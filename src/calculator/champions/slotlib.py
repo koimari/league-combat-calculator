@@ -41,6 +41,9 @@ from .scaling import is_flat_unit, resolve_scaling
 
 ModifierOverride = Callable[[str, float], float | None]
 
+# The cached wiki leveling attribute a per-level ramp is filed under.
+PER_LEVEL_SCALING = "Per-Level Scaling"
+
 
 _MODIFIER_PAIRS_MEMO: dict[tuple[int, int, int | None], tuple[dict, tuple]] = {}
 # Attribute-lookup memos over the same cached JSON, keyed and

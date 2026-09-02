@@ -476,7 +476,7 @@ class SourceRef:
             raise CoverageClaimError(
                 f"{claim}: SourceRef.url {url!r} is not an https url"
             )
-        if not isinstance(self.revision_id, int) or isinstance(self.revision_id, bool):
+        if isinstance(self.revision_id, bool):
             raise CoverageClaimError(
                 f"{claim}: SourceRef.revision_id {self.revision_id!r} is not "
                 "an integer"
@@ -856,8 +856,6 @@ def _validate_issue_refs(claim: Claim, *, name: str) -> None:
 
 def validate_claim(claim: Claim) -> None:
     """Vocabulary, matrix, dotted-path shape, closed dimensions."""
-    if not isinstance(claim, Claim):
-        raise CoverageClaimError(f"{claim!r} is not a Claim")
     name = claim_name(claim)
     _validate_vocabulary(claim, name=name)
     policy = status_policy(claim.lane, claim.status)

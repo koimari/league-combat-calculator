@@ -114,7 +114,7 @@ def test_registry_grows_with_a_manifest_entry(monkeypatch):
         cache_names = {value["name"] for value in json.load(handle).values()}
     assert set(registered_champion_names()) == cache_names
 
-    monkeypatch.setitem(_CHAMPION_MODULES, "Synthetic 174", "ahri")
+    monkeypatch.setitem(_CHAMPION_MODULES, "Synthetic 174", _CHAMPION_MODULES["Ahri"])
     grown = registered_champion_names()
     assert "Synthetic 174" in grown
     assert len(grown) == len(cache_names) + 1

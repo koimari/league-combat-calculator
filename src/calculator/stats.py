@@ -106,6 +106,13 @@ def apply_movement_speed_soft_caps(raw_speed: float) -> float:
     return raw_speed
 
 
+def effective_cooldown(base_cooldown: float, ability_haste: float) -> float:
+    """Effective cooldown in seconds: ``base_cd * 100 / (100 + ability_haste)``."""
+    if base_cooldown <= 0:
+        return 0.0
+    return base_cooldown * (100.0 / (100.0 + ability_haste))
+
+
 def get_champion_base_stats(
     champion_data: Mapping[str, Any], level: int
 ) -> dict[str, float]:
@@ -133,24 +140,12 @@ def get_champion_base_stats(
         level,
     )
 
-    # Attack speed uses percentage growth with separate AS ratio
-    as_ratio = stats.get("attackSpeedRatio", {}).get(
-        "flat", stats["attackSpeed"]["flat"]
-    )
-    attack_speed_bonus_percent = growth_stat(0, stats["attackSpeed"]["perLevel"], level)
-    attack_speed = calculate_attack_speed(
-        stats["attackSpeed"]["flat"], as_ratio, attack_speed_bonus_percent
-    )
-
     return {
         "health": health,
         "attack_damage": attack_damage,
         "ability_power": 0.0,
         "armor": armor,
         "magic_resistance": magic_resistance,
-        "attack_speed": attack_speed,
-        "magic_penetration_flat": 0.0,
-        "magic_penetration_percent": 0.0,
         "move_speed": stats["movespeed"]["flat"],
     }
 

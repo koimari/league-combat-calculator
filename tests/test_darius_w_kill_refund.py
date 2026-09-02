@@ -401,7 +401,6 @@ class TestSourceEvidence:
         built for the exact cached champion name."""
         assert darius_module.SLOTS["W"] is darius_module._crippling_strike
         assert darius_module.parse_abilities is not None
-        assert True
 
     def test_module_options_and_assumptions_declare_the_current_state(self) -> None:
         """Post-contract declaration: the three options (the existing two

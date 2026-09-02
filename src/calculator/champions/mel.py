@@ -57,6 +57,7 @@ from .inputs import int_option
 from .module_contract import coverage
 from .packet_module import build_packet_module
 from .slotlib import (
+    PER_LEVEL_SCALING,
     ability_name,
     damage_entry,
     extract_cooldown,
@@ -104,7 +105,6 @@ _P_MISSILE_LEVEL_1, _P_MISSILE_LEVEL_18 = calculation_interpolation(
 # is the per-projectile ramp ("8 : 30 (based on level)"); occurrence 1 is
 # the all-9-projectiles total ("72 : 270"), which corroborates the
 # 9-missile cap independently of the binary.
-_P_WIKI_ATTRIBUTE = "Per-Level Scaling"
 # Rounding headroom: the cached rows are stored to 2 decimals, so the
 # per-projectile check allows +/- 0.01 and the 9x total check allows the
 # same error amplified nine-fold (worst observed 0.0047 and 0.04).
@@ -144,13 +144,13 @@ def _searing_brilliance_per_missile(ctx: SlotCtx, ability: dict[str, Any]) -> fl
     times the first.  A patch that moves either source raises instead of
     silently pricing a stale projectile.
     """
-    leveling = find_named_leveling(ability, _P_WIKI_ATTRIBUTE, occurrence=0)
+    leveling = find_named_leveling(ability, PER_LEVEL_SCALING, occurrence=0)
     modifiers = (leveling or {}).get("modifiers") or []
     values = list(modifiers[0].get("values") or []) if modifiers else []
     if not values:
         raise ValueError(
             "Mel P (Searing Brilliance) is missing its cached "
-            f"{_P_WIKI_ATTRIBUTE!r} row; the blazing-projectile damage "
+            f"{PER_LEVEL_SCALING!r} row; the blazing-projectile damage "
             "cannot be sourced"
         )
     index = min(max(int(ctx.level), 1), len(values)) - 1
@@ -162,10 +162,10 @@ def _searing_brilliance_per_missile(ctx: SlotCtx, ability: dict[str, Any]) -> fl
         raise ValueError(
             "Mel P (Searing Brilliance) projectile damage drifted: the game "
             f"file interpolates {interpolated:.6g} at level {index + 1}, the "
-            f"cached wiki {_P_WIKI_ATTRIBUTE!r} row gives {cached:.6g}"
+            f"cached wiki {PER_LEVEL_SCALING!r} row gives {cached:.6g}"
         )
 
-    total_leveling = find_named_leveling(ability, _P_WIKI_ATTRIBUTE, occurrence=1)
+    total_leveling = find_named_leveling(ability, PER_LEVEL_SCALING, occurrence=1)
     total_modifiers = (total_leveling or {}).get("modifiers") or []
     total_values = (
         list(total_modifiers[0].get("values") or []) if total_modifiers else []
@@ -173,7 +173,7 @@ def _searing_brilliance_per_missile(ctx: SlotCtx, ability: dict[str, Any]) -> fl
     if not total_values:
         raise ValueError(
             "Mel P (Searing Brilliance) is missing its cached maximum-stack "
-            f"{_P_WIKI_ATTRIBUTE!r} row; the {_P_MAX_MISSILES}-projectile cap "
+            f"{PER_LEVEL_SCALING!r} row; the {_P_MAX_MISSILES}-projectile cap "
             "cannot be corroborated"
         )
     cached_total = float(total_values[min(index, len(total_values) - 1)])

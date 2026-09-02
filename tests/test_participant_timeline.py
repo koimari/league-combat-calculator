@@ -5566,16 +5566,12 @@ def test_healing_rule_champions_matches_the_dispatch_source():
     entrypoint. A missing local declaration would make the import fail before
     a fight can silently skip the rule.
     """
-    import importlib
-
     from src.calculator import healing
     from src.calculator.champions import _CHAMPION_MODULES
     from src.calculator.champions.healing_contract import ChampionHealingRule
 
     for name in healing.HEALING_RULE_CHAMPIONS:
-        module = importlib.import_module(
-            f"src.calculator.champions.{_CHAMPION_MODULES[name]}"
-        )
+        module = _CHAMPION_MODULES[name]
         declaration = getattr(module, "SELF_HEALING_RULE", None)
         assert isinstance(declaration, ChampionHealingRule)
         assert declaration.champion_name == name

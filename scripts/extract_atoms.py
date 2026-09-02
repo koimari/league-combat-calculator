@@ -656,7 +656,7 @@ def _entry_token_hits(entry_toks: set[str], obj_toks: set[str]) -> int:
 
 
 def _best_entry_match(
-    entries: list[WikiEntry], obj_toks: set[str], champ_norm: str = ""
+    entries: Iterable[WikiEntry], obj_toks: set[str], champ_norm: str = ""
 ) -> WikiEntry | None:
     """Best ability entry by name-token overlap with the object's name.
 
@@ -676,7 +676,7 @@ def _best_entry_match(
 
 
 def _slot_damage_type(
-    entries: list[WikiEntry], slot: str, obj_toks: set[str], champ_norm: str = ""
+    entries: Iterable[WikiEntry], slot: str, obj_toks: set[str], champ_norm: str = ""
 ) -> str | None:
     """Wiki damage type for one ability slot.
 
@@ -739,7 +739,7 @@ def wiki_damage_type(
 # --------------------------------------------------------------------------
 def classify_object(
     feat: dict[str, Any],
-    keyword_index: list[tuple[str, str, list[tuple[str, list[str]]]]],
+    keyword_index: Iterable[tuple[str, str, list[tuple[str, list[str]]]]],
     tag_map: Mapping[str, list[str]] | None = None,
 ) -> list[tuple[str, str]]:
     """Return [(atom_id, family), ...] for one SpellObject.

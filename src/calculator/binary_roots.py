@@ -348,6 +348,6 @@ def data_value(spell_obj: dict[str, Any], value_name: str) -> float:
 
 def data_value_at_rank(spell_obj: dict[str, Any], value_name: str, rank: int) -> float:
     """A named ranked DataValue using the game's one-based spell rank index."""
-    if isinstance(rank, bool) or not isinstance(rank, int) or rank < 1:
+    if isinstance(rank, bool) or rank < 1:
         raise RuntimeError(f"DataValue {value_name!r}: rank must be a positive integer")
     return _data_value_at_index(spell_obj, value_name, rank, f"rank {rank}")

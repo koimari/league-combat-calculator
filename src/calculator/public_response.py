@@ -27,8 +27,11 @@ ICON_HOSTS = frozenset(
 )
 
 
-def https_icon(url: str) -> str:
-    """Return one allow-listed HTTPS icon URL or an empty public value."""
+def https_icon(url: Any) -> str:
+    """Return one allow-listed HTTPS icon URL or an empty public value.
+
+    ``url`` is a cached icon field, so anything but a string is unsourced.
+    """
     if not isinstance(url, str):
         return ""
     if url.startswith("http://"):

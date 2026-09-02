@@ -124,7 +124,7 @@ class SourceReceipt:
         """Reject a receipt that cites nothing checkable."""
         if not self.url.startswith("http"):
             raise ValueRefError(f"SourceReceipt url must be a URL, got {self.url!r}")
-        if isinstance(self.revision_id, bool) or not isinstance(self.revision_id, int):
+        if isinstance(self.revision_id, bool):
             raise ValueRefError("SourceReceipt revision_id must be an int")
         if self.revision_id < 0:
             raise ValueRefError("SourceReceipt revision_id must not be negative")
@@ -221,7 +221,7 @@ class Const:
                 f"Const reason {self.reason!r} is not one of "
                 f"{sorted(STRUCTURAL_REASONS)}"
             )
-        if isinstance(self.value, bool) or not isinstance(self.value, (int, float)):
+        if isinstance(self.value, bool):
             raise ValueRefError("Const value must be a number")
         if not math.isfinite(self.value):
             raise ValueRefError("Const value must be finite")

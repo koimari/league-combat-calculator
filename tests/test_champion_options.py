@@ -6,7 +6,6 @@ serves them via get_champion_options_meta / champion_options_meta_map
 (consumed by /api/config).
 """
 
-import importlib
 import inspect
 
 from src.calculator.champions import (
@@ -29,9 +28,7 @@ _OPTION_TYPES = {
 
 
 def _module(champion_name: str):
-    return importlib.import_module(
-        f"src.calculator.champions.{_CHAMPION_MODULES[champion_name]}"
-    )
+    return _CHAMPION_MODULES[champion_name]
 
 
 class TestGetChampionOptionsMeta:

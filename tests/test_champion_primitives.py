@@ -11,8 +11,8 @@ from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.common import calculate_ability_damage
 from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.champions.slotlib import extract_cast_time
-from src.calculator.damage import effective_cooldown
 from src.calculator.data_fetcher import get_champion
+from src.calculator.stats import effective_cooldown
 
 
 class TestCalculateAbilityDamage:

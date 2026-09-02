@@ -151,6 +151,7 @@ def fetch_rune_data(
 
     Raises:
         FileNotFoundError: If no cached data exists.  Run the updater first.
+        ValueError: If the cache is not a non-empty mapping of named runes.
     """
     filename = "runes.json"
     cache_path = data_directory / filename

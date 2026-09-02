@@ -73,9 +73,7 @@ def non_legacy_scenarios(corpus: Mapping[str, Any]) -> list[dict[str, Any]]:
 
 def parametrized_ids() -> tuple[str, ...]:
     """The scenario ids ``tests/test_e9_corpus.py`` parametrizes."""
-    from tests.test_e9_corpus import _EXECUTED  # local: keeps the import edge one-way
-
-    return tuple(s["id"] for s in _EXECUTED)
+    return tuple(s["id"] for s in non_legacy_scenarios(load_corpus()))
 
 
 def expected_non_legacy_count() -> int | None:
@@ -168,7 +166,7 @@ def reprobe_failures(
     The receipt kinds live once, in ``tests/test_e9_corpus.py``; the writer
     borrows them rather than growing a second copy that could disagree.
     """
-    from tests.test_e9_corpus import (  # local: keeps the import edge one-way
+    from tests.test_e9_corpus import (  # sightline-ok: 35 borrows the suite's receipts
         _KIND_ASSERTIONS,
         _run_calculate,
     )

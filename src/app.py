@@ -42,6 +42,12 @@ from flask.typing import ResponseReturnValue
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
+# The sys.path bootstrap above forces every first-party import below it;
+# this one line carries the disable rather than the whole block, because
+# widening it is another lane's file to change.
+from src.calculator.ability_spec import (  # pylint: disable=wrong-import-position
+    StarvedSignal,
+)
 from src.calculator.application_errors import ApplicationError
 from src.calculator.bis import bis_batch_payload, bis_objective_contract, bis_payload
 from src.calculator.calculate import calculate_payload, compare_payload
@@ -73,12 +79,7 @@ from src.calculator.item_effects import (
     refresh_item_effects,
     stat_conversion_metadata,
 )
-from src.calculator.loadout_rules import (
-    exclusivity_groups,
-    inventory_capacity,
-    required_boots_tier,
-    validate_resolved_loadout,
-)
+from src.calculator.loadout_rules import exclusivity_groups, validate_resolved_loadout
 from src.calculator.optimizer import (
     get_eligible_boots,
     get_selectable_items,
@@ -125,6 +126,8 @@ from src.calculator.request_parsing import (
 )
 from src.calculator.role_quests import (
     boot_upgrade_contract,
+    inventory_capacity,
+    required_boots_tier,
     role_quest_domain_contract,
     support_quest_item_contract,
     support_quest_item_stage,
@@ -147,13 +150,6 @@ from src.calculator.scenario import (
     resolve_named_item as _resolve_named_item,
 )
 from src.calculator.stats import MAX_LEVEL, get_item_stats
-
-# The sys.path bootstrap above forces every first-party import below it;
-# this one line carries the disable rather than the whole block, because
-# widening it is another lane's file to change.
-from src.calculator.trigger_stream import (  # pylint: disable=wrong-import-position
-    StarvedSignal,
-)
 from src.calculator.validation_receipts import (
     VALIDATION_SOURCES as _VALIDATION_SOURCES,
 )

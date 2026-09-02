@@ -15,10 +15,14 @@ Row status conventions:
   break when the kernel lands, which is the intended signal).
 """
 
+from operator import itemgetter
+
 import pytest
 
 from src.app import app
 from tests.survival_probe import survival_of
+
+_BY_TIME = itemgetter("time")
 
 
 def _calculate(payload: dict) -> dict:
@@ -106,7 +110,7 @@ def test_d1_projectile_skillshot_braum_full_blocks_then_reduces():
     )
     q_events = sorted(
         _events(combat, attacker="main", target="enemy:Braum", source="Q"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     assert [event["time"] for event in q_events] == [0.25, 3.5, 6.75]
     first, later, after = q_events
@@ -306,7 +310,7 @@ def test_d1_skillshot_marked_dot_ticks_are_destroyed_by_wind_wall():
     )
     e_events = sorted(
         _events(combat, attacker="main", target="enemy:Yasuo", source="E"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     destroyed = [event for event in e_events if event.get("projectile_defense")]
     # Ticks at 0.5s..3.75s (0.25s cadence) fall inside [0, 4.0).
@@ -418,7 +422,7 @@ def test_d2_yasuo_blocks_only_selected_projectiles():
     )
     q_events = sorted(
         _events(combat, attacker="main", target="enemy:Yasuo", source="Q"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     assert q_events[0]["projectile_defense"]["mode"] == "destroyed"
     assert q_events[0]["skipped_reason"] == "yasuo_wind_wall"
@@ -604,7 +608,7 @@ def test_d3_event_id_selection_blocks_exact_packets():
     )
     q_events = sorted(
         _events(combat, attacker="main", target="enemy:Braum", source="Q"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     first, second = q_events
     assert first["event_id"] == "main:enemy:Braum:1"
@@ -647,7 +651,7 @@ def test_d3_mixed_slot_and_event_id_selection_is_a_union():
     assert w_first["damage"] == pytest.approx(0.0)
     q_events = sorted(
         _events(combat, attacker="main", target="enemy:Braum", source="Q"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     first, second = q_events
     assert first["time"] == pytest.approx(0.25)
@@ -759,7 +763,7 @@ def test_d4_event_after_window_end_passes():
     )
     q_events = sorted(
         _events(combat, attacker="main", target="enemy:Braum", source="Q"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     assert q_events[0]["time"] == pytest.approx(0.25)
     assert q_events[0]["projectile_defense"]["mode"] == "full_block"
@@ -818,7 +822,7 @@ def test_d4_requested_duration_clamps_to_source_rank_duration():
     assert defense["damage_reduction"] == pytest.approx(0.35)
     q_events = sorted(
         _events(combat, attacker="main", target="enemy:Braum", source="Q"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     assert q_events[0]["projectile_defense"]["mode"] == "full_block"
     # The 3.5 s hit is outside the clamped [0, 3.0) window.
@@ -947,7 +951,7 @@ def test_d5_yasuo_destroys_every_selected_projectile_without_cap():
     )
     q_events = sorted(
         _events(combat, attacker="main", target="enemy:Yasuo", source="Q"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     assert q_events[0]["projectile_defense"]["mode"] == "destroyed"
     assert q_events[1]["projectile_defense"]["mode"] == "destroyed"
@@ -1021,7 +1025,7 @@ def test_d5_control_carrying_hit_consumes_first_use_and_cc_is_skipped():
     )
     e_events = sorted(
         _events(combat, attacker="main", target="enemy:Braum", source="E"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     first, later = e_events
     assert first["time"] == pytest.approx(0.0)
@@ -1116,7 +1120,7 @@ def test_d6_target_state_gate_runs_before_projectile_defense():
     )
     q_events = sorted(
         _events(combat, attacker="main", target="enemy:Braum", source="Q"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     in_stasis, after_stasis, _ = q_events
     assert in_stasis["time"] == pytest.approx(0.25)
@@ -1151,7 +1155,7 @@ def test_d6_attacker_state_gate_runs_after_full_block_prepare():
     )
     q_events = sorted(
         _events(combat, attacker="main", target="enemy:Braum", source="Q"),
-        key=lambda event: event["time"],
+        key=_BY_TIME,
     )
     cc_hit, later, after = q_events
     assert cc_hit["time"] == pytest.approx(0.25)

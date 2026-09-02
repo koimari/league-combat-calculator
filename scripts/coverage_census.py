@@ -148,7 +148,7 @@ CHAMPION_BUCKETS = (
 GLOBAL_BUCKETS = ("keystone_unmodeled", "expiry_refusals", "enemy_item_entries")
 
 
-def _timed_payload(champ, **extra):
+def _timed_payload(champ: str, **extra):
     return {
         "champion": champ,
         "level": LEVEL,
@@ -205,12 +205,8 @@ def _catalog():
     }
 
 
-def _champion_cells(champ):
-    """Every frontier entry one champion can own."""
-    cat = _catalog()
-    cells = {bucket: {} for bucket in CHAMPION_BUCKETS}
-
-    # 1. champion x mode, and the bare-kit timed baseline.
+def _mode_cells(champ: str, cells: Mapping) -> set:
+    """Champion x mode; returns the bare-kit timed baseline."""
     baseline = set()
     for mode in MODES:
         r = _probe(calculate_payload, _timed_payload(champ, fight_mode=mode))
@@ -220,13 +216,16 @@ def _champion_cells(champ):
             baseline = _coarse(r)
             if baseline:
                 cells["attacker_kit_coarse"][champ] = sorted(baseline)
+    return baseline
 
-    # 2. champion x legally-slotted item, across every window the interface can
-    #    ask for.  A single mode with autos on is not "all modes with all
-    #    items": an item can be coarse in one rotation and clean in a timed
-    #    window, and turning the auto stream off changes which sources are
-    #    active at all.  Each cell is compared against that champion's bare kit
-    #    IN THE SAME WINDOW, so the entry is the item's contribution.
+
+def _item_cells(champ: str, cat: Mapping, cells: Mapping) -> None:
+    """Champion x legally-slotted item, across every window the interface can
+    ask for.  A single mode with autos on is not "all modes with all items":
+    an item can be coarse in one rotation and clean in a timed window, and
+    turning the auto stream off changes which sources are active at all.
+    Each cell is compared against that champion's bare kit IN THE SAME
+    WINDOW, so the entry is the item's contribution."""
     for mode, autos in ITEM_WINDOWS:
         window = _timed_payload(champ, fight_mode=mode, include_auto_attacks=autos)
         base = _coarse(_probe(calculate_payload, window))
@@ -243,7 +242,9 @@ def _champion_cells(champ):
                 if extra:
                     cells["item_pair_coarse"][key] = extra
 
-    # 3. champion x compiled keystone.
+
+def _keystone_cells(champ: str, cat: Mapping, cells: Mapping, baseline: set) -> None:
+    """Champion x compiled keystone, against the bare-kit baseline."""
     for keystone in cat["keystones"]:
         r = _probe(calculate_payload, _timed_payload(champ, keystone=keystone))
         key = f"{champ}|{keystone}"
@@ -254,7 +255,9 @@ def _champion_cells(champ):
             if extra:
                 cells["keystone_failures"][key] = f"coarse: {extra}"
 
-    # 4. every certified-timeline item on this champion as the enemy.
+
+def _enemy_cells(champ: str, cat: Mapping, cells: Mapping) -> None:
+    """Every certified-timeline item on this champion as the enemy."""
     for item in cat["certified_items"]:
         r = _probe(
             calculate_payload,
@@ -266,7 +269,9 @@ def _champion_cells(champ):
         if not r["ok"]:
             cells["certified_enemy_withholds"][f"{champ}|{item}"] = r["error"]
 
-    # 6. comparison curve.
+
+def _crossover_cells(champ: str, cells: Mapping) -> None:
+    """The comparison curve."""
     r = _probe(
         calculate_payload,
         {"champion": champ, "level": LEVEL, "items": [], "include_crossover": True},
@@ -280,17 +285,32 @@ def _champion_cells(champ):
                 status.get("reason", "curve absent")
             )
 
-    # 7. BIS sample, both windows.
-    if champ in BIS_SAMPLE:
-        for mode in ("one_rotation", "timed"):
-            r = _probe(
-                bis_payload,
-                _timed_payload(
-                    champ, fight_mode=mode, include_auto_attacks=mode == "timed"
-                ),
-            )
-            if not r["ok"]:
-                cells["bis_errors"][f"{champ}|{mode}"] = r["error"]
+
+def _bis_cells(champ: str, cells: Mapping) -> None:
+    """The BIS sample, both windows."""
+    if champ not in BIS_SAMPLE:
+        return
+    for mode in ("one_rotation", "timed"):
+        r = _probe(
+            bis_payload,
+            _timed_payload(
+                champ, fight_mode=mode, include_auto_attacks=mode == "timed"
+            ),
+        )
+        if not r["ok"]:
+            cells["bis_errors"][f"{champ}|{mode}"] = r["error"]
+
+
+def _champion_cells(champ: str) -> dict:
+    """Every frontier entry one champion can own."""
+    cat = _catalog()
+    cells = {bucket: {} for bucket in CHAMPION_BUCKETS}
+    baseline = _mode_cells(champ, cells)
+    _item_cells(champ, cat, cells)
+    _keystone_cells(champ, cat, cells, baseline)
+    _enemy_cells(champ, cat, cells)
+    _crossover_cells(champ, cells)
+    _bis_cells(champ, cells)
     return cells
 
 

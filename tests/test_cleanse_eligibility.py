@@ -181,6 +181,7 @@ import pytest
 
 from src.app import app
 from src.calculator import delivery_eligibility as de
+from src.calculator.crowd_control_eligibility import classify_control
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.interpreters import uncompilable_item_receipt
 from src.calculator.participant_timeline import Combatant, _WalkCompiler
@@ -962,8 +963,6 @@ def test_r5_mikaels_excluded_kinds_per_sourced_wording():
     )
     # Blind/disarm are known SOFT kinds (never add downtime) and nearsight
     # is not even in the known set — the exclusion stays sourced per item.
-    from src.calculator.crowd_control_eligibility import classify_control
-
     assert classify_control(SimpleNamespace(cc_kind="blind")).unknown is False
     assert classify_control(SimpleNamespace(cc_kind="nearsight")).unknown is True
 
@@ -1643,28 +1642,8 @@ def test_r14_repeated_use_second_activation_fails_closed():
 # ---------------------------------------------------------------------------
 
 
-def test_r15_unknown_control_kind_is_refused_by_the_closed_vocabulary():
-    """Kernel + timeline: what an *unknown* control kind means here.
-
-    The merge ruling: ours keeps the closed ``ability_spec.CC_KIND_VOCABULARY``
-    and ``trigger_stream`` raises on anything outside it, because a misspelled
-    kind must never author a no-op control.  So a ``'dance'`` packet can no
-    longer reach the walk at all -- the branch main's version of this test
-    drove (apply the interval, then deny the cleanse with ``unknown_control``)
-    is unreachable *through the timeline*, and asserting it there would pin a
-    fail-open path this tree does not have.
-
-    Three halves, at the two seams that still exist:
-
-    * the timeline refuses the kind by name (ours' ruling);
-    * ``classify_control`` and the cleanse eligibility still answer
-      ``unknown`` for a kind handed straight to them -- they are pure
-      classifiers with no engine in front, and "an unknown control is not
-      cleansable and truncates nothing" is still their contract;
-    * a real non-blocking vocabulary kind (``slow``) carries the walk-level
-      half: it is authored, it adds no action downtime, and the activation
-      finds no active control to remove.
-    """
+def _r15_world():
+    """An enemy, a main target, and one cleanse packet on that target."""
     combatants = [
         _dummy_combatant("enemy", "enemy"),
         _dummy_combatant("target", "main"),
@@ -1672,8 +1651,13 @@ def test_r15_unknown_control_kind_is_refused_by_the_closed_vocabulary():
     support_effects = {
         "target": [_cleanse_packet(1.5, target="target", attacker="target")]
     }
+    return combatants, support_effects
 
-    # 1. The closed vocabulary refuses the kind, by name, before the walk.
+
+def test_r15_unknown_control_kind_is_refused_by_the_closed_vocabulary():
+    """The timeline refuses a kind outside ``CC_KIND_VOCABULARY`` by name,
+    before the walk: a misspelled kind never authors a no-op control."""
+    combatants, support_effects = _r15_world()
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
         simulate_survival(
             combatants,
@@ -1683,11 +1667,12 @@ def test_r15_unknown_control_kind_is_refused_by_the_closed_vocabulary():
             10.0,
         )
 
-    # 2. The kernel seam still classifies an unknown kind as unknown, and an
-    #    unknown control is neither cleansable nor truncatable.
-    ce = _require_contract()
-    from src.calculator.crowd_control_eligibility import classify_control
 
+def test_r15_the_kernel_seam_classifies_an_unknown_kind_as_unknown():
+    """``classify_control`` and the cleanse eligibility are pure classifiers
+    with no engine in front: a kind handed straight to them is ``unknown``,
+    and an unknown control is neither cleansable nor truncatable."""
+    ce = _require_contract()
     profile = classify_control(SimpleNamespace(cc_kind="dance"))
     assert profile.unknown is True
     decision = _eligibility("Quicksilver Sash").decide(
@@ -1701,9 +1686,12 @@ def test_r15_unknown_control_kind_is_refused_by_the_closed_vocabulary():
     assert kept == [_interval("dance", 1.0, 3.0)]
     assert removed == []
 
-    # 3. The walk-level half, on a kind the vocabulary declares: a slow is
-    #    known and non-blocking, so it authors no downtime interval and the
-    #    activation names control_not_active with nothing removed.
+
+def test_r15_a_known_non_blocking_kind_authors_no_downtime():
+    """A slow is in the vocabulary and non-blocking: it authors no downtime
+    interval, and the activation names control_not_active with nothing
+    removed."""
+    combatants, support_effects = _r15_world()
     assert classify_control(SimpleNamespace(cc_kind="slow")).blocking is False
     result = simulate_survival(
         combatants,

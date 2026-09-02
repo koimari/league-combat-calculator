@@ -2704,19 +2704,13 @@ def _window_readings(seed, request_key):
         if seed.damage_type == "physical"
         else pair_engine._add_burn_damage
     )
-    attribute = (
-        "_add_item_active_damage"
-        if seed.damage_type == "physical"
-        else "_add_burn_damage"
-    )
     readings = []
-    original = getattr(pair_engine, attribute)
-    setattr(
-        pair_engine,
-        attribute,
-        _stamping(step, lambda state: _declare_authored_row(state, seed)),
-    )
-    try:
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(
+            pair_engine,
+            step.__name__,
+            _stamping(step, lambda state: _declare_authored_row(state, seed)),
+        )
         for params in resolved.target_fight_params:
             result = run_fight(
                 resolved.champion_data, parsed.level, list(resolved.items), params
@@ -2739,8 +2733,6 @@ def _window_readings(seed, request_key):
                     ),
                 )
             )
-    finally:
-        setattr(pair_engine, attribute, original)
     return tuple(readings)
 
 
@@ -3647,7 +3639,7 @@ def test_both_declared_spellblade_damage_classes_are_inside_the_fixture_set():
 #: The pair engine's own step for the bolt row, and the row it authors.  Named
 #: rather than searched for: the stamp has to land where the family's own
 #: retirement slice would put it.
-SWING_SEED_STEP = "_add_single_proc_on_hits"
+SWING_SEED_STEP = pair_engine._add_single_proc_on_hits
 SWING_SEED_ROW = "secondary_Runaan's Hurricane"
 SWING_SEED_RULE = "runaans_hurricane.secondary_target"
 SWING_SEED_ITEMS = ("Runaan's Hurricane", "Blade of the Ruined King")
@@ -3770,12 +3762,13 @@ def _swing_seed_reading(case):
         roster_target_count=2,
         **_swing_seed_states()[case],
     )
-    original = getattr(pair_engine, SWING_SEED_STEP)
-    setattr(pair_engine, SWING_SEED_STEP, _stamping(original, _declare_swing_row))
-    try:
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(
+            pair_engine,
+            SWING_SEED_STEP.__name__,
+            _stamping(SWING_SEED_STEP, _declare_swing_row),
+        )
         result = run_fight(champion, level, list(items), params)
-    finally:
-        setattr(pair_engine, SWING_SEED_STEP, original)
     stats = calculate_total_stats(champion, level, list(items))
     amps = delta_amp.resolve_static_holder_amps(
         list(items),
@@ -4113,9 +4106,10 @@ def _routing_slot():
 
     champion = gs.fetch_champion_data()[_ON_HIT_PROBE_CHAMPION]
     by_name = {data["name"]: data for data in gs.fetch_item_data().values()}
-    original = getattr(pair_engine, SWING_SEED_STEP)
-    setattr(pair_engine, SWING_SEED_STEP, _stamping(original, capture))
-    try:
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(
+            pair_engine, SWING_SEED_STEP.__name__, _stamping(SWING_SEED_STEP, capture)
+        )
         run_fight(
             champion,
             18,
@@ -4133,8 +4127,6 @@ def _routing_slot():
                 roster_target_count=2,
             ),
         )
-    finally:
-        setattr(pair_engine, SWING_SEED_STEP, original)
     return captured["slot"]
 
 

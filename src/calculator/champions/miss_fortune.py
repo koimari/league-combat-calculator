@@ -40,6 +40,7 @@ from .engine import BUFF, ONHIT, SlotCtx
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
+    PER_LEVEL_SCALING,
     STEROID_ZERO,
     ability_name,
     damage_entry,
@@ -67,8 +68,6 @@ from .slotlib import (
 _LOVE_TAP_LEVEL1_AD_RATIO = 0.5
 _LOVE_TAP_BREAKPOINT_LEVELS = (4, 7, 9, 11, 13, 20, 25, 30)
 _LOVE_TAP_BREAKPOINT_STEP = 0.1
-# The cached wiki row this ladder must reproduce, as percentages.
-_LOVE_TAP_WIKI_ATTRIBUTE = "Per-Level Scaling"
 
 
 def _love_tap_tier(level: int) -> int:
@@ -89,13 +88,13 @@ def _love_tap_ad_ratio(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     tier = _love_tap_tier(ctx.level)
     ratio = _LOVE_TAP_LEVEL1_AD_RATIO + _LOVE_TAP_BREAKPOINT_STEP * tier
 
-    leveling = find_named_leveling(ability, _LOVE_TAP_WIKI_ATTRIBUTE, occurrence=0)
+    leveling = find_named_leveling(ability, PER_LEVEL_SCALING, occurrence=0)
     modifiers = (leveling or {}).get("modifiers") or []
     values = list(modifiers[0].get("values") or []) if modifiers else []
     if not values:
         raise ValueError(
             "Miss Fortune P (Love Tap) is missing its cached "
-            f"{_LOVE_TAP_WIKI_ATTRIBUTE!r} row; the bonus-damage "
+            f"{PER_LEVEL_SCALING!r} row; the bonus-damage "
             "coefficient cannot be sourced"
         )
     if tier < len(values):
@@ -104,7 +103,7 @@ def _love_tap_ad_ratio(ctx: SlotCtx, ability: dict[str, Any]) -> float:
             raise ValueError(
                 "Miss Fortune P (Love Tap) coefficient drifted: game file "
                 f"gives {ratio:.6g} x AD at level {ctx.level}, cached wiki "
-                f"{_LOVE_TAP_WIKI_ATTRIBUTE!r} tier {tier} gives {cached:.6g}"
+                f"{PER_LEVEL_SCALING!r} tier {tier} gives {cached:.6g}"
             )
     return ratio
 

@@ -33,6 +33,7 @@ from dataclasses import replace
 import pytest
 
 from src import app as app_module
+from src.calculator.champions import _CHAMPION_MODULES
 from src.calculator.data_fetcher import get_champion
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.participant_timeline import build_participant_timeline
@@ -105,11 +106,7 @@ def _revive_fight(champion: str, level: int, stats_override=None):
     if stats_override:
         main_stats = dict(main_stats)
         main_stats.update(stats_override)
-    module = __import__(
-        f"src.calculator.champions.{champion.lower()}",
-        fromlist=["starting_revive_defense"],
-    )
-    revive = module.starting_revive_defense(level, main_stats)
+    revive = _CHAMPION_MODULES[champion].starting_revive_defense(level, main_stats)
     defenses = replace(
         resolve_starting_defenses(champion, level, main_stats, []), **revive
     )

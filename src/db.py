@@ -905,7 +905,7 @@ def record_metric_event(
     """
     if event not in METRIC_EVENT_NAMES:
         raise ValueError(f"event must be one of {sorted(METRIC_EVENT_NAMES)}")
-    if not session_id or not isinstance(session_id, str) or len(session_id) > 100:
+    if not session_id or len(session_id) > 100:
         raise ValueError("session_id must be a non-empty string of at most 100 chars")
     if took_ms is not None:
         took_ms = int(took_ms)

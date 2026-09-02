@@ -26,6 +26,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .slotlib import (
+    PER_LEVEL_SCALING,
     ability_name,
     damage_entry,
     extract_cooldown,
@@ -40,7 +41,6 @@ _PROC_AP_RATIO = calculation_coefficient(
     _VELKOZ_PASSIVE_SPELL, "TotalDamage"
 )  # "35 : 197.06 (based on level) (+ 60% AP)"
 _PROC_STACKS = int(data_value(_VELKOZ_PASSIVE_SPELL, "MaxStacks"))
-_PROC_LEVELING_ATTR = "Per-Level Scaling"
 
 
 def _organic_deconstruction(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -60,7 +60,7 @@ def _organic_deconstruction(ctx: SlotCtx) -> dict[str, Any] | None:
     if applications < _PROC_STACKS:
         return None
 
-    flat = extract_named(ability, _PROC_LEVELING_ATTR, ctx.level, ctx.stats, ctx.target)
+    flat = extract_named(ability, PER_LEVEL_SCALING, ctx.level, ctx.stats, ctx.target)
     ap = ctx.stat("ability_power")
     total = flat + _PROC_AP_RATIO * ap
     return {

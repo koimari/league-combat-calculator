@@ -27,57 +27,6 @@ from src.calculator.roster_composition import (
 from src.calculator.scenario import ChampionLoadout
 
 
-@pytest.mark.parametrize(
-    "defenses", [SimpleNamespace(magic_shield=0.0), None], ids=["namespace", "none"]
-)
-def test_a_combatant_refuses_defenses_that_are_not_starting_defenses(defenses):
-    """The typed field is enforced where the participant is built.
-
-    Every walk-side consumer reads ``defenses`` by direct attribute, so a
-    stand-in would fail deep in the kernel on the first field it lacks; the
-    constructor names the participant and the wrong type instead.
-    """
-    with pytest.raises(
-        TypeError, match="ally:Lux: defenses must be a StartingDefenses"
-    ):
-        Combatant(
-            participant_id="ally:Lux",
-            team="ally",
-            champion_data={"name": "Lux"},
-            level=12,
-            items=(),
-            stats={},
-            defenses=defenses,
-        )
-
-
-@pytest.mark.parametrize(
-    "request_double",
-    [SimpleNamespace(role="mid"), None],
-    ids=["namespace", "none"],
-)
-def test_a_combatant_refuses_a_request_that_is_not_an_actor_request(
-    request_double,
-):
-    """``request`` is read by direct attribute the same way ``defenses`` is.
-
-    A stand-in cannot buy a field it does not carry a silent default -- an
-    absent ``ability_ranks`` reading as no manual allocation, an absent
-    ``ally_effects_enabled`` as opted out.
-    """
-    with pytest.raises(TypeError, match="ally:Lux: request must be an ActorRequest"):
-        Combatant(
-            participant_id="ally:Lux",
-            team="ally",
-            champion_data={"name": "Lux"},
-            level=12,
-            items=(),
-            stats={},
-            defenses=StartingDefenses(),
-            request=request_double,
-        )
-
-
 def test_a_roster_card_and_the_main_params_build_one_request_shape():
     """Both producers emit an ``ActorRequest``; neither invents a type."""
     params = FightParams.from_request(

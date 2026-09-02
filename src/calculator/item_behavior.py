@@ -865,8 +865,6 @@ class DamageFormula:
             raise BehaviorRuleError("a DamageFormula declares its scaling")
         if not isinstance(self.floor, FLOOR_TYPES):
             raise BehaviorRuleError("a DamageFormula declares its floor")
-        if not isinstance(self.damage_class, DamageClass):
-            raise BehaviorRuleError("a DamageFormula declares what mitigates it")
 
 
 @dataclass(frozen=True, slots=True)
@@ -2757,10 +2755,6 @@ def validate_rule(rule: BehaviorRule) -> None:
     whether an interpreter is registered and whether the numbers resolve are
     later tiers' questions, deliberately not asked here.
     """
-    if not isinstance(rule, BehaviorRule):
-        raise BehaviorRuleError(f"{rule!r} is not a BehaviorRule")
-    if not isinstance(rule.family, RuleFamily):
-        raise BehaviorRuleError(f"{rule.owner!r}: family must be a RuleFamily")
     if not rule.owner.strip():
         raise BehaviorRuleError("a BehaviorRule names an owner")
     if not rule.mechanic_id.strip():
@@ -2779,12 +2773,6 @@ def validate_rule(rule: BehaviorRule) -> None:
         )
     if not isinstance(rule.compilability, COMPILABILITY_TYPES):
         raise BehaviorRuleError(f"{rule.mechanic_id}: compilability is not declared")
-    if not isinstance(rule.receipt, SourceReceipt):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: receipt is not a SourceReceipt")
-    if not isinstance(rule.zero_policy, ZeroPolicy):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: zero_policy is required and has no default (D-24)"
-        )
     _validate_policy_types(rule)
     _validate_payload(rule)
 
@@ -2944,10 +2932,6 @@ def _validate_cooldown_proc(rule: BehaviorRule, payload: CooldownProcRule) -> No
         {"attack_cooldown_refund": payload.attack_cooldown_refund},
         optional=True,
     )
-    if not isinstance(payload.trigger, ProcTrigger):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: a cooldown proc says what arms it"
-        )
     for name in (
         "repeat_on_cooldown",
         "is_ability_damage",
@@ -2984,11 +2968,6 @@ def _validate_spellblade(rule: BehaviorRule, payload: SpellbladeRule) -> None:
         },
         optional=True,
     )
-    if not isinstance(payload.double_on_hit, bool):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: double_on_hit is a declared bool; whether the "
-            "empowered attack applies on-hit effects twice has no default answer"
-        )
     for pair in (
         (payload.mana_restore_base_ad_ratio, payload.mana_restore_crit_ratio),
         (payload.self_heal_ap_ratio, payload.self_heal_bonus_health_ratio),
@@ -3002,10 +2981,6 @@ def _validate_spellblade(rule: BehaviorRule, payload: SpellbladeRule) -> None:
 
 def _validate_periodic(rule: BehaviorRule, payload: PeriodicRule) -> None:
     """A periodic strike names a cadence and only that cadence's fields."""
-    if not isinstance(payload.cadence, PeriodicCadence):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: a periodic strike says how it spreads over time"
-        )
     _validate_formula(rule, payload.formula)
     _validate_refs(rule, {"interval": payload.interval})
     allowed = PERIODIC_CADENCE_FIELDS[payload.cadence]
@@ -3090,8 +3065,6 @@ def _validate_swing_schedule(rule: BehaviorRule, payload: SwingScheduleRule) -> 
 
 def _validate_formula(rule: BehaviorRule, formula: DamageFormula) -> None:
     """A formula's terms are sourced shares of declared bases."""
-    if not isinstance(formula, DamageFormula):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: payload declares no formula")
     for term in formula.terms:
         if not isinstance(term, Term):
             raise BehaviorRuleError(f"{rule.mechanic_id}: a formula holds Terms")
@@ -3118,11 +3091,6 @@ def _validate_secondary_target(
             raise BehaviorRuleError(
                 f"{rule.mechanic_id}: {field_name} is a sourced reference"
             )
-    if not isinstance(payload.applies_on_hit, bool):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: a secondary target says whether it carries "
-            "on-hit effects; there is no default answer"
-        )
 
 
 def _validate_defense(rule: BehaviorRule, payload: RulePayload) -> None:
@@ -3172,22 +3140,6 @@ def _validate_ally_packet(rule: BehaviorRule, payload: AllyPacketRule) -> None:
     ever checked in one direction is a field a second producer can quietly
     stop filling in.
     """
-    if not isinstance(payload.producer, AllyProducer):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: producer is not an AllyProducer")
-    if not isinstance(payload.trigger, PacketTrigger):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: an ally packet says what fires it"
-        )
-    if not isinstance(payload.persistence, Persistence):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: an ally packet says how long it is in force"
-        )
-    if not isinstance(payload.redirects_incoming_damage, bool):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: redirects_incoming_damage is a declared bool; "
-            "a producer that re-routes another participant's damage is not "
-            "representable by the compiled kernel and must not default"
-        )
     if not payload.packets:
         raise BehaviorRuleError(
             f"{rule.mechanic_id}: a producer that emits no packet is an item "
@@ -3283,22 +3235,6 @@ def _validate_secondary_recipients(rule: BehaviorRule, payload: AllyPacketRule) 
 
 def _validate_shred_payload(rule: BehaviorRule, payload: ResistanceShredRule) -> None:
     """A shred names a resistance, a ramp and the damage that applies a stack."""
-    if not isinstance(payload.resistance, Resistance):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: a shred says which resistance it reduces"
-        )
-    if not isinstance(payload.ramp, StackRamp):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: ramp is not a StackRamp")
-    if not isinstance(payload.ramp.accrual, TriggerEvent):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: a shred says what event applies a stack"
-        )
-    if not isinstance(payload.ramp.model, RampModel):
-        raise BehaviorRuleError(
-            f"{rule.mechanic_id}: a shred says how its stack history is summed"
-        )
-    if not isinstance(payload.typing, Typing):
-        raise BehaviorRuleError(f"{rule.mechanic_id}: typing is not declared (D-04)")
     if payload.subject is not Subject.TARGET:
         raise BehaviorRuleError(
             f"{rule.mechanic_id}: a resistance shred acts on the target's "

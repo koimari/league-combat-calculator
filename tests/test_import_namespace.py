@@ -138,11 +138,11 @@ def test_growth_multiplier_enforces_level_bound():
             stats.growth_multiplier(bad)
 
 
-def test_cooldown_formula_lives_only_in_damage():
-    """Ability-haste cooldown math is owned by damage.effective_cooldown."""
+def test_cooldown_formula_lives_only_in_stats():
+    """Ability-haste cooldown math is owned by stats.effective_cooldown."""
     rr = _src_text("src/calculator/rotation_resolver.py")
     import_line = next(
-        line for line in rr.splitlines() if line.startswith("from .damage import")
+        line for line in rr.splitlines() if line.startswith("from .stats import")
     )
     assert "effective_cooldown" in import_line
     for lineno, line in enumerate(_code_lines(rr), 1):

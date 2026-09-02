@@ -161,14 +161,28 @@ def boot_upgrade_contract() -> dict[str, dict[str, str]]:
     }
 
 
+def inventory_capacity(role: str, role_quest_complete: bool) -> int:
+    """Return combat-item slots for the selected role state."""
+    parsed_role = validate_role(role)
+    if role_quest_complete and not parsed_role:
+        raise ValueError("role is required when role_quest_complete is true")
+    return 7 if parsed_role == "bottom" and role_quest_complete else 6
+
+
+def required_boots_tier(role: str, role_quest_complete: bool) -> int:
+    """Return the only boots tier legal for the selected role state."""
+    parsed_role = validate_role(role)
+    if role_quest_complete and not parsed_role:
+        raise ValueError("role is required when role_quest_complete is true")
+    return 3 if parsed_role == "mid" and role_quest_complete else 2
+
+
 def role_quest_domain_contract() -> dict[str, object]:
     """Return the role-dependent limits used by every public client.
 
     The browser needs these values to shape controls.  Keep the calculation
     functions as the owners and publish only their JSON-safe result here.
     """
-    from .loadout_rules import inventory_capacity, required_boots_tier
-
     states = (("incomplete", False), ("complete", True))
     return {
         "roles": sorted(ROLES),

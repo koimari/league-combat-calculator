@@ -12,7 +12,6 @@ import hashlib
 import json
 import numbers
 import subprocess
-import sys
 import urllib.error
 import urllib.request
 from collections.abc import Callable, Iterable, Iterator, Mapping
@@ -20,7 +19,6 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(REPO_ROOT))
 
 from scripts import patch_regression
 from scripts.source_receipt import source_sha256

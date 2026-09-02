@@ -234,7 +234,7 @@ from .resistance import (
     reduce_resistance,
 )
 from .state_lifecycle import InstanceCadence, TimedStackState, TriggerGate
-from .stats import calculate_attack_speed, resolve_move_speed
+from .stats import calculate_attack_speed, effective_cooldown, resolve_move_speed
 from .survival.actions import TransitionRank
 from .survival.pricing import (
     AuthoredDeclaration,
@@ -260,6 +260,11 @@ BASE_CRIT_MULTIPLIER = 2.0
 # skipped harmlessly for champions without a second Q cast. A tuple so a
 # fight can never mutate the shared default; use sites materialize a list.
 DEFAULT_CAST_ORDER = ("Q", "Q2", "W", "E", "R")
+
+
+def _row_time(row: Mapping[str, Any]) -> float:
+    """One event row's time, the key every chronological sort uses."""
+    return float(row["time"])
 
 
 def _declared_options(meta: Mapping[str, Any], owner: str) -> Mapping[str, Any]:
@@ -317,13 +322,6 @@ def _seeded_option_stacks(
     except (TypeError, ValueError):
         seeded = int(default)
     return max(int(spec["min"]), min(seeded, int(spec["max"])))
-
-
-def effective_cooldown(base_cooldown: float, ability_haste: float) -> float:
-    """Effective cooldown in seconds: ``base_cd * 100 / (100 + ability_haste)``."""
-    if base_cooldown <= 0:
-        return 0.0
-    return base_cooldown * (100.0 / (100.0 + ability_haste))
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -726,11 +724,10 @@ class FightConfig:
         here is refused rather than merged, so "sourced" and "caller-supplied"
         never both answer for one field.
 
-        ``target_magic_resistance`` is a required argument precisely because
-        it is the one durability stat no minion record states: the caller must
-        decide it in the open. Defaulting it here would put an invented magic
-        resistance behind a sourced-looking constructor, which is the failure
-        :mod:`minion_stats` exists to prevent.
+        ``target_magic_resistance`` has no default because it is the one
+        durability stat no minion record states; a default here would put an
+        invented magic resistance behind a sourced-looking constructor, which
+        is the failure :mod:`minion_stats` exists to prevent.
         """
         sourced = sourced_minion_target(minion_type)
         # "minion_type" needs no entry here: it is a named parameter above, so
@@ -5810,7 +5807,7 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             identity = _tear_hit_identity(key, accepted_ordinal, info)
             hit_receipt, tear_event = tear.hit(
                 time=cast_time,
-                hit_identity=identity if identity is not None else "",
+                hit_identity=identity,
                 target_kind=state.target_class,
                 sequence=sequence,
             )
@@ -7490,7 +7487,7 @@ def _add_precomputed_proc_damage(
             # (Aurora's Spirit Abjuration). Keep the public ledger
             # chronological even when those authored hit times arrive out
             # of order relative to the ambient auto cadence.
-            authored_events.sort(key=lambda event: float(event["time"]))
+            authored_events.sort(key=_row_time)
             state.breakdown[key]["damage_events"] = authored_events
             state.breakdown[key]["event_phase"] = "auto"
         # Champion-minted display text (e.g. Braum P's cycle summary) and
@@ -7549,7 +7546,7 @@ def _ability_dot_tick_events(
                     amount / casts, dtype, dot_duration, tick_interval
                 )
             )
-    events.sort(key=lambda tick: float(tick["time"]))
+    events.sort(key=_row_time)
     return events or None
 
 
@@ -12012,7 +12009,7 @@ def _add_keystone_dark_harvest(state: FightState, rotation: RotationResult) -> N
         next_source = (
             base_events[source_index] if source_index < len(base_events) else None
         )
-        pending.sort(key=lambda item: float(item["time"]))
+        pending.sort(key=_row_time)
         next_proc = pending[0] if pending else None
         source_time = (
             float(next_source.get("time", 0.0)) if next_source is not None else math.inf
@@ -14945,7 +14942,7 @@ def _muramana_cast_receipt(
     # the parts alone desynchronised this walk from the very count it is
     # checked against below, which withheld the whole row.  Either fact
     # showing damage is a damaging cast; only both showing none is not.
-    row = breakdown.get(slot) if isinstance(breakdown, Mapping) else None
+    row = breakdown.get(slot)
     priced = (
         float(row.get("total_damage", 0.0) or 0.0) if isinstance(row, Mapping) else 0.0
     )
@@ -15172,7 +15169,7 @@ def _first_damaging_ability_event(
                 if positive:
                     first = min(
                         positive,
-                        key=lambda event: float(event["time"]),
+                        key=_row_time,
                     )
                     event_time = _finite_numeric_receipt(first.get("time"))
                     if event_time is not None:

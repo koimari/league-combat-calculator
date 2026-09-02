@@ -31,11 +31,7 @@ from .interpreters import (
 )
 from .item_coverage import target_build_coverage
 from .item_effects import validate_item_input_options
-from .loadout_rules import (
-    required_boots_tier,
-    role_quest_legal_items,
-    role_scoped_shop_items,
-)
+from .loadout_rules import role_quest_legal_items, role_scoped_shop_items
 from .optimizer import (
     get_eligible_boots,
     get_eligible_legendaries,
@@ -54,6 +50,7 @@ from .program.views import (
 )
 from .public_response import https_icon
 from .request_parsing import request_int, request_string
+from .role_quests import required_boots_tier
 from .scenario import (
     MAX_LOADOUT_ITEMS,
     ChampionLoadout,

@@ -336,8 +336,162 @@ def _weekly_gate(week_results: Sequence[dict]) -> str:
 # pylint: disable=too-many-locals,too-many-branches,too-many-statements
 # The gate composes four independent weekly criteria into one scorecard; the
 # verbatim computation is moved from the operator CLI (scripts/beta_metrics.py).
+
+
+def _source_counts(db_module: Any, start: datetime, end: datetime) -> dict[str, int]:
+    """Row counts of every persisted source inside the window."""
+
+    def _count_rows(model):
+        with db_module.session() as db_session:
+            statement = select(model.id).where(
+                model.created_at >= start, model.created_at <= end
+            )
+            return len(db_session.execute(statement).scalars().all())
+
+    return {
+        "builds": _count_rows(db_module.Build),
+        "shares": _count_rows(db_module.ShareLink),
+        "feedback": _count_rows(db_module.ValidationFeedback),
+        "metrics_events": _count_rows(db_module.MetricsEvent),
+    }
+
+
+def _retention_section(
+    timeline: Any,
+    windows: Sequence[tuple[datetime, datetime]],
+    beta_start: datetime,
+    effective_end: datetime,
+    now: datetime,
+) -> tuple[dict, list[dict], str]:
+    """The retention criterion: overall metrics, its weekly rows and its gate."""
+    overall = _retention_metrics(timeline, beta_start, effective_end, now)
+    weeks = []
+    for index, (wk_start, wk_end) in enumerate(windows, start=1):
+        metrics = _retention_metrics(timeline, wk_start, wk_end, now)
+        complete = now >= wk_end
+        weeks.append(
+            {
+                "week": index,
+                "complete": complete,
+                "status": metrics["status"] if complete else "insufficient_data",
+                "value": metrics["value"],
+                "numerator": metrics["numerator"],
+                "denominator": metrics["denominator"],
+            }
+        )
+    status = overall["status"]
+    gate = (
+        "pass"
+        if status == "pass"
+        else "fail" if status == "fail" else "insufficient_data"
+    )
+    return overall, weeks, gate
+
+
+def _receipt_weeks(
+    db_module: Any, windows: Sequence[tuple[datetime, datetime]], now: datetime
+) -> list[dict]:
+    """Validation receipts per week against ``RECEIPTS_PER_WEEK``."""
+    weeks = []
+    for index, (wk_start, wk_end) in enumerate(windows, start=1):
+        count = _receipt_count(db_module, wk_start, min(now, wk_end))
+        complete = now >= wk_end
+        weeks.append(
+            {
+                "week": index,
+                "complete": complete,
+                "count": count,
+                "status": (
+                    ("pass" if count >= RECEIPTS_PER_WEEK else "fail")
+                    if complete
+                    else "insufficient_data"
+                ),
+            }
+        )
+    return weeks
+
+
+def _bias_weeks(
+    db_module: Any, windows: Sequence[tuple[datetime, datetime]], now: datetime
+) -> list[dict]:
+    """Champions the bias scan flags, per week, against ``BIAS_FLAGGED_MAX``."""
+    weeks = []
+    for index, (_wk_start, wk_end) in enumerate(windows, start=1):
+        flagged = _bias_flagged_count(db_module, min(now, wk_end))
+        complete = now >= wk_end
+        weeks.append(
+            {
+                "week": index,
+                "complete": complete,
+                "flagged": flagged,
+                "status": (
+                    ("pass" if flagged <= BIAS_FLAGGED_MAX else "fail")
+                    if complete
+                    else "insufficient_data"
+                ),
+            }
+        )
+    return weeks
+
+
+def _staleness_weeks(
+    report: dict | None,
+    checked_at: datetime | None,
+    windows: Sequence[tuple[datetime, datetime]],
+    now: datetime,
+) -> list[dict]:
+    """The staleness report's verdict per week."""
+    weeks = []
+    for index, (wk_start, wk_end) in enumerate(windows, start=1):
+        complete = now >= wk_end
+        # The final week is judged at the evaluation moment so a report
+        # refreshed on the last day is not misread as post-beta.
+        week_end = now if index == len(windows) else min(now, wk_end)
+        result = _staleness_week(report, checked_at, wk_start, wk_end, week_end)
+        weeks.append(
+            {
+                "week": index,
+                "complete": complete,
+                "status": result["status"] if complete else "insufficient_data",
+                "detail": result["detail"],
+            }
+        )
+    return weeks
+
+
+def _gate_status(gates: Mapping[str, str], beta_complete: bool) -> str:
+    """fail beats pending beats pass; pending until the beta is over."""
+    if "fail" in gates.values():
+        return "fail"
+    if not beta_complete or any(
+        status in {"at_risk", "insufficient_data"} for status in gates.values()
+    ):
+        return "pending"
+    return "pass"
+
+
+def _staleness_detail(
+    report: dict | None, checked_at: datetime | None, age_hours: float | None
+) -> str:
+    """The one-line reading of the staleness report's age."""
+    if report is None:
+        return "no staleness report on disk"
+    if checked_at is None:
+        return "staleness report missing checked_at"
+    if age_hours is not None and age_hours <= STALE_MAX_HOURS:
+        return f"staleness report {age_hours:.1f}h old"
+    return f"staleness report {age_hours:.1f}h old (SLA {STALE_MAX_HOURS}h)"
+
+
+def _cache_context(db_module: Any) -> dict:
+    """The result cache's stats, or the reason they are unavailable."""
+    try:
+        return db_module.cache_stats()
+    except Exception:  # pylint: disable=broad-exception-caught
+        return {"error": "cache stats unavailable"}
+
+
 def compute_scorecard(
-    *,
     now: datetime | None = None,
     beta_start: datetime | None = None,
     weeks: int = 2,
@@ -371,157 +525,36 @@ def compute_scorecard(
     report = _staleness_report(report_path)
     checked_at = _checked_at_naive(report)
 
-    # --- data sources -----------------------------------------------------
     all_rows = _activity_rows(db_module, beta_start, effective_end)
     timeline = _session_timeline(all_rows)
     rows_without_id = sum(1 for session_id, _ in all_rows if not session_id)
-
-    def _count_rows(model, start, end):
-        with db_module.session() as db_session:
-            statement = select(model.id).where(
-                model.created_at >= start, model.created_at <= end
-            )
-            return len(db_session.execute(statement).scalars().all())
-
-    source_counts = {
-        "builds": _count_rows(db_module.Build, beta_start, effective_end),
-        "shares": _count_rows(db_module.ShareLink, beta_start, effective_end),
-        "feedback": _count_rows(
-            db_module.ValidationFeedback, beta_start, effective_end
-        ),
-        "metrics_events": _count_rows(
-            db_module.MetricsEvent, beta_start, effective_end
-        ),
-    }
+    source_counts = _source_counts(db_module, beta_start, effective_end)
     receipts_total = _receipt_count(db_module, beta_start, effective_end)
 
-    # --- retention --------------------------------------------------------
-    retention_overall = _retention_metrics(timeline, beta_start, effective_end, now)
-    retention_weeks = []
-    for index, (wk_start, wk_end) in enumerate(windows, start=1):
-        metrics = _retention_metrics(timeline, wk_start, wk_end, now)
-        complete = now >= wk_end
-        retention_weeks.append(
-            {
-                "week": index,
-                "complete": complete,
-                "status": metrics["status"] if complete else "insufficient_data",
-                "value": metrics["value"],
-                "numerator": metrics["numerator"],
-                "denominator": metrics["denominator"],
-            }
-        )
-    retention_status = retention_overall["status"]
-    retention_gate = (
-        "pass"
-        if retention_status == "pass"
-        else "fail" if retention_status == "fail" else "insufficient_data"
+    retention_overall, retention_weeks, retention_gate = _retention_section(
+        timeline, windows, beta_start, effective_end, now
     )
-
-    # --- receipts ---------------------------------------------------------
-    receipt_weeks = []
-    for index, (wk_start, wk_end) in enumerate(windows, start=1):
-        wk_end_eff = min(now, wk_end)
-        count = _receipt_count(db_module, wk_start, wk_end_eff)
-        complete = now >= wk_end
-        receipt_weeks.append(
-            {
-                "week": index,
-                "complete": complete,
-                "count": count,
-                "status": (
-                    ("pass" if count >= RECEIPTS_PER_WEEK else "fail")
-                    if complete
-                    else "insufficient_data"
-                ),
-            }
-        )
-    receipts_gate = _weekly_gate(receipt_weeks)
-
-    # --- bias -------------------------------------------------------------
-    bias_weeks = []
-    for index, (_wk_start, wk_end) in enumerate(windows, start=1):
-        wk_end_eff = min(now, wk_end)
-        flagged = _bias_flagged_count(db_module, wk_end_eff)
-        complete = now >= wk_end
-        bias_weeks.append(
-            {
-                "week": index,
-                "complete": complete,
-                "flagged": flagged,
-                "status": (
-                    ("pass" if flagged <= BIAS_FLAGGED_MAX else "fail")
-                    if complete
-                    else "insufficient_data"
-                ),
-            }
-        )
-    bias_current = bias_weeks[-1]["flagged"] if bias_weeks else 0
-    bias_gate = _weekly_gate(bias_weeks)
-
-    # --- staleness --------------------------------------------------------
-    staleness_weeks = []
-    for index, (wk_start, wk_end) in enumerate(windows, start=1):
-        complete = now >= wk_end
-        # The final week is judged at the evaluation moment so a report
-        # refreshed on the last day is not misread as post-beta.
-        week_end = now if index == len(windows) else min(now, wk_end)
-        result = _staleness_week(
-            report, checked_at, wk_start, wk_end, effective_end=week_end
-        )
-        staleness_weeks.append(
-            {
-                "week": index,
-                "complete": complete,
-                "status": result["status"] if complete else "insufficient_data",
-                "detail": result["detail"],
-            }
-        )
-    staleness_gate = _weekly_gate(staleness_weeks)
-
-    # --- overall gate -----------------------------------------------------
-    beta_complete = now >= beta_end
+    receipt_weeks = _receipt_weeks(db_module, windows, now)
+    bias_weeks = _bias_weeks(db_module, windows, now)
+    staleness_weeks = _staleness_weeks(report, checked_at, windows, now)
     gates = {
         "retention": retention_gate,
-        "receipts": receipts_gate,
-        "bias": bias_gate,
-        "staleness": staleness_gate,
+        "receipts": _weekly_gate(receipt_weeks),
+        "bias": _weekly_gate(bias_weeks),
+        "staleness": _weekly_gate(staleness_weeks),
     }
-    if "fail" in gates.values():
-        gate_status = "fail"
-    elif not beta_complete or any(
-        status in {"at_risk", "insufficient_data"} for status in gates.values()
-    ):
-        gate_status = "pending"
-    else:
-        gate_status = "pass"
+    beta_complete = now >= beta_end
+    gate_status = _gate_status(gates, beta_complete)
 
-    # --- cache context ----------------------------------------------------
-    cache = {}
-    try:
-        cache = db_module.cache_stats()
-    except Exception:  # pylint: disable=broad-exception-caught
-        cache = {"error": "cache stats unavailable"}
-
+    cache = _cache_context(db_module)
     age_hours = (
         round((now - checked_at).total_seconds() / 3600.0, 2)
         if checked_at is not None
         else None
     )
-    if report is None:
-        staleness_current_detail = "no staleness report on disk"
-    elif checked_at is None:
-        staleness_current_detail = "staleness report missing checked_at"
-    elif age_hours is not None and age_hours <= STALE_MAX_HOURS:
-        staleness_current_detail = f"staleness report {age_hours:.1f}h old"
-    else:
-        staleness_current_detail = (
-            f"staleness report {age_hours:.1f}h old (SLA {STALE_MAX_HOURS}h)"
-        )
-
     missed_weeks = {
-        name: sum(1 for week in weeks if week["status"] == "fail")
-        for name, weeks in (
+        name: sum(1 for week in week_rows if week["status"] == "fail")
+        for name, week_rows in (
             ("receipts", receipt_weeks),
             ("bias", bias_weeks),
             ("staleness", staleness_weeks),
@@ -555,15 +588,15 @@ def compute_scorecard(
                 "weeks": retention_weeks,
             },
             "receipts": {
-                "status": receipts_gate,
+                "status": gates["receipts"],
                 "value": receipts_total,
                 "threshold": RECEIPTS_PER_WEEK,
                 "detail": "validation receipts (delta != NULL) per week",
                 "weeks": receipt_weeks,
             },
             "bias": {
-                "status": bias_gate,
-                "value": bias_current,
+                "status": gates["bias"],
+                "value": bias_weeks[-1]["flagged"] if bias_weeks else 0,
                 "threshold": BIAS_FLAGGED_MAX,
                 "detail": (
                     "champions flagged by the systematic-bias scan "
@@ -572,10 +605,10 @@ def compute_scorecard(
                 "weeks": bias_weeks,
             },
             "staleness": {
-                "status": staleness_gate,
+                "status": gates["staleness"],
                 "value_hours": age_hours,
                 "threshold_hours": STALE_MAX_HOURS,
-                "detail": staleness_current_detail,
+                "detail": _staleness_detail(report, checked_at, age_hours),
                 "report": {
                     "exists": report is not None,
                     "patch": report.get("patch") if report else None,

@@ -358,6 +358,12 @@ class StackRule:
     cap_behavior: CapBehavior = "noop"
     combat_extension_seconds: float = 0.0
     payload: Mapping[str, Any] = field(default_factory=dict)
+
+    @property
+    def per_stack_timers(self) -> bool:
+        """``refresh="none"``: every stack expires on its own clock."""
+        return self.refresh == "none"
+
     source: SourceReceipt | None = None
 
     def validate(self) -> None:
@@ -509,7 +515,7 @@ class TimedStackState:
         return self._timeline
 
     def _expires_at(self) -> float | None:
-        if self.rule.refresh == "none":
+        if self.rule.per_stack_timers:
             if not self._entries:
                 return None
             return min(entry.gained_at for entry in self._entries) + (
@@ -527,7 +533,7 @@ class TimedStackState:
         out: list[Transition] = []
         if self._is_frozen(time) or not self._entries:
             return out
-        if self.rule.refresh == "none":
+        if self.rule.per_stack_timers:
             # Per-stack timers: each stack dies 1 duration after its own
             # gain, oldest first.
             while self._entries:
@@ -755,7 +761,7 @@ class TimedStackState:
             after = self.stacks
             expires_at = self._shared_deadline
             transition_kind: TransitionKind = "replace"
-        elif self.rule.refresh == "none":
+        elif self.rule.per_stack_timers:
             self._entries.append(_StackEntry(time, kind or "trigger"))
             self._last_gain_time = time
             after = self.stacks
@@ -1318,9 +1324,8 @@ class InstanceCadence:
     def allow(self, time: float, instance: str | None) -> bool:
         """Whether a trigger for *instance* may proceed at *time*.
 
-        A consumed instance is recorded here; the caller must NOT retry
-        the same instance later (matches Fimbulwinter's seen-casts
-        consumption semantics).
+        An allowed instance is recorded here, so a repeat of it is judged
+        against that record (Fimbulwinter's seen-casts consumption).
         """
         if instance is None:
             return True

@@ -18,6 +18,10 @@ from src.rate_limit import TokenBucketStore
 from tests.app_config import app_config
 
 
+def _empty_optimizer_result(**_kwargs):
+    return {"items": [], "total_damage": 0.0}
+
+
 @pytest.fixture(autouse=True)
 def _disable_rate_limits_between_route_tests():
     """Only dedicated tests spend the production abuse-control budget."""
@@ -923,7 +927,7 @@ def test_optimizer_global_bucket_returns_json_429(monkeypatch, tmp_path):
     monkeypatch.setattr(
         app_module,
         "optimize_build",
-        lambda **_kwargs: {"items": [], "total_damage": 0.0},
+        _empty_optimizer_result,
     )
     monkeypatch.setattr(
         app_module,
@@ -2469,7 +2473,7 @@ def test_optimize_accepts_standard_slot_counts(monkeypatch, slot_count):
     monkeypatch.setattr(
         app_module,
         "optimize_build",
-        lambda **_kwargs: {"items": [], "total_damage": 0.0},
+        _empty_optimizer_result,
     )
 
     payload = {"champion": "Ahri", "level": 18, "max_legendary_slots": slot_count}
@@ -2938,7 +2942,7 @@ def test_attacker_above_level_18_requires_completed_top_quest(monkeypatch):
     monkeypatch.setattr(
         app_module,
         "optimize_build",
-        lambda **_kwargs: {"items": [], "total_damage": 0.0},
+        _empty_optimizer_result,
     )
     client = app_module.app.test_client()
 

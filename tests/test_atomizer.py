@@ -25,7 +25,7 @@ def _item(name):
     return next(v for v in fetch_item_data().values() if v.get("name") == name)
 
 
-def test_atom_contract_fields():
+def _bolt_atoms() -> list[dict]:
     a = Atomizer("items", source_ref="Test")
     a.add(
         "damage.magic",
@@ -36,7 +36,11 @@ def test_atom_contract_fields():
         units=["flat"],
         evidence=["kw:magic damage"],
     )
-    emitted = a.emit()
+    return a.emit()
+
+
+def test_atom_contract_fields():
+    emitted = _bolt_atoms()
     assert len(emitted) == 1
     atom = emitted[0]
     for key in (
@@ -50,7 +54,7 @@ def test_atom_contract_fields():
         "hash",
     ):
         assert key in atom, key
-    assert atom["hash"] == atom["hash"]  # deterministic
+    assert atom["hash"] == _bolt_atoms()[0]["hash"]  # deterministic
     assert atom["evidence"] == ["kw:magic damage"]
 
 

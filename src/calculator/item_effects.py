@@ -1542,10 +1542,7 @@ def item_state_receipts(
             "Guardian Angel",
             "rebirth",
             revived=True,
-            revive_health_restored=(
-                float(required_effect_value("Guardian Angel", "revive_health_ratio"))
-                * base_health
-            ),
+            revive_health_restored=declaration["revive_health_ratio"] * base_health,
             revive_delay=declaration["revive_delay"],
             revive_cooldown=declaration["revive_cooldown"],
             one_use=bool(required_effect_value("Guardian Angel", "one_use")),
@@ -4058,7 +4055,6 @@ def fimbulwinter_mana_gate_authority() -> dict[str, Any]:
     direct source supplies it.
     """
     status = str(required_effect_value("Fimbulwinter", "everlasting_mana_gate_status"))
-    source = ITEM_INPUT_OPTIONS["Fimbulwinter"]
     if status not in AUTHORIZED_MANA_GATE_STATUSES:
         if status != "source_unavailable":
             raise ValueError(
@@ -4072,8 +4068,6 @@ def fimbulwinter_mana_gate_authority() -> dict[str, Any]:
             "current_mana_term": None,
             "maximum_mana_term": None,
             "manaless_behavior": None,
-            "source_url": source["source_url"],
-            "source_revision_id": source["source_revision_id"],
         }
     return {
         "status": status,
@@ -4084,8 +4078,6 @@ def fimbulwinter_mana_gate_authority() -> dict[str, Any]:
         "current_mana_term": "post_cast_current_mana",
         "maximum_mana_term": "holder_maximum_mana",
         "manaless_behavior": "deny",
-        "source_url": source["source_url"],
-        "source_revision_id": source["source_revision_id"],
     }
 
 
@@ -4125,9 +4117,7 @@ def fimbulwinter_nearby_enemy_range_authority() -> dict[str, Any]:
             "Fimbulwinter Everlasting range boundary status must be "
             f"'source_unavailable', got {boundary_status!r}"
         )
-    source = ITEM_INPUT_OPTIONS["Fimbulwinter"]
     return {
-        "status": "source_authorized",
         "range_units": range_units,
         "minimum_enemy_count": minimum_count,
         "multiplier": multiplier,
@@ -4138,10 +4128,7 @@ def fimbulwinter_nearby_enemy_range_authority() -> dict[str, Any]:
             required_effect_value("Fimbulwinter", "everlasting_range_target_kind")
         ),
         "boundary_status": boundary_status,
-        "boundary_operator": None,
         "spatial_input_status": "spatial_input_unavailable",
-        "source_url": source["source_url"],
-        "source_revision_id": source["source_revision_id"],
     }
 
 
@@ -5691,7 +5678,7 @@ def hubris_eminence_bonus_ad(
     """Return Eminence's sourced temporary bonus AD for explicit kill state."""
     if item_name not in ITEM_EFFECTS:
         raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing")
-    if isinstance(stacks, bool) or not isinstance(stacks, int) or stacks < 0:
+    if isinstance(stacks, bool) or stacks < 0:
         raise ValueError("Hubris Eminence stacks must be a non-negative integer")
     if not active:
         return 0.0
@@ -5734,7 +5721,7 @@ def yun_tal_permanent_crit_chance(
     """Return Practice Makes Lethal's bounded permanent crit chance."""
     if item_name not in ITEM_EFFECTS:
         raise KeyError(f"ITEM_EFFECTS[{item_name!r}] is missing")
-    if isinstance(stacks, bool) or not isinstance(stacks, int) or stacks < 0:
+    if isinstance(stacks, bool) or stacks < 0:
         raise ValueError("Yun Tal stacks must be a non-negative integer")
     suffix = "melee" if is_melee else "ranged"
     per_stack = required_effect_value(item_name, f"crit_chance_per_stack_{suffix}")

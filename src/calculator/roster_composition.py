@@ -72,21 +72,6 @@ class Combatant:  # pylint: disable=too-many-instance-attributes
     request: ActorRequest = field(default_factory=ActorRequest)
     is_practice_dummy: bool = False
 
-    def __post_init__(self) -> None:
-        # Every walk-side consumer reads ``defenses`` and ``request`` by
-        # direct attribute, so a stand-in object is refused here, by
-        # name, not on its first read.
-        if not isinstance(self.defenses, StartingDefenses):
-            raise TypeError(
-                f"{self.participant_id}: defenses must be a StartingDefenses, "
-                f"not {type(self.defenses).__name__}"
-            )
-        if not isinstance(self.request, ActorRequest):
-            raise TypeError(
-                f"{self.participant_id}: request must be an ActorRequest, "
-                f"not {type(self.request).__name__}"
-            )
-
 
 def coalesce_darius_q_heals(
     healing: MutableMapping[str, list[dict[str, Any]]],

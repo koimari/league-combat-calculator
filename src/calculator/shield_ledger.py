@@ -230,7 +230,8 @@ def grant(
 
     Every shield a fight hands out enters the pools here, so the pool total
     and its expiry sub-ledger can never disagree."""
-    _set_pool(pools, pool, _pool(pools, pool) + amount)
+    remaining, absorbed = _read_pool(pools, pool)
+    _write_pool(pools, pool, remaining + amount, absorbed)
     if expires_at is not None:
         pools.timed.append(
             TimedShield(amount=amount, expires_at=expires_at, pool=pool, source=source)
@@ -249,7 +250,8 @@ def expire_timed(pools: ShieldPools, event_time: float) -> float:
             continue
         amount = max(0.0, shield.amount)
         if amount > 0.0:
-            _set_pool(pools, shield.pool, max(0.0, _pool(pools, shield.pool) - amount))
+            remaining, absorbed = _read_pool(pools, shield.pool)
+            _write_pool(pools, shield.pool, max(0.0, remaining - amount), absorbed)
             pools.shield_expired += amount
             expired_total += amount
     pools.timed = surviving
@@ -503,7 +505,7 @@ def _drain(pools: ShieldPools, pool: str, remaining: float) -> float:
     than to the pool the grant sits in, so the two stay separately reportable
     and the grand total counts each unit exactly once.
     """
-    total = _pool(pools, pool)
+    total, credited = _read_pool(pools, pool)
     absorbed = 0.0
     for shield in sorted(pools.timed, key=lambda entry: entry.expires_at):
         if shield.pool != pool:
@@ -519,33 +521,39 @@ def _drain(pools: ShieldPools, pool: str, remaining: float) -> float:
         if shield.source == LIFELINE:
             pools.threshold_absorbed += used
         else:
-            _credit_pool(pools, pool, used)
+            credited += used
         if remaining <= 1e-9:
             break
     if remaining > 0.0:
         used = min(total, remaining)
         total -= used
         absorbed += used
-        _credit_pool(pools, pool, used)
-    _set_pool(pools, pool, total)
+        credited += used
+    _write_pool(pools, pool, total, credited)
     pools.timed = [shield for shield in pools.timed if shield.amount > 1e-9]
     return absorbed
 
 
-def _pool(pools: ShieldPools, pool: str) -> float:
-    """Read one pool total by name, failing closed on an unknown pool."""
-    if pool not in POOLS:
+def _read_pool(pools: ShieldPools, pool: str) -> tuple[float, float]:
+    """One pool's ``(remaining, absorbed)`` counters, failing closed on an unknown pool."""
+    if pool == PHYSICAL:
+        return pools.physical_shield, pools.physical_absorbed
+    if pool == MAGIC:
+        return pools.magic_shield, pools.magic_absorbed
+    if pool == GENERAL:
+        return pools.general_shield, pools.general_absorbed
+    raise ValueError(f"shield_ledger: unknown pool {pool!r}")
+
+
+def _write_pool(
+    pools: ShieldPools, pool: str, remaining: float, absorbed: float
+) -> None:
+    """Store one pool's ``(remaining, absorbed)`` counters."""
+    if pool == PHYSICAL:
+        pools.physical_shield, pools.physical_absorbed = remaining, absorbed
+    elif pool == MAGIC:
+        pools.magic_shield, pools.magic_absorbed = remaining, absorbed
+    elif pool == GENERAL:
+        pools.general_shield, pools.general_absorbed = remaining, absorbed
+    else:
         raise ValueError(f"shield_ledger: unknown pool {pool!r}")
-    return getattr(pools, f"{pool}_shield")
-
-
-def _set_pool(pools: ShieldPools, pool: str, amount: float) -> None:
-    """Write one pool total by name, failing closed on an unknown pool."""
-    if pool not in POOLS:
-        raise ValueError(f"shield_ledger: unknown pool {pool!r}")
-    setattr(pools, f"{pool}_shield", amount)
-
-
-def _credit_pool(pools: ShieldPools, pool: str, amount: float) -> None:
-    """Add to one pool's reported absorption total."""
-    setattr(pools, f"{pool}_absorbed", getattr(pools, f"{pool}_absorbed") + amount)

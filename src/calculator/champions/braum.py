@@ -37,7 +37,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from ..damage import effective_cooldown
+from ..stats import effective_cooldown
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option
 from .slotlib import (

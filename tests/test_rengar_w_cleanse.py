@@ -862,8 +862,6 @@ class TestFerocityCondition:
         result = _fight({"p_ferocity": 4}, one_rotation=True, cast_order=["W"])
         (w_cast,) = [c for c in result["cast_timeline"] if c["slot"] == "W"]
         assert w_cast["time"] == pytest.approx(0.0)
-        _app_combat({"p_ferocity": 4}, duration=10.0)
-        assert True  # contract below needs the app-level W-first rotation
 
     def test_empowered_w_cleanse_fires_timed(self):
         # P2-6 contract: in the 22s seed-4 fight the live walk marks W@10

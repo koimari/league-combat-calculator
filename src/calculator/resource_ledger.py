@@ -250,10 +250,6 @@ class ResourceAccount:
     def bonus_maximum(self) -> float:
         return self._maximum - self._base_maximum
 
-    @property
-    def regen_per_second(self) -> float:
-        return self._regen_per_second
-
     # ── typed operations ───────────────────────────────────────────────────
     def apply(self, event: ResourceEvent) -> ResourceReceipt:
         """Apply one typed operation and return its receipt."""
@@ -394,7 +390,7 @@ class TearDeclaration:
                 raise ValueError(f"TearDeclaration.{name} must be finite")
             if float(value) <= 0.0:
                 raise ValueError(f"TearDeclaration.{name} must be positive")
-        if not isinstance(self.max_charges, int) or self.max_charges < 1:
+        if self.max_charges < 1:
             raise ValueError(
                 f"TearDeclaration.max_charges must be an int >= 1, got "
                 f"{self.max_charges!r}"
@@ -488,7 +484,7 @@ class TearManaflow:
         self,
         *,
         time: float,
-        hit_identity: str,
+        hit_identity: str | None,
         target_kind: str = "champion",
         sequence: int = 0,
         tier: float = TIER_RESTORE,
@@ -505,7 +501,7 @@ class TearManaflow:
         if float(time) < 0.0:
             raise ValueError(f"time must be non-negative, got {time!r}")
         self._last_time = max(self._last_time, float(time))
-        if not isinstance(hit_identity, str) or not hit_identity.strip():
+        if not hit_identity or not hit_identity.strip():
             return (
                 self._receipt(
                     time=time,
@@ -648,7 +644,7 @@ class EnlightenDeclaration:
                 raise ValueError(f"EnlightenDeclaration.{name} must be finite")
             if float(value) <= 0.0:
                 raise ValueError(f"EnlightenDeclaration.{name} must be positive")
-        if not isinstance(self.ticks, int) or self.ticks < 1:
+        if self.ticks < 1:
             raise ValueError(
                 f"EnlightenDeclaration.ticks must be an int >= 1, got {self.ticks!r}"
             )

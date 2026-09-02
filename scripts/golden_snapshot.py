@@ -290,7 +290,7 @@ def snapshot_champion_baselines(
 
 
 def _resolve_build(
-    requested_names: list[str],
+    requested_names: Iterable[str],
     items_by_name: Mapping[str, dict[str, Any]],
     substitutions: list[dict[str, str | None]],
 ) -> list[dict[str, Any]]:
@@ -306,7 +306,7 @@ def _resolve_build(
 
 
 def snapshot_registered_fights(
-    champions: dict[str, Any],
+    champions: Mapping[str, Any],
     items_by_name: Mapping[str, dict[str, Any]],
     substitutions: list[dict[str, str | None]],
 ) -> dict[str, dict[str, Any]]:
@@ -356,7 +356,7 @@ def snapshot_registered_fights(
 
 
 def snapshot_keystone_fights(
-    champions: dict[str, Any],
+    champions: Mapping[str, Any],
     items_by_name: Mapping[str, dict[str, Any]],
     substitutions: list[dict[str, str | None]],
 ) -> dict[str, dict[str, Any]]:
@@ -414,7 +414,7 @@ def _sweep_entry(champion_data, item, **fight_kwargs):
 
 
 def snapshot_item_sweep(
-    champions: dict[str, Any], items: dict[str, Any]
+    champions: Mapping[str, Any], items: Mapping[str, Any]
 ) -> dict[str, dict[str, Any]]:
     """Section 3: every item, alone, at level 11, in two arms.
 
@@ -751,7 +751,7 @@ def _identity_index(members):
     return _index(members, _identity)
 
 
-def _identity_keyed_diffs(path, old, new, out):
+def _identity_keyed_diffs(path: str, old, new, out):
     """Diff two identity-bearing lists by identity, never by list position.
 
     A member both sides hold is compared field by field under the *baseline's*
@@ -837,7 +837,7 @@ def _leaf_diffs(path: str, old, new, out, *, identity=None):
         out.append(_leaf_diff(path, old, new, identity))
 
 
-def _leaf_diff(path, old, new, identity=None):
+def _leaf_diff(path: str, old, new, identity=None):
     transition, abs_delta, percent = _classify(old, new)
     return LeafDiff(
         path=path,
@@ -1612,13 +1612,14 @@ def _swing_pricing_functions():
     added to a fourth helper has to arrive at the guard on the commit that
     adds it rather than on the commit somebody notices.
     """
-    getattr(damage, SWING_PRICING_ENTRY)  # a rename is an error, not a silence
     module = ast.parse(inspect.getsource(damage))
     defined = {
         node.name: node
         for node in module.body
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
     }
+    if SWING_PRICING_ENTRY not in defined:
+        raise RuntimeError(f"damage.{SWING_PRICING_ENTRY} was renamed; move the entry")
     reached, pending = {}, [SWING_PRICING_ENTRY]
     while pending:
         name = pending.pop()
