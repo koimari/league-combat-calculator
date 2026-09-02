@@ -45,6 +45,7 @@ from .item_effects import (
     ITEM_INPUT_OPTIONS,
     fimbulwinter_mana_gate_authority,
     fimbulwinter_nearby_enemy_range_authority,
+    manaflow_declaration,
     required_effect_value,
 )
 
@@ -969,43 +970,40 @@ def derive_item_support_effects(
         ward.declared(PacketKind.VISION)
         packets.extend(_support_quest_packets(attacker, shared_riches, ward))
 
-    # Tear of the Goddess — Manaflow packets are a PROJECTION of the typed
-    # mana resource ledger (P3 slice 1): the fight engine admits casts
-    # through ``resource_ledger``, records every PROVEN accepted eligible
-    # hit (a denied cast can never trigger Tear, and a missing hit identity
+    # Manaflow packets are a PROJECTION of the typed mana resource ledger
+    # (P3 slice 1): the fight engine admits casts through
+    # ``resource_ledger``, records every PROVEN accepted eligible hit (a
+    # denied cast can never trigger Manaflow, and a missing hit identity
     # fails closed), and applies each granted bonus max-mana to the same
     # account.  This layer only shapes the accepted hit receipts into the
     # public kind="resource" packet schema.  It never recomputes cadence,
-    # charges, or caps.  A fight result
-    # without a ledger section has no Manaflow activity by construction, and
-    # that section IS the guard: damage._tear_manaflow_for builds one for no
-    # other holder, so this branch asks the typed ledger whether Manaflow ran
-    # instead of asking the build for an item name (A3).
+    # charges, or caps.  A fight result without a ledger section has no
+    # Manaflow activity by construction, and that section IS the guard: it
+    # names its own holder, so this branch asks the typed ledger which item
+    # ran instead of asking the build for a name (A3).
     ledger_section = result.get("resource_ledger")
-    tear = ledger_section.get("tear") if isinstance(ledger_section, Mapping) else None
-    if isinstance(tear, Mapping):
-        interval = required_effect_value(
-            "Tear of the Goddess", "manaflow_charge_interval"
-        )
-        max_charges = max(
-            1,
-            int(required_effect_value("Tear of the Goddess", "manaflow_max_charges")),
-        )
-        per_trigger = required_effect_value(
-            "Tear of the Goddess", "manaflow_bonus_mana_per_trigger"
-        )
-        per_champion = required_effect_value(
-            "Tear of the Goddess", "manaflow_bonus_mana_per_champion"
-        )
-        mana_cap = required_effect_value(
-            "Tear of the Goddess", "manaflow_bonus_mana_max"
-        )
-        source_meta = ITEM_INPUT_OPTIONS["Tear of the Goddess"]
-        authored_mana = max(
-            0.0, _option(attacker, "Tear of the Goddess", "manaflow_bonus_mana")
-        )
+    manaflow = (
+        ledger_section.get("manaflow") if isinstance(ledger_section, Mapping) else None
+    )
+    if isinstance(manaflow, Mapping):
+        declaration = manaflow.get("declaration")
+        if not isinstance(declaration, Mapping):
+            raise ValueError(
+                "a Manaflow ledger section carries no declaration, so its "
+                "holder cannot be named"
+            )
+        holder = str(declaration["item"])
+        sourced = manaflow_declaration(holder)
+        interval = sourced["charge_interval"]
+        max_charges = max(1, sourced["max_charges"])
+        per_trigger = sourced["bonus_mana_per_trigger"]
+        per_champion = sourced["bonus_mana_per_champion"]
+        mana_cap = sourced["bonus_mana_max"]
+        authored_mana = max(0.0, _option(attacker, holder, "manaflow_bonus_mana"))
         for hit in (
-            tear.get("hits", ()) if isinstance(tear.get("hits"), Iterable) else ()
+            manaflow.get("hits", ())
+            if isinstance(manaflow.get("hits"), Iterable)
+            else ()
         ):
             if not isinstance(hit, Mapping):
                 continue
@@ -1043,7 +1041,7 @@ def derive_item_support_effects(
                     target=attacker,
                     time=hit_time,
                     kind=PacketKind.RESOURCE.value,
-                    source="Tear of the Goddess — Manaflow",
+                    source=f"{holder} — Manaflow",
                     amount=grant,
                     target_scope="self",
                     bonus_mana_total=max(0.0, ledger_total - authored_capped),
@@ -1056,8 +1054,8 @@ def derive_item_support_effects(
                     trigger_kind="ability_cast_vs_champion",
                     charge_accrued_at=(use_count - 1) * interval,
                     rank=TransitionRank.BARRIER_GRANT,
-                    source_url=source_meta["source_url"],
-                    source_revision_id=source_meta["source_revision_id"],
+                    source_url=sourced["source_url"],
+                    source_revision_id=sourced["source_revision_id"],
                 )
             )
 

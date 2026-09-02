@@ -4,6 +4,7 @@ import pytest
 
 from src.calculator import economy
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.item_effects import manaflow_items
 from src.calculator.loadout_rules import (
     ITEM_EXCLUSIVITY_GROUPS,
     exclusivity_groups,
@@ -926,7 +927,12 @@ class TestExclusivityGroupsAccessor:
             "Blight",
             "Fatality",
             "Immolate",
+            "Manaflow",
         }
+
+    def test_manaflow_group_holds_every_charge_ledger_item(self):
+        """One named unique passive, so a build benefits from one holder."""
+        assert exclusivity_groups()["Manaflow"] == sorted(manaflow_items())
 
     def test_glory_group_members(self):
         groups = exclusivity_groups()

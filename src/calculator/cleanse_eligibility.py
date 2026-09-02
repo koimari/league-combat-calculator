@@ -75,7 +75,7 @@ from typing import Any, Protocol
 from .ability_spec import DISPLACEMENT_CC_KINDS
 from .crowd_control_eligibility import KNOWN_CONTROL_KINDS
 from .delivery_eligibility import PacketIdentity, stable_event_key
-from .item_effects import ally_item_effect_value
+from .item_effects import ally_item_effect_value, mercurial_quicksilver_movement
 from .state_lifecycle import SourceReceipt
 
 _EPS = 1e-9
@@ -197,16 +197,12 @@ MIKAELS_HEAL_ATOM: dict[str, Any] = {
     "evidence": ["active:Purify@kw:heal"],
     "hash": "cf9fe930ebd40602",
 }
-MERCURIAL_MOVEMENT_ATOM: dict[str, Any] = {
-    "atom_id": "control.movement_speed",
-    "behavior": "control",
-    "source": "Mercurial Scimitar.actives[0].branches[0]",
-    "name": "Quicksilver",
-    "values": [50.0, 2.0],
-    "units": ["percent", "s"],
-    "evidence": ["active:Quicksilver@kw:movement speed"],
-    "hash": "5e5f100f08a793f9",
-}
+#: Rule 5: Quicksilver's percent and window live in ITEM_EFFECTS, and both
+#: the atom receipt's ``values`` and the declaration below are that one read
+#: — read at import, like Purify's pair, because the entry is code-owned and
+#: refresh-inert (D-47).
+MERCURIAL_MOVEMENT = mercurial_quicksilver_movement()
+MERCURIAL_MOVEMENT_ATOM: dict[str, Any] = MERCURIAL_MOVEMENT["atom"]
 
 
 def _cache_receipt(
@@ -285,8 +281,8 @@ ITEM_CLEANSE_DECLARATIONS: dict[str, dict[str, Any]] = {
         "cooldown_source_gap": True,
         "heal": None,
         "movement": {
-            "amount": 50.0,
-            "duration": 2.0,
+            "amount": MERCURIAL_MOVEMENT["move_speed_percent"],
+            "duration": MERCURIAL_MOVEMENT["duration_seconds"],
             "source": "Mercurial Scimitar — Quicksilver",
             "source_atoms": [dict(MERCURIAL_MOVEMENT_ATOM)],
         },

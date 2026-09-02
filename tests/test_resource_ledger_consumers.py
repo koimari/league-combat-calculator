@@ -15,6 +15,11 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.item_effects import (
+    manaflow_declaration,
+    manaflow_holder,
+    manaflow_items,
+)
 from src.calculator.item_support_effects import derive_item_support_effects
 from src.calculator.pipeline import FightParams, run_fight
 
@@ -59,7 +64,7 @@ def test_tear_hits_consume_banked_charges_and_grow_the_account_maximum():
     items = [get_item_by_name("Tear of the Goddess")]
     result = run_fight(champ, 18, items, _params(duration=24.0))
     ledger = result["resource_ledger"]
-    tear = ledger["tear"]
+    tear = ledger["manaflow"]
 
     # Charges bank at t=0/8/16; the first proven cast after each bank time
     # consumes the charge (E/Q/W/R all carry damage or cc proof).
@@ -94,7 +99,7 @@ def test_tear_denied_cast_never_consumes_a_charge():
         _params(duration=10.0),
     )
     ledger = result["resource_ledger"]
-    tear = ledger["tear"]
+    tear = ledger["manaflow"]
     hits = tear["hits"]
     # Every hit receipt must be tied to an accepted cast: count the
     # accepted spend receipts and compare with hit attempts.
@@ -107,6 +112,59 @@ def test_tear_denied_cast_never_consumes_a_charge():
     assert tear["bonus_total"] <= 24.0
 
 
+@pytest.mark.parametrize("holder", manaflow_items())
+def test_every_manaflow_holder_runs_its_own_charge_ledger(holder):
+    """Issue #230: the ledger's holder comes from the build, not a literal.
+
+    Each of the five prices the fight with its OWN cadence, grant pair,
+    ceiling, wiki receipt and mana atom, and the granted bonus maximum lands
+    on the same account.
+    """
+    sourced = manaflow_declaration(holder)
+    result = run_fight(
+        get_champion("Ahri"), 18, [get_item_by_name(holder)], _params(duration=24.0)
+    )
+    ledger = result["resource_ledger"]
+    flow = ledger["manaflow"]
+    assert flow["declaration"]["item"] == holder
+    assert flow["declaration"]["max_charges"] == sourced["max_charges"]
+    assert flow["declaration"]["bonus_mana_per_champion"] == (
+        sourced["bonus_mana_per_champion"]
+    )
+    assert flow["declaration"]["atom"] == list(sourced["atom"])
+    assert flow["declaration"]["source_revision_id"] == sourced["source_revision_id"]
+
+    accepted = [hit for hit in flow["hits"] if hit["accepted"]]
+    assert accepted
+    assert all(hit["source"] == f"{holder} — Manaflow" for hit in flow["hits"])
+    assert all(
+        hit["bonus_delta"] == sourced["bonus_mana_per_champion"] for hit in accepted
+    )
+    assert flow["bonus_total"] == pytest.approx(
+        len(accepted) * sourced["bonus_mana_per_champion"]
+    )
+    assert ledger["bonus_maximum"] == pytest.approx(flow["bonus_total"])
+
+    actor = _actor("main", (holder,))
+    packets = derive_item_support_effects(actor, result, [actor, _actor("enemy", ())])
+    rows = [p for p in packets if p["source"] == f"{holder} — Manaflow"]
+    assert [p["time"] for p in rows] == [hit["time"] for hit in accepted]
+    assert all(p["source_url"] == sourced["source_url"] for p in rows)
+
+
+def test_a_build_with_no_manaflow_item_runs_no_charge_ledger():
+    result = run_fight(get_champion("Ahri"), 18, [], _params(duration=24.0))
+    assert "manaflow" not in result["resource_ledger"]
+
+
+def test_two_manaflow_holders_are_refused_by_name():
+    """Manaflow is one unique named passive, so two holders is not a build."""
+    with pytest.raises(ValueError) as excinfo:
+        manaflow_holder([{"name": "Manamune"}, {"name": "Tear of the Goddess"}])
+    assert "Manamune" in str(excinfo.value)
+    assert "Tear of the Goddess" in str(excinfo.value)
+
+
 def test_tear_packets_are_projected_from_ledger_hits():
     holder = _actor("main", ("Tear of the Goddess",))
     enemy = _actor("enemy", ())
@@ -116,7 +174,9 @@ def test_tear_packets_are_projected_from_ledger_hits():
     )
     packets = derive_item_support_effects(holder, result, [holder, enemy])
     manaflow = [p for p in packets if p["source"] == "Tear of the Goddess — Manaflow"]
-    accepted = [h for h in result["resource_ledger"]["tear"]["hits"] if h["accepted"]]
+    accepted = [
+        h for h in result["resource_ledger"]["manaflow"]["hits"] if h["accepted"]
+    ]
     assert len(manaflow) == len(accepted)
     assert [p["time"] for p in manaflow] == [h["time"] for h in accepted]
     assert [p["amount"] for p in manaflow] == [6.0] * len(accepted)
@@ -143,7 +203,7 @@ def test_tear_manaflow_maxed_option_emits_no_packets():
             item_options={"Tear of the Goddess": {"manaflow_bonus_mana": 360}},
         ),
     )
-    tear = result["resource_ledger"]["tear"]
+    tear = result["resource_ledger"]["manaflow"]
     assert all(not h["accepted"] for h in tear["hits"])
     assert all(h["reason"] == "cap_reached" for h in tear["hits"])
     packets = derive_item_support_effects(holder, result, [holder, enemy])
@@ -167,7 +227,7 @@ def test_tear_missing_hit_identity_fails_closed_with_receipt():
     result = run_fight(
         champ, 18, [get_item_by_name("Tear of the Goddess")], _params(duration=6.0)
     )
-    for hit in result["resource_ledger"]["tear"]["hits"]:
+    for hit in result["resource_ledger"]["manaflow"]["hits"]:
         if not hit["accepted"]:
             assert hit["hit_identity"]  # identity was proven; denial is pool/cap
         else:
@@ -195,7 +255,7 @@ def test_tear_manaflow_pays_the_fights_own_target_class():
             [get_item_by_name("Tear of the Goddess")],
             _params(duration=20.0, target_class=target_class),
         )
-        tear = result["resource_ledger"]["tear"]
+        tear = result["resource_ledger"]["manaflow"]
         accepted = [hit for hit in tear["hits"] if hit["accepted"]]
         assert accepted
         assert {hit["target_kind"] for hit in accepted} == {target_class}
@@ -396,7 +456,7 @@ def test_tear_plus_lost_chapter_compose_in_one_account():
         ),
     )
     ledger = result["resource_ledger"]
-    assert ledger["tear"]["bonus_total"] == pytest.approx(12.0)  # t=0, t=8
+    assert ledger["manaflow"]["bonus_total"] == pytest.approx(12.0)  # t=0, t=8
     assert ledger["enlighten"]["triggered"] is True
     gains = [r for r in ledger["receipts"] if r["source"] == "Lost Chapter — Enlighten"]
     assert [r["time"] for r in gains] == [2.0, 3.0, 4.0]

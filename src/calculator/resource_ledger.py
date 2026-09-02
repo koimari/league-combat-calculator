@@ -3,13 +3,12 @@
 One account per participant and resource kind owns every mana transition:
 current mana, maximum mana, maximum-mana growth, gain/restore, spend,
 refund, regeneration, caps, stable same-time order, source ownership, and
-public receipts.  Tear of the Goddess (Manaflow) and Lost Chapter
-(Enlighten) are runtime consumers; Catalyst's Eternity restores and
-Essence Reaver's Spellblade restores ride the same account as external
-gain operations, and Eternity's mana-spent heal is a pure projection of
-the account's accepted spend receipts
-(``catalyst_eternity_heal_schedule``) — the cast-admission walk in
-``damage._apply_resource_limits`` is the only driver.
+public receipts.  Manaflow and Lost Chapter (Enlighten) are runtime
+consumers; Catalyst's Eternity and Essence Reaver's Spellblade restores
+ride the same account as external gain operations, and Eternity's
+mana-spent heal is a pure projection of the account's accepted spend
+receipts (``catalyst_eternity_heal_schedule``) — the cast-admission walk
+in ``damage._apply_resource_limits`` is the only driver.
 
 Design rules (HANDOVER §11):
 
@@ -27,7 +26,7 @@ Design rules (HANDOVER §11):
 - Fail closed: unknown resource kind or operation, an event whose owner
   does not match the account, non-finite or negative authored amounts, and
   invalid clamp amounts all raise, naming the offending field.  Unclear
-  runtime rules (an unproven Tear hit) become denial receipts, never
+  runtime rules (an unproven Manaflow hit) become denial receipts, never
   guesses.
 
 The empty string is a valid owner in standalone/kernel use (tests compose
@@ -41,7 +40,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from typing import Any
 
 # Floating-point tolerance shared with the engine walks (1e-9).
@@ -173,7 +172,7 @@ class ResourceAccount:
     ``current`` always stays within ``[0, maximum]``; over-restoration is
     receipted as CAPPED, and a spend beyond the current pool is denied with
     ``insufficient_resource``.  ``maximum`` is the opening maximum plus every
-    accepted ``max_increase`` (Tear's bonus-mana growth); it never goes
+    accepted ``max_increase`` (Manaflow's bonus-mana growth); it never goes
     negative, and a max increase never moves ``current`` (the sourced
     Manaflow rule: the grant is MAX mana, not a restore).
     """
@@ -362,24 +361,27 @@ class ResourceLedger:
 
 
 # ---------------------------------------------------------------------------
-# Tear of the Goddess — Manaflow
+# Manaflow (Tear of the Goddess and its four upgrades)
 # ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
-class TearDeclaration:
-    """Sourced Manaflow rule declaration (wiki branch + typed accessors)."""
+class ManaflowDeclaration:
+    """Sourced Manaflow rule; the holders share a shape and not a number."""
 
-    charge_interval: float = 8.0
-    max_charges: int = 4
-    bonus_mana_per_trigger: float = 3.0
-    bonus_mana_per_champion: float = 6.0
-    bonus_mana_max: float = 360.0
-    source_url: str = "https://wiki.leagueoflegends.com/en-us/Tear_of_the_Goddess"
-    source_revision_id: int = 4026380
-    atom: tuple[str, str] = ("stat.mana", "f8e104e5f65ff397")
+    item: str
+    charge_interval: float
+    max_charges: int
+    bonus_mana_per_trigger: float
+    bonus_mana_per_champion: float
+    bonus_mana_max: float
+    source_url: str
+    source_revision_id: int
+    atom: tuple[str, str]
 
     def __post_init__(self) -> None:
+        if not self.item.strip():
+            raise ValueError("ManaflowDeclaration.item must name the holder")
         for name, value in (
             ("charge_interval", self.charge_interval),
             ("bonus_mana_per_trigger", self.bonus_mana_per_trigger),
@@ -387,34 +389,32 @@ class TearDeclaration:
             ("bonus_mana_max", self.bonus_mana_max),
         ):
             if isinstance(value, bool) or not math.isfinite(float(value)):
-                raise ValueError(f"TearDeclaration.{name} must be finite")
+                raise ValueError(f"ManaflowDeclaration.{name} must be finite")
             if float(value) <= 0.0:
-                raise ValueError(f"TearDeclaration.{name} must be positive")
+                raise ValueError(f"ManaflowDeclaration.{name} must be positive")
         if self.max_charges < 1:
             raise ValueError(
-                f"TearDeclaration.max_charges must be an int >= 1, got "
+                f"ManaflowDeclaration.max_charges must be an int >= 1, got "
                 f"{self.max_charges!r}"
             )
 
+    @property
+    def source(self) -> str:
+        return f"{self.item} — Manaflow"
+
     def public(self) -> dict[str, Any]:
-        return {
-            "charge_interval": self.charge_interval,
-            "max_charges": self.max_charges,
-            "bonus_mana_per_trigger": self.bonus_mana_per_trigger,
-            "bonus_mana_per_champion": self.bonus_mana_per_champion,
-            "bonus_mana_max": self.bonus_mana_max,
-            "source_url": self.source_url,
-            "source_revision_id": self.source_revision_id,
-            "atom": list(self.atom),
-        }
+        # Every declared field, so the receipt cannot fall behind the rule.
+        published = {item.name: getattr(self, item.name) for item in fields(self)}
+        published["atom"] = list(self.atom)
+        return published
 
 
-class TearManaflow:
+class ManaflowLedger:
     """Manaflow charge/hit state for one holder.
 
     A hit is only a PROVEN ACCEPTED ELIGIBLE HIT: the driver calls ``hit``
     exclusively for casts the resource ledger already admitted (a denied
-    cast cannot spend or trigger Tear), and a missing ``hit_identity``
+    cast cannot spend or trigger Manaflow), and a missing ``hit_identity``
     fails closed with ``missing_hit_identity`` instead of treating every
     cast as a hit.  Same-time hits are ordered by the caller's
     ``(sequence, tier)`` and are deterministic.
@@ -422,7 +422,7 @@ class TearManaflow:
 
     def __init__(
         self,
-        declaration: TearDeclaration,
+        declaration: ManaflowDeclaration,
         *,
         owner: str,
         authored_bonus_mana: float = 0.0,
@@ -451,7 +451,7 @@ class TearManaflow:
         return self._owner
 
     @property
-    def declaration(self) -> TearDeclaration:
+    def declaration(self) -> ManaflowDeclaration:
         return self._declaration
 
     @property
@@ -516,7 +516,7 @@ class TearManaflow:
             )
         if target_kind not in {"champion", "minion"}:
             raise ValueError(
-                f"unknown Tear target_kind {target_kind!r}; supported: "
+                f"unknown Manaflow target_kind {target_kind!r}; supported: "
                 "champion, minion"
             )
         grant = (
@@ -560,7 +560,7 @@ class TearManaflow:
             operation=OP_MAX_INCREASE,
             amount=delta,
             time=float(time),
-            source="Tear of the Goddess — Manaflow",
+            source=self._declaration.source,
             sequence=int(sequence),
             tier=float(tier),
             atoms=(self._declaration.atom,),
@@ -599,7 +599,7 @@ class TearManaflow:
     ) -> dict[str, Any]:
         return {
             "time": round(float(time), 9),
-            "source": "Tear of the Goddess — Manaflow",
+            "source": self._declaration.source,
             "accepted": accepted,
             "reason": reason,
             "target_kind": target_kind,

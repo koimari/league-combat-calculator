@@ -4673,7 +4673,7 @@ def _apply_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     MANA fights run through the typed mana resource ledger
     (``resource_ledger``): one account owns regen ticks, external restores
     (Catalyst's Eternity, Essence Reaver's Spellblade), ability restores,
-    cast spends, Tear's max-mana growth, and Lost Chapter's Enlighten.
+    cast spends, Manaflow's max-mana growth, and Lost Chapter's Enlighten.
     ENERGY fights run ``_apply_energy_resource_limits`` instead.  The account
     is certified for mana only and its maximum grows but never falls, so it
     cannot hold the temporary maximum Akali's W declares; and every mechanic
@@ -4989,12 +4989,12 @@ def _apply_energy_resource_limits(state: FightState, plan: CastPlan) -> CastPlan
     return admission.cast_plan(resource_remaining=remaining)
 
 
-def _tear_hit_identity(
+def _manaflow_hit_identity(
     key: str, accepted_ordinal: int, info: Mapping[str, Any]
 ) -> str | None:
     """Return a proven hit identity for an accepted cast, or None.
 
-    Tear's Manaflow wording triggers on affecting an enemy or ally with an
+    Manaflow's wording triggers on affecting an enemy or ally with an
     ability.  In the fighter model a cast is a PROVEN eligible hit when its
     reviewed packet carries a champion-affecting marker: a damage part
     (``amount`` > 0 or an ``hp_scaled_damage`` closure), a crowd-control
@@ -5025,59 +5025,36 @@ def _tear_hit_identity(
     return None
 
 
-def _tear_manaflow_for(
+def _manaflow_ledger_for(
     state: FightState, owner: str
-) -> resource_ledger.TearManaflow | None:
-    """Build the holder's Tear Manaflow state, or None when not equipped.
+) -> resource_ledger.ManaflowLedger | None:
+    """Build the build's Manaflow state, or None when no holder is equipped.
 
-    All numbers come from the typed ``item_effects`` accessors and the
-    public option receipt; the atom hash is the verified catalog hash for
-    Tear's stat.mana (data/atoms/items.json, evidence
-    ``passive:Manaflow@kw:mana`` + ``stats.mana.flat``).
+    The holder comes from the build — whichever of the five registered
+    Manaflow items it holds — and every number, receipt and atom is that
+    holder's own, read through the typed ``item_effects`` accessor.
     """
-    holder = "Tear of the Goddess"
-    if not item_effects.has_item(state.items, holder):
+    holder = item_effects.manaflow_holder(state.items)
+    if holder is None:
         return None
     options = state.item_options or {}
     unset = declared_option_default("item", holder, "manaflow_bonus_mana")
     authored = float(
         (options.get(holder) or {}).get("manaflow_bonus_mana", unset) or unset
     )
-    declaration = resource_ledger.TearDeclaration(
-        charge_interval=float(
-            item_effects.required_effect_value(
-                "Tear of the Goddess", "manaflow_charge_interval"
-            )
-        ),
-        max_charges=int(
-            item_effects.required_effect_value(
-                "Tear of the Goddess", "manaflow_max_charges"
-            )
-        ),
-        bonus_mana_per_trigger=float(
-            item_effects.required_effect_value(
-                "Tear of the Goddess", "manaflow_bonus_mana_per_trigger"
-            )
-        ),
-        bonus_mana_per_champion=float(
-            item_effects.required_effect_value(
-                "Tear of the Goddess", "manaflow_bonus_mana_per_champion"
-            )
-        ),
-        bonus_mana_max=float(
-            item_effects.required_effect_value(
-                "Tear of the Goddess", "manaflow_bonus_mana_max"
-            )
-        ),
-        source_url=str(
-            item_effects.ITEM_INPUT_OPTIONS["Tear of the Goddess"]["source_url"]
-        ),
-        source_revision_id=int(
-            item_effects.ITEM_INPUT_OPTIONS["Tear of the Goddess"]["source_revision_id"]
-        ),
-        atom=("stat.mana", "f8e104e5f65ff397"),
+    sourced = item_effects.manaflow_declaration(holder)
+    declaration = resource_ledger.ManaflowDeclaration(
+        item=holder,
+        charge_interval=sourced["charge_interval"],
+        max_charges=sourced["max_charges"],
+        bonus_mana_per_trigger=sourced["bonus_mana_per_trigger"],
+        bonus_mana_per_champion=sourced["bonus_mana_per_champion"],
+        bonus_mana_max=sourced["bonus_mana_max"],
+        source_url=sourced["source_url"],
+        source_revision_id=sourced["source_revision_id"],
+        atom=sourced["atom"],
     )
-    return resource_ledger.TearManaflow(
+    return resource_ledger.ManaflowLedger(
         declaration, owner=owner, authored_bonus_mana=authored
     )
 
@@ -5448,11 +5425,11 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     One account per fight owner owns every transition: base regeneration
     ticks, external restores (Catalyst's Eternity, Essence Reaver's
     Spellblade), ability restores, per-auto mana restores (Jayce's W
-    passive), Essence Flux mark refunds (Ezreal's W), cast spends, Tear
-    of the Goddess max-mana growth (proven accepted eligible hits only),
+    passive), Essence Flux mark refunds (Ezreal's W), cast spends, the
+    Manaflow holder's max-mana growth (proven accepted eligible hits only),
     and Lost Chapter's Enlighten level-up restore.  The ledger's receipts are
-    the single source the public resource section and the Tear packets project
-    from, so there is no second receipt-only ledger.
+    the single source the public resource section and the Manaflow packets
+    project from, so there is no second receipt-only ledger.
 
     Champion resource mechanics ride the SAME account as cast admission,
     so restored/refunded mana can enable later casts; every restore lands
@@ -5468,7 +5445,7 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         current=base_maximum,
         regen_per_second=regen,
     )
-    tear = _tear_manaflow_for(state, owner)
+    manaflow = _manaflow_ledger_for(state, owner)
     enlighten_decl = _enlighten_decl_for(state)
 
     events = _cast_admission_events(state, plan)
@@ -5567,7 +5544,7 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
     heapq.heapify(timeline)
 
     sequence = 0
-    tear_hits: list[dict[str, Any]] = []
+    manaflow_hits: list[dict[str, Any]] = []
     enlighten_public: dict[str, Any] | None = None
     # Essence Flux marks: one row per accepted W cast (arm order), FIFO
     # consumption by the next accepted ability cast (the model assumes
@@ -5744,9 +5721,8 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         )
         sequence += 1
         if not spend.accepted:
-            # A denied cast cannot spend, so it can never trigger Tear or
-            # consume a Manaflow charge (the hit is only driven below for
-            # accepted casts).
+            # A denied cast cannot spend, so it can never consume a Manaflow
+            # charge (the hit is only driven below for accepted casts).
             admission.omit(key)
             continue
         before = spend.current_before
@@ -5777,26 +5753,25 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             resource_after=remaining,
         )
 
-        # Tear of the Goddess: only an ACCEPTED cast with a PROVEN
-        # target-affecting identity can consume a Manaflow charge.  The
-        # granted bonus maximum mana enters the authoritative account; a
-        # missing identity fails closed with a receipt and no charge is
-        # spent.  The fight's own target class picks which of Manaflow's two
-        # sourced amounts is paid — the declaration carries both, so a
-        # minion-class fight pays the trigger amount rather than the
-        # champion one.
-        if tear is not None:
-            identity = _tear_hit_identity(key, accepted_ordinal, info)
-            hit_receipt, tear_event = tear.hit(
+        # Manaflow: only an ACCEPTED cast with a PROVEN target-affecting
+        # identity can consume a charge.  The granted bonus maximum mana
+        # enters the authoritative account; a missing identity fails closed
+        # with a receipt and no charge is spent.  The fight's own target
+        # class picks which of the holder's two sourced amounts is paid —
+        # the declaration carries both, so a minion-class fight pays the
+        # trigger amount rather than the champion one.
+        if manaflow is not None:
+            identity = _manaflow_hit_identity(key, accepted_ordinal, info)
+            hit_receipt, manaflow_event = manaflow.hit(
                 time=cast_time,
                 hit_identity=identity,
                 target_kind=state.target_class,
                 sequence=sequence,
             )
             sequence += 1
-            tear_hits.append(hit_receipt)
-            if tear_event is not None:
-                ledger.apply(tear_event)
+            manaflow_hits.append(hit_receipt)
+            if manaflow_event is not None:
+                ledger.apply(manaflow_event)
                 sequence += 1
 
         # Essence Flux mark refund (Ezreal's W): an accepted mark-arming
@@ -6010,8 +5985,8 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         resource_remaining=ledger.account.current,
         resource_ledger=_resource_ledger_public(
             ledger,
-            tear,
-            tear_hits,
+            manaflow,
+            manaflow_hits,
             enlighten_public,
             auto_restore=auto_restore_section,
             mark_refunds=mark_refunds_section,
@@ -6033,7 +6008,7 @@ def _schedule_enlighten(
     """Pop the Enlighten level-up marker and schedule its restore ticks.
 
     The 20% base is fixed at the level-up moment against the account's LIVE
-    maximum (Tear hits before the level-up enlarge the base; later events
+    maximum (Manaflow hits before the level-up enlarge the base; later events
     never retroactively resize it).  Ticks land at +1/+2/+3s on the restore
     tier, so a simultaneous cast sees them (the engine's restore-before-
     cast convention); resource changes affect only casts at or after each
@@ -6094,8 +6069,8 @@ def _schedule_enlighten(
 
 def _resource_ledger_public(
     ledger: resource_ledger.ResourceLedger,
-    tear: resource_ledger.TearManaflow | None,
-    tear_hits: list[dict[str, Any]],
+    manaflow: resource_ledger.ManaflowLedger | None,
+    manaflow_hits: list[dict[str, Any]],
     enlighten_public: dict[str, Any] | None,
     *,
     auto_restore: dict[str, Any] | None = None,
@@ -6124,18 +6099,20 @@ def _resource_ledger_public(
         "bonus_maximum": round(account.bonus_maximum, 6),
         "receipts": [receipt.public() for receipt in ledger.receipts()],
     }
-    if tear is not None:
-        section["tear"] = {
-            "declaration": tear.declaration.public(),
+    if manaflow is not None:
+        section["manaflow"] = {
+            "declaration": manaflow.declaration.public(),
             "authored_bonus_mana": round(
-                tear.bonus_total
-                - sum(float(hit.get("bonus_delta", 0.0) or 0.0) for hit in tear_hits),
+                manaflow.bonus_total
+                - sum(
+                    float(hit.get("bonus_delta", 0.0) or 0.0) for hit in manaflow_hits
+                ),
                 6,
             ),
-            "hits": tear_hits,
-            "use_count": tear.use_count,
-            "bonus_total": round(tear.bonus_total, 6),
-            "stored_charges": tear.stored_charges,
+            "hits": manaflow_hits,
+            "use_count": manaflow.use_count,
+            "bonus_total": round(manaflow.bonus_total, 6),
+            "stored_charges": manaflow.stored_charges,
         }
     if enlighten_public is not None:
         section["enlighten"] = enlighten_public

@@ -118,11 +118,13 @@ def class_restricted_packets(
 # Which declaration prices its cached clause at the FIGHT's target class, and
 # the clause it prices, named as the cache names it.  A restricted channel
 # answers that from its own packet; this is the reviewed rest, where the class
-# reading lives in a ledger no declaration can carry — Tear's Manaflow ledger is
+# reading lives in a ledger no declaration can carry — a Manaflow ledger is
 # handed the fight's class, so a minion is paid the trigger amount and not the
-# champion one.  Keyed by mechanic id and not by payload type: the four other
-# Manaflow entries declare the same split and none of them is paid one.
+# champion one.  Keyed by mechanic id and not by payload type: the other three
+# Manaflow clauses ALSO spend a charge on-hit, a trigger the fight model does
+# not price, so their clause is refused whole rather than paid for half of it.
 CLASS_READING_MECHANICS: Mapping[str, str] = {
+    "archangels_staff.mana_charge": "Manaflow",
     "tear_of_the_goddess.mana_charge": "Manaflow",
 }
 

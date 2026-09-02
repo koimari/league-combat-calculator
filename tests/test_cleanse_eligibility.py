@@ -184,6 +184,10 @@ from src.calculator import delivery_eligibility as de
 from src.calculator.crowd_control_eligibility import classify_control
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.interpreters import uncompilable_item_receipt
+from src.calculator.item_effects import (
+    ITEM_EFFECTS,
+    mercurial_quicksilver_movement,
+)
 from src.calculator.participant_timeline import Combatant, _WalkCompiler
 from src.calculator.state_lifecycle import SourceReceipt
 from src.calculator.survival.actions import (
@@ -935,6 +939,36 @@ def test_r4_cleanse_declarations_three_sourced_items():
     assert movement["duration"] == pytest.approx(2.0)
     assert any(atom["hash"] == "5e5f100f08a793f9" for atom in movement["source_atoms"])
     assert any("3139" in str(receipt) for receipt in mercurial["source_receipts"])
+
+
+def test_quicksilver_movement_atom_and_declaration_share_one_accessor():
+    """Issue #230, rule 5: the 50%/2s pair has one home in item_effects.
+
+    Both the declaration and the atom receipt's ``values`` are that one
+    read, so neither can outlive the other; the record above is the
+    independently transcribed catalog oracle.
+    """
+    ce = _require_contract()
+    sourced = mercurial_quicksilver_movement()
+    movement = ce.ITEM_CLEANSE_DECLARATIONS["Mercurial Scimitar"]["movement"]
+    assert movement["amount"] == sourced["move_speed_percent"]
+    assert movement["duration"] == sourced["duration_seconds"]
+    assert ce.MERCURIAL_MOVEMENT_ATOM["values"] == [
+        sourced["move_speed_percent"],
+        sourced["duration_seconds"],
+    ]
+    assert ce.MERCURIAL_MOVEMENT_ATOM == MERCURIAL_MOVEMENT_ATOM
+
+
+def test_a_missing_quicksilver_key_raises_naming_the_item(monkeypatch):
+    """Rule 5: no literal fallback survives a parser that drops the key."""
+    entry = dict(ITEM_EFFECTS["Mercurial Scimitar"])
+    entry.pop("quicksilver_move_speed_percent")
+    monkeypatch.setitem(ITEM_EFFECTS, "Mercurial Scimitar", entry)
+    with pytest.raises(KeyError) as excinfo:
+        mercurial_quicksilver_movement()
+    assert "Mercurial Scimitar" in str(excinfo.value)
+    assert "quicksilver_move_speed_percent" in str(excinfo.value)
 
 
 # ---------------------------------------------------------------------------

@@ -7,14 +7,14 @@ damage/pipeline internals, so the kernel must be testable standalone.
 
 Matrix sections (mirrors the roadmap slice-1 matrix):
     KERNEL          1-16  ResourceEvent / ResourceAccount / ResourceLedger
-    TEAR           17-29  TearDeclaration / TearManaflow
+    MANAFLOW       17-29  ManaflowDeclaration / ManaflowLedger
     LOST CHAPTER   30-39  EnlightenDeclaration / enlighten_schedule
     REGRESSION     40-43  contract-level composition (no engine imports)
     row 44 is a comment-only note (Catalyst is out of slice; its matrix
     lives in tests/test_catalyst_resource_ledger.py)
 
 Contract clarifications received from RLM-1 (binding):
-    * TearManaflow(declaration, *, owner, authored_bonus_mana=0.0); hit()
+    * ManaflowLedger(declaration, *, owner, authored_bonus_mana=0.0); hit()
       events carry owner=owner.
     * charges_available_at(time): banked = 1 + int(time // interval);
       available = max(0, min(max_charges, banked - use_count)) — charges
@@ -48,11 +48,11 @@ from src.calculator.resource_ledger import (
     OP_SPEND,
     RESOURCE_KIND_MANA,
     EnlightenDeclaration,
+    ManaflowDeclaration,
+    ManaflowLedger,
     ResourceAccount,
     ResourceEvent,
     ResourceLedger,
-    TearDeclaration,
-    TearManaflow,
     enlighten_schedule,
 )
 
@@ -96,9 +96,28 @@ def _ledger(*, maximum=1000.0, current=None, owner="Ahri"):
     return ResourceLedger(owner, maximum=maximum, current=current)
 
 
+#: Tear's sourced rule as a fixture: the kernel is standalone, so the
+#: numbers are supplied here rather than read from the item registry.
+_TEAR_RULE = {
+    "item": "Tear of the Goddess",
+    "charge_interval": 8.0,
+    "max_charges": 4,
+    "bonus_mana_per_trigger": 3.0,
+    "bonus_mana_per_champion": 6.0,
+    "bonus_mana_max": 360.0,
+    "source_url": "https://wiki.leagueoflegends.com/en-us/Tear_of_the_Goddess",
+    "source_revision_id": 4026380,
+    "atom": ("stat.mana", "f8e104e5f65ff397"),
+}
+
+
+def _declaration(**decl_kw):
+    return ManaflowDeclaration(**{**_TEAR_RULE, **decl_kw})
+
+
 def _tear(*, owner="Ahri", authored=0.0, **decl_kw):
-    return TearManaflow(
-        TearDeclaration(**decl_kw), owner=owner, authored_bonus_mana=authored
+    return ManaflowLedger(
+        _declaration(**decl_kw), owner=owner, authored_bonus_mana=authored
     )
 
 
@@ -405,7 +424,7 @@ class TestKernel:
 
 
 # ---------------------------------------------------------------------------
-# TEAR — TearDeclaration / TearManaflow (matrix 17-29)
+# TEAR — ManaflowDeclaration / ManaflowLedger (matrix 17-29)
 # ---------------------------------------------------------------------------
 
 
@@ -444,8 +463,8 @@ class TestTear:
     #     (per_champion), returns max_increase event with amount 6 and atoms
     #     carrying the declaration atom.
     def test_18_champion_hit_grants_per_champion_with_atoms(self):
-        declaration = TearDeclaration()
-        tear = TearManaflow(declaration, owner="Ahri")
+        declaration = _declaration()
+        tear = ManaflowLedger(declaration, owner="Ahri")
         receipt, event = tear.hit(time=0.0, hit_identity="q-1", target_kind="champion")
         assert receipt["accepted"] is True
         assert receipt["reason"] == "charge_consumed"
@@ -644,8 +663,8 @@ class TestTear:
     # 28. receipt: hit receipt carries accepted, reason, charge/use/bonus
     #     fields, amount, time, source, atoms; JSON-safe.
     def test_28_hit_receipt_fields_and_json_safety(self):
-        declaration = TearDeclaration()
-        tear = TearManaflow(declaration, owner="Ahri")
+        declaration = _declaration()
+        tear = ManaflowLedger(declaration, owner="Ahri")
         first, _ = tear.hit(time=0.0, hit_identity="q-1")
         second, _ = tear.hit(time=8.0, hit_identity="q-2")
         denied, _ = tear.hit(time=8.0, hit_identity="q-3")
@@ -687,7 +706,7 @@ class TestTear:
         assert denied["bonus_delta"] == pytest.approx(0.0)
 
     # 29. parity: total granted bonus mana from max_increase events ==
-    #     TearManaflow.bonus_total - authored (for a sequence of hits), and
+    #     ManaflowLedger.bonus_total - authored (for a sequence of hits), and
     #     never exceeds cap.
     def test_29_grant_parity_with_bonus_total(self):
         tear = _tear(authored=0.0)
@@ -969,8 +988,8 @@ class TestRegression:
     #     max_increase + Enlighten gains + spends) -> order deterministic,
     #     all receipts present, final current within [0, maximum].
     def test_42_tear_and_lost_chapter_composition(self):
-        declaration = TearDeclaration()
-        tear = TearManaflow(declaration, owner="", authored_bonus_mana=0.0)
+        declaration = _declaration()
+        tear = ManaflowLedger(declaration, owner="", authored_bonus_mana=0.0)
         _, tear_event = tear.hit(time=2.0, hit_identity="cast-2")
         assert tear_event is not None
 
@@ -1072,7 +1091,7 @@ class TestRegression:
 #    test_38 accepts either "tick" or "tick_index" (1-based). Please use one
 #    of those exact keys.
 #
-# 6. TearManaflow.hit() receipt uses the exact key set RLM-1 clarified
+# 6. ManaflowLedger.hit() receipt uses the exact key set RLM-1 clarified
 #    (time/source/accepted/reason/target_kind/hit_identity/charge_consumed/
 #    use_count/bonus_total/bonus_delta/cap/atom); test_28 requires all keys
 #    and JSON-safe values (tuples permitted — they are the kernel's atom

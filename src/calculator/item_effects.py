@@ -909,11 +909,7 @@ def stat_conversion_metadata(item_name: str) -> dict[str, float]:
         "ultimate_haste",
         "adaptive_force_per_total_move_speed",
         "bonus_mana_to_heal_shield_power_ratio",
-        "manaflow_charge_interval",
-        "manaflow_max_charges",
-        "manaflow_bonus_mana_per_trigger",
-        "manaflow_bonus_mana_per_champion",
-        "manaflow_bonus_mana_max",
+        *MANAFLOW_LEDGER_KEYS,
         "manaflow_transform_bonus_mana",
         "timeless_bonus_health_per_stack",
         "timeless_bonus_mana_per_stack",
@@ -1268,6 +1264,88 @@ def actualizer_active_seconds(
     return max(0.0, min(float(fight_duration_seconds), seconds))
 
 
+#: The three Awe-family ratios a Manaflow upgrade may convert bonus mana by.
+_MANAFLOW_CONVERSION_KEYS = (
+    "bonus_mana_to_ap_ratio",
+    "bonus_mana_to_health_ratio",
+    "bonus_mana_to_heal_shield_power_ratio",
+)
+
+
+def _manaflow_trigger_boundary(declaration: Mapping[str, Any]) -> str:
+    """What the fight model prices of one holder's Manaflow trigger set."""
+    if not declaration["on_hit_charge"]:
+        return (
+            "Every trigger the cached clause names is priced: a charge is "
+            "spent by an accepted ability cast that affects the target."
+        )
+    return (
+        "The cached clause spends a charge on-hit as well as on an ability "
+        "cast; the fight model prices the ability-cast trigger only, so an "
+        "auto-attack-only fight accrues no bonus mana here."
+    )
+
+
+def _manaflow_state(
+    item_name: str,
+    item_options: Mapping[str, Mapping[str, int | float]] | None,
+    *,
+    bonus_mana: float,
+    max_mana: float,
+) -> tuple[str, dict[str, Any]]:
+    """One Manaflow holder's receipt state and fields.
+
+    Every number is that holder's own — the five do not share a cadence, a
+    grant pair or a ceiling — and each extra field is claimed by a declared
+    key rather than by the item's name, so a holder gaining or losing Awe or
+    Helping Hand changes its receipt by itself.
+    """
+    declaration = manaflow_declaration(item_name)
+    schema = entry_schema_keys(item_name)
+    cap = declaration["bonus_mana_max"]
+    option_value = float(
+        (item_options or {}).get(item_name, {}).get("manaflow_bonus_mana", 0)
+    )
+    # A holder that becomes another item at the ceiling declares the
+    # transform amount; Tear's ceiling just ends its own ledger.
+    transforms = "manaflow_transform_bonus_mana" in schema
+    complete = option_value >= cap
+    fields: dict[str, Any] = {
+        "manaflow_bonus_mana": min(option_value, cap),
+        "manaflow_cap": cap,
+        "manaflow_charge_interval": declaration["charge_interval"],
+        "manaflow_max_charges": declaration["max_charges"],
+        "manaflow_bonus_mana_per_trigger": declaration["bonus_mana_per_trigger"],
+        "manaflow_bonus_mana_per_champion": declaration["bonus_mana_per_champion"],
+        "manaflow_trigger_boundary": _manaflow_trigger_boundary(declaration),
+        "transformed": transforms and complete,
+    }
+    if transforms:
+        # The upgrade holders carry Awe; the sum covers the bonus-mana
+        # ratios, so Manamune's maximum-mana Awe publishes a declared zero.
+        fields["awe_conversion"] = sum(
+            _declared_effect_value(item_name, key) * bonus_mana
+            for key in _MANAFLOW_CONVERSION_KEYS
+        )
+    if "helping_hand_minion_damage" in schema:
+        fields["helping_hand_minion_damage"] = required_effect_value(
+            item_name, "helping_hand_minion_damage"
+        )
+        fields["helping_hand_minion_only"] = True
+        fields["helping_hand_boundary"] = (
+            "Helping Hand's sourced bonus damage applies to minions only; a "
+            "champion-class target never receives it.  A minion-class fight "
+            "(FightConfig.target_class='minion') arms the sourced on-hit "
+            "packet on every qualifying basic attack, and Manaflow pays that "
+            "fight the trigger amount rather than the champion one."
+        )
+    fields["total_mana"] = max_mana
+    state = "manaflow_progress"
+    if complete:
+        state = "transformed" if transforms else "manaflow_complete"
+    return state, fields
+
+
 def item_state_receipts(
     items: Sequence[Mapping[str, Any]],
     item_options: Mapping[str, Mapping[str, int | float]] | None,
@@ -1402,75 +1480,13 @@ def item_state_receipts(
             ),
         )
 
-    mana_items = (
-        "Archangel's Staff",
-        "Manamune",
-        "Whispering Circlet",
-        "Winter's Approach",
-    )
-    for item_name in mana_items:
+    for item_name in manaflow_items():
         if item_name not in names:
             continue
-        option_value = float(
-            (item_options or {}).get(item_name, {}).get("manaflow_bonus_mana", 0)
+        state, fields = _manaflow_state(
+            item_name, item_options, bonus_mana=bonus_mana, max_mana=max_mana
         )
-        cap = required_effect_value(item_name, "manaflow_bonus_mana_max")
-        add(
-            item_name,
-            "transformed" if option_value >= cap else "manaflow_progress",
-            manaflow_bonus_mana=min(option_value, cap),
-            manaflow_cap=cap,
-            transformed=option_value >= cap,
-            awe_conversion=sum(
-                _declared_effect_value(item_name, key) * bonus_mana
-                for key in (
-                    "bonus_mana_to_ap_ratio",
-                    "bonus_mana_to_health_ratio",
-                    "bonus_mana_to_heal_shield_power_ratio",
-                )
-            ),
-            total_mana=max_mana,
-        )
-
-    if "Tear of the Goddess" in names:
-        option_value = float(
-            (item_options or {})
-            .get("Tear of the Goddess", {})
-            .get("manaflow_bonus_mana", 0)
-        )
-        cap = required_effect_value("Tear of the Goddess", "manaflow_bonus_mana_max")
-        add(
-            "Tear of the Goddess",
-            "manaflow_complete" if option_value >= cap else "manaflow_progress",
-            manaflow_bonus_mana=min(option_value, cap),
-            manaflow_cap=cap,
-            manaflow_charge_interval=required_effect_value(
-                "Tear of the Goddess", "manaflow_charge_interval"
-            ),
-            manaflow_max_charges=required_effect_value(
-                "Tear of the Goddess", "manaflow_max_charges"
-            ),
-            manaflow_bonus_mana_per_trigger=required_effect_value(
-                "Tear of the Goddess", "manaflow_bonus_mana_per_trigger"
-            ),
-            manaflow_bonus_mana_per_champion=required_effect_value(
-                "Tear of the Goddess", "manaflow_bonus_mana_per_champion"
-            ),
-            transformed=False,
-            helping_hand_minion_damage=required_effect_value(
-                "Tear of the Goddess", "helping_hand_minion_damage"
-            ),
-            helping_hand_minion_only=True,
-            helping_hand_boundary=(
-                "Helping Hand's sourced bonus damage applies to minions only; "
-                "a champion-class target never receives it.  A minion-class "
-                "fight (FightConfig.target_class='minion') arms the sourced "
-                "on-hit packet on every qualifying basic attack, and Manaflow "
-                "pays that fight the trigger amount rather than the champion "
-                "one."
-            ),
-            total_mana=max_mana,
-        )
+        add(item_name, state, **fields)
 
     if "Doran's Helm" in names:
         add(
@@ -2016,6 +2032,18 @@ def item_state_receipts(
     return receipts
 
 
+#: The charge ledger every Manaflow holder declares, whole or not at all.
+#: Membership in this key group is what makes an item a Manaflow holder, so
+#: nothing downstream asks the build for a name.
+MANAFLOW_LEDGER_KEYS = (
+    "manaflow_charge_interval",
+    "manaflow_max_charges",
+    "manaflow_bonus_mana_per_trigger",
+    "manaflow_bonus_mana_per_champion",
+    "manaflow_bonus_mana_max",
+)
+
+
 # ---------------------------------------------------------------------------
 # Reference item effect entries
 # ---------------------------------------------------------------------------
@@ -2045,6 +2073,14 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Mercurial Scimitar": {
         "type": "sustain",
         "lifesteal_percent": 10.0,
+        # Quicksilver: "... and grants 50% bonus movement speed for 2
+        # seconds" (cached active branch, rev 3984461; catalog atom
+        # control.movement_speed 5e5f100f08a793f9 carries the same pair).
+        # The cleanse leaf reads both through
+        # ``mercurial_quicksilver_movement`` so neither the declaration nor
+        # its atom receipt spells a number.
+        "quicksilver_move_speed_percent": 50.0,
+        "quicksilver_move_speed_seconds": 2.0,
         "source_url": "https://wiki.leagueoflegends.com/en-us/Mercurial_Scimitar",
         "source_revision_id": 3984461,
     },
@@ -2208,6 +2244,11 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "manaflow_bonus_mana_per_trigger": 3.0,
         "manaflow_bonus_mana_per_champion": 6.0,
         "manaflow_bonus_mana_max": 360.0,
+        # Tear's cached clause spends a charge on an ability cast instance
+        # only ("Dealing ability damage, or applying a buff or debuff ...
+        # with a non-innate ability cast instance"), so the fight model
+        # prices the whole clause.
+        "manaflow_on_hit_charge": False,
         "helping_hand_minion_damage": 5.0,
     },
     "Lost Chapter": {
@@ -3007,6 +3048,10 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "manaflow_bonus_mana_per_champion": 10.0,
         "manaflow_bonus_mana_max": 360.0,
         "manaflow_transform_bonus_mana": 360.0,
+        # "Affecting an enemy or ally with an ability consumes a charge" —
+        # the cached clause names no on-hit trigger, so the fight model
+        # prices it whole.
+        "manaflow_on_hit_charge": False,
     },
     "Manamune": {
         "type": "stat_conversion",
@@ -3017,6 +3062,9 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "manaflow_bonus_mana_per_champion": 6.0,
         "manaflow_bonus_mana_max": 360.0,
         "manaflow_transform_bonus_mana": 360.0,
+        # "Consumes a charge on-hit and whenever affecting an enemy or ally
+        # with an ability" — the fight model prices the ability half only.
+        "manaflow_on_hit_charge": True,
     },
     "Fimbulwinter": {
         "type": "stat_conversion",
@@ -3056,6 +3104,9 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "manaflow_bonus_mana_per_champion": 6.0,
         "manaflow_bonus_mana_max": 360.0,
         "manaflow_transform_bonus_mana": 360.0,
+        # "Consumes a charge on-hit and whenever affecting an enemy or ally
+        # with an ability" — the fight model prices the ability half only.
+        "manaflow_on_hit_charge": True,
     },
     "Whispering Circlet": {
         "type": "stat_conversion",
@@ -3066,6 +3117,9 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "manaflow_bonus_mana_per_champion": 8.0,
         "manaflow_bonus_mana_max": 360.0,
         "manaflow_transform_bonus_mana": 360.0,
+        # "Consumes a charge on-hit and whenever affecting an enemy or ally
+        # with an ability" — the fight model prices the ability half only.
+        "manaflow_on_hit_charge": True,
     },
     "Rod of Ages": {
         "type": "stat_conversion",
@@ -3499,6 +3553,7 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
         "energized_ability_trigger",
         "cleave_on_hit",
         "armor_penetration_bonus_only",
+        "manaflow_on_hit_charge",
     }
 )
 
@@ -3662,14 +3717,7 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
         }
     ),
     "Tear of the Goddess": frozenset(
-        {
-            "manaflow_charge_interval",
-            "manaflow_max_charges",
-            "manaflow_bonus_mana_per_trigger",
-            "manaflow_bonus_mana_per_champion",
-            "manaflow_bonus_mana_max",
-            "helping_hand_minion_damage",
-        }
+        {*MANAFLOW_LEDGER_KEYS, "helping_hand_minion_damage"}
     ),
     "World Atlas": frozenset(
         {
@@ -3910,7 +3958,13 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
         {"lifesteal_percent", "source_url", "source_revision_id"}
     ),
     "Mercurial Scimitar": frozenset(
-        {"lifesteal_percent", "source_url", "source_revision_id"}
+        {
+            "lifesteal_percent",
+            "quicksilver_move_speed_percent",
+            "quicksilver_move_speed_seconds",
+            "source_url",
+            "source_revision_id",
+        }
     ),
     "Gunmetal Greaves": frozenset(
         {
@@ -4171,6 +4225,123 @@ def catalyst_eternity_declaration() -> dict[str, Any]:
             ("stat.mana", "cc42451dcf4dfd78"),
             ("stat.health", "a30899d6cbe13bf7"),
         ),
+    }
+
+
+# ---------------------------------------------------------------------------
+# Manaflow (Tear of the Goddess and its four upgrades)
+# ---------------------------------------------------------------------------
+
+# Each holder's own mana atom from the unified item catalog
+# (data/atoms/items.json, written by scripts/atomize.py items); every record
+# carries the ``passive:Manaflow@kw:mana`` evidence marker, which is what makes
+# it the Manaflow ledger's atom rather than a bare stat receipt.
+_MANAFLOW_MANA_ATOMS: dict[str, tuple[str, str]] = {
+    "Archangel's Staff": ("stat.mana", "42ffc5a89c212e27"),
+    "Manamune": ("stat.mana", "87e8dc58481617bc"),
+    "Tear of the Goddess": ("stat.mana", "f8e104e5f65ff397"),
+    "Whispering Circlet": ("stat.mana", "f6a1a7ddf559d662"),
+    "Winter's Approach": ("stat.mana", "d70cb0809635ee6d"),
+}
+
+
+def manaflow_items() -> tuple[str, ...]:
+    """Every registered item carrying the Manaflow charge ledger.
+
+    Membership is the key group, never a name list: an item that gains or
+    loses the ledger on a patch changes this answer by itself.
+    """
+    return tuple(
+        sorted(
+            name
+            for name, effect in ITEM_EFFECTS.items()
+            if MANAFLOW_LEDGER_KEYS[0] in effect
+        )
+    )
+
+
+def manaflow_holder(items: Iterable[dict[str, Any]]) -> str | None:
+    """The one Manaflow item a build holds, or None.
+
+    Manaflow is one named unique passive, so a build benefits from a single
+    holder; ``loadout_rules`` refuses a second one and this raises rather
+    than picking a winner if one ever arrives another way.
+    """
+    held = [name for name in manaflow_items() if has_item(items, name)]
+    if len(held) > 1:
+        raise ValueError(
+            "a build may hold one Manaflow item, not "
+            f"{', '.join(repr(name) for name in held)}"
+        )
+    return held[0] if held else None
+
+
+def manaflow_declaration(item_name: str) -> dict[str, Any]:
+    """One holder's sourced Manaflow rule, fail-closed on every number.
+
+    The charge cadence, both grant amounts and the bonus ceiling are that
+    item's own registry values — the five holders do not share them (5/10 on
+    Archangel's, 4/8 on Whispering Circlet, 3/6 on the other three) — and the
+    wiki receipt is the holder's own option entry.  ``on_hit_charge`` states
+    the reviewed trigger boundary: three of the five also spend a charge
+    on-hit, which the fight model does not price.
+    """
+    if item_name not in _MANAFLOW_MANA_ATOMS:
+        raise KeyError(
+            f"{item_name!r} has no reviewed Manaflow mana atom; a holder is "
+            "declared with its own atom receipt or not at all"
+        )
+    source_meta = ITEM_INPUT_OPTIONS[item_name]
+    interval, charges, per_trigger, per_champion, ceiling = MANAFLOW_LEDGER_KEYS
+    return {
+        "item": item_name,
+        "charge_interval": float(required_effect_value(item_name, interval)),
+        "max_charges": int(required_effect_value(item_name, charges)),
+        "bonus_mana_per_trigger": float(required_effect_value(item_name, per_trigger)),
+        "bonus_mana_per_champion": float(
+            required_effect_value(item_name, per_champion)
+        ),
+        "bonus_mana_max": float(required_effect_value(item_name, ceiling)),
+        "on_hit_charge": bool(
+            required_effect_value(item_name, "manaflow_on_hit_charge")
+        ),
+        "source_url": str(source_meta["source_url"]),
+        "source_revision_id": int(source_meta["source_revision_id"]),
+        "atom": _MANAFLOW_MANA_ATOMS[item_name],
+    }
+
+
+# ---------------------------------------------------------------------------
+# Mercurial Scimitar — Quicksilver movement
+# ---------------------------------------------------------------------------
+
+
+def mercurial_quicksilver_movement() -> dict[str, Any]:
+    """Quicksilver's sourced movement burst, fail-closed.
+
+    The percent and its window are registry-owned; the atom record is the
+    catalog's own (data/atoms/items.json), and its ``values`` are filled from
+    the same registry read so the receipt and the declaration cannot drift.
+    """
+    percent = float(
+        required_effect_value("Mercurial Scimitar", "quicksilver_move_speed_percent")
+    )
+    duration = float(
+        required_effect_value("Mercurial Scimitar", "quicksilver_move_speed_seconds")
+    )
+    return {
+        "move_speed_percent": percent,
+        "duration_seconds": duration,
+        "atom": {
+            "atom_id": "control.movement_speed",
+            "behavior": "control",
+            "source": "Mercurial Scimitar.actives[0].branches[0]",
+            "name": "Quicksilver",
+            "values": [percent, duration],
+            "units": ["percent", "s"],
+            "evidence": ["active:Quicksilver@kw:movement speed"],
+            "hash": "5e5f100f08a793f9",
+        },
     }
 
 
