@@ -33,6 +33,7 @@ from types import MappingProxyType
 from typing import Any
 
 from ..ability_spec import Quantity
+from ..delivery_eligibility import CombatantFacts
 from ..item_behavior import Compilability, Compilable, EngineLane
 from ..survival.actions import TransitionRank
 from ..trigger_stream import (
@@ -437,7 +438,7 @@ class Program:
     events: tuple[RoutedEvent, ...]
     pass_index: int = 0
     patch: ParamPatch | None = None
-    actors: tuple[Any, ...] = ()
+    actors: tuple[CombatantFacts, ...] = ()
     focus: str = ""
 
     def __post_init__(self) -> None:
@@ -461,7 +462,7 @@ class Program:
 
 
 def roster_program(
-    actors: Sequence[Any],
+    actors: Sequence[CombatantFacts],
     *,
     pass_index: int = 0,
     patch: ParamPatch | None = None,

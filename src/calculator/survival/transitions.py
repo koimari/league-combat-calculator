@@ -50,7 +50,7 @@ Ledger observation contract (the only adapter difference):
 from __future__ import annotations
 
 import math
-from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, NamedTuple, Protocol
 
@@ -72,6 +72,7 @@ from ..crowd_control_eligibility import (
 )
 from ..delivery_eligibility import (
     SPELL_SHIELD_ONE_USE_RULE,
+    CombatantFacts,
     DefenseWindow,
     SourceReceipt,
     SpellShieldComposition,
@@ -148,7 +149,7 @@ class SurvivalLedger(Protocol):
 
 
 def resolve_grievous(
-    profiles: tuple[Any, ...], damage_type: str
+    profiles: tuple[dict[str, Any], ...], damage_type: str
 ) -> tuple[float, float, tuple[str, ...]] | None:
     """Pre-resolve one attacker's Grievous application for one damage type.
 
@@ -173,7 +174,7 @@ def resolve_grievous(
 
 
 def evaluate_live_raw_formula(
-    raw_formula: Any,
+    raw_formula: Callable[..., float],
     missing_ratio: float,
     target_max_health: float,
 ) -> float:
@@ -187,7 +188,7 @@ def evaluate_live_raw_formula(
         return max(0.0, float(raw_formula(missing_ratio)))
 
 
-def participant_pools(combatant: Any) -> shield_ledger.ShieldPools:
+def participant_pools(combatant: CombatantFacts) -> shield_ledger.ShieldPools:
     """Stage one participant's starting health, shields, and Lifelines."""
     defenses = combatant.defenses
     # An authored starting health (roster ``current_health``) is the one way
@@ -316,12 +317,12 @@ class TransitionContext:
 
     duration: float
     states: list[dict[str, Any]]
-    combatants: Sequence[Any]
+    combatants: Sequence[CombatantFacts]
     index_of: Mapping[str, int]
     ledger: SurvivalLedger
     regeneration_windows: Sequence[RegenerationWindow | None]
     venom_profiles: list[tuple[float, float] | None] | None = None
-    reduction_profiles: list[tuple[Any, ...]] | None = None
+    reduction_profiles: list[tuple[dict[str, Any], ...] | None] | None = None
     # Keyed by event slot (Phase 4 S1): ``redirect_children`` maps a parent
     # packet's slot to the redirected child action, and the two sets hold the
     # slots the holder-health gate has judged and cancelled.
@@ -392,7 +393,7 @@ class TransitionContext:
             return 1.0
         return self._heal_power[caster]
 
-    def reductions_for(self, attacker: int) -> tuple[Any, ...]:
+    def reductions_for(self, attacker: int) -> tuple[dict[str, Any], ...]:
         """One attacker's healing-reduction profiles, empty where it has none.
 
         Score mode carries no profile list, so an empty tuple is the honest
@@ -402,7 +403,8 @@ class TransitionContext:
             0 <= attacker < len(self.reduction_profiles)
         ):
             return ()
-        return self.reduction_profiles[attacker]
+        profiles = self.reduction_profiles[attacker]
+        return () if profiles is None else profiles
 
 
 def expire_temporary_health(state: dict[str, Any], event_time: float) -> bool:
@@ -1382,7 +1384,7 @@ def _write_spell_shield_reduction_receipt(
     ctx: TransitionContext,
     action: SurvivalAction,
     state: Mapping[str, Any],
-    attacker: Any,
+    attacker: CombatantFacts | None,
 ) -> None:
     """Mirror a projectile defense's reduction receipt onto a packet the
     spell shield is about to block.

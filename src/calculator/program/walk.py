@@ -251,7 +251,7 @@ class SurvivalFold:
     projectile_defense: Mapping[str, Any] | None
 
 
-def survival_folds(states: Sequence[Any]) -> tuple[SurvivalFold, ...]:
+def survival_folds(states: Sequence[Mapping[str, Any]]) -> tuple[SurvivalFold, ...]:
     """One :class:`SurvivalFold` per settled participant state, in walk order.
 
     Exported rather than inlined into :func:`walk` so a caller assembling a
@@ -426,7 +426,7 @@ def walk(
     actions: Sequence[SurvivalAction],
     ctx: TransitionContext,
     *,
-    coverage: Sequence[Any] = (),
+    coverage: Sequence[Mapping[str, Any]] = (),
     rung: Rung = CompiledFast(),  # noqa: B008 - a frozen sentinel; one instance is the default
     counters: WorkCounterSink | None = None,
 ) -> WalkResult:

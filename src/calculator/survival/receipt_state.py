@@ -14,7 +14,7 @@ from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from typing import Any
 
 from ..data_registry import data_version
-from ..delivery_eligibility import initial_full_block_uses
+from ..delivery_eligibility import CombatantFacts, initial_full_block_uses
 from ..interaction_effects import (
     defense_composition,
     defense_eligibility,
@@ -132,7 +132,7 @@ def _resolved_defence_contracts(combatant: Any) -> dict[str, Any]:
 
 
 def _state_proto_key(
-    combatant: Any, below_half_healing_bonus: float
+    combatant: CombatantFacts, below_half_healing_bonus: float
 ) -> tuple[Any, ...]:
     """The prototype's value key.
 
@@ -150,7 +150,9 @@ def _state_proto_key(
     )
 
 
-def build_state(combatant: Any, below_half_healing_bonus: float) -> dict[str, Any]:
+def build_state(
+    combatant: CombatantFacts, below_half_healing_bonus: float
+) -> dict[str, Any]:
     """One participant's canonical survival state.
 
     Clones the memoized prototype for this combatant's defence record: fresh
@@ -196,7 +198,7 @@ def build_state(combatant: Any, below_half_healing_bonus: float) -> dict[str, An
 
 
 def _build_state_uncached(
-    combatant: Any, below_half_healing_bonus: float
+    combatant: CombatantFacts, below_half_healing_bonus: float
 ) -> dict[str, Any]:
     """The canonical state construction the prototype memo clones.
 
@@ -462,7 +464,7 @@ def _build_state_uncached(
 
 
 def build_states(
-    combatants: Sequence[Any], below_half_healing_bonuses: Sequence[float]
+    combatants: Sequence[CombatantFacts], below_half_healing_bonuses: Sequence[float]
 ) -> list[dict[str, Any]]:
     """Index-aligned canonical state list for a participant roster.
 

@@ -33,6 +33,8 @@ import math
 from collections.abc import Iterable, Mapping
 from typing import Any
 
+from ..delivery_eligibility import CombatantFacts
+from ..item_effects import ThornsEffect
 from ..resistance import apply_magic_penetration
 from .actions import ActionKind, SurvivalAction
 from .pricing import mitigate_declared
@@ -286,7 +288,9 @@ def champion_wound_tuple(
     )
 
 
-def thorns_return_damage(profile: Any, wearer: Any, striker: Any) -> float:
+def thorns_return_damage(
+    profile: ThornsEffect, wearer: CombatantFacts, striker: CombatantFacts
+) -> float:
     """Price one thorns strike-back against the striker's resistances.
 
     Thorns damage benefits from the wearer's penetration and is mitigated

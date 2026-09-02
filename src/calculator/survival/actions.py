@@ -16,7 +16,7 @@ composition and the score compiler build the same keys.
 from __future__ import annotations
 
 import math
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from enum import Enum, IntEnum
 from threading import Lock
 from typing import Any, NamedTuple
@@ -592,11 +592,11 @@ def declared_modifier_classes(
 # only spell 2**N of them, which is what bounds this table.  ``frozenset()``
 # is not a CPython singleton the way ``()`` is, so the empty set gets its own
 # name: an absent declaration is the common case and it allocated per action.
-_NO_CLASSES: frozenset = frozenset()
-_CLASS_SETS: dict[frozenset, frozenset] = {}
+_NO_CLASSES: frozenset[Enum] = frozenset()
+_CLASS_SETS: dict[frozenset[Enum], frozenset[Enum]] = {}
 
 
-def declared_class_set(value: Any, vocabulary: type) -> frozenset:
+def declared_class_set(value: object, vocabulary: type[Enum]) -> frozenset[Enum]:
     """One packet's declared class set, failing closed to the empty set.
 
     An absent declaration is empty rather than guessed; a declaration
@@ -605,10 +605,11 @@ def declared_class_set(value: Any, vocabulary: type) -> frozenset:
     """
     if not value:
         return _NO_CLASSES
-    members = frozenset(value if isinstance(value, Iterable) else (value,))
-    if not all(isinstance(member, vocabulary) for member in members):
+    declared = frozenset(value if isinstance(value, Iterable) else (value,))
+    members = frozenset(item for item in declared if isinstance(item, vocabulary))
+    if len(members) != len(declared):
         raise TypeError(
-            f"a packet declared {sorted(map(str, members))} where "
+            f"a packet declared {sorted(map(str, declared))} where "
             f"{vocabulary.__name__} members are required"
         )
     return _CLASS_SETS.setdefault(members, members)
@@ -628,7 +629,7 @@ def event_sequence(event: Mapping[str, Any]) -> int:
         return 0
 
 
-def participant_order(participant_id: Any) -> tuple[int, str]:
+def participant_order(participant_id: object) -> tuple[int, str]:
     """Use a deterministic side order when sources share a timestamp."""
     text = str(participant_id or "")
     if text == "main":
@@ -775,12 +776,17 @@ def compiled_damage_action(
     return tuple.__new__(SurvivalAction, row)
 
 
+#: The walk's total order for one action: time, ordering slot, sequence,
+#: participant order (side, id), participant id, event id, source.
+ActionSortKey = tuple[float, TransitionRank, int, int, str, str, str, str]
+
+
 def action_key(
     event_time: float,
     phase: TransitionRank,
     participant_id: str,
     event: Mapping[str, Any],
-) -> tuple[Any, ...]:
+) -> ActionSortKey:
     """Order event phases without ever comparing payload dictionaries.
 
     The survival walk's total order.  Pair packets precompute it per event
@@ -976,10 +982,10 @@ def classify_prefetched(
     event: Mapping[str, Any],
     phase: TransitionRank,
     kind: str,
-    execute_ratio_raw: Any,
-    deferred_raw: Any,
-    redirected_raw: Any,
-    raw_formula: Any,
+    execute_ratio_raw: float | None,
+    deferred_raw: bool | None,
+    redirected_raw: bool | None,
+    raw_formula: Callable[..., float] | None,
     raw_damage: float,
     grievous_duration: float,
 ) -> ActionKind:

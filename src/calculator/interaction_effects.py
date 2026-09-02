@@ -19,6 +19,8 @@ from .ability_atoms import (
 )
 from .champions.skill_orders import get_ability_rank
 from .delivery_eligibility import (
+    ChampionFacts,
+    CombatantFacts,
     DefenseComposition,
     DefenseEligibility,
     DefenseWindow,
@@ -26,6 +28,7 @@ from .delivery_eligibility import (
     DestructionRule,
     FullBlockRule,
     ReductionRule,
+    RequestFacts,
     SourceReceipt,
     SourceSelection,
     SpellShieldComposition,
@@ -75,7 +78,9 @@ class TargetPhysicalDamageReduction:
     source_atoms: tuple[dict[str, Any], ...] = ()
 
 
-def _rank_for(champion: str, level: int, request: Any, slot: str) -> int:
+def _rank_for(
+    champion: str, level: int, request: RequestFacts | None, slot: str
+) -> int:
     requested = getattr(request, "ability_ranks", None)
     if isinstance(requested, Mapping) and slot in requested:
         return int(requested[slot])
@@ -189,7 +194,7 @@ def _ranked_atom_value(
     return ranked_ability_atom_value(atom, rank, source=source)
 
 
-def _combatant_level(combatant: Any) -> int:
+def _combatant_level(combatant: ChampionFacts) -> int:
     """Read a level from either a timeline combatant or resolved loadout."""
     level = getattr(combatant, "level", None)
     if level is None:
@@ -209,7 +214,7 @@ def _prose_duration_atom(
 
 
 def resolve_physical_damage_reduction(
-    combatant: Any,
+    combatant: ChampionFacts,
 ) -> TargetPhysicalDamageReduction | None:
     """Resolve a typed target passive that reduces physical damage."""
     champion_data = getattr(combatant, "champion_data", {})
@@ -297,7 +302,9 @@ def resolve_physical_damage_reduction(
     )
 
 
-def target_physical_damage_reduction_params(combatant: Any) -> dict[str, float]:
+def target_physical_damage_reduction_params(
+    combatant: ChampionFacts,
+) -> dict[str, float]:
     """Return numeric target overrides for the one-pair damage engine."""
     reduction = resolve_physical_damage_reduction(combatant)
     if reduction is None:
@@ -325,7 +332,7 @@ def public_physical_damage_reduction(
     }
 
 
-def resolve_projectile_defense(combatant: Any) -> ProjectileDefense | None:
+def resolve_projectile_defense(combatant: CombatantFacts) -> ProjectileDefense | None:
     """Resolve one authored champion defensive window."""
 
     champion_data = getattr(combatant, "champion_data", {})
@@ -537,7 +544,7 @@ class SpellShieldContract:
         }
 
 
-def resolve_spell_shield(combatant: Any) -> SpellShieldContract | None:
+def resolve_spell_shield(combatant: CombatantFacts) -> SpellShieldContract | None:
     """Resolve one item-owned Annul spell shield from a combatant.
 
     The starting defenses (:mod:`defensive_effects`) declare readiness

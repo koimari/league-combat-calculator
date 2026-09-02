@@ -22,7 +22,8 @@ from __future__ import annotations
 
 import math
 from collections.abc import Iterable, Mapping
-from typing import Any
+
+from .delivery_eligibility import CombatantFacts
 
 # Floating-point tolerance shared with the damage/survival walks.
 _EPS = 1e-9
@@ -34,7 +35,7 @@ SPATIAL_UNAVAILABLE = "nearby_enemy_spatial_input_unavailable"
 MISSING_HOLDER_POSITION = "missing_holder_position"
 
 
-def _position_of(actor: Any) -> tuple[float, float] | None:
+def _position_of(actor: CombatantFacts) -> tuple[float, float] | None:
     """Extract an (x, y) position from an actor's stats, returning *None*
     when the position is missing or non-finite."""
     stats = getattr(actor, "stats", None)
@@ -60,8 +61,8 @@ def euclidean(a: tuple[float, float], b: tuple[float, float]) -> float:
 
 
 def enemies_within_range(
-    holder: Any,
-    all_actors: Iterable[Any],
+    holder: CombatantFacts,
+    all_actors: Iterable[CombatantFacts],
     range_units: float,
 ) -> tuple[int, str | None]:
     """Count enemies whose position is within *range_units* of the holder.

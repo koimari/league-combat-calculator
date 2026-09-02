@@ -56,7 +56,10 @@ from operator import itemgetter
 from typing import Any, NamedTuple
 
 from ..ability_spec import AttackClass, DamageClass
+from ..delivery_eligibility import CombatantFacts
 from ..healing_reduction import amplifies_recovery
+from ..interpreters.delta_amp import StaticHolderAmps
+from ..item_effects import ThornsEffect
 from ..ledger_projection import LightRow
 from ..resistance import (
     apply_armor_penetration,
@@ -106,7 +109,12 @@ from .build import (
     dropped_pair_previews,
     pair_preview_sources,
 )
-from .caches import program_fingerprint, roster_fingerprint
+from .caches import (
+    ProgramFingerprint,
+    RosterFingerprint,
+    program_fingerprint,
+    roster_fingerprint,
+)
 from .identity import event_id_text
 
 # Kinds a compiled damage action may carry; a revive candidate is authored
@@ -170,7 +178,7 @@ class PairView:
         self,
         result: Mapping[str, Any],
         live_amps: Sequence[LiveAmpRider] = (),
-        holder_amps: Any = None,
+        holder_amps: StaticHolderAmps | None = None,
     ) -> None:
         self.engine: Mapping[str, Any] = result
         self.result: Mapping[str, Any] = result
@@ -279,7 +287,7 @@ def pair_view(
     *,
     champion_wounds: Mapping[str, Any] | None = None,
     live_amps: Sequence[LiveAmpRider] = (),
-    holder_amps: Any = None,
+    holder_amps: StaticHolderAmps | None = None,
 ) -> PairView:
     """One pair fight's receipt view, through the one packet compiler.
 
@@ -355,7 +363,10 @@ def ability_instance_for_event(
 
 
 def declared_packet_of(
-    declaration: Any, damage_type: str, source_key: str, holder_amps: Any
+    declaration: Any,
+    damage_type: str,
+    source_key: str,
+    holder_amps: StaticHolderAmps | None,
 ) -> DeclaredPacket:
     """One re-priced packet's declaration, composed for the walk to price.
 
@@ -684,7 +695,7 @@ def modifier_delivery_receipt(
 
 def revive_candidate_actions(
     actions: Iterable[SurvivalAction],
-    combatants: Iterable[Any],
+    combatants: Iterable[CombatantFacts],
     next_aidx: int,
 ) -> tuple[list[SurvivalAction], int]:
     """Author revive candidates beside every incoming damage action.
@@ -820,7 +831,7 @@ class WalkCompiler:
         defender_index: int = 0,
         champion_wounds: Mapping[str, Any] | None = None,
         live_amps: Sequence[LiveAmpRider] = (),
-        holder_amps: Any = None,
+        holder_amps: StaticHolderAmps | None = None,
         suppress_actor_wide_heals: bool = False,
         view: PairView | None = None,
     ) -> None:
@@ -1661,10 +1672,10 @@ class WalkCompiler:
 
     def add_thorns(
         self,
-        wearer: Any,
+        wearer: CombatantFacts,
         wearer_i: int,
-        strikes: Iterable[tuple[int, float, int, Any, int]],
-        profiles: tuple[Any, ...],
+        strikes: Iterable[tuple[int, float, int, CombatantFacts, int]],
+        profiles: tuple[ThornsEffect, ...],
         grievous_by_dtype: Mapping[str, Any],
         duration: float,
         id_namespace: str,
@@ -2188,8 +2199,8 @@ class ProgramKey(NamedTuple):
     of serving a number computed from inputs it does not hold.
     """
 
-    roster: tuple
-    program: tuple
+    roster: RosterFingerprint
+    program: ProgramFingerprint
     projection: str
 
 

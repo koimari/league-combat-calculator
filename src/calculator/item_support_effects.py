@@ -49,6 +49,7 @@ from .item_effects import (
 from .program import route as program_route
 from .program.identity import PIdx
 from .program.scope import Unreviewed, reviewed_scope, scope_policy
+from .roster_composition import Combatant
 from .state_lifecycle import (
     CcTriggerRule,
     CooldownRule,
@@ -97,7 +98,7 @@ def _same_side(attacker: Any, actor: Any) -> bool:
     return left == right
 
 
-def _teammates(attacker: Any, all_actors: Iterable[Any]) -> list[Any]:
+def _teammates(attacker: Combatant, all_actors: Iterable[Combatant]) -> list[Combatant]:
     attacker_id = getattr(attacker, "participant_id", None)
     return [
         actor
@@ -107,7 +108,7 @@ def _teammates(attacker: Any, all_actors: Iterable[Any]) -> list[Any]:
     ]
 
 
-def _item_names(attacker: Any) -> set[str]:
+def _item_names(attacker: Combatant) -> set[str]:
     return {str(item.get("name", "")) for item in attacker.items}
 
 
@@ -386,7 +387,7 @@ def reprice_slot(owner: str, producer_value: str) -> AllyPacketSlot | None:
 
 
 def repriced_for_recipient(
-    template: Mapping[str, Any], recipient: Any
+    template: Mapping[str, Any], recipient: Combatant
 ) -> dict[str, Any]:
     """*template* with any recipient-scaled amount re-read at *recipient*.
 
@@ -416,7 +417,7 @@ def repriced_for_recipient(
 
 
 def _support_triggers(
-    trigger_effects: Iterable[Mapping[str, Any]], attacker: Any
+    trigger_effects: Iterable[Mapping[str, Any]], attacker: Combatant
 ) -> list[Mapping[str, Any]]:
     """Return ally heal/shield packets that can trigger item passives."""
     return [
@@ -849,9 +850,9 @@ def _self_cleanse_items(names: Iterable[str]) -> tuple[str, ...]:
 
 
 def derive_item_support_effects(
-    attacker: Any,
+    attacker: Combatant,
     result: Mapping[str, Any],
-    all_actors: list[Any],
+    all_actors: list[Combatant],
     trigger_effects: Iterable[Mapping[str, Any]] = (),
 ) -> list[dict[str, Any]]:
     """Compile the holder's explicit cross-participant item packets."""
@@ -2115,7 +2116,7 @@ def derive_item_support_effects(
 
 
 def schedule_knights_vow(
-    all_actors: list[Any],
+    all_actors: list[Combatant],
     incoming: Mapping[str, list[dict[str, Any]]],
     outgoing: Mapping[str, list[dict[str, Any]]],
     support_effects: Mapping[str, list[dict[str, Any]]],
