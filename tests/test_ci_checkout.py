@@ -1,12 +1,12 @@
 """CI checks out the tree, not the repository.
 
 Every gate the workflow runs answers from the files in the checkout.  Four
-places used to answer from commits instead — the corpus anchor's merge base,
-the campaign's slice tags, the migration counters' receipt-to-receipt diff and
-the P2a breach's tree extraction — and between them they held ``fetch-depth: 0``
-on the test job for records that were already closed.  The records are pinned
-now, so the two halves of that are asserted together: the workflow pins no
-depth, and no gate reads a commit the depth-1 checkout does not have.
+records — the corpus anchor's merge base, the campaign's slice tags, the
+migration counters' receipt-to-receipt diff and the P2a breach's tree
+extraction — are closed and pinned, so none of them needs a commit and none
+justifies ``fetch-depth: 0`` on the test job.  The two halves of that are
+asserted together: the workflow pins no depth, and no gate reads a commit the
+depth-1 checkout does not have.
 """
 
 from __future__ import annotations

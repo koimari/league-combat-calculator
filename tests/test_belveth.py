@@ -167,7 +167,7 @@ class TestWAboveAndBelow:
         assert _parse(belveth_data, 5)["W"]["damage_type"] == "magic"
 
     def test_w_rank5_no_ap(self, belveth_data) -> None:
-        """Rank 5, 0 AP: 320; W no longer scales with bonus AD."""
+        """Rank 5, 0 AP: 320; W does not scale with bonus AD."""
         abilities = _parse(belveth_data, 18, bonus_ad=50.0, ranks=_ALL_MAX)
         assert abilities["W"]["total_raw"] == pytest.approx(320.0)
 

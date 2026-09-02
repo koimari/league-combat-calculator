@@ -3,7 +3,7 @@
 Locks the wave-2 decisions and invariants:
 
 1. Unsealed Spellbook books no damage and says so with a receipt.  MERGE:
-   it is no longer a raise — this branch compiles it to a
+   it is not a raise — this branch compiles it to a
    ``RuneNoDamageEffect`` carrying a ``STRUCTURAL_ZERO`` disposition and
    the reason (RUNES-API), so the refusal is a value the page can carry
    rather than an exception a caller must catch.
@@ -73,7 +73,7 @@ class TestUnsealedSpellbookDecision:
 
     def test_catalog_serves_it_as_a_declared_zero(self):
         by_name = {entry["name"]: entry for entry in rune_effects.rune_catalog()}
-        # It has a compiler now, so the catalog no longer greys it out;
+        # It has a compiler, so the catalog does not grey it out;
         # the zero is the model, and the receipt says why.
         assert by_name["Unsealed Spellbook"]["implemented"] is True
         assert by_name["Unsealed Spellbook"]["path"] == "Inspiration"

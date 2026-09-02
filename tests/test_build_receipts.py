@@ -250,7 +250,7 @@ def test_failure_publishes_no_partial_tree(patched):
 
 
 def test_main_completes_on_real_data_and_matches_manifest(tmp_path, monkeypatch):
-    """main() must no longer raise on 'effects'; totals match the manifest."""
+    """main() must not raise on 'effects'; totals match the manifest."""
     # Publish to a scratch OUT so the tracked docs/receipts tree is untouched.
     monkeypatch.setattr(br, "OUT", tmp_path / "receipts")
     objects = br.load_item_atoms()

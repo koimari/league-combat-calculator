@@ -1,8 +1,8 @@
 """Issue #164 — one calculator package namespace + canonical math owners.
 
-The Flask entry point used to insert ``src/`` on ``sys.path`` and import
-``calculator.*`` while tests and scripts imported ``src.calculator.*``,
-loading two distinct module trees in one process.  These tests pin the
+A Flask entry point that inserts ``src/`` on ``sys.path`` and imports
+``calculator.*`` while tests and scripts import ``src.calculator.*`` loads
+two distinct module trees in one process.  These tests pin the
 single-namespace contract and guard against re-importing duplicate growth,
 cooldown, and resistance formulas outside their canonical owners.
 """

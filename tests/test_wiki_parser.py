@@ -15,7 +15,7 @@ sys.path.insert(0, str(_LOLSTATICDATA_ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from lolstaticdata.champions.pull_champions_wiki import LolWikiDataHandler
 
-import calculator.data_updater  # noqa: F401  — triggers the monkey-patch
+import calculator.data_updater  # noqa: F401 - triggers the monkey-patch
 
 # Champions that have nvalues=None in the parser
 NVALUES_NONE_CHAMPIONS = ["Heimerdinger", "Sona", "Karma", "Nidalee"]

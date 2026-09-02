@@ -1699,8 +1699,8 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         """Ahri level 18 with Bloodsong vs 1000 HP / 100 Armor / 100 MR.
 
         5-second fight, 100% auto uptime. Expected ~1040 total damage
-        (±5%). Was ~1161 before the shared cast timeline: W (5.0s cd)
-        used to sneak a second cast at exactly t=5.0, but Q's 0.25s cast
+        (±5%), not ~1161: on the shared cast timeline W (5.0s cd) cannot
+        sneak a second cast at exactly t=5.0, because Q's 0.25s cast
         time delays W to t=0.25, putting its recast at 5.25 — past the
         fight's end, as in-game.
         """

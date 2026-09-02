@@ -120,8 +120,8 @@ class TestReviewedCrowdControl:
 
     def test_severum_pays_one_heal_per_attack_that_dealt_damage(self):
         """ "Severum's attacks heal Aphelios for ... the post-mitigation
-        damage dealt" — six attacks, six shares, same total as the one
-        payment the unspread row used to make.
+        damage dealt" — six attacks, six shares, same total as one
+        unspread payment.
         """
         payload = calculate_payload(
             {

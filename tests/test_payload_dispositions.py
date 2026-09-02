@@ -492,10 +492,10 @@ class TestTheTwoScoreServingPayloads:
     class pins is the other half of umbrella criterion 1: the numbers they
     publish carry dispositions too, or the two largest numeric surfaces in the
     calculator serve undispositioned numbers while every other criterion
-    passes.  It is the reverse direction that was missing -- the old version
-    asserted two named leaves were *present* in the map and never asked what
-    else the payload held, which is how 14 959 of BIS's 18 807 numbers stayed
-    unnamed, the objective's own four score components among them.
+    passes.  It is the reverse direction that was missing -- asserting two
+    named leaves are *present* in the map never asks what else the payload
+    holds, which is how 14 959 of BIS's 18 807 numbers stayed unnamed, the
+    objective's own four score components among them.
     """
 
     def test_the_bis_payload_names_every_number_it_publishes(self) -> None:

@@ -1,12 +1,12 @@
 """The front door for the periodic interpreter.
 
-Three registry tags used to reach the engine as three unrelated typed records
-with no shared vocabulary.  What is pinned here is that they are one declared
-family with three cadences; that each cadence's row keeps the breakdown key
-and display name the engine has always published; that a burn without a
-declared window is refused rather than priced; and that Anguish's radius is
-read off its own declaration instead of being fetched by spelling its item's
-name at the point of use.
+Three registry tags reach the engine as one declared family, not as three
+unrelated typed records with no shared vocabulary.  What is pinned here is
+that the family has three cadences; that each cadence's row keeps the
+breakdown key and display name the engine has always published; that a burn
+without a declared window is refused rather than priced; and that Anguish's
+radius is read off its own declaration instead of being fetched by spelling
+its item's name at the point of use.
 """
 
 import pytest

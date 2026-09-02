@@ -505,7 +505,7 @@ def test_malformed_typed_values_fail_loudly(monkeypatch):
 
 
 def test_divergent_cooldown_fails_closed_against_the_catalog_atom(monkeypatch):
-    """A registry value that no longer matches the catalog atom (the stale
+    """A registry value that does not match the catalog atom (the stale
     literal trap of AGENTS.md rule 5) raises ValueError naming the hash."""
     base = dict(ITEM_EFFECTS[ITEM_NAME])
     patched = dict(base)
@@ -718,7 +718,7 @@ def test_second_ability_within_the_cooldown_is_not_blocked():
 def test_rearm_past_the_sourced_sixty_seconds_restarts_on_champion_damage():
     """The rearm clock enforces the sourced 60s AND its restart clause.
 
-    Same 70s window this file used to pin as "never re-arms".  The
+    A 70s window re-arms; "never re-arms" is the wrong pin.  The
     arithmetic, entirely from sourced numbers: the shield is consumed by
     the ability at t=1.0; the basic attack at t=2.0 lands 20 damage on the
     holder, which is what "timer restarts upon taking damage from
@@ -970,7 +970,7 @@ def test_compiled_panels_carry_the_verdant_fight():
 
 def test_enemy_holder_compiles_after_certification():
     """P3-3U contract: the roster-side Verdant holder compiles like the
-    main holder — the capability scan no longer poisons the context, panels
+    main holder — the capability scan does not poison the context, panels
     are built, and the compiled surface deep-equals the receipt walk.
     LIVE post-completion: the roster-side holder compiles like the main
     holder."""

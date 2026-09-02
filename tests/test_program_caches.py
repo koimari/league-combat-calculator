@@ -283,7 +283,7 @@ class TestEveryCacheDeclaresWhatStalesIt:
         """The ``patch`` defect, as a construction error.
 
         A producer input declared to be determined by something the key does
-        not carry is an answer filed under inputs it no longer has — the
+        not carry is an answer filed under inputs it does not have — the
         shape ``build_program``'s ``patch`` had before this landed.
         """
         with pytest.raises(ValueError, match="not among its key fields"):

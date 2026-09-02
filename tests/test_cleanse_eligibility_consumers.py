@@ -309,7 +309,7 @@ def test_mercurial_cleanse_and_movement_are_separate_effects():
 
 
 def test_a_pull_survives_quicksilver_as_the_displacement_it_is():
-    """F-9: ``pull`` used to fail closed as ``unknown_control``.
+    """F-9: ``pull`` is a known displacement, never ``unknown_control``.
 
     The Wiki files a pull under Airborne, and Quicksilver's tooltip carves
     Airborne out — so the interval survives for the game's reason, named

@@ -472,7 +472,7 @@ class TestMarkerSurfaceIsDerived:
         """The rule itself, driven both ways (criterion 10).
 
         A key the interpreter newly reads with no negative test fails, and
-        a negative test naming a key the interpreter no longer reads fails
+        a negative test naming a key the interpreter does not read fails
         too — otherwise the mapping could outlive the read it describes.
         """
         observed = {

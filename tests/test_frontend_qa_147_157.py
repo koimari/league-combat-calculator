@@ -168,8 +168,8 @@ def test_open_in_editor_does_not_depend_on_quick_view(source: str):
 
 
 def test_shared_build_render_targets_the_analyst_view(source: str):
-    """The shared payload renders into the live result column; the old
-    ``#quickResults`` host no longer exists in the template."""
+    """The shared payload renders into the live result column; there is no
+    ``#quickResults`` host in the template."""
     block = source.split("async function renderSharedBuild(token)")[1].split(
         "\nfunction ", maxsplit=1
     )[0]
@@ -456,8 +456,8 @@ def test_best_buy_disabled_state_stays_legible(css: str):
 
 def test_optimizer_receipt_has_a_visible_home(soup: BeautifulSoup, source: str):
     """The optimizer's own result is a canvas band, never a toast — and it is
-    actually rendered (``state.optimizer.summary`` used to be written in seven
-    places and read in none, so every best-buy receipt was invisible)."""
+    actually rendered (a ``state.optimizer.summary`` written in seven places
+    and read in none would leave every best-buy receipt invisible)."""
     band = soup.select_one("#buyBand")
     assert band is not None
     assert band.has_attr("hidden")
@@ -645,7 +645,7 @@ def test_sparse_timeline_names_every_source_in_full():
 
 
 def test_simultaneous_events_get_separate_lanes():
-    """Same-timestamp events used to stack markers on top of each other."""
+    """Same-timestamp events get separate lanes, never stacked markers."""
     html = run_timeline_renderer(
         [event(4.0, "Orb of Deception"), event(4.0, "Spellblade"), event(4.0, "Comet")],
         10,

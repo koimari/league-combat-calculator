@@ -2531,10 +2531,10 @@ class PacketSpec:
 class LevelSubject(Enum):
     """Whose level a support packet's level ramp is read at.
 
-    The cached Wiki sentence *states* this and the emitters used to guess it:
-    every ramp was read at the recipient's level, so the four producers the
-    source scales on the holder were priced at whatever level the ally
-    happened to be.  Members are spelled the way the source spells them —
+    The cached Wiki sentence *states* this, so the emitters read it rather
+    than guess: a ramp read at the wrong level prices the four producers the
+    source scales on the holder at whatever level the ally happens to be.
+    Members are spelled the way the source spells them —
     ``{{pp|150 to 350|type=target's level}}`` against an unqualified
     ``{{pp|80 to 250}}``, whose bare "based on level" is the item owner's —
     so a declaration and the sentence it was read from compare without a

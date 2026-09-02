@@ -911,8 +911,8 @@ class TestNestedApWithNamedParamsStaysUnresolved:
 class TestPiecewiseProgressions:
     """Module:Ability progression's ``start; then +f(x) for N; …`` form.
 
-    Two runes state a per-level payout this way, and both used to arrive as
-    a parse warning. Each run continues from the previous run's last value,
+    Two runes state a per-level payout this way, and both parse instead of
+    arriving as a parse warning. Each run continues from the previous run's last value,
     which is what makes ``1; then +0.25*x for 4`` a ramp rather than four
     independent values.
     """

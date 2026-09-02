@@ -143,7 +143,7 @@ def test_multi_hit_or_ally_mark_packets_are_certified_or_explicitly_non_damage(
     [("Shen", "Q")],
 )
 def test_calculate_api_surfaces_certified_empowered_attack_timeline(champion, source):
-    """Wave 1B: the public API no longer reports Shen Q as coarse."""
+    """Wave 1B: the public API does not report Shen Q as coarse."""
     app.config["RATE_LIMIT_ENABLED"] = False
     with app.test_client() as client:
         response = client.post(

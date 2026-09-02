@@ -1812,12 +1812,12 @@ def test_a_target_event_certified_item_needs_a_certified_timeline(item: str) -> 
 def test_a_target_blocked_item_stops_the_run() -> None:
     """A withheld target record refuses the calculation by name.
 
-    The population is no longer a table of one: since 3.8's flip the target
-    lane passes the attacker ladder's refusal through, so every cached record
+    The population is not a table of one: since 3.8's flip the target lane
+    passes the attacker ladder's refusal through, so every cached record
     whose described passive nothing declares stops a target build rather than
-    being called irrelevant.  Guardian's Horn used to be named here by hand;
-    it left the population when Undaunted got its declaration, so the whole
-    population is checked as a set and nothing is named twice.
+    being called irrelevant.  Guardian's Horn left the population when
+    Undaunted got its declaration, so the whole population is checked as a
+    set and nothing is named by hand.
     """
     refused = [
         name
@@ -2158,7 +2158,7 @@ def _only(claim: Claim, kind: type):
 
 
 def _importer_without(module: str, attribute: str):
-    """An importer for which *module* no longer defines *attribute*.
+    """An importer for which *module* does not define *attribute*.
 
     A rename is indistinguishable from a deletion as far as a claim naming
     the old name is concerned, so one shim serves M1 and M2 both.
@@ -2446,13 +2446,12 @@ def test_the_mutation_suite_is_nine_mutations_that_write_nothing() -> None:
 def test_the_receipt_names_a_producer_a_reader_can_look_up() -> None:
     """The receipt's provenance is derived from the functions, not typed.
 
-    ``metadata.classifiers`` used to be read off ``classify.__name__`` and
-    became a hand-written map when the attacker lane turned into a lambda that
-    supplies the lane set.  A hand-written producer name survives the rename of
-    the thing it names: the receipt would go on citing a symbol nothing
-    defines, and every gate over it would stay green.  The names come off the
-    wrapped functions again, and this asserts what that buys — each one
-    resolves to a callable on the module the receipt says it is on.
+    A hand-written ``metadata.classifiers`` map — the shape the attacker
+    lane's lambda invites — survives the rename of the thing it names: the
+    receipt would go on citing a symbol nothing defines, and every gate over
+    it would stay green.  The names come off the wrapped functions, and this
+    asserts what that buys — each one resolves to a callable on the module
+    the receipt says it is on.
     """
     receipt = json.loads(CLASSIFICATION_RECEIPT.read_text(encoding="utf-8"))
     recorded = receipt["metadata"]["classifiers"]

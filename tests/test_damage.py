@@ -1219,7 +1219,7 @@ class TestTargetIncomingDamageModifiers:
         Banned shortcut check: the coverage refusal was not deleted, it was
         *measured*.  A declaration subdividing the sourced window into no
         ticks leaves the heal a total rather than a schedule, and the coarse
-        source comes back exactly as it used to.
+        source comes back unchanged.
         """
         monkeypatch.setattr(
             damage.threshold_defense, "threshold_health_tick_interval", lambda: 0.0
@@ -1256,7 +1256,7 @@ class TestTargetIncomingDamageModifiers:
     def test_protoplasm_prices_a_fight_that_outlives_its_window(
         self, fight, attacker_stats
     ):
-        """The fight the refusal used to withhold now computes.
+        """A fight that outlives the window computes instead of being refused.
 
         Six seconds outlives the five-second window, and the second cast
         lands after it: the temporary maximum is gone by then, so the
@@ -1999,8 +1999,8 @@ class TestOnHitSwingEvents:
 class TestSplitAutoVsAbility:
     """Tests for split_auto_vs_ability — auto vs ability damage attribution.
 
-    Expected values replicate the attribution rules that previously lived
-    in app.py's /api/calculate route.
+    Expected values pin the attribution rules the /api/calculate route
+    publishes through ``pipeline``.
     """
 
     def test_pure_ability_damage(self) -> None:

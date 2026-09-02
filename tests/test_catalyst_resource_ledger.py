@@ -214,10 +214,9 @@ def _karthus_fixture(duration=20.0):
     to exhaust the pool now that the fixture runs as Karthus rather than
     under a renamed generic parser; ten seconds accepts every cast.
     """
-    # MERGE: the fixture used to rename the champion so the generic parser
-    # would take it.  There is no generic parser now -- an unknown name
-    # fails closed -- so it runs as Karthus, whose named module is what the
-    # mana ledger under test is fed by anyway.
+    # MERGE: there is no generic parser -- an unknown name fails closed --
+    # so the fixture runs as Karthus, whose named module is what the mana
+    # ledger under test is fed by anyway.
     champ = get_champion("Karthus")
     params = _catalyst_params(
         target_health=2000.0,

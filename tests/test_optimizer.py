@@ -810,7 +810,7 @@ class TestOptimizerBasic:
         ``-n auto`` multiplier over the dev box was ~2.2x when the old 8 s
         cap was set and measures ~3.4x now (8.2 s and 8.7 s on two green
         trees), so the cap is recalibrated to 15 s: still an instant fail
-        on a runaway search (historically >30 s) without repinning the
+        on a runaway search (observed at >30 s) without repinning the
         runner pool's scheduling noise as a formula change.
         """
         champ_data = get_champion("Ahri")
@@ -1191,7 +1191,7 @@ def _patch_purchase_prices(monkeypatch, pool):
     ``economy.item_total`` reads the atomized economics table and
     nothing else, so a fabricated item needs a fabricated row; a test
     world that skipped this would be pricing off the wiki cache the
-    engine no longer reads.
+    engine does not read.
     """
     real = economy.sourced_total
     rows = {int(item["id"]): int(item["shop"]["prices"]["total"]) for item in pool}
@@ -1811,7 +1811,7 @@ def test_optimize_build_rejects_consumable_locked_items():
 
 
 def test_role_scope_keeps_multiclass_lane_items_available():
-    """A SUPPORT tag no longer hides lane-class items (patch 16.15.1 added
+    """A SUPPORT tag does not hide lane-class items (patch 16.15.1 added
     SUPPORT to Whispering Circlet, a MAGE item; Morellonomicon/Frozen Heart
     are TANK/MAGE+SUPPORT and legal for those lanes in the real shop)."""
     from src.calculator.loadout_rules import role_scoped_shop_items

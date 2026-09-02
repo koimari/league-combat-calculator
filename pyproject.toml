@@ -46,6 +46,11 @@ excludes = ["vendor"]  # external code (CLAUDE.md rule 1)
 [tool.simply-elegant]
 comment-rules-off = ["module-doc", "layout", "block", "ratio"]
 
+# The contract tables in these two module docstrings keep their column width.
+[tool.simply-elegant.comment-per-file-off]
+"tests/test_cleanse_eligibility.py" = ["width"]
+"tests/test_crowd_control_immunity.py" = ["width"]
+
 # The simply-elegant hooks run ruff on their own strict config (select = ALL)
 # and merge this table on top; every overrule below states its reason.
 [tool.ruff]

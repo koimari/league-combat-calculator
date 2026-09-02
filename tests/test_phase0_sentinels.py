@@ -371,10 +371,8 @@ class TestCommandWindowsMergeByRefresh:
     wording admits is filed with its cost in
     ``item_behavior_catalog.ACKNOWLEDGED_READING_DIVERGENCES``.
 
-    This class used to assert that no authored pair could merge, and that the
-    day one did, ``merge`` needed "a fixture and an oracle receipt before
-    landing it".  The corpus grew past it, and keeps growing.  The fixture and
-    the receipt live in
+    An authored pair that merges needs "a fixture and an oracle receipt
+    before landing it".  The fixture and the receipt live in
     ``tests/test_command_amp_roster.py::TestTwoImmobilizesMergeIntoOneRefreshedWindow``
     — the merge is asserted here only as the census fact that makes that
     fixture reachable, so one fact keeps one home.

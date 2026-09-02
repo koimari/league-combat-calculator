@@ -103,8 +103,8 @@ class TestTheCachedRoster:
 def fixture_uncompiled_rune(monkeypatch):
     """One roster rune with its compiler taken away, and its name.
 
-    Every rune the roster offers compiles now, so the refusal an *unmodeled*
-    rune is owed can no longer be proved by naming one — it is proved by
+    Every rune the roster offers compiles, so the refusal an *unmodeled*
+    rune is owed cannot be proved by naming one — it is proved by
     removing a compiler. The merged vocabulary is cached, so the cache is
     cleared on the way in and again on the way out, once monkeypatch has put
     the compiler back.

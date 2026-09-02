@@ -1,7 +1,7 @@
 """The front door for the spellblade interpreter.
 
-Seven items share one mechanic and used to differ, inside the registry's own
-compiler, by a table of *item names* deciding which sibling mechanic each
+Seven items share one mechanic.  The retired registry compiler told them
+apart by a table of *item names* deciding which sibling mechanic each
 carried and a ``values.get(key, 0.0)`` fallback for every other.  What is
 pinned here is that the sibling groups come off the registry's schema instead
 of that table, that a group is declared whole or not at all, that the fail
@@ -51,7 +51,7 @@ def _inputs(**stats: float) -> DamageInputs:
 
 
 def test_every_spellblade_entry_declares_exactly_one_rule() -> None:
-    """Counter 3's half: the tag is no longer engine code in the registry."""
+    """Counter 3's half: the tag is not engine code in the registry."""
     for owner, entry in ITEM_EFFECTS.items():
         if entry.get("type") != "spellblade":
             continue

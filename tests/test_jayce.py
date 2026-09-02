@@ -732,7 +732,7 @@ class TestHyperChargeBurstAttackSpeed:
         the whole ~1s burst, so the four forced attacks in this rotation
         cannot yield four procs: a charge is spent per CAST that forces
         swings, and only R and W do. Pricing the procs against the
-        nominal 5s rotation instead used to hand one out per attack.
+        nominal 5s rotation instead would hand one out per attack.
         """
         essence_reaver = get_item_by_name("Essence Reaver")
         stats = dict(STATS_250_AD, critical_strike_chance=0.0)

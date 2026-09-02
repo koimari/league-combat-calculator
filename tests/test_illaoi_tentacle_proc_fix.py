@@ -175,7 +175,7 @@ class TestLinearScaling:
         )
 
     def test_the_three_measured_bug_values_exactly(self):
-        """The audit's exact numbers: 4036.50 and 11212.50 no longer appear."""
+        """The audit's exact bug numbers, 4036.50 and 11212.50, do not appear."""
         assert _fight(p_tentacles=1)["breakdown"]["passive"]["total_damage"] == (
             pytest.approx(448.5)
         )

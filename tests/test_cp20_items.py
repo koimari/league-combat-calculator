@@ -523,7 +523,7 @@ def test_umbral_nightstalker_true_damage_formula_is_typed():
     from src.calculator.interpreters import charged_strike
 
     # First-auto strikes compile in the charged-strike interpreter, the one
-    # home for that family; ``BuildDamageEffects`` no longer carries them.
+    # home for that family; ``BuildDamageEffects`` does not carry them.
     slots = charged_strike.resolve_slots(
         ("Umbral Glaive",),
         level=18,

@@ -17,7 +17,7 @@ authored and the tests pin the absence instead:
   fight engine does not simulate for abilities); it is not a sustain
   self-heal that fires on cast.
 
-Yuumi P (Feline Friendship) was a third such absence and no longer is.
+Yuumi P (Feline Friendship) is not such an absence; it is sourced.
 The cached innate spends its buff "upon hitting them with the basic
 attack or Prowling Projectile", which is a damaging-hit anchor over the
 ``auto_attacks`` and ``Q`` source keys, and the innate carries its own
@@ -257,10 +257,10 @@ def test_bard_caretakers_shrine_has_no_sourced_fight_trigger():
 def test_yuumi_feline_friendship_pays_the_level_row_on_a_damaging_hit():
     """Yuumi P moved OUT of this file's absence list: it is now sourced.
 
-    The absence this used to pin rested on "the ledger contains no
-    empowerment state, so every auto/Q event is an unfaithful trigger".
-    That is retired: the cached innate spends the buff on hitting with a
-    basic attack or Prowling Projectile, which is exactly
+    The absence claim "the ledger contains no empowerment state, so every
+    auto/Q event is an unfaithful trigger" does not hold: the cached innate
+    spends the buff on hitting with a basic attack or Prowling Projectile,
+    which is exactly
     ``HealAnchor.DAMAGING_HIT`` over those two source keys, and the
     innate's own per-level cooldown row is the recharge.  The heal is
     per-LEVEL (20 entries for levels 1-20): 20 : 120.59 (+ 30% AP), so

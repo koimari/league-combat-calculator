@@ -734,7 +734,7 @@ class TestSourceAndTypedValues:
         # The module parse receipt (the brief's contract #1): exactly
         # E/Q/R/W — NO P slot (the passive deals no enemy damage).
         #
-        # MERGE: P is no longer ``out_of_scope``.  A slot with no cast can
+        # MERGE: P is not ``out_of_scope``.  A slot with no cast can
         # still be priced through a named engine channel, and the contract
         # makes the module say WHICH: Dr. Mundo's P is ``modeled`` through
         # ``COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}`` — the

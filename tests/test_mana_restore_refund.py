@@ -373,7 +373,7 @@ def test_m2_jayce_restore_keeps_later_casts_affordable():
         if r["operation"] == "spend" and r["accepted"]
     ]
     accepted_slots = {(r["detail"]["slot"], r["detail"]["ordinal"]) for r in spends}
-    assert denied_slots <= accepted_slots  # the formerly-denied casts now land
+    assert denied_slots <= accepted_slots  # the casts denied without autos land
 
 
 def test_m2_denied_casts_never_produce_refund():

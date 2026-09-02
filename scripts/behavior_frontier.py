@@ -1142,7 +1142,8 @@ def no_runtime_behavior_block() -> dict[str, Any]:
         "sourced": sorted(
             name
             for name in members
-            if name in item_coverage._SOURCE_REFS  # noqa: SLF001
+            if name
+            in item_coverage._SOURCE_REFS  # noqa: SLF001 - the frontier reads the map
         ),
         "declaring": sorted(
             name

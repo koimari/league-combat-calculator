@@ -883,7 +883,7 @@ def test_force_of_nature_enemy_holder_poisons_the_compiled_context():
     )
     assert fast == legacy
     # P3-3Q: the roster-side FoN holder compiles like the main holder —
-    # the capability scan no longer poisons the context.
+    # the capability scan does not poison the context.
     assert ctx.uncompilable is False
     assert ctx.panels
 

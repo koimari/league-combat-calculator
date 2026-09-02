@@ -653,6 +653,7 @@ def _cc_orders_the_burst(champion_name: str, slot: str) -> bool:
 # ─────────────────────────────────────────────────────────────────────
 
 
+# comment-ok: width - a pylint pragma cannot wrap
 def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements,too-many-nested-blocks,too-many-return-statements,unused-argument
     champion_name: str,
     ability_damages: Mapping[str, Any],
@@ -1610,6 +1611,7 @@ def _fit_rule_to_fight(
     )
 
 
+# comment-ok: width - a pylint pragma cannot wrap
 def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,too-many-statements,too-many-arguments
     champion_name: str,
     ability_damages: Mapping[str, Any],

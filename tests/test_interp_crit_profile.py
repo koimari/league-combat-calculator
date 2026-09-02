@@ -5,8 +5,8 @@ together — how much more a crit pays, whether one strike is *made* to crit,
 and how much ability cooldown an attack refunds — and the family is the one
 place a build turns into a single answer to all three.
 
-The tests below pin what the retired accumulators inside ``item_effects``
-used to compute, value for value, because this migration's claim is that the
+The tests below pin, value for value, what the retired accumulators inside
+``item_effects`` computed, because this migration's claim is that the
 declarations reproduce them exactly.
 """
 

@@ -1,6 +1,6 @@
 """The opening-defence family's front door.
 
-Six mechanics that used to be six ``if "<item name>" in names`` branches.
+Six mechanics the retired ladder spelled as six ``if "<item name>" in names`` branches.
 The numbers below are the numbers those branches produced — that is the
 whole claim of a migration — so every case here is also a regression test on
 the retired ladder, and the two that are not are the ones the ladder could

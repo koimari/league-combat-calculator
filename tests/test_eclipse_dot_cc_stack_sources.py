@@ -291,8 +291,8 @@ class TestFailClosedIdentityAndMetadata:
         assert denials[0]["reason"] == "target_identity_unavailable"
 
     def test_malformed_dot_metadata_has_named_denial(self) -> None:
-        """A non-numeric ``dot_tick_interval`` used to crash the fight calc
-        with a raw ``ValueError`` (``float('half-second')``). It is now
+        """A non-numeric ``dot_tick_interval`` (``float('half-second')``
+        raises ``ValueError`` — never a crash out of the fight calc) is
         treated the same as a missing cadence (fail-closed — never coerced
         or invented): the row stays coarse (no per-tick ``damage_events``,
         ``total_damage`` unchanged), and the ability still declares a

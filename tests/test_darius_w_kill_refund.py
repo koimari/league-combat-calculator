@@ -407,7 +407,7 @@ class TestSourceEvidence:
         """Post-contract declaration: the three options (the existing two
         plus ``w_kill_assertion``) and the replaced assumption line — the
         assertion contract with the jungle-plant exclusion (the S5
-        receipt) where the not-modeled line used to be."""
+        receipt) in place of any not-modeled line."""
         meta = get_champion_options_meta(CHAMPION)
         assert [option["key"] for option in meta["options"]] == [
             "r_execute_recast",

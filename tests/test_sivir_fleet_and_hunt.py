@@ -19,7 +19,7 @@ measured, not asserted. This is the Vayne-P / Kalista-P / Pyke-P shape:
 sourced, non-damaging, therefore ``no_damage``.
 
 **P's movement grant is still not a ``stat_buff``, but the channel is
-no longer the reason.** The old argument was that
+not the reason.** The old argument was that
 ``_apply_stat_buff_ultimates`` added onto an already-soft-capped
 ``champion_stats["move_speed"]``; CF9's fold re-applies the caps, and
 ``test_the_channel_itself_is_no_longer_the_blocker`` pins that the

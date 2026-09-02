@@ -39,7 +39,7 @@ def test_the_committed_receipt_is_what_a_fresh_audit_produces():
     stale exactly that way during 3.8: the target-lane flip moved 11 statuses
     and 211 reasons inside it while its counts stayed identical, so every
     commit body could truthfully say "209/209, target_blocked 0" and no gate
-    anywhere could see that the committed file no longer matched the code.
+    anywhere could see that the committed file did not match the code.
     R-36 wants a machine-derived receipt to move **with** the slice that moves
     it, and this is what makes that a rule rather than a habit.
     """

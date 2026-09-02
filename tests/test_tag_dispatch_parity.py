@@ -2,8 +2,7 @@
 
 `item_behavior_catalog.TAG_FAMILY` maps all thirty-eight tags to a family
 whose compiler builds a declaration an interpreter prices.
-`item_effects._resolve_damage_effects_uncached` used to branch on eight of
-them and compile a second number for six.  It branches on two now, and
+`item_effects._resolve_damage_effects_uncached` branches on two of them, and
 neither prices anything: `ult_empowered_autos` and `ult_attack_speed_buff`
 quote the catalog's attack-speed digits into an assumption note, which is
 the one prose surface the projection owns.

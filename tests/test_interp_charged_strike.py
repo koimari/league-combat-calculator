@@ -121,7 +121,7 @@ def test_the_optional_mechanics_are_declared_records_or_declared_absences() -> N
 
 
 def test_a_dropped_lethality_number_raises_rather_than_granting_zero() -> None:
-    """The fail-closed contract the item-name branch used to buy."""
+    """The fail-closed contract holds without an item-name branch."""
     broken = dict(ITEM_EFFECTS[LETHALITY_WINDOW])
     broken.pop("temporary_lethality_duration")
     with pytest.MonkeyPatch.context() as patcher:
@@ -259,7 +259,7 @@ def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
 
 # ── the swing schedule ────────────────────────────────────────────────────
 #
-# The fifth shape, and the one the engine used to reach by name: two call
+# The fifth shape, and the one the retired item-name reads reached: two call
 # paths in ``damage.py`` — the auto-count block and the swing-time block —
 # each asked whether the build held one of two items, and a third read the
 # registry for one of those names to strip its window from the opening rate.

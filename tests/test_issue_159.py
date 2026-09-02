@@ -1,10 +1,10 @@
 """Issue #159 — one transition kernel drives every shield absorption path.
 
-Absorption order and shield/health mutation used to be hand-maintained in
-five places: two ordered walks in ``damage.py``, the authoritative receipt
-walk, and both damage branches of the compiled score walk.  Issue #137's
-survival kernel folded the last three into one damage transition; #159 makes
-that transition and both ``damage.py`` walks execute ``shield_ledger.absorb``.
+Absorption order and shield/health mutation have five sites: two ordered
+walks in ``damage.py``, the authoritative receipt walk, and both damage
+branches of the compiled score walk.  Issue #137's survival kernel folds the
+last three into one damage transition; #159 makes that transition and both
+``damage.py`` walks execute ``shield_ledger.absorb``.
 
 The per-transition contract lives in ``tests/test_shield_ledger.py``; these
 are the ownership guards and the end-to-end proof that the two engines agree.

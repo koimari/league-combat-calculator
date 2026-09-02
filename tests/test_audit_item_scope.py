@@ -1,8 +1,8 @@
 """Issue #166 — the full-entry release gate consumes item_source contracts.
 
-The gate used to re-parse ``modes``/``removed`` keys and effect branches
-itself, so a cache-shape or acquisition-rule change could make the audit a
-different item/effect universe than runtime.  These tests pin the parity:
+A gate that re-parses ``modes``/``removed`` keys and effect branches itself
+lets a cache-shape or acquisition-rule change make the audit a different
+item/effect universe than runtime.  These tests pin the parity:
 audit scope is the typed ``item_source.audit_scope`` policy, effect
 enumeration/prose come from ``effect_entries()``/``branches()``/
 ``effect_text()``, and every stored description reaches the receipt exactly

@@ -348,7 +348,7 @@ def _template(**overrides):
 
 
 def test_the_template_refusal_admits_the_kind_and_still_names_its_own():
-    """Clause 1: the kind is no longer refused categorically.
+    """Clause 1: the kind is not refused categorically.
 
     The negative half is what makes the positive one mean something (R-05):
     an amount only the walk can price, and a deferred transition, are still

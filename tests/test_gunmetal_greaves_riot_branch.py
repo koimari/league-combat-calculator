@@ -23,9 +23,9 @@ Contract under test (current runtime facts, verified before pinning):
   the wiki branch AND Riot's own description — the cached item has
   ``passives == []``, ``noEffects == True``, and ``riotDescription`` is
   now a bare stats block with no ``<passive>`` tag and no branch
-  sentence at all (previously it carried "Attacks against Champions
-  grant Move Speed On-Hit decaying over 2 seconds." with no magnitude;
-  that sentence itself is gone from the current source).  The docs
+  sentence at all (the "Attacks against Champions grant Move Speed On-Hit
+  decaying over 2 seconds." sentence is absent from the current
+  source).  The docs
   full-entry audit (page 1675881, revision 4013706, status ready)
   records ZERO effect branches for the item.
 * TYPED LIFESTEAL: ``required_effect_value("Gunmetal Greaves",
@@ -51,7 +51,7 @@ Contract under test (current runtime facts, verified before pinning):
   riotDescription — the typed registry must NOT invent one).  The
   decay duration 2.0s is sourced from the binary capture ONLY now
   (``data/bin/items.bin.json`` 16.15.8024387 ``Items/3172``
-  mDataValues ``Duration = 2.0``) — riotDescription no longer carries
+  mDataValues ``Duration = 2.0``) — riotDescription does not carry
   the "decaying over 2 seconds" sentence.  The binary-only magnitude
   (``MeleeMS`` 0.15 / ``RangedMSMultiplier`` 0.667) stays OUT of the
   registry: the wiki cache is authoritative and records no branch.
@@ -245,7 +245,7 @@ def test_cached_identity_pins_name_id_price_stats_and_passive():
     attack speed + 45 flat move speed, classic-SR mode only, tier 3 boots.
     The cache stats block carries lifesteal.flat = 0 (the effective 5.0 is
     the typed sustain entry), the parsed wiki branch list is EMPTY, and as
-    of the 16.16.1 re-pull Riot's own description no longer declares the
+    of the 16.16.1 re-pull Riot's own description does not declare the
     Noxian Gait passive either — riotDescription is now a bare stats
     block with no ``<passive>`` tag and no branch text at all."""
     item = _boots()
@@ -264,11 +264,10 @@ def test_cached_identity_pins_name_id_price_stats_and_passive():
     # No parsed wiki branch exists at all — no magnitude can ride the cache.
     assert item["passives"] == []
     assert item["noEffects"] is True
-    # Riot's own description no longer declares Noxian Gait either: it is
-    # now a bare stats block, with no passive tag and no branch sentence
-    # (previously "Attacks against Champions grant Move Speed On-Hit
-    # decaying over 2 seconds." rode this field with no magnitude — that
-    # sentence itself is gone from the current source).
+    # Riot's own description does not declare Noxian Gait either: it is
+    # a bare stats block, with no passive tag and no branch sentence (the
+    # "Attacks against Champions grant Move Speed On-Hit decaying over 2
+    # seconds." sentence is absent from the current source).
     description = item["riotDescription"]
     assert f"<passive>{PASSIVE_NAME}</passive>" not in description
     assert "Noxian Gait" not in description
@@ -514,7 +513,7 @@ def test_the_passive_is_not_compiled_into_any_damage_packet():
 
 def test_no_riot_map_or_mode_admission_exists_for_the_branch():
     """The branch is silent on EVERY cached source now: as of the
-    16.16.1 re-pull, Riot's own description no longer declares Noxian
+    16.16.1 re-pull, Riot's own description does not declare Noxian
     Gait at all (no ``<passive>`` tag, no branch sentence), the cached
     wiki carries NO branch to admit, and the source audit records zero
     declared effects and zero conflicts for the item — there is nothing
@@ -530,7 +529,7 @@ def test_no_riot_map_or_mode_admission_exists_for_the_branch():
 def test_the_movement_magnitude_is_unsourced_and_the_registry_invents_none():
     """No numeric magnitude for Noxian Gait exists anywhere in the cached
     sources: the wiki branch list is empty, and as of the 16.16.1
-    re-pull riotDescription no longer even declares the passive (it is a
+    re-pull riotDescription does not even declare the passive (it is a
     bare stats block naming only the boots' ordinary attack-speed /
     move-speed / life-steal stats).  The typed registry MUST NOT invent
     a magnitude: the ITEM_EFFECTS entry carries the 3O typed key set
@@ -574,7 +573,7 @@ def test_the_movement_magnitude_is_unsourced_and_the_registry_invents_none():
 
 def test_decay_duration_is_sourced_and_binary_confirmed():
     """The 2.0s decay is sourced from the binary capture ONLY now:
-    riotDescription no longer carries any Noxian Gait sentence (the
+    riotDescription carries no Noxian Gait sentence (the
     "decaying over 2 seconds" text is gone along with the passive tag,
     as of the 16.16.1 re-pull), but the parsed game files
     (data/bin/items.bin.json 16.15.8024387, Items/3172) still confirm
@@ -745,7 +744,7 @@ def test_a_champion_targeted_auto_grants_no_movement_state_the_magnitude_is_unso
     attack grants NO movement event today, because a decaying-movement
     model would need a move-speed magnitude that is unsourced by every
     available cached source (the wiki branch is empty, and as of the
-    16.16.1 re-pull riotDescription no longer even declares the passive
+    16.16.1 re-pull riotDescription does not even declare the passive
     — only the client binary encodes MeleeMS/RangedMSMultiplier, which
     the registry refuses to promote to a typed key from an unofficial
     source).  The fail-closed absence is asserted directly, alongside

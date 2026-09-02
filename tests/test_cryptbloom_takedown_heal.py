@@ -878,8 +878,8 @@ def test_roster_support_holder_kill_receipted_identically_to_receipt_walk():
     """P3-3K (G1/G2 fix): a ROSTER Cryptbloom holder (ally Brand, a
     non-support champion whose kit authors no ally effects) whose first-pair
     defender dies is receipted identically in the compiled walk and the
-    receipt walk — previously the compiled base panel synthesized no
-    takedown (no target_id) and silently omitted the heal."""
+    receipt walk — the compiled base panel synthesizes the takedown (with a
+    target_id) rather than silently omitting the heal."""
     from src.calculator.pipeline import FightParams
     from src.calculator.scenario import ChampionLoadout
     from src.calculator.stats import calculate_total_stats

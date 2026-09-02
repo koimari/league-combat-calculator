@@ -224,7 +224,7 @@ def test_gunmetal_gait_source_conflict_keeps_boot_stats_eligible():
     # The boot declares its life-steal sustain, so the ladder answers from the
     # declaration.  Noxian Gait's Riot-only movement branch is still out of
     # scope and is still not a refusal: what changed is that the sentence
-    # saying so is gone, because a modelled item no longer carries prose.
+    # saying so is gone, because a modelled item carries no prose.
     # ``modeled_state`` and not ``modeled_effect``: the boot joined
     # ITEM_INPUT_OPTIONS as the citation carrier for the Noxian Gait named
     # boundary, and membership in that registry is what the rung reads.
@@ -611,8 +611,8 @@ def test_opening_defense_items_with_blocked_target_state_never_claim_target_supp
         UtilityDimension.REVIVE,
         UtilityDimension.SHIELD,
     }
-    # The population used to be a hand table of withheld target mechanics.
-    # It is now the target ladder's own refusal set, so the assertion is that
+    # The population is the target ladder's own refusal set, not a hand
+    # table of withheld target mechanics, so the assertion is that
     # a defensive-dimension item the ladder refuses refuses for both gates —
     # never that one of the two quietly stayed eligible.
     for item_name, dimensions in UTILITY_OUTCOMES.items():
@@ -946,9 +946,9 @@ def test_every_holder_survival_field_is_a_field_of_a_declared_payload() -> None:
 def test_the_state_gated_payloads_are_the_ones_declaring_both_fields() -> None:
     """The named tuple is the shape, so a third such payload is not silent.
 
-    ``gated_state_reason`` used to ask every payload for an ``exclusivity``
-    and an ``option`` and read an absence as "no gate"; it now selects the
-    payloads that declare both, and this pins the set to the declarations.
+    ``gated_state_reason`` selects the payloads that declare both an
+    ``exclusivity`` and an ``option``, rather than asking every payload and
+    reading an absence as "no gate"; this pins the set to the declarations.
     """
     both = {
         type(rule.payload)
@@ -1135,10 +1135,10 @@ def test_a_status_nobody_classified_is_ineligible_on_both_lanes() -> None:
 def test_the_two_attacker_eligibility_gates_agree_for_every_cached_item() -> None:
     """One answer, two questions — the collapse pinned rather than assumed.
 
-    ``calculation_eligible`` used to carry an escape term
-    ``optimizer_eligible`` never had: a named set of blocked items an explicit
-    request could still compute.  The set was empty, so the flip's deletion of
-    it moved no answer and the two gates became the same expression.  That is a
+    ``calculation_eligible`` carries no escape term ``optimizer_eligible``
+    lacks: the named set of blocked items an explicit request could still
+    compute was empty, so the flip's deletion of it moved no answer and the
+    two gates became the same expression.  That is a
     real reduction in what this module can express, and it is asserted here so
     that a future divergence between "BIS may build with it" and "a request
     naming it may be computed" has to be written deliberately, in both

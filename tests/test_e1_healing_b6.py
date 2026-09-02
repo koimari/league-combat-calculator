@@ -318,7 +318,7 @@ def test_zaahen_grim_deliverance_heals_flat_per_champion_hit():
         ("KSante", "top"),
         # Locke W's grey-health heal is now implemented by the E8a
         # grey-health primitive (see tests/test_p1_review_1.py) — Locke
-        # authors a heal and no longer belongs in this list.
+        # authors a heal and does not belong in this list.
         # Mordekaiser's W recast heal is now implemented by the E8a
         # grey-health primitive (see tests/test_e8_grey_health.py); its R
         # heals 10% of the TARGET's maximum health and stays out of the

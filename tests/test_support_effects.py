@@ -277,7 +277,7 @@ def test_a_self_scoped_row_flags_itself_as_a_self_grant():
     """A ``self`` scope override carries the self flag with it: the pair
     ``scope="self"`` / ``target_self=False`` is unreachable through the
     ordinary path, and the roster resolver's teammate-less branch reads
-    the flag, so it used to drop the shield in a solo fight."""
+    the flag, so a wrong flag would drop the shield in a solo fight."""
     effects = derive_ally_effects(
         get_champion("Rumble"),
         18,
@@ -314,7 +314,7 @@ def test_sivir_spell_shield_heals_only_sivir():
     """ "she heals herself and activates Fleet of Foot" â the "and" is a verb.
 
     The declaring sentence names no ally, so the packet is the caster's
-    alone.  MERGE: the scanner no longer publishes it at all, and that is
+    alone.  MERGE: the scanner does not publish it at all, and that is
     the more capable answer.  The wiki gates the heal on a successful
     block â "Upon successfully blocking a hostile effect, she heals
     herself" â which a scanner row cannot express: it would pay at the

@@ -39,10 +39,10 @@ calculator exposes. It is documented in ASSUMPTIONS, never added. The
 taunt itself is sourced and already emitted as a control event, which is
 why E is ``no_damage`` rather than ``out_of_scope``.
 
-**The W phantom-proc pin.** ``_defensive_ball_curl`` used to force
-``count=max(autos, 1)``. Because ``damage_entry``'s consumers read ONLY
-``parts``, the default ``w_thorns_autos=0`` still priced one full thorns
-proc — ``autos=0`` and ``autos=1`` scored identically. Zero enemy autos
+**The W phantom-proc pin.** A ``_defensive_ball_curl`` that forces
+``count=max(autos, 1)`` prices one full thorns proc at the default
+``w_thorns_autos=0``, because ``damage_entry``'s consumers read ONLY
+``parts`` — ``autos=0`` and ``autos=1`` score identically. Zero enemy autos
 must cost zero; ``TestThornsCountsZeroAsZero`` pins that, since the same
 "floor the count at 1" reflex is what the Rumble P row in this batch had
 to avoid as well.

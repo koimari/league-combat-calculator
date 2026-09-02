@@ -118,8 +118,8 @@ def test_the_sort_key_carries_the_slot_and_not_the_rank() -> None:
     """Element 1 of the walk's total order is the fold's output.
 
     Since S6 the fold is the identity for every arming rank, so a heal and
-    a debuff armed at one timestamp no longer tie on the phase component
-    and no longer fall through to the tie-breaks after it.  A reactive
+    a debuff armed at one timestamp do not tie on the phase component
+    and do not fall through to the tie-breaks after it.  A reactive
     strike-back still ties with a late barrier, which is the one pair the
     fold still holds.
     """
@@ -585,8 +585,8 @@ def test_the_classified_ladder_reproduces_the_slots_it_replaced() -> None:
     """The three legacy branches — -2.0, -1.0 and the 1.0 fall-through.
 
     The fall-through is the load-bearing one: an unlisted kind still arms
-    at the rank the open ``else 1.0`` gave it.  What S6 changed is that the
-    three ranks the 1.0 covered no longer answer to one slot, so the kind
+    at the rank the open ``else 1.0`` gave it.  Since S6 the three ranks
+    the 1.0 covered do not answer to one slot, so the kind
     ladder's answers are read one by one instead of as a single fold.
     """
     assert support_transition_rank({"kind": "stasis"}) is TransitionRank.STATE_GRANT
@@ -646,7 +646,7 @@ def _declared_ranks(path: Path) -> list[tuple[str, str]]:
 
 
 def test_every_packet_author_declares_a_named_rank() -> None:
-    """The population that used to write an open float, now named.
+    """Every packet author names a rank; none writes an open float.
 
     Four of these were named before the last author converted (three at 0A,
     plus C4's Abyssal Mask Unmake); the rest are the retired ``_priority``
@@ -698,8 +698,8 @@ def _armed_at(rank: TransitionRank, source: str, time: float = 0.0):
     """One authored packet's sort key at *rank*, all tie-breaks held equal.
 
     Everything after element 1 is identical between two calls with the same
-    *source*, which is exactly the position the collapsed slot used to push
-    the decision down to.
+    *source*, which is exactly the position a collapsed slot pushes the
+    decision down to.
     """
     event = {
         "sequence": 0,
@@ -831,7 +831,7 @@ def test_s6_moved_the_ordering_and_not_the_classification() -> None:
         )
         == actions_module._RECOVERY_CLASSIFIED_RANKS
     )
-    # ...and it is no longer expressible as the fold's output, which is what
+    # ...and it is not expressible as the fold's output, which is what
     # makes naming it load-bearing rather than stylistic.
     assert {
         rank

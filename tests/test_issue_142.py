@@ -1,12 +1,11 @@
 """Issue #142 — fail closed on unknown support ``target_scope`` values.
 
-The coupled resolver (``_support_target_ids``) used to land every
-unrecognized / missing / structurally invalid scope in a terminal
-catch-all that silently redirected the packet to teammate zero (or
-dropped it for an enemy attacker) — contradicting the published
-``fail_closed: True`` participant-ledger contract.  These tests lock the
-closed vocabulary: every resolution scope has an explicit branch, the
-terminal default is an unreachable exhaustiveness guard, and emitters
+A terminal catch-all in the coupled resolver (``_support_target_ids``) that
+silently redirects every unrecognized / missing / structurally invalid scope
+to teammate zero (or drops it for an enemy attacker) contradicts the
+published ``fail_closed: True`` participant-ledger contract.  These tests
+lock the closed vocabulary: every resolution scope has an explicit branch,
+the terminal default is an unreachable exhaustiveness guard, and emitters
 validate before any packet can be created.
 """
 
@@ -131,8 +130,8 @@ _EXPECTED = {
 )
 def test_every_resolution_scope_has_an_explicit_branch(actor, scope):
     """The closed contract: every scope resolves to the exact tuple, with
-    ``one_teammate`` promoted to an explicit branch (it previously rode the
-    terminal catch-all)."""
+    ``one_teammate`` an explicit branch rather than a rider on the terminal
+    catch-all."""
     attacker = next(a for a in _roster() if a.participant_id == actor)
     expected = _EXPECTED[actor][scope]
     target_ids, policy = _support_target_ids(

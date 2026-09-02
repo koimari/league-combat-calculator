@@ -2415,8 +2415,8 @@ def _named_like_the_real_timeline(payload):
     ``build_participant_timeline`` names every number it publishes, and the
     BIS objective refuses to rank a number no entry names (D-62): a payload
     with bare numbers is a payload nobody can ask what its numbers mean.  So
-    a fake that returned one would be a fake of a shape the tree no longer
-    has.  The map is built through the same writer the views use rather than
+    a fake that returned one would be a fake of a shape the tree does not
+    have.  The map is built through the same writer the views use rather than
     hand-listed, which is what keeps the fake honest as the writer changes.
     """
     payload["dispositions"] = name_every_number(payload, LeafWriter())
@@ -2770,7 +2770,7 @@ def test_roster_bis_uses_sourced_role_shop_scope_before_scoring_candidates():
 
 
 def test_roster_bis_includes_event_certified_target_defenses():
-    """Event-certified target defenses no longer disappear from the BIS pool."""
+    """Event-certified target defenses stay in the BIS pool."""
     response = app.test_client().post("/api/bis", json=_bis_request("enemy"))
     assert response.status_code == 200
     body = response.get_json()
@@ -4110,8 +4110,8 @@ def test_post_window_damage_receipt_preserves_pair_amount_and_skip_reason():
 def _collector_execute_event() -> dict:
     """One packet that leaves the target inside The Collector's threshold.
 
-    It carries the pair engine's own stamp, because that is what the walk
-    used to read and what this pair of tests is about.
+    It carries the pair engine's own stamp, because that stamp is what this
+    pair of tests is about.
     """
     return {
         "time": 1.0,
@@ -6048,9 +6048,9 @@ class TestCatalystIsTwoPassesAndNotARecursion:
     def test_an_unanswerable_ledger_raises_the_typed_failure(self):
         """Criterion 13's third clause: not an untyped ValueError.
 
-        A caller could not previously tell "this needs another pass" from
-        "this request is malformed" -- both arrived as ValueError, and
-        /api/calculate turned both into a 400.
+        A caller must be able to tell "this needs another pass" from
+        "this request is malformed" -- as one ValueError both would arrive
+        alike, and /api/calculate would turn both into a 400.
         """
         from src.calculator import participant_timeline as timeline
         from src.calculator.program.dependency import IncompleteDependency
@@ -6087,7 +6087,7 @@ class TestCatalystIsTwoPassesAndNotARecursion:
 
 
 class TestThePublishedReceiptFieldsHaveOneProducer:
-    """Two fields the receipt view used to compute for itself (criterion 3).
+    """Two fields the receipt view must not compute for itself (criterion 3).
 
     Both were spelled as a *default* behind ``event.get(...)``, which is the
     least visible way for a published number to acquire a second producer:

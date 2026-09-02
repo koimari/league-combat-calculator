@@ -2,7 +2,7 @@
 
 The resolver derives setup/consume edges from the module OPTIONS rotation
 declarations (``get_champion_option_rotation``).  These tests lock the
-semantics that were previously invisible to the receipt:
+semantics the receipt must make visible:
 
 - Diana ``moonlight_reset`` — consume(E <- Q): a real ``Q→E`` mark_consume
   edge cited with the option; the option gates E's dash count, not the edge.

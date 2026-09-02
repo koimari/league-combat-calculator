@@ -389,9 +389,9 @@ class TestCastOrderOverrides:
 class TestDerivedPathRotations:
     """Champions whose order the derivation computes, not a hand seed.
 
-    Every row here used to live in ``_OVERRIDE_CHAMPIONS``.  A retirement
+    Every row here is a retired ``_OVERRIDE_CHAMPIONS`` seed.  A retirement
     moves its assertions rather than deleting them: the same order, the
-    same mechanic, now asserted on the path that computes it.  Syndra's
+    same mechanic, asserted on the path that computes it.  Syndra's
     row additionally demands the declared kind and the wiki revision in
     the rationale, which a hand seed's prose never carried; the others
     were seeds the derivation already reproduced, held only until a
@@ -839,11 +839,11 @@ class TestTimedCadence:
     def test_zeds_declaration_refuses_an_order_that_skips_the_shadow(
         self, champion_by_name
     ) -> None:
-        """The fixed default order is no longer a legal request for Zed.
+        """The fixed default order is not a legal request for Zed.
 
         D-86 at a champion the phase's criteria never name: a declared
-        prerequisite states impossibility, so ``Q, W, E, R`` — the control
-        the test above used to run — comes back as a refusal quoting the
+        prerequisite states impossibility, so ``Q, W, E, R`` — the fixed
+        default — comes back as a refusal quoting the
         Shadow-placement mechanic rather than as a fight priced against a
         kit Zed cannot cast.
         """

@@ -114,7 +114,7 @@ each is a documented, low-risk trade-off)
   in the real repo, so it passes via the tracked-path check regardless.
 - This module excludes itself from the scan: its own source text
   necessarily contains the guard-idiom substrings it searches for (as
-  regex literals and, previously, as test fixture strings), which would
+  regex literals), which would
   otherwise create a confusing self-referential match. The unit test for
   ``_GUARD_RE`` below deliberately uses a non-``data/`` path so it does
   not depend on this exclusion either.

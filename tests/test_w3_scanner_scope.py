@@ -1,7 +1,7 @@
 """W3 — the ally-support scanner grants to whoever its sentence names.
 
-A leveling row used to default to ``one_teammate`` whenever its declaring
-sentence named no ally, so six casts arrived in served results as a heal or
+A leveling row whose declaring sentence names no ally never defaults to
+``one_teammate``, the default that would serve six casts as a heal or
 shield on an ally the game never gives one:
 
     Bel'Veth R, Cassiopeia E, Ekko W, Locke W, Vladimir R, Zilean R
@@ -350,7 +350,7 @@ class TestTheRecipientRule:
     def test_allied_alone_is_not_a_recipient(self):
         """Bel'Veth R's True Form sentence ends "...spawn from allied and
         enemy minions that die nearby" -- "allied" qualifying a noun that
-        receives nothing used to carry her heal to a teammate."""
+        receives nothing does not carry her heal to a teammate."""
         assert _ALLY_PROSE.search("allied and enemy minions that die nearby") is None
         assert _ALLY_PROSE.search("the target allied champion") is not None
         assert _ALLY_PROSE.search("all allied units") is not None

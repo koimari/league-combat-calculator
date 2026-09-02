@@ -987,7 +987,7 @@ class TestAtomLabel:
         assert _atom_hash(CORRECTED_FOCUS_ATOM) == "c11240f633391d49"
 
     def test_focus_window_atom_is_relabeled(self):
-        # Contract: the 4s effects[0] atom no longer claims to be the
+        # Contract: the 4s effects[0] atom does not claim to be the
         # active duration — it carries the corrected label/atom_id (the
         # pinned record: timing.stack_duration, evidence "stack
         # duration@effects[0].description", values [4.0], units ["s"],
@@ -1129,8 +1129,8 @@ class TestUnchangedBoundaries:
             == 10.0
         )
         from src.calculator import (
-            cleanse_eligibility,  # noqa: F401
-            defensive_effects,  # noqa: F401
+            cleanse_eligibility,  # noqa: F401 - imported to register cleanse
+            defensive_effects,  # noqa: F401 - imported to register grey health
         )
 
     def test_module_source_and_review_status_unchanged(self):

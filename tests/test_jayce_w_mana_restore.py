@@ -856,9 +856,9 @@ def test_p112_hail_of_blades_per_swing_restore_timing():
 
     ``_auto_restore_schedule`` runs before ``_prepare_hail_attack_schedule``
     installs Hail's stack-sensitive schedule on ``state.hail_attack_times``,
-    so it used to fall back to the uniform base schedule.  It now goes
+    so reading that field would give the uniform base schedule.  It goes
     through ``_restore_stream_attack_timestamps``
-    (``src/calculator/damage.py``), which resolves that SAME schedule
+    (``src/calculator/damage.py``) instead, which resolves that SAME schedule
     directly from the keystone effect, so every restore lands at its real
     swing time.
 

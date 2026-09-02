@@ -805,11 +805,11 @@ class TestFightIntegration:
 def _command_slot():
     """Command's declared chain slot, resolved for a Mandate holder.
 
-    The window arithmetic used to be two module helpers in ``damage.py``
-    taking a duration nobody sourced at the call site; Phase 3 moved both
-    into the rule's ``TriggerWindow(IMMOBILIZE, merge=EXTEND,
-    boundary=OPEN_CLOSED)`` and its interpreter.  These tests follow, so
-    they keep pinning the behaviour rather than a deleted spelling.
+    The window arithmetic lives in the rule's ``TriggerWindow(IMMOBILIZE,
+    merge=EXTEND, boundary=OPEN_CLOSED)`` and its interpreter (Phase 3), not
+    in ``damage.py`` helpers taking a duration nobody sourced at the call
+    site.  These tests follow, so they keep pinning the behaviour rather
+    than a deleted spelling.
     """
     from src.calculator.interpreters import delta_amp
     from src.calculator.item_behavior import AmpChainSlot

@@ -1,4 +1,4 @@
-"""C6 — a custom ``cast_order`` may no longer delete a recast slot (D-11).
+"""C6 — a custom ``cast_order`` never deletes a recast slot (D-11).
 
 The defect: both request paths validated a requested order against the
 literal ``sorted(order) == ["E", "Q", "R", "W"]``, so the only orders a
@@ -174,9 +174,8 @@ class TestPartialOrdersAreRunnable:
     """The widening the shape rule implies, exercised end to end.
 
     ``validate_cast_order_shape`` accepts any non-empty list of distinct
-    slots, so a request may now name a *subset* of the champion's kit —
-    both request paths previously demanded a four-slot permutation and
-    raised on anything shorter.  ``/api/calculate`` reads ``cast_order``
+    slots, so a request may name a *subset* of the champion's kit rather
+    than a four-slot permutation.  ``/api/calculate`` reads ``cast_order``
     straight off the payload, so this is a live widening of a public
     request parameter and not merely an internal shape rule.
     """
@@ -263,11 +262,11 @@ class TestOrderableSlotsAnswerTheChampionQuestion:
     def test_the_raise_is_reachable_from_the_request_path(self):
         """The fail-closed half must fire where a request is decided.
 
-        ``cast_slot_surface`` used to drop an unstamped ``Q2`` as a rider
-        row, so the only thing that could reach ``orderable_slots``'s raise
-        was a hand-built surface — and a real kit carrying one was silently
-        deleted from the requested order instead, which is the exact defect
-        C6 exists to kill.
+        If ``cast_slot_surface`` dropped an unstamped ``Q2`` as a rider
+        row, the only thing that could reach ``orderable_slots``'s raise
+        would be a hand-built surface — and a real kit carrying one would be
+        silently deleted from the requested order instead, which is the exact
+        defect C6 exists to kill.
         """
         kit = dict(_syndra_kit(120))
         kit["W2"] = {"name": "Invented recast", "cooldown": 4.0, "total_raw": 10.0}

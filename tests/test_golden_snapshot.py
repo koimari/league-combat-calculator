@@ -1042,10 +1042,9 @@ class TestRepricingWindowCoverage:
         assert max(ticks) / min(ticks) == pytest.approx(expected, rel=1e-2)
 
     def test_the_longer_fight_prices_the_lifeline_expiry(self, coupled):
-        """The refusal this scenario's short window used to dodge is retired.
+        """A fight outliving the temporary maximum prices its expiry.
 
-        A fight outliving the temporary maximum used to be withheld.  The
-        expiry is modelled now, so the same roster at the shared eight
+        The expiry is modelled, so the same roster at the shared eight
         seconds prices — and it prices by *doing the arithmetic*: the burn
         ticks step up while the maximum is raised and fall back to their
         opening size once it lapses, which a deleted refusal could not
@@ -1459,7 +1458,7 @@ class TestSyndraPinScenarios:
         assert "Q2" in slots("syndra_derived_order_120")
 
     def test_a_custom_order_keeps_the_recast_slot(self, coupled):
-        """The defect C6 corrected: the request used to delete this row.
+        """The defect C6 corrected, pinned: the request keeps this row.
 
         This test replaces the pre-C6 ``..._drops_the_recast_slot_today``,
         which pinned the defect and had to invert with the fix.  Both ends

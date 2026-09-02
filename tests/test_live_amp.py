@@ -386,7 +386,7 @@ def test_the_contribution_rises_in_a_multi_attacker_roster():
     Add one ally and the same holder's own packets land on a target the
     roster took low sooner and harder — precisely the input a pair engine
     cannot see and the pair preview therefore cannot price.  The claim is
-    the *rise*: the solo figure is no longer zero (this holder alone now
+    the *rise*: the solo figure is not zero (this holder alone
     reaches the 40% threshold inside the window), so the two rosters are
     compared against each other rather than against a stale zero.
     """

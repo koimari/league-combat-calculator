@@ -150,7 +150,7 @@ def test_the_shield_group_is_declared_whole_and_only_where_it_exists() -> None:
 
 
 def test_a_dropped_shield_number_raises_rather_than_shielding_for_zero() -> None:
-    """The fail-closed contract the item-name branch used to buy."""
+    """The fail-closed contract holds without the item-name branch."""
     broken = dict(ITEM_EFFECTS[SHIELDING])
     broken.pop("shield_melee_base")
     with pytest.MonkeyPatch.context() as patcher:

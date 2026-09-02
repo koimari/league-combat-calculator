@@ -142,7 +142,7 @@ def test_the_same_mechanic_fires_once_its_trigger_is_cast(item, row):
     ],
 )
 def test_a_burn_needs_an_ability_hit_to_light_it(item, row, was):
-    """Autos light no burn; *was* is what the ungated window used to price."""
+    """Autos light no burn; *was* is the figure an ungated window would price."""
     bare = _fight([], "auto_only")
     held = _fight([item], "auto_only")
 
@@ -171,11 +171,11 @@ def test_the_same_burn_lights_once_an_ability_lands(item):
 def test_the_hatefog_burn_tail_keys_off_the_accepted_r_cast():
     """Hatefog refreshes a burn only where the rotation accepted the R.
 
-    Ahri L18, one rotation, Liandry's + Malignance: a Q-only order used to
-    stretch the burn window by Hatefog's whole duration off the mere presence
-    of an ``R`` in the priced kit (75.0), which is the R's own tail with no R
-    cast.  It now prices 37.5 — exactly what the same window prices without
-    Malignance — while the full order casts R and the tail is real.
+    Ahri L18, one rotation, Liandry's + Malignance: a Q-only order prices
+    37.5 — exactly what the same window prices without Malignance — not the
+    75.0 of a burn window stretched by Hatefog's whole duration off the mere
+    presence of an ``R`` in the priced kit, which is the R's own tail with no
+    R cast.  The full order casts R and the tail is real.
     """
     q_only = _fight(
         ["Liandry's Torment", "Malignance"], "one_rotation", cast_order=["Q"]

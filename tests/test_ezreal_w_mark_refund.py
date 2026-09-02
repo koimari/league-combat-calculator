@@ -940,7 +940,7 @@ def test_multi_target_mark_attribution_is_not_modeled():
     monster, or structure' — a per-target mark state the 1v1 model cannot
     express.  The fight prices ONE target; the only multi-target knob the
     engine exposes (``roster_target_index`` / ``roster_target_count``,
-    used to split a single ability's shared AoE charges across a roster)
+    which split a single ability's shared AoE charges across a roster)
     has NO effect on which mark gets consumed or refunded — the refund
     stream stays byte-identical no matter which roster slot/count is
     supplied, proving no per-target mark surface exists to attribute a

@@ -97,7 +97,7 @@ Contract under test (current runtime facts, verified before pinning):
   optimizer_eligible + calculation_eligible True, outcome_dimensions
   ["revive"]; ``target_item_model_coverage`` is "modeled" naming Rebirth
   and 50% base health.
-* XFAIL: none remain.  The five originally-absent mechanics — the typed
+* XFAIL: none remain.  The five mechanics — the typed
   mana/one-use/source-receipt keys, the explicit stasis-state authoring,
   the 300s-cooldown re-arm, the item_state_receipts Rebirth row, and the
   lethal-anchored 4s window in a sustained fight — are all implemented and
@@ -1451,7 +1451,7 @@ def test_sustained_fight_revive_is_anchored_to_the_lethal_hit():
 
 def test_sustained_fight_revive_lands_exactly_four_seconds_after_the_lethal_packet():
     """THE contract pin for item 4 in a sustained fight, in ABSOLUTE numbers
-    (the test above pins the same rule relationally).  The engine no longer
+    (the test above pins the same rule relationally).  The engine never
     lets a pre-lethal candidate shorten the window (it would have revived at
     10.654): the lethal packet at 9.981 arms the stasis, the applied revive
     lands at exactly 13.981 = 9.981 + the sourced 4.0s, and the armed window

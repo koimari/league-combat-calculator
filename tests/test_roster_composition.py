@@ -61,8 +61,8 @@ def test_a_combatant_refuses_a_request_that_is_not_an_actor_request(
 ):
     """``request`` is read by direct attribute the same way ``defenses`` is.
 
-    A stand-in used to buy every field it did not carry a silent default
-    -- an absent ``ability_ranks`` read as no manual allocation, an absent
+    A stand-in cannot buy a field it does not carry a silent default -- an
+    absent ``ability_ranks`` reading as no manual allocation, an absent
     ``ally_effects_enabled`` as opted out.
     """
     with pytest.raises(TypeError, match="ally:Lux: request must be an ActorRequest"):

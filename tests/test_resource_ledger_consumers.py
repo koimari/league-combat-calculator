@@ -183,8 +183,8 @@ def test_tear_manaflow_pays_the_fights_own_target_class():
     """Manaflow's two sourced amounts are picked by the fight's target class.
 
     "increased to 6 mana if they are a champion" is a class clause the ledger
-    already carried both readings of, and the driver used to pass none — so a
-    minion-class fight banked the champion amount.  Passing the fight's class
+    carries both readings of; a driver passing no class would bank the
+    champion amount in a minion-class fight.  Passing the fight's class
     is what makes admitting Tear into a minion-class fight honest.
     """
 
@@ -208,10 +208,10 @@ def test_tear_manaflow_pays_the_fights_own_target_class():
 def test_enlighten_runs_the_declaration_and_not_a_second_registry_read():
     """The three Enlighten numbers have one home: the ``ResourceRestoreRule``.
 
-    ``damage._enlighten_decl_for`` used to read the registry keys directly
-    while the compiled declaration was consumed by nothing — two homes for
-    one schedule.  It now resolves the rule, so the declaration's numbers ARE
-    the ones the ledger schedules.
+    ``damage._enlighten_decl_for`` resolves the rule rather than reading the
+    registry keys directly (which would leave the compiled declaration
+    consumed by nothing — two homes for one schedule), so the declaration's
+    numbers ARE the ones the ledger schedules.
     """
     from src.calculator.damage import _enlighten_decl_for
     from src.calculator.interpreters.stat_derivation import sole_declared_derivation

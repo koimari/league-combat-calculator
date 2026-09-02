@@ -9,7 +9,7 @@ module now reads through the atom accessor, and pins the neighbouring
 attack-speed row as a distinct atom so the two can never be confused
 again.
 
-The row is also no longer one lump.  The cached bounce sentence caps a
+The row is also not one lump.  The cached bounce sentence caps a
 swing at 8 bounces across enemies AND allows each enemy "up to one
 additional time per empowered attack", so one priced target takes
 exactly one bounce per empowered swing and the 8 never binds in a pair

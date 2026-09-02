@@ -32,9 +32,8 @@ def test_index_uses_scryglass_editorial_shell_without_changing_calculator_contra
 
     assert response.status_code == 200
     assert "Scryglass — Item calculator" in page
-    # #148: the brand returns to this app's canonical home. It used to point
-    # at the retired external marketing site; tests/test_frontend_qa_147_157.py
-    # owns the full contract.
+    # #148: the brand points at this app's canonical home, not an external
+    # marketing site; tests/test_frontend_qa_147_157.py owns the full contract.
     assert 'class="brand" href="/"' in page
     # The redesign has no visible page title — the rail header carries the
     # brand — so the H1 is a screen-reader landmark.
@@ -2060,8 +2059,8 @@ class TestIconUrlsAreHttps:
         assert hunger["statConversions"]["famine_base_ability_haste"] == 5.0
         bandlepipes = next(item for item in items if item["name"] == "Bandlepipes")
         assert bandlepipes["statConversions"]["bonus_attack_speed_ranged"] == 20.0
-        # Display fields the browser used to take from static/data.json ride
-        # the backend receipt, so the snapshot can never outrank it.
+        # Display fields the browser renders ride the backend receipt, not
+        # static/data.json, so the snapshot can never outrank it.
         phantom = next(item for item in items if item["name"] == "Phantom Dancer")
         swiftness = next(item for item in boots if item["name"] == "Boots of Swiftness")
         assert phantom["moveSpeed"] == 0.0
@@ -2963,8 +2962,8 @@ def test_a_panel_that_repeats_an_event_id_is_a_400_and_not_a_receipt(monkeypatch
 
     ``program/views/receipt`` builds a :class:`SumPlan` over the three
     published panels, and the plan refuses at construction when one panel
-    published an event id twice.  That is a *new failure mode on the serving
-    path*: a receipt with that defect used to serve, and now it does not.
+    published an event id twice.  That is a *failure mode on the serving
+    path*: a receipt with that defect is refused rather than served.
     Deliberate — a panel repeating its own id has no benign reading and no
     symptom — but a refusal nobody has watched fire is a refusal nobody
     knows the shape of, so this fires it and pins the shape: a named 400
@@ -2998,7 +2997,7 @@ def test_a_panel_that_repeats_an_event_id_is_a_400_and_not_a_receipt(monkeypatch
 
 
 def test_retired_routes_are_not_registered():
-    """Surfaces the API no longer carries; each had a more complete twin
+    """Surfaces the API does not carry; each has a more complete twin
     (/api/champions, /api/share/<token>, /api/receipts, /api/health/deep,
     scripts/patch_update.py)."""
     rules = {rule.rule: rule.methods for rule in app_module.app.url_map.iter_rules()}

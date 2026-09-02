@@ -223,9 +223,9 @@ ASSUMPTIONS = [
     "form of the cached stat row is escalated, not patched here.",
 ]
 
-# HARDCODED: verify on patch updates.  Kled's Grievous Wounds (historically
-# on the Bear Trap on a Rope pull) was REMOVED in V25.14 — the e8-interactions
-# worklist entry is stale and the wiki cache carries no wound on either Q
+# HARDCODED: verify on patch updates.  Kled's Grievous Wounds (the Bear Trap on
+# a Rope pull's wound) was REMOVED in V25.14 — the e8-interactions worklist
+# entry is stale and the wiki cache carries no wound on either Q
 # entry (autoresearch pass 11, 2026-08-07).  Empty declaration = no wound.
 GRIEVOUS_WOUNDS_SOURCES = frozenset()
 

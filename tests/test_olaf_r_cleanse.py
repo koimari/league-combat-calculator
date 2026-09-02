@@ -732,7 +732,7 @@ class TestSourceAndTypedValues:
         # no-damage placeholder.  The no-outgoing-damage half of the
         # brief's contract #1 is unchanged (total_raw 0, one structural
         # zero part, no cast time); what is added is the cached rank-3
-        # cooldown row (80) the packet module used to withhold and the
+        # cooldown row (80) the packet module publishes and the
         # stat_buff carrying the sourced resistances and bonus AD.
         _, abilities = _parse()
         r = abilities["R"]
@@ -1136,7 +1136,7 @@ class TestCleanseOfActiveControls:
 
     def test_r_cleanse_activates_at_the_cast_and_spends_its_use(self):
         # MERGE (the brief's contract #4 + #6): the app-level truncation
-        # this used to assert is unreachable now — nothing hostile is
+        # is unreachable in the app fight — nothing hostile is
         # still active once Ragnarok opens the rotation — so the
         # truncation ITSELF is pinned at kernel level above
         # (``test_slice4_*`` / ``test_r_denied_under_suppression``, which
@@ -1468,7 +1468,7 @@ class TestCastability:
         # at the cast, and the caster use receipt names
         # fired_while_crowd_controlled true.
         #
-        # MERGE: the app fight no longer reaches this state — a priced R
+        # MERGE: the app fight never reaches this state — a priced R
         # opens the rotation, so Olaf is never crowd-controlled when it
         # casts (see ``test_the_enemy_charm_never_blocks_olaf``).  The
         # contract is unchanged and is pinned at kernel level instead,
@@ -1858,8 +1858,8 @@ class TestSameTimeOrdering:
         # packet at t.  The R's own packets (cleanse/immunity/stat buff
         # at the cast) all dispatch in this support band; the exact
         # intra-band order is the walk's total order (action_key: rank,
-        # time, participant, sequence).  Read off the one rank ladder:
-        # the parallel float table this used to read is retired.
+        # time, participant, sequence).  Read off the one rank ladder;
+        # there is no parallel float table.
         from src.calculator.survival.actions import support_transition_rank
 
         shield_rank = support_transition_rank({"kind": "shield"})
@@ -2188,8 +2188,8 @@ class TestUnchangedBoundaries:
         assert abilities["E"]["damage_type"] == "true"
         # MERGE: the cooldown is published at the SELECTED rank now (the
         # reference build maxes E, and the cached row is 11/10/9/8/7 by
-        # rank, so rank 5 is 7) — it used to come back as the rank-1 row
-        # whatever rank was asked for.
+        # rank, so rank 5 is 7) — never the rank-1 row whatever rank was
+        # asked for.
         assert abilities["E"]["rank"] == 5
         assert abilities["E"]["cooldown"] == pytest.approx(7.0)
         assert abilities["E"]["resource_cost"] == pytest.approx(100.0)
@@ -2301,7 +2301,7 @@ class TestRegressionSurface:
         import tests.test_resource_ledger_champion_consumers
         import tests.test_resource_ledger_consumers
         import tests.test_state_lifecycle
-        import tests.test_state_lifecycle_consumers  # noqa: F401
+        import tests.test_state_lifecycle_consumers  # noqa: F401 - its import-time pins
 
     def test_existing_olaf_surfaces_stay_green(self):
         # The existing Olaf regression surface (the brief's contract
@@ -2313,7 +2313,7 @@ class TestRegressionSurface:
         # same 120 full-entry champions Olaf sat in.
         import tests.test_e8_shields
         import tests.test_full_entry_packets
-        import tests.test_support_effects  # noqa: F401
+        import tests.test_support_effects  # noqa: F401 - its import-time pins
 
 
 # The full mandated sanity gate (the brief's contract #15):

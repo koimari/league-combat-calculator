@@ -536,8 +536,8 @@ def test_malformed_evidence_member_is_rejected(member, message: str) -> None:
 def test_the_evidence_union_is_the_closed_nine() -> None:
     """Nine members, and ``StreamMembership`` deliberately absent.
 
-    It would have resolved against five hand name sets Phase 2 deleted, so it
-    could only ever have been evidence for something that no longer exists.
+    It would resolve against five hand name sets Phase 2 deleted, so it
+    could only ever be evidence for something that does not exist.
     """
     assert {
         "Symbol",

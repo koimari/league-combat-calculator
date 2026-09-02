@@ -74,10 +74,10 @@ def _auto_row(champion: str, items: list[str], *, deterministic: bool = False):
 class TestSwingScheduleUnderAttackSpeedKits:
     """Mechanism 1: the swing schedule resolves instead of falling back.
 
-    A kit-granted attack-speed steroid used to recompute the auto count on
-    the flat model while the Rageblade ramp schedule kept its own length;
-    the mismatch dropped the schedule and every static on-hit row stayed
-    eventless.
+    A kit-granted attack-speed steroid that recomputes the auto count on
+    the flat model while the Rageblade ramp schedule keeps its own length
+    mismatches the two, drops the schedule and leaves every static on-hit
+    row eventless.
     """
 
     def test_ashe_rageblade_certifies_complete(self):
@@ -495,7 +495,7 @@ class TestEclipseStackPairingCadence:
 
 
 #: Champions whose Eclipse row was coarse before the walk was completed —
-#: one per reason the cursor used to abandon a cast (an up-rounded cast
+#: one per reason a cursor can abandon a cast (an up-rounded cast
 #: time, a multi-hit cast's repeated packets, a forced-swing cast).
 ECLIPSE_COARSE_CHAMPIONS = [
     "Ziggs",

@@ -781,7 +781,7 @@ def test_deaths_dance_deferral_falls_back():
 
 def test_knights_vow_redirect_compiles_and_stays_byte_parity():
     """Knight's Vow's Worthy redirect is staged by the compiled path (P3
-    package 3S): the roster capability report no longer poisons the
+    package 3S): the roster capability report does not poison the
     context, the compiled panels ride the shared kernel, and the survival
     rows stay byte-equal to the legacy walk.  The CC-blocked attacker's
     total_damage is the documented delta (the receipt/legacy totals are
@@ -2121,7 +2121,7 @@ def _covering_scenario(fixture):
     declares, which is the same join the retirement schedule made while this
     family still had a row there — read rather than named, so a scenario set
     that stops covering the owner fails here instead of quietly comparing a
-    roster that no longer holds it.
+    roster that does not hold it.
     """
     assert fixture.owner in {
         rule.owner
@@ -2258,7 +2258,7 @@ class TestTheFromDeclarationPriceReproducesThePairEngines:
         to be non-trivial and the equality is known to be breakable. The raw
         total is positive and strictly larger than the priced one, so
         mitigation really happened; and the same declaration priced one point
-        of resistance away from the fight's own no longer matches, so the
+        of resistance away from the fight's own does not match, so the
         assertion above is sensitive to the number it is checking.
         """
         parsed, resolved, params, result = _pair_priced(PRICING_EQUIVALENCE)

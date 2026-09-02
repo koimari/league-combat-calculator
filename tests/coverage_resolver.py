@@ -1380,7 +1380,7 @@ def resolve_source_ref(
 
     The revision is what makes it reproducible, so url and revision are
     matched together: a url whose revision has moved on is a citation of a
-    page that no longer says what the claim says it says.  For an **item**
+    page that does not say what the claim says it says.  For an **item**
     claim the entry additionally has to be that item's — a review of some
     other item is not a review of this one.
     """

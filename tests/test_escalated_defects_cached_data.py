@@ -162,8 +162,8 @@ def test_no_runtime_module_reads_the_item_atoms() -> None:
     *champion* rows in memory through ``atomizer.atomize_abilities`` and opens no
     file under ``data/atoms/``.  The entry's clause is about the ITEM atoms being
     summed by a serving path, so this pins the clause it actually makes — no src
-    module names the artifact in executable code — instead of the prose scan it
-    used to, which a provenance comment was enough to break.
+    module names the artifact in executable code — rather than a prose scan,
+    which a provenance comment is enough to break.
     """
     hits = sorted(
         {

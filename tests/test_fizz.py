@@ -76,7 +76,7 @@ def test_timed_w_ledger_sums_and_ticks_at_the_sourced_cadence():
 def test_timed_auto_stream_keeps_its_swings_when_w_rides_it():
     """With an ambient stream, W's empowered attack is one of its swings.
 
-    The auto row keeps every swing (W no longer consumes them onto its own
+    The auto row keeps every swing (W does not consume them onto its own
     row), and its per-swing receipts still reconcile.
     """
     result = run_fight(load_public_champion("Fizz"), 18, [], _timed_params())

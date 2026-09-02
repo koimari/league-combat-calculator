@@ -531,10 +531,10 @@ def test_custom_cast_orders_stay_refused():
 
 
 # ---------------------------------------------------------------------------
-# E/R disposition.  Both slots used to be unwired: E a stock zero-damage
-# receipt and R absent from SLOTS entirely.  Both are wired now — E prices
-# its sourced attack-speed window and R anchors the timed Plasma ledger —
-# and both still deal nothing, which is the pair of facts pinned here.  The
+# E/R disposition.  Both slots are wired, neither as a stock zero-damage
+# receipt nor absent from SLOTS: E prices its sourced attack-speed window
+# and R anchors the timed Plasma ledger, and both deal nothing, which is
+# the pair of facts pinned here.  The
 # coverage dict itself is pinned by ``TestCoverageMap``.
 # ---------------------------------------------------------------------------
 

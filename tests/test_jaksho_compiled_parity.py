@@ -817,7 +817,7 @@ def test_enemy_roster_jaksho_holder_poisons_the_compiled_context_today():
     )
     assert fast == legacy
     # P3-3R: the roster-side Jak'Sho holder compiles — the capability scan
-    # no longer poisons the context, and the enemy holder's Voidborn
+    # does not poison the context, and the enemy holder's Voidborn
     # machine runs through the compiled walk (10s of combat -> 5 stacks).
     assert ctx.uncompilable is False
     assert ctx.panels
@@ -826,7 +826,7 @@ def test_enemy_roster_jaksho_holder_poisons_the_compiled_context_today():
 
 def test_enemy_roster_jaksho_holder_compiles_after_certification():
     """P3-3R contract: the roster-side Jak'Sho holder compiles like the main
-    holder — the capability scan no longer poisons the context, panels are
+    holder — the capability scan does not poison the context, panels are
     built, and the compiled surface still deep-equals the receipt walk.
     Today the scan marks the context uncompilable, so this xfails."""
     main = get_champion("Ahri")
@@ -868,7 +868,7 @@ def test_enemy_roster_jaksho_holder_compiles_after_certification():
 
 
 def test_compiled_capability_scan_is_clean_for_jaksho():
-    """P3-3R: the capability scan no longer names Jak'Sho (it leaves
+    """P3-3R: the capability scan does not name Jak'Sho (it leaves
     COMPILED_WALK_UNREPRESENTABLE_ITEMS); a tuple-ledger champion (Riven)
     with Jak'Sho fails closed per evaluation via
     tuple_ledger_stack_metadata with fallback parity and an unpoisoned

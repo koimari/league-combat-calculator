@@ -249,8 +249,7 @@ def test_calculate_and_bis_share_coverage_boundary_for_main_build():
 
 def test_calculate_optimize_bis_share_coverage_boundary_for_allies():
     """An ally carrying a calc-blocked item is a 400 with the identical
-    message on every endpoint (optimize previously failed deep in the
-    optimizer instead)."""
+    message on every endpoint, optimize included."""
     payload = _ahri_payload(
         allies=[
             {

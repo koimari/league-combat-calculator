@@ -111,7 +111,7 @@ def test_scalar_row_as_observed_today():
     # P3-3J: the scalar is emitted from the FIRST control-bearing effect of
     # the entry only, so its evidence is exactly the one receipt from the
     # effect that sourced its value (0.5 root); effects[1]'s different
-    # durations no longer over-claim this row.
+    # durations do not over-claim this row.
     row = _scalar_row(_r_timing_rows(_ksante()))
     assert row["values"] == [0.5]
     assert row["units"] == ["s"]

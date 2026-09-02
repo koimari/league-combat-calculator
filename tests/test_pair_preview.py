@@ -422,8 +422,8 @@ def test_a_composed_fight_runs_the_reprice_half_of_the_walk_alone():
         composed["breakdown"][BURN_ROW]["total_damage"]
         == solo["breakdown"][BURN_ROW]["total_damage"]
     )
-    # More than the row leaves: the holder's own whole-total amp no longer
-    # levies a share on a number the composition throws away.
+    # More than the row leaves: the holder's own whole-total amp levies no
+    # share on a number the composition throws away.
     dropped = solo["breakdown"][SHADOWFLAME_ROW]["total_damage"]
     assert solo["total_damage"] - composed["total_damage"] > dropped
 

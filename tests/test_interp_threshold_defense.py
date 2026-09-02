@@ -215,7 +215,7 @@ def test_the_temporary_health_lifelines_owner_comes_from_the_declaration() -> No
 
     The pair engine sees a defender's resolved numbers and never its items,
     so both readers of this mechanic — the fight's coverage downgrade and
-    the optimizer's candidate rejection — used to spell the item.  Asserted
+    the optimizer's candidate rejection — need the item's name.  Asserted
     against the catalog rather than a literal, so the day another item grows
     the mechanic this stops rather than names the wrong one.
     """

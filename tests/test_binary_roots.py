@@ -100,7 +100,7 @@ def test_data_value_at_rank_is_one_based_and_fails_closed():
 
 
 def test_aurelion_sol_module_constants_come_from_the_binary():
-    """The pilot: the module no longer hand-copies its Stardust constants."""
+    """The pilot: the module does not hand-copy its Stardust constants."""
     from src.calculator.champions.aurelion_sol import (
         _E_EXECUTE_BASE_PCT,
         _E_EXECUTE_PCT_PER_100_STARDUST,

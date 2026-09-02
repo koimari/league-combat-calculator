@@ -458,10 +458,10 @@ class TestReviewedCrowdControl:
         """The four ticks belong to the charge: "charging for up to 1
         second, during which she ... heals herself every 0.25 seconds".
 
-        This is the defect the anchor exists for.  The ticks used to hang
-        off the scream's own damage event, so timing the scream at the end
-        of the charge would have pushed the charge's healing to 1.25-2.0s
-        — after the thing it happens during.
+        This is the defect the anchor exists for.  Ticks hung off the
+        scream's own damage event would follow a scream timed at the end
+        of the charge, pushing the charge's healing to 1.25-2.0s — after
+        the thing it happens during.
         """
         from src.calculator.calculate import calculate_payload
 

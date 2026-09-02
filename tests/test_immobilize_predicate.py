@@ -31,7 +31,7 @@ from src.calculator.survival.actions import TransitionRank
 
 # The literal C5 retired: the five kinds the walk itself decided were
 # immobilizing.  Pinned here, not read from the tree, because it is the
-# thing that no longer exists — and because the widening's size is what
+# thing the tree does not hold — and because the widening's size is what
 # makes these tests green over something (D-26).
 RETIRED_WALK_LITERAL = frozenset(
     {"immobilize", "stun", "root", "knockup", "suppression"}
@@ -152,7 +152,7 @@ class TestTheWidenedPredicateReachesSteadfast:
 
     @pytest.mark.parametrize("cc_kind", sorted(IMMOBILIZING_CC_KINDS))
     def test_every_immobilizing_kind_grants_the_immobilize_stack_count(self, cc_kind):
-        """All fifteen, not the five the walk used to know."""
+        """All fifteen, not the retired walk literal's five."""
         stacks, row = _stacks_after_one_cast(cc_kind=cc_kind)
         assert stacks == FORCE_IMMOBILIZE_STACKS, (
             f"D-08: cc_kind {cc_kind!r} is in IMMOBILIZING_CC_KINDS, so "

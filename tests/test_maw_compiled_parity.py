@@ -927,10 +927,10 @@ def _maw_timed_request() -> dict:
 def test_calculate_api_certifies_the_timed_maw_fight_it_once_withheld():
     """The frontier closed: Shen's Q is event-ordered, so the fight computes.
 
-    This case used to be the API's uncertified subject.  Every registered
-    attacker now reaches ``event_order_certified`` on a plain timed fight,
-    so the *premise* retired rather than the gate — which is why the fight
-    is pinned as certified here and the withholding is driven below.
+    Every registered attacker reaches ``event_order_certified`` on a plain
+    timed fight, so this case has no uncertified subject to withhold — the
+    *premise* retired rather than the gate, which is why the fight is
+    pinned as certified here and the withholding is driven below.
     """
     client = app_module.app.test_client()
     response = client.post("/api/calculate", json=_maw_timed_request())
@@ -1217,7 +1217,7 @@ def test_maw_enemy_holder_poisons_the_compiled_context():
     )
     assert fast == legacy
     # P3-3T: the roster-side Maw holder compiles like the main holder —
-    # the capability scan no longer poisons the context.
+    # the capability scan does not poison the context.
     assert ctx.uncompilable is False
     assert ctx.panels
 

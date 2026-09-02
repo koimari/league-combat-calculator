@@ -116,10 +116,10 @@ class _CommandNumbers(NamedTuple):
 def _command_effect() -> _CommandNumbers:
     """Command's sourced amp fraction and window, from its declared rule.
 
-    Both numbers used to arrive through a bespoke ``item_effects`` accessor.
-    They now arrive through the ``imperial_mandate.command`` declaration and
-    its ``ValueRef``s into ``ALLY_ITEM_EFFECTS`` — one home for the number,
-    one home for the shape.
+    Both numbers arrive through the ``imperial_mandate.command`` declaration
+    and its ``ValueRef``s into ``ALLY_ITEM_EFFECTS``, not a bespoke
+    ``item_effects`` accessor — one home for the number, one home for the
+    shape.
     """
     slot = delta_amp.resolve_slot(
         [COMMAND_ITEM],

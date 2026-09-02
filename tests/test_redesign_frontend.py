@@ -682,10 +682,10 @@ def _calculate_receipt():
 
 
 def test_the_event_order_panel_renders_from_the_published_result(tmp_path):
-    """eventorder.js used to wrap window.fetch to sniff /api/calculate, which
-    forced it to load before app.js. It reads the receipt app.js publishes on
-    "scryglass:result" instead — the same numbers, one script-order constraint
-    fewer."""
+    """eventorder.js reads the receipt app.js publishes on "scryglass:result"
+    rather than wrapping window.fetch to sniff /api/calculate, which would
+    force it to load before app.js — the same numbers, one script-order
+    constraint fewer."""
     receipt = _calculate_receipt()
     assert receipt["rotation"]["order"] == ["Q", "W", "E", "R"]
     panel = _event_order_panel([receipt], tmp_path)

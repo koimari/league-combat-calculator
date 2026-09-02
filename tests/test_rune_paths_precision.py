@@ -178,7 +178,7 @@ class TestLegendHaste:
         assert bare["champion_stats"]["ability_haste"] == (
             stacked["champion_stats"]["ability_haste"]
         )
-        casts = lambda result: {  # noqa: E731
+        casts = lambda result: {  # noqa: E731 - a one-use inline mapping
             slot: result["breakdown"][slot]["casts"] for slot in ("Q", "W", "E", "R")
         }
         assert casts(bare) == {"Q": 3, "W": 3, "E": 2, "R": 1}

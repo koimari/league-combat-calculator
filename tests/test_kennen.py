@@ -176,8 +176,8 @@ def test_the_storm_certifies_nothing_it_is_not():
     """R carries no ``event_order_certified``, and needs none.
 
     The vocabulary is a string every reader compares against
-    ("single_hit" / "auto_stack_proc"), so the ``True`` this row used to
-    carry never matched one; six bolts on a half-second beat are neither
+    ("single_hit" / "auto_stack_proc"), so a ``True`` on this row could
+    never match one; six bolts on a half-second beat are neither
     kind anyway, and the part's own cadence is what the ledger reads.
     """
     entry = row_review.entry("Kennen", "R", r_bolts=6)

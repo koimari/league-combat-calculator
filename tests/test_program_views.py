@@ -403,7 +403,7 @@ def test_the_writer_puts_the_leaf_and_records_its_entry_in_one_call() -> None:
 
 
 def test_a_number_inside_a_list_is_a_leaf_like_any_other() -> None:
-    """The one shape the walk used to carry through with no entry.
+    """A float inside a list gets an entry like any other leaf.
 
     ``row.nested.x`` got an entry and ``row.values[0]`` did not, because the
     list branch recursed into ``_walk``, which handed a bare float back

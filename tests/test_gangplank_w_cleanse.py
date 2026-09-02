@@ -1018,9 +1018,9 @@ class TestCrowdControlAndSuppression:
         assert result["main"]["cleanse_use"]["uses_after"] == 1
 
     def test_w_a_pull_is_the_declared_displacement_carve_out(self):
-        # F-9 correction to the P2-5 contract: ``pull`` used to read
-        # ``unknown_control`` because the cleanse carried its own kind
-        # vocabulary.  It is an Airborne subtype, and Remove Scurvy's
+        # F-9 correction to the P2-5 contract: ``pull`` is not
+        # ``unknown_control`` (the verdict of a cleanse carrying its own kind
+        # vocabulary).  It is an Airborne subtype, and Remove Scurvy's
         # declaration carves the displacement family out, so the interval
         # survives with the named excluded_control_kind denial instead.
         # A *misspelled* kind never reaches this layer at all (next test).

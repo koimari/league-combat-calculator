@@ -805,7 +805,7 @@ def test_supported_controls_are_removed(kind):
         ("airborne", "excluded_control_kind"),
         ("suppression", "excluded_control_kind"),
         # F-9: a pull is an Airborne subtype, so Purify's "except Airborne"
-        # carve-out reaches it.  It used to read ``unknown_control``.
+        # carve-out reaches it — never ``unknown_control``.
         ("pull", "excluded_control_kind"),
     ],
 )
@@ -844,8 +844,8 @@ def test_soft_kinds_never_create_downtime(kind):
     no downtime, so the cleanse receipt names control_not_active (there is
     nothing to remove) and the heal fires.
 
-    ``disarm`` used to stand here; it is not in ``CC_KIND_VOCABULARY``, so
-    no packet can carry it — ``silence`` is the soft kind that both the
+    ``disarm`` is not in ``CC_KIND_VOCABULARY``, so no packet can carry it
+    and it cannot stand here — ``silence`` is the soft kind that both the
     vocabulary and the cleanse table declare."""
     result = _simulate([_control(1.0, kind, 2.0)], [_purify(1.5)])
     target = result["target"]
@@ -858,9 +858,9 @@ def test_soft_kinds_never_create_downtime(kind):
 
 def test_purify_removes_a_flee():
     """F-9: ``flee`` is the Wiki's own name for a fear, and Purify removes
-    every crowd control its tooltip does not carve out.  It used to fail
-    closed as ``unknown_control`` — one hand-written cleanse vocabulary
-    that had never heard of a kind champion modules may author."""
+    every crowd control its tooltip does not carve out — never an
+    ``unknown_control`` refusal from a hand-written cleanse vocabulary that
+    has never heard of a kind champion modules may author."""
     result = _simulate([_control(1.0, "flee", 2.0)], [_purify(1.5)])
     target = result["target"]
     receipt = target["cleanse"]

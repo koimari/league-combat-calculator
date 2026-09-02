@@ -313,7 +313,7 @@ def _command_slot(*owners: str) -> "delta_amp.AmpSlot | None":
 
 
 def test_command_compiles_its_sourced_fraction_and_window() -> None:
-    """The two numbers the pair engine used to read through an accessor."""
+    """The two numbers the pair engine reads off the declaration."""
     slot = _command_slot("Imperial Mandate")
     assert slot is not None
     assert slot.owner == "Imperial Mandate"

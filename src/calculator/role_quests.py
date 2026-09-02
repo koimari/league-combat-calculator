@@ -106,8 +106,8 @@ def role_quest_meta(role: str, complete: bool) -> dict[str, object]:
 
 def max_champion_level(role: str, complete: bool) -> int:
     """Return the sourced level cap for the selected role-quest state."""
-    # Direct engine/unit-test callers historically supply level 20 without a
-    # role object.  Keep that internal contract; public loadouts use
+    # Direct engine/unit-test callers supply level 20 without a role object;
+    # that internal contract holds.  Public loadouts use
     # ``require_level_within_cap`` above and therefore still require the
     # completed top quest explicitly.
     if not role:

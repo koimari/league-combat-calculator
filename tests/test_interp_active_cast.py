@@ -1,8 +1,8 @@
 """The front door for the active-cast interpreter.
 
-Six items used to reach the fight engine through a three-branch formula
-ladder inside the number registry.  What is pinned here is that the same rows
-now come off declarations, term for term and float for float; that the
+Six items reach the fight engine off declarations, not through a three-branch
+formula ladder inside the number registry.  What is pinned here is that the
+rows come off declarations, term for term and float for float; that the
 level-ramped active reproduces the registry compiler's own interpolation at
 both ends of the span and above the cap; and that "this active inherits life
 steal" and "this active has no life-steal sibling" are two different
@@ -45,7 +45,7 @@ def _inputs(level: int = 18, **stats: float) -> DamageInputs:
 
 
 def test_every_active_entry_declares_exactly_one_rule() -> None:
-    """Counter 3's half: the tag is no longer engine code in the registry."""
+    """Counter 3's half: the tag is not engine code in the registry."""
     for owner, entry in ITEM_EFFECTS.items():
         if entry.get("type") != "active":
             continue

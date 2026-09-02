@@ -122,7 +122,7 @@ class TestTheResultIsFrozen:
 
 
 class TestTheWalkFoldsWhatItsStateImplies:
-    """The three numbers the survival view used to add for itself.
+    """The three numbers the survival view must not add for itself.
 
     Criterion 3 forbids a view performing arithmetic on ledger values, and
     ``remaining_shield``, ``ending_health_ratio`` and ``effective_health``

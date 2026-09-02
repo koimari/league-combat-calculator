@@ -173,11 +173,10 @@ def _bumped_version(monkeypatch: pytest.MonkeyPatch):
 def test_declared_tables_partition_every_memo_in_the_tree() -> None:
     """No memo is outside the five tables, and none is in two of them.
 
-    Five, not four: ``REFRESH_CLEARED_MEMOS`` used to be left out of this
-    partition, and it worked only because its one member's name does not
-    match the convention the scan keyed on.  A table excluded from the
-    partition that proves the population is closed is a table the partition
-    cannot see grow.
+    Five, not four: ``REFRESH_CLEARED_MEMOS`` is in this partition even though
+    its one member's name does not match the convention the scan keys on.  A
+    table excluded from the partition that proves the population is closed is
+    a table the partition cannot see grow.
     """
     tables = {
         "keyed": frozenset(data_registry.DATA_VERSION_KEYED_MEMOS),

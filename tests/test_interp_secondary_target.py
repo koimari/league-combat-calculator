@@ -1,10 +1,10 @@
 """The front door for the secondary-target interpreter.
 
-Wind's Fury used to be reachable only by spelling its item's name: a
-``has_item(items, "Runaan's Hurricane")`` test in the fight engine and two
-accessors carrying the name as a default argument.  What is pinned here is
-that the same two numbers now come off a declaration, that the main target is
-still excluded from the bolt count, and that a build with no holder gets an
+Wind's Fury is reached through its declaration, not by spelling its item's
+name (a ``has_item(items, "Runaan's Hurricane")`` test in the fight engine
+and two accessors carrying the name as a default argument).  What is pinned
+here is that the two numbers come off a declaration, that the main target is
+excluded from the bolt count, and that a build with no holder gets an
 answer rather than a zero.
 """
 
@@ -30,7 +30,7 @@ def _slot(*owners: str) -> "secondary_target.SecondaryTargetSlot | None":
 
 
 def test_the_holder_declares_exactly_one_secondary_target_rule() -> None:
-    """Counter 3's half: the entry is no longer engine code plus two accessors."""
+    """Counter 3's half: the entry is one rule, not engine code plus accessors."""
     rules = [
         rule
         for rule in behavior_rules(HOLDER)

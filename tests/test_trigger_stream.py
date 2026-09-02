@@ -1283,8 +1283,8 @@ def test_a4_has_a_permanent_injection_seam():
 # imports, names, attributes — so a retired name surviving as prose in a
 # comment or a docstring passes them.  That gap is not hypothetical: the
 # phase-2 sign-off found ``_cc_triggers`` still named in ``trigger_stream``'s
-# own ``Trigger`` docstring, describing what the retired scanner used to
-# accept.  Prose is exactly where a retired name does its remaining damage —
+# own ``Trigger`` docstring, describing what the retired scanner accepted.
+# Prose is exactly where a retired name does its remaining damage —
 # it is what a reader greps, and a docstring that discusses a symbol reads as
 # a symbol that still exists — so the criterion is checked as written rather
 # than narrowed to what the parser sees.
@@ -2120,9 +2120,9 @@ def test_the_certification_gate_is_not_exactly_the_disjunction_it_replaced():
 def test_the_certification_gate_selects_its_holder_from_a_declaration():
     """Who the gate certifies, and what it calls the refusal, are derived (3.9).
 
-    The gate used to ask ``requires_authored_control_event`` — a registry-key
-    read — and then spell ``Fimbulwinter`` twice more: once as the bus holder
-    tag and once inside the note.  It now asks the ally-packet declarations
+    The gate does not read ``requires_authored_control_event`` off a registry
+    key and then spell ``Fimbulwinter`` twice more, once as the bus holder
+    tag and once inside the note.  It asks the ally-packet declarations
     for the shape it actually owes proof of, a shield the holder receives on a
     control event, and builds both receipts out of the declaration it found.
 
@@ -2195,10 +2195,10 @@ def test_the_certification_gate_propagates_the_damage_field_contract():
 def test_a_control_trigger_is_not_judged_by_the_damage_type_contract():
     """The damage stream's type vocabulary stops at the damage stream.
 
-    ``Trigger.__post_init__`` used to check ``damage_type`` for every kind,
-    so a control-only holder — one whose ``reads`` never mentions
-    ``Stream.DAMAGE`` — was judged by a contract it does not consume: a
-    control row typed ``"mixed"`` raised out of
+    A ``Trigger.__post_init__`` that checks ``damage_type`` for every kind
+    judges a control-only holder — one whose ``reads`` never mentions
+    ``Stream.DAMAGE`` — by a contract it does not consume: a control row
+    typed ``"mixed"`` raises out of
     ``derive_item_support_effects`` where the retired ``_cc_triggers``
     accepted it.  That is precisely the move ``source_key``'s own narrowing
     refused — "requiring one there would reject authored control the legacy
@@ -2452,8 +2452,8 @@ class TestTheSupportTriggerLinkRaise:
     def test_the_emitted_link_is_declined_one_branch_earlier(self):
         """Everlasting's own declaration refuses it before any template gate.
 
-        The 3 s duration used to be that earlier decline; the typed shield
-        ledger now stages a timed shield, so the duration refuses nothing and
+        The 3 s duration is not that earlier decline: the typed shield
+        ledger stages a timed shield, so the duration refuses nothing and
         the template receipt admits this packet.  What still shadows the
         guard is a branch earlier still — Everlasting is declared a SELF
         shield, and the compiled kernel cannot stage one at all — so the
@@ -2528,8 +2528,8 @@ def test_a_support_scan_row_carrying_a_garbage_number_is_dropped_not_raised():
     and ``_stack_triggers`` then drops the row for carrying no damage.
     44e10ea named this softening for ``time`` only.
 
-    So the direction moved twice, and opposite ways: garbage no longer
-    raises, and infinity no longer stacks.
+    So the bus lands both cases opposite to the scan: garbage does not
+    raise, and infinity does not stack.
     """
     holder = _support_actor("main:Annie", "main", ("Black Cleaver",))
     enemy = _support_actor("enemy:Aatrox", "enemy", ())
@@ -2559,7 +2559,7 @@ def test_the_receipt_token_is_the_rows_own_token_on_every_rung():
     """b2882ec reordered the ladder and moved no ``cc_kind`` token.
 
     ``verify-P2b``'s second pass read the reorder as also propagating the
-    token onto rungs that used to blank it — ``{"cc_kind": "none",
+    token onto rungs the retired ladder blanked — ``{"cc_kind": "none",
     "hard_cc": True}`` yielding ``cc_kind="none"`` where it once yielded
     ``""``.  It does not: the retired ladder returned the normalised token
     whenever it was non-empty and ``""`` exactly when it was empty, which

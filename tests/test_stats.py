@@ -19,7 +19,7 @@ from src.calculator.stats import (
 class TestLethality:
     """Lethality grants its full value as flat armor pen at every level.
 
-    Since V14.1 lethality no longer scales with level -- it is 1:1 flat
+    Since V14.1 lethality does not scale with level -- it is 1:1 flat
     armor penetration (the name survives only to distinguish it from
     percent penetration).
     """

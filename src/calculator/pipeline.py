@@ -349,9 +349,9 @@ def _item_self_healing_events(
 
     # Item-provided health regeneration is a timestamped stat contribution.
     # Keep champion base regeneration out of the item self-heal stream (the
-    # public one-pair result has historically exposed only sourced packets),
-    # while still applying every item's flat/percent contribution in the
-    # coupled survival ledger.  The contribution is computed from typed item
+    # public one-pair result exposes only sourced packets), while still
+    # applying every item's flat/percent contribution in the coupled
+    # survival ledger.  The contribution is computed from typed item
     # accessors, not from a call-site literal.
     item_regen_flat = 0.0
     item_regen_percent = 0.0

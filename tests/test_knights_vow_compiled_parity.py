@@ -1266,7 +1266,7 @@ def test_enemy_holder_poisons_the_compiled_context_and_falls_back():
     )
     assert fast == legacy
     # P3-3S: the roster-side Knight's Vow holder compiles — the capability
-    # scan no longer poisons the context and panels are built (the enemy
+    # scan does not poison the context and panels are built (the enemy
     # holder has no Worthy teammates in this fixture, so the tether is
     # empty and the staging no-ops with byte parity).
     assert ctx.uncompilable is False

@@ -1101,8 +1101,8 @@ class TestCrowdControlAndSuppression:
         # F-9: cripple is an attack-speed slow — real reviewed control, but
         # not action downtime, so the walk arms no interval for it and
         # Battle Roar reports control_not_active rather than pretending it
-        # removed something.  It used to read unknown_control, and the
-        # cripple used to add downtime it does not cause.
+        # removed something: not unknown_control, and no downtime the
+        # cripple does not cause.
         result = _kernel_survival(
             controls=[_control_packet(1.0, "cripple", 2.0, source="E")],
             cleanses=[_rengar_cleanse_packet(1.5, 0)],

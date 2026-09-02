@@ -79,8 +79,8 @@ def _assert_severum_conversion_present(survival):
 
 def test_aphelios_severum_score_path_matches_receipt():
     """The optimizer score path (compiled walk) must deep-equal the legacy
-    score receipt when Severum's overheal-to-shield is active — previously
-    the compiled walk silently erased the shield (11.2 EHP in this
+    score receipt when Severum's overheal-to-shield is active — the
+    compiled walk must not silently erase the shield (11.2 EHP in this
     fixture)."""
     for items in ([], _APHELIOS_ITEMS):
         legacy_score = _aphelios_timeline(items, include_receipt=False)

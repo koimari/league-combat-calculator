@@ -351,7 +351,7 @@ def _lulu_qw() -> dict:
     only the one ``lulu_whimsy_target`` names — the default is the self
     buff, which authors no control at all.  A fixture that wants the
     polymorph has to say so, which is the point: an enemy Lulu who was
-    never told to cast W at anybody no longer polymorphs the board.
+    never told to cast W at anybody does not polymorph the board.
 
     The enemy cast is targeted ("onto the target enemy champion"), so one
     friendly holds it: the roster's first defender, which is the main
@@ -2345,7 +2345,7 @@ def test_r22_mikaels_heal_stays_gated_while_caster_is_ccd():
 # NOTE: the CURRENT "rejected with a named 400" variant (neither self item
 # declared an active option in ITEM_INPUT_OPTIONS, so an explicit active
 # option was rejected with "Unknown item option target: <item>") was removed
-# here — it no longer describes the tree.  The owner landed the P2 Slice 4
+# here — it does not describe the tree.  The owner landed the P2 Slice 4
 # active option for both Quicksilver Sash and Mercurial Scimitar, so the
 # named-400 rejection this row asserted is not reachable anymore; it is
 # superseded, not merely unpinned.  The PRIMARY variant directly below
@@ -2506,8 +2506,8 @@ def test_r26_cleanse_and_movement_arm_after_the_controls_at_their_time():
     same-timestamp damage and control packets that arm at ``DAMAGE`` —
     which is the total-order baseline the same-timestamp row (R17) pins;
     the stable event key keeps the deterministic identity.  Read off the
-    one rank ladder, because the parallel float table it used to read is
-    retired and a second home for one ordering is how the two drift."""
+    one rank ladder: there is no parallel float table, and a second home
+    for one ordering is how the two drift."""
     for kind in ("cleanse", "movement"):
         rank = support_transition_rank({"kind": kind})
         assert rank is TransitionRank.UTILITY_ARM

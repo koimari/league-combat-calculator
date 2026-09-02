@@ -103,7 +103,7 @@ _EXPECTED_DERIVED_ORDERS = {
     # Retired seed (D-89): same flat-kit path as Jhin's.
     "Aphelios": ["Q", "W", "E", "R"],
     # Syndra's retired seed (D-89): E requires Q and E requires Q2, declared
-    # by her module, derive the order the hand seed used to pin.
+    # by her module, derive this order without a hand seed.
     "Syndra": ["Q", "Q2", "E", "W", "R"],
     "Ambessa": ["R", "Q", "Q2", "W", "E"],  # R armor pen buff first
     # W's knock-up does NOT open the burst: Bel'Veth's module declares no

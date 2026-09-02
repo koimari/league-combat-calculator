@@ -5,7 +5,7 @@ These tests pin the F0 redesign without a browser:
 * the analyst builder exists exactly once — no duplicate template ids, one
   ``.content-grid``, quick view is the visible default
 * the damage breakdown and the engine error surface live inside the visible
-  result column (previously hidden containers)
+  result column (not hidden containers)
 * dead renderers are gone (``renderBuilder``, ``renderResults``,
   ``renderExactResults``, ``renderEngineUnavailable`` and friends)
 * the new affordances are wired: practice target, quick→analyst bridge,
@@ -196,7 +196,7 @@ def test_empty_champion_state_hides_dependent_controls_and_stats():
 
 
 # ---------------------------------------------------------------------------
-# Visible result-column surfaces (previously hidden containers)
+# Visible result-column surfaces (not hidden containers)
 # ---------------------------------------------------------------------------
 
 

@@ -97,9 +97,9 @@ def test_p_is_modeled_through_the_1269_cell_division_revive() -> None:
 def test_the_goo_chunk_heal_is_resolved_in_the_one_pair_receipt() -> None:
     """The chunk pays off Zac's OWN maximum health, so it needs no formula.
 
-    It used to ride an ``amount_formula`` only the coupled walk could
-    evaluate, so the one-pair receipt published ``amount: 0.0`` on every
-    row and a top-level ``self_healing`` of 0.0 while the walk paid 203.0.
+    An ``amount_formula`` only the coupled walk could evaluate would leave
+    the one-pair receipt publishing ``amount: 0.0`` on every row and a
+    top-level ``self_healing`` of 0.0 while the walk pays 203.0.
     """
     import pytest
 
@@ -130,7 +130,7 @@ def test_the_goo_chunk_heal_is_resolved_in_the_one_pair_receipt() -> None:
     assert all(event["amount"] == pytest.approx(203.0, abs=0.5) for event in chunks)
     assert "amount_formula" not in chunks[0]
     # The published total is the same rows summed before rounding, so it
-    # is no longer the 0.0 an unresolved formula left behind.
+    # is not the 0.0 an unresolved formula would leave behind.
     assert payload["self_healing"] == pytest.approx(
         sum(event["amount"] for event in chunks), abs=1.0
     )

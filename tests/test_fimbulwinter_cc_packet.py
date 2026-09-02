@@ -238,10 +238,10 @@ class TestTypedContract:
         assert receipt["slow_melee_only"] is True
         assert receipt["immobilize_kinds"] == sorted(IMMOBILIZING_CC_KINDS)
         # The declaration is source-backed: Everlasting's trigger is the
-        # Wiki's Immobilizing class (F-9 — the rule used to borrow the
-        # action-blocking set, which holds polymorph, an action block that
-        # is not an immobilize, and missed flee/pull/snare/stasis, which
-        # are).  The rule carries the item source.
+        # Wiki's Immobilizing class (F-9 — not the action-blocking set,
+        # which holds polymorph, an action block that is not an immobilize,
+        # and misses flee/pull/snare/stasis, which are).  The rule carries
+        # the item source.
         assert set(receipt["immobilize_kinds"]) == set(IMMOBILIZING_CC_KINDS)
         assert receipt["source"]["url"] == shield["source_url"]
         assert receipt["source"]["revision_id"] == shield["source_revision_id"]
@@ -291,7 +291,7 @@ class TestImmobilizeEligibility:
         # F-9: both stop the target acting, and neither is Immobilizing —
         # a polymorphed champion keeps moving and a berserked one keeps
         # moving AND attacking.  Everlasting reads the Immobilizing class,
-        # so neither arms it.  Borrowing ACTION_BLOCKING_CC_KINDS used to
+        # so neither arms it.  Borrowing ACTION_BLOCKING_CC_KINDS would
         # arm it on polymorph.
         packets = _run(
             [_cc_event(1.0, cc_kind=kind, event_id="e1")],

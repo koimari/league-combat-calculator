@@ -17,7 +17,7 @@ _ABILITY_ATOMS_MEMO: dict[tuple[int, str], dict[str, tuple[dict, ...]]] = {}
 
 @dataclass(frozen=True)
 class AbilityAtomQuery:
-    """Exact source receipt used to select one typed ability atom."""
+    """Exact source receipt that selects one typed ability atom."""
 
     source: str
     behavior: str

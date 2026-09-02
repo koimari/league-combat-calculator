@@ -1050,9 +1050,9 @@ class TestUnchangedBoundaries:
             == 10.0
         )
         from src.calculator import (
-            cleanse_eligibility,  # noqa: F401  (cleanse)
-            defensive_effects,  # noqa: F401  (grey health)
-            healing,  # noqa: F401  (heal/grey packages)
+            cleanse_eligibility,  # noqa: F401 - imported to register cleanse
+            defensive_effects,  # noqa: F401 - imported to register grey health
+            healing,  # noqa: F401 - imported to register the heal packages
         )
 
 

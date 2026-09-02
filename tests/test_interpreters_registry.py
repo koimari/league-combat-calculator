@@ -82,7 +82,7 @@ def test_the_compiled_score_walk_gap_is_a_dated_route_and_not_a_zero() -> None:
 
     H5 was SCOPED and its stage landed: the kernel stages a timed, typed
     damage modifier, so every ``delta_amp`` rule is ``Compilable`` and the
-    per-rule receipt that used to excuse this lane is gone.  The lane still
+    per-rule receipt excusing this lane is gone.  The lane still
     has no interpreter of its own — the walk never reads an amp declaration —
     so what stands between it and an unreceipted zero is the dated row naming
     the two routes the number actually arrives by.  A gap excused by neither
@@ -104,7 +104,7 @@ def test_an_owner_whose_behaviour_is_still_engine_code_is_not_compilable(
     """The fold fails closed: an absence never becomes a compiled-lane promise.
 
     Counter 3 reached zero at 3.7-r2, so no real owner takes this branch any
-    more and the frontier can no longer supply a subject.  The branch is
+    more and the frontier cannot supply a subject.  The branch is
     still live and still load-bearing — the next registry tag anybody adds
     lands in it before its declaration does — so it is driven synthetically
     (D-26): an owner the registries know, with its rule set emptied.  A test
@@ -487,7 +487,7 @@ def test_a_compiled_gap_is_excused_by_the_rules_own_receipt(
 
     Since H5's stage the live tree carries ``delta_amp``'s compiled lane in
     the dated table — the flip made those rules compilable, so the per-rule
-    receipt that used to excuse the lane is gone and a route had to be named
+    receipt excusing the lane is gone and a route had to be named
     for it instead.  That makes the narrowing below load-bearing rather than
     incidental: the stub's tables serve every lane but the compiled one, so
     it reaches the per-rule branch this test exists for, which no live
@@ -630,10 +630,10 @@ def test_a_route_the_registry_does_not_serve_is_refused(
     plausible false one.
 
     ``unserved`` needs a route lane the family declares and no interpreter
-    serves, and that is the one shape a *retiring* campaign runs out of: the
-    case used to be driven through whichever family still deferred its
-    receipt walk, and each retirement turned it green for a reason with
-    nothing to do with the clause it tests.  So the case now removes the
+    serves, and that is the one shape a *retiring* campaign runs out of: a
+    case driven through whichever family still defers its receipt walk turns
+    green at each retirement for a reason with nothing to do with the clause
+    it tests.  So the case instead removes the
     route's own interpreter along with the route — the registry is a
     monkeypatched mapping either way, and unregistering is a smaller
     fabrication than keeping a family deferred to be tested against.
@@ -667,10 +667,10 @@ def test_a_route_the_registry_does_not_serve_is_refused(
 def test_no_gap_row_stands_on_a_counter_this_phase_has_retired() -> None:
     """Every surviving row waits on an interpreter, not on a name site.
 
-    Two rows used to stand on the walk reading a sustain key by item name in
-    ``survival/receipt_state.py``, and were dated at counter 1's residue for
-    it.  That read is gone: the below-half bonus is a declaration the walk
-    lane's own interpreter compiles.  A row outliving its stated cause is the
+    Two rows were dated at counter 1's residue, the walk reading a sustain
+    key by item name in ``survival/receipt_state.py``.  That read is gone:
+    the below-half bonus is a declaration the walk lane's own interpreter
+    compiles.  A row outliving its stated cause is the
     prose-outruns-code failure inside the table that exists to prevent it, so
     the reason is asserted rather than trusted.  The date it carried moved to
     the stage records with every other date, so what is left to assert here is
@@ -984,8 +984,8 @@ def test_a_cross_participant_shred_packet_with_no_declared_ramp_is_a_stop() -> N
 
     The half that keeps the retirement from being a silent deletion: a build
     holding the cross-participant producer but declaring no shred of that
-    resistance used to reach the ally packet's own numbers, and now reaches
-    a named stop.  A modifier nobody declared is not a modifier measuring
+    resistance reaches a named stop, never the ally packet's own numbers.
+    A modifier nobody declared is not a modifier measuring
     zero.
     """
     assert (

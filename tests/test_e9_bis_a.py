@@ -122,7 +122,7 @@ def test_calculate_timeline_coverage_is_complete(champion, one_rotation):
     assert coverage["complete"] is True, coverage
     assert coverage["certification"] == "event_order_certified", coverage
     assert coverage["coarse_sources"] == [], coverage
-    # The exact source that previously kept every build partial must now
+    # The exact source that keeps every build partial while coarse must
     # carry authored event order.
     assert PREVIOUSLY_COARSE[champion].issubset(
         set(coverage["exact_sources"])

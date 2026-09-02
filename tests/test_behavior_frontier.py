@@ -494,7 +494,7 @@ def test_the_hand_set_is_gone_and_the_fold_is_what_the_gate_reads() -> None:
     The retired symbol has zero occurrences in ``src/`` — not as a binding
     and not as a sentence about one, because a name that survives in prose is
     how a reader learns to look for something that is not there — and the
-    build-level gate that used to read it now answers from the fold: an owner
+    build-level gate answers from the fold: an owner
     the fold refuses is refused by the gate, and an owner it does not is not.
     Both directions, so a gate wired to something else entirely could not
     pass this by refusing everything.
@@ -770,13 +770,12 @@ def test_counter_four_defers_in_writing_what_this_phase_cannot_close() -> None:
     state it was meant to refuse.  ``creditor_of`` is the ruled claim and
     exactly one record may carry it.
 
-    A row carries the stage **once**.  It used to carry it twice — a
-    ``retires_at`` copied off ``interpreters.UnservedLane`` beside the
-    ``recorded_stage`` resolved from the claim — which put campaign
-    bookkeeping in a runtime module and made a ruled re-dating a ``src/``
-    commit.  What the two copies bought was a clause that caught a re-dating
-    landing on one of them; what one copy buys is a re-dating that cannot land
-    on one of them.
+    A row carries the stage **once**.  A second copy — a ``retires_at`` off
+    ``interpreters.UnservedLane`` beside the ``recorded_stage`` resolved from
+    the claim — would put campaign bookkeeping in a runtime module and make a
+    ruled re-dating a ``src/`` commit.  What the two copies bought was a
+    clause that caught a re-dating landing on one of them; what one copy buys
+    is a re-dating that cannot land on one of them.
     """
     block = _receipt()["counters"]["counter_4"]["deferrals"]
     assert set(block["rows"]) == set(behavior_frontier.COUNTER_4_DEFERRALS)
@@ -1065,12 +1064,11 @@ def test_an_overdue_claim_on_a_live_stage_fails_the_gate() -> None:
 def test_a_deferral_to_a_stage_nothing_declares_fails_the_gate() -> None:
     """The clause that makes the overdue rule come due on its own.
 
-    ``COMPLETED_STAGES`` used to be a literal inside this module and was the
-    sole trigger of the overdue rule, so a stage could ship and every row
-    deferred to it stay silent until somebody remembered to edit the tool —
-    the failure shape the campaign is named after, one level up.  A deferral
-    may now only name a stage the committed record declares, and shippedness
-    is read from the tree from then on.
+    A ``COMPLETED_STAGES`` literal inside this module as the sole trigger of
+    the overdue rule would let a stage ship and every row deferred to it stay
+    silent until somebody remembered to edit the tool — the failure shape the
+    campaign is named after, one level up.  A deferral may only name a stage
+    the committed record declares, and shippedness is read from the tree.
     """
     report = behavior_frontier.scan()
     committed = behavior_frontier.build_receipt(report)
