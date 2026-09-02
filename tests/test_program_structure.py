@@ -29,7 +29,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from tests.app_config import app_config  # noqa: E402 - after the path bootstrap
+from tests.app_config import app_config
 
 SRC = ROOT / "src" / "calculator"
 SURVIVAL = SRC / "survival"
