@@ -322,37 +322,25 @@ def test_every_reviewed_class_reading_key_names_a_declared_clause() -> None:
         assert mechanic in _cached_mechanics(owners[0])
 
 
-def test_an_on_hit_manaflow_holder_still_refuses_a_minion_fight() -> None:
-    """A clause the fight model prices by half is refused, not paid.
+def test_every_manaflow_clause_is_adjudicated_at_the_fights_class() -> None:
+    """Every holder's ledger runs every trigger its cached clause names.
 
-    Three of the five Manaflow clauses also spend a charge on-hit, a trigger
-    the fight model does not price; only the two ability-cast-only clauses
-    (Tear, Archangel's) are adjudicated at the fight's own class.
+    The three on-hit holders spend a charge on a basic attack as well as on
+    an ability cast; both streams read the fight's own class, so no half of
+    the clause is left unpriced and none is refused.
     """
-    on_hit_holders = sorted(
-        name
-        for name in ITEM_EFFECTS
-        if "Manaflow" in _cached_mechanics(name)
-        and required_effect_value(name, "manaflow_on_hit_charge")
+    holders = sorted(
+        name for name in ITEM_EFFECTS if "Manaflow" in _cached_mechanics(name)
     )
-    assert on_hit_holders
-    reader = on_hit_strike.adjudicated_target_class_mechanics
-    for owner in on_hit_holders:
-        assert any("'Manaflow'" in denial for denial in _minion_denials(owner, reader))
-
-
-def test_every_ability_only_manaflow_clause_is_adjudicated() -> None:
-    """The generalized ledger reads the fight's class for every holder it
-    prices whole, not only for Tear."""
-    priced = sorted(
+    assert len(holders) == 5
+    on_hit = [
         name
-        for name in ITEM_EFFECTS
-        if "Manaflow" in _cached_mechanics(name)
-        and not required_effect_value(name, "manaflow_on_hit_charge")
-    )
-    assert priced == ["Archangel's Staff", "Tear of the Goddess"]
+        for name in holders
+        if required_effect_value(name, "manaflow_on_hit_charge")
+    ]
+    assert on_hit == ["Manamune", "Whispering Circlet", "Winter's Approach"]
     reader = on_hit_strike.adjudicated_target_class_mechanics
-    for owner in priced:
+    for owner in holders:
         assert not any(
             "'Manaflow'" in denial for denial in _minion_denials(owner, reader)
         )

@@ -105,6 +105,7 @@ _TEAR_RULE = {
     "bonus_mana_per_trigger": 3.0,
     "bonus_mana_per_champion": 6.0,
     "bonus_mana_max": 360.0,
+    "on_hit_charge": False,
     "source_url": "https://wiki.leagueoflegends.com/en-us/Tear_of_the_Goddess",
     "source_revision_id": 4026380,
     "atom": ("stat.mana", "f8e104e5f65ff397"),

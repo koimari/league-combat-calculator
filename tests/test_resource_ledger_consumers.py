@@ -22,6 +22,16 @@ from src.calculator.item_effects import (
 )
 from src.calculator.item_support_effects import derive_item_support_effects
 from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.resource_ledger import ManaflowDeclaration, ManaflowLedger
+
+#: The two trigger sets, derived from the registry so a patch that changes a
+#: holder's clause moves the parametrization instead of a hand list.
+_ON_HIT_HOLDERS = [
+    name for name in manaflow_items() if manaflow_declaration(name)["on_hit_charge"]
+]
+_CAST_ONLY_HOLDERS = [
+    name for name in manaflow_items() if not manaflow_declaration(name)["on_hit_charge"]
+]
 
 
 def _actor(participant_id, item_names, item_options=None):
@@ -38,14 +48,21 @@ def _actor(participant_id, item_names, item_options=None):
     )
 
 
-def _params(*, duration=12.0, one_rotation=False, item_options=None, **overrides):
+def _params(
+    *,
+    duration=12.0,
+    one_rotation=False,
+    item_options=None,
+    auto_attack_uptime=0.0,
+    **overrides,
+):
     return FightParams(
         target_health=2000.0,
         target_bonus_health=0.0,
         target_armor=50.0,
         target_magic_resistance=40.0,
         fight_duration_seconds=duration,
-        auto_attack_uptime=0.0,
+        auto_attack_uptime=auto_attack_uptime,
         one_rotation=one_rotation,
         include_actives=True,
         deterministic=True,
@@ -150,6 +167,84 @@ def test_every_manaflow_holder_runs_its_own_charge_ledger(holder):
     rows = [p for p in packets if p["source"] == f"{holder} — Manaflow"]
     assert [p["time"] for p in rows] == [hit["time"] for hit in accepted]
     assert all(p["source_url"] == sourced["source_url"] for p in rows)
+
+
+@pytest.mark.parametrize("holder", _ON_HIT_HOLDERS)
+def test_an_on_hit_holder_charges_in_an_auto_attacks_only_fight(holder):
+    """Issue #230: no cast fires here, so only the on-hit stream can spend.
+
+    Disconnect that stream and every number below is zero, which is what the
+    three holders published before it ran.
+    """
+    sourced = manaflow_declaration(holder)
+    result = run_fight(
+        get_champion("Ahri"),
+        18,
+        [get_item_by_name(holder)],
+        _params(duration=24.0, auto_attack_uptime=1.0, auto_attacks_only=True),
+    )
+    flow = result["resource_ledger"]["manaflow"]
+    accepted = [hit for hit in flow["hits"] if hit["accepted"]]
+    assert accepted
+    assert {hit["trigger"] for hit in accepted} == {"basic_attack"}
+    assert flow["bonus_total"] == pytest.approx(
+        len(accepted) * sourced["bonus_mana_per_champion"]
+    )
+    assert result["resource_ledger"]["bonus_maximum"] == pytest.approx(
+        flow["bonus_total"]
+    )
+
+
+@pytest.mark.parametrize("holder", _CAST_ONLY_HOLDERS)
+def test_a_cast_only_holder_charges_nothing_in_an_auto_attacks_only_fight(holder):
+    """Tear and Archangel's cached clauses name no on-hit trigger."""
+    result = run_fight(
+        get_champion("Ahri"),
+        18,
+        [get_item_by_name(holder)],
+        _params(duration=24.0, auto_attack_uptime=1.0, auto_attacks_only=True),
+    )
+    flow = result["resource_ledger"]["manaflow"]
+    assert [hit for hit in flow["hits"] if hit["accepted"]] == []
+    assert flow["bonus_total"] == pytest.approx(0.0)
+
+
+@pytest.mark.parametrize("holder", _ON_HIT_HOLDERS)
+def test_both_manaflow_streams_spend_one_shared_charge_pool(holder):
+    """One cadence, two streams: adding autos moves triggers, not totals.
+
+    The swing at each bank time takes the charge the following cast then
+    finds spent, so the accepted count is the pool's and not the sum of two.
+    """
+    fight = [get_item_by_name(holder)]
+    without = run_fight(get_champion("Ahri"), 18, fight, _params(duration=24.0))
+    with_autos = run_fight(
+        get_champion("Ahri"),
+        18,
+        fight,
+        _params(duration=24.0, auto_attack_uptime=1.0),
+    )
+    quiet = without["resource_ledger"]["manaflow"]
+    loud = with_autos["resource_ledger"]["manaflow"]
+    quiet_accepted = [hit for hit in quiet["hits"] if hit["accepted"]]
+    loud_accepted = [hit for hit in loud["hits"] if hit["accepted"]]
+    assert len(loud["hits"]) > len(quiet["hits"])
+    assert len(loud_accepted) == len(quiet_accepted)
+    assert loud["bonus_total"] == pytest.approx(quiet["bonus_total"])
+    assert {hit["trigger"] for hit in quiet_accepted} == {"ability_cast"}
+    assert {hit["trigger"] for hit in loud_accepted} == {"basic_attack"}
+
+
+def test_a_cast_only_holder_refuses_an_authored_basic_attack_trigger():
+    """The kernel fails closed rather than inventing a trigger a clause
+    does not name."""
+    ledger = ManaflowLedger(
+        ManaflowDeclaration(**manaflow_declaration("Tear of the Goddess")),
+        owner="main",
+    )
+    with pytest.raises(ValueError) as excinfo:
+        ledger.hit(time=0.0, hit_identity="auto:1", trigger="basic_attack")
+    assert "Tear of the Goddess" in str(excinfo.value)
 
 
 def test_a_build_with_no_manaflow_item_runs_no_charge_ledger():

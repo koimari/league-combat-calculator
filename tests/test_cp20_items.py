@@ -78,11 +78,8 @@ def _tear_ledger_result(
     kernel's ``ManaflowLedger.hit`` produces the same receipts the packet
     projection consumes.
     """
-    sourced = manaflow_declaration("Tear of the Goddess")
     tear = ManaflowLedger(
-        ManaflowDeclaration(
-            **{key: value for key, value in sourced.items() if key != "on_hit_charge"}
-        ),
+        ManaflowDeclaration(**manaflow_declaration("Tear of the Goddess")),
         owner=owner,
         authored_bonus_mana=authored_bonus_mana,
     )
@@ -454,9 +451,7 @@ def test_every_manaflow_holder_states_its_own_charge_ledger(holder):
         sourced["bonus_mana_per_champion"]
     )
     assert receipt["manaflow_cap"] == sourced["bonus_mana_max"]
-    assert ("on-hit" in receipt["manaflow_trigger_boundary"]) is sourced[
-        "on_hit_charge"
-    ]
+    assert receipt["manaflow_on_hit_charge"] is sourced["on_hit_charge"]
 
 
 def test_tear_pays_helping_hand_in_a_minion_class_fight():

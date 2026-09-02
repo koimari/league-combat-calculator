@@ -1272,20 +1272,6 @@ _MANAFLOW_CONVERSION_KEYS = (
 )
 
 
-def _manaflow_trigger_boundary(declaration: Mapping[str, Any]) -> str:
-    """What the fight model prices of one holder's Manaflow trigger set."""
-    if not declaration["on_hit_charge"]:
-        return (
-            "Every trigger the cached clause names is priced: a charge is "
-            "spent by an accepted ability cast that affects the target."
-        )
-    return (
-        "The cached clause spends a charge on-hit as well as on an ability "
-        "cast; the fight model prices the ability-cast trigger only, so an "
-        "auto-attack-only fight accrues no bonus mana here."
-    )
-
-
 def _manaflow_state(
     item_name: str,
     item_options: Mapping[str, Mapping[str, int | float]] | None,
@@ -1317,7 +1303,7 @@ def _manaflow_state(
         "manaflow_max_charges": declaration["max_charges"],
         "manaflow_bonus_mana_per_trigger": declaration["bonus_mana_per_trigger"],
         "manaflow_bonus_mana_per_champion": declaration["bonus_mana_per_champion"],
-        "manaflow_trigger_boundary": _manaflow_trigger_boundary(declaration),
+        "manaflow_on_hit_charge": declaration["on_hit_charge"],
         "transformed": transforms and complete,
     }
     if transforms:
@@ -3063,7 +3049,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "manaflow_bonus_mana_max": 360.0,
         "manaflow_transform_bonus_mana": 360.0,
         # "Consumes a charge on-hit and whenever affecting an enemy or ally
-        # with an ability" — the fight model prices the ability half only.
+        # with an ability" — two streams, one charge pool, one grant pair.
         "manaflow_on_hit_charge": True,
     },
     "Fimbulwinter": {
@@ -3105,7 +3091,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "manaflow_bonus_mana_max": 360.0,
         "manaflow_transform_bonus_mana": 360.0,
         # "Consumes a charge on-hit and whenever affecting an enemy or ally
-        # with an ability" — the fight model prices the ability half only.
+        # with an ability" — two streams, one charge pool, one grant pair.
         "manaflow_on_hit_charge": True,
     },
     "Whispering Circlet": {
@@ -3118,7 +3104,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "manaflow_bonus_mana_max": 360.0,
         "manaflow_transform_bonus_mana": 360.0,
         # "Consumes a charge on-hit and whenever affecting an enemy or ally
-        # with an ability" — the fight model prices the ability half only.
+        # with an ability" — two streams, one charge pool, one grant pair.
         "manaflow_on_hit_charge": True,
     },
     "Rod of Ages": {
@@ -4282,9 +4268,9 @@ def manaflow_declaration(item_name: str) -> dict[str, Any]:
     The charge cadence, both grant amounts and the bonus ceiling are that
     item's own registry values — the five holders do not share them (5/10 on
     Archangel's, 4/8 on Whispering Circlet, 3/6 on the other three) — and the
-    wiki receipt is the holder's own option entry.  ``on_hit_charge`` states
-    the reviewed trigger boundary: three of the five also spend a charge
-    on-hit, which the fight model does not price.
+    wiki receipt is the holder's own option entry.  ``on_hit_charge`` is the
+    trigger set: three of the five spend a charge on a basic attack as well
+    as on an ability cast, from the same pool and for the same grant.
     """
     if item_name not in _MANAFLOW_MANA_ATOMS:
         raise KeyError(

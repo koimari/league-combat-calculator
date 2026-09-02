@@ -36,6 +36,11 @@ default ``"main"``), so a production fight can never mint an anonymous
 account.
 """
 
+# file-length-ok: architecture.md gives this leaf one contract — the MANA
+# account and every sourced rule that transacts on it.  Splitting the rules
+# out would put a declaration in one module and the account that applies it
+# in another, which is the split this module exists to prevent.
+
 from __future__ import annotations
 
 import math
@@ -364,6 +369,11 @@ class ResourceLedger:
 # Manaflow (Tear of the Goddess and its four upgrades)
 # ---------------------------------------------------------------------------
 
+#: The two streams a Manaflow clause may spend its one charge pool from.
+TRIGGER_ABILITY_CAST = "ability_cast"
+TRIGGER_BASIC_ATTACK = "basic_attack"
+MANAFLOW_TRIGGERS = frozenset({TRIGGER_ABILITY_CAST, TRIGGER_BASIC_ATTACK})
+
 
 @dataclass(frozen=True, slots=True)
 class ManaflowDeclaration:
@@ -375,6 +385,7 @@ class ManaflowDeclaration:
     bonus_mana_per_trigger: float
     bonus_mana_per_champion: float
     bonus_mana_max: float
+    on_hit_charge: bool
     source_url: str
     source_revision_id: int
     atom: tuple[str, str]
@@ -486,6 +497,7 @@ class ManaflowLedger:
         time: float,
         hit_identity: str | None,
         target_kind: str = "champion",
+        trigger: str = TRIGGER_ABILITY_CAST,
         sequence: int = 0,
         tier: float = TIER_RESTORE,
     ) -> tuple[dict[str, Any], ResourceEvent | None]:
@@ -494,8 +506,20 @@ class ManaflowLedger:
         Returns ``(receipt, event)``: ``event`` is the OP_MAX_INCREASE
         ResourceEvent to apply to the same owner's mana account (None when
         nothing was granted).  The receipt is JSON-safe and always records
-        the accepted state and a named reason.
+        the accepted state and a named reason.  Both streams spend the one
+        charge pool, so a basic attack at 1.0 leaves a cast at 1.2 nothing
+        to spend; a basic-attack trigger on a holder whose clause names no
+        on-hit trigger raises rather than inventing one.
         """
+        if trigger not in MANAFLOW_TRIGGERS:
+            raise ValueError(
+                f"unknown Manaflow trigger {trigger!r}; supported: "
+                + ", ".join(sorted(MANAFLOW_TRIGGERS))
+            )
+        if trigger == TRIGGER_BASIC_ATTACK and not self._declaration.on_hit_charge:
+            raise ValueError(
+                f"{self._declaration.item} declares no on-hit Manaflow trigger"
+            )
         if isinstance(time, bool) or not math.isfinite(float(time)):
             raise ValueError(f"time must be finite, got {time!r}")
         if float(time) < 0.0:
@@ -509,6 +533,7 @@ class ManaflowLedger:
                     target_kind=target_kind,
                     accepted=False,
                     reason="missing_hit_identity",
+                    trigger=trigger,
                     charge_consumed=False,
                     bonus_delta=0.0,
                 ),
@@ -533,6 +558,7 @@ class ManaflowLedger:
                     target_kind=target_kind,
                     accepted=False,
                     reason="cap_reached",
+                    trigger=trigger,
                     charge_consumed=False,
                     bonus_delta=0.0,
                 ),
@@ -546,6 +572,7 @@ class ManaflowLedger:
                     target_kind=target_kind,
                     accepted=False,
                     reason="no_charge_available",
+                    trigger=trigger,
                     charge_consumed=False,
                     bonus_delta=0.0,
                 ),
@@ -567,6 +594,7 @@ class ManaflowLedger:
             detail={
                 "hit_identity": hit_identity,
                 "target_kind": target_kind,
+                "trigger": trigger,
                 "charge_consumed": True,
                 "use_count": self._use_count,
                 "bonus_total": round(self._bonus_total, 9),
@@ -580,6 +608,7 @@ class ManaflowLedger:
                 target_kind=target_kind,
                 accepted=True,
                 reason="charge_consumed",
+                trigger=trigger,
                 charge_consumed=True,
                 bonus_delta=delta,
             ),
@@ -594,6 +623,7 @@ class ManaflowLedger:
         target_kind: str,
         accepted: bool,
         reason: str,
+        trigger: str,
         charge_consumed: bool,
         bonus_delta: float,
     ) -> dict[str, Any]:
@@ -603,6 +633,7 @@ class ManaflowLedger:
             "accepted": accepted,
             "reason": reason,
             "target_kind": target_kind,
+            "trigger": trigger,
             "hit_identity": hit_identity,
             "charge_consumed": charge_consumed,
             "use_count": self._use_count,

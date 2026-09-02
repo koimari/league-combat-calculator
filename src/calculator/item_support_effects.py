@@ -1051,7 +1051,7 @@ def derive_item_support_effects(
                     manaflow_max_charges=max_charges,
                     manaflow_bonus_mana_per_trigger=per_trigger,
                     manaflow_bonus_mana_per_champion=per_champion,
-                    trigger_kind="ability_cast_vs_champion",
+                    trigger_kind=f"{hit.get('trigger')}_vs_{hit.get('target_kind')}",
                     charge_accrued_at=(use_count - 1) * interval,
                     rank=TransitionRank.BARRIER_GRANT,
                     source_url=sourced["source_url"],

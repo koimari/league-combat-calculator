@@ -5025,6 +5025,39 @@ def _manaflow_hit_identity(
     return None
 
 
+def _manaflow_swing_rows(
+    state: FightState,
+    plan: CastPlan,
+    manaflow: resource_ledger.ManaflowLedger | None,
+) -> list[dict[str, Any]]:
+    """The basic attacks that spend a Manaflow charge, in swing order.
+
+    Empty unless the holder's cached clause names an on-hit trigger.  The
+    schedule is the one ``_auto_restore_schedule`` resolves, so the two
+    per-auto ledger walks ride the same swings; an empowered-burst swing
+    carries its arming slot so a denied cast cannot spend a charge with a
+    swing it never fired.
+    """
+    if manaflow is None or not manaflow.declaration.on_hit_charge:
+        return []
+    ordinary_times, swing_events = _auto_restore_schedule(state, plan)
+    rows: list[dict[str, Any]] = [
+        {"time": swing_time, "auto_index": index + 1, "arming_key": None}
+        for index, swing_time in enumerate(ordinary_times)
+    ]
+    rows.extend(
+        {
+            "time": swing["time"],
+            "auto_index": len(ordinary_times) + index + 1,
+            "arming_key": swing["arming_key"],
+            "arming_ordinal": swing["arming_ordinal"],
+        }
+        for index, swing in enumerate(swing_events)
+        if swing["time"] <= state.fight_duration_seconds + _CAST_SCHEDULE_EPS
+    )
+    return rows
+
+
 def _manaflow_ledger_for(
     state: FightState, owner: str
 ) -> resource_ledger.ManaflowLedger | None:
@@ -5042,17 +5075,8 @@ def _manaflow_ledger_for(
     authored = float(
         (options.get(holder) or {}).get("manaflow_bonus_mana", unset) or unset
     )
-    sourced = item_effects.manaflow_declaration(holder)
     declaration = resource_ledger.ManaflowDeclaration(
-        item=holder,
-        charge_interval=sourced["charge_interval"],
-        max_charges=sourced["max_charges"],
-        bonus_mana_per_trigger=sourced["bonus_mana_per_trigger"],
-        bonus_mana_per_champion=sourced["bonus_mana_per_champion"],
-        bonus_mana_max=sourced["bonus_mana_max"],
-        source_url=sourced["source_url"],
-        source_revision_id=sourced["source_revision_id"],
-        atom=sourced["atom"],
+        **item_effects.manaflow_declaration(holder)
     )
     return resource_ledger.ManaflowLedger(
         declaration, owner=owner, authored_bonus_mana=authored
@@ -5541,6 +5565,18 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
                 timeline.append(
                     (swing["time"], 0, -4, row_index, "auto_swing_restore", "", 0.0)
                 )
+    # Manaflow's second trigger stream.  Three of the five holders spend a
+    # charge "on-hit and whenever affecting an enemy or ally with an
+    # ability" (cached clause), and the sentence that grants the mana covers
+    # both triggers, so the streams share one cadence, one charge pool and
+    # one grant pair.  Basic attacks ride the same swing schedule the
+    # per-auto restore walk does and sort on the restore phase, so a swing
+    # at 1.0 takes the charge a cast at 1.2 then finds spent.
+    manaflow_swings = _manaflow_swing_rows(state, plan, manaflow)
+    for row_index, swing_row in enumerate(manaflow_swings):
+        timeline.append(
+            (swing_row["time"], 0, -5, row_index, "manaflow_on_hit", "", 0.0)
+        )
     heapq.heapify(timeline)
 
     sequence = 0
@@ -5637,6 +5673,30 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
                 )
             )
             sequence += 1
+            continue
+        if kind == "manaflow_on_hit" and manaflow is not None:
+            # One modeled basic attack spending from the shared charge pool.
+            # A burst swing whose arming cast was denied never lands, so it
+            # cannot spend; every other swing is receipted whether or not a
+            # charge was banked, the same way an accepted cast is.
+            swing_row = manaflow_swings[ordinal]
+            arming_key = swing_row["arming_key"]
+            if arming_key is not None:
+                fired = admission.accepted_ordinals.get(arming_key, set())
+                if swing_row["arming_ordinal"] not in fired:
+                    continue
+            hit_receipt, manaflow_event = manaflow.hit(
+                time=cast_time,
+                hit_identity=f"auto:{swing_row['auto_index']}",
+                target_kind=state.target_class,
+                trigger=resource_ledger.TRIGGER_BASIC_ATTACK,
+                sequence=sequence,
+            )
+            sequence += 1
+            manaflow_hits.append(hit_receipt)
+            if manaflow_event is not None:
+                ledger.apply(manaflow_event)
+                sequence += 1
             continue
         if kind in ("auto_restore", "auto_swing_restore"):
             # One modeled basic attack's mana restore (Jayce's W passive).
