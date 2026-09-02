@@ -2,6 +2,7 @@
 
 import math
 from collections.abc import Mapping
+from functools import partial
 from typing import Any
 
 from .data_registry import data_version, store_for_generation
@@ -270,17 +271,12 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
         return memo[1]
     stats = item_data.get("stats", {})
 
-    def get_flat(stat_name: str) -> float:
+    def stat_part(stat_name: str, part: str) -> float:
         stat = stats.get(stat_name, {})
-        if isinstance(stat, dict):
-            return stat.get("flat", 0.0)
-        return 0.0
+        return stat.get(part, 0.0) if isinstance(stat, dict) else 0.0
 
-    def get_percent(stat_name: str) -> float:
-        stat = stats.get(stat_name, {})
-        if isinstance(stat, dict):
-            return stat.get("percent", 0.0)
-        return 0.0
+    get_flat = partial(stat_part, part="flat")
+    get_percent = partial(stat_part, part="percent")
 
     total_armor_pen_percent, bonus_armor_pen_percent = armor_penetration_split(
         str(item_data.get("name", "")), get_percent("armorPenetration")

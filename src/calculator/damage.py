@@ -158,7 +158,7 @@ import random
 from collections import Counter
 from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
-from functools import cache
+from functools import cache, partial
 from operator import itemgetter
 from types import MappingProxyType
 from typing import Any, NamedTuple, TypeVar
@@ -5329,83 +5329,61 @@ def _auto_restore_schedule(
     return tuple(_swings_at_rate(ordinary, normal_rate)), swing_events
 
 
-def _kill_refund_decl(info: Mapping[str, Any]) -> dict[str, Any] | None:
-    """Validate and normalize a champion entry's ``kill_refund`` declaration.
-
-    P4-14: Darius W declares the typed refund rule behind the asserted
-    kill (the w_kill_assertion option): when the empowered attack kills,
-    refund the flat (40 = the sourced W cost).  Malformed declarations
-    raise (authored code fails closed).
-    """
-    decl = info.get("kill_refund")
+def _declared_mapping(info: Mapping[str, Any], key: str) -> Mapping[str, Any] | None:
+    """A champion entry's ``key`` declaration, absent, or a stop when malformed."""
+    decl = info.get(key)
     if decl is None:
         return None
     if not isinstance(decl, Mapping):
-        raise ValueError("kill_refund must be a mapping")
-    flat = decl.get("flat")
-    source = decl.get("source")
-    atoms = ability_field(decl, "atoms", form="resource_declaration")
+        raise ValueError(f"{key} must be a mapping")
+    return decl
+
+
+def _finite_non_negative(value: Any, label: str) -> float:
     if (
-        isinstance(flat, bool)
-        or not isinstance(flat, (int, float))
-        or not math.isfinite(float(flat))
-        or float(flat) < 0.0
+        isinstance(value, bool)
+        or not isinstance(value, (int, float))
+        or not math.isfinite(float(value))
+        or float(value) < 0.0
     ):
-        raise ValueError(
-            f"kill_refund.flat must be a finite non-negative number, got {flat!r}"
-        )
-    if not isinstance(source, str) or not source.strip():
-        raise ValueError("kill_refund.source must be a non-empty string")
-    if not isinstance(atoms, (list, tuple)) or any(
+        raise ValueError(f"{label} must be a finite non-negative number, got {value!r}")
+    return float(value)
+
+
+def _non_empty_string(value: Any, label: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{label} must be a non-empty string")
+    return value
+
+
+def _atom_pairs(value: Any, label: str) -> tuple[tuple[str, str], ...]:
+    if not isinstance(value, (list, tuple)) or any(
         not isinstance(pair, (list, tuple))
         or len(pair) != 2
         or not all(isinstance(part, str) and part for part in pair)
-        for pair in atoms
+        for pair in value
     ):
-        raise ValueError(
-            "kill_refund.atoms must be a list of (atom_id, hash) string pairs"
-        )
+        raise ValueError(f"{label} must be a list of (atom_id, hash) string pairs")
+    return tuple(tuple(pair) for pair in value)
+
+
+def _kill_refund_decl(info: Mapping[str, Any]) -> dict[str, Any] | None:
+    """Validate and normalize a champion entry's ``kill_refund`` declaration.
+
+    Darius W declares the typed refund rule behind the asserted kill (the
+    w_kill_assertion option): when the empowered attack kills, refund the
+    flat (40 = the sourced W cost).  Malformed declarations raise (authored
+    code fails closed).
+    """
+    decl = _declared_mapping(info, "kill_refund")
+    if decl is None:
+        return None
+    atoms = ability_field(decl, "atoms", form="resource_declaration")
     return {
-        "flat": float(flat),
-        "source": source,
-        "atoms": tuple(tuple(pair) for pair in atoms),
+        "flat": _finite_non_negative(decl.get("flat"), "kill_refund.flat"),
+        "source": _non_empty_string(decl.get("source"), "kill_refund.source"),
+        "atoms": _atom_pairs(atoms, "kill_refund.atoms"),
     }
-
-
-def _kill_refund_decl_for_state(state: FightState) -> str | None:
-    """The single slot declaring a kill refund, or None.
-
-    P4-14: fail closed on more than one declaring slot — the resource
-    walk supports one authored kill-refund rule per fight (mirrors the
-    mark-refund and auto-restore guards).
-    """
-    declaring: list[str] = []
-    for key, info in state.ability_damages.items():
-        if _kill_refund_decl(info) is not None:
-            declaring.append(key)
-    if len(declaring) > 1:
-        raise ValueError(
-            f"multiple kill_refund declarations ({', '.join(sorted(declaring))})"
-        )
-    return declaring[0] if declaring else None
-
-
-def _mark_refund_decl_for_state(state: FightState) -> str | None:
-    """The single slot declaring a mark refund, or None.
-
-    P1 Slice 13 (R2): fail closed on more than one declaring slot — the
-    resource walk supports one authored mark-refund rule per fight
-    (mirrors ``_auto_restore_decl``'s multi-declaration raise).
-    """
-    declaring: list[str] = []
-    for key, info in state.ability_damages.items():
-        if _mark_refund_decl(info) is not None:
-            declaring.append(key)
-    if len(declaring) > 1:
-        raise ValueError(
-            f"multiple mark_refund declarations ({', '.join(sorted(declaring))})"
-        )
-    return declaring[0] if declaring else None
 
 
 def _mark_refund_decl(info: Mapping[str, Any]) -> dict[str, Any] | None:
@@ -5417,25 +5395,13 @@ def _mark_refund_decl(info: Mapping[str, Any]) -> dict[str, Any] | None:
     the detonation means; ``basic_attack`` disables the refund entirely.
     Malformed declarations raise (authored code fails closed).
     """
-    decl = info.get("mark_refund")
+    decl = _declared_mapping(info, "mark_refund")
     if decl is None:
         return None
-    if not isinstance(decl, Mapping):
-        raise ValueError("mark_refund must be a mapping")
-    flat = decl.get("flat")
     window_seconds = decl.get("window_seconds")
-    source = decl.get("source")
     detonation = decl.get("detonation")
     atoms = ability_field(decl, "atoms", form="resource_declaration")
-    if (
-        isinstance(flat, bool)
-        or not isinstance(flat, (int, float))
-        or not math.isfinite(float(flat))
-        or float(flat) < 0.0
-    ):
-        raise ValueError(
-            f"mark_refund.flat must be a finite non-negative number, got {flat!r}"
-        )
+    flat = _finite_non_negative(decl.get("flat"), "mark_refund.flat")
     if (
         isinstance(window_seconds, bool)
         or not isinstance(window_seconds, (int, float))
@@ -5446,29 +5412,45 @@ def _mark_refund_decl(info: Mapping[str, Any]) -> dict[str, Any] | None:
             "mark_refund.window_seconds must be a finite positive number, "
             f"got {window_seconds!r}"
         )
-    if not isinstance(source, str) or not source.strip():
-        raise ValueError("mark_refund.source must be a non-empty string")
+    source = _non_empty_string(decl.get("source"), "mark_refund.source")
     if detonation not in {"ability", "basic_attack"}:
         raise ValueError(
             f"mark_refund.detonation must be 'ability' or 'basic_attack', got "
             f"{detonation!r}"
         )
-    if not isinstance(atoms, (list, tuple)) or any(
-        not isinstance(pair, (list, tuple))
-        or len(pair) != 2
-        or not all(isinstance(part, str) and part for part in pair)
-        for pair in atoms
-    ):
-        raise ValueError(
-            "mark_refund.atoms must be a list of (atom_id, hash) string pairs"
-        )
     return {
-        "flat": float(flat),
+        "flat": flat,
         "window_seconds": float(window_seconds),
         "source": source,
         "detonation": detonation,
-        "atoms": tuple(tuple(pair) for pair in atoms),
+        "atoms": _atom_pairs(atoms, "mark_refund.atoms"),
     }
+
+
+def _sole_refund_slot(
+    state: FightState, *, reader: Callable[[Mapping[str, Any]], Any], kind: str
+) -> str | None:
+    """The single slot declaring a ``kind`` refund, or None; two is a stop.
+
+    The resource walk supports one authored refund rule of each kind per
+    fight (the auto-restore guard makes the same refusal).
+    """
+    declaring = [
+        key for key, info in state.ability_damages.items() if reader(info) is not None
+    ]
+    if len(declaring) > 1:
+        raise ValueError(
+            f"multiple {kind} declarations ({', '.join(sorted(declaring))})"
+        )
+    return declaring[0] if declaring else None
+
+
+_kill_refund_decl_for_state = partial(
+    _sole_refund_slot, reader=_kill_refund_decl, kind="kill_refund"
+)
+_mark_refund_decl_for_state = partial(
+    _sole_refund_slot, reader=_mark_refund_decl, kind="mark_refund"
+)
 
 
 def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
@@ -7818,6 +7800,29 @@ def _strike_declaration(
     )
 
 
+def _next_authored_event(
+    authored_events: list[Any], cursor: int, event_time: float
+) -> tuple[int, float | None, str | None] | None:
+    """Advance ``cursor`` past the first positive-damage authored event at or
+    after ``event_time``: ``(cursor, time, precision)``, the time ``None`` when
+    the ledger is exhausted, the whole ``None`` on a malformed row."""
+    while cursor < len(authored_events):
+        candidate = authored_events[cursor]
+        if not isinstance(candidate, Mapping):
+            return None
+        candidate_time = _finite_numeric_receipt(candidate.get("time"))
+        candidate_damage = _finite_numeric_receipt(candidate.get("damage"))
+        if candidate_time is None or candidate_damage is None:
+            return None
+        cursor += 1
+        if candidate_time + _CAST_TIME_RESOLUTION + 1e-9 < event_time:
+            continue
+        if candidate_damage > 0.0:
+            precision = str(candidate.get("event_precision", "exact"))
+            return cursor, candidate_time, precision
+    return cursor, None, None
+
+
 def _shaped_charge_proc_receipts(
     state: FightState,
     rotation: RotationResult,
@@ -7861,27 +7866,14 @@ def _shaped_charge_proc_receipts(
         row = breakdown.get(slot) if isinstance(breakdown, Mapping) else None
         authored_events = row.get("damage_events") if isinstance(row, Mapping) else None
         if isinstance(authored_events, list):
-            cursor = event_cursors.get(slot, 0)
-            while cursor < len(authored_events):
-                candidate = authored_events[cursor]
-                if not isinstance(candidate, Mapping):
-                    return None
-                candidate_time = _finite_numeric_receipt(candidate.get("time"))
-                candidate_damage = _finite_numeric_receipt(candidate.get("damage"))
-                if candidate_time is None or candidate_damage is None:
-                    return None
-                if candidate_time + _CAST_TIME_RESOLUTION + 1e-9 < event_time:
-                    cursor += 1
-                    continue
-                if candidate_damage > 0.0:
-                    trigger_time = candidate_time
-                    precision = str(candidate.get("event_precision", "exact"))
-                    cursor += 1
-                    event_cursors[slot] = cursor
-                    break
-                cursor += 1
-            else:
-                event_cursors[slot] = cursor
+            found = _next_authored_event(
+                authored_events, event_cursors.get(slot, 0), event_time
+            )
+            if found is None:
+                return None
+            event_cursors[slot], authored_time, authored_precision = found
+            if authored_time is not None:
+                trigger_time, precision = authored_time, authored_precision
         if trigger_time < ready_at:
             continue
         receipts.append({"time": trigger_time, "event_precision": precision})
@@ -8100,6 +8092,41 @@ def _install_swing_count(state: FightState, count: int) -> None:
     state.resists.resolve_armor()
 
 
+class _HailStacks:
+    """Hail of Blades' stack window, walked over one attack stream."""
+
+    def __init__(self, effect: "rune_effects.KeystoneHailOfBladesEffect") -> None:
+        self.effect = effect
+        self.stacks = 0
+        self.ready_at = float("-inf")
+        self.active_until = float("-inf")
+        self.activation_times: list[float] = []
+
+    def arm(self, attack_time: float) -> None:
+        """Activate on an attack once the sourced cooldown has passed."""
+        if self.stacks <= 0 and attack_time + 1e-9 >= self.ready_at:
+            self.stacks = self.effect.initial_stacks
+            self.active_until = attack_time + self.effect.stack_duration_seconds
+            self.activation_times.append(attack_time)
+
+    def spend(self, attack_time: float) -> bool:
+        """Consume one stack on an active attack; False when none is active."""
+        if self.stacks <= 0 or attack_time > self.active_until + 1e-9:
+            return False
+        self.stacks -= 1
+        self.active_until = attack_time + self.effect.stack_duration_seconds
+        if self.stacks == 0:
+            self.ready_at = attack_time + self.effect.cooldown_seconds
+        return True
+
+    def expire(self, time: float) -> bool:
+        """Drop the stacks once ``time`` is past the window."""
+        if time > self.active_until + 1e-9:
+            self.stacks = 0
+            return True
+        return False
+
+
 def _hail_attack_schedule(
     state: FightState, effect: "rune_effects.KeystoneHailOfBladesEffect"
 ) -> tuple[list[float], list[int], list[float]]:
@@ -8131,11 +8158,8 @@ def _hail_attack_schedule(
 
     times: list[float] = []
     active_indexes: list[int] = []
-    activation_times: list[float] = []
+    hail = _HailStacks(effect)
     current = 0.0
-    cooldown_ready = float("-inf")
-    active_until = float("-inf")
-    stacks = 0
     duration = state.fight_duration_seconds
     base_interval = 1.0 / base_rate
     active_interval = 1.0 / active_rate
@@ -8143,28 +8167,15 @@ def _hail_attack_schedule(
     while current < duration - 1e-12:
         attack_index = len(times)
         times.append(current)
-
-        if stacks <= 0 and current + 1e-9 >= cooldown_ready:
-            stacks = effect.initial_stacks
-            active_until = current + effect.stack_duration_seconds
-            activation_times.append(current)
-
-        if stacks > 0 and current <= active_until + 1e-9:
+        hail.arm(current)
+        if hail.spend(current):
             active_indexes.append(attack_index)
-            stacks -= 1
-            active_until = current + effect.stack_duration_seconds
-            if stacks == 0:
-                cooldown_ready = current + effect.cooldown_seconds
-
-        interval = active_interval if stacks > 0 else base_interval
-        next_time = current + interval
-        if stacks > 0 and next_time > active_until + 1e-9:
-            stacks = 0
-            interval = base_interval
-            next_time = current + interval
+        next_time = current + (active_interval if hail.stacks > 0 else base_interval)
+        if hail.expire(next_time):
+            next_time = current + base_interval
         current = next_time
 
-    return times, active_indexes, activation_times
+    return times, active_indexes, hail.activation_times
 
 
 def _prepare_hail_attack_schedule(state: FightState) -> None:
@@ -8220,22 +8231,23 @@ def _lethal_tempo_attack_schedule(
     stacks = 0
     last_attack: float | None = None
 
+    def swing(attack_time: float) -> None:
+        nonlocal stacks, last_attack
+        stacks = _lethal_tempo_stacks_at(effect, stacks, last_attack, attack_time)
+        if stacks <= 0:
+            stacks = 0
+            activation_times.append(attack_time)
+        stacks = min(effect.max_stacks, stacks + 1)
+        if stacks >= effect.max_stacks:
+            bolt_indexes.append(len(stack_counts))
+        stack_counts.append(stacks)
+        last_attack = attack_time
+
     if generated:
         current = 0.0
         while current < state.fight_duration_seconds - 1e-12:
-            current_stacks = _lethal_tempo_stacks_at(
-                effect, stacks, last_attack, current
-            )
-            if current_stacks <= 0:
-                current_stacks = 0
-                activation_times.append(current)
-            stacks = min(effect.max_stacks, current_stacks + 1)
-            index = len(times)
             times.append(current)
-            stack_counts.append(stacks)
-            if stacks >= effect.max_stacks:
-                bolt_indexes.append(index)
-            last_attack = current
+            swing(current)
             bonus_percent = effect.attack_speed_percent(state.is_melee, stacks)
             rate = (
                 calculate_attack_speed(
@@ -8249,16 +8261,7 @@ def _lethal_tempo_attack_schedule(
         return times, bolt_indexes, stack_counts, activation_times
 
     for attack_time in times:
-        stacks = _lethal_tempo_stacks_at(effect, stacks, last_attack, attack_time)
-        if stacks <= 0:
-            stacks = 0
-            activation_times.append(attack_time)
-        stacks = min(effect.max_stacks, stacks + 1)
-        index = len(stack_counts)
-        stack_counts.append(stacks)
-        if stacks >= effect.max_stacks:
-            bolt_indexes.append(index)
-        last_attack = attack_time
+        swing(attack_time)
     return times, bolt_indexes, stack_counts, activation_times
 
 
@@ -10980,27 +10983,16 @@ def _stacked_champion_proc_times(
                                     f"{cast_id}:forced:{len(forced_attack_events) + 1}",
                                 )
                             )
-                cursor = event_cursors.get(slot, 0)
-                while cursor < len(authored_events):
-                    candidate = authored_events[cursor]
-                    if not isinstance(candidate, Mapping):
-                        return None
-                    candidate_time = _finite_numeric_receipt(candidate.get("time"))
-                    candidate_damage = _finite_numeric_receipt(candidate.get("damage"))
-                    if candidate_time is None or candidate_damage is None:
-                        return None
-                    if candidate_time + _CAST_TIME_RESOLUTION + 1e-9 < event_time:
-                        cursor += 1
-                        continue
-                    if candidate_damage > 0.0:
-                        trigger_time = candidate_time
-                        precision = str(candidate.get("event_precision", "exact"))
-                        cursor += 1
-                        event_cursors[slot] = cursor
-                        break
-                    cursor += 1
-                else:
+                found = _next_authored_event(
+                    authored_events, event_cursors.get(slot, 0), event_time
+                )
+                if found is None:
                     return None
+                cursor, authored_time, authored_precision = found
+                if authored_time is None:
+                    return None
+                event_cursors[slot] = cursor
+                trigger_time, precision = authored_time, authored_precision
             # Ability phase precedes autos at the same timestamp.
             add_trigger(
                 _EclipseStackTrigger(
@@ -12416,25 +12408,13 @@ def _hail_active_for_forced_attacks(
 ) -> tuple[list[int], list[float]]:
     """Walk Hail stacks over authored forced attacks."""
     active_indexes: list[int] = []
-    activation_times: list[float] = []
-    stacks = 0
-    ready_at = float("-inf")
-    active_until = float("-inf")
+    hail = _HailStacks(effect)
     for index, attack_time in enumerate(attack_times):
-        if attack_time > active_until + 1e-9:
-            stacks = 0
-        if stacks <= 0 and attack_time + 1e-9 >= ready_at:
-            stacks = effect.initial_stacks
-            active_until = attack_time + effect.stack_duration_seconds
-            activation_times.append(attack_time)
-        if stacks <= 0 or attack_time > active_until + 1e-9:
-            continue
-        active_indexes.append(index)
-        stacks -= 1
-        active_until = attack_time + effect.stack_duration_seconds
-        if stacks == 0:
-            ready_at = attack_time + effect.cooldown_seconds
-    return active_indexes, activation_times
+        hail.expire(attack_time)
+        hail.arm(attack_time)
+        if hail.spend(attack_time):
+            active_indexes.append(index)
+    return active_indexes, hail.activation_times
 
 
 def _add_keystone_hail_of_blades(state: FightState, rotation: RotationResult) -> None:
@@ -12978,6 +12958,84 @@ def _stack_receipt_row(
     }
 
 
+class _StackAccount:
+    """One champion stack resource's receipts: the count, its gains, the rows.
+
+    An account that is not ``counting`` (K'Sante W, Heimerdinger W/E) rows
+    its events without a count: accepted receipts leave the count alone.
+    """
+
+    def __init__(
+        self, kind: str, seeded: Any, maximum: int, *, counting: bool = True
+    ) -> None:
+        self.kind = kind
+        self.current = seeded
+        self.maximum = maximum
+        self.counting = counting
+        self.gains = 0
+        self.receipts: list[dict[str, Any]] = []
+
+    def add(
+        self,
+        operation: str,
+        amount: float,
+        time: float,
+        source: str,
+        accepted: bool,
+        reason: str,
+        detail: Mapping[str, Any] | None = None,
+    ) -> None:
+        """Append one receipt, moving the count when it is accepted."""
+        before = self.current
+        if accepted and self.counting:
+            self.current += amount
+            self.gains += 1
+        self.receipts.append(
+            _stack_receipt_row(
+                self.kind,
+                len(self.receipts) + 1,
+                operation,
+                amount,
+                time,
+                source,
+                current_before=before,
+                current_after=self.current,
+                maximum=self.maximum,
+                accepted=accepted,
+                reason=reason,
+                detail=detail,
+            )
+        )
+
+    def ledger_section(
+        self, seeded: Any, transitions: list[dict[str, Any]], declaration: Any
+    ) -> dict[str, Any]:
+        """The account's ``resource_ledger_v1`` section."""
+        return {
+            "contract": "resource_ledger_v1",
+            "owner": "main",
+            "kind": self.kind,
+            "opening_maximum": self.maximum,
+            "opening_current": seeded,
+            "closing_maximum": self.maximum,
+            "closing_current": self.current,
+            "base_maximum": self.maximum,
+            "bonus_maximum": 0,
+            "receipts": self.receipts,
+            "threshold_transitions": transitions,
+            "declaration": declaration,
+        }
+
+
+def _resource_ledger(rotation: RotationResult) -> dict[str, Any]:
+    """The rotation's resource ledger, created when nothing wrote one yet."""
+    ledger = rotation.resource_ledger
+    if not isinstance(ledger, dict):
+        ledger = {}
+        rotation.resource_ledger = ledger
+    return ledger
+
+
 def _add_senna_souls(
     state: FightState,
     rotation: RotationResult,
@@ -13003,42 +13061,8 @@ def _add_senna_souls(
 
     option = state.champion_options
     seeded = _seeded_option_stacks(option, "champion", "Senna", "senna_mist_stacks")
-    receipts: list[dict[str, Any]] = []
+    account = _StackAccount("souls", seeded, 300)
     thresholds: list[dict[str, Any]] = []
-    current = seeded
-    gains = 0
-
-    def _add_receipt(
-        operation: str,
-        amount: float,
-        time: float,
-        source: str,
-        accepted: bool,
-        reason: str,
-        detail: Mapping[str, Any] | None = None,
-    ) -> None:
-        nonlocal current, gains
-        before = current
-        if accepted:
-            current += amount
-            gains += 1
-        receipts.append(
-            _stack_receipt_row(
-                "souls",
-                len(receipts) + 1,
-                operation,
-                amount,
-                time,
-                source,
-                current_before=before,
-                current_after=current,
-                maximum=300,
-                accepted=accepted,
-                reason=reason,
-                detail=detail,
-            )
-        )
-
     # The accepted soul event: the champion takedown of the modeled target.
     # (A killed target's 0.0 must not fall back to the survived default.)
     raw_ending = shield_outcome.get("target_ending_health")
@@ -13048,7 +13072,7 @@ def _add_senna_souls(
             (float(event["time"]) for event in damage_events),
             default=0.0,
         )
-        _add_receipt(
+        account.add(
             "gain",
             1.0,
             kill_time,
@@ -13062,12 +13086,12 @@ def _add_senna_souls(
             },
         )
     else:
-        _add_receipt("gain", 0.0, 0.0, "champion takedown", False, "no_takedown_event")
+        account.add("gain", 0.0, 0.0, "champion takedown", False, "no_takedown_event")
     # Named fail-closed denials for the unsupported soul sources (the
     # module's documented boundaries): the model never authors these
     # events, but a future source must not silently mint souls.
     for source in ("minion_drop", "wraith_farm", "mark_consume"):
-        _add_receipt(
+        account.add(
             "gain",
             0.0,
             0.0,
@@ -13076,7 +13100,7 @@ def _add_senna_souls(
             f"unsupported_soul_source:{source}",
             {"event": source, "event_time": 0.0},
         )
-    _add_receipt(
+    account.add(
         "gain",
         0.0,
         0.0,
@@ -13087,7 +13111,7 @@ def _add_senna_souls(
 
     # Every-20 threshold crossings: documented, never re-priced.
     threshold_value = seeded // 20 * 20
-    while threshold_value <= current:
+    while threshold_value <= account.current:
         thresholds.append(
             {
                 "threshold": threshold_value,
@@ -13103,46 +13127,31 @@ def _add_senna_souls(
         )
         threshold_value += 20
 
-    ledger_section = rotation.resource_ledger
-    if not isinstance(ledger_section, dict):
-        ledger_section = {}
-        rotation.resource_ledger = ledger_section
-    ledger_section["souls"] = {
-        "contract": "resource_ledger_v1",
-        "owner": "main",
-        "kind": "souls",
-        "opening_maximum": 300,
-        "opening_current": seeded,
-        "closing_maximum": 300,
-        "closing_current": current,
-        "base_maximum": 300,
-        "bonus_maximum": 0,
-        "receipts": receipts,
-        "threshold_transitions": thresholds,
-        "declaration": SENNA_MIST_RULE.public_receipt(),
-    }
+    _resource_ledger(rotation)["souls"] = account.ledger_section(
+        seeded, thresholds, SENNA_MIST_RULE.public_receipt()
+    )
     state.breakdown["mist"] = {
         "name": SENNA_MIST_RULE.public_receipt()["name"],
         "owner": "champion",
         "informational": True,
         "event_phase": "effect",
-        "count": gains,
+        "count": account.gains,
         "starting_stacks": seeded,
-        "state": f"{seeded} seeded Mist souls; {current} at fight end",
+        "state": f"{seeded} seeded Mist souls; {account.current} at fight end",
         "max_stacks": 300,
         "soul_events": [
-            receipt for receipt in receipts if receipt["operation"] == "gain"
+            receipt for receipt in account.receipts if receipt["operation"] == "gain"
         ],
         "threshold_transitions": thresholds,
     }
-    if gains:
+    if account.gains:
         state.notes.append(
-            f"Senna Mist: {current} souls at fight end ({gains} champion "
+            f"Senna Mist: {account.current} souls at fight end ({account.gains} champion "
             f"takedown soul(s) gained over the seeded {seeded})."
         )
     else:
         state.notes.append(
-            f"Senna Mist: {current} souls (no champion takedown — the "
+            f"Senna Mist: {account.current} souls (no champion takedown — the "
             "seeded counter is the whole admission; minion drops and "
             "Wraith-farming are named unsupported sources)."
         )
@@ -13344,11 +13353,7 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
     ):
         _add_focus_denial(receipts, source, reason)
 
-    ledger_section = rotation.resource_ledger
-    if not isinstance(ledger_section, dict):
-        ledger_section = {}
-        rotation.resource_ledger = ledger_section
-    ledger_section["focus"] = {
+    _resource_ledger(rotation)["focus"] = {
         "contract": "resource_ledger_v1",
         "owner": "main",
         "kind": "focus",
@@ -13459,34 +13464,7 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
         and "bonus_magic_resistance" in state.champion_stats
     )
 
-    receipts: list[dict[str, Any]] = []
-
-    def _add_receipt(
-        operation: str,
-        amount: float,
-        time: float,
-        source: str,
-        accepted: bool,
-        reason: str,
-        detail: Mapping[str, Any] | None = None,
-    ) -> None:
-        receipts.append(
-            _stack_receipt_row(
-                "w",
-                len(receipts) + 1,
-                operation,
-                amount,
-                time,
-                source,
-                current_before=0.0,
-                current_after=0.0,
-                maximum=0,
-                accepted=accepted,
-                reason=reason,
-                detail=detail,
-            )
-        )
-
+    account = _StackAccount("w", 0.0, 0, counting=False)
     # The accepted stream: the engine-priced W parts (the All Out
     # physical part is deliberately untimed — the pinned charge-timing
     # asymmetry — so its receipt carries the part identity, time 0.0).
@@ -13496,7 +13474,7 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
             offset = part.time_offset
             damage_type = part.damage_type
             event_time = float(offset) if offset is not None else 0.0
-            _add_receipt(
+            account.add(
                 "hit",
                 amount,
                 event_time,
@@ -13511,12 +13489,12 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
                 },
             )
     else:
-        _add_receipt(
+        account.add(
             "deny", 0.0, 0.0, "w_unavailable", False, "w_unavailable — no W cast"
         )
 
     if missing_bonus_state:
-        _add_receipt(
+        account.add(
             "deny",
             0.0,
             0.0,
@@ -13554,7 +13532,7 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
             "health threshold is named state, never priced",
         ),
     ):
-        _add_receipt(
+        account.add(
             "deny",
             0.0,
             0.0,
@@ -13563,7 +13541,7 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
             reason,
             {"event": source, "event_time": 0.0},
         )
-    _add_receipt(
+    account.add(
         "deny",
         0.0,
         0.0,
@@ -13572,11 +13550,7 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
         "missing_identity",
     )
 
-    ledger_section = rotation.resource_ledger
-    if not isinstance(ledger_section, dict):
-        ledger_section = {}
-        rotation.resource_ledger = ledger_section
-    ledger_section["w"] = {
+    _resource_ledger(rotation)["w"] = {
         "contract": "resource_ledger_v1",
         "owner": "main",
         "kind": "w",
@@ -13586,7 +13560,7 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
         "closing_current": 0,
         "base_maximum": 0,
         "bonus_maximum": 0,
-        "receipts": receipts,
+        "receipts": account.receipts,
         "declaration": KSANTE_PATH_MAKER_RULE.public_receipt(),
     }
 
@@ -13616,34 +13590,7 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
         HEIMER_W_ROCKETS_RULE,
     )
 
-    receipts: list[dict[str, Any]] = []
-
-    def _add_receipt(
-        operation: str,
-        amount: float,
-        time: float,
-        source: str,
-        accepted: bool,
-        reason: str,
-        detail: Mapping[str, Any] | None = None,
-    ) -> None:
-        receipts.append(
-            _stack_receipt_row(
-                "w_e",
-                len(receipts) + 1,
-                operation,
-                amount,
-                time,
-                source,
-                current_before=0.0,
-                current_after=0.0,
-                maximum=0,
-                accepted=accepted,
-                reason=reason,
-                detail=detail,
-            )
-        )
-
+    account = _StackAccount("w_e", 0.0, 0, counting=False)
     # The accepted stream: the engine-priced W/E parts, one receipt per
     # damage_event (the swing/impact identity), amounts = the raw values.
     for slot in ("W", "E"):
@@ -13656,7 +13603,7 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
         if events:
             for index, event in enumerate(events, start=1):
                 event_time = float(event["time"])
-                _add_receipt(
+                account.add(
                     "hit",
                     float(event.get("raw_damage", 0.0)),
                     event_time,
@@ -13670,7 +13617,7 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
                     },
                 )
         elif row is None:
-            _add_receipt(
+            account.add(
                 "deny",
                 0.0,
                 0.0,
@@ -13679,7 +13626,7 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
                 f"{slot}_unavailable — no {slot} cast in this fight",
             )
         else:
-            _add_receipt(
+            account.add(
                 "deny",
                 0.0,
                 0.0,
@@ -13719,7 +13666,7 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
             "empowerment toggle (fail-closed)",
         ),
     ):
-        _add_receipt(
+        account.add(
             "deny",
             0.0,
             0.0,
@@ -13728,7 +13675,7 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
             reason,
             {"event": source, "event_time": 0.0},
         )
-    _add_receipt(
+    account.add(
         "deny",
         0.0,
         0.0,
@@ -13737,11 +13684,7 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
         "missing_identity",
     )
 
-    ledger_section = rotation.resource_ledger
-    if not isinstance(ledger_section, dict):
-        ledger_section = {}
-        rotation.resource_ledger = ledger_section
-    ledger_section["w_e"] = {
+    _resource_ledger(rotation)["w_e"] = {
         "contract": "resource_ledger_v1",
         "owner": "main",
         "kind": "w_e",
@@ -13751,7 +13694,7 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
         "closing_current": 0,
         "base_maximum": 0,
         "bonus_maximum": 0,
-        "receipts": receipts,
+        "receipts": account.receipts,
         "declaration": {
             "rockets": HEIMER_W_ROCKETS_RULE.public_receipt(),
             "grenade": HEIMER_E_GRENADE_RULE.public_receipt(),
@@ -13940,11 +13883,7 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
         "window_seconds": float(state.fight_duration_seconds),
     }
 
-    ledger_section = rotation.resource_ledger
-    if not isinstance(ledger_section, dict):
-        ledger_section = {}
-        rotation.resource_ledger = ledger_section
-    ledger_section["chimes"] = {
+    _resource_ledger(rotation)["chimes"] = {
         "contract": "resource_ledger_v1",
         "owner": "main",
         "kind": "chimes",
@@ -14021,42 +13960,8 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
     seeded = _seeded_option_stacks(
         option, "champion", "Aurelion Sol", "stardust_stacks"
     )
-    receipts: list[dict[str, Any]] = []
+    account = _StackAccount("stardust", seeded, 999)
     milestones: list[dict[str, Any]] = []
-    current = seeded
-    gains = 0
-
-    def _add_receipt(
-        operation: str,
-        amount: float,
-        time: float,
-        source: str,
-        accepted: bool,
-        reason: str,
-        detail: Mapping[str, Any] | None = None,
-    ) -> None:
-        nonlocal current, gains
-        before = current
-        if accepted:
-            current += amount
-            gains += 1
-        receipts.append(
-            _stack_receipt_row(
-                "stardust",
-                len(receipts) + 1,
-                operation,
-                amount,
-                time,
-                source,
-                current_before=before,
-                current_after=current,
-                maximum=999,
-                accepted=accepted,
-                reason=reason,
-                detail=detail,
-            )
-        )
-
     # The accepted stream: one Q burst vs the champion target per full
     # second of channel (timed) or 3 per Q cast (one-rotation/auto-only),
     # mirroring the module's _channel_window semantics from state fields.
@@ -14072,7 +13977,7 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
             cast_time = float(cast.get("time", 0.0))
             ordinal = int(cast.get("ordinal", 0) or 0)
             for burst_index in range(bursts_per_cast):
-                _add_receipt(
+                account.add(
                     "gain",
                     _STARDUST_PER_Q_BURST,
                     cast_time,
@@ -14088,7 +13993,7 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
                     },
                 )
     else:
-        _add_receipt("gain", 0.0, 0.0, "q_burst_champion", False, "no_q_burst_event")
+        account.add("gain", 0.0, 0.0, "q_burst_champion", False, "no_q_burst_event")
 
     # Named fail-closed denials for the unsupported Stardust sources.
     for source in (
@@ -14098,7 +14003,7 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
         "r_multihit",
         "minion_farm",
     ):
-        _add_receipt(
+        account.add(
             "gain",
             0.0,
             0.0,
@@ -14107,7 +14012,7 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
             f"unsupported_stardust_source:{source}",
             {"event": source, "event_time": 0.0},
         )
-    _add_receipt(
+    account.add(
         "gain",
         0.0,
         0.0,
@@ -14120,7 +14025,7 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
     # document the display values and never re-price (mechanical False).
     step = AURELION_SOL_STARDUST_RULE.execute_breakpoint_stacks
     milestone = seeded // step * step + step
-    while milestone <= current:
+    while milestone <= account.current:
         k = milestone // step
         milestones.append(
             {
@@ -14142,47 +14047,32 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
         )
         milestone += step
 
-    ledger_section = rotation.resource_ledger
-    if not isinstance(ledger_section, dict):
-        ledger_section = {}
-        rotation.resource_ledger = ledger_section
-    ledger_section["stardust"] = {
-        "contract": "resource_ledger_v1",
-        "owner": "main",
-        "kind": "stardust",
-        "opening_maximum": 999,
-        "opening_current": seeded,
-        "closing_maximum": 999,
-        "closing_current": current,
-        "base_maximum": 999,
-        "bonus_maximum": 0,
-        "receipts": receipts,
-        "threshold_transitions": milestones,
-        "declaration": AURELION_SOL_STARDUST_RULE.public_receipt(),
-    }
+    _resource_ledger(rotation)["stardust"] = account.ledger_section(
+        seeded, milestones, AURELION_SOL_STARDUST_RULE.public_receipt()
+    )
     state.breakdown["stardust"] = {
         "name": AURELION_SOL_STARDUST_RULE.public_receipt()["name"],
         "owner": "champion",
         "informational": True,
         "event_phase": "effect",
-        "count": gains,
+        "count": account.gains,
         "starting_stacks": seeded,
-        "state": f"{seeded} seeded Stardust; {current} at fight end",
+        "state": f"{seeded} seeded Stardust; {account.current} at fight end",
         "max_stacks": 999,
         "gain_events": [
-            receipt for receipt in receipts if receipt["operation"] == "gain"
+            receipt for receipt in account.receipts if receipt["operation"] == "gain"
         ],
         "threshold_transitions": milestones,
     }
-    if gains:
+    if account.gains:
         state.notes.append(
-            f"Aurelion Sol Stardust: {current} stacks at fight end "
-            f"({gains} Q-burst champion hit(s) gained over the seeded "
+            f"Aurelion Sol Stardust: {account.current} stacks at fight end "
+            f"({account.gains} Q-burst champion hit(s) gained over the seeded "
             f"{seeded})."
         )
     else:
         state.notes.append(
-            f"Aurelion Sol Stardust: {current} stacks (no Q burst — the "
+            f"Aurelion Sol Stardust: {account.current} stacks (no Q burst — the "
             "seeded counter is the whole admission; E champion-seconds, E "
             "kill bounties, R multihits, and minion farming are named "
             "unsupported sources)."

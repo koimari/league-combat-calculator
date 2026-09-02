@@ -127,6 +127,7 @@ ROW_READS = frozenset(
         ("damage.py", "_layer_on_hit_effects", "dict.get", '"casts"', 1),
         ("damage.py", "_muramana_cast_receipt", "dict.get", '"total_damage"', 1),
         ("damage.py", "_muramana_cast_receipt", "or-default", '"total_damage"', 1),
+        ("damage.py", "_next_authored_event", "dict.get", '"event_precision"', 1),
         ("damage.py", "_ordered_damage_events", "dict.get", '"casts"', 1),
         ("damage.py", "_ordered_damage_events", "dict.get", '"count"', 1),
         ("damage.py", "_ordered_damage_events", "dict.get", '"slot"', 1),
@@ -184,13 +185,6 @@ ROW_READS = frozenset(
         ("damage.py", "_row_damage_parts", "dict.get", '"total_damage"', 1),
         ("damage.py", "_schedule_enlighten", "dict.get", '"tick"', 1),
         ("damage.py", "_self_shield_times", "dict.get", '"time"', 1),
-        (
-            "damage.py",
-            "_shaped_charge_proc_receipts",
-            "dict.get",
-            '"event_precision"',
-            1,
-        ),
         ("damage.py", "_slot_ordinals", "dict.get", '"ordinal"', 1),
         ("damage.py", "_slot_ordinals", "dict.get", '"slot"', 1),
         ("damage.py", "_slot_ordinals", "or-default", '"ordinal"', 1),
@@ -199,7 +193,7 @@ ROW_READS = frozenset(
             "_stacked_champion_proc_times",
             "dict.get",
             '"event_precision"',
-            2,
+            1,
         ),
         ("damage.py", "_stacked_champion_proc_times", "dict.get", '"total_damage"', 3),
         ("damage.py", "add", "dict.get", '"cc_duration"', 1),
@@ -425,23 +419,10 @@ LOADOUT_NAMES = frozenset(
 ATOM_ROWS = frozenset(
     {
         ("item_effects.py", "counter_trigger", "dict.get", '"counter_trigger"', 1),
-        (
-            "item_effects.py",
-            "dorans_helm_helping_hand_minion_damage",
-            "dict.get",
-            '"values"',
-            1,
-        ),
+        ("item_effects.py", "_atom_pinned_value", "dict.get", '"values"', 1),
         (
             "item_effects.py",
             "guardian_angel_rebirth_declaration",
-            "dict.get",
-            '"values"',
-            1,
-        ),
-        (
-            "item_effects.py",
-            "ionian_insight_summoner_spell_haste",
             "dict.get",
             '"values"',
             1,
@@ -1102,11 +1083,9 @@ CACHED_SOURCE_ROW = frozenset(
         ("stats.py", "calculate_total_stats", "dict.get", '"manaRegen"', 2),
         ("stats.py", "calculate_total_stats", "dict.get", '"perLevel"', 3),
         ("stats.py", "champion_stat_conversion", "dict.get", '"name"', 1),
-        ("stats.py", "get_flat", "dict.get", '"flat"', 1),
         ("stats.py", "get_item_stats", "dict.get", '"name"', 1),
         ("stats.py", "get_item_stats", "dict.get", '"stats"', 1),
         ("stats.py", "get_item_stats", "or-default", '"name"', 1),
-        ("stats.py", "get_percent", "dict.get", '"percent"', 1),
     }
 )
 

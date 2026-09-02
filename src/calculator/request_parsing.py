@@ -19,14 +19,18 @@ def request_string(
     required: bool = False,
 ) -> str:
     """Read one trimmed public string with the shared length limit."""
-    value = data.get(key, default)
+    return short_string(data.get(key, default), key, required=required)
+
+
+def short_string(value: object, field: str, *, required: bool = False) -> str:
+    """One trimmed public string under the shared length limit, or a stop."""
     if not isinstance(value, str):
-        raise ValueError(f"{key} must be a string")
+        raise ValueError(f"{field} must be a string")
     parsed = value.strip()
     if required and not parsed:
-        raise ValueError(f"{key} is required")
+        raise ValueError(f"{field} is required")
     if len(parsed) > 100:
-        raise ValueError(f"{key} must be at most 100 characters")
+        raise ValueError(f"{field} must be at most 100 characters")
     return parsed
 
 

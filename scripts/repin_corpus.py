@@ -57,8 +57,7 @@ LEGACY_SCENARIO_IDS = frozenset(
 
 def load_corpus(path: Path = CORPUS_PATH) -> dict[str, Any]:
     """The corpus document."""
-    with Path(path).open(encoding="utf-8") as handle:
-        return json.load(handle)
+    return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
 def write_corpus(corpus: Mapping[str, Any], path: Path = CORPUS_PATH) -> None:
