@@ -95,7 +95,7 @@ def derive_self_healing(  # pylint: disable=too-many-arguments,too-many-position
         champion_stats,
         ability_damages,
         damage_events,
-        cast_timeline,
-        fight_duration_seconds,
+        cast_timeline=cast_timeline,
+        fight_duration_seconds=fight_duration_seconds,
     )
     return sorted(events, key=heal_receipt_order)

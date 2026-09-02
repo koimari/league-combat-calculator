@@ -636,7 +636,7 @@ def _wiki_row_count(entry):
     return count
 
 
-def _compare_entry_rows(entry, spell, slot: str, index: int, ddragon=None):
+def _compare_entry_rows(entry, spell, slot: str, index: int, *, ddragon=None):
     """Compare one wiki ability entry against one game spell.
 
     ``ddragon`` is Riot's official per-spell tooltip row dict (cooldown/cost),
@@ -828,7 +828,7 @@ def compare_item_stats(cache_item, game_item):
 # ---------------------------------------------------------------------------
 
 
-def build_staleness(patch, champions_cache, items_cache, game_dir, ddragon=None):
+def build_staleness(patch, champions_cache, items_cache, game_dir, *, ddragon=None):
     """Compare the wiki cache against the game files -> staleness document.
 
     ``ddragon`` (optional) maps champion name -> official tooltip rows and is

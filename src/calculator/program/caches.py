@@ -161,6 +161,7 @@ def program_inputs_fingerprint(
     actors: Sequence[tuple],
     params: tuple,
     pass_index: int,
+    *,
     patch: Any,
 ) -> tuple:
     """What a program was built from: roster, actors, params, pass, patch.

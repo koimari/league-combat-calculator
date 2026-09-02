@@ -64,7 +64,11 @@ def _q_descriptions() -> list[str]:
 
 def _parse(options: dict | None = None, **ranks) -> dict:
     return twitch.parse_abilities(
-        get_champion("Twitch"), 18, 0.0, dict(RANKS, **ranks), options or {}
+        get_champion("Twitch"),
+        18,
+        0.0,
+        dict(RANKS, **ranks),
+        champion_options=options or {},
     )
 
 
@@ -182,7 +186,9 @@ class TestAmbushModelsTheWindowWhenTheStateIsAsserted:
             effect["leveling"] = []
 
         with pytest.raises((KeyError, ValueError)):
-            twitch.parse_abilities(data, 18, 0.0, dict(RANKS), {"q_ambush_break": True})
+            twitch.parse_abilities(
+                data, 18, 0.0, dict(RANKS), champion_options={"q_ambush_break": True}
+            )
 
 
 class TestBothNumbersAreSourcedTwice:

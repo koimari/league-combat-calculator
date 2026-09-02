@@ -32,9 +32,9 @@ def test_atom_contract_fields():
         "damage",
         "Test.passives[0]",
         "Bolt",
-        [50.0],
-        ["flat"],
-        ["kw:magic damage"],
+        values=[50.0],
+        units=["flat"],
+        evidence=["kw:magic damage"],
     )
     emitted = a.emit()
     assert len(emitted) == 1
@@ -61,18 +61,18 @@ def test_dedup_merges_evidence_per_behavior():
         "damage",
         "p[0]",
         "A",
-        [10.0],
-        ["flat"],
-        ["passive:A@kw:physical"],
+        values=[10.0],
+        units=["flat"],
+        evidence=["passive:A@kw:physical"],
     )
     a.add(
         "damage.physical",
         "damage",
         "a[0]",
         "B",
-        [],
-        [],
-        ["active:B@kw:physical damage"],
+        values=[],
+        units=[],
+        evidence=["active:B@kw:physical damage"],
     )
     emitted = a.emit()
     assert len(emitted) == 1

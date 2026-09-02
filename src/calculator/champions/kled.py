@@ -105,7 +105,7 @@ def _violent_tendencies(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_per_hit": 0.0,
             "damage_type": "physical",
         },
-        0.0,
+        cooldown=0.0,
     )
     result["parts"] = (
         DamagePart("physical", value, basic_damage=True, time_offset=0.1),

@@ -881,7 +881,7 @@ class TestSupportValueMixesUnits:
             ("enemy:Aatrox", 0, 1, False),
         ]
         support_value, healing_output = accumulate_support_values(
-            [360.0, 0.07], entries, (), (), 1
+            [360.0, 0.07], entries, (), (), count=1
         )
         assert support_value == [pytest.approx(360.07)], (
             "D-14: the support accumulator gained a unit axis.  That is H3 "

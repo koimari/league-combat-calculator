@@ -691,6 +691,7 @@ def ledger_inputs(  # pylint: disable=too-many-arguments,too-many-positional-arg
     champion_data: Mapping[str, Any],
     items: Iterable[dict[str, Any]],
     item_damage_effects: Any,
+    *,
     fight_stats: Mapping[str, Any],
     ability_damages: Mapping[str, Any],
 ) -> LedgerInputs:
@@ -718,6 +719,7 @@ def _attach_engine_receipts(
     params: "FightParams",
     items: list[dict[str, Any]],
     fight_stats: Mapping[str, Any],
+    *,
     auto_attack_policy: Mapping[str, Any],
 ) -> None:
     """Decorate a finished engine result with the receipts this module owns.
@@ -1078,7 +1080,9 @@ class FightParams(FightConfig):
         requested_uptime = _bounded_request_float(
             data, "auto_attack_uptime", DEFAULT_AUTO_ATTACK_UPTIME
         )
-        rotation_count = _request_int(data, "rotations", 1, 1, MAX_ROTATIONS)
+        rotation_count = _request_int(
+            data, "rotations", 1, minimum=1, maximum=MAX_ROTATIONS
+        )
         uptime_mode = data.get(
             "auto_attack_uptime_mode", AUTO_ATTACK_UPTIME_MODE_LEGACY
         )
@@ -1376,6 +1380,7 @@ def run_fight(
     level: int,
     items: list[dict[str, Any]],
     params: FightParams,
+    *,
     precomputed_stats: dict[str, float] | None = None,
     validated: bool = False,
     score_only: bool = False,
@@ -1547,8 +1552,8 @@ def run_fight(
                 champion_data,
                 items,
                 item_damage_effects,
-                fight_stats,
-                ability_damages,
+                fight_stats=fight_stats,
+                ability_damages=ability_damages,
             )
         )
         is ResultProjection.LIGHT_TUPLE_LEDGER
@@ -1607,7 +1612,9 @@ def run_fight(
         ),
         user_order=resolved_user_order,
     )
-    _attach_engine_receipts(result, params, items, fight_stats, auto_attack_policy)
+    _attach_engine_receipts(
+        result, params, items, fight_stats, auto_attack_policy=auto_attack_policy
+    )
     if tuple_ledger:
         # The predicate above IS derive_self_healing's dispatch gate, so
         # the empty list is the exact value the call would return.

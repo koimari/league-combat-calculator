@@ -1360,7 +1360,9 @@ def api_optimize():  # pylint: disable=too-many-return-statements
         locked_items = _request_string_list(data, "locked_items", maximum=6)
         locked_boots = _request_string(data, "locked_boots")
         include_boots = _request_bool(data, "include_boots", True)
-        max_legendary_slots = _request_int(data, "max_legendary_slots", 5, 1, 6)
+        max_legendary_slots = _request_int(
+            data, "max_legendary_slots", 5, minimum=1, maximum=6
+        )
         gold_budget = _request_optional_int(data, "gold_budget", 1, 30_000)
         optimization_scope = _request_string(data, "optimization_scope", "build")
         if optimization_scope not in {"build", "purchase"}:
@@ -1370,14 +1372,16 @@ def api_optimize():  # pylint: disable=too-many-return-statements
             raise ValueError("available_gold is required for purchase optimization")
         max_purchase_items = _request_optional_int(data, "max_purchase_items", 1, 7)
         allow_sell = _request_bool(data, "allow_sell", False)
-        max_sell_items = _request_int(data, "max_sell_items", 1, 0, 1)
+        max_sell_items = _request_int(data, "max_sell_items", 1, minimum=0, maximum=1)
         combine_policy = _request_string(data, "combine_policy", "shop_combine")
         if combine_policy not in {"shop_combine", "component_accumulate"}:
             raise ValueError(
                 "combine_policy must be 'shop_combine' or 'component_accumulate'"
             )
         include_starters = _request_bool(data, "include_starters", False)
-        time_budget_ms = _request_int(data, "time_budget_ms", 12_000, 100, 60_000)
+        time_budget_ms = _request_int(
+            data, "time_budget_ms", 12_000, minimum=100, maximum=60_000
+        )
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
 
@@ -1519,7 +1523,7 @@ def api_save_build():
     try:
         data = _json_object()
         _request_string(data, "champion", required=True)
-        _request_int(data, "level", 1, 1, MAX_LEVEL)
+        _request_int(data, "level", 1, minimum=1, maximum=MAX_LEVEL)
         role = _request_string(data, "role")
         items = data.get("items", [])
         if not isinstance(items, list) or not all(
@@ -1563,7 +1567,7 @@ def api_create_share():
     """Create a public share link for a saved build."""
     try:
         data = _json_object()
-        build_id = _request_int(data, "build_id", 0, 1, 1_000_000_000)
+        build_id = _request_int(data, "build_id", 0, minimum=1, maximum=1_000_000_000)
         slug = _request_string(data, "slug")
         if slug and not all(
             character.isalnum() or character in "-_" for character in slug
@@ -1617,7 +1621,9 @@ def api_list_feedback():
     try:
         champion = _request_string(request.args, "champion") or None
         source = _request_string(request.args, "source") or None
-        limit = _request_int(request.args, "limit", 50, 1, _FEEDBACK_PAGE_MAX)
+        limit = _request_int(
+            request.args, "limit", 50, minimum=1, maximum=_FEEDBACK_PAGE_MAX
+        )
         rows = list_feedback(champion=champion, source=source, limit=limit)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
@@ -1734,7 +1740,9 @@ def api_validation():
     """
     try:
         champion = _request_string(request.args, "champion") or None
-        limit = _request_int(request.args, "limit", 50, 1, _FEEDBACK_PAGE_MAX)
+        limit = _request_int(
+            request.args, "limit", 50, minimum=1, maximum=_FEEDBACK_PAGE_MAX
+        )
         rows = list_feedback(champion=champion, limit=limit)
         systematic = validation_summary(champion=champion)
     except ValueError as exc:

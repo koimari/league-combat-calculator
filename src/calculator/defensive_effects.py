@@ -646,6 +646,7 @@ def resolve_starting_defenses(
     level: int,
     stats: dict[str, float],
     items: Sequence[Mapping[str, Any]] = (),
+    *,
     item_options: Mapping[str, Mapping[str, int | float]] | None = None,
 ) -> StartingDefenses:
     """Resolve the sourced champion and item defences ready at fight start.

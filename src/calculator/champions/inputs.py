@@ -305,6 +305,7 @@ def _option(
     key: str,
     default: Any,
     label: str,
+    *,
     minimum: float | None,
     maximum: float | None,
     extra: dict[str, Any],
@@ -325,28 +326,34 @@ def _option(
 
 def bool_option(key: str, default: bool, label: str, **extra: Any) -> dict[str, Any]:
     """A checkbox row: a piece of fight state the user turns on or off."""
-    return _option("bool", key, default, label, None, None, extra)
+    return _option("bool", key, default, label, minimum=None, maximum=None, extra=extra)
 
 
 def int_option(
     key: str,
     default: int,
+    *,
     minimum: int,
     maximum: int,
     label: str,
     **extra: Any,
 ) -> dict[str, Any]:
     """A whole-count row (stacks, casts, targets) and the range it accepts."""
-    return _option("int", key, default, label, minimum, maximum, extra)
+    return _option(
+        "int", key, default, label, minimum=minimum, maximum=maximum, extra=extra
+    )
 
 
 def float_option(
     key: str,
     default: float,
+    *,
     minimum: float,
     maximum: float,
     label: str,
     **extra: Any,
 ) -> dict[str, Any]:
     """A fractional row (shares, seconds, uptimes) and the range it accepts."""
-    return _option("float", key, default, label, minimum, maximum, extra)
+    return _option(
+        "float", key, default, label, minimum=minimum, maximum=maximum, extra=extra
+    )

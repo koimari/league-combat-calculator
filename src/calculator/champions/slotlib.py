@@ -913,6 +913,7 @@ def fixed_count_pet_row(
     damage_type: str,
     damage_per_hit: float,
     attack_times: list[float],
+    *,
     detail: str,
 ) -> dict[str, Any]:
     """Build a fixed-count pet-attack proc row (E4 summoned units).
@@ -949,6 +950,7 @@ def ability_on_hit_entry(
     rank: int,
     damage_type: str,
     on_hit: dict[str, Any],
+    *,
     cooldown: float | None = None,
 ) -> dict[str, Any]:
     """Wrap an on-hit payload in a zero-direct-damage ability shell."""
@@ -984,6 +986,7 @@ def _control_duration_atom(
     source: tuple[str, int] | None,
     attribute: str,
     rank: int,
+    *,
     effect_index: int = 0,
 ) -> tuple[float, dict[str, Any]]:
     """Read a control duration through the validated ability atom catalog."""
@@ -1348,7 +1351,7 @@ def with_control(
             )
         rank = ctx.level if ranks == "level" else ctx.rank_for(source_slot)
         duration, duration_atom = _control_duration_atom(
-            ctx, source, duration_attr, rank, effect_index
+            ctx, source, duration_attr, rank, effect_index=effect_index
         )
         if duration <= 0.0:
             raise ValueError(
@@ -1499,7 +1502,7 @@ def with_control_event(
             )
         else:
             duration, duration_atom = _control_duration_atom(
-                ctx, source, duration_attr, rank, effect_index
+                ctx, source, duration_attr, rank, effect_index=effect_index
             )
         if duration <= 0.0:
             raise ValueError(
@@ -1561,6 +1564,7 @@ def with_control_event(
 def stat_buff(
     attr: str,
     stat: str,
+    *,
     mode: str = "flat",
     percent_of: str = "attack_damage",
     apply_to: tuple[str, ...] = (),
@@ -1705,6 +1709,7 @@ ProcDamageResolver = Callable[[SlotCtx, dict[str, Any]], float]
 def proc_damage(
     per_proc: ProcDamageResolver,
     dmg_type: str,
+    *,
     count_option: str = "passive_procs",
     default_count: int = 4,
     name: str | None = None,

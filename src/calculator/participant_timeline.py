@@ -233,6 +233,7 @@ def _pair_run_fight(
     champion_data: Mapping[str, Any],
     level: int,
     items: list[dict[str, Any]],
+    *,
     params: FightParams,
     **kwargs: Any,
 ) -> dict[str, Any]:
@@ -1895,6 +1896,7 @@ def _attach_support_effects(
     result: Mapping[str, Any],
     all_actors: list[Combatant],
     support_effects: Mapping[str, list[dict[str, Any]]],
+    *,
     outgoing: dict[str, list[dict[str, Any]]] | None = None,
     incoming: dict[str, list[dict[str, Any]]] | None = None,
     denial_receipts: list[dict[str, Any]] | None = None,
@@ -2569,6 +2571,7 @@ def _grey_health_receipts(
     champion_data: Mapping[str, Any],
     level: int,
     stats: Mapping[str, float],
+    *,
     incoming: list[tuple[float, float, float]],
     outgoing: Iterable[tuple[float, float, float]],
     cast_timeline: Iterable[Mapping[str, Any]],
@@ -3014,6 +3017,7 @@ def _simulate_survival(
     healing: Mapping[str, list[dict[str, Any]]],
     support_effects: Mapping[str, list[dict[str, Any]]],
     duration: float,
+    *,
     annotate: bool = True,
     receipt_events: MutableMapping[str, list[dict[str, Any]]] | None = None,
     work_counters: WorkCounterSink | None = None,
@@ -3781,6 +3785,7 @@ def _context_setup(
     params: FightParams,
     enemies: list[ResolvedLoadout],
     allies: list[ResolvedLoadout],
+    *,
     champion_name: str,
     level: int,
     pair_result_cache: dict[tuple[Any, ...], PairView],
@@ -3926,7 +3931,7 @@ def _context_setup(
                     attacker.champion_data,
                     attacker.level,
                     list(attacker.items),
-                    context.roster_pair_params[pair_id],
+                    params=context.roster_pair_params[pair_id],
                     validated=True,
                 ),
                 attacker.participant_id,
@@ -3943,12 +3948,12 @@ def _context_setup(
             attacker.participant_id,
             attacker_i,
             defender.participant_id,
-            context.index_of[defender.participant_id],
-            context.grievous_packs[attacker_i],
-            params.fight_duration_seconds,
-            context.base_heal_dedup[attacker_i],
-            context.panel_id_strings[pair_id],
-            defender_index,
+            defender_i=context.index_of[defender.participant_id],
+            grievous_by_dtype=context.grievous_packs[attacker_i],
+            duration=params.fight_duration_seconds,
+            heal_dedup=context.base_heal_dedup[attacker_i],
+            id_strings=context.panel_id_strings[pair_id],
+            defender_index=defender_index,
             champion_wounds=wounds,
             live_amps=view.live_amps,
             holder_amps=view.holder_amps,
@@ -3993,9 +3998,9 @@ def _context_setup(
                 wearer_i,
                 strikes,
                 profiles,
-                context.grievous_packs[wearer_i],
-                params.fight_duration_seconds,
-                "base",
+                grievous_by_dtype=context.grievous_packs[wearer_i],
+                duration=params.fight_duration_seconds,
+                id_namespace="base",
             )
     # A roster holder's active Warmog's Heart ticks are search-invariant:
     # author the same events the receipt walk schedules and convert them
@@ -4023,7 +4028,7 @@ def _context_setup(
         if kv_tether is None:
             continue
         base_aidx = stage_knights_vow_redirect_actions(
-            base, all_actors_by_index, kv_tether, kv_children, base_aidx
+            base, all_actors_by_index, kv_tether, kv_children, next_aidx=base_aidx
         )
         base_aidx = stage_knights_vow_heals(
             base, all_actors_by_index, kv_tether, base_aidx
@@ -4039,6 +4044,7 @@ def _build_signature_panel(
     main: Combatant,
     params: FightParams,
     pair_result_cache: dict[tuple[Any, ...], PairView],
+    *,
     signature: tuple[Any, ...],
     all_actors: list[Combatant],
 ) -> _SignaturePanel:
@@ -4074,7 +4080,7 @@ def _build_signature_panel(
                     attacker.champion_data,
                     attacker.level,
                     list(attacker.items),
-                    replace(
+                    params=replace(
                         context.actor_params[attacker.participant_id],
                         enforce_resource_limits=True,
                         # An enemy attacker's ordered defenders are
@@ -4103,11 +4109,11 @@ def _build_signature_panel(
             attacker.participant_id,
             attacker_i,
             "main",
-            0,
-            context.grievous_packs[attacker_i],
-            duration,
-            dict(context.base_heal_dedup.get(attacker_i) or {}),
-            context.panel_id_strings[(attacker.participant_id, "main")],
+            defender_i=0,
+            grievous_by_dtype=context.grievous_packs[attacker_i],
+            duration=duration,
+            heal_dedup=dict(context.base_heal_dedup.get(attacker_i) or {}),
+            id_strings=context.panel_id_strings[(attacker.participant_id, "main")],
             champion_wounds=wounds,
             live_amps=view.live_amps,
             holder_amps=view.holder_amps,
@@ -4136,7 +4142,7 @@ def _build_signature_panel(
         if kv_tether is None or kv_tether["target"].participant_id != "main":
             continue
         sig_aidx = stage_knights_vow_redirect_actions(
-            sig, all_actors, kv_tether, sig_children, sig_aidx
+            sig, all_actors, kv_tether, sig_children, next_aidx=sig_aidx
         )
     sig.next_aidx = sig_aidx
     return _SignaturePanel(context.base_sorted, sig, kv_redirect_children=sig_children)
@@ -4200,10 +4206,10 @@ def _score_with_search_context(
                 params,
                 enemies,
                 allies,
-                str(champion_data.get("name", "")),
-                level,
-                pair_result_cache,
-                [placeholder, *setup_allies, *setup_enemies],
+                champion_name=str(champion_data.get("name", "")),
+                level=level,
+                pair_result_cache=pair_result_cache,
+                all_actors_by_index=[placeholder, *setup_allies, *setup_enemies],
             )
         except UncompilableActionError as exc:
             # Roster pair compilation is search-invariant: one failure means
@@ -4239,7 +4245,12 @@ def _score_with_search_context(
     if panel is None:
         try:
             panel = _build_signature_panel(
-                context, main, params, pair_result_cache, signature, all_actors
+                context,
+                main,
+                params,
+                pair_result_cache,
+                signature=signature,
+                all_actors=all_actors,
             )
         except UncompilableActionError as exc:
             # Signature-panel compilation is invariant per defensive
@@ -4274,7 +4285,7 @@ def _score_with_search_context(
             main.champion_data,
             main.level,
             list(main.items),
-            pair_params,
+            params=pair_params,
             precomputed_stats=reusable_stats,
             validated=True,
             score_only=True,
@@ -4291,12 +4302,12 @@ def _score_with_search_context(
             "main",
             0,
             defender.participant_id,
-            context.index_of[defender.participant_id],
-            main_packs,
-            duration,
-            heal_dedup,
-            context.pair_id_strings[defender.participant_id],
-            defender_index,
+            defender_i=context.index_of[defender.participant_id],
+            grievous_by_dtype=main_packs,
+            duration=duration,
+            heal_dedup=heal_dedup,
+            id_strings=context.pair_id_strings[defender.participant_id],
+            defender_index=defender_index,
             champion_wounds=main_champion_wounds,
             live_amps=_live_amps_of(main, defender, params),
             holder_amps=_holder_amps_of(main, defender, params),
@@ -4375,9 +4386,9 @@ def _score_with_search_context(
                 wearer_i,
                 strikes,
                 profiles,
-                context.grievous_packs[wearer_i],
-                duration,
-                "fresh",
+                grievous_by_dtype=context.grievous_packs[wearer_i],
+                duration=duration,
+                id_namespace="fresh",
             )
     main_thorns = thorns_effects(list(main.items))
     if main_thorns:
@@ -4389,7 +4400,13 @@ def _score_with_search_context(
         ]
         if strikes:
             fresh.add_thorns(
-                main, 0, strikes, main_thorns, main_packs, duration, "fresh"
+                main,
+                0,
+                strikes,
+                main_thorns,
+                grievous_by_dtype=main_packs,
+                duration=duration,
+                id_namespace="fresh",
             )
 
     # Grey-health consume heals (E8a) are compiled from the same incoming
@@ -4462,26 +4479,26 @@ def _score_with_search_context(
             champion_data,
             level,
             main.stats,
-            in_records,
-            out_records,
-            main_cast_timeline,
-            duration,
-            len(enemy_actors),
-            params.ability_ranks,
-            params.champion_options,
+            incoming=in_records,
+            outgoing=out_records,
+            cast_timeline=main_cast_timeline,
+            duration=duration,
+            enemy_count=len(enemy_actors),
+            ability_ranks=params.ability_ranks,
+            champion_options=params.champion_options,
         )
         for index, (heal_time, source, amount) in enumerate(grey_heals):
             aidx = fresh.next_aidx
             fresh.next_aidx += 1
             fresh.actions.append(
-                grey_health_heal_action(heal_time, source, amount, index, aidx)
+                grey_health_heal_action(heal_time, source, amount, index, aidx=aidx)
             )
         for index, (grant_time, source, amount, window) in enumerate(grey_shields):
             aidx = fresh.next_aidx
             fresh.next_aidx += 1
             fresh.actions.append(
                 grey_health_shield_action(
-                    grant_time, source, amount, window, index, aidx
+                    grant_time, source, amount, window, index=index, aidx=aidx
                 )
             )
 
@@ -4595,7 +4612,7 @@ def _score_with_search_context(
         fresh.support_entries,
         base.support_entries,
         panel.sig.support_entries,
-        count,
+        count=count,
     )
     totals = accumulate_damage_totals(
         survival_rows,
@@ -5067,7 +5084,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                             attacker.champion_data,
                             attacker.level,
                             list(attacker.items),
-                            _target_params(pair_params, defender),
+                            params=_target_params(pair_params, defender),
                             precomputed_stats=reusable_stats,
                         ),
                         attacker.participant_id,
@@ -5238,15 +5255,15 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             attacker.champion_data,
             attacker.level,
             list(attacker.items),
-            actor_params,
+            params=actor_params,
         )
         _attach_support_effects(
             attacker,
             fallback,
             all_actors,
             support_effects,
-            outgoing,
-            incoming,
+            outgoing=outgoing,
+            incoming=incoming,
             denial_receipts=item_denial_receipts,
         )
         support_attached.add(attacker.participant_id)
@@ -5386,13 +5403,13 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             champion_data,
             level,
             main_stats,
-            in_records,
-            out_records,
-            main_cast_timeline,
-            duration,
-            len(enemy_actors),
-            params.ability_ranks,
-            params.champion_options,
+            incoming=in_records,
+            outgoing=out_records,
+            cast_timeline=main_cast_timeline,
+            duration=duration,
+            enemy_count=len(enemy_actors),
+            ability_ranks=params.ability_ranks,
+            champion_options=params.champion_options,
         )
         for index, (heal_time, source, amount) in enumerate(grey_heals):
             heal_event: dict[str, Any] = {

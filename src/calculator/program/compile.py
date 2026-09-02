@@ -189,6 +189,7 @@ def _enriched_damage_event(  # pylint: disable=too-many-arguments
     attacker_id: str,
     defender_id: str,
     event_id: str,
+    *,
     is_ability: bool,
     ability_instance: Any,
     basic_attack: bool,
@@ -295,12 +296,12 @@ def pair_view(
         attacker_id,
         -1,
         defender_id,
-        -1,
-        {},
-        0.0,
-        {},
-        [],
-        defender_index,
+        defender_i=-1,
+        grievous_by_dtype={},
+        duration=0.0,
+        heal_dedup={},
+        id_strings=[],
+        defender_index=defender_index,
         champion_wounds=champion_wounds,
         live_amps=live_amps,
         holder_amps=holder_amps,
@@ -444,11 +445,11 @@ def action_from_event(
         phase,
         kind_str,
         execute_ratio_raw,
-        deferred_raw,
-        redirected_raw,
-        raw_formula,
-        raw_damage,
-        grievous_duration,
+        deferred_raw=deferred_raw,
+        redirected_raw=redirected_raw,
+        raw_formula=raw_formula,
+        raw_damage=raw_damage,
+        grievous_duration=grievous_duration,
     )
     attacker_id = get("attacker")
     attacker_index = index_of.get(str(attacker_id), -1) if attacker_id else -1
@@ -812,6 +813,7 @@ class WalkCompiler:
         attacker_id: str,
         attacker_i: int,
         defender_id: str,
+        *,
         defender_i: int,
         grievous_by_dtype: Mapping[str, Any],
         duration: float,
@@ -1150,31 +1152,31 @@ class WalkCompiler:
                             else ActionKind.DAMAGE
                         ),
                         defender_i,
-                        attacker_i,
-                        aidx,
-                        damage,
-                        damage_type,
-                        live_formula,
-                        raw_damage,
-                        grievous,
-                        wound,
-                        source_key,
-                        source,
-                        slot_of(event_id),
-                        sequence,
-                        live_amp,
-                        declared,
-                        is_ability,
-                        basic_attack,
-                        baseline_armor,
-                        baseline_mr,
-                        immobilized,
-                        cc_kind,
-                        cc_duration,
-                        skillshot,
-                        damage_over_time,
-                        area_damage,
-                        ability_instance,
+                        attacker=attacker_i,
+                        aidx=aidx,
+                        amount=damage,
+                        damage_type=damage_type,
+                        raw_formula=live_formula,
+                        raw_damage=raw_damage,
+                        grievous=grievous,
+                        wound=wound,
+                        source_key=source_key,
+                        source=source,
+                        event_slot=slot_of(event_id),
+                        sequence=sequence,
+                        live_amp=live_amp,
+                        declared=declared,
+                        is_ability=is_ability,
+                        basic_attack=basic_attack,
+                        baseline_effective_armor=baseline_armor,
+                        baseline_effective_mr=baseline_mr,
+                        immobilized=immobilized,
+                        cc_kind=cc_kind,
+                        cc_duration=cc_duration,
+                        skillshot=skillshot,
+                        damage_over_time=damage_over_time,
+                        area_damage=area_damage,
+                        ability_instance=ability_instance,
                     )
                 )
                 if time_value <= duration:
@@ -1191,16 +1193,16 @@ class WalkCompiler:
                         attacker_id,
                         defender_id,
                         event_id,
-                        is_ability,
-                        ability_instance,
-                        basic_attack,
-                        wound,
-                        time_value,
-                        result_breakdown.get(source_key),
-                        baseline_fields,
-                        live_amp,
-                        declared,
-                        sort_key,
+                        is_ability=is_ability,
+                        ability_instance=ability_instance,
+                        basic_attack=basic_attack,
+                        wound=wound,
+                        time_value=time_value,
+                        source_row=result_breakdown.get(source_key),
+                        baseline_fields=baseline_fields,
+                        live_amp=live_amp,
+                        declared=declared,
+                        sort_key=sort_key,
                     )
                 )
                 view.event_id_by_aidx[aidx] = event_id
@@ -1665,6 +1667,7 @@ class WalkCompiler:
         wearer_i: int,
         strikes: Iterable[tuple[int, float, int, Any, int]],
         profiles: tuple[Any, ...],
+        *,
         grievous_by_dtype: Mapping[str, Any],
         duration: float,
         id_namespace: str,
@@ -1791,7 +1794,7 @@ def knights_vow_target_factor(
             float(source.stats.get("armor_penetration_percent", 0.0) or 0.0) / 100.0,
             float(source.stats.get("armor_penetration_bonus_percent", 0.0) or 0.0)
             / 100.0,
-            float(target.stats.get("bonus_armor", 0.0) or 0.0),
+            bonus_armor=float(target.stats.get("bonus_armor", 0.0) or 0.0),
         )
     elif damage_type == "magic":
         effective = apply_magic_penetration(
@@ -1846,6 +1849,7 @@ def stage_knights_vow_redirect_actions(
     combatants: Sequence[Any],
     tether: Mapping[str, Any],
     redirect_children: MutableMapping[int, SurvivalAction],
+    *,
     next_aidx: int,
 ) -> int:
     """Stage the receipt walk's Knight's Vow pre-mitigation split onto one
@@ -2106,7 +2110,7 @@ def stage_knights_vow_heals(
 
 
 def grey_health_heal_action(
-    heal_time: float, source: str, amount: float, index: int, aidx: int
+    heal_time: float, source: str, amount: float, index: int, *, aidx: int
 ) -> SurvivalAction:
     """One main-participant grey-health regeneration tick, as an action.
 
@@ -2142,6 +2146,7 @@ def grey_health_shield_action(  # pylint: disable=too-many-arguments
     source: str,
     amount: float,
     duration: float,
+    *,
     index: int,
     aidx: int,
 ) -> SurvivalAction:

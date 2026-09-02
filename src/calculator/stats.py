@@ -358,6 +358,7 @@ def calculate_total_stats(
     champion_data: dict[str, Any],
     level: int,
     items: list[dict[str, Any]],
+    *,
     item_options: Mapping[str, Mapping[str, int]] | None = None,
     role: str = "",
     role_quest_complete: bool = False,

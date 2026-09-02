@@ -685,6 +685,7 @@ def compiled_damage_action(
     time: float,
     kind: ActionKind,
     subject: int,
+    *,
     attacker: int,
     aidx: int,
     amount: float,
@@ -977,6 +978,7 @@ def classify_prefetched(
     phase: TransitionRank,
     kind: str,
     execute_ratio_raw: Any,
+    *,
     deferred_raw: Any,
     redirected_raw: Any,
     raw_formula: Any,
@@ -1032,11 +1034,11 @@ def classify_event_kind(event: Mapping[str, Any], phase: TransitionRank) -> Acti
         phase,
         str(get("kind", "")),
         get("execute_threshold_ratio"),
-        get("_deferred"),
-        get("_redirected"),
-        get("raw_formula"),
-        float(get("raw_damage", 0.0) or 0.0),
-        float(get("grievous_duration", 0.0) or 0.0),
+        deferred_raw=get("_deferred"),
+        redirected_raw=get("_redirected"),
+        raw_formula=get("raw_formula"),
+        raw_damage=float(get("raw_damage", 0.0) or 0.0),
+        grievous_duration=float(get("grievous_duration", 0.0) or 0.0),
     )
 
 

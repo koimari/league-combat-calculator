@@ -664,11 +664,13 @@ def bis_payload(
     subject_team = request_string(data, "subject_team", "main")
     if subject_team not in {"main", "ally", "enemy"}:
         raise ValueError("subject_team must be main, ally, or enemy")
-    slot_index = request_int(data, "slot_index", 0, 0, MAX_LOADOUT_ITEMS - 1)
+    slot_index = request_int(
+        data, "slot_index", 0, minimum=0, maximum=MAX_LOADOUT_ITEMS - 1
+    )
     slot_kind = request_string(data, "slot_kind", "item")
     if slot_kind not in {"item", "boots"}:
         raise ValueError("slot_kind must be item or boots")
-    subject_index = request_int(data, "subject_index", 0, 0, 4)
+    subject_index = request_int(data, "subject_index", 0, minimum=0, maximum=4)
     objective_meta = bis_objective_meta(request_string(data, "objective", "overall"))
     objective_key = objective_meta["key"]
     if subject_team == "ally" and subject_index >= len(request.allies):
@@ -994,7 +996,7 @@ def bis_batch_payload(data: Mapping[str, object]) -> dict:
     scenario = deepcopy(dict(data))
     scenario.pop("slots", None)
     subject_team = request_string(scenario, "subject_team", "main")
-    subject_index = request_int(scenario, "subject_index", 0, 0, 4)
+    subject_index = request_int(scenario, "subject_index", 0, minimum=0, maximum=4)
     pair_result_cache: dict = {}
     batch_search_context = None
     results: list[dict] = []
@@ -1007,7 +1009,9 @@ def bis_batch_payload(data: Mapping[str, object]) -> dict:
         slot_kind = request_string(raw_slot, "slot_kind", "item")
         if slot_kind not in {"item", "boots"}:
             raise ValueError("slot_kind must be item or boots")
-        slot_index = request_int(raw_slot, "slot_index", 0, 0, MAX_LOADOUT_ITEMS - 1)
+        slot_index = request_int(
+            raw_slot, "slot_index", 0, minimum=0, maximum=MAX_LOADOUT_ITEMS - 1
+        )
         current = deepcopy(scenario)
         current["slot_kind"] = slot_kind
         current["slot_index"] = slot_index

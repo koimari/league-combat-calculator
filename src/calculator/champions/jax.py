@@ -57,7 +57,7 @@ def _empower(ctx: SlotCtx) -> dict[str, Any] | None:
         rank,
         "magic",
         {"name": "Empower", "damage_per_hit": value, "damage_type": "magic"},
-        extract_cooldown(ability, rank),
+        cooldown=extract_cooldown(ability, rank),
     )
     entry["empowers_next_auto"] = True
     entry["detail"] = (

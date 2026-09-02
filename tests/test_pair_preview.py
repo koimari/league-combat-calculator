@@ -254,11 +254,11 @@ def _compile_engine_result():
         "main",
         0,
         "enemy:Aatrox",
-        1,
-        {},
-        8.0,
-        {},
-        [],
+        defender_i=1,
+        grievous_by_dtype={},
+        duration=8.0,
+        heal_dedup={},
+        id_strings=[],
     )
     return compiler.actions
 

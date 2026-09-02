@@ -87,7 +87,7 @@ def _boulder_damage(ctx: SlotCtx, ability: dict, rank: int) -> tuple[float, bool
 
 
 def _volley_parts(
-    ctx: SlotCtx, ability: dict, rank: int, distance: float, start: float
+    ctx: SlotCtx, ability: dict, rank: int, distance: float, *, start: float
 ) -> tuple[DamagePart, ...]:
     """One full fresh-ground volley: 5 shards from a cast starting at ``start``.
 
@@ -129,7 +129,7 @@ def _timed_cast_starts(
 
 
 def _timed_threaded_volley(
-    ctx: SlotCtx, ability: dict, rank: int, distance: float, duration: float
+    ctx: SlotCtx, ability: dict, rank: int, distance: float, *, duration: float
 ) -> dict[str, Any]:
     """Timed Q: the module-owned Worked Ground walk, cast exactly once.
 
@@ -154,7 +154,7 @@ def _timed_threaded_volley(
     )
     boulder, primary = _boulder_damage(ctx, ability, rank)
     boulder_travel = _worked_travel_time(distance)
-    parts = _volley_parts(ctx, ability, rank, distance, starts[0]) + tuple(
+    parts = _volley_parts(ctx, ability, rank, distance, start=starts[0]) + tuple(
         # The empowered cast is the one that controls: "dealing 180% damage
         # to them and normal damage to nearby enemies, slowing all targets
         # hit for 1.5 seconds".
@@ -203,7 +203,9 @@ def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
     # q_ground select prices the two states in one-rotation mode only.
     duration = ctx.options.get("fight_duration_seconds")
     if duration is not None:
-        return _timed_threaded_volley(ctx, ability, rank, distance, float(duration))
+        return _timed_threaded_volley(
+            ctx, ability, rank, distance, duration=float(duration)
+        )
 
     if ground == "worked":
         raw, primary = _boulder_damage(ctx, ability, rank)
@@ -229,7 +231,7 @@ def _threaded_volley(ctx: SlotCtx) -> dict[str, Any] | None:
         )
         return entry
 
-    parts = _volley_parts(ctx, ability, rank, distance, _Q_CAST_START)
+    parts = _volley_parts(ctx, ability, rank, distance, start=_Q_CAST_START)
     total = parts[0].amount + 4.0 * parts[1].amount
     entry = damage_entry(
         ability_name(ability),

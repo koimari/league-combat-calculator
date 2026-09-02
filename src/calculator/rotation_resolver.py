@@ -1343,6 +1343,7 @@ def resolved_edges(  # pylint: disable=import-outside-toplevel
     ability_damages: Mapping[str, Any],
     champion_data: Mapping[str, Any],
     option_keys: Mapping[str, list[str]],
+    *,
     declarations: Sequence[CastDependency] | None = None,
 ) -> tuple[tuple[_Edge, ...], DependencyReceipt]:
     """The one public detect→merge surface.
@@ -1746,7 +1747,11 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
     if declarations is None:
         declarations = get_champion_cast_dependencies(champion_name)
     merged, _receipt = resolved_edges(
-        champion_name, ability_damages, champion_data, slot_options, declarations
+        champion_name,
+        ability_damages,
+        champion_data,
+        slot_options,
+        declarations=declarations,
     )
     edges = list(merged)
 

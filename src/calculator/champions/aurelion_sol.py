@@ -280,7 +280,7 @@ def _breath_of_light(ctx: SlotCtx) -> dict[str, Any] | None:
         ),
     ]
 
-    secondary_part = _secondary_beam_part(ctx, ability, rank, ap, ticks)
+    secondary_part = _secondary_beam_part(ctx, ability, rank, ap, ticks=ticks)
     if secondary_part is not None:
         parts.insert(0, secondary_part)
         total += _secondary_beam_per_second(ctx, ability, rank, ap) * seconds
@@ -347,7 +347,7 @@ def _burst_damage(ctx: SlotCtx, ability: dict[str, Any], rank: int, ap: float) -
 
 
 def _secondary_beam_part(
-    ctx: SlotCtx, ability: dict[str, Any], rank: int, ap: float, ticks: int
+    ctx: SlotCtx, ability: dict[str, Any], rank: int, ap: float, *, ticks: int
 ) -> DamagePart | None:
     """The per-tick secondary-beam part, or None with no secondary target."""
     per_second = _secondary_beam_per_second(ctx, ability, rank, ap)

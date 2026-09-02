@@ -218,6 +218,7 @@ def _run_fight(
     champion_data,
     level,
     items,
+    *,
     auto_attack_uptime=0.0,
     one_rotation=True,
     duration=ONE_ROTATION_DURATION,
@@ -466,6 +467,7 @@ def snapshot_metadata(
     items: dict[str, Any],
     substitutions,
     sweep_error_count: int,
+    *,
     sections,
 ):
     """Section 4: patch, provenance, counts, and the shape fingerprint.
@@ -511,7 +513,7 @@ def build_snapshot():
     return {
         **sections,
         "metadata": snapshot_metadata(
-            champions, items, substitutions, sweep_errors, sections
+            champions, items, substitutions, sweep_errors, sections=sections
         ),
     }
 
@@ -774,7 +776,11 @@ def _identity_keyed_diffs(path, old, new, out):
         member_path = f"{path}[{position}]"
         if identity in new_index:
             _leaf_diffs(
-                member_path, old[position], new[new_index[identity]], out, identity
+                member_path,
+                old[position],
+                new[new_index[identity]],
+                out,
+                identity=identity,
             )
         else:
             out.append(_leaf_diff(member_path, old[position], ABSENT, identity))
@@ -786,7 +792,7 @@ def _identity_keyed_diffs(path, old, new, out):
     return True
 
 
-def _leaf_diffs(path: str, old, new, out, identity=None):
+def _leaf_diffs(path: str, old, new, out, *, identity=None):
     """Collect one LeafDiff per differing leaf, recursing through containers."""
     if _is_error(old) != _is_error(new):
         out.append(_leaf_diff(path, old, new, identity))
@@ -798,7 +804,7 @@ def _leaf_diffs(path: str, old, new, out, identity=None):
                 old.get(key, ABSENT),
                 new.get(key, ABSENT),
                 out,
-                identity,
+                identity=identity,
             )
         return
     if isinstance(old, list) and isinstance(new, list):
@@ -810,7 +816,7 @@ def _leaf_diffs(path: str, old, new, out, identity=None):
                 old[index] if index < len(old) else ABSENT,
                 new[index] if index < len(new) else ABSENT,
                 out,
-                identity,
+                identity=identity,
             )
         return
     if old is ABSENT or new is ABSENT or old != new:

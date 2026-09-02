@@ -62,7 +62,7 @@ def _kayle_e(ctx: SlotCtx) -> dict[str, Any] | None:
         rank,
         "magic",
         {"name": "Starfire passive", "damage_per_hit": passive, "damage_type": "magic"},
-        extract_cooldown(ability, rank),
+        cooldown=extract_cooldown(ability, rank),
     )
     result["parts"] = (DamagePart("magic", active, basic_damage=True, time_offset=0.1),)
     result["total_raw"] = active

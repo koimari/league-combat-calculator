@@ -30,4 +30,9 @@ def test_zero_is_a_value_and_not_an_absent_field():
     """The sentinel set is exactly ``None`` and ``""``: 0 is supplied data."""
     with pytest.raises(ValueError, match="max_purchase_items must be between 1 and 7"):
         request_optional_int({"max_purchase_items": 0}, "max_purchase_items", 1, 7)
-    assert request_int({"max_purchase_items": 0}, "max_purchase_items", 0, 0, 7) == 0
+    assert (
+        request_int(
+            {"max_purchase_items": 0}, "max_purchase_items", 0, minimum=0, maximum=7
+        )
+        == 0
+    )

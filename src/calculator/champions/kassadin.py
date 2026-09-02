@@ -71,7 +71,7 @@ def _nether_blade(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_per_hit": passive,
             "damage_type": "magic",
         },
-        extract_cooldown(ability, rank),
+        cooldown=extract_cooldown(ability, rank),
     )
     if active:
         entry["parts"] = (

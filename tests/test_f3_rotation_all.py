@@ -938,7 +938,11 @@ def _syndra_merge(champion_data, level, splinters, declarations):
         champion_data, level, (), {}, champion_options={"splinters": splinters}
     )
     return resolved_edges(
-        "Syndra", parsed, champion_data, _slot_options("Syndra"), declarations
+        "Syndra",
+        parsed,
+        champion_data,
+        _slot_options("Syndra"),
+        declarations=declarations,
     )
 
 

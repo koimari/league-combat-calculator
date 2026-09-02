@@ -460,9 +460,14 @@ def _walk_roster(markers: Sequence[str]) -> dict[str, Any]:
                 for build_label, build in MATRIX_BUILDS:
                     state = f"{label}|L{level}|{build_label}"
                     states_walked += 1
-                    parsed = _parse(data, level, build, items_by_name, options)
+                    parsed = _parse(data, level, build, items_by_name, options=options)
                     _record_markers(
-                        name, parsed, markers, marker_authors, cc_markers, cc_contract
+                        name,
+                        parsed,
+                        markers,
+                        marker_authors,
+                        cc_markers=cc_markers,
+                        cc_contract=cc_contract,
                     )
                     try:
                         edges, receipt = resolved_edges(name, parsed, data, option_keys)
@@ -489,13 +494,19 @@ def _walk_roster(markers: Sequence[str]) -> dict[str, Any]:
                         state,
                         declarations,
                         receipt,
-                        activation,
-                        matched,
-                        latent,
-                        conflicts,
+                        activation=activation,
+                        matched=matched,
+                        latent=latent,
+                        conflicts=conflicts,
                     )
                     _record_routes(
-                        name, data, parsed, options, declarations, receipt, routes
+                        name,
+                        data,
+                        parsed,
+                        options,
+                        declarations=declarations,
+                        receipt=receipt,
+                        routes=routes,
                     )
 
     return {
@@ -520,6 +531,7 @@ def _parse(
     level: int,
     build: Sequence[str],
     items_by_name: Mapping[str, Any],
+    *,
     options: Mapping[str, Any],
 ) -> dict[str, Any]:
     """One champion's parsed ability package for one matrix cell."""
@@ -541,6 +553,7 @@ def _record_markers(
     parsed: Mapping[str, Any],
     markers: Sequence[str],
     marker_authors: Mapping[str, set[str]],
+    *,
     cc_markers: dict[tuple[str, str], set[str]],
     cc_contract: dict[tuple[str, str], str],
 ) -> None:
@@ -570,6 +583,7 @@ def _record_merge(  # pylint: disable=too-many-arguments,too-many-positional-arg
     state: str,
     declarations: Sequence[CastDependency],
     receipt: Any,
+    *,
     activation: dict[tuple[str, str, str], set[str]],
     matched: dict[tuple[str, str, str, str], set[str]],
     latent: dict[tuple[str, str, str, str], set[str]],
@@ -622,6 +636,7 @@ def _record_routes(  # pylint: disable=too-many-arguments,too-many-positional-ar
     champion_data: Mapping[str, Any],
     parsed: Mapping[str, Any],
     options: Mapping[str, Any],
+    *,
     declarations: Sequence[CastDependency],
     receipt: Any,
     routes: dict[tuple[str, str, str], set[str]],
@@ -636,14 +651,26 @@ def _record_routes(  # pylint: disable=too-many-arguments,too-many-positional-ar
         return
     certified = get_champion_cast_order(name)
     full_order = _derived_order(
-        name, parsed, champion_data, certified, options, declarations
+        name,
+        parsed,
+        champion_data,
+        certified,
+        options=options,
+        declarations=declarations,
     )
     for dependency in declarations:
         key = (name, dependency.slot, dependency.requires)
         routes.setdefault(key, set())
         rest = tuple(other for other in declarations if other is not dependency)
         if (
-            _derived_order(name, parsed, champion_data, certified, options, rest)
+            _derived_order(
+                name,
+                parsed,
+                champion_data,
+                certified,
+                options=options,
+                declarations=rest,
+            )
             != full_order
         ):
             routes[key].add("derived_order")
@@ -661,6 +688,7 @@ def _derived_order(  # pylint: disable=too-many-arguments,too-many-positional-ar
     parsed: Mapping[str, Any],
     champion_data: Mapping[str, Any],
     certified: list[str] | None,
+    *,
     options: Mapping[str, Any],
     declarations: Sequence[CastDependency],
 ) -> tuple[str, ...] | None:

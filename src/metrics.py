@@ -262,6 +262,7 @@ def _staleness_week(
     checked_at: datetime | None,
     wk_start: datetime,
     _wk_end: datetime,
+    *,
     effective_end: datetime,
 ) -> dict:
     """Staleness verdict for one week window.
@@ -464,7 +465,9 @@ def compute_scorecard(
         # The final week is judged at the evaluation moment so a report
         # refreshed on the last day is not misread as post-beta.
         week_end = now if index == len(windows) else min(now, wk_end)
-        result = _staleness_week(report, checked_at, wk_start, wk_end, week_end)
+        result = _staleness_week(
+            report, checked_at, wk_start, wk_end, effective_end=week_end
+        )
         staleness_weeks.append(
             {
                 "week": index,

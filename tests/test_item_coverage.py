@@ -765,7 +765,7 @@ def test_guardians_horn_target_coverage_uses_typed_flat_reduction():
         18,
         {"health": 2000.0},
         [{"name": "Guardian's Horn"}],
-        {},
+        item_options={},
     )
     assert resolved.champion_damage_flat_reduction == pytest.approx(15.0)
     assert resolved.champion_dot_damage_flat_reduction == pytest.approx(3.75)

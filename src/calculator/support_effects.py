@@ -1235,6 +1235,7 @@ def _target_max_health_shield_metadata(
     ability: Mapping[str, Any],
     slot: str,
     attribute: str,
+    *,
     rank: int,
 ) -> dict[str, Any]:
     """Return a typed target-health formula when the source names one."""
@@ -1393,6 +1394,7 @@ def _nami_return_bounce_packet(
     ability: dict[str, Any],
     slot: str,
     rank: int,
+    *,
     stats: Mapping[str, float],
     base_amount: float,
     cast_time: float,
@@ -1437,6 +1439,7 @@ def _yuumi_best_friend_packet(
     slot: str,
     level: int,
     rank: int,
+    *,
     base_amount: float,
     cast_time: float,
     cast_index: int,
@@ -1540,6 +1543,7 @@ def derive_ally_effects(
     level: int,
     stats: dict[str, float],
     cast_timeline: Iterable[dict[str, Any]],
+    *,
     ability_ranks: dict[str, int] | None = None,
     champion_options: Mapping[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
@@ -1668,7 +1672,7 @@ def derive_ally_effects(
                 amount_metadata = {
                     key: value
                     for key, value in _target_max_health_shield_metadata(
-                        champion_data, ability, slot, shield_attr, rank
+                        champion_data, ability, slot, shield_attr, rank=rank
                     ).items()
                     if key != "amount"
                 }
@@ -1789,10 +1793,10 @@ def derive_ally_effects(
                                 ability,
                                 slot,
                                 rank,
-                                stats,
-                                amount,
-                                heal_time,
-                                cast_index,
+                                stats=stats,
+                                base_amount=amount,
+                                cast_time=heal_time,
+                                cast_index=cast_index,
                             )
                         )
                     elif champion_key == ("Yuumi", "R"):
@@ -1801,9 +1805,9 @@ def derive_ally_effects(
                             slot,
                             level,
                             rank,
-                            amount,
-                            heal_time,
-                            cast_index,
+                            base_amount=amount,
+                            cast_time=heal_time,
+                            cast_index=cast_index,
                         )
                         effects.append(best_friend)
                         effects.append(

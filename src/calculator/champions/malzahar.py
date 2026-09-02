@@ -177,7 +177,7 @@ def _void_swarm(ctx: SlotCtx) -> dict[str, Any] | None:
             "magic",
             per_attack,
             attack_times,
-            (
+            detail=(
                 f"{count} Voidling(s), {total_attacks} attack(s) total at "
                 f"{per_attack:.2f} magic each ({interval:.2f}s cadence)"
             ),

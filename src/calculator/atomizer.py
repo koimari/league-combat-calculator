@@ -75,6 +75,7 @@ class Atomizer:
         behavior: str,
         source: str,
         name: str,
+        *,
         values: Iterable[float] = (),
         units: Iterable[str] = (),
         evidence: Iterable[str] = (),

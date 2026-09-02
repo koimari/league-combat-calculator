@@ -595,7 +595,7 @@ def parse_scenario_request(
     identically.
     """
     champion = _request_string(data, "champion", required=True)
-    level = _request_int(data, "level", 1, 1, MAX_LEVEL)
+    level = _request_int(data, "level", 1, minimum=1, maximum=MAX_LEVEL)
     item_names = _request_string_list(data, "items", maximum=MAX_LOADOUT_ITEMS)
     boots_name = _request_string(data, "boots")
     fight_params = FightParams.from_request(data, deterministic=deterministic)

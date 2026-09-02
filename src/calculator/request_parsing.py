@@ -34,6 +34,7 @@ def request_int(
     data: Mapping[str, object],
     key: str,
     default: int,
+    *,
     minimum: int,
     maximum: int,
 ) -> int:

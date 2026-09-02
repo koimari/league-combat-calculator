@@ -127,6 +127,7 @@ def _evaluate_build(
     level: int,
     items: list[dict[str, Any]],
     fight_params: FightParams | tuple[FightParams, ...],
+    *,
     objective: str,
     gold_budget: int | None = None,
     timeline_audit: dict[str, Any] | None = None,
@@ -155,7 +156,7 @@ def _evaluate_build(
             level,
             items,
             fight_params,
-            objective,
+            objective=objective,
             gold_budget=gold_budget,
             timeline_audit=timeline_audit,
             require_complete_timeline=require_complete_timeline,
@@ -200,7 +201,7 @@ def _evaluate_build(
         level,
         items,
         fight_params,
-        objective,
+        objective=objective,
         gold_budget=gold_budget,
         timeline_audit=timeline_audit,
         require_complete_timeline=require_complete_timeline,
@@ -230,6 +231,7 @@ def _evaluate_build_uncached(
     level: int,
     items: list[dict[str, Any]],
     fight_params: FightParams | tuple[FightParams, ...],
+    *,
     objective: str,
     gold_budget: int | None = None,
     timeline_audit: dict[str, Any] | None = None,
@@ -636,6 +638,7 @@ def _greedy_fill(
     level: int,
     locked_legendaries: list[dict[str, Any]],
     locked_boots: dict[str, Any] | None,
+    *,
     slots_to_fill: int,
     fill_boots: bool,
     pool: Iterable[dict[str, Any]],
@@ -729,6 +732,7 @@ def _hill_climb(
     level: int,
     legendaries: list[dict[str, Any]],
     boots: dict[str, Any] | None,
+    *,
     locked_legendary_names: Collection[str],
     locked_boots: bool,
     pool: Iterable[dict[str, Any]],
@@ -885,6 +889,7 @@ class _PurchaseSearch:
         level: int,
         owned: list[dict[str, Any]],
         owned_boots: dict[str, Any] | None,
+        *,
         available_gold: int,
         max_buys: int,
         combine_policy: str,
@@ -1047,6 +1052,7 @@ def _enumerate_affordable_shapes(
     sell: dict[str, Any] | None,
     buyables: Sequence[dict[str, Any]],
     cap: int,
+    *,
     counted: int,
 ) -> tuple[list[list[dict[str, Any]]], bool]:
     """Depth-first walk of every priceable buy list, in pool order.
@@ -1143,6 +1149,7 @@ def _greedy_purchase_chain(
     sell: dict[str, Any] | None,
     buyables: Iterable[dict[str, Any]],
     per_gold: bool,
+    *,
     start: list[dict[str, Any]] | None = None,
 ) -> tuple[list[dict[str, Any]], float] | None:
     """Add the best affordable buy one slot at a time until nothing improves.
@@ -1477,7 +1484,7 @@ def optimize_purchase(
         level,
         owned,
         owned_boots,
-        available_gold,
+        available_gold=available_gold,
         max_buys=max_purchase_items or capacity,
         combine_policy=combine_policy,
         role=role,
@@ -1519,7 +1526,7 @@ def optimize_purchase(
     exhaustive_complete = True
     for sell in sell_options:
         shapes, sell_complete = _enumerate_affordable_shapes(
-            search, sell, buyables, candidate_cap, len(shape_rows)
+            search, sell, buyables, candidate_cap, counted=len(shape_rows)
         )
         shape_rows.extend((sell, shape) for shape in shapes)
         if not sell_complete:
@@ -1750,6 +1757,7 @@ def _optimize_dispositions(payload: dict[str, Any]) -> dict[str, dict[str, objec
 def optimize_build(
     champion_data: dict[str, Any],
     level: int,
+    *,
     fight_params: FightParams | None = None,
     objective: str = "total_damage",
     locked_items: list[str] | None = None,
@@ -2004,11 +2012,11 @@ def optimize_build(
             level,
             resolved_locked,
             resolved_locked_boots,
-            slots_to_fill,
-            fill_boots,
-            pool,
-            boots_pool,
-            eval_kwargs,
+            slots_to_fill=slots_to_fill,
+            fill_boots=fill_boots,
+            pool=pool,
+            boots_pool=boots_pool,
+            eval_kwargs=eval_kwargs,
             seed_item=seed,
         )
         # Rough eval count estimate for greedy phase
@@ -2019,11 +2027,11 @@ def optimize_build(
             level,
             legendaries,
             boots,
-            locked_names,
-            boots_locked,
-            pool,
-            boots_pool,
-            eval_kwargs,
+            locked_legendary_names=locked_names,
+            locked_boots=boots_locked,
+            pool=pool,
+            boots_pool=boots_pool,
+            eval_kwargs=eval_kwargs,
             max_iterations=3 if coupled_objective else 10,
             initial_score=greedy_score,
         )

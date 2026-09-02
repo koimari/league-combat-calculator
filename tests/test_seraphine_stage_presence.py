@@ -342,7 +342,7 @@ def _ally_effects(
         level,
         dict(stats),
         [{"slot": "W", "time": 1.0}],
-        {"W": rank},
+        ability_ranks={"W": rank},
         champion_options=options,
     )
 
