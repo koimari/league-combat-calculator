@@ -182,7 +182,7 @@ def test_evaluate_build_sums_objective_across_target_roster(monkeypatch):
     first = FightParams.from_request({"target_health": 1000}, deterministic=True)
     second = FightParams.from_request({"target_health": 2500}, deterministic=True)
 
-    score = _evaluate_build({}, 1, [], (first, second), "magic_damage")
+    score = _evaluate_build({}, 1, [], (first, second), objective="magic_damage")
 
     assert score == 350
 
@@ -198,11 +198,11 @@ def test_hill_climb_reuses_greedy_score_without_duplicate_evaluation(monkeypatch
         18,
         [item],
         None,
-        set(),
-        True,
-        [],
-        [],
-        {
+        locked_legendary_names=set(),
+        locked_boots=True,
+        pool=[],
+        boots_pool=[],
+        eval_kwargs={
             "fight_params": FightParams.from_request({}, deterministic=True),
             "objective": "total_damage",
         },
@@ -240,7 +240,7 @@ def test_coupled_total_damage_does_not_add_effective_health_twice(monkeypatch):
         18,
         [],
         params,
-        "total_damage",
+        objective="total_damage",
         combat_context={"enemies": [object()], "allies": []},
     )
 
@@ -494,7 +494,7 @@ def test_coupled_evaluate_withholds_partial_timeline(monkeypatch):
         18,
         [],
         params,
-        "total_damage",
+        objective="total_damage",
         require_complete_timeline=True,
         combat_context={"enemies": [object()], "allies": []},
     )
@@ -537,7 +537,7 @@ def test_audit_less_memo_entry_cannot_mute_a_dropped_candidate(monkeypatch):
         18,
         owned,
         params,
-        "total_damage",
+        objective="total_damage",
         timeline_audit=None,
         require_complete_timeline=True,
         combat_context=combat_context,
@@ -559,7 +559,7 @@ def test_audit_less_memo_entry_cannot_mute_a_dropped_candidate(monkeypatch):
         18,
         owned,
         params,
-        "total_damage",
+        objective="total_damage",
         timeline_audit=audit,
         require_complete_timeline=True,
         combat_context=combat_context,

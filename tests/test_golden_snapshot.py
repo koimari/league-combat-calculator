@@ -29,6 +29,7 @@ from src.calculator.item_behavior import (
     Basis,
     DefenseField,
     EmpoweredHitRule,
+    FightFacts,
     OpeningDefenseRule,
     PartAmpRule,
     PeriodicRule,
@@ -799,10 +800,12 @@ class TestHolderAmpCoverage:
                         resolved = resolve_part_amp(
                             [owner],
                             attack_class,
-                            level=18,
-                            fight_duration_seconds=8.0,
-                            target_bonus_health=0.0,
-                            holder_is_melee=False,
+                            facts=FightFacts(
+                                level=18,
+                                fight_duration_seconds=8.0,
+                                target_bonus_health=0.0,
+                                holder_is_melee=False,
+                            ),
                         )
                         assert resolved is not None
                         assert resolved.owner == owner

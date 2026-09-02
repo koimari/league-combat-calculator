@@ -26,6 +26,7 @@ from ..item_behavior import (
     BehaviorRule,
     BuildContext,
     EngineLane,
+    FightFacts,
     KernelField,
     RuleFamily,
     SpellbladeRule,
@@ -165,10 +166,7 @@ def spellblade_effect(rule: BehaviorRule, ctx: BuildContext) -> SpellbladeEffect
 def resolve_slot(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> SpellbladeEffect | None:
     """The one spellblade this build arms, or ``None`` if it declares none.
 
@@ -179,13 +177,7 @@ def resolve_slot(
     for rule in spellblade_rules(owners)[:1]:
         return spellblade_effect(
             rule,
-            build_context(
-                rule.owner,
-                level,
-                fight_duration_seconds=fight_duration_seconds,
-                target_bonus_health=target_bonus_health,
-                holder_is_melee=holder_is_melee,
-            ),
+            build_context(rule.owner, facts),
         )
     return None
 

@@ -157,6 +157,7 @@ def _slot_certainty(
     options: Iterable[Mapping[str, Any]],
     assumptions: Iterable[str],
     coverage: Mapping[str, str],
+    *,
     module_slots: Collection[str],
     ability_names: dict[str, list[str]],
     audit: Mapping[str, Any] | None,
@@ -282,10 +283,10 @@ def derive_certainty(champion: str, champion_data: Mapping[str, Any]) -> dict[st
                 options,
                 assumptions,
                 coverage,
-                module_slots,
-                ability_names,
-                audit,
-                registration,
+                module_slots=module_slots,
+                ability_names=ability_names,
+                audit=audit,
+                registration=registration,
             )
         ]
     }

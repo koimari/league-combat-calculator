@@ -310,10 +310,15 @@ def _runtime_entry_receipt(kind: str, name: str) -> dict[str, Any]:
     }
 
 
-def _compact_text(value: Any, limit: int = 280) -> str:
+_COMPACT_TEXT_LIMIT = 280
+
+
+def _compact_text(value: Any) -> str:
     """Keep source-derived expectations readable without copying full pages."""
     text = re.sub(r"\s+", " ", str(value or "")).strip()
-    return text if len(text) <= limit else text[: limit - 1].rstrip() + "…"
+    if len(text) <= _COMPACT_TEXT_LIMIT:
+        return text
+    return text[: _COMPACT_TEXT_LIMIT - 1].rstrip() + "…"
 
 
 def _expected_effects(kind: str, record: dict[str, Any] | None) -> dict[str, Any]:

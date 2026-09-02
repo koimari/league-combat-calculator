@@ -520,7 +520,7 @@ class TestSharedEntryAndModifierPrimitives:
     ) -> None:
         payload = {"name": "Nested", "damage_per_hit": 42.0}
         without_cd = ability_on_hit_entry("Ability", 3, "magic", payload)
-        with_cd = ability_on_hit_entry("Ability", 3, "magic", payload, 8.0)
+        with_cd = ability_on_hit_entry("Ability", 3, "magic", payload, cooldown=8.0)
 
         assert without_cd == {
             "name": "Ability",
@@ -1405,7 +1405,7 @@ def _empower_shell(**overrides):
             3,
             "magic",
             {"name": "Shell", "damage_per_hit": 40.0, "damage_type": "magic"},
-            8.0,
+            cooldown=8.0,
         )
         entry.update(overrides)
         return entry

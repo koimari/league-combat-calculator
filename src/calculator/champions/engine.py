@@ -969,6 +969,7 @@ def build_parser(
         level: int,
         total_ability_power: float,
         ability_ranks: dict[str, int] | None = None,
+        *,
         champion_options: dict[str, Any] | None = None,
         champion_stats: dict[str, float] | None = None,
         target_stats: dict[str, float] | None = None,

@@ -297,7 +297,7 @@ class TestDeclarations:
             if entry.get("name") == "Syndra"
         )
         _label, options = option_states("Syndra")[0]
-        parsed = _parse(data, 18, (), {}, options)
+        parsed = _parse(data, 18, (), {}, options=options)
         declarations = get_champion_cast_dependencies("Syndra")
 
         confirmed: dict[tuple[str, str, str], set[str]] = {}
@@ -306,13 +306,13 @@ class TestDeclarations:
             data,
             parsed,
             options,
-            declarations,
-            SimpleNamespace(
+            declarations=declarations,
+            receipt=SimpleNamespace(
                 confirmed_by_inference=(
                     "E requires Q (declared cc_enabler): the detector agrees",
                 )
             ),
-            confirmed,
+            routes=confirmed,
         )
         assert "confirmed_by_inference" in confirmed[("Syndra", "E", "Q")]
         assert "confirmed_by_inference" not in confirmed[("Syndra", "E", "Q2")]
@@ -323,9 +323,9 @@ class TestDeclarations:
             data,
             parsed,
             options,
-            declarations,
-            SimpleNamespace(confirmed_by_inference=()),
-            silent,
+            declarations=declarations,
+            receipt=SimpleNamespace(confirmed_by_inference=()),
+            routes=silent,
         )
         assert all("confirmed_by_inference" not in routes for routes in silent.values())
 

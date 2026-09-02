@@ -39,6 +39,7 @@ from src.calculator.item_behavior import (
     BehaviorRuleError,
     DerivedStat,
     EngineLane,
+    FightFacts,
     FlatStatGrantRule,
     ManaflowRule,
     ResourceRestoreRule,
@@ -83,10 +84,12 @@ def _slots(owner: str, payload_type: type, *, melee: bool = True):
                 rule,
                 catalog.build_context(
                     rule.owner,
-                    13,
-                    fight_duration_seconds=5.0,
-                    target_bonus_health=0.0,
-                    holder_is_melee=melee,
+                    FightFacts(
+                        level=13,
+                        fight_duration_seconds=5.0,
+                        target_bonus_health=0.0,
+                        holder_is_melee=melee,
+                    ),
                 ),
                 EngineLane.STAT_RESOLVER,
             ),
@@ -373,10 +376,12 @@ def test_both_lanes_are_registered_and_stamp_their_own_lane() -> None:
             rule,
             catalog.build_context(
                 rule.owner,
-                13,
-                fight_duration_seconds=5.0,
-                target_bonus_health=0.0,
-                holder_is_melee=True,
+                FightFacts(
+                    level=13,
+                    fight_duration_seconds=5.0,
+                    target_bonus_health=0.0,
+                    holder_is_melee=True,
+                ),
             ),
             lane,
         )
@@ -391,10 +396,12 @@ def test_the_interpreter_refuses_a_payload_of_another_family() -> None:
             rule,
             catalog.build_context(
                 rule.owner,
-                13,
-                fight_duration_seconds=5.0,
-                target_bonus_health=0.0,
-                holder_is_melee=True,
+                FightFacts(
+                    level=13,
+                    fight_duration_seconds=5.0,
+                    target_bonus_health=0.0,
+                    holder_is_melee=True,
+                ),
             ),
             EngineLane.PAIR_ENGINE,
         )

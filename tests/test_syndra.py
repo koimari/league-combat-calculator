@@ -24,6 +24,7 @@ import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.item_behavior import FightFacts
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -818,10 +819,12 @@ def _command_slot():
     slot = delta_amp.resolve_slot(
         ["Imperial Mandate"],
         AmpChainSlot.POST_IMMOBILIZE,
-        level=18,
-        fight_duration_seconds=10.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=10.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert slot is not None
     return slot

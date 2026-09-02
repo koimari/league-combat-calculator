@@ -33,7 +33,13 @@ from .interpreters.resistance_shred import walk_slot as _shred_walk_slot
 # declare Everlasting?" — rather than by spelling the item that has it, and
 # every number comes back through the rule's own references, so a key no
 # declaration carries is a stop instead of a silent registry read.
-from .item_behavior import AllyProducer, LevelSubject, PacketKind, Resistance
+from .item_behavior import (
+    AllyProducer,
+    FightFacts,
+    LevelSubject,
+    PacketKind,
+    Resistance,
+)
 from .item_effects import (
     AUTHORIZED_MANA_GATE_STATUSES,
     ITEM_INPUT_OPTIONS,
@@ -169,10 +175,12 @@ def _shred_ramp(
     slot = _shred_walk_slot(
         sorted(frozenset(names)),
         resistance,
-        level=int(attacker.stats.get("level", 1) or 1),
-        fight_duration_seconds=0.0,
-        target_bonus_health=0.0,
-        holder_is_melee=bool(attacker.stats.get("is_melee", False)),
+        facts=FightFacts(
+            level=int(attacker.stats.get("level", 1) or 1),
+            fight_duration_seconds=0.0,
+            target_bonus_health=0.0,
+            holder_is_melee=bool(attacker.stats.get("is_melee", False)),
+        ),
     )
     if slot is None:
         raise ValueError(

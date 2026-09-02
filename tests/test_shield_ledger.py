@@ -299,7 +299,7 @@ class TestThresholdHealth:
         bonus health beside it is a grant and stays whole.  The kernel takes
         whatever factor the walk hands it and owns none of its own."""
         pools = _pools(threshold_health=self._protoplasm())
-        outcome = absorb(pools, 1500.0, "magic", 0.0, 0.5)
+        outcome = absorb(pools, 1500.0, "magic", 0.0, healing_factor=0.5)
         assert outcome.threshold_health_heal == 200.0
         assert outcome.threshold_health_reduced == 200.0
         assert pools.max_health == 2300.0

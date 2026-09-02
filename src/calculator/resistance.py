@@ -53,6 +53,7 @@ def apply_armor_penetration(
     flat_penetration: float,
     percent_penetration: float,
     percent_bonus_penetration: float = 0.0,
+    *,
     bonus_armor: float | None = None,
 ) -> float:
     """Effective armor after penetration and lethality: percent first, then flat.

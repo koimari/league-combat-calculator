@@ -100,9 +100,16 @@ def _inputs(
     real_ledger_inputs = pipeline_module.ledger_inputs
     real_shield_inputs = damage_module.shield_outcome_inputs
 
-    def spy_ledger(params, champion_data, items, effects, stats, abilities):
+    def spy_ledger(
+        params, champion_data, items, item_damage_effects, fight_stats, ability_damages
+    ):
         captured["ledger"] = real_ledger_inputs(
-            params, champion_data, items, effects, stats, abilities
+            params,
+            champion_data,
+            items,
+            item_damage_effects,
+            fight_stats=fight_stats,
+            ability_damages=ability_damages,
         )
         return captured["ledger"]
 

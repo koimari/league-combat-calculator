@@ -555,6 +555,7 @@ def stack_count_option(
     key: str,
     label: str,
     disclosure: str,
+    *,
     ceiling_key: str = "max_stacks",
 ) -> RuneOption:
     """One rune's stack-count option, bounded by the ceiling its cache states.

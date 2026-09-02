@@ -25,6 +25,7 @@ from src.calculator.damage import (
     calculate_fight_damage,
 )
 from src.calculator.interpreters import cast_proc
+from src.calculator.item_behavior import FightFacts
 
 
 def _stats() -> dict:
@@ -153,10 +154,12 @@ def _eclipse_proc():
         proc
         for proc in cast_proc.resolve_slots(
             ("Eclipse",),
-            level=11,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            facts=FightFacts(
+                level=11,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         ).cooldown_procs
         if proc.source.item_name == "Eclipse"
     )

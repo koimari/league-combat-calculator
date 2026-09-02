@@ -37,9 +37,6 @@ from .engine import CC_PER_PART, SlotCtx
 from .inputs import bool_option, float_option, int_option
 from .module_contract import coverage
 from .module_helpers import (
-    CRIT_CHANCE_MULTIPLIER,
-    CRIT_DAMAGE_MULTIPLIER_FACTOR,
-    EXCESS_CRIT_BONUS_AD_PER_PERCENT,
     crit_conversion_certification,
     crit_conversion_payload,
     no_damage,
@@ -60,15 +57,6 @@ PACKET_SHA256 = "94e34c2bf9df12ee71c952261d6c8ca2d69773f4e5eb2fc218cd944bada606a
 
 # P4: the crit-conversion rule is the shared module_helpers rule (the
 # 0.9 factor's atom hash is f375a24fbf0555e1 for Yasuo).
-(
-    _CRIT_CHANCE_MULTIPLIER,
-    _CRIT_DAMAGE_MULTIPLIER_FACTOR,
-    _EXCESS_CRIT_BONUS_AD_PER_PERCENT,
-) = (
-    CRIT_CHANCE_MULTIPLIER,
-    CRIT_DAMAGE_MULTIPLIER_FACTOR,
-    EXCESS_CRIT_BONUS_AD_PER_PERCENT,
-)
 CERTIFIED_CONSTANTS, ATOM_IDS = crit_conversion_certification("f375a24fbf0555e1")
 certified_constants, atom_ids = CERTIFIED_CONSTANTS, ATOM_IDS
 

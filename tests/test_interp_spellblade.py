@@ -14,6 +14,7 @@ import pytest
 from src.calculator.interpreters import spellblade
 from src.calculator.item_behavior import (
     EngineLane,
+    FightFacts,
     RuleFamily,
     SpellbladeRule,
     validate_rule,
@@ -32,10 +33,12 @@ def _armed(*owners: str, is_melee: bool = True):
     """The spellblade a build of *owners* arms."""
     return spellblade.resolve_slot(
         owners,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -188,10 +191,12 @@ def test_the_pair_interpreter_compiles_the_cooldown_it_can_know() -> None:
     (rule,) = spellblade.spellblade_rules([PLAIN])
     ctx = build_context(
         PLAIN,
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     (field,) = spellblade.spellblade_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.name == spellblade.SPELLBLADE_COOLDOWN_FIELD
@@ -207,10 +212,12 @@ def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
     ]
     ctx = build_context(
         "Tiamat",
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     with pytest.raises(spellblade.SpellbladeInterpretationError):
         spellblade.spellblade_fields(foreign, ctx, EngineLane.PAIR_ENGINE)

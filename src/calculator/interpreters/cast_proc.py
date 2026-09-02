@@ -31,6 +31,7 @@ from ..item_behavior import (
     BuildContext,
     CooldownProcRule,
     EngineLane,
+    FightFacts,
     KernelField,
     RuleFamily,
     UltimateProcRule,
@@ -286,10 +287,7 @@ def self_shield_owners(owners: Sequence[str]) -> tuple[str, ...]:
 def resolve_slots(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> CastProcSlots:
     """Every cast-triggered proc this build declares, split by shape.
 
@@ -300,13 +298,7 @@ def resolve_slots(
     cooldown_procs: list[CooldownProcEffect] = []
     ultimate_procs: list[UltimateProcEffect] = []
     for rule in cast_proc_rules(owners):
-        ctx = build_context(
-            rule.owner,
-            level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=target_bonus_health,
-            holder_is_melee=holder_is_melee,
-        )
+        ctx = build_context(rule.owner, facts)
         if isinstance(rule.payload, UltimateProcRule):
             ultimate_procs.append(ultimate_proc_effect(rule, ctx))
         else:

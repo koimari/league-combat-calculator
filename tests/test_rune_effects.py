@@ -11,6 +11,7 @@ import pytest
 
 from src.calculator import rune_effects
 from src.calculator.ability_spec import Disposition
+from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import DamageInputs
 from src.calculator.rune_paths import keystones as keystone_module
 
@@ -317,10 +318,12 @@ class TestFirstStrike:
         slot = delta_amp.resolve_slot(
             ["First Strike"],
             AmpChainSlot.OPENING_WINDOW,
-            level=18,
-            fight_duration_seconds=10.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            facts=FightFacts(
+                level=18,
+                fight_duration_seconds=10.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         )
         assert slot is not None
         assert slot.window() == (0.0, 3.0)
@@ -377,10 +380,12 @@ class TestPressTheAttack:
         slot = delta_amp.resolve_slot(
             ["Press the Attack"],
             AmpChainSlot.LASTING_PROC_AMP,
-            level=18,
-            fight_duration_seconds=10.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            facts=FightFacts(
+                level=18,
+                fight_duration_seconds=10.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         )
         assert slot is not None
         assert slot.fractions[0] == pytest.approx(0.08)

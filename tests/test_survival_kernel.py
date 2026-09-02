@@ -61,7 +61,12 @@ from src.calculator.interpreters.reactive import thorns_effects
 from src.calculator.interpreters.spellblade import (
     resolve_slot as resolve_spellblade_slot,
 )
-from src.calculator.item_behavior import DefenseField, EngineLane, RuleFamily
+from src.calculator.item_behavior import (
+    DefenseField,
+    EngineLane,
+    FightFacts,
+    RuleFamily,
+)
 from src.calculator.item_behavior_catalog import behavior_rules, rule_owners
 from src.calculator.item_effects import DamageInputs, required_effect_value
 from src.calculator.item_support_effects import (
@@ -2168,10 +2173,12 @@ def _declared_packet(fixture, parsed, resolved, params):
     owners = [str(item["name"]) for item in resolved.items]
     slot = resolve_spellblade_slot(
         owners,
-        level=parsed.level,
-        fight_duration_seconds=duration,
-        target_bonus_health=max(0.0, float(params.target_bonus_health or 0.0)),
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=parsed.level,
+            fight_duration_seconds=duration,
+            target_bonus_health=max(0.0, float(params.target_bonus_health or 0.0)),
+            holder_is_melee=is_melee,
+        ),
     )
     assert slot is not None
     assert slot.source.breakdown_key == fixture.breakdown_key
@@ -2375,12 +2382,12 @@ def _amp_armed_reading(seed):
     """
     parsed, resolved, params, result, stats = _amp_armed_fight(seed)
     is_melee = bool(stats.get("is_melee", True))
-    build = {
-        "level": parsed.level,
-        "fight_duration_seconds": float(params.fight_duration_seconds),
-        "target_bonus_health": max(0.0, float(params.target_bonus_health or 0.0)),
-        "holder_is_melee": is_melee,
-    }
+    build = FightFacts(
+        level=parsed.level,
+        fight_duration_seconds=float(params.fight_duration_seconds),
+        target_bonus_health=max(0.0, float(params.target_bonus_health or 0.0)),
+        holder_is_melee=is_melee,
+    )
     source = seed.raw_of(
         [str(item["name"]) for item in resolved.items], seed.breakdown_key, build
     )
@@ -2399,7 +2406,7 @@ def _amp_armed_reading(seed):
         # The window is authored by the scenario's own item options, which is
         # what makes this roster the one that arms the ability amp at all.
         ability_amp_armed=True,
-        **build,
+        facts=build,
     )
     return AmpArmedReading(
         raw=raw,
@@ -2465,7 +2472,7 @@ def _active_source(owners, breakdown_key, build):
     """The item active the pair engine prices, from its own interpreter."""
     return next(
         source
-        for source in active_cast.active_sources(owners, **build)
+        for source in active_cast.active_sources(owners, facts=build)
         if source.breakdown_key == breakdown_key
     )
 
@@ -2474,7 +2481,7 @@ def _cast_proc_source(owners, breakdown_key, build):
     """The ability-triggered item proc, from its own interpreter."""
     return next(
         effect.source
-        for effect in cast_proc.resolve_slots(owners, **build).cooldown_procs
+        for effect in cast_proc.resolve_slots(owners, facts=build).cooldown_procs
         if effect.source.breakdown_key == breakdown_key
     )
 
@@ -3257,10 +3264,12 @@ def _on_hit_probe(owner: str):
         list(items),
         holder_stats=stats,
         ability_amp_armed=False,
-        level=level,
-        fight_duration_seconds=float(params.fight_duration_seconds),
-        target_bonus_health=0.0,
-        holder_is_melee=bool(stats.get("is_melee")),
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=float(params.fight_duration_seconds),
+            target_bonus_health=0.0,
+            holder_is_melee=bool(stats.get("is_melee")),
+        ),
     )
     return result, amps
 
@@ -3375,10 +3384,12 @@ def _periodic_probe(owner: str):
         list(items),
         holder_stats=stats,
         ability_amp_armed=False,
-        level=level,
-        fight_duration_seconds=float(params.fight_duration_seconds),
-        target_bonus_health=0.0,
-        holder_is_melee=bool(stats.get("is_melee")),
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=float(params.fight_duration_seconds),
+            target_bonus_health=0.0,
+            holder_is_melee=bool(stats.get("is_melee")),
+        ),
     )
     return result, amps
 
@@ -3516,10 +3527,12 @@ def _spellblade_probe(owner: str):
         list(items),
         holder_stats=stats,
         ability_amp_armed=False,
-        level=level,
-        fight_duration_seconds=float(params.fight_duration_seconds),
-        target_bonus_health=0.0,
-        holder_is_melee=bool(stats.get("is_melee")),
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=float(params.fight_duration_seconds),
+            target_bonus_health=0.0,
+            holder_is_melee=bool(stats.get("is_melee")),
+        ),
     )
     return result, amps
 
@@ -3768,10 +3781,12 @@ def _swing_seed_reading(case):
         list(items),
         holder_stats=stats,
         ability_amp_armed=False,
-        level=level,
-        fight_duration_seconds=float(params.fight_duration_seconds),
-        target_bonus_health=0.0,
-        holder_is_melee=bool(stats.get("is_melee")),
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=float(params.fight_duration_seconds),
+            target_bonus_health=0.0,
+            holder_is_melee=bool(stats.get("is_melee")),
+        ),
     )
     return result, amps
 

@@ -176,17 +176,12 @@ DdragonRows = dict[str, dict[str, list[float] | None]]
 # ---------------------------------------------------------------------------
 
 
-def within_tolerance(
-    cached: float,
-    game: float,
-    relative: float = REL_TOLERANCE,
-    flat: float = FLAT_TOLERANCE,
-) -> bool:
+def within_tolerance(cached: float, game: float, flat: float = FLAT_TOLERANCE) -> bool:
     """True when a drift is rounding noise (inside 0.5% or +-flat)."""
     if cached == game:
         return True
     delta = abs(game - cached)
-    return delta <= flat or delta <= relative * abs(cached)
+    return delta <= flat or delta <= REL_TOLERANCE * abs(cached)
 
 
 # ---------------------------------------------------------------------------
@@ -547,7 +542,7 @@ def _attr_matches_game_row(attribute, spell):
 
 
 def game_spells_by_slot(
-    bin_data: Mapping[str, Any], champion_name: str, cache_abilities: Mapping[str, Any]
+    bin_data: Mapping[str, Any], champion_name: str
 ) -> dict[str, list[dict[str, Any]]]:
     """Locate the game SpellDataResource per wiki ability slot (best-effort).
 
@@ -610,7 +605,7 @@ def compare_ability_rows(
     needs_ddragon names the slots whose cooldown/cost rows could not be
     arbitrated from the bin alone.
     """
-    by_slot = game_spells_by_slot(bin_data, champion_name, cache_abilities)
+    by_slot = game_spells_by_slot(bin_data, champion_name)
     checked = 0
     stale = 0
     unchecked = 0
@@ -666,7 +661,7 @@ def _wiki_row_count(entry):
     return count
 
 
-def _compare_entry_rows(entry, spell, slot: str, index: int, ddragon=None):
+def _compare_entry_rows(entry, spell, slot: str, index: int, *, ddragon=None):
     """Compare one wiki ability entry against one game spell.
 
     ``ddragon`` is Riot's official per-spell tooltip row dict (cooldown/cost),
@@ -865,6 +860,7 @@ def build_staleness(
     champions_cache: Mapping[str, Any],
     items_cache: Mapping[str, Any],
     game_dir: str | Path,
+    *,
     ddragon: Mapping[str, Any] | None = None,
 ) -> tuple[dict[str, Any], dict[str, list[str]]]:
     """Compare the wiki cache against the game files -> staleness document.

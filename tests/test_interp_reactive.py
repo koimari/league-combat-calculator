@@ -33,6 +33,7 @@ from src.calculator.item_behavior import (
     DefenseMechanic,
     DefenseSubject,
     EngineLane,
+    FightFacts,
     RuleFamily,
     TriggerEvent,
 )
@@ -47,10 +48,12 @@ def _ctx(owner: str):
     """
     return catalog.build_context(
         owner,
-        18,
-        fight_duration_seconds=0.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=0.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 

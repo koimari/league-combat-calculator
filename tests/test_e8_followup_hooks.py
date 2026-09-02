@@ -123,9 +123,9 @@ def test_rakan_p_shield_rides_q(champion_data):
         18,
         0.0,
         {},
-        {},
-        {"health": 2000.0, "ability_power": 0.0},
-        {},
+        champion_options={},
+        champion_stats={"health": 2000.0, "ability_power": 0.0},
+        target_stats={},
     )
     q = out.get("Q", {})
     payload = q.get("self_shield_events")

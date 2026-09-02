@@ -421,12 +421,11 @@ def pct_health_per_hit(
     attr: str,
     rank: int,
     target: dict[str, float] | None,
+    *,
     ap: float = 0.0,
     ap_ratio_per_100: bool = False,
     floor_attr: str | None = None,
     stacks_required: int = 1,
-    *,
-    level: int | None = None,
 ) -> float | None:
     """Per-hit on-hit damage as a percentage of the target's max health.
 
@@ -445,14 +444,14 @@ def pct_health_per_hit(
     if leveling is None:
         return None
 
-    percent = _modifier_value(leveling, 0, rank, level)
+    percent = _modifier_value(leveling, 0, rank)
     if ap_ratio_per_100:
-        percent += ap * _modifier_value(leveling, 1, rank, level) / 100.0
+        percent += ap * _modifier_value(leveling, 1, rank) / 100.0
 
     max_health = target_stat(target or {}, "target_max_health")
     per_proc = (percent / 100.0) * max_health
     if floor_attr:
-        per_proc = max(per_proc, extract_value(ability, floor_attr, rank, level=level))
+        per_proc = max(per_proc, extract_value(ability, floor_attr, rank))
     return per_proc / stacks_required
 
 
@@ -714,7 +713,6 @@ def support_cast(
     *,
     default_name: str,
     detail: str,
-    dmg_type: str = "magic",
     resource_cost: float | None = None,
 ) -> SlotParser:
     """A slot parser for a shield/heal-only ability that damages nothing.
@@ -736,7 +734,7 @@ def support_cast(
             rank,
             extract_cooldown(ability, rank),
             0.0,
-            dmg_type,
+            "magic",
         )
         # The shared builder always writes one part; a support cast has none
         # to price, and an authored zero part would put a zero-damage
@@ -915,6 +913,7 @@ def fixed_count_pet_row(
     damage_type: str,
     damage_per_hit: float,
     attack_times: list[float],
+    *,
     detail: str,
 ) -> dict[str, Any]:
     """Build a fixed-count pet-attack proc row (E4 summoned units).
@@ -951,6 +950,7 @@ def ability_on_hit_entry(
     rank: int,
     damage_type: str,
     on_hit: dict[str, Any],
+    *,
     cooldown: float | None = None,
 ) -> dict[str, Any]:
     """Wrap an on-hit payload in a zero-direct-damage ability shell."""
@@ -986,6 +986,7 @@ def _control_duration_atom(
     source: tuple[str, int] | None,
     attribute: str,
     rank: int,
+    *,
     effect_index: int = 0,
 ) -> tuple[float, dict[str, Any]]:
     """Read a control duration through the validated ability atom catalog."""
@@ -1350,7 +1351,7 @@ def with_control(
             )
         rank = ctx.level if ranks == "level" else ctx.rank_for(source_slot)
         duration, duration_atom = _control_duration_atom(
-            ctx, source, duration_attr, rank, effect_index
+            ctx, source, duration_attr, rank, effect_index=effect_index
         )
         if duration <= 0.0:
             raise ValueError(
@@ -1425,8 +1426,6 @@ def with_control_event(
     duration_source: str = "attribute",
     magnitude_attr: str | None = None,
     kind: str | None = None,
-    source: tuple[str, int] | None = None,
-    ranks: str = "rank",
     time_offset: float | None = 0.0,
     effect_index: int = 0,
     scope: ControlScope = ControlScope.EVERY_TARGET,
@@ -1472,8 +1471,6 @@ def with_control_event(
     """
     if kind is not None and not kind.strip():
         raise ValueError("with_control_event kind must be a non-empty string")
-    if ranks not in {"rank", "level"}:
-        raise ValueError("with_control_event ranks must be 'rank' or 'level'")
     if duration_source not in {"attribute", "prose", "active"}:
         raise ValueError(
             "with_control_event duration_source must be 'attribute', 'prose' "
@@ -1487,21 +1484,21 @@ def with_control_event(
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         entry = parser(ctx)
-        ability, source_slot = _resolve_source(ctx, source)
+        ability, source_slot = _resolve_source(ctx, None)
         if ability is None:
             raise ValueError(
                 f"{ctx.champion_name} {ctx.slot}: control source ability is missing"
             )
-        rank = ctx.level if ranks == "level" else ctx.rank_for(source_slot)
+        rank = ctx.rank_for(source_slot)
         if rank < 1:
             return entry
         if duration_source != "attribute":
             duration, duration_atom = _prose_control_atom(
-                ctx, source, effect_index, duration_source
+                ctx, None, effect_index, duration_source
             )
         else:
             duration, duration_atom = _control_duration_atom(
-                ctx, source, duration_attr, rank, effect_index
+                ctx, None, duration_attr, rank, effect_index=effect_index
             )
         if duration <= 0.0:
             raise ValueError(
@@ -1512,7 +1509,7 @@ def with_control_event(
         magnitude_atom = None
         if magnitude_attr is not None:
             magnitude, magnitude_atom = _control_magnitude_atom(
-                ctx, source, magnitude_attr, rank
+                ctx, None, magnitude_attr, rank
             )
             if magnitude <= 0.0:
                 raise ValueError(
@@ -1563,11 +1560,11 @@ def with_control_event(
 def stat_buff(
     attr: str,
     stat: str,
+    *,
     mode: str = "flat",
     percent_of: str = "attack_damage",
     apply_to: tuple[str, ...] = (),
     damage_attr: str | None = None,
-    dmg_type: str = "physical",
     couples: tuple[str, str] | None = None,
     uptime_option: str | None = None,
 ) -> SlotParser:
@@ -1592,7 +1589,6 @@ def stat_buff(
         damage_attr: Leveling attribute for the ability's own active
             damage (Ambessa R), extracted from PRE-buff stats. None
             emits 0.0 damage.
-        dmg_type: Damage type labeling the entry.
         couples: ``(stats_key, attr_name)`` — publish another leveling
             value into ``ctx.stats`` under ``stats_key`` for a dependent
             slot listed later (Vayne R's Tumble cooldown reduction,
@@ -1648,7 +1644,7 @@ def stat_buff(
             rank,
             extract_cooldown(ability, rank, level=ctx.level),
             damage,
-            dmg_type,
+            "physical",
             zero_policy=(
                 MODULE_FORMULA_ZERO if damage_attr is not None else STEROID_ZERO
             ),
@@ -1707,6 +1703,7 @@ ProcDamageResolver = Callable[[SlotCtx, dict[str, Any]], float]
 def proc_damage(
     per_proc: ProcDamageResolver,
     dmg_type: str,
+    *,
     count_option: str = "passive_procs",
     default_count: int = 4,
     name: str | None = None,

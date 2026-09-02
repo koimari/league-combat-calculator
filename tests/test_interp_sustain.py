@@ -43,6 +43,7 @@ from src.calculator.item_behavior import (
     BelowHalfHealingRule,
     DefenseMechanic,
     EngineLane,
+    FightFacts,
     ManaSpentHealRule,
     MeleeRangedSplit,
     OnHitHealRule,
@@ -74,10 +75,12 @@ def _slot(owner: str, payload_type: type):
     return sustain_slot(
         [owner],
         payload_type,
-        level=13,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=13,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -213,10 +216,12 @@ def test_two_drains_stop_rather_than_compose_silently() -> None:
         sustain_slot(
             [DRAIN_HOLDER, DRAIN_HOLDER],
             ResourceDrainRule,
-            level=13,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            facts=FightFacts(
+                level=13,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         )
 
 
@@ -295,10 +300,12 @@ def test_the_pair_interpreter_refuses_the_received_multiplier() -> None:
             rule,
             catalog.build_context(
                 rule.owner,
-                13,
-                fight_duration_seconds=5.0,
-                target_bonus_health=0.0,
-                holder_is_melee=True,
+                FightFacts(
+                    level=13,
+                    fight_duration_seconds=5.0,
+                    target_bonus_health=0.0,
+                    holder_is_melee=True,
+                ),
             ),
             EngineLane.PAIR_ENGINE,
         )
@@ -405,10 +412,12 @@ def test_the_walk_accessor_and_the_walk_interpreter_are_one_answer() -> None:
         rule,
         catalog.build_context(
             rule.owner,
-            13,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            FightFacts(
+                level=13,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         ),
         EngineLane.RECEIPT_WALK,
     )

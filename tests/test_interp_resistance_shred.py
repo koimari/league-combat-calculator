@@ -21,6 +21,7 @@ from src.calculator.ability_spec import DamageClass
 from src.calculator.interpreters import INTERPRETERS, resistance_shred
 from src.calculator.item_behavior import (
     EngineLane,
+    FightFacts,
     RampModel,
     Resistance,
     ResistanceShredRule,
@@ -42,10 +43,12 @@ def _slot(*owners: str, resistance: Resistance) -> "resistance_shred.ShredSlot |
     return resistance_shred.resolve_slot(
         owners,
         resistance,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 

@@ -586,7 +586,7 @@ def _shield(champion: str, slot: str, level: int, stats: dict, rank: int = 5):
         level,
         dict(stats),
         [{"slot": slot, "time": 1.0}],
-        {slot: rank},
+        ability_ranks={slot: rank},
     )
     return next(effect for effect in effects if effect["kind"] == "shield")
 

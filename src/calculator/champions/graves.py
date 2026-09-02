@@ -24,6 +24,7 @@ def _level_scaling(
     occurrence: int,
     level: int,
     stats: dict[str, float],
+    *,
     target: dict[str, float],
 ) -> float:
     leveling = find_named_leveling(ability, "Per-Level Scaling", occurrence)
@@ -36,10 +37,12 @@ def _new_destiny(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    total_ratio = _level_scaling(ability, 2, ctx.level, ctx.stats, ctx.target)
+    total_ratio = _level_scaling(ability, 2, ctx.level, ctx.stats, target=ctx.target)
     critical = bool(ctx.option("p_critical_pellets"))
     if critical:
-        total_ratio = _level_scaling(ability, 3, ctx.level, ctx.stats, ctx.target)
+        total_ratio = _level_scaling(
+            ability, 3, ctx.level, ctx.stats, target=ctx.target
+        )
     entry = no_damage(
         ctx,
         name="New Destiny",

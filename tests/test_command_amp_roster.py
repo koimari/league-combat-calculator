@@ -35,7 +35,7 @@ from src.calculator.ability_spec import AttackClass, DamageClass
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.data_fetcher import get_champion
 from src.calculator.interpreters import delta_amp
-from src.calculator.item_behavior import AmpChainSlot
+from src.calculator.item_behavior import AmpChainSlot, FightFacts
 from src.calculator.item_behavior_catalog import ACKNOWLEDGED_READING_DIVERGENCES
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival.actions import SurvivalAction
@@ -124,10 +124,12 @@ def _command_effect() -> _CommandNumbers:
     slot = delta_amp.resolve_slot(
         [COMMAND_ITEM],
         AmpChainSlot.POST_IMMOBILIZE,
-        level=18,
-        fight_duration_seconds=8.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=8.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert slot is not None, "the roster fixture needs Command's declared rule"
     return _CommandNumbers(

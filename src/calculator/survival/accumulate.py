@@ -18,6 +18,7 @@ def accumulate_support_values(
     fresh_entries: Sequence[tuple[str, int, int, bool]],
     base_entries: Sequence[tuple[str, int, int, bool]],
     sig_entries: Sequence[tuple[str, int, int, bool]],
+    *,
     count: int,
 ) -> tuple[list[float], list[float]]:
     """Per-attacker support value and healing output.

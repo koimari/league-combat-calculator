@@ -3722,6 +3722,18 @@ class KernelField(NamedTuple):
 
 
 @dataclass(frozen=True, slots=True)
+class FightFacts:
+    """The fight facts a build-time magnitude scales with: the holder's level and
+    range class, the fight's length, the target's bonus health.  All are fixed
+    before the first event and all are required (see :class:`BuildContext`)."""
+
+    level: int
+    fight_duration_seconds: float
+    target_bonus_health: float
+    holder_is_melee: bool
+
+
+@dataclass(frozen=True, slots=True)
 class BuildContext:
     """What an interpreter may read at build time.
 

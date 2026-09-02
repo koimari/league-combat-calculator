@@ -11,7 +11,7 @@ answer rather than a zero.
 import pytest
 
 from src.calculator.interpreters import secondary_target
-from src.calculator.item_behavior import RuleFamily, SecondaryTargetRule
+from src.calculator.item_behavior import FightFacts, RuleFamily, SecondaryTargetRule
 from src.calculator.item_behavior_catalog import behavior_rules
 from src.calculator.item_effects import ITEM_EFFECTS
 
@@ -22,10 +22,12 @@ def _slot(*owners: str) -> "secondary_target.SecondaryTargetSlot | None":
     """The secondary-target strike a build declares."""
     return secondary_target.resolve_slot(
         owners,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=False,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=False,
+        ),
     )
 
 

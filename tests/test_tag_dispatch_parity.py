@@ -52,6 +52,7 @@ from src.calculator.interpreters.stat_derivation import (
 from src.calculator.interpreters.sustain import declared_sustain
 from src.calculator.item_behavior import (
     EngineLane,
+    FightFacts,
     FlatStatGrantRule,
     OnHitHealRule,
     RuleFamily,
@@ -78,12 +79,12 @@ DURATION = 10.0
 TARGET_BONUS_HEALTH = 0.0
 HOLDER_IS_MELEE = False
 
-CATALOG_CONTEXT = {
-    "level": LEVEL,
-    "fight_duration_seconds": DURATION,
-    "target_bonus_health": TARGET_BONUS_HEALTH,
-    "holder_is_melee": HOLDER_IS_MELEE,
-}
+CATALOG_CONTEXT = FightFacts(
+    level=LEVEL,
+    fight_duration_seconds=DURATION,
+    target_bonus_health=TARGET_BONUS_HEALTH,
+    holder_is_melee=HOLDER_IS_MELEE,
+)
 
 # Which item carries each shared tag today, read off the live registry so a
 # renamed or retired item fails here rather than skipping its comparison.
@@ -133,7 +134,7 @@ def test_execute_is_retired_from_the_ladder_and_owned_by_the_catalog():
     — so the projection carries no field for it and both engines read the
     threshold through the fight-free reader."""
     owner = _sole("execute")
-    catalog = resolve_execution([owner], **CATALOG_CONTEXT)
+    catalog = resolve_execution([owner], facts=CATALOG_CONTEXT)
     assert catalog.owner == owner
     assert catalog.threshold == pytest.approx(required_effect_value(owner, "threshold"))
     assert not hasattr(_ladder(owner), "execute")
@@ -145,7 +146,7 @@ def test_crit_modifier_is_retired_from_the_ladder_and_owned_by_the_catalog():
     beside the crit declarations that already held the same numbers."""
     owner = "Infinity Edge"
     assert ITEM_EFFECTS[owner]["type"] == "crit_modifier"
-    catalog = resolve_profile([owner], **CATALOG_CONTEXT)
+    catalog = resolve_profile([owner], facts=CATALOG_CONTEXT)
     assert catalog.damage_bonus == pytest.approx(
         required_effect_value(owner, "bonus_crit_damage")
     )
@@ -160,7 +161,7 @@ def test_crit_modifier_is_retired_from_the_ladder_and_owned_by_the_catalog():
 def test_attack_cooldown_refund_is_the_catalogs_alone():
     owner = "Navori Flickerblade"
     assert ITEM_EFFECTS[owner]["type"] == "crit_modifier"
-    catalog = resolve_profile([owner], **CATALOG_CONTEXT)
+    catalog = resolve_profile([owner], facts=CATALOG_CONTEXT)
     assert catalog.cooldown_refund.owner == owner
     assert catalog.cooldown_refund.fraction == pytest.approx(
         required_effect_value(owner, "cd_refund_percent")
@@ -171,7 +172,7 @@ def test_a_build_holding_both_crit_items_folds_both_sub_branches():
     """The two crit_modifier sub-branches compose the way the ladder folded
     them: the bonus sums into one slot and the refund fills another."""
     catalog = resolve_profile(
-        ["Infinity Edge", "Navori Flickerblade"], **CATALOG_CONTEXT
+        ["Infinity Edge", "Navori Flickerblade"], facts=CATALOG_CONTEXT
     )
     assert catalog.damage_bonus == pytest.approx(
         required_effect_value("Infinity Edge", "bonus_crit_damage")
@@ -184,7 +185,7 @@ def test_first_auto_crit_is_retired_from_the_ladder_and_owned_by_the_catalog():
     carried is a key of the forced-crit declaration, read here against the
     registry so a dropped reference fails rather than defaults."""
     owner = _sole("first_auto_crit")
-    catalog = resolve_profile([owner], **CATALOG_CONTEXT).forced_crit
+    catalog = resolve_profile([owner], facts=CATALOG_CONTEXT).forced_crit
     assert catalog.owner == owner
     for field, key in (
         ("reduced_ratio", "reduced_crit_ratio"),
@@ -227,7 +228,7 @@ def test_the_flat_crit_reader_answers_what_the_contextual_one_answers():
     numbers a build holding every crit item carries — which is what lets a
     caller with item names and no fight read the declaration instead of the
     ladder's projection."""
-    contextual = resolve_profile(list(CRIT_HOLDERS), **CATALOG_CONTEXT)
+    contextual = resolve_profile(list(CRIT_HOLDERS), facts=CATALOG_CONTEXT)
     flat = declared_crit_profile(list(CRIT_HOLDERS))
     assert flat.damage_bonus == pytest.approx(contextual.damage_bonus)
     assert flat.cooldown_refund == contextual.cooldown_refund
@@ -236,7 +237,9 @@ def test_the_flat_crit_reader_answers_what_the_contextual_one_answers():
 
 def test_the_flat_execution_reader_answers_what_the_contextual_one_answers():
     owner = _sole("execute")
-    assert declared_execution([owner]) == resolve_execution([owner], **CATALOG_CONTEXT)
+    assert declared_execution([owner]) == resolve_execution(
+        [owner], facts=CATALOG_CONTEXT
+    )
     assert declared_execution([]) is None
 
 
@@ -383,10 +386,12 @@ def test_the_overdrive_note_quotes_the_catalogs_numbers():
             rule,
             build_context(
                 owner,
-                LEVEL,
-                fight_duration_seconds=DURATION,
-                target_bonus_health=TARGET_BONUS_HEALTH,
-                holder_is_melee=melee,
+                FightFacts(
+                    level=LEVEL,
+                    fight_duration_seconds=DURATION,
+                    target_bonus_health=TARGET_BONUS_HEALTH,
+                    holder_is_melee=melee,
+                ),
             ),
             EngineLane.STAT_RESOLVER,
         )

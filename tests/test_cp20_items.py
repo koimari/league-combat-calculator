@@ -21,6 +21,7 @@ import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.item_behavior import FightFacts
 from src.calculator.item_coverage import require_calculation_item_coverage
 from src.calculator.item_effects import (
     _PARSEABLE_ITEM_KEYS,
@@ -526,10 +527,12 @@ def test_umbral_nightstalker_true_damage_formula_is_typed():
     # home for that family; ``BuildDamageEffects`` does not carry them.
     slots = charged_strike.resolve_slots(
         ("Umbral Glaive",),
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert len(slots.first_autos) == 1
     source = slots.first_autos[0].source

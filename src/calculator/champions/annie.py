@@ -139,7 +139,7 @@ def _tibbers_attacks_row(ctx: SlotCtx, rank: int) -> dict[str, Any] | None:
         "magic",
         per_attack,
         _tibbers_attack_times(attack_count),
-        (
+        detail=(
             f"{attack_count} Tibbers auto attack(s) at {per_attack:.2f} "
             f"magic each (5 enrage attacks, then "
             f"{1.0 / _TIBBERS_BASE_ATTACK_SPEED:.1f}s cadence)"

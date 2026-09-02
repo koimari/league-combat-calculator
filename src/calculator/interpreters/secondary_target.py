@@ -23,6 +23,7 @@ from ..item_behavior import (
     BehaviorRule,
     BuildContext,
     EngineLane,
+    FightFacts,
     KernelField,
     RuleFamily,
     SecondaryTargetRule,
@@ -127,10 +128,7 @@ class SecondaryTargetSlot:
 def resolve_slot(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> SecondaryTargetSlot | None:
     """This build's secondary-target strike, or ``None`` if nobody declares one.
 
@@ -156,13 +154,7 @@ def resolve_slot(
         rule=rule,
         fields=routing_fields(
             rule,
-            build_context(
-                rule.owner,
-                level,
-                fight_duration_seconds=fight_duration_seconds,
-                target_bonus_health=target_bonus_health,
-                holder_is_melee=holder_is_melee,
-            ),
+            build_context(rule.owner, facts),
             EngineLane.PAIR_ENGINE,
         ),
     )

@@ -193,8 +193,8 @@ class TestAKeyIsDerivedFromTheValue:
     def test_two_passes_are_two_program_keys(self) -> None:
         """Which pass, as a key component."""
         roster = caches.roster_fingerprint(("main",))
-        first = caches.program_inputs_fingerprint(roster, (), (), 0, None)
-        second = caches.program_inputs_fingerprint(roster, (), (), 1, None)
+        first = caches.program_inputs_fingerprint(roster, (), (), 0, patch=None)
+        second = caches.program_inputs_fingerprint(roster, (), (), 1, patch=None)
         assert first != second
 
     def test_two_patches_are_two_program_inputs_keys(self) -> None:
@@ -209,16 +209,16 @@ class TestAKeyIsDerivedFromTheValue:
         roster = caches.roster_fingerprint(("main",))
         first = ParamPatch(overrides={"x": 1}, reason="pass 2")
         second = ParamPatch(overrides={"x": 2}, reason="pass 2")
-        assert caches.program_inputs_fingerprint(roster, (), (), 1, first) != (
-            caches.program_inputs_fingerprint(roster, (), (), 1, second)
+        assert caches.program_inputs_fingerprint(roster, (), (), 1, patch=first) != (
+            caches.program_inputs_fingerprint(roster, (), (), 1, patch=second)
         )
 
     def test_no_patch_and_a_patch_are_two_program_inputs_keys(self) -> None:
         """Pass 1 is not pass 2 wearing the same key."""
         roster = caches.roster_fingerprint(("main",))
         patch = ParamPatch(overrides={"x": 1}, reason="pass 2")
-        assert caches.program_inputs_fingerprint(roster, (), (), 1, None) != (
-            caches.program_inputs_fingerprint(roster, (), (), 1, patch)
+        assert caches.program_inputs_fingerprint(roster, (), (), 1, patch=None) != (
+            caches.program_inputs_fingerprint(roster, (), (), 1, patch=patch)
         )
 
     def test_two_patches_are_two_program_keys(self) -> None:

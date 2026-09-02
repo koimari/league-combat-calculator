@@ -730,16 +730,14 @@ def _walk_item(  # pylint: disable=too-many-arguments
     authority: Authority = Authority.COUPLED_AUTHORITATIVE,
     pairing: Pairing = Pairing.SOLO,
     pair_of: str | None = None,
-    divergence_ref: str | None = None,
     impl: str = _SUPPORT_IMPL,
-    view_tag: ViewTag = ViewTag.APPLIED,
 ) -> MechanicCapability:
     """One item-granted mechanic the participant walk implements.
 
     A constructor, not a default: the keyword defaults are what is true of
     the majority of walk packets (no stream, no raw field, the walk owns its
-    packet, no pair-side half, a delivered rather than previewed number).  A
-    row that differs states its difference at the call site.
+    packet, no pair-side half); a row that differs states its difference at
+    the call site.  A walk half delivers its number and cites no divergence.
 
     ``packet_source`` is the half's delivery reference, a
     :class:`RiderDelivery` for the one walk half that authors no packet:
@@ -758,10 +756,10 @@ def _walk_item(  # pylint: disable=too-many-arguments
         authority=authority,
         pairing=pairing,
         pair_of=pair_of,
-        divergence_ref=divergence_ref,
+        divergence_ref=None,
         impl=impl,
         packet_source=packet_source,
-        view_tags=MappingProxyType({Engine.WALK: view_tag}),
+        view_tags=MappingProxyType({Engine.WALK: ViewTag.APPLIED}),
         holder_stacking=holder_stacking,
     )
 

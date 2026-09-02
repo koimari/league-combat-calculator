@@ -205,10 +205,12 @@ def test_optimizer_evaluator_resolves_evolution_per_candidate(kaisa_data):
     )
     item = get_item_by_name("Luden's Echo")
 
-    auto_score = _evaluate_build(kaisa_data, 12, [item], auto, "total_damage")
-    base_score = _evaluate_build(kaisa_data, 12, [item], forced_base, "total_damage")
+    auto_score = _evaluate_build(kaisa_data, 12, [item], auto, objective="total_damage")
+    base_score = _evaluate_build(
+        kaisa_data, 12, [item], forced_base, objective="total_damage"
+    )
     evolved_score = _evaluate_build(
-        kaisa_data, 12, [item], forced_evolved, "total_damage"
+        kaisa_data, 12, [item], forced_evolved, objective="total_damage"
     )
 
     assert auto_score == pytest.approx(evolved_score)

@@ -177,6 +177,7 @@ def program_inputs_fingerprint(
     actors: Sequence[ActorFingerprint],
     params: tuple[object, ...],
     pass_index: int,
+    *,
     patch: ParamPatch | None,
 ) -> ProgramInputsFingerprint:
     """What a program was built from: roster, actors, params, pass, patch.

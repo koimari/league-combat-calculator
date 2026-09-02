@@ -573,6 +573,7 @@ def _apply_slot_overrides(
     slots: PacketSlotMap,
     slot_parsers: dict[str, Any] | None,
     slot_wrappers: dict[str, Any] | None,
+    *,
     slot_order: tuple[str, ...] | None,
 ) -> None:
     """Apply a module's slot overrides to the compiled map, in place.
@@ -864,7 +865,9 @@ def build_packet_module(
         if option is not None:
             options.append(option)
 
-    _apply_slot_overrides(champion_name, slots, slot_parsers, slot_wrappers, slot_order)
+    _apply_slot_overrides(
+        champion_name, slots, slot_parsers, slot_wrappers, slot_order=slot_order
+    )
 
     # The digest above proves the evidence is the reviewed one; this
     # proves the declarations are about slots that evidence compiled.  A

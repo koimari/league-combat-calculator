@@ -523,10 +523,8 @@ _BOUNDLESS_ALL_HEALS_NOTE = (
 def _apply_boundless_vitality(
     ledger: _DefenseLedger,
     declared: Mapping[DefenseMechanic, BehaviorRule],
-    subject: DefenseSubject,
 ) -> None:
     """Spirit Visage's received-healing multiplier, folded over the ledger."""
-    del subject
     rule = declared.get(DefenseMechanic.BOUNDLESS_VITALITY)
     if rule is None:
         return
@@ -560,9 +558,7 @@ def _apply_boundless_vitality(
         ledger.notes.append(_BOUNDLESS_ALL_HEALS_NOTE.format(share=share))
 
 
-def _apply_everlasting(
-    ledger: _DefenseLedger, names: frozenset[str], subject: DefenseSubject
-) -> None:
+def _apply_everlasting(ledger: _DefenseLedger, names: frozenset[str]) -> None:
     """Fimbulwinter's Everlasting: cited here, declared as an ally packet.
 
     The one defence this resolver publishes without a defensive declaration
@@ -572,7 +568,6 @@ def _apply_everlasting(
     infer — and saying that twice, once as a second declaration, is the
     duplicated authority this campaign exists to remove.
     """
-    del subject
     for owner in ITEM_EFFECTS:
         if owner not in names:
             continue
@@ -611,11 +606,11 @@ _LEDGER_APPLIED_DEFENSES: Mapping[
     ],
 ] = {
     DefenseMechanic.EVERLASTING: lambda ledger, names, declared, subject: (
-        _apply_everlasting(ledger, names, subject)
+        _apply_everlasting(ledger, names)
     ),
     DefenseMechanic.BOUNDLESS_VITALITY: (
         lambda ledger, names, declared, subject: _apply_boundless_vitality(
-            ledger, declared, subject
+            ledger, declared
         )
     ),
 }
@@ -646,6 +641,7 @@ def resolve_starting_defenses(
     level: int,
     stats: dict[str, float],
     items: Sequence[Mapping[str, Any]] = (),
+    *,
     item_options: Mapping[str, Mapping[str, int | float]] | None = None,
 ) -> StartingDefenses:
     """Resolve the sourced champion and item defences ready at fight start.

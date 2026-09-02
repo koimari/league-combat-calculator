@@ -171,6 +171,7 @@ def usable_keyword(
     ktoks: list[str],
     atom_name_toks: set[str],
     head_word: str,
+    *,
     generic_tokens: set[str],
     champion_tokens: set[str],
     keyword_atom_count: Mapping[str, int],
@@ -455,9 +456,9 @@ def build_keyword_index(
                 ktoks,
                 set(name_toks),
                 head_word,
-                generic_tokens,
-                champ_tokens,
-                keyword_atom_count,
+                generic_tokens=generic_tokens,
+                champion_tokens=champ_tokens,
+                keyword_atom_count=keyword_atom_count,
             ):
                 specs.append((nk, ktoks))
         index.append((atom_id, a["family"], specs))
@@ -816,6 +817,7 @@ def extract_champion(
     bin_path: Path,
     keyword_index: list[tuple[str, str, list[tuple[str, list[str]]]]],
     vocab: Mapping[str, dict[str, Any]],
+    *,
     passive_map: Mapping[str, list[dict[str, Any]]] | None = None,
     tag_map: Mapping[str, list[str]] | None = None,
     wiki_types: None | dict[str, list[WikiEntry]] = None,
@@ -1196,10 +1198,10 @@ def main(argv: list[str] | None = None) -> int:
                 f,
                 keyword_index,
                 vocab,
-                passive_map,
-                tag_map,
-                wiki_types,
-                atom_relations,
+                passive_map=passive_map,
+                tag_map=tag_map,
+                wiki_types=wiki_types,
+                atom_relations=atom_relations,
             )
         )
         (out / f"{champ}.atoms.json").write_text(
@@ -1219,7 +1221,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # sanity checks + suggestions are produced by the caller for a curated set;
     # default run emits the generic report without them.
-    sanity, suggestions = build_sanity_and_suggestions(results, vocab)
+    sanity, suggestions = build_sanity_and_suggestions(results)
     report = build_report(results, vocab, sanity, suggestions)
     # Carry over externally-added report sections (e.g. the autoresearch
     # weak-evidence experiment log) so a regeneration never clobbers them.
@@ -1249,13 +1251,13 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def build_sanity_and_suggestions(
-    results: list[dict[str, Any]], vocab: Mapping[str, dict[str, Any]]
+    results: list[dict[str, Any]],
 ) -> tuple[list[dict[str, Any]], list[str]]:
     """Sanity checks for curated mechanics + classifier improvement list."""
     by_champ = {r["champion"]: r for r in results}
     sanity = []
 
-    def check(label, champ, atom_id, key_hint=None, extra=None):
+    def check(label, champ, atom_id, key_hint=None, *, extra=None):
         """Pass if the atom exists on an object whose binary key/script name
         contains key_hint (the champion prefix is stripped from behaviors in
         matching, so search the full binary keys too)."""
@@ -1301,49 +1303,49 @@ def build_sanity_and_suggestions(
         "vladimir",
         "heal-shield.heal",
         "TransfusionHeal",
-        "VladimirQ also carries Trait_ActiveHeal.",
+        extra="VladimirQ also carries Trait_ActiveHeal.",
     )
     check(
         "Gnar transform (Rage Gene)",
         "gnar",
         "stack-transform-summon-resource.transform",
         "GnarTransform",
-        "GnarFuryGeneration maps to fury/rage resource atom.",
+        extra="GnarFuryGeneration maps to fury/rage resource atom.",
     )
     check(
         "Jinx execute reset (Get Excited!)",
         "jinx",
         "damage.execute",
         "JinxR",
-        "JinxPassiveKill is tagged on_takedown (kill token).",
+        extra="JinxPassiveKill is tagged on_takedown (kill token).",
     )
     check(
         "Pyke execute (Death from Below)",
         "pyke",
         "damage.execute",
         "PykeR",
-        "via generic rule: ultimate + damage-cap datavalue.",
+        extra="via generic rule: ultimate + damage-cap datavalue.",
     )
     check(
         "Senna soul stacking (Absolution)",
         "senna",
         "stack-transform-summon-resource.stack",
         "SennaPassiveStacks",
-        "Soul drops live under SennaPassive stacks; 'soul' itself is not a vocab keyword.",
+        extra="Soul drops live under SennaPassive stacks; 'soul' itself is not a vocab keyword.",
     )
     check(
         "Neeko transform (Inherent Glamour)",
         "neeko",
         "stack-transform-summon-resource.transform",
         "NeekoPassive",
-        "NeekoPassive has no transform/disguise tokens; clone+stealth captured on W.",
+        extra="NeekoPassive has no transform/disguise tokens; clone+stealth captured on W.",
     )
     check(
         "Kayle transform (Divine Ascent)",
         "kayle",
         "stack-transform-summon-resource.transform",
         "KaylePassive",
-        "Level-gated form change is only visible as LevelForPassiveRank datavalues.",
+        extra="Level-gated form change is only visible as LevelForPassiveRank datavalues.",
     )
 
     # Extended semantic-layer checks (tag-backed atoms)
@@ -1352,78 +1354,80 @@ def build_sanity_and_suggestions(
         "senna",
         "heal-shield.heal",
         "SennaQ",
-        "Trait_ActiveHeal + BaseHeal datavalue; target should be ally/self.",
+        extra="Trait_ActiveHeal + BaseHeal datavalue; target should be ally/self.",
     )
     check(
         "Thresh W ally shield (Dark Passage)",
         "thresh",
         "heal-shield.shield",
         "ThreshW",
-        "Trait_Shield + ShieldPerSoul datavalue.",
+        extra="Trait_Shield + ShieldPerSoul datavalue.",
     )
     check(
         "Kayle W ally heal",
         "kayle",
         "heal-shield.heal",
         "KayleW",
-        "ally-targeted heal via Trait_ActiveHeal.",
+        extra="ally-targeted heal via Trait_ActiveHeal.",
     )
     check(
         "Twitch Q stealth (Ambush)",
         "twitch",
         "vision-economy.stealth",
         "HideInShadows",
-        "Trait_Invisibility.",
+        extra="Trait_Invisibility.",
     )
     check(
         "Malzahar voidling summon",
         "malzahar",
         "stack-transform-summon-resource.summon",
         "MalzaharW",
-        "Trait_Pet summon.",
+        extra="Trait_Pet summon.",
     )
     check(
         "Annie Tibbers summon",
         "annie",
         "stack-transform-summon-resource.summon",
         "EmpoweredTibbers",
-        "Trait_Pet summon.",
+        extra="Trait_Pet summon.",
     )
     check(
         "LeBlanc clone",
         "leblanc",
         "stack-transform-summon-resource.clone",
         "MirrorImage",
-        "Trait_CreateClone.",
+        extra="Trait_CreateClone.",
     )
     check(
         "Darius R execute reset",
         "darius",
         "interaction.attack-reset",
         "NoxianTactics",
-        "Trait_AttackReset on ultimate.",
+        extra="Trait_AttackReset on ultimate.",
     )
-    check("Teemo poison DoT", "teemo", "damage.dot", "TeemoR", "Trait_DoT poison.")
+    check(
+        "Teemo poison DoT", "teemo", "damage.dot", "TeemoR", extra="Trait_DoT poison."
+    )
     check(
         "Ashe slow",
         "ashe",
         "crowd-control-mobility.slow",
         "Ashe",
-        "PositiveEffect_MoveBlock slow.",
+        extra="PositiveEffect_MoveBlock slow.",
     )
     check(
         "Lee Sin dash",
         "leesin",
         "crowd-control-mobility.dash",
         "LeeSinQ",
-        "Trait_PlayerSelectedDashDirection.",
+        extra="Trait_PlayerSelectedDashDirection.",
     )
     check(
         "Heimerdinger turret summon",
         "heimerdinger",
         "stack-transform-summon-resource.summon",
         "HeimerdingerTurretBehavior",
-        "Trait_Pet/turret summon.",
+        extra="Trait_Pet/turret summon.",
     )
 
     suggestions = [

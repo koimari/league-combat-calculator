@@ -17,6 +17,7 @@ import pytest
 import src.app as app_module
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.interpreters import charged_strike
+from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import (
     ENERGIZED_SOURCE_RECEIPT,
     ITEM_EFFECTS,
@@ -245,10 +246,12 @@ def test_guinsoo_seething_strike_stacks_typed_and_fight_accelerates():
     ) == pytest.approx(3.0)
     ramp = charged_strike.resolve_slots(
         ["Guinsoo's Rageblade"],
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     ).swing_schedule.ramp
     assert ramp.bonus_percent(0) == 0.0
     assert ramp.bonus_percent(4) == pytest.approx(32.0)

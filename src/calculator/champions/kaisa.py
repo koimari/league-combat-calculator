@@ -470,7 +470,7 @@ def _icathian_rain(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _supercharge_uptime(
-    ctx: SlotCtx, ability: dict[str, Any], rank: int, duration: float, uptime: float
+    ctx: SlotCtx, ability: dict[str, Any], rank: int, duration: float, *, uptime: float
 ) -> tuple[int, float]:
     """(charges, window duty cycle) for Supercharge over the fight window.
 
@@ -527,7 +527,7 @@ def _supercharge(ctx: SlotCtx) -> dict[str, Any] | None:
             "Kai'Sa E: 'Bonus Attack Speed' leveling entry missing from the "
             "ability JSON — cannot price Supercharge's window"
         )
-    casts, duty_cycle = _supercharge_uptime(ctx, ability, rank, duration, uptime)
+    casts, duty_cycle = _supercharge_uptime(ctx, ability, rank, duration, uptime=uptime)
     granted = bonus_percent * duty_cycle
     ctx.bump_stat("attack_speed", ctx.stat("attack_speed_ratio") * granted / 100.0)
     return {

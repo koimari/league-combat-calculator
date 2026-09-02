@@ -299,7 +299,9 @@ class TestTheGreyHealthTickBuilder:
     """The one action shape neither relocated builder produces."""
 
     def test_it_arms_at_the_recovery_rank_on_the_main_slot(self) -> None:
-        action = program_compile.grey_health_heal_action(2.5, "Grey Health", 40.0, 0, 7)
+        action = program_compile.grey_health_heal_action(
+            2.5, "Grey Health", 40.0, 0, aidx=7
+        )
         assert action.phase is TransitionRank.RECOVERY
         assert action.kind is ActionKind.HEAL
         assert (action.subject, action.attacker, action.aidx) == (0, 0, 7)
@@ -308,7 +310,7 @@ class TestTheGreyHealthTickBuilder:
     def test_its_event_id_is_the_published_grey_shape(self) -> None:
         from src.calculator.survival.actions import EVENT_SLOTS
 
-        action = program_compile.grey_health_heal_action(1.0, "Warmog", 10.0, 3, 0)
+        action = program_compile.grey_health_heal_action(1.0, "Warmog", 10.0, 3, aidx=0)
         assert EVENT_SLOTS.text(action.event_slot) == "main:grey:Warmog:3"
 
 
@@ -443,7 +445,16 @@ def compile_result(result: dict, **kwargs) -> list:
     """*result* through the one compiler, as typed actions."""
     compiler = program_compile.WalkCompiler(0)
     compiler.add_engine_result(
-        result, "enemy:Veigar", 1, "main", 0, {}, 8.0, {}, [], **kwargs
+        result,
+        "enemy:Veigar",
+        1,
+        "main",
+        defender_i=0,
+        grievous_by_dtype={},
+        duration=8.0,
+        heal_dedup={},
+        id_strings=[],
+        **kwargs,
     )
     return compiler.actions
 

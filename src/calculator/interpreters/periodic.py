@@ -25,6 +25,7 @@ from ..item_behavior import (
     BehaviorRule,
     BuildContext,
     EngineLane,
+    FightFacts,
     KernelField,
     PeriodicCadence,
     PeriodicRule,
@@ -177,10 +178,7 @@ def declares_self_heal(owners: Sequence[str]) -> bool:
 def resolve_slots(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> PeriodicSlots:
     """Every periodic strike this build declares, split by cadence.
 
@@ -194,13 +192,7 @@ def resolve_slots(
     range_units: dict[str, float] = {}
     for rule in periodic_rules(owners):
         payload = _payload(rule)
-        ctx = build_context(
-            rule.owner,
-            level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=target_bonus_health,
-            holder_is_melee=holder_is_melee,
-        )
+        ctx = build_context(rule.owner, facts)
         interval = resolve(payload.interval, ctx.level)
         if payload.cadence is PeriodicCadence.REFRESHED_BURN:
             if payload.duration is None:

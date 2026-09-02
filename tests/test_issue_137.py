@@ -118,12 +118,12 @@ def test_compiler_fails_closed_on_overheal_to_shield():
             "main",
             0,
             "enemy:X",
-            1,
-            {},
-            10.0,
-            {},
-            [],
-            0,
+            defender_i=1,
+            grievous_by_dtype={},
+            duration=10.0,
+            heal_dedup={},
+            id_strings=[],
+            defender_index=0,
         )
     assert exc.value.receipt == "overheal_to_shield"
     assert exc.value.source == "Severum"
@@ -151,12 +151,12 @@ def test_compiler_carries_vamp_healing_category():
         "main",
         0,
         "enemy:X",
-        1,
-        {},
-        10.0,
-        {},
-        [],
-        0,
+        defender_i=1,
+        grievous_by_dtype={},
+        duration=10.0,
+        heal_dedup={},
+        id_strings=[],
+        defender_index=0,
     )
     heal = next(action for action in compiler.actions if action.kind.name == "HEAL")
     assert heal.healing_category == "vamp"
@@ -225,12 +225,12 @@ def test_compiler_fails_closed_on_execute_threshold_damage():
             "main",
             0,
             "enemy:X",
-            1,
-            {},
-            10.0,
-            {},
-            [],
-            0,
+            defender_i=1,
+            grievous_by_dtype={},
+            duration=10.0,
+            heal_dedup={},
+            id_strings=[],
+            defender_index=0,
         )
     assert exc.value.receipt == "execute_threshold=The Collector"
 

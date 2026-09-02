@@ -255,11 +255,10 @@ def apply_purchase_plan(
     owned_boots: dict[str, Any] | None,
     buys: Iterable[dict[str, Any]],
     gold_on_hand: int,
+    *,
     sell_items: Iterable[dict[str, Any]] | None = None,
     combine_items: Iterable[dict[str, Any]] | None = None,
     combine_policy: str = "shop_combine",
-    role: str = "",
-    role_quest_complete: bool = False,
     flag_incomplete_combine: bool = True,
 ) -> PurchasePlan:
     """Apply a real-shop plan to the owned inventory and return the priced result.

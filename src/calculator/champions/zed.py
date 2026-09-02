@@ -169,7 +169,7 @@ _SHADOW_MIMICS_Q_AND_E = (
 # detonation offset. Neither direction is a dependency both surfaces
 # would agree to, and a declaration that contradicts one of them is worse
 # than the seed it would retire.
-CAST_DEPENDENCIES = (
+CAST_DEPENDENCIES = (  # sightline-ok: 32 module_contract reads it by name
     CastDependency(
         slot="Q",
         requires="W",

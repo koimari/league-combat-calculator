@@ -720,6 +720,7 @@ def apply_overheal_shield(
     state: dict[str, Any],
     action: SurvivalAction,
     excess: float,
+    *,
     event_time: float,
 ) -> float:
     """Convert sourced overheal into a timed shield (Aphelios Severum).
@@ -1003,6 +1004,7 @@ def grant_reactive_shield(
     action: SurvivalAction,
     state: dict[str, Any],
     event_time: float,
+    *,
     event_damage: float,
 ) -> None:
     """Grant a Noxian Endurance/Persistence typed shield after the hit.
@@ -1934,7 +1936,7 @@ def _apply_cleanse(
     group = str(action.cleanse_group or "")
     same_group = bool(group) and group == use.get("last_cleanse_group")
     decision = eligibility.decide(
-        _cleanse_action_view(action, item, target_id, holder_id, state),
+        _cleanse_action_view(action, item, target_id, holder_id, state=state),
         holder={
             "uses_remaining": 1 if same_group else int(use["uses_remaining"]),
             "item_held": True,
@@ -2040,6 +2042,7 @@ def _cleanse_action_view(
     item: str,
     target_id: str,
     holder_id: str,
+    *,
     state: Mapping[str, Any],
 ) -> Any:
     """The kernel's typed view of one walk activation."""
@@ -2201,7 +2204,7 @@ def _apply_heal(
             state,
             action,
             leftover_excess - ichor_converted,
-            event_time,
+            event_time=event_time,
         )
     else:
         ichor_converted = 0.0
@@ -3224,7 +3227,7 @@ def _apply_damage(
         amount,
         damage_type,
         event_time,
-        live_healing_factor(state, event_time),
+        healing_factor=live_healing_factor(state, event_time),
     )
     if state.get("crowd_control_immunity_grants"):
         _sync_crowd_control_immunity(state, event_time)
@@ -3278,7 +3281,9 @@ def _apply_damage(
         ):
             schedule_maw_omnivamp_heal(ctx, action, event_time, event_damage)
         if state["reactive_shield_amount"] > 0.0:
-            grant_reactive_shield(ctx, action, state, event_time, event_damage)
+            grant_reactive_shield(
+                ctx, action, state, event_time, event_damage=event_damage
+            )
     if (
         ctx.record_defy_damage
         and 0 <= action.attacker < len(ctx.combatants)

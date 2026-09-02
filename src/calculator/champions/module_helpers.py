@@ -38,21 +38,15 @@ def typed_damage(
     attribute: str,
     damage_type: str,
     *,
-    count: int = 1,
     time_offset: float | None = None,
-    hit_interval: float | None = None,
-    rank_override: int | None = None,
-    source_slot: str | None = None,
 ) -> dict[str, Any] | None:
     """Build one explicitly named typed packet from cached champion data."""
 
-    slot = source_slot or ctx.slot
+    slot = ctx.slot
     ability = ctx.ability(slot)
     if ability is None:
         return None
-    selected = rank_override if rank_override is not None else ctx.rank_for(slot)
-    if slot == "P" and rank_override is None:
-        selected = ctx.level
+    selected = ctx.level if slot == "P" else ctx.rank_for(slot)
     if selected < 1:
         return None
     value = extract_named(ability, attribute, selected, ctx.stats, ctx.target)
@@ -60,18 +54,10 @@ def typed_damage(
         str(ability.get("name", slot)),
         selected,
         extract_cooldown(ability, selected),
-        value * max(1, count),
+        value,
         damage_type,
     )
-    entry["parts"] = (
-        DamagePart(
-            damage_type,
-            value,
-            count=max(1, count),
-            time_offset=time_offset,
-            hit_interval=hit_interval,
-        ),
-    )
+    entry["parts"] = (DamagePart(damage_type, value, time_offset=time_offset),)
     return entry
 
 
@@ -197,7 +183,6 @@ def no_damage(
     name: str,
     reason: str,
     slot: str | None = None,
-    cooldown: float | None = None,
 ) -> dict[str, Any] | None:
     """Emit an explicit, user-visible state/utility row."""
 
@@ -212,11 +197,7 @@ def no_damage(
     entry: dict[str, Any] = {
         "name": name,
         "rank": selected_rank,
-        "cooldown": (
-            float(cooldown)
-            if cooldown is not None
-            else extract_cooldown(ability, selected_rank)
-        ),
+        "cooldown": extract_cooldown(ability, selected_rank),
         "damage_type": "magic",
         "total_raw": 0.0,
         "parts": (),

@@ -296,6 +296,7 @@ def absorb(
     damage: float,
     damage_type: str,
     event_time: float,
+    *,
     healing_factor: float = 1.0,
 ) -> Absorption:
     """Apply one post-mitigation damage instance to a defender's pools.
@@ -360,7 +361,7 @@ def absorb(
     armed = None
     if pools.threshold_shield is not None or pools.threshold_health is not None:
         armed = _arm_thresholds(
-            pools, remaining, damage_type, event_time, healing_factor
+            pools, remaining, damage_type, event_time, healing_factor=healing_factor
         )
         if armed.shield_pool is not None and armed.shield_pool != GENERAL:
             # A typed Lifeline (Maw's magic shield) blocks the very hit that
@@ -420,6 +421,7 @@ def _arm_thresholds(
     remaining: float,
     damage_type: str,
     event_time: float,
+    *,
     healing_factor: float = 1.0,
 ) -> _Armed:
     """Arm whichever Lifelines this damage would carry past their threshold.

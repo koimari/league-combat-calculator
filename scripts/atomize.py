@@ -173,10 +173,10 @@ def atomize_champions(champions: Mapping[str, Any]) -> dict[str, list[dict[str, 
             path,
             keyword_index,
             vocab,
-            passive_map,
-            tag_map,
-            wiki_types,
-            atom_relations,
+            passive_map=passive_map,
+            tag_map=tag_map,
+            wiki_types=wiki_types,
+            atom_relations=atom_relations,
         )
         results[name] = [normalize(name, atom) for atom in result["atoms"]]
     return results

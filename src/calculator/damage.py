@@ -209,6 +209,7 @@ from .item_behavior import (
     ActiveWindowCastEconomyRule,
     AmpChainSlot,
     Comparison,
+    FightFacts,
     Isolation,
     ManaSpentHealRule,
     OnHitHealRule,
@@ -480,7 +481,7 @@ class Resists:
             self.flat_armor_pen,
             self.ability_armor_pen_percent,
             self.armor_pen_bonus_percent,
-            self.target_bonus_armor,
+            bonus_armor=self.target_bonus_armor,
         )
 
     def _resolve_mr_from_target(self) -> None:
@@ -536,7 +537,7 @@ class Resists:
             self.flat_armor_pen,
             self.auto_armor_pen_percent,
             self.armor_pen_bonus_percent,
-            self.target_bonus_armor,
+            bonus_armor=self.target_bonus_armor,
         )
         self.effective_mr_pre_ult = apply_magic_penetration(
             self.base_mr, self.magic_pen_flat, self.auto_magic_pen_percent
@@ -1384,6 +1385,7 @@ def _calculate_stacking_procs(
     phantom_hit_autos: Collection[int],
     double_on_hit_procs: int,
     hits_required: int,
+    *,
     leading_ability_hits: int = 0,
     ability_extra_stacks: set[int] | None = None,
 ) -> tuple[list[int], list[int]]:
@@ -1581,6 +1583,7 @@ def _simulate_stacking_on_hit_damage(
     base_inputs: item_effects.DamageInputs,
     target_health: float,
     num_auto_attacks: int,
+    *,
     auto_damage_per_hit: float,
     other_on_hit_per_hit: float,
     resists: Resists,
@@ -1696,6 +1699,7 @@ def _simulate_hp_scaled_on_hit_procs(
     target_health: float,
     num_auto_attacks: int,
     auto_damage_per_hit: float,
+    *,
     other_on_hit_per_hit: float,
     resists: Resists,
     magic_amp: float,
@@ -1736,6 +1740,7 @@ def _simulate_current_health_on_hit(
     base_inputs: item_effects.DamageInputs,
     target_health: float,
     num_auto_attacks: int,
+    *,
     auto_damage_per_hit: float,
     other_on_hit_per_hit: float,
     resists: Resists,
@@ -1888,6 +1893,7 @@ def _damage_event_row(  # pylint: disable=too-many-arguments,too-many-positional
     lean: bool,
     source_key: str,
     damage_type: str,
+    *,
     damage: float,
     time: float,
     sequence: int,
@@ -2076,16 +2082,16 @@ def _ordered_damage_events(
                 lean,
                 source_key,
                 damage_type,
-                damage,
-                time,
-                sequence,
-                float(sequence),
-                phase,
-                ordinal,
-                fields,
-                source_key in cast_order,
-                source_key.startswith(_VAMP_SOURCE_PREFIXES),
-                None,
+                damage=damage,
+                time=time,
+                sequence=sequence,
+                order_value=float(sequence),
+                phase=phase,
+                ordinal=ordinal,
+                fields=fields,
+                is_ability=source_key in cast_order,
+                vamp_source=source_key.startswith(_VAMP_SOURCE_PREFIXES),
+                shield_events=None,
             )
         )
         sequence += 1
@@ -2137,16 +2143,16 @@ def _ordered_damage_events(
                     lean,
                     source_key,
                     damage_type,
-                    damage,
-                    float(event["time"]),
-                    sequence,
-                    float(sequence) if order is None else float(order),
-                    phase,
-                    ordinal,
-                    event if not entry_facts else {**entry_facts, **event},
-                    is_ability_source,
-                    vamp_source,
-                    shield_events,
+                    damage=damage,
+                    time=float(event["time"]),
+                    sequence=sequence,
+                    order_value=float(sequence) if order is None else float(order),
+                    phase=phase,
+                    ordinal=ordinal,
+                    fields=event if not entry_facts else {**entry_facts, **event},
+                    is_ability=is_ability_source,
+                    vamp_source=vamp_source,
+                    shield_events=shield_events,
                 )
             )
             sequence += 1
@@ -2829,10 +2835,12 @@ def _shred_slot(
     return resistance_shred.resolve_slot(
         [item_effects.resolved_item_name(item) for item in items],
         resistance,
-        level=level,
-        fight_duration_seconds=config.fight_duration_seconds,
-        target_bonus_health=max(0.0, config.target_bonus_health),
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=config.fight_duration_seconds,
+            target_bonus_health=max(0.0, config.target_bonus_health),
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -2841,10 +2849,7 @@ def _part_amp(
     attack_class: AttackClass,
     *,
     armed: bool,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
     holder_stats: Mapping[str, float],
 ) -> tuple[float, str]:
     """The per-part amp for one attack class: its multiplier and its holder.
@@ -2861,10 +2866,7 @@ def _part_amp(
     amp = delta_amp.resolve_part_amp(
         owners,
         attack_class,
-        level=level,
-        fight_duration_seconds=fight_duration_seconds,
-        target_bonus_health=target_bonus_health,
-        holder_is_melee=holder_is_melee,
+        facts=facts,
     )
     if amp is None:
         return 1.0, ""
@@ -2923,6 +2925,7 @@ def _resolve_combat_state(
     ability_damages: dict[str, dict[str, Any]],
     items: list[dict[str, Any]],
     config: FightConfig,
+    *,
     item_options: Mapping[str, Mapping[str, int | float]] | None = None,
     champion_options: Mapping[str, Any] | None = None,
 ) -> FightState:
@@ -2958,19 +2961,19 @@ def _resolve_combat_state(
     # resistances, because Malignance's magic-resistance shred is one of the
     # numbers the resistance ladder is built from.
     owners = [item_effects.resolved_item_name(item) for item in items]
-    item_cast_procs = cast_proc.resolve_slots(
-        owners,
+    facts = FightFacts(
         level=level,
         fight_duration_seconds=fight_duration_seconds,
         target_bonus_health=max(0.0, config.target_bonus_health),
         holder_is_melee=bool(is_melee),
     )
+    item_cast_procs = cast_proc.resolve_slots(
+        owners,
+        facts=facts,
+    )
     item_charged_strikes = charged_strike.resolve_slots(
         owners,
-        level=level,
-        fight_duration_seconds=fight_duration_seconds,
-        target_bonus_health=max(0.0, config.target_bonus_health),
-        holder_is_melee=bool(is_melee),
+        facts=facts,
     )
     actualizer_active_until = (
         item_effects.actualizer_active_seconds(
@@ -3013,20 +3016,14 @@ def _resolve_combat_state(
         owners,
         AttackClass.ABILITY,
         armed=actualizer_active_until > 0.0,
-        level=level,
-        fight_duration_seconds=fight_duration_seconds,
-        target_bonus_health=max(0.0, config.target_bonus_health),
-        holder_is_melee=bool(is_melee),
+        facts=facts,
         holder_stats=champion_stats,
     )
     basic_part_amp = _part_amp(
         owners,
         AttackClass.BASIC_ATTACK,
         armed=True,
-        level=level,
-        fight_duration_seconds=fight_duration_seconds,
-        target_bonus_health=max(0.0, config.target_bonus_health),
-        holder_is_melee=bool(is_melee),
+        facts=facts,
         holder_stats=champion_stats,
     )
 
@@ -3183,44 +3180,29 @@ def _resolve_combat_state(
         damage_effects=damage_effects,
         per_hit_strikes=on_hit_strike.per_hit_effects(
             owners,
-            level=level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=max(0.0, config.target_bonus_health),
-            holder_is_melee=bool(is_melee),
+            facts=facts,
         ),
         class_restricted_strikes=on_hit_strike.class_restricted_per_hit_effects(
             owners, target_class=config.target_class
         ),
         item_actives=active_cast.active_sources(
             owners,
-            level=level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=max(0.0, config.target_bonus_health),
-            holder_is_melee=bool(is_melee),
+            facts=facts,
         ),
         item_cast_procs=item_cast_procs,
         item_charged_strikes=item_charged_strikes,
         item_periodics=periodic.resolve_slots(
             owners,
-            level=level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=max(0.0, config.target_bonus_health),
-            holder_is_melee=bool(is_melee),
+            facts=facts,
         ),
         item_armor_shred=armor_shred,
         item_spellblade=resolve_spellblade_slot(
             owners,
-            level=level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=max(0.0, config.target_bonus_health),
-            holder_is_melee=bool(is_melee),
+            facts=facts,
         ),
         secondary_target_bolts=secondary_target.resolve_slot(
             owners,
-            level=level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=max(0.0, config.target_bonus_health),
-            holder_is_melee=bool(is_melee),
+            facts=facts,
         ),
         cast_order=(
             config.cast_order
@@ -3870,6 +3852,7 @@ def _mitigate_hits(
     part: DamagePart,
     raw: float,
     ability_mr: float,
+    *,
     hits: int,
     rock_solid_instances: int = 0,
     damage_over_time: bool = False,
@@ -4030,7 +4013,7 @@ def _evaluate_cast_parts(
                     part,
                     raw,
                     ability_mr,
-                    1,
+                    hits=1,
                     damage_over_time=damage_over_time,
                 )
                 if repeat_pure and hits > 1
@@ -4100,7 +4083,7 @@ def _evaluate_cast_parts(
                     part,
                     raw,
                     ability_mr,
-                    1,
+                    hits=1,
                     rock_solid_instances=int(
                         rock_solid_instances > 0 and hit_index == 0
                     ),
@@ -4169,6 +4152,7 @@ def _apply_post_hit_proc(
     trigger_key: str,
     ability_info: Mapping[str, Any],
     num_casts: int,
+    *,
     cast_times: tuple[float, ...],
     running_damage: float,
 ) -> float:
@@ -4254,6 +4238,7 @@ def _effective_timed_cooldown(
     result: "RotationResult",
     ability_key: str,
     ability_info: dict,
+    *,
     basic_ability_haste: float,
 ) -> float:
     """Effective recast cooldown in timed mode: ability haste, Spear of
@@ -4372,7 +4357,11 @@ def _schedule_shared_casts(
         seen.add(key)
     cooldowns = {
         key: _effective_timed_cooldown(
-            state, result, key, state.ability_damages[key], basic_ability_haste
+            state,
+            result,
+            key,
+            state.ability_damages[key],
+            basic_ability_haste=basic_ability_haste,
         )
         for key in keys
     }
@@ -5151,6 +5140,7 @@ def _return_denied_burst_budget(
     plan: CastPlan,
     auto_restore_rows: list[dict[str, Any]],
     denied_row: Mapping[str, Any],
+    *,
     timeline: list[tuple[Any, ...]],
 ) -> None:
     """Return one denied burst cast's time to the ordinary restore budget.
@@ -5663,9 +5653,9 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
                 ledger,
                 owner,
                 enlighten_decl,
-                enlighten_level_up,
-                cast_time,
-                timeline,
+                level_up_time=enlighten_level_up,
+                marker_time=cast_time,
+                timeline=timeline,
             )
             continue
         if kind == "enlighten_tick":
@@ -5724,7 +5714,7 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
                             plan,
                             auto_restore_rows,
                             row,
-                            timeline,
+                            timeline=timeline,
                         )
                     continue
             detail: dict[str, Any] = {
@@ -6044,8 +6034,8 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             tear,
             tear_hits,
             enlighten_public,
-            auto_restore_section,
-            mark_refunds_section,
+            auto_restore=auto_restore_section,
+            mark_refunds=mark_refunds_section,
             catalyst=catalyst_section,
         ),
     )
@@ -6056,6 +6046,7 @@ def _schedule_enlighten(
     ledger: resource_ledger.ResourceLedger,
     owner: str,
     declaration: resource_ledger.EnlightenDeclaration | None,
+    *,
     level_up_time: float,
     marker_time: float,
     timeline: list[tuple[float, int, int, int, str, str, float]],
@@ -6127,6 +6118,7 @@ def _resource_ledger_public(
     tear: resource_ledger.TearManaflow | None,
     tear_hits: list[dict[str, Any]],
     enlighten_public: dict[str, Any] | None,
+    *,
     auto_restore: dict[str, Any] | None = None,
     mark_refunds: dict[str, Any] | None = None,
     catalyst: dict[str, Any] | None = None,
@@ -7127,8 +7119,8 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             ability_key,
             ability_info,
             num_casts,
-            plan.times.get(ability_key, ()),
-            mitigated_damage_dealt,
+            cast_times=plan.times.get(ability_key, ()),
+            running_damage=mitigated_damage_dealt,
         )
         mitigated_damage_dealt += post_hit_total
 
@@ -9784,7 +9776,7 @@ def _layer_on_hit_effects(
         rotation,
         num_auto_attacks,
         swing_times,
-        on_hit_effectiveness,
+        effectiveness=on_hit_effectiveness,
     )
     if current_health_effect is not None and num_auto_attacks > 0:
         (
@@ -9911,10 +9903,11 @@ def _layer_on_hit_effects(
                 state.target_health,
                 num_auto_attacks,
                 autos.auto_damage_per_hit,
-                result.static_on_hit_per_hit + result.current_health_on_hit_avg,
-                resists,
-                magic_amp,
-                proc_autos,
+                other_on_hit_per_hit=result.static_on_hit_per_hit
+                + result.current_health_on_hit_avg,
+                resists=resists,
+                magic_amp=magic_amp,
+                proc_autos=proc_autos,
                 effectiveness=on_hit_effectiveness,
             )
             proc_total = sum(proc_damages)
@@ -10077,6 +10070,7 @@ def _add_spellblade_true_rider(
     source: item_effects.DamageSource,
     raw_per_proc: float,
     procs: int,
+    *,
     proc_times: list[float],
 ) -> None:
     """Add a champion's true-damage rider on spellblade procs (Corki P).
@@ -10318,7 +10312,9 @@ def _add_spellblade_damage(
                     if amount > 0
                 ]
         state.total_damage += sb_total
-        _add_spellblade_true_rider(state, source, raw_sb, result.procs, proc_times)
+        _add_spellblade_true_rider(
+            state, source, raw_sb, result.procs, proc_times=proc_times
+        )
 
         # Spellblade siblings are resolved from the same accepted proc event
         # as the damage.  They are informational resource/sustain outputs in
@@ -13015,6 +13011,7 @@ def _add_senna_souls(
         amount: float,
         time: float,
         source: str,
+        *,
         accepted: bool,
         reason: str,
         detail: Mapping[str, Any] | None = None,
@@ -13055,16 +13052,23 @@ def _add_senna_souls(
             1.0,
             kill_time,
             "champion takedown",
-            True,
-            "",
-            {
+            accepted=True,
+            reason="",
+            detail={
                 "event": "takedown",
                 "target": shield_outcome.get("target", "target"),
                 "event_time": round(kill_time, 3),
             },
         )
     else:
-        _add_receipt("gain", 0.0, 0.0, "champion takedown", False, "no_takedown_event")
+        _add_receipt(
+            "gain",
+            0.0,
+            0.0,
+            "champion takedown",
+            accepted=False,
+            reason="no_takedown_event",
+        )
     # Named fail-closed denials for the unsupported soul sources (the
     # module's documented boundaries): the model never authors these
     # events, but a future source must not silently mint souls.
@@ -13074,17 +13078,17 @@ def _add_senna_souls(
             0.0,
             0.0,
             f"unsupported_soul_source:{source}",
-            False,
-            f"unsupported_soul_source:{source}",
-            {"event": source, "event_time": 0.0},
+            accepted=False,
+            reason=f"unsupported_soul_source:{source}",
+            detail={"event": source, "event_time": 0.0},
         )
     _add_receipt(
         "gain",
         0.0,
         0.0,
         "soul_event_without_identity",
-        False,
-        "missing_identity",
+        accepted=False,
+        reason="missing_identity",
     )
 
     # Every-20 threshold crossings: documented, never re-priced.
@@ -13155,6 +13159,7 @@ def _feed_ashe_focus_stack(
     swings: list[Any],
     q_casts: Iterable[Mapping[str, Any]],
     duration: float,
+    *,
     q_window_end: float = 0.0,
 ) -> tuple[list[dict[str, Any]], int, int]:
     """Feed the Focus stack machine from the engine's per-swing stream.
@@ -13175,6 +13180,7 @@ def _feed_ashe_focus_stack(
         amount: float,
         time: float,
         source: str,
+        *,
         status: tuple[bool, str],
     ) -> None:
         nonlocal current, gains
@@ -13225,7 +13231,7 @@ def _feed_ashe_focus_stack(
                     -(before - after),
                     time,
                     "Ranger's Focus activation",
-                    (True, ""),
+                    status=(True, ""),
                 )
             else:
                 _record(
@@ -13233,7 +13239,7 @@ def _feed_ashe_focus_stack(
                     0.0,
                     time,
                     "Ranger's Focus activation",
-                    (False, "below_cap"),
+                    status=(False, "below_cap"),
                 )
         elif q_window_end > 0.0 and time < q_window_end:
             # P1 Slice 11: the "while Ranger's Focus is INACTIVE" clause
@@ -13245,7 +13251,7 @@ def _feed_ashe_focus_stack(
                 0.0,
                 time,
                 f"auto attack {index}",
-                (False, "active_window"),
+                status=(False, "active_window"),
             )
         else:
             before = stack.stacks
@@ -13267,11 +13273,15 @@ def _feed_ashe_focus_stack(
                     0.0,
                     time,
                     f"auto attack {index}",
-                    (False, "at_cap"),
+                    status=(False, "at_cap"),
                 )
             else:
                 _record(
-                    "gain", after - before, time, f"auto attack {index}", (True, "")
+                    "gain",
+                    after - before,
+                    time,
+                    f"auto attack {index}",
+                    status=(True, ""),
                 )
     sequence += 1
     stack.materialize_expiries(duration, sequence=sequence)
@@ -13468,6 +13478,7 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
         amount: float,
         time: float,
         source: str,
+        *,
         accepted: bool,
         reason: str,
         detail: Mapping[str, Any] | None = None,
@@ -13503,9 +13514,9 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
                 amount,
                 event_time,
                 f"w_part:{damage_type}",
-                True,
-                "",
-                {
+                accepted=True,
+                reason="",
+                detail={
                     "event": "w_part",
                     "part_index": index,
                     "damage_type": damage_type,
@@ -13514,7 +13525,12 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
             )
     else:
         _add_receipt(
-            "deny", 0.0, 0.0, "w_unavailable", False, "w_unavailable — no W cast"
+            "deny",
+            0.0,
+            0.0,
+            "w_unavailable",
+            accepted=False,
+            reason="w_unavailable — no W cast",
         )
 
     if missing_bonus_state:
@@ -13523,10 +13539,10 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
             0.0,
             0.0,
             "w_missing_resist_state",
-            False,
-            "w_missing_resist_state — bonus armor/magic resistance absent; "
+            accepted=False,
+            reason="w_missing_resist_state — bonus armor/magic resistance absent; "
             "the resist terms priced at 0 (no invented stats)",
-            {"event": "missing_resist_state", "event_time": 0.0},
+            detail={"event": "missing_resist_state", "event_time": 0.0},
         )
     # Named fail-closed denials for the unsupported state boundaries.
     for source, reason in (
@@ -13561,17 +13577,17 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
             0.0,
             0.0,
             source,
-            False,
-            reason,
-            {"event": source, "event_time": 0.0},
+            accepted=False,
+            reason=reason,
+            detail={"event": source, "event_time": 0.0},
         )
     _add_receipt(
         "deny",
         0.0,
         0.0,
         "w_event_without_identity",
-        False,
-        "missing_identity",
+        accepted=False,
+        reason="missing_identity",
     )
 
     ledger_section = rotation.resource_ledger
@@ -13625,6 +13641,7 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
         amount: float,
         time: float,
         source: str,
+        *,
         accepted: bool,
         reason: str,
         detail: Mapping[str, Any] | None = None,
@@ -13663,9 +13680,9 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
                     float(event.get("raw_damage", 0.0)),
                     event_time,
                     f"{slot.lower()}_part",
-                    True,
-                    "",
-                    {
+                    accepted=True,
+                    reason="",
+                    detail={
                         "event": f"{slot.lower()}_part",
                         "event_index": index,
                         "event_time": round(event_time, 3),
@@ -13677,8 +13694,8 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
                 0.0,
                 0.0,
                 f"{slot}_unavailable",
-                False,
-                f"{slot}_unavailable — no {slot} cast in this fight",
+                accepted=False,
+                reason=f"{slot}_unavailable — no {slot} cast in this fight",
             )
         else:
             _add_receipt(
@@ -13686,8 +13703,8 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
                 0.0,
                 0.0,
                 f"{slot}_part_without_identity",
-                False,
-                "missing_identity",
+                accepted=False,
+                reason="missing_identity",
             )
 
     # Named fail-closed denials for the unsupported multi-target claims.
@@ -13726,17 +13743,17 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
             0.0,
             0.0,
             source,
-            False,
-            reason,
-            {"event": source, "event_time": 0.0},
+            accepted=False,
+            reason=reason,
+            detail={"event": source, "event_time": 0.0},
         )
     _add_receipt(
         "deny",
         0.0,
         0.0,
         "w_e_event_without_identity",
-        False,
-        "missing_identity",
+        accepted=False,
+        reason="missing_identity",
     )
 
     ledger_section = rotation.resource_ledger
@@ -13828,6 +13845,7 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
         amount: float,
         time: float,
         source: str,
+        *,
         accepted: bool,
         reason: str,
         detail: Mapping[str, Any] | None = None,
@@ -13870,9 +13888,9 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
                 1.0,
                 event_time,
                 "meep_empowered_auto",
-                True,
-                "",
-                {
+                accepted=True,
+                reason="",
+                detail={
                     "event": "meep_auto",
                     "event_index": index,
                     "event_time": round(event_time, 3),
@@ -13880,7 +13898,12 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
             )
     elif meep_row is None or opening <= 0:
         _add_receipt(
-            "deny", 0.0, 0.0, "no_meep_auto_event", False, "no_meep_auto_event"
+            "deny",
+            0.0,
+            0.0,
+            "no_meep_auto_event",
+            accepted=False,
+            reason="no_meep_auto_event",
         )
     else:
         _add_receipt(
@@ -13888,8 +13911,8 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
             0.0,
             0.0,
             "meep_auto_without_identity",
-            False,
-            "missing_identity",
+            accepted=False,
+            reason="missing_identity",
         )
 
     # Named fail-closed denials for the unsupported chime/meep surfaces.
@@ -13899,39 +13922,39 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
             0.0,
             0.0,
             f"unsupported_chime_source:{source}",
-            False,
-            "unsupported_chime_source:"
+            accepted=False,
+            reason="unsupported_chime_source:"
             + source
             + " — the model cannot simulate map chime spawning/collection",
-            {"event": source, "event_time": 0.0},
+            detail={"event": source, "event_time": 0.0},
         )
     _add_receipt(
         "deny",
         0.0,
         0.0,
         "unsupported_meep_effect:slow",
-        False,
-        "unsupported_meep_effect:slow — the meep slow (25%..75% at 5+ "
+        accepted=False,
+        reason="unsupported_meep_effect:slow — the meep slow (25%..75% at 5+ "
         "chimes) is CC with no damage component",
-        {"event": "meep_slow", "event_time": 0.0},
+        detail={"event": "meep_slow", "event_time": 0.0},
     )
     _add_receipt(
         "deny",
         0.0,
         0.0,
         "unsupported_meep_effect:splash",
-        False,
-        "unsupported_meep_effect:splash — the 15+ chime splash/cone "
+        accepted=False,
+        reason="unsupported_meep_effect:splash — the 15+ chime splash/cone "
         "never hits the primary target (single-target model)",
-        {"event": "meep_splash", "event_time": 0.0},
+        detail={"event": "meep_splash", "event_time": 0.0},
     )
     _add_receipt(
         "deny",
         0.0,
         0.0,
         "meep_event_without_identity",
-        False,
-        "missing_identity",
+        accepted=False,
+        reason="missing_identity",
     )
 
     availability = {
@@ -14033,6 +14056,7 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
         amount: float,
         time: float,
         source: str,
+        *,
         accepted: bool,
         reason: str,
         detail: Mapping[str, Any] | None = None,
@@ -14079,9 +14103,9 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
                     _STARDUST_PER_Q_BURST,
                     cast_time,
                     "q_burst_champion",
-                    True,
-                    "",
-                    {
+                    accepted=True,
+                    reason="",
+                    detail={
                         "event": "q_burst",
                         "source_key": "Q",
                         "cast_ordinal": ordinal,
@@ -14090,7 +14114,14 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
                     },
                 )
     else:
-        _add_receipt("gain", 0.0, 0.0, "q_burst_champion", False, "no_q_burst_event")
+        _add_receipt(
+            "gain",
+            0.0,
+            0.0,
+            "q_burst_champion",
+            accepted=False,
+            reason="no_q_burst_event",
+        )
 
     # Named fail-closed denials for the unsupported Stardust sources.
     for source in (
@@ -14105,17 +14136,17 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
             0.0,
             0.0,
             f"unsupported_stardust_source:{source}",
-            False,
-            f"unsupported_stardust_source:{source}",
-            {"event": source, "event_time": 0.0},
+            accepted=False,
+            reason=f"unsupported_stardust_source:{source}",
+            detail={"event": source, "event_time": 0.0},
         )
     _add_receipt(
         "gain",
         0.0,
         0.0,
         "stardust_event_without_identity",
-        False,
-        "missing_identity",
+        accepted=False,
+        reason="missing_identity",
     )
 
     # Per-100 display milestones: both priced terms are LINEAR — the rows
@@ -15239,6 +15270,7 @@ def _first_auto_damage_by_auto_for_health_walk(
     rotation: RotationResult,
     num_auto_attacks: int,
     swing_times: Sequence[float],
+    *,
     effectiveness: float,
 ) -> list[float]:
     """Price first-auto packets as HP inputs without authoring them twice.
@@ -15500,6 +15532,7 @@ def _add_copied_stacking_on_hit_packets(
     rotation: RotationResult,
     on_hits: OnHitResult,
     spellblade: SpellbladeResult,
+    *,
     copied_events: list[dict[str, Any]],
     proc_indices: Sequence[int],
     swing_times: Sequence[float],
@@ -15622,6 +15655,7 @@ def _add_single_proc_on_hits(
     rotation: RotationResult,
     autos: AutoAttackResult,
     on_hits: OnHitResult,
+    *,
     spellblade: SpellbladeResult,
 ) -> None:
     """Add items that proc once (or on a stack counter) rather than per hit.
@@ -16058,10 +16092,10 @@ def _add_single_proc_on_hits(
                     rotation,
                     on_hits,
                     spellblade,
-                    copied_events,
-                    proc_indices,
-                    swing_times,
-                    effectiveness,
+                    copied_events=copied_events,
+                    proc_indices=proc_indices,
+                    swing_times=swing_times,
+                    effectiveness=effectiveness,
                 )
                 copied_by_type: dict[str, float] = {}
                 for copied_event in copied_events:
@@ -16319,11 +16353,11 @@ def _add_single_proc_on_hits(
                         _damage_inputs(state),
                         state.target_health,
                         num_auto_attacks,
-                        autos.auto_damage_per_hit,
-                        other_on_hit_per_hit,
-                        resists,
-                        state.magic_amp,
-                        proc_autos,
+                        auto_damage_per_hit=autos.auto_damage_per_hit,
+                        other_on_hit_per_hit=other_on_hit_per_hit,
+                        resists=resists,
+                        magic_amp=state.magic_amp,
+                        proc_autos=proc_autos,
                         effectiveness=effectiveness,
                         target_basic_damage_multiplier=(
                             state.target_basic_damage_multiplier
@@ -17102,10 +17136,12 @@ def _amp_slot_for(
     return delta_amp.resolve_slot(
         owners,
         slot,
-        level=state.level,
-        fight_duration_seconds=state.fight_duration_seconds,
-        target_bonus_health=max(0.0, state.target_bonus_health),
-        holder_is_melee=state.is_melee,
+        facts=FightFacts(
+            level=state.level,
+            fight_duration_seconds=state.fight_duration_seconds,
+            target_bonus_health=max(0.0, state.target_bonus_health),
+            holder_is_melee=state.is_melee,
+        ),
     )
 
 
@@ -17333,8 +17369,8 @@ def _add_rune_conditional_amp_damage(
             effect.breakdown_key,
             effect.rune_name,
             1.0 + slot.bonus_fraction,
-            amped,
-            bonus,
+            amped=amped,
+            bonus=bonus,
         )
         state.notes.append(
             f"{effect.rune_name}'s gate is walked over the fight's ordered "
@@ -17419,8 +17455,8 @@ def _add_rune_flat_amp_damage(state: FightState, rotation: RotationResult) -> No
             effect.breakdown_key,
             effect.rune_name,
             1.0 + ratio,
-            amped,
-            bonus,
+            amped=amped,
+            bonus=bonus,
         )
 
 
@@ -17429,6 +17465,7 @@ def _record_amp_row(
     key: str,
     name: str,
     multiplier: float,
+    *,
     amped: list,
     bonus: float,
 ) -> None:
@@ -17500,8 +17537,8 @@ def _apply_command_amp(state: FightState, rotation: RotationResult) -> None:
         f"damage_amp_{slot.owner}",
         f"{slot.owner} — Command",
         slot.multiplier,
-        amped,
-        bonus,
+        amped=amped,
+        bonus=bonus,
     )
 
 
@@ -17617,7 +17654,7 @@ def _apply_temporary_lethality_windows(state: FightState) -> None:
                 state.resists.flat_armor_pen + extra_lethality,
                 percent_pen,
                 state.resists.armor_pen_bonus_percent,
-                state.resists.target_bonus_armor,
+                bonus_armor=state.resists.target_bonus_armor,
             )
             new_multiplier = apply_resistance(1.0, new_armor)
             if not math.isfinite(new_multiplier) or new_multiplier <= 0.0:
@@ -18111,10 +18148,12 @@ def _apply_shield_reaver_venom(
     is_melee = bool(champion_stats["is_melee"])
     bypass = damage_routing.resolve_shield_bypass(
         [item_effects.resolved_item_name(item) for item in items],
-        level=int(champion_stats["level"]),
-        fight_duration_seconds=config.fight_duration_seconds,
-        target_bonus_health=max(0.0, config.target_bonus_health),
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=int(champion_stats["level"]),
+            fight_duration_seconds=config.fight_duration_seconds,
+            target_bonus_health=max(0.0, config.target_bonus_health),
+            holder_is_melee=is_melee,
+        ),
     )
     if bypass is None or bypass.fraction <= 0.0:
         return config, []
@@ -18187,6 +18226,7 @@ def calculate_fight_damage(
     ability_damages: dict[str, dict[str, Any]],
     items: list[dict[str, Any]],
     config: FightConfig,
+    *,
     score_only: bool = False,
     tuple_ledger: bool = False,
     item_options: Mapping[str, Mapping[str, int | float]] | None = None,
@@ -18280,7 +18320,7 @@ def calculate_fight_damage(
     _add_item_active_damage(state, rotation)
 
     # ── Single-proc on-hits, Shadowflame, and Expose Weakness ───────────
-    _add_single_proc_on_hits(state, rotation, autos, on_hits, spellblade)
+    _add_single_proc_on_hits(state, rotation, autos, on_hits, spellblade=spellblade)
     _add_on_hit_healing(state, autos, on_hits)
     _add_first_auto_healing(state)
     _add_shadowflame_cinderbloom(state, config, rotation)

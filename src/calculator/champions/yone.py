@@ -29,9 +29,6 @@ from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx
 from .inputs import int_option
 from .module_helpers import (
-    CRIT_CHANCE_MULTIPLIER,
-    CRIT_DAMAGE_MULTIPLIER_FACTOR,
-    EXCESS_CRIT_BONUS_AD_PER_PERCENT,
     crit_conversion_certification,
     crit_conversion_payload,
     no_damage,
@@ -48,15 +45,6 @@ from .slotlib import (
 
 # P4: the crit-conversion rule is the shared module_helpers rule (the
 # 0.9 factor's atom hash is 1142fbe0a600fcc8 for Yone).
-(
-    _CRIT_CHANCE_MULTIPLIER,
-    _CRIT_DAMAGE_MULTIPLIER_FACTOR,
-    _EXCESS_CRIT_BONUS_AD_PER_PERCENT,
-) = (
-    CRIT_CHANCE_MULTIPLIER,
-    CRIT_DAMAGE_MULTIPLIER_FACTOR,
-    EXCESS_CRIT_BONUS_AD_PER_PERCENT,
-)
 CERTIFIED_CONSTANTS, ATOM_IDS = crit_conversion_certification("1142fbe0a600fcc8")
 certified_constants, atom_ids = CERTIFIED_CONSTANTS, ATOM_IDS
 
