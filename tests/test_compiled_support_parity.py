@@ -222,7 +222,7 @@ def test_remove_scurvy_heals_on_the_compiled_path_while_its_caster_is_stunned():
     """Gangplank W is the game's canCastWhileDisabled: being held is the
     reason to cast it.  The compiled heal builder has to stamp that
     exemption, or the compiled walk blocks the heal the receipt walk
-    applies — a divergence the cleanse refusal used to hide."""
+    applies, a divergence the cleanse refusal hides."""
     compiled = _assert_compiled_parity(champion="Gangplank")
     caster = _survival(compiled, "main")
     assert caster["healing_received"] > 0.0
