@@ -421,6 +421,7 @@ def pct_health_per_hit(
     attr: str,
     rank: int,
     target: dict[str, float] | None,
+    *,
     ap: float = 0.0,
     ap_ratio_per_100: bool = False,
     floor_attr: str | None = None,
