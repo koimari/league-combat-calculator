@@ -33,12 +33,12 @@
   "crossover_unavailable": 0,
   "enemy_item_entries": 0,
   "expiry_refusals": 0,
-  "item_pair_coarse": 96,
+  "item_pair_coarse": 40,
   "item_pair_failures": 0,
   "keystone_failures": 0,
   "keystone_unmodeled": 0,
   "mode_refusals": 0,
-  "total": 96
+  "total": 40
  },
  "frontier": {
   "attacker_kit_coarse": {},
@@ -48,30 +48,6 @@
   "enemy_item_entries": {},
   "expiry_refusals": {},
   "item_pair_coarse": {
-   "Aatrox|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Aatrox|Fimbulwinter|time_based|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Aatrox|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Aatrox|Fimbulwinter|timed|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Ahri|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Ahri|Fimbulwinter|time_based|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Ahri|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Ahri|Fimbulwinter|timed|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
    "Akali|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
    ],
@@ -82,30 +58,6 @@
     "fimbulwinter_everlasting"
    ],
    "Akali|Fimbulwinter|timed|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Akshan|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Akshan|Fimbulwinter|time_based|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Akshan|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Akshan|Fimbulwinter|timed|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Ambessa|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Ambessa|Fimbulwinter|time_based|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Ambessa|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Ambessa|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
    "Anivia|Fimbulwinter|one_rotation|autos=True": [
@@ -132,18 +84,6 @@
    "Annie|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Bel'Veth|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Bel'Veth|Fimbulwinter|time_based|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Bel'Veth|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Bel'Veth|Fimbulwinter|timed|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
    "Brand|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
    ],
@@ -154,30 +94,6 @@
     "fimbulwinter_everlasting"
    ],
    "Brand|Fimbulwinter|timed|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Darius|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Darius|Fimbulwinter|time_based|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Darius|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Darius|Fimbulwinter|timed|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Diana|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Diana|Fimbulwinter|time_based|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Diana|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Diana|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
    "Kennen|Fimbulwinter|one_rotation|autos=True": [
@@ -192,54 +108,6 @@
    "Kennen|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
-   "Kled|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Kled|Fimbulwinter|time_based|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Kled|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Kled|Fimbulwinter|timed|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "LeBlanc|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "LeBlanc|Fimbulwinter|time_based|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "LeBlanc|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "LeBlanc|Fimbulwinter|timed|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Master Yi|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Master Yi|Fimbulwinter|time_based|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Master Yi|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Master Yi|Fimbulwinter|timed|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Sett|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Sett|Fimbulwinter|time_based|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Sett|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Sett|Fimbulwinter|timed|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
    "Shaco|Fimbulwinter|one_rotation|autos=True": [
     "fimbulwinter_everlasting"
    ],
@@ -250,30 +118,6 @@
     "fimbulwinter_everlasting"
    ],
    "Shaco|Fimbulwinter|timed|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Sivir|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Sivir|Fimbulwinter|time_based|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Sivir|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Sivir|Fimbulwinter|timed|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Syndra|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Syndra|Fimbulwinter|time_based|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Syndra|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Syndra|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
    "Xayah|Fimbulwinter|one_rotation|autos=True": [
@@ -310,18 +154,6 @@
     "fimbulwinter_everlasting"
    ],
    "Yone|Fimbulwinter|timed|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Zoe|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Zoe|Fimbulwinter|time_based|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Zoe|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Zoe|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
    "Zyra|Fimbulwinter|one_rotation|autos=True": [
