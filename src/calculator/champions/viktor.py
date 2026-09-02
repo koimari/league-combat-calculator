@@ -38,7 +38,7 @@ from typing import Any
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
 from .module_contract import coverage
-from .packet_module import build_packet_module, initial_plus_ticks_parser
+from .packet_module import build_packet_module, first_plus_repeats_parser
 from .slotlib import (
     attach_self_shield,
     extract_named,
@@ -165,11 +165,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # module-authored self-shield payload onto the event row.
     single_hit_slots=frozenset({"E", "Q"}),
     slot_parsers={
-        "R": initial_plus_ticks_parser(
-            initial_attr="Magic Damage",
-            tick_attr="Magic Damage Per Tick",
+        "R": first_plus_repeats_parser(
+            first_attr="Magic Damage",
+            repeat_attr="Magic Damage Per Tick",
             dmg_type="magic",
-            tick_count=6,
+            repeats=6,
             time_offset=1.0,
             hit_interval=1.0,
             dot_duration=6.5,

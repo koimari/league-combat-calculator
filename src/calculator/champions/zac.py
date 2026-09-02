@@ -34,7 +34,7 @@ from .engine import CC_PER_PART, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
 from .module_helpers import no_damage, ranked_slot
-from .packet_module import build_packet_module, full_plus_reduced_parser
+from .packet_module import build_packet_module, first_plus_repeats_parser
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -182,11 +182,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             source=("W", 0),
             event_order_certified="single_hit",
         ),
-        "R": full_plus_reduced_parser(
-            full_attr="Magic Damage Per Hit",
-            reduced_attr="Reduced Damage Per Hit",
+        "R": first_plus_repeats_parser(
+            first_attr="Magic Damage Per Hit",
+            repeat_attr="Reduced Damage Per Hit",
             dmg_type="magic",
-            reduced_count=3,
+            repeats=3,
             time_offset=1.0,
             hit_interval=1.0,
             dot_duration=3.0,

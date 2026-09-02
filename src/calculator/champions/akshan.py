@@ -318,11 +318,6 @@ _DIRTY_FIGHTING_SHIELD_DURATION_SECONDS = data_value(
 )
 
 
-def _dirty_fighting_shield(passive: dict[str, Any], ctx: SlotCtx) -> float:
-    """Dirty Fighting 3-stack proc shield amount (40:280 + 35% bAD by level)."""
-    return extract_named(passive, "Bonus Damage", ctx.level, ctx.stats, ctx.target)
-
-
 def _dirty_fighting(ctx: SlotCtx) -> dict[str, Any] | None:
     """Emit the 3-stack proc with its sourced auto-stack cadence.
 
@@ -344,7 +339,10 @@ def _dirty_fighting(ctx: SlotCtx) -> dict[str, Any] | None:
     if passive is not None:
         attach_self_shield(
             entry,
-            amount=_dirty_fighting_shield(passive, ctx),
+            # The 3-stack proc shield: 40:280 + 35% bAD by level.
+            amount=extract_named(
+                passive, "Bonus Damage", ctx.level, ctx.stats, ctx.target
+            ),
             duration=_DIRTY_FIGHTING_SHIELD_DURATION_SECONDS,
             source="Dirty Fighting (3-Stack Shield)",
             detail=(

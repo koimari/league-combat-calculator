@@ -20,6 +20,7 @@ from .module_helpers import (
     no_damage,
     ranked_slot,
     typed_damage,
+    with_item_on_hit_specs,
 )
 from .slotlib import (
     ability_name,
@@ -121,23 +122,7 @@ _ON_HIT_SPECS: dict[str, dict] = {
     "E": {"effectiveness": 1.0, "hits": 1, "triggers": ("on_hit",)},
 }
 
-_parse_abilities = parse_abilities
-
-
-def parse_abilities(*args, **kwargs):
-    """Parse abilities, then declare wiki-sourced item on-hit application."""
-    result = _parse_abilities(*args, **kwargs)
-    for slot, spec in _ON_HIT_SPECS.items():
-        entry = result.get(slot) or (result.get("passive") if slot == "P" else None)
-        if entry is not None:
-            entry["applies_item_on_hits"] = dict(spec)
-    return result
-
-
-# The wrapper is the module's published parser, so it republishes the
-# wiring the inner parser holds — the contract proves declaration and
-# wiring are one dict off whichever function the module exports.
-parse_abilities.cc_kinds = _parse_abilities.cc_kinds
+parse_abilities = with_item_on_hit_specs(parse_abilities, _ON_HIT_SPECS)
 
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments

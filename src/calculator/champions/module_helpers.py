@@ -17,10 +17,12 @@ from ..ability_spec import DamagePart
 from .engine import AMP, DAMAGE, SlotCtx, SlotParser
 from .slotlib import (
     MODULE_FORMULA_ZERO,
+    ProcDamageResolver,
     ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
+    find_named_leveling,
     simple_damage,
 )
 
@@ -220,6 +222,10 @@ def with_item_on_hit_specs(
                 entry["applies_item_on_hits"] = dict(spec)
         return result
 
+    # The wrapper is the module's published parser, so it republishes the
+    # wiring the inner parser holds — the contract proves declaration and
+    # wiring are one dict off whichever function the module exports.
+    parse.cc_kinds = parse_abilities.cc_kinds
     return parse
 
 
@@ -406,6 +412,25 @@ def no_damage_slot(reason: str) -> SlotParser:
 
     parse.phase = DAMAGE
     return parse
+
+
+def level_row(attr: str) -> ProcDamageResolver:
+    """A proc resolver reading *attr* at the champion's level: an innate's per-level row."""
+
+    def resolve(ctx: SlotCtx, ability: dict[str, Any]) -> float:
+        return extract_named(ability, attr, ctx.level, ctx.stats, ctx.target)
+
+    return resolve
+
+
+def require_named_leveling(
+    champion: str, ability: dict[str, Any], attribute: str
+) -> None:
+    """Fail loud when the named leveling row is absent (cache corruption)."""
+    if find_named_leveling(ability, attribute) is None:
+        raise KeyError(
+            f"{champion} {ability_name(ability)} has no {attribute!r} leveling row"
+        )
 
 
 def at_level(brackets: Sequence[tuple[int, Any]], level: int) -> Any:

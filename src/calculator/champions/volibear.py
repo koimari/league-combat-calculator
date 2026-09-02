@@ -279,14 +279,7 @@ def derive_self_healing(
     w_flat = extract_named(w, "Heal", w_rank, champion_stats, {})
     w_missing_pct = _healing.leveling_modifier(w, "Heal", w_rank, 1)
 
-    def frenzied_maul_heal(
-        current_health: float,
-        maximum_health: float,
-        flat: float = w_flat,
-        missing_pct: float = w_missing_pct,
-    ) -> float:
-        return flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
-
+    frenzied_maul_heal = _healing.flat_plus_missing_heal(w_flat, w_missing_pct)
     # One bite, one heal: the cached note is "Frenzied Maul deals bonus
     # damage and heals if the target is still Wounded after the cast time",
     # so the payment is the cast, not the parts this module prices that bite

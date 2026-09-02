@@ -8,7 +8,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
-from .module_helpers import no_damage, ranked_slot
+from .module_helpers import no_damage, ranked_slot, require_named_leveling
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -109,15 +109,6 @@ _W_TRUE_MIN_RESIST_PCT_PER_100 = 0.2
 _W_TRUE_MAX_RESIST_PCT_PER_100 = 1.6
 
 
-def _require_row(ability: dict[str, Any], attribute: str) -> None:
-    """Fail loud when the named leveling row is absent (cache corruption)."""
-    for effect in ability.get("effects", []):
-        for leveling in effect.get("leveling", []):
-            if leveling.get("attribute") == attribute:
-                return
-    raise KeyError(f"K'Sante {ability_name(ability)} has no {attribute!r} leveling row")
-
-
 class _PathMakerRule:
     """The typed Path Maker declaration (P3 package 4A).
 
@@ -190,7 +181,7 @@ def _path_maker(
         "Minimum Bonus True Damage",
         "Maximum Bonus True Damage",
     ):
-        _require_row(ability, attribute)
+        require_named_leveling("K'Sante", ability, attribute)
     flat = extract_value(ability, "Physical Damage", rank, 0)
     base_pct = extract_value(ability, "Physical Damage", rank, 1)
     bonus_armor = ctx.stat("bonus_armor")

@@ -8,7 +8,7 @@ from .. import healing_helpers as _healing
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option
-from .module_helpers import named_damage, no_damage, ranked_slot
+from .module_helpers import level_row, named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     extract_named,
@@ -16,13 +16,8 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 
-
-def _vital(ctx: SlotCtx, ability: dict[str, Any]) -> float:
-    return extract_named(ability, "Bonus Damage", ctx.level, ctx.stats, ctx.target)
-
-
 _vital_proc = proc_damage(
-    _vital,
+    level_row("Bonus Damage"),
     "true",
     count_option="p_vitals",
     default_count=0,

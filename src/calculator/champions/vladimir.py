@@ -30,10 +30,11 @@ from ..ability_atoms import (
 )
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import AMP, SlotCtx
+from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, float_option
 from .module_contract import coverage
+from .module_helpers import amp_slot
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import ability_name, damage_entry, extract_named
 
@@ -311,17 +312,8 @@ def _apply_hemoplague(result: dict[str, Any]) -> None:
         }
 
 
-def _hemoplague_amp(ctx: SlotCtx) -> None:
-    """AMP pseudo-slot: the 10% debuff amplifies every damage entry."""
-    if not ctx.option("r_hemoplague_debuff"):
-        return
-    for key in ("Q", "W", "E", "R"):
-        entry = ctx.results.get(key)
-        if entry is not None:
-            _apply_hemoplague(entry)
-
-
-_hemoplague_amp.phase = AMP
+# AMP pseudo-slot: the 10% debuff amplifies every damage entry.
+_hemoplague_amp = amp_slot("r_hemoplague_debuff", _apply_hemoplague)
 
 
 # Sanguine Pool's ticks land on enemies who "are slowed by 40%"; Tides of

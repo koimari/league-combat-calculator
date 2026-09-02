@@ -72,7 +72,7 @@ from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
 from .module_contract import coverage
-from .packet_module import build_packet_module, full_plus_reduced_parser
+from .packet_module import build_packet_module, first_plus_repeats_parser
 from .slotlib import (
     extract_cooldown,
     extract_named,
@@ -158,11 +158,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"Q"}),
     cc_kinds=MODULE_CC,
     slot_parsers={
-        "R": full_plus_reduced_parser(
-            full_attr="Magic Damage per Hit",
-            reduced_attr="Reduced Damage per Hit",
+        "R": first_plus_repeats_parser(
+            first_attr="Magic Damage per Hit",
+            repeat_attr="Reduced Damage per Hit",
             dmg_type="magic",
-            reduced_count=4,
+            repeats=4,
             time_offset=0.7,
             hit_interval=0.7,
             dot_duration=3.5,

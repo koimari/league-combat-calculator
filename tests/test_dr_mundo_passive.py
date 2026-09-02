@@ -122,7 +122,7 @@ Contract sections (numbered as in the RLM-2 C brief):
       the wired recharge contract xfailed).
   S14 Missing identity or rows (the unavailable-source KeyError pinned;
       the typed extractors return 0.0 on the empty P leveling — a
-      pinned source gap; the _require_row fail-loud precedent).
+      pinned source gap; the require_named_leveling fail-loud precedent).
   S15 Score fail-closed (the generic gate receipts PASS —
       support_kind=cleanse / support_cleanse / support_kind=canister;
       never a silent re-price).
@@ -831,14 +831,15 @@ class TestSourceAndTypedValues:
         # extractors return 0.0 for the empty-leveling P rows — the
         # cost/heal/canister values exist ONLY in the wording + the game
         # file.  The P2-8 declaration must receipt them from the game
-        # file and fail LOUD on a missing row (the _require_row
+        # file and fail LOUD on a missing row (the require_named_leveling
         # precedent), never fall back to a literal.
         assert extract_named(_p_ability(), "Health Cost", 1, {}, {}) == 0.0
         assert extract_named(_p_ability(), "Max Health Heal", 1, {}, {}) == 0.0
-        from src.calculator.champions.ksante import _require_row
+        from src.calculator.champions.module_helpers import require_named_leveling
 
         with pytest.raises(KeyError) as excinfo:
-            _require_row(
+            require_named_leveling(
+                "K'Sante",
                 {"name": "Goes Where He Pleases", "effects": [{"leveling": []}]},
                 "Health Cost",
             )
@@ -1447,22 +1448,22 @@ class TestMissingIdentityAndRows:
         assert "Mundo Passive" in str(excinfo.value)
 
     def test_require_row_fail_loud_precedent(self):
-        # The _require_row precedent (the brief's contract #14): missing
+        # The require_named_leveling precedent (the brief's contract #14): missing
         # leveling rows fail LOUD, naming the ability + the attribute —
         # the helper the P declaration must mirror for the cost/heal
         # rows that live only in the wording + game file today.
-        from src.calculator.champions.ksante import _require_row
+        from src.calculator.champions.module_helpers import require_named_leveling
 
         fake = {
             "name": "Goes Where He Pleases",
             "effects": [{"leveling": []}],
         }
         with pytest.raises(KeyError) as excinfo:
-            _require_row(fake, "Health Cost")
+            require_named_leveling("K'Sante", fake, "Health Cost")
         assert "Goes Where He Pleases" in str(excinfo.value)
         assert "Health Cost" in str(excinfo.value)
         with pytest.raises(KeyError) as excinfo:
-            _require_row(fake, "Max Health Heal")
+            require_named_leveling("K'Sante", fake, "Max Health Heal")
         assert "Max Health Heal" in str(excinfo.value)
 
     def test_declared_sources_stay_resolvable(self):

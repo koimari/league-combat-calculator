@@ -273,18 +273,9 @@ def derive_self_healing(
     w = _healing.ability_json(champion_data, "W")
     w_rank = _healing.parsed_rank(ability_damages, "W")
     w_flat = extract_named(w, "Heal", w_rank, champion_stats)
-    w_missing_ratio = (
-        _healing.leveling_ratio(w, "Heal", "missing health", w_rank) / 100.0
+    remove_scurvy_heal = _healing.flat_plus_missing_heal(
+        w_flat, _healing.leveling_ratio(w, "Heal", "missing health", w_rank)
     )
-
-    def remove_scurvy_heal(
-        current_health: float,
-        maximum_health: float,
-        flat: float = w_flat,
-        missing_ratio: float = w_missing_ratio,
-    ) -> float:
-        return flat + max(0.0, maximum_health - current_health) * missing_ratio
-
     for cast in cast_timeline or []:
         if cast.get("slot") != "W":
             continue

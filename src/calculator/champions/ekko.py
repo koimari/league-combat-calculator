@@ -9,7 +9,7 @@ from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, float_option, int_option
-from .module_helpers import named_damage, no_damage, ranked_slot
+from .module_helpers import level_row, named_damage, no_damage, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -19,18 +19,11 @@ from .slotlib import (
 )
 from .source_receipts import load_champion_sources
 
-
-def _resonance(ctx: SlotCtx, ability: dict[str, Any]) -> float:
-    """One Z-Drive Resonance detonation: the third stack consumes all
-    three to deal the sourced bonus magic damage (30 : 150 by level,
-    + 80% AP).  The detonation is priced per completed 3-stack cycle."""
-    return extract_named(
-        ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
-    )
-
-
+# One Z-Drive Resonance detonation: the third stack consumes all three to
+# deal the sourced bonus magic damage (30 : 150 by level, + 80% AP).  The
+# detonation is priced per completed 3-stack cycle.
 _resonance_proc = proc_damage(
-    _resonance,
+    level_row("Bonus Magic Damage"),
     "magic",
     count_option="p_procs",
     default_count=0,

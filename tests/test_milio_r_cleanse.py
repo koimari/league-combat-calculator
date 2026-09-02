@@ -108,7 +108,7 @@ Contract sections (numbered as in the RLM-2 C brief):
   S11 Truncation (the truncate_intervals contract; per-recipient
       truncation; historical downtime + later controls).
   S12 Missing identity + rows (the unavailable-source KeyError pinned;
-      the _require_row fail-loud precedent).
+      the require_named_leveling fail-loud precedent).
   S13 Score fail-closed (the generic gate receipts PASS; never a
       silent re-price).
   S14 Full vs score parity (byte-identical R surface today; the named
@@ -1618,10 +1618,10 @@ class TestMissingIdentityAndRows:
         assert "Bogus Life" in str(excinfo.value)
 
     def test_require_row_fail_loud_precedent(self):
-        # The _require_row precedent (the brief's contract #12): missing
+        # The require_named_leveling precedent (the brief's contract #12): missing
         # leveling rows fail LOUD, naming the ability — the K'Sante
         # helper the typed R declaration must mirror for the "Heal" row.
-        from src.calculator.champions.ksante import _require_row
+        from src.calculator.champions.module_helpers import require_named_leveling
 
         # The R Heal row EXISTS (extract_named resolves it) — the row the
         # declaration must require.
@@ -1629,7 +1629,7 @@ class TestMissingIdentityAndRows:
         # A genuinely missing attribute raises, naming the ability.
         fake = {"name": "Breath of Life", "effects": [{"leveling": []}]}
         with pytest.raises(KeyError) as excinfo:
-            _require_row(fake, "Heal")
+            require_named_leveling("K'Sante", fake, "Heal")
         assert "Breath of Life" in str(excinfo.value)
         assert "Heal" in str(excinfo.value)
 
@@ -1638,7 +1638,7 @@ class TestMissingIdentityAndRows:
         # declaration landed) — every spelling resolves to the
         # declaration key, the declaration's source_receipts carry the
         # wording + game-file evidence, and a missing "Heal" row fails
-        # loud (the _require_row precedent).
+        # loud (the require_named_leveling precedent).
         assert resolve_cleanse_item(_R_CLEANSE_ITEM) == _R_CLEANSE_ITEM
         assert resolve_cleanse_item("Milio R — Breath of Life") == _R_CLEANSE_ITEM
         assert resolve_cleanse_item("Breath of Life") == _R_CLEANSE_ITEM

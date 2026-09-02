@@ -364,16 +364,7 @@ def derive_self_healing(
         flat = extract_named(w, "Heal", level, champion_stats, {})
         missing_pct = _healing.leveling_modifier(w, "Missing Health Damage", level, 0)
 
-        def inferno_aegis_heal(
-            current_health: float,
-            maximum_health: float,
-            flat: float = flat,
-            missing_pct: float = missing_pct,
-        ) -> float:
-            return (
-                flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
-            )
-
+        inferno_aegis_heal = _healing.flat_plus_missing_heal(flat, missing_pct)
         for payment in _healing.payments(
             _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
         ):

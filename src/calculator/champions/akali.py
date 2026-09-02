@@ -21,7 +21,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import int_option
-from .module_helpers import ranked_slot
+from .module_helpers import level_row, ranked_slot
 from .slotlib import (
     ability_name,
     extract_cooldown,
@@ -53,17 +53,6 @@ def _twilight_shroud(
         "resource_maximum_bonus_duration": duration,
         "detail": "Restores 100 energy and raises maximum energy by 100",
     }
-
-
-def _assassins_mark_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
-    """Resolve one Assassin's Mark proc from per-level JSON scaling."""
-    return extract_named(
-        ability,
-        "Bonus Magic Damage",
-        ctx.level,
-        ctx.stats,
-        ctx.target,
-    )
 
 
 @ranked_slot
@@ -117,7 +106,7 @@ SLOTS = {
     "E": simple_damage(attr="Total Magic Damage", dmg_type="magic"),
     "R": _perfect_execution,
     "P": proc_damage(
-        per_proc=_assassins_mark_damage,
+        per_proc=level_row("Bonus Magic Damage"),
         dmg_type="magic",
         count_option="passive_procs",
         phase_order_events=True,

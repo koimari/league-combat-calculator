@@ -111,6 +111,20 @@ def _marks(ctx: SlotCtx) -> int:
     return min(max(int(ctx.option("marks")), 0), _MARK_MAX)
 
 
+def _mark_scaled_override(
+    ctx: SlotCtx, marks: int, unit_phrase: str, per_mark: float, target_stat: str
+):
+    """A modifier override: the unit naming *unit_phrase* grows *per_mark* per Mark."""
+
+    def override(unit: str, value: float) -> float | None:
+        if unit_phrase not in unit:
+            return None
+        percent = value + per_mark * marks
+        return percent / 100.0 * float(ctx.target_stat(target_stat) or 0.0)
+
+    return override
+
+
 def _mark_of_the_kindred(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: Mark state row (bonus range, Q AS, E missing-health scaling)."""
     ability = ctx.ability()
@@ -151,16 +165,15 @@ def _mounting_dread(
     if leveling is None:
         return None
 
-    def per_mark_override(unit: str, value: float) -> float | None:
-        """Kindred E's missing-health modifier: 5% (+ 0.5% per Mark)."""
-        if "of target's missing health" not in unit:
-            return None
-        percent = value + 0.5 * marks
-        missing = float(ctx.target_stat("target_missing_health") or 0.0)
-        return percent / 100.0 * missing
-
+    # E's missing-health modifier: 5% (+ 0.5% per Mark).
     damage = sum_modifiers(
-        leveling, rank, ctx.stats, ctx.target, modifier_override=per_mark_override
+        leveling,
+        rank,
+        ctx.stats,
+        ctx.target,
+        modifier_override=_mark_scaled_override(
+            ctx, marks, "of target's missing health", 0.5, "target_missing_health"
+        ),
     )
     entry = damage_entry(
         ability_name(ability),
@@ -246,16 +259,15 @@ def _wolfs_frenzy(
     if leveling is None:
         return None
 
-    def per_mark_override(unit: str, value: float) -> float | None:
-        """Wolf's current-health modifier: 1.5% (+ 1% per Mark)."""
-        if "of target's current health" not in unit:
-            return None
-        percent = value + 1.0 * marks
-        current = float(ctx.target_stat("target_current_health") or 0.0)
-        return percent / 100.0 * current
-
+    # Wolf's current-health modifier: 1.5% (+ 1% per Mark).
     per = sum_modifiers(
-        leveling, rank, ctx.stats, ctx.target, modifier_override=per_mark_override
+        leveling,
+        rank,
+        ctx.stats,
+        ctx.target,
+        modifier_override=_mark_scaled_override(
+            ctx, marks, "of target's current health", 1.0, "target_current_health"
+        ),
     )
     entry = damage_entry(
         ability_name(ability),

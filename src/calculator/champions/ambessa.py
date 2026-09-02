@@ -25,7 +25,6 @@ AD ratio from its description text); nothing is hardcoded.
 """
 
 import re
-from dataclasses import replace
 from typing import Any
 
 from .. import healing_helpers as _healing
@@ -34,6 +33,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, SlotParser, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
+from .module_helpers import delayed
 from .scaling import is_flat_unit, resolve_scaling
 from .slotlib import (
     attach_self_shield,
@@ -271,24 +271,13 @@ _R_SUPPRESSION_S = 0.75
 _R_IMPACT_FROM_CAST_START_S = _R_CAST_TIME_S + _R_SUPPRESSION_S
 
 
-def _public_execution(ctx: SlotCtx) -> dict[str, Any] | None:
-    """R: the stat-buff row, with its strike timed to the cached landing."""
-    entry = _r_stat_buff(ctx)
-    if entry is None:
-        return None
-    entry["parts"] = tuple(
-        replace(part, time_offset=_R_IMPACT_FROM_CAST_START_S)
-        for part in entry.get("parts", ())
-    )
-    return entry
-
-
 _r_stat_buff = stat_buff(
     "Armor Penetration",
     "armor_penetration_percent",
     damage_attr="Physical Damage",
 )
-_public_execution.phase = getattr(_r_stat_buff, "phase", None)
+# R: the stat-buff row, with its strike timed to the cached landing.
+_public_execution = delayed(_r_stat_buff, delay=_R_IMPACT_FROM_CAST_START_S)
 
 SLOTS = {
     "R": _public_execution,

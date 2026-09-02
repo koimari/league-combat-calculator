@@ -218,14 +218,7 @@ def derive_self_healing(
     q_flat = extract_named(q, "Heal", q_rank, champion_stats, {})
     q_missing_pct = _healing.leveling_modifier(q, "Heal", q_rank, 1)
 
-    def tongue_lash_heal(
-        current_health: float,
-        maximum_health: float,
-        flat: float = q_flat,
-        missing_pct: float = q_missing_pct,
-    ) -> float:
-        return flat + max(0.0, maximum_health - current_health) * missing_pct / 100.0
-
+    tongue_lash_heal = _healing.flat_plus_missing_heal(q_flat, q_missing_pct)
     for payment in _healing.payments(
         _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):

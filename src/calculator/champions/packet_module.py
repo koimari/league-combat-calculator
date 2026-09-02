@@ -126,21 +126,23 @@ def repeat_damage_parser(
     return parse
 
 
-def initial_plus_ticks_parser(
+def first_plus_repeats_parser(
     *,
-    initial_attr: str,
-    tick_attr: str,
+    first_attr: str,
+    repeat_attr: str,
     dmg_type: str,
-    tick_count: int,
+    repeats: int,
     time_offset: float,
     hit_interval: float,
     dot_duration: float | None = None,
     name: str | None = None,
 ):
-    """One impact hit plus ``tick_count`` channel ticks (Viktor R).
+    """One hit at the cast plus ``repeats`` hits of a second row.
 
-    ``initial + tick_count * per_tick`` equals the wiki's "Total Magic
-    Damage" row at every rank (impact + 6 storm bolts for Arcane Storm).
+    ``first + repeats * repeat`` equals the wiki's "Total ..." row at every
+    rank: an impact plus channel ticks (Viktor R's impact + 6 storm bolts),
+    or a full-strength hit plus reduced ones (Zac's initial bounce + 3 half
+    bounces; Yuumi's first wave + 4 waves at 25% damage).
     """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -148,79 +150,25 @@ def initial_plus_ticks_parser(
         if ranked is None:
             return None
         ability, rank = ranked
-        initial = extract_named(
-            ability, initial_attr, rank, ctx.stats, ctx.target, level=ctx.level
+        first = extract_named(
+            ability, first_attr, rank, ctx.stats, ctx.target, level=ctx.level
         )
-        per_tick = extract_named(
-            ability, tick_attr, rank, ctx.stats, ctx.target, level=ctx.level
-        )
-        entry = damage_entry(
-            name or ability.get("name", f"Ability {ctx.slot}"),
-            rank,
-            extract_cooldown(ability, rank, level=ctx.level),
-            initial + per_tick * tick_count,
-            dmg_type,
-        )
-        entry["parts"] = (
-            DamagePart(dmg_type, amount=initial, time_offset=0.0),
-            DamagePart(
-                dmg_type,
-                amount=per_tick,
-                count=tick_count,
-                time_offset=time_offset,
-                hit_interval=hit_interval,
-            ),
-        )
-        if dot_duration is not None:
-            entry["dot_duration"] = dot_duration
-        return entry
-
-    parse.phase = "damage"
-    return parse
-
-
-def full_plus_reduced_parser(
-    *,
-    full_attr: str,
-    reduced_attr: str,
-    dmg_type: str,
-    reduced_count: int,
-    time_offset: float,
-    hit_interval: float,
-    dot_duration: float | None = None,
-    name: str | None = None,
-):
-    """One full-strength hit plus ``reduced_count`` reduced hits.
-
-    The wiki's "Total ..." row equals ``full + reduced_count * reduced``
-    at every rank (Zac's initial bounce + 3 half bounces; Yuumi's first
-    wave + 4 waves at 25% damage).
-    """
-
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ranked = ctx.ranked()
-        if ranked is None:
-            return None
-        ability, rank = ranked
-        full = extract_named(
-            ability, full_attr, rank, ctx.stats, ctx.target, level=ctx.level
-        )
-        reduced = extract_named(
-            ability, reduced_attr, rank, ctx.stats, ctx.target, level=ctx.level
+        repeat = extract_named(
+            ability, repeat_attr, rank, ctx.stats, ctx.target, level=ctx.level
         )
         entry = damage_entry(
             name or ability.get("name", f"Ability {ctx.slot}"),
             rank,
             extract_cooldown(ability, rank, level=ctx.level),
-            full + reduced * reduced_count,
+            first + repeat * repeats,
             dmg_type,
         )
         entry["parts"] = (
-            DamagePart(dmg_type, amount=full, time_offset=0.0),
+            DamagePart(dmg_type, amount=first, time_offset=0.0),
             DamagePart(
                 dmg_type,
-                amount=reduced,
-                count=reduced_count,
+                amount=repeat,
+                count=repeats,
                 time_offset=time_offset,
                 hit_interval=hit_interval,
             ),

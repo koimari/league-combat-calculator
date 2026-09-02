@@ -285,18 +285,9 @@ def derive_self_healing(
     q_rank = _healing.parsed_rank(ability_damages, "Q")
     q_level = int(champion_stat(champion_stats, "level"))
     q_flat = _leveling_flat_at_level(q, "Heal", q_level)
-    q_missing_ratio = (
-        _healing.leveling_ratio(q, "Heal", "missing health", q_rank) / 100.0
+    last_rites_heal = _healing.flat_plus_missing_heal(
+        q_flat, _healing.leveling_ratio(q, "Heal", "missing health", q_rank)
     )
-
-    def last_rites_heal(
-        current_health: float,
-        maximum_health: float,
-        flat: float = q_flat,
-        missing_ratio: float = q_missing_ratio,
-    ) -> float:
-        return flat + max(0.0, maximum_health - current_health) * missing_ratio
-
     for payment in _healing.payments(
         _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):

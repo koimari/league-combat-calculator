@@ -104,32 +104,26 @@ def effect_description(ability: Mapping[str, Any], effect_index: int) -> str:
     return "" if description is None else str(description)
 
 
+def _prose_value(
+    pattern: re.Pattern[str], ability: Mapping[str, Any], effect_index: int
+) -> float | None:
+    """The ``value`` group of *pattern*'s first match in one effect description."""
+    match = pattern.search(effect_description(ability, effect_index))
+    return float(match.group("value")) if match else None
+
+
 def extract_description_duration(
     ability: Mapping[str, Any], effect_index: int = 0
 ) -> float | None:
     """Read the first seconds value from one cached effect description."""
-    effects = ability.get("effects") or []
-    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
-        return None
-    effect = effects[effect_index]
-    if not isinstance(effect, dict):
-        return None
-    description = str(effect.get("description") or "")
-    match = _PROSE_SECONDS_RE.search(description)
-    return float(match.group("value")) if match else None
+    return _prose_value(_PROSE_SECONDS_RE, ability, effect_index)
 
 
 def extract_description_shield_duration(
     ability: Mapping[str, Any], effect_index: int = 0
 ) -> float | None:
     """Read the duration attached to a shield phrase in one effect."""
-    effects = ability.get("effects") or []
-    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
-        return None
-    effect = effects[effect_index]
-    if not isinstance(effect, dict):
-        return None
-    description = str(effect.get("description") or "")
+    description = effect_description(ability, effect_index)
     sentences = re.split(r"(?<=[.!?])\s+(?=[A-Z])", description)
     for sentence in sentences:
         match = _PROSE_SHIELD_SECONDS_RE.search(sentence)
@@ -142,18 +136,9 @@ def extract_description_invulnerability_timing(
     ability: Mapping[str, Any], effect_index: int = 0
 ) -> tuple[float | None, float | None]:
     """Read a sourced invulnerability delay and window from one description."""
-    effects = ability.get("effects") or []
-    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
-        return None, None
-    effect = effects[effect_index]
-    if not isinstance(effect, dict):
-        return None, None
-    description = str(effect.get("description") or "")
-    delay_match = _PROSE_INVULNERABILITY_DELAY_RE.search(description)
-    duration_match = _PROSE_INVULNERABILITY_DURATION_RE.search(description)
     return (
-        float(delay_match.group("value")) if delay_match else None,
-        float(duration_match.group("value")) if duration_match else None,
+        _prose_value(_PROSE_INVULNERABILITY_DELAY_RE, ability, effect_index),
+        _prose_value(_PROSE_INVULNERABILITY_DURATION_RE, ability, effect_index),
     )
 
 
@@ -169,13 +154,7 @@ def extract_description_control_durations(
     ability: Mapping[str, Any], effect_index: int = 0
 ) -> list[float]:
     """Read every action-blocking control duration from one description."""
-    effects = ability.get("effects") or []
-    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
-        return []
-    effect = effects[effect_index]
-    if not isinstance(effect, dict):
-        return []
-    description = str(effect.get("description") or "")
+    description = effect_description(ability, effect_index)
     return [
         float(match.group("value"))
         for match in _PROSE_CONTROL_DURATION_RE.finditer(description)
@@ -186,30 +165,14 @@ def extract_description_damage_reduction_cap(
     ability: Mapping[str, Any], effect_index: int = 0
 ) -> float | None:
     """Read a percentage cap on one pre-mitigation damage instance."""
-    effects = ability.get("effects") or []
-    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
-        return None
-    effect = effects[effect_index]
-    if not isinstance(effect, dict):
-        return None
-    description = str(effect.get("description") or "")
-    match = _PROSE_DAMAGE_REDUCTION_CAP_RE.search(description)
-    return float(match.group("value")) if match else None
+    return _prose_value(_PROSE_DAMAGE_REDUCTION_CAP_RE, ability, effect_index)
 
 
 def extract_description_damage_reduction(
     ability: Mapping[str, Any], effect_index: int = 0
 ) -> float | None:
     """Read a sourced percentage of incoming damage reduction."""
-    effects = ability.get("effects") or []
-    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
-        return None
-    effect = effects[effect_index]
-    if not isinstance(effect, dict):
-        return None
-    description = str(effect.get("description") or "")
-    match = _PROSE_DAMAGE_REDUCTION_RE.search(description)
-    return float(match.group("value")) if match else None
+    return _prose_value(_PROSE_DAMAGE_REDUCTION_RE, ability, effect_index)
 
 
 # An ability's rank array holds one value per rank — five, or six for
