@@ -936,10 +936,7 @@ def _packet_keyword(call, name):
     over its construction sites is purely a test-side source assertion and
     lives with the assertions.
     """
-    for keyword in call.keywords:
-        if keyword.arg == name:
-            return keyword.value
-    return None
+    return next((k.value for k in call.keywords if k.arg == name), None)
 
 
 def declared_packet_keywords(*names):

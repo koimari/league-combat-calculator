@@ -9,7 +9,6 @@ champion registry.
 
 from __future__ import annotations
 
-import argparse
 import json
 import sys
 from collections.abc import Iterable, Mapping
@@ -18,7 +17,7 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from scripts.source_receipt import cache_patch, source_receipt
+from scripts.source_receipt import cache_patch, catalog_arguments, source_receipt
 from src.calculator.cast_dependency import BASE_CAST_SLOTS
 from src.calculator.champions import registered_champion_names
 
@@ -154,15 +153,9 @@ def build_catalog(source: Path, patch: str) -> dict[str, Any]:
 
 
 def main() -> None:
-    root = Path(__file__).resolve().parents[1]
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source", type=Path, default=root / "data" / "champions.json")
-    parser.add_argument(
-        "--output", type=Path, default=root / "static" / "ability-catalog.json"
+    args = catalog_arguments(
+        __doc__, source="champions.json", output="ability-catalog.json"
     )
-    # Default derived from the cache, so a rebuild cannot stamp a stale patch.
-    parser.add_argument("--patch", default=None)
-    args = parser.parse_args()
 
     catalog = build_catalog(args.source.resolve(), args.patch or cache_patch())
     if not catalog["champions"]:

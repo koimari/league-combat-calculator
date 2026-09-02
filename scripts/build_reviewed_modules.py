@@ -25,6 +25,7 @@ import re
 import sqlite3
 import sys
 from collections.abc import Mapping, Sequence
+from functools import partial
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -63,16 +64,22 @@ DEFAULT_AXWORD_SOURCE = (
 )
 
 
-def resolve_wiki_db(cli_value: str | Path | None = None) -> Path:
-    """Resolve the Local League Wiki cache: --wiki-db > LCC_WIKI_DB > repo default."""
-    raw = cli_value or os.environ.get("LCC_WIKI_DB")
-    return Path(raw).expanduser() if raw else DEFAULT_WIKI_DB
+def _resolve_source(
+    cli_value: str | Path | None = None, *, env: str, default: Path
+) -> Path:
+    """Resolve a source path: the flag, else the ``env`` variable, else ``default``."""
+    raw = cli_value or os.environ.get(env)
+    return Path(raw).expanduser() if raw else default
 
 
-def resolve_axword_source(cli_value: str | Path | None = None) -> Path:
-    """Resolve the Axword Meraki kit source: flag > LCC_AXWORD_SOURCE > sibling repo."""
-    raw = cli_value or os.environ.get("LCC_AXWORD_SOURCE")
-    return Path(raw).expanduser() if raw else DEFAULT_AXWORD_SOURCE
+#: The Local League Wiki cache: --wiki-db > LCC_WIKI_DB > repo default.
+resolve_wiki_db = partial(_resolve_source, env="LCC_WIKI_DB", default=DEFAULT_WIKI_DB)
+
+
+#: The Axword Meraki kit source: flag > LCC_AXWORD_SOURCE > sibling repo.
+resolve_axword_source = partial(
+    _resolve_source, env="LCC_AXWORD_SOURCE", default=DEFAULT_AXWORD_SOURCE
+)
 
 
 def _derive_patch(champions_source: Path) -> str:

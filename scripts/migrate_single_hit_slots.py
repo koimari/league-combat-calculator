@@ -121,10 +121,7 @@ def _packet_call(tree: ast.AST) -> ast.Call | None:
 
 
 def _keyword(call: ast.Call, name: str) -> ast.expr | None:
-    for keyword in call.keywords:
-        if keyword.arg == name:
-            return keyword.value
-    return None
+    return next((k.value for k in call.keywords if k.arg == name), None)
 
 
 def _slot_map(call: ast.Call, name: str) -> dict[str, str]:

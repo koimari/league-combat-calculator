@@ -133,14 +133,19 @@ def _print_table(report: Mapping) -> None:
     print(f"  score: {report['total_damage']}")
 
 
-def profile(rows: int = 30) -> None:
-    """cProfile one search, warmed first so the catalogue parse is not the top row."""
-    one_search()
+def _profiled_search() -> pstats.Stats:
+    """cProfile statistics over one search."""
     profiler = cProfile.Profile()
     profiler.enable()
     one_search()
     profiler.disable()
-    stats = pstats.Stats(profiler)
+    return pstats.Stats(profiler)
+
+
+def profile(rows: int = 30) -> None:
+    """cProfile one search, warmed first so the catalogue parse is not the top row."""
+    one_search()
+    stats = _profiled_search()
     stats.sort_stats("tottime").print_stats(rows)
     stats.sort_stats("cumulative").print_stats(rows)
 
@@ -229,11 +234,7 @@ def _captured_term(label: str, calls: list, key: tuple[str, str]) -> Term:
 
 def _profile_totals() -> tuple[dict, float]:
     """Exact call counts and cumulative time per (file, function) over one search."""
-    profiler = cProfile.Profile()
-    profiler.enable()
-    one_search()
-    profiler.disable()
-    stats = pstats.Stats(profiler)
+    stats = _profiled_search()
     totals: dict[tuple[str, str], list[float]] = {}
     for (filename, _line, func), row in stats.stats.items():
         entry = totals.setdefault((Path(filename).name, func), [0, 0.0])
