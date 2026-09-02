@@ -26,11 +26,17 @@ from ..item_behavior import (
     DEFENSE_PAYLOAD_TYPES,
     BehaviorRule,
     BuildContext,
+    CombatStateRule,
+    DamageDeferralRule,
     DefenseExclusivity,
     DefenseField,
     DefenseMechanic,
     EngineLane,
     KernelField,
+    OpeningDefenseRule,
+    ReactiveRule,
+    ReceivedHealingRule,
+    ThresholdDefenseRule,
 )
 from ..item_behavior_catalog import behavior_rules
 from ..value_ref import LateLevelValueRef, LevelValueRef, ValueRef
@@ -42,16 +48,38 @@ from ..value_ref import LateLevelValueRef, LevelValueRef, ValueRef
 # claiming otherwise would be a number the mechanic cannot have yet.
 DEFENSE_VALUE_COUNT_FIELD = "defense_values"
 
+# The static reading of ``DEFENSE_PAYLOAD_TYPES``; tests pin the two equal.
+DefensePayload = (
+    OpeningDefenseRule
+    | ThresholdDefenseRule
+    | CombatStateRule
+    | ReactiveRule
+    | DamageDeferralRule
+    | ReceivedHealingRule
+)
+
 
 class DefenseInterpretationError(ValueError):
     """A defence was asked something its declaration does not answer."""
 
 
-def payload(rule: BehaviorRule):
+def payload(rule: BehaviorRule) -> DefensePayload:
     """*rule*'s defence payload, or a stop."""
-    if not isinstance(rule.payload, DEFENSE_PAYLOAD_TYPES):
-        raise DefenseInterpretationError(f"{rule.mechanic_id} is not a defence rule")
-    return rule.payload
+    candidate = rule.payload
+    # The classes are spelled out so the checker narrows what it returns.
+    if isinstance(
+        candidate,
+        (
+            OpeningDefenseRule,
+            ThresholdDefenseRule,
+            CombatStateRule,
+            ReactiveRule,
+            DamageDeferralRule,
+            ReceivedHealingRule,
+        ),
+    ):
+        return candidate
+    raise DefenseInterpretationError(f"{rule.mechanic_id} is not a defence rule")
 
 
 class DefenseSlot:

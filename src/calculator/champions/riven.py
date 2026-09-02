@@ -36,6 +36,8 @@ an already-covered slot (the Malzahar/Nasus precedent, roadmap session
 4 batch D). Reclassified to "no_damage"; zero fight-computation change.
 """
 
+from typing import Any
+
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
 from .packet_module import build_packet_module
@@ -64,7 +66,7 @@ _R_BUFF_DURATION = data_value(_RIVEN_R_SPELL, "Duration")
 _RUNIC_BLADE_CRIT_EFFECTIVENESS = 1.0
 
 
-def _blade_of_the_exile(ctx: SlotCtx):
+def _blade_of_the_exile(ctx: SlotCtx) -> dict[str, Any] | None:
     """R1: +20% of bonus AD as bonus AD for 15s (BUFF phase).
 
     Runs before every damage slot, so Q/W/R all scale off the buffed
@@ -99,7 +101,7 @@ def _blade_of_the_exile(ctx: SlotCtx):
 _blade_of_the_exile.phase = BUFF
 
 
-def _runic_blade(ctx: SlotCtx):
+def _runic_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: empowered basic attacks deal per-level % AD bonus physical damage."""
     ability = ctx.ability("P", 0)
     if ability is None:

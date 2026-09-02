@@ -10,16 +10,20 @@ it at all.
 
 from __future__ import annotations
 
+from typing import get_args
+
 import pytest
 
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator.interpreters.defense_state import (
     DEFENSE_VALUE_COUNT_FIELD,
     DefenseInterpretationError,
+    DefensePayload,
     DefenseSlot,
     compiled_shape,
 )
 from src.calculator.item_behavior import (
+    DEFENSE_PAYLOAD_TYPES,
     BehaviorRule,
     DefenseField,
     DefenseMechanic,
@@ -34,6 +38,10 @@ def _rule(owner: str, mechanic: DefenseMechanic) -> BehaviorRule:
         if getattr(rule.payload, "mechanic", None) is mechanic:
             return rule
     raise AssertionError(f"{owner} declares no {mechanic.value} rule")
+
+
+def test_the_payload_annotation_names_exactly_the_defence_payload_types() -> None:
+    assert set(get_args(DefensePayload)) == set(DEFENSE_PAYLOAD_TYPES)
 
 
 def test_a_slot_reads_only_the_numbers_its_declaration_names() -> None:

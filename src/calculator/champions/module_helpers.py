@@ -227,7 +227,7 @@ def no_damage(
 
 def no_damage_parser(
     slot: str, reason: str = "No enemy damage is listed for this ability."
-):
+) -> SlotParser:
     """Build a slot parser emitting an explicit zero-damage entry.
 
     Unlike ``no_damage`` this is not rank-gated and carries no cooldown: a
@@ -255,7 +255,7 @@ def no_damage_parser(
 
 def rank_gated_no_damage_parser(
     slot: str, reason: str = "No enemy damage is listed for this ability."
-):
+) -> SlotParser:
     """A :func:`no_damage_parser` row that is ABSENT while unlearned.
 
     The engine rotates every slot at every rank, so a heal/cleanse-only

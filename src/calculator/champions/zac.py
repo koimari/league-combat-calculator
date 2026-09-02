@@ -30,7 +30,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import CC_PER_PART, SlotCtx
+from .engine import CC_PER_PART, SlotCtx, SlotParser
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
 from .module_helpers import no_damage
@@ -84,7 +84,7 @@ def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, fl
 # empowered second Stretching Strike that replaces Zac's next basic
 # attack while the tether persists.  The second strike has a sourced
 # 0.25-second cast time.
-def _stretching_strikes(ctx: SlotCtx):
+def _stretching_strikes(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: both Stretching Strikes — 2 x the sourced per-hit Magic Damage."""
     ranked = ctx.ranked()
     if ranked is None:
@@ -110,7 +110,7 @@ def _stretching_strikes(ctx: SlotCtx):
     return entry
 
 
-def _lets_bounce(packet_r):
+def _lets_bounce(packet_r: SlotParser) -> SlotParser:
     """R: the opening bounce displaces; the later bounces only slow.
 
     "Each bounce deals magic damage to enemies hit, knocks them back over 1
@@ -121,7 +121,7 @@ def _lets_bounce(packet_r):
     reduced ones.
     """
 
-    def parse(ctx: SlotCtx):
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         entry = packet_r(ctx)
         if entry is None:
             return None

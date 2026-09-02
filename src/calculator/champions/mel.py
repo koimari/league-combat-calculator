@@ -244,7 +244,7 @@ def _searing_brilliance(ctx: SlotCtx) -> dict[str, Any] | None:
 _searing_brilliance.phase = ONHIT
 
 
-def _rebuttal(ctx: SlotCtx):
+def _rebuttal(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: shield + conditional projectile reflection, priced ``no_damage``.
 
     Rebuttal owns no damage on any cached source, so the slot is

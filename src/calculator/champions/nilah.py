@@ -59,7 +59,7 @@ _NILAH_R_HEAL_TO_SHIELD_MIN_RATIO = 0.20  # R: 20% : 50% by crit
 _NILAH_EXCESS_SHIELD_DURATION_SECONDS = 6.0
 
 
-def _formless_blade(ctx: SlotCtx):
+def _formless_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: minimum-row physical damage, scaled linearly by crit chance."""
     ability = ctx.ability("Q", 0)
     if ability is None:

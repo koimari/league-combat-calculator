@@ -16,10 +16,14 @@ of the ledger the module happened to author.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Container, Iterable, Mapping
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
+
+# The event source a heal rule reads: a slot letter, a set of source keys,
+# or a predicate over the key.
+HealSource = str | Container[str] | Callable[[str], bool]
 
 
 def leveling_value(ability: Mapping[str, Any], attribute: str, rank: int) -> float:
@@ -104,7 +108,7 @@ def event_source(event: Mapping[str, Any]) -> str:
 
 def attributed_events(
     events: Iterable[dict[str, Any]],
-    predicate,
+    predicate: Callable[[str, dict[str, Any]], bool],
 ) -> list[dict[str, Any]]:
     return [event for event in events if predicate(event_source(event), event)]
 
@@ -167,7 +171,9 @@ def heal_from_damage(
     healing.append(heal)
 
 
-def missing_health_scaled_heal(minimum: float, maximum: float):
+def missing_health_scaled_heal(
+    minimum: float, maximum: float
+) -> Callable[[float, float], float]:
     """Build a live missing-health interpolation between two sourced bounds.
 
     Wiki "0% : 100% (based on missing health)" means the heal pays the
@@ -252,7 +258,9 @@ class _Payment:
     event: dict[str, Any]
 
 
-def _events_matching(source, damage_events: Iterable[dict[str, Any]]):
+def _events_matching(
+    source: HealSource, damage_events: Iterable[dict[str, Any]]
+) -> list[dict[str, Any]]:
     """Damage events whose source key the rule claims."""
     if callable(source):
         return [event for event in damage_events if source(event_source(event))]
@@ -289,7 +297,7 @@ def takedown_payments(
 
 def payments(
     anchor: HealAnchor,
-    source,
+    source: HealSource,
     damage_events: list[dict[str, Any]],
     cast_timeline: list[dict[str, Any]] | None = None,
 ) -> list[_Payment]:

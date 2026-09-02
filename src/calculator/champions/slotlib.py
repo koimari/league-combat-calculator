@@ -14,7 +14,7 @@ Extraction core:
 """
 
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, replace
 from typing import Any
 
@@ -716,7 +716,7 @@ def support_cast(
     detail: str,
     dmg_type: str = "magic",
     resource_cost: float | None = None,
-) -> Any:
+) -> SlotParser:
     """A slot parser for a shield/heal-only ability that damages nothing.
 
     ``support_effects`` hangs its packet on a CAST, so a shield- or heal-only
@@ -726,7 +726,7 @@ def support_cast(
     ledger would mislabel (Soraka W's 10%-of-max-health cost).
     """
 
-    def parse(ctx: Any) -> dict[str, Any] | None:
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         ranked = ctx.ranked()
         if ranked is None:
             return None
@@ -870,7 +870,9 @@ class HitRider:
         return entry
 
 
-def with_hit_rider(parser: SlotParser, rider_for) -> SlotParser:
+def with_hit_rider(
+    parser: SlotParser, rider_for: Callable[[SlotCtx], HitRider | None]
+) -> SlotParser:
     """Wrap a slot so every hit its parts deal carries a declared rider.
 
     ``rider_for(ctx)`` returns this fight's :class:`HitRider`, or None when
@@ -1665,8 +1667,8 @@ def stat_buff(
 
 def by_option(
     option: str,
-    cases: dict[Any, SlotParser],
-    default: Any,
+    cases: Mapping[bool | int | str, SlotParser],
+    default: bool | int | str,
 ) -> SlotParser:
     """Dispatch a slot to one of several parsers by a champion option.
 
@@ -1789,7 +1791,13 @@ def _slot_passive_on_hit(
     return on_hit_entry(name, total, resolved_type)
 
 
-def with_item_on_hits(parser, *, effectiveness, hits=1, triggers=("on_hit",)):
+def with_item_on_hits(
+    parser: SlotParser,
+    *,
+    effectiveness: float,
+    hits: int = 1,
+    triggers: Iterable[str] = ("on_hit",),
+) -> SlotParser:
     """Wrap a slot parser so its entry declares item on-hit application.
 
     Used by named champion modules to add wiki-sourced
@@ -1797,7 +1805,7 @@ def with_item_on_hits(parser, *, effectiveness, hits=1, triggers=("on_hit",)):
     (spellblade charges, on-hit items) without rewriting the packet parser.
     """
 
-    def parse(ctx):
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         entry = parser(ctx)
         if entry is None:
             return None

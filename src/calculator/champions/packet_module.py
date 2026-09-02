@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -17,7 +17,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..cast_dependency import CastDependency, validate_cast_dependencies
-from .engine import SlotCtx, build_parser
+from .engine import SlotCtx, SlotParser, build_parser
 from .module_helpers import no_damage_parser
 from .slotlib import (
     damage_entry,
@@ -85,7 +85,7 @@ def repeat_damage_parser(
     hit_interval: float = 0.0,
     dot_duration: float | None = None,
     name: str | None = None,
-):
+) -> SlotParser:
     """One per-tick attribute priced ``count`` times (E2-3 repeat fix).
 
     ``per_tick * count`` equals the wiki's "Total ..." row at every rank;
@@ -136,7 +136,7 @@ def initial_plus_ticks_parser(
     hit_interval: float,
     dot_duration: float | None = None,
     name: str | None = None,
-):
+) -> SlotParser:
     """One impact hit plus ``tick_count`` channel ticks (Viktor R).
 
     ``initial + tick_count * per_tick`` equals the wiki's "Total Magic
@@ -189,7 +189,7 @@ def full_plus_reduced_parser(
     hit_interval: float,
     dot_duration: float | None = None,
     name: str | None = None,
-):
+) -> SlotParser:
     """One full-strength hit plus ``reduced_count`` reduced hits.
 
     The wiki's "Total ..." row equals ``full + reduced_count * reduced``
@@ -769,7 +769,13 @@ def build_packet_module(
     packet_part_timings: dict[str, dict[str, Any]] | None = None,
     cast_dependencies: tuple[CastDependency, ...] = (),
     cc_kinds: dict[str, str] | None = None,
-):
+) -> tuple[
+    Callable[..., dict[str, dict[str, Any]]],
+    PacketSlotMap,
+    list[str],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+]:
     """Compile one named module's reviewed packet declaration.
 
     Champion-specific timing, parser, and assumption choices are passed by

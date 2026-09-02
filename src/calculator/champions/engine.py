@@ -55,6 +55,10 @@ PHASE_ORDER = (BUFF, DEBUFF, DAMAGE, ONHIT, AMP)
 
 SlotParser = Callable[["SlotCtx"], dict[str, Any] | None]
 
+# What a declared OPTIONS row may hold: bool, int, float, select (str or
+# int) and string_list rows, per ``champions/inputs.py``.
+OptionValue = bool | int | float | str | list[str]
+
 # Every key an emitted entry may carry. The fight engine reads the first
 # group; the second is producer-side diagnostics and champion display
 # metadata (never engine-read). An unknown key raises at parse time —
@@ -273,7 +277,7 @@ class SlotCtx:
         """One target stat by declared name (``inputs.TARGET_STATS``)."""
         return target_stat(self.target, name, champion=self.champion_name)
 
-    def option(self, key: str) -> Any:
+    def option(self, key: str) -> OptionValue:
         """One declared option: the user's value, or the module's default.
 
         The default is the module's own ``OPTIONS`` row, the row the frontend
