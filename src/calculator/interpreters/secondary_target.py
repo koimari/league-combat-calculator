@@ -22,11 +22,11 @@ from dataclasses import dataclass
 from ..item_behavior import (
     BehaviorRule,
     BuildContext,
+    CompiledSlot,
     EngineLane,
     KernelField,
     RuleFamily,
     SecondaryTargetRule,
-    compiled_value,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..value_ref import resolve
@@ -76,21 +76,16 @@ def routing_fields(
 
 
 @dataclass(frozen=True, slots=True)
-class SecondaryTargetSlot:
+class SecondaryTargetSlot(CompiledSlot):
     """One build's declared secondary-target strike, resolved."""
 
     rule: BehaviorRule
     fields: tuple[KernelField, ...]
-
-    def value(self, name: str) -> float:
-        """One compiled field of the slot's rule, or a stop."""
-        return compiled_value(
-            self.fields,
-            name,
-            SecondaryTargetInterpretationError,
-            f"{self.rule.mechanic_id} compiles no {name!r} field; the engine "
-            "asked its declaration a question it does not answer",
-        )
+    stop = SecondaryTargetInterpretationError
+    missing = (
+        "{mechanic_id} compiles no {name!r} field; the engine asked its "
+        "declaration a question it does not answer"
+    )
 
     def bolt_count(self, roster_target_count: int) -> int:
         """How many *extra* targets the bolts reach: the declared cap, less the

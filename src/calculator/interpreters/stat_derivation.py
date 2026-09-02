@@ -29,6 +29,7 @@ from ..item_behavior import (
     STAT_DERIVATION_UNGRANTED_PAYLOADS,
     BehaviorRule,
     BuildContext,
+    CompiledSlot,
     DerivedStat,
     EngineLane,
     KernelField,
@@ -36,7 +37,6 @@ from ..item_behavior import (
     PenetrationChannelRule,
     RuleFamily,
     StatAvailability,
-    compiled_value,
     sole_declaration,
 )
 from ..item_behavior_catalog import behavior_rules
@@ -105,7 +105,7 @@ def granted_stat(payload: object) -> DerivedStat | None:
 
 
 @dataclass(frozen=True, slots=True)
-class StatSlot:
+class StatSlot(CompiledSlot):
     """One holder's stat derivation, resolved for one build.
 
     The accessor an engine holds instead of an item name.  ``value`` refuses
@@ -116,6 +116,11 @@ class StatSlot:
 
     rule: BehaviorRule
     fields: tuple[KernelField, ...]
+    stop = StatDerivationInterpretationError
+    missing = (
+        "{mechanic_id} declares no {name!r} value; a stat derivation reads "
+        "the numbers its declaration names and no others"
+    )
 
     @property
     def owner(self) -> str:
@@ -131,16 +136,6 @@ class StatSlot:
     def availability(self) -> StatAvailability:
         """When this stat is in the block the engines read."""
         return self.rule.payload.availability
-
-    def value(self, name: str) -> float:
-        """One declared number, by the field name it was declared under."""
-        return compiled_value(
-            self.fields,
-            name,
-            StatDerivationInterpretationError,
-            f"{self.rule.mechanic_id} declares no {name!r} value; a stat derivation "
-            "reads the numbers its declaration names and no others",
-        )
 
 
 def stat_derivation_rules(

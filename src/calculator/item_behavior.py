@@ -35,7 +35,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, is_dataclass
 from dataclasses import fields as dataclass_fields
 from enum import Enum
-from typing import Any, NamedTuple
+from typing import Any, ClassVar, NamedTuple
 
 from .ability_spec import (
     AttackClass,
@@ -3917,6 +3917,29 @@ def flat_fields(
     )
 
 
+class CompiledSlot:
+    """A rule with its compiled fields: ``value`` reads one by name or stops.
+
+    A slot class names its family's ``stop`` and the ``missing`` message it
+    formats with ``mechanic_id`` and ``name``.
+    """
+
+    __slots__ = ()
+    rule: BehaviorRule
+    fields: tuple[KernelField, ...]
+    stop: ClassVar[type[Exception]]
+    missing: ClassVar[str]
+
+    def value(self, name: str) -> float:
+        """One compiled field of the slot's rule, or a stop."""
+        return compiled_value(
+            self.fields,
+            name,
+            self.stop,
+            self.missing.format(mechanic_id=self.rule.mechanic_id, name=name),
+        )
+
+
 __all__ = [
     "ACTIVATION_TYPES",
     "AMP_CHAIN_ORDER",
@@ -3966,6 +3989,7 @@ __all__ = [
     "Comparison",
     "Compilability",
     "Compilable",
+    "CompiledSlot",
     "Consumption",
     "CooldownProcRule",
     "CritDamageBonusRule",

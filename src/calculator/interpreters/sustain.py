@@ -34,6 +34,7 @@ from ..item_behavior import (
     SUSTAIN_VALUE_PAYLOADS,
     BehaviorRule,
     BuildContext,
+    CompiledSlot,
     DefenseField,
     DefenseMechanic,
     DefenseOutcome,
@@ -45,7 +46,6 @@ from ..item_behavior import (
     RuleFamily,
     SustainStat,
     SustainStatRule,
-    compiled_value,
     sole_declaration,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
@@ -135,7 +135,7 @@ def received_healing_multiplier(rule: BehaviorRule) -> float:
 
 
 @dataclass(frozen=True, slots=True)
-class SustainSlot:
+class SustainSlot(CompiledSlot):
     """One holder's sustain declaration, resolved for one build.
 
     The accessor engines hold instead of an item name.  ``value`` refuses a
@@ -146,21 +146,16 @@ class SustainSlot:
 
     rule: BehaviorRule
     fields: tuple[KernelField, ...]
+    stop = SustainInterpretationError
+    missing = (
+        "{mechanic_id} declares no {name!r} value; a sustain rule reads the "
+        "numbers its declaration names and no others"
+    )
 
     @property
     def owner(self) -> str:
         """The item whose registry entry carries this sustain."""
         return self.rule.owner
-
-    def value(self, name: str) -> float:
-        """One declared number, by the field name it was declared under."""
-        return compiled_value(
-            self.fields,
-            name,
-            SustainInterpretationError,
-            f"{self.rule.mechanic_id} declares no {name!r} value; a sustain rule "
-            "reads the numbers its declaration names and no others",
-        )
 
 
 def sustain_rules(

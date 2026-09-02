@@ -17,7 +17,7 @@
       "counter_2": 18
     },
     "calculator/item_effects.py": {
-      "class_c": 526
+      "class_c": 522
     },
     "calculator/item_outcomes.py": {
       "class_c": 44
@@ -307,7 +307,7 @@
         "calculator/role_quests.py": "quest-item declarations keyed by the item that carries the quest",
         "calculator/trigger_stream.py": "Phase 2's capability registry: `ItemOwner(\"\u2026\")` declares who owns a mechanic, which is the same kind of home as the number registry. **Not in the prior**: the module did not exist when the prior counts were taken, and its 38 sites are the whole Class C divergence"
       },
-      "sites": 811
+      "sites": 807
     },
     "class_d_non_behavioural": {
       "modules": {
