@@ -1044,8 +1044,8 @@ class CleanseEligibility:
         active = [i for i in intervals if interval_active(i, activation)]
 
         # Self-scope castability: a QSS/Mercurial self-cast cannot be
-        # performed while the caster is under suppression (cleanse atom +
-        # binary cannotBeSuppressed).  The denial does not consume the use.
+        # performed while the caster is suppressed or in stasis (cleanse
+        # atom + binary cannotBeSuppressed).  The denial keeps the use.
         if scope == "self":
             blocked = [
                 i for i in active if _interval_kind(i) in CAST_BLOCKING_CONTROL_KINDS
@@ -1131,7 +1131,7 @@ class CleanseEligibility:
         active = [i for i in intervals if interval_active(i, activation)]
         excluded = self._excluded()
         if reason == "caster_control_blocks_cleanse":
-            # The cast itself is denied (the caster is under suppression):
+            # The cast is denied (the caster is suppressed or in stasis):
             # every active control is rejected with the castability reason —
             # nothing was removed.
             rejected = list(active)

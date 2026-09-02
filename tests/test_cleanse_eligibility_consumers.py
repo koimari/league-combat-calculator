@@ -372,10 +372,13 @@ def test_the_walk_truncates_exactly_what_the_kernel_decided():
 
 
 def test_a_stasis_downtime_row_survives_a_cleanse_inside_its_window():
-    """Stasis is never cleansable, and the downtime ledger is where the
-    only stasis row lives (the kernel is handed crowd-control intervals
-    only, so it never sees one).  Truncating the downtime ledger with a
-    set that forgot the rule silently ate a Time Stop.
+    """Stasis is never cleansable, and the downtime ledger is where a
+    combat-state Time Stop's only row lives.  Truncating the downtime
+    ledger with a set that forgot the rule silently ate a Time Stop.
+
+    The activation is Milio's R rather than a self-cast: stasis blocks a
+    self-cast outright, so the ally cast is the one that still truncates
+    while a Time Stop is running on its recipient.
     """
     stasis = {
         "time": 0.8,
@@ -392,7 +395,15 @@ def test_a_stasis_downtime_row_survives_a_cleanse_inside_its_window():
     }
     result = _run(
         [_control(0.5, "stun", 2.5, source="W", sequence=0)],
-        [stasis, _cleanse(1.0, sequence=1)],
+        [
+            stasis,
+            _cleanse(
+                1.0,
+                attacker="caster",
+                source="Milio R — Breath of Life",
+                sequence=1,
+            ),
+        ],
     )
     target = result["target"]
     assert target["cleanse"]["decision"]["reason"] == ""
