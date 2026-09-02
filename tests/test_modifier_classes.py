@@ -70,7 +70,7 @@ class TestPacketClasses:
     """The two readers: what one damage packet *is*."""
 
     @pytest.mark.parametrize(
-        "damage_type,expected",
+        ("damage_type", "expected"),
         [
             ("magic", DamageClass.MAGIC),
             ("physical", DamageClass.PHYSICAL),
@@ -89,7 +89,7 @@ class TestPacketClasses:
         assert not _applies(_modifier(holder=-1), action)
 
     @pytest.mark.parametrize(
-        "fields,expected",
+        ("fields", "expected"),
         [
             ({"basic_attack": True}, AttackClass.BASIC_ATTACK),
             ({"source_key": "auto_attacks"}, AttackClass.BASIC_ATTACK),

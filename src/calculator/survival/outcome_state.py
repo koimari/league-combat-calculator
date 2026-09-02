@@ -20,13 +20,13 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from .actions import NO_SLOT, SurvivalAction
 from ..ability_spec import Measured, Quantity, Starved, StructuralZero
 from ..trigger_stream import StarvedSignal
+from .actions import NO_SLOT, SurvivalAction
 
 __all__ = [
-    "DuplicateApplied",
     "OUTCOME_FIELDS",
+    "DuplicateApplied",
     "Outcome",
     "OutcomeLedger",
     "OutcomeRewritten",
@@ -148,11 +148,11 @@ class OutcomeLedger:
     """
 
     __slots__ = (
-        "annotating",
-        "records_annotations",
         "_applied_by",
         "_fields",
         "_status",
+        "annotating",
+        "records_annotations",
     )
 
     records_event_fields = True

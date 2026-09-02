@@ -24,7 +24,7 @@ def _src_text(relpath: str) -> str:
 def _code_lines(text: str) -> list[str]:
     """Source lines with comments AND docstrings stripped (enough for the
     formula guards — prose may cite the formula, code may not)."""
-    without_docstrings = re.sub(r'""".*?"""', "", text, flags=re.S)
+    without_docstrings = re.sub(r'""".*?"""', "", text, flags=re.DOTALL)
     lines = []
     for raw in without_docstrings.splitlines():
         line = re.sub(r"\s*#.*$", "", raw).strip()
@@ -129,7 +129,7 @@ def test_growth_formula_lives_only_in_stats():
 
 
 def test_growth_multiplier_enforces_level_bound():
-    import src.calculator.stats as stats
+    from src.calculator import stats
 
     assert stats.growth_multiplier(1) == pytest.approx(0.7025)
     assert stats.growth_multiplier(18) == pytest.approx(0.7025 + 0.0175 * 17)

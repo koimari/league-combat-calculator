@@ -24,7 +24,9 @@ Short Fuse AP ratio (see HARDCODED below).
 import re
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
+from .inputs import bool_option, int_option
 from .slotlib import (
     ability_name,
     by_option,
@@ -36,8 +38,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
-from ..binary_roots import data_value, spell_object
 
 # HARDCODED: verify on patch updates — the wiki-scraped JSON stores
 # Short Fuse's per-level base but drops its AP modifier entirely.

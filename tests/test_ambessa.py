@@ -2,15 +2,14 @@
 
 import pytest
 
-from tests.ability_math import parts_raw_total
-
 from src.calculator.calculate import calculate_payload
-from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.champions import ambessa
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import load_public_champion
-from src.calculator.champions import ambessa
 from tests import cc_review
+from tests.ability_math import parts_raw_total
 
 
 class TestQ1CunningSweep:
@@ -278,7 +277,7 @@ class TestPassiveDrakehoundsStep:
         per_proc = parts_raw_total(abilities["passive"]["parts"], "physical")
         assert abs(abilities["passive"]["total_raw"] - per_proc * 6) < 0.1
 
-    @pytest.mark.parametrize(("level", "restored"), ((1, 40.0), (7, 55.0), (13, 70.0)))
+    @pytest.mark.parametrize(("level", "restored"), [(1, 40.0), (7, 55.0), (13, 70.0)])
     def test_passive_energy_restore_breakpoints(
         self, ambessa_data, parse_at, level, restored
     ) -> None:

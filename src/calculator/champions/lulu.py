@@ -231,7 +231,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Pix, Faerie Companion) fires lulu_pix_bolts (default 3) magic "
     "bolts on each basic attack; each bolt deals the per-level row "
     "(5 : 39 by level) + 5% AP (module constants; the AP ratio is wiki "

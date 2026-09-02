@@ -9,17 +9,18 @@ presentation: Boundless Vitality multiplies shields three earlier mechanics
 granted, so moving it is not a refactor.
 """
 
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any
 
 from .champions.skill_orders import get_ability_rank
 from .interpreters import opening_defense, resolve_defense
 from .interpreters.defense_state import declared_defenses
 from .interpreters.sustain import received_healing_multiplier
 from .item_behavior import (
+    DEFENSE_FIELD_COMBINE,
     AllyProducer,
     BehaviorRule,
-    DEFENSE_FIELD_COMBINE,
     DefenseCombine,
     DefenseField,
     DefenseMechanic,
@@ -340,7 +341,7 @@ _COVERAGE_CHAMPION_PASSIVE = "modeled_starting_passive"
 class _DefenseLedger:
     """Every defensive field, its notes and its citations, mid-resolution."""
 
-    __slots__ = ("fields", "notes", "citations")
+    __slots__ = ("citations", "fields", "notes")
 
     def __init__(self) -> None:
         """Seed every field with the state of a build holding nothing."""
@@ -450,8 +451,9 @@ def _champion_starting_revive(
     champion fails closed with zero revive fields.
     """
     # pylint: disable=import-outside-toplevel
-    from .champions import _CHAMPION_MODULES
     from importlib import import_module
+
+    from .champions import _CHAMPION_MODULES
 
     module_name = _CHAMPION_MODULES.get(champion_name)
     if module_name is None:
@@ -685,7 +687,7 @@ def resolve_starting_defenses(
 __all__ = [
     "DEFENSE_SOURCE_LABEL",
     "DefenseCitation",
-    "defense_source",
     "StartingDefenses",
+    "defense_source",
     "resolve_starting_defenses",
 ]

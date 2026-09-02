@@ -39,10 +39,13 @@ All numeric values are read from the champion JSON data.
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option
+from .module_contract import coverage
 from .slotlib import (
     ability_name,
     attach_self_shield,
@@ -53,9 +56,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
-from .inputs import bool_option
-from .module_contract import coverage
 
 
 def _true_split_parts(
@@ -363,9 +363,7 @@ def derive_self_healing(
     healing = []
     w_ability = _healing.ability_json(champion_data, "W")
     w_rank = _healing.parsed_rank(ability_damages, "W")
-    base_raw = _healing.extract_named(
-        w_ability, "Physical Damage", w_rank, champion_stats, {}
-    )
+    base_raw = extract_named(w_ability, "Physical Damage", w_rank, champion_stats, {})
     for payment in _healing.payments(
         _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
     ):

@@ -28,12 +28,12 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
-
 from functools import cache
 from types import MappingProxyType
+from typing import Any
 
-from ..item_behavior import Compilable, Compilability, EngineLane
+from ..ability_spec import Quantity
+from ..item_behavior import Compilability, Compilable, EngineLane
 from ..survival.actions import TransitionRank
 from ..trigger_stream import (
     CAPABILITIES,
@@ -43,11 +43,10 @@ from ..trigger_stream import (
     HolderStacking,
     packet_source_literal,
 )
-from ..ability_spec import Quantity
-from .views import UnrankableNumber, ViewTag
 from .events import PairEvent, RoutedEvent, payload_from_packet, riders_from_packet
 from .identity import EventId, MechanicId, PairOrigin, PIdx
 from .route import PairDefender, RouteContext, resolve_route
+from .views import UnrankableNumber, ViewTag
 
 
 class Projection(Enum):
@@ -104,7 +103,7 @@ class Tagged:
     quantity: Quantity
     tag: ViewTag
 
-    def __add__(self, other: object) -> "Tagged":
+    def __add__(self, other: object) -> Tagged:
         """Fold two quantities that mean the same thing, or refuse."""
         if not isinstance(other, Tagged):
             return NotImplemented
@@ -623,19 +622,19 @@ def build_program(
             opponents=(defender,),
         )
         for event in pair.events:
-            for subject in resolve_route(event.route, ctx, roster_size=len(roster)):
-                routed.append(
-                    RoutedEvent(
-                        id=event.id,
-                        subject=subject,
-                        source=attacker,
-                        time=event.time,
-                        sequence=event.sequence,
-                        rank=event.rank,
-                        payload=event.payload,
-                        riders=event.riders,
-                    )
+            routed.extend(
+                RoutedEvent(
+                    id=event.id,
+                    subject=subject,
+                    source=attacker,
+                    time=event.time,
+                    sequence=event.sequence,
+                    rank=event.rank,
+                    payload=event.payload,
+                    riders=event.riders,
                 )
+                for subject in resolve_route(event.route, ctx, roster_size=len(roster))
+            )
     return Program(
         participants=roster,
         events=tuple(routed),
@@ -646,25 +645,25 @@ def build_program(
 
 __all__ = [
     "CapabilityView",
-    "MixedViewFold",
-    "Tagged",
-    "declared_view_tags",
-    "fold_tagged",
-    "ranked_total",
-    "tag_for",
     "DerivationCycle",
     "MechanicView",
+    "MixedViewFold",
     "PairProgram",
     "ParamPatch",
     "Program",
     "Projection",
+    "Tagged",
     "build_program",
+    "declared_view_tags",
     "derivation_order",
     "dropped_pair_previews",
     "dropped_preview_mechanics",
+    "fold_tagged",
     "pair_preview_mechanics",
     "pair_preview_sources",
     "pair_program",
-    "walk_repriced_mechanics",
+    "ranked_total",
     "roster_program",
+    "tag_for",
+    "walk_repriced_mechanics",
 ]

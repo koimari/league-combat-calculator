@@ -255,20 +255,20 @@ def _pipeline_fight(
     **overrides,
 ):
     """Pipeline fight (real champion stats) — the registered surface."""
-    params = dict(
-        target_health=2500.0,
-        target_bonus_health=0.0,
-        target_armor=50.0,
-        target_magic_resistance=40.0,
-        fight_duration_seconds=duration,
-        auto_attack_uptime=uptime,
-        auto_attack_uptime_mode="explicit",
-        one_rotation=one_rotation,
-        include_actives=True,
-        deterministic=True,
-        item_options={},
-        champion_options=options or {},
-    )
+    params = {
+        "target_health": 2500.0,
+        "target_bonus_health": 0.0,
+        "target_armor": 50.0,
+        "target_magic_resistance": 40.0,
+        "fight_duration_seconds": duration,
+        "auto_attack_uptime": uptime,
+        "auto_attack_uptime_mode": "explicit",
+        "one_rotation": one_rotation,
+        "include_actives": True,
+        "deterministic": True,
+        "item_options": {},
+        "champion_options": options or {},
+    }
     params.update(overrides)
     return run_fight(
         copy.deepcopy(get_champion(CHAMPION)),
@@ -410,7 +410,7 @@ class TestP4JSourceEvidence:
             for r in catalog["objects"][CHAMPION]
             if r["source"].startswith("Jayce.R[")
         ]
-        live_r = [r for r in atomize_abilities(CHAMPION, get_champion(CHAMPION))["R"]]
+        live_r = list(atomize_abilities(CHAMPION, get_champion(CHAMPION))["R"])
         assert len(catalog_r) == len(live_r) == 2
         expected = {
             "timing.cooldown": ("09ec6b9b472be16f", [6.0] * 6, "Jayce.R[0].cooldown"),
@@ -464,8 +464,10 @@ class TestP4JParseParity:
             assert cannon[slot]["name"] != hammer[slot]["name"], slot
         assert "E" not in cannon
         assert hammer["E"]["name"] == "Thundering Blow"
-        assert "stat_buff" in hammer["R"] and "target_debuff" not in hammer["R"]
-        assert "target_debuff" in cannon["R"] and "stat_buff" not in cannon["R"]
+        assert "stat_buff" in hammer["R"]
+        assert "target_debuff" not in hammer["R"]
+        assert "target_debuff" in cannon["R"]
+        assert "stat_buff" not in cannon["R"]
 
     def test_p4j_cannon_r_packet_shape(self):
         """R Cannon: no bonus damage, the 35% armor/MR shred for 5s, no
@@ -690,13 +692,13 @@ class TestP4JTransitionContract:
         swing)."""
         result = _fight({OPTION_KEY: 4.0})
         assert result["breakdown"]["R"]["total_damage"] == pytest.approx(250.0)
-        auto_row = result["breakdown"]["auto_attacks"]
+        result["breakdown"]["auto_attacks"]
 
     def test_p4j_reference_fight_total(self):
         """Post-contract: the reference split fight totals
         672 + 512.5 (Q) + 825 + 440 (W) + 0 (R) + 2250 + 175 (autos +
         the empower rider) = 4874.5."""
-        result = _fight({OPTION_KEY: 4.0})
+        _fight({OPTION_KEY: 4.0})
 
     def test_p4j_w_restore_continues_across_the_flip(self):
         """The per-auto mana restore (25 at W rank 6) rides the modeled
@@ -879,7 +881,7 @@ class TestP4JZeroAuto:
         forced ability-row swings are not basic-attack stream autos)."""
         for options in (None, {"hammer_stance": True}):
             result = _pipeline_fight(options, uptime=0.0)
-            restores = [
+            [
                 r
                 for r in result["resource_ledger"]["receipts"]
                 if r["operation"] == "gain"

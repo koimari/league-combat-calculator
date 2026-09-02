@@ -512,7 +512,8 @@ class TestZac:
 
     def test_kit_still_parses_and_fights(self) -> None:
         _, abilities = _parse("Zac")
-        assert "Q" in abilities and "W" in abilities
+        assert "Q" in abilities
+        assert "W" in abilities
         combat = _fight("Zac")
         assert len(_main_events(combat, "Q")) >= 1
         assert len(_main_events(combat, "R")) == 4  # 1 + 3 reduced bounces

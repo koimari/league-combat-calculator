@@ -199,19 +199,19 @@ from pathlib import Path
 
 import pytest
 
-from tests.committed_bytes import sha256_as_committed
 from src import app as app_module
 from src.calculator.atomizer import hash_domain_file
 from src.calculator.champions import get_champion_options_meta, parse_champion_abilities
 from src.calculator.champions.slotlib import extract_value
 from src.calculator.champions.vladimir import (
-    MODULE_COVERAGE,
-    PACKET_SHA256,
     _E_CHANNEL_SECONDS,
     _E_CHARGE_RAMP_SECONDS,
+    MODULE_COVERAGE,
+    PACKET_SHA256,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from tests.committed_bytes import sha256_as_committed
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _VLADIMIR_DATA = _CHAMPION_DATA["Vladimir"]
@@ -655,7 +655,7 @@ class TestChargeFractions:
         # The typed cost seam: 2% of CURRENT health at fraction 0, 8% at
         # fraction 1.0, monotone between (the 4%/6% tier boundaries are
         # not sourced — AMBIGUITY 3; only endpoints are pinned here).
-        from src.calculator.champions.vladimir import (  # noqa: F401
+        from src.calculator.champions.vladimir import (
             TIDES_OF_BLOOD_BOUNDARY_RULES,
         )
 
@@ -698,6 +698,7 @@ class TestLevelEndpoints:
             range(1, 6),
             (290.0, 320.0, 350.0, 380.0, 410.0),
             (102.5, 117.5, 132.5, 147.5, 162.5),
+            strict=False,
         ):
             ranks = {**dict(_RANKS), "E": rank}
             entry_max = _parse(
@@ -714,7 +715,7 @@ class TestLevelEndpoints:
     def test_e_cooldown_tracks_the_live_cached_array(self):
         # The module reads the live cooldown row 13/11/9/7/5 — NOT the
         # reviewed packet's fixed 13.0 (HANDOVER §4.12).
-        for rank, want in zip(range(1, 6), _COOLDOWN_ROW):
+        for rank, want in zip(range(1, 6), _COOLDOWN_ROW, strict=False):
             entry = _parse(
                 {"r_hemoplague_debuff": False},
                 ranks={**dict(_RANKS), "E": rank},
@@ -722,7 +723,7 @@ class TestLevelEndpoints:
             assert entry["cooldown"] == pytest.approx(want), rank
 
     def test_unranked_e_is_absent(self):
-        abilities = _parse(ranks={k: 0 for k in "QWER"})
+        abilities = _parse(ranks=dict.fromkeys("QWER", 0))
         assert "E" not in abilities
 
 
@@ -810,7 +811,7 @@ class TestHealthCostFreeRule:
         # when the caster's current health is below 12% of max health
         # (effects[4]); the engine has no attacker current-health input
         # today (AMBIGUITY 3), so the seam needs one.
-        from src.calculator.champions.vladimir import (  # noqa: F401
+        from src.calculator.champions.vladimir import (
             TIDES_OF_BLOOD_BOUNDARY_RULES,
         )
 
@@ -851,7 +852,7 @@ class TestSlow:
         # The enemy slow: rank values for 0.5s, ONLY at fraction 1.0
         # ("charged for at least 1 second" == ramp completion); below
         # full charge the interpolated nova carries no slow.
-        from src.calculator.champions.vladimir import (  # noqa: F401
+        from src.calculator.champions.vladimir import (
             TIDES_OF_BLOOD_BOUNDARY_RULES,
         )
 
@@ -873,11 +874,11 @@ class TestFailClosed:
         # The module reads the rows by exact attribute name; the degraded
         # charge-time row (effects[0]) is never read — the fraction IS
         # the selection.  Values resolve exactly, never a zero fallback.
-        for rank, want in zip(range(1, 6), _MIN_FLAT):
+        for rank, want in zip(range(1, 6), _MIN_FLAT, strict=False):
             assert extract_value(
                 _E_ABILITY, "Minimum Magic Damage", rank, 0
             ) == pytest.approx(want)
-        for rank, want in zip(range(1, 6), _MAX_FLAT):
+        for rank, want in zip(range(1, 6), _MAX_FLAT, strict=False):
             assert extract_value(
                 _E_ABILITY, "Maximum Magic Damage", rank, 0
             ) == pytest.approx(want)
@@ -987,7 +988,7 @@ class TestSourceAndAtomReceipts:
         # default fraction, and the atom ids it is backed by — with the
         # wiki prose named as the 1s-ramp root (no atom carries it,
         # AMBIGUITY 2).
-        from src.calculator.champions.vladimir import (  # noqa: F401
+        from src.calculator.champions.vladimir import (
             TIDES_OF_BLOOD_CHARGE_RULE,
         )
 
@@ -1110,7 +1111,7 @@ class TestScoreReceiptParity:
             shared = ("time", "slot", "name", "ordinal", "resource_cost")
             assert len(full["cast_timeline"]) == len(scored["cast_timeline"])
             for full_row, scored_row in zip(
-                full["cast_timeline"], scored["cast_timeline"]
+                full["cast_timeline"], scored["cast_timeline"], strict=False
             ):
                 assert {k: full_row[k] for k in shared} == {
                     k: scored_row[k] for k in shared

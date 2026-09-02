@@ -293,7 +293,7 @@ class TestElectrocuteFormula:
             for name, entry in rune_effects.RUNE_EFFECTS.items()
         }
         monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-        with pytest.raises(KeyError, match="Electrocute.*ap_ratio"):
+        with pytest.raises(KeyError, match=r"Electrocute.*ap_ratio"):
             rune_effects.resolve_rune("Electrocute")
 
 
@@ -349,7 +349,7 @@ class TestFirstStrike:
             for name, entry in rune_effects.RUNE_EFFECTS.items()
         }
         monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-        with pytest.raises(KeyError, match="First Strike.*gold_conversion_ratios"):
+        with pytest.raises(KeyError, match=r"First Strike.*gold_conversion_ratios"):
             rune_effects.resolve_rune("First Strike")
 
 
@@ -434,7 +434,7 @@ class TestPressTheAttack:
             for name, entry in rune_effects.RUNE_EFFECTS.items()
         }
         monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-        with pytest.raises(KeyError, match="Press the Attack.*stack_duration_seconds"):
+        with pytest.raises(KeyError, match=r"Press the Attack.*stack_duration_seconds"):
             rune_effects.resolve_rune("Press the Attack")
 
     def test_a_missing_amp_ratio_raises_through_the_reference(self, monkeypatch):
@@ -459,7 +459,7 @@ class TestPressTheAttack:
             ValueRef,
         )
 
-        with pytest.raises(KeyError, match="Press the Attack.*damage_amp_ratio"):
+        with pytest.raises(KeyError, match=r"Press the Attack.*damage_amp_ratio"):
             ValueRef("RUNE_EFFECTS", "Press the Attack", "damage_amp_ratio").get()
 
 
@@ -530,7 +530,7 @@ class TestArcaneComet:
             for name, entry in rune_effects.RUNE_EFFECTS.items()
         }
         monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-        with pytest.raises(KeyError, match="Arcane Comet.*distance_scaling"):
+        with pytest.raises(KeyError, match=r"Arcane Comet.*distance_scaling"):
             rune_effects.resolve_rune("Arcane Comet")
 
     def test_swapped_leveling_tables_raise_with_context(self, monkeypatch):
@@ -553,7 +553,7 @@ class TestArcaneComet:
             for name, entry in rune_effects.RUNE_EFFECTS.items()
         }
         monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-        with pytest.raises(KeyError, match="Arcane Comet.*leveling"):
+        with pytest.raises(KeyError, match=r"Arcane Comet.*leveling"):
             rune_effects.resolve_rune("Arcane Comet")
 
     def test_degenerate_distance_span_raises_with_context(self, monkeypatch):
@@ -575,7 +575,7 @@ class TestArcaneComet:
             for name, entry in rune_effects.RUNE_EFFECTS.items()
         }
         monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-        with pytest.raises(KeyError, match="Arcane Comet.*distance_scaling"):
+        with pytest.raises(KeyError, match=r"Arcane Comet.*distance_scaling"):
             rune_effects.resolve_rune("Arcane Comet")
 
     def test_scalar_cooldown_raises_with_context(self, monkeypatch):
@@ -586,7 +586,7 @@ class TestArcaneComet:
             for name, entry in rune_effects.RUNE_EFFECTS.items()
         }
         monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-        with pytest.raises(KeyError, match="Arcane Comet.*cooldown"):
+        with pytest.raises(KeyError, match=r"Arcane Comet.*cooldown"):
             rune_effects.resolve_rune("Arcane Comet")
 
 
@@ -705,7 +705,7 @@ _COMPILED_KEYS = {
 
 
 @pytest.mark.parametrize(
-    "name,key",
+    ("name", "key"),
     [(name, key) for name, keys in _COMPILED_KEYS.items() for key in keys],
 )
 def test_every_compiled_number_fails_loud_when_the_cache_loses_it(
@@ -731,7 +731,7 @@ def test_dark_harvest_fails_loud_without_its_top_level_cooldown(monkeypatch):
         for name, entry in rune_effects.RUNE_EFFECTS.items()
     }
     monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-    with pytest.raises(KeyError, match="Dark Harvest.*cooldown"):
+    with pytest.raises(KeyError, match=r"Dark Harvest.*cooldown"):
         rune_effects.resolve_rune("Dark Harvest")
 
 
@@ -938,7 +938,7 @@ class TestTheSharedTableAccessors:
     def test_any_other_width_is_still_a_degraded_parse(self, width):
         """The relaxation must not admit a twenty-level table missing columns."""
         values = rune_effects.RuneValues("Synthetic", {"leveling": [[1.0] * width]})
-        with pytest.raises(KeyError, match="Synthetic.*18 or 20"):
+        with pytest.raises(KeyError, match=r"Synthetic.*18 or 20"):
             rune_effects.required_leveling("Synthetic", values)
 
     def test_a_keyed_table_is_read_by_its_own_rule_not_the_level_one(self):

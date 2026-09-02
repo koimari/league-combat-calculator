@@ -15,6 +15,8 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .inputs import bool_option, int_option
+from .module_contract import coverage
 from .module_helpers import (
     REVIEWED_MODULE_ASSUMPTIONS,
     ability_cast_times,
@@ -31,8 +33,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
-from .module_contract import coverage
 
 # Mark of the Storm is prose only — its cached effects carry no leveling
 # row — so the cap, the repeat-stun rule and Slicing Maelstrom's own stack
@@ -250,7 +250,8 @@ OPTIONS = [
         "already have stunned)",
     ),
 ]
-ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(REVIEWED_MODULE_ASSUMPTIONS),
     "The Mark of the Storm walk merges the fight's ability casts at the "
     "Braum-pattern schedule (each learned slot at t=0 and every hasted "
     "cooldown after) with Slicing Maelstrom's own bolt cadence and, when "

@@ -208,10 +208,8 @@ class TestGuerrillaWarfareStaysReceiptedOpen:
         assert part["__type"] == "ByCharLevelBreakpointsCalculationPart"
         assert part["mLevel1Value"] == pytest.approx(0.20, abs=1e-6)
         assert [bp["mLevel"] for bp in part["mBreakpoints"]] == [5, 10, 15]
-        for breakpoint in part["mBreakpoints"]:
-            assert breakpoint["mAdditionalBonusAtThisLevel"] == pytest.approx(
-                0.20, abs=1e-6
-            )
+        for step in part["mBreakpoints"]:
+            assert step["mAdditionalBonusAtThisLevel"] == pytest.approx(0.20, abs=1e-6)
 
     def test_the_window_and_stealth_delay_are_sourced_too(self):
         values = {

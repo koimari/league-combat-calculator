@@ -5,7 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
+from .inputs import bool_option, float_option, int_option
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -16,8 +18,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, float_option, int_option
-from ..binary_roots import data_value, spell_object
 
 # Rooted in KSanteR.Omnivamp; the cached R prose corroborates the 20% value.
 _ALLOUT_OMNIVAMP_PERCENT = (
@@ -72,7 +72,10 @@ def _dauntless(ctx: SlotCtx) -> dict[str, Any] | None:
             }
             for i in range(count)
         ],
-        "detail": f"{count} marked attack consumption(s); All Out bonus is {bool(ctx.option('all_out'))}.",
+        "detail": (
+            f"{count} marked attack consumption(s); All Out bonus is "
+            f"{bool(ctx.option('all_out'))}."
+        ),
     }
 
 
@@ -322,7 +325,12 @@ OPTIONS = [
 ]
 ASSUMPTIONS = [
     "Dauntless Instinct is an explicit marked-attack proc, not an assumed proc on every auto.",
-    "Path Maker uses its physical packet and optionally the authored All Out true-damage range; charge duration is explicit.",
-    "All Out terrain routing and the health threshold / resistance conversion remain visible state rather than hidden arithmetic; the 20% omnivamp IS priced on the fight's explicitly single-target attack/on-hit packets (the engine's full-effectiveness omnivamp scope) and the remaining ability-damage omnivamp is a documented boundary",
+    "Path Maker uses its physical packet and optionally the authored All Out "
+    "true-damage range; charge duration is explicit.",
+    "All Out terrain routing and the health threshold / resistance conversion remain "
+    "visible state rather than hidden arithmetic; the 20% omnivamp IS priced on the "
+    "fight's explicitly single-target attack/on-hit packets (the engine's "
+    "full-effectiveness omnivamp scope) and the remaining ability-damage omnivamp is "
+    "a documented boundary",
 ]
 SOURCES = load_champion_sources("K'Sante")

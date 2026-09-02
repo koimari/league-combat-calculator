@@ -121,7 +121,8 @@ def _sett_pit_grit_prose() -> tuple[list[float], list[float]]:
         p_text,
         flags=re.IGNORECASE,
     )
-    assert base_match and max_match
+    assert base_match
+    assert max_match
     return (
         [float(v) for v in re.findall(r"\d+(?:\.\d+)?", base_match.group(1))],
         [float(v) for v in re.findall(r"\d+(?:\.\d+)?", max_match.group(1))],
@@ -210,7 +211,6 @@ def _maokai_sap_magic_expected(data: dict) -> tuple[float, float]:
     """Recompute the Sap Magic heal (time, amount) from cached data and the
     fight's own ledger: cooldown (level) - 4 s per outgoing trigger, first
     auto after completion + 0.25 s, % max health by level."""
-    import re
 
     level = int(data["champion_stats"]["level"])
     p = _DATA["Maokai"]["abilities"]["P"][0]

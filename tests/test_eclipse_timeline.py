@@ -2,9 +2,9 @@
 
 from src.calculator.ability_spec import DamagePart
 from src.calculator.damage import FightConfig, calculate_fight_damage
-from src.calculator.scenario import load_public_champion as _load_public_champion
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.scenario import load_public_champion as _load_public_champion
 
 
 def _stats() -> dict:

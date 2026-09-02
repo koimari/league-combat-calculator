@@ -46,18 +46,15 @@ R13 | sourced rearm clock end to end on Banshee's 40s: endpoint
      window, and the unsourced shield that never rearms          | walk
 """
 
-from types import SimpleNamespace
-
 import pytest
 
 from src.app import app
-from src.calculator.defensive_effects import StartingDefenses
-from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator import delivery_eligibility as de
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.data_fetcher import get_champion
-from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
 from src.calculator.interaction_effects import resolve_spell_shield
+from src.calculator.interpreters import uncompilable_item_receipt
 from src.calculator.item_effects import (
     annul_spell_shield_cooldown_atom,
     annul_spell_shield_timer_restarts,
@@ -65,10 +62,8 @@ from src.calculator.item_effects import (
 )
 from src.calculator.participant_timeline import Combatant
 from src.calculator.stats import calculate_total_stats
-from src.calculator.interpreters import uncompilable_item_receipt
 from src.calculator.survival import unrepresentable_template_receipt
-from tests.survival_probe import simulate_survival
-from tests.survival_probe import survival_of
+from tests.survival_probe import simulate_survival, survival_of
 
 # ---------------------------------------------------------------------------
 # Shared helpers
@@ -300,7 +295,7 @@ def test_r1_sivir_e_blocks_one_effect_and_triggers_exactly_one_heal():
 
 
 @pytest.mark.parametrize(
-    "item,source",
+    ("item", "source"),
     [
         ("Banshee's Veil", "Banshee's Veil — Annul"),
         ("Edge of Night", "Edge of Night — Annul"),
@@ -481,7 +476,8 @@ def test_r4_multipart_cast_blocks_all_packets_with_one_use_and_one_heal():
     assert survival["spell_shield_heal_triggered"] is True
     # A later cast from the same attacker passes.
     later = _events(combat, target="main", source="E")
-    assert later and later[0].get("skipped_reason") is None
+    assert later
+    assert later[0].get("skipped_reason") is None
     assert later[0]["damage"] > 0.0
 
 
@@ -684,13 +680,15 @@ def test_r6_kernel_two_casts_same_timestamp_distinct_instances():
     assert decision_a.cast_identity == "cast-a"
     assert decision_a.cast_identity_kind == "sourced"
     blocked, reason = budget.blocks(decision_a)
-    assert blocked is True and reason == ""
+    assert blocked is True
+    assert reason == ""
 
     decision_b = eligibility.decide(second, attacker)
     assert decision_b.eligible is True
     assert decision_b.cast_identity == "cast-b"
     blocked, reason = budget.blocks(decision_b)
-    assert blocked is False and reason == "budget_spent"
+    assert blocked is False
+    assert reason == "budget_spent"
 
 
 def test_r6_kernel_derived_fallback_groups_identically_to_current():
@@ -709,7 +707,8 @@ def test_r6_kernel_derived_fallback_groups_identically_to_current():
     assert d1.cast_identity == "Q:0.5"
     assert d1.cast_identity_kind == "derived"
     blocked, reason = budget.blocks(d1)
-    assert blocked is True and reason == ""
+    assert blocked is True
+    assert reason == ""
     assert budget.remaining == 0
 
     d2 = eligibility.decide(packet_two, attacker)
@@ -717,7 +716,8 @@ def test_r6_kernel_derived_fallback_groups_identically_to_current():
     assert d2.cast_identity_kind == "derived"
     # Same cast: reuses the decision, does NOT spend again.
     blocked, reason = budget.blocks(d2)
-    assert blocked is True and reason == ""
+    assert blocked is True
+    assert reason == ""
     assert budget.remaining == 0
 
 
@@ -940,7 +940,7 @@ def test_r9_unknown_cast_identity_fails_closed_no_consumption():
     assert decision.cast_identity_kind == "unknown"
 
     budget = _CastBudget(uses=1)
-    blocked, reason = budget.blocks(decision)
+    blocked, _reason = budget.blocks(decision)
     assert blocked is False
     assert budget.remaining == 1  # never spent
 

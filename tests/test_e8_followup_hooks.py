@@ -12,6 +12,7 @@ coordinator's implementations:
 """
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -21,7 +22,7 @@ from src.calculator.support_effects import derive_ally_effects
 
 @pytest.fixture(scope="module")
 def champion_data():
-    return json.load(open("data/champions.json"))
+    return json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 
 
 def _resolve(champ: str, level: int = 18, *, items=(), **stats):

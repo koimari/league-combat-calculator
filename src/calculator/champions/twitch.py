@@ -88,6 +88,8 @@ from ..ability_atoms import required_ranked_attribute_atom
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
+from .inputs import bool_option, int_option
+from .module_contract import coverage
 from .slotlib import (
     STEROID_ZERO,
     ability_name,
@@ -97,8 +99,6 @@ from .slotlib import (
     stat_buff,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
-from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # Deadly Venom per-stack total true damage over 6 seconds by level
@@ -138,7 +138,9 @@ def _poison_stacks(options: dict[str, Any]) -> int:
 def _poison_total_per_stack(level: int, ap: float) -> float:
     """One stack's full 6s true damage at a champion level."""
     base = _POISON_TOTAL_BREAKPOINTS[-1]
-    for min_level, value in zip(_POISON_BREAKPOINT_LEVELS, _POISON_TOTAL_BREAKPOINTS):
+    for min_level, value in zip(
+        _POISON_BREAKPOINT_LEVELS, _POISON_TOTAL_BREAKPOINTS, strict=False
+    ):
         if level >= min_level:
             base = value
     return base + _POISON_AP_RATIO * ap

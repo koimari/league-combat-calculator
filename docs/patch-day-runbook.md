@@ -38,13 +38,13 @@ Definitions:
   notes; normally a Wednesday).
 - **Re-certified** = the flagged value was checked against the game files and
   either the wiki cache was updated to match or the code-owned copy was
-  updated, and `scripts/patch_regression.py check` no longer flags it.
+  updated, and `scripts/patch_regression.py check` does not flag it.
 - **Boundary-documented** = the flagged value is deliberately not modeled and
   that decision is recorded with a reason (champion module `MODULE_COVERAGE`
   entry, `ASSUMPTIONS` line, or a worklist / item-source reconciliation
-  entry). A boundary is a *documented decision*, not a TODO, and it is not a
+  entry). A boundary is a *documented decision*, not a deferral, and it is not a
   way to clear a badge without explanation — the badge stays until the
-  regression re-run shows the entry as no longer stale (Step 5).
+  regression re-run shows the entry as fresh (Step 5).
 - The STALE badge (`static/js/staleness.js`) reads `/api/staleness`, which
   serves the committed `data/staleness.json`. The badge stays visible until
   the committed report shows `stale: false` for the selected champion/item.
@@ -124,8 +124,8 @@ What `run` does:
    coverage census
    (`coverage_census.py run --output docs/coverage-census.json`, ~1 min on 16 cores; it
    refreshes its receipt and fails on a frontier entry no
-   `docs/coverage-residue.json` row acknowledges or a row that no longer
-   reproduces) — each fails closed and aborts the run — then pytest, golden
+   `docs/coverage-residue.json` row acknowledges or a row that fails to
+   reproduce) — each fails closed and aborts the run — then pytest, golden
    compare (diffs printed — expected after a real patch), and re-captures the
    golden baseline ONLY if pytest is green. If pytest is red, hand-validated
    expectations drifted — fix them first (Step 4).
@@ -287,7 +287,7 @@ python scripts/golden_snapshot.py capture scripts/golden_baseline.json
 2. Commit the refreshed `data/staleness.json` (`patch` = the new patch).
 3. After deploy, confirm:
    - `/api/staleness` serves the new report (new `patch`, all `stale: false`).
-   - STALE badges are gone for previously-flagged champions/items
+   - STALE badges are gone for the flagged champions/items
      (`static/js/staleness.js` renders badges only for `stale: true` entries).
 4. Update the tracking issue and send the final announcement
    (`docs/patch-announcement-template.md`).

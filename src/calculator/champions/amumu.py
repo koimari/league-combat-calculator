@@ -29,7 +29,9 @@ hardcoded.
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import AMP, SlotCtx, build_parser
+from .inputs import bool_option, float_option
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -38,8 +40,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, float_option
-from ..binary_roots import data_value, spell_object
 
 _AMUMU_P_SPELL = spell_object("Amumu", "AmumuP")
 _CURSE_BONUS_FRACTION = data_value(_AMUMU_P_SPELL, "DamageAmp")
@@ -145,7 +145,8 @@ ASSUMPTIONS = [
     "Q's sourced 1-second stun and R's sourced 1.5-second stun count as "
     "target action downtime",
     "W defaults to 3 seconds active (6 ticks at 0.5s intervals)",
-    "E passive reduces each physical raw damage instance with its sourced rank, bonus-resist scaling, and 50% instance cap",
+    "E passive reduces each physical raw damage instance with its sourced rank, "
+    "bonus-resist scaling, and 50% instance cap",
 ]
 
 # Q, E and R each land once at the cast: the bandage "deals magic damage

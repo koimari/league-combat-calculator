@@ -17,7 +17,6 @@ lands there, which a triggered debuff's rank would not.
 """
 
 import copy
-from types import SimpleNamespace
 
 import pytest
 
@@ -27,6 +26,7 @@ from src.calculator.ability_atoms import (
     AbilityAtomQuery,
     required_ability_atom,
 )
+from src.calculator.ability_spec import AttackClass, DamageClass
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.briar import OPTIONS
 from src.calculator.data_fetcher import get_champion
@@ -34,10 +34,6 @@ from src.calculator.defensive_effects import (
     StartingDefenses,
     resolve_starting_defenses,
 )
-from src.calculator.program.build import roster_program
-from src.calculator.program.compile import action_from_event
-from src.calculator.program.views.survival import survival
-from src.calculator.program.walk import walk as run_one_walk
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
@@ -46,6 +42,10 @@ from src.calculator.participant_timeline import (
     build_participant_timeline,
 )
 from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.program.build import roster_program
+from src.calculator.program.compile import action_from_event
+from src.calculator.program.views.survival import survival
+from src.calculator.program.walk import walk as run_one_walk
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival import (
@@ -54,7 +54,6 @@ from src.calculator.survival import (
     TransitionContext,
     build_states,
 )
-from src.calculator.ability_spec import AttackClass, DamageClass
 from src.calculator.survival.actions import (
     EVENT_SLOTS,
     SUPPORT_RANK_KEY,

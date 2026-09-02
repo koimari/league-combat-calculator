@@ -351,7 +351,8 @@ def test_ordinary_cast_receipts_keep_the_timeline_shape():
     result = run_fight(champ, 18, [], _params(duration=6.0))
     ledger = result["resource_ledger"]
     spends = [r for r in ledger["receipts"] if r["operation"] == "spend"]
-    assert spends and all(r["accepted"] for r in spends)
+    assert spends
+    assert all(r["accepted"] for r in spends)
     # cast_timeline rows agree with the ledger receipts.
     by_slot_ordinal = {(r["detail"]["slot"], r["detail"]["ordinal"]): r for r in spends}
     for cast in result["cast_timeline"]:

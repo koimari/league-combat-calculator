@@ -122,7 +122,9 @@ import re
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
+from .inputs import int_option
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -134,8 +136,6 @@ from .slotlib import (
     on_hit_entry,
     simple_damage,
 )
-from .inputs import int_option
-from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "c18c1e6e7005c17066acf180ec68a2013bb656c20a88655a536f0a2bc9a078f5"
 
@@ -479,7 +479,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_parsers={"Q": _flamespitter_full_channel, "P": _junkyard_titan},
     cc_kinds=MODULE_CC,
 )
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "overheat_autos",
         0,
@@ -497,16 +498,15 @@ OPTIONS = list(OPTIONS) + [
         rotation={
             "role": "self_state",
             "slot": "P",
-            "note": (
-                "Heat is a resource this engine does not simulate, and the "
-                "cast plan cannot stand in for it while E is scheduled on "
-                "its 0.5s inter-charge cooldown instead of its 6s recharge. "
-                "How often the mech reaches the ceiling is declared."
-            ),
+            "note": "Heat is a resource this engine does not simulate, and the "
+            "cast plan cannot stand in for it while E is scheduled on "
+            "its 0.5s inter-charge cooldown instead of its 6s recharge. "
+            "How often the mech reaches the ceiling is declared.",
         },
     ),
 ]
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q (Flamespitter) prices the cached Maximum Magic Damage row "
     "(62.5/93.75/125/156.25/187.5 + 131.25% AP + 7.5% : 10% of the "
     "target's maximum health) — the whole 3-second flamethrower, equal "

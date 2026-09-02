@@ -2,8 +2,8 @@
 
 import pytest
 
-from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.champions import ashe
+from src.calculator.damage import FightConfig, calculate_fight_damage
 from tests import cc_review
 
 

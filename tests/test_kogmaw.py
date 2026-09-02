@@ -10,12 +10,10 @@ Reference damage (level 9, rank 5 Q, rank 3 W, rank 3 E, rank 1 R, 80 AP):
 import pytest
 
 from src.calculator.calculate import calculate_payload
-from src.calculator.champions import get_champion_module_contract
-from tests import cc_review, coverage_truth
-from src.calculator.champions import kogmaw
-
+from src.calculator.champions import get_champion_module_contract, kogmaw
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from tests import cc_review, coverage_truth
 
 # ---------------------------------------------------------------------------
 # Helpers

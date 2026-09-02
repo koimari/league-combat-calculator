@@ -8,6 +8,7 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import BUFF, CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import float_option, int_option
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -18,7 +19,6 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
 
 
 def _p_row(ability: dict[str, Any], occurrence: int, ctx: SlotCtx) -> float:
@@ -43,7 +43,8 @@ def _fervor(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_type": "magic",
         }
     entry["detail"] = (
-        f"{stacks} Ionian Fervor stack(s), +{bonus_as:g}% bonus attack speed; max-stack on-hit is explicit."
+        f"{stacks} Ionian Fervor stack(s), +{bonus_as:g}% bonus attack speed; "
+        f"max-stack on-hit is explicit."
     )
     return entry
 
@@ -175,9 +176,12 @@ OPTIONS = [
     int_option("r_passes", 2, minimum=1, maximum=2, label="Vanguard's Edge passes"),
 ]
 ASSUMPTIONS = [
-    "Ionian Fervor's per-stack attack speed is applied before damage and its max-stack on-hit is explicit.",
-    "Bladesurge is one full-effectiveness basic attack; Defiant Dance exposes the sourced charge interval.",
-    "Vanguard's Edge models the initial barrage and one perimeter pass; marks, stun and slow are utility.",
+    "Ionian Fervor's per-stack attack speed is applied before damage and its "
+    "max-stack on-hit is explicit.",
+    "Bladesurge is one full-effectiveness basic attack; Defiant Dance exposes the "
+    "sourced charge interval.",
+    "Vanguard's Edge models the initial barrage and one perimeter pass; marks, stun "
+    "and slow are utility.",
 ]
 SOURCES = load_champion_sources("Irelia")
 
@@ -195,7 +199,7 @@ def derive_self_healing(
     healing = []
     ability = _healing.ability_json(champion_data, "Q")
     rank = _healing.parsed_rank(ability_damages, "Q")
-    amount = _healing.extract_named(ability, "Heal", rank, champion_stats, {})
+    amount = extract_named(ability, "Heal", rank, champion_stats, {})
     for event in damage_events:
         if _healing.event_source(event) == "Q":
             _healing.heal_from_damage(healing, event, amount, "Bladesurge")

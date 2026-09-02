@@ -6,9 +6,9 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .inputs import bool_option, champion_stat
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, champion_stat
 from .module_helpers import no_damage
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
@@ -40,7 +40,8 @@ def _decisive_strike(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["event_order_certified"] = "single_hit"
     entry["empowers_next_auto"] = True
     entry["detail"] = (
-        "One uncancellable, silencing empowered basic attack; slow cleanse/movement speed are state-only."
+        "One uncancellable, silencing empowered basic attack; slow cleanse/movement "
+        "speed are state-only."
     )
     return entry
 
@@ -79,7 +80,8 @@ def _judgment(ctx: SlotCtx) -> dict[str, Any] | None:
         ),
     )
     entry["detail"] = (
-        f"{spins} spin(s); nearest-target 25% branch={'on' if nearest else 'off'}. Six hits apply the sourced 25% armor reduction."
+        f"{spins} spin(s); nearest-target 25% branch={'on' if nearest else 'off'}. Six "
+        f"hits apply the sourced 25% armor reduction."
     )
     entry["target_debuff"] = {
         "armor_reduction_percent": 25.0,
@@ -106,7 +108,8 @@ def _demacian_justice(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["event_order_certified"] = "single_hit"
     entry["target_max_health_sensitive"] = True
     entry["detail"] = (
-        "True damage scales from target missing health; the execute/reveal threshold is target state."
+        "True damage scales from target missing health; the execute/reveal threshold "
+        "is target state."
     )
     return entry
 
@@ -132,8 +135,10 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Judgment uses the sourced 7 + 1 per 25% bonus attack speed spin count and exposes the nearest-target 25% branch.",
-    "The armor reduction is retained as an ordered effect after the six-hit threshold; it is never allowed to boost the first six spins.",
+    "Judgment uses the sourced 7 + 1 per 25% bonus attack speed spin count and "
+    "exposes the nearest-target 25% branch.",
+    "The armor reduction is retained as an ordered effect after the six-hit "
+    "threshold; it is never allowed to boost the first six spins.",
     "Perseverance and Courage are defensive/self-state rows and do not enter TDD.",
 ]
 

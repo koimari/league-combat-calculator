@@ -8,6 +8,7 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import int_option
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -17,7 +18,6 @@ from .slotlib import (
     extract_value,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
 
 
 def _tentacle(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -59,7 +59,10 @@ def _tentacle(ctx: SlotCtx) -> dict[str, Any] | None:
             }
             for i in range(count)
         ],
-        "detail": f"{count} Tentacle strike(s), including the sourced Q rank increase of {increase:g}%.",
+        "detail": (
+            f"{count} Tentacle strike(s), including the sourced Q rank increase of "
+            f"{increase:g}%."
+        ),
     }
 
 
@@ -93,7 +96,8 @@ def _harsh_lesson(ctx: SlotCtx) -> dict[str, Any] | None:
         "triggers": ("on_hit",),
     }
     entry["detail"] = (
-        f"Empowered attack: max-health ratio {pct:.3f}, AD ratio {ad_ratio:.3f}, minimum {minimum:g}."
+        f"Empowered attack: max-health ratio {pct:.3f}, AD ratio {ad_ratio:.3f}, "
+        f"minimum {minimum:g}."
     )
     return entry
 
@@ -113,7 +117,8 @@ def _leap_of_faith(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = (DamagePart("physical", value, time_offset=0.4),)
     entry["detail"] = (
-        "One area slam; the champion-hit tentacle summons and Harsh Lesson cooldown reduction are explicit state."
+        "One area slam; the champion-hit tentacle summons and Harsh Lesson cooldown "
+        "reduction are explicit state."
     )
     return entry
 
@@ -123,13 +128,19 @@ SLOTS = {
     "Q": lambda ctx: no_damage(
         ctx,
         name="Tentacle Smash",
-        reason="The active commands a Tentacle; its damage is represented by the explicit Tentacle proc count.",
+        reason=(
+            "The active commands a Tentacle; its damage is represented by the "
+            "explicit Tentacle proc count."
+        ),
     ),
     "W": _harsh_lesson,
     "E": lambda ctx: no_damage(
         ctx,
         name="Test of Spirit",
-        reason="Spirit health/armor/magic-resist redirection and Vessel spawning are target-state branches, not direct outgoing damage.",
+        reason=(
+            "Spirit health/armor/magic-resist redirection and Vessel spawning are "
+            "target-state branches, not direct outgoing damage."
+        ),
     ),
     "R": _leap_of_faith,
 }
@@ -146,8 +157,10 @@ OPTIONS = [
     int_option("p_tentacles", 1, minimum=0, maximum=12, label="Tentacle strikes")
 ]
 ASSUMPTIONS = [
-    "Tentacle strikes use the level-scaled parent formula and Q rank increase; the user supplies how many authored strikes land.",
-    "Harsh Lesson is one item-coupled empowered attack; Test of Spirit's redirected damage remains explicit target state.",
+    "Tentacle strikes use the level-scaled parent formula and Q rank increase; the "
+    "user supplies how many authored strikes land.",
+    "Harsh Lesson is one item-coupled empowered attack; Test of Spirit's redirected "
+    "damage remains explicit target state.",
     "Leap of Faith's slam is separate from the summoned Tentacle strikes.",
     "Each Tentacle that hits an enemy champion heals Illaoi for 5% of her "
     "missing health (cached P description prose); the E1 self-heal rule "
@@ -170,19 +183,19 @@ def derive_self_healing(
     tentacle_hits = _healing.attributed_events(
         damage_events, lambda source, _event: source == "passive"
     )
-    for event in tentacle_hits:
-        healing.append(
-            {
-                "time": float(event.get("time", 0.0)),
-                "amount": 0.0,
-                "amount_formula": lambda current_health, maximum_health: (
-                    max(0.0, maximum_health - current_health) * 0.05
-                ),
-                "source": "Prophet of an Elder God",
-                "kind": "champion_passive",
-                **_healing.trigger_fields(event),
-            }
-        )
+    healing.extend(
+        {
+            "time": float(event.get("time", 0.0)),
+            "amount": 0.0,
+            "amount_formula": lambda current_health, maximum_health: (
+                max(0.0, maximum_health - current_health) * 0.05
+            ),
+            "source": "Prophet of an Elder God",
+            "kind": "champion_passive",
+            **_healing.trigger_fields(event),
+        }
+        for event in tentacle_hits
+    )
     return healing
 
 

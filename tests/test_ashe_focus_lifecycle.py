@@ -76,6 +76,7 @@ appear as literal contract constants beside their game-file evidence.
 """
 
 import copy
+import itertools
 import json
 from pathlib import Path
 
@@ -312,7 +313,8 @@ class TestSourceAndTypedValues:
                 "mSpell"
             ]["DataValues"]
         }
-        assert "CombatExtension" not in names and "OutOfCombatDuration" not in names
+        assert "CombatExtension" not in names
+        assert "OutOfCombatDuration" not in names
 
     def test_stack_rule_typed_path_discloses_all_sourced_values(self):
         receipt = ASHE_FOCUS_STACK_RULE.public_receipt()
@@ -635,7 +637,7 @@ class TestStepDownDrain:
         # (the fight end with no later swings) and carries each step's
         # SCHEDULED time in the detail; the scheduled steps are 1s apart.
         scheduled = sorted(float(t["detail"]["expires_at"]) for t in expires)
-        gaps = [b - a for a, b in zip(scheduled, scheduled[1:])]
+        gaps = [b - a for a, b in itertools.pairwise(scheduled)]
         assert all(abs(gap - 1.0) < 1e-6 for gap in gaps)
 
 
@@ -721,7 +723,8 @@ class TestRepeatedCasts:
             for r in account["receipts"]
             if r["operation"] == "consume" and r["accepted"]
         ]
-        assert consumes and consumes[0]["amount"] == -4.0
+        assert consumes
+        assert consumes[0]["amount"] == -4.0
 
     def test_walk_receipts_the_activation_without_inventing_consume(self):
         # Once wired: the walk receipts the Q activation at full stacks
@@ -739,7 +742,8 @@ class TestRepeatedCasts:
             for r in account["receipts"]
             if r["operation"] == "consume" and r["accepted"]
         ]
-        assert consumes and consumes[0]["amount"] == -4.0
+        assert consumes
+        assert consumes[0]["amount"] == -4.0
         assert consumes[0]["time"] == pytest.approx(0.0)
         assert account["closing_current"] <= 4
 
@@ -1045,9 +1049,11 @@ class TestUnchangedBoundaries:
             RENGAR_FEROCITY_STACK_RULE.public_receipt()["combat_extension_seconds"]
             == 10.0
         )
-        from src.calculator import cleanse_eligibility  # noqa: F401  (cleanse)
-        from src.calculator import defensive_effects  # noqa: F401  (grey health)
-        from src.calculator import healing  # noqa: F401  (heal/grey packages)
+        from src.calculator import (
+            cleanse_eligibility,  # noqa: F401  (cleanse)
+            defensive_effects,  # noqa: F401  (grey health)
+            healing,  # noqa: F401  (heal/grey packages)
+        )
 
 
 # ---------------------------------------------------------------------------

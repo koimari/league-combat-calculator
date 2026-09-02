@@ -50,30 +50,11 @@ Ledger observation contract (the only adapter difference):
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, field
 from collections.abc import Mapping, MutableMapping, Sequence
+from dataclasses import dataclass, field
 from typing import Any, NamedTuple, Protocol
 
-from .actions import (
-    EVENT_SLOTS,
-    NO_SLOT,
-    ActionKind,
-    LiveProbe,
-    SurvivalAction,
-    TransitionRank,
-    attack_class_of,
-    damage_class_of,
-    declared_modifier_classes,
-)
-from . import pricing
 from .. import shield_ledger
-from ..crowd_control_eligibility import (
-    KNOWN_CONTROL_KINDS,
-    CrowdControlDecision,
-    CrowdControlEligibility,
-    classify_control,
-    immunity_holder,
-)
 from ..cleanse_eligibility import (
     CleanseEligibility,
     item_declaration,
@@ -82,10 +63,12 @@ from ..cleanse_eligibility import (
     resolve_excluded_kinds,
     truncate_intervals,
 )
-from ..healing_reduction import (
-    GRIEVOUS_WOUNDS_FACTOR,
-    heal_and_shield_power_factor,
-    matching_healing_reduction,
+from ..crowd_control_eligibility import (
+    KNOWN_CONTROL_KINDS,
+    CrowdControlDecision,
+    CrowdControlEligibility,
+    classify_control,
+    immunity_holder,
 )
 from ..delivery_eligibility import (
     SPELL_SHIELD_ONE_USE_RULE,
@@ -98,7 +81,24 @@ from ..delivery_eligibility import (
     spell_shield_group_key,
     stable_event_key,
 )
+from ..healing_reduction import (
+    GRIEVOUS_WOUNDS_FACTOR,
+    heal_and_shield_power_factor,
+    matching_healing_reduction,
+)
 from ..resistance import apply_resistance
+from . import pricing
+from .actions import (
+    EVENT_SLOTS,
+    NO_SLOT,
+    ActionKind,
+    LiveProbe,
+    SurvivalAction,
+    TransitionRank,
+    attack_class_of,
+    damage_class_of,
+    declared_modifier_classes,
+)
 
 #: The revive label used when a participant's resolved defenses arm a revive
 #: without naming its own source.  Guardian Angel is the item-source carrier
@@ -341,7 +341,7 @@ class TransitionContext:
     record_defy_damage: bool = field(init=False)
     stack_flags: list[bool] = field(init=False, repr=False)
     regeneration_flags: list[bool] = field(init=False, repr=False)
-    _defense_profiles: list["SubjectDefenseProfile"] = field(init=False, repr=False)
+    _defense_profiles: list[SubjectDefenseProfile] = field(init=False, repr=False)
     # Every caster's heal-and-shield-power factor, resolved once per walk
     # so the recovery path never re-reads a stat dict per packet.
     _heal_power: list[float] = field(init=False, repr=False)
@@ -366,7 +366,9 @@ class TransitionContext:
             )
         profiles = [
             _subject_defense_profile(combatant, window)
-            for combatant, window in zip(self.combatants, self.regeneration_windows)
+            for combatant, window in zip(
+                self.combatants, self.regeneration_windows, strict=False
+            )
         ]
         self._defense_profiles = profiles
         self.stack_flags = [profile.has_stack_items for profile in profiles]
@@ -378,7 +380,7 @@ class TransitionContext:
             for combatant in self.combatants
         ]
 
-    def defense_profile(self, subject: int) -> "SubjectDefenseProfile":
+    def defense_profile(self, subject: int) -> SubjectDefenseProfile:
         """The subject's cached per-event defense constants."""
         return self._defense_profiles[subject]
 
@@ -464,7 +466,7 @@ def update_combat_state(
     jak_interval = profile.jak_interval
     jak_max = profile.jak_max
     if jak_interval > 0.0 and jak_max > 0:
-        stacks = min(jak_max, max(0, int(math.floor(action.time / jak_interval))))
+        stacks = min(jak_max, max(0, math.floor(action.time / jak_interval)))
         if stacks != target_state["jaksho_stacks"]:
             target_state["jaksho_stacks"] = stacks
             target_state["jaksho_stack_events"].append(
@@ -833,7 +835,7 @@ def schedule_regeneration_recovery(
     source_key = action.source_key
     is_basic_or_on_hit = (
         action.basic_attack
-        or source_key in {"auto_attacks"}
+        or source_key == "auto_attacks"
         or source_key.startswith(("on_hit_", "on_hit_once_"))
     )
     ranged = str(combatant.champion_data.get("attackType", "MELEE")).upper() != "MELEE"
@@ -842,7 +844,7 @@ def schedule_regeneration_recovery(
     if total <= 0.0:
         return
     trigger_id = EVENT_SLOTS.text(action.event_slot)
-    ticks = max(1, int(round(duration_value / tick)))
+    ticks = max(1, round(duration_value / tick))
     for tick_index in range(1, ticks + 1):
         heal_event = {
             "time": round(action.time + tick * tick_index, 6),
@@ -851,7 +853,7 @@ def schedule_regeneration_recovery(
             # diminishing-return formula at every sourced tick.
             "amount": 0.0,
             "amount_formula": (
-                lambda current_health, maximum_health, total_cap=total_cap, missing_cap=missing_cap, ticks=ticks: (
+                lambda current_health, maximum_health, total_cap=total_cap, missing_cap=missing_cap, ticks=ticks: (  # noqa: E501 - lambda parameters do not wrap
                     total_cap
                     * min(
                         1.0,
@@ -1090,13 +1092,11 @@ def _actor_stasis_blocks(state: dict[str, Any], event_time: float) -> bool:
     # comparison and fall through to ``return True`` so it blocks on its
     # own terms, named "attacker_state_blocked" — not silently absorbed
     # into the revive bypass and misattributed to "attacker_dead".
-    if (
+    return not (
         state["death_time"] is not None
         and revive_stasis_until > event_time
-        and revive_stasis_until >= stasis_until - 1e-9
-    ):
-        return False
-    return True
+        and revive_stasis_until >= stasis_until - 1e-09
+    )
 
 
 def arm_revive_stasis(state: dict[str, Any], event_time: float) -> bool:
@@ -3820,8 +3820,10 @@ def run_survival_walk(
             ActionKind.OVERHEAL_SHIELD,
             ActionKind.ICHOR_CONVERT,
         ) and (
-            (action.trigger >= 0 or action.trigger_slot != NO_SLOT)
-            and ledger.trigger_applied(action)
+            (
+                (action.trigger >= 0 or action.trigger_slot != NO_SLOT)
+                and ledger.trigger_applied(action)
+            )
             or bool(action.cast_while_disabled)
         )
         # A packet whose source declared itself "not the caster's own action"

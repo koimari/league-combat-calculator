@@ -51,19 +51,26 @@ import subprocess
 import sys
 import time
 import timeit
+from collections.abc import Callable
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable, NamedTuple
+from typing import Any, NamedTuple
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.calculator import damage, item_behavior_catalog, item_effects  # noqa: E402
-from src.calculator import pipeline  # noqa: E402
-from src.calculator.data_fetcher import get_champion, get_item_by_name  # noqa: E402
-from src.calculator.optimizer import get_selectable_items  # noqa: E402
-from src.calculator.optimizer import optimize_build  # noqa: E402
-from src.calculator.pipeline import FightParams, run_fight  # noqa: E402
+from src.calculator import (
+    damage,
+    item_behavior_catalog,
+    item_effects,
+    pipeline,
+)
+from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.optimizer import (
+    get_selectable_items,
+    optimize_build,
+)
+from src.calculator.pipeline import FightParams, run_fight
 
 REPEATS = 7
 
@@ -274,7 +281,7 @@ def _budget_terms(
         ),
         Term(
             "item_effects._item_names",
-            partial(item_effects._item_names, items),
+            partial(item_effects._item_names, items),  # noqa: SLF001 - the fold
             1,
             None,
             ("item_effects.py", "_item_names"),

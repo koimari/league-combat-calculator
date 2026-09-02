@@ -33,7 +33,6 @@ from dataclasses import replace
 import pytest
 
 from src import app as app_module
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.participant_timeline import build_participant_timeline
@@ -606,8 +605,8 @@ def test_support_amount_is_sourced_from_cached_leveling(
     champion, slot, attribute, expected
 ):
     """The support packet amount equals the cached leveling row at rank 5."""
-    from src.calculator.champions.slotlib import extract_named
     from src.calculator.champions.skill_orders import get_ability_rank
+    from src.calculator.champions.slotlib import extract_named
 
     data = get_champion(champion)
     rank = get_ability_rank(slot, 18, champion)

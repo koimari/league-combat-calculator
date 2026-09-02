@@ -65,12 +65,12 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value_at_rank, spell_object
-from .inputs import champion_stat, float_option
 from .engine import SlotCtx, build_parser
+from .inputs import champion_stat, float_option
+from .module_contract import coverage
 from .module_helpers import no_damage
 from .slotlib import ability_name, damage_entry, extract_named, simple_damage
 from .source_receipts import load_champion_sources
-from .module_contract import coverage
 
 # Glacial Storm's own cadence: the blizzard "deal[s] magic damage every 0.5
 # seconds to enemies within and slow[s] them for 1 second, refreshing every

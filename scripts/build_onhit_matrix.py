@@ -20,27 +20,29 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUT = REPO_ROOT / "data" / "onhit-matrix.json"
 
-_APPLIES = re.compile(r"appl(?:ies|y|ying|ied).{0,60}on[- ]?hit effects", re.I)
-_TRIGGERS_ON_ATTACK = re.compile(r"trigger(?:s|ing).{0,40}on[- ]?attack", re.I)
+_APPLIES = re.compile(r"appl(?:ies|y|ying|ied).{0,60}on[- ]?hit effects", re.IGNORECASE)
+_TRIGGERS_ON_ATTACK = re.compile(r"trigger(?:s|ing).{0,40}on[- ]?attack", re.IGNORECASE)
 _NEGATED = re.compile(
     r"(?:cannot|does not|don'?t|no longer|not).{0,50}(?:apply|trigger).{0,40}on[- ]?hit",
-    re.I,
+    re.IGNORECASE,
 )
 _EFFECTIVENESS = re.compile(
     r"with on[- ]?hit damage reduced to (\d+)% effectiveness|"
     r"on[- ]?hit effects at (\d+)% effectiveness|"
     r"appl(?:ies|y|ying).{0,30}on[- ]?hit effects at (\d+)%|"
     r"appl(?:ies|y|ying).{0,30}item on[- ]?hit effects at (\d+)%",
-    re.I,
+    re.IGNORECASE,
 )
-_ONLY_ONCE = re.compile(r"apply on[- ]?hit effects only once", re.I)
+_ONLY_ONCE = re.compile(r"apply on[- ]?hit effects only once", re.IGNORECASE)
 
 
 def ability_text(entry: dict) -> str:
     parts = [str(entry.get("name", ""))]
-    for effect in entry.get("effects") or []:
-        if isinstance(effect, dict):
-            parts.append(str(effect.get("description", "")))
+    parts.extend(
+        str(effect.get("description", ""))
+        for effect in entry.get("effects") or []
+        if isinstance(effect, dict)
+    )
     return " ".join(parts)
 
 

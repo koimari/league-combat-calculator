@@ -8,11 +8,11 @@ damage is sourced from the same Wiki snapshot as the generated roster.
 
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
+from .inputs import int_option
 from .packet_module import build_packet_module
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_value
-from .inputs import int_option
-from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "8e7f7c3e75ab1a7eb65ec2d5deb23878aa47b44ee0044807d13f064afc55cafd"
 

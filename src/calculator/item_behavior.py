@@ -32,9 +32,10 @@ live meanings of that word already.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, fields as dataclass_fields, is_dataclass
+from dataclasses import dataclass, is_dataclass
+from dataclasses import fields as dataclass_fields
 from enum import Enum
-from typing import NamedTuple, Union
+from typing import NamedTuple
 
 from .ability_spec import (
     AttackClass,
@@ -42,7 +43,7 @@ from .ability_spec import (
     DamageClass,
     ZeroPolicy,
 )
-from .value_ref import AnyValueRef, LevelValueRef, SourceReceipt, VALUE_REF_TYPES
+from .value_ref import VALUE_REF_TYPES, AnyValueRef, LevelValueRef, SourceReceipt
 
 
 class BehaviorRuleError(ValueError):
@@ -232,7 +233,7 @@ class ReceiptOnly:
             raise BehaviorRuleError("ReceiptOnly needs a reason")
 
 
-Compilability = Union[Compilable, ReceiptOnly]
+Compilability = Compilable | ReceiptOnly
 
 COMPILABILITY_TYPES: tuple[type, ...] = (Compilable, ReceiptOnly)
 
@@ -379,14 +380,14 @@ class LivePredicate:
         return True
 
 
-Activation = Union[
-    Always,
-    AbsoluteWindow,
-    TriggerWindow,
-    AfterTrigger,
-    ExcludeTrigger,
-    LivePredicate,
-]
+Activation = (
+    Always
+    | AbsoluteWindow
+    | TriggerWindow
+    | AfterTrigger
+    | ExcludeTrigger
+    | LivePredicate
+)
 
 ACTIVATION_TYPES: tuple[type, ...] = (
     Always,
@@ -422,7 +423,7 @@ class NEvents:
     count: AnyValueRef
 
 
-Consumption = Union[Persist, NextEventOnly, NEvents]
+Consumption = Persist | NextEventOnly | NEvents
 
 CONSUMPTION_TYPES: tuple[type, ...] = (Persist, NextEventOnly, NEvents)
 
@@ -545,14 +546,14 @@ class StatScaled:
     stat: HolderStat
 
 
-Magnitude = Union[
-    Fixed,
-    RampPerSecond,
-    TargetBonusHealthScaled,
-    RampPerStack,
-    MeleeRangedSplit,
-    StatScaled,
-]
+Magnitude = (
+    Fixed
+    | RampPerSecond
+    | TargetBonusHealthScaled
+    | RampPerStack
+    | MeleeRangedSplit
+    | StatScaled
+)
 
 MAGNITUDE_TYPES: tuple[type, ...] = (
     Fixed,
@@ -760,8 +761,8 @@ class LevelSteppedRate:
     schema that needs this pays a melee holder more at both ends.
     """
 
-    base: Union[AnyValueRef, "MeleeRangedSplit"]
-    per_level: Union[AnyValueRef, "MeleeRangedSplit"]
+    base: AnyValueRef | MeleeRangedSplit
+    per_level: AnyValueRef | MeleeRangedSplit
     from_level: AnyValueRef
 
 
@@ -776,7 +777,7 @@ class Term:
     where it grows with the holder's level past a declared one.
     """
 
-    coefficient: Union[AnyValueRef, MeleeRangedSplit, LevelSteppedRate]
+    coefficient: AnyValueRef | MeleeRangedSplit | LevelSteppedRate
     basis: Basis
 
 
@@ -792,7 +793,7 @@ class AtLeast:
     value: AnyValueRef
 
 
-Floor = Union[NoFloor, AtLeast]
+Floor = NoFloor | AtLeast
 
 FLOOR_TYPES: tuple[type, ...] = (NoFloor, AtLeast)
 
@@ -828,7 +829,7 @@ class TimesMissingHealth:
     bonus_at_full_missing: AnyValueRef
 
 
-Scaling = Union[NoScaling, TimesValue, TimesMissingHealth]
+Scaling = NoScaling | TimesValue | TimesMissingHealth
 
 SCALING_TYPES: tuple[type, ...] = (NoScaling, TimesValue, TimesMissingHealth)
 
@@ -2613,54 +2614,54 @@ class AllyPacketRule:
     ramps: tuple[LevelRamp, ...]
 
 
-RulePayload = Union[
-    ActiveCastRule,
-    EmpoweredAutoBuffRule,
-    EmpoweredHitRule,
-    SwingScheduleRule,
-    RepeatingStrikeRule,
-    ShapedChargeRule,
-    CooldownProcRule,
-    UltimateProcRule,
-    PeriodicRule,
-    SpellbladeRule,
-    AllyPacketRule,
-    DeltaAmpRule,
-    PartAmpRule,
-    OnHitStrikeRule,
-    ResistanceShredRule,
-    SecondaryTargetRule,
-    CritDamageBonusRule,
-    ForcedCritRule,
-    AttackCooldownRefundRule,
-    ExecuteRule,
-    ShieldBypassRule,
-    DamageDeferralRule,
-    SustainStatRule,
-    OnHitHealRule,
-    PostMitigationHealRule,
-    ResourceDrainRule,
-    ManaSpentHealRule,
-    RegenerationRule,
-    ReceivedHealingRule,
-    BelowHalfHealingRule,
-    StatConversionRule,
-    StatMultiplierRule,
-    PenetrationChannelRule,
-    RestrictedChannelRule,
-    ResourceRestoreRule,
-    ManaflowRule,
-    StackedStatRule,
-    FlatStatGrantRule,
-    StatAuraRule,
-    ThresholdRegenRule,
-    UltimateRefundRule,
-    ActiveWindowCastEconomyRule,
-    OpeningDefenseRule,
-    ThresholdDefenseRule,
-    CombatStateRule,
-    ReactiveRule,
-]
+RulePayload = (
+    ActiveCastRule
+    | EmpoweredAutoBuffRule
+    | EmpoweredHitRule
+    | SwingScheduleRule
+    | RepeatingStrikeRule
+    | ShapedChargeRule
+    | CooldownProcRule
+    | UltimateProcRule
+    | PeriodicRule
+    | SpellbladeRule
+    | AllyPacketRule
+    | DeltaAmpRule
+    | PartAmpRule
+    | OnHitStrikeRule
+    | ResistanceShredRule
+    | SecondaryTargetRule
+    | CritDamageBonusRule
+    | ForcedCritRule
+    | AttackCooldownRefundRule
+    | ExecuteRule
+    | ShieldBypassRule
+    | DamageDeferralRule
+    | SustainStatRule
+    | OnHitHealRule
+    | PostMitigationHealRule
+    | ResourceDrainRule
+    | ManaSpentHealRule
+    | RegenerationRule
+    | ReceivedHealingRule
+    | BelowHalfHealingRule
+    | StatConversionRule
+    | StatMultiplierRule
+    | PenetrationChannelRule
+    | RestrictedChannelRule
+    | ResourceRestoreRule
+    | ManaflowRule
+    | StackedStatRule
+    | FlatStatGrantRule
+    | StatAuraRule
+    | ThresholdRegenRule
+    | UltimateRefundRule
+    | ActiveWindowCastEconomyRule
+    | OpeningDefenseRule
+    | ThresholdDefenseRule
+    | CombatStateRule
+    | ReactiveRule
+)
 
 # Which family each payload type belongs to.  One entry per payload; each
 # migration slice adds its family's payload here, so a rule can never carry
@@ -3810,13 +3811,36 @@ class DefenseOutcome:
     sentence is presentation and criterion 6 admits no open string as policy.
     """
 
-    fields: tuple["KernelField", ...]
+    fields: tuple[KernelField, ...]
     notes: tuple[str, ...]
 
 
 __all__ = [
     "ACTIVATION_TYPES",
     "AMP_CHAIN_ORDER",
+    "COMPILABILITY_TYPES",
+    "CONSUMPTION_TYPES",
+    "DEFENSE_FIELD_COMBINE",
+    "DEFENSE_PAYLOAD_TYPES",
+    "DURABILITY_STATS",
+    "FLOOR_TYPES",
+    "MAGNITUDE_TYPES",
+    "PAYLOAD_FAMILY",
+    "PERIODIC_CADENCE_FIELDS",
+    "POLICY_IDENTIFIER_FIELDS",
+    "RESTRICTED_CHANNEL_PACKETS",
+    "RULE_FAMILY_COUNT",
+    "SCALING_TYPES",
+    "STAT_CHANNEL_PAYLOADS",
+    "STAT_DERIVATION_OPTIONAL_REFERENCES",
+    "STAT_DERIVATION_PAYLOADS",
+    "STAT_DERIVATION_REQUIRED_REFERENCES",
+    "STAT_DERIVATION_TARGET_PAYLOADS",
+    "STAT_DERIVATION_UNGRANTED_PAYLOADS",
+    "SUBJECT_AUTHORITY",
+    "SUSTAIN_PAYLOAD_REFERENCES",
+    "SUSTAIN_VALUE_PAYLOADS",
+    "TRIGGER_STREAM",
     "AbsoluteWindow",
     "Activation",
     "ActiveCastRule",
@@ -3834,8 +3858,6 @@ __all__ = [
     "BelowHalfHealingRule",
     "BonusTyping",
     "BuildContext",
-    "COMPILABILITY_TYPES",
-    "CONSUMPTION_TYPES",
     "ChainTargets",
     "ChargedSplash",
     "CombatStateRule",
@@ -3846,9 +3868,6 @@ __all__ = [
     "CooldownProcRule",
     "CritDamageBonusRule",
     "CritOccurrence",
-    "DEFENSE_FIELD_COMBINE",
-    "DEFENSE_PAYLOAD_TYPES",
-    "DURABILITY_STATS",
     "DamageDeferralRule",
     "DamageFormula",
     "DamageThreshold",
@@ -3869,7 +3888,6 @@ __all__ = [
     "EngineLane",
     "ExcludeTrigger",
     "ExecuteRule",
-    "FLOOR_TYPES",
     "Fixed",
     "FlatStatGrantRule",
     "Floor",
@@ -3882,7 +3900,6 @@ __all__ = [
     "LevelSteppedRate",
     "LevelSubject",
     "LivePredicate",
-    "MAGNITUDE_TYPES",
     "Magnitude",
     "ManaSpentHealRule",
     "ManaflowRule",
@@ -3894,9 +3911,6 @@ __all__ = [
     "OnHitHealRule",
     "OnHitStrikeRule",
     "OpeningDefenseRule",
-    "PAYLOAD_FAMILY",
-    "PERIODIC_CADENCE_FIELDS",
-    "POLICY_IDENTIFIER_FIELDS",
     "PacketKind",
     "PacketSpec",
     "PacketTrigger",
@@ -3911,8 +3925,6 @@ __all__ = [
     "PostMitigationHealRule",
     "Probe",
     "ProcTrigger",
-    "RESTRICTED_CHANNEL_PACKETS",
-    "RULE_FAMILY_COUNT",
     "RampModel",
     "RampPerSecond",
     "RampPerStack",
@@ -3934,16 +3946,6 @@ __all__ = [
     "RestrictedPacket",
     "RuleFamily",
     "RulePayload",
-    "SCALING_TYPES",
-    "STAT_CHANNEL_PAYLOADS",
-    "STAT_DERIVATION_OPTIONAL_REFERENCES",
-    "STAT_DERIVATION_PAYLOADS",
-    "STAT_DERIVATION_REQUIRED_REFERENCES",
-    "STAT_DERIVATION_TARGET_PAYLOADS",
-    "STAT_DERIVATION_UNGRANTED_PAYLOADS",
-    "SUBJECT_AUTHORITY",
-    "SUSTAIN_PAYLOAD_REFERENCES",
-    "SUSTAIN_VALUE_PAYLOADS",
     "Scaling",
     "SecondaryTargetRule",
     "SelfShield",
@@ -3964,7 +3966,6 @@ __all__ = [
     "SustainStat",
     "SustainStatRule",
     "SwingScheduleRule",
-    "TRIGGER_STREAM",
     "TargetBonusHealthScaled",
     "TemporaryLethality",
     "Term",

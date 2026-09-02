@@ -97,13 +97,11 @@ AMBIGUITY NOTES for the coordinator:
    buff dict's base deltas.
 """
 
-import hashlib
 import json
 from pathlib import Path
 
 import pytest
 
-from tests.committed_bytes import sha256_as_committed
 from src import app as app_module
 from src.calculator.atomizer import hash_domain_file
 from src.calculator.champions import get_champion_options_meta, parse_champion_abilities
@@ -118,6 +116,7 @@ from src.calculator.champions.gnar import (
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats, growth_stat
+from tests.committed_bytes import sha256_as_committed
 
 # ---------------------------------------------------------------------------
 # Data roots (read-only evidence reads; nothing is written)
@@ -245,10 +244,12 @@ class TestSourceEvidence:
     def test_gnar_root_matches_the_cached_cdn_stats(self) -> None:
         # The tracked cache (data/champions.json) agrees with the binary.
         stats = _GNAR_DATA["stats"]
-        assert stats["health"]["flat"] == 540 and stats["health"]["perLevel"] == 79
+        assert stats["health"]["flat"] == 540
+        assert stats["health"]["perLevel"] == 79
         assert stats["attackDamage"]["flat"] == 60
         assert stats["attackDamage"]["perLevel"] == pytest.approx(3.2)
-        assert stats["armor"]["flat"] == 32 and stats["armor"]["perLevel"] == 3.7
+        assert stats["armor"]["flat"] == 32
+        assert stats["armor"]["perLevel"] == 3.7
         assert stats["magicResistance"]["flat"] == 30
         assert stats["attackSpeed"]["flat"] == 0.625
         assert stats["attackSpeed"]["perLevel"] == 6
@@ -270,7 +271,7 @@ class TestSourceEvidence:
             )
         # The AS constant is the LOSS magnitude: Mini's 6.0%/lvl growth
         # minus Mega's 0.5%/lvl (the buff applies it as -bonus AS).
-        assert MEGA_ATTACK_SPEED_LOSS == pytest.approx((0.0, 6.0 - 0.5))
+        assert pytest.approx((0.0, 6.0 - 0.5)) == MEGA_ATTACK_SPEED_LOSS
 
     def test_constants_are_the_five_pinned_pairs(self) -> None:
         assert MEGA_BONUS_HEALTH == (100.0, 43.0)
@@ -309,7 +310,7 @@ class TestSourceEvidence:
 
 class TestLevelEndpoints:
     @pytest.mark.parametrize(
-        "constant, level1, level18, level20",
+        ("constant", "level1", "level18", "level20"),
         [
             (MEGA_BONUS_HEALTH, 100.0, 831.0, 945.595),
             (MEGA_BONUS_AD, 6.0, 45.1, 51.2295),
@@ -326,10 +327,10 @@ class TestLevelEndpoints:
 
     def test_growth_multipliers_are_exact(self) -> None:
         # The formula's level factor: (L-1) x (0.7025 + 0.0175 x (L-1)).
-        assert _GROWTH_18 == pytest.approx(17.0)
-        assert _GROWTH_20 == pytest.approx(19.665)
-        assert 43 * _GROWTH_20 == pytest.approx(845.595)
-        assert 2.3 * _GROWTH_20 == pytest.approx(45.2295)
+        assert pytest.approx(17.0) == _GROWTH_18
+        assert pytest.approx(19.665) == _GROWTH_20
+        assert pytest.approx(845.595) == 43 * _GROWTH_20
+        assert pytest.approx(45.2295) == 2.3 * _GROWTH_20
 
     def test_level1_deltas_are_the_base_constants(self) -> None:
         # growth_stat at level 1 = base exactly (growth term is zero).
@@ -352,7 +353,7 @@ class TestLevelEndpoints:
 
 class TestBaseVsBonusAD:
     @pytest.mark.parametrize(
-        "level, base_health, base_ad",
+        ("level", "base_health", "base_ad"),
         [
             (1, 100.0, 6.0),
             (18, 831.0, 45.1),
@@ -374,7 +375,7 @@ class TestBaseVsBonusAD:
         }
 
     @pytest.mark.parametrize(
-        "level, mini_base_ad, mega_base_ad",
+        ("level", "mini_base_ad", "mega_base_ad"),
         [
             (1, 60.0, 66.0),
             (18, 114.0, 159.1),
@@ -428,7 +429,7 @@ class TestBaseVsBonusAD:
 
 class TestAttackSpeedLoss:
     @pytest.mark.parametrize(
-        "level, loss",
+        ("level", "loss"),
         [(1, 0.0), (18, 93.5), (20, 108.1575)],
     )
     def test_stat_buff_loss_value(self, level, loss) -> None:
@@ -450,7 +451,7 @@ class TestAttackSpeedLoss:
             )
 
     @pytest.mark.parametrize(
-        "level, mega_as",
+        ("level", "mega_as"),
         [(1, 0.625), (18, 0.678125), (20, 0.686453125)],
     )
     def test_engine_mega_as_math(self, level, mega_as) -> None:
@@ -463,7 +464,7 @@ class TestAttackSpeedLoss:
         assert stats["attack_speed"] == pytest.approx(expected)
 
     @pytest.mark.parametrize(
-        "level, mini_as, mega_as",
+        ("level", "mini_as", "mega_as"),
         [
             (1, 0.625, 0.625),
             (18, 1.6375, 0.678125),
@@ -497,7 +498,7 @@ class TestAttackSpeedLoss:
 
 class TestStatPanel:
     @pytest.mark.parametrize(
-        "level, mini, mega",
+        ("level", "mini", "mega"),
         [
             # (health, ad, base_ad, bonus_ad, armor, mr, attack_speed)
             (1, (540, 60, 60, 0, 32, 30, 0.625), (640, 66, 66, 0, 36, 33, 0.625)),
@@ -571,7 +572,7 @@ class TestEConsumers:
         assert "E" not in mega
 
     @pytest.mark.parametrize(
-        "level, mini_raw, mega_raw",
+        ("level", "mini_raw", "mega_raw"),
         [
             (18, 302.98, 382.84),  # 190+6%x1883 / 220+6%x2714
             (20, 315.64, 402.3757),  # 190+6%x2094 / 220+6%x3039.595
@@ -603,7 +604,7 @@ class TestRConsumers:
         assert "R" not in mega1
 
     @pytest.mark.parametrize(
-        "level, wall_raw, no_wall_raw",
+        ("level", "wall_raw", "no_wall_raw"),
         [
             (18, 600.0, 400.0),  # rank 3: 600+0.75x0 / 400+0.5x0
             (20, 600.0, 400.0),

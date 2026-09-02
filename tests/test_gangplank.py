@@ -47,7 +47,7 @@ class TestReviewedCrowdControl:
 
     def test_reviewed_kinds_follow_the_other_branch(self):
         """The burn row carries the review once it prices any proc."""
-        assert _CC.kinds(**{"p_procs": 2}) == {
+        assert _CC.kinds(p_procs=2) == {
             "passive": ["none"],
             "Q": ["none"],
             "E": ["slow"],

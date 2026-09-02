@@ -86,18 +86,18 @@ _EPS = 1e-9
 
 
 def _params(*, duration=12.0, one_rotation=False, item_options=None, **overrides):
-    base = dict(
-        target_health=2000.0,
-        target_bonus_health=0.0,
-        target_armor=50.0,
-        target_magic_resistance=40.0,
-        fight_duration_seconds=duration,
-        auto_attack_uptime=0.0,
-        one_rotation=one_rotation,
-        include_actives=True,
-        deterministic=True,
-        item_options=item_options or {},
-    )
+    base = {
+        "target_health": 2000.0,
+        "target_bonus_health": 0.0,
+        "target_armor": 50.0,
+        "target_magic_resistance": 40.0,
+        "fight_duration_seconds": duration,
+        "auto_attack_uptime": 0.0,
+        "one_rotation": one_rotation,
+        "include_actives": True,
+        "deterministic": True,
+        "item_options": item_options or {},
+    }
     base.update(overrides)
     return FightParams(**base)
 
@@ -142,7 +142,7 @@ def _expected_ezreal_refunds(result):
     ]
     accepted_casts = [(c["slot"], c["resource_cost"]) for c in result["cast_timeline"]]
     expected = []
-    for index, (slot, cost) in enumerate(accepted_casts):
+    for index, (slot, _cost) in enumerate(accepted_casts):
         if slot != "W":
             continue
         if index + 1 >= len(accepted_casts):
@@ -152,7 +152,7 @@ def _expected_ezreal_refunds(result):
         # and refunds nothing (the in-game mark expired before the hit).
         if spend_times[index + 1] - spend_times[index] > 4.0 + 1e-9:
             continue
-        detonator_slot, detonator_cost = accepted_casts[index + 1]
+        _detonator_slot, detonator_cost = accepted_casts[index + 1]
         expected.append((spend_times[index + 1], EZREAL_REFUND_BASE + detonator_cost))
     return expected
 
@@ -343,11 +343,11 @@ def test_m2_jayce_restore_keeps_later_casts_affordable():
     # denied with insufficient_resource receipts; with the same fight plus
     # the auto stream, the restores keep those exact later casts affordable.
     champ = get_champion("Jayce")
-    kwargs = dict(
-        duration=60.0,
-        auto_attack_uptime_mode="explicit",
-        champion_options={"hammer_stance": True},
-    )
+    kwargs = {
+        "duration": 60.0,
+        "auto_attack_uptime_mode": "explicit",
+        "champion_options": {"hammer_stance": True},
+    }
     without = run_fight(champ, 6, [], _params(auto_attack_uptime=0.0, **kwargs))
     with_autos = run_fight(champ, 6, [], _params(auto_attack_uptime=1.0, **kwargs))
 
@@ -359,7 +359,8 @@ def test_m2_jayce_restore_keeps_later_casts_affordable():
     denied_slots = {
         (r["detail"]["slot"], r["detail"]["ordinal"]) for r in denied_without
     }
-    assert ("W", 6) in denied_slots and ("W", 7) in denied_slots  # 50s / 60s W casts
+    assert ("W", 6) in denied_slots
+    assert ("W", 7) in denied_slots
 
     restores = _jayce_restores(with_autos["resource_ledger"]["receipts"])
     assert restores
@@ -519,7 +520,7 @@ def test_m4_ezreal_refund_amount_timing_and_order():
     # cast's time, applied AFTER the detonating spend in the receipt
     # stream.  Two detonating abilities with different costs (Q=40, E=70).
     champ = get_champion("Ezreal")
-    for cast_order, det_slots in ((["W", "Q"], {"Q"}), (["W", "E"], {"E"})):
+    for cast_order, _det_slots in ((["W", "Q"], {"Q"}), (["W", "E"], {"E"})):
         result = run_fight(champ, 18, [], _params(duration=12.0, cast_order=cast_order))
         receipts = result["resource_ledger"]["receipts"]
         refunds = _ezreal_refunds(receipts)
@@ -527,7 +528,7 @@ def test_m4_ezreal_refund_amount_timing_and_order():
         assert expected, "fixture must produce detonations"
         assert len(refunds) == len(expected)
         assert all(r["source"].startswith("Ezreal") for r in refunds)
-        for refund, (time, amount) in zip(refunds, expected):
+        for refund, (time, amount) in zip(refunds, expected, strict=False):
             assert refund["time"] == pytest.approx(time, abs=1e-6)
             assert refund["amount"] == pytest.approx(amount)
             assert refund["tier"] == 0.0  # restore tier on the receipt
@@ -552,7 +553,8 @@ def test_m4_ezreal_refund_amount_timing_and_order():
             "resource_ledger"
         ]["receipts"]
     )
-    assert q_refunds and e_refunds
+    assert q_refunds
+    assert e_refunds
     assert all(r["amount"] == pytest.approx(100.0) for r in q_refunds)
     assert all(r["amount"] == pytest.approx(130.0) for r in e_refunds)
 
@@ -564,7 +566,7 @@ def test_m4_ezreal_refund_enables_later_casts_and_basic_attack_option():
     # cast is accepted.  With w_mark_detonation="basic_attack" the mark
     # refunds nothing, so the denials come back.
     champ = get_champion("Ezreal")
-    kwargs = dict(duration=45.0, cast_order=["W", "Q", "E"])
+    kwargs = {"duration": 45.0, "cast_order": ["W", "Q", "E"]}
     ability_detonation = run_fight(champ, 6, [], _params(**kwargs))
     basic_attack = run_fight(
         champ,
@@ -808,12 +810,12 @@ def test_m8_score_parity_jayce():
     # implementation fails closed with a named receipt — the receipt
     # stream equality is the pinned check).
     champ = get_champion("Jayce")
-    kwargs = dict(
-        duration=12.0,
-        auto_attack_uptime=1.0,
-        auto_attack_uptime_mode="explicit",
-        champion_options={"hammer_stance": True},
-    )
+    kwargs = {
+        "duration": 12.0,
+        "auto_attack_uptime": 1.0,
+        "auto_attack_uptime_mode": "explicit",
+        "champion_options": {"hammer_stance": True},
+    }
     full = run_fight(champ, 18, [], _params(**kwargs))
     score = run_fight(champ, 18, [], _params(**kwargs), score_only=True)
     assert full["resource_spent"] == pytest.approx(score["resource_spent"])
@@ -834,7 +836,7 @@ def test_m8_score_parity_jayce():
 def test_m8_score_parity_ezreal():
     # M8, Ezreal side (refund active in both modes).
     champ = get_champion("Ezreal")
-    kwargs = dict(duration=12.0, cast_order=["W", "Q"])
+    kwargs = {"duration": 12.0, "cast_order": ["W", "Q"]}
     full = run_fight(champ, 18, [], _params(**kwargs))
     score = run_fight(champ, 18, [], _params(**kwargs), score_only=True)
     assert full["resource_spent"] == pytest.approx(score["resource_spent"])

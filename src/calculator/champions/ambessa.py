@@ -28,10 +28,12 @@ import re
 from dataclasses import replace
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_atoms import ability_field, ability_payload
+from ..binary_roots import data_value, spell_object
+from .engine import SlotCtx, SlotParser, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
-from .engine import SlotCtx, SlotParser, build_parser
 from .scaling import is_flat_unit, resolve_scaling
 from .slotlib import (
     attach_self_shield,
@@ -43,8 +45,6 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
-from ..binary_roots import data_value, spell_object
 
 # Rooted in AmbessaW.Shield_Duration; the cached ability description
 # corroborates the 1.5-second shield window. The shield base and 150%
@@ -319,7 +319,8 @@ MODULE_CC = {"Q": "none", "Q2": "none", "W": "none", "R": "stun"}
 
 parse_abilities = build_parser(SLOTS, "Ambessa", cc_kinds=MODULE_CC)
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Repudiation) also shields Ambessa at the cast for the level-indexed "
     "base (50 : 320 by level) + 150% bonus AD for 1.5s; the shield absorbs "
     "incoming damage in the participant ledger.",

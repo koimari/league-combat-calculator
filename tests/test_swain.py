@@ -8,8 +8,8 @@ says makes the whole timed fight fall back to coarse ordering.
 import pytest
 
 from src.calculator.champions import swain
-from tests import cc_review, row_review
 from src.calculator.champions.engine import CC_PER_PART
+from tests import cc_review, row_review
 
 
 def _r_parts(variant: int):

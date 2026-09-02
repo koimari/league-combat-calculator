@@ -36,9 +36,9 @@ from __future__ import annotations
 from typing import Any
 
 from .engine import ONHIT, SlotCtx
+from .inputs import bool_option, float_option, int_option
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
-from .inputs import bool_option, float_option, int_option
 from .slotlib import HitRider, ability_name, extract_value, with_hit_rider
 
 PACKET_SHA256 = "26e75628def53875687d8141eb419c4f2d3a2adb6e68ee714cd39cb4e446ad4e"
@@ -226,7 +226,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "p_style_stacks",
         0,
@@ -237,10 +238,8 @@ OPTIONS = list(OPTIONS) + [
     bool_option(
         "p_blade_zone",
         True,
-        label=(
-            "Samira fights inside her 200-unit blade zone (blade attacks; "
-            "Flair slashes) — the Daredevil Impulse rider's range gate"
-        ),
+        label="Samira fights inside her 200-unit blade zone (blade attacks; "
+        "Flair slashes) — the Daredevil Impulse rider's range gate",
     ),
     bool_option(
         "w_active", False, label="W (Blade Whirl) active against selected skillshots"
@@ -264,9 +263,7 @@ OPTIONS = list(OPTIONS) + [
         "type": "string_list",
         "default": [],
         "max_items": 24,
-        "label": (
-            "Skillshot slots to destroy; an empty list destroys all marked skillshots"
-        ),
+        "label": "Skillshot slots to destroy; an empty list destroys all marked skillshots",
     },
 ]
 

@@ -12,10 +12,10 @@ from __future__ import annotations
 import pytest
 
 from src.calculator import ability_spec, trigger_stream
-from tests import ability_math
 from src.calculator.ability_spec import Disposition
 from src.calculator.survival import outcome_state
 from src.calculator.survival.actions import NO_SLOT, ActionKind, SurvivalAction
+from tests import ability_math
 
 
 def action(slot: int, *, event_slot: int = NO_SLOT, trigger_slot: int = NO_SLOT):
@@ -501,7 +501,7 @@ def test_the_request_boundary_names_these_raises(raised) -> None:
     def _view():
         raise raised
 
-    guarded = app_module._within_starvation_boundary(_view)  # noqa: SLF001
+    guarded = app_module._within_starvation_boundary(_view)
     with app_module.app.test_request_context("/api/calculate", method="POST"):
         response, status = guarded()
     body = response.get_json()

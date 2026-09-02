@@ -7,10 +7,8 @@ says makes the whole timed fight fall back to coarse ordering.
 
 import pytest
 
-from src.calculator.champions import get_champion_module_contract
-from tests import rider_probe
-from src.calculator.champions import taric
-from tests import cc_review
+from src.calculator.champions import get_champion_module_contract, taric
+from tests import cc_review, rider_probe
 
 
 class TestReviewedCrowdControl:

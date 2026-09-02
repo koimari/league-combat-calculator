@@ -52,8 +52,10 @@ from ..binary_roots import (
     data_value,
     spell_object,
 )
-from .packet_module import build_packet_module
 from .engine import CC_PER_PART, ONHIT, SlotCtx
+from .inputs import int_option
+from .module_contract import coverage
+from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -63,8 +65,6 @@ from .slotlib import (
     find_named_leveling,
     on_hit_entry,
 )
-from .inputs import int_option
-from .module_contract import coverage
 
 PACKET_SHA256 = "4729cb0ee938dd410196bc3e6ea901bac4caf07fbe25859ce9532c9bf6648aea"
 
@@ -449,7 +449,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "r_overwhelm_stacks",
         _R_DEFAULT_OVERWHELM_STACKS,
@@ -466,7 +467,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Searing Brilliance) prices the empowered attack: each ability "
     "cast arms ONE empowered basic attack for 5 seconds and the swing "
     "fires 8 : 30 (based on level) (+ 4% AP) magic damage per consumed "

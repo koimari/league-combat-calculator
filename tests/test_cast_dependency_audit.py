@@ -20,7 +20,6 @@ interpreter reads this key and the read matters" is the claim under test.
 from __future__ import annotations
 
 import dataclasses
-import json
 
 import pytest
 
@@ -186,7 +185,8 @@ class TestReceipt:
         matrix = receipt["option_matrix"]
         assert matrix["champions"] == len(fetch_champion_data())
         assert matrix["states_walked"] > matrix["champions"]
-        assert matrix["levels"] and matrix["builds"]
+        assert matrix["levels"]
+        assert matrix["builds"]
 
 
 class TestInferredKindCoverage:
@@ -205,7 +205,8 @@ class TestInferredKindCoverage:
         gap = gaps[0]
         assert gap["ledger"] == "inferred_kind_coverage"
         assert gap["member"] == "enhanced_consume"
-        assert "D-88" in gap["decision"] and "H6" in gap["decision"]
+        assert "D-88" in gap["decision"]
+        assert "H6" in gap["decision"]
         assert len(gap["dated"]) == len("YYYY-MM-DD")
         assert gap["reason"].strip()
 

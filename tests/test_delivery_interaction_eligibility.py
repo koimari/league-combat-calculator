@@ -476,11 +476,13 @@ def test_d2_empty_selection_destroys_all_marked_projectiles():
     )
     destroyed = []
     for source in ("W", "Q", "E", "R"):
-        for event in _events(
-            combat, attacker="main", target="enemy:Yasuo", source=source
-        ):
-            if event.get("projectile_defense"):
-                destroyed.append(event)
+        destroyed.extend(
+            event
+            for event in _events(
+                combat, attacker="main", target="enemy:Yasuo", source=source
+            )
+            if event.get("projectile_defense")
+        )
     assert sorted(event["time"] for event in destroyed) == [
         0.0,
         0.25,

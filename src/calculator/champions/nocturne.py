@@ -20,6 +20,7 @@ from typing import Any
 
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
+from .inputs import bool_option
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -31,7 +32,6 @@ from .slotlib import (
     with_control_event,
     with_item_on_hits,
 )
-from .inputs import bool_option
 
 PACKET_SHA256 = "0ce5c515d925ee81726b3430bfa9068b01a64a9901b67361a7f8da766fd561b8"
 
@@ -148,7 +148,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     bool_option(
         "e_tether_holds",
         True,
@@ -156,10 +157,8 @@ OPTIONS = list(OPTIONS) + [
         rotation={
             "role": "self_state",
             "slot": "E",
-            "note": (
-                "Arms E's sourced fear at the end of its 2-second tether; "
-                "breaking the tether is the enemy's answer, not a cast edge."
-            ),
+            "note": "Arms E's sourced fear at the end of its 2-second tether; "
+            "breaking the tether is the enemy's answer, not a cast edge.",
         },
     ),
     bool_option(
@@ -169,15 +168,14 @@ OPTIONS = list(OPTIONS) + [
         rotation={
             "role": "self_state",
             "slot": "W",
-            "note": (
-                "Arms W's own doubled attack speed; the block is state the "
-                "enemy creates, not a cross-slot cast edge."
-            ),
+            "note": "Arms W's own doubled attack speed; the block is state the "
+            "enemy creates, not a cross-slot cast edge.",
         },
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Shroud of Darkness) grants its passive Bonus Attack Speed row "
     "(30-50%) unconditionally — the cached text gives that half no "
     "duration — and the fight engine applies it to the auto count.",

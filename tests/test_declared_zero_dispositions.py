@@ -56,7 +56,7 @@ def _combat(scenario: str) -> dict:
 
 
 @pytest.mark.parametrize(
-    "scenario", ("mandate_abyssal_curse_roster", "cleaver_bloodsong_roster")
+    "scenario", ["mandate_abyssal_curse_roster", "cleaver_bloodsong_roster"]
 )
 def test_a_refused_row_publishes_a_declared_zero(scenario: str) -> None:
     """The reproducer, inverted, against a live run.

@@ -14,9 +14,6 @@ paths agree by construction.
 import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.pipeline import FightParams
-from src.calculator.scenario import ChampionLoadout
-from src.calculator.stats import calculate_total_stats
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
@@ -24,6 +21,9 @@ from src.calculator.participant_timeline import (
     _WalkCompiler,
     build_participant_timeline,
 )
+from src.calculator.pipeline import FightParams
+from src.calculator.scenario import ChampionLoadout
+from src.calculator.stats import calculate_total_stats
 
 _APHELIOS_ITEMS = [
     get_item_by_name(name)

@@ -32,9 +32,12 @@ row rather than left unmodeled.
 from functools import partial
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
+from .inputs import int_option
+from .module_contract import coverage
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -44,9 +47,6 @@ from .slotlib import (
     with_control,
     with_item_on_hits,
 )
-from .. import healing_helpers as _healing
-from .inputs import int_option
-from .module_contract import coverage
 
 PACKET_SHA256 = "97538cf620050743705205ae884ef53611e35fbad8ed2808fd3617fb3bc3b7d5"
 
@@ -327,7 +327,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "senna_mist_stacks",
         40,
@@ -338,7 +339,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Mist stack count is user-set (default 40 — the expected mid-game "
     "state); Wraith-farming and mark-consume Mist generation are not "
     "simulated",
@@ -392,7 +394,7 @@ def derive_self_healing(
     healing = []
     q = _healing.ability_json(champion_data, "Q")
     q_rank = _healing.parsed_rank(ability_damages, "Q")
-    q_heal = _healing.extract_named(q, "Healing", q_rank, champion_stats)
+    q_heal = extract_named(q, "Healing", q_rank, champion_stats)
     for payment in _healing.payments(
         _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
     ):

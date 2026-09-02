@@ -15,8 +15,7 @@ import pytest
 
 import scripts.build_reviewed_modules as brm
 import scripts.full_entry_audit as audit
-import scripts.patch_regression as patch_regression
-import scripts.patch_update as patch_update
+from scripts import patch_regression, patch_update
 from scripts.source_receipt import source_receipt
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -132,7 +131,7 @@ def test_build_fails_closed_when_wiki_db_missing(tmp_path):
     axword = _write_axword(tmp_path)
     output = tmp_path / "out" / "reviewed-packets.json"
     missing = tmp_path / "missing.sqlite3"
-    with pytest.raises(RuntimeError, match="--wiki-db|LCC_WIKI_DB"):
+    with pytest.raises(RuntimeError, match=r"--wiki-db|LCC_WIKI_DB"):
         brm.build(champions, axword, output, wiki_db=missing)
     assert not output.exists(), "no output may be written on a missing wiki DB"
 
@@ -171,7 +170,7 @@ def test_build_missing_axword_source_is_one_actionable_failure(tmp_path):
     champions = _write_champions(tmp_path)
     db = _write_wiki_db(tmp_path, {"Fixture": 123})
     output = tmp_path / "reviewed-packets.json"
-    with pytest.raises(RuntimeError, match="axword|LCC_AXWORD_SOURCE"):
+    with pytest.raises(RuntimeError, match=r"axword|LCC_AXWORD_SOURCE"):
         brm.build(
             champions,
             tmp_path / "absent-merakiAbilityKits.ts",
@@ -210,7 +209,7 @@ def test_audit_report_marks_infrastructure_ok(tmp_path, monkeypatch):
 
 
 def test_resolve_patch_without_cdtb_raises_actionable_error():
-    with pytest.raises(RuntimeError, match="CDTB_BIN|--patch"):
+    with pytest.raises(RuntimeError, match=r"CDTB_BIN|--patch"):
         patch_regression.resolve_patch(cdtb_bin="/nonexistent/cdtb")
 
 
@@ -289,7 +288,7 @@ def test_packet_freshness_gate_detects_changed_champion_data(tmp_path):
 
 
 def test_packet_freshness_gate_detects_stale_wiki_revision(tmp_path):
-    asset_path, champions, axword, db = _fresh_sources(tmp_path)
+    asset_path, champions, axword, _db = _fresh_sources(tmp_path)
     moved = _write_wiki_db(tmp_path, {"Fixture": 999})  # wiki page was re-edited
     problems = _receipt_half(asset_path, champions, axword, moved)
     assert any("not current" in problem for problem in problems)

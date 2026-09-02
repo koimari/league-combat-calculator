@@ -236,7 +236,7 @@ def test_locke_w_grey_health_recast_heals_the_capped_pool():
     w = data["abilities"]["W"][0]
     cap = extract_named(w, "Damage taken grey health cap", 5, stats, {})
     combat = _fight("Locke", duration=10)
-    heals = [h for h in _main_heals(combat, "Soul Ignition (grey health)")]
+    heals = list(_main_heals(combat, "Soul Ignition (grey health)"))
     assert heals, "Soul Ignition grey-health heal missing"
     survival = _main_survival(combat)
     assert survival["grey_health_stored"] == pytest.approx(cap)
@@ -255,8 +255,9 @@ def test_locke_w_rank1_caps_the_pool_lower():
     combat = _fight("Locke", duration=10, ranks={"Q": 5, "W": 1, "E": 5, "R": 3})
     survival = _main_survival(combat)
     assert survival["grey_health_stored"] == pytest.approx(40.0)
-    heals = [h for h in _main_heals(combat, "Soul Ignition (grey health)")]
-    assert heals and heals[0]["amount"] == pytest.approx(40.0)
+    heals = list(_main_heals(combat, "Soul Ignition (grey health)"))
+    assert heals
+    assert heals[0]["amount"] == pytest.approx(40.0)
 
 
 # ---------------------------------------------------------------------------
@@ -295,12 +296,13 @@ def test_malphite_e_scales_off_tripled_armor():
 def test_malphite_api_w_and_e_match_sourced_mitigation():
     combat = _fight("Malphite")
     enemy_stats = _enemy_stats(combat)
-    _, stats, abilities = _parse("Malphite")
+    _, _stats, abilities = _parse("Malphite")
     w_raw = abilities["W"]["total_raw"]
     e_raw = abilities["E"]["total_raw"]
     w_events = _main_damage_events(combat, "W")
     e_events = _main_damage_events(combat, "E")
-    assert w_events and e_events
+    assert w_events
+    assert e_events
     # Thunderclap lands its empowered-attack bonus and its cone in one
     # instant but at two magnitudes, so the row's claim is that its events
     # ACCOUNT for the raw total, not that they are equal shares of it.
@@ -333,7 +335,7 @@ def _assert_soul_eater_heals(combat, *, level, ratio):
     """
     from src.calculator.data_fetcher import get_champion
 
-    heals = [h for h in _main_heals(combat, "Soul Eater")]
+    heals = list(_main_heals(combat, "Soul Eater"))
     assert heals, "Soul Eater heal missing"
     enemy_stats = _enemy_stats(combat)
     nasus_stats = calculate_total_stats(get_champion("Nasus"), level, [])
@@ -390,7 +392,8 @@ def test_reksai_e_prices_physical_bite_by_default():
     assert abilities["E"]["damage_type"] == "physical"
     combat = _fight("RekSai")
     events = _main_damage_events(combat, "E")
-    assert events and events[0]["damage_type"] == "physical"
+    assert events
+    assert events[0]["damage_type"] == "physical"
     assert events[0]["raw_damage"] == pytest.approx(expected / len(events))
 
 
@@ -403,7 +406,8 @@ def test_reksai_e_at_max_fury_is_true_damage():
     assert abilities["E"]["damage_type"] == "true"
     combat = _fight("RekSai", options={"e_fury": 100})
     events = _main_damage_events(combat, "E")
-    assert events and events[0]["damage_type"] == "true"
+    assert events
+    assert events[0]["damage_type"] == "true"
     # True damage ignores the target's armor entirely at 0 resists.
     assert sum(e["damage"] for e in events) == pytest.approx(expected, rel=1e-3)
 

@@ -14,28 +14,31 @@ reproduce them exactly.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator import item_effects
 from src.calculator.defensive_effects import resolve_starting_defenses
-from dataclasses import replace
-
-from src.calculator.interpreters import INTERPRETERS, RESOLVERS, compilability_for
-from src.calculator.interpreters import sustain
+from src.calculator.interpreters import (
+    INTERPRETERS,
+    RESOLVERS,
+    compilability_for,
+    sustain,
+)
 from src.calculator.interpreters.defense_state import compiled_shape
 from src.calculator.interpreters.sustain import (
     SustainInterpretationError,
-    resolve_received_healing,
-    sustain_fields,
-    walk_fields,
     declared_sustain,
     received_healing_multiplier,
+    resolve_received_healing,
     stat_grants,
+    sustain_fields,
     sustain_slot,
+    walk_fields,
     walk_slot,
 )
-from src.calculator.value_ref import LevelValueRef, ValueRef
 from src.calculator.item_behavior import (
     BelowHalfHealingRule,
     DefenseMechanic,
@@ -54,6 +57,7 @@ from src.calculator.item_behavior import (
     SustainStat,
     SustainStatRule,
 )
+from src.calculator.value_ref import LevelValueRef, ValueRef
 
 DRAIN_HOLDER = "Doran's Ring"
 HEAL_HOLDER = "Doran's Blade"

@@ -4,21 +4,22 @@ from __future__ import annotations
 
 import math
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Mapping
+from typing import Any
 
 from .ability_atoms import (
     AbilityAtomQuery,
     ranked_ability_atom_value,
-    required_ranked_attribute_atom,
     required_ability_atom,
+    required_ranked_attribute_atom,
 )
 from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
-from .item_behavior import PacketKind
-from .data_registry import data_version, store_for_generation
-from .survival.actions import SUPPORT_RANK_KEY, TransitionRank
-from .champions.slotlib import ability_name, extract_named, find_named_leveling
 from .champions.skill_orders import get_ability_rank
+from .champions.slotlib import ability_name, extract_named, find_named_leveling
+from .data_registry import data_version, store_for_generation
+from .item_behavior import PacketKind
+from .survival.actions import SUPPORT_RANK_KEY, TransitionRank
 
 
 def _ability(data: dict[str, Any], slot: str) -> dict[str, Any]:

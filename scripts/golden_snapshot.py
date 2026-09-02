@@ -55,11 +55,11 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.source_receipt import cache_patch
+from src.calculator import damage
 from src.calculator.champions import (
     parse_champion_abilities,
     registered_champion_names,
 )
-from src.calculator import damage
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.item_behavior import (
@@ -76,6 +76,14 @@ from src.calculator.item_behavior_catalog import (
     rule_owners,
 )
 from src.calculator.item_support_effects import producer_item
+from src.calculator.participant_timeline import (
+    CoupledSearchContext,
+    build_participant_timeline,
+)
+from src.calculator.pipeline import ONE_ROTATION_DURATION, FightParams, run_fight
+from src.calculator.public_response import serialize_fight_result
+from src.calculator.scenario import parse_scenario_request, resolve_scenario
+from src.calculator.stats import calculate_total_stats
 
 # The sys.path bootstrap above forces every first-party import below it;
 # this one line carries the disable rather than the whole block.
@@ -83,14 +91,6 @@ from src.calculator.trigger_stream import (  # pylint: disable=wrong-import-posi
     CAPABILITIES,
     cross_participant_packet_source,
 )
-from src.calculator.participant_timeline import (
-    CoupledSearchContext,
-    build_participant_timeline,
-)
-from src.calculator.pipeline import FightParams, ONE_ROTATION_DURATION, run_fight
-from src.calculator.public_response import serialize_fight_result
-from src.calculator.scenario import parse_scenario_request, resolve_scenario
-from src.calculator.stats import calculate_total_stats
 
 FINGERPRINTS_PATH = REPO_ROOT / "docs" / "receipts" / "campaign-fingerprints.json"
 SCHEDULE_RECEIPT_PATH = (
@@ -1752,7 +1752,7 @@ def coupled_entry(scenario):
         )
     else:
         for index, (enemy, target_params) in enumerate(
-            zip(resolved.enemies, resolved.target_fight_params)
+            zip(resolved.enemies, resolved.target_fight_params, strict=False)
         ):
             fights[f"{index}:{enemy.champion_data['name']}"] = serialize_fight_result(
                 run_fight(

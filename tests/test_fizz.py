@@ -183,7 +183,7 @@ class TestReviewedCrowdControl:
 
     def test_reviewed_kinds_follow_the_other_branch(self):
         """Trickster deals the same damage 'but not applying the slow'."""
-        assert _CC.kinds(**{"e_variant": 1}) == {
+        assert _CC.kinds(e_variant=1) == {
             "Q": ["none"],
             "W": ["none"],
             "E": ["none"],

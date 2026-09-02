@@ -9,8 +9,9 @@ final loadouts through the existing fight pipeline.
 from __future__ import annotations
 
 import collections
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Iterable
+from typing import Any
 
 from .data_fetcher import fetch_item_data
 from .data_registry import data_version
@@ -122,9 +123,7 @@ def is_purchasable(item: dict[str, Any], include_starters: bool = False) -> bool
     ranks = {str(rank).upper() for rank in item.get("rank", []) or []}
     if not ranks & _PURCHASABLE_RANKS:
         return False
-    if STARTER in ranks and not include_starters:
-        return False
-    return True
+    return not (STARTER in ranks and not include_starters)
 
 
 def _stackable_epics() -> frozenset[str]:

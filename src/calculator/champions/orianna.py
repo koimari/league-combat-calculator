@@ -31,6 +31,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
+from .inputs import bool_option, int_option
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -43,7 +44,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 
 def _clockwork_windup(ctx: SlotCtx) -> dict[str, Any] | None:

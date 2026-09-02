@@ -5,9 +5,12 @@ Option keys consumed by the shared parser: "p_ready", "q_isolated".
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option
+from .module_contract import coverage
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import (
     ability_name,
@@ -17,9 +20,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
-from .inputs import bool_option
-from .module_contract import coverage
 
 
 def _unseen_threat(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -118,7 +118,7 @@ def derive_self_healing(
     healing = []
     w = _healing.ability_json(champion_data, "W")
     w_rank = _healing.parsed_rank(ability_damages, "W")
-    w_heal = _healing.extract_named(w, "Heal", w_rank, champion_stats)
+    w_heal = extract_named(w, "Heal", w_rank, champion_stats)
     for payment in _healing.payments(
         _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
     ):

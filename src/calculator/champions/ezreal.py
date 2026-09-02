@@ -23,7 +23,9 @@ Why each slot is non-generic:
 
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, SlotParser, build_parser
+from .inputs import int_option
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -32,8 +34,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
-from ..binary_roots import data_value, spell_object
 
 # ROOTED IN THE BINARY (data/bin/characters/ezreal.bin.json): the passive
 # stack shape is EzrealPassive DataValues, Q's cooldown refund is

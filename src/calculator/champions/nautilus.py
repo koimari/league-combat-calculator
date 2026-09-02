@@ -23,8 +23,8 @@ P1-2 fixes:
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .packet_module import build_packet_module
 from .engine import ONHIT, SlotCtx
+from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -149,7 +149,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Staggering Blow) deals 14 : 128 (based on level) bonus physical "
     "damage on empowered basic attacks — the wiki's 'Per-Level Scaling' "
     "row (data/champions.json). The packet's old 0.75-1.5 'Bonus Damage' "

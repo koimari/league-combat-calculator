@@ -22,6 +22,8 @@ from types import SimpleNamespace
 
 import pytest
 
+from src import app as app_module
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.delivery_eligibility import (
     SPELL_SHIELD_ONE_USE_RULE,
     DefenseWindow,
@@ -29,9 +31,6 @@ from src.calculator.delivery_eligibility import (
     SpellShieldComposition,
     SpellShieldEligibility,
 )
-
-from src import app as app_module
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.participant_timeline import Combatant
 from src.calculator.program.amp import LiveAmpRider, live_amp_for, live_amp_riders
 from src.calculator.program.compile import action_from_event
@@ -114,7 +113,10 @@ def _walk(actions, target, *, state_edits=None):
     does not land.
     """
     observed = [dict(action.event or {}) for action in actions]
-    staged = [action._replace(event=event) for action, event in zip(actions, observed)]
+    staged = [
+        action._replace(event=event)
+        for action, event in zip(actions, observed, strict=False)
+    ]
     states = build_states([target], (0.0,))
     if state_edits is not None:
         state_edits(states)
@@ -301,7 +303,8 @@ def test_the_interpreter_reads_shadowflames_own_declaration():
     assert rider.amp.threshold == pytest.approx(0.4)
     assert rider.amp.fraction == pytest.approx(0.2)
     assert rider.damage_types == frozenset({"magic", "true"})
-    assert rider.rides("magic") and not rider.rides("physical")
+    assert rider.rides("magic")
+    assert not rider.rides("physical")
 
 
 def test_a_build_declaring_no_live_predicate_declares_no_rider():
@@ -429,7 +432,8 @@ def test_removing_the_coupled_interpreter_drops_it_to_zero_not_to_the_preview(
     body = _roster((ALLY,))
     applied = _applied(body)
     preview = body["breakdown"]["shadowflame_Shadowflame"]["total_damage"]
-    assert applied > 0.0 and preview > 0.0
+    assert applied > 0.0
+    assert preview > 0.0
     _roster.cache_clear()
     monkeypatch.setattr(
         participant_timeline, "_live_amps_of", lambda attacker, defender, params: ()

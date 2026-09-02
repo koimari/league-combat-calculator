@@ -2,9 +2,9 @@
 
 import pytest
 
-from tests.ability_math import parts_raw_total
 from src.calculator.champions import rakan
 from tests import cc_review
+from tests.ability_math import parts_raw_total
 
 
 def test_rakan_rotation_counts_each_enemy_damage_cast_once(rakan_data, parse_at):

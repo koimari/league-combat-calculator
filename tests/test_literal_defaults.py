@@ -19,7 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-import literal_defaults  # noqa: E402  (path set above)
+import literal_defaults
 
 CALCULATOR = Path(__file__).resolve().parent.parent / "src" / "calculator"
 
@@ -1965,7 +1965,7 @@ def _covered_findings():
         )
         for finding in literal_defaults.scan(_covered_files())
     )
-    return {key + (count,) for key, count in occurrences.items()}
+    return {(*key, count) for key, count in occurrences.items()}
 
 
 def test_no_ability_payload_read_carries_a_literal_default():

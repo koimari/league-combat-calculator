@@ -352,11 +352,11 @@ def write_runtime_cache(
     data_path = data_directory / filename
     tmp_path = data_directory / f".{filename}.tmp"
     try:
-        with open(tmp_path, "w", encoding="utf-8") as handle:
+        with tmp_path.open("w", encoding="utf-8") as handle:
             json.dump(payload, handle, indent=2)
             handle.flush()
             os.fsync(handle.fileno())
-        os.replace(tmp_path, data_path)
+        tmp_path.replace(data_path)
     finally:
         if tmp_path.exists():
             tmp_path.unlink(missing_ok=True)
@@ -399,5 +399,5 @@ def write_runtime_cache(
                 "source_version": source_version,
             }
     meta_path = data_directory / f".{filename}.meta"
-    with open(meta_path, "w", encoding="utf-8") as meta_file:
+    with meta_path.open("w", encoding="utf-8") as meta_file:
         json.dump(metadata, meta_file, indent=2)

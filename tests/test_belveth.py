@@ -11,11 +11,10 @@ Hand-validated against revision-backed patch 26.15 wiki data:
 import pytest
 
 from src.calculator import item_effects
-from src.calculator.interpreters import charged_strike, on_hit_strike
-from src.calculator.champions import parse_champion_abilities
+from src.calculator.champions import belveth, parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.champions import belveth
+from src.calculator.interpreters import charged_strike, on_hit_strike
 from tests import cc_review
 
 

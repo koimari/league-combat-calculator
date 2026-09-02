@@ -38,7 +38,7 @@ class TestReviewedCrowdControl:
         assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
 
     @pytest.mark.parametrize(
-        "form,kind",
+        ("form", "kind"),
         [("base", "slow"), ("shadow_assassin", "slow"), ("darkin", "knockup")],
     )
     def test_blades_reach_carries_the_forms_own_kind(self, form, kind):

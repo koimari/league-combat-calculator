@@ -18,9 +18,9 @@ a preserved defect S6 declined to touch, not an oversight.
 """
 
 import ast
-import json
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Iterable, Mapping, NamedTuple, Sequence
+from typing import NamedTuple
 
 import pytest
 
@@ -274,20 +274,23 @@ def _sort_key_tuples(tree: ast.AST, rules: _SlotRules) -> list[tuple[ast.Tuple, 
             for keyword in node.keywords:
                 if keyword.arg == "sort_key" and isinstance(keyword.value, ast.Tuple):
                     found.append((keyword.value, "sort_key[1]"))
-                if keyword.arg == "key" and isinstance(keyword.value, ast.Lambda):
-                    if isinstance(keyword.value.body, ast.Tuple):
-                        found.append((keyword.value.body, "sort_key[1]"))
+                if (
+                    keyword.arg == "key"
+                    and isinstance(keyword.value, ast.Lambda)
+                    and isinstance(keyword.value.body, ast.Tuple)
+                ):
+                    found.append((keyword.value.body, "sort_key[1]"))
             index = rules.sort_key_arg.get(_callee_name(node.func), -1)
             if 0 <= index < len(node.args) and isinstance(node.args[index], ast.Tuple):
                 found.append((node.args[index], "sort_key[1] (positional)"))
         elif isinstance(node, ast.Assign):
-            for target in node.targets:
-                if (
-                    isinstance(target, ast.Name)
-                    and target.id.endswith("sort_key")
-                    and isinstance(node.value, ast.Tuple)
-                ):
-                    found.append((node.value, "sort_key[1]"))
+            found.extend(
+                (node.value, "sort_key[1]")
+                for target in node.targets
+                if isinstance(target, ast.Name)
+                and target.id.endswith("sort_key")
+                and isinstance(node.value, ast.Tuple)
+            )
     return found
 
 
@@ -316,9 +319,11 @@ def phase_literals(
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
             callee = _callee_name(node.func)
-            for keyword in node.keywords:
-                if keyword.arg == "phase" and _slot_offends(keyword.value, bound):
-                    offenders.append((path.name, keyword.value.lineno, "phase="))
+            offenders.extend(
+                (path.name, keyword.value.lineno, "phase=")
+                for keyword in node.keywords
+                if keyword.arg == "phase" and _slot_offends(keyword.value, bound)
+            )
             index = rules.phase_arg.get(callee, -1)
             if 0 <= index < len(node.args) and _slot_offends(node.args[index], bound):
                 offenders.append(
@@ -331,17 +336,15 @@ def phase_literals(
             ):
                 offenders.append((path.name, node.lineno, "phase comparison"))
         elif isinstance(node, ast.ClassDef):
-            for stmt in node.body:
-                if (
-                    isinstance(stmt, ast.AnnAssign)
-                    and isinstance(stmt.target, ast.Name)
-                    and stmt.target.id == "phase"
-                    and stmt.value is not None
-                    and _slot_offends(stmt.value, bound)
-                ):
-                    offenders.append(
-                        (path.name, stmt.lineno, f"{node.name}.phase default")
-                    )
+            offenders.extend(
+                (path.name, stmt.lineno, f"{node.name}.phase default")
+                for stmt in node.body
+                if isinstance(stmt, ast.AnnAssign)
+                and isinstance(stmt.target, ast.Name)
+                and stmt.target.id == "phase"
+                and stmt.value is not None
+                and _slot_offends(stmt.value, bound)
+            )
     for tup, slot in _sort_key_tuples(tree, rules):
         if len(tup.elts) > 1 and _slot_offends(tup.elts[1], bound):
             offenders.append((path.name, tup.elts[1].lineno, slot))
@@ -442,7 +445,7 @@ def test_the_phase_slot_guard_sees_every_spelling(tmp_path: Path) -> None:
     """The guard's own red: each shape it claims to cover, made to fail."""
     sample = tmp_path / "sample.py"
     sample.write_text(
-        "\n".join(
+        "\n".join(  # noqa: FLY002 - one sample line per shape
             (
                 # The definitions shapes 2 and 3 read their positions from.
                 "def action_key(event_time, phase, participant_id, event):\n    pass",
@@ -630,11 +633,13 @@ def _declared_ranks(path: Path) -> list[tuple[str, str]]:
     found: list[tuple[str, str]] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
-            for keyword in node.keywords:
-                if keyword.arg == "rank" and _rank_name(keyword.value):
-                    found.append((path.name, _rank_name(keyword.value)))
+            found.extend(
+                (path.name, _rank_name(keyword.value))
+                for keyword in node.keywords
+                if keyword.arg == "rank" and _rank_name(keyword.value)
+            )
         elif isinstance(node, ast.Dict):
-            for key, value in zip(node.keys, node.values):
+            for key, value in zip(node.keys, node.values, strict=False):
                 if getattr(key, "id", "") == "SUPPORT_RANK_KEY" and _rank_name(value):
                     found.append((path.name, _rank_name(value)))
     return found
@@ -816,12 +821,15 @@ def test_s6_moved_the_ordering_and_not_the_classification() -> None:
     named in the module instead, and this is the assertion that the two
     questions now have two answers.
     """
-    assert actions_module._RECOVERY_CLASSIFIED_RANKS == frozenset(
-        {
-            TransitionRank.DEBUFF_ARM,
-            TransitionRank.RECOVERY,
-            TransitionRank.UTILITY_ARM,
-        }
+    assert (
+        frozenset(
+            {
+                TransitionRank.DEBUFF_ARM,
+                TransitionRank.RECOVERY,
+                TransitionRank.UTILITY_ARM,
+            }
+        )
+        == actions_module._RECOVERY_CLASSIFIED_RANKS
     )
     # ...and it is no longer expressible as the fold's output, which is what
     # makes naming it load-bearing rather than stylistic.

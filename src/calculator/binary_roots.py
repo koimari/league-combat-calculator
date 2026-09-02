@@ -16,7 +16,7 @@ substitutes zero, skips, or falls back.
 import json
 import math
 import re
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from typing import Any
 
@@ -29,7 +29,7 @@ def champion_key(name: str) -> str:
     return _NONALNUM.sub("", str(name).lower())
 
 
-@lru_cache(maxsize=None)
+@cache
 def character_bin(champion_name: str) -> dict[str, Any]:
     """One champion's full parsed binary dump, keyed by object path."""
     path = _BIN_DIR / f"{champion_key(champion_name)}.bin.json"
@@ -99,15 +99,13 @@ def record_value(root: dict[str, Any], field: str) -> float:
     raise RuntimeError(f"record field {field!r} not found")
 
 
-def _breakpoint_level(breakpoint: Any) -> float:
+def _breakpoint_level(step: Any) -> float:
     """One breakpoint's sort key: its numeric ``mLevel``, or raise."""
-    if isinstance(breakpoint, dict) and "mLevel" in breakpoint:
-        level = breakpoint["mLevel"]
+    if isinstance(step, dict) and "mLevel" in step:
+        level = step["mLevel"]
         if isinstance(level, (int, float)):
             return float(level)
-    raise RuntimeError(
-        f"calculation breakpoint row without a numeric mLevel: {breakpoint!r}"
-    )
+    raise RuntimeError(f"calculation breakpoint row without a numeric mLevel: {step!r}")
 
 
 def calculation_breakpoints(
@@ -145,9 +143,9 @@ def calculation_breakpoints(
                 raise RuntimeError(
                     f"calculation {calculation_name!r}: mBreakpoints is not a list"
                 )
-            for breakpoint in sorted(raw_breakpoints, key=_breakpoint_level):
+            for step in sorted(raw_breakpoints, key=_breakpoint_level):
                 try:
-                    current += float(breakpoint["mAdditionalBonusAtThisLevel"])
+                    current += float(step["mAdditionalBonusAtThisLevel"])
                 except (KeyError, TypeError, ValueError) as exc:
                     raise RuntimeError(
                         f"calculation {calculation_name!r}: unusable breakpoint row"

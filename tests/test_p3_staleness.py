@@ -11,8 +11,8 @@ import json
 
 import pytest
 
-import scripts.patch_regression as patch_regression
 import src.app as app_module
+from scripts import patch_regression
 
 # ---------------------------------------------------------------------------
 # Tolerance contract
@@ -127,8 +127,7 @@ def _cache_stats(**overrides):
         "mana": {"flat": 418.0, "perLevel": 25.0},
         "manaRegen": {"flat": 8.0, "perLevel": 0.8},
     }
-    for key, value in overrides.items():
-        stats[key] = value
+    stats.update(overrides)
     return stats
 
 
@@ -214,7 +213,7 @@ def _game_items_bin():
 
 
 def _cache_item(name, **stats_overrides):
-    zero = {key: 0.0 for key in ("flat", "percent", "percentBase", "percentBonus")}
+    zero = dict.fromkeys(("flat", "percent", "percentBase", "percentBonus"), 0.0)
     stats = {
         key: dict(zero)
         for key in (
@@ -240,8 +239,7 @@ def _cache_item(name, **stats_overrides):
             "cooldownReduction",
         )
     }
-    for key, value in stats_overrides.items():
-        stats[key] = value
+    stats.update(stats_overrides)
     return {"name": name, "stats": stats}
 
 
@@ -400,11 +398,11 @@ def test_damage_row_value_matched_is_checked():
 def _write_fixture_game_dir(tmp_path):
     game_dir = tmp_path / "gamefiles"
     (game_dir / "characters").mkdir(parents=True)
-    with open(game_dir / "characters" / "fixture.bin.json", "w") as handle:
+    with (game_dir / "characters" / "fixture.bin.json").open("w") as handle:
         json.dump(_champion_bin({"baseHPModifiable": 600.0}), handle)
-    with open(game_dir / "characters" / "clean.bin.json", "w") as handle:
+    with (game_dir / "characters" / "clean.bin.json").open("w") as handle:
         json.dump(_champion_bin(), handle)
-    with open(game_dir / "items.bin.json", "w") as handle:
+    with (game_dir / "items.bin.json").open("w") as handle:
         json.dump(_game_items_bin(), handle)
     return game_dir
 

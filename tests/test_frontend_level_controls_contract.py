@@ -1,6 +1,7 @@
 import re
-from bs4 import BeautifulSoup
 from pathlib import Path
+
+from bs4 import BeautifulSoup
 
 import src.app as app_module
 
@@ -34,7 +35,8 @@ def test_level_controls_use_level_delta_path_contract():
     )
     assert 'data-level-path="${root}.${index}.level"' in source
     assert (
-        "setPath(levelPath, Math.max(1, Math.min(cap, Number(pathValue(levelPath)) + Number(levelButton.dataset.levelDelta || levelButton.dataset.delta || 0))))"
+        "setPath(levelPath, Math.max(1, Math.min(cap, Number(pathValue(levelPath)) + "
+        "Number(levelButton.dataset.levelDelta || levelButton.dataset.delta || 0))))"
         in source
     )
 

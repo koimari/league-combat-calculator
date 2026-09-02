@@ -71,13 +71,13 @@ from src.calculator.champions import (
 from src.calculator.champions.aurelion_sol import (
     _E_EXECUTE_BASE_PCT,
     _E_EXECUTE_PCT_PER_100_STARDUST,
-    _Q_BURSTS_PER_CHANNEL,
     _Q_BURST_MAXHP_PCT_PER_STARDUST,
+    _Q_BURSTS_PER_CHANNEL,
     _Q_CHANNEL_SECONDS,
 )
+from src.calculator.champions.slotlib import find_named_leveling
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
-from src.calculator.champions.slotlib import find_named_leveling
 from tests.parse_stats import parse_stats
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
@@ -258,10 +258,10 @@ class TestSourceAndTypedValues:
     def test_module_constants_typed_path_disclose_all_sourced_values(self):
         # The typed module path (direct import, the same route the option
         # state receipt will publish) discloses every Stardust number.
-        assert _Q_BURST_MAXHP_PCT_PER_STARDUST == pytest.approx(0.031)
-        assert _E_EXECUTE_BASE_PCT == pytest.approx(5.0)
-        assert _E_EXECUTE_PCT_PER_100_STARDUST == pytest.approx(2.6)
-        assert _Q_CHANNEL_SECONDS == pytest.approx(3.25)
+        assert pytest.approx(0.031) == _Q_BURST_MAXHP_PCT_PER_STARDUST
+        assert pytest.approx(5.0) == _E_EXECUTE_BASE_PCT
+        assert pytest.approx(2.6) == _E_EXECUTE_PCT_PER_100_STARDUST
+        assert pytest.approx(3.25) == _Q_CHANNEL_SECONDS
         assert _Q_BURSTS_PER_CHANNEL == 3
 
     def test_stardust_constants_discoverable_through_parse(self):
@@ -595,7 +595,8 @@ class TestThresholdTransitions:
         assert crossings
         for row in crossings:
             count = row["threshold_count"]
-            assert count % 100 == 0 and count > 0
+            assert count % 100 == 0
+            assert count > 0
             assert row["execute_pct_delta"] == pytest.approx(2.6)
             assert row["stacks_before"] == count - 100
             assert row["stacks_after"] == count
@@ -692,7 +693,8 @@ class TestLedgerReceipts:
         assert ledger["kind"] == "mana"
         assert ledger["opening_current"] == pytest.approx(300.0)
         spends = [r for r in ledger["receipts"] if r["operation"] == "spend"]
-        assert spends and all(r["accepted"] for r in spends)
+        assert spends
+        assert all(r["accepted"] for r in spends)
         assert result["resource_spent"] > 0.0
         assert result["resource_remaining"] < ledger["opening_current"]
         # The additive stardust sub-section coexists beside the mana account.
@@ -792,7 +794,7 @@ class TestScoreReceiptParity:
             assert len(full["cast_timeline"]) == len(scored["cast_timeline"])
             shared = ("time", "slot", "name", "ordinal", "resource_cost")
             for full_row, scored_row in zip(
-                full["cast_timeline"], scored["cast_timeline"]
+                full["cast_timeline"], scored["cast_timeline"], strict=False
             ):
                 assert {k: full_row[k] for k in shared} == {
                     k: scored_row[k] for k in shared
@@ -951,7 +953,5 @@ class TestUnchangedBoundaries:
 # ---------------------------------------------------------------------------
 # S10 — Regression surface (kept green; run list)
 # ---------------------------------------------------------------------------
-# Run ONLY this file plus the mandated sanity list (contract 10):
-#   .venv/bin/python -m pytest tests/test_aurelion_sol_stardust_ledger.py #     tests/test_senna_souls_ledger.py tests/test_rengar_ferocity_ledger.py #     tests/test_state_lifecycle.py tests/test_state_lifecycle_consumers.py #     tests/test_resource_ledger.py tests/test_resource_ledger_consumers.py #     tests/test_resource_ledger_champion_consumers.py #     tests/test_catalyst_resource_ledger.py tests/test_item_sustain.py #     tests/test_mana_restore_refund.py tests/test_app.py
 # Aurelion Sol / stardust grep surface (contract 10), run separately:
 #   tests/test_aurelion_sol.py tests/test_e2_dot_1.py #     tests/test_mechanics_packets.py

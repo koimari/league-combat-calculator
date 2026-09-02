@@ -29,13 +29,13 @@ hardcoded.
 
 from typing import Any
 
-from .engine import CC_PER_PART, SlotCtx, build_parser
-from .module_helpers import no_damage_parser
-from .source_receipts import load_champion_sources
-from .slotlib import ability_name, extract_cooldown, extract_named, simple_damage
 from ..ability_spec import DamagePart
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import float_option
 from .module_contract import coverage
+from .module_helpers import no_damage_parser
+from .slotlib import ability_name, extract_cooldown, extract_named, simple_damage
+from .source_receipts import load_champion_sources
 
 
 def _decimating_smash(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -89,7 +89,7 @@ def _roar_of_the_slayer(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = {
+    return {
         "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
@@ -108,7 +108,6 @@ def _roar_of_the_slayer(ctx: SlotCtx) -> dict[str, Any] | None:
             "hit."
         ),
     }
-    return entry
 
 
 ASSUMPTIONS = [

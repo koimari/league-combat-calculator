@@ -329,11 +329,11 @@ __all__ = [
     "CastProcInterpretationError",
     "CastProcSlots",
     "cast_proc_rules",
+    "cooldown_proc_effect",
     "proc_fields",
     "proc_mechanic_id",
-    "self_shield_owners",
-    "cooldown_proc_effect",
     "repeated_target_multiplier",
     "resolve_slots",
+    "self_shield_owners",
     "ultimate_proc_effect",
 ]

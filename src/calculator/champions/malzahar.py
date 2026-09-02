@@ -47,9 +47,11 @@ from functools import partial
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from ..stats import growth_multiplier
-from .inputs import champion_stat, int_option
 from .engine import SlotCtx
+from .inputs import champion_stat, int_option
+from .module_contract import coverage
 from .module_helpers import rank
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -62,8 +64,6 @@ from .slotlib import (
     fixed_count_pet_row,
     with_control,
 )
-from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
 
 _MALZAHAR_E_SPELL = spell_object("Malzahar", "MalzaharE")
 _MALZAHAR_R_SPELL = spell_object("Malzahar", "MalzaharR")

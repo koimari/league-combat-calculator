@@ -32,8 +32,7 @@ from src.calculator.champions import (
 from src.calculator.champions.engine import SlotCtx
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import calculate_total_stats
-from tests import rider_probe, row_review
-from tests import cc_review
+from tests import cc_review, rider_probe, row_review
 
 # The phrase each declared kind was read from, in that slot's cached text.
 QUOTED = {"E": "slowing them by 40%"}
@@ -144,9 +143,9 @@ class TestStrut:
         assert entry["total_raw"] == 0.0
 
     def test_every_slot_now_prices_something(self):
-        assert get_champion_module_contract("Miss Fortune").coverage == {
-            slot: "modeled" for slot in "PQWER"
-        }
+        assert get_champion_module_contract("Miss Fortune").coverage == dict.fromkeys(
+            "PQWER", "modeled"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -190,7 +189,9 @@ class TestLoveTapRatioLadder:
         assert miss_fortune._love_tap_tier(18) == 5  # 20-breakpoint not reached
         assert miss_fortune._love_tap_tier(20) == 6
 
-    @pytest.mark.parametrize("level,expected_ratio", sorted(_RATIO_ENDPOINTS.items()))
+    @pytest.mark.parametrize(
+        ("level", "expected_ratio"), sorted(_RATIO_ENDPOINTS.items())
+    )
     def test_ratio_at_verified_endpoints(self, level, expected_ratio):
         # Recompute independently of the module's own tier arithmetic:
         # level1 + step * tier, using the module's public constants.

@@ -39,6 +39,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
+from .inputs import int_option
 from .packet_module import build_packet_module
 from .slotlib import (
     attach_self_shield,
@@ -48,7 +49,6 @@ from .slotlib import (
     on_hit_entry,
     sum_modifiers,
 )
-from .inputs import int_option
 
 PACKET_SHA256 = "02fdfcd1fd65f629f446626879f993ab3308ec7eefb4e974ab8f4a026f43dd15"
 
@@ -227,7 +227,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "p_gloom_detonations",
         1,
@@ -239,7 +240,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "R (Shadow Surge) always lands both hits: the Shadow's cached Magic "
     "Damage at the cast and the recast consume 0.5s later. The player "
     "picks that instant anywhere inside the cached 4-second mark, so the "

@@ -814,7 +814,8 @@ class TestMeleeRangedLeveling:
             "{{tip|adaptive damage}} upon arrival"
         )
         melee, ranged = effects["melee_ranged_leveling"]
-        assert len(melee) == 20 and len(ranged) == 20
+        assert len(melee) == 20
+        assert len(ranged) == 20
         assert melee[0] == 9.0
         assert melee[17] == pytest.approx(30.0)
         assert ranged[0] == 6.0

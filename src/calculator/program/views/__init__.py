@@ -45,12 +45,12 @@ __all__ = [
     "LeafWriter",
     "RankingWriter",
     "UnrankableNumber",
+    "ViewTag",
     "name_every_number",
     "published_quantity",
     "published_tag",
     "refuse_previewed",
     "serialize_leaf",
-    "ViewTag",
 ]
 
 
@@ -131,7 +131,7 @@ def refuse_previewed(
 
 def published_tag(
     dispositions: Mapping[str, Mapping[str, object]], path: str, *, surface: str
-) -> "ViewTag":
+) -> ViewTag:
     """What the payload says the number at *path* means, or a refusal.
 
     A leaf with no entry is refused rather than assumed applied: a number
@@ -269,7 +269,7 @@ class LeafBlock:
 
     def __init__(
         self,
-        writer: "LeafWriter",
+        writer: LeafWriter,
         target: MutableMapping[str, object],
         prefix: str,
         tag: ViewTag,
@@ -297,11 +297,11 @@ class LeafBlock:
         """
         out = serialize_leaf(f"{self._dot}{key}", quantity, self._tag)
         # pylint: disable-next=protected-access
-        self._writer._record(out)
+        self._writer._record(out)  # noqa: SLF001 - the writer's ledger
         if out.present:
             self._target[key] = out.value
 
-    def nested(self, target: MutableMapping[str, object], key: str) -> "LeafBlock":
+    def nested(self, target: MutableMapping[str, object], key: str) -> LeafBlock:
         """A block for a sub-object of this one, at ``prefix.key``."""
         return LeafBlock(self._writer, target, f"{self._dot}{key}", self._tag)
 
@@ -358,7 +358,7 @@ class LeafBlock:
             return float(value)
         out = serialize_leaf(path, Measured(amount=float(value)), self._tag)
         # pylint: disable-next=protected-access
-        self._writer._record(out)
+        self._writer._record(out)  # noqa: SLF001 - the writer's ledger
         return out.value
 
     def raw(self, key: str, value: object) -> None:

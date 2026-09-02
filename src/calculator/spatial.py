@@ -21,7 +21,8 @@ Design rules (HANDOVER §11):
 from __future__ import annotations
 
 import math
-from typing import Any, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 # Floating-point tolerance shared with the damage/survival walks.
 _EPS = 1e-9

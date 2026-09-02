@@ -74,9 +74,9 @@ from src.calculator.champions import (
     parse_champion_abilities,
 )
 from src.calculator.champions.rumble import (
-    ASSUMPTIONS,
     _MAX_OVERHEAT_AUTOS,
     _MAX_OVERHEAT_WINDOWS,
+    ASSUMPTIONS,
     _heat_mechanics,
 )
 from src.calculator.champions.scaling import (
@@ -247,7 +247,8 @@ class TestOverheatIsBinaryCorroborated:
         ]
         assert ladders, "TotalBaseDamage has no per-level ladder part"
         flat = json.dumps(ladders)
-        assert "5.0" in flat and "40.0" in flat
+        assert "5.0" in flat
+        assert "40.0" in flat
 
 
 class TestOverheatDamage:
@@ -321,7 +322,8 @@ class TestZeroAutosCostZero:
     def test_zero_and_one_auto_are_not_identical(self):
         assert _rider(20, 0) == (0.0, 0)
         per_swing, procs = _rider(20, 1)
-        assert per_swing > 0.0 and procs == 1
+        assert per_swing > 0.0
+        assert procs == 1
 
     def test_option_is_registered_with_a_zero_default(self):
         meta = get_champion_options_meta("Rumble")

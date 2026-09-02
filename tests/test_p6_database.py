@@ -8,6 +8,7 @@ isolated SQLite file; the layer itself is dialect-agnostic, so the same
 models and helpers run against PostgreSQL in production.
 """
 
+import contextlib
 import threading
 import time
 
@@ -358,10 +359,8 @@ def test_concurrent_cache_set_on_one_key_never_raises(sqlite_database):
 
     def hold_after_existence_check(_conn, _cursor, statement, *_rest):
         if "cached_results" in statement and statement.lstrip()[:6].upper() == "SELECT":
-            try:
+            with contextlib.suppress(threading.BrokenBarrierError):
                 barrier.wait()
-            except threading.BrokenBarrierError:
-                pass
 
     errors = []
 

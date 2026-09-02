@@ -7,7 +7,10 @@ import math
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx, build_parser
+from .inputs import bool_option
+from .module_contract import coverage
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import (
     ability_name,
@@ -17,9 +20,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option
-from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
 
 
 def _sigil_of_malice(ctx: SlotCtx) -> dict[str, Any] | None:

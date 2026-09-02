@@ -16,7 +16,6 @@ partially refreshed tree.
 from __future__ import annotations
 
 import json
-import os
 import shutil
 import sys
 import tempfile
@@ -112,11 +111,9 @@ def champion_receipt(name: str, champ: dict, audits: dict) -> dict:
         "audit_gap": audit.get("gap_summary", "")[:200],
         "ability_damage_types": {
             slot: (
-                (
-                    abs_[0].get("damageType")
-                    if abs_ and isinstance(abs_[0], dict)
-                    else None
-                )
+                abs_[0].get("damageType")
+                if abs_ and isinstance(abs_[0], dict)
+                else None
             )
             for slot, abs_ in (champ.get("abilities") or {}).items()
         },
@@ -246,7 +243,7 @@ def build() -> dict:
             dest = OUT / child
             if dest.exists():
                 shutil.rmtree(dest)
-            os.replace(tmp / child, dest)
+            (tmp / child).replace(dest)
 
     print(f"champions: {len(summary['champions'])} | items: {len(summary['items'])}")
     verdicts = Counter(v["verdict"] for v in summary["champions"].values())

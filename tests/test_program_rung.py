@@ -37,7 +37,7 @@ class TestEveryDecisionHasExactlyOneLabel:
     """The bridge to the published counter vocabulary."""
 
     @pytest.mark.parametrize(
-        "decision,label",
+        ("decision", "label"),
         [
             (rung.CompiledFast(), CounterRung.COMPILED),
             (rung.CompiledFull(), CounterRung.COMPILED),
@@ -232,8 +232,8 @@ class TestTheLadderIsReachableFromProduction:
         the ``rung`` the composition hands the kernel — the production
         value, not a re-derivation of it.
         """
-        from src.calculator import participant_timeline as timeline
         from scripts.bench_coupled_optimizer import WorkCounters
+        from src.calculator import participant_timeline as timeline
         from src.calculator.data_fetcher import get_champion, get_item_by_name
         from src.calculator.defensive_effects import resolve_starting_defenses
         from src.calculator.pipeline import FightParams

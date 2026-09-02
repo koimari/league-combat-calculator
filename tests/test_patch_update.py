@@ -38,9 +38,7 @@ from pathlib import Path
 
 import pytest
 
-import scripts.patch_mechanics as patch_mechanics
-import scripts.patch_regression as patch_regression
-import scripts.patch_update as patch_update
+from scripts import patch_mechanics, patch_regression, patch_update
 from scripts.patch_mechanics import (
     drop_noise,
     is_numeric_diff,
@@ -379,7 +377,7 @@ class TestImportHygiene:
 
     @pytest.mark.parametrize(
         "invocation",
-        (["scripts/patch_update.py"], ["-m", "scripts.patch_update"]),
+        [["scripts/patch_update.py"], ["-m", "scripts.patch_update"]],
         ids=("script-path", "module-form"),
     )
     def test_every_subcommand_parses_from_either_invocation(self, invocation):
@@ -427,11 +425,15 @@ class TestExtractClientPatch:
 
 class TestFetchCdragonLivePatch:
     def test_happy_path_returns_client_patch(self):
-        fetch = lambda: json.dumps({"version": "16.16.8049184+x"}).encode()
+        def fetch():
+            return json.dumps({"version": "16.16.8049184+x"}).encode()
+
         assert patch_update.fetch_cdragon_live_patch(fetch) == "16.16"
 
     def test_missing_version_field_fails_closed(self):
-        fetch = lambda: json.dumps({"nope": True}).encode()
+        def fetch():
+            return json.dumps({"nope": True}).encode()
+
         with pytest.raises(RuntimeError, match="no 'version' field"):
             patch_update.fetch_cdragon_live_patch(fetch)
 
@@ -443,7 +445,9 @@ class TestFetchCdragonLivePatch:
             patch_update.fetch_cdragon_live_patch(fetch)
 
     def test_malformed_json_fails_closed(self):
-        fetch = lambda: b"{not json"
+        def fetch():
+            return b"{not json"
+
         with pytest.raises(RuntimeError, match="content-metadata fetch failed"):
             patch_update.fetch_cdragon_live_patch(fetch)
 
@@ -460,7 +464,9 @@ class TestResolveLivePatch:
         def boom(*_a, **_k):
             raise RuntimeError("cdtb not found")
 
-        fetch = lambda: json.dumps({"version": "16.16.999+x"}).encode()
+        def fetch():
+            return json.dumps({"version": "16.16.999+x"}).encode()
+
         patch, source = patch_update.resolve_live_patch(
             cdtb_resolver=boom, cdragon_fetch=fetch
         )
@@ -1465,7 +1471,7 @@ class TestEconomicsLines:
     """The sourced gold table must be current for the cache it prices."""
 
     def _tables(self):
-        import json  # noqa: PLC0415  pylint: disable=import-outside-toplevel
+        import json
 
         return json.loads(ECONOMICS_TABLES.read_text(encoding="utf-8"))
 

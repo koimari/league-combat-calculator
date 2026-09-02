@@ -15,9 +15,9 @@ import urllib.parse
 import pytest
 
 from src.calculator.champions import (
-    get_champion_module_contract,
     _CHAMPION_MODULES,
     engine_registration_kind,
+    get_champion_module_contract,
     get_champion_options_meta,
     parse_champion_abilities,
 )

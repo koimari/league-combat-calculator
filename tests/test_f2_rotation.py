@@ -16,8 +16,8 @@ Covers the combo layer (src/calculator/rotation_resolver.py) end to end:
 """
 
 import re
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import pytest
 
@@ -373,7 +373,8 @@ class TestCastOrderOverrides:
     def test_resolve_cast_order_uses_table_then_default(self) -> None:
         order, rule = resolve_cast_order("Cassiopeia", {})
         assert order == ["Q", "E", "W", "R"]
-        assert rule is not None and rule.champion == "Cassiopeia"
+        assert rule is not None
+        assert rule.champion == "Cassiopeia"
         # A champion with no combo signal keeps the engine default (with Q2).
         order, rule = resolve_cast_order("NoSuchChampion", {})
         assert rule is None
@@ -545,7 +546,8 @@ class TestDerivedPathRotations:
             _parse_for(champion_by_name[champion]),
             champion_data=champion_by_name[champion],
         )
-        assert rule is not None and rule.derived is True
+        assert rule is not None
+        assert rule.derived is True
         assert rule.override_reason is None
         assert champion not in CAST_ORDER_OVERRIDES
 
@@ -716,9 +718,9 @@ class TestDpsRanking:
         five = rank_ability_dps(abilities, aoe=aoe, target_count=5)
         assert [slot for slot, *_ in five] == ["W", "Q"]
         # The multiplier is min(target_count, cap), never more than the cap.
-        w_dps = dict((s, d) for s, d, *_ in five)["W"]
+        w_dps = {s: d for s, d, *_ in five}["W"]
         capped = rank_ability_dps(abilities, aoe=aoe, target_count=9)
-        assert dict((s, d) for s, d, *_ in capped)["W"] == w_dps
+        assert {s: d for s, d, *_ in capped}["W"] == w_dps
 
 
 # ---------------------------------------------------------------------------

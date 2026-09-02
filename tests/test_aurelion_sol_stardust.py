@@ -139,16 +139,16 @@ from src.calculator.champions import get_champion_options_meta, parse_champion_a
 from src.calculator.champions.aurelion_sol import (
     _E_EXECUTE_BASE_PCT,
     _E_EXECUTE_PCT_PER_100_STARDUST,
-    _Q_BURSTS_PER_CHANNEL,
     _Q_BURST_MAXHP_PCT_PER_STARDUST,
+    _Q_BURSTS_PER_CHANNEL,
     _Q_CHANNEL_SECONDS,
     _STARDUST_PER_Q_BURST,
     AURELION_SOL_STARDUST_RULE,
 )
+from src.calculator.champions.slotlib import find_named_leveling
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
-from src.calculator.pipeline import FightParams, ONE_ROTATION_DURATION, run_fight
-from src.calculator.champions.slotlib import find_named_leveling
+from src.calculator.pipeline import ONE_ROTATION_DURATION, FightParams, run_fight
 from tests.parse_stats import parse_stats
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
@@ -317,9 +317,11 @@ def _binary_data_values(*, spell: str, name: str) -> list[float]:
         if isinstance(obj, dict):
             rows = obj.get("DataValues")
             if isinstance(rows, list):
-                for dv in rows:
-                    if isinstance(dv, dict) and dv.get("name") == name:
-                        hits.append((path, list(dv.get("values", []))))
+                hits.extend(
+                    (path, list(dv.get("values", [])))
+                    for dv in rows
+                    if isinstance(dv, dict) and dv.get("name") == name
+                )
             for key, value in obj.items():
                 walk(value, f"{path}/{key}")
         elif isinstance(obj, list):
@@ -1286,7 +1288,7 @@ class TestScoreReceiptParity:
             assert len(full["cast_timeline"]) == len(scored["cast_timeline"])
             shared = ("time", "slot", "name", "ordinal", "resource_cost")
             for full_row, scored_row in zip(
-                full["cast_timeline"], scored["cast_timeline"]
+                full["cast_timeline"], scored["cast_timeline"], strict=False
             ):
                 assert {k: full_row[k] for k in shared} == {
                     k: scored_row[k] for k in shared

@@ -20,6 +20,8 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .inputs import bool_option
+from .module_contract import coverage
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import (
     ability_name,
@@ -29,8 +31,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option
-from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — the recast lands ~0.5s after the
 # wave (Sonic Wave's 0.25s cast time plus the recast reaction); the
@@ -128,7 +128,8 @@ OPTIONS: list[dict[str, Any]] = [
     bool_option("q_recast", True, label="Resonating Strike recast follows Sonic Wave"),
 ]
 
-ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(REVIEWED_MODULE_ASSUMPTIONS),
     "Q is the two-stage combo: Sonic Wave (Physical Damage row) plus the "
     "Resonating Strike recast, which reads Q[1]'s Minimum/Maximum "
     "Physical Damage rows and interpolates by the target's missing-health "

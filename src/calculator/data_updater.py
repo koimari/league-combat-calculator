@@ -7,9 +7,10 @@ Data Dragon, and Community Dragon, with per-champion progress tracking.
 import json
 import sys
 import threading
+from collections.abc import Generator
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import requests as _requests
 
@@ -43,10 +44,11 @@ if sys.platform == "win32":
     def _win_download_soup(
         url: str,
         use_cache: bool = True,
-        dir: str = "__cache__",
+        dir: str = "__cache__",  # noqa: A002 - the vendor signature this replaces
     ) -> str:
         import os as _os
-        from bs4 import BeautifulSoup as _BS
+
+        from bs4 import BeautifulSoup as _BeautifulSoup
 
         directory = _os.path.abspath(
             _os.path.join(
@@ -73,7 +75,7 @@ if sys.platform == "win32":
                 with open(fn, "w", encoding="utf-8") as f:
                     f.write(html)
 
-        soup = _BS(html, "lxml")
+        soup = _BeautifulSoup(html, "lxml")
         html = str(soup)
         for old, new in [
             ("\u00a0", " "),
@@ -91,9 +93,9 @@ if sys.platform == "win32":
 
     _lsd_utils.download_soup = _win_download_soup
 
-from lolstaticdata.champions.pull_champions_wiki import LolWikiDataHandler
-from lolstaticdata.champions.pull_champions_dragons import get_ability_url
 from lolstaticdata.champions.__main__ import get_ability_filenames
+from lolstaticdata.champions.pull_champions_dragons import get_ability_url
+from lolstaticdata.champions.pull_champions_wiki import LolWikiDataHandler
 
 from .data_fetcher import DEFAULT_DATA_DIR, _read_cache
 from .data_registry import write_runtime_cache
@@ -164,8 +166,8 @@ def _build_champion_payload(
                         icon_filenames,
                     )
                     ability.icon = url
-        except Exception:
-            pass  # Ability icons are non-critical
+        except Exception:  # noqa: S110 - icons are decoration
+            pass
 
     champion_payload = json.loads(champion.__json__(ensure_ascii=False))
     champion_payload.pop("skins", None)
@@ -356,7 +358,7 @@ def _process_items() -> dict[str, Any] | None:
 
     items_path = _LOLSTATICDATA_ROOT / "items.json"
     if items_path.exists():
-        with open(items_path, "r", encoding="utf-8") as items_file:
+        with items_path.open(encoding="utf-8") as items_file:
             generated = json.load(items_file)
         return merge_item_sources(
             generated, _wiki_item_table(), _riot_item_descriptions()
@@ -495,10 +497,10 @@ def _rune_page_facts(runes: dict[str, Any]) -> str | None:
             source=_WIKI_PAGE_URL.format(title=_RUNE_PAGE_TITLE),
             revision=revision,
         )
-        return wikitext
     except Exception as exc:
         runes[SHARDS_KEY] = {"error": str(exc)}
         return None
+    return wikitext
 
 
 def _adaptive_force_facts(runes: dict[str, Any]) -> None:

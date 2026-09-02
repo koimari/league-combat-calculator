@@ -7,10 +7,11 @@ the module publishes the complete parser/evidence contract.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from string import hexdigits
 from types import ModuleType
-from typing import Any, Callable
+from typing import Any
 
 from ..ability_spec import CC_KIND_VOCABULARY
 from ..cast_dependency import (
@@ -85,8 +86,8 @@ def coverage(*, no_damage: str = "", out_of_scope: str = "") -> dict[str, str]:
             "coverage() named one slot twice: "
             f"no_damage={no_damage!r} out_of_scope={out_of_scope!r}"
         )
-    stated = {slot: "no_damage" for slot in no_damage}
-    stated.update({slot: "out_of_scope" for slot in out_of_scope})
+    stated = dict.fromkeys(no_damage, "no_damage")
+    stated.update(dict.fromkeys(out_of_scope, "out_of_scope"))
     return {slot: stated.get(slot, "modeled") for slot in REQUIRED_CHAMPION_SLOTS}
 
 

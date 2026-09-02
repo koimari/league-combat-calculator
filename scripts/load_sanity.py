@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import os
 import socket
 import statistics
@@ -187,18 +188,19 @@ def _spawn_server(port: int, database: str) -> subprocess.Popen:
     env["DATABASE_URL"] = f"sqlite:///{database}"
     env.pop("REDIS_URL", None)
     env.pop("SENTRY_DSN", None)
-    proc = subprocess.Popen(
+    return subprocess.Popen(
         [sys.executable, "-c", spawn_code, str(port)],
         cwd=str(Path(__file__).resolve().parent.parent),
         env=env,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
-    return proc
 
 
 async def _wait_until_healthy(
-    client: httpx.AsyncClient, base_url: str, timeout: float = 60.0
+    client: httpx.AsyncClient,
+    base_url: str,
+    timeout: float = 60.0,  # noqa: ASYNC109 - the poll window
 ) -> None:
     """Poll /healthz until the server responds."""
     deadline = time.monotonic() + timeout
@@ -322,7 +324,7 @@ async def _run(
             failures += 1
             failures_detail.append(f"{endpoint} -> {status}")
 
-    summary = {
+    return {
         "users": users,
         "requests_per_user": requests,
         "total_requests": len(cold) + len(warm),
@@ -341,7 +343,6 @@ async def _run(
             if values
         },
     }
-    return summary
 
 
 def _percentile(values: list[float], fraction: float) -> float:
@@ -417,10 +418,8 @@ def main(argv: list[str] | None = None) -> int:
                 spawned.wait(timeout=10)
             except subprocess.TimeoutExpired:
                 spawned.kill()
-            try:
+            with contextlib.suppress(OSError):
                 Path(database).unlink(missing_ok=True)
-            except OSError:
-                pass
 
     print(
         f"[load_sanity] users={summary['users']} requests/user={summary['requests_per_user']}"

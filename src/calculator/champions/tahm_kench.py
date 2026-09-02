@@ -29,6 +29,8 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, int_option
+from .module_contract import coverage
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -38,8 +40,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
-from .module_contract import coverage
 
 
 def _acquired_taste(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -167,7 +167,8 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "An Acquired Taste is an explicit on-hit rider; Q may opt into the bonus damage from a pre-existing stack state.",
+    "An Acquired Taste is an explicit on-hit rider; Q may opt into the bonus damage "
+    "from a pre-existing stack state.",
     "Thick Skin stores 15/23/31/39/47% of post-mitigation damage taken as "
     "grey health (42/44/46/48/50% with 2+ visible enemies); the "
     "out-of-combat consume (4 s without damage) restores 60% : 100% "
@@ -179,7 +180,8 @@ ASSUMPTIONS = [
     "presses at the earliest available time (the Mordekaiser-recast "
     "convention). A press blocks the out-of-combat heal until its own "
     "cooldown has run out, and the residual bank still pays that heal.",
-    "R defaults to the enemy Regurgitate branch; ally Devour is a separate support/shield scenario.",
+    "R defaults to the enemy Regurgitate branch; ally Devour is a separate "
+    "support/shield scenario.",
     "E (Thick Skin) has no enemy-damage formula: all three cached "
     "effects are self-directed grey-health resource state (store %, "
     "out-of-combat consume-heal, shield conversion) — the 'Max Health "
@@ -213,7 +215,7 @@ def derive_self_healing(
     healing = []
     q = _healing.ability_json(champion_data, "Q")
     q_rank = _healing.parsed_rank(ability_damages, "Q")
-    q_flat = _healing.extract_named(q, "Heal", q_rank, champion_stats, {})
+    q_flat = extract_named(q, "Heal", q_rank, champion_stats, {})
     q_missing_pct = _healing.leveling_modifier(q, "Heal", q_rank, 1)
 
     def tongue_lash_heal(

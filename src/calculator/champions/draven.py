@@ -6,6 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
+from .inputs import bool_option, int_option
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -15,7 +16,6 @@ from .slotlib import (
     extract_value,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 
 def _spinning_axe(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -154,7 +154,8 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     "Spinning Axe is an empowered basic attack and therefore shares the auto/item timeline.",
-    "Whirling Death exposes one or two sourced passes; target crossing and execution thresholds remain explicit target state, not guessed damage.",
+    "Whirling Death exposes one or two sourced passes; target crossing and execution "
+    "thresholds remain explicit target state, not guessed damage.",
     "Adoration is an explicit economy state and never silently contributes to TDD.",
 ]
 

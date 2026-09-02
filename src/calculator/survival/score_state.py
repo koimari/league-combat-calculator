@@ -19,8 +19,8 @@ damage-order lists and support entries live on the compilers, and
 
 from __future__ import annotations
 
-from typing import Any
 from collections.abc import Callable, Mapping
+from typing import Any
 
 from .actions import SurvivalAction, TransitionRank, action_key
 
@@ -35,13 +35,13 @@ class ScoreLedger:
     """
 
     __slots__ = (
-        "n_actions",
-        "applied",
-        "status",
         "actions",
-        "index_of",
-        "current_index",
+        "applied",
         "compile_event",
+        "current_index",
+        "index_of",
+        "n_actions",
+        "status",
     )
 
     # Ledger capability flags: the kernel's hot loop skips building
@@ -106,7 +106,7 @@ class ScoreLedger:
         """A skipped action leaves its applied slot at zero, before any mutation."""
         # ``preserve_reason`` is accepted because the shared kernel sends it,
         # and an adapter answering a narrower protocol crashes on first use.
-        return None
+        return
 
     # -- trigger linkage -----------------------------------------------------
     def trigger_applied(self, action: SurvivalAction) -> bool:
@@ -122,7 +122,7 @@ class ScoreLedger:
     def mark_blocked(self, action: SurvivalAction) -> None:
         """Score mode has no blocked-state consumer; compilation rejects those."""
         # A blocked action never gets the applied marker, failing the same gate.
-        return None
+        return
 
     # -- walk-authored scheduling (P3 package 3T) ----------------------------
     def schedule_heal(self, heal_event: dict[str, Any], recipient_id: str) -> None:

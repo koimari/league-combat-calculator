@@ -7,6 +7,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
+from .inputs import bool_option, float_option, int_option
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -18,7 +19,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, float_option, int_option
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # Whisper's final round "always critically strikes ... and deals bonus

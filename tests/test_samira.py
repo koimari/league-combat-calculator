@@ -56,12 +56,12 @@ class TestCoverageMap:
 
     def test_the_map_is_the_rows_the_module_prices(self):
         assert not hasattr(samira, "MODULE_COVERAGE")
-        assert get_champion_module_contract("Samira").coverage == {
-            slot: "modeled" for slot in "PQWER"
-        }
-        assert coverage_truth.emitted("Samira") == {
-            slot: coverage_truth.PRICED for slot in "PQWER"
-        }
+        assert get_champion_module_contract("Samira").coverage == dict.fromkeys(
+            "PQWER", "modeled"
+        )
+        assert coverage_truth.emitted("Samira") == dict.fromkeys(
+            "PQWER", coverage_truth.PRICED
+        )
 
     def test_the_blade_zone_option_is_the_riders_only_gate(self):
         """Outside the zone P falls back to the Style state row."""

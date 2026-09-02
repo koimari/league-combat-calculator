@@ -53,7 +53,7 @@ CHAMPIONS_ROOT = ROOT / "src" / "calculator" / "champions"
 # The names a champion input block is bound to.  Duplicating the frontier's
 # set here would be a second thing to maintain, so it is imported from the
 # instrument that gates it.
-from scripts.behavior_frontier import (  # noqa: E402  pylint: disable=wrong-import-position
+from scripts.behavior_frontier import (
     INPUT_BLOCK_NAMES,
     zero_policy_frontier,
 )

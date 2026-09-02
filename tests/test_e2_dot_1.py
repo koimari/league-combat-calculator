@@ -151,7 +151,7 @@ def test_aurelion_sol_breath_of_light_beam_is_twenty_six_ticks():
         "AurelionSol", "Q", "Total Maximum Magic Damage", 4
     ) / _value("AurelionSol", "Q", "Magic Damage per Second", 4)
     assert channel_seconds == pytest.approx(3.25)
-    ticks = int(round(channel_seconds / (per_tick / per_second)))
+    ticks = round(channel_seconds / (per_tick / per_second))
     assert ticks == 26
     assert per_second * channel_seconds == pytest.approx(per_tick * ticks)
     events = _tick_events(combat, "Q", per_tick)

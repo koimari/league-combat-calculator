@@ -3,6 +3,7 @@
 import json
 from unittest.mock import Mock
 
+import pytest
 import requests
 
 from scripts.reparse_runes import drifted_runes
@@ -32,12 +33,9 @@ def test_non_404_ability_source_failure_still_fails_closed(monkeypatch):
     )
     handler = data_updater.LolWikiDataHandler(use_cache=False)
 
-    try:
+    with pytest.raises(requests.HTTPError) as caught:
         handler._pull_champion_ability("Milio", "Ultra Mega Fire Kick")
-    except requests.HTTPError as caught:
-        assert caught is error
-    else:  # pragma: no cover - assertion branch
-        raise AssertionError("non-404 source failure must remain fatal")
+    assert caught.value is error
 
 
 def test_reparse_cached_rune_effects_recomputes_without_network(tmp_path):

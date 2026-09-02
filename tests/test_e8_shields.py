@@ -250,7 +250,8 @@ def test_braum_unbreakable_is_documented_mitigation_not_a_flat_shield():
             "src.calculator.champions.braum", fromlist=["ASSUMPTIONS"]
         ).ASSUMPTIONS
     )
-    assert "Unbreakable" in assumptions and "Damage reduction" in assumptions
+    assert "Unbreakable" in assumptions
+    assert "Damage reduction" in assumptions
 
 
 # ---------------------------------------------------------------------------
@@ -443,7 +444,7 @@ def test_leona_eclipse_is_documented_mitigation_not_a_flat_shield():
 
     assert _ECLIPSE_FLAT_REDUCTION_RANKED == (8.0, 12.0, 16.0, 20.0, 24.0)
     assert _ECLIPSE_BONUS_RESIST_RANKED == (20.0, 27.5, 35.0, 42.5, 50.0)
-    assert _ECLIPSE_REDUCTION_CAP == pytest.approx(0.50)
+    assert pytest.approx(0.50) == _ECLIPSE_REDUCTION_CAP
     combat = _run_api_fight("Leona")
     assert not [
         e for e in combat.get("support_events", []) if e.get("kind") == "shield"
@@ -465,8 +466,8 @@ def test_olaf_tough_it_out_shield_amount_is_sourced():
         TOUGH_IT_OUT_SHIELD_DURATION_SECONDS,
     )
 
-    assert TOUGH_IT_OUT_MISSING_HEALTH_RATIO == pytest.approx(0.175)
-    assert TOUGH_IT_OUT_SHIELD_DURATION_SECONDS == pytest.approx(2.5)
+    assert pytest.approx(0.175) == TOUGH_IT_OUT_MISSING_HEALTH_RATIO
+    assert pytest.approx(2.5) == TOUGH_IT_OUT_SHIELD_DURATION_SECONDS
 
 
 def test_olaf_api_tough_it_out_absorbs_sourced_amount():
@@ -515,9 +516,9 @@ def test_nilah_joy_unending_conversion_is_documented_with_sourced_ratios():
         _NILAH_R_HEAL_TO_SHIELD_MIN_RATIO,
     )
 
-    assert _NILAH_Q_HEAL_TO_SHIELD_MAX_RATIO == pytest.approx(0.20)
-    assert _NILAH_R_HEAL_TO_SHIELD_MIN_RATIO == pytest.approx(0.20)
-    assert _NILAH_EXCESS_SHIELD_DURATION_SECONDS == pytest.approx(6.0)
+    assert pytest.approx(0.20) == _NILAH_Q_HEAL_TO_SHIELD_MAX_RATIO
+    assert pytest.approx(0.20) == _NILAH_R_HEAL_TO_SHIELD_MIN_RATIO
+    assert pytest.approx(6.0) == _NILAH_EXCESS_SHIELD_DURATION_SECONDS
     combat = _run_api_fight("Nilah")
     # Excess-heal conversion is live state; no flat shield is invented.
     assert not [

@@ -18,16 +18,17 @@ and each entry is produced beside its leaf by ``serialize_leaf``.
 each candidate's combat map before folding a score out of it.
 """
 
-from copy import deepcopy
-from dataclasses import replace
 import math
 import time
 from collections.abc import Mapping
+from copy import deepcopy
+from dataclasses import replace
 
 from .interpreters import (
     survival_ledger_certifications,
     survival_ledger_note,
 )
+from .item_coverage import target_build_coverage
 from .item_effects import validate_item_input_options
 from .loadout_rules import (
     required_boots_tier,
@@ -39,6 +40,7 @@ from .optimizer import (
     get_eligible_legendaries,
     optimizer_supported_items,
 )
+from .participant_timeline import CoupledSearchContext, build_participant_timeline
 from .pipeline import DEFAULT_FIGHT_DURATION
 from .program.build import Tagged, ranked_total
 from .program.views import (
@@ -49,7 +51,6 @@ from .program.views import (
     published_tag,
     refuse_previewed,
 )
-from .participant_timeline import CoupledSearchContext, build_participant_timeline
 from .public_response import https_icon
 from .request_parsing import request_int, request_string
 from .scenario import (
@@ -59,7 +60,6 @@ from .scenario import (
     parse_scenario_request,
     resolve_scenario,
 )
-from .item_coverage import target_build_coverage
 from .timeline_coverage import applicability_exclusion_sources
 
 
@@ -182,16 +182,14 @@ def roster_target_coverage(loadouts: list[ChampionLoadout]) -> list[dict[str, ob
     blocked: list[dict[str, object]] = []
     for loadout in loadouts:
         coverage = target_build_coverage(list(loadout.item_data))
-        for entry in coverage.get("withheld", []):
-            blocked.append(
-                {
-                    "champion": loadout.champion_data.get(
-                        "name", loadout.request.champion
-                    ),
-                    "name": entry.get("name", ""),
-                    "reason": entry.get("reason", ""),
-                }
-            )
+        blocked.extend(
+            {
+                "champion": loadout.champion_data.get("name", loadout.request.champion),
+                "name": entry.get("name", ""),
+                "reason": entry.get("reason", ""),
+            }
+            for entry in coverage.get("withheld", [])
+        )
     return blocked
 
 

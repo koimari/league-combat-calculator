@@ -24,11 +24,12 @@ hardcoded.
 
 from typing import Any
 
-from ..ability_spec import DamagePart
-from .inputs import champion_stat, int_option
-from .engine import SlotCtx, build_parser
 from .. import healing_helpers as _healing
+from ..ability_spec import DamagePart
+from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import champion_stat, int_option
+from .module_contract import coverage
 from .slotlib import (
     ability_name,
     extract_auto,
@@ -38,7 +39,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .module_contract import coverage
 
 
 def _essence_theft(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -213,7 +213,7 @@ def derive_self_healing(
     if "passive" in ability_damages:
         # The module emits the P receipt only at 9+ fragments.
         level = int(champion_stat(champion_stats, "level"))
-        heal = _healing.extract_named(
+        heal = extract_named(
             _healing.ability_json(champion_data, "P"), "Heal", level, champion_stats
         )
         for event in damage_events:

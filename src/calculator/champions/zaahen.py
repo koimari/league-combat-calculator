@@ -33,12 +33,12 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .inputs import champion_stat, int_option
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, CC_PER_PART, SlotCtx
 from .healing_contract import self_healing_rule
+from .inputs import champion_stat, int_option
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
-from ..binary_roots import data_value, spell_object
 from .slotlib import (
     STEROID_ZERO,
     ability_name,
@@ -211,7 +211,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option("q_variant", 0, minimum=0, maximum=2, label="Q damage variant"),
     int_option(
         "p_determination_stacks",
@@ -222,15 +223,14 @@ OPTIONS = list(OPTIONS) + [
         rotation={
             "role": "self_state",
             "slot": "P",
-            "note": (
-                "Stacks Zaahen's own attacks and abilities generate; the "
-                "buff is self-state, not a consumed setup."
-            ),
+            "note": "Stacks Zaahen's own attacks and abilities generate; the "
+            "buff is self-state, not a consumed setup.",
         },
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Cultivation of War) grants bonus attack damage equal to the "
     "cached per-level Determination row (1.5% : 2.95% AD) per stack, "
     "replaced at the 12-stack cap by the filled row (36% : 70.87% AD).  "
@@ -285,7 +285,7 @@ def derive_self_healing(
     # ("Healing per Champion hit": 82.5 / 132 / 181.5 (+ 66% bonus
     # AD)); the 1v1 pair fight sees exactly one hit per R cast.
     r_rank = _healing.parsed_rank(ability_damages, "R")
-    r_heal = _healing.extract_named(
+    r_heal = extract_named(
         _healing.ability_json(champion_data, "R"),
         "Healing per Champion hit",
         r_rank,

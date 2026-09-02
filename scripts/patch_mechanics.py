@@ -15,14 +15,15 @@ import subprocess
 import sys
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from scripts import patch_regression  # noqa: E402  (path set above)
-from scripts.source_receipt import source_sha256  # noqa: E402
+from scripts import patch_regression
+from scripts.source_receipt import source_sha256
 
 DEFAULT_CHAMPIONS = REPO_ROOT / "data" / "champions.json"
 DEFAULT_GAME_DIR = REPO_ROOT / "data" / "gamefiles"
@@ -180,7 +181,7 @@ def leaf_diffs(old, new, path=""):
     elif isinstance(old, list) and isinstance(new, list):
         if len(old) != len(new):
             yield (f"{path}(len)", len(old), len(new))
-        for index, (o, n) in enumerate(zip(old, new)):
+        for index, (o, n) in enumerate(zip(old, new, strict=False)):
             yield from leaf_diffs(o, n, f"{path}[{index}]")
     elif old != new:
         yield (path, old, new)
@@ -209,9 +210,9 @@ def is_numeric_diff(diff):
         if isinstance(value, str):
             try:
                 float(value)
-                return True
             except ValueError:
                 return False
+            return True
         return False
 
     _, old, new = diff
@@ -232,7 +233,7 @@ def name_delta(old_by_name, new_by_name):
 
 def _load_current(filename):
     """Load a data file from the on-disk cache (the freshly pulled patch)."""
-    with open(REPO_ROOT / "data" / filename, encoding="utf-8") as f:
+    with (REPO_ROOT / "data" / filename).open(encoding="utf-8") as f:
         return json.load(f)
 
 

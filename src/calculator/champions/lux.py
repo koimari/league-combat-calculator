@@ -24,6 +24,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
+from .inputs import int_option
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -31,7 +32,6 @@ from .slotlib import (
     find_named_leveling,
     sum_modifiers,
 )
-from .inputs import int_option
 
 PACKET_SHA256 = "2f20b99c3cd6919e7b81d1fb0cf912d9e02ea8ac475c4c4fa6381bc332407130"
 
@@ -117,7 +117,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "p_illumination_procs",
         _P_ILLUMINATION_DEFAULT_PROCS,
@@ -128,7 +129,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Illumination) prices the sourced per-level proc (30 : 200 based "
     "on level, + 35% AP) from the p_illumination_procs option (default 3 "
     "— one per Q/E/R mark in the one-rotation combo); each proc is one "

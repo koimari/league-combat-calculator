@@ -11,8 +11,10 @@ from typing import Any
 
 from .application_errors import NoCompleteEventOrder
 from .data_fetcher import fetch_item_data, get_item_by_name
+from .defensive_effects import resolve_starting_defenses
 from .economy import (
     PurchasePlan,
+    _item_by_id,
     apply_purchase_plan,
     combine_candidates,
     is_purchasable,
@@ -20,7 +22,6 @@ from .economy import (
     item_total,
     plan_incomplete_combine,
     recipe_demand,
-    _item_by_id,
 )
 from .item_coverage import (
     optimizer_candidate_coverage,
@@ -31,16 +32,15 @@ from .item_source import is_ordinary_sr_item
 from .loadout_rules import (
     ITEM_TO_EXCLUSIVITY_GROUPS,
     conflicts_with_groups,
-    occupied_groups,
     inventory_capacity,
+    occupied_groups,
     role_quest_legal_items,
     role_scoped_shop_items,
     validate_resolved_loadout,
 )
-from .program.views import RankingWriter, name_every_number
-from .pipeline import FightParams, run_fight
-from .defensive_effects import resolve_starting_defenses
 from .participant_timeline import CoupledSearchContext, build_participant_timeline
+from .pipeline import FightParams, run_fight
+from .program.views import RankingWriter, name_every_number
 from .timeline_coverage import (
     applicability_exclusion_sources,
     combine_timeline_coverages,
@@ -675,9 +675,9 @@ def _greedy_fill(
             if _conflicts_with_build(name, build_groups):
                 continue
 
-            trial_items = current + [candidate]
+            trial_items = [*current, candidate]
             if boots:
-                trial_items = [boots] + trial_items
+                trial_items = [boots, *trial_items]
 
             score = _evaluate_build(
                 champion_data,
@@ -700,7 +700,7 @@ def _greedy_fill(
         best_score = -1.0
         best_boots = None
         for candidate in boots_pool:
-            trial_items = [candidate] + current
+            trial_items = [candidate, *current]
             score = _evaluate_build(
                 champion_data,
                 level,
@@ -803,7 +803,7 @@ def _hill_climb(
             for candidate in boots_pool:
                 if current_boots and candidate["name"] == current_boots["name"]:
                     continue
-                trial_items = [candidate] + current
+                trial_items = [candidate, *current]
                 score = _evaluate_build(
                     champion_data,
                     level,
@@ -2074,7 +2074,7 @@ def optimize_build(
                 score = _evaluate_build(
                     champion_data,
                     level,
-                    [candidate] + best_legendaries,
+                    [candidate, *best_legendaries],
                     **eval_kwargs,
                 )
                 total_evals += 1

@@ -123,16 +123,14 @@ after_first_lethal_packet ~136), ``tests/test_defensive_effects.py``
 is disjoint and pins only the Guardian Angel acceptance observables.
 """
 
-import json
 from dataclasses import replace
 
 import pytest
 
-from src.calculator.item_coverage import ATTACKER_LANES
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.item_coverage import (
+    ATTACKER_LANES,
     item_model_coverage,
     target_item_model_coverage,
 )
@@ -257,7 +255,7 @@ def _earliest_revive_candidate(result: dict, delay: float) -> float:
     lands while the holder is dead.  The walk authors one candidate after
     every incoming damage packet and applies the first one that finds the
     participant dead (participant_timeline.py ~3086-3110)."""
-    holder_id = result["participants"][1]["participant_id"]
+    result["participants"][1]["participant_id"]
     death_time = _holder_survival(result)["first_death_time"]
     candidates = [
         packet_time + delay
@@ -390,7 +388,12 @@ def test_untriggered_revive_leaves_the_fight_byte_identical():
     (defenses without GA) — survival, breakdown, events, healing_events and
     support_events are all byte-equal.  The revive only ever contributes the
     survival state transition on a lethal packet."""
-    stats = dict(health=5000.0, base_health=200.0, armor=0.0, magic_resistance=0.0)
+    stats = {
+        "health": 5000.0,
+        "base_health": 200.0,
+        "armor": 0.0,
+        "magic_resistance": 0.0,
+    }
     with_ga = _holder_fight(5.0, stats=stats)
     assert _holder_survival(with_ga)["revived"] is False
     ga_stats = dict(with_ga["participants"][1]["stats"])
@@ -425,13 +428,13 @@ def test_lethal_death_records_window_and_revive_at_death_plus_four():
     survived_window True when the fight ends inside the post-revive lull."""
     result = _holder_fight(
         4.1,
-        stats=dict(
-            health=100.0,
-            base_health=200.0,
-            bonus_health=0.0,
-            armor=0.0,
-            magic_resistance=0.0,
-        ),
+        stats={
+            "health": 100.0,
+            "base_health": 200.0,
+            "bonus_health": 0.0,
+            "armor": 0.0,
+            "magic_resistance": 0.0,
+        },
     )
     survival = _holder_survival(result)
     assert survival["first_death_time"] == pytest.approx(0.0, abs=1e-3)
@@ -464,13 +467,13 @@ def test_revive_restores_exactly_half_of_base_health_not_max():
     first hit."""
     result = _holder_fight(
         20.0,
-        stats=dict(
-            health=1000.0,
-            base_health=200.0,
-            bonus_health=800.0,
-            armor=0.0,
-            magic_resistance=0.0,
-        ),
+        stats={
+            "health": 1000.0,
+            "base_health": 200.0,
+            "bonus_health": 800.0,
+            "armor": 0.0,
+            "magic_resistance": 0.0,
+        },
     )
     survival = _holder_survival(result)
     assert survival["max_health"] == pytest.approx(1000.0)
@@ -495,13 +498,13 @@ def test_incoming_damage_during_the_window_is_ignored_not_compounded():
     holder), not the window hits."""
     result = _holder_fight(
         4.1,
-        stats=dict(
-            health=100.0,
-            base_health=200.0,
-            bonus_health=0.0,
-            armor=0.0,
-            magic_resistance=0.0,
-        ),
+        stats={
+            "health": 100.0,
+            "base_health": 200.0,
+            "bonus_health": 0.0,
+            "armor": 0.0,
+            "magic_resistance": 0.0,
+        },
     )
     survival = _holder_survival(result)
     holder_id = result["participants"][1]["participant_id"]
@@ -529,13 +532,13 @@ def test_holder_authors_no_damage_during_the_window_and_acts_after_revival():
     next lethal."""
     result = _holder_fight(
         12.0,
-        stats=dict(
-            health=100.0,
-            base_health=200.0,
-            bonus_health=0.0,
-            armor=0.0,
-            magic_resistance=0.0,
-        ),
+        stats={
+            "health": 100.0,
+            "base_health": 200.0,
+            "bonus_health": 0.0,
+            "armor": 0.0,
+            "magic_resistance": 0.0,
+        },
     )
     survival = _holder_survival(result)
     holder_id = result["participants"][1]["participant_id"]
@@ -572,13 +575,13 @@ def test_explicit_stasis_state_is_authored_for_the_window():
     resolution (``resolved`` / ``ready_at == revive_time + 300``)."""
     result = _holder_fight(
         4.1,
-        stats=dict(
-            health=100.0,
-            base_health=200.0,
-            bonus_health=0.0,
-            armor=0.0,
-            magic_resistance=0.0,
-        ),
+        stats={
+            "health": 100.0,
+            "base_health": 200.0,
+            "bonus_health": 0.0,
+            "armor": 0.0,
+            "magic_resistance": 0.0,
+        },
     )
     survival = _holder_survival(result)
     assert survival["stasis_until"] == pytest.approx(survival["revive_time"])
@@ -611,13 +614,13 @@ def test_explicit_stasis_adds_no_second_gate_and_no_row_without_a_window():
     with no armed revive emits NO ``revive_stasis`` key at all and keeps
     ``stasis_until``/``stasis_source`` at 0.0/"" — the key is fail-closed
     keyed to an actually-armed window."""
-    stats = dict(
-        health=100.0,
-        base_health=200.0,
-        bonus_health=0.0,
-        armor=0.0,
-        magic_resistance=0.0,
-    )
+    stats = {
+        "health": 100.0,
+        "base_health": 200.0,
+        "bonus_health": 0.0,
+        "armor": 0.0,
+        "magic_resistance": 0.0,
+    }
     result = _holder_fight(4.1, stats=stats)
     survival = _holder_survival(result)
     holder_id = result["participants"][1]["participant_id"]
@@ -634,7 +637,8 @@ def test_explicit_stasis_adds_no_second_gate_and_no_row_without_a_window():
         if str(event.get("attacker", "")) == holder_id
         and window[0] < float(event["time"]) < window[1]
     ]
-    assert incoming and outgoing
+    assert incoming
+    assert outgoing
     assert {event["skipped_reason"] for event in incoming} == {"target_dead"}
     assert {event["skipped_reason"] for event in outgoing} == {"attacker_dead"}
     assert [row["kind"] for row in survival["action_downtime_intervals"]] == ["death"]
@@ -657,13 +661,13 @@ def test_stasis_window_unresolved_at_the_fight_end_claims_nothing():
     survival = _holder_survival(
         _holder_fight(
             2.0,
-            stats=dict(
-                health=100.0,
-                base_health=200.0,
-                bonus_health=0.0,
-                armor=0.0,
-                magic_resistance=0.0,
-            ),
+            stats={
+                "health": 100.0,
+                "base_health": 200.0,
+                "bonus_health": 0.0,
+                "armor": 0.0,
+                "magic_resistance": 0.0,
+            },
         )
     )
     assert survival["revived"] is False
@@ -711,9 +715,9 @@ def test_ordinary_stasis_stacked_beyond_the_revive_window_blocks_on_its_own_term
     ``_actor_stasis_blocks`` blocks on the ordinary stasis's own terms and
     the skip reason becomes "attacker_state_blocked" instead — proving the
     longer stasis is never laundered through the revive bypass."""
-    from src.calculator.roster_composition import Combatant
     from src.calculator.program.compile import action_from_event
     from src.calculator.program.walk import walk as run_one_walk
+    from src.calculator.roster_composition import Combatant
     from src.calculator.survival import (
         EVENT_SLOTS,
         ActionKind,
@@ -880,13 +884,13 @@ def test_second_lethal_after_revive_does_not_revive_again():
     appears (revive_time != death_time + 4.0)."""
     result = _holder_fight(
         12.0,
-        stats=dict(
-            health=100.0,
-            base_health=200.0,
-            bonus_health=0.0,
-            armor=0.0,
-            magic_resistance=0.0,
-        ),
+        stats={
+            "health": 100.0,
+            "base_health": 200.0,
+            "bonus_health": 0.0,
+            "armor": 0.0,
+            "magic_resistance": 0.0,
+        },
     )
     survival = _holder_survival(result)
     assert survival["revived"] is True
@@ -912,11 +916,11 @@ def _rebirth_kernel_walk(second_lethal: float, *, receipt: bool) -> tuple[dict, 
     number comes from ``resolve_starting_defenses`` on the REAL cached item,
     i.e. from the typed registry; nothing is authored by hand.
     """
-    from src.calculator.roster_composition import Combatant
     from src.calculator.program.build import roster_program
     from src.calculator.program.compile import action_from_event
     from src.calculator.program.views.survival import survival
     from src.calculator.program.walk import walk as run_one_walk
+    from src.calculator.roster_composition import Combatant
     from src.calculator.survival import (
         EVENT_SLOTS,
         ActionKind,
@@ -1031,17 +1035,17 @@ def test_requested_fights_cannot_reach_the_300s_rebirth_cooldown():
     exactly one revive — and the second lethal arms NO second stasis window
     (the cooldown, not a spent one-shot boolean, is the reason)."""
     with pytest.raises(ValueError) as excinfo:
-        _holder_fight(320.0, stats=dict(health=100.0, base_health=200.0))
+        _holder_fight(320.0, stats={"health": 100.0, "base_health": 200.0})
     assert "fight_duration must be between 1 and 30" in str(excinfo.value)
     result = _holder_fight(
         12.0,
-        stats=dict(
-            health=100.0,
-            base_health=200.0,
-            bonus_health=0.0,
-            armor=0.0,
-            magic_resistance=0.0,
-        ),
+        stats={
+            "health": 100.0,
+            "base_health": 200.0,
+            "bonus_health": 0.0,
+            "armor": 0.0,
+            "magic_resistance": 0.0,
+        },
     )
     survival = _holder_survival(result)
     assert survival["revive_time"] == pytest.approx(4.0, abs=1e-3)
@@ -1124,13 +1128,13 @@ def test_post_death_damage_after_final_death_is_ignored_too():
     amounts (2 x 100 = 200) — nothing else compounds."""
     result = _holder_fight(
         12.0,
-        stats=dict(
-            health=100.0,
-            base_health=200.0,
-            bonus_health=0.0,
-            armor=0.0,
-            magic_resistance=0.0,
-        ),
+        stats={
+            "health": 100.0,
+            "base_health": 200.0,
+            "bonus_health": 0.0,
+            "armor": 0.0,
+            "magic_resistance": 0.0,
+        },
     )
     survival = _holder_survival(result)
     holder_id = result["participants"][1]["participant_id"]
@@ -1160,13 +1164,13 @@ def test_score_path_agrees_with_receipt_on_every_revive_field():
     closed and both surfaces run the shared kernel walk — equality by
     construction.  This is the score-path equality the P3-3P completion
     must preserve."""
-    stats = dict(
-        health=100.0,
-        base_health=200.0,
-        bonus_health=0.0,
-        armor=0.0,
-        magic_resistance=0.0,
-    )
+    stats = {
+        "health": 100.0,
+        "base_health": 200.0,
+        "bonus_health": 0.0,
+        "armor": 0.0,
+        "magic_resistance": 0.0,
+    }
     receipt = _holder_fight(12.0, stats=stats)
     score = _holder_fight(12.0, stats=stats, include_receipt=False)
     compiled_ctx = CoupledSearchContext()
@@ -1184,7 +1188,9 @@ def test_score_path_agrees_with_receipt_on_every_revive_field():
             == receipt["participants"][0]["survival"]
         )
         assert surface["duration"] == receipt["duration"]
-        for score_row, receipt_row in zip(surface["breakdown"], receipt["breakdown"]):
+        for score_row, receipt_row in zip(
+            surface["breakdown"], receipt["breakdown"], strict=False
+        ):
             assert score_row["participant_id"] == receipt_row["participant_id"]
             assert score_row["total_damage"] == receipt_row["total_damage"]
             assert score_row["incoming_damage"] == receipt_row["incoming_damage"]
@@ -1284,13 +1290,13 @@ def test_revive_adds_no_damage_and_no_healing_claim_anywhere():
     is a state transition, not healing)."""
     result = _holder_fight(
         12.0,
-        stats=dict(
-            health=100.0,
-            base_health=200.0,
-            bonus_health=0.0,
-            armor=0.0,
-            magic_resistance=0.0,
-        ),
+        stats={
+            "health": 100.0,
+            "base_health": 200.0,
+            "bonus_health": 0.0,
+            "armor": 0.0,
+            "magic_resistance": 0.0,
+        },
     )
     survival = _holder_survival(result)
     assert survival["revived"] is True
@@ -1330,13 +1336,13 @@ def test_absent_ga_produces_no_revive_and_no_receipt_row():
     result = _holder_fight(
         12.0,
         holder_items=(),
-        stats=dict(
-            health=100.0,
-            base_health=200.0,
-            bonus_health=0.0,
-            armor=0.0,
-            magic_resistance=0.0,
-        ),
+        stats={
+            "health": 100.0,
+            "base_health": 200.0,
+            "bonus_health": 0.0,
+            "armor": 0.0,
+            "magic_resistance": 0.0,
+        },
     )
     survival = _holder_survival(result)
     assert survival["revived"] is False
@@ -1360,13 +1366,13 @@ def test_holder_without_a_valid_base_health_arms_no_revive():
     assert defenses.revive_health_amount == 0.0
     result = _holder_fight(
         4.1,
-        stats=dict(
-            health=100.0,
-            base_health=0.0,
-            bonus_health=0.0,
-            armor=0.0,
-            magic_resistance=0.0,
-        ),
+        stats={
+            "health": 100.0,
+            "base_health": 0.0,
+            "bonus_health": 0.0,
+            "armor": 0.0,
+            "magic_resistance": 0.0,
+        },
     )
     survival = _holder_survival(result)
     assert survival["revived"] is False
@@ -1426,13 +1432,13 @@ def test_sustained_fight_revive_is_anchored_to_the_lethal_hit():
     even in sustained fights."""
     result = _holder_fight(
         20.0,
-        stats=dict(
-            health=1000.0,
-            base_health=200.0,
-            bonus_health=0.0,
-            armor=0.0,
-            magic_resistance=0.0,
-        ),
+        stats={
+            "health": 1000.0,
+            "base_health": 200.0,
+            "bonus_health": 0.0,
+            "armor": 0.0,
+            "magic_resistance": 0.0,
+        },
     )
     survival = _holder_survival(result)
     assert survival["revived"] is True
@@ -1453,13 +1459,13 @@ def test_sustained_fight_revive_lands_exactly_four_seconds_after_the_lethal_pack
     cooldown."""
     result = _holder_fight(
         20.0,
-        stats=dict(
-            health=1000.0,
-            base_health=200.0,
-            bonus_health=0.0,
-            armor=0.0,
-            magic_resistance=0.0,
-        ),
+        stats={
+            "health": 1000.0,
+            "base_health": 200.0,
+            "bonus_health": 0.0,
+            "armor": 0.0,
+            "magic_resistance": 0.0,
+        },
     )
     survival = _holder_survival(result)
     assert survival["revived"] is True
@@ -1564,13 +1570,13 @@ def test_regression_surface_guardian_angel_timeline_stays_green():
     result = _holder_fight(
         4.1,
         holder="Aatrox",
-        stats=dict(
-            health=100.0,
-            base_health=200.0,
-            bonus_health=0.0,
-            armor=0.0,
-            magic_resistance=0.0,
-        ),
+        stats={
+            "health": 100.0,
+            "base_health": 200.0,
+            "bonus_health": 0.0,
+            "armor": 0.0,
+            "magic_resistance": 0.0,
+        },
     )
     survival = _holder_survival(result)
     assert survival["first_death_time"] is not None

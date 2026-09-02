@@ -28,9 +28,9 @@ from ..healing_helpers import (
     leveling_value,
     trigger_fields,
 )
-from .inputs import bool_option, champion_stat
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, champion_stat
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,

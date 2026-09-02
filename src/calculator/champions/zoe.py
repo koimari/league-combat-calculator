@@ -18,8 +18,10 @@ pinned packet declares the slot ``kind: "no_damage"``), so R is
 """
 
 from ..ability_spec import DamagePart
-from .packet_module import build_packet_module
 from .engine import SlotCtx
+from .inputs import int_option
+from .module_contract import coverage
+from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -27,8 +29,6 @@ from .slotlib import (
     extract_named,
     simple_damage,
 )
-from .inputs import int_option
-from .module_contract import coverage
 
 PACKET_SHA256 = "254423a49d0d309eafb437ffdb27709166a149f7ea2bc6aa1f21cf01f1b747a8"
 
@@ -127,7 +127,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "w_summoner",
         0,
@@ -137,7 +138,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Spell Thief) prices all three orbiting bolts — the wiki's 'Total "
     "Magic Damage' row (45-165 + 30% AP == 3 x 'Magic Damage Per Bolt', "
     "data/champions.json W).",

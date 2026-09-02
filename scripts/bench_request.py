@@ -25,8 +25,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from scripts.golden_snapshot import COUPLED_SCENARIOS  # noqa: E402
-from src.calculator.calculate import calculate_payload  # noqa: E402
+from scripts.golden_snapshot import COUPLED_SCENARIOS
+from src.calculator.calculate import calculate_payload
 
 REPEATS = 50
 LOOP_CALLS = 20

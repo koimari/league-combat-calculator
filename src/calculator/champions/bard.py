@@ -38,7 +38,10 @@ than letting ``SLOTS`` derive ``modeled``.
 
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx, build_parser
+from .inputs import int_option
+from .module_contract import coverage
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -49,9 +52,6 @@ from .slotlib import (
     with_control_event,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
-from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
 
 # Bard's P[0] remains degraded in the wiki JSON, but the tracked
 # BardPTooltip_D_nS record carries the passive tooltip values directly.

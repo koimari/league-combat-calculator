@@ -36,7 +36,9 @@ Why each slot is non-generic:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
+from .module_contract import coverage
 from .slotlib import (
     ability_name,
     attach_self_shield,
@@ -47,8 +49,6 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
-from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # https://wiki.leagueoflegends.com/en-us/Blitzcrank

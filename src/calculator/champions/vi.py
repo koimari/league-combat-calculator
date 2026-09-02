@@ -32,6 +32,8 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..damage import effective_cooldown
 from .engine import SlotCtx, build_parser
+from .inputs import float_option, int_option
+from .module_contract import coverage
 from .module_helpers import clamp
 from .slotlib import (
     ability_name,
@@ -43,8 +45,6 @@ from .slotlib import (
     extract_value,
 )
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
-from .module_contract import coverage
 
 _VI_Q_SPELL = spell_object("Vi", "ViQ")
 _Q_MAX_CHARGE_SECONDS = 1.25

@@ -9,6 +9,8 @@ enumeration/prose come from ``effect_entries()``/``branches()``/
 once.
 """
 
+from pathlib import Path
+
 import pytest
 
 from scripts import full_entry_audit as audit
@@ -79,7 +81,7 @@ def test_audit_scope_matches_runtime_availability(
 def test_gate_scope_uses_item_source_not_mode_keys():
     """The audit must not re-derive scope from mode/removed keys itself."""
     source = audit.__file__
-    text = open(source).read()
+    text = Path(source).read_text(encoding="utf-8")
     assert "effect_entries" in text
     assert "audit_scope" in text
     assert 'modes.get("classic sr 5v5")' not in text

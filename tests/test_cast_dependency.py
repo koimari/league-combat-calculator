@@ -19,21 +19,6 @@ from types import ModuleType
 import pytest
 
 from src import app as app_module
-from src.calculator.champions import (
-    _CHAMPION_MODULES,
-    get_champion_cast_dependencies,
-    get_champion_module_contract,
-    get_champion_option_rotation,
-)
-from src.calculator.data_fetcher import get_champion
-from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.champions import module_contract
-from src.calculator.champions.module_contract import (
-    ChampionModuleContractError,
-    contract_from_module,
-)
-from src.calculator.champions.packet_module import PacketSlotMap, build_packet_module
-from src.calculator.rotation_resolver import _DIRECT_EDGE_KIND
 from src.calculator.cast_dependency import (
     BASE_CAST_SLOTS,
     DEPENDENCY_KINDS,
@@ -60,6 +45,21 @@ from src.calculator.cast_dependency import (
     validate_cast_dependencies,
     validate_cast_order_declaration,
 )
+from src.calculator.champions import (
+    _CHAMPION_MODULES,
+    get_champion_cast_dependencies,
+    get_champion_module_contract,
+    get_champion_option_rotation,
+    module_contract,
+)
+from src.calculator.champions.module_contract import (
+    ChampionModuleContractError,
+    contract_from_module,
+)
+from src.calculator.champions.packet_module import PacketSlotMap, build_packet_module
+from src.calculator.data_fetcher import get_champion
+from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.rotation_resolver import _DIRECT_EDGE_KIND
 
 ROOT = Path(__file__).resolve().parent.parent
 LEAF = ROOT / "src" / "calculator" / "cast_dependency.py"
@@ -177,9 +177,9 @@ class TestTheLeafIsALeaf:
         tree = ast.parse(LEAF.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
-                assert node.level == 0 and not str(node.module).startswith(
-                    "src.calculator"
-                ), f"cast_dependency.py:{node.lineno} imports a sibling module"
+                sibling = f"cast_dependency.py:{node.lineno} imports a sibling module"
+                assert node.level == 0, sibling
+                assert not str(node.module).startswith("src.calculator"), sibling
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     assert not alias.name.startswith("src.calculator")
@@ -193,13 +193,13 @@ class TestTheLeafIsALeaf:
         """
         code = (
             "import importlib.util, sys\n"
-            "spec = importlib.util.spec_from_file_location('leaf', r'%s')\n"
+            f"spec = importlib.util.spec_from_file_location('leaf', r'{LEAF}')\n"
             "module = importlib.util.module_from_spec(spec)\n"
             "spec.loader.exec_module(module)\n"
             "leaked = [m for m in sys.modules if m.startswith('src.calculator')]\n"
             "assert not leaked, f'leaf pulled in {leaked}'\n"
             "assert len(module.INFERRED_EDGE_KINDS) == 12\n"
-            "print('leaf ok')\n" % LEAF
+            "print('leaf ok')\n"
         )
         result = subprocess.run(
             [sys.executable, "-c", code],
@@ -218,8 +218,9 @@ class TestVocabularies:
         assert BASE_CAST_SLOTS == ("P", "Q", "W", "E", "R")
 
     def test_dependency_kinds_are_four(self) -> None:
-        assert DEPENDENCY_KINDS == frozenset(
-            {"cc_enabler", "damage_enabler", "resource_enabler", "recast_of"}
+        assert (
+            frozenset({"cc_enabler", "damage_enabler", "resource_enabler", "recast_of"})
+            == DEPENDENCY_KINDS
         )
 
     def test_inferred_edge_kinds_are_twelve(self) -> None:
@@ -394,7 +395,7 @@ class TestSuppressionCannotBroaden:
         _validate([_dep(suppresses=(_suppression(),))])
 
     @pytest.mark.parametrize(
-        "setup,consume",
+        ("setup", "consume"),
         [("E", "W"), ("W", "Q"), ("Q", "E"), ("R", "R")],
     )
     def test_anything_but_the_reverse_pair_raises(
@@ -1061,8 +1062,8 @@ class TestSyndraDeclaresHerStun:
         campaign exists to kill, so the claim is asserted against the
         detector rather than believed.
         """
-        from src.calculator.rotation_resolver import detect_setup_consume_edges
         from src.calculator.data_fetcher import fetch_champion_data
+        from src.calculator.rotation_resolver import detect_setup_consume_edges
 
         champion = {data.get("name"): data for data in fetch_champion_data().values()}[
             "Syndra"

@@ -42,6 +42,8 @@ from ..ability_atoms import (
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value_at_rank, spell_object
 from .engine import CC_PER_PART, SlotCtx, build_parser
+from .inputs import bool_option
+from .module_contract import coverage
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -52,8 +54,6 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option
-from .module_contract import coverage
 
 
 def _bonus_magic_damage_levelings(

@@ -17,15 +17,15 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-import golden_snapshot as gs  # noqa: E402  (path is set above)
+import golden_snapshot as gs
 
-from src.calculator import pipeline  # noqa: E402
-from src.calculator.interpreters.delta_amp import (  # noqa: E402
+from src.calculator import pipeline
+from src.calculator.interpreters.delta_amp import (
     EVERY_DAMAGE_CLASS,
     declared_magic_amp,
     resolve_part_amp,
 )
-from src.calculator.item_behavior import (  # noqa: E402
+from src.calculator.item_behavior import (
     Basis,
     DefenseField,
     EmpoweredHitRule,
@@ -34,22 +34,21 @@ from src.calculator.item_behavior import (  # noqa: E402
     PeriodicRule,
     ThresholdDefenseRule,
 )
-from src.calculator.item_behavior_catalog import (  # noqa: E402
+from src.calculator.item_behavior_catalog import (
     behavior_rules,
     rule_owners,
 )
-from src.calculator.item_effects import (  # noqa: E402
+from src.calculator.item_effects import (
     required_effect_value,
-    resolve_damage_effects,
 )
-from src.calculator.item_support_effects import producer_item  # noqa: E402
-from src.calculator.pipeline import run_fight  # noqa: E402
-from src.calculator.roster_composition import (  # noqa: E402
+from src.calculator.item_support_effects import producer_item
+from src.calculator.pipeline import run_fight
+from src.calculator.roster_composition import (
     from_loadout,
     target_overrides,
     target_params,
 )
-from src.calculator.scenario import (  # noqa: E402
+from src.calculator.scenario import (
     parse_scenario_request,
     resolve_scenario,
 )
@@ -98,7 +97,7 @@ class TestProvenanceExclusion:
     def test_every_excluded_key_is_actually_captured(self, path):
         """The exclusion set names keys the snapshot carries, not aspirations."""
         metadata = _load(path)["metadata"]
-        assert gs.COMPARE_EXCLUDED_PROVENANCE <= set(metadata)
+        assert set(metadata) >= gs.COMPARE_EXCLUDED_PROVENANCE
 
     def test_dropping_git_head_from_the_exclusion_set_turns_compare_red(self):
         """R-05: the gate's own red, reproducible on demand.
@@ -160,7 +159,7 @@ class TestFingerprint:
 
 class TestLeafReport:
     @pytest.mark.parametrize(
-        "old, new, transition",
+        ("old", "new", "transition"),
         [
             ({"a": 10.0}, {"a": 10.5}, "value"),
             ({"a": 0.0}, {"a": 3.0}, "zero_to_value"),
@@ -1009,7 +1008,8 @@ class TestRepricingWindowCoverage:
         ]
         inside = [e["damage"] for e in autos if e["time"] <= window["duration"]]
         outside = [e["damage"] for e in autos if e["time"] > window["duration"]]
-        assert inside and outside
+        assert inside
+        assert outside
         published = float(fight["effective_armor"])
         windowed = published - float(window["amount"])
         # Flat penetration cannot drive armour below zero, so the subtraction
@@ -1639,7 +1639,7 @@ class TestFingerprintsReceipt:
     RECEIPT = REPO_ROOT / "docs" / "receipts" / "campaign-fingerprints.json"
 
     @pytest.mark.parametrize(
-        "block, path",
+        ("block", "path"),
         [
             ("golden", PAIR_BASELINE),
             ("coupled_golden", COUPLED_BASELINE),

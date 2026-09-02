@@ -207,9 +207,8 @@ class TestCommandAmpsTheMainChampionFromAnAlly:
         """The mechanic is a multiplier; no row may carry it as damage."""
         held = _roster(IMMOBILIZE_HOLDER, (MANDATE,), main="Pantheon")
         packets = _packets(held, self.SOURCE)
-        assert packets and all(
-            packet["kind"] == "damage_modifier" for packet in packets
-        )
+        assert packets
+        assert all(packet["kind"] == "damage_modifier" for packet in packets)
         assert all(packet["multiplier"] > 1.0 for packet in packets)
 
 

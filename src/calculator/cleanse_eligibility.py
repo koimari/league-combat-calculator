@@ -68,9 +68,9 @@ from __future__ import annotations
 # pylint: disable=too-many-lines,too-many-return-statements  # one
 # dependency-light leaf owns the typed contracts; the decision path's named
 # reasons map one-to-one onto returns.
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Mapping
+from typing import Any
 
 from .ability_spec import DISPLACEMENT_CC_KINDS
 from .crowd_control_eligibility import KNOWN_CONTROL_KINDS
@@ -919,7 +919,7 @@ class CleanseEligibility:
         action: Any,
         *,
         holder: Mapping[str, Any] | None = None,
-    ) -> "CleanseDecision":
+    ) -> CleanseDecision:
         """Decide one cleanse activation (deterministic, receipted).
 
         ``holder`` is the item holder's live use state (the walk resolves
@@ -977,17 +977,16 @@ class CleanseEligibility:
                     use_consumed=False,
                     event_key=event_key,
                 )
-        elif scope == "explicit_selected_ally":
-            if not target or target == holder_id:
-                return self._decision(
-                    eligible=False,
-                    reason="target_not_selected",
-                    action=action,
-                    intervals=intervals,
-                    activation=activation,
-                    use_consumed=False,
-                    event_key=event_key,
-                )
+        elif scope == "explicit_selected_ally" and (not target or target == holder_id):
+            return self._decision(
+                eligible=False,
+                reason="target_not_selected",
+                action=action,
+                intervals=intervals,
+                activation=activation,
+                use_consumed=False,
+                event_key=event_key,
+            )
         if not item_held:
             return self._decision(
                 eligible=False,
@@ -1095,7 +1094,7 @@ class CleanseEligibility:
         event_key: str,
         _kept: list[dict[str, Any]] | None = None,
         _removed: list[dict[str, Any]] | None = None,
-    ) -> "CleanseDecision":
+    ) -> CleanseDecision:
         """Build the decision receipt from the analysis outcome.
 
         Only an eligible outcome truncates: every denial
@@ -1210,16 +1209,16 @@ class CleanseDecision:
 __all__ = [
     "CAST_BLOCKING_CONTROL_KINDS",
     "CLEANSE_ACTIVE_SOURCES",
-    "CleanseDecision",
-    "CleanseEligibility",
     "ITEM_CLEANSE_DECLARATIONS",
     "MERCURIAL_MOVEMENT_ATOM",
     "MIKAELS_HEAL_ATOM",
+    "CleanseDecision",
+    "CleanseEligibility",
     "interval_active",
-    "movement_entry",
     "item_declaration",
     "merged_interval_duration",
     "merged_spans",
+    "movement_entry",
     "resolve_cleanse_item",
     "resolve_excluded_kinds",
     "truncate_intervals",

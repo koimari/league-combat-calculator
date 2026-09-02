@@ -1,10 +1,10 @@
 """Typed cross-participant item packets and explicit trigger contracts."""
 
 import ast
+import re
 from collections import Counter, defaultdict
 from contextlib import contextmanager
 from pathlib import Path
-import re
 from types import MappingProxyType, SimpleNamespace
 from typing import get_args, get_type_hints
 
@@ -12,22 +12,29 @@ import pytest
 
 from src.app import app
 from src.calculator import item_behavior_catalog as catalog
-from src.calculator import item_support_effects, ledger_projection, pipeline
-from src.calculator.item_behavior import PacketKind, Persistence
+from src.calculator import (
+    item_support_effects,
+    ledger_projection,
+    pipeline,
+    trigger_stream,
+)
 from src.calculator.ability_spec import AttackClass, Authority, DamageClass
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.item_behavior import PacketKind, Persistence
+from src.calculator.item_effects import (
+    ITEM_EFFECTS,
+    ally_item_effect_value,
+    ally_item_level_value,
+)
 from src.calculator.item_source import effect_entries, effect_text
-from src.calculator.item_effects import ITEM_EFFECTS, ally_item_effect_value
-from src.calculator.item_effects import ally_item_level_value
-from src.calculator.roster_composition import ActorRequest
 from src.calculator.item_support_effects import (
     _declared_authorities,
     derive_item_support_effects,
     producer_item,
     schedule_knights_vow,
 )
-from src.calculator import trigger_stream
 from src.calculator.program.views import ViewTag
+from src.calculator.roster_composition import ActorRequest
 from src.calculator.trigger_stream import CAPABILITIES
 
 pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
@@ -695,21 +702,22 @@ def _damage_modifier_call_sites() -> dict[str, str]:
         if not _is_packet_kind_node(kind, "damage_modifier"):
             continue
         source = _packet_keyword(node, "source")
-        assert isinstance(source, ast.Constant) and isinstance(source.value, str), (
+        no_literal = (
             f"the damage_modifier packet at line {node.lineno} names no literal "
             "source; the registry cannot be checked against an expression"
         )
+        assert isinstance(source, ast.Constant), no_literal
+        assert isinstance(source.value, str), no_literal
         authority = _packet_keyword(node, "authority")
-        assert (
-            isinstance(authority, ast.Attribute)
-            and isinstance(authority.value, ast.Name)
-            and authority.value.id == "Authority"
-            and authority.attr in Authority.__members__
-        ), (
+        no_member = (
             f"{source.value} declares no literal Authority.<member> at line "
             f"{node.lineno}; one of "
             f"{sorted(member.value for member in Authority)} is required (D-07)"
         )
+        assert isinstance(authority, ast.Attribute), no_member
+        assert isinstance(authority.value, ast.Name), no_member
+        assert authority.value.id == "Authority", no_member
+        assert authority.attr in Authority.__members__, no_member
         declared[source.value] = authority.attr
     return declared
 
@@ -971,7 +979,7 @@ def _evaluate_declaration(expression):
     """One declared keyword's value, or ``None`` when the site omits it."""
     if expression is None:
         return None
-    return eval(  # pylint: disable=eval-used
+    return eval(  # noqa: S307 - evaluates the module's own declaration AST  # pylint: disable=eval-used
         compile(ast.Expression(expression), "<declaration>", "eval"),
         vars(item_support_effects),
     )
@@ -1002,9 +1010,7 @@ def timed_cross_participant_producers():
         ):
             continue
         for owner in catalog.owners_for(producer):
-            mechanic = (
-                f"{catalog._mechanic_slug(owner)}.{producer.value}"  # noqa: SLF001
-            )
+            mechanic = f"{catalog._mechanic_slug(owner)}.{producer.value}"
             sources.add(trigger_stream.CAPABILITIES[mechanic].packet_source)
     return sources
 

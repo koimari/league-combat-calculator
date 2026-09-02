@@ -33,17 +33,18 @@ SCOPES = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 FUNCS = (ast.FunctionDef, ast.AsyncFunctionDef)
 
 EVIDENCE = re.compile(
-    r"https?://|wiki|\.bin\.json|CommunityDragon|game file|\batoms?\b|binar", re.I
+    r"https?://|wiki|\.bin\.json|CommunityDragon|game file|\batoms?\b|binar",
+    re.IGNORECASE,
 )
 HISTORY = re.compile(
     r"\bretired\b|\bused to\b|\bpreviously\b|\b(?-i:legacy)\b|\bno longer\b"
     r"|\b(?:issue|PR) #\d+"
     r"|\b(?<!\{)(?=[0-9a-f]*[a-f])(?=[0-9a-f]*\d)(?:[0-9a-f]{7,8}|[0-9a-f]{40})\b",
-    re.I,
+    re.IGNORECASE,
 )
 POINTER = re.compile(
     r"\bAmendment\b|\bRuling\b|\bD-\d{2,3}\b|\bPhase \d|\bwave \d|\bslice\b|\bcampaign\b",
-    re.I,
+    re.IGNORECASE,
 )
 
 
@@ -102,7 +103,7 @@ def _cite(found: dict[str, list], where: str, line: int, text: str) -> None:
 
 def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str]]:
     """Report the four findings over every ``.py`` file under ``TARGETS``."""
-    found: dict[str, list[str]] = {k: [] for k in FAILING + ("pointer",)}
+    found: dict[str, list[str]] = {k: [] for k in (*FAILING, "pointer")}
     paths = (
         p for t in TARGETS for p in (root / t).rglob("*.py") if p.name not in exclude
     )

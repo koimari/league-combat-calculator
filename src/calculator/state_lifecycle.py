@@ -29,9 +29,10 @@ Design rules (HANDOVER §11):
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import math
-from typing import Any, Literal, Mapping
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from typing import Any, Literal
 
 from .ability_spec import IMMOBILIZING_CC_KINDS
 
@@ -62,7 +63,7 @@ class SourceReceipt:
     key: str | None = None
 
     @classmethod
-    def from_mapping(cls, mapping: Mapping[str, Any]) -> "SourceReceipt":
+    def from_mapping(cls, mapping: Mapping[str, Any]) -> SourceReceipt:
         """Adapt the two receipt spellings used in this codebase.
 
         Item option rows publish ``source_url``/``source_revision_id``;
@@ -871,7 +872,7 @@ class TimedStackState:
         self._shared_deadline = None
         self._decay_steps_applied = 0
         self._instances.clear()
-        transition = self._timeline.record(
+        return self._timeline.record(
             time,
             "consume",
             sequence=sequence,
@@ -885,7 +886,6 @@ class TimedStackState:
                 "trigger_source": str((meta or {}).get("source") or "consume"),
             },
         )
-        return transition
 
     def reset(
         self,
@@ -1208,7 +1208,7 @@ class CooldownState:
         key = target if self.rule.per_target else "default"
         cooldown_until = time + self.rule.cooldown_seconds
         self._ready_at[key] = cooldown_until
-        transition = self._timeline.record(
+        return self._timeline.record(
             time,
             "cooldown_start",
             sequence=sequence,
@@ -1221,7 +1221,6 @@ class CooldownState:
                 "trigger_source": str((meta or {}).get("source") or "trigger"),
             },
         )
-        return transition
 
     def public_receipt(self) -> dict[str, Any]:
         """JSON-safe public receipt."""
@@ -1249,7 +1248,7 @@ class TriggerGate:
     inheriting a default that would move its numbers.
     """
 
-    __slots__ = ("cooldown_seconds", "inclusive", "_ready_at", "_seen")
+    __slots__ = ("_ready_at", "_seen", "cooldown_seconds", "inclusive")
 
     def __init__(self, cooldown_seconds: float = 0.0, *, inclusive: bool) -> None:
         self.cooldown_seconds = cooldown_seconds

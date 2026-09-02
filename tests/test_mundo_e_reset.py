@@ -111,13 +111,13 @@ import pytest
 
 from src import app as app_module
 from src.calculator.atomizer_domains import atomize_abilities
+from src.calculator.champions import dr_mundo as dr_mundo_module
 from src.calculator.champions import (
     get_champion_option_rotation,
     get_champion_options_meta,
     parse_champion_abilities,
     registered_champion_names,
 )
-from src.calculator.champions import dr_mundo as dr_mundo_module
 from src.calculator.damage import (
     FightConfig,
     _empower_burst_attack_speed,
@@ -299,17 +299,17 @@ def _pipeline_fight(
     is honored), so the pipeline surface is directly comparable to the
     direct-engine reference fight (AS 1.020625 at level 18 -> floor(10.2)
     = 10 swings; 2 ride the E row -> auto row 8)."""
-    params = dict(
-        target_health=_TARGET_HEALTH,
-        target_armor=100.0,
-        target_magic_resistance=100.0,
-        fight_duration_seconds=_DURATION,
-        auto_attack_uptime=1.0,
-        one_rotation=False,
-        deterministic=True,
-        ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 3},
-        champion_options=options or {},
-    )
+    params = {
+        "target_health": _TARGET_HEALTH,
+        "target_armor": 100.0,
+        "target_magic_resistance": 100.0,
+        "fight_duration_seconds": _DURATION,
+        "auto_attack_uptime": 1.0,
+        "one_rotation": False,
+        "deterministic": True,
+        "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+        "champion_options": options or {},
+    }
     params.update(overrides)
     return run_fight(
         copy.deepcopy(get_champion(DATA_KEY)),

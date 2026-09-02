@@ -56,6 +56,8 @@ from operator import itemgetter
 from typing import Any, NamedTuple
 
 from ..ability_spec import AttackClass, DamageClass
+from ..healing_reduction import amplifies_recovery
+from ..ledger_projection import LightRow
 from ..resistance import (
     apply_armor_penetration,
     apply_magic_penetration,
@@ -83,10 +85,10 @@ from ..survival.compile import (
     champion_wound_tuple,
     heal_trigger_key,
     thorns_return_damage,
+    trigger_time_key,
     unrepresentable_damage_receipt,
     unrepresentable_heal_receipt,
     unrepresentable_template_receipt,
-    trigger_time_key,
 )
 from ..survival.pricing import (
     AuthoredDeclaration,
@@ -94,8 +96,6 @@ from ..survival.pricing import (
     RoutingProvenance,
     route_declared_packet,
 )
-from ..healing_reduction import amplifies_recovery
-from ..ledger_projection import LightRow
 from ..trigger_stream import HolderStacking, is_immobilizing_event
 from . import events as ev
 from .amp import LiveAmpRider, live_amp_for
@@ -151,19 +151,19 @@ class PairView:
         # The engine's own result, unmodified: what the per-pair ``fights``
         # receipt publishes and what the score panels compile.
         "engine",
-        "result",
-        "live_amps",
-        "holder_amps",
-        "events",
-        "heals",
-        "source_names",
-        "support",
-        "support_denials",
         # The event-id string of each compiled damage action, so a self-heal
         # can publish the id of the hit that caused it.  The compiler already
         # resolved that link by action index; this is the same link one
         # representation over.
         "event_id_by_aidx",
+        "events",
+        "heals",
+        "holder_amps",
+        "live_amps",
+        "result",
+        "source_names",
+        "support",
+        "support_denials",
     )
 
     def __init__(
@@ -668,7 +668,7 @@ def pair_resistance_baselines(
 
 
 def modifier_delivery_receipt(
-    compilers: Iterable["WalkCompiler"],
+    compilers: Iterable[WalkCompiler],
 ) -> str | None:
     """Refuse an armed modifier the compiled walk cannot classify against.
 
@@ -773,14 +773,14 @@ class WalkCompiler:
 
     __slots__ = (
         "actions",
-        "damage_order",
-        "thorns_order",
-        "support_entries",
         "auto_strikes_into",
         "coverage",
+        "damage_order",
         "next_aidx",
-        "unclassified_delivery",
         "staged_modifier",
+        "support_entries",
+        "thorns_order",
+        "unclassified_delivery",
     )
 
     def __init__(self, first_aidx: int = 0) -> None:
@@ -822,7 +822,7 @@ class WalkCompiler:
         live_amps: Sequence[LiveAmpRider] = (),
         holder_amps: Any = None,
         suppress_actor_wide_heals: bool = False,
-        view: "PairView | None" = None,
+        view: PairView | None = None,
     ) -> None:
         """Compile one pair fight from the engine's own rows.
 
@@ -1054,7 +1054,7 @@ class WalkCompiler:
             else:
                 damage_type = row["damage_type"]
                 wound_damage = row["damage"]
-                damage = wound_damage if wound_damage > 0.0 else 0.0
+                damage = max(0.0, wound_damage)
                 raw_formula = row.get("raw_formula")
                 raw_damage = float(row.get("raw_damage", 0.0) or 0.0)
                 declaration = row.get("declared")
@@ -1941,13 +1941,13 @@ def stage_knights_vow_redirect_actions(
         if raw_amount is None or not math.isfinite(raw_amount):
             rebuilt.append(action)
             continue
-        split = dict(
-            damage_type=str(action.damage_type),
-            basic_attack=bool(action.basic_attack),
-            damage_over_time=bool(action.damage_over_time),
-            source=source,
-            raw_amount=raw_amount,
-        )
+        split = {
+            "damage_type": str(action.damage_type),
+            "basic_attack": bool(action.basic_attack),
+            "damage_over_time": bool(action.damage_over_time),
+            "source": source,
+            "raw_amount": raw_amount,
+        }
         protected_share = knights_vow_target_factor(target=target, **split)
         holder_share = knights_vow_target_factor(target=holder, **split)
         if protected_share is None or holder_share is None:
@@ -2379,7 +2379,7 @@ def compile_program(
         return tuple(actions)
     return tuple(
         action._replace(event={"_event_id": event_id_text(event.id)})
-        for action, event in zip(actions, program.events)
+        for action, event in zip(actions, program.events, strict=False)
     )
 
 

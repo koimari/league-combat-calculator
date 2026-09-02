@@ -8,7 +8,8 @@ Trades, whose stacks are the build's own item stat types and whose two
 channels are granted together.
 """
 
-from typing import Any, Callable, Mapping
+from collections.abc import Callable, Mapping
+from typing import Any
 
 from ..ability_spec import Disposition
 from ..rune_effects import (

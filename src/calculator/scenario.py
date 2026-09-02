@@ -7,20 +7,22 @@ champion-specific rules or replacing item mechanics with generic estimates.
 
 import math
 from collections.abc import Mapping
-from dataclasses import dataclass, field as dataclass_field, replace
+from dataclasses import dataclass, replace
+from dataclasses import field as dataclass_field
 from typing import Any
 
 from .ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
 from .capabilities import PRE_COMBAT_STATS
 from .champions import get_champion_options_meta
+from .champions.skill_orders import get_ability_rank
 from .data_fetcher import get_champion, get_item_by_name
 from .defensive_effects import StartingDefenses, resolve_starting_defenses
+from .interaction_effects import target_physical_damage_reduction_params
 from .item_coverage import (
     require_calculation_item_coverage,
     require_target_item_coverage,
     target_build_coverage,
 )
-from .interaction_effects import target_physical_damage_reduction_params
 from .item_effects import validate_item_input_options
 from .loadout_rules import validate_resolved_loadout
 from .pipeline import MAX_ALLIES, MAX_ENEMIES, FightParams, validate_cast_order_shape
@@ -32,16 +34,21 @@ from .practice_dummy import (
     parse_stat_overrides,
     practice_dummy_data,
 )
-from .role_quests import require_level_within_cap, validate_role
-from .rune_effects import RunePage, validate_rune_page
 from .request_parsing import (
     request_index_map,
+)
+from .request_parsing import (
     request_int as _request_int,
+)
+from .request_parsing import (
     request_string as _request_string,
+)
+from .request_parsing import (
     request_string_list as _request_string_list,
 )
+from .role_quests import require_level_within_cap, validate_role
+from .rune_effects import RunePage, validate_rune_page
 from .stats import MAX_LEVEL, resolve_pre_combat_stats
-from .champions.skill_orders import get_ability_rank
 
 MAX_LOADOUT_ITEMS = 6
 
@@ -104,10 +111,10 @@ def _validate_champion_options(
             if len(option_value) > maximum:
                 raise ValueError(f"{field}.{key} may contain at most {maximum} entries")
             parsed_values: list[str] = []
-            for value in option_value:
-                if not isinstance(value, str) or not value.strip():
+            for raw in option_value:
+                if not isinstance(raw, str) or not raw.strip():
                     raise ValueError(f"{field}.{key} entries must be strings")
-                value = value.strip()
+                value = raw.strip()
                 if len(value) > 100:
                     raise ValueError(
                         f"{field}.{key} entries must be at most 100 characters"
@@ -257,9 +264,7 @@ class ChampionLoadout:
         # Historical requests omitted this field; keep sourced ally effects
         # active for compatibility.  The browser sends an explicit false when
         # the user turns the opt-in toggle off.
-        ally_effects_enabled = value.get(
-            "ally_effects_enabled", False if is_practice_dummy else True
-        )
+        ally_effects_enabled = value.get("ally_effects_enabled", not is_practice_dummy)
         if not isinstance(ally_effects_enabled, bool):
             raise ValueError(f"{field}.ally_effects_enabled must be true or false")
         if is_practice_dummy and ally_effects_enabled:

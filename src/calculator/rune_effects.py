@@ -24,14 +24,15 @@ haste, a heal, a shield, a crowd-control trigger). Those compile to a
 engine publishes — never a silent zero.
 """
 
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from functools import cache
 from types import MappingProxyType
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any
 
-from .champions.inputs import champion_stat
 from .ability_spec import Disposition, ZeroPolicy
+from .champions.inputs import champion_stat
 from .data_fetcher import fetch_rune_data
 from .item_effects import DamageInputs
 from .request_parsing import request_positional_string_list, request_string_list
@@ -216,7 +217,7 @@ def zero_receipts(
         if zero_policy.disposition is Disposition.STRUCTURAL_ZERO
         else "is not priced"
     )
-    return (f"{rune_name} {verdict}: {zero_policy.reason}.",) + disclosures
+    return (f"{rune_name} {verdict}: {zero_policy.reason}.", *disclosures)
 
 
 @dataclass(frozen=True, slots=True)

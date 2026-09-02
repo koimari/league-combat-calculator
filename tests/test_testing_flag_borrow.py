@@ -16,7 +16,7 @@ TESTS = Path(__file__).resolve().parent
 
 sys.path.insert(0, str(TESTS.parent / "scripts"))
 
-import testing_flag_codemod  # noqa: E402  (path set above)
+import testing_flag_codemod
 
 #: The borrow's own home, where the assignment is the implementation.
 EXEMPT = frozenset({"app_config.py"})

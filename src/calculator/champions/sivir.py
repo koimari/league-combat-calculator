@@ -79,12 +79,13 @@ from typing import Any
 
 from ..ability_atoms import (
     AbilityAtomQuery,
+    ranked_ability_atom_value,
     required_ability_atom,
     required_ranked_attribute_atom,
-    ranked_ability_atom_value,
 )
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
+from .module_contract import coverage
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -94,7 +95,6 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
 )
-from .module_contract import coverage
 
 PACKET_SHA256 = "ac50a4316c8ffc3f6f326c6be14ec20867f6301066621ff49ec26c1fad1b97a7"
 
@@ -333,7 +333,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q (Boomerang Blade) prices the full two-way pass from the cached "
     "'Total Maximum Champion Damage' row (120-320 + 140% bonus AD + "
     "120% AP == 2 x the single-pass 'Physical Damage' row): the blade "

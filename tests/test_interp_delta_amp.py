@@ -43,10 +43,10 @@ from src.calculator.item_behavior import (
 from src.calculator.item_behavior_catalog import (
     ACKNOWLEDGED_READING_DIVERGENCES,
     AMP_COMPILABILITY,
-    BehaviorCatalogError,
-    COMPILED_KERNEL_CANNOT_AMP,
     COMPILED_KERNEL_CAN_AMP,
+    COMPILED_KERNEL_CANNOT_AMP,
     RUNE_AMP_SLOTS,
+    BehaviorCatalogError,
     behavior_rules,
     build_context,
     rule_owners,
@@ -397,10 +397,12 @@ def test_every_acknowledged_reading_divergence_names_a_live_declaration() -> Non
         "the note says REFRESH is the shipped reading; the declaration no "
         "longer agrees, so one of the two has moved without the other"
     )
-    assert "REFRESH" in note and "EXTEND" in note, (
+    both_readings = (
         "the note has to name both the reading that ships and the reading "
         "that stays open, or it records a decision without its alternative"
     )
+    assert "REFRESH" in note, both_readings
+    assert "EXTEND" in note, both_readings
 
 
 def test_refresh_takes_the_last_trigger_and_not_the_running_total() -> None:
@@ -815,7 +817,8 @@ def test_the_basic_amp_declares_its_range_assumption_as_a_derivation() -> None:
     melee = _part_amp(
         "Hexoptics C44", melee=True, attack_class=AttackClass.BASIC_ATTACK
     )
-    assert ranged is not None and melee is not None
+    assert ranged is not None
+    assert melee is not None
     assert ranged.multiplier({}) == pytest.approx(1.0 + entry["max_amp"])
     assert melee.multiplier({}) == pytest.approx(
         1.0
@@ -836,7 +839,8 @@ def test_a_per_part_amp_is_selected_by_the_damage_it_prices() -> None:
     build = ("Actualizer", "Hexoptics C44")
     ability = _part_amp(*build, melee=True, attack_class=AttackClass.ABILITY)
     basic = _part_amp(*build, melee=True, attack_class=AttackClass.BASIC_ATTACK)
-    assert ability is not None and basic is not None
+    assert ability is not None
+    assert basic is not None
     assert [rule.owner for rule in ability.rules] == ["Actualizer"]
     assert [rule.owner for rule in basic.rules] == ["Hexoptics C44"]
     assert _part_amp(*build, melee=True, attack_class=AttackClass.OTHER) is None

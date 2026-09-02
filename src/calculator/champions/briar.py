@@ -46,10 +46,11 @@ from ..ability_atoms import (
     required_ability_atom,
 )
 from ..ability_spec import AttackClass, ControlEvent, DamageClass, DamagePart
+from ..binary_roots import data_value, spell_object
 from ..survival.actions import TransitionRank
+from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option, target_stat
-from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .module_helpers import missing_hp_fraction
 from .slotlib import (
     ability_name,
@@ -59,7 +60,6 @@ from .slotlib import (
     extract_value,
 )
 from .source_receipts import load_champion_sources
-from ..binary_roots import data_value, spell_object
 
 # The P/Q/R effect records carry the duration, stack, and ratio values; the
 # level-banded bleed base and bonus-AD ratio remain prose/leveling-backed.
@@ -566,10 +566,8 @@ def derive_self_healing(
     healing = []
     ability = _healing.ability_json(champion_data, "E")
     rank = _healing.parsed_rank(ability_damages, "E")
-    per_tick = _healing.extract_named(
-        ability, "Heal Per Tick", rank, champion_stats, {}
-    )
-    maximum = _healing.extract_named(ability, "Maximum Heal", rank, champion_stats, {})
+    per_tick = extract_named(ability, "Heal Per Tick", rank, champion_stats, {})
+    maximum = extract_named(ability, "Maximum Heal", rank, champion_stats, {})
     if per_tick > 0.0 and maximum > 0.0:
         # The ticks are the charge's, not the scream's: Briar is "charging
         # for up to 1 second, during which she ... heals herself every 0.25
@@ -584,19 +582,19 @@ def derive_self_healing(
         for payment in _healing.payments(
             _healing.HealAnchor.CAST_SCHEDULE, "E", damage_events, cast_timeline
         ):
-            ticks = max(1, min(4, int(math.ceil(maximum / per_tick))))
-            for index in range(1, ticks + 1):
-                healing.append(
-                    {
-                        "time": payment.cast_time + index * 0.25,
-                        "amount": min(
-                            float(per_tick),
-                            max(0.0, maximum - per_tick * (index - 1)),
-                        ),
-                        "source": "Chilling Scream",
-                        "kind": "champion_ability",
-                    }
-                )
+            ticks = max(1, min(4, math.ceil(maximum / per_tick)))
+            healing.extend(
+                {
+                    "time": payment.cast_time + index * 0.25,
+                    "amount": min(
+                        float(per_tick),
+                        max(0.0, maximum - per_tick * (index - 1)),
+                    ),
+                    "source": "Chilling Scream",
+                    "kind": "champion_ability",
+                }
+                for index in range(1, ticks + 1)
+            )
     # P (Crimson Curse) bleed self-heal: "The bleed always heals Briar
     # for 25% of the pre-mitigation damage dealt" (cached passive prose).
     # The bleed's own per-stack heal rows (2.5 : 12.5 + 12.5% bonus AD
@@ -629,7 +627,7 @@ def derive_self_healing(
     # bite's hit event; the CAST anchor keeps that one payment even if a
     # future W is priced as several hits.
     w_rank = _healing.parsed_rank(ability_damages, "W")
-    heal_percent = _healing.extract_named(
+    heal_percent = extract_named(
         _healing.ability_json(champion_data, "W", 1),
         "Heal Percentage",
         w_rank,
@@ -650,7 +648,7 @@ def derive_self_healing(
     # Hematomania lasts; life steal heals for the sourced percentage of
     # the post-mitigation damage dealt by basic attacks.
     r_rank = _healing.parsed_rank(ability_damages, "R")
-    life_steal = _healing.extract_named(
+    life_steal = extract_named(
         _healing.ability_json(champion_data, "R"),
         "Life Steal",
         r_rank,

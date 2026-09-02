@@ -14,6 +14,7 @@ from ..ability_spec import DamagePart
 from ..healing_helpers import ability_json, cast_slot_times, parsed_rank
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, typed_damage
 from .slotlib import (
     ability_name,
@@ -24,7 +25,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option
 
 
 def _kayle_passive(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -158,7 +158,7 @@ def derive_self_healing(
     w_heal = extract_named(
         ability_json(champion_data, "W"), "Heal", w_rank, champion_stats
     )
-    healing = [
+    return [
         {
             "time": cast_time,
             "amount": w_heal,
@@ -168,7 +168,6 @@ def derive_self_healing(
         }
         for cast_time in cast_slot_times(cast_timeline, "W")
     ]
-    return healing
 
 
 SELF_HEALING_RULE = self_healing_rule("Kayle")(derive_self_healing)

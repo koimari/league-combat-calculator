@@ -9,6 +9,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import float_option, int_option
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -17,7 +18,6 @@ from .slotlib import (
     extract_value,
 )
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
 
 
 def _warpath(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -89,7 +89,8 @@ def _spirit_of_dread(ctx: SlotCtx) -> dict[str, Any] | None:
         DamagePart("magic", per_tick, count=ticks, time_offset=0.0, hit_interval=1.0),
     )
     entry["detail"] = (
-        "One sourced area tick per second; healing and bonus resistances remain state in the ledger."
+        "One sourced area tick per second; healing and bonus resistances remain state "
+        "in the ledger."
     )
     return entry
 
@@ -127,15 +128,6 @@ def _devastating_charge(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-SLOTS = {
-    "P": _warpath,
-    "Q": _rampage,
-    "W": _spirit_of_dread,
-    "E": _devastating_charge,
-    "R": lambda ctx: _r(ctx),
-}
-
-
 def _r(ctx: SlotCtx) -> dict[str, Any] | None:
     ranked = ctx.ranked()
     if ranked is None:
@@ -156,6 +148,15 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
 # knockback.  R's riders damage on the way through and Hecarim then "fears
 # nearby enemies" on arrival.  P is the bonus-AD conversion row and applies
 # nothing.
+SLOTS = {
+    "P": _warpath,
+    "Q": _rampage,
+    "W": _spirit_of_dread,
+    "E": _devastating_charge,
+    "R": _r,
+}
+
+
 MODULE_CC = {"Q": "none", "W": "none", "E": "knockback", "R": "fear"}
 
 parse_abilities = build_parser(SLOTS, "Hecarim", cc_kinds=MODULE_CC)
@@ -181,9 +182,12 @@ OPTIONS = [
     ),
 ]
 ASSUMPTIONS = [
-    "Warpath reads the explicit bonus-movement-speed input and updates bonus AD before later casts.",
-    "Rampage stacks and Spirit of Dread ticks are explicit ordered state; ally healing, fear and displacement are utility.",
-    "Devastating Charge is one empowered basic attack and therefore shares the item/on-hit timeline.",
+    "Warpath reads the explicit bonus-movement-speed input and updates bonus AD "
+    "before later casts.",
+    "Rampage stacks and Spirit of Dread ticks are explicit ordered state; ally "
+    "healing, fear and displacement are utility.",
+    "Devastating Charge is one empowered basic attack and therefore shares the "
+    "item/on-hit timeline.",
 ]
 SOURCES = load_champion_sources("Hecarim")
 

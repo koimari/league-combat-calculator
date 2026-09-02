@@ -104,22 +104,20 @@ R19 | Kernel fail-closed: same-hit rule unverified -> missing_same_hit_rule | ke
 R20 | Kernel contract: receipt shapes (six separation concerns)      | kernel      | NEW-CONTRACT | no
 """
 
-from types import SimpleNamespace
 from typing import Any
 
 import pytest
 
 from src.app import app
-from src.calculator.defensive_effects import StartingDefenses
-from src.calculator.roster_composition import ActorRequest
 from src.calculator import shield_ledger
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.delivery_eligibility import DefenseWindow, stable_event_key
 from src.calculator.participant_timeline import Combatant, _WalkCompiler
+from src.calculator.roster_composition import ActorRequest
 from src.calculator.state_lifecycle import SourceReceipt
 from src.calculator.survival.actions import ActionKind
 from src.calculator.survival.compile import unrepresentable_template_receipt
-from tests.survival_probe import simulate_survival
-from tests.survival_probe import survival_of
+from tests.survival_probe import simulate_survival, survival_of
 
 try:  # P2 Slice 3 planned kernel — not landed yet; rows fail with the marker.
     from src.calculator import crowd_control_eligibility as cce
@@ -488,7 +486,7 @@ def test_r1_black_shield_protects_the_selected_ally_only():
     # NEW-CONTRACT: the recipient's survival row carries the immunity
     # receipt (recipient, holder source, window, active-until, ended
     # reason, blocked entries); the unselected ally has none.
-    cce = _require_contract()
+    _require_contract()
     receipt = survival_of(combat, "ally:Lux")["crowd_control_immunity"]
     assert receipt["recipient"] == "ally:Lux"
     assert receipt["shield_source"] == "Black Shield"
@@ -530,7 +528,7 @@ def test_r2_damage_attached_cc_blocked_while_shield_remains():
     # NEW-CONTRACT: the blocked event's receipt carries the decision —
     # control kind, eligibility verdict, holder source, shield amount
     # before the packet's absorption and after it, active-until time.
-    cce = _require_contract()
+    _require_contract()
     receipt = charm["crowd_control_blocked"]
     decision = receipt["decision"]
     assert decision["eligible"] is True
@@ -583,7 +581,7 @@ def test_r3_control_only_packet_blocked_while_shield_remains():
     # NOTE: Veigar Q (157.9 magic) lands at t=0 and the cage stuns at 0.75,
     # so the E decision sees the drained holder — 320 - 157.9 == 162.1,
     # exactly the value R5 pins for the same payload.
-    cce = _require_contract()
+    _require_contract()
     decision = cage["crowd_control_blocked"]["decision"]
     assert decision["eligible"] is True
     assert decision["reason"] == ""
@@ -608,7 +606,7 @@ def test_r3_control_only_packet_blocked_timeline_level():
     assert packet["crowd_control_blocked"]["source"] == "Black Shield"
 
     # NEW-CONTRACT: the decision gate ran (not silently skipped).
-    cce = _require_contract()
+    _require_contract()
     decision = packet["crowd_control_blocked"]["decision"]
     assert decision["eligible"] is True
     assert decision["control"]["kind"] == "stun"
@@ -659,7 +657,7 @@ def test_r4_physical_before_control_does_not_consume_magic_pool():
 
     # NEW-CONTRACT: the decision sees the FULL holder amount (physical
     # damage never touched the magic pool).
-    cce = _require_contract()
+    _require_contract()
     assert cage["crowd_control_blocked"]["decision"]["shield_amount_before"] == (
         pytest.approx(320.0)
     )
@@ -692,7 +690,7 @@ def test_r4_physical_before_control_timeline_level():
 
     # NEW-CONTRACT: the decision sees the FULL holder amount (physical
     # damage never touched the magic pool — R15 pins the ledger totals).
-    cce = _require_contract()
+    _require_contract()
     decision = blocked[0]["crowd_control_blocked"]["decision"]
     assert decision["shield_amount_before"] == pytest.approx(320.0)
 
@@ -731,7 +729,7 @@ def test_r5_magic_below_shield_strength_persists_immunity():
 
     # NEW-CONTRACT: the decision sees the drained-but-alive holder
     # (320 - 157.9 == 162.1) and still blocks.
-    cce = _require_contract()
+    _require_contract()
     decision = cage["crowd_control_blocked"]["decision"]
     assert decision["shield_amount_before"] == pytest.approx(162.1)
     assert decision["eligible"] is True
@@ -755,7 +753,7 @@ def test_r5_magic_below_shield_strength_timeline_level():
     assert len(blocked) == 1
     assert blocked[0]["time"] == pytest.approx(2.0)
 
-    cce = _require_contract()
+    _require_contract()
     decision = blocked[0]["crowd_control_blocked"]["decision"]
     assert decision["shield_amount_before"] == pytest.approx(120.0)
     assert decision["eligible"] is True
@@ -792,7 +790,7 @@ def test_r6a_same_packet_damage_breaks_shield_variant_blocked():
     # same_hit_ordering() (R19 fails closed while RLM-2 A is unverified);
     # the decision gate itself only sees the holder present, so the
     # blocked receipt carries the full before-amount and a zero after.
-    cce = _require_contract()
+    _require_contract()
     decision = packet["crowd_control_blocked"]["decision"]
     assert decision["eligible"] is True
     assert decision["shield_amount_before"] == pytest.approx(320.0)
@@ -830,7 +828,7 @@ def test_r6a_alt_variant_lands_does_not_occur_the_walk_deterministically_blocks(
     # of the same-hit ordering question: decide() with no holder present
     # always denies "shield_not_held", regardless of which same-hit
     # variant RLM-2 A eventually certifies.
-    cce = _require_contract()
+    _require_contract()
     decision = _eligibility().decide(_CcAction(time=1.0), holder=None)
     assert decision.eligible is False
     assert decision.reason == "shield_not_held"
@@ -857,7 +855,7 @@ def test_r6b_depletion_before_later_control_packet_cc_lands():
 
     # NEW-CONTRACT: the second packet was never blocked — its decision
     # fails closed with the named absent-holder reason.
-    cce = _require_contract()
+    _require_contract()
     assert "crowd_control_blocked" not in applied[0]
     decision = _eligibility().decide(_CcAction(time=2.0), holder=None)
     assert decision.eligible is False
@@ -888,7 +886,8 @@ def test_r6b_app_depletion_then_stun_lands():
     first, tether = r_events
     assert first["time"] == pytest.approx(0.0)
     assert first["damage"] == pytest.approx(230.3)
-    assert "crowd_control" not in first and "crowd_control_blocked" not in first
+    assert "crowd_control" not in first
+    assert "crowd_control_blocked" not in first
     (q,) = _events(combat, target="ally:Lux", source="Q")
     assert q["time"] == pytest.approx(0.35)
     assert q["damage"] == pytest.approx(197.4)
@@ -903,7 +902,7 @@ def test_r6b_app_depletion_then_stun_lands():
 
     # NEW-CONTRACT: the survival-row receipt reports the immunity ended
     # because the holder was DRAINED (not expired).
-    cce = _require_contract()
+    _require_contract()
     receipt = lux["crowd_control_immunity"]
     assert receipt["reason_immunity_ended"] == "drained"
     assert receipt["active_until"] == pytest.approx(5.0)
@@ -943,17 +942,21 @@ def test_r7_window_boundaries_start_inclusive_end_exclusive():
 
     # NEW-CONTRACT: the kernel decision reproduces the same boundary
     # convention (start inclusive, end exclusive) on the eligibility window.
-    cce = _require_contract()
+    _require_contract()
     eligibility = _eligibility(start=2.0, until=5.0)
     holder = _holder()
     before = eligibility.decide(_CcAction(time=1.9999999), holder=holder)
-    assert before.eligible is False and before.reason == "outside_window"
+    assert before.eligible is False
+    assert before.reason == "outside_window"
     at_start = eligibility.decide(_CcAction(time=2.0), holder=holder)
-    assert at_start.eligible is True and at_start.reason == ""
+    assert at_start.eligible is True
+    assert at_start.reason == ""
     just_before = eligibility.decide(_CcAction(time=4.9999999), holder=holder)
-    assert just_before.eligible is True and just_before.reason == ""
+    assert just_before.eligible is True
+    assert just_before.reason == ""
     at_end = eligibility.decide(_CcAction(time=5.0), holder=holder)
-    assert at_end.eligible is False and at_end.reason == "outside_window"
+    assert at_end.eligible is False
+    assert at_end.reason == "outside_window"
 
 
 # ---------------------------------------------------------------------------
@@ -991,7 +994,8 @@ def test_r8_another_shield_does_not_keep_immunity():
     assert target["crowd_control_until"] == pytest.approx(3.5)
     assert target["crowd_control_immunity_until"] == pytest.approx(0.0)
     applied = [packet for packet in packets if packet.get("crowd_control")]
-    assert len(applied) == 1 and applied[0]["time"] == pytest.approx(2.0)
+    assert len(applied) == 1
+    assert applied[0]["time"] == pytest.approx(2.0)
 
     # NEW-CONTRACT: the exact Black Shield ledger entry is the only
     # immunity holder — the general entry never matches.
@@ -1035,7 +1039,7 @@ def test_r9_two_same_time_controls_are_deterministic():
         )
 
     result_one, events_one = run()
-    result_two, events_two = run()
+    result_two, _events_two = run()
     assert result_one == result_two
     assert [event["crowd_control_blocked"]["source"] for event in events_one] == [
         "Black Shield",
@@ -1046,7 +1050,7 @@ def test_r9_two_same_time_controls_are_deterministic():
 
     # NEW-CONTRACT: each decision is identified by stable_event_key and the
     # same-time order follows the event keys deterministically.
-    cce = _require_contract()
+    _require_contract()
     eligibility = _eligibility()
     holder = _holder()
     first = eligibility.decide(
@@ -1057,7 +1061,8 @@ def test_r9_two_same_time_controls_are_deterministic():
         _CcAction(time=1.0, source_key="B", sequence=1, cc_kind="root"),
         holder=holder,
     )
-    assert first.eligible is True and second.eligible is True
+    assert first.eligible is True
+    assert second.eligible is True
     assert first.event_key == stable_event_key(
         _CcAction(time=1.0, source_key="A", sequence=0)
     )
@@ -1144,7 +1149,7 @@ def test_r11a_spell_shield_blocks_the_cast_entirely():
 
     # NEW-CONTRACT: the Annul-blocked cast never reached the immunity
     # gate — the recipient's immunity receipt blocked nothing.
-    cce = _require_contract()
+    _require_contract()
     assert survival_of(combat, "ally:Yasuo")["crowd_control_immunity"]["blocked"] == []
 
 
@@ -1188,7 +1193,7 @@ def test_r11b_projectile_defense_destroys_the_packet():
 
     # NEW-CONTRACT: the destroyed packets never reached the immunity
     # gate — no immunity block was recorded.
-    cce = _require_contract()
+    _require_contract()
     assert survival["crowd_control_immunity"]["blocked"] == []
 
 
@@ -1230,7 +1235,7 @@ def test_r11c_full_blocked_packet_drops_its_cc_without_receipt():
 
     # NEW-CONTRACT: the full-blocked packet's CC was dropped before the
     # immunity gate — no immunity block was recorded.
-    cce = _require_contract()
+    _require_contract()
     assert survival["crowd_control_immunity"]["blocked"] == []
 
 
@@ -1272,7 +1277,7 @@ def test_r11d_stasis_blocked_packets_skip_every_later_gate():
 
     # NEW-CONTRACT: nothing was blocked by immunity — the stasis packet
     # never reached the gate, so the blocked list is empty.
-    cce = _require_contract()
+    _require_contract()
     assert survival["crowd_control_immunity"]["blocked"] == []
 
 
@@ -1323,7 +1328,7 @@ def test_r11e_reduced_but_not_blocked_packet_still_hits_the_cc_gate():
     # NEW-CONTRACT: the reduced-but-not-blocked packet reached the
     # immunity gate and the decision receipt names the reduced holder
     # amount (320 - 90 == 230 remains after this packet's damage).
-    cce = _require_contract()
+    _require_contract()
     decision = reduced["crowd_control_blocked"]["decision"]
     assert decision["eligible"] is True
     assert decision["shield_amount_before"] == pytest.approx(320.0)
@@ -1385,7 +1390,7 @@ def test_r12_receipt_result_parity():
 
     # NEW-CONTRACT receipt: recipient, holder source atoms, window,
     # active-until, ended reason, blocked entries, decision receipts.
-    cce = _require_contract()
+    _require_contract()
     receipt = lux["crowd_control_immunity"]
     assert receipt["recipient"] == "ally:Lux"
     assert receipt["shield_source"] == "Black Shield"
@@ -1526,7 +1531,8 @@ def test_r14_timeline_non_control_damage_packet():
 
     cce = _require_contract()
     profile = cce.classify_control(_CcAction(cc_kind="", damage=100.0))
-    assert profile.kind == "" and profile.unknown is False
+    assert profile.kind == ""
+    assert profile.unknown is False
 
 
 # ---------------------------------------------------------------------------
@@ -1578,7 +1584,7 @@ def test_r15_physical_damage_never_consumes_the_magic_pool():
 def test_r16_damage_attached_and_control_only_share_one_contract():
     """Both packet kinds route through the SAME eligibility contract and
     produce identical decision receipts (modulo the packet identity)."""
-    cce = _require_contract()
+    _require_contract()
     eligibility = _eligibility()
     holder = _holder()
 
@@ -1594,9 +1600,11 @@ def test_r16_damage_attached_and_control_only_share_one_contract():
 
     decision_a = eligibility.decide(attached, holder=holder)
     decision_b = eligibility.decide(control_only, holder=holder)
-    assert decision_a.eligible is True and decision_b.eligible is True
+    assert decision_a.eligible is True
+    assert decision_b.eligible is True
     assert decision_a.reason == decision_b.reason == ""
-    assert decision_a.control.blocking is True and decision_b.control.blocking is True
+    assert decision_a.control.blocking is True
+    assert decision_b.control.blocking is True
 
     receipt_a = decision_a.public_receipt()
     receipt_b = decision_b.public_receipt()
@@ -1635,7 +1643,7 @@ def test_r17_kernel_decision_reasons_and_soft_control():
     SOFT control (slow; silence is authored but excluded from the
     blocking set) is denied with 'control_not_blocking', never
     'unknown_control'."""
-    cce = _require_contract()
+    _require_contract()
     reasons: dict[str, object] = {}
 
     outside = _eligibility(start=0.0, until=5.0).decide(
@@ -1757,9 +1765,13 @@ def test_r20_kernel_receipt_shapes():
 
     # Classification: plain packet vs blocking vs unknown.
     plain = cce.classify_control(_CcAction(cc_kind=""))
-    assert plain.kind == "" and plain.blocking is False and plain.unknown is False
+    assert plain.kind == ""
+    assert plain.blocking is False
+    assert plain.unknown is False
     stun = cce.classify_control(_CcAction(cc_kind="stun"))
-    assert stun.kind == "stun" and stun.blocking is True and stun.unknown is False
+    assert stun.kind == "stun"
+    assert stun.blocking is True
+    assert stun.unknown is False
     assert set(stun.public_receipt()) == {
         "kind",
         "blocking",

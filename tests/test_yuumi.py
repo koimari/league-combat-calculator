@@ -6,6 +6,7 @@ waves by a stacking 10%.
 
 import copy
 import inspect
+import itertools
 
 import pytest
 
@@ -80,7 +81,8 @@ class TestReviewedCrowdControl:
         while W prices nothing an enemy takes and reads ``no_damage``
         (TestYouAndMeIsASourcedZeroDamageRow re-derives that verdict).
         """
-        assert "W" not in yuumi.MODULE_CC and "E" not in yuumi.MODULE_CC
+        assert "W" not in yuumi.MODULE_CC
+        assert "E" not in yuumi.MODULE_CC
         assert get_champion_module_contract("Yuumi").coverage["W"] == "no_damage"
         assert get_champion_module_contract("Yuumi").coverage["E"] == "modeled"
 
@@ -127,7 +129,7 @@ class TestFelineFriendship:
         )
 
     @pytest.mark.parametrize(
-        "level, ranks, heal, recharge",
+        ("level", "ranks", "heal", "recharge"),
         [
             (1, {"Q": 1, "W": 0, "E": 0, "R": 0}, 20.0, 20.0),
             (6, {"Q": 3, "W": 1, "E": 1, "R": 1}, 46.47, 16.470588235294116),
@@ -146,7 +148,7 @@ class TestFelineFriendship:
         assert times[0] == pytest.approx(0.0)
         assert all(
             later - earlier >= recharge - 1e-6
-            for earlier, later in zip(times, times[1:])
+            for earlier, later in itertools.pairwise(times)
         )
 
     def test_the_recharge_is_the_innates_own_haste_immune_row(self):

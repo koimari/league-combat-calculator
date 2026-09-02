@@ -7,14 +7,14 @@ amplifies one slot's damage on the flat-amp kind, and the two runes whose
 halves this engine holds no channel for compile to a refusal with the reason.
 """
 
-from typing import Any, Callable, Mapping
+from collections.abc import Callable, Mapping
+from typing import Any
 
 from ..ability_spec import Disposition
 from ..rune_effects import (
-    cached_effects,
-    RuneEffect,
     ULTIMATE_SLOT,
     RuneAmpContext,
+    RuneEffect,
     RuneFlatAmpEffect,
     RuneOption,
     RuneOptionKind,
@@ -27,6 +27,7 @@ from ..rune_effects import (
     adaptive_force_attack_damage_ratio,
     at_level,
     breakdown_key,
+    cached_effects,
     display_name,
     keyed_columns,
     no_damage_compiler,
@@ -274,7 +275,7 @@ def _certify_adaptive_rendering(
     ratio = adaptive_force_attack_damage_ratio()
     if len(rendered) != len(force_by_mark) or any(
         abs(attack_damage - ratio * force) > 1e-6
-        for attack_damage, force in zip(rendered, force_by_mark)
+        for attack_damage, force in zip(rendered, force_by_mark, strict=False)
     ):
         raise KeyError(
             f"RUNE_EFFECTS[{name!r}] leveling is not the attack-damage "

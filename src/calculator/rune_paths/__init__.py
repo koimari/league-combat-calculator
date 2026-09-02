@@ -25,7 +25,8 @@ so nothing downstream distinguishes a keystone from a minor rune except where
 the roster says its slot is.
 """
 
-from typing import Any, Callable, Mapping
+from collections.abc import Callable, Mapping
+from typing import Any
 
 from ..rune_effects import RuneEffect, RuneOption
 from . import (

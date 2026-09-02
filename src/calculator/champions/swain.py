@@ -28,14 +28,20 @@ per Tick row carries a "% of his bonus health" ratio.
 from dataclasses import replace
 from typing import Any
 
-from .inputs import champion_stat, int_option
-from .engine import BUFF, CC_PER_PART, SlotCtx
-from .healing_contract import self_healing_rule
-from .module_helpers import typed_damage
-from .packet_module import build_packet_module
-from .slotlib import STEROID_ZERO, ability_name, damage_entry
 from .. import healing_helpers as _healing
 from ..binary_roots import data_value, spell_object
+from .engine import BUFF, CC_PER_PART, SlotCtx
+from .healing_contract import self_healing_rule
+from .inputs import champion_stat, int_option
+from .module_helpers import typed_damage
+from .packet_module import build_packet_module
+from .slotlib import (
+    STEROID_ZERO,
+    ability_name,
+    damage_entry,
+    find_named_leveling,
+    sum_modifiers,
+)
 
 PACKET_SHA256 = "65d9e8cd0840ba7f346dd7faad26a485494c4825f438be91e63491b17ecc5169"
 
@@ -149,7 +155,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "p_soul_fragments",
         0,
@@ -159,15 +166,14 @@ OPTIONS = list(OPTIONS) + [
         rotation={
             "role": "self_state",
             "slot": "P",
-            "note": (
-                "Fragments carried into the fight; P's health buff is "
-                "self-state, not a consumed setup."
-            ),
+            "note": "Fragments carried into the fight; P's health buff is "
+            "self-state, not a consumed setup.",
         },
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Ravenous Flock) grants 15 permanent bonus health per Soul "
     "Fragment (cached P prose; the passive has no leveling row).  "
     "p_soul_fragments defaults to 0: fragments are dropped by enemy "
@@ -204,7 +210,7 @@ def derive_self_healing(
     healing = []
     r_ability = _healing.ability_json(champion_data, "R")
     r_rank = _healing.parsed_rank(ability_damages, "R")
-    heal_leveling = _healing.find_named_leveling(r_ability, "Heal per Tick")
+    heal_leveling = find_named_leveling(r_ability, "Heal per Tick")
 
     def swain_bonus_health(unit: str, value: float) -> float | None:
         if unit == "% of his bonus health":
@@ -212,7 +218,7 @@ def derive_self_healing(
         return None
 
     heal_per_tick = (
-        _healing.sum_modifiers(
+        sum_modifiers(
             heal_leveling,
             r_rank,
             champion_stats,

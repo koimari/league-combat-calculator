@@ -16,11 +16,12 @@ table all stay in ``rune_effects``: this module is the compilation and
 nothing else.
 """
 
+from collections.abc import Callable, Mapping
 from types import MappingProxyType
-from typing import Any, Callable, Mapping
+from typing import Any
 
-from ..champions.inputs import champion_stat
 from ..ability_spec import Disposition, ZeroPolicy
+from ..champions.inputs import champion_stat
 from ..item_effects import DamageInputs
 from ..rune_effects import (
     KeystoneAeryEffect,
@@ -237,7 +238,7 @@ def _certify_comet_leveling_order(
     max_by_level = [float(value) for value in leveling[1]] if len(leveling) > 1 else []
     if len(max_by_level) != len(base_by_level) or any(
         abs(max_value - base_value * (1.0 + full_amp)) > 1e-6
-        for base_value, max_value in zip(base_by_level, max_by_level)
+        for base_value, max_value in zip(base_by_level, max_by_level, strict=False)
     ):
         raise KeyError(
             f"RUNE_EFFECTS[{name!r}] leveling tables are not minimum then "

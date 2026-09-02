@@ -54,9 +54,11 @@ import math
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..damage import effective_cooldown
 from ..binary_roots import data_value, spell_object
+from ..damage import effective_cooldown
 from .engine import BUFF, SlotCtx, build_parser
+from .inputs import float_option, int_option
+from .module_contract import coverage
 from .module_helpers import clamp
 from .slotlib import (
     ability_name,
@@ -68,8 +70,6 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
-from .module_contract import coverage
 
 _Q_FIRST_HIT_DELAY = 0.4
 _Q_VOLLEY_DURATION = 1.0

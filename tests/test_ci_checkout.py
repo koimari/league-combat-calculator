@@ -25,7 +25,9 @@ HISTORY_WALKING = ("log", "archive", "merge-base", "rev-list", "for-each-ref")
 #: ``git`` and the subcommand, however the call spells the gap between them:
 #: ``git log`` in prose, ``["git", "log", ...]``, ``_git("merge-base", ...)``,
 #: and the same wrapped across lines.
-_WALK = re.compile(r"""git['"]?[\s,(_-]+['"]?(?:%s)\b""" % "|".join(HISTORY_WALKING))
+_WALK = re.compile(
+    r"""git['"]?[\s,(_-]+['"]?(?:{})\b""".format("|".join(HISTORY_WALKING))
+)
 
 
 def test_the_workflow_pins_no_fetch_depth():

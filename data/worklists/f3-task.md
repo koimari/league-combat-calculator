@@ -13,7 +13,7 @@ DELIVERABLES:
    c. EMIT a rationale string citing the specific atoms that drove the order (e.g. "E's Enhanced row (…+55% AP vs poisoned) requires Q's 3s poison — Q first").
    d. FALLBACK: a champion with NO detectable edge and flat abilities keeps the certified/DEFAULT order with a rationale that says exactly that (data-driven, honest).
 2. COMBO-INVARIANT TESTS: a regression suite that asserts, for EVERY champion: (a) the derived order never violates a detected setup/consume edge (E-before-poison, detonate-before-stack-application, amp-after-the-burst), (b) the rationale cites real atoms, (c) the order is stable across levels/items for the same champion (deterministic).
-3. KEEP the 10 ComboRule entries as documented OVERRIDES (they are the verified seeds) but the table must no longer be the primary path for the other 163.
+3. KEEP the 10 ComboRule entries as documented OVERRIDES (they are the verified seeds) but the table must not be the primary path for the other 163.
 4. Verification gap report: for each champion whose derivation is ambiguous (edges detected but conflicting, or no data signal where a combo is known), list it in docs/rotation-verification-gaps.md for the F4 verification swarm.
 
 GATES: pytest -q full; pylint src/ --fail-under=9; black --check src/ tests/; node --check static/js/app.js (unchanged); git diff --check; golden — re-capture + explain every diff (this is EXPECTED to change sustained totals for many champions).

@@ -52,18 +52,18 @@ from pathlib import Path
 
 import pytest
 
+from src.calculator.ability_atoms import _ability_atoms
 from src.calculator.champions import (
     get_champion_module_contract,
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from src.calculator.ability_atoms import _ability_atoms
 from src.calculator.champions.seraphine import (
-    ASSUMPTIONS,
     _MAX_NOTES,
     _W_MOVE_SPEED_PER_100_AP,
     _W_MOVE_SPEED_PERCENT,
     _W_WINDOW_SOURCE,
+    ASSUMPTIONS,
 )
 from src.calculator.data_fetcher import get_champion
 from src.calculator.pipeline import FightParams, run_fight
@@ -279,7 +279,8 @@ class TestZeroNotesCostZero:
     def test_zero_and_one_note_are_not_identical(self):
         assert _notes(18, 0) == (0.0, 0)
         per_note, fired = _notes(18, 1)
-        assert per_note > 0.0 and fired == 1
+        assert per_note > 0.0
+        assert fired == 1
 
     def test_option_is_registered_with_the_sourced_cap_as_its_default(self):
         meta = get_champion_options_meta("Seraphine")

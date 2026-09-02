@@ -27,6 +27,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx
+from .inputs import int_option
 from .module_helpers import (
     CRIT_CHANCE_MULTIPLIER,
     CRIT_DAMAGE_MULTIPLIER_FACTOR,
@@ -44,7 +45,6 @@ from .slotlib import (
     extract_named,
     extract_value,
 )
-from .inputs import int_option
 
 # P4: the crit-conversion rule is the shared module_helpers rule (the
 # 0.9 factor's atom hash is 1142fbe0a600fcc8 for Yone).
@@ -290,7 +290,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "W": _spirit_cleave,
         "R": _fate_sealed,
         "P": _way_of_the_hunter,
-        "Q": _mortal_steel,  # E declares metadata consumed after the fight event ledger is authored.
+        # E declares metadata consumed after the fight event ledger is authored.
+        "Q": _mortal_steel,
         "E": _soul_unbound,
     },
     slot_order=("P", "Q", "W", "R", "E"),

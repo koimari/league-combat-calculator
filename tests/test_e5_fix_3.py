@@ -31,11 +31,10 @@ from pathlib import Path
 import pytest
 
 from src import app as app_module
-from src.calculator.champions import parse_champion_abilities
-from src.calculator.champions import wukong
+from src.calculator.champions import parse_champion_abilities, wukong
+from src.calculator.champions.slotlib import find_named_leveling
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import calculate_total_stats
-from src.calculator.champions.slotlib import find_named_leveling
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _FULL_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
@@ -171,7 +170,7 @@ class TestQArmorReductionParse:
 
     def test_q_shred_duration_is_wiki_pinned_constant(self) -> None:
         """3s, from the wiki prose 'inflict armor reduction for 3 seconds'."""
-        assert wukong.Q_SHRED_DURATION == pytest.approx(3.0)
+        assert pytest.approx(3.0) == wukong.Q_SHRED_DURATION
 
     def test_q_shred_disabled_by_option(self) -> None:
         data = get_champion(_CACHE_KEY)

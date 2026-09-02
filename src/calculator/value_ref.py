@@ -35,7 +35,7 @@ from __future__ import annotations
 import math
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, Union
+from typing import Literal
 
 from . import item_effects, rune_effects
 
@@ -375,7 +375,7 @@ class DerivedValueRef:
     """
 
     op: DerivedOp
-    operands: tuple["AnyValueRef", ...]
+    operands: tuple[AnyValueRef, ...]
 
     def __post_init__(self) -> None:
         """Reject an op outside the union or an arity the op cannot fold."""
@@ -412,7 +412,7 @@ class DerivedValueRef:
         return product
 
 
-AnyValueRef = Union[Const, ValueRef, LevelValueRef, LateLevelValueRef, DerivedValueRef]
+AnyValueRef = Const | ValueRef | LevelValueRef | LateLevelValueRef | DerivedValueRef
 
 VALUE_REF_TYPES: tuple[type, ...] = (
     Const,
@@ -464,21 +464,21 @@ def resolve_flat(references: Sequence[AnyValueRef]) -> tuple[float, ...]:
 
 
 __all__ = [
+    "DERIVED_OPS",
+    "LEVEL_SCALES",
+    "STRUCTURAL_REASONS",
+    "VALUE_REF_TYPES",
+    "VALUE_REGISTRIES",
     "AnyValueRef",
     "Const",
-    "DERIVED_OPS",
     "DerivedOp",
     "DerivedValueRef",
-    "LEVEL_SCALES",
     "LateLevelValueRef",
     "LevelScale",
     "LevelValueRef",
-    "STRUCTURAL_REASONS",
     "SourceReceipt",
     "StructuralReason",
     "UnsourcedDeclarationError",
-    "VALUE_REF_TYPES",
-    "VALUE_REGISTRIES",
     "ValueRef",
     "ValueRefError",
     "ValueRegistry",

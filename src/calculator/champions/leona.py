@@ -17,6 +17,7 @@ Option key consumed by the shared parser: "p_marks".
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
+from .inputs import int_option
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, delayed_damage
 from .slotlib import (
     ability_name,
@@ -27,7 +28,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
 
 
 def _sunlight(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -133,7 +133,8 @@ _ECLIPSE_FLAT_REDUCTION_RANKED = (8.0, 12.0, 16.0, 20.0, 24.0)
 _ECLIPSE_REDUCTION_CAP = 0.50  # capped at 50% of the damage instance
 _ECLIPSE_BONUS_RESIST_RANKED = (20.0, 27.5, 35.0, 42.5, 50.0)
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Eclipse) is documented as mitigation state, not a shield: "
     "per-instance flat damage reduction 8/12/16/20/24 (capped at 50% of "
     "the instance) plus bonus armor/MR 20/27.5/35/42.5/50 + 20% of "

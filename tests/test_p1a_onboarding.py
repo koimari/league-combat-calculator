@@ -106,7 +106,8 @@ def test_overlay_has_exactly_three_steps_with_required_copy():
     # Step 2 explains how to read the delta spine without relying on colour.
     second = steps[1].get_text().lower()
     assert "delta" in second
-    assert "green ahead" in second and "red behind" in second
+    assert "green ahead" in second
+    assert "red behind" in second
     # Step 3 names the ledger and the certainty chips.
     assert "event ledger" in steps[2].get_text().lower()
     assert "EXACT" in steps[2].get_text()
@@ -322,5 +323,6 @@ def test_node_check_passes_for_app_js():
         capture_output=True,
         text=True,
         cwd=ROOT,
+        check=False,
     )
     assert result.returncode == 0, result.stderr

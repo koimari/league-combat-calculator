@@ -31,7 +31,10 @@ def _disable_rate_limits_between_route_tests():
 def _test_password_hash(password="secret"):
     salt = b"p0a-invite-salt"
     digest = hashlib.scrypt(password.encode(), salt=salt, n=16_384, r=8, p=1)
-    enc = lambda value: base64.urlsafe_b64encode(value).rstrip(b"=").decode()
+
+    def enc(value):
+        return base64.urlsafe_b64encode(value).rstrip(b"=").decode()
+
     return f"scrypt$16384$8$1${enc(salt)}${enc(digest)}"
 
 
@@ -366,7 +369,7 @@ def test_redis_cache_failure_fails_closed(redis_env, monkeypatch):
         def hgetall(self, key):
             raise RuntimeError("connection refused")
 
-    monkeypatch.setattr(db, "_redis_client", lambda: FailingRedis())
+    monkeypatch.setattr(db, "_redis_client", FailingRedis)
     key = db.stable_cache_key("calculate", {"champion": "Ahri"})
     with pytest.raises(db.CacheUnavailable):
         db.cache_get(key)
@@ -435,7 +438,9 @@ def test_env_example_documents_every_gate_variable():
         "CACHE_TTL_SECONDS",
     ):
         assert f"{variable}=" in example, variable
-    assert "Neon" in example and "Supabase" in example and "RDS" in example
+    assert "Neon" in example
+    assert "Supabase" in example
+    assert "RDS" in example
     assert "Upstash" in example
 
 

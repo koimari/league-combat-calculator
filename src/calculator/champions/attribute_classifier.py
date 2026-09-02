@@ -49,10 +49,7 @@ def is_damage_attribute(attribute: str) -> bool:
         return False
 
     # Exclude non-primary damage attributes
-    if any(kw in lower for kw in _EXCLUDE_KEYWORDS):
-        return False
-
-    return True
+    return not any(kw in lower for kw in _EXCLUDE_KEYWORDS)
 
 
 def is_primary_damage_attribute(attribute: str) -> bool:

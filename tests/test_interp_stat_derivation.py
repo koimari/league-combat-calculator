@@ -14,32 +14,29 @@ They are asserted here against the accessors that behave that way.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator import item_effects
-from dataclasses import replace
-
-from src.calculator.interpreters import INTERPRETERS
-from src.calculator.interpreters import stat_derivation
+from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.interpreters import INTERPRETERS, stat_derivation
 from src.calculator.interpreters.stat_derivation import (
     StatDerivationInterpretationError,
     declared_stat_derivations,
     reference_fields,
     stat_derivation_rules,
 )
-from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.stats import get_item_stats
-from src.calculator.value_ref import LevelValueRef
 from src.calculator.item_behavior import (
-    ActiveWindowCastEconomyRule,
-    BehaviorRuleError,
+    DURABILITY_STATS,
     STAT_DERIVATION_OPTIONAL_REFERENCES,
     STAT_DERIVATION_PAYLOADS,
     STAT_DERIVATION_REQUIRED_REFERENCES,
     STAT_DERIVATION_TARGET_PAYLOADS,
     STAT_DERIVATION_UNGRANTED_PAYLOADS,
-    DURABILITY_STATS,
+    ActiveWindowCastEconomyRule,
+    BehaviorRuleError,
     DerivedStat,
     EngineLane,
     FlatStatGrantRule,
@@ -59,6 +56,8 @@ from src.calculator.item_behavior import (
     UltimateRefundRule,
     validate_rule,
 )
+from src.calculator.stats import get_item_stats
+from src.calculator.value_ref import LevelValueRef
 
 CONVERSION_HOLDER = "Muramana"
 MULTIPLIER_HOLDER = "Rabadon's Deathcap"
@@ -157,7 +156,7 @@ def test_a_manaflow_ledger_missing_half_its_keys_is_a_stop() -> None:
     """A charge ledger is claimed whole or not at all."""
     entry = dict(item_effects.ITEM_EFFECTS[MANAFLOW_HOLDER])
     with pytest.raises(catalog.BehaviorCatalogError, match="claimed whole"):
-        catalog._manaflow_rule(  # noqa: SLF001
+        catalog._manaflow_rule(
             MANAFLOW_HOLDER,
             "ITEM_EFFECTS",
             frozenset(entry) - {"manaflow_bonus_mana_max"},
@@ -302,7 +301,8 @@ def test_a_build_declaring_no_cast_economy_answers_none_not_a_multiplier() -> No
     slot = stat_derivation.sole_declared_derivation(
         [CAST_ECONOMY_HOLDER], ActiveWindowCastEconomyRule
     )
-    assert slot is not None and slot.owner == CAST_ECONOMY_HOLDER
+    assert slot is not None
+    assert slot.owner == CAST_ECONOMY_HOLDER
 
 
 def test_two_holders_of_a_non_composing_shape_are_a_stop(
@@ -337,7 +337,7 @@ def test_an_entry_whose_whole_mechanic_is_declared_elsewhere_compiles_nothing() 
 def test_an_entry_the_family_claims_with_no_signature_key_is_a_stop() -> None:
     """A derivation that derives nothing is a parse that failed."""
     with pytest.raises(catalog.BehaviorCatalogError, match="derives nothing"):
-        catalog._compile_stat_derivation(  # noqa: SLF001
+        catalog._compile_stat_derivation(
             RuleFamily.STAT_DERIVATION,
             "Long Sword",
             "ITEM_EFFECTS",
@@ -599,7 +599,7 @@ def test_every_helping_hand_entry_declares_the_minion_class_channel(owner: str) 
     )
 
 
-@pytest.mark.parametrize("owner", (CHANNEL_HASTE_HOLDER, *CHANNEL_MINION_HOLDERS))
+@pytest.mark.parametrize("owner", [CHANNEL_HASTE_HOLDER, *CHANNEL_MINION_HOLDERS])
 def test_a_restricted_channel_is_not_counted_as_runtime_behaviour(owner: str) -> None:
     """The sibling of the penetration channel's own clause.
 

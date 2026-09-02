@@ -8,8 +8,8 @@ import dataclasses
 
 import pytest
 
-from src.calculator import rotation_resolver
 from src.calculator import champions as champions_package
+from src.calculator import rotation_resolver
 from src.calculator.champions import get_champion_cast_order, parse_champion_abilities
 from src.calculator.champions.engine import _apply_module_cc
 from src.calculator.damage import DEFAULT_CAST_ORDER
@@ -213,7 +213,7 @@ class TestAModuleAuthoredKitFactDoesNotOrderTheRotation:
             champions_package,
             "get_champion_module_contract",
             lambda name: (
-                dataclasses.replace(real(name), cc_kinds={s: "stun" for s in slots})
+                dataclasses.replace(real(name), cc_kinds=dict.fromkeys(slots, "stun"))
                 if name == champion_name
                 else real(name)
             ),
@@ -243,7 +243,7 @@ class TestAModuleAuthoredKitFactDoesNotOrderTheRotation:
             _DERIVED_RULE_CACHE.clear()
 
     @pytest.mark.parametrize("champion_name", CHAMPIONS)
-    @pytest.mark.parametrize("authoring", ("declared", "authored"))
+    @pytest.mark.parametrize("authoring", ["declared", "authored"])
     def test_recording_control_changes_no_order_and_no_rationale(
         self, champions, monkeypatch, champion_name, authoring
     ) -> None:
@@ -286,7 +286,7 @@ class TestAModuleAuthoredKitFactDoesNotOrderTheRotation:
             assert {part.cc_kind for part in marked[slot]["parts"]} == {"stun"}, slot
 
     @pytest.mark.parametrize("champion_name", CHAMPIONS)
-    @pytest.mark.parametrize("authoring", ("declared", "authored"))
+    @pytest.mark.parametrize("authoring", ["declared", "authored"])
     def test_neither_authoring_site_fans_a_setup_edge(
         self, champions, monkeypatch, champion_name, authoring
     ) -> None:
@@ -333,14 +333,14 @@ class TestThePinnedPreCampaignOrdering:
         return {data.get("name"): data for data in fetch_champion_data().values()}
 
     def test_the_table_holds_exactly_the_pre_campaign_slots(self) -> None:
-        assert _PRE_CAMPAIGN_CC_ORDERING == {
+        assert {
             "Ahri": frozenset({"E"}),
             "Pantheon": frozenset({"W"}),
             "Syndra": frozenset({"E"}),
-        }
+        } == _PRE_CAMPAIGN_CC_ORDERING
 
     @pytest.mark.parametrize(
-        "champion_name,slot",
+        ("champion_name", "slot"),
         [("Ahri", "E"), ("Pantheon", "W"), ("Syndra", "E")],
     )
     def test_each_pinned_slot_still_fans_its_edges(

@@ -43,14 +43,14 @@ def _canned_acceptance_results(post, *, origin="local:test_client"):
     scenarios = list(acceptance_matrix.SCENARIOS.items())[:2]
     optimize_bodies = (_CERTIFIED_OPTIMIZE, _WITHHELD_OPTIMIZE)
     return [
-        acceptance_matrix._summarize(  # noqa: SLF001
+        acceptance_matrix._summarize(
             name,
             payload,
             (200, _CALCULATE_OK),
             (200, body),
             origin=origin,
         )
-        for (name, payload), body in zip(scenarios, optimize_bodies)
+        for (name, payload), body in zip(scenarios, optimize_bodies, strict=False)
     ]
 
 
@@ -144,7 +144,7 @@ def test_validate_rejects_count_invariant_violations():
                 "counts": {"passed": 10, "failed": 3, "total": 13, "withheld": 0},
             }
         )
-    with pytest.raises(ValueError, match="counts.failed"):
+    with pytest.raises(ValueError, match=re.escape("counts.failed")):
         validate_receipt(
             {
                 **base,
@@ -202,6 +202,7 @@ def test_validate_receipt_cli(tmp_path):
         capture_output=True,
         text=True,
         cwd=ROOT,
+        check=False,
     )
     assert ok.returncode == 0
     assert "ok" in ok.stdout
@@ -210,6 +211,7 @@ def test_validate_receipt_cli(tmp_path):
         capture_output=True,
         text=True,
         cwd=ROOT,
+        check=False,
     )
     assert fail.returncode == 1
     assert "FAIL" in fail.stdout
@@ -259,6 +261,7 @@ def test_item_umbrella_audit_emits_boolean_envelope():
         capture_output=True,
         text=True,
         cwd=ROOT,
+        check=False,
     )
     receipt = _json.loads(result.stdout)
     assert receipt["schema_version"] == SCHEMA_VERSION

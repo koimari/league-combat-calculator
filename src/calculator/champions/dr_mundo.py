@@ -37,11 +37,13 @@ Why each slot is non-generic:
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .inputs import bool_option, champion_stat, int_option
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, champion_stat, int_option
+from .module_contract import coverage
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -51,8 +53,6 @@ from .slotlib import (
     stat_buff,
 )
 from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
-from .module_contract import coverage
 
 # ROOTED IN THE BINARY (data/bin/characters/drmundo.bin.json): W's field
 # duration and auto-detonation instant are DrMundoW DataValues (Duration);
@@ -471,7 +471,7 @@ def derive_self_healing(
     healing = []
     r = _healing.ability_json(champion_data, "R")
     r_rank = _healing.parsed_rank(ability_damages, "R")
-    per_tick = _healing.extract_named(
+    per_tick = extract_named(
         r, "Health Regenerated per 0.5 Seconds", r_rank, champion_stats, {}
     )
     duration = max(0.0, float(fight_duration_seconds or 0.0))

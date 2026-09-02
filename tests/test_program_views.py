@@ -23,24 +23,23 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator import ability_spec
 from src.calculator.ability_spec import Measured, Starved, StructuralZero, Withheld
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.program import precision
 from src.calculator.program.build import roster_program
-from src.calculator.program.walk import AttackerOutcome, WalkResult, survival_folds
 from src.calculator.program.rung import CompiledFast
 from src.calculator.program.views import (
     DISCARD,
     LeafWriter,
     ViewTag,
     breakdown,
-    receipt,
     score,
     serialize_leaf,
     survival,
-    tdd,
+    tdd,  # noqa: F401 - the front door D-95 counts (tests/test_architecture.py)
 )
+from src.calculator.program.walk import AttackerOutcome, WalkResult, survival_folds
 from src.calculator.trigger_stream import ProjectionStarvation
 
 VIEWS_ROOT = Path(survival.__file__).resolve().parent
@@ -938,8 +937,7 @@ def test_a_number_no_entry_names_may_not_be_ranked() -> None:
 
 def test_a_total_folded_from_previews_is_not_a_score() -> None:
     """``ranked_total`` is ``fold_tagged`` plus the half a ranking needs."""
-    from src.calculator.program.build import ranked_total
-    from src.calculator.program.build import Tagged
+    from src.calculator.program.build import Tagged, ranked_total
     from src.calculator.program.views import UnrankableNumber
 
     assert (

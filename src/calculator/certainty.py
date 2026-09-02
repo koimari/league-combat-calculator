@@ -93,9 +93,13 @@ def _audit_entries() -> dict[str, dict]:
             payload = json.loads(path.read_text(encoding="utf-8"))
             if not isinstance(payload, dict):
                 continue
-            for name, entry in payload.items():
-                if isinstance(name, str) and isinstance(entry, dict):
-                    entries[name] = entry
+            entries.update(
+                {
+                    name: entry
+                    for name, entry in payload.items()
+                    if isinstance(name, str) and isinstance(entry, dict)
+                }
+            )
     except (OSError, TypeError, ValueError, json.JSONDecodeError):
         entries = {}
     _AUDIT_CACHE["loaded"] = True
@@ -118,10 +122,9 @@ def _option_affects_slot(
         return slot == "P"
     if re.search(rf"\b{slot}\b", label):
         return True
-    for name in ability_names.get(slot, ()):
-        if name and name.lower() in label.lower():
-            return True
-    return False
+    return any(
+        name and name.lower() in label.lower() for name in ability_names.get(slot, ())
+    )
 
 
 def classify_assumption(text: str) -> str | None:
@@ -144,10 +147,7 @@ def _line_mentions_slot(
         return True
     if slot == "P" and re.search(r"\bpassive\b", line, re.IGNORECASE):
         return True
-    for name in ability_names.get(slot, ()):
-        if name and name in line:
-            return True
-    return False
+    return any(name and name in line for name in ability_names.get(slot, ()))
 
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-return-statements

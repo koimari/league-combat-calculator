@@ -12,9 +12,9 @@ from src.calculator.damage import Resists
 from src.calculator.interpreters import resistance_shred
 from src.calculator.item_behavior import Resistance
 from src.calculator.resistance import (
-    apply_resistance,
-    apply_magic_penetration,
     apply_armor_penetration,
+    apply_magic_penetration,
+    apply_resistance,
 )
 
 

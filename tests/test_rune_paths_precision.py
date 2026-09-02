@@ -204,7 +204,7 @@ class TestTheRowThatPaysOnATakedown:
     """Row 1: Triumph's takedown the fight can score, and two it cannot."""
 
     @pytest.mark.parametrize(
-        "name,phrase",
+        ("name", "phrase"),
         [
             ("Absorb Life", "there is nothing to kill"),
             ("Presence of Mind", "not gated by a resource"),

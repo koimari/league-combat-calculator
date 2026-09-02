@@ -2,12 +2,11 @@
 
 import pytest
 
-from tests.ability_math import parts_raw_total
-
+from src.calculator.champions import amumu
 from src.calculator.champions.amumu import _CURSE_BONUS_FRACTION
 from src.calculator.damage import FightConfig, calculate_fight_damage
-from src.calculator.champions import amumu
 from tests import cc_review
+from tests.ability_math import parts_raw_total
 
 # Default target stats used when W's %maxHP damage needs resolving.
 _TARGET = {"target_max_health": 2000.0}

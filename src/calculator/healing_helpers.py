@@ -16,11 +16,10 @@ of the ledger the module happened to author.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Iterable
-
-from .champions.slotlib import extract_named, find_named_leveling, sum_modifiers
+from typing import Any
 
 
 def leveling_value(ability: dict[str, Any], attribute: str, rank: int) -> float:

@@ -26,11 +26,11 @@ Champion/item data fixtures (ahri_data, liandrys, malignance, rylais,
 sorc_shoes, void_staff, rabadons) come from tests/conftest.py.
 """
 
-from src.calculator.stats import calculate_total_stats
 from src.calculator.champions import (
     parse_champion_abilities as parse_ahri_abilities,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.stats import calculate_total_stats
 
 # ──────────────────────────────────────────────────────────────────────
 # TEST CASE 1: Ahri Level 6, Items: Liandry's Torment

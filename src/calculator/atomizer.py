@@ -27,12 +27,12 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import re
 import time
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 
 @dataclass
@@ -172,15 +172,14 @@ def write_atoms(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     tmp = out_path.with_suffix(out_path.suffix + ".tmp")
     tmp.write_text(json.dumps(payload, indent=1, ensure_ascii=False), encoding="utf-8")
-    os.replace(tmp, out_path)
-    manifest = {
+    tmp.replace(out_path)
+    return {
         "domain": domain,
         "object_count": len(objects),
         "atom_count": sum(len(rows) for rows in objects.values()),
         "sha256": content_hash(domain, objects, source_ref),
         "source_ref": source_ref,
     }
-    return manifest
 
 
 def write_manifest(path: Path, payload: dict[str, Any]) -> None:
@@ -188,7 +187,7 @@ def write_manifest(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(payload, indent=1, ensure_ascii=False), encoding="utf-8")
-    os.replace(tmp, path)
+    tmp.replace(path)
 
 
 def split_effect_fragments(
@@ -221,7 +220,9 @@ def split_effect_fragments(
                         (f"{prefix}[{index}].branches[{branch_index}]", text)
                     )
     description = str(effect.get("description", ""))
-    for sentence in re.split(r"(?<=[.!?])\s+", description):
-        if sentence.strip():
-            fragments.append((f"{prefix}[{index}]", sentence))
+    fragments.extend(
+        (f"{prefix}[{index}]", sentence)
+        for sentence in re.split(r"(?<=[.!?])\s+", description)
+        if sentence.strip()
+    )
     return fragments

@@ -139,7 +139,7 @@ class TestBatch2VladimirAndYone:
         )
 
     def test_yone_spirit_form_window_comes_from_the_binary(self):
-        import src.calculator.champions.yone as yone
+        from src.calculator.champions import yone
 
         e = spell_object("Yone", "YoneE")
         assert data_value(e, "ReturnTimer") == pytest.approx(
@@ -164,7 +164,7 @@ class TestBatch3RootedConstants:
     moving either side trips."""
 
     def test_varus(self):
-        import src.calculator.champions.varus as varus
+        from src.calculator.champions import varus
 
         w = spell_object("Varus", "VarusW")
         p = spell_object("Varus", "VarusPassive")
@@ -177,7 +177,7 @@ class TestBatch3RootedConstants:
         )
 
     def test_udyr(self):
-        import src.calculator.champions.udyr as udyr
+        from src.calculator.champions import udyr
 
         assert data_value(spell_object("Udyr", "UdyrQ"), "Bounces") == (
             udyr._Q_LIGHTNING_STRIKES_PER_ATTACK
@@ -186,10 +186,10 @@ class TestBatch3RootedConstants:
             pytest.approx(udyr._E_MOVE_SPEED_SECONDS)
         )
         # The strike interval stays prose-rooted (no binary home).
-        assert udyr._Q_LIGHTNING_HIT_INTERVAL == pytest.approx(0.2)
+        assert pytest.approx(0.2) == udyr._Q_LIGHTNING_HIT_INTERVAL
 
     def test_seraphine(self):
-        import src.calculator.champions.seraphine as seraphine
+        from src.calculator.champions import seraphine
 
         q = spell_object("Seraphine", "SeraphineQ")
         w = spell_object("Seraphine", "SeraphineW")
@@ -204,7 +204,7 @@ class TestBatch3RootedConstants:
         )
 
     def test_senna(self):
-        import src.calculator.champions.senna as senna
+        from src.calculator.champions import senna
 
         p = spell_object("Senna", "SennaPassive")
         r = spell_object("Senna", "SennaR")
@@ -218,7 +218,7 @@ class TestBatch3RootedConstants:
         )
 
     def test_ezreal(self):
-        import src.calculator.champions.ezreal as ezreal
+        from src.calculator.champions import ezreal
 
         p = spell_object("Ezreal", "EzrealPassive")
         w = spell_object("Ezreal", "EzrealW")
@@ -235,7 +235,7 @@ class TestBatch3RootedConstants:
         )
 
     def test_darius(self):
-        import src.calculator.champions.darius as darius
+        from src.calculator.champions import darius
 
         hemo = spell_object("Darius", "DariusHemoMarker")
         assert data_value(hemo, "BleedDuration") == pytest.approx(
@@ -270,7 +270,7 @@ class TestBatch4MundoAndJayce:
         )
 
     def test_jayce_hyper_charge(self):
-        import src.calculator.champions.jayce as jayce
+        from src.calculator.champions import jayce
 
         hc = spell_object("Jayce", "JayceHyperCharge")
         assert data_value(hc, "PercentIncreasedAS") * 100.0 == pytest.approx(
@@ -296,7 +296,7 @@ class TestBatch5RootedConstants:
     their binaries."""
 
     def test_naafiri(self):
-        import src.calculator.champions.naafiri as naafiri
+        from src.calculator.champions import naafiri
 
         q = spell_object("Naafiri", "NaafiriQ")
         r = spell_object("Naafiri", "NaafiriR")
@@ -311,7 +311,7 @@ class TestBatch5RootedConstants:
         assert data_value(r, "Duration") == pytest.approx(naafiri._HUNT_DURATION)
 
     def test_rammus(self):
-        import src.calculator.champions.rammus as rammus
+        from src.calculator.champions import rammus
 
         w = spell_object("Rammus", "DefensiveBallCurl")
         p = spell_object("Rammus", "RammusP")
@@ -332,7 +332,7 @@ class TestBatch5RootedConstants:
         assert data_value(p, "BaseDamage") != pytest.approx(rammus._THORNS_BASE)
 
     def test_shaco(self):
-        import src.calculator.champions.shaco as shaco
+        from src.calculator.champions import shaco
 
         p = spell_object("Shaco", "ShacoPassive")
         assert data_value(p, "AttackBonusADRatio") == pytest.approx(
@@ -346,7 +346,7 @@ class TestBatch5RootedConstants:
         )
 
     def test_syndra(self):
-        import src.calculator.champions.syndra as syndra
+        from src.calculator.champions import syndra
 
         p = spell_object("Syndra", "SyndraPassive")
         assert data_value(p, "CapstoneAPPerc") == pytest.approx(
@@ -360,7 +360,7 @@ class TestBatch6RootedConstants:
     from their binaries; conflicts stay pinned."""
 
     def test_olaf(self):
-        import src.calculator.champions.olaf as olaf
+        from src.calculator.champions import olaf
 
         w = spell_object("Olaf", "OlafFrenziedStrikes")
         assert data_value(w, "ShieldDuration") == pytest.approx(
@@ -388,14 +388,14 @@ class TestBatch7RootedConstants:
     their binaries."""
 
     def test_teemo(self):
-        import src.calculator.champions.teemo as teemo
+        from src.calculator.champions import teemo
 
         assert data_value(
             spell_object("Teemo", "TeemoW"), "ActiveMoveSpeedBuffDuration"
         ) == pytest.approx(teemo._W_ACTIVE_SECONDS)
 
     def test_twitch(self):
-        import src.calculator.champions.twitch as twitch
+        from src.calculator.champions import twitch
 
         assert data_value(
             spell_object("Twitch", "TwitchHideInShadows"), "AttackSpeedDuration"
@@ -406,14 +406,14 @@ class TestBatch7RootedConstants:
         )
 
     def test_velkoz(self):
-        import src.calculator.champions.velkoz as velkoz
+        from src.calculator.champions import velkoz
 
         assert data_value(spell_object("Vel'Koz", "VelkozPassive"), "MaxStacks") == (
             velkoz._PROC_STACKS
         )
 
     def test_vex(self):
-        import src.calculator.champions.vex as vex
+        from src.calculator.champions import vex
 
         assert data_value(spell_object("Vex", "VexW"), "ShieldDuration") == (
             pytest.approx(vex._PERSONAL_SPACE_SHIELD_DURATION_SECONDS)
@@ -425,7 +425,7 @@ class TestBatch8RootedConstants:
     their binaries."""
 
     def test_annie(self):
-        import src.calculator.champions.annie as annie
+        from src.calculator.champions import annie
 
         r = spell_object("Annie", "AnnieR")
         assert data_value(r, "TibbersAttackAPRatio") == pytest.approx(
@@ -436,14 +436,14 @@ class TestBatch8RootedConstants:
         )
 
     def test_brand(self):
-        import src.calculator.champions.brand as brand
+        from src.calculator.champions import brand
 
         assert data_value(
             spell_object("Brand", "BrandPassive"), "PercentHealthDamage"
         ) / 100.0 == pytest.approx(brand._ABLAZE_DOT_PCT_MAX_HP)
 
     def test_warwick(self):
-        import src.calculator.champions.warwick as warwick
+        from src.calculator.champions import warwick
 
         p = spell_object("Warwick", "WarwickP")
         assert data_value(p, "HealingThreshold") * 100.0 == pytest.approx(
@@ -460,7 +460,7 @@ class TestBatch8RootedConstants:
         )
 
     def test_tristana(self):
-        import src.calculator.champions.tristana as tristana
+        from src.calculator.champions import tristana
 
         assert data_value(spell_object("Tristana", "TristanaE"), "ActiveMaxStacks") == (
             tristana._E_MAX_STACKS
@@ -471,7 +471,7 @@ class TestBatch9RootedConstants:
     """Batch 9: Yorick's Maiden AD ratio resolves from the binary."""
 
     def test_yorick(self):
-        import src.calculator.champions.yorick as yorick
+        from src.calculator.champions import yorick
 
         assert data_value(spell_object("Yorick", "YorickR"), "MaidenADRatio") == (
             pytest.approx(yorick._MAIDEN_AD_RATIO)
@@ -501,10 +501,10 @@ class TestBatch10GnarCrossFile:
             record_value(mega, "hpPerLevelModifiable")
             - record_value(mini, "hpPerLevelModifiable")
         ) == MEGA_BONUS_HEALTH[1]
-        assert (6.0, 2.3) == MEGA_BONUS_AD
-        assert (4.0, 3.0) == MEGA_BONUS_ARMOR
-        assert (3.0, 3.5) == MEGA_BONUS_MR
-        assert (0.0, 5.5) == MEGA_ATTACK_SPEED_LOSS
+        assert MEGA_BONUS_AD == (6.0, 2.3)
+        assert MEGA_BONUS_ARMOR == (4.0, 3.0)
+        assert MEGA_BONUS_MR == (3.0, 3.5)
+        assert MEGA_ATTACK_SPEED_LOSS == (0.0, 5.5)
 
     def test_character_record_root_fail_closed(self):
         with pytest.raises(RuntimeError):
@@ -541,14 +541,14 @@ class TestBatch12RootedConstants:
     Haymaker window and Shen's Ki Barrier duration resolve from binaries."""
 
     def test_braum(self):
-        import src.calculator.champions.braum as braum
+        from src.calculator.champions import braum
 
         p = spell_object("Braum", "BraumPassive")
         assert data_value(p, "StackCap") == braum._STACKS_TO_PROC
         assert data_value(p, "StackDuration") == pytest.approx(braum._STACK_DURATION)
 
     def test_volibear(self):
-        import src.calculator.champions.volibear as volibear
+        from src.calculator.champions import volibear
 
         e = spell_object("Volibear", "VolibearE")
         assert data_value(e, "ShieldAmount") == pytest.approx(
@@ -562,14 +562,14 @@ class TestBatch12RootedConstants:
         )
 
     def test_sett(self):
-        import src.calculator.champions.sett as sett
+        from src.calculator.champions import sett
 
         assert data_value(spell_object("Sett", "SettW"), "ShieldMaxDuration") == (
             pytest.approx(sett._W_SHIELD_DURATION_SECONDS)
         )
 
     def test_shen(self):
-        import src.calculator.champions.shen as shen
+        from src.calculator.champions import shen
 
         assert data_value(spell_object("Shen", "ShenPassive"), "ShieldDuration") == (
             pytest.approx(shen._P_SHIELD_DURATION_SECONDS)
@@ -580,7 +580,7 @@ class TestBatch13RootedConstants:
     """Batch 13: Nasus, Urgot and Bel'Veth constants resolve from binaries."""
 
     def test_nasus(self):
-        import src.calculator.champions.nasus as nasus
+        from src.calculator.champions import nasus
 
         assert data_value(spell_object("Nasus", "NasusR"), "QCDR") == pytest.approx(
             nasus._R_Q_COOLDOWN_MULTIPLIER
@@ -590,17 +590,17 @@ class TestBatch13RootedConstants:
         )
 
     def test_urgot(self):
-        import src.calculator.champions.urgot as urgot
+        from src.calculator.champions import urgot
 
         w = spell_object("Urgot", "UrgotW")
         assert data_value(w, "Duration") == pytest.approx(urgot._W_DURATION)
         assert data_value(w, "WAttacksPerSecond") * urgot._W_TICK_INTERVAL == (
             pytest.approx(1.0)
         )
-        assert urgot._W_SHOTS == int(urgot._W_DURATION * urgot._W_ATTACKS_PER_SECOND)
+        assert int(urgot._W_DURATION * urgot._W_ATTACKS_PER_SECOND) == urgot._W_SHOTS
 
     def test_belveth(self):
-        import src.calculator.champions.belveth as belveth
+        from src.calculator.champions import belveth
 
         p = spell_object("Bel'Veth", "BelvethPassive")
         assert data_value(p, "AttackADRatio") == pytest.approx(
@@ -619,7 +619,7 @@ class TestBatch14RootedConstants:
     their binaries."""
 
     def test_akshan(self):
-        import src.calculator.champions.akshan as akshan
+        from src.calculator.champions import akshan
 
         assert data_value(spell_object("Akshan", "AkshanR"), "CritDamageMod") == (
             pytest.approx(akshan._R_CRIT_EFFECTIVENESS)
@@ -629,21 +629,21 @@ class TestBatch14RootedConstants:
         ) == pytest.approx(akshan._DIRTY_FIGHTING_SHIELD_DURATION_SECONDS)
 
     def test_camille(self):
-        import src.calculator.champions.camille as camille
+        from src.calculator.champions import camille
 
         assert data_value(
             spell_object("Camille", "CamillePassive"), "ShieldDuration"
         ) == pytest.approx(camille.ADAPTIVE_DEFENSES_DURATION_SECONDS)
 
     def test_kaisa(self):
-        import src.calculator.champions.kaisa as kaisa
+        from src.calculator.champions import kaisa
 
         assert data_value(spell_object("Kai'Sa", "KaisaPassive"), "PDuration") == (
             pytest.approx(kaisa._PLASMA_STACK_DURATION)
         )
 
     def test_lulu(self):
-        import src.calculator.champions.lulu as lulu
+        from src.calculator.champions import lulu
 
         p = spell_object("Lulu", "LuluPassive")
         assert data_value(p, "NumberOfBolts") == lulu._PIX_BOLTS_DEFAULT
@@ -655,14 +655,14 @@ class TestBatch15RootedConstants:
     resolve from their binaries."""
 
     def test_kindred(self):
-        import src.calculator.champions.kindred as kindred
+        from src.calculator.champions import kindred
 
         assert data_value(
             spell_object("Kindred", "KindredEWrapper"), "CritMod"
         ) == pytest.approx(kindred._E_POUNCE_CRIT_EFFECTIVENESS)
 
     def test_nocturne(self):
-        import src.calculator.champions.nocturne as nocturne
+        from src.calculator.champions import nocturne
 
         assert data_value(
             spell_object("Nocturne", "NocturneShroudofDarkness"),
@@ -670,21 +670,21 @@ class TestBatch15RootedConstants:
         ) == pytest.approx(nocturne._W_ENHANCED_SECONDS)
 
     def test_riven(self):
-        import src.calculator.champions.riven as riven
+        from src.calculator.champions import riven
 
         r = spell_object("Riven", "RivenFengShuiEngine")
         assert data_value(r, "PercentBonusAD") == pytest.approx(riven._R_BONUS_AD_RATIO)
         assert data_value(r, "Duration") == pytest.approx(riven._R_BUFF_DURATION)
 
     def test_viktor(self):
-        import src.calculator.champions.viktor as viktor
+        from src.calculator.champions import viktor
 
         assert data_value(spell_object("Viktor", "ViktorQ"), "BuffDuration") == (
             pytest.approx(viktor._Q_SHIELD_DURATION_SECONDS)
         )
 
     def test_viego(self):
-        import src.calculator.champions.viego as viego
+        from src.calculator.champions import viego
 
         assert data_value(spell_object("Viego", "ViegoQ"), "SecondAttackAPRatio") == (
             pytest.approx(viego._Q_SECOND_STRIKE_AP_RATIO)
@@ -699,7 +699,7 @@ class TestBatch16RootedConstants:
     resolve from their binaries."""
 
     def test_hecarim(self):
-        import src.calculator.champions.hecarim as hecarim
+        from src.calculator.champions import hecarim
 
         w = spell_object("Hecarim", "HecarimW")
         assert data_value(w, "DamageLeechPerc") / 100.0 == pytest.approx(
@@ -710,11 +710,11 @@ class TestBatch16RootedConstants:
         )
 
     def test_corki(self):
-        import src.calculator.champions.corki as corki
+        from src.calculator.champions import corki
 
         w = spell_object("Corki", "CarpetBomb")
         assert data_value(w, "MaximumTicks") == corki._W_TICKS
-        assert corki._W_DURATION == pytest.approx(2.5)
+        assert pytest.approx(2.5) == corki._W_DURATION
 
 
 class TestBatch17RootedConstants:
@@ -722,14 +722,14 @@ class TestBatch17RootedConstants:
     their binaries."""
 
     def test_swain(self):
-        import src.calculator.champions.swain as swain
+        from src.calculator.champions import swain
 
         assert data_value(
             spell_object("Swain", "SwainPassive"), "HealthIncrement"
         ) == pytest.approx(swain._P_HEALTH_PER_FRAGMENT)
 
     def test_skarner(self):
-        import src.calculator.champions.skarner as skarner
+        from src.calculator.champions import skarner
 
         w = spell_object("Skarner", "SkarnerW")
         assert data_value(w, "InitialShieldRatio") == pytest.approx(
@@ -740,7 +740,7 @@ class TestBatch17RootedConstants:
         )
 
     def test_smolder(self):
-        import src.calculator.champions.smolder as smolder
+        from src.calculator.champions import smolder
 
         q = spell_object("Smolder", "SmolderQ")
         assert data_value(q, "StackTier3") == smolder._TIER3_STACKS
@@ -768,14 +768,14 @@ class TestBatch18RootedConstants:
     resolve from their binaries."""
 
     def test_ambessa(self):
-        import src.calculator.champions.ambessa as ambessa
+        from src.calculator.champions import ambessa
 
         assert data_value(
             spell_object("Ambessa", "AmbessaW"), "Shield_Duration"
         ) == pytest.approx(ambessa._REPUDIATION_SHIELD_DURATION_SECONDS)
 
     def test_aphelios(self):
-        import src.calculator.champions.aphelios as aphelios
+        from src.calculator.champions import aphelios
 
         assert data_value(
             spell_object("Aphelios", "ApheliosInfernumQ"),
@@ -786,7 +786,7 @@ class TestBatch18RootedConstants:
         ) == pytest.approx(aphelios._R_FOLLOWUP_CRIT_EXTRA)
 
     def test_bard(self):
-        import src.calculator.champions.bard as bard
+        from src.calculator.champions import bard
 
         p = spell_object("Bard", "BardPTooltip_D_nS")
         assert data_value(p, "BaseMeepDamage") == pytest.approx(bard._MEEP_BASE)
@@ -800,7 +800,7 @@ class TestBatch18RootedConstants:
         )
 
     def test_blitzcrank(self):
-        import src.calculator.champions.blitzcrank as blitzcrank
+        from src.calculator.champions import blitzcrank
 
         assert data_value(
             spell_object("Blitzcrank", "Overdrive"), "Duration"
@@ -814,7 +814,7 @@ class TestBatch18RootedConstants:
         )
 
     def test_briar(self):
-        import src.calculator.champions.briar as briar
+        from src.calculator.champions import briar
 
         p = spell_object("Briar", "BriarP")
         assert data_value(p, "BleedDuration") == pytest.approx(briar.P_BLEED_DURATION)
@@ -846,14 +846,14 @@ class TestBatch19RootedConstants:
         )
 
     def test_ksante(self):
-        import src.calculator.champions.ksante as ksante
+        from src.calculator.champions import ksante
 
         assert data_value(spell_object("K'Sante", "KSanteR"), "Omnivamp") * 100.0 == (
             pytest.approx(ksante._ALLOUT_OMNIVAMP_PERCENT)
         )
 
     def test_malzahar(self):
-        import src.calculator.champions.malzahar as malzahar
+        from src.calculator.champions import malzahar
 
         assert data_value(spell_object("Malzahar", "MalzaharW"), "SummonDelay") == (
             pytest.approx(malzahar._VOIDLING_SUMMON_DELAY)
@@ -865,21 +865,21 @@ class TestBatch20RootedConstants:
     binaries."""
 
     def test_pantheon(self):
-        import src.calculator.champions.pantheon as pantheon
+        from src.calculator.champions import pantheon
 
         assert data_value(
             spell_object("Pantheon", "PantheonW"), "StunDuration"
         ) == pytest.approx(pantheon._W_STUN_SECONDS)
 
     def test_rengar(self):
-        import src.calculator.champions.rengar as rengar
+        from src.calculator.champions import rengar
 
         assert data_value(
             spell_object("Rengar", "RengarR"), "ArmorShredDuration"
         ) == pytest.approx(rengar._R_SHRED_SECONDS)
 
     def test_shyvana(self):
-        import src.calculator.champions.shyvana as shyvana
+        from src.calculator.champions import shyvana
 
         assert data_value(spell_object("Shyvana", "ShyvanaW"), "Duration") == (
             pytest.approx(shyvana._W_SHIELD_DURATION_SECONDS)
@@ -891,22 +891,22 @@ class TestBatch21RootedConstants:
     resolve from their binaries."""
 
     def test_singed(self):
-        import src.calculator.champions.singed as singed
+        from src.calculator.champions import singed
 
         assert data_value(
             spell_object("Singed", "InsanityPotion"), "Duration"
         ) == pytest.approx(singed._R_DURATION_SECONDS)
 
     def test_thresh(self):
-        import src.calculator.champions.thresh as thresh
+        from src.calculator.champions import thresh
 
         assert data_value(
             spell_object("Thresh", "ThreshPassiveSouls"), "StatValuePerSoul"
         ) == pytest.approx(thresh._AP_PER_SOUL)
-        assert thresh._ARMOR_PER_SOUL == pytest.approx(thresh._AP_PER_SOUL)
+        assert pytest.approx(thresh._AP_PER_SOUL) == thresh._ARMOR_PER_SOUL
 
     def test_twitch(self):
-        import src.calculator.champions.twitch as twitch
+        from src.calculator.champions import twitch
 
         marker = spell_object("Twitch", "TwitchDeadlyVenomMarker")
         assert data_value(marker, "Duration") == pytest.approx(twitch._POISON_DURATION)
@@ -918,7 +918,7 @@ class TestBatch21RootedConstants:
         ) == pytest.approx(twitch._E_MAGIC_AP_RATIO)
 
     def test_yunara(self):
-        import src.calculator.champions.yunara as yunara
+        from src.calculator.champions import yunara
 
         r = spell_object("Yunara", "YunaraR")
         assert data_value(r, "RW_ADRatio") == pytest.approx(
@@ -934,7 +934,7 @@ class TestBatch21RootedConstants:
         ) == pytest.approx(12)
 
     def test_ziggs(self):
-        import src.calculator.champions.ziggs as ziggs
+        from src.calculator.champions import ziggs
 
         assert data_value(
             spell_object("Ziggs", "ZiggsPassiveBuff"), "APRatio"
@@ -946,21 +946,21 @@ class TestBatch22RootedConstants:
     their binaries."""
 
     def test_caitlyn(self):
-        import src.calculator.champions.caitlyn as caitlyn
+        from src.calculator.champions import caitlyn
 
         assert data_value(
             spell_object("Caitlyn", "CaitlynR"), "CriticalStrikeModifier"
         ) == pytest.approx(caitlyn._R_CRIT_EFFECTIVENESS)
 
     def test_aurora(self):
-        import src.calculator.champions.aurora as aurora
+        from src.calculator.champions import aurora
 
         assert data_value(
             spell_object("Aurora", "AuroraPassive"), "BaseHPDamage"
         ) * 100.0 == pytest.approx(aurora._SPIRIT_PCT_BASE)
 
     def test_azir(self):
-        import src.calculator.champions.azir as azir
+        from src.calculator.champions import azir
 
         w = spell_object("Azir", "AzirW")
         assert data_value(w, "SubsequentDamageMod") / 100.0 == pytest.approx(
@@ -971,7 +971,7 @@ class TestBatch22RootedConstants:
         )
 
     def test_xayah(self):
-        import src.calculator.champions.xayah as xayah
+        from src.calculator.champions import xayah
 
         assert data_value(spell_object("Xayah", "XayahPassive"), "PStackMax") == (
             xayah._CLEAN_CUTS_MAX_STACKS
@@ -982,7 +982,7 @@ class TestBatch23RootedConstants:
     """Batch 23: Sylas passive ratios resolve from spell calculations."""
 
     def test_sylas(self):
-        import src.calculator.champions.sylas as sylas
+        from src.calculator.champions import sylas
 
         passive = spell_object("Sylas", "SylasPassive")
         assert calculation_coefficients(passive, "PassiveDamage") == pytest.approx(
@@ -998,14 +998,14 @@ class TestBatch24RootedConstants:
     from their binaries."""
 
     def test_jinx(self):
-        import src.calculator.champions.jinx as jinx
+        from src.calculator.champions import jinx
 
         assert data_value(spell_object("Jinx", "JinxE"), "GrenadeArmTime") == (
             pytest.approx(jinx._E_ARMING_SECONDS)
         )
 
     def test_karthus(self):
-        import src.calculator.champions.karthus as karthus
+        from src.calculator.champions import karthus
 
         w = spell_object("Karthus", "KarthusWallOfPain")
         assert data_value(w, "MagicResistShred") == pytest.approx(
@@ -1016,21 +1016,21 @@ class TestBatch24RootedConstants:
         )
 
     def test_kled(self):
-        import src.calculator.champions.kled as kled
+        from src.calculator.champions import kled
 
         assert data_value(spell_object("Kled", "KledQ"), "TetherPopTime") == (
             pytest.approx(kled._Q_TETHER_SECONDS)
         )
 
     def test_kogmaw(self):
-        import src.calculator.champions.kogmaw as kogmaw
+        from src.calculator.champions import kogmaw
 
         assert data_value(spell_object("Kog'Maw", "KogMawQ"), "ShredDuration") == (
             pytest.approx(kogmaw.Q_SHRED_DURATION)
         )
 
     def test_leblanc(self):
-        import src.calculator.champions.leblanc as leblanc
+        from src.calculator.champions import leblanc
 
         assert data_value(
             spell_object("LeBlanc", "LeblancE"), "TetherDuration"
@@ -1041,39 +1041,39 @@ class TestBatch25RootedConstants:
     """Batch 25 constants resolve from their champion binaries."""
 
     def test_lulu(self):
-        import src.calculator.champions.lulu as lulu
+        from src.calculator.champions import lulu
 
         assert data_value(spell_object("Lulu", "LuluR"), "BuffDuration") == (
             pytest.approx(lulu._R_DURATION_SECONDS)
         )
 
     def test_morgana(self):
-        import src.calculator.champions.morgana as morgana
+        from src.calculator.champions import morgana
 
         w = spell_object("Morgana", "MorganaW")
         assert data_value(w, "TickRate") == pytest.approx(morgana._W_TICK_INTERVAL)
         assert data_value(w, "WDuration") == pytest.approx(morgana._W_DURATION)
-        assert morgana._W_TICKS == int(morgana._W_DURATION / morgana._W_TICK_INTERVAL)
+        assert int(morgana._W_DURATION / morgana._W_TICK_INTERVAL) == morgana._W_TICKS
         assert data_value(
             spell_object("Morgana", "MorganaR"), "ChainDuration"
         ) == pytest.approx(morgana._R_TETHER_SECONDS)
 
     def test_mordekaiser(self):
-        import src.calculator.champions.mordekaiser as mordekaiser
+        from src.calculator.champions import mordekaiser
 
         assert data_value(
             spell_object("Mordekaiser", "MordekaiserE"), "DelayBeforeMovement"
         ) == pytest.approx(mordekaiser._E_CLAW_SECONDS)
 
     def test_rumble(self):
-        import src.calculator.champions.rumble as rumble
+        from src.calculator.champions import rumble
 
         assert data_value(
             spell_object("Rumble", "RumbleFlameThrower"), "TickRate"
         ) == pytest.approx(rumble._Q_TICK_INTERVAL)
 
     def test_talon(self):
-        import src.calculator.champions.talon as talon
+        from src.calculator.champions import talon
 
         passive = spell_object("Talon", "TalonPassive")
         assert data_value(passive, "BonusADRatio") == pytest.approx(
@@ -1088,21 +1088,21 @@ class TestBatch26RootedConstants:
     """Batch 26 constants resolve from their champion binaries."""
 
     def test_ashe(self):
-        import src.calculator.champions.ashe as ashe
+        from src.calculator.champions import ashe
 
         assert data_value(spell_object("Ashe", "AsheQ"), "BuffDuration") == (
             pytest.approx(ashe.ASHE_Q_ACTIVE_DURATION_SECONDS)
         )
 
     def test_aphelios(self):
-        import src.calculator.champions.aphelios as aphelios
+        from src.calculator.champions import aphelios
 
         assert data_value(
             spell_object("Aphelios", "ApheliosSeverumQ"), "Duration"
         ) == pytest.approx(aphelios._Q_ONSLAUGHT_SECONDS)
 
     def test_malzahar(self):
-        import src.calculator.champions.malzahar as malzahar
+        from src.calculator.champions import malzahar
 
         e = spell_object("Malzahar", "MalzaharE")
         r = spell_object("Malzahar", "MalzaharR")
@@ -1110,17 +1110,18 @@ class TestBatch26RootedConstants:
         assert data_value(e, "SecondsPerTick") == pytest.approx(
             malzahar._E_TICK_INTERVAL
         )
-        assert malzahar._E_TICKS == int(
-            malzahar._E_DURATION / malzahar._E_TICK_INTERVAL
+        assert (
+            int(malzahar._E_DURATION / malzahar._E_TICK_INTERVAL) == malzahar._E_TICKS
         )
         assert data_value(r, "SuppressDuration") == pytest.approx(malzahar._R_DURATION)
         assert int(data_value(r, "BeamDamageTicks")) == malzahar._R_TICKS
-        assert malzahar._R_TICK_INTERVAL == pytest.approx(
-            malzahar._R_DURATION / malzahar._R_TICKS
+        assert (
+            pytest.approx(malzahar._R_DURATION / malzahar._R_TICKS)
+            == malzahar._R_TICK_INTERVAL
         )
 
     def test_vi(self):
-        import src.calculator.champions.vi as vi
+        from src.calculator.champions import vi
 
         w = spell_object("Vi", "ViW")
         assert int(data_value(w, "StacksBeforeEffect")) + 1 == vi._W_STACKS_REQUIRED
@@ -1135,7 +1136,7 @@ class TestBatch26RootedConstants:
         )
 
     def test_warwick(self):
-        import src.calculator.champions.warwick as warwick
+        from src.calculator.champions import warwick
 
         assert data_value(spell_object("Warwick", "WarwickR"), "RDuration") == (
             pytest.approx(warwick._R_CHANNEL_SECONDS)
@@ -1146,22 +1147,22 @@ class TestBatch27RootedConstants:
     """Batch 27 constants resolve from their champion binaries."""
 
     def test_malzahar_q(self):
-        import src.calculator.champions.malzahar as malzahar
+        from src.calculator.champions import malzahar
 
         assert data_value(
             spell_object("Malzahar", "MalzaharQ"), "DelayPostCast"
         ) == pytest.approx(malzahar._Q_PORTAL_SECONDS)
 
     def test_nasus_r(self):
-        import src.calculator.champions.nasus as nasus
+        from src.calculator.champions import nasus
 
         spell = spell_object("Nasus", "NasusR")
         assert data_value(spell, "TickRate") == pytest.approx(nasus._R_TICK_INTERVAL)
         assert data_value(spell, "Duration") == pytest.approx(nasus._R_DOT_DURATION)
-        assert nasus._R_TICKS == int(nasus._R_DOT_DURATION / nasus._R_TICK_INTERVAL)
+        assert int(nasus._R_DOT_DURATION / nasus._R_TICK_INTERVAL) == nasus._R_TICKS
 
     def test_xayah_r(self):
-        import src.calculator.champions.xayah as xayah
+        from src.calculator.champions import xayah
 
         assert data_value(spell_object("Xayah", "XayahR"), "RAttackDelay") == (
             pytest.approx(xayah._R_LEAP_SECONDS)
@@ -1172,7 +1173,7 @@ class TestBatch28RootedConstants:
     """Batch 28 constants resolve from their champion binaries."""
 
     def test_ashe_focus(self):
-        import src.calculator.champions.ashe as ashe
+        from src.calculator.champions import ashe
 
         spell = spell_object("Ashe", "AsheQ")
         assert (
@@ -1186,27 +1187,28 @@ class TestBatch28RootedConstants:
         )
 
     def test_fizz(self):
-        import src.calculator.champions.fizz as fizz
+        from src.calculator.champions import fizz
 
         spell = spell_object("Fizz", "FizzW")
         rate = data_value(spell, "DoTTicksPerSecond")
         assert data_value(spell, "PassiveDoTDuration") == pytest.approx(
             fizz._W_PASSIVE_DURATION
         )
-        assert fizz._W_PASSIVE_TICK_INTERVAL == pytest.approx(1.0 / rate)
-        assert fizz._W_PASSIVE_TICKS == int(
-            fizz._W_PASSIVE_DURATION / fizz._W_PASSIVE_TICK_INTERVAL
+        assert pytest.approx(1.0 / rate) == fizz._W_PASSIVE_TICK_INTERVAL
+        assert (
+            int(fizz._W_PASSIVE_DURATION / fizz._W_PASSIVE_TICK_INTERVAL)
+            == fizz._W_PASSIVE_TICKS
         )
 
     def test_jinx(self):
-        import src.calculator.champions.jinx as jinx
+        from src.calculator.champions import jinx
 
         assert data_value(
             spell_object("Jinx", "JinxPassiveMarker"), "ASBuff"
         ) == pytest.approx(jinx._JINX_PASSIVE_AS_PERCENT)
 
     def test_shen(self):
-        import src.calculator.champions.shen as shen
+        from src.calculator.champions import shen
 
         q = spell_object("Shen", "ShenQ")
         e = spell_object("Shen", "ShenE")
@@ -1221,14 +1223,14 @@ class TestBatch29RootedConstants:
     """Batch 29 constants resolve from their champion binaries."""
 
     def test_amumu(self):
-        import src.calculator.champions.amumu as amumu
+        from src.calculator.champions import amumu
 
         assert data_value(
             spell_object("Amumu", "AmumuP"), "DamageAmp"
         ) == pytest.approx(amumu._CURSE_BONUS_FRACTION)
 
     def test_gangplank(self):
-        import src.calculator.champions.gangplank as gangplank
+        from src.calculator.champions import gangplank
 
         assert data_value(
             spell_object("Gangplank", "GangplankW"), "PercentHeal"
@@ -1241,14 +1243,14 @@ class TestBatch29RootedConstants:
         )
 
     def test_katarina(self):
-        import src.calculator.champions.katarina as katarina
+        from src.calculator.champions import katarina
 
         assert data_value(
             spell_object("Katarina", "KatarinaR"), "Duration"
         ) == pytest.approx(katarina._DEATH_LOTUS_DURATION)
 
     def test_syndra(self):
-        import src.calculator.champions.syndra as syndra
+        from src.calculator.champions import syndra
 
         passive = spell_object("Syndra", "SyndraPassive")
         ultimate = spell_object("Syndra", "SyndraR")
@@ -1274,14 +1276,14 @@ class TestBatch30RootedConstants:
     """Batch 30 constants resolve from their champion binaries."""
 
     def test_aurelion_sol(self):
-        import src.calculator.champions.aurelion_sol as aurelion_sol
+        from src.calculator.champions import aurelion_sol
 
         assert data_value(
             spell_object("Aurelion Sol", "AurelionSolE"), "Duration"
         ) == pytest.approx(aurelion_sol._E_DURATION)
 
     def test_gwen(self):
-        import src.calculator.champions.gwen as gwen
+        from src.calculator.champions import gwen
 
         assert data_value(
             spell_object("Gwen", "GwenQ"), "TrueDamageConversion"
@@ -1291,19 +1293,19 @@ class TestBatch30RootedConstants:
         )
 
     def test_neeko(self):
-        import src.calculator.champions.neeko as neeko
+        from src.calculator.champions import neeko
 
         assert data_value(
             spell_object("Neeko", "NeekoQ"), "RepeatDelay"
         ) == pytest.approx(neeko._Q_BLOOM_DELAY)
-        assert neeko._Q_BLOOM_DELAY * 2 == pytest.approx(1.5)
+        assert pytest.approx(1.5) == neeko._Q_BLOOM_DELAY * 2
 
 
 class TestBatch31RootedConstants:
     """Batch 31 constants resolve from Wukong's MonkeyKing binary."""
 
     def test_wukong(self):
-        import src.calculator.champions.wukong as wukong
+        from src.calculator.champions import wukong
 
         q = spell_object("MonkeyKing", "MonkeyKingDoubleAttack")
         r = spell_object("MonkeyKing", "MonkeyKingSpinToWin")
@@ -1315,7 +1317,7 @@ class TestBatch32RootedRankedConstants:
     """Batch 32 ranked DataValues resolve from their champion binaries."""
 
     def test_gangplank(self):
-        import src.calculator.champions.gangplank as gangplank
+        from src.calculator.champions import gangplank
 
         spell = spell_object("Gangplank", "GangplankW")
         assert gangplank._W_HEAL_FLAT == (45.0, 70.0, 95.0, 120.0, 145.0)
@@ -1328,7 +1330,7 @@ class TestBatch33RootedRankedConstants:
     """Batch 33 ranked DataValues resolve Ivern's Daisy payload."""
 
     def test_ivern(self):
-        import src.calculator.champions.ivern as ivern
+        from src.calculator.champions import ivern
 
         spell = spell_object("Ivern", "IvernR")
         assert ivern._DAISY_AD_BY_RANK == (70.0, 100.0, 130.0)
@@ -1343,7 +1345,7 @@ class TestBatch34RootedTimingConstants:
     """Batch 34 roots Anivia R timing rows from GlacialStorm."""
 
     def test_anivia(self):
-        import src.calculator.champions.anivia as anivia
+        from src.calculator.champions import anivia
 
         spell = spell_object("Anivia", "GlacialStorm")
         assert data_value_at_rank(spell, "TickRate", 1) == pytest.approx(
@@ -1358,7 +1360,7 @@ class TestBatch35RootedTimingConstants:
     """Batch 35 roots Cassiopeia's active poison timing rows."""
 
     def test_cassiopeia(self):
-        import src.calculator.champions.cassiopeia as cassiopeia
+        from src.calculator.champions import cassiopeia
 
         q = spell_object("Cassiopeia", "CassiopeiaQ")
         w = spell_object("Cassiopeia", "CassiopeiaW")
@@ -1377,7 +1379,7 @@ class TestBatch36RootedCorkiConstants:
     """Batch 36 roots Corki's Gatling Gun timing and shred rows."""
 
     def test_corki(self):
-        import src.calculator.champions.corki as corki
+        from src.calculator.champions import corki
 
         spell = spell_object("Corki", "GGun")
         assert data_value(spell, "SprayDuration") == pytest.approx(corki._E_DURATION)
@@ -1388,14 +1390,14 @@ class TestBatch36RootedCorkiConstants:
             corki._E_SHRED_LINGER
         )
         assert data_value(spell, "ShredCap") == pytest.approx(corki._E_MAX_SHRED_STACKS)
-        assert corki._E_TICKS == int(corki._E_DURATION * corki._E_TICKS_PER_SECOND)
+        assert int(corki._E_DURATION * corki._E_TICKS_PER_SECOND) == corki._E_TICKS
 
 
 class TestBatch37RootedKaisaConstants:
     """Batch 37 roots Kai'Sa's active Plasma Rupture coefficients."""
 
     def test_kaisa(self):
-        import src.calculator.champions.kaisa as kaisa
+        from src.calculator.champions import kaisa
 
         spell = spell_object("Kai'Sa", "KaisaPassive")
         assert data_value(spell, "PExecuteRatio") == pytest.approx(
@@ -1410,7 +1412,7 @@ class TestBatch38RootedDianaConstants:
     """Batch 38 roots Diana's Moonfall beam delay."""
 
     def test_diana(self):
-        import src.calculator.champions.diana as diana
+        from src.calculator.champions import diana
 
         spell = spell_object("Diana", "DianaR")
         assert data_value(spell, "Delay") == pytest.approx(diana._R_BEAM_SECONDS)
@@ -1420,14 +1422,17 @@ class TestBatch39RootedYorickConstants:
     """Batch 39 roots Yorick's Maiden rank bases."""
 
     def test_yorick(self):
-        import src.calculator.champions.yorick as yorick
+        from src.calculator.champions import yorick
 
         spell = spell_object("Yorick", "YorickR")
-        assert yorick._MAIDEN_BASE_BY_RANK == pytest.approx(
-            tuple(
-                data_value_at_rank(spell, "RBigGhoulBonusAD", rank)
-                for rank in range(1, 4)
+        assert (
+            pytest.approx(
+                tuple(
+                    data_value_at_rank(spell, "RBigGhoulBonusAD", rank)
+                    for rank in range(1, 4)
+                )
             )
+            == yorick._MAIDEN_BASE_BY_RANK
         )
 
 
@@ -1435,7 +1440,7 @@ class TestBatch40RootedMelConstants:
     """Batch 40 roots Mel's Searing Brilliance window constants."""
 
     def test_mel(self):
-        import src.calculator.champions.mel as mel
+        from src.calculator.champions import mel
 
         spell = spell_object("Mel", "MelPassive")
         assert data_value(spell, "PassiveBonusMissiles") == pytest.approx(

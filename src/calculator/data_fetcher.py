@@ -19,13 +19,13 @@ DEFAULT_DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 def _read_json_version(data_path: Path, _modified_ns: int) -> dict[str, Any]:
     """Parse one immutable on-disk JSON version.  ``_modified_ns`` joins the
     cache key so a file ``data_updater`` replaces is never served stale."""
-    with open(data_path, "r", encoding="utf-8") as data_file:
+    with Path(data_path).open(encoding="utf-8") as data_file:
         return json.load(data_file)
 
 
 @lru_cache(maxsize=8)
 def _resolved(data_directory: Path, filename: str) -> Path:
-    """Canonical path of one cache file; memoized because only its contents ever change (freshness is ``_cache_version``'s un-memoized stat)."""
+    """Canonical path of one cache file; memoized since only its contents ever change."""
     return (data_directory / filename).resolve()
 
 
@@ -185,7 +185,8 @@ def get_champion(name: str, data_directory: Path = DEFAULT_DATA_DIR) -> dict[str
 
 @lru_cache(maxsize=8)
 def _item_name_index(data_path: Path, _modified_ns: int) -> dict[str, dict[str, Any]]:
-    """``{lowered display name: record}`` for one items version; the first record with a name wins, keyed on the parse's path-and-mtime so a replaced file is a new key."""
+    """``{lowered display name: record}`` for one items version; the first record with a
+    name wins, keyed on the parse's path-and-mtime so a replaced file is a new key."""
     index: dict[str, dict[str, Any]] = {}
     for item_data in _read_json_version(data_path, _modified_ns).values():
         index.setdefault(item_data.get("name", "").lower(), item_data)

@@ -25,9 +25,10 @@ cache schema and the three questions the calculator asks of it:
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable, Mapping, Sequence
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any
 
 # The Wiki item table's key for ordinary 5v5 Summoner's Rift availability.
 SR_MODE_KEY = "classic sr 5v5"
@@ -274,8 +275,9 @@ def _champion_restriction(
 ) -> list[str]:
     """Union the Wiki's champion list with Riot's required champion or ally."""
     restriction: list[str] = []
-    for champion in (wiki_entry or {}).get("champion") or ():
-        restriction.append(str(champion))
+    restriction.extend(
+        str(champion) for champion in (wiki_entry or {}).get("champion") or ()
+    )
     for key in ("requiredChampion", "requiredAlly"):
         value = str(item.get(key) or "")
         if value and value not in restriction:
@@ -299,7 +301,7 @@ def _merge_effect_branches(
         cached_entries = entry.get(cached_key) or []
         wiki_entries = grouped[kind]
         chosen, unclaimed = _align_effects(cached_entries, wiki_entries)
-        for cached, match in zip(cached_entries, chosen):
+        for cached, match in zip(cached_entries, chosen, strict=False):
             texts = _branch_texts(wiki_entries[match]) if match is not None else []
             if not texts:
                 previous = list(cached.get("branches") or ()) or [
@@ -312,11 +314,11 @@ def _merge_effect_branches(
                 )
             cached.pop("effects", None)
             cached["branches"] = texts
-        for index in unclaimed:
-            warnings.append(
-                f"{name}: Wiki {kind} '{wiki_entries[index].get('name')}' is "
-                "absent from the cache"
-            )
+        warnings.extend(
+            f"{name}: Wiki {kind} '{wiki_entries[index].get('name')}' is "
+            "absent from the cache"
+            for index in unclaimed
+        )
 
 
 def _merge_one_item(
@@ -335,11 +337,11 @@ def _merge_one_item(
         warnings.append(f"{name}: no Wiki item-table entry; sources unmerged")
     else:
         grouped, unclassified = _wiki_effects_by_kind(wiki_table, wiki_name)
-        for dropped in unclassified:
-            warnings.append(
-                f"{name}: Wiki effect '{dropped}' is not a passive or active "
-                "and is not represented in the cache"
-            )
+        warnings.extend(
+            f"{name}: Wiki effect '{dropped}' is not a passive or active "
+            "and is not represented in the cache"
+            for dropped in unclassified
+        )
 
     wiki_stats = _resolve_inherited(wiki_table, wiki_name, "stats")
     entry["modes"] = dict(_resolve_inherited(wiki_table, wiki_name, "modes") or {})
@@ -468,10 +470,11 @@ def sr_availability(item: Mapping[str, Any]) -> Availability:
         acquisition = "shop"
         acquisition_reason = f"{name} is an ordinary Summoner's Rift purchase."
 
-    if not on_rift:
-        reason = f"{name} is not available on Summoner's Rift."
-    else:
-        reason = acquisition_reason
+    reason = (
+        f"{name} is not available on Summoner's Rift."
+        if not on_rift
+        else acquisition_reason
+    )
 
     return Availability(
         on_summoners_rift=on_rift,
@@ -688,8 +691,8 @@ __all__ = [
     "ACKNOWLEDGED_SOURCE_CONFLICTS",
     "APPROVED_BRANCH_REMOVALS",
     "OPEN_SOURCE_CONFLICTS",
-    "Availability",
     "SR_MODE_KEY",
+    "Availability",
     "branch_inventory",
     "branch_losses",
     "branches",

@@ -53,7 +53,7 @@ class TestReviewedCrowdControl:
 
     def test_reviewed_kinds_follow_the_other_branch(self):
         """The barrage alone applies no immobilize."""
-        assert _CC.kinds(**{"r_passes": 1}) == {
+        assert _CC.kinds(r_passes=1) == {
             "Q": ["none"],
             "W": ["none"],
             "E": ["stun"],

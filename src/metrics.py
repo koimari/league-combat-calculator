@@ -26,7 +26,7 @@ insufficient or a criterion has a single strike, ``fail`` otherwise.
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -59,9 +59,9 @@ _GATE_RULE = (
 def _naive_utc(value: datetime | None) -> datetime:
     """Normalize an aware/naive datetime to naive UTC (storage convention)."""
     if value is None:
-        return datetime.now(timezone.utc).replace(tzinfo=None)
+        return datetime.now(UTC).replace(tzinfo=None)
     if value.tzinfo is not None:
-        return value.astimezone(timezone.utc).replace(tzinfo=None)
+        return value.astimezone(UTC).replace(tzinfo=None)
     return value
 
 
@@ -69,7 +69,7 @@ def _iso(value: datetime | None) -> str | None:
     """Serialize a naive-UTC datetime as an ISO-8601 string with a Z suffix."""
     if value is None:
         return None
-    return value.replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
+    return value.replace(tzinfo=UTC).isoformat().replace("+00:00", "Z")
 
 
 def _week_windows(beta_start: datetime, weeks: int) -> list[tuple[datetime, datetime]]:
@@ -156,7 +156,7 @@ def _staleness_report(staleness_path: str | Path) -> dict | None:
     if not path.exists():
         return None
     try:
-        with open(path, "r", encoding="utf-8") as handle:
+        with Path(path).open(encoding="utf-8") as handle:
             return json.load(handle)
     except (json.JSONDecodeError, OSError):
         return None
@@ -434,7 +434,7 @@ def compute_scorecard(
 
     # --- bias -------------------------------------------------------------
     bias_weeks = []
-    for index, (wk_start, wk_end) in enumerate(windows, start=1):
+    for index, (_wk_start, wk_end) in enumerate(windows, start=1):
         wk_end_eff = min(now, wk_end)
         flagged = _bias_flagged_count(db_module, wk_end_eff)
         complete = now >= wk_end
@@ -520,7 +520,7 @@ def compute_scorecard(
         )
     }
 
-    scorecard = {
+    return {
         "generated_at": _iso(now),
         "beta": {
             "start": _iso(beta_start),
@@ -589,4 +589,3 @@ def compute_scorecard(
             }[gate_status],
         },
     }
-    return scorecard

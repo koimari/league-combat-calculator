@@ -42,16 +42,16 @@ timing wave, as is the stack-scaled sixth bolt onward.
 from dataclasses import replace
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
-from .module_helpers import typed_damage
-from .packet_module import build_packet_module
-from .slotlib import ability_name, with_item_on_hits
-from .. import healing_helpers as _healing
 from .inputs import int_option
 from .module_contract import coverage
-from ..binary_roots import calculation_coefficient, data_value, spell_object
+from .module_helpers import typed_damage
+from .packet_module import build_packet_module
+from .slotlib import ability_name, extract_named, with_item_on_hits
 
 PACKET_SHA256 = "25b414368fa8e3421c2471eff320f299ef82d9d07ce34f3a7af74a5db21b8d25"
 
@@ -193,7 +193,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
+OPTIONS: list[dict[str, Any]] = [
+    *list(OPTIONS),
     int_option(
         "p_stacks",
         _TIER3_STACKS,
@@ -203,7 +204,8 @@ OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q (Super Scorcher Breath) is increased by 0% : 75% (+ 0% : 22.5%) "
     "based on critical strike chance (cached Q description prose): the "
     "packet's flat + AD-ratio price is multiplied by 1 + 0.975 x crit "
@@ -246,7 +248,7 @@ def derive_self_healing(
     healing = []
     r = _healing.ability_json(champion_data, "R")
     r_rank = _healing.parsed_rank(ability_damages, "R")
-    r_heal = _healing.extract_named(r, "Self Heal", r_rank, champion_stats)
+    r_heal = extract_named(r, "Self Heal", r_rank, champion_stats)
     # The flat self heal is paid once per cast, so a wave the module prices
     # as several hits still heals once.
     for payment in _healing.payments(

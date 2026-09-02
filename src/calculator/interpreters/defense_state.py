@@ -23,9 +23,9 @@ from __future__ import annotations
 
 from .. import item_effects
 from ..item_behavior import (
+    DEFENSE_PAYLOAD_TYPES,
     BehaviorRule,
     BuildContext,
-    DEFENSE_PAYLOAD_TYPES,
     DefenseExclusivity,
     DefenseField,
     DefenseMechanic,
@@ -130,9 +130,7 @@ class DefenseSlot:
             )
         return reference.get()
 
-    def grant(
-        self, field: DefenseField, value: float | int | bool | str
-    ) -> KernelField:
+    def grant(self, field: DefenseField, value: float | bool | str) -> KernelField:
         """One resolved field, refused unless the declaration writes it.
 
         This is the half that makes ``writes`` load-bearing: an interpreter

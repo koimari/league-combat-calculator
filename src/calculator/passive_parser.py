@@ -19,6 +19,7 @@ Markup reference (subset used by the parser):
 """
 
 import ast
+import contextlib
 import logging
 import math
 import re
@@ -123,8 +124,7 @@ def _resolve_simple_templates(text: str) -> str:
             return val  # Plain number — keep as-is
         return match.group(0)  # Expression — leave the template intact
 
-    text = re.sub(r"\{\{ap\|([^}]+)\}\}", _resolve_ap, text)
-    return text
+    return re.sub(r"\{\{ap\|([^}]+)\}\}", _resolve_ap, text)
 
 
 def _eval_simple_expr(expr: str) -> float:
@@ -1153,7 +1153,9 @@ def _parse_rod_timeless(text: str) -> dict[str, Any]:
     if maximum:
         result["timeless_max_stacks"] = int(maximum.group(1))
     if re.search(
-        r"reaching\s+maximum\s+stacks.*?gain\s+a\s+level", text_resolved, re.I | re.S
+        r"reaching\s+maximum\s+stacks.*?gain\s+a\s+level",
+        text_resolved,
+        re.IGNORECASE | re.DOTALL,
     ):
         result["timeless_level_gain_at_max"] = True
     return result
@@ -1178,10 +1180,14 @@ def _parse_endless_hunger_feast(text: str) -> dict[str, Any]:
     text_resolved = _resolve_simple_templates(text)
     result: dict[str, Any] = {}
     omnivamp = re.search(
-        r"grants?\s+.*?\{\{as\|(\d+(?:\.\d+)?)%\s+omnivamp", text, re.I
+        r"grants?\s+.*?\{\{as\|(\d+(?:\.\d+)?)%\s+omnivamp", text, re.IGNORECASE
     )
-    duration = re.search(r"for\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved, re.I)
-    window = re.search(r"within\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved, re.I)
+    duration = re.search(
+        r"for\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved, re.IGNORECASE
+    )
+    window = re.search(
+        r"within\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved, re.IGNORECASE
+    )
     if omnivamp:
         result["feast_omnivamp_percent"] = float(omnivamp.group(1))
     if duration:
@@ -1216,13 +1222,19 @@ def _parse_zeke_frostfire(text: str) -> dict[str, Any]:
         result["base"] = float(total.group(1)) * 5.0
     elif per_tick:
         result["base"] = float(per_tick.group(1)) * 5.0
-    interval = re.search(r"every\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved, re.I)
-    duration = re.search(r"for\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved, re.I)
-    cooldown = re.search(r"(\d+(?:\.\d+)?)\s+second\s+cooldown", text_resolved, re.I)
+    interval = re.search(
+        r"every\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved, re.IGNORECASE
+    )
+    duration = re.search(
+        r"for\s+(\d+(?:\.\d+)?)\s+seconds", text_resolved, re.IGNORECASE
+    )
+    cooldown = re.search(
+        r"(\d+(?:\.\d+)?)\s+second\s+cooldown", text_resolved, re.IGNORECASE
+    )
     slow = re.search(
         r"slows?(?:\}\})?\s+them\s+by\s+(\d+(?:\.\d+)?)%",
         text_resolved,
-        re.I,
+        re.IGNORECASE,
     )
     if interval:
         result["tick_interval"] = float(interval.group(1))
@@ -1322,12 +1334,10 @@ def _parse_hullbreaker(text: str) -> dict[str, Any]:
         # Ranged: may be "{{ap|120*0.7}}%" — need to eval the expression
         r_match = re.search(r"\{\{ap\|([^}]+)\}\}", ranged_ad)
         if r_match:
-            try:
+            with contextlib.suppress(ValueError):
                 result["base_ad_ratio_ranged"] = (
                     _eval_simple_expr(r_match.group(1)) / 100.0
                 )
-            except ValueError:
-                pass
         elif not r_match:
             r_plain = re.search(r"(\d+(?:\.\d+)?)%", ranged_ad)
             if r_plain:
@@ -1340,12 +1350,10 @@ def _parse_hullbreaker(text: str) -> dict[str, Any]:
             result["max_hp_ratio_melee"] = float(m.group(1)) / 100.0
         r_match = re.search(r"\{\{ap\|([^}]+)\}\}", ranged_hp)
         if r_match:
-            try:
+            with contextlib.suppress(ValueError):
                 result["max_hp_ratio_ranged"] = (
                     _eval_simple_expr(r_match.group(1)) / 100.0
                 )
-            except ValueError:
-                pass
         elif not r_match:
             r_plain = re.search(r"(\d+(?:\.\d+)?)%", ranged_hp)
             if r_plain:
@@ -1416,12 +1424,14 @@ def _parse_actualizer(text: str) -> dict[str, Any]:
     if cooldown_match:
         result["mana_made_real_cooldown"] = float(cooldown_match.group(1))
     if re.search(
-        r"cooldowns?\s+progress\s+(\d+(?:\.\d+)?)%\s+faster", text_resolved, re.I
+        r"cooldowns?\s+progress\s+(\d+(?:\.\d+)?)%\s+faster",
+        text_resolved,
+        re.IGNORECASE,
     ):
         speed_match = re.search(
             r"cooldowns?\s+progress\s+(\d+(?:\.\d+)?)%\s+faster",
             text_resolved,
-            re.I,
+            re.IGNORECASE,
         )
         if speed_match:
             result["basic_cooldown_progress_multiplier"] = (
@@ -1452,7 +1462,7 @@ def _parse_eclipse(
             result["target_max_hp_ratio_melee"] = damage_melee
             result["target_max_hp_ratio_ranged"] = damage_ranged
     if len(rd_pairs) >= 2:
-        shield_pair = _extract_rd_numbers("{{rd|%s|%s}}" % rd_pairs[1])
+        shield_pair = _extract_rd_numbers("{{{{rd|{}|{}}}}}".format(*rd_pairs[1]))
         if shield_pair is not None:
             result["shield_melee_base"] = shield_pair[0]
             result["shield_ranged_base"] = shield_pair[1]
@@ -2668,7 +2678,7 @@ def _find_item_data_by_name(
 ) -> dict[str, Any] | None:
     """Find an item entry in JSON data by name (case-insensitive)."""
     json_name = _json_name(item_name)
-    for _, item_data in items_data.items():
+    for item_data in items_data.values():
         if item_data.get("name", "").lower() == json_name.lower():
             return item_data
     return None
@@ -2720,10 +2730,7 @@ def parse_item_effect(
         if "key_prefix" in extra:
             kwargs["key_prefix"] = extra["key_prefix"]
 
-        if kwargs:
-            parsed = parser_func(text, **kwargs)
-        else:
-            parsed = parser_func(text)
+        parsed = parser_func(text, **kwargs) if kwargs else parser_func(text)
 
         merged.update(parsed)
 
@@ -2733,7 +2740,7 @@ def parse_item_effect(
     if crit_dmg.get("percent", 0) > 0:
         merged["bonus_crit_damage"] = crit_dmg["percent"] / 100.0
 
-    return merged if merged else None
+    return merged or None
 
 
 def parse_all_item_effects(

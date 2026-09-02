@@ -222,7 +222,7 @@ class TestTypedContract:
         )
 
     def test_missing_typed_key_fails_loud_naming_the_item_and_key(self):
-        with pytest.raises(KeyError, match="Fimbulwinter.*everlasting_missing_key"):
+        with pytest.raises(KeyError, match=r"Fimbulwinter.*everlasting_missing_key"):
             required_effect_value(FIMBULWINTER, "everlasting_missing_key")
 
     def test_shield_carries_the_cc_trigger_rule_declaration_receipt(self):
@@ -621,7 +621,7 @@ class TestFailClosedMetadata:
         the per-item ``unknown_cc_kind`` receipt it replaces: the row cannot
         reach any consumer at all, and one refusal covers every holder.
         """
-        with pytest.raises(ValueError, match="petrify.*CC_KIND_VOCABULARY"):
+        with pytest.raises(ValueError, match=r"petrify.*CC_KIND_VOCABULARY"):
             _run([_cc_event(1.0, cc_kind="petrify", event_id="e1")])
 
     def test_event_with_no_marker_is_not_a_candidate(self):

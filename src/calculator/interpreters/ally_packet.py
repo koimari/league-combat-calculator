@@ -197,7 +197,7 @@ def resolve_slots(
             if rule.family is not RuleFamily.ALLY_PACKET:
                 continue
             producer = _payload(rule).producer
-            slots[producer] = slots.get(producer, ()) + (AllyPacketSlot(rule),)
+            slots[producer] = (*slots.get(producer, ()), AllyPacketSlot(rule))
     return slots
 
 

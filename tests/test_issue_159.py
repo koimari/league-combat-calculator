@@ -17,13 +17,13 @@ import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
-from src.calculator.pipeline import FightParams
-from src.calculator.scenario import ChampionLoadout
-from src.calculator.stats import calculate_total_stats
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
+from src.calculator.pipeline import FightParams
+from src.calculator.scenario import ChampionLoadout
+from src.calculator.stats import calculate_total_stats
 
 SRC = Path(__file__).parents[1] / "src" / "calculator"
 LEDGER = SRC / "shield_ledger.py"

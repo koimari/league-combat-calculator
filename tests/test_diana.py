@@ -227,19 +227,19 @@ class TestCleaveCadence:
 
 def _fight_params(**overrides):
     """Timed-fight FightParams with explicit overrides."""
-    defaults = dict(
-        target_health=5000.0,
-        target_bonus_health=0.0,
-        target_armor=100.0,
-        target_magic_resistance=100.0,
-        fight_duration_seconds=8.0,
-        auto_attack_uptime=1.0,
-        one_rotation=False,
-        include_actives=True,
-        cast_order=None,
-        auto_attacks_only=False,
-        deterministic=True,
-    )
+    defaults = {
+        "target_health": 5000.0,
+        "target_bonus_health": 0.0,
+        "target_armor": 100.0,
+        "target_magic_resistance": 100.0,
+        "fight_duration_seconds": 8.0,
+        "auto_attack_uptime": 1.0,
+        "one_rotation": False,
+        "include_actives": True,
+        "cast_order": None,
+        "auto_attacks_only": False,
+        "deterministic": True,
+    }
     defaults.update(overrides)
     return FightParams(**defaults)
 

@@ -25,7 +25,6 @@ from src.calculator.damage import (
     calculate_fight_damage,
 )
 from src.calculator.interpreters import cast_proc
-from src.calculator.item_effects import resolve_damage_effects
 
 
 def _stats() -> dict:

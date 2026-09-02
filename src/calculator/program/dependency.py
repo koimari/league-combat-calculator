@@ -24,7 +24,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Any, TypeVar, Union
+from typing import Any, TypeVar
 
 from .build import ParamPatch
 from .identity import MechanicId
@@ -118,7 +118,7 @@ class PassRequest:
 _Result = TypeVar("_Result")
 
 #: What a pass function hands back: the finished composition, or a request.
-PassOutcome = Union[_Result, PassRequest]
+PassOutcome = _Result | PassRequest
 
 #: One pass, as the driver sees it — given its pass number and the patch it
 #: carries, it either finishes or asks for another.

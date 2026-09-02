@@ -17,6 +17,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..stats import MAX_LEVEL
 from .engine import CC_PER_PART, SlotCtx, build_parser
+from .inputs import int_option
 from .module_contract import coverage
 from .slotlib import (
     ability_name,
@@ -27,7 +28,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
 
 
 def _bellows_breath(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -239,8 +239,11 @@ parse_abilities = build_parser(SLOTS, "Ornn", cc_kinds=MODULE_CC)
 OPTIONS = [int_option("r_passes", 2, minimum=1, maximum=2, label="R elemental passes")]
 
 ASSUMPTIONS = [
-    "Bellows Breath uses five sourced 0.15-second ticks and exposes the final-gout Brittle state in its detail receipt.",
-    "Call of the Forge God defaults to both sourced passes; one pass is an explicit option, and Temper's Brittle consume rides the second pass, so a one-pass fight prices no consume.",
+    "Bellows Breath uses five sourced 0.15-second ticks and exposes the final-gout "
+    "Brittle state in its detail receipt.",
+    "Call of the Forge God defaults to both sourced passes; one pass is an explicit "
+    "option, and Temper's Brittle consume rides the second pass, so a one-pass fight "
+    "prices no consume.",
     "Living Forge and Master Craftsman are item/state systems, not direct enemy damage.",
     "P (Temper) is modeled through Call of the Forge God: the recast pass "
     "immobilises a target the first pass made Brittle, so every two-pass R "

@@ -26,11 +26,12 @@ for it, through the two channels ``COVERAGE_CHANNELS`` names.
 
 from dataclasses import replace
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .engine import CC_PER_PART, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
-from .engine import CC_PER_PART, SlotCtx
 from .module_helpers import no_damage
 from .packet_module import build_packet_module, full_plus_reduced_parser
 from .slotlib import (
@@ -40,7 +41,6 @@ from .slotlib import (
     extract_named,
     simple_damage,
 )
-from .. import healing_helpers as _healing
 
 PACKET_SHA256 = "73c072964c8c0863856fbd128d75afd0584bb1763baf64063b3bfb8a7df2ac3f"
 
@@ -213,7 +213,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 # of Zac's level-18 itemless maximum health — plus the Goo chunk heal the
 # healing rule authors, so P names both channels.
 COVERAGE_CHANNELS = {"P": ("starting_revive_defense", "self_healing_rule")}
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q (Stretching Strikes) prices both arm strikes: 2 x the sourced "
     "per-hit 'Magic Damage' row == the wiki's 'Total Magic Damage' row "
     "(data/champions.json Q; 120-360 + 60% AP + 6% of bonus health at "
@@ -253,23 +254,21 @@ def derive_self_healing(
     healing = []
     p = _healing.ability_json(champion_data, "P")
     level = int(champion_stat(champion_stats, "level"))
-    chunk_pct = _healing.extract_named(
-        p, "Max Health Damage", level, champion_stats, {}
-    )
+    chunk_pct = extract_named(p, "Max Health Damage", level, champion_stats, {})
     amount = max(0.0, champion_stat(champion_stats, "health") * chunk_pct / 100.0)
 
-    for event in _healing.attributed_events(
-        damage_events, lambda source, _event: source in {"Q", "W", "E", "R"}
-    ):
-        healing.append(
-            {
-                "time": float(event.get("time", 0.0)),
-                "amount": amount,
-                "source": "Cell Division",
-                "kind": "champion_passive",
-                **_healing.trigger_fields(event),
-            }
+    healing.extend(
+        {
+            "time": float(event.get("time", 0.0)),
+            "amount": amount,
+            "source": "Cell Division",
+            "kind": "champion_passive",
+            **_healing.trigger_fields(event),
+        }
+        for event in _healing.attributed_events(
+            damage_events, lambda source, _event: source in {"Q", "W", "E", "R"}
         )
+    )
     return healing
 
 

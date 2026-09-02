@@ -15,12 +15,14 @@ Against 100 MR (no pen) each is halved.
 import pytest
 
 from src.calculator.champions import (
+    cassiopeia,
     get_champion_options_meta,
+)
+from src.calculator.champions import (
     parse_champion_abilities as parse_abilities,
 )
-from src.calculator.champions.skill_orders import get_ability_rank
-from src.calculator.champions import cassiopeia
 from src.calculator.champions.engine import CC_PER_PART
+from src.calculator.champions.skill_orders import get_ability_rank
 from tests import cc_review
 
 # ---------------------------------------------------------------------------

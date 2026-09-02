@@ -19,7 +19,9 @@ E3 fix over the CP10.3 packet module:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
+from .module_contract import coverage
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import (
     ability_name,
@@ -31,8 +33,6 @@ from .slotlib import (
     with_item_on_hits,
 )
 from .source_receipts import load_champion_sources
-from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
 
 _KATARINA_R_SPELL = spell_object("Katarina", "KatarinaR")
 _DEATH_LOTUS_DURATION = data_value(_KATARINA_R_SPELL, "Duration")
@@ -179,7 +179,8 @@ MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Katarina", cc_kinds=MODULE_CC)
 
 OPTIONS = list(_packet_options)
-ASSUMPTIONS = list(_packet_assumptions) + [
+ASSUMPTIONS = [
+    *list(_packet_assumptions),
     "Sinister Steel's dagger spin prices the flat level term plus 60% "
     "bonus AD plus the level-banded AP ratio (70%/80%/90%/100% at "
     "levels 1-5/6-10/11-15/16+) — the band values are wiki prose "

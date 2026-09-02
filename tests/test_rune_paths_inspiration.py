@@ -41,7 +41,7 @@ def _request(**overrides):
 
 
 class TestEveryInspirationRuneIsCompiledAndReceipted:
-    @pytest.mark.parametrize("name,declaration", sorted(DISPOSITIONS.items()))
+    @pytest.mark.parametrize(("name", "declaration"), sorted(DISPOSITIONS.items()))
     def test_it_books_no_damage_and_says_why(self, name, declaration):
         disposition, reason = declaration
         effect = rune_effects.resolve_rune(name)

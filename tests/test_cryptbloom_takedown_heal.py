@@ -57,7 +57,6 @@ Contract pinned (typed source-backed values):
   per recipient per takedown (no duplicates).
 """
 
-import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -173,7 +172,7 @@ def _main_payload(
     duration: float = 8.0,
 ) -> dict:
     """A deterministic kill-fight request: Lux R + autos vs a level-1 enemy."""
-    payload = {
+    return {
         "champion": "Lux",
         "level": 18,
         "items": [CRYPTBLOOM],
@@ -184,7 +183,6 @@ def _main_payload(
         "allies": allies if allies is not None else [_ally("Jinx")],
         "enemies": enemies if enemies is not None else [_enemy("Aatrox")],
     }
-    return payload
 
 
 def _lfd_events(combat: dict) -> list[dict]:
@@ -349,7 +347,7 @@ def test_takedown_scan_predicates_keep_dict_rows():
     view the takedown synthesis reads, so a Cryptbloom holder keeps dict
     rows (issue #169): the pipeline predicate and the support-item sets
     pin that exclusion."""
-    assert TAKEDOWN_SCAN_SUPPORT_ITEMS == frozenset({CRYPTBLOOM})
+    assert frozenset({CRYPTBLOOM}) == TAKEDOWN_SCAN_SUPPORT_ITEMS
     assert has_takedown_scan_support_items([{"name": CRYPTBLOOM}]) is True
     assert has_event_scan_support_items([{"name": CRYPTBLOOM}]) is True
     assert has_takedown_scan_support_items([{"name": "Void Staff"}]) is False
@@ -882,13 +880,12 @@ def test_roster_support_holder_kill_receipted_identically_to_receipt_walk():
     defender dies is receipted identically in the compiled walk and the
     receipt walk — previously the compiled base panel synthesized no
     takedown (no target_id) and silently omitted the heal."""
+    from src.calculator.pipeline import FightParams
     from src.calculator.scenario import ChampionLoadout
     from src.calculator.stats import calculate_total_stats
-    from src.calculator.defensive_effects import resolve_starting_defenses
-    from src.calculator.pipeline import FightParams, run_fight
 
     main = get_champion("Ahri")
-    params = FightParams.from_request(
+    FightParams.from_request(
         {
             "fight_mode": "time_based",
             "fight_duration": 8,
@@ -898,16 +895,15 @@ def test_roster_support_holder_kill_receipted_identically_to_receipt_walk():
         },
         deterministic=True,
     )
-    brand = ChampionLoadout(
+    ChampionLoadout(
         champion="Brand",
         level=18,
         role="support",
         items=("Cryptbloom",),
         item_options={},
     ).resolve()
-    enemy = ChampionLoadout(champion="Yuumi", level=1, role="top", items=()).resolve()
-    allies = [brand]
-    main_stats = calculate_total_stats(main, 18, [])
+    ChampionLoadout(champion="Yuumi", level=1, role="top", items=()).resolve()
+    calculate_total_stats(main, 18, [])
     result_legacy = _timeline(
         allies=[
             {

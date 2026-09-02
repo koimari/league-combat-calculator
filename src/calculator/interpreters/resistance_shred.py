@@ -189,10 +189,9 @@ class ShredSlot:
             )
         cap = self.max_stacks
         hits = applying_events + int(self.value(SHRED_LEADING_STACKS_FIELD))
-        if hits >= cap:
-            average_stacks = cap * _CESARO_SATURATED_STACK_FRACTION
-        else:
-            average_stacks = hits / 2.0
+        average_stacks = (
+            cap * _CESARO_SATURATED_STACK_FRACTION if hits >= cap else hits / 2.0
+        )
         return self.per_stack * average_stacks
 
     def reduction_percent(self, stacks: int) -> float:

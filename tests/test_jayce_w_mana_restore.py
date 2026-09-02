@@ -74,19 +74,19 @@ _EPS = 1e-9
 
 def _params(duration=12.0, **overrides):
     """Fight params with the auto stream EXPLICITLY on (uptime 1.0)."""
-    base = dict(
-        target_health=2000.0,
-        target_bonus_health=0.0,
-        target_armor=50.0,
-        target_magic_resistance=40.0,
-        fight_duration_seconds=duration,
-        auto_attack_uptime=1.0,
-        auto_attack_uptime_mode="explicit",
-        one_rotation=False,
-        include_actives=True,
-        deterministic=True,
-        item_options={},
-    )
+    base = {
+        "target_health": 2000.0,
+        "target_bonus_health": 0.0,
+        "target_armor": 50.0,
+        "target_magic_resistance": 40.0,
+        "fight_duration_seconds": duration,
+        "auto_attack_uptime": 1.0,
+        "auto_attack_uptime_mode": "explicit",
+        "one_rotation": False,
+        "include_actives": True,
+        "deterministic": True,
+        "item_options": {},
+    }
     base.update(overrides)
     return FightParams(**base)
 
@@ -494,7 +494,8 @@ def test_p112_denied_burst_cast_never_mints_mana():
         pytest.approx(0.999000999, abs=1e-6),
     ]
     restores = _jayce_restores(ledger["receipts"])
-    assert restores and all(r["detail"]["kind"] == "ordinary" for r in restores)
+    assert restores
+    assert all(r["detail"]["kind"] == "ordinary" for r in restores)
     # P1-12 (R1): a DENIED burst cast never fires its swings, so its
     # burst time returns to the ordinary budget — the uninterrupted
     # stream restores all 4 autos (0/1.25/2.5/3.75).
@@ -610,7 +611,7 @@ def test_p112_score_parity_resource_surface():
     display-only per-cast resource_before/after rows are skipped in score
     mode (documented score_only contract)."""
     champ = get_champion("Jayce")
-    kwargs = dict(duration=12.0, champion_options={"hammer_stance": False})
+    kwargs = {"duration": 12.0, "champion_options": {"hammer_stance": False}}
     full = run_fight(champ, 18, [], _params(**kwargs))
     score = run_fight(champ, 18, [], _params(**kwargs), score_only=True)
     assert full["resource_ledger"] == score["resource_ledger"]
@@ -718,7 +719,7 @@ def test_p112_damage_pricing_untouched_by_restore():
     restore's.
     """
     champ = get_champion("Jayce")
-    kw = dict(duration=8.0, champion_options={"hammer_stance": False})
+    kw = {"duration": 8.0, "champion_options": {"hammer_stance": False}}
     with_autos = run_fight(champ, 18, [], _params(**kw))
     no_autos = run_fight(champ, 18, [], _params(**{**kw, "auto_attack_uptime": 0.0}))
     assert _jayce_restores(with_autos["resource_ledger"]["receipts"])

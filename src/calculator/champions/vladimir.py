@@ -32,10 +32,10 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import AMP, SlotCtx
 from .healing_contract import self_healing_rule
-from .packet_module import build_packet_module, repeat_damage_parser
-from .slotlib import ability_name, damage_entry
 from .inputs import bool_option, float_option
 from .module_contract import coverage
+from .packet_module import build_packet_module, repeat_damage_parser
+from .slotlib import ability_name, damage_entry, extract_named
 
 PACKET_SHA256 = "03e211424b005b94fe9d0df6d90a10efc1aa4d935e306143b14b0b254bd3532d"
 
@@ -362,7 +362,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     float_option(
         "e_charge_fraction",
         1.0,
@@ -381,7 +382,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "R (Hemoplague) marks the target for 4 seconds: all damage dealt "
     "while marked is increased by 10% (cached R prose; patch history "
     "'reduced to 10% from 12%').  The AMP pseudo-slot adds the sourced "
@@ -426,7 +428,7 @@ def derive_self_healing(
     """Resolve Vladimir self-healing events from its authored packet."""
     healing = []
     q_rank = _healing.parsed_rank(ability_damages, "Q")
-    q_heal = _healing.extract_named(
+    q_heal = extract_named(
         _healing.ability_json(champion_data, "Q"), "Heal", q_rank, champion_stats
     )
     for payment in _healing.payments(
@@ -455,10 +457,10 @@ def derive_self_healing(
     # first infected champion pays the full heal and each additional
     # champion pays the reduced heal.
     r_rank = _healing.parsed_rank(ability_damages, "R")
-    r_heal = _healing.extract_named(
+    r_heal = extract_named(
         _healing.ability_json(champion_data, "R"), "Heal", r_rank, champion_stats
     )
-    r_reduced = _healing.extract_named(
+    r_reduced = extract_named(
         _healing.ability_json(champion_data, "R"),
         "Reduced Heal",
         r_rank,

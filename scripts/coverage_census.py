@@ -39,14 +39,14 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from src.calculator import item_coverage, item_source  # noqa: E402
-from src.calculator.bis import bis_payload  # noqa: E402
-from src.calculator.calculate import calculate_payload  # noqa: E402
-from src.calculator.role_quests import (  # noqa: E402
+from src.calculator import item_coverage, item_source
+from src.calculator.bis import bis_payload
+from src.calculator.calculate import calculate_payload
+from src.calculator.role_quests import (
     SUPPORT_QUEST_UPGRADED_STAGE,
     support_quest_item_stage,
 )
-from src.calculator.rune_effects import rune_catalog, resolve_rune  # noqa: E402
+from src.calculator.rune_effects import resolve_rune, rune_catalog
 
 LEVEL = 18
 MODES = ("one_rotation", "time_based", "timed", "auto_only")
@@ -155,7 +155,7 @@ def _timed_payload(champ, **extra):
     }
 
 
-@functools.lru_cache(maxsize=None)
+@functools.cache
 def _catalog():
     """The populations every axis sweeps, read once per process."""
     champions = sorted(

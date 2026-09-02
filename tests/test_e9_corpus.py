@@ -29,7 +29,6 @@ from scripts.repin_corpus import (
     load_corpus,
     non_legacy_scenarios,
 )
-
 from src import app as app_module
 
 pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
@@ -388,7 +387,7 @@ def test_the_reader_walks_no_history():
     assert not hasattr(sys.modules[__name__], "subprocess")
     reader_half = REPIN_SCRIPT.read_text(encoding="utf-8").split("# The writer")[0]
     assert "subprocess.run" not in reader_half
-    assert _EXECUTED == non_legacy_scenarios(load_corpus())
+    assert non_legacy_scenarios(load_corpus()) == _EXECUTED
 
 
 def test_check_passes_on_the_committed_corpus():

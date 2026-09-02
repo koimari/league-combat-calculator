@@ -108,7 +108,6 @@ from src.calculator.interpreters import (
     damage_routing,
     on_hit_strike,
 )
-from src.calculator.item_coverage import item_model_coverage
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     ITEM_INPUT_OPTIONS,
@@ -123,7 +122,6 @@ from src.calculator.item_effects import (
 from src.calculator.item_source import item_source_audit, riot_declared_effects
 from src.calculator.optimizer import get_eligible_boots
 from src.calculator.stats import calculate_total_stats
-
 from tests import item_probe
 from tests.app_config import app_config
 
@@ -401,9 +399,9 @@ def test_fights_are_bit_identical_against_a_synthetic_build_with_those_stats(
     assert synthetic == with_boots  # the synthetic bundle IS the boot bundle
     abilities = _ahri_abilities(ahri_data, with_boots)
     for label, overrides in (
-        ("one_rotation", dict(one_rotation=True, fight_duration_seconds=5.0)),
-        ("timed_abilities", dict()),
-        ("timed_autos", dict(auto_attack_uptime=1.0)),
+        ("one_rotation", {"one_rotation": True, "fight_duration_seconds": 5.0}),
+        ("timed_abilities", {}),
+        ("timed_autos", {"auto_attack_uptime": 1.0}),
     ):
         with_item = _champion_fight(
             with_boots, abilities, items=(_boots(),), **overrides
@@ -441,7 +439,7 @@ def test_noxian_gait_adds_no_direct_damage_beyond_the_ordinary_stats(ahri_data):
     contribution.  No "Noxian"/movement breakdown row exists, the
     breakdown is identical, and no movement-speed field appears anywhere
     in the fight result (one-rotation AND timed)."""
-    base = calculate_total_stats(ahri_data, 18, [])
+    calculate_total_stats(ahri_data, 18, [])
     with_boots = calculate_total_stats(ahri_data, 18, [_boots()])
     abilities = _ahri_abilities(ahri_data, with_boots)
     fights = [
@@ -490,12 +488,12 @@ def test_the_passive_is_not_compiled_into_any_damage_packet():
     with nothing saying so -- so each family is asked its own resolver.
     """
     owners = (_boots()["name"],)
-    resolution = dict(
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
-    )
+    resolution = {
+        "level": 18,
+        "fight_duration_seconds": 5.0,
+        "target_bonus_health": 0.0,
+        "holder_is_melee": True,
+    }
     assert on_hit_strike.per_hit_effects(owners, **resolution) == ()
     assert (
         on_hit_strike.class_restricted_per_hit_effects(owners, target_class="minion")

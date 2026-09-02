@@ -19,8 +19,9 @@ API responses behind those controls expose exactly the declared fields.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from copy import deepcopy
-from typing import Any, Mapping
+from typing import Any
 
 # The cast-slot vocabulary, from the stdlib-only leaf that owns it.
 from .cast_dependency import BASE_CAST_SLOTS
@@ -122,9 +123,8 @@ SUPPORT_TARGET_RESOLUTION_SCOPES: frozenset[str] = frozenset(
 # Item-module disclosure scopes.  These packets carry an explicit roster
 # target and never resolve through ``_support_target_ids``; the labels are
 # audited at emit time so the whole vocabulary stays closed.
-# TODO: ``item_support_effects._packet`` should validate ``target_scope``
-# against this set at emit time.  A source-scan contract test covers it
-# meanwhile.
+# ``item_support_effects._packet`` does not check ``target_scope`` against this
+# set at emit time; a source-scan contract test holds the vocabulary closed.
 SUPPORT_TARGET_SCOPES: frozenset[str] = SUPPORT_TARGET_RESOLUTION_SCOPES | frozenset(
     {
         "all_selected_teammates",

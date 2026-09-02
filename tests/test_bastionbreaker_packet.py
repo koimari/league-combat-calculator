@@ -74,15 +74,14 @@ from src.calculator.ability_spec import DamagePart
 from src.calculator.damage import (
     FightConfig,
     RotationResult,
-    calculate_fight_damage,
     _shaped_charge_proc_receipts,
+    calculate_fight_damage,
 )
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.interpreters import charged_strike
 from src.calculator.item_effects import (
     DamageInputs,
     required_effect_value,
-    resolve_damage_effects,
 )
 from src.calculator.timeline_coverage import (
     EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES,
@@ -233,7 +232,7 @@ class TestTypedContract:
         assert required_effect_value(BASTION, "cooldown") == 20.0
 
     def test_missing_typed_key_fails_loud_naming_item_and_key(self) -> None:
-        with pytest.raises(KeyError, match="Bastionbreaker.*shaped_missing_key_3d"):
+        with pytest.raises(KeyError, match=r"Bastionbreaker.*shaped_missing_key_3d"):
             required_effect_value(BASTION, "shaped_missing_key_3d")
 
     def test_compiled_effect_contract(self) -> None:

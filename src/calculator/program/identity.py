@@ -34,7 +34,7 @@ would invert the phase's one-way dependency for no runtime gain.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import NamedTuple, NewType, Union
+from typing import NamedTuple, NewType
 
 # A roster index, narrowed.  The kernel stores the same integer in
 # ``SurvivalAction.subject`` / ``.attacker`` / ``.holder`` as a plain ``int``;
@@ -110,7 +110,7 @@ class DerivedOrigin:
     role: str
 
 
-Origin = Union[PairOrigin, SupportOrigin, ReactiveOrigin, DerivedOrigin]
+Origin = PairOrigin | SupportOrigin | ReactiveOrigin | DerivedOrigin
 
 
 class EventId(NamedTuple):

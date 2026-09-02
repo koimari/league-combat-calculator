@@ -543,7 +543,6 @@ class TestYunara:
 
 class TestCoverageFlags:
     def test_audit_flagged_slots_are_modeled(self) -> None:
-        import importlib
 
         # Every audit-flagged slot (the P1-2 closure list) must be marked
         # modeled in its module's MODULE_COVERAGE.

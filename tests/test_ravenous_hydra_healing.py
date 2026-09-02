@@ -5,8 +5,8 @@ from typing import cast
 
 import pytest
 
-from src.calculator.data_fetcher import fetch_item_data, get_champion, get_item_by_name
 from src.calculator.damage import _active_lifesteal_amount
+from src.calculator.data_fetcher import fetch_item_data, get_champion, get_item_by_name
 from src.calculator.passive_parser import parse_item_effect
 from src.calculator.pipeline import FightParams, run_fight
 
@@ -17,7 +17,7 @@ def test_ravenous_hydra_parser_sources_full_lifesteal_effectiveness() -> None:
 
     if parsed is None:
         pytest.fail("Ravenous Hydra parser returned no values")
-    parsed_values = cast(dict[str, float], parsed)
+    parsed_values = cast("dict[str, float]", parsed)
     assert parsed_values.get("lifesteal_effectiveness") == pytest.approx(1.0)
 
 

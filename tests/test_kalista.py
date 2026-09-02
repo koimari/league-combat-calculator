@@ -49,7 +49,7 @@ class TestReviewedCrowdControl:
 
     def test_reviewed_kinds_follow_the_other_branch(self):
         """The Soul-Mark consumption only damages."""
-        assert _CC.kinds(**{"soul_mark_proc": True}) == {
+        assert _CC.kinds(soul_mark_proc=True) == {
             "Q": ["none"],
             "W": ["none"],
             "E": ["slow"],

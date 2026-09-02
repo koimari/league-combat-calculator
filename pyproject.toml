@@ -34,3 +34,87 @@ dependencies = [
 [tool.black]
 line-length = 88
 extend-exclude = "vendor/"
+
+[tool.sightline]
+excludes = ["vendor"]  # external code (CLAUDE.md rule 1)
+
+# The simply-elegant house comment standard, minus the three form rules this tree
+# writes against on purpose: a module docstring and a function docstring carry the
+# "why" (traps, sources, contracts) as prose, bounded by scripts/prose_lint.py's
+# docstring-no-longer-than-its-body rule rather than by a one-line / sections-only form.
+[tool.simply-elegant]
+comment-rules-off = ["module-doc", "layout", "block"]
+
+# The simply-elegant hooks run ruff on their own strict config (select = ALL)
+# and merge this table on top; every overrule below states its reason.
+[tool.ruff]
+extend-exclude = ["vendor"]  # external code (CLAUDE.md rule 1)
+
+[tool.ruff.lint]
+ignore = [
+  # A raise names the item and key in its message (rule 5); tests match on it.
+  "TRY003", "EM101", "EM102",
+  # Fail-closed contracts raise ValueError/KeyError; TypeError re-pins every negative test.
+  "TRY004",
+  # Relative imports are the package form inside src/calculator.
+  "TID252",
+  # Lazy imports break cycles and keep cold start cheap; tests import inside the case.
+  "PLC0415",
+  # sightline #23 prices complexity and #55 arity; one owner per fact.
+  "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",
+  # Contract-shaped signatures (champion modules, readers, stubs); sightline #32 flags
+  # a never-read parameter where it is not a contract.
+  "ARG001", "ARG002", "ARG004", "ARG005",
+  # Boolean flags ride the engine's positional packet builders; keyword-only would be a
+  # signature campaign across the hot path, not a lint fix.
+  "FBT001", "FBT002", "FBT003",
+  # An import used only in an annotation stays a real import so the import graph
+  # (sightline #35) sees the dependency.
+  "TC001", "TC002", "TC003",
+  # ERA001 reads section headers (`# W: Overdrive`), wiki formulas and quoted prose as
+  # code; sightline #34 owns commented-out code with a real parser.
+  "ERA001",
+  # Request validators raise inside the try whose except turns every ValueError into
+  # the 400 response; the raise is the guard, not an abstraction candidate.
+  "TRY301",
+  # An assert narrows an Optional the preceding branch already established; rule 5's
+  # fail-closed checks are explicit raises, never asserts.
+  "S101",
+  # Rule 5 and scripts/literal_defaults.py own numeric literals; the rest are structural
+  # comparisons (rank axes, arity).
+  "PLR2004",
+  # Em dashes and multiplication signs in prose are intended.
+  "RUF001", "RUF002", "RUF003",
+  # Exception names read as the sentence they raise (WithheldHasNoValue).
+  "N818",
+  # Module singletons (db engine, economy memos) are set once by their loader.
+  "PLW0603",
+  # pytest.raises(ValueError) pins the class; the message is pinned where it is the contract.
+  "PT011",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# E402: a sys.path bootstrap precedes the package import. S603/S607: argv lists of known
+# executables, no shell. S310: wiki and Community Dragon fetches open https URLs the
+# module builds. S106: "frontend_token" names a capability, not a secret. S311: crit rolls
+# are game randomness, not cryptography. Tests: stub classes hold mutable class attributes
+# and test names carry the claim id they pin.
+"scripts/**" = ["E402", "S603", "S607", "S310"]
+"tests/**" = ["E402", "S603", "S607", "RUF012", "N802", "N806", "S105", "S107"]
+"src/calculator/capabilities.py" = ["S106"]
+"src/calculator/rotation_resolver.py" = ["S105", "S106"]
+"src/calculator/damage.py" = ["S311"]
+# BLE001: broad catches wrap untrusted wiki parses and scenario evaluation and re-report
+# the error as data. PTH: the Windows download_soup mirrors lolstaticdata's os.path body.
+"src/calculator/data_updater.py" = ["E402", "S310", "BLE001", "PTH"]
+"scripts/golden_snapshot.py" = ["BLE001"]
+# E501: quoted wiki, JavaScript and contract-table fixtures keep their source width.
+"tests/test_rune_parser.py" = ["E501"]
+"tests/test_app.py" = ["E501"]
+"tests/test_cleanse_eligibility.py" = ["E501"]
+"tests/test_crowd_control_immunity.py" = ["E501"]
+"tests/test_f0_frontend.py" = ["E501"]
+"tests/test_issues_82.py" = ["E501"]
+"scripts/decompose_binaries.py" = ["BLE001"]
+"scripts/atomize.py" = ["BLE001"]
+"src/metrics.py" = ["BLE001"]

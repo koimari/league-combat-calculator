@@ -36,7 +36,8 @@ class TestReviewedCrowdControl:
         E is ``modeled`` all the same: the mist's attack speed is a
         priced stat_buff row.  P grants nothing the engine prices.
         """
-        assert "E" not in viego.MODULE_CC and "P" not in viego.MODULE_CC
+        assert "E" not in viego.MODULE_CC
+        assert "P" not in viego.MODULE_CC
         assert get_champion_module_contract("Viego").coverage["E"] == "modeled"
         assert get_champion_module_contract("Viego").coverage["P"] == "no_damage"
 

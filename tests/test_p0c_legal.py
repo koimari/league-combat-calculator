@@ -26,7 +26,10 @@ def _disable_rate_limits_between_route_tests():
 def _test_password_hash(password="secret"):
     salt = b"p0c-legal-salt"
     digest = hashlib.scrypt(password.encode(), salt=salt, n=16_384, r=8, p=1)
-    enc = lambda value: base64.urlsafe_b64encode(value).rstrip(b"=").decode()
+
+    def enc(value):
+        return base64.urlsafe_b64encode(value).rstrip(b"=").decode()
+
     return f"scrypt$16384$8$1${enc(salt)}${enc(digest)}"
 
 

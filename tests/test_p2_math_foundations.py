@@ -20,6 +20,7 @@ cannot silently break the math without a test failing:
 
 import pytest
 
+from src.calculator.champions.veigar import _EXECUTE_MISSING_RATIO_CAP
 from src.calculator.damage import (
     BASE_CRIT_MULTIPLIER,
     _calculate_phantom_hits,
@@ -34,7 +35,6 @@ from src.calculator.resistance import (
     reduce_resistance,
 )
 from src.calculator.stats import apply_movement_speed_soft_caps, growth_stat
-from src.calculator.champions.veigar import _EXECUTE_MISSING_RATIO_CAP
 
 # ─────────────────────────────────────────────────────────────────────
 # 1. Resistance: the 100/(100+R) identity
@@ -272,7 +272,7 @@ class TestExecuteQuantiles:
         """d(m) = d_min*(1 + min(1, m/(2/3))) (pass-16 decision): linear
         from 1x at full health to the max row (2x min) at m=2/3, flat
         afterwards."""
-        assert _EXECUTE_MISSING_RATIO_CAP == pytest.approx(2.0 / 3.0)
+        assert pytest.approx(2.0 / 3.0) == _EXECUTE_MISSING_RATIO_CAP
 
         def ramp(m: float) -> float:
             boost = max(

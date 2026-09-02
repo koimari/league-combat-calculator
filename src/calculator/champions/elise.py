@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
+from .inputs import bool_option, int_option
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -14,7 +15,6 @@ from .slotlib import (
     with_control_event,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 _SPIDER_FORM_LEVELS = (1, 6, 11, 16)
 _SPIDER_BONUS_DAMAGE = (12.0, 22.0, 32.0, 42.0)
@@ -125,7 +125,10 @@ def _form_toggle(ctx: SlotCtx) -> dict[str, Any] | None:
     return no_damage(
         ctx,
         name="Spider Form / Human Form",
-        reason=f"Explicit {form} form selected; transformation and spiderling state are not outgoing damage.",
+        reason=(
+            f"Explicit {form} form selected; transformation and spiderling state are "
+            f"not outgoing damage."
+        ),
     )
 
 
@@ -155,8 +158,10 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Q is a real form variant: Neurotoxin scales from target current health, while Venomous Bite scales from target missing health.",
-    "Spiderlings, Rappel untargetability and the Spider Form heal are explicit state/utility rows; only Spider Form's on-hit damage enters TDD.",
+    "Q is a real form variant: Neurotoxin scales from target current health, while "
+    "Venomous Bite scales from target missing health.",
+    "Spiderlings, Rappel untargetability and the Spider Form heal are explicit "
+    "state/utility rows; only Spider Form's on-hit damage enters TDD.",
 ]
 
 SOURCES = load_champion_sources("Elise")

@@ -439,9 +439,9 @@ class TestModuleCcDeclaration:
         Munitions delivers on the auto stream, so its row authors no
         ability event and the engine refuses a declaration there.
         """
-        assert get_champion_module_contract("Corki").cc_kinds == {
-            slot: "none" for slot in ("Q", "W", "E", "R")
-        }
+        assert get_champion_module_contract("Corki").cc_kinds == dict.fromkeys(
+            ("Q", "W", "E", "R"), "none"
+        )
         for name, slot, kind in (
             ("Syndra", "E", "stun"),
             ("Ahri", "E", "immobilize"),

@@ -32,15 +32,15 @@ left silently absent.
 
 from typing import Any
 
-from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
 from ..binary_roots import data_value, spell_object
+from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
+from ..stats import calculate_attack_speed
 from .engine import BUFF, SlotCtx, build_parser
+from .inputs import bool_option, int_option
+from .module_contract import coverage
 from .module_helpers import no_damage
 from .slotlib import ability_name, extract_cooldown, extract_value, simple_damage
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
-from .module_contract import coverage
-from ..stats import calculate_attack_speed
 
 # Focus is a typed kernel state (state_lifecycle.StackRule).  The numbers
 # are prose in the reviewed cache entry (Ashe Q effect 0: "basic attacks

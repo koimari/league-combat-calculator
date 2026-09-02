@@ -21,7 +21,8 @@ No shard declares an option: every one of them states a number the cache
 carries, gated on nothing, so this module has no ``OPTIONS`` to merge.
 """
 
-from typing import Any, Callable, Mapping
+from collections.abc import Callable, Mapping
+from typing import Any
 
 from ..ability_spec import Disposition
 from ..rune_effects import (

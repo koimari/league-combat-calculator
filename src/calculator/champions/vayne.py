@@ -38,6 +38,8 @@ absence of damage rather than an unmodeled gap.
 from typing import Any
 
 from .engine import SlotCtx, build_parser
+from .inputs import bool_option
+from .module_contract import coverage
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -48,8 +50,6 @@ from .slotlib import (
     with_control_event,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option
-from .module_contract import coverage
 
 # Silver Bolts procs on every 3rd basic attack (wiki prose, not JSON).
 _SILVER_BOLTS_STACKS = 3

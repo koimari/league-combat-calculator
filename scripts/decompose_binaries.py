@@ -41,9 +41,8 @@ def _download(url: str, dest: Path, chunk=1 << 20) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
     with requests.get(url, stream=True, timeout=600) as r:
         r.raise_for_status()
-        with open(dest, "wb") as f:
-            for chunk_ in r.iter_content(chunk):
-                f.write(chunk_)
+        with Path(dest).open("wb") as f:
+            f.writelines(r.iter_content(chunk))
 
 
 def ensure_hash_tables() -> dict[int, str]:
@@ -51,7 +50,7 @@ def ensure_hash_tables() -> dict[int, str]:
         print(f"downloading {HASH_FILE.name} ...")
         _download(f"{HASH_URL_BASE}/hashes.game.txt", HASH_FILE)
     table: dict[int, str] = {}
-    with open(HASH_FILE) as f:
+    with Path(HASH_FILE).open() as f:
         for line in f:
             h, _, path = line.partition(" ")
             table[int(h, 16)] = path.rstrip("\n")
@@ -85,8 +84,9 @@ def extract_path(wad, table, path: str) -> bytes | None:
 
 
 def parse_bin(data: bytes, name: str):
-    from cdtb.binfile import BinFile
     import io
+
+    from cdtb.binfile import BinFile
 
     bf = BinFile(io.BytesIO(data))
     return bf.to_serializable()
@@ -138,7 +138,8 @@ def decompose_items(table, out: Path):
         if r.status_code != 200:
             raise RuntimeError(
                 "items.bin unavailable locally and 16.15 CDN dump 404; "
-                "item decomposition will use per-item Lua scripts (data/items/<id>.lua) in a later step"
+                "item decomposition will use per-item Lua scripts "
+                "(data/items/<id>.lua) in a later step"
             )
         data = r.content
         source = "cdragon-16.15"
@@ -159,7 +160,7 @@ def decompose_map11(table, out: Path):
     for mw in map_wads:
         try:
             w = open_wad(mw)
-        except Exception:
+        except Exception:  # noqa: S112 - skip an unreadable wad
             continue
         data = extract_path(w, table, "data/maps/map11/map11.bin")
         if data:

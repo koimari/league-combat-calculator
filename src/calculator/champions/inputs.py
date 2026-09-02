@@ -33,23 +33,24 @@ number's one home, stated once and with a reason.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Mapping
+from typing import Any
 
 __all__ = [
+    "CHAMPION_STATS",
+    "RESERVED_OPTION_DEFAULTS",
+    "SCALING_INPUTS",
+    "TARGET_STATS",
     "ChampionInputError",
     "InputDefault",
-    "CHAMPION_STATS",
-    "TARGET_STATS",
-    "SCALING_INPUTS",
-    "RESERVED_OPTION_DEFAULTS",
-    "champion_stat",
-    "target_stat",
-    "scaling_input",
-    "declared_option_defaults",
     "bool_option",
-    "int_option",
+    "champion_stat",
+    "declared_option_defaults",
     "float_option",
+    "int_option",
+    "scaling_input",
+    "target_stat",
 ]
 
 

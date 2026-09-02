@@ -26,9 +26,9 @@ from src.calculator.ability_spec import (
     CC_KIND_VOCABULARY,
     DISPLACEMENT_CC_KINDS,
     IMMOBILIZING_CC_KINDS,
+    NO_CONTROL_KIND,
     NON_BLOCKING_CC_KINDS,
     NON_IMMOBILIZING_CC_KINDS,
-    NO_CONTROL_KIND,
     cc_kind_reviewed,
 )
 from src.calculator.cleanse_eligibility import (
@@ -69,7 +69,7 @@ class TestTheVocabularyIsTheOnlyVocabulary:
         classifier as the empty kind), so it is the one member the
         control classifier does not carry.
         """
-        assert KNOWN_CONTROL_KINDS == CC_KIND_VOCABULARY - {NO_CONTROL_KIND}
+        assert CC_KIND_VOCABULARY - {NO_CONTROL_KIND} == KNOWN_CONTROL_KINDS
 
     def test_no_classification_names_a_kind_outside_the_vocabulary(self):
         for name, kinds in (
@@ -88,23 +88,27 @@ class TestTheVocabularyIsTheOnlyVocabulary:
 
     def test_blocking_and_soft_partition_the_known_kinds(self):
         assert ACTION_BLOCKING_CC_KINDS | NON_BLOCKING_CC_KINDS == KNOWN_CONTROL_KINDS
-        assert ACTION_BLOCKING_CC_KINDS & NON_BLOCKING_CC_KINDS == frozenset()
+        assert frozenset() == ACTION_BLOCKING_CC_KINDS & NON_BLOCKING_CC_KINDS
 
     def test_the_action_blocking_half_is_derived_from_the_immobilizes(self):
         """Every immobilize blocks actions; polymorph and berserk block
         them without immobilizing.  Re-spelling the fifteen was how the two
         drifted."""
-        assert ACTION_BLOCKING_CC_KINDS == IMMOBILIZING_CC_KINDS | {
-            "polymorph",
-            "berserk",
-        }
+        assert (
+            IMMOBILIZING_CC_KINDS
+            | {
+                "polymorph",
+                "berserk",
+            }
+            == ACTION_BLOCKING_CC_KINDS
+        )
 
     def test_immobilizing_and_non_immobilizing_partition_the_vocabulary(self):
         assert (
             IMMOBILIZING_CC_KINDS | NON_IMMOBILIZING_CC_KINDS | {NO_CONTROL_KIND}
             == CC_KIND_VOCABULARY
         )
-        assert IMMOBILIZING_CC_KINDS & NON_IMMOBILIZING_CC_KINDS == frozenset()
+        assert frozenset() == IMMOBILIZING_CC_KINDS & NON_IMMOBILIZING_CC_KINDS
 
     @pytest.mark.parametrize("kind", sorted(CC_KIND_VOCABULARY - {NO_CONTROL_KIND}))
     def test_every_authorable_kind_classifies(self, kind):
@@ -161,7 +165,7 @@ class TestCleanseCarveOutsSpeakTheVocabulary:
             declared = frozenset(declaration["excluded_control_kinds"])
             if not declared & DISPLACEMENT_CC_KINDS:
                 continue
-            assert DISPLACEMENT_CC_KINDS <= resolve_excluded_kinds(declared), (
+            assert resolve_excluded_kinds(declared) >= DISPLACEMENT_CC_KINDS, (
                 f"{declaration['item']} carves out {sorted(declared)} but the "
                 "resolver leaves part of the Airborne class cleansable"
             )

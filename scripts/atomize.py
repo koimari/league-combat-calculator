@@ -23,8 +23,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from src.calculator.atomizer import Atom, write_atoms, write_manifest  # noqa: E402
-from src.calculator.atomizer_domains import (  # noqa: E402
+from src.calculator.atomizer import Atom, write_atoms, write_manifest
+from src.calculator.atomizer_domains import (
     atomize_abilities,
     atomize_economics,
     atomize_item_catalogue,
@@ -101,12 +101,16 @@ def atomize_champions(champions: dict) -> dict[str, list]:
         receipt = provenance.get("evidence")
         if isinstance(receipt, str) and receipt and receipt != "unknown":
             evidence.append(receipt)
-        for wiki_page in provenance.get("wiki", []):
-            if str(wiki_page).strip():
-                evidence.append(f"wiki:{wiki_page}")
-        for binary_name in provenance.get("binary", []):
-            if str(binary_name).strip():
-                evidence.append(f"binary:{binary_name}")
+        evidence.extend(
+            f"wiki:{wiki_page}"
+            for wiki_page in provenance.get("wiki", [])
+            if str(wiki_page).strip()
+        )
+        evidence.extend(
+            f"binary:{binary_name}"
+            for binary_name in provenance.get("binary", [])
+            if str(binary_name).strip()
+        )
         if provenance.get("source"):
             evidence.append(f"source:{provenance['source']}")
         if provenance.get("inherited_from"):
@@ -185,7 +189,7 @@ def _source_ref(path: Path) -> str:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "domains", nargs="*", help="one of %s or 'all'" % "|".join(DOMAINS)
+        "domains", nargs="*", help="one of {} or 'all'".format("|".join(DOMAINS))
     )
     parser.add_argument("--list", action="store_true", help="list domains and exit")
     parser.add_argument("--out", default=str(REPO_ROOT / "data" / "atoms"))

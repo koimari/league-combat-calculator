@@ -43,9 +43,9 @@ fallback text.
 from typing import Any
 
 from .engine import SlotCtx
+from .module_contract import coverage
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
-from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — the second shot's AD ratio is
 # level-banded.  The cached P JSON carries only the prose "50% / 55% /
@@ -140,7 +140,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "R (The Culling) prices all 22 sourced shots of the 3-second "
     "channel (per-shot x 22; the wiki cache carries only the per-shot "
     "row and the prose shot count, not a Total row).  The "

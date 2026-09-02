@@ -20,8 +20,9 @@ including zero-damage entries (stat-buff ultimates must never silently
 vanish). Dropping a non-damaging slot is the parser's decision.
 """
 
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
-from typing import Any, Callable, Mapping
+from typing import Any
 
 from ..ability_spec import (
     CC_KIND_VOCABULARY,

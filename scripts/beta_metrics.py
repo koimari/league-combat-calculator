@@ -17,21 +17,21 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from src.metrics import compute_scorecard  # noqa: E402
+from src.metrics import compute_scorecard
 
 
 def _parse_cli_datetime(value: str) -> datetime:
     """Parse an ISO date or datetime (CLI) into naive UTC."""
     parsed = datetime.fromisoformat(value)
     if parsed.tzinfo is not None:
-        parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
+        parsed = parsed.astimezone(UTC).replace(tzinfo=None)
     return parsed
 
 
@@ -61,11 +61,11 @@ def _format_human(scorecard: dict) -> str:
         threshold = entry.get("threshold", entry.get("threshold_hours"))
         lines.append(f"{name:<10} {status:<16} value={value} threshold={threshold}")
         lines.append(f"            {entry['detail']}")
-        for week in entry.get("weeks", []):
-            lines.append(
-                f"            week {week['week']}: {week['status']}"
-                f" (complete={week.get('complete')})"
-            )
+        lines.extend(
+            f"            week {week['week']}: {week['status']}"
+            f" (complete={week.get('complete')})"
+            for week in entry.get("weeks", [])
+        )
     gate = scorecard["gate"]
     lines.append("")
     lines.append(f"gate: {gate['verdict']} ({gate['status']})")

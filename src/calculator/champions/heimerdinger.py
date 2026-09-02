@@ -6,6 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .inputs import int_option
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -15,7 +16,6 @@ from .slotlib import (
     extract_recharge,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
 
 
 def _turret_damage(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -274,7 +274,10 @@ def _upgrade(ctx: SlotCtx) -> dict[str, Any] | None:
     return no_damage(
         ctx,
         name="UPGRADE!!!",
-        reason="The ultimate is an empowerment toggle; its selected Q/W/E variant carries the outgoing damage.",
+        reason=(
+            "The ultimate is an empowerment toggle; its selected Q/W/E variant "
+            "carries the outgoing damage."
+        ),
     )
 
 
@@ -321,14 +324,17 @@ OPTIONS = [
     ),
 ]
 ASSUMPTIONS = [
-    "Turret shot/beam values and cadences are copied from the full Wiki Pets entry because the champion slot template intentionally contains no pet formula rows.",
+    "Turret shot/beam values and cadences are copied from the full Wiki Pets entry "
+    "because the champion slot template intentionally contains no pet formula rows.",
     "Q is a charge ability: its cooldown is the 20s rechargeRate (the "
     "JSON cooldown field is only the 1s inter-cast timer), so one deploy "
     "is priced per 20s window; the q_turrets/q_turret_attacks options set "
     "how many turrets and shots one deploy contributes.",
     "The R upgrade is the q_variant option: the H-28Q Apex Turret rows "
     "scale by R rank (shots 80-120 +35% AP, beams 100-180 +70% AP).",
-    "Rocket multi-hit reduction uses the explicit first/subsequent rows; only one champion hit is counted for the upgraded grenade.",
-    "UPGRADE!!!, stuns, slows, turret targeting and vision are state/utility, not extra direct champion damage.",
+    "Rocket multi-hit reduction uses the explicit first/subsequent rows; only one "
+    "champion hit is counted for the upgraded grenade.",
+    "UPGRADE!!!, stuns, slows, turret targeting and vision are state/utility, not "
+    "extra direct champion damage.",
 ]
 SOURCES = load_champion_sources("Heimerdinger")

@@ -22,8 +22,10 @@ PROGRAM_ROOT = Path(precision.__file__).resolve().parent
 def test_every_declared_precision_is_a_digit_count() -> None:
     """A registry entry is a field name and a non-negative integer."""
     for field, digits in precision.ROUNDING.items():
-        assert isinstance(field, str) and field.strip(), field
-        assert isinstance(digits, int) and digits >= 0, field
+        assert isinstance(field, str), field
+        assert field.strip(), field
+        assert isinstance(digits, int), field
+        assert digits >= 0, field
 
 
 def test_the_registry_is_not_writable_through_its_public_name() -> None:
@@ -81,8 +83,8 @@ def test_the_cutoff_is_the_published_death_time_sliver_and_all() -> None:
         published, 10.0, precision.CutoffPolicy.ROUNDED_DEATH_TIME
     )
     assert cutoff == 4.568
-    assert 4.5679 <= cutoff
-    assert 4.5679 > raw_death
+    assert cutoff >= 4.5679
+    assert raw_death < 4.5679
 
 
 def test_an_unknown_cutoff_policy_raises() -> None:

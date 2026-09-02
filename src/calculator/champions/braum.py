@@ -39,6 +39,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..damage import effective_cooldown
 from .engine import BUFF, SlotCtx, build_parser
+from .inputs import bool_option, float_option
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -50,7 +51,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, float_option
 
 # HARDCODED: verify on patch updates — Concussive Blows' trigger damage,
 # stack count, stack duration, and immunity period remain description/prose

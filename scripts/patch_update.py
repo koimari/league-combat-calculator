@@ -79,14 +79,24 @@ import sys
 import tempfile
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from collections.abc import Callable
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from scripts import patch_regression
+from scripts.build_bis_profiles import build_profiles
+from scripts.build_reviewed_modules import (
+    _wiki_revisions,
+    resolve_axword_source,
+    resolve_wiki_db,
+)
+from scripts.build_reviewed_modules import (
+    build as build_reviewed_packets,
+)
 from scripts.patch_mechanics import (
     DEFAULT_BIN_DIR,
     DEFAULT_CHAMPIONS,
@@ -99,22 +109,15 @@ from scripts.patch_mechanics import (
     name_delta,
     run_fetch,
 )
-from scripts.build_bis_profiles import build_profiles
-from scripts.build_reviewed_modules import (
-    _wiki_revisions,
-    build as build_reviewed_packets,
-    resolve_axword_source,
-    resolve_wiki_db,
-)
 from scripts.refresh_economics_data import stale_reasons
 from scripts.source_receipt import cache_patch, source_receipt
 from src.calculator.champions import registered_champion_names
-from src.calculator.passive_parser import _ITEM_PARSE_CONFIG
 from src.calculator.item_effects import (
-    ALLY_ITEM_EFFECTS,
     _STATIC_VALUE_KEYS_BY_ITEM,
+    ALLY_ITEM_EFFECTS,
 )
 from src.calculator.item_source import branch_losses, source_audit
+from src.calculator.passive_parser import _ITEM_PARSE_CONFIG
 from src.calculator.patch_identity import (
     PatchIdentityError,
     canonical_patch,
@@ -179,10 +182,8 @@ def champion_audit_lines(old_champs, new_champs):
     added, removed = name_delta(old_champs, new_champs)
     if added or removed:
         lines.append("== Roster delta (new champions need a named module) ==")
-        for name in added:
-            lines.append(f"  + {name}")
-        for name in removed:
-            lines.append(f"  - {name}")
+        lines.extend(f"  + {name}" for name in added)
+        lines.extend(f"  - {name}" for name in removed)
     return lines
 
 
@@ -208,8 +209,9 @@ def item_audit_lines(old_items, new_items):
     added, removed = name_delta(old_items, new_items)
     if added or removed:
         lines.append("== Shop delta ==")
-        for name in added:
-            lines.append(f"  + {name} (new item — consider /add-item-effect)")
+        lines.extend(
+            f"  + {name} (new item — consider /add-item-effect)" for name in added
+        )
         for name in removed:
             implemented = (
                 " ** IMPLEMENTED — code must be updated **"
@@ -255,8 +257,7 @@ def item_source_lines(old_items, new_items):
         lines.append(f"    {conflict['note']}")
     blocking = blocking or bool(audit["unreviewed_conflicts"])
 
-    for warning in audit["warnings"]:
-        lines.append(f"  note: {warning}")
+    lines.extend(f"  note: {warning}" for warning in audit["warnings"])
 
     if len(lines) == 1:
         lines.append("  (every source branch is accounted for)")
@@ -366,8 +367,7 @@ def economics_lines(tables, new_items, ddragon_version):
     """
     lines = ["== Item economics (data/economics-sourced.json) =="]
     reasons = stale_reasons(tables, new_items, ddragon_version)
-    for reason in reasons:
-        lines.append(f"  BLOCKING: {reason}")
+    lines.extend(f"  BLOCKING: {reason}" for reason in reasons)
     if reasons:
         lines.append(
             "  ** BLOCKING — run scripts/refresh_economics_data.py, or record a "
@@ -463,7 +463,10 @@ def fetch_cdragon_live_patch(fetch: Callable[[], bytes] | None = None) -> str:
     for tests — it must return the raw response body bytes.
     """
     if fetch is None:
-        fetch = lambda: _download_bytes(CDRAGON_CONTENT_METADATA)
+
+        def fetch():
+            return _download_bytes(CDRAGON_CONTENT_METADATA)
+
     try:
         payload = json.loads(fetch())
     except urllib.error.HTTPError as exc:
@@ -530,7 +533,7 @@ def detect_report(
         "live_patch": live_identity.client_patch,
         "live_patch_source": live_source,
         "cached_patch": cached_identity.client_patch,
-        "checked_at": datetime.now(timezone.utc).isoformat(),
+        "checked_at": datetime.now(UTC).isoformat(),
     }
 
 
@@ -822,16 +825,14 @@ def _receipt_problems(
         return problems
 
     asset_names = set(asset.get("champions") or {})
-    for name in sorted(cached_names - asset_names):
-        problems.append(
-            f"{name} is in data/champions.json but missing from "
-            "reviewed-packets.json"
-        )
-    for name in sorted(asset_names - cached_names):
-        problems.append(
-            f"{name} is in reviewed-packets.json but missing from "
-            "data/champions.json"
-        )
+    problems.extend(
+        f"{name} is in data/champions.json but missing from " "reviewed-packets.json"
+        for name in sorted(cached_names - asset_names)
+    )
+    problems.extend(
+        f"{name} is in reviewed-packets.json but missing from " "data/champions.json"
+        for name in sorted(asset_names - cached_names)
+    )
 
     try:
         revisions = _wiki_revisions(wiki_db)
@@ -1432,7 +1433,6 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({"status": "ok", **report}, indent=2, sort_keys=True))
         return 0
 
-    # args.command == "packets"
     report = reviewed_packet_report(
         asset_path=args.static_path,
         champions_source=args.source,

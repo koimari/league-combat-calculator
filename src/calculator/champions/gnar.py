@@ -40,6 +40,7 @@ from ..ability_spec import ControlEvent, DamagePart
 from ..binary_roots import character_record_root, record_value
 from ..stats import growth_stat
 from .engine import BUFF, SlotCtx, build_parser
+from .inputs import bool_option, int_option
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -53,7 +54,6 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 # ROOTED IN THE BINARIES: the five Mega deltas are computed at import as
 # GnarBig's CharacterRecord root minus Mini Gnar's (both tracked under
@@ -82,12 +82,10 @@ MEGA_BONUS_HEALTH = _mega_delta("baseHPModifiable", "hpPerLevelModifiable")
 MEGA_BONUS_AD = _mega_delta("baseDamageModifiable", "damagePerLevelModifiable")
 MEGA_BONUS_ARMOR = _mega_delta("baseArmorModifiable", "armorPerLevelModifiable")
 MEGA_BONUS_MR = _mega_delta("baseMR", "mrPerLevel")
-MEGA_ATTACK_SPEED_LOSS = (
-    0.0,
-    float(
-        f"{record_value(_MINI_ROOT, 'attackSpeedPerLevelModifiable') - record_value(_MEGA_ROOT, 'attackSpeedPerLevelModifiable'):.6g}"
-    ),
-)
+_ATTACK_SPEED_PER_LEVEL_DELTA = record_value(
+    _MINI_ROOT, "attackSpeedPerLevelModifiable"
+) - record_value(_MEGA_ROOT, "attackSpeedPerLevelModifiable")
+MEGA_ATTACK_SPEED_LOSS = (0.0, float(f"{_ATTACK_SPEED_PER_LEVEL_DELTA:.6g}"))
 
 # HARDCODED: catching Q refunds 40% (Mini) / 70% (Mega) of the
 # cooldown (wiki prose) -> remaining-cooldown multiplier per form.

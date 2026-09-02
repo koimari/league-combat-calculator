@@ -174,7 +174,8 @@ class TestFiddlesticksIrrelevantOption:
         parsed = _parse(data, 11, (), items_by_name)
         order, rule = _resolve(data, parsed)
         assert order == ["Q", "W", "E", "R"]
-        assert rule.setup == () and rule.consume == ()
+        assert rule.setup == ()
+        assert rule.consume == ()
         text = _receipt_text(rule)
         assert "q_target_already_feared" in text
         assert "(irrelevant" in text
@@ -264,8 +265,9 @@ class TestSelfStateOptions:
     ) -> None:
         data = champion_by_name[champion]
         parsed = _parse(data, 11, (), items_by_name)
-        order, rule = _resolve(data, parsed)
-        assert rule.setup == () and rule.consume == ()
+        _order, rule = _resolve(data, parsed)
+        assert rule.setup == ()
+        assert rule.consume == ()
         assert option_key in _receipt_text(rule)
         assert "(self_state" in _receipt_text(rule)
         assert "no detectable setup/consume signal" in rule.rationale

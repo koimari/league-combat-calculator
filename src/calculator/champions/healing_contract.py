@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import functools
-from dataclasses import dataclass
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any
 
 

@@ -31,7 +31,6 @@ reason the union carries a member nobody declares yet.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Union
 
 from . import route
 
@@ -89,7 +88,7 @@ class Unreviewed:
             )
 
 
-CcScope = Union[SingleTarget, MultiTarget, Unreviewed]
+CcScope = SingleTarget | MultiTarget | Unreviewed
 
 CC_SCOPES: tuple[type, ...] = (SingleTarget, MultiTarget, Unreviewed)
 

@@ -22,8 +22,8 @@ not have, so nothing but the boundary receipt could be priced anyway.
 
 from typing import Any
 
-from .engine import SlotCtx, build_parser
 from .. import healing_helpers as _healing
+from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .slotlib import (
     ability_name,
@@ -138,29 +138,25 @@ def derive_self_healing(
     healing = []
     r = _healing.ability_json(champion_data, "R")
     r_rank = _healing.parsed_rank(ability_damages, "R")
-    min_tick = _healing.extract_named(
-        r, "Minimum Heal per Tick", r_rank, champion_stats
-    )
-    max_tick = _healing.extract_named(
-        r, "Maximum Heal per Tick", r_rank, champion_stats
-    )
+    min_tick = extract_named(r, "Minimum Heal per Tick", r_rank, champion_stats)
+    max_tick = extract_named(r, "Maximum Heal per Tick", r_rank, champion_stats)
     for payment in _healing.payments(
         _healing.HealAnchor.CAST_SCHEDULE, "R", damage_events, cast_timeline
     ):
         trigger = _healing.trigger_fields(payment.event)
-        for index in range(1, 11):
-            healing.append(
-                {
-                    "time": payment.cast_time + index * 0.25,
-                    "amount": 0.0,
-                    "amount_formula": _healing.missing_health_scaled_heal(
-                        min_tick, max_tick
-                    ),
-                    "source": "Frozen Tomb",
-                    "kind": "champion_ability",
-                    **trigger,
-                }
-            )
+        healing.extend(
+            {
+                "time": payment.cast_time + index * 0.25,
+                "amount": 0.0,
+                "amount_formula": _healing.missing_health_scaled_heal(
+                    min_tick, max_tick
+                ),
+                "source": "Frozen Tomb",
+                "kind": "champion_ability",
+                **trigger,
+            }
+            for index in range(1, 11)
+        )
     return healing
 
 

@@ -235,7 +235,7 @@ class TestAnUnstageableRiderFailsClosed:
     def test_every_declared_rider_family_is_covered(self) -> None:
         """The population is the declaration, so a sixth rider is not silent."""
         assert len(events.RIDER_KINDS) == 5
-        assert program_compile._STAGED_RIDERS == frozenset()  # pylint: disable=W0212
+        assert frozenset() == program_compile._STAGED_RIDERS  # pylint: disable=W0212
 
     def test_a_rider_the_builder_attached_is_refused_end_to_end(self) -> None:
         """The live shape: ``pair_program`` reads riders off the packet.
@@ -389,7 +389,7 @@ class TestTheProgramEntryPointUsesTheOneSortKey:
     def test_every_compiled_key_is_action_keys_own_output(self) -> None:
         program = two_row_program()
         actions = program_compile.compile_program(program, projection=Projection.SCORE)
-        for action, event in zip(actions, program.events):
+        for action, event in zip(actions, program.events, strict=False):
             text = event_id_text(event.id)
             assert action.sort_key == action_key(
                 event.time,
@@ -573,7 +573,7 @@ class TestTheReceiptProjection:
     def test_the_enriched_event_carries_the_compilers_own_facts(self) -> None:
         view = program_compile.pair_view(engine_result(), "enemy:Veigar", "main")
         actions = compile_result(engine_result())
-        for event, action in zip(view.events, actions):
+        for event, action in zip(view.events, actions, strict=False):
             assert event["is_ability"] is action.is_ability
             assert event["ability_instance"] == action.ability_instance
             assert event["_sk"] == action.sort_key

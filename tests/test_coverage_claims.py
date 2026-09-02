@@ -34,6 +34,7 @@ from pathlib import Path
 import pytest
 
 from scripts import capture_coverage_classification
+from src.calculator import item_behavior_catalog, item_coverage, item_outcomes
 from src.calculator.coverage_evidence import (
     EVIDENCE_TYPES,
     UTILITY_DIMENSIONS,
@@ -51,19 +52,15 @@ from src.calculator.coverage_evidence import (
     validate_claim,
 )
 from src.calculator.data_fetcher import fetch_item_data
-from src.calculator import item_behavior_catalog
-from src.calculator import item_coverage
-from src.calculator import item_outcomes
 from src.calculator.item_coverage import (
     COVERAGE_EVIDENCE,
     FRONTIER,
-    item_model_coverage,
     target_item_model_coverage,
 )
 from src.calculator.item_effects import (
+    _KNOWN_EFFECT_TYPES,
     ITEM_EFFECTS,
     ITEM_INPUT_OPTIONS,
-    _KNOWN_EFFECT_TYPES,
 )
 from src.calculator.trigger_stream import CAPABILITIES
 
@@ -733,7 +730,8 @@ def test_ci_runs_pytest_with_no_keyword_marker_or_path_filter() -> None:
     value_options = {"-n", "--numprocesses", "-p", "--dist", "--cov"}
     for invocation in invocations:
         arguments = invocation[invocation.index("pytest") + 1 :]
-        assert "-k" not in arguments and "--keyword" not in arguments
+        assert "-k" not in arguments
+        assert "--keyword" not in arguments
         assert "-m" not in arguments
         positional = []
         skip_next = False
@@ -1670,7 +1668,7 @@ def test_a_stateful_item_supplies_its_state_from_a_named_home(item: str) -> None
     *assumed*, which is the disposition this campaign refuses to let look like
     a computed one.
     """
-    record = CACHE[item]
+    CACHE[item]
     assert _attacker(item).optimizer_eligible
     path, home = item_coverage._ATTACKER_STATE_HOMES[item]
     kind, _, value = home.partition(":")
@@ -1695,9 +1693,10 @@ def test_a_reviewed_stats_only_item_adds_no_outgoing_damage(item: str) -> None:
     and the optimiser may score it rather than withholding it.  A regression
     that starts blocking one of these fails here with the item's name.
     """
-    record = CACHE[item]
+    CACHE[item]
     coverage = _attacker(item)
-    assert coverage.optimizer_eligible and coverage.calculation_eligible
+    assert coverage.optimizer_eligible
+    assert coverage.calculation_eligible
     entry = _audit_entry(item)
     assert entry["status"] == "ready"
 
@@ -1935,9 +1934,11 @@ def test_every_hand_listed_entry_carries_exactly_one_claim_on_its_lane() -> None
     }
     unclaimed: list[str] = []
     for container_name, lane in lanes.items():
-        for item in getattr(item_coverage, container_name):
-            if ("item", item, lane) not in COVERAGE_EVIDENCE:
-                unclaimed.append(f"{container_name}:{item}")
+        unclaimed.extend(
+            f"{container_name}:{item}"
+            for item in getattr(item_coverage, container_name)
+            if ("item", item, lane) not in COVERAGE_EVIDENCE
+        )
     for item, refs in item_coverage._REVIEW_ISSUE_REFS.items():
         carriers = [
             key
@@ -2084,7 +2085,7 @@ def test_every_declared_dimension_is_a_member_of_the_closed_set() -> None:
         for dimensions in item_outcomes.UTILITY_OUTCOMES.values()
         for dimension in dimensions
     }
-    assert UTILITY_DIMENSIONS == measured
+    assert measured == UTILITY_DIMENSIONS
     for claim in COVERAGE_EVIDENCE.values():
         assert set(claim.dimensions) <= UTILITY_DIMENSIONS
     for item, dimensions in item_outcomes.UTILITY_OUTCOMES.items():
@@ -2102,7 +2103,8 @@ def test_the_frontier_holds_no_damage_or_durability_lane_and_every_entry_is_trac
     criterion asks for.  Every reason carries the issue that tracks it.
     """
     for key, reason in FRONTIER.items():
-        assert not key.endswith("@attacker") and not key.endswith("@target"), key
+        assert not key.endswith("@attacker"), key
+        assert not key.endswith("@target"), key
         assert re.search(r"#\d+", reason), key
     assert not set(FRONTIER) & {
         f"{kind}:{subject}@{lane}" for kind, subject, lane in COVERAGE_EVIDENCE

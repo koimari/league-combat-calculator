@@ -43,10 +43,10 @@ from typing import Any
 
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
+from .module_contract import coverage
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import extract_value
-from .module_contract import coverage
 
 # Sourced cadence for one Noxious Trap detonation (cache + wiki):
 # "the target takes magic damage every second over 4 seconds" — 4 ticks

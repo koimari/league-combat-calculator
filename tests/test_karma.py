@@ -39,7 +39,7 @@ class TestReviewedCrowdControl:
 
     def test_reviewed_kinds_follow_the_other_branch(self):
         """A broken tether never reaches the root."""
-        assert _CC.kinds(**{"w_tether_holds": False}) == {"Q": ["slow"], "W": ["none"]}
+        assert _CC.kinds(w_tether_holds=False) == {"Q": ["slow"], "W": ["none"]}
 
     def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
         coverage = _CC.coverage()

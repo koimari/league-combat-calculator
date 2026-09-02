@@ -9,22 +9,22 @@ from __future__ import annotations
 
 import hashlib
 import json
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from dataclasses import dataclass
 from typing import Any
 
 from ..ability_spec import DamagePart
 from ..cast_dependency import CastDependency, validate_cast_dependencies
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage_parser
-from .source_receipts import load_champion_sources
 from .slotlib import (
     damage_entry,
     extract_cooldown,
     extract_named,
     simple_damage,
 )
+from .source_receipts import load_champion_sources
 
 _ROOT = Path(__file__).resolve().parents[3]
 _PACKET_PATH = _ROOT / "static" / "reviewed-packets.json"
@@ -680,7 +680,7 @@ def _variant_slot(
         ctx: SlotCtx,
         parsers=tuple(parsers),
         key=option_key,
-        default=spec.get("default", 0),
+        default=spec.get("default", 0),  # noqa: B008 - bound at definition
     ):
         try:
             index = int(ctx.options.get(key, default))

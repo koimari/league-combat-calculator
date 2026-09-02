@@ -23,7 +23,15 @@ The CP-era gap items are closed here:
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import (
+    calculation_coefficient,
+    calculation_stat_coefficient,
+    data_value,
+    spell_object,
+)
 from .engine import SlotCtx
+from .inputs import bool_option, float_option
+from .module_contract import coverage
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -31,14 +39,6 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
     extract_value,
-)
-from .inputs import bool_option, float_option
-from .module_contract import coverage
-from ..binary_roots import (
-    calculation_coefficient,
-    calculation_stat_coefficient,
-    data_value,
-    spell_object,
 )
 
 PACKET_SHA256 = "604839aed7fc6d6741cf14f1a8d6d58554dce93cd8c14bea5ac73d82215e771a"
@@ -198,7 +198,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
+OPTIONS: list[dict[str, Any]] = [
+    *list(OPTIONS),
     bool_option(
         "q_execute",
         False,
@@ -233,12 +234,14 @@ OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
         "default": [],
         "max_items": 24,
         "label": (
-            "Front-facing skillshot slots to block; an empty list blocks all marked skillshots"
+            "Front-facing skillshot slots to block; an empty list blocks all marked "
+            "skillshots"
         ),
     },
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q prices the Hurl Physical Damage row plus the Mortal Will empowered "
     "term (20 : 265.88 by level + 115% bonus AD) — Pantheon starts fights "
     "with maximum Mortal Will stacks (cached P description), so the first "

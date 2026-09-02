@@ -215,8 +215,7 @@ def _iter_statement_containers(root: ast.AST):
             value = getattr(current, field_name, None)
             if value:
                 stack.extend(value)
-        for handler in getattr(current, "handlers", None) or ():
-            stack.append(handler)
+        stack.extend(getattr(current, "handlers", None) or ())
 
 
 def _docstring_excluded_lines(source: str) -> frozenset[int]:
@@ -486,7 +485,7 @@ def test_tracked_paths_lookup_matches_git_ls_files() -> None:
     fresh = frozenset(
         line.strip() for line in result.stdout.splitlines() if line.strip()
     )
-    assert TRACKED_PATHS == fresh
+    assert fresh == TRACKED_PATHS
     assert "data/bin/characters/gnar.bin.json" in TRACKED_PATHS
     assert "data/gamefiles/ddragon/Milio.json" in TRACKED_PATHS
     # Every champion dump is tracked now (binary-rooted constants policy):
@@ -505,7 +504,7 @@ def test_the_locally_built_receipt_trees_are_watched() -> None:
     """
     assert "docs/receipts/champions/" in WATCHED_PREFIXES
     assert "docs/receipts/items/" in WATCHED_PREFIXES
-    fabricated = "\n".join(
+    fabricated = "\n".join(  # noqa: FLY002 - one fabricated line per shape
         (
             '_R = Path("docs/receipts/champions/vladimir.json")',
             'ITEM = ROOT / "docs" / "receipts" / "items" / "1001.json"',

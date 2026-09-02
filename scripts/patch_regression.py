@@ -73,7 +73,7 @@ import subprocess
 import sys
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -188,7 +188,7 @@ def within_tolerance(cached, game, relative=REL_TOLERANCE, flat=FLAT_TOLERANCE):
 def resolve_patch(cdtb_bin=None):
     """Return the live game patch version via `cdtb versions game -a`."""
     binary = cdtb_bin or CDTB_BIN
-    if not binary or (not os.path.isfile(binary) and shutil.which(binary) is None):
+    if not binary or (not Path(binary).is_file() and shutil.which(binary) is None):
         raise RuntimeError(
             "cdtb not found — install it and set CDTB_BIN, or pin with "
             "--patch <version>"
@@ -277,18 +277,14 @@ def fetch_ddragon_for_pending(ddragon_version, pending, game_dir, concurrency=8)
         url, dest, name = target
         try:
             _download(url, dest)
-            with open(dest, encoding="utf-8") as handle:
+            with Path(dest).open(encoding="utf-8") as handle:
                 payload = json.load(handle)
             return name, ddragon_rows_by_slot(payload["data"][name])
         except (OSError, KeyError, json.JSONDecodeError):
             return name, None
 
-    rows = {}
     with ThreadPoolExecutor(max_workers=concurrency) as pool:
-        for name, row in pool.map(fetch, targets):
-            if row is not None:
-                rows[name] = row
-    return rows
+        return {name: row for name, row in pool.map(fetch, targets) if row is not None}
 
 
 def _parse_burn(burn):
@@ -308,7 +304,7 @@ def ddragon_rows_by_slot(ddragon_champion):
     """Map ddragon spells (Q/W/E/R order) to cooldown/cost value rows."""
     by_slot = {}
     spells = ddragon_champion.get("spells") or []
-    for slot, spell in zip(_SLOT_ORDER, spells):
+    for slot, spell in zip(_SLOT_ORDER, spells, strict=False):
         cooldown = _parse_burn(spell.get("cooldownBurn"))
         cost = _parse_burn(spell.get("costBurn"))
         by_slot[slot] = {
@@ -480,7 +476,7 @@ def _slices_match(wiki_values, game_values, flat_tolerance):
         window = game_values[start : start + n]
         if all(
             isinstance(g, (int, float)) and within_tolerance(w, g, flat=flat_tolerance)
-            for w, g in zip(wiki_values, window)
+            for w, g in zip(wiki_values, window, strict=False)
         ):
             return True
     return False
@@ -837,7 +833,7 @@ def build_staleness(patch, champions_cache, items_cache, game_dir, ddragon=None)
     used only to arbitrate cooldown/cost rows (see _compare_entry_rows).
     """
     game_dir = Path(game_dir)
-    with open(game_dir / "items.bin.json", encoding="utf-8") as handle:
+    with (game_dir / "items.bin.json").open(encoding="utf-8") as handle:
         game_items = json.load(handle)
     game_items_by_id = items_by_id(game_items)
 
@@ -846,7 +842,7 @@ def build_staleness(patch, champions_cache, items_cache, game_dir, ddragon=None)
     for name, cache_entry in champions_cache.items():
         bin_path = game_dir / "characters" / f"{champion_dir(name)}.bin.json"
         try:
-            with open(bin_path, encoding="utf-8") as handle:
+            with Path(bin_path).open(encoding="utf-8") as handle:
                 bin_data = json.load(handle)
         except OSError as exc:
             champions[name] = {
@@ -914,7 +910,7 @@ def build_staleness(patch, champions_cache, items_cache, game_dir, ddragon=None)
 
     document = {
         "patch": patch,
-        "checked_at": datetime.now(timezone.utc).isoformat(),
+        "checked_at": datetime.now(UTC).isoformat(),
         "champions": champions,
         "items": items,
     }
@@ -934,7 +930,8 @@ def verify_wads(patch, champion_names, game_dir, storage=None):
     champion bin, then ``cdtb bin-dump --json`` produces the ground truth.
     Returns a per-champion report of stat deltas (empty = identical).
     """
-    storage = storage or str(Path(os.environ.get("TMPDIR", "/tmp")) / "lcc-p3-cdtb")
+    tmp_root = os.environ.get("TMPDIR", "/tmp")  # noqa: S108 - cdtb scratch
+    storage = storage or str(Path(tmp_root) / "lcc-p3-cdtb")
     report = {}
     for name in champion_names:
         champ_dir = champion_dir(name)
@@ -1011,7 +1008,7 @@ print(os.path.abspath(game.elem.extract_path(files[0])))
     if result.returncode != 0:
         return None
     wad_path = result.stdout.strip().splitlines()[-1]
-    if not os.path.isfile(wad_path):
+    if not Path(wad_path).is_file():
         return None
     extract_dir = wad_path + ".x"
     extract = subprocess.run(
@@ -1073,9 +1070,9 @@ def main(argv=None):
         print(f"FAIL: {exc}", file=sys.stderr)
         return 2
     data_dir = Path(args.data_dir)
-    with open(data_dir / "champions.json", encoding="utf-8") as handle:
+    with (data_dir / "champions.json").open(encoding="utf-8") as handle:
         champions_cache = json.load(handle)
-    with open(data_dir / "items.json", encoding="utf-8") as handle:
+    with (data_dir / "items.json").open(encoding="utf-8") as handle:
         items_cache = json.load(handle)
     names = list(champions_cache)
     if args.limit:

@@ -14,6 +14,7 @@ import inspect
 
 import pytest
 
+from src.calculator import support_effects
 from src.calculator.capabilities import (
     PARTICIPANT_LEDGER_CONTRACT,
     SUPPORT_TARGET_RESOLUTION_SCOPES,
@@ -24,7 +25,6 @@ from src.calculator.participant_timeline import (
     Combatant,
     _support_target_ids,
 )
-from src.calculator import support_effects
 from src.calculator.support_effects import _SCOPE_OVERRIDES, _support_profile
 
 
@@ -216,8 +216,8 @@ def test_unknown_scope_template_rejected_before_application(monkeypatch):
 def test_champion_emitter_validates_scope(monkeypatch):
     """derive_ally_effects itself rejects a scope outside the resolution set,
     naming the champion, slot, and supported values."""
-    from src.calculator.support_effects import derive_ally_effects
     from src.calculator.data_fetcher import get_champion
+    from src.calculator.support_effects import derive_ally_effects
 
     champion_data = get_champion("Lux")
     casts = [{"slot": "W", "time": 1.0}]

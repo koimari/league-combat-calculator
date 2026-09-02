@@ -13,10 +13,10 @@ from src.calculator.champions import (
     parse_champion_abilities,
     zilean,
 )
+from src.calculator.champions.engine import CC_PER_PART
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
-from src.calculator.champions.engine import CC_PER_PART
 
 
 class TestReviewedCrowdControl:
@@ -126,7 +126,7 @@ class TestReviewedCrowdControl:
         stripped["abilities"]["R"][0]["effects"][1]["leveling"] = []
         monkeypatch.setattr(zilean, "get_champion", lambda _name: stripped)
 
-        with pytest.raises(KeyError, match="Heal.*data/champions.json"):
+        with pytest.raises(KeyError, match=r"Heal.*data/champions.json"):
             zilean.starting_revive_defense(18, {"ability_power": 0.0})
 
     def test_every_ability_event_carries_the_review(self):

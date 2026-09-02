@@ -7,10 +7,24 @@ champion-agnostic fight engine; data fetching remains with each consumer.
 
 import math
 import re
-from dataclasses import dataclass, replace
 from collections.abc import Mapping
+from dataclasses import dataclass, replace
 from typing import Any
 
+from . import item_effects, minion_stats, resource_ledger
+from .auto_attack_policy import (
+    AUTO_ATTACK_UPTIME_MODE_CALCULATED,
+    AUTO_ATTACK_UPTIME_MODE_EXPLICIT,
+    AUTO_ATTACK_UPTIME_MODE_LEGACY,
+    AUTO_ATTACK_UPTIME_MODES,
+    resolve_auto_attack_policy,
+)
+from .cast_dependency import (
+    BASE_CAST_SLOTS,
+    check_order_satisfies_dependencies,
+    expand_user_order,
+    orderable_slots,
+)
 from .champions import (
     RESERVED_OPTION_KEYS,
     get_champion_cast_dependencies,
@@ -19,53 +33,47 @@ from .champions import (
     get_custom_cast_order_unavailable_reason,
     parse_champion_abilities,
 )
-from .rotation_resolver import (
-    build_rotation_receipt,
-    detect_aoe_cap,
-    resolve_cast_order,
-)
 from .champions.skill_orders import get_ability_rank
 from .damage import (
-    FightConfig,
     MINION_SOURCED_TARGET_FIELDS,
+    FightConfig,
     calculate_fight_damage,
     sourced_minion_target,
     split_auto_vs_ability,
     split_by_damage_type,
 )
-from . import item_effects
-from . import minion_stats
-from . import resource_ledger
+from .data_registry import data_version
+from .healing import derive_self_healing, self_heal_rule_owner
+from .healing_reduction import amplifies_recovery, heal_and_shield_power_factor
 from .interpreters import sustain
+from .interpreters.crit_profile import declared_crit_profile
 from .interpreters.sustain import declared_sustain
 from .item_behavior import (
     PostMitigationHealRule,
     ResourceDrainRule,
     SustainStat,
 )
-from .interpreters.crit_profile import declared_crit_profile
 from .item_effects import (
     resolve_damage_effects,
     resolved_item_name,
     validate_item_input_options,
 )
-from .healing import derive_self_healing, self_heal_rule_owner
-from .healing_reduction import amplifies_recovery, heal_and_shield_power_factor
 from .ledger_projection import LedgerInputs, ResultProjection, ledger_projection
-from .support_effects import derive_self_state_effects
-from .auto_attack_policy import (
-    AUTO_ATTACK_UPTIME_MODE_CALCULATED,
-    AUTO_ATTACK_UPTIME_MODE_EXPLICIT,
-    AUTO_ATTACK_UPTIME_MODE_LEGACY,
-    AUTO_ATTACK_UPTIME_MODES,
-    resolve_auto_attack_policy,
+from .request_parsing import (
+    request_bool as _request_bool,
 )
-from .role_quests import max_champion_level, validate_role
 from .request_parsing import (
     request_index_map,
-    request_bool as _request_bool,
-    request_int as _request_int,
     request_string,
+)
+from .request_parsing import (
+    request_int as _request_int,
+)
+from .role_quests import max_champion_level, validate_role
+from .rotation_resolver import (
+    build_rotation_receipt,
+    detect_aoe_cap,
+    resolve_cast_order,
 )
 from .rune_effects import (
     KeystoneConquerorEffect,
@@ -79,14 +87,8 @@ from .rune_effects import (
     validate_rune_page,
 )
 from .stats import get_item_stats, resolve_pre_combat_stats
+from .support_effects import derive_self_state_effects
 from .trigger_stream import applies_control
-from .data_registry import data_version
-from .cast_dependency import (
-    BASE_CAST_SLOTS,
-    check_order_satisfies_dependencies,
-    expand_user_order,
-    orderable_slots,
-)
 
 DEFAULT_TARGET: dict[str, float] = {
     "health": 1000.0,
@@ -125,10 +127,9 @@ def rank_allocation_contract() -> dict[str, object]:
     """Return the backend-owned rank allocation modes for public clients."""
     return {
         "default": "manual",
-        "by_champion": {
-            champion: "level_derived"
-            for champion in sorted(_NONSTANDARD_RANK_CHAMPIONS)
-        },
+        "by_champion": dict.fromkeys(
+            sorted(_NONSTANDARD_RANK_CHAMPIONS), "level_derived"
+        ),
     }
 
 

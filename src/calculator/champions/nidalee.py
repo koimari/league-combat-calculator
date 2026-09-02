@@ -30,20 +30,19 @@ from __future__ import annotations
 import dataclasses
 from typing import Any
 
-from .engine import SlotCtx
-from .healing_contract import self_healing_rule
-from .packet_module import build_packet_module
-from .slotlib import extract_named
-
 from ..healing_helpers import (
     HealAnchor,
     ability_json,
     missing_health_scaled_heal,
-    payments,
     parsed_rank,
+    payments,
     trigger_fields,
 )
+from .engine import SlotCtx
+from .healing_contract import self_healing_rule
 from .module_contract import coverage
+from .packet_module import build_packet_module
+from .slotlib import extract_named
 
 # "Up to a maximum of 4 / 6 / 8 / 10 (based on level) traps may be
 # active at once" — 10 at level 18 (the test level).
@@ -166,17 +165,17 @@ def derive_self_healing(
     e_rank = parsed_rank(ability_damages, "E")
     min_heal = extract_named(ability, "Minimum Heal", e_rank, champion_stats)
     max_heal = extract_named(ability, "Maximum Heal", e_rank, champion_stats)
-    for payment in payments(HealAnchor.CAST, "E", damage_events, cast_timeline):
-        healing.append(
-            {
-                "time": float(payment.event.get("time", 0.0)),
-                "amount": 0.0,
-                "amount_formula": missing_health_scaled_heal(min_heal, max_heal),
-                "source": "Primal Surge",
-                "kind": "champion_ability",
-                **trigger_fields(payment.event),
-            }
-        )
+    healing.extend(
+        {
+            "time": float(payment.event.get("time", 0.0)),
+            "amount": 0.0,
+            "amount_formula": missing_health_scaled_heal(min_heal, max_heal),
+            "source": "Primal Surge",
+            "kind": "champion_ability",
+            **trigger_fields(payment.event),
+        }
+        for payment in payments(HealAnchor.CAST, "E", damage_events, cast_timeline)
+    )
     return healing
 
 

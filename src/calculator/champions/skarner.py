@@ -19,6 +19,7 @@ P1-3 closures:
   parser adds it explicitly from the same leveling row.
 """
 
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
@@ -31,7 +32,6 @@ from .slotlib import (
     simple_damage,
     sum_modifiers,
 )
-from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "1f62c9ad3216116b491935d3b92ff91949b3bea5a6a7381af05e7b6cfcbf5577"
 
@@ -165,7 +165,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Seismic Bastion) shields Skarner for 8% of his maximum health "
     "for 2.5 seconds (cached W prose) via the shared self_shield_events "
     "interface; the shockwave damage is unchanged.",

@@ -71,6 +71,7 @@ from ..healing_helpers import (
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
+from .module_contract import coverage
 from .packet_module import build_packet_module, full_plus_reduced_parser
 from .slotlib import (
     extract_cooldown,
@@ -78,7 +79,6 @@ from .slotlib import (
     extract_value,
     find_named_leveling,
 )
-from .module_contract import coverage
 
 PACKET_SHA256 = "1795828f6486a1da27c639b301d6ebca7047735f17a173075d41d59369c82942"
 
@@ -258,16 +258,16 @@ def derive_self_healing(
             if cast.get("slot") != "R":
                 continue
             start = float(cast.get("time", 0.0))
-            for index in range(5):
-                healing.append(
-                    {
-                        "time": start + index * 0.7,
-                        "amount": float(per_wave),
-                        "source": "Final Chapter",
-                        "kind": "champion_ability",
-                        "actor_wide": True,
-                    }
-                )
+            healing.extend(
+                {
+                    "time": start + index * 0.7,
+                    "amount": float(per_wave),
+                    "source": "Final Chapter",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                }
+                for index in range(5)
+            )
     healing.extend(
         _feline_friendship_heals(champion_data, champion_stats, damage_events)
     )

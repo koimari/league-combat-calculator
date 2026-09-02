@@ -36,10 +36,11 @@ computation change. P is not a cast slot in this engine
 """
 
 from .. import healing_helpers as _healing
-from .inputs import champion_stat
 from .healing_contract import self_healing_rule
-from .packet_module import build_packet_module
+from .inputs import champion_stat
 from .module_contract import coverage
+from .packet_module import build_packet_module
+from .slotlib import extract_named
 
 PACKET_SHA256 = "2590188ce529af2e9f91b00238597c2b85f6f388447f0e0f4f34f6e9c4b692f3"
 
@@ -103,10 +104,8 @@ def derive_self_healing(
     healing = []
     w_rank = _healing.parsed_rank(ability_damages, "W")
     w_ability = _healing.ability_json(champion_data, "W")
-    base = _healing.extract_named(w_ability, "Heal", w_rank, champion_stats, {})
-    floor = _healing.extract_named(
-        w_ability, "Minimum Heal", w_rank, champion_stats, {}
-    )
+    base = extract_named(w_ability, "Heal", w_rank, champion_stats, {})
+    floor = extract_named(w_ability, "Minimum Heal", w_rank, champion_stats, {})
     ap = champion_stat(champion_stats, "ability_power")
     amount = max(floor, base * (0.80 + 0.15 * ap / 100.0))
     for payment in _healing.payments(

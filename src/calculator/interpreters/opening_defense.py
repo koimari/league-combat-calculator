@@ -214,10 +214,10 @@ def _undaunted(slot: DefenseSlot) -> DefenseOutcome:
 
 __all__ = [
     "BLESSED_SOURCE",
-    "UNDAUNTED_SOURCE",
     "EVERLASTING_NOTE",
     "ICHORSHIELD_EMPTY_NOTE",
     "ICHORSHIELD_SUPPLIED_NOTE",
     "NOTES",
+    "UNDAUNTED_SOURCE",
     "resolve_opening_defense",
 ]

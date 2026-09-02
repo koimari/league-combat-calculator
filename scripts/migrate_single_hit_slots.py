@@ -42,7 +42,7 @@ CHAMPIONS = ROOT / "src" / "calculator" / "champions"
 
 sys.path.insert(0, str(ROOT))
 
-from src.calculator.champions.packet_module import (  # noqa: E402
+from src.calculator.champions.packet_module import (
     _packet_specs,
     _single_hit_row,
 )
@@ -132,7 +132,7 @@ def _slot_map(call: ast.Call, name: str) -> dict[str, str]:
     if not isinstance(node, ast.Dict):
         return {}
     resolved: dict[str, str] = {}
-    for key, value in zip(node.keys, node.values):
+    for key, value in zip(node.keys, node.values, strict=False):
         if not (isinstance(key, ast.Constant) and isinstance(key.value, str)):
             continue
         if isinstance(value, ast.Name):
@@ -219,7 +219,9 @@ def _rewrite(path: Path, sites: list[Site]) -> None:
     call = _packet_call(tree)
     assert call is not None
     slots = _named_slots(call) | {site.slot for site in sites if site.slot}
-    rendered = "frozenset({%s})" % ", ".join(f'"{slot}"' for slot in sorted(slots))
+    rendered = "frozenset({{{}}})".format(
+        ", ".join(f'"{slot}"' for slot in sorted(slots))
+    )
 
     keep = {site.lineno for site in sites}
     physical = text.splitlines(keepends=True)

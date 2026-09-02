@@ -4,8 +4,8 @@ import math
 
 import pytest
 
-from src.calculator.data_fetcher import get_champion
 from src.calculator import support_effects
+from src.calculator.data_fetcher import get_champion
 from src.calculator.support_effects import _support_profile, derive_ally_effects
 
 
@@ -247,7 +247,7 @@ def test_support_packet_missing_or_invalid_cast_time_fails_closed(bad_time):
         cast["time"] = bad_time
 
     with pytest.raises(
-        ValueError, match="Support cast W time|missing its sourced time"
+        ValueError, match=r"Support cast W time|missing its sourced time"
     ):
         _sona_effects([cast])
 

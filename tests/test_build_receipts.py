@@ -42,7 +42,7 @@ def _items_payload(objects: dict, domain: str = "items") -> dict:
     return {"domain": domain, "generated_at": 0, "source_ref": None, "objects": objects}
 
 
-@pytest.fixture()
+@pytest.fixture
 def tmp_tree(tmp_path: Path):
     """A small data tree: one champion, three items, unified item atoms."""
     champs = {"Aatrox": {"name": "Aatrox", "abilities": {}}}
@@ -91,7 +91,7 @@ def tmp_tree(tmp_path: Path):
     return tmp_path
 
 
-@pytest.fixture()
+@pytest.fixture
 def patched(tmp_tree: Path, monkeypatch):
     monkeypatch.setattr(br, "CHAMPS_JSON", tmp_tree / "data" / "champions.json")
     monkeypatch.setattr(br, "ITEMS_JSON", tmp_tree / "data" / "items.json")

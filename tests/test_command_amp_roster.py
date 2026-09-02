@@ -394,12 +394,12 @@ class TestTwoImmobilizesMergeIntoOneRefreshedWindow:
             "Command's window; this roster no longer authors them"
         )
         duration = _command_effect().duration
-        assert SECOND_TRIGGER - FIRST_TRIGGER < duration
+        assert duration > SECOND_TRIGGER - FIRST_TRIGGER
         assert [packet["expires_at"] for packet in packets] == [
             FIRST_EXPIRY,
             REFRESHED_EXPIRY,
         ]
-        assert REFRESHED_EXPIRY == pytest.approx(SECOND_TRIGGER + duration), (
+        assert pytest.approx(SECOND_TRIGGER + duration) == REFRESHED_EXPIRY, (
             "REFRESH: the surviving expiry is the *last* trigger plus one "
             "duration, not the first expiry plus another"
         )

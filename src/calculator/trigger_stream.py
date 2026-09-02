@@ -59,12 +59,13 @@ from .ability_spec import (
 from .program.views import ViewTag
 
 __all__ = [
-    "Authority",
     "CAPABILITIES",
     "CROSS_PARTICIPANT_AUTHORITIES",
+    "DIVERGENCES",
+    "RAW_STREAMS",
+    "Authority",
     "CcClass",
     "ChampionSlotOwner",
-    "DIVERGENCES",
     "DivergenceReceipt",
     "Engine",
     "EngineOwner",
@@ -75,10 +76,9 @@ __all__ = [
     "MechanicOwner",
     "Pairing",
     "ProjectionStarvation",
-    "StarvedSignal",
-    "RAW_STREAMS",
     "RiderDelivery",
     "RuneOwner",
+    "StarvedSignal",
     "Stream",
     "Trigger",
     "TriggerKind",

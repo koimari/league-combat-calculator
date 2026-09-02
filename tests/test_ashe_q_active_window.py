@@ -67,14 +67,13 @@ game-file evidence.
 
 import copy
 import hashlib
+import itertools
 import json
-import math
 from pathlib import Path
 
 import pytest
 
 from src.calculator import atomizer_domains
-from src.calculator import state_lifecycle as sl
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
@@ -607,7 +606,7 @@ class TestPostWindowSwings:
         # boundary — a swing landing exactly at cast+6 is normal).
         first_post = post[0]
         assert first_post == pytest.approx(cast + 6.0)
-        for a, b in zip(post, post[1:]):
+        for a, b in itertools.pairwise(post):
             assert b - a == pytest.approx(1.0 / stats["attack_speed"])
 
     def test_total_swing_count_unchanged_at_ten_seconds(self):
@@ -772,7 +771,8 @@ class TestFocusConsumeAndGainsResume:
                 for r in account["receipts"]
                 if r["operation"] == "consume" and r["accepted"]
             ]
-            assert consumes and consumes[0]["time"] == 0.0
+            assert consumes
+            assert consumes[0]["time"] == 0.0
             assert consumes[0]["amount"] == -4
 
     def test_in_window_gains_fire_today(self):
@@ -1128,8 +1128,10 @@ class TestUnchangedBoundaries:
             RENGAR_FEROCITY_STACK_RULE.public_receipt()["combat_extension_seconds"]
             == 10.0
         )
-        from src.calculator import cleanse_eligibility  # noqa: F401
-        from src.calculator import defensive_effects  # noqa: F401
+        from src.calculator import (
+            cleanse_eligibility,  # noqa: F401
+            defensive_effects,  # noqa: F401
+        )
 
     def test_module_source_and_review_status_unchanged(self):
         # MERGE: review status and coverage have ONE home now — the
@@ -1197,8 +1199,6 @@ class TestRegressionSurface:
 
 
 # ---------------------------------------------------------------------------
-# Run ONLY this file plus the mandated sanity list:
-#   .venv/bin/python -m pytest tests/test_ashe_q_active_window.py #       tests/test_aurelion_sol_stardust_ledger.py tests/test_senna_souls_ledger.py #       tests/test_bard_chimes_ledger.py tests/test_heimerdinger_multihit.py #       tests/test_ksante_w_resistance.py tests/test_rengar_ferocity_ledger.py #       tests/test_rengar_w_cleanse.py tests/test_gangplank_w_cleanse.py #       tests/test_milio_r_cleanse.py tests/test_dr_mundo_passive.py #       tests/test_olaf_r_cleanse.py tests/test_ashe_focus_lifecycle.py #       tests/test_state_lifecycle.py tests/test_state_lifecycle_consumers.py #       tests/test_resource_ledger.py tests/test_resource_ledger_consumers.py #       tests/test_resource_ledger_champion_consumers.py #       tests/test_catalyst_resource_ledger.py tests/test_item_sustain.py #       tests/test_mana_restore_refund.py tests/test_app.py
 #
 # Golden-delta note for the coordinator: the golden's Ashe fights are
 # one-rotation (no autos) and 5s sustained (fully inside the 6s window),

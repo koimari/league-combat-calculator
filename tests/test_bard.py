@@ -14,12 +14,14 @@ the P[0] JSON has no effects/leveling):
 import pytest
 
 from src.calculator.champions import (
+    bard,
     get_champion_options_meta,
+)
+from src.calculator.champions import (
     parse_champion_abilities as parse_abilities,
 )
 from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.damage import FightConfig, calculate_fight_damage
-from src.calculator.champions import bard
 from tests import cc_review
 
 # ---------------------------------------------------------------------------
@@ -88,7 +90,7 @@ class TestPassiveTravelersCall:
         assert _parse(bard_data)["passive"]["total_raw"] == 0.0
 
     @pytest.mark.parametrize(
-        "chimes,expected",
+        ("chimes", "expected"),
         [(5, 36.0), (15, 48.0), (25, 60.0), (35, 72.0), (50, 90.0)],
     )
     def test_meep_damage_reference_no_ap(self, bard_data, chimes, expected) -> None:
@@ -112,7 +114,7 @@ class TestPassiveTravelersCall:
         assert _meep(abilities)["damage_per_hit"] == pytest.approx(72.0)
 
     @pytest.mark.parametrize(
-        "chimes,stock",
+        ("chimes", "stock"),
         [
             # Every boundary of {{pp|1 to 9 for 9|0;10;30;50;65;80;90;95;100}}
             (0, 1),
@@ -140,7 +142,7 @@ class TestPassiveTravelersCall:
         assert _meep(abilities)["max_procs"] == stock
 
     @pytest.mark.parametrize(
-        "chimes,expected",
+        ("chimes", "expected"),
         [
             # Every boundary of {{pp|8 to 4 for 5|0;20;40;55;70}} over a
             # 10s window: expected = stock + floor(10 / recharge).
@@ -223,7 +225,8 @@ class TestNonDamageSlots:
     def test_r_reason_cites_zero_proc_true_damage(self, bard_data) -> None:
         entry = _parse(bard_data)["R"]
         assert entry["name"] == "Tempered Fate"
-        assert "0" in entry["detail"] and "true damage" in entry["detail"]
+        assert "0" in entry["detail"]
+        assert "true damage" in entry["detail"]
 
     def test_w_is_a_zero_damage_cast_the_support_scanner_prices(
         self, bard_data

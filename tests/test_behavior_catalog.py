@@ -132,7 +132,7 @@ def test_one_compiler_per_family() -> None:
     compilers = catalog._COMPILERS  # pylint: disable=protected-access
     assert frozenset(compilers) == frozenset(RuleFamily)
     assert all(
-        getattr(compiler, "__name__", "") and not compiler.__name__ == "<lambda>"
+        getattr(compiler, "__name__", "") and compiler.__name__ != "<lambda>"
         for compiler in compilers.values()
     )
 
@@ -144,7 +144,7 @@ def test_the_delta_amp_family_is_fully_migrated() -> None:
         for tag, family in catalog.TAG_FAMILY.items()
         if family is RuleFamily.DELTA_AMP
     )
-    assert catalog.MIGRATED_DELTA_AMP_TAGS == delta_tags
+    assert delta_tags == catalog.MIGRATED_DELTA_AMP_TAGS
     assert not catalog.DELTA_AMP_UNMIGRATED_TAGS
 
 
@@ -162,23 +162,29 @@ def test_an_unnamed_delta_amp_tag_fails_the_catalog(
 
 def test_the_ten_undispatched_tags_are_declared_four_and_six() -> None:
     """The split is the phase document's; this table must agree with it."""
-    assert catalog.H4_DEAD_TAGS == frozenset(
-        {
-            "conditional_attack_speed",
-            "shield_reduction",
-            "target_state",
-            "target_attack_speed_aura",
-        }
+    assert (
+        frozenset(
+            {
+                "conditional_attack_speed",
+                "shield_reduction",
+                "target_state",
+                "target_attack_speed_aura",
+            }
+        )
+        == catalog.H4_DEAD_TAGS
     )
-    assert catalog.H4_SELF_REFERENTIAL_TAGS == frozenset(
-        {
-            "defensive_start",
-            "stat_conversion",
-            "sustain",
-            "target_mitigation",
-            "target_threshold_health",
-            "target_threshold_shield",
-        }
+    assert (
+        frozenset(
+            {
+                "defensive_start",
+                "stat_conversion",
+                "sustain",
+                "target_mitigation",
+                "target_threshold_health",
+                "target_threshold_shield",
+            }
+        )
+        == catalog.H4_SELF_REFERENTIAL_TAGS
     )
     assert not catalog.H4_DEAD_TAGS & catalog.H4_SELF_REFERENTIAL_TAGS
 
@@ -521,7 +527,7 @@ SECONDARY_SIGNATURE_KEYS = (
 )
 
 
-@pytest.mark.parametrize("owner,key,family", SECONDARY_SIGNATURE_KEYS)
+@pytest.mark.parametrize(("owner", "key", "family"), SECONDARY_SIGNATURE_KEYS)
 def test_a_dropped_secondary_signature_key_still_claims_its_family(
     monkeypatch: pytest.MonkeyPatch, owner: str, key: str, family: RuleFamily
 ) -> None:
@@ -532,7 +538,7 @@ def test_a_dropped_secondary_signature_key_still_claims_its_family(
     assert family in catalog.entry_families("ITEM_EFFECTS", primary, live, owner)
 
 
-@pytest.mark.parametrize("owner,key,family", SECONDARY_SIGNATURE_KEYS)
+@pytest.mark.parametrize(("owner", "key", "family"), SECONDARY_SIGNATURE_KEYS)
 def test_a_dropped_secondary_signature_key_raises_naming_item_and_key(
     monkeypatch: pytest.MonkeyPatch, owner: str, key: str, family: RuleFamily
 ) -> None:
@@ -540,7 +546,7 @@ def test_a_dropped_secondary_signature_key_raises_naming_item_and_key(
     entry = {name: value for name, value in ITEM_EFFECTS[owner].items() if name != key}
     monkeypatch.setitem(ITEM_EFFECTS, owner, entry)
     (rule,) = [rule for rule in catalog.behavior_rules(owner) if rule.family is family]
-    with pytest.raises(KeyError, match=key):
+    with pytest.raises(KeyError, match=key):  # noqa: PT012 - the loop is the read
         for reference in _declared_references(rule.payload):
             reference.get()
 

@@ -94,7 +94,7 @@ class TestRosterCoverage:
         assert _registry_names() == COMPILED_KEYSTONES
         assert len(_registry_names()) == 17
         assert len(COMPILED_KEYSTONES) == 17
-        assert NO_DAMAGE_KEYSTONES == {"Unsealed Spellbook"}
+        assert {"Unsealed Spellbook"} == NO_DAMAGE_KEYSTONES
 
     def test_catalog_implemented_flags_match_the_compilers(self):
         by_name = {entry["name"]: entry for entry in rune_effects.rune_catalog()}

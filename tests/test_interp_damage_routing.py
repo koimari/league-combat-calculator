@@ -21,8 +21,8 @@ from src.calculator import item_effects
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.interpreters import INTERPRETERS, RESOLVERS
 from src.calculator.interpreters.damage_routing import (
-    DamageRoutingInterpretationError,
     EXECUTE_THRESHOLD_FIELD,
+    DamageRoutingInterpretationError,
     pair_fields,
     resolve_deferral,
     resolve_execution,

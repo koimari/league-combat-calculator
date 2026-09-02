@@ -301,7 +301,9 @@ def test_zoe_w_prices_all_three_bolts():
     assert w["total_damage"] != pytest.approx(55.0)
 
 
-@pytest.mark.parametrize("summoner,reason", [(1, "Heal"), (2, "Barrier"), (3, "Smite")])
+@pytest.mark.parametrize(
+    ("summoner", "reason"), [(1, "Heal"), (2, "Barrier"), (3, "Smite")]
+)
 def test_zoe_w_summoner_shard_variants_price_no_champion_damage(summoner, reason):
     data = _fight("Zoe", options={"w_summoner": summoner})
     w = data["breakdown"]["W"]

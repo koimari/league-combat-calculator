@@ -47,11 +47,15 @@ def _defaulted_zero_policy_params(path: Path) -> list[tuple[str, int]]:
         args = node.args
         positional = args.posonlyargs + args.args
         pairs = list(
-            zip(positional[len(positional) - len(args.defaults) :], args.defaults)
+            zip(
+                positional[len(positional) - len(args.defaults) :],
+                args.defaults,
+                strict=False,
+            )
         )
         pairs += [
             (arg, default)
-            for arg, default in zip(args.kwonlyargs, args.kw_defaults)
+            for arg, default in zip(args.kwonlyargs, args.kw_defaults, strict=False)
             if default is not None
         ]
         for arg, _default in pairs:

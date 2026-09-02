@@ -37,6 +37,7 @@ from typing import Any
 
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
+from .module_contract import coverage
 from .packet_module import build_packet_module, initial_plus_ticks_parser
 from .slotlib import (
     attach_self_shield,
@@ -46,7 +47,6 @@ from .slotlib import (
     resolve_scaling,
     with_control_event,
 )
-from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — the shield window (2.5s) and the
 # Discharge window (4s) are wiki Q prose; the shield base row and the
@@ -193,7 +193,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q (Siphon Power) shields Viktor for the per-level 40 : 140 (+ 25% AP) "
     "for 2.5 seconds (the cache's 'Bonus Damage' row is the shield base, "
     "level-indexed); the shield is granted at the cast (E8c "

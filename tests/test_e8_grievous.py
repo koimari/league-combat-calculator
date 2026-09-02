@@ -25,18 +25,14 @@ from dataclasses import replace
 import pytest
 
 from src.calculator.calculate import calculate_payload
-from src.calculator.defensive_effects import StartingDefenses
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
 from src.calculator.healing_reduction import (
     GRIEVOUS_WOUNDS_DURATION,
     GRIEVOUS_WOUNDS_FACTOR,
     champion_grievous_wound_sources,
     healing_reduction_profiles,
 )
-from src.calculator.survival import resolve_grievous
 from src.calculator.interpreters.damage_routing import walk_venom
 from src.calculator.participant_timeline import (
     Combatant,
@@ -45,8 +41,11 @@ from src.calculator.participant_timeline import (
     build_participant_timeline,
 )
 from src.calculator.pipeline import FightParams
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
+from src.calculator.survival import resolve_grievous
 
 pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
 
@@ -663,7 +662,7 @@ def _sourced_labels(item_name, damage_type):
     return list(pack[2])
 
 
-@pytest.mark.parametrize("item_name,damage_type", sorted(GRIEVOUS_ITEMS.items()))
+@pytest.mark.parametrize(("item_name", "damage_type"), sorted(GRIEVOUS_ITEMS.items()))
 def test_grievous_item_reduces_enemy_healing_through_the_payload(
     item_name, damage_type
 ):
@@ -701,7 +700,7 @@ def test_grievous_item_reduces_enemy_healing_through_the_payload(
         )
 
 
-@pytest.mark.parametrize("item_name,damage_type", sorted(GRIEVOUS_ITEMS.items()))
+@pytest.mark.parametrize(("item_name", "damage_type"), sorted(GRIEVOUS_ITEMS.items()))
 def test_grievous_item_without_its_trigger_damage_type_reduces_nothing(
     item_name, damage_type
 ):
@@ -792,7 +791,7 @@ def test_a_wounded_lifeline_heal_is_cut_like_any_authored_heal():
 
     burst = ["Rabadon's Deathcap", "Void Staff", "Shadowflame"]
     unwounded = lifeline_arm(burst)
-    wounded = lifeline_arm(burst + ["Morellonomicon"])
+    wounded = lifeline_arm([*burst, "Morellonomicon"])
 
     assert unwounded["healing_received"] == pytest.approx(sourced_heal)
     assert unwounded["healing_reduced"] == 0.0
@@ -805,7 +804,7 @@ def test_a_wounded_lifeline_heal_is_cut_like_any_authored_heal():
     )
 
 
-@pytest.mark.parametrize("item_name,damage_type", sorted(GRIEVOUS_ITEMS.items()))
+@pytest.mark.parametrize(("item_name", "damage_type"), sorted(GRIEVOUS_ITEMS.items()))
 def test_compiled_search_walk_prices_the_wound_like_the_receipt_walk(
     item_name, damage_type
 ):

@@ -2,18 +2,18 @@
 
 import pytest
 
-from src.calculator.defensive_effects import StartingDefenses
-from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views.survival import survival as _survival_view
+from src.calculator.champions import parse_champion_abilities
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.participant_timeline import Combatant, _simulate_survival
 from src.calculator.pipeline import (
     FightParams,
     _item_self_healing_events,
     run_fight,
 )
-from src.calculator.champions import parse_champion_abilities
-from src.calculator.damage import calculate_fight_damage
-from src.calculator.participant_timeline import Combatant, _simulate_survival
+from src.calculator.program.build import roster_program as _roster_program
+from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.stats import calculate_total_stats, get_item_stats
 
 

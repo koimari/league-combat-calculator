@@ -136,7 +136,8 @@ def test_thorns_writes_no_starting_state_because_it_is_an_event() -> None:
     outcome = resolve_defense(rule, _subject())
 
     assert rule.payload.writes == ()
-    assert outcome.fields == () and outcome.notes == ()
+    assert outcome.fields == ()
+    assert outcome.notes == ()
     assert rule.payload.trigger is TriggerEvent.BASIC_ATTACK_HIT
 
 
@@ -172,7 +173,7 @@ def test_a_missing_thorns_key_fails_loud_with_item_and_key(
     broken.pop("bonus_armor_ratio")
     monkeypatch.setitem(item_effects.ITEM_EFFECTS, "Thornmail", broken)
 
-    with pytest.raises(KeyError, match="Thornmail.*bonus_armor_ratio"):
+    with pytest.raises(KeyError, match=r"Thornmail.*bonus_armor_ratio"):
         thorns_effects(_build("Thornmail"))
 
 

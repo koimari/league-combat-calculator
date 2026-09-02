@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .inputs import bool_option, champion_stat, float_option, int_option
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, champion_stat, float_option, int_option
 from .module_helpers import no_damage
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
 
 _GWEN_Q_SPELL = spell_object("Gwen", "GwenQ")
 _GWEN_E_SPELL = spell_object("Gwen", "GwenE")
@@ -49,7 +49,8 @@ def _thousand_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_type": "magic",
         }
         entry["detail"] = (
-            "1% + 0.6% per 100 AP of target maximum health per qualifying hit; champion heal is sustain."
+            "1% + 0.6% per 100 AP of target maximum health per qualifying hit; "
+            "champion heal is sustain."
         )
     return entry
 
@@ -81,11 +82,7 @@ def _snip_times(ability: dict[str, Any], bonus: int) -> tuple[float, ...]:
             "the final snip's sourced instant ('the last one at the end "
             "of the cast time') cannot be read"
         ) from exc
-    return (
-        (_Q_FIRST_SNIP_SECONDS,)
-        + tuple(sorted(_Q_BONUS_SNIP_SECONDS[:bonus]))
-        + (final,)
-    )
+    return (_Q_FIRST_SNIP_SECONDS, *tuple(sorted(_Q_BONUS_SNIP_SECONDS[:bonus])), final)
 
 
 def _snip_snip(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -116,7 +113,7 @@ def _snip_snip(ctx: SlotCtx) -> dict[str, Any] | None:
         "mixed" if center else "magic",
     )
     parts: list[DamagePart] = []
-    for time_offset, amount in zip(times, per_snip):
+    for time_offset, amount in zip(times, per_snip, strict=False):
         if center:
             # "The center of each snip converts 50% of the damage to true
             # damage" — the magic half leads, as a mixed entry requires.
@@ -149,7 +146,10 @@ def _hallowed_mist(ctx: SlotCtx) -> dict[str, Any] | None:
     return no_damage(
         ctx,
         name="Hallowed Mist",
-        reason="Mist untargetability and bonus resistances are defensive state; no outgoing damage.",
+        reason=(
+            "Mist untargetability and bonus resistances are defensive state; no "
+            "outgoing damage."
+        ),
     )
 
 
@@ -286,7 +286,7 @@ def derive_self_healing(
     """Resolve Gwen self-healing events from its authored packet."""
     healing = []
     p_level = int(champion_stat(champion_stats, "level"))
-    per_instance_cap = _healing.extract_named(
+    per_instance_cap = extract_named(
         _healing.ability_json(champion_data, "P"),
         "Bonus Damage",
         p_level,

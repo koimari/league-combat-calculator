@@ -124,7 +124,7 @@ def capture() -> dict[str, Any]:
             "and cannot represent a collision"
         )
     records = {
-        lane: {name: classify(item) for name, item in zip(names, items)}
+        lane: {name: classify(item) for name, item in zip(names, items, strict=False)}
         for lane, classify in CLASSIFIERS.items()
     }
     return {

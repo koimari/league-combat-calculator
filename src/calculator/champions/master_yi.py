@@ -40,6 +40,7 @@ from .slotlib import (
     ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
+    extract_named,
     extract_value,
 )
 
@@ -182,7 +183,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Double Strike procs on every 3rd basic attack; the second strike "
     "deals 50% AD physical damage — wiki prose (module constants)",
     "The second strike 'is affected by critical strike modifiers' and "
@@ -230,28 +232,24 @@ def derive_self_healing(
     healing = []
     w_rank = _healing.parsed_rank(ability_damages, "W")
     w_ability = _healing.ability_json(champion_data, "W")
-    min_tick = _healing.extract_named(
-        w_ability, "Minimum Heal Per Tick", w_rank, champion_stats
-    )
-    max_tick = _healing.extract_named(
-        w_ability, "Maximum Heal Per Tick", w_rank, champion_stats
-    )
+    min_tick = extract_named(w_ability, "Minimum Heal Per Tick", w_rank, champion_stats)
+    max_tick = extract_named(w_ability, "Maximum Heal Per Tick", w_rank, champion_stats)
     if min_tick > 0.0:
         for cast_time in _healing.cast_slot_times(cast_timeline, "W"):
             start = float(cast_time)
-            for index in range(1, 9):
-                healing.append(
-                    {
-                        "time": start + index * 0.5,
-                        "amount": 0.0,
-                        "amount_formula": _healing.missing_health_scaled_heal(
-                            min_tick, max_tick
-                        ),
-                        "source": "Meditate",
-                        "kind": "champion_ability",
-                        "actor_wide": True,
-                    }
-                )
+            healing.extend(
+                {
+                    "time": start + index * 0.5,
+                    "amount": 0.0,
+                    "amount_formula": _healing.missing_health_scaled_heal(
+                        min_tick, max_tick
+                    ),
+                    "source": "Meditate",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                }
+                for index in range(1, 9)
+            )
     return healing
 
 

@@ -39,9 +39,10 @@ account.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import math
-from typing import Any, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field
+from typing import Any
 
 # Floating-point tolerance shared with the engine walks (1e-9).
 _EPS = 1e-9

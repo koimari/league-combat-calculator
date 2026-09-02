@@ -66,8 +66,8 @@ from typing import Any
 from .ability_spec import (
     ACTION_BLOCKING_CC_KINDS,
     CC_KIND_VOCABULARY,
-    NON_BLOCKING_CC_KINDS,
     NO_CONTROL_KIND,
+    NON_BLOCKING_CC_KINDS,
 )
 from .delivery_eligibility import DefenseWindow, stable_event_key
 from .shield_ledger import ShieldPools, TimedShield
@@ -229,7 +229,7 @@ class CrowdControlEligibility:
 
     def decide(
         self, action: Any, _attacker: Any = None, *, holder: TimedShield | None = None
-    ) -> "CrowdControlDecision":
+    ) -> CrowdControlDecision:
         """Decide eligibility for one event (deterministic, receipted).
 
         The attacker parameter mirrors the delivery-eligibility decision
@@ -366,10 +366,10 @@ def same_hit_ordering() -> tuple[str, SourceReceipt]:
 
 
 __all__ = [
+    "KNOWN_CONTROL_KINDS",
+    "ControlProfile",
     "CrowdControlDecision",
     "CrowdControlEligibility",
-    "ControlProfile",
-    "KNOWN_CONTROL_KINDS",
     "MissingSameHitRuleError",
     "UnknownControlError",
     "active_until",

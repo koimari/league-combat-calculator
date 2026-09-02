@@ -59,12 +59,10 @@ from src.calculator.survival.compile import (
     unrepresentable_template_receipt,
 )
 from src.calculator.trigger_stream import HolderStacking
-
 from tests.test_survival_kernel import (
     Holder,
     KernelFixture,
     _differing_leaves,
-    _item,
     _reached_keys,
 )
 
@@ -438,8 +436,8 @@ def test_a_compiled_damage_row_says_how_it_was_delivered():
     ``auto_attacks`` — an amp the score path priced differently from the
     walk with nothing saying so.
     """
-    from src.calculator.survival.actions import attack_class_of
     from src.calculator.ability_spec import AttackClass
+    from src.calculator.survival.actions import attack_class_of
 
     ability = SurvivalAction(is_ability=True, source_key="Q")
     basic = SurvivalAction(basic_attack=True, source_key="on_hit_Nashors")

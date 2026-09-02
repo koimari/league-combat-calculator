@@ -32,7 +32,7 @@ VALUE_KEYS = (
 
 
 @pytest.mark.parametrize(
-    "level, ability_ranks",
+    ("level", "ability_ranks"),
     [(6, None), (18, {"Q": 5, "W": 5, "E": 5, "R": 3})],
     ids=["early", "max_rank"],
 )
@@ -65,7 +65,7 @@ def test_all_registered_modules_parse_without_a_generic_runtime_fallback(
 
 
 def test_mundo_q_uses_running_current_health_and_floor():
-    champion, stats = _stats("DrMundo")
+    champion, _ = _stats("DrMundo")
     params = FightParams.from_request(
         {
             "target_health": 2400,

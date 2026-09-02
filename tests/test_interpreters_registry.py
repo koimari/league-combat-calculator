@@ -15,16 +15,13 @@ from pathlib import Path
 
 import pytest
 
-from src.calculator.ability_spec import Authority
-from src.calculator import bis
-from src.calculator import data_fetcher
-from src.calculator import interpreters
-from src.calculator import item_coverage
-from src.calculator import item_effects
+from src.calculator import bis, interpreters, item_coverage, item_effects
 from src.calculator import item_behavior_catalog as catalog
+from src.calculator.ability_spec import Authority
 from src.calculator.interpreters import damage_routing, resistance_shred
 from src.calculator.interpreters.ally_packet import AllyPacketSlot
 from src.calculator.item_behavior import (
+    SUBJECT_AUTHORITY,
     AllyProducer,
     Compilable,
     DefenseField,
@@ -34,7 +31,6 @@ from src.calculator.item_behavior import (
     ReceiptScope,
     Resistance,
     RuleFamily,
-    SUBJECT_AUTHORITY,
     Subject,
 )
 from src.calculator.item_behavior_catalog import registry_owners
@@ -235,7 +231,7 @@ def test_an_interpreter_no_declaration_reaches_is_an_orphan_branch(
             if all(rule.family is not family for rule in catalog.behavior_rules(owner))
         ),
     )
-    with pytest.raises(interpreters.InterpreterRegistryError, match="orphan|reaches"):
+    with pytest.raises(interpreters.InterpreterRegistryError, match=r"orphan|reaches"):
         interpreters.validate_registrations()
 
 
@@ -823,7 +819,8 @@ def test_the_walk_execution_equals_the_pair_engines_stamp() -> None:
         target_bonus_health=0.0,
         holder_is_melee=True,
     )
-    assert stamped is not None and rider is not None
+    assert stamped is not None
+    assert rider is not None
     assert rider.threshold == stamped.threshold
     assert rider.owner == stamped.owner
 
@@ -915,7 +912,7 @@ _SHRED_OWNERS = (
 
 
 @pytest.mark.parametrize(
-    "owner,resistance,producer,prefix", _SHRED_OWNERS, ids=lambda value: str(value)
+    ("owner", "resistance", "producer", "prefix"), _SHRED_OWNERS, ids=str
 )
 def test_the_walk_shred_ramp_equals_the_ally_packet_numbers_it_replaced(
     owner: str, resistance, producer, prefix: str
@@ -973,7 +970,8 @@ def test_both_lanes_of_a_shred_compile_one_declaration_to_one_ramp() -> None:
         }
         pair = resistance_shred.resolve_slot([owner], resistance, **facts)
         walk = resistance_shred.walk_slot([owner], resistance, **facts)
-        assert pair is not None and walk is not None
+        assert pair is not None
+        assert walk is not None
         assert [(field.name, field.value) for field in pair.fields] == [
             (field.name, field.value) for field in walk.fields
         ]

@@ -21,7 +21,6 @@ import subprocess
 from pathlib import Path
 
 import pytest
-
 from bs4 import BeautifulSoup
 
 import src.app as app_module
@@ -118,7 +117,8 @@ def test_every_setup_step_is_a_labelled_disclosure():
     for toggle in heads:
         assert toggle.get("aria-expanded") == "false"
         controls = toggle.get("aria-controls")
-        assert controls and soup.select_one(f"#{controls}") is not None
+        assert controls
+        assert soup.select_one(f"#{controls}") is not None
         assert soup.select_one(f"#{controls}").has_attr("hidden")
     briefs = soup.select(".step-brief[data-step-toggle]")
     assert [b["data-step-toggle"] for b in briefs] == ["champion", "roster"]
@@ -140,7 +140,8 @@ def test_constraint_rows_are_labelled_disclosures():
     for row in rows:
         assert row.get("aria-expanded") == "false"
         body = soup.select_one(f"#{row['aria-controls']}")
-        assert body is not None and body.has_attr("hidden")
+        assert body is not None
+        assert body.has_attr("hidden")
 
 
 def test_no_duplicate_ids_in_template():
@@ -155,7 +156,8 @@ def test_quick_view_is_the_visible_default():
     soup = _soup()
     assert soup.select_one("#quickView") is None
     analyst = soup.select_one("#analystView")
-    assert analyst is not None and analyst.get("hidden") is None
+    assert analyst is not None
+    assert analyst.get("hidden") is None
     assert soup.select(".view-tab") == []
 
 
@@ -178,11 +180,15 @@ def test_empty_champion_state_hides_dependent_controls_and_stats():
     identity = soup.select_one(".champion-identity")
     controls = soup.select_one("#identityControls")
     stats = soup.select_one("#statsGrid")
-    assert card is not None and "is-empty" in card.get("class", [])
-    assert identity is not None and "is-empty" in identity.get("class", [])
-    assert controls is not None and controls.has_attr("hidden")
+    assert card is not None
+    assert "is-empty" in card.get("class", [])
+    assert identity is not None
+    assert "is-empty" in identity.get("class", [])
+    assert controls is not None
+    assert controls.has_attr("hidden")
     assert controls.get("aria-hidden") == "true"
-    assert stats is not None and stats.has_attr("hidden")
+    assert stats is not None
+    assert stats.has_attr("hidden")
     assert stats.get("aria-hidden") == "true"
     source = _source()
     assert "identityControls" in source
@@ -215,7 +221,8 @@ def test_damage_breakdown_lives_in_the_visible_ledger_band():
 def test_event_ledger_is_a_native_disclosure_with_the_trust_legend():
     soup = _soup()
     band = soup.select_one("#ledgerBand")
-    assert band is not None and band.name == "details"
+    assert band is not None
+    assert band.name == "details"
     summary = band.find("summary")
     assert summary is not None
     assert "Open event ledger" in summary.get_text()
@@ -233,8 +240,9 @@ def test_engine_error_surface_lives_above_the_verdict():
     # Banners sit above the verdict strip, never below the result they qualify.
     banners = soup.select_one(".banners")
     verdict = soup.select_one(".verdict")
-    assert banners is not None and verdict is not None
-    order = [node for node in soup.select(".canvas > *")]
+    assert banners is not None
+    assert verdict is not None
+    order = list(soup.select(".canvas > *"))
     assert order.index(banners) < order.index(verdict)
 
 
@@ -671,7 +679,8 @@ def test_range_sliders_have_accessible_names():
 def test_favicon_link_present():
     soup = _soup()
     link = soup.select_one('link[rel="icon"]')
-    assert link is not None and link.get("href")
+    assert link is not None
+    assert link.get("href")
 
 
 def test_page_has_one_h1_and_a_sane_heading_order():
@@ -689,7 +698,8 @@ def test_page_has_one_h1_and_a_sane_heading_order():
     step_headings = soup.select(".step .step-head")
     assert [h.name for h in step_headings] == ["h2", "h2"]
     champion = soup.select_one("#championName")
-    assert champion is not None and champion.name == "h3"
+    assert champion is not None
+    assert champion.name == "h3"
 
 
 def test_visually_hidden_helper_actually_hides():
@@ -714,5 +724,6 @@ def test_node_check_passes_for_app_js():
         capture_output=True,
         text=True,
         cwd=ROOT,
+        check=False,
     )
     assert result.returncode == 0, result.stderr

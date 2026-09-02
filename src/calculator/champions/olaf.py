@@ -33,6 +33,7 @@ from typing import Any
 
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
+from .inputs import int_option
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -45,7 +46,6 @@ from .slotlib import (
     find_named_leveling,
     sum_modifiers,
 )
-from .inputs import int_option
 
 PACKET_SHA256 = "abc0765ed94d66999d26bc7fe98c41c49c3d5e3631c4cca2a96a59de1ba776eb"
 
@@ -226,7 +226,8 @@ TOUGH_IT_OUT_SHIELD_DURATION_SECONDS = data_value(_OLAF_W_SPELL, "ShieldDuration
 TOUGH_IT_OUT_MISSING_HEALTH_RATIO = data_value(_OLAF_W_SPELL, "ShieldPercMissingHP")
 TOUGH_IT_OUT_MISSING_HEALTH_CAP = 0.70
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "olaf_missing_health_percent",
         _DEFAULT_MISSING_HEALTH_PERCENT,
@@ -236,15 +237,14 @@ OPTIONS = list(OPTIONS) + [
         rotation={
             "role": "self_state",
             "slot": "P",
-            "note": (
-                "Olaf's own health, which the fight engine does not track; "
-                "it scales P alone."
-            ),
+            "note": "Olaf's own health, which the fight engine does not track; "
+            "it scales P alone.",
         },
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Tough It Out) shields Olaf for the sourced 10/40/70/100/130 + "
     "17.5% missing health for 2.5s at the cast; the ally-support scanner "
     "emits the self packet with the flat component at the full-health "

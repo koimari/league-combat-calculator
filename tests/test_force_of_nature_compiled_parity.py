@@ -118,18 +118,23 @@ test_force_of_nature_target_defense_is_event_certified ~377).  This file
 is disjoint and pins only the Force of Nature acceptance observables.
 """
 
-from types import SimpleNamespace
-
 import pytest
 
-from src.calculator.item_coverage import ATTACKER_LANES
-from src.calculator.defensive_effects import StartingDefenses
-from src.calculator import item_effects
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+
+# The retired per-item ``_X_SOURCE`` constant, read from the one home it
+# moved to: the declaration's own resolved citation.
 from src.calculator.defensive_effects import (
+    StartingDefenses,
+    defense_source,
     resolve_starting_defenses,
 )
-from src.calculator.item_coverage import item_model_coverage, target_item_model_coverage
+from src.calculator.item_behavior import DefenseMechanic
+from src.calculator.item_coverage import (
+    ATTACKER_LANES,
+    item_model_coverage,
+    target_item_model_coverage,
+)
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     ITEM_INPUT_OPTIONS,
@@ -143,13 +148,8 @@ from src.calculator.participant_timeline import (
 )
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
-from src.calculator.stats import calculate_total_stats
 from src.calculator.state_lifecycle import SourceReceipt
-
-# The retired per-item ``_X_SOURCE`` constant, read from the one home it
-# moved to: the declaration's own resolved citation.
-from src.calculator.defensive_effects import defense_source
-from src.calculator.item_behavior import DefenseMechanic
+from src.calculator.stats import calculate_total_stats
 from tests.survival_probe import simulate_survival
 
 _SOURCE = defense_source("Force of Nature", DefenseMechanic.STEADFAST)
@@ -804,7 +804,9 @@ def test_score_path_agrees_with_receipt_on_every_steadfast_field():
             == receipt["participants"][1]["survival"]
         )
         assert surface["duration"] == receipt["duration"]
-        for score_row, receipt_row in zip(surface["breakdown"], receipt["breakdown"]):
+        for score_row, receipt_row in zip(
+            surface["breakdown"], receipt["breakdown"], strict=False
+        ):
             assert score_row["participant_id"] == receipt_row["participant_id"]
             assert score_row["total_damage"] == receipt_row["total_damage"]
             assert score_row["incoming_damage"] == receipt_row["incoming_damage"]
@@ -859,12 +861,12 @@ def test_force_of_nature_enemy_holder_poisons_the_compiled_context():
         deterministic=True,
     )
     enemy = ChampionLoadout(champion="Janna", level=18, items=[ITEM_NAME]).resolve()
-    kwargs = dict(
-        main_stats=main_stats,
-        main_defenses=resolve_starting_defenses("Ahri", 18, main_stats, []),
-        enemies=[enemy],
-        allies=[],
-    )
+    kwargs = {
+        "main_stats": main_stats,
+        "main_defenses": resolve_starting_defenses("Ahri", 18, main_stats, []),
+        "enemies": [enemy],
+        "allies": [],
+    }
     legacy = build_participant_timeline(
         main, 18, [], params, include_receipt=False, **kwargs
     )

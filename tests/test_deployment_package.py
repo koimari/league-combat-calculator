@@ -123,6 +123,7 @@ def _run_in_package(package: Path, code: str) -> str:
         cwd=cwd,
         env=env,
         timeout=180,
+        check=False,
     )
     assert result.returncode == 0, result.stderr
     return result.stdout
@@ -141,7 +142,8 @@ scripts_spec = importlib.util.find_spec("scripts")
 package_root = Path(os.environ["PYTHONPATH"]).resolve()
 if scripts_spec is not None:
     locations = [Path(value).resolve() for value in (scripts_spec.submodule_search_locations or [])]
-    assert package_root not in locations and not any(package_root in value.parents for value in locations), "scripts must not ship"
+    assert package_root not in locations, "scripts must not ship"
+    assert not any(package_root in value.parents for value in locations), "scripts must not ship"
 # Importing src.app first mirrors the production entrypoint; every route
 # dependency must then resolve from the packaged artifact alone under the
 # single ``src.*`` namespace (issue #164).

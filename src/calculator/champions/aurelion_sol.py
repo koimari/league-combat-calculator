@@ -61,6 +61,8 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx, build_parser
+from .inputs import bool_option, int_option
+from .module_contract import coverage
 from .module_helpers import delayed_damage, no_damage
 from .slotlib import (
     ability_name,
@@ -71,8 +73,6 @@ from .slotlib import (
     extract_value,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
-from .module_contract import coverage
 
 # One full Q channel: 3.25 s of beam, with a burst on the primary target
 # at each full second of channel (3 bursts).
@@ -260,7 +260,7 @@ def _breath_of_light(ctx: SlotCtx) -> dict[str, Any] | None:
     # The beam is per-tick damage x (seconds / tick interval): 26 ticks
     # of the per-tick row for one 3.25s channel, exactly the sourced
     # "Total Maximum Magic Damage" (per-second x 3.25).
-    ticks = int(round(seconds / _Q_TICK_INTERVAL))
+    ticks = round(seconds / _Q_TICK_INTERVAL)
     per_tick = beam_per_second * _Q_TICK_INTERVAL
     total = per_tick * ticks + per_burst * bursts
     parts = [

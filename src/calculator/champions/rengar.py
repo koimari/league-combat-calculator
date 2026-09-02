@@ -43,8 +43,10 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
 from .engine import CC_PER_PART, DEBUFF, SlotCtx
+from .inputs import bool_option, int_option
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -57,8 +59,6 @@ from .slotlib import (
     find_named_leveling,
     sum_modifiers,
 )
-from .inputs import bool_option, int_option
-from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "bc9f962c63c4eaabd3333b892d9f7d876578e1d3ae0f9fe1fb0256afb3232d50"
 

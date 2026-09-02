@@ -15,11 +15,10 @@ Hand-validated against https://wiki.leagueoflegends.com/en-us/Braum
 
 import pytest
 
-from src.calculator.champions import parse_champion_abilities
+from src.calculator.champions import braum, parse_champion_abilities
 from src.calculator.champions.slotlib import extract_value
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
-from src.calculator.champions import braum
 from tests import cc_review
 
 

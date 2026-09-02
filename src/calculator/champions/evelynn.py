@@ -6,6 +6,7 @@ from typing import Any
 
 from ..ability_spec import ControlEvent, DamagePart
 from .engine import SlotCtx, build_parser
+from .inputs import bool_option, int_option
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -15,14 +16,16 @@ from .slotlib import (
     extract_value,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 
 def _demon_shade(ctx: SlotCtx) -> dict[str, Any] | None:
     return no_damage(
         ctx,
         name="Demon Shade",
-        reason="Camouflage and low-health regeneration are self-state; no outgoing damage is implied.",
+        reason=(
+            "Camouflage and low-health regeneration are self-state; no outgoing "
+            "damage is implied."
+        ),
         slot="P",
     )
 
@@ -48,14 +51,14 @@ def _hate_spike(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     parts = [DamagePart("magic", dart, time_offset=0.3)]
-    for index in range(recasts):
-        parts.append(
-            DamagePart(
-                "magic",
-                spike + (marked_bonus if marked else 0.0),
-                time_offset=0.6 + 0.3 * index,
-            )
+    parts.extend(
+        DamagePart(
+            "magic",
+            spike + (marked_bonus if marked else 0.0),
+            time_offset=0.6 + 0.3 * index,
         )
+        for index in range(recasts)
+    )
     entry["parts"] = tuple(parts)
     entry["detail"] = (
         f"Dart plus {recasts} recast spike(s); mark bonus {'on' if marked else 'off'}."
@@ -71,7 +74,10 @@ def _allure(ctx: SlotCtx) -> dict[str, Any] | None:
     entry = no_damage(
         ctx,
         name=ability_name(ability),
-        reason="Charm/slow is selected from the full W entry; champion target is the default branch.",
+        reason=(
+            "Charm/slow is selected from the full W entry; champion target is the "
+            "default branch."
+        ),
     )
     if entry is None:
         return None

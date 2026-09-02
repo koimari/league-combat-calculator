@@ -109,7 +109,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Winter's Wrath) prices both flail swings: the first and second "
     "'Physical Damage' rows sum to the cached 'Total Physical Damage' "
     "row (10-130 + 90% AP + 12% of Sejuani's maximum health) at every "

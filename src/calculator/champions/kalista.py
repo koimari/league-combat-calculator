@@ -42,6 +42,8 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .inputs import bool_option, int_option
+from .module_contract import coverage
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -51,8 +53,6 @@ from .slotlib import (
     with_control_event,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
-from .module_contract import coverage
 
 
 def _pierce(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -212,7 +212,8 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     "W damage is withheld unless the Oathsworn and Kalista marks are explicitly armed.",
-    "Rend defaults to one lodged spear; the stack count is explicit and capped at the sourced 254-stack limit.",
+    "Rend defaults to one lodged spear; the stack count is explicit and capped at the "
+    "sourced 254-stack limit.",
     "Fate's Call and Martial Poise are utility/state effects with no direct enemy damage.",
     "P (Martial Poise) and R (Fate's Call) carry no sourced damage/heal/shield "
     "row of their own (P's four effect rows are all empty leveling; R's only "

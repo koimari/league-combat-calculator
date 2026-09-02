@@ -14,11 +14,11 @@ here, so it emits that sourced zero-damage row: MODULE_COVERAGE reads
 
 from functools import partial
 
+from ..healing_helpers import ability_json, event_source, heal_from_damage, parsed_rank
 from .healing_contract import self_healing_rule
+from .module_contract import coverage
 from .packet_module import build_packet_module
 from .slotlib import extract_named, with_item_on_hits
-from ..healing_helpers import ability_json, event_source, heal_from_damage, parsed_rank
-from .module_contract import coverage
 
 PACKET_SHA256 = "d331bfbe1255392c5667aa32b6403badc5674e16c7196822d0a8bee5a94a4f3f"
 
@@ -61,7 +61,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     },
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Reign of Anger) has no enemy-damage formula: all three cached "
     "effects (Fury generation/decay, the 50-Fury empower gate, the "
     "sub-50%-health bonus-Fury-generation rule) carry zero leveling "

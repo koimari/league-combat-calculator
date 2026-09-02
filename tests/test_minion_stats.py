@@ -24,9 +24,9 @@ from pathlib import Path
 import pytest
 
 import src.app as app_module
-from tests.app_config import app_config
 from src.calculator import damage, item_effects, minion_stats
 from src.calculator.damage import FightConfig
+from tests.app_config import app_config
 
 BIN_DIR = Path(__file__).resolve().parent.parent / "data" / "bin" / "characters"
 
@@ -70,13 +70,13 @@ def _field(record: dict, name: str) -> float:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("stat, expected", sorted(MELEE_ANCHOR.items()))
+@pytest.mark.parametrize(("stat", "expected"), sorted(MELEE_ANCHOR.items()))
 def test_the_melee_anchor_is_what_the_module_answers(stat, expected):
     """The named anchor, read through the accessor callers use."""
     assert minion_stats.sourced_stat("melee", stat) == expected
 
 
-@pytest.mark.parametrize("stat, expected", sorted(MELEE_ANCHOR.items()))
+@pytest.mark.parametrize(("stat", "expected"), sorted(MELEE_ANCHOR.items()))
 def test_the_melee_anchor_is_what_the_binary_states(stat, expected):
     """The same anchor, read out of the tracked record itself.
 

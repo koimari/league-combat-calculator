@@ -110,7 +110,7 @@ def test_every_dual_sided_mechanic_is_covered_here():
     ) == len([cap for cap in CAPABILITIES.values() if cap.holder_stacking is not None])
 
 
-@pytest.mark.parametrize("mechanic, stacking", _rider_delivered())
+@pytest.mark.parametrize(("mechanic", "stacking"), _rider_delivered())
 def test_a_rider_delivered_mechanic_declares_stacking_and_arms_nothing(
     mechanic, stacking
 ):
@@ -129,7 +129,7 @@ def test_a_rider_delivered_mechanic_declares_stacking_and_arms_nothing(
     assert mechanic not in armed
 
 
-@pytest.mark.parametrize("mechanic, stacking", _holder_packet_delivered())
+@pytest.mark.parametrize(("mechanic", "stacking"), _holder_packet_delivered())
 def test_a_holder_packet_declares_stacking_and_arms_nothing(mechanic, stacking):
     """A retired family's answer to the same question, in its own shape.
 
@@ -147,7 +147,7 @@ def test_a_holder_packet_declares_stacking_and_arms_nothing(mechanic, stacking):
     assert mechanic not in armed
 
 
-@pytest.mark.parametrize("mechanic, packet_source, stacking", _arming())
+@pytest.mark.parametrize(("mechanic", "packet_source", "stacking"), _arming())
 def test_a_second_holder_arms_exactly_what_the_mechanic_declares(
     mechanic, packet_source, stacking
 ):
@@ -173,7 +173,7 @@ def test_a_second_holder_arms_exactly_what_the_mechanic_declares(
         assert second is None, mechanic
 
 
-@pytest.mark.parametrize("mechanic, packet_source, stacking", _arming())
+@pytest.mark.parametrize(("mechanic", "packet_source", "stacking"), _arming())
 def test_the_key_shape_is_the_declaration_and_nothing_else(
     mechanic, packet_source, stacking
 ):
@@ -192,7 +192,7 @@ def test_the_key_shape_is_the_declaration_and_nothing_else(
     assert key == expected
 
 
-@pytest.mark.parametrize("mechanic, packet_source, stacking", _arming())
+@pytest.mark.parametrize(("mechanic", "packet_source", "stacking"), _arming())
 def test_one_holder_re_arming_over_time_is_never_a_duplicate(
     mechanic, packet_source, stacking
 ):

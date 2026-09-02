@@ -42,6 +42,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import (
     calculation_interpolation,
@@ -50,14 +51,13 @@ from ..binary_roots import (
     spell_object,
 )
 from ..stats import growth_multiplier
-from .inputs import champion_stat, int_option
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
+from .inputs import champion_stat, int_option
+from .module_contract import coverage
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
 from .slotlib import ability_name, damage_entry, extract_cooldown
-from .. import healing_helpers as _healing
-from .module_contract import coverage
 
 PACKET_SHA256 = "906b7a57f67c65c1729d75e139e3608eaf8532c564638f0f008b2b1f7348c8f5"
 

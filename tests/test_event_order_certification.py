@@ -2,11 +2,11 @@
 
 import pytest
 
-from src.calculator.scenario import load_public_champion as _load_public_champion
 from src.app import app
 from src.calculator.champions import get_champion_options_meta
 from src.calculator.champions.slotlib import extract_cooldown
 from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.scenario import load_public_champion as _load_public_champion
 
 
 def _timed_params():
@@ -34,7 +34,7 @@ def test_briar_and_darius_empowered_auto_receipts_match_aggregates():
         )
 
 
-@pytest.mark.parametrize("champion", ("Briar", "Darius"))
+@pytest.mark.parametrize("champion", ["Briar", "Darius"])
 def test_stack_dot_receipts_mark_sourced_tick_cadence_exact(champion):
     result = run_fight(_load_public_champion(champion), 18, [], _timed_params())
     key = "stacking_dot_passive"
@@ -102,7 +102,7 @@ def test_soraka_equinox_emits_the_delayed_eruption_hit():
     assert {event["event_precision"] for event in eruption} == {"exact"}
 
 
-@pytest.mark.parametrize("champion,source", (("Shen", "Q"),))
+@pytest.mark.parametrize(("champion", "source"), [("Shen", "Q")])
 def test_empowered_attack_packets_certify_their_authored_swing_ledger(champion, source):
     """Wave 1B: Shen Q's bonus hits carry authored swing timing."""
     result = run_fight(_load_public_champion(champion), 18, [], _timed_params())
@@ -122,14 +122,14 @@ def test_belveth_ability_carried_ramping_on_hit_has_authored_carrier_times():
     assert all("time" in event for event in events)
 
 
-@pytest.mark.parametrize("champion,source", (("Wukong", "R"), ("Qiyana", "R")))
+@pytest.mark.parametrize(("champion", "source"), [("Wukong", "R"), ("Qiyana", "R")])
 def test_multi_stage_ultimates_use_authored_subhit_cadence(champion, source):
     result = run_fight(_load_public_champion(champion), 18, [], _timed_params())
     assert result["timeline_coverage"]["complete"] is True
     assert source in result["timeline_coverage"]["exact_sources"]
 
 
-@pytest.mark.parametrize("champion,source", (("Ornn", "W"), ("Kalista", "W")))
+@pytest.mark.parametrize(("champion", "source"), [("Ornn", "W"), ("Kalista", "W")])
 def test_multi_hit_or_ally_mark_packets_are_certified_or_explicitly_non_damage(
     champion, source
 ):
@@ -139,8 +139,8 @@ def test_multi_hit_or_ally_mark_packets_are_certified_or_explicitly_non_damage(
 
 
 @pytest.mark.parametrize(
-    "champion,source",
-    (("Shen", "Q"),),
+    ("champion", "source"),
+    [("Shen", "Q")],
 )
 def test_calculate_api_surfaces_certified_empowered_attack_timeline(champion, source):
     """Wave 1B: the public API no longer reports Shen Q as coarse."""
@@ -384,7 +384,7 @@ def test_shyvana_multi_form_e_and_w_have_certified_sources():
     assert {"E", "W"}.issubset(set(result["timeline_coverage"]["exact_sources"]))
 
 
-@pytest.mark.parametrize("champion", ("Akshan", "Braum", "Diana", "Ziggs"))
+@pytest.mark.parametrize("champion", ["Akshan", "Braum", "Diana", "Ziggs"])
 def test_complete_receipts_use_the_public_certification_label(champion):
     result = run_fight(_load_public_champion(champion), 18, [], _timed_params())
     coverage = result["timeline_coverage"]
@@ -393,7 +393,7 @@ def test_complete_receipts_use_the_public_certification_label(champion):
     assert coverage["coarse_sources"] == []
 
 
-@pytest.mark.parametrize("champion", ("Bel'Veth", "Wukong", "Ornn"))
+@pytest.mark.parametrize("champion", ["Bel'Veth", "Wukong", "Ornn"])
 def test_reviewed_receipts_claim_public_exact_certification(champion):
     coverage = run_fight(_load_public_champion(champion), 18, [], _timed_params())[
         "timeline_coverage"
@@ -421,9 +421,9 @@ def test_poppy_hammer_shock_exports_both_authored_hits():
     times = [round(event["time"], 2) for event in hammer_shock["damage_events"]]
     assert times[0] == 0.0
     assert len(times) % 2 == 0
-    assert [second - first for first, second in zip(times[::2], times[1::2])] == [
-        pytest.approx(1.0)
-    ] * (len(times) // 2)
+    assert [
+        second - first for first, second in zip(times[::2], times[1::2], strict=False)
+    ] == [pytest.approx(1.0)] * (len(times) // 2)
     assert sum(
         event["damage"] for event in hammer_shock["damage_events"]
     ) == pytest.approx(hammer_shock["total_damage"])
@@ -527,7 +527,7 @@ def test_hwei_devastating_fire_uses_the_sourced_cast_boundary():
 
 @pytest.mark.parametrize(
     "champion",
-    (
+    [
         "Gragas",
         "Jax",
         "Jinx",
@@ -538,7 +538,7 @@ def test_hwei_devastating_fire_uses_the_sourced_cast_boundary():
         "Xin Zhao",
         "Yone",
         "Rek'Sai",
-    ),
+    ],
 )
 def test_single_hit_dynamic_packets_are_cast_boundary_certified(champion):
     result = run_fight(_load_public_champion(champion), 18, [], _timed_params())

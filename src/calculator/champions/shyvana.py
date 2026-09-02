@@ -25,12 +25,14 @@ four ``Stacks_Per_*`` counts, with no damage node of any kind."""
 import re
 from typing import Any
 
-from ..ability_atoms import ability_payload
 from .. import healing_helpers as _healing
+from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
-from .inputs import bool_option, champion_stat, int_option
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, champion_stat, int_option
+from .module_contract import coverage
 from .slotlib import (
     STEROID_ZERO,
     ability_name,
@@ -40,9 +42,7 @@ from .slotlib import (
     extract_named,
     simple_damage,
 )
-from .module_contract import coverage
 from .source_receipts import load_champion_sources
-from ..binary_roots import data_value, spell_object
 
 # Rooted in ShyvanaW.Duration; the cached W description corroborates the
 # 2.5-second shield window. The 1-second recast window remains prose.
@@ -361,7 +361,7 @@ def derive_self_healing(
     if "dragon form" in str(w_row.get("detail", "")).lower():
         level = max(1, int(champion_stat(champion_stats, "level")))
         w = _healing.ability_json(champion_data, "W")
-        flat = _healing.extract_named(w, "Heal", level, champion_stats, {})
+        flat = extract_named(w, "Heal", level, champion_stats, {})
         missing_pct = _healing.leveling_modifier(w, "Missing Health Damage", level, 0)
 
         def inferno_aegis_heal(

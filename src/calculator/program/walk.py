@@ -396,7 +396,7 @@ class WalkResult:
     item_denial_receipts: tuple[Mapping[str, Any], ...] = ()
     objective: ObjectiveFold | None = None
 
-    def projected(self, **folds: Any) -> "WalkResult":
+    def projected(self, **folds: Any) -> WalkResult:
         """The same walk, carrying a fold the composition derived from it.
 
         A new record rather than a mutation: the result is frozen because a
@@ -427,7 +427,7 @@ def walk(
     ctx: TransitionContext,
     *,
     coverage: Sequence[Any] = (),
-    rung: Rung = CompiledFast(),
+    rung: Rung = CompiledFast(),  # noqa: B008 - a frozen sentinel; one instance is the default
     counters: WorkCounterSink | None = None,
 ) -> WalkResult:
     """Run the kernel exactly once and freeze what it produced.

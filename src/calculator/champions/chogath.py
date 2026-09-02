@@ -31,10 +31,12 @@ Why each slot is non-generic:
 import re
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import int_option
 from .module_helpers import delayed_damage
 from .slotlib import (
     ability_name,
@@ -48,8 +50,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
-from .inputs import int_option
 
 # E empowers the next 3 basic attacks per cast. The count has no JSON
 # attribute of its own; the JSON's "Total Magic Damage" entry is exactly
@@ -300,19 +300,19 @@ def derive_self_healing(
     carnivore = ability_payload(ability_damages, "passive").get("self_heal_state")
     if isinstance(carnivore, dict):
         amount = float(carnivore.get("amount", 0.0) or 0.0)
-        for payment in _healing.takedown_payments(
-            int(carnivore.get("kills", 0) or 0), damage_events
-        ):
-            healing.append(
-                {
-                    "time": float(payment.event.get("time", 0.0)),
-                    "amount": amount,
-                    "source": "Carnivore",
-                    "kind": "champion_passive",
-                    "actor_wide": True,
-                    **_healing.trigger_fields(payment.event),
-                }
+        healing.extend(
+            {
+                "time": float(payment.event.get("time", 0.0)),
+                "amount": amount,
+                "source": "Carnivore",
+                "kind": "champion_passive",
+                "actor_wide": True,
+                **_healing.trigger_fields(payment.event),
+            }
+            for payment in _healing.takedown_payments(
+                int(carnivore.get("kills", 0) or 0), damage_events
             )
+        )
     return healing
 
 

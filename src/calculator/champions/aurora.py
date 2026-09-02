@@ -34,10 +34,14 @@ anywhere. Reclassified from out_of_scope to no_damage (an
 atoms-confirmed zero-HP-number effect), not left silently absent.
 """
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx, build_parser
+from .inputs import int_option
+from .module_contract import coverage
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -48,9 +52,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
-from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
 
 # HARDCODED: verify on patch updates — the wiki JSON only carries the
 # passive's monster damage cap (attribute "Bonus Damage", 100-270 by

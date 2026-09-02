@@ -153,9 +153,8 @@ def atomize_item(item: dict[str, Any]) -> list[dict[str, Any]]:
     ):
         if not effects:
             continue
-        if isinstance(effects, dict):
-            effects = [effects]
-        for index, effect in enumerate(effects):
+        effect_rows = [effects] if isinstance(effects, dict) else effects
+        for index, effect in enumerate(effect_rows):
             effect_name = str(
                 effect.get("name") or f"{effect_kind.capitalize()} {index + 1}"
             )
@@ -506,7 +505,7 @@ def atomize_rune_catalogue(runes: Any) -> dict[str, list[dict[str, Any]]]:
                 return "count"
             return "flat"
 
-        def visit(value: Any, path: str) -> None:
+        def visit(value: Any, path: str, *, a=a, name=name) -> None:
             if isinstance(value, dict):
                 for sub_key, sub_value in value.items():
                     visit(sub_value, f"{path}.{sub_key}" if path else sub_key)

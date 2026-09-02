@@ -92,8 +92,9 @@ the stat-shard table and the adaptive-force conversion.
 
 import ast
 import re
+from collections.abc import Mapping
 from types import MappingProxyType
-from typing import Any, Mapping
+from typing import Any
 
 _PARAM_LINE = re.compile(r"^\|(\w+)\s*=\s?(.*)$")
 _PP_TEMPLATE = re.compile(r"\{\{pp\|([^{}]+)\}\}")
@@ -1368,7 +1369,7 @@ def _parse_scalar_templates(
         )
 
     glacial_fields = (
-        (_GLACIAL_RAY_COUNT, "glacial_ray_count", lambda value: int(value)),
+        (_GLACIAL_RAY_COUNT, "glacial_ray_count", int),
         (_GLACIAL_ZONE_WIDTH, "glacial_zone_width_units", float),
         (
             _GLACIAL_SLOW_BASE,

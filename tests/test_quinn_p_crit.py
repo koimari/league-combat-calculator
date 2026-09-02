@@ -245,22 +245,22 @@ def _api(level: int = _LEVEL, **overrides):
 
 
 def _params(level: int = _LEVEL, **overrides) -> FightParams:
-    base = dict(
-        target_health=2000.0,
-        target_bonus_health=0.0,
-        target_armor=0.0,
-        target_magic_resistance=0.0,
-        fight_duration_seconds=5.0,
-        auto_attack_uptime=1.0,
-        one_rotation=True,
-        include_actives=True,
-        deterministic=True,
-        auto_attack_uptime_mode="explicit",
-        ability_ranks=dict(_RANKS),
-        champion_options=None,
-        item_options={},
-        role="top",
-    )
+    base = {
+        "target_health": 2000.0,
+        "target_bonus_health": 0.0,
+        "target_armor": 0.0,
+        "target_magic_resistance": 0.0,
+        "fight_duration_seconds": 5.0,
+        "auto_attack_uptime": 1.0,
+        "one_rotation": True,
+        "include_actives": True,
+        "deterministic": True,
+        "auto_attack_uptime_mode": "explicit",
+        "ability_ranks": dict(_RANKS),
+        "champion_options": None,
+        "item_options": {},
+        "role": "top",
+    }
     base.update(overrides)
     return FightParams(**base)
 
@@ -391,7 +391,8 @@ class TestSourceEvidence:
         assert atom["units"] == ["s", "s", "s"]
         # The crit gimmick text is absent from the atom entirely.
         assert "critical strike chance" not in json.dumps(atom)
-        assert 7.0 not in atom["values"] and 2.56 not in atom["values"]
+        assert 7.0 not in atom["values"]
+        assert 2.56 not in atom["values"]
 
     def test_binary_corroboration(self):
         # QuinnPassive DataValues: the 4 s reveal, the 40% AD ratio, the
@@ -866,9 +867,9 @@ class TestRegressionSurface:
         # total_raw still equals the cached rows at rank 5/5/3.
         _, abilities = _parse()
         data = _CHAMPION_DATA["Quinn"]["abilities"]
-        q = data["Q"][0]
-        e = data["E"][0]
-        r = data["R"][1]
+        data["Q"][0]
+        data["E"][0]
+        data["R"][1]
         assert abilities["Q"]["total_raw"] > 0.0
         assert abilities["E"]["total_raw"] > 0.0
         assert abilities["R"]["total_raw"] > 0.0

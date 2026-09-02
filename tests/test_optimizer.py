@@ -4,21 +4,26 @@ import pytest
 
 from src.calculator import economy
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.loadout_rules import ITEM_EXCLUSIVITY_GROUPS, exclusivity_groups
+from src.calculator.loadout_rules import (
+    ITEM_EXCLUSIVITY_GROUPS,
+    exclusivity_groups,
+    role_scoped_shop_items,
+)
 from src.calculator.optimizer import (
     _evaluate_build,
-    get_eligible_legendaries,
-    get_eligible_boots,
-    optimizer_supported_items,
-    optimize_build as _optimize_build,
-    get_selectable_items,
-    get_purchase_items,
-    optimize_purchase,
-    item_gold,
     _hill_climb,
+    get_eligible_boots,
+    get_eligible_legendaries,
+    get_purchase_items,
+    get_selectable_items,
+    item_gold,
+    optimize_purchase,
+    optimizer_supported_items,
+)
+from src.calculator.optimizer import (
+    optimize_build as _optimize_build,
 )
 from src.calculator.pipeline import FightParams
-from src.calculator.loadout_rules import role_scoped_shop_items
 
 _FIGHT_PARAM_KEYS = {
     "target_health",
@@ -1140,16 +1145,16 @@ def test_coupled_optimizer_caches_do_not_change_results(monkeypatch):
             items=("Randuin's Omen", "Bramble Vest"),
         ).resolve(),
     ]
-    common = dict(
-        champion_data=get_champion("Cassiopeia"),
-        level=13,
-        fight_params=FightParams.from_request(
+    common = {
+        "champion_data": get_champion("Cassiopeia"),
+        "level": 13,
+        "fight_params": FightParams.from_request(
             {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
         ),
-        max_legendary_slots=2,
-        require_complete_timeline=True,
-        enemy_loadouts=enemies,
-    )
+        "max_legendary_slots": 2,
+        "require_complete_timeline": True,
+        "enemy_loadouts": enemies,
+    }
     baseline = _optimize_build(**common)
 
     monkeypatch.setattr(
@@ -1220,9 +1225,7 @@ def test_purchase_optimizer_can_prefer_two_components_to_one_completed_item(
     monkeypatch.setattr(
         "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
     )
-    monkeypatch.setattr(
-        "src.calculator.optimizer.optimizer_supported_items", lambda items: list(items)
-    )
+    monkeypatch.setattr("src.calculator.optimizer.optimizer_supported_items", list)
     monkeypatch.setattr(
         "src.calculator.optimizer.optimizer_candidate_coverage",
         lambda _items: {"complete": True},
@@ -1268,9 +1271,7 @@ def _patch_purchase_world(monkeypatch, pool, score):
     monkeypatch.setattr(
         "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
     )
-    monkeypatch.setattr(
-        "src.calculator.optimizer.optimizer_supported_items", lambda items: list(items)
-    )
+    monkeypatch.setattr("src.calculator.optimizer.optimizer_supported_items", list)
     monkeypatch.setattr(
         "src.calculator.optimizer.optimizer_candidate_coverage",
         lambda _items: {"complete": True},
@@ -1491,9 +1492,7 @@ def test_purchase_exhaustive_walk_can_hold_a_component_and_its_legendary(
     monkeypatch.setattr(
         "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
     )
-    monkeypatch.setattr(
-        "src.calculator.optimizer.optimizer_supported_items", lambda items: list(items)
-    )
+    monkeypatch.setattr("src.calculator.optimizer.optimizer_supported_items", list)
     monkeypatch.setattr(
         "src.calculator.optimizer.optimizer_candidate_coverage",
         lambda _items: {"complete": True},
@@ -1793,9 +1792,7 @@ def test_purchase_pool_includes_components_but_not_starters(monkeypatch):
         _purchase_item("Doran's Ring", "STARTER", 400),
     ]
     monkeypatch.setattr("src.calculator.optimizer._ordinary_sr_items", lambda: items)
-    monkeypatch.setattr(
-        "src.calculator.optimizer.optimizer_supported_items", lambda rows: list(rows)
-    )
+    monkeypatch.setattr("src.calculator.optimizer.optimizer_supported_items", list)
 
     assert [item["name"] for item in get_purchase_items("top")] == [
         "Ruby Crystal",
@@ -1824,7 +1821,8 @@ def test_role_scope_keeps_multiclass_lane_items_available():
     mid = {item["name"] for item in role_scoped_shop_items(pool, "mid")}
     support = {item["name"] for item in role_scoped_shop_items(pool, "support")}
 
-    assert "Whispering Circlet" in top and "Whispering Circlet" in mid
+    assert "Whispering Circlet" in top
+    assert "Whispering Circlet" in mid
     assert "Morellonomicon" in top
     assert "Frozen Heart" in top
     assert "Locket of the Iron Solari" in top

@@ -1,7 +1,7 @@
 """Regression tests for the Issue #160 ownership boundaries."""
 
-from importlib import import_module
 import inspect
+from importlib import import_module
 from pathlib import Path
 
 from src.calculator import healing

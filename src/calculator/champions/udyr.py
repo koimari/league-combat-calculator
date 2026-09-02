@@ -34,9 +34,10 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import target_stat
-from .engine import ONHIT, SlotCtx
+from .module_contract import coverage
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import (
@@ -48,7 +49,6 @@ from .slotlib import (
     resolve_scaling,
     with_control_event,
 )
-from .module_contract import coverage
 
 # The Awaken lightning chain's strike COUNT is the binary UdyrQ.Bounces
 # DataValue; the strike INTERVAL (0.2s) has no binary home (script-side)
@@ -337,7 +337,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q (Wilding Claw) empowers q_empowered_attacks (default 2) basic "
     "attacks with the sourced on-hit payload: Bonus Physical Damage "
     "(3% : 8% by rank of the target's maximum health + 3.5% per 100 bonus "
@@ -374,7 +375,8 @@ OPTIONS.append(
         "label": "Q empowered basic attacks",
     }
 )
-ASSUMPTIONS = ASSUMPTIONS + [
+ASSUMPTIONS = [
+    *ASSUMPTIONS,
     "E (Blazing Stampede) is a sourced zero-damage row (MODULE_COVERAGE: "
     "no_damage, reclassified from out_of_scope). Its empowered attack IS "
     "priced as a sourced control event: a 0.75s stun from the validated "
@@ -427,7 +429,7 @@ def derive_self_healing(
     """Resolve Udyr self-healing events from its authored packet."""
     healing = []
     w_rank = _healing.parsed_rank(ability_damages, "W")
-    per_tick = _healing.extract_named(
+    per_tick = extract_named(
         _healing.ability_json(champion_data, "W"),
         "Heal per Tick",
         w_rank,
@@ -438,16 +440,16 @@ def derive_self_healing(
             if cast.get("slot") != "W":
                 continue
             start = float(cast.get("time", 0.0))
-            for index in range(1, 17):
-                healing.append(
-                    {
-                        "time": start + index * 0.25,
-                        "amount": float(per_tick),
-                        "source": "Iron Mantle",
-                        "kind": "champion_ability",
-                        "actor_wide": True,
-                    }
-                )
+            healing.extend(
+                {
+                    "time": start + index * 0.25,
+                    "amount": float(per_tick),
+                    "source": "Iron Mantle",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                }
+                for index in range(1, 17)
+            )
     return healing
 
 

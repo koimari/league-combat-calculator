@@ -8,9 +8,9 @@ Hand-validated against the wiki (see /add-champion spec):
 
 import pytest
 
+from src.calculator.champions import azir
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.champions import azir
 from tests import cc_review
 
 
@@ -308,7 +308,8 @@ class TestProcItemEffects:
 
         row_on = self._row_total(with_soldiers, "Lich Bane")
         row_off = self._row_total(without, "Lich Bane")
-        assert row_on is not None and row_on["count"] > 0  # still procs
+        assert row_on is not None
+        assert row_on["count"] > 0
         assert row_on["damage_per_hit"] == pytest.approx(
             0.5 * row_off["damage_per_hit"]
         )
@@ -325,7 +326,8 @@ class TestProcItemEffects:
 
         row_on = self._row_total(with_soldiers, "Statikk Shiv")
         row_off = self._row_total(without, "Statikk Shiv")
-        assert row_on is not None and row_on["count"] == row_off["count"]  # consumed
+        assert row_on is not None
+        assert row_on["count"] == row_off["count"]
         assert row_on["total_damage"] == pytest.approx(0.5 * row_off["total_damage"])
 
     def test_kraken_third_attack_proc_halved(self, azir_data, parse_at) -> None:
@@ -345,7 +347,8 @@ class TestProcItemEffects:
 
         row_on = self._row_total(with_soldiers, "Kraken")
         row_off = self._row_total(without, "Kraken")
-        assert row_on is not None and row_on["count"] > 0  # every 3rd attack
+        assert row_on is not None
+        assert row_on["count"] > 0
         assert row_on["count"] == row_off["count"]
         assert row_on["total_damage"] == pytest.approx(
             0.5 * row_off["total_damage"], rel=0.01

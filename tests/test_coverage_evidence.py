@@ -343,7 +343,7 @@ def test_key_disagreeing_with_its_claim_is_rejected() -> None:
 
 def test_key_that_is_not_a_triple_is_rejected() -> None:
     """The key is ``(subject_kind, subject, lane)`` and nothing shorter."""
-    with pytest.raises(CoverageClaimError, match="is not a .subject_kind"):
+    with pytest.raises(CoverageClaimError, match=r"is not a .subject_kind"):
         validate_claim_table({"Imperial Mandate": claim()})
 
 
@@ -539,7 +539,7 @@ def test_the_evidence_union_is_the_closed_nine() -> None:
     It would have resolved against five hand name sets Phase 2 deleted, so it
     could only ever have been evidence for something that no longer exists.
     """
-    assert EVIDENCE_KINDS == {
+    assert {
         "Symbol",
         "PacketSource",
         "PairedSides",
@@ -549,7 +549,7 @@ def test_the_evidence_union_is_the_closed_nine() -> None:
         "TestRef",
         "SourceRef",
         "Absence",
-    }
+    } == EVIDENCE_KINDS
     assert len(EVIDENCE_TYPES) == len(EVIDENCE_KINDS)
     assert "StreamMembership" not in EVIDENCE_KINDS
 
@@ -614,7 +614,7 @@ def test_utility_dimensions_project_the_single_home() -> None:
     measured from maps 43 items onto the distinct strings, so either integer
     is a plausible-looking wrong answer.
     """
-    assert UTILITY_DIMENSIONS == {dimension.value for dimension in UtilityDimension}
+    assert {dimension.value for dimension in UtilityDimension} == UTILITY_DIMENSIONS
 
 
 # ---------------------------------------------------------------------------

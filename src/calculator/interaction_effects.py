@@ -8,7 +8,7 @@ the resolved atom to apply timing, selection, and one-use rules.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from .ability_atoms import (
@@ -17,6 +17,7 @@ from .ability_atoms import (
     required_ability_atom,
     required_ranked_attribute_atom,
 )
+from .champions.skill_orders import get_ability_rank
 from .delivery_eligibility import (
     DefenseComposition,
     DefenseEligibility,
@@ -25,8 +26,8 @@ from .delivery_eligibility import (
     DestructionRule,
     FullBlockRule,
     ReductionRule,
-    SourceSelection,
     SourceReceipt,
+    SourceSelection,
     SpellShieldComposition,
     SpellShieldEligibility,
     SpellShieldRearmClock,
@@ -37,7 +38,6 @@ from .item_effects import (
     annul_spell_shield_timer_restarts,
     spell_shield_cooldown_seconds,
 )
-from .champions.skill_orders import get_ability_rank
 
 
 @dataclass(frozen=True, slots=True)
@@ -522,7 +522,7 @@ class SpellShieldContract:
     composition: SpellShieldComposition
     cooldown_seconds: float = 0.0
     cooldown_atom: dict[str, Any] | None = None
-    rearm: SpellShieldRearmClock = SpellShieldRearmClock()
+    rearm: SpellShieldRearmClock = field(default_factory=SpellShieldRearmClock)
 
     def public_receipt(self) -> dict[str, Any]:
         """JSON-safe contract receipt."""

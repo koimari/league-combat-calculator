@@ -53,7 +53,7 @@ from typing import Any, Literal
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.app import app  # noqa: E402
+from src.app import app
 
 # ``/api/optimize`` clamps ``time_budget_ms`` into [100, 60_000] and defaults
 # to 12_000.  A budget the machine can exhaust makes every counter below a

@@ -16,7 +16,7 @@ from src.calculator.atomizer_domains import (
     atomize_rune_catalogue,
     atomize_stats,
 )
-from src.calculator.data_fetcher import fetch_item_data, fetch_champion_data
+from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 
 ROOT = Path(__file__).resolve().parents[1]
 

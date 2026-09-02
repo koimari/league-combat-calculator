@@ -13,11 +13,11 @@ Reference damage (wiki: https://wiki.leagueoflegends.com/en-us/Cho'Gath):
 
 import pytest
 
+from src.calculator.champions import chogath
 from src.calculator.champions import parse_champion_abilities as parse_abilities
+from src.calculator.champions.slotlib import extract_value
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.champions.slotlib import extract_value
-from src.calculator.champions import chogath
 from tests import cc_review
 
 # ---------------------------------------------------------------------------

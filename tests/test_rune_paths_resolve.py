@@ -113,7 +113,7 @@ class TestOvergrowth:
 class TestResolveRefusals:
     """Six runes the pair engine holds no channel for, each saying which."""
 
-    @pytest.mark.parametrize("name,reason", sorted(REFUSALS.items()))
+    @pytest.mark.parametrize(("name", "reason"), sorted(REFUSALS.items()))
     def test_each_refusal_is_withheld_and_names_the_half_it_refuses(self, name, reason):
         effect = rune_effects.resolve_rune(name)
         assert isinstance(effect, rune_effects.RuneNoDamageEffect), name
@@ -277,7 +277,7 @@ class TestFontOfLife:
         assert "ally half is withheld twice over" in effect.disclosures[1]
 
     @pytest.mark.parametrize(
-        "champion,amount",
+        ("champion", "amount"),
         [("Malphite", 50.0), ("Ashe", 35.0)],
     )
     def test_an_impairing_kit_heals_at_its_range_class(self, champion, amount):

@@ -33,10 +33,12 @@ Why each slot is non-generic:
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, int_option
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -48,8 +50,6 @@ from .slotlib import (
     with_control_event,
 )
 from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
-from .inputs import bool_option, int_option
 
 # The passive's bonus-AD ratio is the coefficient on the binary's
 # BleedDamagePerStack calculation.  The bleed window and stack cap are binary DataValues

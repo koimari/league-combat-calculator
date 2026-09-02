@@ -305,7 +305,7 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
         ) from exc
     return tuple(
         KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
-        for (name, _), value in zip(references, values)
+        for (name, _), value in zip(references, values, strict=False)
     )
 
 
@@ -550,17 +550,17 @@ __all__ = [
     "DEFER_DURATION_FIELD",
     "DEFER_FRACTION_FIELD",
     "DEFER_TICKS_FIELD",
-    "DamageRoutingInterpretationError",
-    "Deferral",
     "EXECUTE_THRESHOLD_FIELD",
-    "Execution",
     "FLAT_ROUTING_REFERENCES",
     "IGNORE_PAIN_NOTE",
     "SHIELD_BYPASS_DURATION_FIELD",
     "SHIELD_BYPASS_FRACTION_FIELD",
-    "ShieldBypass",
     "VENOM_DURATION_FIELD",
     "VENOM_KEEP_FIELD",
+    "DamageRoutingInterpretationError",
+    "Deferral",
+    "Execution",
+    "ShieldBypass",
     "Venom",
     "declared_execution",
     "pair_fields",

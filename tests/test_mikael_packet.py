@@ -75,13 +75,12 @@ Contract pinned (typed source-backed values):
 
 import json
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 
 from src.app import app
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
 from src.calculator.item_effects import (
     ALLY_ITEM_EFFECTS,
     ITEM_INPUT_OPTIONS,
@@ -91,26 +90,23 @@ from src.calculator.item_effects import (
     required_effect_value,
     validate_item_input_options,
 )
-from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.ledger_projection import SHARED_ROW_FIELDS, LightRow
 from src.calculator.optimizer import get_eligible_legendaries
-from src.calculator.stats import calculate_total_stats
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
     _WalkCompiler,
     build_participant_timeline,
 )
-from src.calculator.ledger_projection import LightRow, SHARED_ROW_FIELDS
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import ChampionLoadout
+from src.calculator.stats import calculate_total_stats
 from src.calculator.survival.compile import (
     UncompilableActionError,
     unrepresentable_template_receipt,
 )
-
-from tests.survival_probe import simulate_survival
-from tests.survival_probe import survival_of
 from tests import item_probe
+from tests.survival_probe import simulate_survival, survival_of
 
 MIKAELS = "Mikael's Blessing"
 MIKAELS_SOURCE = "Mikael's Blessing \u2014 Purify"
@@ -136,7 +132,7 @@ def _calculate_status(payload: dict) -> tuple[int, dict]:
     response = app.test_client().post("/api/calculate", json=payload)
     try:
         body = response.get_json()
-    except Exception:  # pragma: no cover - non-JSON error bodies
+    except Exception:  # noqa: BLE001 - non-JSON body  # pragma: no cover
         body = {}
     return response.status_code, body
 
@@ -331,7 +327,8 @@ def test_missing_heal_key_raises_keyerror_naming_mikaels_and_key(monkeypatch):
     with pytest.raises(KeyError) as excinfo:
         ally_item_level_value(MIKAELS, "heal_min", "heal_max", 18)
     message = str(excinfo.value)
-    assert "Mikael" in message and "Blessing" in message
+    assert "Mikael" in message
+    assert "Blessing" in message
     assert "heal_min" in message
 
 
@@ -342,7 +339,8 @@ def test_item_effects_accessor_fails_loud_for_mikaels():
     with pytest.raises(KeyError) as excinfo:
         required_effect_value(MIKAELS, "heal_min")
     message = str(excinfo.value)
-    assert "Mikael" in message and "Blessing" in message
+    assert "Mikael" in message
+    assert "Blessing" in message
     assert "heal_min" in message
 
 
@@ -671,7 +669,7 @@ def test_no_teammates_fails_closed():
 
 
 @pytest.mark.parametrize(
-    "level,expected", [(1, 100.0), (6, 144.11764705882354), (18, 250.0)]
+    ("level", "expected"), [(1, 100.0), (6, 144.11764705882354), (18, 250.0)]
 )
 def test_packet_amount_equals_ally_item_level_value(level, expected):
     """The packet amount == ally_item_level_value(100, 250, target.level):
@@ -802,7 +800,7 @@ def test_supported_controls_are_removed(kind):
 
 
 @pytest.mark.parametrize(
-    "kind,reason",
+    ("kind", "reason"),
     [
         ("airborne", "excluded_control_kind"),
         ("suppression", "excluded_control_kind"),
@@ -1097,7 +1095,8 @@ def test_source_revision_3984364_rides_the_receipt_chain():
 
     declaration = ITEM_CLEANSE_DECLARATIONS[MIKAELS]
     receipts = declaration["source_receipts"]
-    assert receipts and receipts[0]["revision_id"] == REVISION_ID
+    assert receipts
+    assert receipts[0]["revision_id"] == REVISION_ID
     assert "3222" in str(receipts[0])
     assert declaration["heal"]["amount_min"] == pytest.approx(100.0)
     assert declaration["heal"]["amount_max"] == pytest.approx(250.0)
@@ -1240,13 +1239,17 @@ def _scoring_rows(result):
         if isinstance(event, tuple):
             row = LightRow._make(event)
             rows.append(
-                (row.sort_key[0],)
-                + tuple(getattr(row, field) for field in SHARED_ROW_FIELDS)
+                (
+                    row.sort_key[0],
+                    *tuple(getattr(row, field) for field in SHARED_ROW_FIELDS),
+                )
             )
         else:
             rows.append(
-                (event.get("time"),)
-                + tuple(event.get(field) for field in SHARED_ROW_FIELDS)
+                (
+                    event.get("time"),
+                    *tuple(event.get(field) for field in SHARED_ROW_FIELDS),
+                )
             )
     return rows
 
@@ -1321,7 +1324,8 @@ def test_no_stale_bis_entry_and_review_issue_48_recorded():
         (REPO / "docs" / "cp47-production-acceptance.json").read_text(encoding="utf-8")
     )
     residual = " ".join(tracked["residual_scope"])
-    assert "#48" in residual and "Mikael's Blessing" in residual
+    assert "#48" in residual
+    assert "Mikael's Blessing" in residual
 
 
 # ---------------------------------------------------------------------------

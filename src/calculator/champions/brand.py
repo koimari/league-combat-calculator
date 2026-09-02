@@ -27,6 +27,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..cast_dependency import CastDependency
 from .engine import SlotCtx, build_parser
+from .inputs import int_option
 from .module_helpers import delayed_damage
 from .slotlib import (
     ability_name,
@@ -37,7 +38,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
 
 # HARDCODED: verify on patch updates — the Ablaze DoT is prose-only in
 # the JSON (P effect[1] has no leveling entry): each stack deals 2% of

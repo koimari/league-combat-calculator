@@ -20,10 +20,10 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
-from .packet_module import build_packet_module
-from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .inputs import int_option
 from .module_contract import coverage
+from .packet_module import build_packet_module
+from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 
 PACKET_SHA256 = "3bd191171432197d87f1d33ec2ab9bf3f483d15f73f892c373a32c249fd764db"
 
@@ -47,11 +47,11 @@ def _rite_of_the_arcane(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-    recasts = int(round(extract_named(ability, "Number of Recasts", rank)))
+    recasts = round(extract_named(ability, "Number of Recasts", rank))
     per_shot = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     stacks = min(max(int(ctx.option("r_arcane_perfection")), 0), 6)
     if stacks > 0:
-        maximum_stacks = int(round(extract_named(ability, "Maximum Stacks", rank)))
+        maximum_stacks = round(extract_named(ability, "Maximum Stacks", rank))
         per_stack = extract_named(
             ability, "Increased Damage per Stack", rank, ctx.stats, ctx.target
         )
@@ -130,7 +130,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "r_arcane_perfection",
         0,
@@ -140,7 +141,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "R (Rite of the Arcane) prices every Arcane Barrage: 'Number of "
     "Recasts' (4/5/6) x 'Magic Damage' per shot == the cached 'Total "
     "Magic Damage' row (680/1100/1620 + 180/225/270% AP) at the sourced "

@@ -34,6 +34,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
+from .inputs import bool_option, int_option
 from .module_helpers import missing_hp_fraction
 from .slotlib import (
     ability_name,
@@ -48,7 +49,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 # HARDCODED: verify on patch updates — wiki-prose values with no JSON home.
 # https://wiki.leagueoflegends.com/en-us/Bel%27Veth

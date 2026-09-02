@@ -57,7 +57,8 @@ def test_issue_fixture_active_not_absorbed_by_passive():
 
     shield_atoms = _evidence_atoms(atoms, "passive", "Shield")
     dash_atoms = _evidence_atoms(atoms, "active", "Dash")
-    assert shield_atoms and dash_atoms
+    assert shield_atoms
+    assert dash_atoms
     assert [a["atom_id"] for a in shield_atoms] == ["shield.flat"]
     assert [a["atom_id"] for a in dash_atoms] == ["control.dash"]
     # the active emits exactly one atom (issue body: "active atoms emitted: 0")

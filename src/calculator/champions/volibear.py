@@ -20,10 +20,12 @@ E3 additions over the CP10.9 packet module:
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, int_option
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -32,8 +34,6 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
 )
-from .. import healing_helpers as _healing
-from .inputs import bool_option, int_option
 
 PACKET_SHA256 = "29b4dc9dac0b65fb99cbe14df3e85aebbb307f341cae112415f1b9504c9f3cce"
 
@@ -230,7 +230,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "relentless_storm_stacks",
         _RELENTLESS_STORM_MAX_STACKS,
@@ -241,7 +242,8 @@ OPTIONS = list(OPTIONS) + [
     bool_option("w_wounded", True, label="W hits an already-Wounded target (2nd bite)"),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "The Relentless Storm stack count is user-set (default 5 = fully "
     "stacked); the 6-second stack window and which damage events refresh "
     "it are not simulated",
@@ -274,7 +276,7 @@ def derive_self_healing(
     healing = []
     w = _healing.ability_json(champion_data, "W")
     w_rank = _healing.parsed_rank(ability_damages, "W")
-    w_flat = _healing.extract_named(w, "Heal", w_rank, champion_stats, {})
+    w_flat = extract_named(w, "Heal", w_rank, champion_stats, {})
     w_missing_pct = _healing.leveling_modifier(w, "Heal", w_rank, 1)
 
     def frenzied_maul_heal(

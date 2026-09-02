@@ -511,7 +511,7 @@ def _first_declared_cycle(
         path.append(node)
         for successor in successors.get(node, ()):
             if successor in visiting:
-                return tuple(path[path.index(successor) :] + [successor])
+                return (*path[path.index(successor) :], successor)
             if successor not in settled:
                 found = walk(successor)
                 if found is not None:

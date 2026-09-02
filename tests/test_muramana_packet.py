@@ -95,8 +95,8 @@ from src.calculator.damage import (
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.interpreters import on_hit_strike
 from src.calculator.item_effects import (
-    DamageInputs,
     ITEM_EFFECTS,
+    DamageInputs,
     muramana_bonus_ad,
     required_effect_value,
     resolve_damage_effects,
@@ -260,7 +260,7 @@ class TestTypedContract:
         assert required_effect_value(MURAMANA, "damage_type") == "physical"
 
     def test_missing_typed_key_fails_loud_naming_item_and_key(self) -> None:
-        with pytest.raises(KeyError, match="Muramana.*shock_missing_key_3e"):
+        with pytest.raises(KeyError, match=r"Muramana.*shock_missing_key_3e"):
             required_effect_value(MURAMANA, "shock_missing_key_3e")
 
     def test_registry_carries_the_wiki_revision_receipt(self) -> None:

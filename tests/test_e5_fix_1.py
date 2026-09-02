@@ -23,6 +23,7 @@ module now reads:
 """
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -105,7 +106,7 @@ def _parse(champion: str, *, ranks: dict | None = None, options: dict | None = N
     """Parse abilities with the same stats the app fight computed."""
     from src.calculator.champions import parse_champion_abilities
 
-    with open("data/champions.json", encoding="utf-8") as handle:
+    with Path("data/champions.json").open(encoding="utf-8") as handle:
         champion_data = next(
             value
             for value in json.load(handle).values()

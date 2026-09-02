@@ -1,6 +1,6 @@
 """Regression tests for the issue-20 acceptance evidence contract."""
 
-import scripts.acceptance_matrix as acceptance_matrix
+from scripts import acceptance_matrix
 from scripts.acceptance_matrix import _post_remote, _summarize
 
 

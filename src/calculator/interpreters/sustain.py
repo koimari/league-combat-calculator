@@ -30,6 +30,8 @@ from dataclasses import dataclass
 
 from .. import item_effects
 from ..item_behavior import (
+    SUSTAIN_PAYLOAD_REFERENCES,
+    SUSTAIN_VALUE_PAYLOADS,
     BehaviorRule,
     BuildContext,
     DefenseField,
@@ -41,8 +43,6 @@ from ..item_behavior import (
     MeleeRangedSplit,
     ReceivedHealingRule,
     RuleFamily,
-    SUSTAIN_PAYLOAD_REFERENCES,
-    SUSTAIN_VALUE_PAYLOADS,
     SustainStat,
     SustainStatRule,
 )
@@ -276,7 +276,7 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
         ) from exc
     return tuple(
         KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
-        for name, value in zip(names, values)
+        for name, value in zip(names, values, strict=False)
     )
 
 

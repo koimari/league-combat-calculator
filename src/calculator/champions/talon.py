@@ -25,13 +25,13 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .inputs import champion_stat, int_option
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
+from .inputs import champion_stat, int_option
+from .module_contract import coverage
 from .packet_module import build_packet_module
 from .slotlib import ability_name, find_named_leveling, sum_modifiers
-from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
 
 # Sourced bleed cadence (wiki P): "5 : 18.97 (based on level)
 # (+ 13.125% bonus AD) physical damage every 0.125 seconds" — 16 ticks
@@ -134,13 +134,15 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "passive_procs", 1, minimum=0, maximum=10, label="Blade's End 3-stack consumes"
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Blade's End) prices one 3-stack consume per fight (the "
     "passive_procs option): abilities apply Wound stacks (max 3, 6s, "
     "refreshing); the next basic attack consumes them to bleed the "

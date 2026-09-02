@@ -2,10 +2,10 @@
 
 import pytest
 
-from src.calculator.stats import calculate_total_stats
+from src.calculator.champions import aatrox
 from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.damage import FightConfig, calculate_fight_damage
-from src.calculator.champions import aatrox
+from src.calculator.stats import calculate_total_stats
 from tests import cc_review
 
 
@@ -108,7 +108,9 @@ class TestQThreeCasts:
         assert [part.time_offset for part in parts] == [0.0, 1.0, 2.0]
         q_ability = aatrox_data["abilities"]["Q"][0]
         for part, attribute in zip(
-            parts, ["First Cast Damage", "Second Cast Damage", "Third Cast Damage"]
+            parts,
+            ["First Cast Damage", "Second Cast Damage", "Third Cast Damage"],
+            strict=False,
         ):
             assert part.amount == pytest.approx(
                 extract_named(q_ability, attribute, 5, stats)

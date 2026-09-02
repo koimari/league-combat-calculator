@@ -131,6 +131,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
+from .inputs import bool_option
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -141,7 +142,6 @@ from .slotlib import (
     extract_named,
     extract_value,
 )
-from .inputs import bool_option
 
 PACKET_SHA256 = "422062ecdd781eb5a57f34b7b9c3221288b03f12811cb2d0788a6a877afe4896"
 
@@ -461,7 +461,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
+OPTIONS: list[dict[str, Any]] = [
+    *list(OPTIONS),
     bool_option(
         "q_recast",
         True,
@@ -475,7 +476,8 @@ OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q (Darkin Daggers) prices the initial hit, 10 sourced 0.5s bleed "
     "ticks (Total Bleed Physical Damage == per-tick x 10, E2 worklist), "
     "and the recast's bonus damage — interpolated between the "
@@ -549,7 +551,7 @@ def derive_self_healing(
     """Resolve Naafiri self-healing events from its authored packet."""
     healing = []
     q_rank = _healing.parsed_rank(ability_damages, "Q")
-    q_heal = _healing.extract_named(
+    q_heal = extract_named(
         _healing.ability_json(champion_data, "Q"), "Heal", q_rank, champion_stats
     )
     # One heal per Q cast: the module emits the initial hit at the cast

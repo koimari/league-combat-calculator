@@ -131,7 +131,7 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
         ) from exc
     return tuple(
         KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
-        for (name, _), value in zip(references, values)
+        for (name, _), value in zip(references, values, strict=False)
     )
 
 
@@ -311,9 +311,6 @@ __all__ = [
     "COOLDOWN_REFUND_FIELD",
     "CRIT_DAMAGE_BONUS_FIELD",
     "CRIT_PAYLOAD_REFERENCES",
-    "CooldownRefund",
-    "CritProfile",
-    "CritProfileInterpretationError",
     "FORCED_CRIT_COOLDOWN_FIELD",
     "FORCED_CRIT_HEAL_BASE_AD_FIELD",
     "FORCED_CRIT_HEAL_BASE_AD_RANGED_FIELD",
@@ -321,6 +318,9 @@ __all__ = [
     "FORCED_CRIT_HEAL_REFERENCES",
     "FORCED_CRIT_RATIO_FIELD",
     "FORCED_CRIT_TEMP_HEALTH_DURATION_FIELD",
+    "CooldownRefund",
+    "CritProfile",
+    "CritProfileInterpretationError",
     "ForcedCrit",
     "crit_fields",
     "crit_references",

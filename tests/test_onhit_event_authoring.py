@@ -7,6 +7,8 @@ classifier ``damage._event_timeline_coverage`` accepts a row only when its
 authored events sum-reconcile with the row's priced total.
 """
 
+import itertools
+
 import pytest
 
 from src.calculator import damage
@@ -432,7 +434,7 @@ class TestEclipseStackPairingCadence:
         assert times == sorted(times)
         assert all(
             later - earlier >= ECLIPSE_COOLDOWN - 1e-9
-            for earlier, later in zip(times, times[1:])
+            for earlier, later in itertools.pairwise(times)
         )
 
     @pytest.mark.parametrize("champion", ["Ziggs", "Skarner", "Ahri", "Aatrox"])

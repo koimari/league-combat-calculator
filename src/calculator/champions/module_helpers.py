@@ -9,8 +9,9 @@ champion membership or champion-specific formulas.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import replace
-from typing import Any, Sequence
+from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, SlotParser

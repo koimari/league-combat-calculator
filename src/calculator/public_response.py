@@ -14,7 +14,6 @@ from urllib.parse import urlsplit
 
 from .capabilities import FIGHT_EFFECTIVE_STATS
 from .champions import engine_registration_kind
-
 from .timeline_coverage import combine_timeline_coverages
 
 ICON_HOSTS = frozenset(

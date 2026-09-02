@@ -42,9 +42,17 @@ from typing import Any
 
 from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
+from ..healing_helpers import (
+    HealAnchor,
+    ability_json,
+    event_source,
+    leveling_value,
+    payments,
+    trigger_fields,
+)
+from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
-from .engine import ONHIT, SlotCtx, build_parser
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -55,15 +63,6 @@ from .slotlib import (
     on_hit_entry,
     pct_health_per_hit,
     stat_buff,
-)
-
-from ..healing_helpers import (
-    HealAnchor,
-    ability_json,
-    event_source,
-    leveling_value,
-    payments,
-    trigger_fields,
 )
 from .source_receipts import load_champion_sources
 
@@ -321,10 +320,8 @@ def _is_persistent(event: dict[str, Any]) -> bool:
     """
     source = event_source(event).lower()
     return (
-        source.startswith("burn_")
-        or source.startswith("stacking_dot_")
+        source.startswith(("burn_", "stacking_dot_", "immolate_"))
         or "tibbers_aura" in source
-        or source.startswith("immolate_")
     )
 
 

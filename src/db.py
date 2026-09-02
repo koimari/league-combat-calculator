@@ -43,8 +43,9 @@ import math
 import os
 import secrets
 import threading
-from datetime import datetime, timedelta, timezone
-from typing import Any, Mapping
+from collections.abc import Mapping
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from sqlalchemy import (
     JSON,
@@ -78,7 +79,7 @@ _VALID_FEEDBACK_SOURCES = frozenset({"manual", "combat_log", "practice_tool"})
 
 def _utcnow() -> datetime:
     """Naive UTC now; the storage convention for every timestamp column."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def _resolve_database_url() -> str:
@@ -411,7 +412,7 @@ def _serialize_datetime(value: datetime | None) -> str | None:
     """ISO-8601 UTC string for API output (storage is naive UTC)."""
     if value is None:
         return None
-    return value.replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
+    return value.replace(tzinfo=UTC).isoformat().replace("+00:00", "Z")
 
 
 # ---------------------------------------------------------------------------
@@ -536,14 +537,15 @@ def create_share_link(
             db_session.add(share)
             try:
                 db_session.commit()
-                return {
-                    "token": share.token,
-                    "build_id": share.build_id,
-                    "slug": share.slug,
-                    "url": f"/api/share/{share.token}",
-                }
             except SQLAlchemyError:
                 db_session.rollback()  # token collision; try another one
+                continue
+            return {
+                "token": share.token,
+                "build_id": share.build_id,
+                "slug": share.slug,
+                "url": f"/api/share/{share.token}",
+            }
         raise SQLAlchemyError("could not allocate a unique share token")
 
 

@@ -6,13 +6,18 @@ from typing import get_args
 import pytest
 
 from src.calculator import item_coverage
+from src.calculator.data_fetcher import fetch_item_data, get_champion, get_item_by_name
+from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.interpreters.threshold_defense import (
+    threshold_health_coverage_source,
+)
+from src.calculator.item_behavior import AllyPacketRule, UtilityDimension
 from src.calculator.item_behavior_catalog import (
     behavior_rules,
     undeclared_owners,
 )
-
-from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_coverage import (
+    ATTACKER_LANES,
     gated_state_reason,
     item_model_coverage,
     optimizer_candidate_coverage,
@@ -22,18 +27,9 @@ from src.calculator.item_coverage import (
     target_build_coverage,
     target_item_model_coverage,
 )
-from src.calculator.interpreters.threshold_defense import (
-    threshold_health_coverage_source,
-)
-from src.calculator.item_behavior import AllyPacketRule, UtilityDimension
-from src.calculator.item_outcomes import UTILITY_OUTCOMES
 from src.calculator.item_effects import ITEM_EFFECTS
-from src.calculator.defensive_effects import resolve_starting_defenses
-from src.calculator.data_fetcher import fetch_item_data
+from src.calculator.item_outcomes import UTILITY_OUTCOMES
 from src.calculator.item_source import is_ordinary_sr_item
-from src.calculator.item_coverage import ATTACKER_LANES
-
-
 from src.calculator.optimizer import (
     get_eligible_boots,
     get_eligible_legendaries,
@@ -944,7 +940,7 @@ def test_every_holder_survival_field_is_a_field_of_a_declared_payload() -> None:
         for field in dataclasses.fields(rule.payload)
     }
 
-    assert item_coverage._HOLDER_SURVIVAL_FIELDS <= declared
+    assert declared >= item_coverage._HOLDER_SURVIVAL_FIELDS
 
 
 def test_the_state_gated_payloads_are_the_ones_declaring_both_fields() -> None:
@@ -1112,7 +1108,7 @@ def test_the_five_statuses_partition_into_eligible_and_refusal() -> None:
     declared = set(get_args(item_coverage.ItemCoverageStatus))
 
     assert (
-        item_coverage._ELIGIBLE_STATUSES | item_coverage._REFUSAL_STATUSES == declared
+        declared == item_coverage._ELIGIBLE_STATUSES | item_coverage._REFUSAL_STATUSES
     )
     assert not item_coverage._ELIGIBLE_STATUSES & item_coverage._REFUSAL_STATUSES
 

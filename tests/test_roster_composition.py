@@ -9,23 +9,22 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.calculator import item_effects
-from src.calculator import roster_composition
+from src.calculator import item_effects, roster_composition
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.interpreters.stat_derivation import StatSlot
-from src.calculator.item_behavior import KernelField, EngineLane
+from src.calculator.item_behavior import EngineLane, KernelField
 from src.calculator.pipeline import FightParams
-from src.calculator.scenario import ChampionLoadout
 from src.calculator.roster_composition import (
     ActorRequest,
     Combatant,
     actor_params,
     coalesce_darius_q_heals,
     from_loadout,
-    mana_spent_heal_slot,
     main_combatant,
+    mana_spent_heal_slot,
     target_overrides,
 )
+from src.calculator.scenario import ChampionLoadout
 
 
 @pytest.mark.parametrize(
@@ -186,7 +185,8 @@ def test_roster_helpers_keep_darius_coalescing_and_catalyst_presence_typed():
     assert events["main"][0]["amount_formula"](500.0, 1000.0) == 170.0
     assert mana_spent_heal_slot([]) is None
     slot = mana_spent_heal_slot([{"name": "Catalyst of Aeons"}])
-    assert slot is not None and slot.value("damage_taken_to_mana_ratio") > 0.0
+    assert slot is not None
+    assert slot.value("damage_taken_to_mana_ratio") > 0.0
 
 
 # ── the restore ledger's answer to a late hit ─────────────────────────────

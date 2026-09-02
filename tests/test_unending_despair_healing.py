@@ -73,7 +73,7 @@ def test_anguish_emits_exact_periodic_damage_and_self_healing_events():
     assert [event["time"] for event in item_heals] == [4.0, 8.0]
     assert all(
         event["amount"] == event_damage["damage"] * multiplier
-        for event, event_damage in zip(item_heals, damage_events)
+        for event, event_damage in zip(item_heals, damage_events, strict=False)
     )
     assert result["self_healing"] == sum(event["amount"] for event in healing_events)
 

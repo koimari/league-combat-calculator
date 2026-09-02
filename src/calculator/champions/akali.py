@@ -20,6 +20,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .inputs import int_option
 from .slotlib import (
     ability_name,
     extract_cooldown,
@@ -29,7 +30,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
 
 
 def _twilight_shroud(ctx: SlotCtx) -> dict[str, Any] | None:

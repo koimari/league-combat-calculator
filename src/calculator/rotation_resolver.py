@@ -59,9 +59,9 @@ certified module ``CAST_ORDER`` (when present) or the engine's historical
 from __future__ import annotations
 
 import re
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Literal, Mapping
+from typing import Any, Literal
 
 from .ability_spec import NO_CONTROL_KIND
 from .cast_dependency import (
@@ -425,36 +425,39 @@ _P_MARKS_TARGET = re.compile(
     r"mark(s|ed) (the target|them|enemies|the first enemy|with)"
 )
 _P_ABILITY_CONSUMES_MARK = re.compile(
-    r"abilit(y|ies).{0,80}(consume|detonat).{0,40}mark", re.I
+    r"abilit(y|ies).{0,80}(consume|detonat).{0,40}mark", re.IGNORECASE
 )
 _P_TARGET_MISSING = re.compile(
-    r"target's? missing|target’s? missing|missing health of the target|missing hp", re.I
+    r"target's? missing|target’s? missing|missing health of the target|missing hp",
+    re.IGNORECASE,
 )
-_P_NAMED_APPLIER_STACK = re.compile(r"([\w' ]+?) apply a stack of ([A-Za-z']+)", re.I)
+_P_NAMED_APPLIER_STACK = re.compile(
+    r"([\w' ]+?) apply a stack of ([A-Za-z']+)", re.IGNORECASE
+)
 _P_NAMED_APPLIER_COND = re.compile(
     r"enemies? hit by ([\w' ]+?) (?:or ([\w' ]+?))?.{0,40}?become (chilled|poisoned|marked)",
-    re.I,
+    re.IGNORECASE,
 )
 _P_NAMED_CONSUMER = re.compile(
-    r"([\w' ]+?) against an enemy with ([A-Za-z']+) stacks? consumes", re.I
+    r"([\w' ]+?) against an enemy with ([A-Za-z']+) stacks? consumes", re.IGNORECASE
 )
 _P_PASSIVE_ABILITIES_APPLY = re.compile(
-    r"abilit(y|ies).{0,80}apply a stack of ([A-Za-z']+)", re.I
+    r"abilit(y|ies).{0,80}apply a stack of ([A-Za-z']+)", re.IGNORECASE
 )
 _P_PASSIVE_ABILITIES_MARK = re.compile(
-    r"abilit(y|ies).{0,80}(apply a mark|become marked|are marked)", re.I
+    r"abilit(y|ies).{0,80}(apply a mark|become marked|are marked)", re.IGNORECASE
 )
 # target-oriented condition phrase for "Enhanced Damage" consumers
 _P_COND_PHRASE = re.compile(
     r"(if|when|while|against|on|vs\.?|versus|doubled|increased|bonus).{0,50}"
     r"(the target|they|it|enemies|an enemy|a target|them|targets?|enemy)"
     r".{0,30}(is|are|were|has|had|take|takes|become)",
-    re.I,
+    re.IGNORECASE,
 )
 _P_SELF_RESOURCE = re.compile(
     r"\b(heat|fury|rage|mana|energy|reign of anger|has at least|gains? a stack|"
     r"generates? a stack|at max stacks)\b",
-    re.I,
+    re.IGNORECASE,
 )
 # named conditions shared by consume phrases and apply rows
 _CONDITIONS = (
@@ -778,7 +781,7 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                 return True
             if cond_token == "mark" and "__mark__" in passive_applies:
                 return True
-            if any(nm not in ("__mark__",) and nm in t for nm in passive_applies):
+            if any(nm != "__mark__" and nm in t for nm in passive_applies):
                 return True
         if cond_token == "stack":
             return any("stack" in a for a in atoms)
@@ -860,7 +863,8 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                     (
                         "execute",
                         "execute",
-                        f"attribute {_ATTR_ENHANCED_DMG.search(at).group(0)!r} + target-missing-health",
+                        f"attribute {_ATTR_ENHANCED_DMG.search(at).group(0)!r} + "
+                        f"target-missing-health",
                     )
                 )
             else:
@@ -909,7 +913,7 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
     # ── pairwise edges: setup slots before their consumers ──
     for b, cons in consume_atoms.items():
         bt = texts[b]
-        for kind, cond, cite in cons:
+        for kind, _cond, cite in cons:
             if kind == "dot_consume":
                 for a in corpora:
                     if (
@@ -921,7 +925,8 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                             a,
                             b,
                             "dot_consume",
-                            f"{b} {cite} consumes the champion's poison; {a} {', '.join(apply_atoms[a])} applies it",
+                            f"{b} {cite} consumes the champion's poison; {a} "
+                            f"{', '.join(apply_atoms[a])} applies it",
                         )
             elif kind == "stack_consume":
                 for a in corpora:
@@ -930,7 +935,8 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                             a,
                             b,
                             "stack_consume",
-                            f"{b} {cite} consumes stacks; {a} {', '.join(apply_atoms[a])} applies them",
+                            f"{b} {cite} consumes stacks; {a} "
+                            f"{', '.join(apply_atoms[a])} applies them",
                         )
             elif kind == "mark_consume":
                 for a in corpora:
@@ -939,7 +945,8 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                             a,
                             b,
                             "mark_consume",
-                            f"{b} {cite} consumes the mark; {a} {', '.join(apply_atoms[a])} applies it",
+                            f"{b} {cite} consumes the mark; {a} "
+                            f"{', '.join(apply_atoms[a])} applies it",
                         )
             elif kind == "mark_applier":
                 for a in corpora:
@@ -957,7 +964,8 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                             a,
                             b,
                             "detonate",
-                            f"{b} {cite} detonates stacks; {a} {', '.join(apply_atoms[a])} applies them",
+                            f"{b} {cite} detonates stacks; {a} "
+                            f"{', '.join(apply_atoms[a])} applies them",
                         )
             elif kind == "enhanced_consume":
                 if not _P_COND_PHRASE.search(bt) or _P_SELF_RESOURCE.search(bt):
@@ -985,7 +993,8 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
                                 a,
                                 b,
                                 "enhanced_consume",
-                                f"{b} {cite} enhanced vs {condtok}; {a} applies {condtok} ({', '.join(apply_atoms[a])})",
+                                f"{b} {cite} enhanced vs {condtok}; {a} applies "
+                                f"{condtok} ({', '.join(apply_atoms[a])})",
                             )
                     break
         # named appliers/consumers inside the consumer's own structured rows
@@ -1025,24 +1034,25 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
         # execute / stored-damage consumers come after ALL other damage;
         # slots that already consume stacks/marks (detonators) are exempt —
         # their consume relationship dominates the missing-health rider.
-        if any(kind in ("execute", "stored_consume") for kind, _, _ in cons):
-            if not has_consume_role(
-                b,
-                (
-                    "stack_consume",
-                    "detonation_consume",
-                    "mark_consume",
-                    "enhanced_consume",
-                ),
-            ):
-                for a in corpora:
-                    if a != b and _is_damage_row(infos[a]) and _castable(infos[a], a):
-                        add(
-                            a,
-                            b,
-                            "execute",
-                            f"{b} is a missing-health/stored execute — after {a}'s damage",
-                        )
+        if any(
+            kind in ("execute", "stored_consume") for kind, _, _ in cons
+        ) and not has_consume_role(
+            b,
+            (
+                "stack_consume",
+                "detonation_consume",
+                "mark_consume",
+                "enhanced_consume",
+            ),
+        ):
+            for a in corpora:
+                if a != b and _is_damage_row(infos[a]) and _castable(infos[a], a):
+                    add(
+                        a,
+                        b,
+                        "execute",
+                        f"{b} is a missing-health/stored execute — after {a}'s damage",
+                    )
 
     # mark applier by own text: slot says its mark is consumed by the
     # champion's abilities (Ezreal W, Ryze E) -> slot before the burst
@@ -1292,11 +1302,11 @@ def merge_declared_edges(
                 f"({suppression.kind}) is latent: {suppression.latent_reason}"
             )
 
-        for edge in confirmations:
-            confirmed_rows.append(
-                f"{dep.slot} requires {dep.requires} is confirmed by the "
-                f"inferred {edge.setup} -> {edge.consume} ({edge.kind})"
-            )
+        confirmed_rows.extend(
+            f"{dep.slot} requires {dep.requires} is confirmed by the "
+            f"inferred {edge.setup} -> {edge.consume} ({edge.kind})"
+            for edge in confirmations
+        )
 
         dropped = {id(edge) for edge in oppositions + confirmations}
         surviving = [edge for edge in surviving if id(edge) not in dropped]
@@ -1397,7 +1407,7 @@ def detect_aoe_cap(
 
 def _kahn_order(slots: list[str], edges: list[_Edge], tie_key: Any) -> list[str] | None:
     successors: dict[str, list[str]] = {s: [] for s in slots}
-    indegree = {s: 0 for s in slots}
+    indegree = dict.fromkeys(slots, 0)
     for e in edges:
         if e.setup in successors and e.consume in successors:
             successors[e.setup].append(e.consume)
@@ -1781,8 +1791,10 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
             champion=champion_name,
             order=tuple(base),
             rationale=rationale,
-            sources=("no setup/consume atoms detected (flat kit)",)
-            + tuple(option_receipts),
+            sources=(
+                "no setup/consume atoms detected (flat kit)",
+                *tuple(option_receipts),
+            ),
             setup=(),
             consume=(),
             aoe=aoe,

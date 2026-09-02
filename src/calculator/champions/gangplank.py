@@ -6,13 +6,13 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, data_value_at_rank, spell_object
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, int_option
 from .module_helpers import no_damage
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
-from ..binary_roots import data_value, data_value_at_rank, spell_object
 
 _GANGPLANK_W_SPELL = spell_object("Gangplank", "GangplankW")
 _GANGPLANK_R_SPELL = spell_object("Gangplank", "GangplankR")
@@ -35,7 +35,7 @@ def _trial_proc(ctx: SlotCtx) -> dict[str, Any] | None:
             slot="P",
         )
     per_tick = _trial_by_fire(ctx, ability) / 10.0
-    entry = {
+    return {
         "name": "Trial by Fire",
         "damage_type": "true",
         "total_raw": per_tick * 10 * procs,
@@ -45,7 +45,6 @@ def _trial_proc(ctx: SlotCtx) -> dict[str, Any] | None:
         "proc_count": procs,
         "detail": f"{procs} empowered attacks, each burning for 2.5 seconds.",
     }
-    return entry
 
 
 def _parrrley(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -71,7 +70,8 @@ def _parrrley(ctx: SlotCtx) -> dict[str, Any] | None:
     }
     entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
-        "Ranged attack: applies on-hit/on-attack effects and may critically strike for the sourced 230% modifier."
+        "Ranged attack: applies on-hit/on-attack effects and may critically strike "
+        "for the sourced 230% modifier."
     )
     return entry
 
@@ -209,7 +209,8 @@ def _powder_keg(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["parts"] = (DamagePart("physical", bonus),)
     entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
-        "Champion keg branch: triggering attack plus the sourced bonus; 40% armor-ignore is retained in provenance."
+        "Champion keg branch: triggering attack plus the sourced bonus; 40% "
+        "armor-ignore is retained in provenance."
     )
     return entry
 
@@ -245,7 +246,8 @@ def _cannon_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = tuple(parts)
     entry["detail"] = (
-        f"{waves} wave(s); Fire at Will={'on' if fire_at_will else 'off'}, Death's Daughter={'on' if deaths_daughter else 'off'}."
+        f"{waves} wave(s); Fire at Will={'on' if fire_at_will else 'off'}, Death's "
+        f"Daughter={'on' if deaths_daughter else 'off'}."
     )
     return entry
 
@@ -273,8 +275,11 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Trial by Fire is an explicit 10-tick true-damage burn per empowered attack; Parrrley cannot also apply it.",
-    "Powder Keg's triggering attack is a separate authored input; the packet retains the bonus champion branch and armor-ignore note instead of fabricating the trigger.",
+    "Trial by Fire is an explicit 10-tick true-damage burn per empowered attack; "
+    "Parrrley cannot also apply it.",
+    "Powder Keg's triggering attack is a separate authored input; the packet retains "
+    "the bonus champion branch and armor-ignore note instead of fabricating the "
+    "trigger.",
     "Cannon Barrage exposes the 12/18-wave and Death's Daughter branches with ordered tick events.",
 ]
 
@@ -294,7 +299,7 @@ def derive_self_healing(
     healing = []
     w = _healing.ability_json(champion_data, "W")
     w_rank = _healing.parsed_rank(ability_damages, "W")
-    w_flat = _healing.extract_named(w, "Heal", w_rank, champion_stats)
+    w_flat = extract_named(w, "Heal", w_rank, champion_stats)
     w_missing_ratio = (
         _healing.leveling_ratio(w, "Heal", "missing health", w_rank) / 100.0
     )

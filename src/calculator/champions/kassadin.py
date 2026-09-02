@@ -7,6 +7,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import SlotCtx, build_parser
+from .inputs import bool_option, int_option
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -17,7 +18,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 _KASSADIN_W_SPELL = spell_object("Kassadin", "NetherBlade")
 PASSIVE_W_BASE = data_value(_KASSADIN_W_SPELL, "PassiveBaseDamage")
@@ -42,9 +42,10 @@ def _null_sphere(ctx: SlotCtx) -> dict[str, Any] | None:
         event_order_certified="single_hit",
     )
     entry["parts"] = (DamagePart("magic", value),)
-    entry["detail"] = (
-        f"Magic shield is {extract_named(ability, 'Magic Shield Strength', rank, ctx.stats, ctx.target):g}; shield is defensive state."
+    shield = extract_named(
+        ability, "Magic Shield Strength", rank, ctx.stats, ctx.target
     )
+    entry["detail"] = f"Magic shield is {shield:g}; shield is defensive state."
     return entry
 
 
@@ -79,7 +80,8 @@ def _nether_blade(ctx: SlotCtx) -> dict[str, Any] | None:
         entry["total_raw"] = active
         entry["empowers_next_auto"] = True
     entry["detail"] = (
-        f"Passive on-hit {passive:g}; {'empowered' if active else 'unempowered'} next attack and mana restore are explicit."
+        f"Passive on-hit {passive:g}; {'empowered' if active else 'unempowered'} next "
+        f"attack and mana restore are explicit."
     )
     return entry
 
@@ -104,7 +106,8 @@ def _riftwalk(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = (DamagePart("magic", value, time_offset=0.2),)
     entry["detail"] = (
-        f"{stacks} Riftwalk stack(s); mana cost escalation is source-backed and included in the base packet."
+        f"{stacks} Riftwalk stack(s); mana cost escalation is source-backed and "
+        f"included in the base packet."
     )
     return entry
 
@@ -135,7 +138,8 @@ OPTIONS = [
 ]
 ASSUMPTIONS = [
     "Void Stone's magic-damage reduction is defensive and never enters TDD.",
-    "Nether Blade uses the full parent passive on-hit plus the selected active rider on one empowered basic attack.",
+    "Nether Blade uses the full parent passive on-hit plus the selected active rider "
+    "on one empowered basic attack.",
     "Riftwalk reads the target's max-mana scaling and an explicit 0–4 stack state.",
 ]
 SOURCES = load_champion_sources("Kassadin")

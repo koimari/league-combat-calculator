@@ -25,6 +25,7 @@ per-level recharge row; both are read live by ``yuumi.derive_self_healing``,
 so the tests below pin the amount and the gate rather than the absence.
 """
 
+import itertools
 import json
 import re
 from pathlib import Path
@@ -137,7 +138,8 @@ def test_rakan_gleaming_quill_heals_per_level_plus_ap():
     # The heal fires 3 seconds after the Q hit (no ally enters the radius
     # in a 1v1) and is inside the 10s window.
     in_window = [event for event in heals if event["time"] <= 10.0]
-    assert in_window and in_window[0]["time"] == pytest.approx(3.0)
+    assert in_window
+    assert in_window[0]["time"] == pytest.approx(3.0)
     expected = flat + ratio / 100.0 * ap
     assert in_window[0]["amount"] == pytest.approx(expected, abs=0.06)
 
@@ -296,7 +298,8 @@ def test_yuumi_feline_friendship_is_gated_by_its_own_recharge_row():
     ]
     assert len(times) >= 2, "a 30s fight should re-arm the gate at least once"
     assert all(
-        later - earlier >= recharge - 1e-6 for earlier, later in zip(times, times[1:])
+        later - earlier >= recharge - 1e-6
+        for earlier, later in itertools.pairwise(times)
     )
 
 

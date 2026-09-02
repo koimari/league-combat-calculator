@@ -132,7 +132,6 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
@@ -148,12 +147,12 @@ from src.calculator.cleanse_eligibility import (
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.healing import derive_self_healing
 from src.calculator.participant_timeline import Combatant
 from src.calculator.survival.compile import unrepresentable_template_receipt
-from tests.survival_probe import simulate_survival
-from tests.survival_probe import survival_of
 from tests.app_config import app_config
+from tests.survival_probe import simulate_survival, survival_of
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _MILIO_DATA = _CHAMPION_DATA["Milio"]
@@ -578,7 +577,7 @@ class TestSourceAndTypedValues:
         # resolves flat + 50% AP at every rank (rank 0 clamps to the
         # LAST row value 350 — the pinned packet-module clamp the
         # completion's rank gate must supersede).
-        for rank, flat in zip(range(1, 4), _R_HEAL_FLAT):
+        for rank, flat in zip(range(1, 4), _R_HEAL_FLAT, strict=False):
             assert _r_flat(rank, 100.0) == pytest.approx(flat + _R_AP_PERCENT)
             assert _r_flat(rank, 0.0) == pytest.approx(flat)
         assert _r_flat(0, 100.0) == pytest.approx(350.0 + _R_AP_PERCENT)
@@ -974,14 +973,14 @@ class TestControlExclusions:
             "movement": None,
         }
         eligibility = CleanseEligibility(declaration=declaration)
-        base = dict(
-            time=1.5,
-            source_key=_R_CLEANSE_ITEM,
-            sequence=0,
-            event_id="r:0",
-            target="main",
-            holder="main",
-        )
+        base = {
+            "time": 1.5,
+            "source_key": _R_CLEANSE_ITEM,
+            "sequence": 0,
+            "event_id": "r:0",
+            "target": "main",
+            "holder": "main",
+        }
         for kind in ("airborne", "knockback", "knockup"):
             decision = eligibility.decide(
                 SimpleNamespace(
@@ -1147,9 +1146,8 @@ class TestCastabilityGate:
             for e in combat.get("healing_events", [])
             if e.get("source") == "Breath of Life"
         ]
-        assert r_heals and all(
-            e.get("skipped_reason") == "attacker_state_blocked" for e in r_heals
-        )
+        assert r_heals
+        assert all(e.get("skipped_reason") == "attacker_state_blocked" for e in r_heals)
         # The ally's charm is untouched too (the whole cast is denied).
         ally = survival_of(combat, "ally:Jinx")
         assert ally["crowd_control_intervals"][0]["end"] == pytest.approx(1.8)
@@ -1386,10 +1384,11 @@ class TestSameTimeOrdering:
         # ORDER itself is pinned by the fan-out index rule below.
         import src.calculator.participant_timeline as pt_module
 
-        source = open(pt_module.__file__, encoding="utf-8").read()
+        source = Path(pt_module.__file__).read_text(encoding="utf-8")
         heal_loop = source.find("for heal_index, heal_event in enumerate(")
         cleanse_block = source.find('champion_name == "Gangplank"')
-        assert heal_loop != -1 and cleanse_block != -1
+        assert heal_loop != -1
+        assert cleanse_block != -1
         assert heal_loop < cleanse_block
 
     def test_r_cleanse_receipt_pairs_with_heal_at_cast_time(self):
@@ -1737,7 +1736,7 @@ class TestModeParity:
             assert full["resource_ledger"] == scored["resource_ledger"]
             shared = ("time", "slot", "name", "ordinal", "resource_cost")
             for full_row, scored_row in zip(
-                full["cast_timeline"], scored["cast_timeline"]
+                full["cast_timeline"], scored["cast_timeline"], strict=False
             ):
                 assert {k: full_row[k] for k in shared} == {
                     k: scored_row[k] for k in shared
@@ -1903,9 +1902,7 @@ class TestUnchangedBoundaries:
 # ---------------------------------------------------------------------------
 # S16 — Regression surface (run list)
 # ---------------------------------------------------------------------------
-# Run ONLY this file plus the mandated sanity list (the repo gate):
 #
-#   .venv/bin/python -m pytest tests/test_milio_r_cleanse.py #     tests/test_aurelion_sol_stardust_ledger.py #     tests/test_senna_souls_ledger.py tests/test_bard_chimes_ledger.py #     tests/test_heimerdinger_multihit.py tests/test_ksante_w_resistance.py #     tests/test_rengar_ferocity_ledger.py tests/test_rengar_w_cleanse.py #     tests/test_gangplank_w_cleanse.py tests/test_cleanse_eligibility.py #     tests/test_cleanse_eligibility_kernel.py #     tests/test_cleanse_eligibility_consumers.py tests/test_state_lifecycle.py #     tests/test_state_lifecycle_consumers.py tests/test_resource_ledger.py #     tests/test_resource_ledger_consumers.py #     tests/test_resource_ledger_champion_consumers.py #     tests/test_catalyst_resource_ledger.py tests/test_item_sustain.py #     tests/test_mana_restore_refund.py tests/test_app.py
 #
 # The broader regression surface (every test that touches milio / breath
 # of life / ally support, per the brief contract #16): test_e8_support.py

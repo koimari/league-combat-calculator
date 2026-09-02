@@ -33,11 +33,11 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Union
+from typing import Any
 
 from ..healing_reduction import amplifies_recovery
 from ..survival.actions import TransitionRank
-from .identity import PIdx, EventId
+from .identity import EventId, PIdx
 from .route import RoutePolicy
 
 # ---------------------------------------------------------------------------
@@ -177,19 +177,19 @@ class Utility:
     duration: float = 0.0
 
 
-EventPayload = Union[
-    Damage,
-    Recovery,
-    Barrier,
-    TemporaryHealth,
-    Revive,
-    CombatState,
-    SpellShield,
-    StatBuff,
-    DamageModifier,
-    OnHitMagic,
-    Utility,
-]
+EventPayload = (
+    Damage
+    | Recovery
+    | Barrier
+    | TemporaryHealth
+    | Revive
+    | CombatState
+    | SpellShield
+    | StatBuff
+    | DamageModifier
+    | OnHitMagic
+    | Utility
+)
 
 PAYLOAD_FAMILIES: tuple[type, ...] = (
     Damage,
@@ -261,7 +261,7 @@ class AmpBonus:
     mechanic: str
 
 
-Rider = Union[Execute, Defer, Redirect, Wound, AmpBonus]
+Rider = Execute | Defer | Redirect | Wound | AmpBonus
 
 RIDER_KINDS: tuple[type, ...] = (Execute, Defer, Redirect, Wound, AmpBonus)
 
@@ -449,6 +449,8 @@ def riders_from_packet(packet: Mapping[str, Any]) -> tuple[Rider, ...]:
 
 
 __all__ = [
+    "PAYLOAD_FAMILIES",
+    "RIDER_KINDS",
     "AmpBonus",
     "Barrier",
     "CombatState",
@@ -458,9 +460,7 @@ __all__ = [
     "EventPayload",
     "Execute",
     "OnHitMagic",
-    "PAYLOAD_FAMILIES",
     "PairEvent",
-    "RIDER_KINDS",
     "Recovery",
     "Redirect",
     "Revive",

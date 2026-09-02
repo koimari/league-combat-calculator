@@ -14,8 +14,9 @@ Extraction core:
 """
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, replace
-from typing import Any, Callable
+from typing import Any
 
 from ..ability_spec import (
     ControlEvent,
@@ -562,9 +563,9 @@ below, so this is the single place the disposition has to be stated — the
 and a required-no-default field there would be a campaign-wide champion
 sweep smuggled in by an idiom.  Those two figures are measured, not
 recalled: ``tests/test_zero_policy.py`` counts the calls and states the
-counting rule, so restating them anywhere turns it red.  ``MEASURED`` is the honest default at this layer
-and only at this layer: a module formula that evaluates to zero *computed*
-that zero.  Any slot whose zero means something else passes its own policy.
+counting rule, so restating them anywhere turns it red.  ``MEASURED`` is the
+honest default at this layer and only at this layer: a module formula that evaluates
+to zero *computed* that zero.  Any slot whose zero means something else passes its own policy.
 
 The default's safety rests on the inputs being wired, which is why it ships
 with a guard rather than on its own.  A ``.get(key, <literal>)`` on one of
@@ -974,7 +975,7 @@ def _resolve_source(
     source: tuple[str, int] | None,
 ) -> tuple[dict[str, Any] | None, str]:
     """Resolve a factory's source param to (ability JSON, source slot)."""
-    src_slot, src_index = source if source else (ctx.slot, 0)
+    src_slot, src_index = source or (ctx.slot, 0)
     return ctx.ability(src_slot, src_index), src_slot
 
 
@@ -986,7 +987,7 @@ def _control_duration_atom(
     effect_index: int = 0,
 ) -> tuple[float, dict[str, Any]]:
     """Read a control duration through the validated ability atom catalog."""
-    src_slot, src_index = source if source else (ctx.slot, 0)
+    src_slot, src_index = source or (ctx.slot, 0)
     # Deferred import avoids the slotlib -> atomizer_domains -> slotlib cycle.
     from ..ability_atoms import (
         AbilityAtomQuery,
@@ -1065,7 +1066,7 @@ def _prose_control_atom(
     exactly when the control lasts as long as the effect.  The caller says
     which it means rather than the reader guessing.
     """
-    src_slot, src_index = source if source else (ctx.slot, 0)
+    src_slot, src_index = source or (ctx.slot, 0)
     # Deferred import avoids the slotlib -> atomizer_domains -> slotlib cycle.
     from ..ability_atoms import (
         AbilityAtomQuery,
@@ -1105,7 +1106,7 @@ def _control_magnitude_atom(
     cache either carries under a name or does not carry at all, and a prose
     fallback here would be the literal-default shape rule 5 refuses.
     """
-    src_slot, src_index = source if source else (ctx.slot, 0)
+    src_slot, src_index = source or (ctx.slot, 0)
     # Deferred import avoids the slotlib -> atomizer_domains -> slotlib cycle.
     from ..ability_atoms import required_ranked_attribute_atom
 
@@ -1404,7 +1405,8 @@ def park_control_interval(
 
     :func:`with_control_event` for a slot that builds its entry by hand.
     """
-    entry[PENDING_CONTROL_EVENTS] = tuple(entry.get(PENDING_CONTROL_EVENTS, ())) + (
+    entry[PENDING_CONTROL_EVENTS] = (
+        *tuple(entry.get(PENDING_CONTROL_EVENTS, ())),
         {
             "duration": float(duration),
             "time_offset": time_offset,

@@ -411,7 +411,6 @@ class TestFightIntegration:
     """The packets reach the fight engine's breakdown rows."""
 
     def test_darius_execute_recast_doubles_r_damage(self) -> None:
-        from src.calculator.champions import darius as darius_module
 
         base = _parse("Darius")
         recast = _parse("Darius", options={"r_execute_recast": True})

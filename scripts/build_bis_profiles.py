@@ -59,11 +59,8 @@ def _ratio_components(unit: str, attribute: str) -> dict[str, float]:
         result["bonusAd"] = 1.0 / 100.0
     elif ("% ad" in text or text.endswith(" ad")) and "per 100 ad" not in text:
         result["ad"] = 1.0 / 100.0
-    if (
-        "target" in text
-        and "maximum health" in text
-        or "target" in text
-        and "max health" in text
+    if ("target" in text and "maximum health" in text) or (
+        "target" in text and "max health" in text
     ):
         result["targetMaxHp"] = 1.0 / 100.0
     elif "target" in text and "current health" in text:

@@ -48,6 +48,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
+from .inputs import bool_option, int_option
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -59,7 +60,6 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 # Crushing Blow's debuff lasts 3s ("inflict armor reduction for 3
 # seconds", wiki prose below) — it is not permanent.
@@ -191,8 +191,10 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Stone Skin armor uses explicit Strength of Stone stacks; regeneration is a separate survival effect.",
-    "Crushing Blow exposes its bonus packet and attaches the next basic attack through the shared empowered-auto path.",
+    "Stone Skin armor uses explicit Strength of Stone stacks; regeneration is a "
+    "separate survival effect.",
+    "Crushing Blow exposes its bonus packet and attaches the next basic attack "
+    "through the shared empowered-auto path.",
     "Q's armor reduction (10-30% of target's armor by rank, 3s) applies "
     "to damage dealt after the empowered attack lands, not to the attack "
     "itself.",

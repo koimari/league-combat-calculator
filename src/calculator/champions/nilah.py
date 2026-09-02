@@ -25,13 +25,13 @@ damage-taken reduction remain axes the engine does not have, documented
 in ASSUMPTIONS.
 """
 
-from .inputs import champion_stat
-from .healing_contract import self_healing_rule
-from .packet_module import build_packet_module
-from .engine import SlotCtx
-from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .. import healing_helpers as _healing
+from .engine import SlotCtx
+from .healing_contract import self_healing_rule
+from .inputs import champion_stat
 from .module_contract import coverage
+from .packet_module import build_packet_module
+from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 
 PACKET_SHA256 = "95ce830b00c9c829930974899e20cda18a55eb0bb6ab1cc16360b57113671fe5"
 
@@ -120,7 +120,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Joy Unending) converts self-heal excess beyond maximum health "
     "into a 6-second shield (cached description); the conversion ratios "
     "are 0%:20% (Q autos) and 20%:50% (R) by critical strike chance "

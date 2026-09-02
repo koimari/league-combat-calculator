@@ -726,15 +726,15 @@ def _demands(
     found: list[LedgerDemand] = []
     for condition in conditions:
         declaration = DECLARATIONS[condition]
-        for owner in probes[condition](inputs):
-            found.append(
-                LedgerDemand(
-                    condition=condition,
-                    owner=owner,
-                    reader=declaration.reader,
-                    reason=declaration.reason,
-                )
+        found.extend(
+            LedgerDemand(
+                condition=condition,
+                owner=owner,
+                reader=declaration.reader,
+                reason=declaration.reason,
             )
+            for owner in probes[condition](inputs)
+        )
         if found and stop_at_first:
             break
     return tuple(found)
@@ -774,15 +774,15 @@ def shield_outcome_projection(inputs: ShieldOutcomeInputs) -> ResultProjection:
 
 
 __all__ = [
-    "AdequacyCondition",
-    "AdequacyDeclaration",
     "DECLARATIONS",
     "LEDGER_CONDITIONS",
+    "SHIELD_OUTCOME_CONDITIONS",
+    "AdequacyCondition",
+    "AdequacyDeclaration",
     "LedgerDemand",
     "LedgerInputs",
     "ProjectionRegistryError",
     "ResultProjection",
-    "SHIELD_OUTCOME_CONDITIONS",
     "ShieldOutcomeInputs",
     "UndeclaredStatRead",
     "ledger_demands",

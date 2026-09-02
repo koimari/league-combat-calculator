@@ -4,6 +4,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
+from .inputs import bool_option, int_option
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -14,7 +15,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 
 def _royal_privilege(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -82,7 +82,7 @@ def _terrashape(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     total = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
-    entry = ability_on_hit_entry(
+    return ability_on_hit_entry(
         "Terrashape element",
         rank,
         "magic",
@@ -92,7 +92,6 @@ def _terrashape(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_type": "magic",
         },
     )
-    return entry
 
 
 _terrashape.phase = ONHIT
@@ -154,7 +153,8 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Royal Privilege and Terrashape are modeled as on-hit riders; they are not free direct spell damage.",
+    "Royal Privilege and Terrashape are modeled as on-hit riders; they are not free "
+    "direct spell damage.",
     "Terrain Q's increased damage is enabled only when the target-below-half state is explicit.",
     "Element control and per-target passive cooldowns remain explicit scenario state.",
 ]

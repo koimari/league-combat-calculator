@@ -182,7 +182,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Granite Shield) is modeled as a pre-fight granted shield: 10% of "
     "max HP spanning the fight window, riding the first Q cast. The "
     "until-broken lifetime is approximated as the full window; the "

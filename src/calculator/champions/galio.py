@@ -12,9 +12,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .inputs import float_option, int_option
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
 
 _Q_CAST_TIME = 0.25
 _Q_TORNADO_FIRST_TICK = 0.75

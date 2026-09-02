@@ -62,7 +62,7 @@ def _findings():
 @pytest.mark.parametrize("kind", FAILING)
 def test_the_tree_carries_no_prose_of_this_kind(findings, kind):
     hits = findings[kind]
-    assert hits == [], "\n".join([f"{len(hits)} {kind}:"] + hits)
+    assert hits == [], "\n".join([f"{len(hits)} {kind}:", *hits])
 
 
 @pytest.mark.parametrize("kind", FAILING)

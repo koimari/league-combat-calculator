@@ -16,7 +16,8 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator.defensive_effects import StartingDefenses
-from src.calculator.program import rung, walk as walk_module
+from src.calculator.program import rung
+from src.calculator.program import walk as walk_module
 from src.calculator.survival import (
     ScoreLedger,
     SurvivalAction,
@@ -207,11 +208,10 @@ class TestOneWalkPerPassAtRuntime:
 
     def test_one_candidate_evaluation_enters_the_kernel_once_per_pass(self) -> None:
         from src.calculator import participant_timeline as timeline_module
+        from src.calculator.data_fetcher import get_item_by_name
         from src.calculator.participant_timeline import CoupledSearchContext
         from src.calculator.program.dependency import pass_count
-
         from tests.test_participant_timeline import _coupled_fixture
-        from src.calculator.data_fetcher import get_item_by_name
 
         sink = self._sink()
         timeline = _coupled_fixture()
@@ -492,8 +492,8 @@ class TestEveryViewOfOneRequestProjectsOneWalk:
         walked, _ = self._one_request(monkeypatch)
         kernel = walked[0]
         second = walk_module.WalkResult(
-            actions=tuple(list(kernel.actions)),
-            states=tuple(list(kernel.states)),
+            actions=(*kernel.actions,),
+            states=(*kernel.states,),
             coverage=kernel.coverage,
             rung=kernel.rung,
             duration=kernel.duration,

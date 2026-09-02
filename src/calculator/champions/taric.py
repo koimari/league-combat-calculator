@@ -44,8 +44,10 @@ import re
 from functools import partial
 from typing import Any
 
+from ..healing_helpers import ability_json, parsed_rank
 from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
+from .inputs import champion_stat
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -56,8 +58,6 @@ from .slotlib import (
     sum_modifiers,
     with_control,
 )
-from ..healing_helpers import ability_json, parsed_rank
-from .inputs import champion_stat
 
 PACKET_SHA256 = "c4661e1dfa5a63e1d512d64efc3bbb6cfb5e5d22f3c5d3e08c363f4d5c672cb4"
 
@@ -199,7 +199,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "E's sourced 1.5-second stun counts as target action downtime",
     "W (Bastion) shields Taric and the linked selected teammate the "
     "sourced Shield Strength as a live % of the PROTECTED TARGET's "
@@ -273,7 +274,7 @@ def _starlights_touch(
         flags=re.IGNORECASE,
     )
     if per_charge_match is None or charges <= 0.0:
-        return 0.0, max(0, int(round(charges)))
+        return 0.0, max(0, round(charges))
     maximum_health = champion_stat(champion_stats, "health", champion="Taric")
     ability_power = champion_stat(champion_stats, "ability_power", champion="Taric")
 
@@ -299,7 +300,7 @@ def _starlights_touch(
                 float(maximum_match.group(3)),
             ),
         )
-    return max(0.0, heal), max(0, int(round(charges)))
+    return max(0.0, heal), max(0, round(charges))
 
 
 def derive_self_healing(

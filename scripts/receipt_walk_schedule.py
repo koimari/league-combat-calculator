@@ -121,28 +121,32 @@ import dataclasses
 import functools
 import json
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "src"))
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 # pylint: disable=wrong-import-position,wrong-import-order
-import golden_snapshot  # noqa: E402
-from calculator import interpreters  # noqa: E402
-from calculator import item_coverage  # noqa: E402
-from calculator import shield_ledger  # noqa: E402
-from calculator import trigger_stream  # noqa: E402
-from calculator.defensive_effects import option_reader  # noqa: E402
+import golden_snapshot
+
+from calculator import (
+    interpreters,
+    item_coverage,
+    shield_ledger,
+    trigger_stream,
+)
+from calculator.defensive_effects import option_reader
 from calculator.item_behavior import (
     DefenseOption,
     DefenseSubject,
     Subject,
-)  # noqa: E402
-from calculator.item_behavior_catalog import behavior_rules, rule_owners  # noqa: E402
-from calculator.program import events  # noqa: E402
-from calculator.survival import actions as survival_actions  # noqa: E402
+)
+from calculator.item_behavior_catalog import behavior_rules, rule_owners
+from calculator.program import events
+from calculator.survival import actions as survival_actions
 
 RECEIPTS_DIR = REPO_ROOT / "docs" / "receipts"
 SCHEDULE_PATH = RECEIPTS_DIR / "receipt-walk-retirement-schedule.json"
@@ -511,10 +515,11 @@ def _scenario_rows(request: Mapping[str, Any]) -> tuple[frozenset[str], ...]:
     """
     parsed = golden_snapshot.parse_scenario_request(dict(request), deterministic=True)
     resolved = golden_snapshot.resolve_scenario(parsed)
-    if not resolved.enemies:
-        runs = [resolved.fight_params]
-    else:
-        runs = list(resolved.target_fight_params)
+    runs = (
+        [resolved.fight_params]
+        if not resolved.enemies
+        else list(resolved.target_fight_params)
+    )
     return tuple(
         priced_rows(
             golden_snapshot.run_fight(
@@ -532,7 +537,7 @@ def _probe_rows(champion: str, items: Sequence[str]) -> frozenset[str]:
         data["name"]: data for data in golden_snapshot.fetch_item_data().values()
     }
     return priced_rows(
-        golden_snapshot._run_fight(  # pylint: disable=protected-access
+        golden_snapshot._run_fight(  # noqa: SLF001 - the gate's own fight runner  # pylint: disable=protected-access
             champions[champion],
             PROBE_LEVEL,
             [by_name[name] for name in items],
@@ -570,7 +575,7 @@ def authored_rows(
         scenario = by_name[name]
         with_them = _scenario_rows(scenario.request)
         without = _scenario_rows(_stripped(scenario.request, held))
-        for full, ablated in zip(with_them, without):
+        for full, ablated in zip(with_them, without, strict=False):
             found |= full - ablated
     for champion in PROBE_CHAMPIONS:
         bare = _probe_rows(champion, ())
@@ -1783,21 +1788,23 @@ def check(committed: Mapping[str, Any] | None = None) -> list[str]:
     for family, entry in fresh["families"].items():
         if committed.get("families", {}).get(family) != entry:
             failures.append(f"family {family!r}: committed row differs from derived")
-    for key in (
-        "scheduled_slices",
-        "slices_whose_retiring_lane_amendment_k_corrects",
-        "slices_whose_ruled_act_is_already_performed",
-        "named_delivery_rule",
-        "named_delivery_resolution",
-        "triage_by_class",
-        "triage_rows_stopping_the_next_retirement_round",
-        "closed_by_authority_reclassification",
-        "lane_correction_rule",
-        "rows_served_through_their_declared_lane",
-        "closed_by_lane_declaration_correction",
-    ):
-        if committed.get(key) != fresh[key]:
-            failures.append(f"{key}: committed value differs from derived")
+    failures.extend(
+        f"{key}: committed value differs from derived"
+        for key in (
+            "scheduled_slices",
+            "slices_whose_retiring_lane_amendment_k_corrects",
+            "slices_whose_ruled_act_is_already_performed",
+            "named_delivery_rule",
+            "named_delivery_resolution",
+            "triage_by_class",
+            "triage_rows_stopping_the_next_retirement_round",
+            "closed_by_authority_reclassification",
+            "lane_correction_rule",
+            "rows_served_through_their_declared_lane",
+            "closed_by_lane_declaration_correction",
+        )
+        if committed.get(key) != fresh[key]
+    )
     resolution = fresh["named_delivery_resolution"]
     if not resolution["covers_every_declaration"]:
         failures.append(

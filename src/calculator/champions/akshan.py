@@ -47,9 +47,10 @@ import re
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .inputs import champion_stat, int_option
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
+from .inputs import champion_stat, int_option
+from .module_contract import coverage
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -64,7 +65,6 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
-from .module_contract import coverage
 
 # R bullets can crit at 30% effectiveness (3% damage per 10% crit chance) and
 # scale up to +200% based on the target's missing health. The binary stores

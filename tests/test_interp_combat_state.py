@@ -12,12 +12,11 @@ from __future__ import annotations
 
 import pytest
 
-from src.calculator.defensive_effects import option_reader
-
 from src.calculator import item_behavior_catalog as catalog
-from src.calculator.interpreters.defense_state import compiled_shape, declared_defenses
+from src.calculator.defensive_effects import option_reader
 from src.calculator.interpreters import INTERPRETERS, RESOLVERS, resolve_defense
 from src.calculator.interpreters.combat_state import resolve_combat_state
+from src.calculator.interpreters.defense_state import compiled_shape, declared_defenses
 from src.calculator.item_behavior import (
     BehaviorRule,
     DefenseMechanic,
@@ -127,7 +126,8 @@ def test_stasis_is_never_assumed_active_by_item_presence() -> None:
         rule, _subject({"Zhonya's Hourglass": {"stasis_active_seconds": 1.5}})
     )
 
-    assert idle.fields == () and idle.notes == ()
+    assert idle.fields == ()
+    assert idle.notes == ()
     assert _granted(active)["starting_stasis_duration"] == pytest.approx(1.5)
     assert (
         _granted(active)["starting_stasis_source"] == "Zhonya's Hourglass — Time Stop"

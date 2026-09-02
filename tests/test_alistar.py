@@ -2,13 +2,13 @@
 
 import pytest
 
-from src.calculator.champions.slotlib import extract_named
+from src.calculator.champions import alistar
 from src.calculator.champions.alistar import (
     _extract_e_on_hit_damage,
 )
-from src.calculator.damage import FightConfig, calculate_fight_damage
-from src.calculator.champions import alistar
 from src.calculator.champions.engine import CC_PER_PART
+from src.calculator.champions.slotlib import extract_named
+from src.calculator.damage import FightConfig, calculate_fight_damage
 from tests import cc_review
 
 
@@ -152,7 +152,8 @@ class TestRUnbreakableWill:
         assert entry["total_raw"] == 0.0
         # Rank 2 at level 11 default ladder: sourced 65% reduction, 7s.
         events = entry["self_state_events"]
-        assert events and events[0]["kind"] == "damage_modifier"
+        assert events
+        assert events[0]["kind"] == "damage_modifier"
         # Rank 2: 65% sourced reduction -> multiplier 0.35 over the 7s window.
         assert events[0]["multiplier"] == pytest.approx(0.35)
         assert events[0]["duration"] == 7.0

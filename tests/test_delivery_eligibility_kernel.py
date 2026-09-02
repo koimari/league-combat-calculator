@@ -14,7 +14,6 @@ uses, first-valid-hit, destruction, later-hit reduction).
 import pytest
 
 from src.calculator import delivery_eligibility as de
-from src.calculator.state_lifecycle import SourceReceipt
 
 
 class _Action:

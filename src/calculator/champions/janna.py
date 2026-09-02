@@ -15,8 +15,10 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..healing_helpers import ability_json, parsed_rank
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import float_option
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -26,8 +28,6 @@ from .slotlib import (
     on_hit_entry,
 )
 from .source_receipts import load_champion_sources
-from ..healing_helpers import ability_json, parsed_rank
-from .inputs import float_option
 
 
 def _tailwind(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -38,7 +38,8 @@ def _tailwind(ctx: SlotCtx) -> dict[str, Any] | None:
     value = 0.30 * bonus_ms
     entry = on_hit_entry(ability_name(ability), value, "magic")
     entry["detail"] = (
-        f"30% of the explicit {bonus_ms:g} bonus movement speed is bonus magic damage on attacks and Zephyr."
+        f"30% of the explicit {bonus_ms:g} bonus movement speed is bonus magic damage "
+        f"on attacks and Zephyr."
     )
     return entry
 
@@ -99,7 +100,10 @@ SLOTS = {
     "R": lambda ctx: no_damage(
         ctx,
         name="Monsoon",
-        reason="Knockback and channelled healing are utility; the parent entry has no outgoing champion damage formula.",
+        reason=(
+            "Knockback and channelled healing are utility; the parent entry has no "
+            "outgoing champion damage formula."
+        ),
     ),
 }
 # Q's whirlwind deals magic damage "and knock[s] them up"; W's air
@@ -128,7 +132,8 @@ OPTIONS = [
 ]
 ASSUMPTIONS = [
     "Tailwind's 30% bonus-movement-speed on-hit uses the explicit movement-speed input.",
-    "Howling Gale interpolates the sourced minimum/maximum charge packet; W's passive movement speed is not double-counted as damage.",
+    "Howling Gale interpolates the sourced minimum/maximum charge packet; W's passive "
+    "movement speed is not double-counted as damage.",
     "Eye of the Storm and Monsoon are visible ally/defensive utility, not TDD.",
     "E (Eye of the Storm) shields the selected teammate for the sourced "
     "Shield Strength (80-240 + 55% AP) for 4s (scanner packet with "
@@ -175,7 +180,7 @@ def derive_self_healing(
     per_tick = extract_named(ability, "Heal Per Tick", r_rank, champion_stats)
     total = extract_named(ability, "Total Heal", r_rank, champion_stats)
     tick_count = (
-        max(1, min(100, int(round(total / per_tick))))
+        max(1, min(100, round(total / per_tick)))
         if per_tick > 0.0 and total > 0.0
         else 12
     )
@@ -184,18 +189,18 @@ def derive_self_healing(
             if cast.get("slot") != "R":
                 continue
             start = float(cast.get("time", 0.0))
-            for index in range(1, tick_count + 1):
-                healing.append(
-                    {
-                        "time": start + index * 0.25,
-                        "amount": float(per_tick),
-                        "source": "Monsoon",
-                        "kind": "champion_ability",
-                        "actor_wide": True,
-                        "target_scope": "self_and_all_teammates",
-                        "_event_id": f"janna:r:{cast_index}:{index}",
-                    }
-                )
+            healing.extend(
+                {
+                    "time": start + index * 0.25,
+                    "amount": float(per_tick),
+                    "source": "Monsoon",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                    "target_scope": "self_and_all_teammates",
+                    "_event_id": f"janna:r:{cast_index}:{index}",
+                }
+                for index in range(1, tick_count + 1)
+            )
     return healing
 
 

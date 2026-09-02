@@ -65,7 +65,7 @@ import argparse
 import ast
 import json
 import sys
-from collections.abc import Collection, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -306,7 +306,7 @@ def _literal_string_dict(node: ast.AST) -> dict[str, str] | None:
     if not isinstance(node, ast.Dict):
         return None
     mapping: dict[str, str] = {}
-    for key, value in zip(node.keys, node.values):
+    for key, value in zip(node.keys, node.values, strict=False):
         if not isinstance(key, ast.Constant) or not isinstance(value, ast.Constant):
             return None
         mapping[str(key.value)] = str(value.value)
@@ -607,8 +607,9 @@ def _record_merge(  # pylint: disable=too-many-arguments,too-many-positional-arg
                 matched[suppression_key].add(state)
             if _has_prefix(receipt.latent, prefix):
                 latent[suppression_key].add(state)
-    for row in receipt.conflicts:
-        conflicts.append({"champion": name, "state": state, "row": row})
+    conflicts.extend(
+        {"champion": name, "state": state, "row": row} for row in receipt.conflicts
+    )
 
 
 def _has_prefix(rows: Iterable[str], prefix: str) -> bool:
@@ -1144,16 +1145,16 @@ def _marker_ledger(
                     ),
                 }
             )
-    for marker in sorted(set(negative_tests) - set(markers)):
-        failures.append(
-            {
-                "item": f"authored_marker_reach:{marker}",
-                "reason": (
-                    "a negative test claims a marker the interpreter no longer "
-                    "reads; the test is stale"
-                ),
-            }
-        )
+    failures.extend(
+        {
+            "item": f"authored_marker_reach:{marker}",
+            "reason": (
+                "a negative test claims a marker the interpreter no longer "
+                "reads; the test is stale"
+            ),
+        }
+        for marker in sorted(set(negative_tests) - set(markers))
+    )
     return ledger, failures
 
 
@@ -1231,7 +1232,7 @@ def _override_frontier() -> dict[str, Any]:
     from a pure Tier 3 seed and the distinction D-89 ruled lives only in
     ``declared_dependency_activation``.
     """
-    histogram = {reason: 0 for reason in sorted(ORDER_OVERRIDE_REASONS)}
+    histogram = dict.fromkeys(sorted(ORDER_OVERRIDE_REASONS), 0)
     unclassified: list[str] = []
     for name, rule in sorted(CAST_ORDER_OVERRIDES.items()):
         if rule.override_reason in histogram:

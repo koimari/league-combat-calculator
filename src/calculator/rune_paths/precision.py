@@ -13,10 +13,11 @@ which the pair engine does not track, so it is a flat amplifier whose gate is
 a declared option.
 """
 
-from typing import Any, Callable, Mapping, NamedTuple
+from collections.abc import Callable, Mapping
+from typing import Any, NamedTuple
 
-from ..champions.inputs import champion_stat
 from ..ability_spec import Disposition, ZeroPolicy
+from ..champions.inputs import champion_stat
 from ..item_effects import DamageInputs
 from ..rune_effects import (
     RuneAmpContext,

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import math
 from collections.abc import Iterable, Mapping, MutableMapping
 from dataclasses import dataclass, field, replace
-import math
 from typing import TYPE_CHECKING, Any
 
 from .defensive_effects import StartingDefenses
@@ -45,7 +45,7 @@ class ActorRequest:
     current_health: float | None = None
 
     @classmethod
-    def of_params(cls, params: FightParams) -> "ActorRequest":
+    def of_params(cls, params: FightParams) -> ActorRequest:
         """The main champion's request, off the selected fight params."""
         return cls(
             role=params.role,

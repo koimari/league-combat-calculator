@@ -1,10 +1,9 @@
 """Route-level contracts for shared fight request parsing."""
 
-from dataclasses import replace
-from pathlib import Path
 import base64
 import hashlib
 import sqlite3
+from pathlib import Path
 
 import pytest
 from bs4 import BeautifulSoup
@@ -40,7 +39,8 @@ def test_index_uses_scryglass_editorial_shell_without_changing_calculator_contra
     # The redesign has no visible page title — the rail header carries the
     # brand — so the H1 is a screen-reader landmark.
     heading = soup.select_one("h1")
-    assert heading is not None and "calculator" in heading.get_text(strip=True).lower()
+    assert heading is not None
+    assert "calculator" in heading.get_text(strip=True).lower()
     # The setup rail and duel canvas each exist exactly once and the proof
     # surfaces ride in the visible canvas — the legacy hidden DOM is gone.
     assert len(soup.select(".app-grid")) == 1
@@ -66,7 +66,10 @@ def test_index_uses_scryglass_editorial_shell_without_changing_calculator_contra
 def _test_password_hash(password="secret"):
     salt = b"test-scryglass-salt"
     digest = hashlib.scrypt(password.encode(), salt=salt, n=16_384, r=8, p=1)
-    enc = lambda value: base64.urlsafe_b64encode(value).rstrip(b"=").decode()
+
+    def enc(value):
+        return base64.urlsafe_b64encode(value).rstrip(b"=").decode()
+
     return f"scrypt$16384$8$1${enc(salt)}${enc(digest)}"
 
 
@@ -90,8 +93,7 @@ def test_password_auth_accepts_only_configured_accounts(monkeypatch):
     monkeypatch.setenv("SCRYGLASS_AUTH_SECRET", "test-auth-secret")
     monkeypatch.setenv(
         "SCRYGLASS_AUTH_USERS",
-        '{"LSAccessAccount":"%s","SkywayAccessAccount":"%s","KoiAccessAccount":"%s"}'
-        % (
+        '{{"LSAccessAccount":"{}","SkywayAccessAccount":"{}","KoiAccessAccount":"{}"}}'.format(
             _test_password_hash(),
             _test_password_hash("skyway-secret"),
             _test_password_hash("koi-secret"),
@@ -118,7 +120,9 @@ def test_password_auth_accepts_only_configured_accounts(monkeypatch):
     body = page.get_data(as_text=True)
     assert "Signed in as <strong>LSAccessAccount</strong>" in body
     assert "/auth/logout" in body
-    assert "Articles" not in body and "Ratings" not in body and "Matches" not in body
+    assert "Articles" not in body
+    assert "Ratings" not in body
+    assert "Matches" not in body
     # Locked decision 3: one committed look (cream canvas + dark rail). The
     # theme toggle and its data-theme plumbing are retired, so the served
     # page must not carry a theme attribute at all.
@@ -553,8 +557,8 @@ def test_calculate_withholds_uncertified_timed_fight_against_lifeline(monkeypatc
     assert "not event-certified" in error
 
 
-@pytest.mark.parametrize("field", ("enemies", "allies"))
-@pytest.mark.parametrize("champion", ("Vi", "Kai'Sa", "Karthus", "Taliyah"))
+@pytest.mark.parametrize("field", ["enemies", "allies"])
+@pytest.mark.parametrize("champion", ["Vi", "Kai'Sa", "Karthus", "Taliyah"])
 def test_timed_fight_accepts_every_champion_on_the_roster(field, champion):
     response = app_module.app.test_client().post(
         "/api/calculate",
@@ -2060,18 +2064,22 @@ class TestIconUrlsAreHttps:
         # the backend receipt, so the snapshot can never outrank it.
         phantom = next(item for item in items if item["name"] == "Phantom Dancer")
         swiftness = next(item for item in boots if item["name"] == "Boots of Swiftness")
-        assert phantom["moveSpeed"] == 0.0 and phantom["moveSpeedPercent"] == 10.0
+        assert phantom["moveSpeed"] == 0.0
+        assert phantom["moveSpeedPercent"] == 10.0
         assert phantom["tier"] == 3
-        assert swiftness["moveSpeed"] == 55.0 and swiftness["tier"] == 2
+        assert swiftness["moveSpeed"] == 55.0
+        assert swiftness["tier"] == 2
         assert all("moveSpeed" in item and "tier" in item for item in items + boots)
         # Stat numbers and price come from the typed accessor and the sourced
         # shop price; the cache keeps them under ``stats``/``shop``, so a
         # top-level .get(key, 0) read served zero for every item.
         deathcap = next(item for item in items if item["name"] == "Rabadon's Deathcap")
-        assert deathcap["ap"] == 130.0 and deathcap["price"] == 3500
+        assert deathcap["ap"] == 130.0
+        assert deathcap["price"] == 3500
         assert swiftness["price"] == 1000
         edge = next(item for item in items if item["name"] == "Infinity Edge")
-        assert edge["crit"] == 25.0 and edge["ad"] > 0
+        assert edge["crit"] == 25.0
+        assert edge["ad"] > 0
         assert sum(1 for item in items if item["price"] > 0) > len(items) // 2
 
     def test_item_apis_expose_optimizer_coverage(self):
@@ -2732,7 +2740,8 @@ class TestBreakdownProcRowShape:
         row = response.get_json()["breakdown"]["on_hit_Kraken Slayer"]
         assert row["count"] == 3
         assert row["unit"] == "procs"
-        assert row["damage_per_hit"] is not None and row["damage_per_hit"] > 0
+        assert row["damage_per_hit"] is not None
+        assert row["damage_per_hit"] > 0
 
     def test_spellblade_row_carries_proc_detail(self):
         """Any champ + Trinity Force, timed with autos: the spellblade
@@ -2753,9 +2762,11 @@ class TestBreakdownProcRowShape:
         ]
         assert spellblade_rows, f"no spellblade row in {sorted(breakdown)}"
         row = spellblade_rows[0]
-        assert row["count"] and row["count"] > 0
+        assert row["count"]
+        assert row["count"] > 0
         assert row["unit"] == "procs"
-        assert row["damage_per_hit"] is not None and row["damage_per_hit"] > 0
+        assert row["damage_per_hit"] is not None
+        assert row["damage_per_hit"] > 0
 
     def test_guinsoo_seething_schedule_is_used_by_timed_calculation(self):
         """A timed build uses Seething's sourced swing schedule, not a flat AS count."""

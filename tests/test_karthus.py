@@ -2,7 +2,6 @@
 
 import pytest
 
-from tests.ability_math import parts_raw_total
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import (
     get_champion_cast_order,
@@ -12,7 +11,7 @@ from src.calculator.champions import (
 )
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
-from src.calculator.champions import karthus
+from tests.ability_math import parts_raw_total
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 

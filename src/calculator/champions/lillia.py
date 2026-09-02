@@ -8,6 +8,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
+from .inputs import bool_option, int_option
 from .module_helpers import (
     REVIEWED_MODULE_ASSUMPTIONS,
     mixed_damage,
@@ -16,7 +17,6 @@ from .module_helpers import (
 )
 from .slotlib import ability_name, extract_cooldown, extract_named, simple_damage
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 
 def _dream_laden_bough(ctx: SlotCtx) -> dict[str, Any] | None:

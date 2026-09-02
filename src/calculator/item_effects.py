@@ -15,18 +15,19 @@ re-parses and updates ``ITEM_EFFECTS`` in place.
 import logging
 import math
 import re
+from collections.abc import Callable, Mapping, Sequence
 from copy import deepcopy
 from dataclasses import dataclass
-from typing import Any, Callable, Literal, Mapping, Sequence
+from typing import Any, Literal
+
 from . import data_fetcher, item_source
+from .data_fetcher import fetch_item_data
+from .passive_parser import parse_all_item_effects
 from .state_lifecycle import (
     SourceReceipt,
     WindowGateRule,
     WindowStackGate,
 )
-
-from .data_fetcher import fetch_item_data
-from .passive_parser import parse_all_item_effects
 
 logger = logging.getLogger(__name__)
 
@@ -4718,7 +4719,7 @@ def eclipse_trigger_gate(effect: "CooldownProcEffect") -> WindowStackGate:
     registry-owned, ``cooldown`` parser-owned).  The damage formula stays
     with the fight engine; this gate owns only the trigger/stack timing.
     """
-    gate = WindowStackGate(
+    return WindowStackGate(
         WindowGateRule(
             name="Eclipse (Ever Rising Moon) — stack pair gate",
             stacks_required=int(effect.stack_required),
@@ -4728,7 +4729,6 @@ def eclipse_trigger_gate(effect: "CooldownProcEffect") -> WindowStackGate:
             source=_ECLIPSE_TRIGGER_SOURCE,
         )
     )
-    return gate
 
 
 # ---------------------------------------------------------------------------

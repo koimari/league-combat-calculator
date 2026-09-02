@@ -84,6 +84,7 @@ from ..ability_atoms import (
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
+from .inputs import bool_option, int_option
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -94,7 +95,6 @@ from .slotlib import (
     on_hit_entry,
     with_control,
 )
-from .inputs import bool_option, int_option
 
 PACKET_SHA256 = "4814ec27868dfc6c584834af7a9e7e17d4febc980aa3532143466c34cf7b995b"
 
@@ -281,7 +281,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "p_notes",
         _NOTE_CAP,
@@ -296,7 +297,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Surround Sound) pulses its sourced missing-health heal after 2.5 "
     "seconds when Seraphine has a shield at cast time; the first cast can "
     "use the explicit w_already_shielded option",

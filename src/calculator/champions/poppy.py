@@ -23,8 +23,9 @@ static/reviewed-packets.json (only the Poppy entry changed; the other
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .packet_module import build_packet_module
 from .engine import ONHIT, SlotCtx
+from .inputs import bool_option
+from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -33,7 +34,6 @@ from .slotlib import (
     on_hit_entry,
     with_control,
 )
-from .inputs import bool_option
 
 PACKET_SHA256 = "b6f179d37816f86a3c589048738bf588034d2340535ad6dde533391daf113d90"
 
@@ -136,11 +136,13 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     bool_option("r_charged", False, label="Fully-charged Keeper's Verdict (R)"),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Iron Ambassador) deals 20 : 198.82 (based on level) bonus magic "
     "damage on the empowered buckler attack — the wiki's 'Bonus Magic "
     "Damage' row (data/champions.json). The old packet's %max-HP "

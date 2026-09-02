@@ -19,8 +19,8 @@ from src.calculator.item_behavior import (
     BehaviorRule,
     BehaviorRuleError,
     EmpoweredAutoBuffRule,
-    EngineLane,
     EmpoweredHitRule,
+    EngineLane,
     RepeatingStrikeRule,
     RuleFamily,
     ShapedChargeRule,
@@ -289,14 +289,16 @@ def _swing_rule(owner: str):
 def test_the_two_swing_mechanics_are_declared_shapes() -> None:
     """A ramp the attacks build and a window the attacks re-arm."""
     ramp = _schedule(RAMP)
-    assert ramp is not None and ramp.window is None
+    assert ramp is not None
+    assert ramp.window is None
     assert ramp.ramp == charged_strike.DecayingStackRamp(
         per_stack=float(ITEM_EFFECTS[RAMP]["seething_attack_speed_per_stack"]),
         max_stacks=int(ITEM_EFFECTS[RAMP]["seething_max_stacks"]),
         stack_duration=float(ITEM_EFFECTS[RAMP]["seething_duration"]),
     )
     window = _schedule(WINDOW)
-    assert window is not None and window.ramp is None
+    assert window is not None
+    assert window.ramp is None
     assert window.window == charged_strike.RearmedWindow(
         bonus_percent=float(ITEM_EFFECTS[WINDOW]["bonus_attack_speed_percent"]),
         duration=float(ITEM_EFFECTS[WINDOW]["duration"]),

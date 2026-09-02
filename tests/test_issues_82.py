@@ -28,9 +28,11 @@ from src.calculator.data_fetcher import get_champion
 from src.calculator.loadout_rules import role_quest_legal_items
 from src.calculator.optimizer import (
     get_eligible_legendaries,
-    optimize_build as _optimize_build,
     optimizer_supported_items,
     role_scoped_shop_items,
+)
+from src.calculator.optimizer import (
+    optimize_build as _optimize_build,
 )
 from src.calculator.pipeline import FightParams
 from src.calculator.role_quests import (
@@ -202,7 +204,7 @@ class TestMidQuestBootTierContract:
         level_block = re.search(
             r"const levelButton = event\.target\.closest\(\"[^\"]*data-level-delta[^\"]*\"\);.*?\n  \}",
             source,
-            re.S,
+            re.DOTALL,
         )
         assert level_block is not None
         assert "normalizeAttackerBootsForRole" not in level_block.group(0)

@@ -47,20 +47,20 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from scripts.bench_coupled_optimizer import PROBE_BUILDS, SCENARIOS  # noqa: E402
-from src.calculator.defensive_effects import resolve_starting_defenses  # noqa: E402
-from src.calculator.participant_timeline import (  # noqa: E402
+from scripts.bench_coupled_optimizer import PROBE_BUILDS, SCENARIOS
+from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.program import precision  # noqa: E402
-from src.calculator.program.views import receipt as receipt_view  # noqa: E402
-from src.calculator.program.views import score as score_view  # noqa: E402
+from src.calculator.program import precision
+from src.calculator.program.views import receipt as receipt_view
+from src.calculator.program.views import score as score_view
 from src.calculator.scenario import (
     parse_scenario_request,
     resolve_scenario,
-)  # noqa: E402
-from src.calculator.stats import calculate_total_stats  # noqa: E402
+)
+from src.calculator.stats import calculate_total_stats
 
 #: Every digit count the precision registry declares, read rather than typed.
 DECLARED_DIGITS = frozenset(precision.ROUNDING.values())

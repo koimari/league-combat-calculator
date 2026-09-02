@@ -17,7 +17,6 @@ from src.app import app
 from src.calculator.delivery_eligibility import (
     DefenseEligibility,
     DeliveryAcceptance,
-    DefenseWindow,
     SourceSelection,
 )
 from tests.survival_probe import survival_of

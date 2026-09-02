@@ -70,13 +70,11 @@ AMBIGUITY NOTES for the coordinator:
    xfail in S8 pins the missing typed certification surface.
 """
 
-import hashlib
 import json
 from pathlib import Path
 
 import pytest
 
-from tests.committed_bytes import sha256_as_committed
 from src import app as app_module
 from src.calculator.atomizer import hash_domain_file
 from src.calculator.champions import (
@@ -84,10 +82,11 @@ from src.calculator.champions import (
     parse_champion_abilities,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
-from src.calculator.ledger_projection import LightRow, SHARED_ROW_FIELDS
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.ledger_projection import SHARED_ROW_FIELDS, LightRow
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
+from tests.committed_bytes import sha256_as_committed
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _ABILITIES_ATOMS = json.loads(
@@ -344,10 +343,10 @@ class TestSourceEvidence:
         for q in (_YASUO_Q, _YONE_Q):
             assert q["cooldown"]["modifiers"][0]["values"] == [4, 4, 4, 4, 4]
             assert q["cooldown"]["affectedByCdr"] is False
-            assert (
+            assert q["cooldown"]["modifiers"][0]["units"][0] == (
                 " x (1 - (0.01 per 1.67% bonus attack speed)). This is capped "
                 "at 67% reduction at 111.1% bonus attack speed."
-            ) == q["cooldown"]["modifiers"][0]["units"][0]
+            )
 
     def test_q_atoms_hashes_stable(self):
         yasuo_atoms = _ABILITIES_ATOMS["Yasuo"]
@@ -1071,7 +1070,7 @@ class TestScoreReceiptParity:
         # both carry (``SHARED_ROW_FIELDS``).
         light = bool(score.get("damage_events_tuple"))
         for score_event, full_event in zip(
-            score["damage_events"], full["damage_events"]
+            score["damage_events"], full["damage_events"], strict=False
         ):
             if light:
                 row = LightRow._make(score_event)
@@ -1081,7 +1080,7 @@ class TestScoreReceiptParity:
                 # authored them; ``raw_damage`` rides only the rows that
                 # carry a raw figure, so the comparison is over what
                 # BOTH rows hold rather than what the light shape packs.
-                score_event = {
+                score_event = {  # noqa: PLW2901 - the row is narrowed to the shared fields in place
                     field: getattr(row, field)
                     for field in SHARED_ROW_FIELDS
                     if field in full_event

@@ -6,6 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
+from .inputs import bool_option, int_option
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -16,7 +17,6 @@ from .slotlib import (
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 
 def _level_scaling(
@@ -43,7 +43,10 @@ def _new_destiny(ctx: SlotCtx) -> dict[str, Any] | None:
     entry = no_damage(
         ctx,
         name="New Destiny",
-        reason="Shotgun reload/pellet state is explicit; all pellets hitting one target is the selected auto packet.",
+        reason=(
+            "Shotgun reload/pellet state is explicit; all pellets hitting one target "
+            "is the selected auto packet."
+        ),
         slot="P",
     )
     if entry is not None:
@@ -53,7 +56,8 @@ def _new_destiny(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_type": "physical",
         }
         entry["detail"] = (
-            f"{total_ratio:g}% AD across the authored pellet cone; critical pellet branch={'on' if critical else 'off'}."
+            f"{total_ratio:g}% AD across the authored pellet cone; critical pellet "
+            f"branch={'on' if critical else 'off'}."
         )
     return entry
 
@@ -116,7 +120,10 @@ def _quickdraw(ctx: SlotCtx) -> dict[str, Any] | None:
     entry = no_damage(
         ctx,
         name=ability_name(ability),
-        reason=f"{stacks} True Grit stack(s): +{armor:g} armor/+{mr:g} MR; dash/reload are state-only.",
+        reason=(
+            f"{stacks} True Grit stack(s): +{armor:g} armor/+{mr:g} MR; dash/reload "
+            f"are state-only."
+        ),
     )
     if entry is not None:
         entry["stat_buff"] = {"armor": armor, "magic_resistance": mr}
@@ -170,8 +177,10 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "The auto packet assumes all pellets hit the primary target; reload timing is exposed as state rather than replacing the attack stream with guessed cadence.",
-    "End of the Line keeps pass and detonation as separate ordered physical events; terrain collision is an explicit source note.",
+    "The auto packet assumes all pellets hit the primary target; reload timing is "
+    "exposed as state rather than replacing the attack stream with guessed cadence.",
+    "End of the Line keeps pass and detonation as separate ordered physical events; "
+    "terrain collision is an explicit source note.",
     "True Grit armor/MR is a selected defensive state and cannot inflate outgoing damage.",
 ]
 

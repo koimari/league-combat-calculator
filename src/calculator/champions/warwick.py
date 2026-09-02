@@ -355,7 +355,8 @@ OPTIONS.append(
     }
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "R (Infinite Duress) prices the wiki Total Magic Damage "
     "(175/350/525 + 167% bonus AD by rank) as one cast over the "
     "1.5-second suppress channel; healing.py's existing 100%-of-R-"
@@ -411,9 +412,7 @@ def derive_self_healing(
     healing = []
     q = _healing.ability_json(champion_data, "Q")
     q_rank = _healing.parsed_rank(ability_damages, "Q")
-    q_ratio = _healing.extract_named(
-        q, "Healing Percentage", q_rank, champion_stats, {}
-    )
+    q_ratio = extract_named(q, "Healing Percentage", q_rank, champion_stats, {})
     for event in damage_events:
         source = _healing.event_source(event)
         if source == "Q":

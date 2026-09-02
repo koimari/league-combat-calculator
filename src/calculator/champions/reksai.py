@@ -32,11 +32,13 @@ replaces that slot with the priced burrow heal.
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
-from .module_helpers import typed_damage
 from .healing_contract import self_healing_rule
+from .inputs import int_option
+from .module_helpers import typed_damage
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -45,8 +47,6 @@ from .slotlib import (
     extract_named,
     extract_value,
 )
-from .. import healing_helpers as _healing
-from .inputs import int_option
 
 PACKET_SHA256 = "004116a55524cf55d387d236bcd22e8fbad9b79deb5679fc0c2be4257d364c0a"
 
@@ -150,7 +150,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "e_fury",
         0,
@@ -170,15 +171,14 @@ OPTIONS = list(OPTIONS) + [
         rotation={
             "role": "self_state",
             "slot": "P",
-            "note": (
-                "The burrow heal is Fury Rek'Sai carried in, spent before "
-                "the rotation starts; no cast orders it."
-            ),
+            "note": "The burrow heal is Fury Rek'Sai carried in, spent before "
+            "the rotation starts; no cast orders it.",
         },
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "E (Furious Bite) is deterministic through the e_fury option: below "
     "100 Fury it prices the physical row (70-170 + 60% bonus AD); at 100 "
     "Fury it prices the sourced true-damage variant (84-204 + 72% bonus "

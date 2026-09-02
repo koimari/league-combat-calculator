@@ -27,7 +27,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Union
 
 from .identity import PIdx
 
@@ -113,18 +112,18 @@ class TriggerTarget:
     """
 
 
-RoutePolicy = Union[
-    SelfOnly,
-    Holder,
-    PairDefender,
-    AllOpponents,
-    AllTeammates,
-    SelfAndAllTeammates,
-    OneTeammate,
-    SelfAndOneTeammate,
-    ExplicitTargets,
-    TriggerTarget,
-]
+RoutePolicy = (
+    SelfOnly
+    | Holder
+    | PairDefender
+    | AllOpponents
+    | AllTeammates
+    | SelfAndAllTeammates
+    | OneTeammate
+    | SelfAndOneTeammate
+    | ExplicitTargets
+    | TriggerTarget
+)
 
 ROUTE_POLICIES: tuple[type, ...] = (
     SelfOnly,

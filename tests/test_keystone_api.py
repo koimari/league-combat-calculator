@@ -545,7 +545,7 @@ def test_an_uncompiled_keystone_is_still_rejected(monkeypatch):
     # ``grants_attack_speed`` marks the two that also empower the swings the
     # baseline counted, so their row is a floor on what they added rather
     # than the whole of it.
-    "keystone,expected_row,grants_attack_speed",
+    ("keystone", "expected_row", "grants_attack_speed"),
     [
         ("Summon Aery", True, False),
         ("Hail of Blades", True, True),
@@ -586,7 +586,8 @@ def test_the_thirteen_new_keystones_price_exactly_what_they_declare(
 
     row = result["breakdown"].get(f"keystone_{keystone}")
     if expected_row:
-        assert row is not None and row["total_damage"] > 0
+        assert row is not None
+        assert row["total_damage"] > 0
         with_row = baseline["total_damage"] + row["total_damage"]
         if grants_attack_speed:
             assert result["total_damage"] > with_row

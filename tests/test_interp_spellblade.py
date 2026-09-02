@@ -76,7 +76,9 @@ def test_the_three_formulas_sum_their_declared_shares() -> None:
         _armed(WITH_ABILITY_POWER),
         _armed(WITH_CRIT),
     )
-    assert plain is not None and magical is not None and critical is not None
+    assert plain is not None
+    assert magical is not None
+    assert critical is not None
     assert plain.source.raw_damage(_inputs(**stats)) == pytest.approx(
         float(ITEM_EFFECTS[PLAIN]["base_ad_ratio"]) * 100.0  # type: ignore[arg-type]
     )

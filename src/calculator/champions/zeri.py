@@ -244,7 +244,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "E (Spark Surge) prices the dash plus Lightning Rounds: 7 Burst "
     "Fire rounds x the wiki's 'Burst Fire Bonus Magic Damage' row "
     "(22-30 + 20% AP, data/champions.json E), the E2-sourced round "

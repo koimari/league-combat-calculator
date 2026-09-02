@@ -295,7 +295,7 @@ def test_a_priced_fight_follows_the_cached_text(cached_items) -> None:
 
 def test_the_inert_families_reason_is_still_true() -> None:
     """The exemption is measured on every run, never carried as prose."""
-    static_keys = item_effects._STATIC_VALUE_KEYS_BY_ITEM  # noqa: SLF001
+    static_keys = item_effects._STATIC_VALUE_KEYS_BY_ITEM
     for family, reason in REFRESH_INERT_FAMILIES.items():
         assert reason.strip()
         parser_owned: list[str] = []

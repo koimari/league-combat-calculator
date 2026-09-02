@@ -44,9 +44,10 @@ import math
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..damage import effective_cooldown
 from ..binary_roots import data_value, spell_object
+from ..damage import effective_cooldown
 from .engine import ONHIT, SlotCtx, build_parser
+from .inputs import float_option, int_option
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -58,7 +59,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
 
 # HARDCODED: verify on patch updates — wiki values with no JSON home.
 # https://wiki.leagueoflegends.com/en-us/Corki

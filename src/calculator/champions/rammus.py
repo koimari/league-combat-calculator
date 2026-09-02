@@ -57,6 +57,8 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, CC_PER_PART, SlotCtx
+from .inputs import int_option
+from .module_contract import coverage
 from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
@@ -65,8 +67,6 @@ from .slotlib import (
     extract_cooldown,
     with_control_event,
 )
-from .inputs import int_option
-from .module_contract import coverage
 
 # The thorns flat damage and ratios are binary DataValues (DefensiveBallCurl
 # — W — FlatDamageReturn / DamageArmorRatio / DamageMRRatio); the cached W
@@ -223,7 +223,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "w_thorns_autos",
         0,
@@ -233,7 +234,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Defensive Ball Curl) prices the thorns damage — 15 + 10% total "
     "armor + 10% total magic resistance magic damage per enemy basic "
     "attack that hits Rammus during the stance (cached W description "

@@ -5,8 +5,8 @@ displaces on its opening bounce only — so R's kinds are authored per part.
 """
 
 from src.calculator.champions import parse_champion_abilities, zac
-from tests import cc_review
 from src.calculator.champions.engine import CC_PER_PART
+from tests import cc_review
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -48,7 +48,8 @@ class TestReviewedCrowdControl:
         parsed = parse_champion_abilities(data, 18, 100.0, _RANKS)
         opening, later = parsed["R"]["parts"]
         assert opening.cc_kind == "knockback"
-        assert later.cc_kind == "slow" and later.count == 3
+        assert later.cc_kind == "slow"
+        assert later.count == 3
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Zac") == []

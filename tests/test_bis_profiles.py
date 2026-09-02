@@ -97,7 +97,9 @@ def test_checked_in_bis_profiles_track_the_wiki_rebuild():
             stored_entries = stored_champion["abilities"][slot]
             assert len(stored_entries) == len(fresh_entries), f"{name} {slot}"
 
-            for index, (stored, built) in enumerate(zip(stored_entries, fresh_entries)):
+            for index, (stored, built) in enumerate(
+                zip(stored_entries, fresh_entries, strict=False)
+            ):
                 where = f"{name} {slot}[{index}]"
                 filled_by_auxiliary = bool(stored["packets"]) and not built["packets"]
                 if filled_by_auxiliary:

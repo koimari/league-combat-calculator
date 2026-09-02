@@ -56,10 +56,10 @@ import pytest
 
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.rammus import (
-    ASSUMPTIONS,
-    MODULE_COVERAGE,
     _SPIKED_SHELL_ARMOR_RATIO,
     _SPIKED_SHELL_MAGIC_RESISTANCE_RATIO,
+    ASSUMPTIONS,
+    MODULE_COVERAGE,
 )
 from src.calculator.data_fetcher import get_champion
 from src.calculator.item_effects import TARGET_CLASSES

@@ -6,6 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
+from .inputs import bool_option, float_option, int_option
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -20,7 +21,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, float_option, int_option
 
 
 def _assault(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -126,7 +126,8 @@ def _grandmaster(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_type": "magic",
         }
     entry["detail"] = (
-        f"Active lantern swing; +{armor:g} armor/+{mr:g} magic resistance for the authored 8-second window."
+        f"Active lantern swing; +{armor:g} armor/+{mr:g} magic resistance for the "
+        f"authored 8-second window."
     )
     return entry
 
@@ -185,9 +186,13 @@ OPTIONS = [
     bool_option("r_passive_ready", False, label="Grandmaster passive hit ready"),
 ]
 ASSUMPTIONS = [
-    "Relentless Assault is an explicit stack-derived attack-speed buff; it is applied before later casts and autos.",
-    "Empower is one next-attack magic rider; Counter Strike uses the sourced 0–100% dodge-damage range.",
-    "Counter Strike's sourced 2-second evasion window blocks incoming basic attacks and reduces marked area-ability damage by 25% when e_active is selected.",
-    "Grandmaster-at-Arms includes the active swing and defensive resistances; its passive hit is opt-in to avoid inventing prior stacks.",
+    "Relentless Assault is an explicit stack-derived attack-speed buff; it is applied "
+    "before later casts and autos.",
+    "Empower is one next-attack magic rider; Counter Strike uses the sourced 0–100% "
+    "dodge-damage range.",
+    "Counter Strike's sourced 2-second evasion window blocks incoming basic attacks "
+    "and reduces marked area-ability damage by 25% when e_active is selected.",
+    "Grandmaster-at-Arms includes the active swing and defensive resistances; its "
+    "passive hit is opt-in to avoid inventing prior stacks.",
 ]
 SOURCES = load_champion_sources("Jax")

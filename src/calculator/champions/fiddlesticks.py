@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, int_option
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -16,8 +18,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
-from .inputs import bool_option, int_option
 
 
 def _scarecrow(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -186,9 +186,12 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Q's doubled branch is selected only for an already-feared target; current-health and minimum-damage thresholds remain sourced.",
-    "W and R expose explicit tick counts and intervals; W's final missing-health tick is not averaged into the channel.",
-    "Fear, silence, reveal, healing and Effigy behavior are recorded as state/utility, not invented TDD.",
+    "Q's doubled branch is selected only for an already-feared target; current-health "
+    "and minimum-damage thresholds remain sourced.",
+    "W and R expose explicit tick counts and intervals; W's final missing-health tick "
+    "is not averaged into the channel.",
+    "Fear, silence, reveal, healing and Effigy behavior are recorded as "
+    "state/utility, not invented TDD.",
 ]
 
 SOURCES = load_champion_sources("Fiddlesticks")
@@ -208,9 +211,7 @@ def derive_self_healing(
     w_ability = _healing.ability_json(champion_data, "W")
     w_rank = _healing.parsed_rank(ability_damages, "W")
     portion = (
-        _healing.extract_named(
-            w_ability, "Champion Heal Portion", w_rank, champion_stats, {}
-        )
+        extract_named(w_ability, "Champion Heal Portion", w_rank, champion_stats, {})
         / 100.0
     )
     for event in _healing.attributed_events(

@@ -13,10 +13,11 @@ who picks Taste of Blood should be told what the rune would have healed, not
 merely that it dealt nothing.
 """
 
-from typing import Any, Callable, Mapping
+from collections.abc import Callable, Mapping
+from typing import Any
 
-from ..champions.inputs import champion_stat
 from ..ability_spec import Disposition
+from ..champions.inputs import champion_stat
 from ..item_effects import DamageInputs
 from ..rune_effects import (
     RuneEffect,

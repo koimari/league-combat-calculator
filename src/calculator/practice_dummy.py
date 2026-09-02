@@ -5,8 +5,8 @@ never enters an attacker position in the participant timeline. Its item
 effects still resolve through the normal cached item path.
 """
 
-from collections.abc import Mapping
 import math
+from collections.abc import Mapping
 from typing import Any
 
 PRACTICE_DUMMY_KIND = "practice_dummy"

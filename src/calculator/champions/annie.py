@@ -33,6 +33,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
+from .inputs import float_option, int_option
 from .module_helpers import ability_cast_times
 from .slotlib import (
     ability_name,
@@ -46,7 +47,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
 
 # HARDCODED: verify on patch updates — pet stats are not in the JSON.
 # Tibbers pet numbers come from the LoL Wiki "Annie#Pets" entry:
@@ -255,7 +255,9 @@ def _stun_seconds(ability: dict[str, Any], level: int) -> float:
             "'stun enemies hit for A / B / C (based on level)'"
         )
     steps = [float(value) for value in match.groups()]
-    for seconds, breakpoint_level in zip(reversed(steps), _STUN_BREAKPOINT_LEVELS):
+    for seconds, breakpoint_level in zip(
+        reversed(steps), _STUN_BREAKPOINT_LEVELS, strict=False
+    ):
         if level >= breakpoint_level:
             return seconds
     return steps[0]

@@ -7,11 +7,11 @@ from src.calculator.item_effects import swiftmarch_adaptive_force
 from src.calculator.rune_effects import validate_rune_page
 from src.calculator.stats import (
     apply_movement_speed_soft_caps,
-    growth_stat,
     calculate_attack_speed,
+    calculate_total_stats,
     get_champion_base_stats,
     get_item_stats,
-    calculate_total_stats,
+    growth_stat,
     item_mana_reaches_pool,
 )
 
@@ -492,8 +492,8 @@ class TestStatsUsesItemEffectsRegistry:
         self, ahri_data: dict, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Patching Rabadon's ap_percent_increase changes the result."""
-        from src.calculator.data_fetcher import get_item_by_name
         from src.calculator import item_effects
+        from src.calculator.data_fetcher import get_item_by_name
 
         rabadons = get_item_by_name("Rabadon's Deathcap")
         base_ap = rabadons["stats"]["abilityPower"]["flat"]
@@ -514,8 +514,8 @@ class TestStatsUsesItemEffectsRegistry:
         self, ahri_data: dict, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Patching Seraph's bonus_mana_to_ap_ratio changes the result."""
-        from src.calculator.data_fetcher import get_item_by_name
         from src.calculator import item_effects
+        from src.calculator.data_fetcher import get_item_by_name
 
         seraphs = get_item_by_name("Seraph's Embrace")
         base_ap = seraphs["stats"]["abilityPower"]["flat"]
@@ -534,8 +534,8 @@ class TestStatsUsesItemEffectsRegistry:
         self, ahri_data: dict, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Patching Muramana max_mana_to_ad_ratio changes the result."""
-        from src.calculator.data_fetcher import get_item_by_name
         from src.calculator import item_effects
+        from src.calculator.data_fetcher import get_item_by_name
 
         muramana = get_item_by_name("Muramana")
 
@@ -572,8 +572,8 @@ class TestNewItemStats:
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Patching rapids_bonus_ap changes the AP result."""
-        from src.calculator.data_fetcher import get_item_by_name
         from src.calculator import item_effects
+        from src.calculator.data_fetcher import get_item_by_name
 
         staff = get_item_by_name("Staff of Flowing Water")
         patched = dict(item_effects.ITEM_EFFECTS.get("Staff of Flowing Water", {}))
@@ -604,8 +604,8 @@ class TestNewItemStats:
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Patching base_ad_to_bonus_ad_ratio changes the AD result."""
-        from src.calculator.data_fetcher import get_item_by_name
         from src.calculator import item_effects
+        from src.calculator.data_fetcher import get_item_by_name
 
         steraks = get_item_by_name("Sterak's Gage")
         default_stats = calculate_total_stats(ahri_data, 18, [steraks])
@@ -634,8 +634,8 @@ class TestNewItemStats:
 
     def test_stormrazor_parsed_values(self) -> None:
         """Parser extracts base=100 and damage_type=magic."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         items = fetch_item_data()
         parsed = parse_item_effect("Stormrazor", items)
@@ -647,8 +647,8 @@ class TestNewItemStats:
     def test_statikk_shiv_parsed_values(self) -> None:
         """Parser extracts the reworked Electrospark: ONE empowered attack
         dealing 60 magic damage, chain-lightning to 4-8 targets by level."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         items = fetch_item_data()
         parsed = parse_item_effect("Statikk Shiv", items)
@@ -662,8 +662,8 @@ class TestNewItemStats:
 
     def test_titanic_hydra_active_parsed(self) -> None:
         """Parser extracts active_max_hp_ratio_melee=0.04, ranged=0.02."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         items = fetch_item_data()
         parsed = parse_item_effect("Titanic Hydra", items)
@@ -675,8 +675,8 @@ class TestNewItemStats:
         assert parsed["active_secondary_max_hp_ratio_ranged"] == 0.045
 
     def test_ravenous_hydra_cleave_secondary_ad_parsed(self) -> None:
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         parsed = parse_item_effect("Ravenous Hydra", fetch_item_data())
         assert parsed["secondary_ad_ratio_melee"] == 0.40
@@ -752,8 +752,8 @@ class TestNewItemStats:
 
     def test_terminus_parsed_light_resist(self) -> None:
         """Parser extracts light_resist_min and light_resist_max."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         items = fetch_item_data()
         parsed = parse_item_effect("Terminus", items)
@@ -763,8 +763,8 @@ class TestNewItemStats:
 
     def test_yun_tal_parsed_values(self) -> None:
         """Parser extracts bonus_attack_speed_percent, duration, cooldown."""
-        from src.calculator.passive_parser import parse_item_effect
         from src.calculator.data_fetcher import fetch_item_data
+        from src.calculator.passive_parser import parse_item_effect
 
         items = fetch_item_data()
         parsed = parse_item_effect("Yun Tal Wildarrows", items)

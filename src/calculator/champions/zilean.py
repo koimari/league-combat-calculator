@@ -23,12 +23,12 @@ they are ``no_damage`` rather than unmodelled mechanics:
 
 from dataclasses import replace
 
-from .engine import CC_PER_PART
-from .inputs import bool_option, champion_stat
-from .packet_module import build_packet_module
-
 from ..champions.skill_orders import get_ability_rank
 from ..data_fetcher import get_champion
+from .engine import CC_PER_PART
+from .inputs import bool_option, champion_stat
+from .module_contract import coverage
+from .packet_module import build_packet_module
 from .slotlib import (
     build_stats_context,
     extract_cooldown,
@@ -37,7 +37,6 @@ from .slotlib import (
     with_control,
     with_control_event,
 )
-from .module_contract import coverage
 
 PACKET_SHA256 = "9b4c1e8f16ad0424b82b068c7d55f47892f0345ff70020773135903cc8233776"
 
@@ -117,7 +116,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     bool_option(
         "q_second_bomb",
         False,
@@ -125,11 +125,9 @@ OPTIONS = list(OPTIONS) + [
         rotation={
             "role": "self_state",
             "slot": "Q",
-            "note": (
-                "A second Time Bomb detonates the first immediately and "
-                "stuns; W (Rewind) is what refunds Q's cooldown in time, "
-                "and no cast order the engine walks can derive it."
-            ),
+            "note": "A second Time Bomb detonates the first immediately and "
+            "stuns; W (Rewind) is what refunds Q's cooldown in time, "
+            "and no cast order the engine walks can derive it.",
         },
     ),
 ]
@@ -178,7 +176,8 @@ def starting_revive_defense(level: int, stats: dict[str, float]) -> dict[str, fl
 # prices for the slot (1100.0 at rank 3 with no AP).
 MODULE_COVERAGE = coverage(no_damage="PWE")
 COVERAGE_CHANNELS = {"R": ("starting_revive_defense",)}
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Q's stun is emitted only when the explicit second-bomb state is selected; "
     "the second bomb detonates the first bomb immediately (so the detonation "
     "moves from its 3s fuse to the cast boundary) and uses the sourced "

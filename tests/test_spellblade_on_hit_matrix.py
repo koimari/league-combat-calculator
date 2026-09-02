@@ -14,8 +14,8 @@ from pathlib import Path
 
 import pytest
 
-from src.calculator.stats import calculate_total_stats
 from src.calculator.champions import parse_champion_abilities
+from src.calculator.stats import calculate_total_stats
 
 ROOT = Path(__file__).resolve().parents[1]
 MATRIX = json.loads((ROOT / "data" / "onhit-matrix.json").read_text(encoding="utf-8"))
@@ -58,7 +58,10 @@ REVIEWED = {
         "Q": {
             "status": "declared",
             "eff": 1.0,
-            "note": "26.15 removed the 75% on-hit rider reduction (patch notes: Undocumented/Removed)",
+            "note": (
+                "26.15 removed the 75% on-hit rider reduction (patch notes: "
+                "Undocumented/Removed)"
+            ),
         }
     },
     "Briar": {"Q": {"status": "declared", "eff": 1.0, "on_attack": True}},

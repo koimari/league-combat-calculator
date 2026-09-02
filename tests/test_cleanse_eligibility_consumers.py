@@ -6,8 +6,6 @@ Timeline-level walk integration (through
 heal+cleanse marker, and the compiled-score fail-closed surface.
 """
 
-from types import SimpleNamespace
-
 import pytest
 
 from src.app import app
@@ -464,7 +462,7 @@ def _main(item: str) -> dict:
 
 
 @pytest.mark.parametrize(
-    "item,source",
+    ("item", "source"),
     [
         ("Quicksilver Sash", QUICKSILVER_SOURCE),
         ("Mercurial Scimitar", MERCURIAL_SOURCE),

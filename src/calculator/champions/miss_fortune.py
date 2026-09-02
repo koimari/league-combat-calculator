@@ -73,7 +73,7 @@ _LOVE_TAP_WIKI_ATTRIBUTE = "Per-Level Scaling"
 
 def _love_tap_tier(level: int) -> int:
     """Index of the breakpoint tier a champion level falls in."""
-    return sum(1 for breakpoint in _LOVE_TAP_BREAKPOINT_LEVELS if level >= breakpoint)
+    return sum(1 for threshold in _LOVE_TAP_BREAKPOINT_LEVELS if level >= threshold)
 
 
 def _love_tap_ad_ratio(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -256,7 +256,8 @@ OPTIONS.append(
     }
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "R (Bullet Time) prices the full channel: per-wave damage x the "
     "sourced Total Waves row (14/16/18 by rank) at the sourced Wave "
     "Interval Time cadence.  The wiki's Maximum Total Physical Damage "

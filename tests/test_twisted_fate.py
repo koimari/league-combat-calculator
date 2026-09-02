@@ -6,8 +6,8 @@ says makes the whole timed fight fall back to coarse ordering.
 """
 
 from src.calculator.champions import twisted_fate
-from tests import cc_review
 from src.calculator.champions.engine import CC_PER_PART
+from tests import cc_review
 
 
 def _w_parts(card: int):

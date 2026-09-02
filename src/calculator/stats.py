@@ -4,16 +4,16 @@ import math
 from collections.abc import Mapping
 from typing import Any
 
+from .data_registry import data_version, store_for_generation
+from .interpreters.stat_derivation import armor_penetration_split
 from .item_effects import (
     grouped_sustain_stat_percent,
-    input_option_retribution_bonus_ad,
     input_option_crit_chance,
+    input_option_retribution_bonus_ad,
     input_option_stat_bonuses,
     override_item_stat,
     resolve_stat_effects,
 )
-from .data_registry import data_version, store_for_generation
-from .interpreters.stat_derivation import armor_penetration_split
 from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
 from .rune_effects import RunePage, compile_rune_page
 from .stat_conversion import BonusHealthConversion

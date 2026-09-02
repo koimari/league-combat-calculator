@@ -15,7 +15,7 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 
-import receipt_walk_schedule  # noqa: E402  (path is set above)
+import receipt_walk_schedule
 
 
 def test_the_priced_row_predicate_reproduces_the_fights_own_total() -> None:
@@ -32,7 +32,7 @@ def test_the_priced_row_predicate_reproduces_the_fights_own_total() -> None:
         for data in receipt_walk_schedule.golden_snapshot.fetch_item_data().values()
     }
     held = ["Sundered Sky", "The Collector", "Bloodthirster"]
-    result = receipt_walk_schedule.golden_snapshot._run_fight(  # noqa: SLF001
+    result = receipt_walk_schedule.golden_snapshot._run_fight(
         champions["Caitlyn"],
         receipt_walk_schedule.PROBE_LEVEL,
         [by_name[name] for name in held],

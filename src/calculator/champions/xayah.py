@@ -27,11 +27,11 @@ from ..ability_atoms import (
     required_ability_atom,
 )
 from ..ability_spec import ControlEvent, DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
+from .inputs import int_option
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slotlib import ability_name, damage_entry, extract_cooldown
-from .inputs import int_option
-from ..binary_roots import data_value, spell_object
 
 PACKET_SHA256 = "1aaff9137640dc9212a82420983ce8b4c7734417696e4529f59d8302d5fbc8e6"
 
@@ -271,7 +271,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "clean_cuts_secondary_targets",
         0,
@@ -297,7 +298,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Clean Cuts stack count is user-set (default 5); the 8-second stack "
     "window and which casts generate stacks are not simulated",
     "Each empowered auto deals the triggering attack's damage to the "

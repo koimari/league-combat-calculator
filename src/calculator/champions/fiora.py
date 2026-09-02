@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .inputs import bool_option, champion_stat, float_option, int_option
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, champion_stat, float_option, int_option
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -17,7 +18,6 @@ from .slotlib import (
     proc_damage,
 )
 from .source_receipts import load_champion_sources
-from .. import healing_helpers as _healing
 
 
 def _vital(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -84,12 +84,15 @@ def _bladework(ctx: SlotCtx) -> dict[str, Any] | None:
     ranked = ctx.ranked()
     if ranked is None:
         return None
-    ability, rank = ranked
+    ability, _rank = ranked
     attacks = min(max(int(ctx.option("e_attacks")), 1), 2)
     entry = no_damage(
         ctx,
         name=ability_name(ability),
-        reason=f"{attacks} empowered basic attack(s); first cannot crit and second uses the sourced modified critical damage.",
+        reason=(
+            f"{attacks} empowered basic attack(s); first cannot crit and second uses "
+            f"the sourced modified critical damage."
+        ),
     )
     if entry is None:
         return None
@@ -104,7 +107,10 @@ def _grand_challenge(ctx: SlotCtx) -> dict[str, Any] | None:
     return no_damage(
         ctx,
         name="Grand Challenge",
-        reason="Vital highlighting and Victory Zone healing are explicit challenge state, not outgoing damage.",
+        reason=(
+            "Vital highlighting and Victory Zone healing are explicit challenge "
+            "state, not outgoing damage."
+        ),
     )
 
 
@@ -188,7 +194,7 @@ def derive_self_healing(
     """Resolve Fiora self-healing events from its authored packet."""
     healing = []
     p_level = int(champion_stat(champion_stats, "level"))
-    p_heal = _healing.extract_named(
+    p_heal = extract_named(
         _healing.ability_json(champion_data, "P"),
         "Bonus Damage",
         p_level,

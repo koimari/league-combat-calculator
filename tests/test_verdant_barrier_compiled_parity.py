@@ -154,21 +154,20 @@ spell shield), and ``tests/test_item_coverage.py`` (target coverage
 acceptance observables.
 """
 
-from types import SimpleNamespace
-
 import pytest
 
 from src import app as app_module
-from src.calculator.item_coverage import ATTACKER_LANES
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import (
+    StartingDefenses,
     defense_source,
     resolve_starting_defenses,
 )
-from src.calculator.item_behavior import DefenseMechanic
 from src.calculator.interaction_effects import resolve_spell_shield
+from src.calculator.interpreters import uncompilable_item_receipt
+from src.calculator.item_behavior import DefenseMechanic
 from src.calculator.item_coverage import (
+    ATTACKER_LANES,
     item_model_coverage,
     target_item_model_coverage,
 )
@@ -188,9 +187,8 @@ from src.calculator.participant_timeline import (
 from src.calculator.pipeline import FightParams
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
-from src.calculator.interpreters import uncompilable_item_receipt
-from tests.survival_probe import simulate_survival
 from tests.app_config import app_config
+from tests.survival_probe import simulate_survival
 
 ITEM_NAME = "Verdant Barrier"
 ITEM_ID = 4632
@@ -928,7 +926,9 @@ def test_score_path_agrees_with_receipt_on_every_observable():
             == receipt["participants"][1]["survival"]
         )
         assert surface["duration"] == receipt["duration"]
-        for score_row, receipt_row in zip(surface["breakdown"], receipt["breakdown"]):
+        for score_row, receipt_row in zip(
+            surface["breakdown"], receipt["breakdown"], strict=False
+        ):
             assert score_row["participant_id"] == receipt_row["participant_id"]
             assert score_row["total_damage"] == receipt_row["total_damage"]
             assert score_row["incoming_damage"] == receipt_row["incoming_damage"]
@@ -987,12 +987,12 @@ def test_enemy_holder_compiles_after_certification():
         deterministic=True,
     )
     enemy = ChampionLoadout(champion="Janna", level=18, items=[ITEM_NAME]).resolve()
-    kwargs = dict(
-        main_stats=main_stats,
-        main_defenses=resolve_starting_defenses("Ahri", 18, main_stats, []),
-        enemies=[enemy],
-        allies=[],
-    )
+    kwargs = {
+        "main_stats": main_stats,
+        "main_defenses": resolve_starting_defenses("Ahri", 18, main_stats, []),
+        "enemies": [enemy],
+        "allies": [],
+    }
     legacy = build_participant_timeline(
         main, 18, [], params, include_receipt=False, **kwargs
     )
@@ -1033,12 +1033,12 @@ def test_tuple_ledger_champion_holding_verdant_fails_closed_with_parity():
         deterministic=True,
     )
     enemy = ChampionLoadout(champion="Cassiopeia", level=18, items=[]).resolve()
-    kwargs = dict(
-        main_stats=main_stats,
-        main_defenses=resolve_starting_defenses("Riven", 18, main_stats, items),
-        enemies=[enemy],
-        allies=[],
-    )
+    kwargs = {
+        "main_stats": main_stats,
+        "main_defenses": resolve_starting_defenses("Riven", 18, main_stats, items),
+        "enemies": [enemy],
+        "allies": [],
+    }
     legacy = build_participant_timeline(
         main, 18, items, params, include_receipt=False, **kwargs
     )

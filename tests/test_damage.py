@@ -7,31 +7,34 @@ test_item_damage.py; resistance/pen primitives in test_resistance.py; ability
 primitives in test_champion_primitives.py.
 """
 
-import pytest
 from types import SimpleNamespace
+
+import pytest
 
 from src.calculator import damage
 from src.calculator.ability_spec import DamagePart
-from src.calculator.interpreters import on_hit_strike
-from src.calculator.resistance import apply_resistance
 from src.calculator.champions import (
     parse_champion_abilities as parse_ahri_abilities,
 )
 from src.calculator.damage import (
     DecayingTarget,
     FightConfig,
+    _event_timeline_coverage,
+    _mitigate,
+    _navori_effective_cd,
+    _ordered_damage_events,
+    _simulate_current_health_on_hit,
     calculate_fight_damage,
     split_auto_vs_ability,
     split_by_damage_type,
-    _event_timeline_coverage,
-    _ordered_damage_events,
-    _simulate_current_health_on_hit,
+)
+from src.calculator.damage import (
     _calculate_phantom_hits as _calculate_phantom_hits_compiled,
-    _navori_effective_cd,
-    _mitigate,
 )
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.interpreters import on_hit_strike
 from src.calculator.item_effects import DamageInputs, resolve_damage_effects
+from src.calculator.resistance import apply_resistance
 
 
 def _simulate_bork_damage(
@@ -532,7 +535,7 @@ class TestLedgerRowShapes:
         light = self._ledger(light=True)
 
         assert len(full) == len(lean) == len(light) > 4
-        for full_row, lean_row, light_row in zip(full, lean, light):
+        for full_row, lean_row, light_row in zip(full, lean, light, strict=False):
             assert light_row[0] == full_row["_lk"] == lean_row["_lk"]
             assert light_row[1] == full_row["damage"]
             assert light_row[2] == full_row["damage_type"]
@@ -542,7 +545,9 @@ class TestLedgerRowShapes:
             assert light_row[6] == full_row.get("declared")
 
     def test_lean_drops_the_display_fields_and_nothing_else(self):
-        for full_row, lean_row in zip(self._ledger(), self._ledger(lean=True)):
+        for full_row, lean_row in zip(
+            self._ledger(), self._ledger(lean=True), strict=False
+        ):
             assert set(lean_row) == set(full_row) - self.DISPLAY_ONLY
             for key, value in lean_row.items():
                 assert full_row[key] == value

@@ -30,7 +30,8 @@ class TestReviewedCrowdControl:
 
     def test_the_non_damaging_slots_stay_absent(self):
         """E is a dash, R is the Transcendent State buff shell."""
-        assert "E" not in yunara.MODULE_CC and "R" not in yunara.MODULE_CC
+        assert "E" not in yunara.MODULE_CC
+        assert "R" not in yunara.MODULE_CC
         assert (
             cc_review.control_words(cc_review.slot_text(cc_review.kit("Yunara"), "E"))
             == []

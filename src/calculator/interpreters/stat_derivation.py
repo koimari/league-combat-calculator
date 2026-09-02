@@ -23,6 +23,10 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 
 from ..item_behavior import (
+    STAT_DERIVATION_OPTIONAL_REFERENCES,
+    STAT_DERIVATION_PAYLOADS,
+    STAT_DERIVATION_REQUIRED_REFERENCES,
+    STAT_DERIVATION_UNGRANTED_PAYLOADS,
     BehaviorRule,
     BuildContext,
     DerivedStat,
@@ -31,10 +35,6 @@ from ..item_behavior import (
     MeleeRangedSplit,
     PenetrationChannelRule,
     RuleFamily,
-    STAT_DERIVATION_OPTIONAL_REFERENCES,
-    STAT_DERIVATION_PAYLOADS,
-    STAT_DERIVATION_REQUIRED_REFERENCES,
-    STAT_DERIVATION_UNGRANTED_PAYLOADS,
     StatAvailability,
 )
 from ..item_behavior_catalog import behavior_rules
@@ -222,7 +222,7 @@ def declared_stat_derivations(
                         lane=EngineLane.STAT_RESOLVER,
                         rule_id=rule.mechanic_id,
                     )
-                    for name, value in zip(names, values)
+                    for name, value in zip(names, values, strict=False)
                 ),
             )
         )

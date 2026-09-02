@@ -7,6 +7,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value_at_rank, spell_object
 from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
+from .inputs import bool_option, int_option
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -18,7 +19,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, int_option
 
 
 def _brushmaker(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -37,7 +37,8 @@ def _brushmaker(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry = on_hit_entry(ability_name(ability), value, "magic")
     entry["detail"] = (
-        "Brushmaker bonus attack magic damage; brush duration and allied-brush branch are explicit state."
+        "Brushmaker bonus attack magic damage; brush duration and allied-brush branch "
+        "are explicit state."
     )
     return entry
 
@@ -160,7 +161,10 @@ SLOTS = {
     "P": lambda ctx: no_damage(
         ctx,
         name="Friend of the Forest",
-        reason="Grove channel, health/mana cost, camp release and full bounty are jungle utility state.",
+        reason=(
+            "Grove channel, health/mana cost, camp release and full bounty are jungle "
+            "utility state."
+        ),
     ),
     # The vine damages "the first enemy hit and root[s] them"; the root's
     # duration is read off the packet's own Root Duration row rather than
@@ -192,7 +196,8 @@ OPTIONS = [
 ]
 ASSUMPTIONS = [
     "Ivern's non-epic monster prohibition and grove economics are preserved as utility/state.",
-    "Brushmaker's self bonus attack is an on-hit package; allied champion bolts are a separate roster branch.",
+    "Brushmaker's self bonus attack is an on-hit package; allied champion bolts are a "
+    "separate roster branch.",
     "Daisy's basic attacks (70/100/130 by R rank + 15% AP physical) and the "
     "third-hit Daisy Smash (90/140/190 by R rank + 50% AP magic) are "
     "game-file constants; verify on patch updates against Community Dragon",

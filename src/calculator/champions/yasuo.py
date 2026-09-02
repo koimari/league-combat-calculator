@@ -34,6 +34,8 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx
+from .inputs import bool_option, float_option, int_option
+from .module_contract import coverage
 from .module_helpers import (
     CRIT_CHANCE_MULTIPLIER,
     CRIT_DAMAGE_MULTIPLIER_FACTOR,
@@ -52,8 +54,6 @@ from .slotlib import (
     extract_named,
     extract_value,
 )
-from .inputs import bool_option, float_option, int_option
-from .module_contract import coverage
 
 PACKET_SHA256 = "94e34c2bf9df12ee71c952261d6c8ca2d69773f4e5eb2fc218cd944bada606ac"
 

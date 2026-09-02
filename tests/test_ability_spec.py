@@ -9,6 +9,7 @@ four closed vocabularies the leaf declares, member for member.
 import ast
 import importlib.util
 import sys
+from dataclasses import FrozenInstanceError
 from enum import Enum
 from pathlib import Path
 from types import SimpleNamespace
@@ -16,7 +17,6 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator import ability_spec, trigger_stream
-from tests import ability_math
 from src.calculator.ability_spec import (
     AttackClass,
     Authority,
@@ -27,6 +27,7 @@ from src.calculator.ability_spec import (
 )
 from src.calculator.damage import _evaluate_cast_parts
 from src.calculator.resistance import apply_resistance
+from tests import ability_math
 
 
 def _stub_state(
@@ -161,9 +162,9 @@ class TestClosedVocabularies:
             if id(node) in deferred:
                 continue
             if isinstance(node, ast.ImportFrom):
-                assert node.level == 0 and not str(node.module).startswith(
-                    "src.calculator"
-                ), f"ability_spec.py:{node.lineno} imports a sibling module"
+                sibling = f"ability_spec.py:{node.lineno} imports a sibling module"
+                assert node.level == 0, sibling
+                assert not str(node.module).startswith("src.calculator"), sibling
             if isinstance(node, ast.Import):
                 for alias in node.names:
                     assert not alias.name.startswith("src.calculator")
@@ -206,7 +207,8 @@ class TestClosedVocabularies:
         spec = importlib.util.spec_from_file_location(
             "ability_spec_standalone", ability_spec.__file__
         )
-        assert spec is not None and spec.loader is not None
+        assert spec is not None
+        assert spec.loader is not None
         standalone = importlib.util.module_from_spec(spec)
         # ``dataclasses`` resolves a field's annotations through
         # ``sys.modules[cls.__module__]``, so the module has to be registered
@@ -479,7 +481,8 @@ def test_reading_a_starved_quantity_raises_projection_starvation() -> None:
     with pytest.raises(trigger_stream.ProjectionStarvation) as excinfo:
         STARVED.read()
     message = str(excinfo.value)
-    assert "cc" in message and "Imperial Mandate" in message
+    assert "cc" in message
+    assert "Imperial Mandate" in message
     assert "tuple ledger carries no cc stream" in message
 
 
@@ -504,8 +507,8 @@ def test_measured_folds_with_measured() -> None:
 
 def test_measured_folds_with_structural_zero_which_contributes_zero() -> None:
     """The invariant table's "``STRUCTURAL_ZERO`` contributes 0.0"."""
-    assert MEASURED + STRUCTURAL == ability_spec.Measured(amount=3.0)
-    assert STRUCTURAL + MEASURED == ability_spec.Measured(amount=3.0)
+    assert ability_spec.Measured(amount=3.0) == MEASURED + STRUCTURAL
+    assert ability_spec.Measured(amount=3.0) == STRUCTURAL + MEASURED
 
 
 def test_two_structural_zeros_fold_to_a_measured_zero() -> None:
@@ -515,7 +518,7 @@ def test_two_structural_zeros_fold_to_a_measured_zero() -> None:
     declarations are their own receipts and not the total's, and
     ``StructuralZero`` carries one reason with no way to merge two.
     """
-    assert STRUCTURAL + STRUCTURAL_OTHER == ability_spec.Measured(amount=0.0)
+    assert ability_spec.Measured(amount=0.0) == STRUCTURAL + STRUCTURAL_OTHER
 
 
 def test_a_withheld_member_makes_the_total_withheld_naming_it() -> None:
@@ -607,7 +610,9 @@ def test_five_measured_components_and_one_withheld_do_not_make_a_measured_total(
 def test_the_algebra_is_frozen_so_a_fold_cannot_mutate_its_operands() -> None:
     """Value type: every member is a frozen dataclass with slots."""
     for member in (MEASURED, STRUCTURAL, WITHHELD, STARVED):
-        with pytest.raises(Exception):
+        # A frozen slots dataclass refuses a field with FrozenInstanceError and any other
+        # name with TypeError (CPython rebinds the class for slots); both are refusals.
+        with pytest.raises((FrozenInstanceError, TypeError)):
             member.disposition = Disposition.MEASURED  # type: ignore[misc]
 
 

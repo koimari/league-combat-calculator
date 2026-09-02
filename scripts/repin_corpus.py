@@ -27,8 +27,9 @@ import argparse
 import json
 import subprocess
 import sys
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Collection, Iterable, Mapping, Sequence
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
@@ -111,9 +112,11 @@ def check_pins(
     """
     reasons: list[str] = []
     governed = non_legacy_scenarios(corpus)
-    for scenario in governed:
-        if not scenario.get("sha"):
-            reasons.append(f"{scenario['id']} is missing its pinned SHA")
+    reasons.extend(
+        f"{scenario['id']} is missing its pinned SHA"
+        for scenario in governed
+        if not scenario.get("sha")
+    )
 
     executed = tuple(s["id"] for s in governed)
     if not executed:

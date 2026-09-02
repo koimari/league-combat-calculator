@@ -73,8 +73,9 @@ from __future__ import annotations
 # pylint: disable=too-many-lines  # one dependency-light leaf owns the typed
 # contracts; splitting it would create a second decision path.
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Literal, Mapping
+from typing import Any, Literal
 
 from .state_lifecycle import SourceReceipt
 
@@ -359,9 +360,8 @@ class SourceSelection:
         if not self.blocked_sources and not self.blocked_event_ids:
             return True, ""
         event_id = str(getattr(action, "event_id", "") or "")
-        if self.blocked_event_ids:
-            if event_id and event_id in self.blocked_event_ids:
-                return True, ""
+        if self.blocked_event_ids and event_id and event_id in self.blocked_event_ids:
+            return True, ""
         source_key = str(getattr(action, "source_key", "") or "")
         source = str(getattr(action, "source", "") or "")
         attacker_name = _attacker_name(attacker)
@@ -479,7 +479,7 @@ class DefenseEligibility:
     acceptance: DeliveryAcceptance = DeliveryAcceptance()
     source: SourceReceipt | None = None
 
-    def decide(self, action: Any, attacker: Any) -> "EligibilityDecision":
+    def decide(self, action: Any, attacker: Any) -> EligibilityDecision:
         """Decide eligibility for one event (deterministic, receipted)."""
         profile = classify_delivery(action)
         event_time = float(getattr(action, "time", 0.0) or 0.0)
@@ -897,7 +897,7 @@ class SpellShieldEligibility:
     block_rule: str = SPELL_SHIELD_ONE_USE_RULE
     source: SourceReceipt | None = None
 
-    def decide(self, action: Any, _attacker: Any) -> "SpellShieldDecision":
+    def decide(self, action: Any, _attacker: Any) -> SpellShieldDecision:
         """Decide eligibility for one event (deterministic, receipted).
 
         The attacker parameter mirrors :meth:`DefenseEligibility.decide`
@@ -1094,8 +1094,7 @@ class SpellShieldRearmClock:
         started = float(consumed_at)
         if self.restarts_on_champion_damage and last_champion_damage_at is not None:
             damaged_at = float(last_champion_damage_at)
-            if damaged_at > started:
-                started = damaged_at
+            started = max(started, damaged_at)
         return started
 
     def ready_at(
@@ -1193,6 +1192,11 @@ __all__ = [
     "DELIVERY_HITSCAN",
     "DELIVERY_PROJECTILE",
     "DELIVERY_TARGETED",
+    "SPELL_SHIELD_BASIC_ATTACK_RULE",
+    "SPELL_SHIELD_CONTROL_ONLY_RULE",
+    "SPELL_SHIELD_ONE_USE_RULE",
+    "SPELL_SHIELD_PRIOR_DISPOSAL_RULE",
+    "SPELL_SHIELD_REARM_RULE",
     "DefenseComposition",
     "DefenseEligibility",
     "DefenseWindow",
@@ -1204,12 +1208,6 @@ __all__ = [
     "FullBlockRule",
     "ReductionRule",
     "SourceSelection",
-    "UnknownDeliveryError",
-    "SPELL_SHIELD_BASIC_ATTACK_RULE",
-    "SPELL_SHIELD_CONTROL_ONLY_RULE",
-    "SPELL_SHIELD_ONE_USE_RULE",
-    "SPELL_SHIELD_PRIOR_DISPOSAL_RULE",
-    "SPELL_SHIELD_REARM_RULE",
     "SpellShieldAcceptance",
     "SpellShieldComposition",
     "SpellShieldDecision",
@@ -1217,6 +1215,7 @@ __all__ = [
     "SpellShieldRearmClock",
     "SpellShieldRuleDeclaration",
     "TriggeredHealRule",
+    "UnknownDeliveryError",
     "UseBudget",
     "classify_delivery",
     "delivery_declarations_receipt",

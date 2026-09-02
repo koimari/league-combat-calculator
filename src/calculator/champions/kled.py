@@ -19,7 +19,10 @@ the wound rides the module's Q damage receipts at the patch-wide
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx, build_parser
+from .inputs import bool_option, float_option
+from .module_contract import coverage
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage
 from .slotlib import (
     ability_name,
@@ -30,9 +33,6 @@ from .slotlib import (
     simple_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, float_option
-from .module_contract import coverage
-from ..binary_roots import data_value, spell_object
 
 # Bear Trap on a Rope lands twice and the cache times the second hit: the
 # trap "collides with the first enemy champion ... forming a tether
@@ -192,7 +192,8 @@ MODULE_CC = {"Q": CC_PER_PART, "W": "none", "R": "knockback"}
 
 parse_abilities = build_parser(SLOTS, "Kled", cc_kinds=MODULE_CC)
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "Skaarl the Cowardly Lizard (P): the mounted duo's damage is suffered "
     "by Skaarl, whose 400 : 1400 (based on level) base health is the "
     "mounted pool (data/champions.json P 'Bonus Damage'); the "

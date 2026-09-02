@@ -5,20 +5,23 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from ..binary_roots import data_value, spell_object
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx, build_parser
+from .inputs import int_option
 from .module_helpers import no_damage
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
-from .inputs import int_option
 
 
 def _nimble_fighter(ctx: SlotCtx) -> dict[str, Any] | None:
     return no_damage(
         ctx,
         name="Nimble Fighter",
-        reason="Ghosting and incoming pre-mitigation damage reduction are defensive state, not outgoing TDD.",
+        reason=(
+            "Ghosting and incoming pre-mitigation damage reduction are defensive "
+            "state, not outgoing TDD."
+        ),
         slot="P",
     )
 
@@ -203,7 +206,8 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     "Urchin Strike carries both its magic packet and one 100% AD on-hit attack component.",
-    "Seastone Trident's active empower is attached to one basic attack; its bleed and monster-only riders are not silently applied to champions.",
+    "Seastone Trident's active empower is attached to one basic attack; its bleed and "
+    "monster-only riders are not silently applied to champions.",
     "Seastone Trident's empowered attack is one of the ambient stream's swings "
     "when the timed window contains at least one; with no stream the cast "
     "forces its own swing. W therefore casts on cooldown in timed fights even "
@@ -211,7 +215,8 @@ ASSUMPTIONS = [
     "The W burn is applied once per W cast (its 6 sourced 0.5s ticks trail the "
     "empowered hit); ordinary basic attacks between casts refresh the same "
     "bleed in game but are not priced as extra applications.",
-    "Chum the Waters exposes all three sourced distance branches rather than treating the largest shark as a default.",
+    "Chum the Waters exposes all three sourced distance branches rather than treating "
+    "the largest shark as a default.",
 ]
 
 SOURCES = load_champion_sources("Fizz")

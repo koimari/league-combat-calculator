@@ -20,10 +20,10 @@ from typing import Any
 from .. import healing_helpers as _healing
 from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
+from .inputs import int_option
 from .module_helpers import rank_gated_no_damage_parser
 from .packet_module import build_packet_module
 from .slotlib import ability_name, extract_named, on_hit_entry
-from .inputs import int_option
 
 PACKET_SHA256 = "fce2851d13e50c61a320c2195e1618e540b56a81742d3e44cfaa4a0ffe2c163f"
 
@@ -89,7 +89,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "p_procs",
         _FIRED_UP_PROCS_PER_CAST,
@@ -99,7 +100,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Fired Up!) prices the sourced burn the enchanted hit applies "
     "(10 : 50 based on level + 20% of Milio's AP, priced at the hit rather "
     "than over its six 0.25s ticks) once per cast (selectable); the "
@@ -142,7 +144,7 @@ def derive_self_healing(
     """Resolve Milio self-healing events from its authored packet."""
     healing = []
     r_rank = _healing.parsed_rank(ability_damages, "R")
-    heal = _healing.extract_named(
+    heal = extract_named(
         _healing.ability_json(champion_data, "R"), "Heal", r_rank, champion_stats
     )
     if heal > 0.0:
@@ -172,12 +174,10 @@ def derive_self_healing(
     # the sourced trigger.
     w_rank = _healing.parsed_rank(ability_damages, "W")
     w_ability = _healing.ability_json(champion_data, "W")
-    w_per_tick = _healing.extract_named(
-        w_ability, "Heal per Tick", w_rank, champion_stats
-    )
-    w_total = _healing.extract_named(w_ability, "Total Heal", w_rank, champion_stats)
+    w_per_tick = extract_named(w_ability, "Heal per Tick", w_rank, champion_stats)
+    w_total = extract_named(w_ability, "Total Heal", w_rank, champion_stats)
     w_tick_count = (
-        max(1, min(100, int(round(w_total / w_per_tick))))
+        max(1, min(100, round(w_total / w_per_tick)))
         if w_per_tick > 0.0 and w_total > 0.0
         else 25
     )
@@ -186,16 +186,16 @@ def derive_self_healing(
             if cast.get("slot") != "W":
                 continue
             start = float(cast.get("time", 0.0))
-            for index in range(1, w_tick_count + 1):
-                healing.append(
-                    {
-                        "time": start + index * 0.24,
-                        "amount": float(w_per_tick),
-                        "source": "Cozy Campfire",
-                        "kind": "champion_ability",
-                        "actor_wide": True,
-                    }
-                )
+            healing.extend(
+                {
+                    "time": start + index * 0.24,
+                    "amount": float(w_per_tick),
+                    "source": "Cozy Campfire",
+                    "kind": "champion_ability",
+                    "actor_wide": True,
+                }
+                for index in range(1, w_tick_count + 1)
+            )
     return healing
 
 

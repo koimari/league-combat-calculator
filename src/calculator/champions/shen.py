@@ -52,7 +52,10 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from ..stats import calculate_attack_speed
 from .engine import SlotCtx, build_parser
+from .inputs import bool_option, float_option, int_option
+from .module_contract import coverage
 from .module_helpers import no_damage
 from .scaling import is_flat_unit, resolve_scaling
 from .slotlib import (
@@ -65,9 +68,6 @@ from .slotlib import (
     support_cast,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, float_option, int_option
-from .module_contract import coverage
-from ..stats import calculate_attack_speed
 
 _SHEN_Q_SPELL = spell_object("Shen", "ShenQ")
 _SHEN_E_SPELL = spell_object("Shen", "ShenE")

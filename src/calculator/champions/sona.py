@@ -34,11 +34,11 @@ from typing import Any
 from ..healing_helpers import ability_json, parsed_rank
 from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
+from .inputs import int_option
+from .module_contract import coverage
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .slotlib import ability_name, extract_named, on_hit_entry
-from .inputs import int_option
-from .module_contract import coverage
 
 PACKET_SHA256 = "c78392f6b8f667c85594d31be2e6a9c1b7c6504d5cd02e3c5b385271dafc6c06"
 
@@ -184,7 +184,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     int_option(
         "p_power_chords",
         _POWER_CHORDS_PER_ROTATION,
@@ -194,7 +195,8 @@ OPTIONS = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Power Chord) prices the sourced unmodified chord (20 : 270 based on "
     "level + 20% AP) once per three basic abilities (selectable); the "
     "Staccato / Diminuendo / Tempo riders the last-cast tag adds are not "
@@ -249,7 +251,7 @@ def derive_self_healing(
     )
     if heal <= 0.0:
         return []
-    healing = [
+    return [
         {
             "time": float(cast.get("time", 0.0)),
             "amount": heal,
@@ -262,7 +264,6 @@ def derive_self_healing(
         for cast_index, cast in enumerate(cast_timeline or [])
         if cast.get("slot") == "W"
     ]
-    return healing
 
 
 SELF_HEALING_RULE = self_healing_rule("Sona")(derive_self_healing)

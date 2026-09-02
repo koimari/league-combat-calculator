@@ -39,9 +39,10 @@ from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..healing_helpers import HealAnchor, heal_from_damage, payments
-from .inputs import bool_option, champion_stat, int_option
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, champion_stat, int_option
+from .module_contract import coverage
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -50,7 +51,6 @@ from .slotlib import (
     with_control_event,
 )
 from .source_receipts import load_champion_sources
-from .module_contract import coverage
 
 # E2-sourced tick cadences (data/worklists/e2-dot-ticks.json and the
 # ability descriptions): Spirit Fire's zone ticks every 0.5s over 5s
@@ -339,7 +339,7 @@ def derive_self_healing(
     healing: list[dict[str, Any]] = []
     level = max(1, int(champion_stat(champion_stats, "level")))
     ratio = next(
-        share for breakpoint, share in _SOUL_EATER_BREAKPOINTS if level >= breakpoint
+        share for threshold, share in _SOUL_EATER_BREAKPOINTS if level >= threshold
     )
     empowered = bool(ability_payload(ability_damages, "Q").get("empowers_next_auto"))
 

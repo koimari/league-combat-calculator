@@ -41,13 +41,13 @@ healing rule off the same on-hit events.
 
 from typing import Any
 
-from ..ability_atoms import ability_field, ability_payload
 from .. import healing_helpers as _healing
+from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .inputs import champion_stat
 from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
+from .inputs import champion_stat
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,

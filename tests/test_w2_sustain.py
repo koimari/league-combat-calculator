@@ -11,6 +11,8 @@ the option is set; that default is pinned too, because it is what keeps a
 default request's numbers where they were.
 """
 
+import itertools
+
 import pytest
 
 from src import app as app_module
@@ -386,7 +388,7 @@ class TestTheTwoShieldOnlySlotChannels:
     """
 
     @pytest.mark.parametrize(
-        "champion, source",
+        ("champion", "source"),
         [
             ("Shen", "Ki Barrier"),
             ("Rakan", "Fey Feathers"),
@@ -499,7 +501,7 @@ class TestTahmKenchThickSkin:
         assert times == sorted(times)
         assert all(
             later - earlier == pytest.approx(3.0)
-            for earlier, later in zip(times, times[1:])
+            for earlier, later in itertools.pairwise(times)
         )
         # The whole pool is consumed by the presses, and the shields absorb.
         survival = _main_survival(payload)

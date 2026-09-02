@@ -26,8 +26,8 @@ from .coverage_evidence import (
     CoverageClaimError,
     EffectKey,
     Evidence,
-    OwnerPolicy,
     OptionSchema,
+    OwnerPolicy,
     PacketSource,
     PairedSides,
     SourceRef,
@@ -238,10 +238,22 @@ NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
     "Doran's Helm": "Helping Hand's 5 bonus physical damage is restricted to minions "
     "(a minion-class fight arms it from the item's own restricted-channel "
     "declaration); the full Wiki entry has no champion-facing sustain branch.",
-    "Scorchclaw Pup": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
-    "Gustwalker Hatchling": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
-    "Mosstomper Seedling": "The jungle companion and evolved Smite buff affect monsters, not the champion target model.",
-    "Refillable Potion": "Potion charges restore the holder's health; they add no outgoing target damage.",
+    "Scorchclaw Pup": (
+        "The jungle companion and evolved Smite buff affect monsters, not the "
+        "champion target model."
+    ),
+    "Gustwalker Hatchling": (
+        "The jungle companion and evolved Smite buff affect monsters, not the "
+        "champion target model."
+    ),
+    "Mosstomper Seedling": (
+        "The jungle companion and evolved Smite buff affect monsters, not the "
+        "champion target model."
+    ),
+    "Refillable Potion": (
+        "Potion charges restore the holder's health; they add no outgoing target "
+        "damage."
+    ),
     "Executioner's Calling": "Grievous Wounds reduces recipient healing; it adds no direct damage.",
     "Oblivion Orb": "Grievous Wounds reduces recipient healing; it adds no direct damage.",
     "Chempunk Chainsword": "Hackshorn applies sourced three-second Grievous Wounds in the coupled "
@@ -2396,11 +2408,10 @@ __all__ = [
     "ATTACKER_LANES",
     "COVERAGE_EVIDENCE",
     "FRONTIER",
-    "ItemCoverage",
     "NO_RUNTIME_BEHAVIOR",
-    "declared_boundaries",
-    "reviewed_as_inert",
     "SCORING_LANES",
+    "ItemCoverage",
+    "declared_boundaries",
     "item_model_coverage",
     "optimizer_candidate_coverage",
     "optimizer_supported_items",
@@ -2409,6 +2420,7 @@ __all__ = [
     "require_optimizer_item_coverage",
     "require_target_item_coverage",
     "review_issue_refs",
+    "reviewed_as_inert",
     "stats_only_effect_fingerprint",
     "target_build_coverage",
     "target_item_model_coverage",

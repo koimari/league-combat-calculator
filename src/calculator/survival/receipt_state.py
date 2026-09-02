@@ -13,10 +13,8 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from typing import Any
 
-from .actions import NO_SLOT, SurvivalAction, TransitionRank, action_key
-from .outcome_state import OutcomeLedger
-from .transitions import participant_pools
 from ..data_registry import data_version
+from ..delivery_eligibility import initial_full_block_uses
 from ..interaction_effects import (
     defense_composition,
     defense_eligibility,
@@ -24,7 +22,9 @@ from ..interaction_effects import (
     resolve_projectile_defense,
     resolve_spell_shield,
 )
-from ..delivery_eligibility import initial_full_block_uses
+from .actions import NO_SLOT, SurvivalAction, TransitionRank, action_key
+from .outcome_state import OutcomeLedger
+from .transitions import participant_pools
 
 # The optimizer rebuilds every participant's state once per candidate
 # evaluation, but the construction below derives from exactly seven values:
@@ -481,7 +481,9 @@ def build_states(
         )
     return [
         build_state(combatant, bonus)
-        for combatant, bonus in zip(combatants, below_half_healing_bonuses)
+        for combatant, bonus in zip(
+            combatants, below_half_healing_bonuses, strict=False
+        )
     ]
 
 
@@ -490,18 +492,18 @@ class ReceiptLedger:
     status by event id, and walk-authored recovery scheduling."""
 
     __slots__ = (
-        "annotating",
-        "records_annotations",
-        "damage_event_status",
         "actions",
-        "current_index",
-        "index_of",
-        "expanded_healing",
-        "healing",
+        "annotating",
         "annotations_written",
         "compile_event",
-        "outcomes",
+        "current_index",
+        "damage_event_status",
+        "expanded_healing",
+        "healing",
+        "index_of",
         "next_aidx",
+        "outcomes",
+        "records_annotations",
     )
 
     # Event writes always persist on this adapter; annotations only when

@@ -156,7 +156,8 @@ class TestBlazingStampedeIsASourcedZeroDamageRow:
         decayed = _e_leveling("Decayed Bonus Movement Speed")[rank - 1]
         detail = _parse(E=rank)["E"]["detail"]
 
-        assert burst > 0.0 and decayed > 0.0
+        assert burst > 0.0
+        assert decayed > 0.0
         assert f"{burst:g}%" in detail
         assert f"{decayed:g}%" in detail
 

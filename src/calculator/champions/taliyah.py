@@ -32,6 +32,8 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..damage import effective_cooldown
 from .engine import CC_PER_PART, SlotCtx, build_parser
+from .inputs import float_option, int_option
+from .module_contract import coverage
 from .module_helpers import clamp, no_damage
 from .slotlib import (
     ability_name,
@@ -41,8 +43,6 @@ from .slotlib import (
     extract_resource_cost,
 )
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
-from .module_contract import coverage
 
 _E_CAST_START = 0.0
 _W_CAST_START = 0.25

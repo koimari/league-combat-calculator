@@ -78,7 +78,7 @@ def parse_observed_paste(text: str) -> dict[str, Any]:
     text = text.strip()
     if not text:
         raise ValueError("observed paste is empty")
-    if text.startswith("{") or text.startswith("["):
+    if text.startswith(("{", "[")):
         try:
             parsed = json.loads(text)
         except json.JSONDecodeError as exc:

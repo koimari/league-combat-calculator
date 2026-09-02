@@ -70,6 +70,8 @@ from ..ability_atoms import (
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
+from .inputs import int_option
+from .module_contract import coverage
 from .slotlib import (
     STEROID_ZERO,
     ability_name,
@@ -80,8 +82,6 @@ from .slotlib import (
     with_control,
 )
 from .source_receipts import load_champion_sources
-from .inputs import int_option
-from .module_contract import coverage
 
 # HARDCODED: verify on patch updates — the 4-stack cap is wiki prose
 # ("stacking up to 4 times for a maximum 100% increase"); the damage

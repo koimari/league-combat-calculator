@@ -17,11 +17,10 @@ Hand-validated against https://wiki.leagueoflegends.com/en-us/Briar
 
 import pytest
 
-from src.calculator.champions import parse_champion_abilities
+from src.calculator.champions import briar, parse_champion_abilities
 from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
-from src.calculator.champions import briar
 from tests import cc_review
 
 # Rank pins for hand-math tests (independent of level/skill order).
@@ -332,7 +331,7 @@ class TestFightIntegration:
     def test_q_shred_helps_later_casts_but_not_q_itself(self, briar_data):
         """Kog'Maw rule: the shred lands after Q's own damage, so only
         abilities cast after Q see reduced resistances."""
-        params = dict(target_armor=100.0, target_magic_resistance=100.0)
+        params = {"target_armor": 100.0, "target_magic_resistance": 100.0}
         q_first = run_fight(
             briar_data,
             18,
@@ -486,7 +485,8 @@ class TestReviewedCrowdControl:
             for event in payload["damage_events"]
             if event.get("source") == "E"
         ]
-        assert scream and min(scream) == 1.0
+        assert scream
+        assert min(scream) == 1.0
         assert max(ticks[:4]) <= min(scream)
 
     def test_the_kit_clears_the_control_armed_scan(self):

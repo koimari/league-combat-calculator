@@ -16,8 +16,8 @@ composition and the score compiler build the same keys.
 from __future__ import annotations
 
 import math
-from enum import Enum, IntEnum
 from collections.abc import Iterable, Mapping
+from enum import Enum, IntEnum
 from threading import Lock
 from typing import Any, NamedTuple
 
@@ -295,7 +295,7 @@ class EventSlots:
     be walked.
     """
 
-    __slots__ = ("_by_text", "_texts", "_lock")
+    __slots__ = ("_by_text", "_lock", "_texts")
 
     def __init__(self) -> None:
         self._by_text: dict[str, int] = {}
@@ -1046,16 +1046,16 @@ def classify_event_kind(event: Mapping[str, Any], phase: TransitionRank) -> Acti
 # underscore on a name another layer must call is a boundary nobody can
 # see.  What stays here is the vocabulary that constructor converts *into*.
 __all__ = [
-    "ActionKind",
     "EVENT_SLOTS",
+    "NO_SLOT",
+    "SUPPORT_RANK_KEY",
+    "UTILITY_KINDS",
+    "ActionKind",
     "EventSlots",
     "LiveAmp",
     "LiveProbe",
-    "NO_SLOT",
-    "SUPPORT_RANK_KEY",
     "SurvivalAction",
     "TransitionRank",
-    "UTILITY_KINDS",
     "action_key",
     "attack_class_of",
     "classify_event_kind",

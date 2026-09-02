@@ -51,8 +51,8 @@ from src.calculator.champions import (
     parse_champion_abilities,
 )
 from src.calculator.champions.rengar import RENGAR_FEROCITY_STACK_RULE
-from src.calculator.data_fetcher import get_champion
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import calculate_total_stats
 from tests.parse_stats import parse_stats
 
@@ -305,7 +305,8 @@ class TestAcceptedCastStackGains:
         # cooldown-only: rank-5 Q (4s CD) lands at 0/4/8 in a 10s fight.
         result = _fight({"p_ferocity": 0})
         timeline = [(c["slot"], c["time"]) for c in result["cast_timeline"]]
-        assert ("Q", 0.0) in timeline and ("Q", 4.0) in timeline
+        assert ("Q", 0.0) in timeline
+        assert ("Q", 4.0) in timeline
         assert ("Q", 8.0) in timeline
         assert len([c for c in timeline if c[0] == "Q"]) == 3
         assert all(c["slot"] in "QWER" for c in result["cast_timeline"])
@@ -636,8 +637,6 @@ class TestResourceLedgerVisibility:
 # ---------------------------------------------------------------------------
 # S10 — Regression surface (kept green; run list)
 # ---------------------------------------------------------------------------
-# Run ONLY this file plus the regression list below:
-#   .venv/bin/python -m pytest tests/test_rengar_ferocity_ledger.py #     tests/test_e3_stacks_2.py tests/test_state_lifecycle.py #     tests/test_state_lifecycle_consumers.py tests/test_resource_ledger.py #     tests/test_resource_ledger_consumers.py #     tests/test_resource_ledger_champion_consumers.py #     tests/test_catalyst_resource_ledger.py tests/test_mana_restore_refund.py #     tests/test_app.py
 # The existing Rengar/ferocity pins (test_e3_stacks_2.py
 # test_rengar_ferocity_empowers_q_w_e; test_state_lifecycle_consumers.py
 # TestRengarFerocityConsumer) and the resource-ledger consumers stay green.

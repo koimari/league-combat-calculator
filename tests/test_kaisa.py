@@ -7,7 +7,6 @@ import pytest
 
 from src import app as app_module
 from src.calculator.calculate import calculate_payload
-from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.champions import (
     get_champion_cast_order,
     get_champion_module_contract,
@@ -16,6 +15,7 @@ from src.calculator.champions import (
     parse_champion_abilities,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.optimizer import _evaluate_build
 from src.calculator.pipeline import DEFAULT_AUTO_ATTACK_UPTIME, FightParams, run_fight
 from tests import cc_review, row_review
@@ -318,7 +318,7 @@ def test_timed_plasma_ruptures_recur_across_the_window():
 
 @pytest.mark.parametrize(
     "items",
-    ([], ["Kraken Slayer"], ["Nashor's Tooth", "Rabadon's Deathcap"]),
+    [[], ["Kraken Slayer"], ["Nashor's Tooth", "Rabadon's Deathcap"]],
 )
 def test_timed_plasma_stream_reconciles_with_the_engine_timeline(items):
     """The module's walked application stream is the engine's own cadence:

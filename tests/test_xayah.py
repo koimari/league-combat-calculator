@@ -36,7 +36,8 @@ class TestReviewedCrowdControl:
         )
         (part,) = parsed["E"]["parts"]
         assert part.count > 1
-        assert part.time_offset is None and part.hit_interval is None
+        assert part.time_offset is None
+        assert part.hit_interval is None
 
     def test_the_unreviewable_slot_keeps_the_fight_coarse(self):
         assert cc_review.unreviewed_ability_slots("Xayah") == ["E"]

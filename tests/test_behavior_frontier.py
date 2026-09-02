@@ -11,8 +11,8 @@ dischargeable by creating a fourteenth.
 """
 
 import ast
-import shutil
 import json
+import shutil
 import subprocess
 from dataclasses import fields
 from pathlib import Path
@@ -21,9 +21,8 @@ from unittest import mock
 import pytest
 
 from scripts import behavior_frontier
-from src.calculator import interpreters
+from src.calculator import interpreters, item_coverage
 from src.calculator import item_behavior_catalog as catalog
-from src.calculator import item_coverage
 from src.calculator.interpreters.stat_derivation import declared_stat_derivations
 from src.calculator.item_behavior import ThresholdRegenRule
 
@@ -165,9 +164,7 @@ def test_a_container_exclusion_outside_class_b_is_refused() -> None:
         "calculator/damage.py"
     ] = {"SOMETHING": "a reason"}
 
-    failures = behavior_frontier._claim_evidence_failures(  # noqa: SLF001
-        committed, fresh
-    )
+    failures = behavior_frontier._claim_evidence_failures(committed, fresh)
 
     assert any("is not a Class B module" in failure for failure in failures)
 
@@ -611,9 +608,7 @@ def test_a_member_with_a_compiled_rule_fails_the_ratchet() -> None:
     committed = json.loads(json.dumps(fresh))
     fresh["no_runtime_behavior"]["declaring"] = ["Spirit Visage"]
 
-    failures = behavior_frontier._no_runtime_behavior_failures(  # noqa: SLF001
-        committed, fresh
-    )
+    failures = behavior_frontier._no_runtime_behavior_failures(committed, fresh)
 
     assert any("compile a BehaviorRule" in failure for failure in failures)
 
@@ -831,7 +826,7 @@ def test_a_deferral_that_outlives_its_gap_fails_the_gate() -> None:
         "counter_4"
     ]["deferrals"]["rows"][stale]
 
-    failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
+    failures = behavior_frontier._deferral_failures(committed, fresh)
 
     assert any("is not an open gap" in failure for failure in failures)
 
@@ -852,7 +847,7 @@ def test_a_re_dating_that_never_reached_the_receipt_fails_the_gate() -> None:
         "recorded_stage"
     ] = "Phase 4 S3 — one kernel, five views"
 
-    failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
+    failures = behavior_frontier._deferral_failures(committed, fresh)
 
     assert any("is half-landed" in failure for failure in failures)
 
@@ -1047,7 +1042,7 @@ def test_a_row_whose_stage_shipped_without_saying_so_fails_the_gate() -> None:
         row["overdue"] = False
         row["blocked_on"] = ""
 
-    failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
+    failures = behavior_frontier._deferral_failures(committed, fresh)
 
     assert any("is not declared overdue with a blocker" in f for f in failures)
 
@@ -1062,7 +1057,7 @@ def test_an_overdue_claim_on_a_live_stage_fails_the_gate() -> None:
         row = block["counters"]["counter_4"]["deferrals"]["rows"][key]
         row["recorded_stage"] = "a stage that has not shipped"
 
-    failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
+    failures = behavior_frontier._deferral_failures(committed, fresh)
 
     assert any("is not a completed stage" in f for f in failures)
 
@@ -1085,7 +1080,7 @@ def test_a_deferral_to_a_stage_nothing_declares_fails_the_gate() -> None:
         row = block["counters"]["counter_4"]["deferrals"]["rows"][key]
         row["recorded_stage"] = "Phase 9 S1 — a stage no record declares"
 
-    failures = behavior_frontier._deferral_failures(committed, fresh)  # noqa: SLF001
+    failures = behavior_frontier._deferral_failures(committed, fresh)
 
     assert any("campaign-stages.json declares" in f for f in failures)
 
@@ -1137,11 +1132,12 @@ def test_stage_completion_is_read_from_the_tree_not_from_a_declaration() -> None
     assert set(shipped) <= set(declared)
     assert "Phase 4 S3 — one kernel, five views" in shipped
 
-    tags = behavior_frontier._tag_first_seen()  # noqa: SLF001
+    tags = behavior_frontier._tag_first_seen()
     for stage, row in declared.items():
         assert "shipped" not in row, f"{stage} declares shippedness rather than a tag"
         if stage in shipped:
-            assert row["slice_tag"] in tags and row["followed_by"] in tags
+            assert row["slice_tag"] in tags
+            assert row["followed_by"] in tags
             assert tags[row["slice_tag"]] in shipped[stage]
 
 
@@ -1205,8 +1201,8 @@ def test_the_two_committed_artifacts_are_each_read_once_per_process() -> None:
         return real_run(command, *args, **kwargs)  # type: ignore[arg-type]
 
     for cached in (
-        behavior_frontier._campaign_stages_block,  # noqa: SLF001
-        behavior_frontier._tag_first_seen,  # noqa: SLF001
+        behavior_frontier._campaign_stages_block,
+        behavior_frontier._tag_first_seen,
     ):
         # Tolerated rather than required, so that dropping a decorator fails
         # this test on the count it is about instead of on an AttributeError.
@@ -1234,22 +1230,25 @@ def test_the_pinned_slice_tags_name_the_range_the_stage_records_declare() -> Non
         behavior_frontier.CAMPAIGN_SLICE_TAGS.read_text(encoding="utf-8")
     )
     assert pinned["range"] == behavior_frontier.campaign_range()
-    behavior_frontier._tag_first_seen.cache_clear()  # noqa: SLF001
+    behavior_frontier._tag_first_seen.cache_clear()
     try:
-        with mock.patch.object(
-            behavior_frontier, "campaign_range", lambda: "deadbee..cafe000"
+        with (
+            mock.patch.object(
+                behavior_frontier, "campaign_range", return_value="deadbee..cafe000"
+            ),
+            pytest.raises(RuntimeError, match="campaign range"),
         ):
-            with pytest.raises(RuntimeError, match="campaign range"):
-                behavior_frontier._tag_first_seen()  # noqa: SLF001
+            behavior_frontier._tag_first_seen()
     finally:
-        behavior_frontier._tag_first_seen.cache_clear()  # noqa: SLF001
+        behavior_frontier._tag_first_seen.cache_clear()
 
 
 def test_every_declared_stage_carries_a_blocker_a_reader_can_open() -> None:
     """A stage record is only useful if its blocker names an artifact."""
     for stage, row in behavior_frontier.declared_stages().items():
         assert row["blocked_on"].startswith("docs/receipts/"), stage
-        assert row["slice_tag"] and row["followed_by"], stage
+        assert row["slice_tag"], stage
+        assert row["followed_by"], stage
 
 
 def test_a_file_vanishing_mid_scan_is_skipped(tmp_path) -> None:

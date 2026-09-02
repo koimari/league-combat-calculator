@@ -154,7 +154,10 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
-from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.ability_spec import (
+    ACTION_BLOCKING_CC_KINDS,
+    NON_BLOCKING_CC_KINDS,
+)
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
@@ -166,22 +169,18 @@ from src.calculator.cleanse_eligibility import (
     resolve_cleanse_item,
     truncate_intervals,
 )
-from src.calculator.ability_spec import (
-    ACTION_BLOCKING_CC_KINDS,
-    NON_BLOCKING_CC_KINDS,
-)
 from src.calculator.crowd_control_eligibility import (
     KNOWN_CONTROL_KINDS,
     classify_control,
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.healing import derive_self_healing
 from src.calculator.participant_timeline import Combatant
 from src.calculator.survival.compile import unrepresentable_template_receipt
-from tests.survival_probe import simulate_survival
-from tests.survival_probe import survival_of
 from tests.app_config import app_config
+from tests.survival_probe import simulate_survival, survival_of
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _MUNDO_DATA = _CHAMPION_DATA["DrMundo"]
@@ -910,7 +909,8 @@ class TestNoTrigger:
         assert "cleanse" not in main
         assert "cleanse_use" not in main
         assert "cleanse_denied" not in main
-        assert "canister" not in main and "passive_cost" not in main
+        assert "canister" not in main
+        assert "passive_cost" not in main
         # The t=0 arm + the receipted cooldown are present (the passive
         # is armed; no trigger -> no resist).
         assert main["passive_state"]["armed"] is True
@@ -1564,7 +1564,7 @@ class TestModeParity:
             assert full["resource_ledger"] == scored["resource_ledger"]
             shared = ("time", "slot", "name", "ordinal", "resource_cost")
             for full_row, scored_row in zip(
-                full["cast_timeline"], scored["cast_timeline"]
+                full["cast_timeline"], scored["cast_timeline"], strict=False
             ):
                 assert {k: full_row[k] for k in shared} == {
                     k: scored_row[k] for k in shared

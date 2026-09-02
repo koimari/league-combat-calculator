@@ -1,6 +1,7 @@
 """Fimbulwinter Everlasting mana-gate authority certification.
 
-The gate is SOURCED, from Fimbulwinter revision 3984419: a melee holder's slow arms Everlasting above the 20%-maximum-mana gate, and
+The gate is SOURCED, from Fimbulwinter revision 3984419: a melee holder's slow arms
+Everlasting above the 20%-maximum-mana gate, and
 the whole champion x Fimbulwinter coverage fan-out prices through it.  The
 registry states that authority in ``everlasting_mana_gate_status``, and the
 runtime reads the contract rather than a literal.
@@ -285,9 +286,8 @@ class TestTwentyPercentBoundaryIsAuthored:
         assert required_effect_value(
             FIMBULWINTER, "everlasting_mana_threshold_ratio"
         ) == pytest.approx(THRESHOLD_RATIO)
-        with _desourced_gate():
-            with pytest.raises(KeyError) as excinfo:
-                required_effect_value(FIMBULWINTER, "everlasting_mana_threshold_ratio")
+        with _desourced_gate(), pytest.raises(KeyError) as excinfo:
+            required_effect_value(FIMBULWINTER, "everlasting_mana_threshold_ratio")
         message = excinfo.value.args[0]
         assert FIMBULWINTER in message
         assert "everlasting_mana_threshold_ratio" in message

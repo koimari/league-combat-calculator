@@ -21,6 +21,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
+from .inputs import int_option
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
@@ -30,7 +31,6 @@ from .slotlib import (
     extract_value,
     proc_damage,
 )
-from .inputs import int_option
 
 PACKET_SHA256 = "9d82bf325e3fbc81b2fed62c53b2501f2bb7aa95228e266e6daeb24e5e7392d6"
 
@@ -154,7 +154,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
+OPTIONS: list[dict[str, Any]] = [
+    *list(OPTIONS),
     int_option(
         "p_legs",
         1,
@@ -165,7 +166,8 @@ OPTIONS: list[dict[str, Any]] = list(OPTIONS) + [
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Purge) prices all 12 sourced shots of the 4-second channel at the "
     "fixed 3.0 attack speed (3.0 AS x 4s; Modified Physical Damage row "
     "per shot, 1/3s cadence); on-hit effects at 50% effectiveness and "

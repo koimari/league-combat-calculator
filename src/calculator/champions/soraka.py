@@ -34,6 +34,7 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option
 from .module_contract import coverage
 from .slotlib import (
     ability_name,
@@ -45,7 +46,6 @@ from .slotlib import (
     support_cast,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option
 
 
 def _equinox(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -202,12 +202,10 @@ def derive_self_healing(
     healing = []
     ability = _healing.ability_json(champion_data, "Q")
     rank = _healing.parsed_rank(ability_damages, "Q")
-    per_tick = _healing.extract_named(
-        ability, "Heal per Tick", rank, champion_stats, {}
-    )
-    total = _healing.extract_named(ability, "Total Heal", rank, champion_stats, {})
+    per_tick = extract_named(ability, "Heal per Tick", rank, champion_stats, {})
+    total = extract_named(ability, "Total Heal", rank, champion_stats, {})
     tick_count = (
-        max(1, min(100, int(round(total / per_tick))))
+        max(1, min(100, round(total / per_tick)))
         if per_tick > 0.0 and total > 0.0
         else 0
     )
@@ -215,16 +213,16 @@ def derive_self_healing(
         if _healing.event_source(event) != "Q" or tick_count <= 0:
             continue
         trigger = _healing.trigger_fields(event)
-        for index in range(1, tick_count + 1):
-            healing.append(
-                {
-                    "time": float(event.get("time", 0.0)) + index * 0.2,
-                    "amount": float(per_tick),
-                    "source": "Starcall · Rejuvenation",
-                    "kind": "champion_ability",
-                    **trigger,
-                }
-            )
+        healing.extend(
+            {
+                "time": float(event.get("time", 0.0)) + index * 0.2,
+                "amount": float(per_tick),
+                "source": "Starcall · Rejuvenation",
+                "kind": "champion_ability",
+                **trigger,
+            }
+            for index in range(1, tick_count + 1)
+        )
     return healing
 
 

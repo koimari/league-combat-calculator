@@ -8,6 +8,7 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, float_option, int_option
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -17,7 +18,6 @@ from .slotlib import (
     proc_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option, float_option, int_option
 
 
 def _resonance(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -71,12 +71,15 @@ def _parallel_convergence(ctx: SlotCtx) -> dict[str, Any] | None:
     ranked = ctx.ranked()
     if ranked is None:
         return None
-    ability, rank = ranked
+    ability, _rank = ranked
     ready = bool(ctx.option("w_passive_ready"))
     entry = no_damage(
         ctx,
         name=ability_name(ability),
-        reason="Active W creates a sourced shield/stun zone; its passive on-hit is opt-in below 30% target health.",
+        reason=(
+            "Active W creates a sourced shield/stun zone; its passive on-hit is "
+            "opt-in below 30% target health."
+        ),
     )
     if entry is None:
         return None
@@ -182,10 +185,16 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Resonance stacks up to 3 (cap) and the third stack consumes all three to detonate; each p_procs entry is one completed 3-stack detonation (30 : 150 by level + 80% AP), priced because the rotation does not imply three prior applications.",
-    "Resonance's per-target 4-second stack window and monster 270% multiplier are boundary state; the detonation value is the champion-target sourced value.",
-    "Q's return is a separate authored event and W's passive is disabled unless the target-health gate is selected.",
-    "Chronobreak's heal, stasis and movement are recorded as non-TDD state; only the arrival explosion enters damage.",
+    "Resonance stacks up to 3 (cap) and the third stack consumes all three to "
+    "detonate; each p_procs entry is one completed 3-stack detonation (30 : 150 by "
+    "level + 80% AP), priced because the rotation does not imply three prior "
+    "applications.",
+    "Resonance's per-target 4-second stack window and monster 270% multiplier are "
+    "boundary state; the detonation value is the champion-target sourced value.",
+    "Q's return is a separate authored event and W's passive is disabled unless the "
+    "target-health gate is selected.",
+    "Chronobreak's heal, stasis and movement are recorded as non-TDD state; only the "
+    "arrival explosion enters damage.",
 ]
 
 SOURCES = load_champion_sources("Ekko")
@@ -203,7 +212,7 @@ def derive_self_healing(
     """Resolve Ekko self-healing events from its authored packet."""
     healing = []
     r_rank = _healing.parsed_rank(ability_damages, "R")
-    r_heal = _healing.extract_named(
+    r_heal = extract_named(
         _healing.ability_json(champion_data, "R"),
         "Minimum Heal",
         r_rank,

@@ -16,6 +16,7 @@ import pytest
 
 import src.app as app_module
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.interpreters import charged_strike
 from src.calculator.item_effects import (
     ENERGIZED_SOURCE_RECEIPT,
     ITEM_EFFECTS,
@@ -28,7 +29,6 @@ from src.calculator.item_effects import (
     required_effect_value,
     sustain_effect_value,
 )
-from src.calculator.interpreters import charged_strike
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
 from tests.app_config import app_config
@@ -108,9 +108,9 @@ def test_lifesteal_typed_receipts_pin_wiki_values(item_name, percent, revision):
 def test_missing_lifesteal_key_raises_naming_item_and_key(monkeypatch):
     """A missing typed key fails loudly instead of borrowing a literal."""
     monkeypatch.setitem(ITEM_EFFECTS, "Vampiric Scepter", {"type": "sustain"})
-    with pytest.raises(KeyError, match="Vampiric Scepter.*lifesteal_percent"):
+    with pytest.raises(KeyError, match=r"Vampiric Scepter.*lifesteal_percent"):
         sustain_effect_value("Vampiric Scepter", "lifesteal_percent")
-    with pytest.raises(KeyError, match="Vampiric Scepter.*lifesteal_percent"):
+    with pytest.raises(KeyError, match=r"Vampiric Scepter.*lifesteal_percent"):
         grouped_sustain_stat_percent(_items("Vampiric Scepter"), "lifesteal_percent")
 
 
@@ -119,7 +119,7 @@ def test_missing_lifesteal_source_raises_naming_item_and_key(monkeypatch):
     monkeypatch.setitem(
         ITEM_EFFECTS, "Vampiric Scepter", {"type": "sustain", "lifesteal_percent": 7.0}
     )
-    with pytest.raises(KeyError, match="Vampiric Scepter.*source_url"):
+    with pytest.raises(KeyError, match=r"Vampiric Scepter.*source_url"):
         required_effect_value("Vampiric Scepter", "source_url")
 
 

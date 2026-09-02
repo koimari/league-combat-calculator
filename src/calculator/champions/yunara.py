@@ -18,6 +18,7 @@ from functools import partial
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -27,7 +28,6 @@ from .slotlib import (
     extract_named,
     with_item_on_hits,
 )
-from ..binary_roots import data_value, spell_object
 
 # HARDCODED: verify on patch updates — the linger cadence (4 ticks at
 # 0.25s over the 1-second linger) is wiki W prose, reconciled by
@@ -96,14 +96,14 @@ def _arc_of_judgment(ctx: SlotCtx) -> dict[str, Any] | None:
         "magic",
     )
     parts: list[DamagePart] = [DamagePart("magic", initial, time_offset=0.0)]
-    for index in range(1, _W_LINGER_TICKS + 1):
-        parts.append(
-            DamagePart(
-                "magic",
-                linger_per_tick,
-                time_offset=index * _W_LINGER_TICK_INTERVAL,
-            )
+    parts.extend(
+        DamagePart(
+            "magic",
+            linger_per_tick,
+            time_offset=index * _W_LINGER_TICK_INTERVAL,
         )
+        for index in range(1, _W_LINGER_TICKS + 1)
+    )
     entry["parts"] = tuple(parts)
     entry["detail"] = detail
     return entry
@@ -157,7 +157,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Arc of Judgment) prices the initial impact plus 4 lingering-bead "
     "ticks at 0.25s intervals over the 1-second linger (Linger Magic "
     "Damage per Tick x 4 == Total Expanded Damage; per-tick is 15% of "

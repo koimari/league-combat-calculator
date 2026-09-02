@@ -11,10 +11,10 @@ Reference damage (raw, pre-mitigation, at 100 AP, rank 5 basics / rank 3 R):
 
 import pytest
 
+from src.calculator.champions import aurora
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.damage import FightConfig, calculate_fight_damage
-from src.calculator.champions import aurora
 from tests import cc_review
 
 # ---------------------------------------------------------------------------

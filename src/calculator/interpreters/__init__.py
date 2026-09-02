@@ -45,9 +45,10 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-from ..champions.inputs import champion_stat
 from ..ability_spec import Authority
+from ..champions.inputs import champion_stat
 from ..item_behavior import (
+    SUBJECT_AUTHORITY,
     BehaviorRule,
     BuildContext,
     Compilability,
@@ -62,13 +63,11 @@ from ..item_behavior import (
     ReceiptOnly,
     ReceiptScope,
     RuleFamily,
-    SUBJECT_AUTHORITY,
     Subject,
     ThresholdRegenRule,
 )
 from ..item_behavior_catalog import behavior_rules, registry_entries, rule_owners
 from ..trigger_stream import CAPABILITIES
-from .stat_derivation import declared_stat_derivations
 from . import (
     active_cast,
     ally_packet,
@@ -90,6 +89,7 @@ from . import (
     sustain,
     threshold_defense,
 )
+from .stat_derivation import declared_stat_derivations
 
 
 class InterpreterRegistryError(RuntimeError):

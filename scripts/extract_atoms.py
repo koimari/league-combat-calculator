@@ -161,9 +161,7 @@ def keyword_matches(
             for t in obj_tokens:
                 if len(t) > n and t.startswith(nk):
                     return True
-    if len(ktoks) >= 2 and all(t in obj_tokens for t in ktoks):
-        return True
-    return False
+    return bool(len(ktoks) >= 2 and all(t in obj_tokens for t in ktoks))
 
 
 def usable_keyword(
@@ -177,15 +175,9 @@ def usable_keyword(
 ) -> bool:
     """Whether a vocab keyword is allowed to vote for its atom.
 
-    Drops keywords that carry no signal in this corpus:
-      * keywords made entirely of champion names (the vocab lists champions
-        like "Aatrox"/"Aphelios"/"Yasuo" as examples, but every object of that
-        champion would then match), and
-      * keywords made entirely of corpus-generic engine tokens ("duration",
-        "ability damage", "basic damage", "% crit" -> "crit" ...).
-    Ambiguous single-token keywords ("shield" is the head of the shield atom
-    but also a keyword of the true-damage / flow atoms) only vote for the atom
-    they are the head word of.
+    Keywords made only of champion names or of corpus-generic engine tokens carry
+    no signal and are dropped; an ambiguous single-token keyword ("shield") votes
+    only for the atom it heads.
     """
     if len(nk) <= SHORT_KEYWORD_MAX:
         return True
@@ -194,14 +186,10 @@ def usable_keyword(
             return True
         if keyword_atom_count.get(nk, 0) >= 2:
             return False
-        if nk in generic_tokens or nk in champion_tokens:
-            return False
-        return True
+        return not (nk in generic_tokens or nk in champion_tokens)
     if set(ktoks) <= atom_name_toks:
         return True
-    if set(ktoks) <= (generic_tokens | champion_tokens):
-        return False
-    return True
+    return not set(ktoks) <= generic_tokens | champion_tokens
 
 
 def compute_generic_tokens(champ_paths: list[Path]) -> set[str]:
@@ -505,7 +493,7 @@ def object_features(obj: dict, key: str, champ_norm: str) -> dict:
     calcs = list((sp.get("mSpellCalculations") or {}).keys())
     dvs_raw = sp.get("DataValues") or []
     if isinstance(dvs_raw, dict):
-        dvs = [str(k) for k in dvs_raw.keys()]
+        dvs = [str(k) for k in dvs_raw]
     else:
         dvs = [
             dv.get("name") for dv in dvs_raw if isinstance(dv, dict) and dv.get("name")
@@ -518,7 +506,7 @@ def object_features(obj: dict, key: str, champ_norm: str) -> dict:
     # (TAG_ATOMS); feeding tag text into the free-text keyword matcher would
     # re-match them with weaker semantics ("wind" from "Melee_BigWindup",
     # "block" from "PositiveEffect_MoveBlock", "ranged" from "Trait_Ranged_*").
-    sources = [match_name, match_alt] + calcs + dvs + [buff_desc]
+    sources = [match_name, match_alt, *calcs, *dvs, buff_desc]
     toks: set[str] = set()
     for s in sources:
         if s:
@@ -788,10 +776,9 @@ def classify_object(feat: dict, keyword_index, tag_map=None) -> list[tuple[str, 
     # generic execute rule: an ultimate-tagged damage spell whose data values
     # carry a damage cap is an execute (below-health-threshold kill).
     is_ult = any(t.startswith("Trait_Ultimate") for t in feat["tags"])
-    if "execute" in feat["toks"]:
-        hits.setdefault("damage.execute", "damage")
-        evidence.setdefault("damage.execute", "rule:execute")
-    elif is_ult and "cap" in feat["toks"] and "damage" in feat["toks"]:
+    if "execute" in feat["toks"] or (
+        is_ult and "cap" in feat["toks"] and "damage" in feat["toks"]
+    ):
         hits.setdefault("damage.execute", "damage")
         evidence.setdefault("damage.execute", "rule:execute")
     # generic crit-event rule: script names like "XxxCritAttack" carry the
@@ -912,8 +899,10 @@ def extract_champion(
                     "target_policy": "self",
                     "parameters": {},
                     "provenance": {
-                        "wiki": list(vocab.get(atom_id, {}).get("wiki_pages", []))
-                        + [entry.get("wiki_name", "")],
+                        "wiki": [
+                            *list(vocab.get(atom_id, {}).get("wiki_pages", [])),
+                            entry.get("wiki_name", ""),
+                        ],
                         "binary": [],
                         "source": "wiki-map",
                         "evidence": "wiki-map",
@@ -955,9 +944,8 @@ def extract_champion(
                 if cand in behavior_atoms:
                     parent = cand
                     break
-        if parent is None and base != name:
-            if base in behavior_atoms:
-                parent = base
+        if parent is None and base != name and base in behavior_atoms:
+            parent = base
         # multi-level: recursively strip clone suffixes down to a classified
         # parent (ApheliosCalibrumAttackMisMini -> ApheliosCalibrum -> falls
         # back to the champion's base ability or basic attack).
@@ -1109,7 +1097,10 @@ def build_report(
         for fam, c in r["family_counts"].items():
             totals[fam] = totals.get(fam, 0) + c
     return {
-        "classifier": "scripts/extract_atoms.py (v2.1 data-driven: wiki-atoms vocab + wiki damage-type bridge)",
+        "classifier": (
+            "scripts/extract_atoms.py (v2.1 data-driven: wiki-atoms vocab + wiki "
+            "damage-type bridge)"
+        ),
         "vocab": {
             "atom_count": len(vocab),
             "families": sorted({a["family"] for a in vocab.values()}),
@@ -1267,11 +1258,11 @@ def build_sanity_and_suggestions(results, vocab):
         passed = found is not None
         evidence = []
         if r:
-            for a in r["atoms"]:
-                if a["atom_id"] == atom_id:
-                    evidence.append(
-                        f"{a['atom_id']} @ {a['behavior']} ({a['trigger']})"
-                    )
+            evidence.extend(
+                f"{a['atom_id']} @ {a['behavior']} ({a['trigger']})"
+                for a in r["atoms"]
+                if a["atom_id"] == atom_id
+            )
         sanity.append(
             {
                 "mechanic": label,
@@ -1415,33 +1406,57 @@ def build_sanity_and_suggestions(results, vocab):
     )
 
     suggestions = [
-        "Extend the transform atom (or add a 'disguise / level-gated form' atom) with keywords for level-gated "
-        "passive ranks and 'disguise' — NeekoPassive and KaylePassive both fail today because their binaries "
-        "never contain 'transform'/'form' tokens (Kayle's ranks are only visible as LevelForPassiveRank* datavalues).",
-        "Add a 'soul'/'stack currency' keyword family: Senna souls, Thresh souls and Nasus Q stacks appear as "
-        "'Soul*'/'Stacks' datavalues, and only 'stack' currently matches — soul-gated scaling is invisible, and "
+        "Extend the transform atom (or add a 'disguise / level-gated form' atom) with "
+        "keywords for level-gated "
+        "passive ranks and 'disguise' — NeekoPassive and KaylePassive both fail today "
+        "because their binaries "
+        "never contain 'transform'/'form' tokens (Kayle's ranks are only visible as "
+        "LevelForPassiveRank* datavalues).",
+        "Add a 'soul'/'stack currency' keyword family: Senna souls, Thresh souls and "
+        "Nasus Q stacks appear as "
+        "'Soul*'/'Stacks' datavalues, and only 'stack' currently matches — soul-gated "
+        "scaling is invisible, and "
         "objects like ThreshPassiveSouls / SennaBasicAttackSouls stay unclassified.",
-        "Damage types are now bridged from the wiki champion cache (data/champions.json per-ability damageType) "
-        "via script-name prefix (champion+slot letter) and ability-name token matching, with token inference as the "
-        "fallback. Remaining damage_type=null atoms are: basic-attack objects (the cache types abilities, not "
-        "autos), slots the wiki marks without a type, and multi-form slots whose entries disagree on the type "
-        "(e.g. Gnar W Hyper vs Wallop, Rek'Sai Q Queen's Wrath vs Prey Seeker) when the object name cannot "
+        "Damage types are now bridged from the wiki champion cache "
+        "(data/champions.json per-ability damageType) "
+        "via script-name prefix (champion+slot letter) and ability-name token "
+        "matching, with token inference as the "
+        "fallback. Remaining damage_type=null atoms are: basic-attack objects (the "
+        "cache types abilities, not "
+        "autos), slots the wiki marks without a type, and multi-form slots whose "
+        "entries disagree on the type "
+        "(e.g. Gnar W Hyper vs Wallop, Rek'Sai Q Queen's Wrath vs Prey Seeker) when "
+        "the object name cannot "
         "disambiguate the form.",
-        "Curate ambiguous vocab keywords before scaling to all champions. The classifier already guards against "
-        "champion-name keywords ('Aatrox', 'Aphelios'), generic words ('duration', 'ability damage', 'crit'), and "
-        "substring traps ('miss' in missile, 'stance' in distance, 'wind' in window) — but residual noise remains: "
-        "'shield' in the flow/true-damage atoms fires on every shield, 'bonus health' in deep-ward fires on any "
-        "bonus+health datavalue, 'TauntLength' (Thresh Q) misclassifies as a taunt, 'refund' fires on ManaRefund, "
+        "Curate ambiguous vocab keywords before scaling to all champions. The "
+        "classifier already guards against "
+        "champion-name keywords ('Aatrox', 'Aphelios'), generic words ('duration', "
+        "'ability damage', 'crit'), and "
+        "substring traps ('miss' in missile, 'stance' in distance, 'wind' in window) "
+        "— but residual noise remains: "
+        "'shield' in the flow/true-damage atoms fires on every shield, 'bonus health' "
+        "in deep-ward fires on any "
+        "bonus+health datavalue, 'TauntLength' (Thresh Q) misclassifies as a taunt, "
+        "'refund' fires on ManaRefund, "
         "and meta atoms (internal-resource-index, buff-duration-class) over-fire by design.",
-        "Add a targeting-data source for target_policy: mTargetingTypeData is nearly empty in these binaries, so "
-        "heal/shield target_policy defaults to 'self' and misses ally-targeted heals (Senna Q, Kayle W, Thresh W "
-        "lantern). mAffectsTypeFlags is also recorded raw (no decode table available for this data version).",
-        "Missiles and empowered-attack variants of an already-classified parent spell (e.g. JinxQAttack, "
-        "ApheliosSeverumAttack, GnarQMissile) stay unclassified; inheriting the parent ability's atoms for "
-        "'*Missile'/'*Attack'-suffixed clones would cut the unclassified-real count roughly in half.",
-        "The wiki cache marks 25 abilities OTHER_DAMAGE (Ahri Q, Camille Q, Pyke R, Sett W, Urgot R, Vel'Koz R, "
-        "Yone P/W/R, ...); these are recorded verbatim as damage_type='other'. Several are true damage in game "
-        "(e.g. Pyke R, Camille Q2, Sett W, Urgot R) — verify against the game files if 'true' matters, and only "
+        "Add a targeting-data source for target_policy: mTargetingTypeData is nearly "
+        "empty in these binaries, so "
+        "heal/shield target_policy defaults to 'self' and misses ally-targeted heals "
+        "(Senna Q, Kayle W, Thresh W "
+        "lantern). mAffectsTypeFlags is also recorded raw (no decode table available "
+        "for this data version).",
+        "Missiles and empowered-attack variants of an already-classified parent spell "
+        "(e.g. JinxQAttack, "
+        "ApheliosSeverumAttack, GnarQMissile) stay unclassified; inheriting the "
+        "parent ability's atoms for "
+        "'*Missile'/'*Attack'-suffixed clones would cut the unclassified-real count "
+        "roughly in half.",
+        "The wiki cache marks 25 abilities OTHER_DAMAGE (Ahri Q, Camille Q, Pyke R, "
+        "Sett W, Urgot R, Vel'Koz R, "
+        "Yone P/W/R, ...); these are recorded verbatim as damage_type='other'. "
+        "Several are true damage in game "
+        "(e.g. Pyke R, Camille Q2, Sett W, Urgot R) — verify against the game files "
+        "if 'true' matters, and only "
         "then special-case them (ideally as data, not code).",
     ]
     return sanity, suggestions

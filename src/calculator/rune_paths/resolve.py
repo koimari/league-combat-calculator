@@ -7,10 +7,11 @@ to a refusal carrying the reason. Overgrowth is the exception — its stacks
 buy maximum health, which the fight's stat block does read.
 """
 
-from typing import Any, Callable, Mapping
+from collections.abc import Callable, Mapping
+from typing import Any
 
-from ..champions.inputs import champion_stat
 from ..ability_spec import Disposition
+from ..champions.inputs import champion_stat
 from ..item_effects import DamageInputs
 from ..rune_effects import (
     RuneEffect,

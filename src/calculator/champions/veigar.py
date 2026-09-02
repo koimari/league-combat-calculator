@@ -27,11 +27,13 @@ All numeric values are read from the champion JSON data; nothing is
 hardcoded.
 """
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
+from ..ability_spec import ControlEvent, DamagePart
 from .engine import SlotCtx, build_parser
+from .module_contract import coverage
 from .module_helpers import delayed_damage, no_damage_parser
-from .source_receipts import load_champion_sources
 from .slotlib import (
     ability_name,
     extract_cooldown,
@@ -39,8 +41,7 @@ from .slotlib import (
     extract_value,
     simple_damage,
 )
-from ..ability_spec import ControlEvent, DamagePart
-from .module_contract import coverage
+from .source_receipts import load_champion_sources
 
 # Primordial Burst gains +100% at 66.66% missing health and remains capped
 # thereafter ("increased by 0% : 100% (based on target's missing health)";
@@ -103,7 +104,7 @@ def _primordial_burst(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     ability, rank = ranked
     base = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
-    entry = {
+    return {
         "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
@@ -118,7 +119,6 @@ def _primordial_burst(ctx: SlotCtx) -> dict[str, Any] | None:
             "at 66.66% missing health, then capped"
         ),
     }
-    return entry
 
 
 ASSUMPTIONS = [

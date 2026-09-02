@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -34,7 +33,7 @@ import requests
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from src.calculator.item_source import is_ordinary_sr_item  # noqa: E402
+from src.calculator.item_source import is_ordinary_sr_item
 
 try:
     from patch_regression import extract_ddragon_version  # pylint: disable=import-error
@@ -101,8 +100,10 @@ def stale_reasons(tables, items_cache, ddragon_version):
                 f"{name}: cached shop total {divergence[0]} != DDragon "
                 f"{divergence[1]} (unacknowledged)"
             )
-    for name in sorted(set(ACKNOWLEDGED_TOTAL_DIVERGENCES) - diverged):
-        reasons.append(f"{name}: acknowledged total divergence no longer reproduces")
+    reasons.extend(
+        f"{name}: acknowledged total divergence no longer reproduces"
+        for name in sorted(set(ACKNOWLEDGED_TOTAL_DIVERGENCES) - diverged)
+    )
     return reasons
 
 
@@ -228,7 +229,8 @@ def main() -> int:
             "rounding": "round half up (floor(x*ratio + 0.5))",
             "exceptions_40pct": [
                 "All SR starters (Doran's x5, Cull, Dark Seal)",
-                "Consumables (Health Potion, Refillable Potion, Control Ward, Elixir of Iron/Sorcery/Wrath)",
+                "Consumables (Health Potion, Refillable Potion, Control Ward, Elixir "
+                "of Iron/Sorcery/Wrath)",
                 "Guardian Angel",
                 "Rejuvenation Bead",
                 "Seeker's Armguard / Shattered Armguard",
@@ -241,7 +243,10 @@ def main() -> int:
                 "Support chain (World Atlas -> Bounty of Worlds, no resell since V25.09)",
                 "Trinkets and distributed items (no shop value)",
             ],
-            "wiki_corrections": "Support chain and jungle pets set to 0% per wiki V25.09 rev 4021809 (DDragon stale); in-game adjudication recommended.",
+            "wiki_corrections": (
+                "Support chain and jungle pets set to 0% per wiki V25.09 rev 4021809 "
+                "(DDragon stale); in-game adjudication recommended."
+            ),
         },
         "per_item_sell": sorted(per_item_sell, key=lambda row: row["id"]),
         "combine_costs": sorted(combine_costs, key=lambda row: row["id"]),
@@ -253,7 +258,7 @@ def main() -> int:
     }
     tmp = out_path.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(out, indent=1, ensure_ascii=False), encoding="utf-8")
-    os.replace(tmp, out_path)
+    tmp.replace(out_path)
     print(
         f"wrote {out_path} ({len(per_item_sell)} sell rows, {len(combine_costs)} combine rows)"
     )

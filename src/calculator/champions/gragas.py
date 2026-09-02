@@ -6,13 +6,13 @@ import re
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .inputs import bool_option, champion_stat
+from ..healing_helpers import ability_json
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import bool_option, champion_stat
 from .module_helpers import no_damage
 from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
-from ..healing_helpers import ability_json
 
 
 def _happy_hour(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -41,7 +41,8 @@ def _barrel_roll(ctx: SlotCtx) -> dict[str, Any] | None:
     )
     entry["parts"] = (DamagePart("magic", value, time_offset=2.0),)
     entry["detail"] = (
-        f"{('Fully' if charged else 'minimum')} fermented barrel; source slow scales with the same charge state."
+        f"{('Fully' if charged else 'minimum')} fermented barrel; source slow scales "
+        f"with the same charge state."
     )
     return entry
 
@@ -85,7 +86,8 @@ def _body_slam(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["parts"] = (DamagePart("magic", value),)
     entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
-        "Collision damage plus sourced knockback/stun; cooldown refund is not assumed without a hit state."
+        "Collision damage plus sourced knockback/stun; cooldown refund is not assumed "
+        "without a hit state."
     )
     return entry
 
@@ -127,9 +129,12 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Barrel Roll exposes the minimum and fully fermented maximum damage branches; the source charge timing is not averaged.",
-    "Drunken Rage is a single empowered attack with a target-max-health rider; the channel damage reduction is defensive state.",
-    "Body Slam's cooldown refund requires a collision state and is not applied to every cast by default.",
+    "Barrel Roll exposes the minimum and fully fermented maximum damage branches; the "
+    "source charge timing is not averaged.",
+    "Drunken Rage is a single empowered attack with a target-max-health rider; the "
+    "channel damage reduction is defensive state.",
+    "Body Slam's cooldown refund requires a collision state and is not applied to "
+    "every cast by default.",
 ]
 
 SOURCES = load_champion_sources("Gragas")

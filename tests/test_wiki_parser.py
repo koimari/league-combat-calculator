@@ -13,9 +13,9 @@ sys.path.insert(0, str(_LOLSTATICDATA_ROOT))
 
 # Apply the Windows download_soup patch before importing the parser
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
-import calculator.data_updater  # noqa: F401  — triggers the monkey-patch
-
 from lolstaticdata.champions.pull_champions_wiki import LolWikiDataHandler
+
+import calculator.data_updater  # noqa: F401  — triggers the monkey-patch
 
 # Champions that have nvalues=None in the parser
 NVALUES_NONE_CHAMPIONS = ["Heimerdinger", "Sona", "Karma", "Nidalee"]

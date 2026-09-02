@@ -41,7 +41,7 @@ try:
 except ImportError:  # imported as scripts.build_reviewed_modules in tests
     from scripts.source_receipt import source_receipt
 
-from src.calculator.cast_dependency import BASE_CAST_SLOTS  # noqa: E402
+from src.calculator.cast_dependency import BASE_CAST_SLOTS
 
 SLOTS = BASE_CAST_SLOTS
 
@@ -517,8 +517,11 @@ def build(
             },
             "slots": slots,
             "assumptions": [
-                "Every slot is an explicit packet or sourced no-damage entry from the pinned local Wiki cache; no runtime archetype inference is used.",
-                "Numeric packets preserve rank/level arrays, typed scaling, target-health terms, and explicit variant selectors where the source lists them.",
+                "Every slot is an explicit packet or sourced no-damage entry from the "
+                "pinned local Wiki cache; no runtime archetype inference is used.",
+                "Numeric packets preserve rank/level arrays, typed scaling, "
+                "target-health terms, and explicit variant selectors where the source "
+                "lists them.",
             ],
             "sources": [
                 {"label": "Local League Wiki cache", "url": source_url, **receipt}

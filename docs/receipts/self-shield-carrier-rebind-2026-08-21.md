@@ -106,7 +106,7 @@ That is a dedicated slice, not a sweep item.
 
 ## 4. What was done instead
 
-The zero is no longer published as a fact. `participant_timeline`
+The zero is not published as a fact. `participant_timeline`
 `_self_shield_carrier_denials` audits the two resolved ledgers after the
 walk and emits a named denial into the existing public
 `combat.item_denial_receipts` section — the channel whose own contract is

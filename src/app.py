@@ -1,10 +1,10 @@
 """Flask web application for the LoL Damage Calculator."""
 
-import hmac
 import base64
 import binascii
 import functools
 import hashlib
+import hmac
 import ipaddress
 import json
 import math
@@ -15,8 +15,8 @@ import sqlite3
 import sys
 import tempfile
 import time
-from datetime import datetime, timezone
 from collections.abc import Callable, Mapping
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
@@ -38,43 +38,22 @@ from flask import (
     request,
     url_for,
 )
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
-from src.calculator.calculate import calculate_payload, compare_payload
 from src.calculator.application_errors import ApplicationError
-
-# The sys.path bootstrap above forces every first-party import below it;
-# this one line carries the disable rather than the whole block, because
-# widening it is another lane's file to change.
-from src.calculator.trigger_stream import (  # pylint: disable=wrong-import-position
-    StarvedSignal,
-)
+from src.calculator.bis import bis_batch_payload, bis_objective_contract, bis_payload
+from src.calculator.calculate import calculate_payload, compare_payload
+from src.calculator.capabilities import public_capability_contract
+from src.calculator.cast_dependency import BASE_CAST_SLOTS
 from src.calculator.certainty import (
     CERTAINTY_BOUNDARY as _CERTAINTY_BOUNDARY,
+)
+from src.calculator.certainty import (
     classify_assumption as _classify_assumption,
+)
+from src.calculator.certainty import (
     derive_certainty,
-)
-from src.calculator.data_fetcher import fetch_champion_data
-from src.calculator.item_effects import (
-    item_input_options_meta,
-    refresh_item_effects,
-    stat_conversion_metadata,
-)
-from src.calculator.rune_effects import (
-    keystone_input_options_meta,
-    refresh_rune_effects,
-    rune_catalog,
-    shard_catalog,
-)
-from src.calculator.item_coverage import (
-    ATTACKER_LANES,
-    item_model_coverage,
-    target_item_model_coverage,
-)
-from src.calculator.loadout_rules import (
-    exclusivity_groups,
-    inventory_capacity,
-    required_boots_tier,
-    validate_resolved_loadout,
 )
 from src.calculator.champions import (
     champion_options_meta_map,
@@ -82,38 +61,29 @@ from src.calculator.champions import (
     get_champion_module_meta,
     registered_champion_names,
 )
-from src.calculator.capabilities import public_capability_contract
-from src.calculator.cast_dependency import BASE_CAST_SLOTS
+from src.calculator.data_fetcher import fetch_champion_data
+from src.calculator.item_coverage import (
+    ATTACKER_LANES,
+    item_model_coverage,
+    target_item_model_coverage,
+)
+from src.calculator.item_effects import (
+    item_input_options_meta,
+    refresh_item_effects,
+    stat_conversion_metadata,
+)
+from src.calculator.loadout_rules import (
+    exclusivity_groups,
+    inventory_capacity,
+    required_boots_tier,
+    validate_resolved_loadout,
+)
 from src.calculator.optimizer import (
     get_eligible_boots,
     get_selectable_items,
     item_gold,
     optimize_build,
     optimize_purchase,
-)
-from src.calculator.stats import MAX_LEVEL
-from src.calculator.stats import get_item_stats
-from src.calculator.bis import bis_batch_payload, bis_objective_contract, bis_payload
-from src.calculator.program.views import (  # pylint: disable=wrong-import-position
-    UnrankableNumber,
-)
-from src.calculator.public_response import (
-    ICON_HOSTS as _ICON_HOSTS,
-    https_icon as _https_icon,
-    public_loadout_summary,
-)
-from src.calculator.scenario import (
-    ChampionLoadout,
-    load_public_champion as _load_public_champion,
-    parse_scenario_request,
-    resolve_named_item as _resolve_named_item,
-    resolve_scenario,
-)
-from src.calculator.role_quests import (
-    boot_upgrade_contract,
-    role_quest_domain_contract,
-    support_quest_item_contract,
-    support_quest_item_stage,
 )
 from src.calculator.pipeline import (
     DEFAULT_AUTO_ATTACK_UPTIME,
@@ -125,20 +95,70 @@ from src.calculator.pipeline import (
     PUBLIC_INPUT_LIMITS,
     rank_allocation_contract,
 )
+from src.calculator.program.views import (  # pylint: disable=wrong-import-position
+    UnrankableNumber,
+)
+from src.calculator.public_response import (
+    ICON_HOSTS as _ICON_HOSTS,
+)
+from src.calculator.public_response import (
+    https_icon as _https_icon,
+)
+from src.calculator.public_response import (
+    public_loadout_summary,
+)
 from src.calculator.request_parsing import (
     request_bool as _request_bool,
+)
+from src.calculator.request_parsing import (
     request_int as _request_int,
+)
+from src.calculator.request_parsing import (
     request_optional_int as _request_optional_int,
+)
+from src.calculator.request_parsing import (
     request_string as _request_string,
+)
+from src.calculator.request_parsing import (
     request_string_list as _request_string_list,
+)
+from src.calculator.role_quests import (
+    boot_upgrade_contract,
+    role_quest_domain_contract,
+    support_quest_item_contract,
+    support_quest_item_stage,
+)
+from src.calculator.rune_effects import (
+    keystone_input_options_meta,
+    refresh_rune_effects,
+    rune_catalog,
+    shard_catalog,
+)
+from src.calculator.scenario import (
+    ChampionLoadout,
+    parse_scenario_request,
+    resolve_scenario,
+)
+from src.calculator.scenario import (
+    load_public_champion as _load_public_champion,
+)
+from src.calculator.scenario import (
+    resolve_named_item as _resolve_named_item,
+)
+from src.calculator.stats import MAX_LEVEL, get_item_stats
+
+# The sys.path bootstrap above forces every first-party import below it;
+# this one line carries the disable rather than the whole block, because
+# widening it is another lane's file to change.
+from src.calculator.trigger_stream import (  # pylint: disable=wrong-import-position
+    StarvedSignal,
 )
 from src.calculator.validation_receipts import (
     VALIDATION_SOURCES as _VALIDATION_SOURCES,
+)
+from src.calculator.validation_receipts import (
     evaluate_validation_receipt,
 )
-from src.rate_limit import TokenBucketStore
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
 from src.db import (
     METRIC_EVENT_MAX_TOOK_MS,
     METRIC_EVENT_NAMES,
@@ -161,6 +181,7 @@ from src.db import (
     stable_cache_key,
     validation_summary,
 )
+from src.rate_limit import TokenBucketStore
 
 app = Flask(
     __name__,
@@ -419,7 +440,7 @@ def _auth_users() -> dict[str, str]:
         raise RuntimeError(
             "SCRYGLASS_AUTH_USERS must map account names to scrypt$ password hashes"
         )
-    return {username: password_hash for username, password_hash in users.items()}
+    return dict(users.items())
 
 
 def _invite_codes() -> tuple[str, ...]:
@@ -496,13 +517,14 @@ def _enforce_authentication():
     if (
         request.path == "/healthz"
         or request.path.startswith("/api/health/")
-        or request.path == "/privacy"
-        or request.path == "/terms"
-        or request.path == "/riot-disclaimer"
-        or request.path == "/api/auth/invite"
-        # Anonymous funnel events fire before/without any approved session;
-        # the scorecard endpoint (GET /api/metrics) stays behind the gate.
-        or request.path == "/api/metrics/event"
+        or request.path
+        in {
+            "/privacy",
+            "/terms",
+            "/riot-disclaimer",
+            "/api/auth/invite",
+            "/api/metrics/event",
+        }
         or request.path.startswith("/auth/")
     ):
         return None
@@ -618,7 +640,8 @@ def _rate_limited(_error):
 @app.after_request
 def _add_security_headers(response):
     """Apply browser protections consistently to pages, APIs, and errors."""
-    for name, value in _SECURITY_HEADERS.items():
+    for name, header in _SECURITY_HEADERS.items():
+        value = header
         if (
             name == "Content-Security-Policy"
             and request.scheme == "http"
@@ -665,9 +688,9 @@ def _local_dev_request() -> bool:
         host_is_local = host == "localhost" or (
             host is not None and ipaddress.ip_address(host).is_loopback
         )
-        return peer_is_loopback and host_is_local
     except ValueError:
         return False
+    return peer_is_loopback and host_is_local
 
 
 def _run_data_update():
@@ -897,10 +920,8 @@ def _health_golden_check() -> dict:
         try:
             parsed = datetime.fromisoformat(checked_at)
             if parsed.tzinfo is None:
-                parsed = parsed.replace(tzinfo=timezone.utc)
-            age_days = max(
-                0.0, (datetime.now(timezone.utc) - parsed).total_seconds() / 86400.0
-            )
+                parsed = parsed.replace(tzinfo=UTC)
+            age_days = max(0.0, (datetime.now(UTC) - parsed).total_seconds() / 86400.0)
         except ValueError:
             age_days = None
     if age_days is None:
@@ -953,7 +974,7 @@ def api_health_deep():
         {
             "status": overall,
             "checks": checks,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
         }
     )
 
@@ -1146,7 +1167,7 @@ def api_config():
     try:
         cache_meta = json.loads(cache_meta_path.read_text(encoding="utf-8"))
         fetched_at = datetime.fromtimestamp(
-            float(cache_meta["fetched_at"]), tz=timezone.utc
+            float(cache_meta["fetched_at"]), tz=UTC
         ).isoformat()
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
         fetched_at = None
@@ -1446,8 +1467,8 @@ def api_optimize():  # pylint: disable=too-many-return-statements
             "level": level,
             "fight_params": fight_params,
             "objective": objective,
-            "locked_items": locked_items if locked_items else None,
-            "locked_boots": locked_boots if locked_boots else None,
+            "locked_items": locked_items or None,
+            "locked_boots": locked_boots or None,
             "target_fight_params": target_fight_params or None,
             "boots_tier": required_boots_tier(
                 fight_params.role, fight_params.role_quest_complete
@@ -1880,7 +1901,7 @@ def _read_staleness():
     if not path.exists():
         return None
     try:
-        with open(path, "r", encoding="utf-8") as handle:
+        with Path(path).open(encoding="utf-8") as handle:
             return json.load(handle)
     except (json.JSONDecodeError, OSError):
         return None

@@ -12,8 +12,7 @@ import pytest
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import get_champion_module_contract, kindred
 from src.calculator.data_fetcher import get_champion
-from tests import coverage_truth, row_review
-from tests import cc_review
+from tests import cc_review, coverage_truth, row_review
 
 # The phrase each declared kind was read from, in that slot's cached text.
 QUOTED = {"E": "slows them by 30%"}

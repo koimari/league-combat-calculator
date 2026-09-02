@@ -40,10 +40,10 @@ from src.calculator.champions import get_champion_cast_order
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.data_registry import data_version
 from src.calculator.rotation_resolver import (
-    CAST_ORDER_OVERRIDES,
     _DERIVED_RULE_CACHE,
     _MATRIX_DPS_CACHE,
     _PRE_CAMPAIGN_CC_ORDERING,
+    CAST_ORDER_OVERRIDES,
     DependencyReceipt,
     _Edge,
     derive_champion_rule,
@@ -261,7 +261,8 @@ class TestOverrideSeeds:
         for name in CAST_ORDER_OVERRIDES:
             parsed = _parse(champion_by_name[name], 11, (), {})
             order, rule = _resolve(champion_by_name[name], parsed)
-            assert rule is not None and rule.derived is False
+            assert rule is not None
+            assert rule.derived is False
             assert order == list(CAST_ORDER_OVERRIDES[name].order)
 
 
@@ -285,20 +286,19 @@ class TestEdgeInvariants:
             order, rule = _resolve(
                 data, parsed, certified_order=get_champion_cast_order(name)
             )
-            assert rule is not None and rule.derived, f"{name} should be derived"
+            assert rule is not None, f"{name} should be derived"
+            assert rule.derived, f"{name} should be derived"
             edges = _detect_edges(name, data, parsed)
             if not edges:
                 continue
             pos = {slot: index for index, slot in enumerate(order)}
-            for edge in edges:
-                if (
-                    edge.setup in pos
-                    and edge.consume in pos
-                    and pos[edge.setup] > pos[edge.consume]
-                ):
-                    violations.append(
-                        (name, edge.setup, edge.consume, edge.kind, order)
-                    )
+            violations.extend(
+                (name, edge.setup, edge.consume, edge.kind, order)
+                for edge in edges
+                if edge.setup in pos
+                and edge.consume in pos
+                and pos[edge.setup] > pos[edge.consume]
+            )
         assert (
             violations == []
         ), "derived order violates detected setup/consume edges: " + repr(
@@ -495,7 +495,7 @@ class TestRationaleCitesAtoms:
                 continue
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), items_by_name)
-            order, rule = _resolve(
+            _order, rule = _resolve(
                 data, parsed, certified_order=get_champion_cast_order(name)
             )
             edges = _detect_edges(name, data, parsed)
@@ -530,7 +530,8 @@ class TestRationaleCitesAtoms:
             assert (
                 "no detectable setup/consume signal" in rule.rationale
             ), f"{name} flat rationale should say no signal"
-            assert rule.setup == () and rule.consume == ()
+            assert rule.setup == ()
+            assert rule.consume == ()
 
 
 # ---------------------------------------------------------------------------
@@ -544,7 +545,7 @@ class TestDeterminismAndStability:
         for name in sorted(champion_by_name):
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), items_by_name)
-            first, rule = _resolve(
+            first, _rule = _resolve(
                 data, parsed, certified_order=get_champion_cast_order(name)
             )
             second, _ = _resolve(
@@ -604,7 +605,7 @@ class TestDeterminismAndStability:
         for name, expected in _EXPECTED_DERIVED_ORDERS.items():
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), items_by_name)
-            order, rule = _resolve(
+            order, _rule = _resolve(
                 data, parsed, certified_order=get_champion_cast_order(name)
             )
             assert order == expected, f"{name}: derived {order} != expected {expected}"
@@ -622,7 +623,7 @@ class TestOrderStructure:
         for name in sorted(champion_by_name):
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), items_by_name)
-            order, rule = _resolve(
+            order, _rule = _resolve(
                 data, parsed, certified_order=get_champion_cast_order(name)
             )
             base = _base_order(name, parsed)
@@ -652,7 +653,7 @@ class TestOrderStructure:
                 continue
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), items_by_name)
-            order, rule = _resolve(
+            order, _rule = _resolve(
                 data, parsed, certified_order=get_champion_cast_order(name)
             )
             edges = _detect_edges(name, data, parsed)
@@ -676,7 +677,7 @@ class TestOrderStructure:
         for name in ("Jayce", "Kai'Sa", "Karthus", "Shen", "Taliyah", "Vi"):
             data = champion_by_name[name]
             parsed = _parse(data, 11, (), items_by_name)
-            order, rule = _resolve(
+            order, _rule = _resolve(
                 data, parsed, certified_order=get_champion_cast_order(name)
             )
             certified = get_champion_cast_order(name)
@@ -778,7 +779,8 @@ class TestPrecedenceTable:
                 "Synthetic", [_inferred("E", "Q")], [_declaration()], _LIVE
             )
         message = str(caught.value)
-        assert "cc_setup" in message and "SuppressedInference" in message
+        assert "cc_setup" in message
+        assert "SuppressedInference" in message
         assert "wiki.leagueoflegends.com" in message
 
     def test_a_suppression_naming_another_kind_does_not_cover(self) -> None:
@@ -822,7 +824,8 @@ class TestPrecedenceTable:
             "Synthetic", [_inferred("E", "Q2")], [declaration], _LIVE
         )
         assert [(e.setup, e.consume) for e in edges] == [("E", "Q2")]
-        assert receipt.suppressed == () and receipt.latent == ()
+        assert receipt.suppressed == ()
+        assert receipt.latent == ()
 
 
 class TestResolvedEdgesIsTheOneSurface:
@@ -864,7 +867,8 @@ class TestResolvedEdgesIsTheOneSurface:
             edges, receipt = _resolved(data, parsed)
             declared = {(e.setup, e.consume) for e in edges if e.origin == "declared"}
             assert declared == pairs
-            assert receipt.conflicts == () and receipt.suppressed == ()
+            assert receipt.conflicts == ()
+            assert receipt.suppressed == ()
 
     def test_every_merged_edge_names_its_surface(
         self, champion_by_name, items_by_name
@@ -961,7 +965,9 @@ class TestSyndrasSuppressionsAreLoadBearing:
     unexplained claim rather than carry it.
     """
 
-    @pytest.mark.parametrize("level,splinters", _SYNDRA_Q2_LIVE + _SYNDRA_Q2_ABSENT)
+    @pytest.mark.parametrize(
+        ("level", "splinters"), _SYNDRA_Q2_LIVE + _SYNDRA_Q2_ABSENT
+    )
     def test_the_opposing_inference_is_one_syndra_really_produces(
         self, champion_by_name, level, splinters
     ) -> None:
@@ -975,7 +981,9 @@ class TestSyndrasSuppressionsAreLoadBearing:
             (e.setup, e.consume, e.kind) for e in inferred
         }
 
-    @pytest.mark.parametrize("level,splinters", _SYNDRA_Q2_LIVE + _SYNDRA_Q2_ABSENT)
+    @pytest.mark.parametrize(
+        ("level", "splinters"), _SYNDRA_Q2_LIVE + _SYNDRA_Q2_ABSENT
+    )
     def test_removing_the_matched_suppression_raises(
         self, champion_by_name, level, splinters
     ) -> None:
@@ -988,7 +996,9 @@ class TestSyndrasSuppressionsAreLoadBearing:
         assert "E requires Q (declared cc_enabler)" in message
         assert "wiki.leagueoflegends.com/en-us/Syndra@" in message
 
-    @pytest.mark.parametrize("level,splinters", _SYNDRA_Q2_LIVE + _SYNDRA_Q2_ABSENT)
+    @pytest.mark.parametrize(
+        ("level", "splinters"), _SYNDRA_Q2_LIVE + _SYNDRA_Q2_ABSENT
+    )
     def test_the_real_declarations_raise_nothing(
         self, champion_by_name, level, splinters
     ) -> None:
@@ -999,7 +1009,9 @@ class TestSyndrasSuppressionsAreLoadBearing:
         assert ("E", "Q") not in _edges_to_slot_pairs(edges)
         assert len(receipt.suppressed) == 1
 
-    @pytest.mark.parametrize("level,splinters", _SYNDRA_Q2_LIVE + _SYNDRA_Q2_ABSENT)
+    @pytest.mark.parametrize(
+        ("level", "splinters"), _SYNDRA_Q2_LIVE + _SYNDRA_Q2_ABSENT
+    )
     def test_no_inference_opposes_the_recast_declaration_anywhere(
         self, champion_by_name, level, splinters
     ) -> None:
@@ -1011,7 +1023,7 @@ class TestSyndrasSuppressionsAreLoadBearing:
         )
         assert ("E", "Q2") not in {(e.setup, e.consume) for e in inferred}
 
-    @pytest.mark.parametrize("level,splinters", _SYNDRA_Q2_LIVE)
+    @pytest.mark.parametrize(("level", "splinters"), _SYNDRA_Q2_LIVE)
     def test_clearing_the_latent_reason_refuses_the_unexplained_claim(
         self, champion_by_name, level, splinters
     ) -> None:
@@ -1030,7 +1042,7 @@ class TestSyndrasSuppressionsAreLoadBearing:
             _syndra_merge(champion_by_name["Syndra"], level, splinters, declarations)
         assert "E -> Q2 (cc_setup) matched no inferred edge" in str(caught.value)
 
-    @pytest.mark.parametrize("level,splinters", _SYNDRA_Q2_LIVE)
+    @pytest.mark.parametrize(("level", "splinters"), _SYNDRA_Q2_LIVE)
     def test_removing_the_latent_suppression_is_inert(
         self, champion_by_name, level, splinters
     ) -> None:
@@ -1048,7 +1060,8 @@ class TestSyndrasSuppressionsAreLoadBearing:
             data, level, splinters, _syndra_declarations(Q2={"suppresses": ()})
         )
         assert list(edges) == list(real_edges)
-        assert len(real_receipt.latent) == 1 and receipt.latent == ()
+        assert len(real_receipt.latent) == 1
+        assert receipt.latent == ()
         assert replace(receipt, latent=real_receipt.latent) == real_receipt
 
 
@@ -1154,7 +1167,8 @@ class TestTheDerivationReadsDeclarations:
         rule = derive_champion_rule(
             "Ahri", parsed, data, get_champion_cast_order("Ahri")
         )
-        assert rule.derived and rule.order
+        assert rule.derived
+        assert rule.order
 
 
 # Two requests for one champion that the memo key cannot tell apart, per

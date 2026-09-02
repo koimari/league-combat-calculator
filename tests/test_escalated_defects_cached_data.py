@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.calculator.item_source import effect_text  # noqa: E402
+from src.calculator.item_source import effect_text
 
 RECEIPT = ROOT / "docs" / "receipts" / "escalated-defects-cached-data.json"
 ITEMS = ROOT / "data" / "items.json"
@@ -46,7 +46,8 @@ def test_the_simple_description_still_describes_a_different_item() -> None:
     assert item["name"] == "Imperial Mandate"
     assert item["simpleDescription"] == "Defer damage until later."
     spoken = " ".join(effect_text(effect) for effect in item["passives"]).lower()
-    assert "defer" not in spoken and "delay" not in spoken
+    assert "defer" not in spoken
+    assert "delay" not in spoken
 
 
 def test_no_runtime_module_reads_the_field() -> None:
@@ -91,7 +92,7 @@ def test_the_named_route_really_reads_this_artifact() -> None:
     routes = {defect["scheduled_home"]["route"] for defect in receipt()["defects"]}
     assert routes == {"scripts/patch_update.py"}
     sys.path.insert(0, str(ROOT / "scripts"))
-    import patch_update  # noqa: PLC0415  pylint: disable=import-outside-toplevel
+    import patch_update
 
     assert patch_update.ESCALATED_CACHED_DATA == RECEIPT
     printed = "\n".join(patch_update.escalated_cached_data_lines())
@@ -108,7 +109,7 @@ def test_the_scheduled_home_check_has_a_red_it_can_reproduce() -> None:
     day somebody is reading the audit.
     """
     sys.path.insert(0, str(ROOT / "scripts"))
-    import patch_update  # noqa: PLC0415  pylint: disable=import-outside-toplevel
+    import patch_update
 
     homeless = json.loads(RECEIPT.read_text(encoding="utf-8"))
     for defect in homeless["defects"]:

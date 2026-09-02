@@ -18,8 +18,8 @@ from src.calculator import item_behavior_catalog as catalog
 from src.calculator import item_effects
 from src.calculator.interpreters import INTERPRETERS
 from src.calculator.interpreters.crit_profile import (
-    CRIT_DAMAGE_BONUS_FIELD,
     COOLDOWN_REFUND_FIELD,
+    CRIT_DAMAGE_BONUS_FIELD,
     CritProfileInterpretationError,
     crit_fields,
     resolve_profile,

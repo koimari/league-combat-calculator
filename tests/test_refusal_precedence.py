@@ -15,8 +15,8 @@ the fix is a property rather than a one-line agreement between two branches.
 
 from __future__ import annotations
 
-
 from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.participant_timeline import Combatant
 from src.calculator.program.compile import action_from_event
 from src.calculator.survival import (
     EVENT_SLOTS,
@@ -28,7 +28,6 @@ from src.calculator.survival import (
     build_states,
     run_survival_walk,
 )
-from src.calculator.participant_timeline import Combatant
 
 
 def _target() -> Combatant:

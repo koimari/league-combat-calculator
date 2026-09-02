@@ -144,7 +144,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Runic Blade) prices the wiki's per-level AD ratio: empowered "
     "basic attacks deal bonus physical damage equal to 30% : 46.76% "
     "(based on level) AD, one stack per auto (data/champions.json P "

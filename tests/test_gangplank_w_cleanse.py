@@ -99,7 +99,6 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
@@ -111,6 +110,7 @@ from src.calculator.cleanse_eligibility import (
 )
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.healing import derive_self_healing
 
 # MERGE: the shared healing readers moved out of ``healing.py`` into
@@ -119,8 +119,8 @@ from src.calculator.healing import derive_self_healing
 from src.calculator.healing_helpers import leveling_ratio
 from src.calculator.participant_timeline import Combatant
 from src.calculator.survival.compile import unrepresentable_template_receipt
-from tests.survival_probe import simulate_survival
 from tests.app_config import app_config
+from tests.survival_probe import simulate_survival
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _GANPLANK_DATA = _CHAMPION_DATA["Gangplank"]
@@ -600,29 +600,29 @@ class TestAbsentOption:
         # by the xfail below).
         with _testing_client() as client:
             responses = []
-            for key in ("w", "w_time", "w_use", "w_cleanse"):
-                responses.append(
-                    (
-                        key,
-                        client.post(
-                            "/api/calculate",
-                            json={
-                                "champion": "Gangplank",
-                                "level": _LEVEL,
-                                "items": [],
-                                "role": "mid",
-                                "ability_ranks": _RANKS,
-                                "fight_mode": "one_rotation",
-                                "fight_duration": 10,
-                                "include_auto_attacks": False,
-                                "target_health": _TARGET_MAX_HP,
-                                "target_armor": 50,
-                                "target_mr": 40,
-                                "champion_options": {key: True},
-                            },
-                        ),
-                    )
+            responses.extend(
+                (
+                    key,
+                    client.post(
+                        "/api/calculate",
+                        json={
+                            "champion": "Gangplank",
+                            "level": _LEVEL,
+                            "items": [],
+                            "role": "mid",
+                            "ability_ranks": _RANKS,
+                            "fight_mode": "one_rotation",
+                            "fight_duration": 10,
+                            "include_auto_attacks": False,
+                            "target_health": _TARGET_MAX_HP,
+                            "target_armor": 50,
+                            "target_mr": 40,
+                            "champion_options": {key: True},
+                        },
+                    ),
                 )
+                for key in ("w", "w_time", "w_use", "w_cleanse")
+            )
         for key, response in responses:
             assert response.status_code == 400
             assert response.get_json()["error"] == (
@@ -836,14 +836,14 @@ class TestCrowdControlAndSuppression:
             "movement": None,
         }
         eligibility = CleanseEligibility(declaration=declaration)
-        base = dict(
-            time=1.5,
-            source_key="Remove Scurvy",
-            sequence=0,
-            event_id="w:0",
-            target="main",
-            holder="main",
-        )
+        base = {
+            "time": 1.5,
+            "source_key": "Remove Scurvy",
+            "sequence": 0,
+            "event_id": "w:0",
+            "target": "main",
+            "holder": "main",
+        }
         airborne = eligibility.decide(
             SimpleNamespace(
                 **base,
@@ -1313,7 +1313,7 @@ class TestModeParity:
                 # fields (the K'Sante matrix's parity convention).
                 shared = ("time", "slot", "name", "ordinal", "resource_cost")
                 for full_row, scored_row in zip(
-                    full["cast_timeline"], scored["cast_timeline"]
+                    full["cast_timeline"], scored["cast_timeline"], strict=False
                 ):
                     assert {k: full_row[k] for k in shared} == {
                         k: scored_row[k] for k in shared
@@ -1355,7 +1355,7 @@ class TestUnchangedBoundaries:
         # spend mana today — 60/70/80/90/100 by rank, receipted as the
         # "ability W cast" ledger spend; the one-rotation ledger books it
         # against the opening pool.
-        for rank, cost in zip(range(1, 6), _W_COST):
+        for rank, cost in zip(range(1, 6), _W_COST, strict=False):
             _, abilities = _parse(ranks={**_RANKS, "W": rank})
             assert abilities["W"]["cooldown"] == pytest.approx(_W_COOLDOWN[rank - 1])
             assert abilities["W"]["resource_cost"] == pytest.approx(cost)
@@ -1436,9 +1436,7 @@ class TestUnchangedBoundaries:
 # ---------------------------------------------------------------------------
 # S11 — Regression surface (run list)
 # ---------------------------------------------------------------------------
-# Run ONLY this file plus the mandated sanity list (the repo gate):
 #
-#   .venv/bin/python -m pytest tests/test_gangplank_w_cleanse.py #     tests/test_aurelion_sol_stardust_ledger.py #     tests/test_senna_souls_ledger.py tests/test_bard_chimes_ledger.py #     tests/test_heimerdinger_multihit.py tests/test_ksante_w_resistance.py #     tests/test_rengar_ferocity_ledger.py tests/test_state_lifecycle.py #     tests/test_state_lifecycle_consumers.py tests/test_resource_ledger.py #     tests/test_resource_ledger_consumers.py #     tests/test_resource_ledger_champion_consumers.py #     tests/test_catalyst_resource_ledger.py tests/test_item_sustain.py #     tests/test_mana_restore_refund.py tests/test_app.py
 #
 # The broader regression surface (every test that touches gangplank /
 # scurvy / cleanse / cleanse_eligibility, per the brief contract #11):

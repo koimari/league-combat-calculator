@@ -28,33 +28,33 @@ when that producer is a second packet on an item some fixture already equips
 (slice 0A.9).
 """
 
-import json
 import math
 import re
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-import golden_snapshot as gs  # noqa: E402  (path is set above)
-import bench_coupled_optimizer as bench  # noqa: E402  (path is set above)
+import bench_coupled_optimizer as bench
+import golden_snapshot as gs
 
-from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator import damage as pair_engine
+from src.calculator import shield_ledger
 from src.calculator.ability_spec import AttackClass
-from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
 from src.calculator.interpreters import (
     INTERPRETERS,
     active_cast,
     cast_proc,
     delta_amp,
-    periodic,
     secondary_target,
 )
 from src.calculator.interpreters.reactive import thorns_effects
@@ -63,14 +63,29 @@ from src.calculator.interpreters.spellblade import (
 )
 from src.calculator.item_behavior import DefenseField, EngineLane, RuleFamily
 from src.calculator.item_behavior_catalog import behavior_rules, rule_owners
+from src.calculator.item_effects import DamageInputs, required_effect_value
+from src.calculator.item_support_effects import (
+    _declared_authorities,
+    producer_item,
+)
+from src.calculator.participant_timeline import (
+    Combatant,
+    CoupledSearchContext,
+    build_participant_timeline,
+)
+from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.program.build import (
     pair_preview_mechanics,
     walk_repriced_mechanics,
 )
-from src.calculator.item_effects import DamageInputs, required_effect_value
-from src.calculator.participant_timeline import Combatant
 from src.calculator.program.compile import action_from_event, declared_packet_of
 from src.calculator.resistance import apply_magic_penetration, apply_resistance
+from src.calculator.scenario import (
+    ChampionLoadout,
+    parse_scenario_request,
+    resolve_scenario,
+)
+from src.calculator.stats import calculate_total_stats
 from src.calculator.survival import (
     EVENT_SLOTS,
     ActionKind,
@@ -80,8 +95,8 @@ from src.calculator.survival import (
     TransitionRank,
     build_states,
     run_survival_walk,
+    transitions,
 )
-from src.calculator.survival import transitions
 from src.calculator.survival.compile import thorns_return_damage
 from src.calculator.survival.pricing import (
     MITIGATED_DAMAGE_TYPES,
@@ -96,29 +111,12 @@ from src.calculator.survival.pricing import (
     route_declared_packet,
     unroute_declared_packet,
 )
-from src.calculator import damage as pair_engine
-from src.calculator import shield_ledger
-from src.calculator.item_support_effects import (
-    _declared_authorities,
-    producer_item,
-)
 from src.calculator.trigger_stream import (
     CAPABILITIES,
     Engine,
     ViewTag,
     tuple_incapable_items,
 )
-from src.calculator.participant_timeline import (
-    CoupledSearchContext,
-    build_participant_timeline,
-)
-from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.scenario import (
-    ChampionLoadout,
-    parse_scenario_request,
-    resolve_scenario,
-)
-from src.calculator.stats import calculate_total_stats
 
 
 def _timeline(
@@ -236,7 +234,9 @@ def _assert_contract(
         # blocked packets included at full event values).  The CC-blocked
         # attacker's total is the named delta; everything else stays
         # byte-equal.
-        for fast_row, legacy_row in zip(fast["breakdown"], legacy["breakdown"]):
+        for fast_row, legacy_row in zip(
+            fast["breakdown"], legacy["breakdown"], strict=False
+        ):
             assert fast_row["participant_id"] == legacy_row["participant_id"], name
             assert fast_row["health_damage"] == legacy_row["health_damage"], name
             assert fast_row["healing_received"] == legacy_row["healing_received"], name
@@ -249,7 +249,7 @@ def _assert_contract(
     _assert_rung(name, context, compiled=compiled, invariant=invariant)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _item(name):
     """One cached item record by name.
 
@@ -814,8 +814,8 @@ def test_receipt_and_score_adapters_share_one_kernel():
     ledger and the score ledger produces identical survival rows."""
 
     from src.calculator.participant_timeline import Combatant
-    from src.calculator.program.compile import action_from_event
     from src.calculator.program.build import roster_program
+    from src.calculator.program.compile import action_from_event
     from src.calculator.program.views.survival import survival
     from src.calculator.program.walk import walk as run_one_walk
     from src.calculator.survival import (
@@ -827,8 +827,6 @@ def test_receipt_and_score_adapters_share_one_kernel():
         TransitionContext,
         TransitionRank,
         build_states,
-        finalize_states,
-        run_survival_walk,
     )
 
     combatant = Combatant(
@@ -1249,7 +1247,7 @@ def required_coverage_keys() -> frozenset[str]:
     return tuple_incapable_items() | frozenset(_declared_authorities())
 
 
-@lru_cache(maxsize=None)
+@cache
 def _reached_keys(fixture: KernelFixture) -> tuple[frozenset[str], frozenset[str]]:
     """``(candidate-authored, ally-authored)`` keys this fixture really fires.
 
@@ -1272,7 +1270,7 @@ def _reached_keys(fixture: KernelFixture) -> tuple[frozenset[str], frozenset[str
     return frozenset(candidate), frozenset(ally)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _fixture_coverage() -> tuple[frozenset[str], frozenset[str]]:
     """``(candidate, ally)`` keys the whole fixture set reaches between them."""
     candidate: frozenset[str] = frozenset()
@@ -1322,7 +1320,7 @@ def _differing_leaves(left: Any, right: Any, path: str = "") -> tuple[str, ...]:
             return (f"{path}[]",)
         return tuple(
             leaf
-            for index, (one, other) in enumerate(zip(left, right))
+            for index, (one, other) in enumerate(zip(left, right, strict=False))
             for leaf in _differing_leaves(one, other, f"{path}[{index}]")
         )
     return () if left == right else (path,)
@@ -1493,7 +1491,8 @@ def test_every_registry_key_has_a_candidate_and_an_ally_fixture():
     """
     required = required_coverage_keys()
     # Neither half may be empty, or the check below is green over nothing.
-    assert tuple_incapable_items() and _declared_authorities()
+    assert tuple_incapable_items()
+    assert _declared_authorities()
     assert required >= tuple_incapable_items()
     assert required >= frozenset(_declared_authorities())
 
@@ -2174,7 +2173,8 @@ def _declared_packet(fixture, parsed, resolved, params):
         target_bonus_health=max(0.0, float(params.target_bonus_health or 0.0)),
         holder_is_melee=is_melee,
     )
-    assert slot is not None and slot.source.breakdown_key == fixture.breakdown_key
+    assert slot is not None
+    assert slot.source.breakdown_key == fixture.breakdown_key
     rule = next(
         declared
         for declared in behavior_rules(fixture.owner)
@@ -2364,7 +2364,7 @@ def _amp_armed_fight(seed):
     return parsed, resolved, params, result, stats
 
 
-@lru_cache(maxsize=None)
+@cache
 def _amp_armed_reading(seed):
     """One seed's raw value, resistances, amps and pair-engine number.
 
@@ -2675,7 +2675,7 @@ def _declare_authored_row(state, seed):
         )
 
 
-@lru_cache(maxsize=None)
+@cache
 def _window_readings(seed, request_key):
     """Every fight of one seed's scenario, run with its row declared.
 
@@ -3003,7 +3003,7 @@ def _covering_scenarios_of(family):
     )
 
 
-@lru_cache(maxsize=None)
+@cache
 def _priced_declarations(scenario_name):
     """Every declaration the coupled walk priced in one scenario, as it priced it.
 
@@ -3104,7 +3104,8 @@ def test_a_retired_family_is_declared_by_the_pair_engine_and_priced_by_the_walk(
                     family_rows += 1
                 assert stamp in previews, key
                 events = entry.get("damage_events")
-                assert isinstance(events, list) and events, key
+                assert isinstance(events, list), key
+                assert events, key
                 for event in events:
                     declaration = event.get("declared")
                     assert declaration is not None, key
@@ -3226,7 +3227,7 @@ def _on_hit_owners() -> tuple[str, ...]:
     )
 
 
-@lru_cache(maxsize=None)
+@cache
 def _on_hit_probe(owner: str):
     """One pair fight holding *owner* and the amp owner, with its walk inputs.
 
@@ -3351,7 +3352,7 @@ def _periodic_owners() -> tuple[str, ...]:
     )
 
 
-@lru_cache(maxsize=None)
+@cache
 def _periodic_probe(owner: str):
     """One pair fight holding *owner* and the amp owner, with its walk inputs."""
     champion = gs.fetch_champion_data()[_PERIODIC_PROBE_CHAMPION]
@@ -3482,7 +3483,7 @@ def _spellblade_owners() -> tuple[str, ...]:
     )
 
 
-@lru_cache(maxsize=None)
+@cache
 def _spellblade_probe(owner: str):
     """One pair fight holding *owner* and the amp owner, with its walk inputs.
 
@@ -3652,7 +3653,7 @@ def _declared_target_term(owner, term):
     )
 
 
-@lru_cache(maxsize=None)
+@cache
 def _swing_seed_states():
     """The five target-side states the seed is measured in.
 
@@ -3731,7 +3732,7 @@ def _declare_swing_row(state):
         event["declared"] = tuple(declaration)
 
 
-@lru_cache(maxsize=None)
+@cache
 def _swing_seed_reading(case):
     """The seed fight in one target-side state, with its bolt row declared.
 
@@ -4065,7 +4066,7 @@ class TestTheBlendIsTheDeterministicReadingAndNotAnAverage:
 COPIED_ROW = "on_hit_secondary_Runaan's Hurricane"
 
 
-@lru_cache(maxsize=None)
+@cache
 def _routing_slot():
     """The `secondary_target` slot the seed fight resolved, and its build state.
 
@@ -4253,7 +4254,7 @@ class TestARoutedPacketIsTheSourceFamilysNumber:
         """
         source = DeclaredPacket(100.0, "physical", "fixture.swing")
         for share in (1.5, -0.1):
-            with pytest.raises(ValueError, match="fixture.rout"):
+            with pytest.raises(ValueError, match=re.escape("fixture.rout")):
                 route_declared_packet(
                     source, RoutingProvenance("fixture.router", share)
                 )
@@ -4401,7 +4402,8 @@ class TestTheCopiedRowPricesFromItsRoutedDeclarations:
             for event in result["breakdown"][COPIED_ROW]["damage_events"]
         }
         assert bolt == {SWING_SEED_RULE}
-        assert copied and SWING_SEED_RULE not in copied
+        assert copied
+        assert SWING_SEED_RULE not in copied
         assert copied <= walk_repriced_mechanics()
 
 

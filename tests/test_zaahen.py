@@ -11,8 +11,8 @@ from src.calculator.champions import (
     parse_champion_abilities,
     zaahen,
 )
-from tests import cc_review, row_review
 from src.calculator.champions.engine import CC_PER_PART
+from tests import cc_review, row_review
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 

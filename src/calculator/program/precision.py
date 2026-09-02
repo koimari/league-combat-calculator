@@ -50,11 +50,11 @@ from types import MappingProxyType
 from typing import Any
 
 __all__ = [
-    "CutoffPolicy",
-    "DuplicateSumMember",
     "ROUNDING",
     "ROUNDING_BY_VIEW",
     "SUM_PANELS",
+    "CutoffPolicy",
+    "DuplicateSumMember",
     "SumPlan",
     "damage_cutoff",
     "digits_for",

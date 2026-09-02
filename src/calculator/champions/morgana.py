@@ -38,6 +38,8 @@ from functools import partial
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
+from ..healing_helpers import HealAnchor, heal_from_damage, payments
 from .engine import CC_PER_PART, SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
@@ -49,9 +51,6 @@ from .slotlib import (
     extract_value,
     with_control,
 )
-
-from ..healing_helpers import HealAnchor, heal_from_damage, payments
-from ..binary_roots import data_value, spell_object
 
 _MORGANA_W_SPELL = spell_object("Morgana", "MorganaW")
 _W_TICK_INTERVAL = data_value(_MORGANA_W_SPELL, "TickRate")
@@ -190,7 +189,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "W (Tormented Shadow) prices all 10 storm ticks (Maximum Damage Per "
     "Tick x10 == Maximum Total Damage 180-700 + 200% AP) at 0.5-second "
     "intervals over the 5-second desecrated area, first tick on-cast.",

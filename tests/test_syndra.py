@@ -23,7 +23,6 @@ import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
-from tests import cc_review
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -240,7 +239,7 @@ class TestDarkSphereCharges:
         assert abilities["Q2"]["resource_cost"] == abilities["Q"]["resource_cost"]
         assert abilities["Q2"]["resource_type"] == "MANA"
 
-    @pytest.mark.parametrize("rank, expected", [(1, 40.0), (3, 50.0), (5, 60.0)])
+    @pytest.mark.parametrize(("rank", "expected"), [(1, 40.0), (3, 50.0), (5, 60.0)])
     def test_the_charge_is_priced_at_its_parents_rank(
         self, syndra_data, rank, expected
     ) -> None:
@@ -385,7 +384,8 @@ class TestRotationOrder:
         abilities = _parse(syndra_data)
         order, rule = resolve_cast_order("Syndra", abilities, champion_data=syndra_data)
         assert order == ["Q", "Q2", "E", "W", "R"]
-        assert rule is not None and rule.derived is True
+        assert rule is not None
+        assert rule.derived is True
         assert "Syndra" not in CAST_ORDER_OVERRIDES
         assert "sphere" in rule.rationale.lower()
         assert "cc_enabler" in rule.rationale

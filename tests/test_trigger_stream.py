@@ -14,7 +14,6 @@ import builtins
 import importlib
 import importlib.util
 import inspect
-import json
 import re
 import sys
 from collections.abc import Mapping
@@ -26,15 +25,7 @@ import pytest
 
 from src.calculator import damage
 from src.calculator import item_behavior_catalog as catalog
-from src.calculator.item_behavior_catalog import behavior_rules
 from src.calculator import trigger_stream as ts
-from src.calculator.interpreters import INTERPRETERS
-from src.calculator.item_behavior import (
-    AllyProducer,
-    EngineLane,
-    LivePredicate,
-    RuleFamily,
-)
 from src.calculator.ability_spec import (
     CC_KIND_VOCABULARY,
     IMMOBILIZING_CC_KINDS,
@@ -43,15 +34,23 @@ from src.calculator.ability_spec import (
     Disposition,
 )
 from src.calculator.champions.engine import _validate_cc_event_contract
+from src.calculator.interpreters import INTERPRETERS
+from src.calculator.item_behavior import (
+    AllyProducer,
+    EngineLane,
+    LivePredicate,
+    RuleFamily,
+)
+from src.calculator.item_behavior_catalog import behavior_rules
 from src.calculator.item_support_effects import (
     EventViewStarvationError,
     _declared_authorities,
     derive_item_support_effects,
 )
 from src.calculator.program.compile import WalkCompiler, action_from_event
-from src.calculator.survival.actions import TransitionRank
 from src.calculator.program.views import ViewTag
 from src.calculator.roster_composition import ActorRequest
+from src.calculator.survival.actions import TransitionRank
 from src.calculator.survival.compile import (
     UncompilableActionError,
     unrepresentable_template_receipt,
@@ -90,9 +89,10 @@ def _enclosing(tree: ast.AST, node: ast.AST) -> str:
         ):
             continue
         end = candidate.end_lineno or candidate.lineno
-        if candidate.lineno <= node.lineno <= end:
-            if best is None or candidate.lineno > best.lineno:
-                best = candidate
+        if candidate.lineno <= node.lineno <= end and (
+            best is None or candidate.lineno > best.lineno
+        ):
+            best = candidate
     return best.name if best else "<module>"
 
 
@@ -215,7 +215,7 @@ def test_trigger_rejects_a_misspelled_cc_kind():
 
 
 @pytest.mark.parametrize(
-    "field, value",
+    ("field", "value"),
     [
         ("time", float("inf")),
         ("damage", -1.0),
@@ -281,7 +281,7 @@ def test_trigger_is_frozen_hashable_and_unordered():
     with pytest.raises(AttributeError):
         trigger.time = 2.0  # type: ignore[misc]
     with pytest.raises(TypeError):
-        _ = trigger < trigger  # type: ignore[operator]
+        _ = trigger < trigger  # noqa: PLR0124 - the refusal  # type: ignore[operator]
 
 
 def test_an_unmarked_row_classifies_unreviewed_and_never_none():
@@ -569,7 +569,7 @@ PAIR_OUTCOME = frozenset({"Cryptbloom"})
 
 
 @pytest.mark.parametrize(
-    "projection, expected",
+    ("projection", "expected"),
     [
         (ts.tuple_incapable_items, TUPLE_INCAPABLE),
         (ts.enriched_view_items, ENRICHED_VIEW),
@@ -862,7 +862,7 @@ def _capability(**overrides) -> ts.MechanicCapability:
 
 
 @pytest.mark.parametrize(
-    "overrides, message",
+    ("overrides", "message"),
     [
         ({"mechanic": "Synthetic Mechanic"}, "mechanic id"),
         ({"owner": "Synthetic"}, "MechanicOwner"),
@@ -911,7 +911,7 @@ def test_a_paired_capability_pointing_at_a_walk_half_is_rejected(monkeypatch):
     )
     monkeypatch.setattr(ts, "CAPABILITIES", broken)
     monkeypatch.setattr(ts, "_DECLARATIONS", tuple(broken.values()))
-    with pytest.raises(ts.TriggerRegistryError, match="Engine.PAIR"):
+    with pytest.raises(ts.TriggerRegistryError, match=re.escape("Engine.PAIR")):
         ts._validate_registry()
 
 
@@ -1256,9 +1256,7 @@ def legacy_name_set_sites(
                 name = node.id
             elif isinstance(node, ast.Attribute):
                 name = node.attr
-            elif isinstance(node, ast.alias):
-                name = node.name
-            elif isinstance(node, ast.FunctionDef):
+            elif isinstance(node, (ast.alias, ast.FunctionDef)):
                 name = node.name
             if name in sites:
                 sites[name].add(path)
@@ -1400,13 +1398,13 @@ def takedown_synthesis_sites(
     for node in ast.walk(ast.parse(text)):
         if not isinstance(node, ast.Assign):
             continue
-        for target in node.targets:
-            if (
-                isinstance(target, ast.Subscript)
-                and isinstance(target.slice, ast.Constant)
-                and target.slice.value == "takedown_events"
-            ):
-                sites.append(f"participant_timeline.py:{node.lineno}")
+        sites.extend(
+            f"participant_timeline.py:{node.lineno}"
+            for target in node.targets
+            if isinstance(target, ast.Subscript)
+            and isinstance(target.slice, ast.Constant)
+            and target.slice.value == "takedown_events"
+        )
     return tuple(sites)
 
 
@@ -1738,7 +1736,8 @@ def test_a9_every_declared_stream_is_load_bearing():
         if capability.reads & frozenset(_STREAM_PROBE)
     }
     for mechanic, row in matrix.items():
-        assert row and all(row.values()), f"{mechanic} declares an inert stream: {row}"
+        assert row, f"{mechanic} declares an inert stream: {row}"
+        assert all(row.values()), f"{mechanic} declares an inert stream: {row}"
     # Every SUPPORT_TRIGGER reader is reachable through the same projection,
     # even though its stream is built from authored templates rather than
     # parsed off raw rows.
@@ -2242,7 +2241,8 @@ def test_a_control_only_holder_scans_a_mixed_typed_row(item):
     of them raised ``ValueError`` on this row.
     """
     reads = ts.streams_for(frozenset({item}))
-    assert ts.Stream.CC in reads and ts.Stream.DAMAGE not in reads
+    assert ts.Stream.CC in reads
+    assert ts.Stream.DAMAGE not in reads
     holder = _support_actor("ally:Lulu", "ally", (item,))
     ally = _support_actor("main:Ahri", "main", ())
     enemy = _support_actor("enemy:Aatrox", "enemy", ())
@@ -2573,7 +2573,7 @@ def test_the_receipt_token_is_the_rows_own_token_on_every_rung():
     """
     flags = ("immobilized", "hard_cc", "slowed", "slow", "crowd_control")
     rows = 0
-    for kind in sorted(CC_KIND_VOCABULARY) + [""]:
+    for kind in [*sorted(CC_KIND_VOCABULARY), ""]:
         for bits in range(1 << len(flags)):
             row = {
                 "cc_kind": kind,
@@ -2711,7 +2711,8 @@ class TestAnAuthoredCcKindIsUncheckedUntilTheWalk:
         payload = response.get_json()
         assert sorted(payload) == ["error"]
         assert str(raised) == payload["error"]
-        assert "disposition" not in payload and "starved" not in payload
+        assert "disposition" not in payload
+        assert "starved" not in payload
 
 
 # ---------------------------------------------------------------------------
@@ -2734,7 +2735,7 @@ def test_every_half_tags_exactly_the_engine_it_runs_on():
 
 
 @pytest.mark.parametrize(
-    "overrides, message",
+    ("overrides", "message"),
     [
         (
             {"pairing": ts.Pairing.PAIRED, "pair_of": "abyssal_mask.magic_amp"},
@@ -2784,7 +2785,8 @@ def test_holder_stacking_is_declared_exactly_on_the_dual_sided_mechanics():
     joined on 2026-08-16, when ``active_cast``, ``cast_proc``,
     ``charged_strike``, ``on_hit_strike`` and ``periodic`` retired off the pair
     engine, and on 2026-08-17 the seven spellblades with ``spellblade`` and
-    Wind's Fury with ``secondary_target``, the last of the fourteen.  Their answer is per-holder for the same reason and one step more
+    Wind's Fury with ``secondary_target``, the last of the fourteen.  Their answer is
+    per-holder for the same reason and one step more
     plainly: each one's walk half prices *its own holder's* packet, so two
     roster members holding one item pay two packets and an aura key would
     silently drop the second — which is the incident's own shape mandated by

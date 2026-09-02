@@ -139,5 +139,5 @@ class TestScalemail:
         stripped = copy.deepcopy(get_champion("Shyvana"))
         effect = stripped["abilities"]["P"][0]["effects"][1]
         effect["description"] = effect["description"].replace("0.3 bonus armor", "more")
-        with pytest.raises(ValueError, match="Shyvana P .Scalemail."):
+        with pytest.raises(ValueError, match=r"Shyvana P .Scalemail."):
             parse_champion_abilities(stripped, 18, 0.0, row_review.RANKS)

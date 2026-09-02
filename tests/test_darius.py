@@ -20,12 +20,11 @@ import copy
 
 import pytest
 
-from src.calculator.champions import parse_champion_abilities
+from src.calculator.champions import darius, parse_champion_abilities
 from src.calculator.champions.darius import P_BLEED_MAX_STACKS
 from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.champions import darius
 from tests import cc_review
 
 LEVEL = 20

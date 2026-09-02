@@ -22,8 +22,8 @@ slot.
 
 from typing import Any
 
-from .packet_module import build_packet_module
 from .engine import BUFF, ONHIT, SlotCtx
+from .packet_module import build_packet_module
 from .slotlib import (
     STEROID_ZERO,
     ability_name,
@@ -127,7 +127,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     cc_kinds=MODULE_CC,
 )
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (Harrier) prices the wiki's on-hit row: 15 : 132.35 (based on "
     "level) (+ 40% bonus AD) bonus physical damage when a basic attack "
     "consumes the Harrier mark (data/champions.json P 'Bonus Physical "

@@ -151,10 +151,10 @@ def coverage_of_a_whole_response(response: Mapping) -> dict[str, set[str]]:
 # The three payloads, checked against live runs rather than against fixtures
 # ---------------------------------------------------------------------------
 
-import importlib.util  # noqa: E402
-import json  # noqa: E402
-import sys  # noqa: E402
-from pathlib import Path  # noqa: E402
+import importlib.util
+import json
+import sys
+from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -422,7 +422,8 @@ class TestARetaggedFieldFailsTheRankingSurfaces:
         """The positive control: the refusal is the tag, not the mechanism."""
         score, metric, components, _ = self._scored(_combat())
         assert isinstance(score, float)
-        assert metric and components
+        assert metric
+        assert components
 
     def test_one_retagged_leaf_refuses_the_whole_ranking(self) -> None:
         """A preview in the map, and BIS declines to name a winner."""

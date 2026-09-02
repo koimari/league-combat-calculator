@@ -32,7 +32,9 @@ Why each slot is non-generic:
 
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, DEBUFF, ONHIT, SlotCtx, build_parser
+from .inputs import bool_option
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -43,8 +45,6 @@ from .slotlib import (
     support_cast,
 )
 from .source_receipts import load_champion_sources
-from .inputs import bool_option
-from ..binary_roots import data_value, spell_object
 
 # Martial Cadence's dedicated binary record carries the current-health
 # fraction and minimum damage; the cached prose corroborates both.

@@ -48,7 +48,7 @@ def css() -> str:
     return CSS.read_text(encoding="utf-8")
 
 
-@pytest.fixture()
+@pytest.fixture
 def soup() -> BeautifulSoup:
     page = app_module.app.test_client().get("/").get_data(as_text=True)
     return BeautifulSoup(page, "html.parser")
@@ -76,7 +76,7 @@ def function_body(source: str, signature: str) -> str:
 def test_the_screen_is_a_rail_beside_a_canvas(soup: BeautifulSoup, css: str):
     grid = soup.select_one(".app-grid")
     assert grid is not None
-    children = [node for node in grid.find_all(recursive=False)]
+    children = list(grid.find_all(recursive=False))
     assert [node.get("class")[0] for node in children] == ["rail", "canvas"]
     block = css[css.index(".app-grid {") : css.index(".app-grid.is-editing")]
     assert "grid-template-columns: var(--rail-width)" in block
@@ -179,7 +179,8 @@ def test_spine_never_makes_colour_the_only_carrier(source: str):
     body = function_body(source, "function spineRowHtml(")
     assert "Build A ${escapeHtml(spoken(aLabel" in body
     assert "Build B ${escapeHtml(spoken(bLabel" in body
-    assert '"Build B ahead"' in body and '"Build A ahead"' in body
+    assert '"Build B ahead"' in body
+    assert '"Build A ahead"' in body
     assert 'aria-label="${escapeHtml(metric.label)}' in body
 
 
@@ -306,7 +307,8 @@ def test_item_stat_lines_actually_resolve_from_the_served_catalogue():
     ]
     assert len(with_stats) > len(served) // 2, "served catalogue must carry stats"
     deathcap = served["Rabadon's Deathcap"]
-    assert deathcap["ap"] > 0 and deathcap["price"] > 0
+    assert deathcap["ap"] > 0
+    assert deathcap["price"] > 0
 
 
 # ---------------------------------------------------------------------------
@@ -316,11 +318,12 @@ def test_item_stat_lines_actually_resolve_from_the_served_catalogue():
 
 def test_not_modeled_disclosure_sits_beside_the_verdict(soup: BeautifulSoup):
     panel = soup.select_one("#notModeledPanel")
-    assert panel is not None and panel.name == "details"
+    assert panel is not None
+    assert panel.name == "details"
     assert panel.has_attr("hidden")
     assert "Qualified result" in panel.find("summary").get_text()
     canvas = soup.select_one(".canvas")
-    order = [node for node in canvas.find_all(recursive=False)]
+    order = list(canvas.find_all(recursive=False))
     assert order.index(panel) < order.index(soup.select_one(".duel"))
 
 
@@ -453,7 +456,7 @@ def test_first_run_shows_a_start_checklist_not_a_ghost_duel(
     band = soup.select_one("#startBand")
     assert band is not None
     canvas = soup.select_one(".canvas")
-    order = [node for node in canvas.find_all(recursive=False)]
+    order = list(canvas.find_all(recursive=False))
     assert order.index(band) < order.index(soup.select_one(".duel"))
     for hidden_band in (".duel", ".hp-band", ".timeline-band", ".ledger-band"):
         assert re.search(
@@ -477,7 +480,8 @@ def test_feedback_widget_is_a_collapsed_disclosure_that_waits_for_a_scenario():
     """The validation widget stays silent without a champion and collapses
     behind a summary otherwise — it never leads the canvas with Yes/No."""
     feedback = (ROOT / "static" / "js" / "feedback.js").read_text(encoding="utf-8")
-    assert "<details" in feedback and "feedback-body" in feedback
+    assert "<details" in feedback
+    assert "feedback-body" in feedback
     assert "if (!STATE.champion)" in feedback
     # The old refreshContext re-parsed its own rendered HTML with a regex.
     assert "statusMarkup().match(" not in feedback
@@ -585,7 +589,7 @@ def test_constraints_ride_the_canvas_as_a_banner(soup: BeautifulSoup, css: str):
     assert bar.find_parent(class_="canvas") is not None
     assert bar.find_parent(class_="rail") is None
     canvas = soup.select_one(".canvas")
-    order = [node for node in canvas.find_all(recursive=False)]
+    order = list(canvas.find_all(recursive=False))
     assert order.index(soup.select_one(".verdict")) < order.index(bar)
     assert order.index(bar) < order.index(soup.select_one(".duel"))
     # All five rows plus the action stay wired.
@@ -595,7 +599,8 @@ def test_constraints_ride_the_canvas_as_a_banner(soup: BeautifulSoup, css: str):
     assert toggles == ["gold", "objective", "window", "state", "enemyHits"]
     assert bar.select_one("#economicsOptimize") is not None
     block = re.search(r"\.constraints-bar \{([^}]*)\}", css)
-    assert block is not None and "var(--rail-panel)" in block.group(1)
+    assert block is not None
+    assert "var(--rail-panel)" in block.group(1)
 
 
 def test_pre_duel_editing_happens_centre_canvas(source: str, soup: BeautifulSoup):

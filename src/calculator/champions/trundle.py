@@ -17,14 +17,14 @@ and the creation knockback have no engine axis.
 
 from typing import Any
 
-from ..ability_atoms import ability_payload
 from .. import healing_helpers as _healing
+from ..ability_atoms import ability_payload
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
-from .packet_module import build_packet_module, repeat_damage_parser
-from .slotlib import extract_value, stat_buff, with_control_event
 from .inputs import float_option, int_option
 from .module_contract import coverage
+from .packet_module import build_packet_module, repeat_damage_parser
+from .slotlib import extract_value, stat_buff, with_control_event
 
 PACKET_SHA256 = "0346556b3577caf70cd1fadf59cbec2eb38d07d723625a473330e5c2618b0d4b"
 
@@ -118,7 +118,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     },
 )
 
-OPTIONS = list(OPTIONS) + [
+OPTIONS = [
+    *list(OPTIONS),
     float_option(
         "w_zone_uptime",
         1.0,
@@ -129,10 +130,8 @@ OPTIONS = list(OPTIONS) + [
         rotation={
             "role": "self_state",
             "slot": "W",
-            "note": (
-                "Frozen Domain is ground, not a self-buff: standing on it "
-                "is player state no cast order can express."
-            ),
+            "note": "Frozen Domain is ground, not a self-buff: standing on it "
+            "is player state no cast order can express.",
         },
     ),
     int_option(
@@ -145,15 +144,14 @@ OPTIONS = list(OPTIONS) + [
         rotation={
             "role": "self_state",
             "slot": "P",
-            "note": (
-                "King's Tribute pays on a nearby death, which no cast "
-                "orders; the count is player state, not a rotation edge."
-            ),
+            "note": "King's Tribute pays on a nearby death, which no cast "
+            "orders; the count is player state, not a rotation edge.",
         },
     ),
 ]
 
-ASSUMPTIONS = list(ASSUMPTIONS) + [
+ASSUMPTIONS = [
+    *list(ASSUMPTIONS),
     "P (King's Tribute) heals 1.8% : 5.94% (based on level) of the dying "
     "unit's maximum health per nearby enemy death — the cached P level "
     "row, which the wiki data mislabels 'Max Health Damage'. A duel "
@@ -208,19 +206,19 @@ def derive_self_healing(
     tribute = ability_payload(ability_damages, "passive").get("self_heal_state")
     if isinstance(tribute, dict):
         amount = float(tribute.get("amount", 0.0) or 0.0)
-        for payment in _healing.takedown_payments(
-            int(tribute.get("deaths", 0) or 0), damage_events
-        ):
-            healing.append(
-                {
-                    "time": float(payment.event.get("time", 0.0)),
-                    "amount": amount,
-                    "source": "King's Tribute",
-                    "kind": "champion_passive",
-                    "actor_wide": True,
-                    **_healing.trigger_fields(payment.event),
-                }
+        healing.extend(
+            {
+                "time": float(payment.event.get("time", 0.0)),
+                "amount": amount,
+                "source": "King's Tribute",
+                "kind": "champion_passive",
+                "actor_wide": True,
+                **_healing.trigger_fields(payment.event),
+            }
+            for payment in _healing.takedown_payments(
+                int(tribute.get("deaths", 0) or 0), damage_events
             )
+        )
     return healing
 
 

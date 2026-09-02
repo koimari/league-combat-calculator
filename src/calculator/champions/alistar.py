@@ -48,19 +48,19 @@ hardcoded.
 import re
 from typing import Any
 
-from ..ability_atoms import ability_payload
 from ..ability_atoms import (
     AbilityAtomQuery,
+    ability_payload,
     ranked_ability_atom_value,
     required_ability_atom,
     required_ranked_attribute_atom,
 )
 from ..ability_spec import AttackClass, DamageClass, DamagePart
-from ..healing_helpers import HealAnchor, payments, ability_json, trigger_fields
+from ..healing_helpers import HealAnchor, ability_json, payments, trigger_fields
 from ..survival.actions import TransitionRank
-from .inputs import champion_stat, int_option
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
+from .inputs import champion_stat, int_option
 from .slotlib import (
     ability_name,
     atom_receipt,

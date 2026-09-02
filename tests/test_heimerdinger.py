@@ -42,7 +42,7 @@ class TestReviewedCrowdControl:
 
     def test_reviewed_kinds_follow_the_other_branch(self):
         """The UPGRADE!!! grenade slows by the same 35%."""
-        assert _CC.kinds(**{"e_upgrade": 1}) == {
+        assert _CC.kinds(e_upgrade=1) == {
             "Q": ["none"],
             "W": ["none"],
             "E": ["slow"],

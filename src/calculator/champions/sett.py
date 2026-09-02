@@ -17,16 +17,15 @@ by the binary RightPunchBonus coefficient.
 
 from __future__ import annotations
 
-from typing import Any
-
 import re
+from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
-from .inputs import champion_stat, int_option
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
+from .inputs import champion_stat, int_option
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -355,7 +354,7 @@ def derive_self_healing(
     level = max(1, int(champion_stat(champion_stats, "level")))
     base = _level_breakpoint_value(base_values, level)
     maximum = _level_breakpoint_value(max_values, level)
-    segments_cap = int(round(maximum / base)) if base > 0.0 else 0
+    segments_cap = round(maximum / base) if base > 0.0 else 0
     duration = max(0.0, float(fight_duration_seconds or 0.0))
     if duration <= 0.0 or base <= 0.0:
         return []

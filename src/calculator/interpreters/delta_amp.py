@@ -187,7 +187,7 @@ def _ramp_per_stack(magnitude: RampPerStack, ctx: BuildContext) -> float:
 def _magnitude_fields(
     magnitude: Magnitude,
     ctx: BuildContext,
-    field: "Callable[[str, float], KernelField]",
+    field: Callable[[str, float], KernelField],
 ) -> tuple[KernelField, ...]:
     """The compiled numbers a magnitude contributes: one field, or two.
 
@@ -527,7 +527,8 @@ class AmpSlot:
     def sources(self) -> tuple[tuple[str, float], ...]:
         """Each holder with the fraction it contributes, in build order."""
         return tuple(
-            (rule.owner, fraction) for rule, fraction in zip(self.rules, self.fractions)
+            (rule.owner, fraction)
+            for rule, fraction in zip(self.rules, self.fractions, strict=False)
         )
 
 
@@ -558,7 +559,7 @@ class PartAmp:
         )
 
     def _terms(
-        self, index: int, holder_stats: "Mapping[str, float]"
+        self, index: int, holder_stats: Mapping[str, float]
     ) -> tuple[float, ...]:
         """One holder's fraction, as the shares its magnitude is made of.
 
@@ -588,13 +589,13 @@ class PartAmp:
             self._value(AMP_PER_HUNDRED_STAT_FIELD, index) * (reading / 100.0),
         )
 
-    def fractions(self, holder_stats: "Mapping[str, float]") -> tuple[float, ...]:
+    def fractions(self, holder_stats: Mapping[str, float]) -> tuple[float, ...]:
         """Each holder's sourced fraction, in build order."""
         return tuple(
             sum(self._terms(index, holder_stats)) for index in range(len(self.rules))
         )
 
-    def multiplier(self, holder_stats: "Mapping[str, float]") -> float:
+    def multiplier(self, holder_stats: Mapping[str, float]) -> float:
         """What the engine multiplies each priced part by.
 
         One running sum from ``1.0`` over every holder's shares, in build order.
@@ -912,9 +913,9 @@ __all__ = [
     "PartAmp",
     "StaticHolderAmps",
     "amp_fields",
-    "magnitude_fraction",
     "damage_class_amp_rules",
     "declared_magic_amp",
+    "magnitude_fraction",
     "part_amp_rules",
     "resolve_part_amp",
     "resolve_slot",

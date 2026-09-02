@@ -39,7 +39,7 @@ class TestReviewedCrowdControl:
 
     def test_reviewed_kinds_follow_the_other_branch(self):
         """In All Out 'Path Maker no longer applies its knock back and stun'."""
-        assert _CC.kinds(**{"all_out": True}) == {
+        assert _CC.kinds(all_out=True) == {
             "Q": ["slow"],
             "W": ["none"],
             "R": ["stun"],

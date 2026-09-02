@@ -2,9 +2,9 @@
 
 import pytest
 
-from tests.ability_math import parts_raw_total
 from src.calculator.champions import soraka
 from tests import cc_review
+from tests.ability_math import parts_raw_total
 
 
 def _parse(soraka_data, parse_at, second_hit):

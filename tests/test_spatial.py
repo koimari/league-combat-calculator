@@ -1,7 +1,5 @@
 """P5 spatial primitives — unit tests for pos, distance, and range counting."""
 
-import math
-
 import pytest
 
 from src.calculator.spatial import (

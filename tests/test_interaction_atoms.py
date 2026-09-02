@@ -808,7 +808,7 @@ def test_structured_control_atoms_create_action_downtime(
     options = _CONTROL_CASE_OPTIONS.get((champion, slot))
     if options is not None:
         payload["champion_options"] = options
-    if champion not in {"Elise"}:
+    if champion != "Elise":
         payload["ability_ranks"] = ranks
     combat = _calculate(payload)
 

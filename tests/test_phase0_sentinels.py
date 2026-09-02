@@ -26,16 +26,14 @@ from typing import NamedTuple
 import pytest
 
 from src import app as app_module
-from src.calculator import item_effects
 from src.calculator.ability_spec import (
     AttackClass,
     DamageClass,
 )
 from src.calculator.champions import registered_champion_names
+from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.interpreters import delta_amp
 from src.calculator.item_behavior import AmpChainSlot
-from src.calculator.trigger_stream import is_immobilizing_event
-from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_support_effects import (
     _declared_authorities,
 )
@@ -47,7 +45,7 @@ from src.calculator.survival.transitions import (
     _apply_damage_modifier,
     _modifier_applies,
 )
-
+from src.calculator.trigger_stream import is_immobilizing_event
 from tests.test_item_support_effects import (
     declared_classes_by_producer,
     timed_cross_participant_producers,

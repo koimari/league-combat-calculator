@@ -6,6 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
+from .inputs import float_option, int_option
 from .module_helpers import no_damage
 from .slotlib import (
     ability_name,
@@ -16,7 +17,6 @@ from .slotlib import (
     proc_damage,
 )
 from .source_receipts import load_champion_sources
-from .inputs import float_option, int_option
 
 
 def _signature(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -44,7 +44,8 @@ def _signature(ctx: SlotCtx) -> dict[str, Any] | None:
     )(ctx)
     if entry is not None:
         entry["detail"] = (
-            f"{entry['proc_count']} completed Signature mark(s); each sourced mark detonates once after the second spell hit."
+            f"{entry['proc_count']} completed Signature mark(s); each sourced mark "
+            f"detonates once after the second spell hit."
         )
     return entry
 
@@ -58,7 +59,10 @@ def _subject_damage(ctx: SlotCtx) -> dict[str, Any] | None:
     if variant == 0:
         value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
         parts = (DamagePart("magic", value, time_offset=0.25, cc_kind="none"),)
-        detail = "Devastating Fire; target-max-health scaling and its monster cap remain source-backed."
+        detail = (
+            "Devastating Fire; target-max-health scaling and its monster cap remain "
+            "source-backed."
+        )
     elif variant == 1:
         base = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
         maximum = extract_named(ability, "Maximum Damage", rank, ctx.stats, ctx.target)
@@ -73,7 +77,10 @@ def _subject_damage(ctx: SlotCtx) -> dict[str, Any] | None:
                 cc_kind="none",
             ),
         )
-        detail = f"Severing Bolt missing-health fraction {missing:.2f}; isolated/immobilized target gate is explicit."
+        detail = (
+            f"Severing Bolt missing-health fraction {missing:.2f}; "
+            f"isolated/immobilized target gate is explicit."
+        )
     else:
         explosions = min(max(int(ctx.option("q_explosions")), 1), 7)
         shock = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
@@ -101,7 +108,10 @@ def _subject_damage(ctx: SlotCtx) -> dict[str, Any] | None:
                 cc_kind="slow",
             ),
         )
-        detail = f"Molten Fissure: {explosions} shockwaves plus one sourced fissure packet per eruption."
+        detail = (
+            f"Molten Fissure: {explosions} shockwaves plus one sourced fissure packet "
+            f"per eruption."
+        )
     entry = damage_entry(
         ability_name(ability),
         rank,
@@ -134,7 +144,10 @@ def _serenity(ctx: SlotCtx) -> dict[str, Any] | None:
         return no_damage(
             ctx,
             name=ability_name(ability),
-            reason=f"Protective pool; maximum self shield is {shield:g} and ally reduction is source-backed.",
+            reason=(
+                f"Protective pool; maximum self shield is {shield:g} and ally "
+                f"reduction is source-backed."
+            ),
             slot="W",
         )
     bonus = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
@@ -267,8 +280,11 @@ OPTIONS = [
     int_option("p_triggers", 1, minimum=0, maximum=8, label="Signature detonations"),
 ]
 ASSUMPTIONS = [
-    "The three subject toggles are state-only; the selected QQ/QW/QE, WQ/WW/WE and EQ/EW/EE entries are explicit variants.",
-    "Severing Bolt exposes the source maximum-damage branch without assuming the immobilized/isolated target gate.",
-    "Signature marks and Stirring Lights charges are visible state; no same-cast mark consumption is inferred.",
+    "The three subject toggles are state-only; the selected QQ/QW/QE, WQ/WW/WE and "
+    "EQ/EW/EE entries are explicit variants.",
+    "Severing Bolt exposes the source maximum-damage branch without assuming the "
+    "immobilized/isolated target gate.",
+    "Signature marks and Stirring Lights charges are visible state; no same-cast mark "
+    "consumption is inferred.",
 ]
 SOURCES = load_champion_sources("Hwei")
