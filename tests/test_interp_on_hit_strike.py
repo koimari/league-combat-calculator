@@ -11,6 +11,7 @@ import dataclasses
 
 import pytest
 
+from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.interpreters import on_hit_strike
 from src.calculator.item_behavior import FightFacts, OnHitStrikeRule, RuleFamily
 from src.calculator.item_behavior_catalog import (
@@ -18,7 +19,12 @@ from src.calculator.item_behavior_catalog import (
     behavior_rules,
     build_context,
 )
-from src.calculator.item_effects import ITEM_EFFECTS, DamageInputs
+from src.calculator.item_effects import (
+    ITEM_EFFECTS,
+    DamageInputs,
+    target_class_denials,
+)
+from src.calculator.item_source import effect_entries
 
 STATS = {
     "ability_power": 200.0,
@@ -196,18 +202,16 @@ def _restricted_owners() -> tuple[str, ...]:
 
 
 def test_every_entry_carrying_the_channel_declares_the_packet() -> None:
-    """The reviewed set, held to what the registry actually carries.
+    """Every channel holder routes the same registry key down the same channel.
 
-    Both Helping Hand holders route the same registry key down the same
-    channel, so both pay it.  The set is pinned because a new holder needs
-    its OTHER class clauses reviewed before a minion-class fight may hold it
-    — Tear's Manaflow reads the fight's own class, which is what makes
-    admitting Tear honest.
+    The holder set is no longer pinned: adjudication is per clause, so a third
+    holder admits its Helping Hand clause and nothing else, and its other class
+    clauses still refuse a minion-class fight on their own.
     """
-    assert _restricted_owners() == ("Doran's Helm", "Tear of the Goddess")
+    assert _restricted_owners()
     for owner in _restricted_owners():
         assert "helping_hand_minion_damage" in ITEM_EFFECTS[owner]
-        assert on_hit_strike.adjudicated_target_classes(owner) == frozenset({"minion"})
+        assert "Helping Hand" in on_hit_strike.adjudicated_target_class_mechanics(owner)
 
 
 def test_the_declared_amount_is_the_atom_checked_accessor() -> None:
@@ -246,3 +250,89 @@ def test_the_minion_row_is_named_after_the_declaration() -> None:
         assert effect.target_class == "minion"
         assert effect.source.damage_type == "physical"
         assert effect.source.display_name.endswith("(Helping Hand vs minions)")
+
+
+# ---------------------------------------------------------------------------
+# Target-class adjudication: per clause, never per item (issue #236)
+# ---------------------------------------------------------------------------
+
+
+def _cached_mechanics(owner: str) -> set[object]:
+    """Every clause name *owner*'s cached record carries."""
+    return {entry.get("name") for _, entry in effect_entries(get_item_by_name(owner))}
+
+
+def _minion_denials(owner: str, reader) -> tuple[str, ...]:
+    """What a minion-class fight holding *owner* alone refuses, through *reader*."""
+    return target_class_denials(
+        [{"name": owner}], "minion", adjudicated_mechanics=reader
+    )
+
+
+def test_a_channel_holders_every_clause_is_adjudicated() -> None:
+    """Neither Helping Hand holder is refused, clause by clause.
+
+    Doran's Helm carries the one clause the packet prices; Tear carries that
+    clause and Manaflow, whose ledger is handed the fight's own class.
+    """
+    reader = on_hit_strike.adjudicated_target_class_mechanics
+    for owner in _restricted_owners():
+        assert _minion_denials(owner, reader) == ()
+        assert (
+            target_class_denials(
+                [{"name": owner}], "champion", adjudicated_mechanics=reader
+            )
+            == ()
+        )
+
+
+def test_an_unpriced_clause_does_not_ride_in_on_a_priced_sibling() -> None:
+    """The issue itself: a holder whose OTHER clause is unpriced is refused.
+
+    Tear stands in for the third Helping Hand holder — the reader admits its
+    Helping Hand clause only, so Manaflow's champion split is refused on its
+    own and the priced clause is not named.
+    """
+    denials = _minion_denials(
+        "Tear of the Goddess", lambda _: frozenset({"Helping Hand"})
+    )
+    assert len(denials) == 1
+    assert "'Manaflow'" in denials[0]
+    assert "champion" in denials[0]
+    assert "minions" not in denials[0]
+
+
+def test_every_reviewed_class_reading_key_names_a_declared_clause() -> None:
+    """The reviewed table is held to the tree it names.
+
+    Each key is a mechanic id exactly one registry entry declares, and each
+    value is a clause that entry's cached record carries — so a renamed
+    declaration or a re-parsed clause fails here rather than silently
+    admitting nothing.
+    """
+    for mechanic_id, mechanic in on_hit_strike.CLASS_READING_MECHANICS.items():
+        owners = [
+            name
+            for name in ITEM_EFFECTS
+            for rule in behavior_rules(name)
+            if rule.mechanic_id == mechanic_id
+        ]
+        assert len(owners) == 1
+        assert mechanic in _cached_mechanics(owners[0])
+
+
+def test_an_unreviewed_manaflow_holder_still_refuses_a_minion_fight() -> None:
+    """Only Tear's Manaflow ledger reads the fight's class.
+
+    Every other Manaflow entry declares the same champion split and none is
+    paid one, so their clause is refused rather than paid the champion amount.
+    """
+    others = sorted(
+        name
+        for name in ITEM_EFFECTS
+        if name != "Tear of the Goddess" and "Manaflow" in _cached_mechanics(name)
+    )
+    assert others
+    reader = on_hit_strike.adjudicated_target_class_mechanics
+    for owner in others:
+        assert any("'Manaflow'" in denial for denial in _minion_denials(owner, reader))

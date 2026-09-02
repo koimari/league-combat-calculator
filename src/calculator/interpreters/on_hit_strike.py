@@ -17,7 +17,7 @@ amp chain resolves its slots per fight on exactly this basis.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from ..item_behavior import (
     RESTRICTED_CHANNEL_PACKETS,
@@ -115,12 +115,32 @@ def class_restricted_packets(
     )
 
 
-def adjudicated_target_classes(owner: str) -> frozenset[str]:
-    """Every non-champion target class *owner* declares a packet for.
+# Which declaration prices its cached clause at the FIGHT's target class, and
+# the clause it prices, named as the cache names it.  A restricted channel
+# answers that from its own packet; this is the reviewed rest, where the class
+# reading lives in a ledger no declaration can carry — Tear's Manaflow ledger is
+# handed the fight's class, so a minion is paid the trigger amount and not the
+# champion one.  Keyed by mechanic id and not by payload type: the four other
+# Manaflow entries declare the same split and none of them is paid one.
+CLASS_READING_MECHANICS: Mapping[str, str] = {
+    "tear_of_the_goddess.mana_charge": "Manaflow",
+}
 
-    The reader ``item_effects.target_class_denials`` is handed."""
+
+def adjudicated_target_class_mechanics(owner: str) -> frozenset[str]:
+    """Every cached clause of *owner* the fight model prices at the fight's
+    own target class, named as the cache names it.
+
+    The reader ``item_effects.target_class_denials`` is handed.  Per clause,
+    so an item's unpriced clause cannot ride in on a priced sibling's
+    admission."""
     return frozenset(
-        packet.target_class for _, packet in class_restricted_packets([owner])
+        {packet.mechanic for _, packet in class_restricted_packets([owner])}
+        | {
+            mechanic
+            for rule in behavior_rules(owner)
+            if (mechanic := CLASS_READING_MECHANICS.get(rule.mechanic_id)) is not None
+        }
     )
 
 
@@ -243,6 +263,7 @@ def per_hit_effects(
 
 
 __all__ = [
+    "CLASS_READING_MECHANICS",
     "CLASS_RESTRICTED_BREAKDOWN_KEY",
     "CLASS_RESTRICTED_MECHANIC_PREFIX",
     "CLASS_RESTRICTED_SUFFIX",
@@ -250,7 +271,7 @@ __all__ = [
     "ON_HIT_SUFFIX",
     "STRIKE_TERM_COUNT_FIELD",
     "OnHitStrikeInterpretationError",
-    "adjudicated_target_classes",
+    "adjudicated_target_class_mechanics",
     "class_restricted_packets",
     "class_restricted_per_hit_effects",
     "per_hit_effect",

@@ -267,10 +267,11 @@ and the runtime gap are two different, only partly overlapping problems.
 **Done — target-class slice only.** The kernel now carries a target-class
 label, `FightConfig.target_class` (`"champion"` default, `"minion"`), plumbed
 through `pipeline.py`'s request parsing to the public `/api/calculate` body.
-It gates class-restricted item EFFECTS: `item_effects.CLASS_RESTRICTED_ON_HITS`
-compiles Doran's Helm's Helping Hand from its typed accessor
+It gates class-restricted item EFFECTS. Each holder's own
+`item_behavior.RestrictedChannelRule` routes Helping Hand's typed accessor
 (`dorans_helm_helping_hand_minion_damage`, sourced 5 bonus physical on-hit,
-wiki revision 4034679) into a `class_restricted_per_hits` stream that only a
+wiki revision 4034679) into an
+`interpreters.on_hit_strike.class_restricted_per_hit_effects` row that only a
 minion-class fight arms. Champion-class fights are unchanged and
 golden-identical; `item_coverage` still classifies the Helm `stats_only`
 because its champion-class contribution is still exactly zero.
@@ -289,15 +290,15 @@ because its champion-class contribution is still exactly zero.
    Cull's minion-kill progression payout, and Ezreal R's minion-damage row
    are all untouched. Ability-carried on-hit applications do not carry the
    class-restricted branch either.
-4. *Unadjudicated class clauses fail closed, they are not modeled.* Any build
-   item whose cached effect text names a target class without an entry in
-   `CLASS_RESTRICTED_ON_HITS` makes a minion-class fight raise, naming the
-   item and clause (`item_effects.target_class_denials`). Statikk Shiv's
-   "increased to 90 against non-champions" and Blade of the Ruined King's
-   minion/monster caps are therefore refusals, not results — a minion-class
-   fight today is only usable for narrow, deliberately-small builds.
-5. *Tear of the Goddess Helping Hand is not armed.* Only Doran's Helm is
-   adjudicated; the Tear family keeps its receipt-only boundary.
+4. *Unadjudicated class clauses fail closed, they are not modeled.* Adjudication
+   is per clause: one cached passive or active is admitted only when
+   `interpreters.on_hit_strike.adjudicated_target_class_mechanics` names it,
+   so an unpriced clause cannot ride in on a priced sibling of the same item.
+   Every other clause naming a target class makes a minion-class fight raise,
+   naming the item and the clause (`item_effects.target_class_denials`).
+   Statikk Shiv's "increased to 90 against non-champions" and Blade of the
+   Ruined King's minion/monster caps are refusals, not results, so a
+   minion-class fight is usable only for narrow, deliberately-small builds.
 
 Items 1–3 are the remaining XL: a new actor class touching the combatant
 model, the event ledger, and every champion/item that references minions.

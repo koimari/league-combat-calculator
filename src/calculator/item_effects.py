@@ -12,6 +12,8 @@ parse must reproduce. When JSON data is refreshed, ``refresh_item_effects()``
 re-parses and updates ``ITEM_EFFECTS`` in place.
 """
 
+# file-length-ok: rule 5 makes this module the one home for every item number,
+# so a split would give the numbers a second home rather than fewer lines.
 import logging
 import math
 import re
@@ -4392,43 +4394,47 @@ _TARGET_CLASS_CLAUSE_PATTERN = re.compile(
 )
 
 
-def _cached_effect_text(item_name: str) -> str:
-    """Return one cached item's full passive/active effect text.
+def _cached_effect_clauses(item_name: str) -> tuple[tuple[object, str], ...]:
+    """One cached item's clauses: each passive or active, named and whole.
 
-    Resolved by NAME through the caching layer, never from the caller's
-    item mapping: a bare ``{"name": ...}`` fixture must not be able to
-    dodge the target-class clause scan by carrying no branches.
+    Resolved by NAME through the cache, so a bare ``{"name": ...}`` fixture
+    cannot dodge the scan; an unnamed clause keeps a ``None`` nothing claims.
     """
     record = data_fetcher.get_item_by_name(item_name)
-    entries: list[Mapping[str, Any]] = []
-    for key in ("passives", "active", "actives"):
-        value = record.get(key)
-        if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
-            entries.extend(entry for entry in value if isinstance(entry, Mapping))
-    return " ".join(item_source.effect_text(entry) for entry in entries)
+    return tuple(
+        (entry.get("name"), item_source.effect_text(entry))
+        for _, entry in item_source.effect_entries(record)
+    )
+
+
+def _cached_effect_text(item_name: str) -> str:
+    """Return one cached item's full passive/active effect text."""
+    return " ".join(text for _, text in _cached_effect_clauses(item_name))
 
 
 def target_class_denials(
     items: Sequence[Mapping[str, Any]],
     target_class: str,
     *,
-    adjudicated_classes: Callable[[str], frozenset[str]],
+    adjudicated_mechanics: Callable[[str], frozenset[str]],
 ) -> tuple[str, ...]:
     """Named fail-closed denials for a non-champion-class fight.
 
     A champion-class fight is the historical model and is never denied.
-    For any other class, an equipped item is admitted only when its cached
-    effect text names no target class at all, or when *adjudicated_classes*
-    reports that the item's own declarations price that class.  Every other
+    For any other class, each CLAUSE of an equipped item — one cached passive
+    or active, whole — is admitted only when it names no target class at all,
+    or when *adjudicated_mechanics* names it as one the item's own
+    declarations price at the fight's class.  Admission is per clause, so a
+    priced clause admits itself and nothing else on the same item: every other
     class clause (Statikk Shiv's "increased to 90 against non-champions",
     Blade of the Ruined King's minion/monster caps, every "against champions"
     restriction) would be priced with the WRONG reading, so the fight is
     refused with the item and clause named.
 
     The reader is injected rather than imported: the declarations live above
-    this module (``interpreters.on_hit_strike.adjudicated_target_classes``),
-    and asking for them by parameter is what keeps the one home for "which
-    items pay a class-restricted packet" from growing a copy here.
+    this module (``interpreters.on_hit_strike``), and asking for them by
+    parameter is what keeps the one home for "which clauses the fight model
+    prices at the fight's own class" from growing a copy here.
     """
     if target_class == DEFAULT_TARGET_CLASS:
         return ()
@@ -4441,10 +4447,8 @@ def target_class_denials(
                 f"{target_class}-class fight requires cached source text"
             )
             continue
-        if target_class in adjudicated_classes(item_name):
-            continue
         try:
-            text = _cached_effect_text(item_name)
+            clauses = _cached_effect_clauses(item_name)
         except KeyError:
             denials.append(
                 f"{item_name!r} is not in the cached shop data, so its "
@@ -4452,15 +4456,19 @@ def target_class_denials(
                 f"{target_class}-class target"
             )
             continue
-        clauses = sorted(
-            {match.lower() for match in _TARGET_CLASS_CLAUSE_PATTERN.findall(text)}
-        )
-        if clauses:
-            denials.append(
-                f"{item_name!r} names target class(es) {', '.join(clauses)} in its "
-                f"sourced effect text, which is not adjudicated for a "
-                f"{target_class}-class target"
+        adjudicated = adjudicated_mechanics(item_name)
+        for mechanic, text in clauses:
+            if mechanic in adjudicated:
+                continue
+            named = sorted(
+                {match.lower() for match in _TARGET_CLASS_CLAUSE_PATTERN.findall(text)}
             )
+            if named:
+                denials.append(
+                    f"{item_name!r} names target class(es) {', '.join(named)} in "
+                    f"its {mechanic!r} clause, which is not adjudicated for a "
+                    f"{target_class}-class target"
+                )
     return tuple(denials)
 
 
