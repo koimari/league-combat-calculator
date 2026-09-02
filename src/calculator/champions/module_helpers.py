@@ -426,6 +426,7 @@ def between_rows(  # pylint: disable=too-many-arguments
     ability: dict[str, Any],
     rank_value: int,
     low: str,
+    *,
     high: str,
     fraction: float,
 ) -> float:
@@ -468,7 +469,7 @@ def require_named_leveling(
         )
 
 
-def at_level(brackets: Sequence[tuple[int, Any]], level: int) -> Any:
+def at_level[T](brackets: Sequence[tuple[int, T]], level: int) -> T:
     """The value of the highest bracket *level* has reached; *brackets* descend by level."""
     for min_level, value in brackets:
         if level >= min_level:

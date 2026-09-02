@@ -1251,7 +1251,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def build_sanity_and_suggestions(
-    results: list[dict[str, Any]],
+    results: Iterable[dict[str, Any]],
 ) -> tuple[list[dict[str, Any]], list[str]]:
     """Sanity checks for curated mechanics + classifier improvement list."""
     by_champ = {r["champion"]: r for r in results}

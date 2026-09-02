@@ -723,6 +723,7 @@ def _score_with_swap(
     level: int,
     base: list[dict[str, Any]],
     index: int,
+    *,
     candidate: dict[str, Any],
     boots: dict[str, Any] | None,
     eval_kwargs: dict[str, Any],
@@ -794,9 +795,9 @@ def _hill_climb(
                     level,
                     current,
                     slot_idx,
-                    candidate,
-                    current_boots,
-                    eval_kwargs,
+                    candidate=candidate,
+                    boots=current_boots,
+                    eval_kwargs=eval_kwargs,
                 )
                 evals += 1
 
@@ -2076,9 +2077,9 @@ def optimize_build(
                     level,
                     best_legendaries,
                     slot_index,
-                    candidate,
-                    best_boots,
-                    eval_kwargs,
+                    candidate=candidate,
+                    boots=best_boots,
+                    eval_kwargs=eval_kwargs,
                 )
                 total_evals += 1
                 remember_candidate(trial, best_boots, score)

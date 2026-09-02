@@ -1887,7 +1887,7 @@ def _sequence(value: Any) -> int | None:
 
 
 def event_triggers(
-    row: Any, *, kinds: frozenset[TriggerKind] = _ROW_KINDS
+    row: object, *, kinds: frozenset[TriggerKind] = _ROW_KINDS
 ) -> tuple[Trigger, ...]:
     """0-2 Triggers from one authored row — a stunning damage packet is both.
 

@@ -502,7 +502,7 @@ def _slices_match(wiki_values, game_values, flat_tolerance: float):
     return False
 
 
-def _data_value_matches(wiki_values, spell):
+def _data_value_matches(wiki_values, spell: Mapping[str, Any]):
     """Return (matched, game_row_name) against the spell's DataValues rows."""
     for data_value in spell.get("DataValues") or []:
         row = data_value.get("values") or []
@@ -530,7 +530,7 @@ def _normalize_attr(name):
     return re.sub(r"[^a-z0-9]", "", (name or "").lower())
 
 
-def _attr_matches_game_row(attribute, spell):
+def _attr_matches_game_row(attribute, spell: Mapping[str, Any]):
     """True when the wiki attribute name equals a DataValues row name."""
     normalized = _normalize_attr(attribute)
     if not normalized:
@@ -661,7 +661,9 @@ def _wiki_row_count(entry):
     return count
 
 
-def _compare_entry_rows(entry, spell, slot: str, index: int, *, ddragon=None):
+def _compare_entry_rows(
+    entry, spell: dict[str, Any], slot: str, index: int, *, ddragon=None
+):
     """Compare one wiki ability entry against one game spell.
 
     ``ddragon`` is Riot's official per-spell tooltip row dict (cooldown/cost),

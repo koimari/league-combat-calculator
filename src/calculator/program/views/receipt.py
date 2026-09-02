@@ -150,7 +150,12 @@ _SUPPORT_LABEL_KEYS = (
 
 
 def _event_row(
-    writer: LeafWriter, prefix: str, index: int, event: Mapping[str, Any], family: str
+    writer: LeafWriter,
+    prefix: str,
+    index: int,
+    event: Mapping[str, Any],
+    *,
+    family: str,
 ) -> tuple[dict[str, Any], Any, Any]:
     """One event's row, its leaf writer and refusal, time and attacker published."""
     row: dict[str, Any] = {}
@@ -166,7 +171,7 @@ def _damage_event_rows(
     """One published damage row per annotated event, in walk order."""
     rows: list[dict[str, Any]] = []
     for index, event in enumerate(events):
-        row, leaf, refusal = _event_row(writer, prefix, index, event, "events")
+        row, leaf, refusal = _event_row(writer, prefix, index, event, family="events")
         leaf.raw("target", event.get("target"))
         leaf.raw("source", event.get("source_key", ""))
         leaf.raw("damage_type", event.get("damage_type", ""))
@@ -389,7 +394,9 @@ def _healing_event_rows(
     """One published healing row per annotated event, in walk order."""
     rows: list[dict[str, Any]] = []
     for index, event in enumerate(events):
-        row, leaf, refusal = _event_row(writer, prefix, index, event, "healing_events")
+        row, leaf, refusal = _event_row(
+            writer, prefix, index, event, family="healing_events"
+        )
         leaf.raw("source", event.get("source", ""))
         if event.get("_event_id") is not None:
             leaf.raw("event_id", str(event["_event_id"]))
@@ -482,7 +489,9 @@ def _support_event_rows(
     """One published support row per armed template, in reading order."""
     rows: list[dict[str, Any]] = []
     for index, event in enumerate(events):
-        row, leaf, refusal = _event_row(writer, prefix, index, event, "support_events")
+        row, leaf, refusal = _event_row(
+            writer, prefix, index, event, family="support_events"
+        )
         leaf.raw("target", event.get("target"))
         leaf.raw("recipient", event.get("target"))
         if event.get("_event_id") is not None:

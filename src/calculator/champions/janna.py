@@ -50,7 +50,12 @@ def _howling_gale(
 ) -> dict[str, Any] | None:
     charge = min(max(float(ctx.option("q_charge")), 0.0), 1.0)
     value = between_rows(
-        ctx, ability, rank, "Minimum Magic Damage", "Maximum Magic Damage", charge
+        ctx,
+        ability,
+        rank,
+        "Minimum Magic Damage",
+        high="Maximum Magic Damage",
+        fraction=charge,
     )
     entry = damage_entry(
         ability_name(ability),

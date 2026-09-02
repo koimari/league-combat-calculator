@@ -1431,7 +1431,9 @@ def bench_roster_scenarios() -> tuple[CoupledScenario, ...]:
     )
 
 
-def _uncovered_producers(scenarios, producers):
+def _uncovered_producers(
+    scenarios: Collection[CoupledScenario], producers: Collection[str]
+):
     """Producers no scenario equips the item for — R-12's derived coverage."""
     equipped = frozenset().union(*(s.equipped() for s in scenarios))
     return tuple(sorted(p for p in producers if producer_item(p) not in equipped))
@@ -1477,7 +1479,9 @@ def _unarmed(covering: Mapping[str, Any]) -> tuple[str, ...]:
     return tuple(sorted(member for member, names in covering.items() if not names))
 
 
-def _uncovered_families(scenarios, families):
+def _uncovered_families(
+    scenarios: Collection[CoupledScenario], families: Mapping[str, Iterable[str]]
+):
     """Deferral families no scenario equips a declaring item of (R-12)."""
     return _unarmed(covering_scenarios(scenarios, families))
 
@@ -1497,7 +1501,9 @@ def holder_amp_declarations() -> dict[str, frozenset[str]]:
     return {kind: frozenset(owners) for kind, owners in sorted(kinds.items())}
 
 
-def _unarmed_amp_kinds(scenarios, amps):
+def _unarmed_amp_kinds(
+    scenarios: Collection[CoupledScenario], amps: Mapping[str, Iterable[str]]
+):
     """Static holder amps no scenario equips a declaring item of."""
     return _unarmed(covering_scenarios(scenarios, amps))
 
@@ -1591,7 +1597,10 @@ def window_covering_scenarios(
     return covering
 
 
-def _unarmed_repricing_windows(scenarios, windows):
+def _unarmed_repricing_windows(
+    scenarios: Collection[CoupledScenario],
+    windows: Mapping[str, Sequence[Collection[str]]],
+):
     """Re-pricing windows no scenario arms (R-12)."""
     return _unarmed(window_covering_scenarios(scenarios, windows))
 
@@ -1710,12 +1719,16 @@ def swing_term_covering_scenarios(
     }
 
 
-def _unarmed_swing_terms(scenarios, terms):
+def _unarmed_swing_terms(
+    scenarios: Collection[CoupledScenario], terms: Mapping[str, Iterable[str]]
+):
     """Target-side swing terms no scenario arms against a swing (R-12)."""
     return _unarmed(swing_term_covering_scenarios(scenarios, terms))
 
 
-def _refuse_unarmed_swing_terms(scenarios, terms):
+def _refuse_unarmed_swing_terms(
+    scenarios: Collection[CoupledScenario], terms: Mapping[str, Iterable[str]]
+):
     """Refuse a capture whose scenario set swings at no holder of some term.
 
     Its own function rather than a fifth block inside :func:`capture_coupled`,
@@ -1807,7 +1820,7 @@ def coupled_entry(scenario: CoupledScenario) -> dict[str, Any]:
     }
 
 
-def _exact_totals(entry):
+def _exact_totals(entry: Mapping[str, Any]):
     """Per-attacker totals at full precision — R-13's bit-exactness instrument.
 
     Golden equality is equality to two decimals, so a summation-order change
@@ -2034,7 +2047,7 @@ def rebuild_for(baseline: Mapping[str, Any]) -> dict[str, Any]:
     )
 
 
-def _write_report(path, diffs, kind):
+def _write_report(path, diffs: tuple[LeafDiff, ...], kind):
     """One LeafDiff per differing leaf, plus the ratio clause's own arithmetic."""
     qualifying = [diff for diff in diffs if qualifies_for_investigation(diff)]
     denominator = receipt_numeric_leaves(kind)

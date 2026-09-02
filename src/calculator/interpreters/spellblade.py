@@ -75,7 +75,7 @@ def spellblade_fields(
 ) -> tuple[KernelField, ...]:
     """One spellblade's compiled numbers, stamped with *lane*."""
     return damage_formula.compiled_field(
-        _payload(rule), "cooldown", SPELLBLADE_COOLDOWN_FIELD, rule, ctx, lane
+        _payload(rule), "cooldown", SPELLBLADE_COOLDOWN_FIELD, rule, ctx=ctx, lane=lane
     )
 
 

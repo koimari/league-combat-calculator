@@ -112,7 +112,7 @@ def _marks(ctx: SlotCtx) -> int:
 
 
 def _mark_scaled_override(
-    ctx: SlotCtx, marks: int, unit_phrase: str, per_mark: float, target_stat: str
+    ctx: SlotCtx, marks: int, unit_phrase: str, per_mark: float, *, target_stat: str
 ):
     """A modifier override: the unit naming *unit_phrase* grows *per_mark* per Mark."""
 
@@ -172,7 +172,11 @@ def _mounting_dread(
         ctx.stats,
         ctx.target,
         modifier_override=_mark_scaled_override(
-            ctx, marks, "of target's missing health", 0.5, "target_missing_health"
+            ctx,
+            marks,
+            "of target's missing health",
+            0.5,
+            target_stat="target_missing_health",
         ),
     )
     entry = damage_entry(
@@ -266,7 +270,11 @@ def _wolfs_frenzy(
         ctx.stats,
         ctx.target,
         modifier_override=_mark_scaled_override(
-            ctx, marks, "of target's current health", 1.0, "target_current_health"
+            ctx,
+            marks,
+            "of target's current health",
+            1.0,
+            target_stat="target_current_health",
         ),
     )
     entry = damage_entry(

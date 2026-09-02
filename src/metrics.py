@@ -354,6 +354,7 @@ def _retention_section(
     windows: Sequence[tuple[datetime, datetime]],
     beta_start: datetime,
     effective_end: datetime,
+    *,
     now: datetime,
 ) -> tuple[dict, list[dict], str]:
     """The retention criterion: overall metrics, its weekly rows and its gate."""
@@ -487,6 +488,7 @@ def _cache_context(db_module: Any) -> dict:
 
 
 def compute_scorecard(
+    *,
     now: datetime | None = None,
     beta_start: datetime | None = None,
     weeks: int = 2,
@@ -527,7 +529,7 @@ def compute_scorecard(
     receipts_total = _receipt_count(db_module, beta_start, effective_end)
 
     retention_overall, retention_weeks, retention_gate = _retention_section(
-        timeline, windows, beta_start, effective_end, now
+        timeline, windows, beta_start, effective_end, now=now
     )
     receipt_weeks = _receipt_weeks(db_module, windows, now)
     bias_weeks = _bias_weeks(db_module, windows, now)

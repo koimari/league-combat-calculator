@@ -73,7 +73,12 @@ def _defiant_dance(
 ) -> dict[str, Any] | None:
     charge = min(max(float(ctx.option("w_charge")), 0.0), 1.0)
     value = between_rows(
-        ctx, ability, rank, "Minimum Physical Damage", "Maximum Physical Damage", charge
+        ctx,
+        ability,
+        rank,
+        "Minimum Physical Damage",
+        high="Maximum Physical Damage",
+        fraction=charge,
     )
     entry = damage_entry(
         ability_name(ability),

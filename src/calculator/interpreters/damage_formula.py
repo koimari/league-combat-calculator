@@ -31,7 +31,7 @@ claim no number moved rather than no number moved much.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from typing import Any
+from typing import Protocol
 
 from ..champions.inputs import champion_stat
 from ..item_behavior import (
@@ -230,11 +230,18 @@ def reads_target_current_health(formula: DamageFormula) -> bool:
     return any(term.basis is Basis.TARGET_CURRENT_HEALTH for term in formula.terms)
 
 
+class FormulaPayload(Protocol):
+    """A declaration that carries a damage formula."""
+
+    formula: DamageFormula
+
+
 def compiled_field(
-    payload: Any,
+    payload: FormulaPayload,
     attribute: str,
     name: str,
     rule: BehaviorRule,
+    *,
     ctx: BuildContext,
     lane: EngineLane,
 ) -> tuple[KernelField, ...]:

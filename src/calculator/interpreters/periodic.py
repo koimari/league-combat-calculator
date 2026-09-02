@@ -75,7 +75,7 @@ def cadence_fields(
 ) -> tuple[KernelField, ...]:
     """One periodic strike's compiled numbers, stamped with *lane*."""
     return damage_formula.compiled_field(
-        _payload(rule), "interval", PERIODIC_INTERVAL_FIELD, rule, ctx, lane
+        _payload(rule), "interval", PERIODIC_INTERVAL_FIELD, rule, ctx=ctx, lane=lane
     )
 
 

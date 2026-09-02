@@ -1857,7 +1857,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
     fight_dps = rank_ability_dps(ability_damages, target_count=1, aoe=aoe)
     dps_idx = {s: i for i, (s, *_) in enumerate(fight_dps)}
 
-    def tie_by(idx: dict[str, int]) -> Callable[[str], tuple[Any, ...]]:
+    def tie_by(idx: Mapping[str, int]) -> Callable[[str], tuple[Any, ...]]:
         """Rank a slot by its row in *idx*, then outgoing edges, then base order."""
         return lambda s: (
             idx.get(s, 10**9),

@@ -35,7 +35,7 @@ from __future__ import annotations
 import math
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Literal
 
 from . import item_effects, rune_effects
 
@@ -473,9 +473,14 @@ def resolve_flat(references: Sequence[AnyValueRef]) -> tuple[float, ...]:
     return tuple(reference.get() for reference in references)
 
 
-def declared_reference(
-    values: Iterable[Any], kind: type, key: str, stop: type[Exception], missing: str
-) -> Any:
+def declared_reference[T](
+    values: Iterable[object],
+    kind: type[T],
+    key: str,
+    stop: type[Exception],
+    *,
+    missing: str,
+) -> T:
     """The *kind* reference in *values* declared under *key*, or *stop*."""
     for reference in values:
         if isinstance(reference, kind) and reference.key == key:

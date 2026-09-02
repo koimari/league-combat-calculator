@@ -147,7 +147,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "R": first_plus_repeats_parser(
             first_attr="Magic Damage",
             repeat_attr="Magic Damage Per Tick",
-            dmg_type="magic",
             repeats=6,
             time_offset=1.0,
             hit_interval=1.0,

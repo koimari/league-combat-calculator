@@ -102,8 +102,8 @@ def _devastating_charge(
         ability,
         rank,
         "Minimum Physical Damage",
-        "Maximum Physical Damage",
-        distance,
+        high="Maximum Physical Damage",
+        fraction=distance,
     )
     entry = damage_entry(
         ability_name(ability),

@@ -180,14 +180,12 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_parsers={
         "W": simple_damage(
             attr="Magic Damage",
-            dmg_type="magic",
             source=("W", 0),
             event_order_certified="single_hit",
         ),
         "R": first_plus_repeats_parser(
             first_attr="Magic Damage Per Hit",
             repeat_attr="Reduced Damage Per Hit",
-            dmg_type="magic",
             repeats=3,
             time_offset=1.0,
             hit_interval=1.0,

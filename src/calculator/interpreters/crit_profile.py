@@ -128,7 +128,7 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
         crit_references(rule),
         lane,
         CritProfileInterpretationError,
-        "resolve_profile",
+        reader="resolve_profile",
     )
 
 

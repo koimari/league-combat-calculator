@@ -130,12 +130,10 @@ def first_plus_repeats_parser(
     *,
     first_attr: str,
     repeat_attr: str,
-    dmg_type: str,
     repeats: int,
     time_offset: float,
     hit_interval: float,
     dot_duration: float | None = None,
-    name: str | None = None,
 ) -> SlotParser:
     """One hit at the cast plus ``repeats`` hits of a second row.
 
@@ -157,16 +155,16 @@ def first_plus_repeats_parser(
             ability, repeat_attr, rank, ctx.stats, ctx.target, level=ctx.level
         )
         entry = damage_entry(
-            name or ability.get("name", f"Ability {ctx.slot}"),
+            ability.get("name", f"Ability {ctx.slot}"),
             rank,
             extract_cooldown(ability, rank, level=ctx.level),
             first + repeat * repeats,
-            dmg_type,
+            "magic",
         )
         entry["parts"] = (
-            DamagePart(dmg_type, amount=first, time_offset=0.0),
+            DamagePart("magic", amount=first, time_offset=0.0),
             DamagePart(
-                dmg_type,
+                "magic",
                 amount=repeat,
                 count=repeats,
                 time_offset=time_offset,

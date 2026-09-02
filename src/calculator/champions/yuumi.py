@@ -161,7 +161,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "R": first_plus_repeats_parser(
             first_attr="Magic Damage per Hit",
             repeat_attr="Reduced Damage per Hit",
-            dmg_type="magic",
             repeats=4,
             time_offset=0.7,
             hit_interval=0.7,
@@ -274,7 +273,11 @@ def derive_self_healing(
     return healing
 
 
-def _feline_friendship_heals(champion_data, champion_stats, damage_events):
+def _feline_friendship_heals(
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    damage_events: list[dict[str, Any]],
+):
     """P's on-hit heals: one per damaging hit the recharge gate allows.
 
     The buff is up when the fight opens (the innate recharges out of

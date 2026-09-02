@@ -1074,11 +1074,7 @@ def derive_item_support_effects(
             source_meta = ITEM_INPUT_OPTIONS["Umbral Glaive"]
             lethality = max(
                 0.0,
-                (
-                    float(attacker.stats.get("lethality", 0.0) or 0.0)
-                    if isinstance(attacker.stats, Mapping)
-                    else 0.0
-                ),
+                float(attacker.stats.get("lethality", 0.0) or 0.0),
             )
             packets.append(
                 _packet(

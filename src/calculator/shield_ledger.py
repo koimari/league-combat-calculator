@@ -19,7 +19,6 @@ from typing import Any, NamedTuple
 PHYSICAL = "physical"
 MAGIC = "magic"
 GENERAL = "general"
-POOLS = frozenset({PHYSICAL, MAGIC, GENERAL})
 
 #: Marks a timed grant a Lifeline armed, so receipts can report threshold
 #: absorption apart from the pool the grant happens to sit in.

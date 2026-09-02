@@ -89,7 +89,7 @@ class DefenseSlot:
             ValueRef,
             key,
             DefenseInterpretationError,
-            f"{self.rule.mechanic_id} declares no {key!r} value; a defence "
+            missing=f"{self.rule.mechanic_id} declares no {key!r} value; a defence "
             "reads the numbers its declaration names and no others",
         ).get()
 
@@ -104,7 +104,7 @@ class DefenseSlot:
             LevelValueRef,
             key,
             DefenseInterpretationError,
-            f"{self.rule.mechanic_id} declares no {key!r} level ramp",
+            missing=f"{self.rule.mechanic_id} declares no {key!r} level ramp",
         ).get(level)
 
     def late_ramp(self, key: str, level: int) -> float:
@@ -114,7 +114,7 @@ class DefenseSlot:
             LateLevelValueRef,
             key,
             DefenseInterpretationError,
-            f"{self.rule.mechanic_id} declares no {key!r} late level ramp",
+            missing=f"{self.rule.mechanic_id} declares no {key!r} late level ramp",
         ).get(level)
 
     def threshold(self) -> float:

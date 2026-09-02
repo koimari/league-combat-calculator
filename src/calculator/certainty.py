@@ -251,6 +251,7 @@ def _slot_certainty(
     options: Iterable[Mapping[str, Any]],
     assumptions: Iterable[str],
     coverage: Mapping[str, str],
+    *,
     module_slots: Collection[str],
     ability_names: dict[str, list[str]],
     audit: Mapping[str, Any] | None,

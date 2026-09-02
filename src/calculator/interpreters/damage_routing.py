@@ -302,7 +302,7 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
         _flat_references(rule),
         lane,
         DamageRoutingInterpretationError,
-        "resolve_execution",
+        reader="resolve_execution",
     )
 
 

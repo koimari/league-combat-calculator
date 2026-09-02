@@ -73,7 +73,7 @@ def active_fields(
 ) -> tuple[KernelField, ...]:
     """One active's compiled numbers, stamped with *lane*, for both engines."""
     return damage_formula.compiled_field(
-        _payload(rule), "cooldown", ACTIVE_COOLDOWN_FIELD, rule, ctx, lane
+        _payload(rule), "cooldown", ACTIVE_COOLDOWN_FIELD, rule, ctx=ctx, lane=lane
     )
 
 

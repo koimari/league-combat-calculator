@@ -35,7 +35,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, is_dataclass
 from dataclasses import fields as dataclass_fields
 from enum import Enum
-from typing import Any, ClassVar, NamedTuple, get_args
+from typing import ClassVar, NamedTuple, get_args
 
 from .ability_spec import (
     AttackClass,
@@ -3777,9 +3777,9 @@ class DefenseOutcome:
     notes: tuple[str, ...]
 
 
-def typed_payload(
-    rule: BehaviorRule, payload_type: type, stop: type[Exception], noun: str
-) -> Any:
+def typed_payload[T](
+    rule: BehaviorRule, payload_type: type[T], stop: type[Exception], noun: str
+) -> T:
     """*rule*'s payload as *payload_type*, or *stop* saying it is not *noun*."""
     payload = rule.payload
     if not isinstance(payload, payload_type):
@@ -3819,12 +3819,12 @@ def compiled_value(
     raise stop(missing)
 
 
-def sole_declaration(
-    items: Sequence[Any],
+def sole_declaration[T](
+    items: Sequence[T],
     owners: Sequence[str],
     payload_type: type,
     stop: type[Exception],
-) -> Any:
+) -> T | None:
     """A build's one declaration of a shape that does not compose, or ``None``.
 
     ``None`` is an answer and not a zero: no holder declares the shape.  Two
@@ -3843,9 +3843,10 @@ def sole_declaration(
 
 def flat_fields(
     rule: BehaviorRule,
-    references: Sequence[tuple[str, Any]],
+    references: Sequence[tuple[str, AnyValueRef]],
     lane: EngineLane,
     stop: type[Exception],
+    *,
     reader: str,
 ) -> tuple[KernelField, ...]:
     """*references* resolved without any fight context, as compiled fields.

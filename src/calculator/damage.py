@@ -7792,7 +7792,7 @@ def _strike_declaration(
 
 
 def _next_authored_event(
-    authored_events: list[Any], cursor: int, event_time: float
+    authored_events: Sequence[Any], cursor: int, event_time: float
 ) -> tuple[int, float | None, str | None] | None:
     """Advance ``cursor`` past the first positive-damage authored event at or
     after ``event_time``: ``(cursor, time, precision)``, the time ``None`` when

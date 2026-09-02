@@ -136,7 +136,7 @@ class AllyPacketSlot:
             ValueRef,
             key,
             AllyPacketInterpretationError,
-            f"{self.rule.mechanic_id} declares no {key!r} value; a producer "
+            missing=f"{self.rule.mechanic_id} declares no {key!r} value; a producer "
             "reads the numbers its declaration names and no others",
         ).get()
 
@@ -152,7 +152,7 @@ class AllyPacketSlot:
             LevelValueRef,
             key,
             AllyPacketInterpretationError,
-            f"{self.rule.mechanic_id} declares no {key!r} level ramp",
+            missing=f"{self.rule.mechanic_id} declares no {key!r} level ramp",
         ).get(level)
 
     def level_subject(self, key: str) -> LevelSubject:
