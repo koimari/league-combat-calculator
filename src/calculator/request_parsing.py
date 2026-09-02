@@ -59,15 +59,14 @@ def request_int(
 def request_optional_int(
     data: Mapping[str, object],
     key: str,
-    minimum: int,
+    *,
     maximum: int,
 ) -> int | None:
-    """Read one bounded integer, or ``None`` when the request omits it:
-    ``None`` and an empty string both spell "not supplied", so there is no
-    default to return and a supplied value reads under :func:`request_int`."""
+    """Read one bounded count of at least one, or ``None`` when the request omits
+    it: ``None`` and an empty string both spell "not supplied"."""
     if data.get(key) in (None, ""):
         return None
-    return request_int(data, key, default=minimum, minimum=minimum, maximum=maximum)
+    return request_int(data, key, default=1, minimum=1, maximum=maximum)
 
 
 def request_bool(data: Mapping[str, object], key: str, default: bool) -> bool:

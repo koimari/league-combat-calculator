@@ -1243,12 +1243,14 @@ def swiftmarch_adaptive_force(
     return max(0.0, float(total_move_speed)) * float(ratio)
 
 
+_ACTUALIZER = "Actualizer"
+
+
 def actualizer_active_seconds(
     items: Sequence[Mapping[str, Any]],
     item_options: Mapping[str, Mapping[str, int | float]] | None,
     *,
     fight_duration_seconds: float,
-    item_name: str = "Actualizer",
 ) -> float:
     """Return the authored Mana Made Real window for one fight.
 
@@ -1260,17 +1262,17 @@ def actualizer_active_seconds(
     fight; API callers always have the typed option map and therefore can
     explicitly request zero seconds.
     """
-    if item_name not in _item_names(list(items)):
+    if _ACTUALIZER not in _item_names(list(items)):
         return 0.0
-    duration = required_effect_value(item_name, "mana_made_real_duration")
+    duration = required_effect_value(_ACTUALIZER, "mana_made_real_duration")
     clipped_duration = max(0.0, min(float(fight_duration_seconds), float(duration)))
     if item_options is None:
         return clipped_duration
-    options = item_options.get(item_name) or {}
+    options = item_options.get(_ACTUALIZER) or {}
     explicit_seconds = options.get("mana_made_real_active_seconds", 0.0)
     if isinstance(explicit_seconds, bool):
         raise ValueError(
-            f"item_options.{item_name}.mana_made_real_active_seconds must be numeric"
+            f"item_options.{_ACTUALIZER}.mana_made_real_active_seconds must be numeric"
         )
     seconds = float(explicit_seconds or 0.0)
     if seconds <= 0.0 and int(options.get("mana_made_real_active", 0) or 0) > 0:

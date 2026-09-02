@@ -92,8 +92,8 @@ class InputDefault:
             raise ValueError("an input default without a reason is a literal")
 
 
-def _build(reason: str, value: float = 0.0) -> InputDefault:
-    return InputDefault(value, "BUILD", reason)
+def _build(reason: str) -> InputDefault:
+    return InputDefault(0.0, "BUILD", reason)
 
 
 _ABSENT_MEANS_NONE = "the build grants none of this stat, so the formula's term is zero"

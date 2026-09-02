@@ -172,14 +172,12 @@ _SLOT_ORDER = ("Q", "W", "E", "R")
 # ---------------------------------------------------------------------------
 
 
-def within_tolerance(
-    cached, game, relative: float = REL_TOLERANCE, flat=FLAT_TOLERANCE
-):
+def within_tolerance(cached, game, flat=FLAT_TOLERANCE):
     """True when a drift is rounding noise (inside 0.5% or +-flat)."""
     if cached == game:
         return True
     delta = abs(game - cached)
-    return delta <= flat or delta <= relative * abs(cached)
+    return delta <= flat or delta <= REL_TOLERANCE * abs(cached)
 
 
 # ---------------------------------------------------------------------------

@@ -1363,14 +1363,16 @@ def api_optimize():  # pylint: disable=too-many-return-statements
         max_legendary_slots = _request_int(
             data, "max_legendary_slots", 5, minimum=1, maximum=6
         )
-        gold_budget = _request_optional_int(data, "gold_budget", 1, 30_000)
+        gold_budget = _request_optional_int(data, "gold_budget", maximum=30_000)
         optimization_scope = _request_string(data, "optimization_scope", "build")
         if optimization_scope not in {"build", "purchase"}:
             raise ValueError("optimization_scope must be 'build' or 'purchase'")
-        available_gold = _request_optional_int(data, "available_gold", 1, 30_000)
+        available_gold = _request_optional_int(data, "available_gold", maximum=30_000)
         if optimization_scope == "purchase" and available_gold is None:
             raise ValueError("available_gold is required for purchase optimization")
-        max_purchase_items = _request_optional_int(data, "max_purchase_items", 1, 7)
+        max_purchase_items = _request_optional_int(
+            data, "max_purchase_items", maximum=7
+        )
         allow_sell = _request_bool(data, "allow_sell", False)
         max_sell_items = _request_int(data, "max_sell_items", 1, minimum=0, maximum=1)
         combine_policy = _request_string(data, "combine_policy", "shop_combine")

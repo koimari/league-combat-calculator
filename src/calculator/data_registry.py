@@ -333,7 +333,6 @@ def write_runtime_cache(
     *,
     source_url: str | None = None,
     source_version: str | None = None,
-    source_hash: str | None = None,
     fetched_at: float | None = None,
 ) -> None:
     """Atomically write one tracked runtime-cache file with provenance meta.
@@ -382,7 +381,6 @@ def write_runtime_cache(
         "filename": filename,
         "source_url": source_url,
         "source_version": source_version,
-        "source_hash": source_hash,
     }
     if source_version:
         try:
