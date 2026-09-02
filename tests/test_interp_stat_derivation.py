@@ -569,7 +569,16 @@ def test_the_channel_declaration_is_not_counted_as_runtime_behaviour() -> None:
 CHANNEL_HASTE_HOLDER = "Ionian Boots of Lucidity"
 CHANNEL_MINION_HOLDERS = ("Doran's Helm", "Tear of the Goddess")
 RESTORE_HOLDER = "Lost Chapter"
-SLAY_HOLDER = "Gluttonous Greaves"
+# Every Slay carrier, read off the registry rather than listed, so a third
+# one arriving under a spelling of its own fails here instead of passing
+# unnoticed (issue #233).
+SLAY_HOLDERS = tuple(
+    sorted(
+        name
+        for name in item_effects.ITEM_EFFECTS
+        if item_effects.SLAY_OMNIVAMP_KEY in item_effects.entry_schema_keys(name)
+    )
+)
 
 
 def test_the_summoner_haste_channel_carries_the_sourced_number_it_routes() -> None:
@@ -655,33 +664,49 @@ def test_the_resource_restore_declares_the_schedule_the_engine_runs() -> None:
         ), field
 
 
-def test_the_slay_grant_declares_both_ceilings_the_registry_states() -> None:
+def test_both_slay_carriers_declare_the_mechanic() -> None:
+    """Slay is a mechanic two items carry, not a property of one of them.
+
+    Gluttonous Greaves and the Immortal Path it builds into state the same
+    passive, so both are expected in the registry-derived population; a
+    carrier that spelled its keys privately would drop out of it.
+    """
+    assert SLAY_HOLDERS == ("Gluttonous Greaves", "Immortal Path")
+
+
+@pytest.mark.parametrize("holder", SLAY_HOLDERS)
+def test_the_slay_grant_declares_both_ceilings_the_registry_states(
+    holder: str,
+) -> None:
     """Slay's omnivamp, and the two ceilings that are not the same claim.
 
     Ten stacks, and the six percent those ten come to: the registry states
     both, and their product is asserted so a patch moving one without the
     other is a red here rather than a cap nobody could reach.
     """
-    slot = _slot(SLAY_HOLDER, StackedStatRule)
+    slot = _slot(holder, StackedStatRule)
     assert slot.granted is DerivedStat.OMNIVAMP_PERCENT
     assert slot.availability is StatAvailability.BUILD_OPTION
     per_stack = item_effects.required_effect_value(
-        SLAY_HOLDER, "slay_omnivamp_per_takedown"
+        holder, item_effects.SLAY_OMNIVAMP_KEY
     )
-    max_stacks = item_effects.required_effect_value(SLAY_HOLDER, "slay_max_stacks")
-    cap = item_effects.required_effect_value(SLAY_HOLDER, "slay_max_omnivamp")
+    max_stacks = item_effects.required_effect_value(holder, "slay_max_stacks")
+    cap = item_effects.required_effect_value(holder, "slay_max_omnivamp")
     assert slot.value("per_stack") == pytest.approx(per_stack)
     assert slot.value("max_stacks") == pytest.approx(max_stacks)
     assert slot.value("cap") == pytest.approx(cap)
     assert cap == pytest.approx(per_stack * max_stacks)
 
 
-def test_the_slay_declaration_is_what_the_engines_omnivamp_accessor_pays() -> None:
+@pytest.mark.parametrize("holder", SLAY_HOLDERS)
+def test_the_slay_declaration_is_what_the_engines_omnivamp_accessor_pays(
+    holder: str,
+) -> None:
     """One mechanic, one set of numbers: the declaration and the fold agree."""
-    slot = _slot(SLAY_HOLDER, StackedStatRule)
+    slot = _slot(holder, StackedStatRule)
     stacks = int(slot.value("max_stacks"))
-    assert item_effects.gluttonous_greaves_slay_omnivamp(
-        [{"name": SLAY_HOLDER}], {SLAY_HOLDER: {"slay_stacks": stacks}}
+    assert item_effects.slay_takedown_omnivamp(
+        [{"name": holder}], {holder: {"slay_stacks": stacks}}, holder
     ) == pytest.approx(slot.value("cap"))
 
 

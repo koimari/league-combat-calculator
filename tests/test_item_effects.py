@@ -903,6 +903,25 @@ class TestResolveStatEffects:
         )
         assert bonuses.bonus_omnivamp == pytest.approx(6.0)
 
+    def test_slay_is_one_contract_under_one_spelling(self) -> None:
+        """The two carriers state the same three keys with the same numbers.
+
+        Immortal Path builds from Gluttonous Greaves and inherits Slay
+        whole, which is what the Gluttonous entry's comment claims; a
+        carrier whose numbers moved alone makes that comment wrong.
+        """
+        contract = (
+            item_effects.SLAY_OMNIVAMP_KEY,
+            "slay_max_stacks",
+            "slay_max_omnivamp",
+        )
+        for key in contract:
+            assert item_effects.required_effect_value(
+                "Immortal Path", key
+            ) == pytest.approx(
+                item_effects.required_effect_value("Gluttonous Greaves", key)
+            ), key
+
     def test_combined_build_resolves_every_conversion(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

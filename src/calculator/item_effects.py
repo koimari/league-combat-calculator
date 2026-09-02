@@ -1195,42 +1195,27 @@ def endless_hunger_input_omnivamp(
     return required_effect_value("Endless Hunger", "feast_omnivamp_percent")
 
 
-def immortal_path_input_omnivamp(
+# Slay's signature key, and so the membership test for the mechanic: an item
+# carries Slay exactly when its schema states this.  One spelling, because a
+# second one is a second mechanic to everything that reads a key name.
+SLAY_OMNIVAMP_KEY = "slay_omnivamp_per_takedown"
+
+
+def slay_takedown_omnivamp(
     items: list[dict[str, Any]],
     item_options: Mapping[str, Mapping[str, int]] | None,
+    item_name: str,
 ) -> float:
-    """Return Immortal Path's explicit Slay takedown omnivamp."""
-    if "Immortal Path" not in _item_names(items):
-        return 0.0
-    stacks = input_option_value(items, item_options, "Immortal Path", "slay_stacks")
-    return stacks * required_effect_value("Immortal Path", "slay_omnivamp_per_stack")
+    """Return one Slay carrier's explicit takedown omnivamp.
 
-
-def gluttonous_greaves_slay_omnivamp(
-    items: list[dict[str, Any]],
-    item_options: Mapping[str, Mapping[str, int]] | None,
-) -> float:
-    """Return Gluttonous Greaves' explicit Slay takedown omnivamp.
-
-    Mirrors the Immortal Path contract with the 3L key names: the authored
-    ``slay_stacks`` scenario option (the valid champion-takedown admission;
-    bounds 0..10 enforced at the request layer) projects to
-    ``stacks * slay_omnivamp_per_takedown``, capped at the typed
-    ``slay_max_stacks``.  No literal fallback: a missing key raises naming
-    the item and key.
+    Every carrier states the mechanic under the same keys, so one accessor
+    prices all of them, capping ``slay_stacks`` at ``slay_max_stacks``.
     """
-    if "Gluttonous Greaves" not in _item_names(items):
+    if item_name not in _item_names(items):
         return 0.0
-    stacks = input_option_value(
-        items, item_options, "Gluttonous Greaves", "slay_stacks"
-    )
-    capped = min(
-        stacks,
-        int(required_effect_value("Gluttonous Greaves", "slay_max_stacks")),
-    )
-    return capped * sustain_effect_value(
-        "Gluttonous Greaves", "slay_omnivamp_per_takedown"
-    )
+    stacks = input_option_value(items, item_options, item_name, "slay_stacks")
+    capped = min(stacks, int(required_effect_value(item_name, "slay_max_stacks")))
+    return capped * sustain_effect_value(item_name, SLAY_OMNIVAMP_KEY)
 
 
 def swiftmarch_adaptive_force(
@@ -1902,7 +1887,7 @@ def item_state_receipts(
             "slay_stacks",
             slay_stacks=max(0, stacks),
             max_stacks=int(required_effect_value("Immortal Path", "slay_max_stacks")),
-            omnivamp=immortal_path_input_omnivamp(list(items), options),
+            omnivamp=slay_takedown_omnivamp(list(items), options, "Immortal Path"),
             assumed_health_state="above_half",
             damage_amp=required_effect_value(
                 "Immortal Path", "health_state_damage_amp_above_half"
@@ -1922,7 +1907,7 @@ def item_state_receipts(
             max_stacks=int(
                 required_effect_value("Gluttonous Greaves", "slay_max_stacks")
             ),
-            omnivamp=gluttonous_greaves_slay_omnivamp(list(items), options),
+            omnivamp=slay_takedown_omnivamp(list(items), options, "Gluttonous Greaves"),
             source_url=str(required_effect_value("Gluttonous Greaves", "source_url")),
             source_revision_id=int(
                 required_effect_value("Gluttonous Greaves", "source_revision_id")
@@ -2162,8 +2147,12 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "type": "damage_amp",
         "health_state_damage_amp_above_half": 0.04,
         "health_state_healing_multiplier_below_half": 0.12,
-        "slay_omnivamp_per_stack": 0.6,
+        # Slay, inherited whole from the Gluttonous Greaves this builds from:
+        # the same three keys under the same spelling, sourced on that entry,
+        # so one mechanic reaches one stacked-stat declaration.
+        "slay_omnivamp_per_takedown": 0.6,
         "slay_max_stacks": 10,
+        "slay_max_omnivamp": 6.0,
     },
     "Gluttonous Greaves": {
         "type": "sustain",
@@ -3606,8 +3595,9 @@ _STATIC_VALUE_KEYS_BY_ITEM: dict[str, frozenset[str]] = {
         {
             "health_state_damage_amp_above_half",
             "health_state_healing_multiplier_below_half",
-            "slay_omnivamp_per_stack",
+            "slay_omnivamp_per_takedown",
             "slay_max_stacks",
+            "slay_max_omnivamp",
         }
     ),
     "Gluttonous Greaves": frozenset(
@@ -5925,7 +5915,11 @@ def resolve_stat_effects(
     )
     hubris_ad = hubris_input_bonus_ad(items, item_options)
     feast_omnivamp = endless_hunger_input_omnivamp(items, item_options)
-    immortal_path_omnivamp = immortal_path_input_omnivamp(items, item_options)
+    slay_omnivamp = sum(
+        slay_takedown_omnivamp(items, item_options, name)
+        for name in _item_names(items)
+        if SLAY_OMNIVAMP_KEY in entry_schema_keys(name)
+    )
     famine_ability_haste = endless_hunger_ability_haste(
         items,
         bonus_attack_damage=bonus_attack_damage + permanent_bonus_ad + hubris_ad,
@@ -5978,11 +5972,7 @@ def resolve_stat_effects(
         basic_ability_haste=basic_ability_haste(items),
         ability_haste=famine_ability_haste,
         ultimate_haste=ultimate_haste,
-        bonus_omnivamp=(
-            feast_omnivamp
-            + immortal_path_omnivamp
-            + gluttonous_greaves_slay_omnivamp(items, item_options)
-        ),
+        bonus_omnivamp=feast_omnivamp + slay_omnivamp,
         bonus_heal_shield_power=harmony_power,
         item_bonus_health_multiplier=health_multiplier,
         permanent_bonus_ap=permanent_bonus_ap,
