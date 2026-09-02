@@ -5398,7 +5398,7 @@ class TestSpearOfShojin:
         - Q at 6s base, 0 ability haste, 25 basic = 6 * 100/125 = 4.8s
         - R at 60s base, 0 ability haste, 25 basic = still 60s (no basic haste)
         """
-        from src.calculator.damage import effective_cooldown
+        from src.calculator.stats import effective_cooldown
 
         base_q_cd = 6.0
         base_r_cd = 60.0

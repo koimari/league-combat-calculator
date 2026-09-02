@@ -9,7 +9,6 @@ The shared readers and the payment machinery a resolver uses live in
 
 from __future__ import annotations
 
-import importlib
 from typing import Any
 
 from .champions import _CHAMPION_MODULES
@@ -42,10 +41,8 @@ SELF_HEAL_RULE_SLOT = "SELF_HEALING_RULE"
 
 def _load_declarations() -> dict[str, ChampionHealingRule]:
     declarations: dict[str, ChampionHealingRule] = {}
-    for champion_name, module_name in sorted(_CHAMPION_MODULES.items()):
-        module = importlib.import_module(
-            f".champions.{module_name}", package=__package__
-        )
+    for champion_name in sorted(_CHAMPION_MODULES):
+        module = _CHAMPION_MODULES[champion_name]
         declaration = getattr(module, "SELF_HEALING_RULE", None)
         if declaration is None:
             continue

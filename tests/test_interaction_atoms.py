@@ -1,11 +1,9 @@
 """Integration tests for authored control and projectile-defense atoms."""
 
-import importlib
-
 import pytest
 
 from src.app import app
-from src.calculator.champions import parse_champion_abilities
+from src.calculator.champions import _CHAMPION_MODULES, parse_champion_abilities
 from src.calculator.data_fetcher import get_champion
 from src.calculator.interaction_effects import resolve_physical_damage_reduction
 from src.calculator.stats import calculate_total_stats
@@ -1058,10 +1056,7 @@ def test_conditional_control_branches_are_reviewed_and_withheld(
     so the withholding stays a decision rather than an omission: if a slot
     starts emitting the branch, this test is what notices.
     """
-    module = importlib.import_module(
-        f"src.calculator.champions.{_MODULE_NAMES[champion]}"
-    )
-    assert module.MODULE_CC.get(slot) == declared
+    assert _CHAMPION_MODULES[champion].MODULE_CC.get(slot) == declared
 
     data = get_champion(champion)
     stats = calculate_total_stats(data, 18, [])
@@ -1082,9 +1077,6 @@ def test_conditional_control_branches_are_reviewed_and_withheld(
     if withheld_duration_attr is not None:
         text = str(data["abilities"][slot])
         assert withheld_duration_attr in text
-
-
-_MODULE_NAMES = {"Anivia": "anivia", "Brand": "brand", "Singed": "singed"}
 
 
 @pytest.mark.parametrize(

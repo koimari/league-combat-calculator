@@ -71,8 +71,9 @@ from .cast_dependency import (
     ResolvedCycleError,
     active_dependencies,
 )
-from .damage import DEFAULT_CAST_ORDER, effective_cooldown
+from .damage import DEFAULT_CAST_ORDER
 from .data_registry import data_version
+from .stats import effective_cooldown
 
 # Fallback rationale when no combo rule and no certified order exists.
 _DEFAULT_RATIONALE = (

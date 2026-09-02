@@ -450,16 +450,12 @@ def _champion_starting_revive(
     Division, Zilean Chronoshift) return the revive payload; every other
     champion fails closed with zero revive fields.
     """
-    # pylint: disable=import-outside-toplevel
-    from importlib import import_module
-
+    # pylint: disable-next=import-outside-toplevel
     from .champions import _CHAMPION_MODULES
 
-    module_name = _CHAMPION_MODULES.get(champion_name)
-    if module_name is None:
+    module = _CHAMPION_MODULES.get(champion_name)
+    if module is None:
         return {}
-    package = f"{__name__.rsplit('.', 1)[0]}.champions"
-    module = import_module(f".{module_name}", package=package)
     resolver = getattr(module, "starting_revive_defense", None)
     if resolver is None:
         return {}

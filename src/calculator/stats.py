@@ -106,6 +106,13 @@ def apply_movement_speed_soft_caps(raw_speed: float) -> float:
     return raw_speed
 
 
+def effective_cooldown(base_cooldown: float, ability_haste: float) -> float:
+    """Effective cooldown in seconds: ``base_cd * 100 / (100 + ability_haste)``."""
+    if base_cooldown <= 0:
+        return 0.0
+    return base_cooldown * (100.0 / (100.0 + ability_haste))
+
+
 def get_champion_base_stats(
     champion_data: Mapping[str, Any], level: int
 ) -> dict[str, float]:

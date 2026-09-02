@@ -233,7 +233,7 @@ from .resistance import (
     reduce_resistance,
 )
 from .state_lifecycle import InstanceCadence, TimedStackState, TriggerGate
-from .stats import calculate_attack_speed, resolve_move_speed
+from .stats import calculate_attack_speed, effective_cooldown, resolve_move_speed
 from .survival.actions import TransitionRank
 from .survival.pricing import (
     AuthoredDeclaration,
@@ -319,13 +319,6 @@ def _seeded_option_stacks(
     except (TypeError, ValueError):
         seeded = int(default)
     return max(int(spec["min"]), min(seeded, int(spec["max"])))
-
-
-def effective_cooldown(base_cooldown: float, ability_haste: float) -> float:
-    """Effective cooldown in seconds: ``base_cd * 100 / (100 + ability_haste)``."""
-    if base_cooldown <= 0:
-        return 0.0
-    return base_cooldown * (100.0 / (100.0 + ability_haste))
 
 
 # ─────────────────────────────────────────────────────────────────────────

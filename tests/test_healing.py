@@ -184,18 +184,13 @@ class TestTheDeclarationAndTheRegistryAgreeBothWays:
             declare_healing_rule("Teemo", None)
 
     def test_no_champion_module_declares_a_rule_outside_the_set(self):
-        import importlib
-
         from src.calculator import healing
         from src.calculator.champions import _CHAMPION_MODULES
 
         declared = {
             name
-            for name, module_name in _CHAMPION_MODULES.items()
-            if hasattr(
-                importlib.import_module(f"src.calculator.champions.{module_name}"),
-                "SELF_HEALING_RULE",
-            )
+            for name, module in _CHAMPION_MODULES.items()
+            if hasattr(module, "SELF_HEALING_RULE")
         }
         assert declared == set(healing.HEALING_RULE_CHAMPIONS)
 

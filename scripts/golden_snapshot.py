@@ -1591,13 +1591,14 @@ def _swing_pricing_functions():
     added to a fourth helper has to arrive at the guard on the commit that
     adds it rather than on the commit somebody notices.
     """
-    getattr(damage, SWING_PRICING_ENTRY)  # a rename is an error, not a silence
     module = ast.parse(inspect.getsource(damage))
     defined = {
         node.name: node
         for node in module.body
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
     }
+    if SWING_PRICING_ENTRY not in defined:
+        raise RuntimeError(f"damage.{SWING_PRICING_ENTRY} was renamed; move the entry")
     reached, pending = {}, [SWING_PRICING_ENTRY]
     while pending:
         name = pending.pop()

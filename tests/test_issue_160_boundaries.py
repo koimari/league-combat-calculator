@@ -1,7 +1,6 @@
 """Regression tests for the Issue #160 ownership boundaries."""
 
 import inspect
-from importlib import import_module
 from pathlib import Path
 
 from src.calculator import healing
@@ -17,8 +16,7 @@ def test_each_healing_declaration_calls_a_resolver_in_its_champion_module():
     assert len(healing.HEALING_RULE_CHAMPIONS) == 62
 
     for champion_name in sorted(healing.HEALING_RULE_CHAMPIONS):
-        module_name = _CHAMPION_MODULES[champion_name]
-        module = import_module(f"src.calculator.champions.{module_name}")
+        module = _CHAMPION_MODULES[champion_name]
         declaration = module.SELF_HEALING_RULE
 
         assert declaration.champion_name == champion_name

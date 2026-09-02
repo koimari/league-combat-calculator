@@ -14,6 +14,7 @@ from dataclasses import replace
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..stats import effective_cooldown
 from .engine import SlotCtx, SlotParser
 from .slotlib import (
     damage_entry,
@@ -171,10 +172,6 @@ def ability_cast_times(
     """
     if ctx.option("auto_attacks_only"):
         return []
-    # Deferred: damage.py imports champion modules that import this one.
-    # pylint: disable-next=import-outside-toplevel,cyclic-import
-    from ..damage import effective_cooldown
-
     casts: list[tuple[float, int]] = []
     for index, slot in enumerate(slots):
         ability = ctx.ability(slot)

@@ -1925,18 +1925,18 @@ def test_every_hand_listed_entry_carries_exactly_one_claim_on_its_lane() -> None
     claim of their own — the refs have one home per item, which is the same
     rule the load gate applies to a negative claim's ``Absence``.
     """
-    lanes = {
-        "_ATTACKER_STATE_HOMES": "attacker",
-        "NO_RUNTIME_BEHAVIOR": "attacker",
-        "_TARGET_MODELED_IMPLS": "target",
-        "_TARGET_CERTIFIED_IMPLS": "target",
-        "UTILITY_OUTCOMES": "utility",
-    }
+    lanes = (
+        ("_ATTACKER_STATE_HOMES", item_coverage._ATTACKER_STATE_HOMES, "attacker"),
+        ("NO_RUNTIME_BEHAVIOR", item_coverage.NO_RUNTIME_BEHAVIOR, "attacker"),
+        ("_TARGET_MODELED_IMPLS", item_coverage._TARGET_MODELED_IMPLS, "target"),
+        ("_TARGET_CERTIFIED_IMPLS", item_coverage._TARGET_CERTIFIED_IMPLS, "target"),
+        ("UTILITY_OUTCOMES", item_coverage.UTILITY_OUTCOMES, "utility"),
+    )
     unclaimed: list[str] = []
-    for container_name, lane in lanes.items():
+    for container_name, container, lane in lanes:
         unclaimed.extend(
             f"{container_name}:{item}"
-            for item in getattr(item_coverage, container_name)
+            for item in container
             if ("item", item, lane) not in COVERAGE_EVIDENCE
         )
     for item, refs in item_coverage._REVIEW_ISSUE_REFS.items():
@@ -2461,5 +2461,7 @@ def test_the_receipt_names_a_producer_a_reader_can_look_up() -> None:
     for lane, dotted in recorded.items():
         module, _, symbol = dotted.rpartition(".")
         assert module == "src.calculator.item_coverage", lane
-        assert callable(getattr(item_coverage, symbol)), dotted
+        assert callable(
+            getattr(item_coverage, symbol)
+        ), dotted  # sightline-ok: 24 receipt names a symbol
         assert symbol == capture_coverage_classification.CLASSIFIER_NAMES[lane]

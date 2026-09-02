@@ -1,7 +1,6 @@
 """Champion modules are the single runtime and review authority (issue #161)."""
 
 import ast
-import importlib
 from pathlib import Path
 from types import ModuleType
 
@@ -33,12 +32,12 @@ REQUIRED_SLOTS = {"P", "Q", "W", "E", "R"}
 
 def test_every_registered_champion_satisfies_the_module_contract():
     """Every registry entry publishes one complete, internally consistent view."""
-    for name, module_name in _CHAMPION_MODULES.items():
-        module = importlib.import_module(f"src.calculator.champions.{module_name}")
+    for name, module in _CHAMPION_MODULES.items():
         contract = get_champion_module_contract(name)
 
         assert contract.name == name
-        assert contract.module_name == module_name
+        assert contract.module is module
+        assert contract.module_name == module.__name__.rpartition(".")[2]
         assert contract.parse_abilities is module.parse_abilities
         assert contract.slots is module.SLOTS
         assert contract.options == tuple(module.OPTIONS)
@@ -172,7 +171,7 @@ def test_no_packet_module_replaces_the_compiled_assumptions():
     review claims with them, and the replacement then carries a copy of the
     compiler's boilerplate that nothing keeps current.
     """
-    for name, module_name in _CHAMPION_MODULES.items():
+    for name in _CHAMPION_MODULES:
         contract = get_champion_module_contract(name)
         if contract.packet_spec is None:
             continue
@@ -180,7 +179,7 @@ def test_no_packet_module_replaces_the_compiled_assumptions():
         owed = set(contract.packet_spec.get("assumptions", ())) | set(
             _FULL_ENTRY_ASSUMPTIONS
         )
-        assert owed <= published, f"{module_name} drops {sorted(owed - published)}"
+        assert owed <= published, f"{name} drops {sorted(owed - published)}"
 
 
 def test_jayce_runtime_and_published_review_metadata_share_one_module():
