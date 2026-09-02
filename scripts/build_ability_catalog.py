@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
@@ -22,11 +23,11 @@ from src.calculator.cast_dependency import BASE_CAST_SLOTS
 from src.calculator.champions import registered_champion_names
 
 
-def _first_nonempty(values: list[Any]) -> Any:
+def _first_nonempty(values: Iterable[Any]) -> Any:
     return next((value for value in values if value not in (None, "")), None)
 
 
-def rank_count(ability: dict[str, Any], slot: str) -> int:
+def rank_count(ability: Mapping[str, Any], slot: str) -> int:
     """The catalogue's rank cardinality for one ability, clamped to the UI's five.
 
     Distinct from ``scenario._ability_max_rank``, which reads the same cache to
@@ -105,7 +106,7 @@ def _ability_entry(slot: str, raw_entries: Any) -> dict[str, Any]:
     }
 
 
-def catalogue_champions(raw: dict[str, Any]) -> list[dict[str, Any]]:
+def catalogue_champions(raw: Mapping[str, Any]) -> list[dict[str, Any]]:
     """The cached champion rows a catalogue publishes, by display name.
 
     Every cached champion is here: an unregistered one is still a legal ally or

@@ -59,7 +59,7 @@ certified module ``CAST_ORDER`` (when present) or the engine's historical
 from __future__ import annotations
 
 import re
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
@@ -1406,7 +1406,9 @@ def detect_aoe_cap(
 # ─────────────────────────────────────────────────────────────────────
 
 
-def _kahn_order(slots: list[str], edges: list[_Edge], tie_key: Any) -> list[str] | None:
+def _kahn_order(
+    slots: list[str], edges: Iterable[_Edge], tie_key: Any
+) -> list[str] | None:
     successors: dict[str, list[str]] = {s: [] for s in slots}
     indegree = dict.fromkeys(slots, 0)
     for e in edges:
@@ -1580,7 +1582,7 @@ def _option_signature(
 def _fit_rule_to_fight(
     cached: ComboRule,
     champion_name: str,
-    fight_slots: set[str],
+    fight_slots: Collection[str],
     certified_order: list[str] | None,
 ) -> ComboRule:
     """Filter a full-kit rule to the fight's parsed slots.
@@ -2000,7 +2002,7 @@ def build_rotation_receipt(  # pylint: disable=unused-argument
     champion_name: str,
     *,
     cast_order: list[str],
-    cast_timeline: list[Any],
+    cast_timeline: Iterable[Any],
     rule: ComboRule | None,
     certified_order: list[str] | None = None,
     user_order: list[str] | None = None,

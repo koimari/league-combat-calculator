@@ -108,7 +108,7 @@ _E_LIGHTNING_ROUNDS_ROUNDS = _BURST_ROUNDS
 _E_BONUS_CRIT_MULTIPLIER_AT_MAX = 2.3
 
 
-def _living_battery(ctx: SlotCtx):
+def _living_battery(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: Living Battery — the uncharged zap + the execute range.
 
     The uncharged zap is per-auto magic damage (the cached "Per-Level
@@ -172,7 +172,7 @@ def _living_battery(ctx: SlotCtx):
 _living_battery.phase = ONHIT
 
 
-def _spark_surge(ctx: SlotCtx):
+def _spark_surge(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: the dash plus 7 Lightning-Rounds-empowered Burst Fire rounds."""
     ability = ctx.ability("E", 0)
     if ability is None:

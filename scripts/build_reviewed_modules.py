@@ -24,6 +24,7 @@ import os
 import re
 import sqlite3
 import sys
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -109,7 +110,7 @@ def _load_axword(path: Path) -> dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
-def _axword_by_name(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
+def _axword_by_name(payload: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
     aliases = {
         "wukong": "MonkeyKing",
         "nunuandwillump": "Nunu",
@@ -158,7 +159,7 @@ def _wiki_revisions(wiki_db: str | Path | None = None) -> dict[str, dict[str, An
     }
 
 
-def _damage_kind(ability: dict[str, Any], attribute: str) -> str:
+def _damage_kind(ability: Mapping[str, Any], attribute: str) -> str:
     field = str(ability.get("damageType", ""))
     return (
         {
@@ -171,7 +172,7 @@ def _damage_kind(ability: dict[str, Any], attribute: str) -> str:
     )
 
 
-def _wiki_cooldown(ability: dict[str, Any]) -> float:
+def _wiki_cooldown(ability: Mapping[str, Any]) -> float:
     """The rank-1 cooldown, recorded as evidence of the row's shape.
 
     Evidence only.  ``packet_module._packet_cooldown`` serves the cooldown
@@ -190,7 +191,7 @@ def _wiki_packet(
     ability: dict[str, Any],
     slot: str,
     ability_index: int,
-    levelings: list[dict[str, Any]],
+    levelings: Sequence[dict[str, Any]],
 ) -> dict[str, Any] | None:
     """Translate one selected Wiki damage group into an explicit packet."""
     damage_type = _damage_kind(ability, str(levelings[0].get("attribute", "")))
@@ -399,7 +400,7 @@ def _wiki_specs(entries: list[dict[str, Any]], slot: str) -> list[dict[str, Any]
     return specs
 
 
-def _axword_spec(ability: dict[str, Any]) -> dict[str, Any] | None:
+def _axword_spec(ability: Mapping[str, Any]) -> dict[str, Any] | None:
     damage = ability.get("damage")
     if not isinstance(damage, dict) or not damage.get("base"):
         return None

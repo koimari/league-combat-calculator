@@ -573,7 +573,7 @@ def _routed_pair_defender_id(
 def _support_target_ids(
     attacker: Combatant,
     effect: Mapping[str, Any],
-    all_actors: list[Combatant],
+    all_actors: Iterable[Combatant],
 ) -> tuple[list[str], str]:
     """Resolve a sourced support packet to selected teammates.
 
@@ -683,7 +683,7 @@ def _support_selection(
 def _apply_item_support_selection(
     attacker: Combatant,
     template: Mapping[str, Any],
-    all_actors: list[Combatant],
+    all_actors: Iterable[Combatant],
 ) -> dict[str, Any]:
     """Apply an authored recipient choice to a one-target item packet.
 
@@ -723,7 +723,7 @@ def _apply_item_support_selection(
 
 
 def _guardian_target(
-    holder: Combatant, all_actors: list[Combatant]
+    holder: Combatant, all_actors: Iterable[Combatant]
 ) -> tuple[Combatant, str] | None:
     """Resolve Guardian's one explicit protected teammate."""
     if holder.team == "ally" and not getattr(
@@ -764,7 +764,7 @@ _KeystoneEffect = TypeVar("_KeystoneEffect")
 
 
 def _keystone_holder[KeystoneEffect](
-    all_actors: list[Combatant],
+    all_actors: Iterable[Combatant],
     keystone_name: str,
     name: str,
     effect_type: type[_KeystoneEffect],
@@ -839,8 +839,8 @@ def _reactive_candidate(
 
 def _schedule_guardian_events(
     all_actors: list[Combatant],
-    incoming: dict[str, list[dict[str, Any]]],
-    support_effects: dict[str, list[dict[str, Any]]],
+    incoming: Mapping[str, list[dict[str, Any]]],
+    support_effects: Mapping[str, list[dict[str, Any]]],
     *,
     keystone_name: str,
 ) -> None:
@@ -986,7 +986,7 @@ def _trigger_reading_order(
 def _schedule_aftershock_events(
     all_actors: list[Combatant],
     outgoing: Mapping[str, list[dict[str, Any]]],
-    support_effects: dict[str, list[dict[str, Any]]],
+    support_effects: Mapping[str, list[dict[str, Any]]],
     *,
     keystone_name: str,
 ) -> None:
@@ -1037,7 +1037,7 @@ def _schedule_aftershock_events(
 def _schedule_grasp_events(
     all_actors: list[Combatant],
     outgoing: Mapping[str, list[dict[str, Any]]],
-    support_effects: dict[str, list[dict[str, Any]]],
+    support_effects: Mapping[str, list[dict[str, Any]]],
     *,
     keystone_name: str,
 ) -> None:
@@ -1088,7 +1088,7 @@ def _schedule_grasp_events(
 def _schedule_glacial_events(
     all_actors: list[Combatant],
     outgoing: Mapping[str, list[dict[str, Any]]],
-    support_effects: dict[str, list[dict[str, Any]]],
+    support_effects: Mapping[str, list[dict[str, Any]]],
     *,
     keystone_name: str,
 ) -> None:
@@ -1194,7 +1194,7 @@ def _schedule_glacial_events(
 def _schedule_stormraider_events(
     all_actors: list[Combatant],
     outgoing: Mapping[str, list[dict[str, Any]]],
-    support_effects: dict[str, list[dict[str, Any]]],
+    support_effects: Mapping[str, list[dict[str, Any]]],
     *,
     keystone_name: str,
 ) -> None:
@@ -1894,7 +1894,7 @@ def _attach_support_effects(
     attacker: Combatant,
     result: Mapping[str, Any],
     all_actors: list[Combatant],
-    support_effects: dict[str, list[dict[str, Any]]],
+    support_effects: Mapping[str, list[dict[str, Any]]],
     outgoing: dict[str, list[dict[str, Any]]] | None = None,
     incoming: dict[str, list[dict[str, Any]]] | None = None,
     denial_receipts: list[dict[str, Any]] | None = None,
@@ -2304,7 +2304,7 @@ def _target_allocation_receipt(
 
 
 def _schedule_thorns_events(
-    all_actors: list[Combatant],
+    all_actors: Iterable[Combatant],
     incoming: dict[str, list[dict[str, Any]]],
     outgoing: dict[str, list[dict[str, Any]]],
 ) -> None:
@@ -2570,7 +2570,7 @@ def _grey_health_receipts(
     level: int,
     stats: Mapping[str, float],
     incoming: list[tuple[float, float, float]],
-    outgoing: list[tuple[float, float, float]],
+    outgoing: Iterable[tuple[float, float, float]],
     cast_timeline: Iterable[Mapping[str, Any]],
     duration: float,
     enemy_count: int,

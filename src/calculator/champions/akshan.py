@@ -44,6 +44,7 @@ atoms-confirmed zero-HP-number effect), not left silently absent.
 """
 
 import re
+from collections.abc import Mapping
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -133,7 +134,7 @@ def _extract_e_per_shot(
 
 
 def _parse_passive_proc_damage(
-    passive: dict[str, Any],
+    passive: Mapping[str, Any],
     level: int,
     stats_context: dict[str, float] | None = None,
 ) -> float:
@@ -184,7 +185,7 @@ def _parse_passive_proc_damage(
     return 0.0
 
 
-def _extract_double_shot_ratio(passive: dict[str, Any]) -> float:
+def _extract_double_shot_ratio(passive: Mapping[str, Any]) -> float:
     """Extract the double shot AD ratio from the passive description.
 
     The description says the additional shot deals ``50% AD`` physical

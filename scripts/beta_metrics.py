@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -35,7 +36,7 @@ def _parse_cli_datetime(value: str) -> datetime:
     return parsed
 
 
-def _format_human(scorecard: dict) -> str:
+def _format_human(scorecard: Mapping) -> str:
     """Render the scorecard as a compact terminal table."""
     lines = [
         "Scryglass Beta Scorecard",

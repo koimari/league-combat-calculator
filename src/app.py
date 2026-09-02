@@ -539,7 +539,7 @@ def _result_cache_enabled() -> bool:
     return not app.config.get("TESTING") and (is_configured() or redis_configured())
 
 
-def _spend_rate_limit(scope: str):
+def _spend_rate_limit(scope: str) -> Response | None:
     """Protect expensive work globally across all Gunicorn workers."""
     if not app.config["RATE_LIMIT_ENABLED"] or app.config.get("TESTING"):
         return None

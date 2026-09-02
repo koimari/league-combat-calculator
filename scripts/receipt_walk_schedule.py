@@ -378,10 +378,6 @@ def mismatch_narration(lane_corrected_ever: Sequence[str]) -> str:
     )
 
 
-def _frontier() -> Mapping[str, Any]:
-    return json.loads(FRONTIER_PATH.read_text(encoding="utf-8"))
-
-
 def deferral_rows() -> dict[str, Mapping[str, Any]]:
     """The committed ``(family, receipt_walk)`` deferral rows, by family.
 
@@ -399,7 +395,9 @@ def deferral_rows() -> dict[str, Mapping[str, Any]]:
     well-formed, and an empty ``rows`` inside a present block is the tree
     saying the debt is paid.
     """
-    counter = _frontier()["counters"]["counter_4"]
+    counter = json.loads(FRONTIER_PATH.read_text(encoding="utf-8"))["counters"][
+        "counter_4"
+    ]
     deferrals = counter.get("deferrals")
     if not isinstance(deferrals, Mapping) or "rows" not in deferrals:
         raise ScheduleError(

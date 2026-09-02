@@ -25,6 +25,9 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from .data_fetcher import _item_name_index, _read_json_version
+from .patch_identity import PatchIdentityError, canonical_patch
+
 CACHE_FILES = frozenset({"champions.json", "items.json", "runes.json"})
 
 # How many times this process has replaced a runtime cache.  Starts at zero
@@ -362,8 +365,6 @@ def write_runtime_cache(
             tmp_path.unlink(missing_ok=True)
 
     # local: no import cycle
-    from .data_fetcher import _item_name_index, _read_json_version
-    from .patch_identity import PatchIdentityError, canonical_patch
 
     # The file on disk has changed, so the parsed-JSON cache is stale and so
     # is everything derived from it.  Both are invalidated here, before the

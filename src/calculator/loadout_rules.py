@@ -4,7 +4,7 @@ Every entry point uses this module.  The browser may prevent an illegal
 selection for convenience, but the API and optimizer remain the authority.
 """
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import Any
 
 from .role_quests import (
@@ -130,7 +130,7 @@ def role_scoped_shop_items(
     parsed_role = validate_role(role)
     candidates = list(items)
 
-    def tags_of(item: dict[str, Any]) -> set[str]:
+    def tags_of(item: Mapping[str, Any]) -> set[str]:
         return {str(tag).upper() for tag in item.get("shop", {}).get("tags", [])}
 
     if parsed_role == "support":

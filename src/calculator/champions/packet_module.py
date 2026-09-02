@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -252,14 +253,16 @@ def _ranked(values: list[float], rank: int) -> float:
     return float(values[min(max(rank, 1) - 1, len(values) - 1)])
 
 
-def _packet_cooldown(ctx: SlotCtx, spec: dict[str, Any], slot: str, rank: int) -> float:
+def _packet_cooldown(
+    ctx: SlotCtx, spec: Mapping[str, Any], slot: str, rank: int
+) -> float:
     """The cast's cooldown from ``data/champions.json``: the packet holds rank 1."""
     source = tuple(spec["source"]) if spec.get("source") else (slot, 0)
     ability = ctx.ability(*source)
     return extract_cooldown(ability, rank, level=ctx.level) if ability else 0.0
 
 
-def _one_hit(spec: dict[str, Any]) -> bool:
+def _one_hit(spec: Mapping[str, Any]) -> bool:
     """Whether a packet row is exactly one hit (a packet without ``count`` is)."""
     return int(spec.get("count", 1)) == 1
 
@@ -375,7 +378,7 @@ def _packet_parser(
     return parse
 
 
-def _override_packet_static(ctx: SlotCtx, fix: dict[str, Any], rank: int) -> float:
+def _override_packet_static(ctx: SlotCtx, fix: Mapping[str, Any], rank: int) -> float:
     """Re-resolve a packet's per-hit base from an override (Nunu E).
 
     The pinned packet priced the wrong leveling row, so the fix carries the
@@ -402,7 +405,7 @@ def _override_packet_static(ctx: SlotCtx, fix: dict[str, Any], rank: int) -> flo
 
 
 def _apply_packet_tick_fix(
-    ctx: SlotCtx, entry: dict[str, Any], spec: dict[str, Any], fix: dict[str, Any]
+    ctx: SlotCtx, entry: dict[str, Any], spec: Mapping[str, Any], fix: dict[str, Any]
 ) -> dict[str, Any]:
     """Price one full multi-tick cast instead of a single tick.
 
@@ -483,7 +486,7 @@ def _apply_packet_tick_fix(
     return entry
 
 
-def _ticked_wiki_attribute_parser(spec: dict[str, Any], fix: dict[str, Any]):
+def _ticked_wiki_attribute_parser(spec: Mapping[str, Any], fix: Mapping[str, Any]):
     """A ``wiki_attribute`` slot whose value is per-tick (Nasus R).
 
     Reads the named per-tick attribute and multiplies by the sourced tick
@@ -669,7 +672,7 @@ def _variant_parsers(
 
 
 def _variant_slot(
-    spec: dict[str, Any], slot: str, overrides: SlotOverrides
+    spec: Mapping[str, Any], slot: str, overrides: SlotOverrides
 ) -> tuple[Any, dict[str, Any]]:
     """A variants slot: the parser that reads its option, and that option."""
     variants = spec["variants"]

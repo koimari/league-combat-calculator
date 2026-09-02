@@ -79,13 +79,9 @@ def _worked_travel_time(distance: float) -> float:
     return max(0.0, distance - _Q_ORIGIN_OFFSET) / _Q_WORKED_SPEED
 
 
-def _is_primary_target(ctx: SlotCtx) -> bool:
-    return int(ctx.target_stat("roster_target_index")) == 0
-
-
 def _boulder_damage(ctx: SlotCtx, ability: dict, rank: int) -> tuple[float, bool]:
     """Worked Ground boulder damage and whether this is the primary target."""
-    primary = _is_primary_target(ctx)
+    primary = int(ctx.target_stat("roster_target_index")) == 0
     attribute = "Empowered Damage" if primary else "Secondary Target Damage"
     return extract_named(ability, attribute, rank, ctx.stats, ctx.target), primary
 

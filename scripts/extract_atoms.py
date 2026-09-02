@@ -42,6 +42,7 @@ import argparse
 import json
 import re
 import sys
+from collections.abc import Collection, Iterable, Mapping
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -146,7 +147,7 @@ GENERIC_THRESHOLD = 0.032
 
 
 def keyword_matches(
-    nk: str, ktoks: list[str], obj_tokens: set[str], obj_hay: str
+    nk: str, ktoks: list[str], obj_tokens: Collection[str], obj_hay: str
 ) -> bool:
     """True if a normalized keyword matches an object's token set / haystack."""
     if nk in obj_tokens:
@@ -171,7 +172,7 @@ def usable_keyword(
     head_word: str,
     generic_tokens: set[str],
     champion_tokens: set[str],
-    keyword_atom_count: dict[str, int],
+    keyword_atom_count: Mapping[str, int],
 ) -> bool:
     """Whether a vocab keyword is allowed to vote for its atom.
 
@@ -192,7 +193,7 @@ def usable_keyword(
     return not set(ktoks) <= generic_tokens | champion_tokens
 
 
-def compute_generic_tokens(champ_paths: list[Path]) -> set[str]:
+def compute_generic_tokens(champ_paths: Iterable[Path]) -> set[str]:
     """Single tokens that appear in >= GENERIC_THRESHOLD of all spell objects."""
     doc = {}
     n_obj = 0
@@ -420,7 +421,7 @@ def load_vocab() -> dict[str, dict]:
 
 
 def build_keyword_index(
-    vocab: dict[str, dict], generic_tokens: set[str], champ_tokens: set[str]
+    vocab: Mapping[str, dict], generic_tokens: set[str], champ_tokens: set[str]
 ) -> list[tuple[str, str, list[tuple[str, list[str]]]]]:
     """[(atom_id, family, [(norm_keyword, keyword_tokens), ...]), ...]
 
@@ -476,7 +477,7 @@ def strip_champ_prefix(name: str, champ_norm: str) -> str:
     return name
 
 
-def object_features(obj: dict, key: str, champ_norm: str) -> dict:
+def object_features(obj: Mapping, key: str, champ_norm: str) -> dict:
     sp = obj.get("mSpell") or {}
     name = obj.get("mScriptName") or obj.get("ObjectName") or key.rsplit("/", 1)[-1]
     alt = sp.get("mAlternateName") or ""
@@ -527,13 +528,13 @@ def object_features(obj: dict, key: str, champ_norm: str) -> dict:
     }
 
 
-def is_noise(feat: dict) -> bool:
+def is_noise(feat: Mapping) -> bool:
     name_toks = set(tokens(feat["name"]))
     key_toks = set(tokens(feat["key"].rsplit("/", 1)[-1]))
     return bool((name_toks | key_toks) & NOISE_TOKENS)
 
 
-def infer_trigger(feat: dict) -> str:
+def infer_trigger(feat: Mapping) -> str:
     name_toks = set(tokens(feat["name"]))
     toks = feat["toks"]
     if name_toks & {"kill", "takedown", "assist"}:
@@ -555,7 +556,7 @@ def infer_trigger(feat: dict) -> str:
     return "on_effect"
 
 
-def infer_target(atom_id: str, feat: dict) -> str:
+def infer_target(atom_id: str, feat: Mapping) -> str:
     tag_tp = (feat.get("tag_targets") or {}).get(atom_id)
     if tag_tp:
         return tag_tp
@@ -578,7 +579,7 @@ def infer_target(atom_id: str, feat: dict) -> str:
     return "self"
 
 
-def infer_damage_type(feat: dict) -> str | None:
+def infer_damage_type(feat: Mapping) -> str | None:
     toks = feat["toks"]
     if "true" in toks:
         return "true"
@@ -798,12 +799,12 @@ def classify_object(feat: dict, keyword_index, tag_map=None) -> list[tuple[str, 
 def extract_champion(
     champ_name: str,
     bin_path: Path,
-    keyword_index,
+    keyword_index: list[tuple[str, str, list[tuple[str, list[str]]]]],
     vocab,
     passive_map=None,
     tag_map=None,
-    wiki_types=None,
-    atom_relations=None,
+    wiki_types: None | dict[str, list[tuple[str, str, str | None]]] = None,
+    atom_relations: None | dict[str, list[str]] = None,
 ) -> dict:
     ser = json.loads(bin_path.read_text())
     atoms: dict[tuple[str, str], dict] = {}  # (atom_id, behavior) -> atom
@@ -1036,7 +1037,7 @@ def champion_key(name: str) -> str:
 # --------------------------------------------------------------------------
 # Outputs
 # --------------------------------------------------------------------------
-def build_summary(results: list[dict]) -> dict:
+def build_summary(results: Iterable[dict]) -> dict:
     summary: dict[str, set] = {}
     for r in results:
         for a in r["atoms"]:
@@ -1044,7 +1045,7 @@ def build_summary(results: list[dict]) -> dict:
     return {fam: sorted(champs) for fam, champs in sorted(summary.items())}
 
 
-def compute_damage_type_stats(results: list[dict]) -> dict:
+def compute_damage_type_stats(results: Iterable[dict]) -> dict:
     """Coverage of parameters.damage_type across damage-family atoms."""
     total = typed = 0
     by_type: dict[str, int] = {}

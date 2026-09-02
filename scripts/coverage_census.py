@@ -103,7 +103,7 @@ def _coarse(result):
     return {str(s) for s in _coverage(result["resp"]).get("coarse_sources", [])}
 
 
-def _slot_payload(record, role_default=""):
+def _slot_payload(record, role_default: str = ""):
     """Route one item into its legal slot and role state."""
     name = str(record.get("name", ""))
     payload = {"items": [name], "role": role_default}
@@ -436,7 +436,7 @@ def _shard(text):
     return index, count
 
 
-def main(argv):
+def main(argv: list[str]):
     """CLI: ``run [--output PATH]`` or ``check PATH``; exit 1 on any frontier."""
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter

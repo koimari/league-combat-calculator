@@ -20,7 +20,7 @@ each candidate's combat map before folding a score out of it.
 
 import math
 import time
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from copy import deepcopy
 from dataclasses import replace
 
@@ -171,7 +171,9 @@ def bis_candidate_pool(
     return sorted(scoped, key=lambda item: item.get("name", ""))
 
 
-def roster_target_coverage(loadouts: list[ChampionLoadout]) -> list[dict[str, object]]:
+def roster_target_coverage(
+    loadouts: Iterable[ChampionLoadout],
+) -> list[dict[str, object]]:
     """Return unsupported target mechanics for the coupled roster.
 
     Roster BIS candidates are later used as passive targets by the main
@@ -583,7 +585,7 @@ def _withheld_candidate(
 def _bis_coverage_receipt(
     certified_ranked: list[dict],
     partial_ranked: list[dict],
-    withheld_candidates: list[dict[str, object]],
+    withheld_candidates: Iterable[dict[str, object]],
     target_coverage_filtered: list[dict[str, object]],
 ) -> tuple[dict[str, object], str, list[dict[str, object]]]:
     """Classify exhaustive coverage and return its public explanation."""

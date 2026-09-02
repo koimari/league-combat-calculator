@@ -82,6 +82,7 @@ explicit state assertion.
   control event.
 """
 
+from collections.abc import Mapping
 from typing import Any
 
 from ..ability_atoms import required_ranked_attribute_atom
@@ -128,7 +129,7 @@ _Q_ATTACK_SPEED_WINDOW = data_value(
 )
 
 
-def _poison_stacks(options: dict[str, Any]) -> int:
+def _poison_stacks(options: Mapping[str, Any]) -> int:
     return min(
         _POISON_MAX_STACKS,
         max(0, int(options.get("poison_stacks", _POISON_MAX_STACKS))),

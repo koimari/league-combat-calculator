@@ -187,7 +187,7 @@ def _searing_brilliance_per_missile(ctx: SlotCtx, ability: dict[str, Any]) -> fl
     return cached + _P_MISSILE_AP_RATIO * float(ctx.stat("ability_power") or 0.0)
 
 
-def _searing_brilliance(ctx: SlotCtx):
+def _searing_brilliance(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: the stack-consuming empowered attack — a cast-armed on-hit.
 
     Every ability cast generates 3 Searing Brilliance stacks for 5
@@ -290,7 +290,7 @@ def _rebuttal(ctx: SlotCtx):
     }
 
 
-def _golden_eclipse(ctx: SlotCtx):
+def _golden_eclipse(ctx: SlotCtx) -> dict[str, Any] | None:
     """R: flat Magic Damage row + (4/7/10 + 4% AP) per Overwhelm stack."""
     ability = ctx.ability("R", 0)
     if ability is None:
@@ -326,7 +326,7 @@ def _golden_eclipse(ctx: SlotCtx):
     return entry
 
 
-def _radiant_volley(ctx: SlotCtx):
+def _radiant_volley(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: the full 6-10 bolt volley — Initial Explosion + subsequent bolts.
 
     The reviewed packet priced only the "Initial Explosion Magic Damage"
@@ -374,7 +374,7 @@ def _radiant_volley(ctx: SlotCtx):
     return entry
 
 
-def _solar_snare(ctx: SlotCtx):
+def _solar_snare(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: orb hit + the solar-field DoT (game-file-sourced 0.5s window).
 
     The reviewed packet priced only the orb.  The orb also emanates a

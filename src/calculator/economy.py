@@ -9,7 +9,7 @@ final loadouts through the existing fight pipeline.
 from __future__ import annotations
 
 import collections
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -99,7 +99,7 @@ def combine_cost(item: dict[str, Any]) -> int:
     return combined
 
 
-def recipe_demand(item: dict[str, Any]) -> dict[int, int]:
+def recipe_demand(item: Mapping[str, Any]) -> dict[int, int]:
     """Return the direct recipe demand as {item_id: count} (multiset)."""
     demand: dict[int, int] = collections.Counter()
     for component_id in item.get("buildsFrom", []) or []:
@@ -107,7 +107,7 @@ def recipe_demand(item: dict[str, Any]) -> dict[int, int]:
     return dict(demand)
 
 
-def is_transformation_item(item: dict[str, Any]) -> bool:
+def is_transformation_item(item: Mapping[str, Any]) -> bool:
     """True for an item reachable only by a ``specialRecipe`` transition."""
     return bool(int(item.get("specialRecipe", 0) or 0))
 
@@ -147,7 +147,7 @@ def _stackable_epics() -> frozenset[str]:
     )
 
 
-def is_stackable(item: dict[str, Any]) -> bool:
+def is_stackable(item: Mapping[str, Any]) -> bool:
     """Return whether duplicate copies of the item are legal mid-inventory."""
     ranks = {str(rank).upper() for rank in item.get("rank", []) or []}
     if ranks & _STACKABLE_RANKS:
@@ -230,7 +230,7 @@ def _combinable_recipe_rows(
 
 
 def combine_candidates(
-    inventory: dict[int, int],
+    inventory: Mapping[int, int],
     by_id: dict[int, dict[str, Any]],
 ) -> list[tuple[int, dict[int, int], int]]:
     """Return every recipe currently satisfiable by the inventory multiset.

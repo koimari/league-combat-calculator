@@ -107,7 +107,7 @@ def apply_movement_speed_soft_caps(raw_speed: float) -> float:
 
 
 def get_champion_base_stats(
-    champion_data: dict[str, Any], level: int
+    champion_data: Mapping[str, Any], level: int
 ) -> dict[str, float]:
     """Calculate a champion's base stats at a given level (no items).
 

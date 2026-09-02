@@ -14,7 +14,7 @@ Extraction core:
 """
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from typing import Any
 
@@ -85,7 +85,7 @@ _PROSE_DAMAGE_REDUCTION_RE = re.compile(
 )
 
 
-def effect_description(ability: dict[str, Any], effect_index: int) -> str:
+def effect_description(ability: Mapping[str, Any], effect_index: int) -> str:
     """One cached effect's description text, or "" when that effect is gone.
 
     A mechanic the cache states only in prose (Annie's Pyromania charge,
@@ -105,7 +105,7 @@ def effect_description(ability: dict[str, Any], effect_index: int) -> str:
 
 
 def extract_description_duration(
-    ability: dict[str, Any], effect_index: int = 0
+    ability: Mapping[str, Any], effect_index: int = 0
 ) -> float | None:
     """Read the first seconds value from one cached effect description."""
     effects = ability.get("effects") or []
@@ -120,7 +120,7 @@ def extract_description_duration(
 
 
 def extract_description_shield_duration(
-    ability: dict[str, Any], effect_index: int = 0
+    ability: Mapping[str, Any], effect_index: int = 0
 ) -> float | None:
     """Read the duration attached to a shield phrase in one effect."""
     effects = ability.get("effects") or []
@@ -139,7 +139,7 @@ def extract_description_shield_duration(
 
 
 def extract_description_invulnerability_timing(
-    ability: dict[str, Any], effect_index: int = 0
+    ability: Mapping[str, Any], effect_index: int = 0
 ) -> tuple[float | None, float | None]:
     """Read a sourced invulnerability delay and window from one description."""
     effects = ability.get("effects") or []
@@ -166,7 +166,7 @@ def extract_description_control_duration(
 
 
 def extract_description_control_durations(
-    ability: dict[str, Any], effect_index: int = 0
+    ability: Mapping[str, Any], effect_index: int = 0
 ) -> list[float]:
     """Read every action-blocking control duration from one description."""
     effects = ability.get("effects") or []
@@ -183,7 +183,7 @@ def extract_description_control_durations(
 
 
 def extract_description_damage_reduction_cap(
-    ability: dict[str, Any], effect_index: int = 0
+    ability: Mapping[str, Any], effect_index: int = 0
 ) -> float | None:
     """Read a percentage cap on one pre-mitigation damage instance."""
     effects = ability.get("effects") or []
@@ -198,7 +198,7 @@ def extract_description_damage_reduction_cap(
 
 
 def extract_description_damage_reduction(
-    ability: dict[str, Any], effect_index: int = 0
+    ability: Mapping[str, Any], effect_index: int = 0
 ) -> float | None:
     """Read a sourced percentage of incoming damage reduction."""
     effects = ability.get("effects") or []
@@ -382,7 +382,7 @@ def find_named_leveling(
 
 
 def _modifier_value(
-    leveling: dict[str, Any],
+    leveling: Mapping[str, Any],
     modifier_index: int,
     rank: int,
     level: int | None = None,
@@ -456,7 +456,7 @@ def pct_health_per_hit(
     return per_proc / stacks_required
 
 
-def ability_name(ability: dict[str, Any]) -> str:
+def ability_name(ability: Mapping[str, Any]) -> str:
     """The cached row's own name — the fourth input block read with no literal.
 
     ``SlotCtx`` refuses a ``.get(key, <literal>)`` on stats, target and
@@ -474,7 +474,7 @@ def ability_name(ability: dict[str, Any]) -> str:
 
 
 def extract_cooldown(
-    ability: dict[str, Any], rank: int, *, level: int | None = None
+    ability: Mapping[str, Any], rank: int, *, level: int | None = None
 ) -> float:
     """The base cooldown at *rank*, or 0.0 when the ability declares none.
 
@@ -492,7 +492,7 @@ def extract_cooldown(
     return float(values[_axis_index(values, rank, level)])
 
 
-def extract_resource_cost(ability: dict[str, Any], rank: int, level: int) -> float:
+def extract_resource_cost(ability: Mapping[str, Any], rank: int, level: int) -> float:
     """What one cast of this ability spends, from its own cost row.
 
     The sole home of the cached cost lookup: ``engine._stamp_resource_cost``
@@ -515,7 +515,7 @@ _NUMBER = re.compile(r"\d+(?:\.\d+)?")
 _PERCENT = re.compile(r"\d+(?:\.\d+)?\s*%")
 
 
-def extract_cast_time(ability: dict[str, Any]) -> float:
+def extract_cast_time(ability: Mapping[str, Any]) -> float:
     """Seconds the champion is locked out casting this ability.
 
     The wiki's ``castTime`` is free text: "0.25", "none", "0.25 / 0.2 (based on
@@ -1038,7 +1038,7 @@ ATOM_RECEIPT_KEYS = (
 )
 
 
-def atom_receipt(atom: dict[str, Any]) -> dict[str, Any]:
+def atom_receipt(atom: Mapping[str, Any]) -> dict[str, Any]:
     """The provenance fields a sourced control number publishes."""
     return {key: atom[key] for key in ATOM_RECEIPT_KEYS}
 
@@ -1121,7 +1121,7 @@ def _control_magnitude_atom(
     return value, atom_receipt(atom)
 
 
-def _require_seconds(ctx: SlotCtx, src_slot: str, atom: dict[str, Any]) -> None:
+def _require_seconds(ctx: SlotCtx, src_slot: str, atom: Mapping[str, Any]) -> None:
     """A control window is an interval; anything else is the wrong atom."""
     units = atom.get("units", [])
     allowed_units = {"seconds", "s"}

@@ -14,6 +14,7 @@ import argparse
 import json
 import re
 import sys
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
@@ -40,7 +41,7 @@ def _number(value: Any) -> float | None:
         return None
 
 
-def _values(modifier: dict[str, Any]) -> list[float]:
+def _values(modifier: Mapping[str, Any]) -> list[float]:
     raw = modifier.get("values", [])
     if not isinstance(raw, list):
         return []
@@ -105,7 +106,7 @@ def _ratio_components(unit: str, attribute: str) -> dict[str, float]:
     return {}
 
 
-def _cooldown_values(ability: dict[str, Any]) -> list[float]:
+def _cooldown_values(ability: Mapping[str, Any]) -> list[float]:
     cooldown = ability.get("cooldown")
     if not isinstance(cooldown, dict):
         return []
@@ -116,7 +117,9 @@ def _cooldown_values(ability: dict[str, Any]) -> list[float]:
     return []
 
 
-def _damage_packet(attribute: str, leveling: dict[str, Any]) -> dict[str, Any] | None:
+def _damage_packet(
+    attribute: str, leveling: Mapping[str, Any]
+) -> dict[str, Any] | None:
     if not _DAMAGE_ATTRIBUTE.search(attribute) or _NON_DAMAGE_ATTRIBUTE.search(
         attribute
     ):
@@ -155,7 +158,9 @@ def _damage_packet(attribute: str, leveling: dict[str, Any]) -> dict[str, Any] |
     }
 
 
-def _utility_packet(attribute: str, leveling: dict[str, Any]) -> dict[str, Any] | None:
+def _utility_packet(
+    attribute: str, leveling: Mapping[str, Any]
+) -> dict[str, Any] | None:
     """Extract shield/heal values without treating them as damage packets."""
     lower = attribute.lower()
     if not re.search(r"shield|barrier|\bheal(?:ing)?\b", lower):
@@ -221,7 +226,7 @@ def _form_profile(slot: str, ability: dict[str, Any]) -> dict[str, Any]:
     for packet in chosen:
         packet["damageType"] = ability.get("damageType")
 
-    def choose_utility(entries: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    def choose_utility(entries: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
         families: dict[str, dict[str, Any]] = {}
         for packet in entries:
             family = re.sub(
@@ -281,7 +286,9 @@ def _load_meraki_kits(path: Path | None) -> dict[str, Any]:
     return json.loads(text[start : text.rfind("}") + 1])
 
 
-def _merge_auxiliary_damage(champions: dict[str, Any], kits: dict[str, Any]) -> int:
+def _merge_auxiliary_damage(
+    champions: Mapping[str, Any], kits: Mapping[str, Any]
+) -> int:
     merged = 0
     by_name = {
         str(kit.get("name")): kit for kit in kits.values() if isinstance(kit, dict)

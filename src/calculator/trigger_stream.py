@@ -489,11 +489,8 @@ class DivergenceReceipt:
 
     ref: str
     mechanic: str
-    pair_reading: str
-    walk_reading: str
     source_url: str
     revision_id: int
-    issue_ref: int
 
 
 # **Empty, and that is the end state.**  The campaign's one live divergence

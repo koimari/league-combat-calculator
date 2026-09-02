@@ -1049,7 +1049,7 @@ def _parse_leveling(
 
 
 def _record_key_span(
-    named: dict[str, str], range_spec: str | None, recorder: _EffectRecorder
+    named: Mapping[str, str], range_spec: str | None, recorder: _EffectRecorder
 ) -> None:
     """Record what a non-level table's columns are keyed by, when it says.
     A ``type=`` plus a column-count span means the table is read by game
@@ -1816,7 +1816,9 @@ def rune_payload(
     return payload
 
 
-def _certify_roster_agreement(params: dict[str, str], path: str, row: int) -> list[str]:
+def _certify_roster_agreement(
+    params: Mapping[str, str], path: str, row: int
+) -> list[str]:
     """Warn when the wiki template disagrees with the Data Dragon roster.
 
     The template spells its slot ``Keystone`` on row 0 and the row number

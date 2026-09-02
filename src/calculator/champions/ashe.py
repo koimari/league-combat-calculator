@@ -30,6 +30,7 @@ out_of_scope to no_damage (an atoms-confirmed zero-HP-number effect), not
 left silently absent.
 """
 
+from collections.abc import Mapping
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
@@ -80,7 +81,7 @@ ASHE_FOCUS_STACK_RULE = StackRule(
 )
 
 
-def _require_q_rows(ability: dict[str, Any]) -> None:
+def _require_q_rows(ability: Mapping[str, Any]) -> None:
     """Fail loud when the Q leveling rows are missing (P1 Slice 10).
 
     The flurry/AS pricing must never fall back to a silent zero when the

@@ -41,6 +41,7 @@ below; every number in it is read from the cached wiki entry.
 """
 
 import re
+from collections.abc import Mapping
 from functools import partial
 from typing import Any
 
@@ -87,7 +88,7 @@ _BRAVADO_ARMED_BY = ("Q", "W", "E", "R")
 _BRAVADO_REFRESH_ON_CONSUME = True
 
 
-def _bravado_window_terms(ability: dict[str, Any]) -> tuple[int, float, float]:
+def _bravado_window_terms(ability: Mapping[str, Any]) -> tuple[int, float, float]:
     """Read (empowered attacks, window seconds, bonus-armor ratio) from cache.
 
     Raises:

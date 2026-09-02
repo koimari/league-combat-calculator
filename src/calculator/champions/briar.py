@@ -37,6 +37,7 @@ Why each slot is non-generic:
 """
 
 import math
+from collections.abc import Mapping
 from typing import Any
 
 from .. import healing_helpers as _healing
@@ -247,7 +248,7 @@ _E_REDUCTION_SOURCE = "Briar.E[0].effects[0].description"
 _E_CONTROL_SOURCE = "Briar.E[0].effects[3].description"
 
 
-def _atom_receipt(atom: dict[str, Any]) -> dict[str, Any]:
+def _atom_receipt(atom: Mapping[str, Any]) -> dict[str, Any]:
     """Keep the provenance fields that identify one runtime atom."""
     return {
         key: atom[key]

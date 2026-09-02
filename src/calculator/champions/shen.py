@@ -47,6 +47,7 @@ the DEFENDER side of a champion-vs-champion interaction, not in a champion's
 own outgoing ``SLOTS`` map.
 """
 
+from collections.abc import Mapping
 from dataclasses import replace
 from typing import Any
 
@@ -84,7 +85,7 @@ _P_SHIELD_DURATION_SECONDS = data_value(
 
 def _named_level_rank_damage(
     ctx: SlotCtx,
-    ability: dict[str, Any],
+    ability: Mapping[str, Any],
     attribute: str,
     rank: int,
 ) -> float:

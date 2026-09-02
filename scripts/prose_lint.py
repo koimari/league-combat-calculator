@@ -24,6 +24,7 @@ import json
 import re
 import sys
 import tokenize
+from collections.abc import Mapping
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -82,7 +83,7 @@ def _definition_spans(funcs: list[ast.stmt]) -> dict[int, int]:
 
 
 def _comment_bound(
-    line: int, block: list[str], funcs: list[ast.stmt], heads: dict[int, int]
+    line: int, block: list[str], funcs: list[ast.stmt], heads: Mapping[int, int]
 ) -> int | None:
     """How many lines this run may hold, or ``None`` if it heads a section."""
     holders = [f for f in funcs if f.lineno <= line <= f.end_lineno]
@@ -91,7 +92,7 @@ def _comment_bound(
     return heads.get(line + len(block))
 
 
-def _cite(found: dict[str, list], where: str, line: int, text: str) -> None:
+def _cite(found: Mapping[str, list], where: str, line: int, text: str) -> None:
     for offset, raw in enumerate(text.splitlines()):
         if EVIDENCE.search(raw):
             continue

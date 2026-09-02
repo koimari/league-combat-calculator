@@ -21,17 +21,13 @@ _SPIDER_BONUS_DAMAGE = (12.0, 22.0, 32.0, 42.0)
 _SPIDER_HEAL = (6.0, 8.0, 10.0, 12.0)
 
 
-def _spider_tier(level: int) -> int:
-    return min(sum(level >= threshold for threshold in _SPIDER_FORM_LEVELS) - 1, 3)
-
-
 def _spider_queen(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
     if not bool(ctx.option("spider_form")):
         return None
-    tier = _spider_tier(ctx.level)
+    tier = min(sum(ctx.level >= threshold for threshold in _SPIDER_FORM_LEVELS) - 1, 3)
     bonus = _SPIDER_BONUS_DAMAGE[tier] + 0.15 * ctx.stat("ability_power")
     entry = no_damage(
         ctx,

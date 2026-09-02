@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 import re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -22,12 +22,12 @@ from .item_behavior import PacketKind
 from .survival.actions import SUPPORT_RANK_KEY, TransitionRank
 
 
-def _ability(data: dict[str, Any], slot: str) -> dict[str, Any]:
+def _ability(data: Mapping[str, Any], slot: str) -> dict[str, Any]:
     entries = data.get("abilities", {}).get(slot, [])
     return entries[0] if entries and isinstance(entries[0], dict) else {}
 
 
-def _first_attribute(ability: dict[str, Any], names: tuple[str, ...]) -> str | None:
+def _first_attribute(ability: Mapping[str, Any], names: tuple[str, ...]) -> str | None:
     available = {
         leveling.get("attribute", "")
         for effect in ability.get("effects", [])
@@ -62,7 +62,7 @@ _CASTER_PROSE = re.compile(
 _HEAL_PROSE = re.compile(r"\bheal(?:s|ed|ing)?\b|\brestor(?:e|es|ing)\b|\bregenerat")
 
 
-def _row_prose(ability: dict[str, Any]) -> dict[str, str]:
+def _row_prose(ability: Mapping[str, Any]) -> dict[str, str]:
     """Each attribute mapped to the lowercased prose of the effect declaring it.
 
     ``extract_named`` reads the FIRST matching leveling entry across effects,
@@ -553,7 +553,7 @@ def _has_support_attributes(champion_data: dict[str, Any]) -> bool:
 _SUPPORT_PROFILE_MEMO: dict[tuple[int, int], tuple[dict, tuple]] = {}
 
 
-def _sourced_cast_time(cast: dict[str, Any], *, slot: str) -> float:
+def _sourced_cast_time(cast: Mapping[str, Any], *, slot: str) -> float:
     """Return one finite authored cast time; never default a missing timestamp."""
     if "time" not in cast:
         raise ValueError(f"Support cast {slot} is missing its sourced time")
@@ -674,7 +674,7 @@ def _scales_off_the_recipient(ability: dict[str, Any], attribute: str) -> bool:
     )
 
 
-def _caster_as_recipient(stats: dict[str, float]) -> dict[str, float]:
+def _caster_as_recipient(stats: Mapping[str, float]) -> dict[str, float]:
     """The one recipient whose stats a scan holds: only the caster's maximum health."""
     return {"target_max_health": float(stats.get("health", 0.0) or 0.0)}
 
@@ -826,10 +826,10 @@ def _slot_rows(champion: str, slot: str, ability: dict[str, Any]) -> list[_Row]:
 
 
 def _slot_rank(
-    champion_data: dict[str, Any],
+    champion_data: Mapping[str, Any],
     slot: str,
     level: int,
-    requested_ranks: dict[str, int],
+    requested_ranks: Mapping[str, int],
 ) -> int:
     """The rank this slot is cast at: the request's, else the skill order's."""
     default_rank = get_ability_rank(slot, level, champion_data.get("name", ""))
@@ -1232,7 +1232,7 @@ def _morgana_black_shield_metadata(
 
 def _target_max_health_shield_metadata(
     champion_data: dict[str, Any],
-    ability: dict[str, Any],
+    ability: Mapping[str, Any],
     slot: str,
     attribute: str,
     rank: int,
@@ -1539,7 +1539,7 @@ def derive_ally_effects(
     champion_data: dict[str, Any],
     level: int,
     stats: dict[str, float],
-    cast_timeline: list[dict[str, Any]],
+    cast_timeline: Iterable[dict[str, Any]],
     ability_ranks: dict[str, int] | None = None,
     champion_options: Mapping[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
@@ -1839,7 +1839,7 @@ _SELF_STATE_EVENT_KINDS = frozenset(
 
 def derive_self_state_effects(
     ability_damages: Mapping[str, Any],
-    cast_timeline: list[dict[str, Any]],
+    cast_timeline: Iterable[dict[str, Any]],
 ) -> list[dict[str, Any]]:
     """Expand module-authored self state atoms over accepted cast times.
 

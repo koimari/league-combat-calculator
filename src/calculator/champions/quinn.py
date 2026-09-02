@@ -37,7 +37,7 @@ from .slotlib import (
 PACKET_SHA256 = "a88925854e27a0548631207e5f283df6a0a369c6249f4ded272801230c801852"
 
 
-def _harrier(ctx: SlotCtx):
+def _harrier(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: on-hit bonus physical damage against Harrier-marked targets."""
     ability = ctx.ability("P", 0)
     if ability is None:

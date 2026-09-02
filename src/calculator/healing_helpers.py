@@ -16,13 +16,13 @@ of the ledger the module happened to author.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
 
-def leveling_value(ability: dict[str, Any], attribute: str, rank: int) -> float:
+def leveling_value(ability: Mapping[str, Any], attribute: str, rank: int) -> float:
     """Read one sourced leveling attribute without inventing a fallback."""
     for effect in ability.get("effects", []):
         for leveling in effect.get("leveling", []):
@@ -39,7 +39,7 @@ def leveling_value(ability: dict[str, Any], attribute: str, rank: int) -> float:
 
 
 def leveling_modifier(
-    ability: dict[str, Any], attribute: str, rank: int, modifier_index: int = 0
+    ability: Mapping[str, Any], attribute: str, rank: int, modifier_index: int = 0
 ) -> float:
     """Read one sourced leveling modifier at rank without scaling resolution.
 
@@ -65,7 +65,7 @@ def leveling_modifier(
 
 
 def ability_json(
-    champion_data: dict[str, Any], slot: str, index: int = 0
+    champion_data: Mapping[str, Any], slot: str, index: int = 0
 ) -> dict[str, Any]:
     entries = champion_data.get("abilities", {}).get(slot, [])
     if index >= len(entries):
@@ -74,7 +74,7 @@ def ability_json(
 
 
 def leveling_ratio(
-    ability: dict[str, Any], attribute: str, unit_substring: str, rank: int
+    ability: Mapping[str, Any], attribute: str, unit_substring: str, rank: int
 ) -> float:
     """Read one sourced modifier whose unit contains a substring at rank.
 
@@ -98,7 +98,7 @@ def leveling_ratio(
     return 0.0
 
 
-def event_source(event: dict[str, Any]) -> str:
+def event_source(event: Mapping[str, Any]) -> str:
     return str(event.get("source_key", ""))
 
 
@@ -109,7 +109,7 @@ def attributed_events(
     return [event for event in events if predicate(event_source(event), event)]
 
 
-def parsed_rank(ability_damages: dict[str, dict[str, Any]], slot: str) -> int:
+def parsed_rank(ability_damages: Mapping[str, dict[str, Any]], slot: str) -> int:
     """Use the parser's sourced rank; omitted ranks are already level-derived."""
     try:
         return max(0, int(ability_damages.get(slot, {}).get("rank", 0) or 0))
@@ -261,7 +261,7 @@ def _events_matching(source, damage_events: Iterable[dict[str, Any]]):
     return [event for event in damage_events if event_source(event) in source]
 
 
-def _attributing_cast(cast_times: list[float], event_time: float) -> float | None:
+def _attributing_cast(cast_times: Iterable[float], event_time: float) -> float | None:
     """The activation an event at *event_time* came from, if one names it."""
     attributed: float | None = None
     for cast_time in cast_times:

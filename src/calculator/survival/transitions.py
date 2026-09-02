@@ -552,7 +552,7 @@ def update_combat_state(
 
 
 def apply_declared_price(
-    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
+    ctx: TransitionContext, action: SurvivalAction, state: Mapping[str, Any]
 ) -> float | None:
     """Price one packet from its family's declaration, at the live resistance.
 
@@ -641,7 +641,7 @@ def apply_declared_price(
 
 
 def reprice_dynamic_resistance(
-    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
+    ctx: TransitionContext, action: SurvivalAction, state: Mapping[str, Any]
 ) -> float | None:
     """Apply an armed target resistance delta to one post-mitigation packet.
 
@@ -1062,7 +1062,7 @@ def grant_reactive_shield(
 # ---------------------------------------------------------------------------
 
 
-def _actor_stasis_blocks(state: dict[str, Any], event_time: float) -> bool:
+def _actor_stasis_blocks(state: Mapping[str, Any], event_time: float) -> bool:
     """Whether an actor's stasis blocks the action it is authoring.
 
     Ordinary stasis (Zhonya's Time Stop, Bard's Tempered Fate) blocks.  The
@@ -1379,7 +1379,10 @@ def _rearm_spell_shield(state: dict[str, Any], event_time: float) -> None:
 
 
 def _write_spell_shield_reduction_receipt(
-    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any], attacker: Any
+    ctx: TransitionContext,
+    action: SurvivalAction,
+    state: Mapping[str, Any],
+    attacker: Any,
 ) -> None:
     """Mirror a projectile defense's reduction receipt onto a packet the
     spell shield is about to block.
@@ -1774,7 +1777,7 @@ def _apply_stat_buff(
 
 
 def _apply_damage_modifier(
-    ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
+    ctx: TransitionContext, action: SurvivalAction, state: Mapping[str, Any]
 ) -> None:
     """Arm a timed (or persistent) cross-participant damage modifier."""
     # The declaration is read before the availability gate: a packet that
@@ -2035,7 +2038,7 @@ def _cleanse_action_view(
     item: str,
     target_id: str,
     holder_id: str,
-    state: dict[str, Any],
+    state: Mapping[str, Any],
 ) -> Any:
     """The kernel's typed view of one walk activation."""
     from types import SimpleNamespace
@@ -2055,8 +2058,8 @@ def _cleanse_action_view(
 
 def _cleanse_use_receipt(
     item: str,
-    declaration: dict[str, Any],
-    use: dict[str, Any],
+    declaration: Mapping[str, Any],
+    use: Mapping[str, Any],
     *,
     fired_while_crowd_controlled: bool,
 ) -> dict[str, Any]:
@@ -2073,7 +2076,7 @@ def _cleanse_use_receipt(
 
 
 def _cleanse_heal_entry(
-    action: SurvivalAction, declaration: dict[str, Any]
+    action: SurvivalAction, declaration: Mapping[str, Any]
 ) -> dict[str, Any] | None:
     """The heal entry attached to a Mikael's cleanse receipt (the heal is a
     SEPARATE effect with its own atoms; the amount is the packet's sourced
@@ -2914,7 +2917,7 @@ def _apply_crowd_control(
 def _apply_live_amp(
     ctx: TransitionContext,
     action: SurvivalAction,
-    state: dict[str, Any],
+    state: Mapping[str, Any],
     amount: float,
 ) -> float:
     """Price a live-predicate amplifier on this packet, before absorption.
@@ -3935,7 +3938,7 @@ def run_survival_walk(
 
 
 def _fill_blocked_shield_after(
-    state: dict[str, Any], action: SurvivalAction, absorbed: float
+    state: Mapping[str, Any], action: SurvivalAction, absorbed: float
 ) -> None:
     """Fill a blocked-control receipt's post-absorption holder amount.
 

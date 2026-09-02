@@ -2118,7 +2118,7 @@ def schedule_knights_vow(
     all_actors: list[Any],
     incoming: Mapping[str, list[dict[str, Any]]],
     outgoing: Mapping[str, list[dict[str, Any]]],
-    support_effects: dict[str, list[dict[str, Any]]],
+    support_effects: Mapping[str, list[dict[str, Any]]],
 ) -> None:
     """Attach one deterministic Worthy tether and redirect/heal receipts."""
     for holder in all_actors:

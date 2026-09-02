@@ -8,6 +8,7 @@ champion_optimizer_matrix) serializes the same envelope: a strict boolean
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 SCHEMA_VERSION = 1
@@ -52,7 +53,7 @@ def build_receipt(
     return receipt
 
 
-def validate_receipt(receipt: dict[str, Any]) -> None:
+def validate_receipt(receipt: Mapping[str, Any]) -> None:
     """Raise ValueError when the envelope violates the shared contract."""
     if receipt.get("schema_version") != SCHEMA_VERSION:
         raise ValueError(f"schema_version must be {SCHEMA_VERSION}")

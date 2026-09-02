@@ -31,6 +31,7 @@ Why each slot is non-generic:
   stack count derived from the fight timeline (or forced by option).
 """
 
+from collections.abc import Mapping
 from typing import Any
 
 from .. import healing_helpers as _healing
@@ -108,7 +109,7 @@ W_KILL_REFUND_FLAT = 40.0
 
 
 def _per_level(
-    ability: dict[str, Any],
+    ability: Mapping[str, Any],
     effect_index: int,
     leveling_index: int,
     level: int,

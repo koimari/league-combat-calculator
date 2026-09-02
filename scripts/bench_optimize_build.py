@@ -51,7 +51,7 @@ import subprocess
 import sys
 import time
 import timeit
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from functools import partial
 from pathlib import Path
 from typing import Any, NamedTuple
@@ -120,7 +120,7 @@ def measure(repeats: int = REPEATS) -> dict:
     }
 
 
-def _print_table(report: dict) -> None:
+def _print_table(report: Mapping) -> None:
     """One row per reading, in the shape ``benchmarks.md`` holds."""
     spread = report["engine_worst_ms"] - report["engine_best_ms"]
     print(f"{CHAMPION} level {LEVEL}, {MAX_LEGENDARY_SLOTS} legendary slots")
@@ -145,7 +145,7 @@ def profile(rows: int = 30) -> None:
     stats.sort_stats("cumulative").print_stats(rows)
 
 
-def _elected_build(result: dict) -> list[dict]:
+def _elected_build(result: Mapping) -> list[dict]:
     """The item rows the search elected, boots last."""
     names = list(result["items"])
     if result.get("boots"):
@@ -243,7 +243,7 @@ def _profile_totals() -> tuple[dict, float]:
 
 
 def _budget_terms(
-    champion: dict, params: FightParams, items: list[dict], captured: dict
+    champion: dict, params: FightParams, items: list[dict], captured: Mapping
 ) -> list[Term]:
     """The terms `benchmarks.md` prices, called the way an evaluation calls them."""
     owners = [item_effects.resolved_item_name(item) for item in items]
@@ -326,7 +326,7 @@ def budget(repeats: int = REPEATS) -> dict:
     }
 
 
-def _print_budget(report: dict) -> None:
+def _print_budget(report: Mapping) -> None:
     """The per-term table, in the shape ``benchmarks.md`` holds."""
     print(f"one evaluation: {report['evaluation_us']} us")
     print(f"  build: {', '.join(report['build'])}")
@@ -403,7 +403,7 @@ def by_build_size(rounds: int = ROUNDS, against: str | None = None) -> dict:
     }
 
 
-def _print_by_build_size(report: dict) -> None:
+def _print_by_build_size(report: Mapping) -> None:
     """One row per tree, one column per build size."""
     print(f"per-evaluation us, cold build, median over {report['rounds']} rounds")
     print(f"  build: {', '.join(report['build'])}")

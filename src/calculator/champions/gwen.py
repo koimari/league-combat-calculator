@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from .. import healing_helpers as _healing
@@ -67,7 +68,7 @@ _Q_FIRST_SNIP_SECONDS = 0.13
 _Q_BONUS_SNIP_SECONDS = (0.23, 0.35, 0.4, 0.45)
 
 
-def _snip_times(ability: dict[str, Any], bonus: int) -> tuple[float, ...]:
+def _snip_times(ability: Mapping[str, Any], bonus: int) -> tuple[float, ...]:
     """Every snip instant of one cast, first to last (the final snip last).
 
     ``bonus`` is how many Snippy snips the cast consumes, and each takes

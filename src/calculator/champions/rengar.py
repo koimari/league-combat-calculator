@@ -40,6 +40,7 @@ being mislabelled in either direction (the Dr. Mundo P precedent).
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -142,7 +143,7 @@ RENGAR_FEROCITY_STACK_RULE = StackRule(
 
 
 def _ferocity_bonus(
-    ctx: SlotCtx, ability: dict[str, Any], attribute: str
+    ctx: SlotCtx, ability: Mapping[str, Any], attribute: str
 ) -> float | None:
     """Extract the Ferocity-Bonus leveling value for one ability.
 

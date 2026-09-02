@@ -18,6 +18,7 @@ import argparse
 import hashlib
 import json
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -93,7 +94,7 @@ def atomize_champions(champions: dict) -> dict[str, list]:
     wiki_types = module.load_wiki_damage_types()
     atom_relations = module.load_atom_relations()
 
-    def normalize(champion_name: str, atom: dict) -> dict:
+    def normalize(champion_name: str, atom: Mapping) -> dict:
         provenance = atom.get("provenance")
         if not isinstance(provenance, dict):
             raise ValueError(f"{champion_name} atom has no provenance")

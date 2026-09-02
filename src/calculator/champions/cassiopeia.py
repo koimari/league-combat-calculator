@@ -31,6 +31,7 @@ Both of E's leveling entries are named "Bonus Magic Damage", so
 ``_bonus_magic_damage_levelings`` collects both in JSON order.
 """
 
+from collections.abc import Mapping
 from dataclasses import replace
 from typing import Any
 
@@ -57,7 +58,7 @@ from .source_receipts import load_champion_sources
 
 
 def _bonus_magic_damage_levelings(
-    ability: dict[str, Any],
+    ability: Mapping[str, Any],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """E's two "Bonus Magic Damage" entries: (per-level base, poisoned bonus).
 

@@ -38,7 +38,7 @@ from .slotlib import (
 PACKET_SHA256 = "b6f179d37816f86a3c589048738bf588034d2340535ad6dde533391daf113d90"
 
 
-def _iron_ambassador(ctx: SlotCtx):
+def _iron_ambassador(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: the empowered buckler toss deals 20 : 198.82 (based on level)
     bonus magic damage on-hit — the "Bonus Magic Damage" leveling row."""
     ability = ctx.ability("P", 0)

@@ -6,6 +6,7 @@ physical, or magic damage) for a given champion/level/target configuration.
 
 import math
 import time
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from dataclasses import replace
 from typing import Any
 
@@ -108,7 +109,7 @@ def get_eligible_boots(tier: int | None = 2) -> list[dict[str, Any]]:
     ]
 
 
-def _get_occupied_groups(items: list[dict[str, Any]]) -> set[str]:
+def _get_occupied_groups(items: Iterable[dict[str, Any]]) -> set[str]:
     """Return the set of exclusivity groups already occupied by *items*."""
     return occupied_groups(item.get("name", "") for item in items)
 
@@ -480,7 +481,7 @@ def _evaluate_build_uncached(
     if require_complete_timeline and not coverage["complete"]:
         return float("-inf")
 
-    def included(entry: dict[str, Any]) -> bool:
+    def included(entry: Mapping[str, Any]) -> bool:
         if objective == "physical_damage":
             return entry.get("damage_type") == "physical"
         if objective == "magic_damage":
@@ -526,13 +527,13 @@ def _combined_build_timeline_coverage(
     )
 
 
-def _build_receipt_key(items: list[dict[str, Any]]) -> tuple[str, ...]:
+def _build_receipt_key(items: Iterable[dict[str, Any]]) -> tuple[str, ...]:
     """Identify one evaluated build by the ordered list the score memo keys on."""
     return tuple(str(item.get("name", "")) for item in items)
 
 
 def _public_build_receipt(
-    items: list[dict[str, Any]],
+    items: Iterable[dict[str, Any]],
     coverage: dict[str, Any],
     reason: str,
     *,
@@ -562,7 +563,7 @@ def _public_build_receipt(
     return receipt
 
 
-def _public_search_timeline_coverage(audit: dict[str, Any]) -> dict[str, Any]:
+def _public_search_timeline_coverage(audit: Mapping[str, Any]) -> dict[str, Any]:
     """Serialize precision across every candidate evaluation in this search."""
     evaluations = int(audit["evaluations"])
     partial_evaluations = int(audit["partial_evaluations"])
@@ -609,7 +610,7 @@ def _public_search_timeline_coverage(audit: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def item_gold(item: dict[str, Any]) -> int:
+def item_gold(item: Mapping[str, Any]) -> int:
     """Return the sourced total shop price, failing closed on a broken record.
 
     ``shop.prices.total`` is cache-owned; a literal default here would make
@@ -625,7 +626,7 @@ def item_gold(item: dict[str, Any]) -> int:
     return price
 
 
-def _build_gold(items: list[dict[str, Any]]) -> int:
+def _build_gold(items: Iterable[dict[str, Any]]) -> int:
     """Return total shop price for a resolved build."""
     return sum(item_gold(item) for item in items)
 
@@ -637,7 +638,7 @@ def _greedy_fill(
     locked_boots: dict[str, Any] | None,
     slots_to_fill: int,
     fill_boots: bool,
-    pool: list[dict[str, Any]],
+    pool: Iterable[dict[str, Any]],
     boots_pool: list[dict[str, Any]],
     eval_kwargs: dict[str, Any],
     seed_item: dict[str, Any] | None = None,
@@ -728,9 +729,9 @@ def _hill_climb(
     level: int,
     legendaries: list[dict[str, Any]],
     boots: dict[str, Any] | None,
-    locked_legendary_names: set[str],
+    locked_legendary_names: Collection[str],
     locked_boots: bool,
-    pool: list[dict[str, Any]],
+    pool: Iterable[dict[str, Any]],
     boots_pool: list[dict[str, Any]],
     eval_kwargs: dict[str, Any],
     max_iterations: int = 10,
@@ -1044,7 +1045,7 @@ class _PurchaseSearch:
 def _enumerate_affordable_shapes(
     search: _PurchaseSearch,
     sell: dict[str, Any] | None,
-    buyables: list[dict[str, Any]],
+    buyables: Sequence[dict[str, Any]],
     cap: int,
     counted: int,
 ) -> tuple[list[list[dict[str, Any]]], bool]:
@@ -1140,7 +1141,7 @@ def _enumerate_affordable_shapes(
 def _greedy_purchase_chain(
     search: _PurchaseSearch,
     sell: dict[str, Any] | None,
-    buyables: list[dict[str, Any]],
+    buyables: Iterable[dict[str, Any]],
     per_gold: bool,
     start: list[dict[str, Any]] | None = None,
 ) -> tuple[list[dict[str, Any]], float] | None:
@@ -1233,8 +1234,8 @@ def _improve_purchase_chain(
 
 def _score_exhaustive_purchase_plans(
     search: _PurchaseSearch,
-    shape_rows: list[tuple[dict[str, Any] | None, list[dict[str, Any]]]],
-    pool_names: set[str],
+    shape_rows: Iterable[tuple[dict[str, Any] | None, list[dict[str, Any]]]],
+    pool_names: Collection[str],
 ) -> bool:
     """Score every enumerated shape plus its combine completions.
 
@@ -1279,7 +1280,7 @@ def _score_exhaustive_purchase_plans(
 
 def _run_purchase_local_search(
     search: _PurchaseSearch,
-    sell_options: list[dict[str, Any] | None],
+    sell_options: Iterable[dict[str, Any] | None],
     buyables: list[dict[str, Any]],
 ) -> bool:
     """Greedy-fill each sell pivot from two angles, then climb the best.

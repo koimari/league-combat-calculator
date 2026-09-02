@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from .. import healing_helpers as _healing
@@ -18,10 +19,6 @@ _GANGPLANK_W_SPELL = spell_object("Gangplank", "GangplankW")
 _GANGPLANK_R_SPELL = spell_object("Gangplank", "GangplankR")
 
 
-def _trial_by_fire(ctx: SlotCtx, ability: dict[str, Any]) -> float:
-    return extract_named(ability, "Bonus True Damage", ctx.level, ctx.stats, ctx.target)
-
-
 def _trial_proc(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
@@ -34,7 +31,10 @@ def _trial_proc(ctx: SlotCtx) -> dict[str, Any] | None:
             reason="Passive burn is ready only when an empowered attack is selected.",
             slot="P",
         )
-    per_tick = _trial_by_fire(ctx, ability) / 10.0
+    per_tick = (
+        extract_named(ability, "Bonus True Damage", ctx.level, ctx.stats, ctx.target)
+        / 10.0
+    )
     return {
         "name": "Trial by Fire",
         "damage_type": "true",
@@ -160,7 +160,7 @@ class _RemoveScurvyRule:
 REMOVE_SCURVY_RULE = _RemoveScurvyRule()
 
 
-def _require_w_rows(ability: dict[str, Any]) -> None:
+def _require_w_rows(ability: Mapping[str, Any]) -> None:
     """Fail loud when the W heal row or its modifiers are missing.
 
     The heal (healing.py) and the typed declaration both read the cached

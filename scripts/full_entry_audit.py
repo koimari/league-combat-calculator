@@ -30,9 +30,11 @@ import re
 import shutil
 import subprocess
 import sys
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
+
+from src.calculator.item_source import audit_scope
 
 ROOT = Path(__file__).resolve().parent.parent
 # The audit is invoked both as ``python scripts/...`` and as an imported
@@ -224,7 +226,6 @@ def audit_item_names() -> list[str]:
     is in scope, while off-map and removed records are not.  The gate never
     parses ``modes``/``removed`` keys itself.
     """
-    from src.calculator.item_source import audit_scope
 
     names: set[str] = set()
     for value in _load(ITEMS_PATH).values():
@@ -421,7 +422,7 @@ def _expected_effects(kind: str, record: dict[str, Any] | None) -> dict[str, Any
 
 
 def _item_effect_coverage(
-    expected: dict[str, Any], runtime: dict[str, Any]
+    expected: Mapping[str, Any], runtime: Mapping[str, Any]
 ) -> list[dict[str, Any]]:
     """Attach a path-aware verdict to every cached passive/active branch."""
     status = str(runtime.get("status") or "review_pending")

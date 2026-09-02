@@ -20,6 +20,7 @@ import statistics
 import subprocess
 import sys
 import time
+from collections.abc import Mapping
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -113,7 +114,7 @@ def committed_medians(path: str) -> dict:
     return rows
 
 
-def regressions(measured: dict, committed: dict, tolerance: float = 1.25) -> list:
+def regressions(measured: Mapping, committed: Mapping, tolerance: float = 1.25) -> list:
     """Scenarios whose median exceeds the committed one by more than 25%."""
     return [
         f"{name}: {committed[name]} -> {reading['median_ms']} ms median"
@@ -122,7 +123,7 @@ def regressions(measured: dict, committed: dict, tolerance: float = 1.25) -> lis
     ]
 
 
-def _print_table(report: dict) -> None:
+def _print_table(report: Mapping) -> None:
     """The committed table's own shape, so a reader can diff by eye."""
     print(f"import calculator: {report['import_calculator_ms']} ms (fresh interpreter)")
     print(f"{'scenario':<20}{'median ms':>12}{'p90 ms':>10}{'20-call s':>12}")

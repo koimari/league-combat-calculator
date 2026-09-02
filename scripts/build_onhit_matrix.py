@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Mapping
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -36,7 +37,7 @@ _EFFECTIVENESS = re.compile(
 _ONLY_ONCE = re.compile(r"apply on[- ]?hit effects only once", re.IGNORECASE)
 
 
-def ability_text(entry: dict) -> str:
+def ability_text(entry: Mapping) -> str:
     parts = [str(entry.get("name", ""))]
     parts.extend(
         str(effect.get("description", ""))

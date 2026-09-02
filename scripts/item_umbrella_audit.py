@@ -22,7 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
@@ -53,7 +53,7 @@ RECEIPT_PATH = ROOT / "docs" / "item-umbrella-audit.json"
 ABSENT = "<absent>"
 
 
-def _names(items: list[Mapping[str, Any]]) -> set[str]:
+def _names(items: Iterable[Mapping[str, Any]]) -> set[str]:
     """Return stable item names from a runtime pool."""
 
     return {str(item.get("name", "")) for item in items if item.get("name")}

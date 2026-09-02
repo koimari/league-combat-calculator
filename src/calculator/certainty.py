@@ -2,7 +2,7 @@
 
 import json
 import re
-from collections.abc import Mapping
+from collections.abc import Collection, Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
@@ -108,7 +108,7 @@ def _audit_entries() -> dict[str, dict]:
 
 
 def _option_affects_slot(
-    option: Mapping[str, Any], slot: str, ability_names: dict[str, list[str]]
+    option: Mapping[str, Any], slot: str, ability_names: Mapping[str, list[str]]
 ) -> bool:
     """Whether one OPTIONS entry is a player-controlled input for ``slot``."""
     key = str(option.get("key", "")).lower()
@@ -139,7 +139,7 @@ def classify_assumption(text: str) -> str | None:
 
 
 def _line_mentions_slot(
-    line: str, slot: str, ability_names: dict[str, list[str]]
+    line: str, slot: str, ability_names: Mapping[str, list[str]]
 ) -> bool:
     """Whether an assumption line talks about ``slot`` (letter, name, or
     the passive keyword)."""
@@ -154,10 +154,10 @@ def _line_mentions_slot(
 # pylint: disable=too-many-locals
 def _slot_certainty(
     slot: str,
-    options: list[Mapping[str, Any]],
-    assumptions: list[str],
+    options: Iterable[Mapping[str, Any]],
+    assumptions: Iterable[str],
     coverage: Mapping[str, str],
-    module_slots: list[str],
+    module_slots: Collection[str],
     ability_names: dict[str, list[str]],
     audit: Mapping[str, Any] | None,
     registration: str,

@@ -16,7 +16,7 @@ and this is one.
 
 # pylint: disable=too-many-lines
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -1297,7 +1297,7 @@ def target_item_model_coverage(item: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def target_build_coverage(items: list[dict[str, Any]]) -> dict[str, Any]:
+def target_build_coverage(items: Iterable[dict[str, Any]]) -> dict[str, Any]:
     """Summarise whether a target inventory is safe to calculate."""
     entries = [target_item_model_coverage(item) for item in items]
     withheld = [entry for entry in entries if not entry["calculation_eligible"]]
@@ -1326,7 +1326,7 @@ def require_target_item_coverage(items: list[dict[str, Any]]) -> None:
 
 
 def require_certified_target_timeline(
-    items: list[dict[str, Any]], timeline_coverage: dict[str, Any]
+    items: Iterable[dict[str, Any]], timeline_coverage: Mapping[str, Any]
 ) -> None:
     """Withhold a computed fight that cannot price a conditional defense.
 
@@ -1355,7 +1355,7 @@ def require_certified_target_timeline(
     )
 
 
-def optimizer_candidate_coverage(items: list[dict[str, Any]]) -> dict[str, Any]:
+def optimizer_candidate_coverage(items: Iterable[dict[str, Any]]) -> dict[str, Any]:
     """Summarise which legal item candidates can be scored without omission.
 
     D-23's published half.  A withheld candidate is **excluded from candidate
@@ -1388,7 +1388,7 @@ def optimizer_candidate_coverage(items: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def optimizer_supported_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def optimizer_supported_items(items: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
     """Return candidates whose outgoing TDD can be scored without omission.
 
     The exclusion half of D-23: a withheld item never reaches candidate
@@ -1404,7 +1404,7 @@ def optimizer_supported_items(items: list[dict[str, Any]]) -> list[dict[str, Any
     ]
 
 
-def require_optimizer_item_coverage(item: dict[str, Any]) -> None:
+def require_optimizer_item_coverage(item: Mapping[str, Any]) -> None:
     """Reject a locked item whose damage-relevant mechanics are incomplete."""
     coverage = item_model_coverage(str(item.get("name", "")), SCORING_LANES)
     if not coverage.optimizer_eligible:
@@ -1415,7 +1415,7 @@ def require_optimizer_item_coverage(item: dict[str, Any]) -> None:
 
 
 def require_calculation_item_coverage(
-    items: list[dict[str, Any]],
+    items: Iterable[dict[str, Any]],
     *,
     participant: str,
     allow_ally_effects: bool = False,

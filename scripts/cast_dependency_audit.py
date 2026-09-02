@@ -540,7 +540,7 @@ def _record_markers(
     name: str,
     parsed: Mapping[str, Any],
     markers: Sequence[str],
-    marker_authors: dict[str, set[str]],
+    marker_authors: Mapping[str, set[str]],
     cc_markers: dict[tuple[str, str], set[str]],
     cc_contract: dict[tuple[str, str], str],
 ) -> None:

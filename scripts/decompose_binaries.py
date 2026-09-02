@@ -35,7 +35,7 @@ _REPO_ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = _REPO_ROOT / "data" / "bin"
 
 
-def _download(url: str, dest: Path, chunk=1 << 20) -> None:
+def _download(url: str, dest: Path, chunk: int = 1 << 20) -> None:
     import requests
 
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -100,7 +100,7 @@ def champion_wads():
         yield f
 
 
-def decompose_champions(table, out: Path) -> list[str]:
+def decompose_champions(table: dict[int, str], out: Path) -> list[str]:
 
     done = []
     for wad_path in champion_wads():
@@ -119,7 +119,7 @@ def decompose_champions(table, out: Path) -> list[str]:
     return done
 
 
-def decompose_items(table, out: Path):
+def decompose_items(table: dict[int, str], out: Path):
     """Item data: local data/items/items.bin if present, else the pinned
     16.15 CommunityDragon dump (identical client version 16.15.8024387)."""
     w = open_wad(FINAL_DIR / "Global.wad.client")
@@ -154,7 +154,7 @@ def decompose_items(table, out: Path):
     return dest, len(data), len(json.dumps(rec, default=str)), source
 
 
-def decompose_map11(table, out: Path):
+def decompose_map11(table: dict[int, str], out: Path):
 
     map_wads = list((FINAL_DIR / "Maps/Shipping").glob("*.wad.client"))
     for mw in map_wads:

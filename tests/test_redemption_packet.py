@@ -114,7 +114,7 @@ from tests import item_probe
 from tests.survival_probe import simulate_survival, survival_of
 
 REDEMPTION = "Redemption"
-SOURCE = "Redemption \u2014 Intervention"  # "Redemption — Intervention"
+SOURCE = "Redemption \u2014 Intervention"
 SOURCE_URL = "https://wiki.leagueoflegends.com/en-us/Redemption"
 REVISION_ID = 4015392
 REPO = Path(__file__).resolve().parent.parent

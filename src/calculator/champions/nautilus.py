@@ -42,7 +42,7 @@ _W_SECOND_INSTANCE_DELAY = 1.25
 PACKET_SHA256 = "66ae84d11488386be94ff6ac41a99478d1d5d6394c98003813b547dbda249172"
 
 
-def _staggering_blow(ctx: SlotCtx):
+def _staggering_blow(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: empowered basic attacks deal 14 : 128 (based on level) bonus
     physical damage — the "Per-Level Scaling" leveling row."""
     ability = ctx.ability("P", 0)

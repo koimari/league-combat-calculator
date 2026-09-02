@@ -46,6 +46,7 @@ hardcoded.
 """
 
 import re
+from collections.abc import Mapping
 from typing import Any
 
 from ..ability_atoms import (
@@ -73,7 +74,7 @@ from .source_receipts import load_champion_sources
 
 
 def _extract_e_on_hit_damage(
-    ability: dict[str, Any],
+    ability: Mapping[str, Any],
     level: int,
 ) -> float:
     """Extract E's empowered-auto bonus magic damage at a champion level.

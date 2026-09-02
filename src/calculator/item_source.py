@@ -286,7 +286,7 @@ def _champion_restriction(
 
 
 def _merge_effect_branches(
-    entry: dict[str, Any],
+    entry: Mapping[str, Any],
     grouped: Mapping[str, list[dict[str, Any]]],
     warnings: list[str],
 ) -> None:

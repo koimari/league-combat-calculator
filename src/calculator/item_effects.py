@@ -15,7 +15,7 @@ re-parses and updates ``ITEM_EFFECTS`` in place.
 import logging
 import math
 import re
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any, Literal
@@ -4631,7 +4631,9 @@ def _cached_sustain_stat(item: Mapping[str, Any], stat_key: str) -> float:
     )
 
 
-def grouped_sustain_stat_percent(items: list[dict[str, Any]], stat_key: str) -> float:
+def grouped_sustain_stat_percent(
+    items: Iterable[dict[str, Any]], stat_key: str
+) -> float:
     """Sum one sustain stat across a build from the typed effect registry.
 
     The typed registry is authoritative for the sustain stats it pins.  An
@@ -4677,12 +4679,12 @@ def resolved_item_name(item: Mapping[str, Any]) -> str:
     return name
 
 
-def _item_names(items: list[dict[str, Any]]) -> set[str]:
+def _item_names(items: Iterable[dict[str, Any]]) -> set[str]:
     """Return the set of item names in a build."""
     return {resolved_item_name(item) for item in items}
 
 
-def has_item(items: list[dict[str, Any]], item_name: str) -> bool:
+def has_item(items: Iterable[dict[str, Any]], item_name: str) -> bool:
     """Return whether a resolved build contains one canonical item name."""
     # Allocation-free on purpose: asked dozens of times per optimizer evaluation.
     return any(resolved_item_name(item) == item_name for item in items)

@@ -156,7 +156,7 @@ import heapq
 import math
 import random
 from collections import Counter
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from functools import cache
 from operator import itemgetter
@@ -1379,7 +1379,7 @@ def _calculate_phantom_hits(
 
 def _calculate_stacking_procs(
     num_auto_attacks: int,
-    phantom_hit_autos: set[int],
+    phantom_hit_autos: Collection[int],
     double_on_hit_procs: int,
     hits_required: int,
     leading_ability_hits: int = 0,
@@ -1830,7 +1830,7 @@ def _ledger_total(events: Sequence[Mapping[str, Any]]) -> float:
     return sum(float(event["damage"]) for event in events)
 
 
-def _row_damage_parts(entry: dict[str, Any]) -> list[tuple[str, float]]:
+def _row_damage_parts(entry: Mapping[str, Any]) -> list[tuple[str, float]]:
     """Return one breakdown row's exact typed post-mitigation parts."""
     by_type = entry.get("damage_by_type")
     if by_type is not None:
@@ -2018,7 +2018,7 @@ _CAST_TIME_RESOLUTION = 5e-4
 
 
 def _ordered_damage_events(
-    breakdown: dict[str, Any],
+    breakdown: Mapping[str, Any],
     ability_damages: dict[str, dict[str, Any]],
     cast_order: list[str],
     *,
@@ -2090,7 +2090,7 @@ def _ordered_damage_events(
 
     def add_declared_events(
         source_key: str,
-        entry: dict[str, Any],
+        entry: Mapping[str, Any],
         *,
         default_phase: str,
     ) -> bool:
@@ -2333,7 +2333,7 @@ def _ordered_damage_events(
 
 
 def _event_timeline_coverage(
-    breakdown: dict[str, Any],
+    breakdown: Mapping[str, Any],
     ability_damages: dict[str, dict[str, Any]],
     cast_order: list[str],
     *,
@@ -2448,7 +2448,7 @@ def _event_timeline_coverage(
 
 
 def _control_armed_holder_shields(
-    items: list[dict[str, Any]],
+    items: Iterable[dict[str, Any]],
 ) -> tuple[ally_packet.AllyPacketSlot, ...]:
     """Every producer this build declares that the pair engine owes proof of.
     The shape, not the item: a shield the *holder* receives when a control
@@ -4165,7 +4165,7 @@ def _evaluate_cast_parts(
 def _apply_post_hit_proc(
     state: "FightState",
     trigger_key: str,
-    ability_info: dict[str, Any],
+    ability_info: Mapping[str, Any],
     num_casts: int,
     cast_times: tuple[float, ...],
     running_damage: float,
@@ -4621,7 +4621,7 @@ class CastPlan:
 
 def _resolve_cast_plan(
     state: FightState,
-    schedule: dict[str, list[float]],
+    schedule: Mapping[str, list[float]],
 ) -> CastPlan:
     """Resolve every ability entry's cast count and cast times."""
     counts: dict[str, int] = {}
@@ -4750,7 +4750,7 @@ def _cast_admission_events(
 
 def _resource_timeline(
     state: FightState,
-    events: list[tuple[float, int, int, str]],
+    events: Iterable[tuple[float, int, int, str]],
     *,
     restore_producer: str,
 ) -> list[tuple[float, int, int, int, str, str, float]]:
@@ -7511,7 +7511,7 @@ def _add_precomputed_proc_damage(
 def _ability_dot_tick_events(
     entry: dict[str, Any],
     info: dict[str, Any],
-    cast_times: list[float],
+    cast_times: Sequence[float],
 ) -> list[dict[str, float | str]] | None:
     """One DoT ability row's per-tick events, or None to stay coarse.
 
@@ -7954,7 +7954,7 @@ class AutoAttackResult:
 
 
 def _weave_around_bursts(
-    offsets: list[float],
+    offsets: Iterable[float],
     blocks: tuple[tuple[float, float], ...],
 ) -> list[float]:
     """Put ordinary swings on the clock a burst's blocks displace.
@@ -8324,7 +8324,7 @@ def _restore_stream_attack_timestamps(state: FightState) -> list[float]:
 
 
 def _find_auto_attack_override(
-    ability_damages: dict[str, dict[str, Any]],
+    ability_damages: Mapping[str, dict[str, Any]],
 ) -> dict[str, Any] | None:
     """Return the first champion ``auto_attack_override`` payload, if any.
     Keys: ``ad_ratio`` / ``crit_as_bonus`` (Ashe), ``replace_raw`` /
@@ -8337,7 +8337,7 @@ def _find_auto_attack_override(
 
 
 def _basic_attack_true_rider(
-    ability_damages: dict[str, dict[str, Any]],
+    ability_damages: Mapping[str, dict[str, Any]],
 ) -> tuple[float, str]:
     """A champion's bonus-true-damage share of every basic attack.
     Corki's Hextech Munitions deals 20% of each attack's PRE-MITIGATION damage
@@ -9189,7 +9189,7 @@ def _add_empower_window_on_hit(
 
 def _declared_slot_stacks(
     on_hit_data: Mapping[str, Any],
-    ability_hit_ledger: list[tuple[str, float]],
+    ability_hit_ledger: Iterable[tuple[str, float]],
 ) -> tuple[int, list[float]]:
     """Stacks a kit's own named slots feed one on-hit counter.
 
@@ -12982,7 +12982,7 @@ def _add_senna_souls(
     state: FightState,
     rotation: RotationResult,
     shield_outcome: Mapping[str, Any],
-    damage_events: list[dict[str, Any]],
+    damage_events: Iterable[dict[str, Any]],
 ) -> None:
     """Add Senna's Absolution Mist soul-counter ledger (P3 package 3W).
 
@@ -13151,7 +13151,7 @@ def _add_senna_souls(
 def _feed_ashe_focus_stack(
     stack: Any,
     swings: list[Any],
-    q_casts: list[Mapping[str, Any]],
+    q_casts: Iterable[Mapping[str, Any]],
     duration: float,
     q_window_end: float = 0.0,
 ) -> tuple[list[dict[str, Any]], int, int]:
@@ -16713,7 +16713,7 @@ def _restate_declaration(
     (event if onto is None else onto)["declared"] = tuple(declaration)
 
 
-def _apply_liandry_reprice(state: FightState, adjustments: dict[str, Any]) -> None:
+def _apply_liandry_reprice(state: FightState, adjustments: Mapping[str, Any]) -> None:
     """Fold the max-health reprice back onto the burn's own breakdown row.
 
     The burn's row is where this number belongs: it is more of Liandry's own
@@ -17868,7 +17868,7 @@ class _EmpoweredSwings(NamedTuple):
 
 
 def _empowered_swing_consumers(
-    state: FightState, available: int, cast_events: list[dict[str, Any]]
+    state: FightState, available: int, cast_events: Iterable[dict[str, Any]]
 ) -> list[_EmpoweredSwings]:
     """Each ``empowers_next_auto`` entry, its row, and the swings it consumes.
 
@@ -18090,8 +18090,8 @@ def _recount_kept_crit_split(
 
 def _apply_shield_reaver_venom(
     config: FightConfig,
-    items: list[dict[str, Any]],
-    champion_stats: dict[str, float],
+    items: Iterable[dict[str, Any]],
+    champion_stats: Mapping[str, float],
 ) -> tuple[FightConfig, list[str]]:
     """Cut the target's non-magic shields for the attacker's Shield Reaver.
 
@@ -18150,7 +18150,7 @@ def _apply_shield_reaver_venom(
 
 
 def shield_outcome_inputs(
-    config: FightConfig, items: list[dict[str, Any]]
+    config: FightConfig, items: Iterable[dict[str, Any]]
 ) -> ShieldOutcomeInputs:
     """One fight's facts, as the shield outcome's readers are decided by."""
     return ShieldOutcomeInputs(
@@ -18275,7 +18275,6 @@ def calculate_fight_damage(
     _add_rune_receipts_applied_elsewhere(state)
     _add_dedicated_keystone_receipts(state)
 
-    # ── Active item damage ──────────────────────────────────────────────
     _add_item_active_damage(state, rotation)
 
     # ── Single-proc on-hits, Shadowflame, and Expose Weakness ───────────
@@ -18493,7 +18492,9 @@ def calculate_fight_damage(
     }
 
 
-def _walk_end_time(config: FightConfig, damage_events: list[dict[str, Any]]) -> float:
+def _walk_end_time(
+    config: FightConfig, damage_events: Iterable[dict[str, Any]]
+) -> float:
     """When a shield walk's window closes, for the timed state it expires.
     The authored fight duration, unless the ledger runs past it: a burst
     request carries no duration and its packets are the only clock."""
@@ -18658,7 +18659,7 @@ def _is_auto_stream_key(key: str) -> bool:
 
 
 def split_auto_vs_ability(
-    breakdown: dict[str, dict[str, Any]],
+    breakdown: Mapping[str, dict[str, Any]],
 ) -> tuple[float, float]:
     """Split a fight breakdown into (auto_attack_damage, ability_damage).
 
@@ -18709,7 +18710,7 @@ def split_auto_vs_ability(
 
 
 def split_by_damage_type(
-    breakdown: dict[str, dict[str, Any]],
+    breakdown: Mapping[str, dict[str, Any]],
 ) -> dict[str, float]:
     """Split a fight breakdown into physical/magic/true damage totals.
 

@@ -20,6 +20,7 @@ import shutil
 import sys
 import tempfile
 from collections import Counter
+from collections.abc import Mapping
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -86,12 +87,12 @@ def load_item_atoms(path: Path | None = None) -> dict[str, list[dict]]:
     return objects
 
 
-def _family_of(atom: dict) -> str:
+def _family_of(atom: Mapping) -> str:
     """Family of an item atom: the ``atom_id`` prefix, no ``family`` field."""
     return atom["atom_id"].split(".", 1)[0]
 
 
-def champion_receipt(name: str, champ: dict, audits: dict) -> dict:
+def champion_receipt(name: str, champ: Mapping, audits: Mapping) -> dict:
     atoms = []
     atoms_file = ATOMS_DIR / f"{name.lower()}.atoms.json"
     if atoms_file.exists():
@@ -120,7 +121,7 @@ def champion_receipt(name: str, champ: dict, audits: dict) -> dict:
     }
 
 
-def item_receipt(item_id: str, item: dict, atoms: list[dict] | None = None) -> dict:
+def item_receipt(item_id: str, item: Mapping, atoms: list[dict] | None = None) -> dict:
     """One item receipt from the Atomizer item domain.
 
     ``atoms`` may be injected for tests; the default loads and validates the

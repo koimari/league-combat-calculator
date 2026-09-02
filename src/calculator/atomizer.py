@@ -29,7 +29,7 @@ import hashlib
 import json
 import re
 import time
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -191,7 +191,7 @@ def write_manifest(path: Path, payload: dict[str, Any]) -> None:
 
 
 def split_effect_fragments(
-    effect: dict[str, Any], *, prefix: str, index: int
+    effect: Mapping[str, Any], *, prefix: str, index: int
 ) -> list[tuple[str, str]]:
     """Per-effect text fragments for classification.
 

@@ -148,7 +148,6 @@ class _RelicCannonRule:
         }
 
 
-SENNA_RELIC_CANNON_RULE = _RelicCannonRule()
 # Dawning Shadow's shield duration and Mist scaling are the binary SennaR
 # ShieldDuration DataValue and TotalShield buff-counter coefficient; the
 # cached prose corroborates the 150% term applied to the user-set Mist count.

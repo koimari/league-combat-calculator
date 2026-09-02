@@ -19,6 +19,7 @@ E3 additions over the CP10.9 packet module:
 """
 
 import re
+from collections.abc import Mapping
 from typing import Any
 
 from ..ability_atoms import (
@@ -57,7 +58,7 @@ _MAX_FEATHERS = 12  # + 5 R feathers (sourced maximum)
 _CLEAN_CUTS_LEVEL_BRACKETS = ((13, 3), (7, 2), (1, 1))  # 1/7/13 -> index
 
 
-def _secondary_feather_ratio(ability: dict[str, Any], level: int) -> float:
+def _secondary_feather_ratio(ability: Mapping[str, Any], level: int) -> float:
     """Level-bracketed 35/45/55% AD secondary-feather damage (P prose)."""
     description = " ".join(
         str(effect.get("description", "")) for effect in ability.get("effects", [])
@@ -79,7 +80,7 @@ def _secondary_feather_ratio(ability: dict[str, Any], level: int) -> float:
     return values[0] / 100.0
 
 
-def _secondary_feather_crit_extra(ability: dict[str, Any]) -> float:
+def _secondary_feather_crit_extra(ability: Mapping[str, Any]) -> float:
     """Extra crit multiplier on the secondary feather (P prose).
 
     "can critically strike for (200% + 30%) damage if the triggering

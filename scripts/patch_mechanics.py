@@ -168,7 +168,7 @@ def _download_bytes(url: str) -> bytes:
 # ---------------------------------------------------------------------------
 
 
-def leaf_diffs(old, new, path=""):
+def leaf_diffs(old, new, path: str = ""):
     """Yield (path, old_value, new_value) for every changed leaf.
 
     Containers recurse; a missing side is reported as None; list length
@@ -231,13 +231,13 @@ def name_delta(old_by_name, new_by_name):
 # ---------------------------------------------------------------------------
 
 
-def _load_current(filename):
+def _load_current(filename: str):
     """Load a data file from the on-disk cache (the freshly pulled patch)."""
     with (REPO_ROOT / "data" / filename).open(encoding="utf-8") as f:
         return json.load(f)
 
 
-def _load_head(filename):
+def _load_head(filename: str):
     """Load the last committed version of a data file via git."""
     result = subprocess.run(
         ["git", "show", f"HEAD:data/{filename}"],

@@ -146,7 +146,7 @@ def run_matrix(
     }
 
 
-def build_gate_report(report: dict[str, Any], names: list[str]) -> dict[str, Any]:
+def build_gate_report(report: Mapping[str, Any], names: list[str]) -> dict[str, Any]:
     """Wrap one optimizer matrix in the shared CI gate receipt."""
     from scripts.gate_receipt import (  # pylint: disable=import-outside-toplevel
         build_receipt,

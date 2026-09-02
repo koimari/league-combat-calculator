@@ -40,6 +40,7 @@ fight-computation change.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from .. import healing_helpers as _healing
@@ -255,7 +256,7 @@ MODULE_COVERAGE = coverage(no_damage="W")
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def _leveling_flat_at_level(
-    ability: dict[str, Any], attribute: str, level: int
+    ability: Mapping[str, Any], attribute: str, level: int
 ) -> float:
     """Read the flat (unit-less) modifier of one attribute at champion level."""
     for effect in ability.get("effects", []):

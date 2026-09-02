@@ -375,7 +375,7 @@ def _stamp_cast_time(
 # Camille's and Ambessa's Q2 are free recasts: one paid cast buys both halves.
 # A charge is not one, it is a whole cast stocked in advance, and a slot
 # parser that knows the difference stamps its own ``resource_cost``.
-def _is_free_recast(entry: dict[str, Any]) -> bool:
+def _is_free_recast(entry: Mapping[str, Any]) -> bool:
     """Whether this entry is a recast the parent cast already paid for."""
     return bool(entry.get("recast_of"))
 
@@ -513,7 +513,7 @@ def _validate_entry_keys(
 def _validate_cc_event_contract(
     champion_name: str,
     result_key: str,
-    entry: dict[str, Any],
+    entry: Mapping[str, Any],
 ) -> None:
     """A part-authored ``cc_kind`` must be a known kind that reaches the
     event ledger.
@@ -797,7 +797,7 @@ def _apply_module_cc(
 def _refuse_undeclared_part_cc(
     champion_name: str,
     result_key: str,
-    entry: dict[str, Any],
+    entry: Mapping[str, Any],
     declared_keys: frozenset[str],
 ) -> None:
     """A part may only author a kind for a slot ``MODULE_CC`` names.

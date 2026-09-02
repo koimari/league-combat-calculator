@@ -29,6 +29,7 @@ Why each slot is non-generic:
 """
 
 import math
+from collections.abc import Mapping
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -77,7 +78,9 @@ E_ON_HIT_MAX_EFFECTIVENESS = 0.24  # per-slash on-hits at 100% missing HP
 R_ONHIT_CADENCE = 1  # patch 26.15: R passive procs on every attack
 
 
-def _per_level_scaling(ability: dict[str, Any], occurrence: int, level: int) -> float:
+def _per_level_scaling(
+    ability: Mapping[str, Any], occurrence: int, level: int
+) -> float:
     """Value of the N-th "Per-Level Scaling" leveling entry at *level*.
 
     Death in Lavender stores its permanent-stack AS under this generic

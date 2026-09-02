@@ -324,7 +324,7 @@ def _aggregate_timeline_coverage(results: list[dict]) -> dict:
     )
 
 
-def _primary_value(result: dict, key: str) -> object:
+def _primary_value(result: Mapping, key: str) -> object:
     """Copy the primary target's value defensively (mapping/list containers)."""
     value = result[key]
     if isinstance(value, Mapping):

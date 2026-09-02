@@ -34,6 +34,7 @@ from __future__ import annotations
 import argparse
 import ast
 import sys
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -157,7 +158,7 @@ def _champion_name(call: ast.Call) -> str | None:
     return None
 
 
-def survey(path: Path, packets: dict[str, dict]) -> list[Site]:
+def survey(path: Path, packets: Mapping[str, dict]) -> list[Site]:
     """Every certification in *path*, each with its migration verdict."""
     tree = ast.parse(path.read_text(encoding="utf-8"))
     lines = [
@@ -212,7 +213,7 @@ def survey(path: Path, packets: dict[str, dict]) -> list[Site]:
     return sites
 
 
-def _rewrite(path: Path, sites: list[Site]) -> None:
+def _rewrite(path: Path, sites: Iterable[Site]) -> None:
     """Delete the named lines and name their slots in ``single_hit_slots``."""
     text = path.read_text(encoding="utf-8", newline="")
     tree = ast.parse(path.read_text(encoding="utf-8"))

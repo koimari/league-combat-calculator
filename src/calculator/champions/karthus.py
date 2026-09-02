@@ -13,6 +13,7 @@ alive-window model in both modes.
 """
 
 import math
+from collections.abc import Mapping
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -96,7 +97,7 @@ def _lay_waste(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _defile_mana_per_second(ability: dict[str, Any], rank: int) -> float:
+def _defile_mana_per_second(ability: Mapping[str, Any], rank: int) -> float:
     """Defile's sourced toggle drain: its cost row is mana per second."""
     return float(
         (ability.get("cost") or {})

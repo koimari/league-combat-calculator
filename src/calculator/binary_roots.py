@@ -16,6 +16,7 @@ substitutes zero, skips, or falls back.
 import json
 import math
 import re
+from collections.abc import Mapping
 from functools import cache
 from pathlib import Path
 from typing import Any
@@ -79,7 +80,7 @@ def character_record_root(champion_name: str) -> dict[str, Any]:
     )
 
 
-def record_value(root: dict[str, Any], field: str) -> float:
+def record_value(root: Mapping[str, Any], field: str) -> float:
     """One ModifiableFloat-style record field's ``baseValue``, snapped the
     same way :func:`data_value` snaps spell DataValues."""
     value = root.get(field)

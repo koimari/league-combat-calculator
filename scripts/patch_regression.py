@@ -128,7 +128,7 @@ CHAMPION_STAT_MAP = [
 # AbilityResourceSlotInfo hashed fields, verified against the game files
 # because the hashes are not in cdtb's public hash lists.
 RESOURCE_POOL = "{726ee5cd}"  # base pool
-RESOURCE_POOL_PER_LEVEL = "{6216bf7b}"  # pool per level
+RESOURCE_POOL_PER_LEVEL = "{6216bf7b}"
 RESOURCE_REGEN = "{c4ab3550}"  # base regen, x5 for the per-5s figure
 RESOURCE_REGEN_PER_LEVEL = "{3a509002}"  # regen per level, x5
 
@@ -172,7 +172,9 @@ _SLOT_ORDER = ("Q", "W", "E", "R")
 # ---------------------------------------------------------------------------
 
 
-def within_tolerance(cached, game, relative=REL_TOLERANCE, flat=FLAT_TOLERANCE):
+def within_tolerance(
+    cached, game, relative: float = REL_TOLERANCE, flat=FLAT_TOLERANCE
+):
     """True when a drift is rounding noise (inside 0.5% or +-flat)."""
     if cached == game:
         return True
@@ -259,7 +261,7 @@ def extract_ddragon_version(champions_cache):
     return None
 
 
-def fetch_ddragon_for_pending(ddragon_version, pending, game_dir, concurrency=8):
+def fetch_ddragon_for_pending(ddragon_version, pending, game_dir, concurrency: int = 8):
     """Fetch Riot's official per-spell tooltip data for champions that need
     cooldown/cost arbitration (targeted; never the whole roster)."""
     game_dir = Path(game_dir)
@@ -314,7 +316,7 @@ def ddragon_rows_by_slot(ddragon_champion):
     return by_slot
 
 
-def _expanded_match(wiki_values, dd_values, flat_tolerance):
+def _expanded_match(wiki_values, dd_values, flat_tolerance: float):
     """Match wiki values against ddragon values (constants expand to rank)."""
     if not dd_values:
         return False
@@ -458,7 +460,7 @@ def _is_scaled_display_row(units):
     return "based on" in text or "stack" in text
 
 
-def _downsample_match(wiki_values, game_values, flat_tolerance):
+def _downsample_match(wiki_values, game_values, flat_tolerance: float):
     """Try matching every-other wiki value, for interpolated display rows: a
     3-rank game cooldown shown as five (100/85/70 -> 100/92.5/85/77.5/70)
     matches exactly at the odd positions."""
@@ -634,7 +636,7 @@ def _wiki_row_count(entry):
     return count
 
 
-def _compare_entry_rows(entry, spell, slot, index, ddragon=None):
+def _compare_entry_rows(entry, spell, slot: str, index: int, ddragon=None):
     """Compare one wiki ability entry against one game spell.
 
     ``ddragon`` is Riot's official per-spell tooltip row dict (cooldown/cost),
@@ -1029,7 +1031,7 @@ print(os.path.abspath(game.elem.extract_path(files[0])))
 # ---------------------------------------------------------------------------
 
 
-def main(argv=None):
+def main(argv: None | list[str] = None):
     parser = argparse.ArgumentParser(
         description="Compare the wiki cache against game-file ground truth.",
         formatter_class=argparse.RawDescriptionHelpFormatter,

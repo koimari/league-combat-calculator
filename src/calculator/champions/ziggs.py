@@ -22,6 +22,7 @@ Short Fuse AP ratio (see HARDCODED below).
 """
 
 import re
+from collections.abc import Mapping
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
@@ -45,7 +46,7 @@ from .source_receipts import load_champion_sources
 SHORT_FUSE_AP_RATIO = data_value(spell_object("Ziggs", "ZiggsPassiveBuff"), "APRatio")
 
 
-def _short_fuse_refund_seconds(ability: dict[str, Any], level: int) -> float:
+def _short_fuse_refund_seconds(ability: Mapping[str, Any], level: int) -> float:
     """Read the sourced 4/5/6-second cast refund from passive prose."""
     description = " ".join(
         str(effect.get("description", "")) for effect in ability.get("effects", [])

@@ -42,6 +42,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 import httpx
@@ -249,7 +250,7 @@ def _build_user_plan(users: int, requests: int) -> list[tuple[str, dict]]:
 async def _run_pass(
     client: httpx.AsyncClient,
     base_url: str,
-    plan: list[tuple[str, dict]],
+    plan: Iterable[tuple[str, dict]],
     concurrency: int,
 ) -> tuple[list[tuple[str, float, int]], list[str]]:
     """Execute the plan with a fixed worker pool; returns the result rows."""
@@ -353,7 +354,7 @@ def _percentile(values: list[float], fraction: float) -> float:
     return ordered[index]
 
 
-def _check_budgets(summary: dict) -> bool:
+def _check_budgets(summary: Mapping) -> bool:
     """Assert p95 budgets and the warm-pass cache hit ratio; returns pass."""
     ok = True
     calculate_p95 = summary["latencies"]["calculate"]["p95"]

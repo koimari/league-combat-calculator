@@ -26,6 +26,7 @@ insufficient or a criterion has a single strike, ``fail`` otherwise.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
@@ -192,7 +193,7 @@ def _stale_flag_count(report: dict | None) -> int:
 
 
 def _session_timeline(
-    rows: list[tuple[str | None, datetime]],
+    rows: Iterable[tuple[str | None, datetime]],
 ) -> dict[str, list[datetime]]:
     """Per-session sorted activity timestamps; NULL session ids are dropped."""
     timeline: dict[str, list[datetime]] = {}
@@ -206,7 +207,10 @@ def _session_timeline(
 
 
 def _retention_metrics(
-    timeline: dict[str, list[datetime]], start: datetime, end: datetime, now: datetime
+    timeline: Mapping[str, list[datetime]],
+    start: datetime,
+    end: datetime,
+    now: datetime,
 ) -> dict:
     """7-day retention for sessions whose first activity lands in range."""
     cohort = {
@@ -302,7 +306,7 @@ def _staleness_week(
     }
 
 
-def _weekly_gate(week_results: list[dict]) -> str:
+def _weekly_gate(week_results: Sequence[dict]) -> str:
     """Gate status from per-week results: 2 misses -> fail, 1 -> at_risk.
 
     Only the last two COMPLETE weeks count (the 2-weeks-running rule); an

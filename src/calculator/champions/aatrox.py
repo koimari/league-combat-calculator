@@ -38,6 +38,7 @@ staying silently absent, and its heal keeps it ``modeled`` through the
 """
 
 import re
+from collections.abc import Iterable
 from typing import Any
 
 from ..ability_atoms import ability_field, ability_payload
@@ -118,7 +119,7 @@ _Q_TRIAD_COMPONENTS = {
 
 
 def _q_strike_parts(
-    ctx: SlotCtx, ability: dict[str, Any], rank: int, attrs: list[str]
+    ctx: SlotCtx, ability: dict[str, Any], rank: int, attrs: Iterable[str]
 ) -> tuple[DamagePart, ...]:
     """One part per named strike, at the strike's sourced landing time."""
     return tuple(

@@ -13,6 +13,7 @@ the sourced sell table raises rather than falling back to the stale cache.
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -30,7 +31,7 @@ class _Tables:
         return cls._loaded
 
 
-def sourced_total(item: dict[str, Any]) -> int | None:
+def sourced_total(item: Mapping[str, Any]) -> int | None:
     """Return the sourced DDragon total price, or None when unavailable."""
     item_id = int(item.get("id") or 0)
     for row in _Tables.load().get("per_item_sell", []):
@@ -44,7 +45,7 @@ def sourced_total(item: dict[str, Any]) -> int | None:
     return None
 
 
-def sourced_sell_value(item: dict[str, Any]) -> int:
+def sourced_sell_value(item: Mapping[str, Any]) -> int:
     """Return the sourced sell refund for an item (never the stale cache)."""
     name = str(item.get("name") or "Unknown item")
     item_id = int(item.get("id") or 0)
@@ -58,7 +59,7 @@ def sourced_sell_value(item: dict[str, Any]) -> int:
     raise KeyError(f"{name}: economics-sourced per_item_sell")
 
 
-def sourced_combine_cost(item: dict[str, Any]) -> int | None:
+def sourced_combine_cost(item: Mapping[str, Any]) -> int | None:
     """Return the sourced combine fee, or None when the item has no recipe."""
     name = str(item.get("name") or "Unknown item")
     item_id = int(item.get("id") or 0)

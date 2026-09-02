@@ -51,6 +51,7 @@ wire them without re-deriving:
 """
 
 import math
+from collections.abc import Iterable
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -295,7 +296,7 @@ def _plasma_application_stream(
 
 
 def _walk_plasma_stacks(
-    ctx: SlotCtx, applications: list[tuple[float, int]]
+    ctx: SlotCtx, applications: Iterable[tuple[float, int]]
 ) -> tuple[list[DamagePart], int]:
     """Turn a stack-application stream into parts, counting the ruptures.
 

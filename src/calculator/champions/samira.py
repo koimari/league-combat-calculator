@@ -91,13 +91,9 @@ def _blade_rider(ctx: SlotCtx) -> HitRider | None:
     )
 
 
-def _blade_zone(ctx: SlotCtx) -> bool:
-    return bool(ctx.option("p_blade_zone"))
-
-
 def _blade_zone_rider(ctx: SlotCtx) -> HitRider | None:
     """The rider on the carriers the blade zone gates (Flair's slash)."""
-    return _blade_rider(ctx) if _blade_zone(ctx) else None
+    return _blade_rider(ctx) if bool(ctx.option("p_blade_zone")) else None
 
 
 def _style_state(ctx: SlotCtx) -> str:

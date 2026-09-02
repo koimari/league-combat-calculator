@@ -14,6 +14,7 @@ Each domain maps one cached data family to Atom records:
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from typing import Any
 
 from .atomizer import Atomizer, number_and_unit, split_effect_fragments
@@ -111,7 +112,7 @@ _ITEM_KEYWORDS: tuple[tuple[str, str, str], ...] = (
 )
 
 
-def atomize_item(item: dict[str, Any]) -> list[dict[str, Any]]:
+def atomize_item(item: Mapping[str, Any]) -> list[dict[str, Any]]:
     """Atomize one item: stats + shop + every passive/active fragment.
 
     Fragments are classified per-effect (never against a whole-item blob),
@@ -134,7 +135,6 @@ def atomize_item(item: dict[str, Any]) -> list[dict[str, Any]]:
                     ["flat"],
                     [f"stats.{stat_name}.flat"],
                 )
-    # shop prices
     prices = (item.get("shop") or {}).get("prices") or {}
     if isinstance(prices.get("total"), (int, float)):
         a.add(
@@ -196,7 +196,7 @@ def atomize_item(item: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def atomize_item_catalogue(
-    items: dict[str, dict[str, Any]],
+    items: Mapping[str, dict[str, Any]],
 ) -> dict[str, list[dict[str, Any]]]:
     return {str(key): atomize_item(item) for key, item in sorted(items.items())}
 
@@ -212,7 +212,7 @@ _FOCUS_WINDOW_ACTIVE_EFFECTS = {"Ashe": {"Q": 1}}
 
 def atomize_abilities(
     champion_name: str,
-    champion: dict[str, Any],
+    champion: Mapping[str, Any],
 ) -> dict[str, list[dict[str, Any]]]:
     """Atomize one champion's ability slots -> effects -> leveling modifiers."""
     out: dict[str, list[dict[str, Any]]] = {}
@@ -531,7 +531,7 @@ def atomize_rune_catalogue(runes: Any) -> dict[str, list[dict[str, Any]]]:
     return out
 
 
-def atomize_economics(economics: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+def atomize_economics(economics: Mapping[str, Any]) -> dict[str, list[dict[str, Any]]]:
     """Atomize the sourced sell/combine tables."""
     out: dict[str, list[dict[str, Any]]] = {}
     for row in economics.get("per_item_sell", []):
@@ -575,7 +575,7 @@ def atomize_economics(economics: dict[str, Any]) -> dict[str, list[dict[str, Any
     return out
 
 
-def atomize_stats(champion: dict[str, Any]) -> list[dict[str, Any]]:
+def atomize_stats(champion: Mapping[str, Any]) -> list[dict[str, Any]]:
     a = Atomizer("stats", source_ref=str(champion.get("name", "?")))
     name = str(champion.get("name", "?"))
     for stat_name, stat in (champion.get("stats") or {}).items():

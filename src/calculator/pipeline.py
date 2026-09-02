@@ -7,7 +7,7 @@ champion-agnostic fight engine; data fetching remains with each consumer.
 
 import math
 import re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, replace
 from typing import Any
 
@@ -667,7 +667,7 @@ def _keystone_self_healing_events(
 
 
 def _saturated_omnivamp_percent(
-    items: list[dict[str, Any]],
+    items: Iterable[dict[str, Any]],
     fight_duration_seconds: float,
     *,
     is_melee: bool = True,
@@ -688,8 +688,8 @@ def _saturated_omnivamp_percent(
 
 def ledger_inputs(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     params: "FightParams",
-    champion_data: dict[str, Any],
-    items: list[dict[str, Any]],
+    champion_data: Mapping[str, Any],
+    items: Iterable[dict[str, Any]],
     item_damage_effects: Any,
     fight_stats: Mapping[str, Any],
     ability_damages: Mapping[str, Any],
@@ -810,7 +810,7 @@ def _attach_display_splits(result: dict[str, Any]) -> None:
 
 
 def _annotate_deathfire_categories(
-    ability_damages: dict[str, dict[str, Any]],
+    ability_damages: Mapping[str, dict[str, Any]],
     champion_data: Mapping[str, Any],
 ) -> None:
     """Attach conservative typed damage categories for Deathfire Touch."""

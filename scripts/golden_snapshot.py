@@ -194,7 +194,7 @@ def _default_target_stats():
     }
 
 
-def _parse_abilities_fresh(champion_data, level, items):
+def _parse_abilities_fresh(champion_data, level: int, items):
     """Mirror the app/optimizer pipeline up through parse_abilities.
 
     Deep-copies inputs (each web request re-reads data from disk, so every
@@ -264,7 +264,7 @@ def _fight_summary(result):
     return summary
 
 
-def snapshot_champion_baselines(champions):
+def snapshot_champion_baselines(champions: dict[str, Any]):
     """Section 1: stats at levels 1/11/18 and level-11 abilities, all champions."""
     out = {}
     for key in sorted(champions):
@@ -286,7 +286,7 @@ def snapshot_champion_baselines(champions):
     return out
 
 
-def _resolve_build(requested_names, items_by_name, substitutions):
+def _resolve_build(requested_names: list[str], items_by_name, substitutions):
     """Resolve build item names against cached data, logging missing names."""
     build = []
     for name in requested_names:
@@ -298,7 +298,9 @@ def _resolve_build(requested_names, items_by_name, substitutions):
     return build
 
 
-def snapshot_registered_fights(champions, items_by_name, substitutions):
+def snapshot_registered_fights(
+    champions: dict[str, Any], items_by_name: dict[Any, Any], substitutions
+):
     """Section 2: fights for every registered champion, 4 builds x 2 levels.
 
     Each level holds the original one-rotation entries under the build keys,
@@ -344,7 +346,9 @@ def snapshot_registered_fights(champions, items_by_name, substitutions):
     return out
 
 
-def snapshot_keystone_fights(champions, items_by_name, substitutions):
+def snapshot_keystone_fights(
+    champions: dict[str, Any], items_by_name: dict[Any, Any], substitutions
+):
     """Section 4: the two swing-scheduling keystones, armed.
 
     One melee and one ranged holder on the physical build, at both fight
@@ -398,7 +402,7 @@ def _sweep_entry(champion_data, item, **fight_kwargs):
     }
 
 
-def snapshot_item_sweep(champions, items):
+def snapshot_item_sweep(champions: dict[str, Any], items: dict[str, Any]):
     """Section 3: every item, alone, at level 11, in two arms.
 
     The one-rotation arm runs Vayne and Ahri with auto_attack_uptime=1.0 —
@@ -442,7 +446,7 @@ def _git(*args):
     return result.stdout.strip() if result.returncode == 0 else ""
 
 
-def _meta_fetched_at(filename):
+def _meta_fetched_at(filename: str):
     meta_path = REPO_ROOT / "data" / f".{filename}.meta"
     return json.loads(meta_path.read_text(encoding="utf-8")).get("fetched_at")
 
@@ -457,7 +461,13 @@ def snapshot_provenance():
     }
 
 
-def snapshot_metadata(champions, items, substitutions, sweep_error_count, sections):
+def snapshot_metadata(
+    champions: dict[str, Any],
+    items: dict[str, Any],
+    substitutions,
+    sweep_error_count: int,
+    sections,
+):
     """Section 4: patch, provenance, counts, and the shape fingerprint.
 
     The fingerprint block is computed by ``fingerprint_counts`` over the
@@ -776,7 +786,7 @@ def _identity_keyed_diffs(path, old, new, out):
     return True
 
 
-def _leaf_diffs(path, old, new, out, identity=None):
+def _leaf_diffs(path: str, old, new, out, identity=None):
     """Collect one LeafDiff per differing leaf, recursing through containers."""
     if _is_error(old) != _is_error(new):
         out.append(_leaf_diff(path, old, new, identity))
@@ -932,7 +942,7 @@ SYNDRA_PIN_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 SYNDRA_CUSTOM_ORDER = ["Q", "W", "E", "R"]
 
 
-def _syndra_pin_request(splinters, *, cast_order):
+def _syndra_pin_request(splinters: int, *, cast_order):
     """One Syndra pin request: level 18, 600 AP, 10 AH, 12 s, 10000 HP target.
 
     The ally carries the same request so the roster loadout's own cast-order
@@ -987,7 +997,9 @@ def _syndra_pin_scenarios():
     return tuple(scenarios)
 
 
-def _roster_request(champion, items, *, enemies, allies, enemy_cards=None, **extra):
+def _roster_request(
+    champion: str, items, *, enemies, allies, enemy_cards=None, **extra
+):
     """A time-based roster request with the fields every scenario shares.
 
     ``enemy_cards`` equips a *defender*, keyed by champion name and carrying
@@ -1913,32 +1925,6 @@ def capture_coupled(
 def _format_value(value):
     text = json.dumps(value, sort_keys=True, default=repr)
     return text if len(text) <= 120 else text[:117] + "..."
-
-
-def diff_snapshots(path, old, new, diffs):
-    """Recursively collect 'path: old -> new' strings for every difference."""
-    if isinstance(old, dict) and isinstance(new, dict):
-        for key in sorted(set(old) | set(new)):
-            if key not in old:
-                diffs.append(f"{path}/{key}: <absent> -> {_format_value(new[key])}")
-            elif key not in new:
-                diffs.append(f"{path}/{key}: {_format_value(old[key])} -> <absent>")
-            else:
-                diff_snapshots(f"{path}/{key}", old[key], new[key], diffs)
-    elif isinstance(old, list) and isinstance(new, list):
-        for index in range(max(len(old), len(new))):
-            if index >= len(old):
-                diffs.append(
-                    f"{path}[{index}]: <absent> -> {_format_value(new[index])}"
-                )
-            elif index >= len(new):
-                diffs.append(
-                    f"{path}[{index}]: {_format_value(old[index])} -> <absent>"
-                )
-            else:
-                diff_snapshots(f"{path}[{index}]", old[index], new[index], diffs)
-    elif old != new:
-        diffs.append(f"{path}: {_format_value(old)} -> {_format_value(new)}")
 
 
 def require_committed_src():

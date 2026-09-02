@@ -16,7 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -170,7 +170,7 @@ def _post_remote(base_url: str, path: str, payload: dict[str, Any]) -> tuple[int
         return 0, {"error": str(exc.reason)}
 
 
-def _participants(body: dict[str, Any]) -> list[str]:
+def _participants(body: Mapping[str, Any]) -> list[str]:
     combat = body.get("combat")
     if not isinstance(combat, dict):
         return []

@@ -23,6 +23,7 @@ import contextlib
 import logging
 import math
 import re
+from collections.abc import Mapping
 from typing import Any
 
 from .item_source import effect_text
@@ -268,7 +269,7 @@ def _extract_ft_parts(text: str) -> tuple[str, str] | None:
 
 
 def _find_passive_by_name(
-    item_data: dict[str, Any],
+    item_data: Mapping[str, Any],
     name: str,
 ) -> dict[str, Any] | None:
     """Find a passive entry by its name field."""
@@ -282,7 +283,7 @@ def _find_passive_by_name(
 
 
 def _find_active_by_name(
-    item_data: dict[str, Any],
+    item_data: Mapping[str, Any],
     name: str,
 ) -> dict[str, Any] | None:
     """Find an active entry by its name field."""
@@ -2673,7 +2674,7 @@ _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
 
 
 def _find_item_data_by_name(
-    items_data: dict[str, Any],
+    items_data: Mapping[str, Any],
     item_name: str,
 ) -> dict[str, Any] | None:
     """Find an item entry in JSON data by name (case-insensitive)."""

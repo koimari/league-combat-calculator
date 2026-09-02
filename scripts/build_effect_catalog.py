@@ -13,6 +13,7 @@ import argparse
 import json
 import re
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -24,7 +25,7 @@ from src.calculator.item_source import effect_text
 NUMBER_RE = re.compile(r"(?<![A-Za-z])\d+(?:\.\d+)?%?")
 
 
-def _text(item: dict[str, Any]) -> str:
+def _text(item: Mapping[str, Any]) -> str:
     parts = [str(item.get("simpleDescription") or ""), str(item.get("active") or "")]
     parts.extend(
         effect_text(effect)
