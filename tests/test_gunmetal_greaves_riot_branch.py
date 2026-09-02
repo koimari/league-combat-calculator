@@ -108,6 +108,7 @@ from src.calculator.interpreters import (
     damage_routing,
     on_hit_strike,
 )
+from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     ITEM_INPUT_OPTIONS,
@@ -487,21 +488,21 @@ def test_the_passive_is_not_compiled_into_any_damage_packet():
     with nothing saying so -- so each family is asked its own resolver.
     """
     owners = (_boots()["name"],)
-    resolution = {
-        "level": 18,
-        "fight_duration_seconds": 5.0,
-        "target_bonus_health": 0.0,
-        "holder_is_melee": True,
-    }
-    assert on_hit_strike.per_hit_effects(owners, **resolution) == ()
+    resolution = FightFacts(
+        level=18,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+    assert on_hit_strike.per_hit_effects(owners, facts=resolution) == ()
     assert (
         on_hit_strike.class_restricted_per_hit_effects(owners, target_class="minion")
         == ()
     )
-    assert active_cast.active_sources(owners, **resolution) == ()
-    charged = charged_strike.resolve_slots(owners, **resolution)
+    assert active_cast.active_sources(owners, facts=resolution) == ()
+    charged = charged_strike.resolve_slots(owners, facts=resolution)
     assert charged.shaped_charges == ()
-    procs = cast_proc.resolve_slots(owners, **resolution)
+    procs = cast_proc.resolve_slots(owners, facts=resolution)
     assert procs.cooldown_procs == ()
 
     resolved = resolve_damage_effects([_boots()])

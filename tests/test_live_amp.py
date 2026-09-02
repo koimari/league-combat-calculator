@@ -31,6 +31,7 @@ from src.calculator.delivery_eligibility import (
     SpellShieldComposition,
     SpellShieldEligibility,
 )
+from src.calculator.item_behavior import FightFacts
 from src.calculator.participant_timeline import Combatant
 from src.calculator.program.amp import LiveAmpRider, live_amp_for, live_amp_riders
 from src.calculator.program.compile import action_from_event
@@ -291,10 +292,12 @@ def test_the_interpreter_reads_shadowflames_own_declaration():
     """Threshold, fraction and typing come from the rule, not from here."""
     riders = live_amp_riders(
         ["Shadowflame"],
-        level=18,
-        fight_duration_seconds=8.0,
-        target_bonus_health=0.0,
-        holder_is_melee=False,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=8.0,
+            target_bonus_health=0.0,
+            holder_is_melee=False,
+        ),
     )
     assert len(riders) == 1
     rider = riders[0]
@@ -312,10 +315,12 @@ def test_a_build_declaring_no_live_predicate_declares_no_rider():
     assert (
         live_amp_riders(
             ["Void Staff"],
-            level=18,
-            fight_duration_seconds=8.0,
-            target_bonus_health=0.0,
-            holder_is_melee=False,
+            facts=FightFacts(
+                level=18,
+                fight_duration_seconds=8.0,
+                target_bonus_health=0.0,
+                holder_is_melee=False,
+            ),
         )
         == ()
     )

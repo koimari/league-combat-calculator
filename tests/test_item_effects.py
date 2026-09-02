@@ -21,6 +21,7 @@ from src.calculator.interpreters import (
 from src.calculator.interpreters.crit_profile import declared_crit_profile
 from src.calculator.interpreters.damage_routing import declared_execution
 from src.calculator.interpreters.delta_amp import declared_magic_amp
+from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
@@ -89,10 +90,12 @@ def _charged_strikes(*owners: str, is_melee: bool = True):
     """The charged strikes a build declares, through their rules."""
     return charged_strike.resolve_slots(
         owners,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -100,10 +103,12 @@ def _cast_proc_slots(*owners: str, is_melee: bool = True):
     """The cast-triggered procs a build declares, through their rules."""
     return cast_proc.resolve_slots(
         owners,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -111,10 +116,12 @@ def _spellblade_slot(*owners: str, level: int = 18, is_melee: bool = True):
     """The spellblade a build arms, resolved through its declaration."""
     return spellblade.resolve_slot(
         owners,
-        level=level,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -197,10 +204,12 @@ def test_giant_slayer_scales_on_the_targets_bonus_health_not_the_holders() -> No
         slot = delta_amp.resolve_slot(
             ["Lord Dominik's Regards"],
             AmpChainSlot.WHOLE_TOTAL,
-            level=18,
-            fight_duration_seconds=5.0,
-            target_bonus_health=target_bonus_health,
-            holder_is_melee=True,
+            facts=FightFacts(
+                level=18,
+                fight_duration_seconds=5.0,
+                target_bonus_health=target_bonus_health,
+                holder_is_melee=True,
+            ),
         )
         assert slot is not None
         return slot.sources()[0][1]
@@ -361,10 +370,12 @@ def _declared_per_hits(*owners: str, level: int = 18):
     """The on-hit strikes a build declares, through their own rules."""
     return on_hit_strike.per_hit_effects(
         owners,
-        level=level,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 

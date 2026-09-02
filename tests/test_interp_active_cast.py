@@ -12,7 +12,12 @@ declarations rather than one defaulted zero.
 import pytest
 
 from src.calculator.interpreters import active_cast
-from src.calculator.item_behavior import ActiveCastRule, EngineLane, RuleFamily
+from src.calculator.item_behavior import (
+    ActiveCastRule,
+    EngineLane,
+    FightFacts,
+    RuleFamily,
+)
 from src.calculator.item_behavior_catalog import behavior_rules, build_context
 from src.calculator.item_effects import ITEM_EFFECTS, DamageInputs
 
@@ -26,10 +31,12 @@ def _sources(*owners: str, level: int = 18) -> tuple:
     """The rows a build of *owners* declares."""
     return active_cast.active_sources(
         owners,
-        level=level,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -108,10 +115,12 @@ def test_the_pair_interpreter_compiles_the_cooldown_it_can_know() -> None:
     (rule,) = active_cast.active_rules([PLAIN])
     ctx = build_context(
         PLAIN,
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     (field,) = active_cast.active_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.name == active_cast.ACTIVE_COOLDOWN_FIELD
@@ -128,10 +137,12 @@ def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
     ]
     ctx = build_context(
         "Runaan's Hurricane",
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=False,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=False,
+        ),
     )
     with pytest.raises(active_cast.ActiveCastInterpretationError):
         active_cast.active_fields(foreign, ctx, EngineLane.PAIR_ENGINE)

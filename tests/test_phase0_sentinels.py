@@ -33,7 +33,7 @@ from src.calculator.ability_spec import (
 from src.calculator.champions import registered_champion_names
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.interpreters import delta_amp
-from src.calculator.item_behavior import AmpChainSlot
+from src.calculator.item_behavior import AmpChainSlot, FightFacts
 from src.calculator.item_support_effects import (
     _declared_authorities,
 )
@@ -184,10 +184,12 @@ def command_slot() -> delta_amp.AmpSlot:
     slot = delta_amp.resolve_slot(
         ["Imperial Mandate"],
         AmpChainSlot.POST_IMMOBILIZE,
-        level=18,
-        fight_duration_seconds=10.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=10.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert slot is not None, "D-12: the sweep needs Command's declared window"
     return slot

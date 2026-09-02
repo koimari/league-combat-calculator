@@ -12,7 +12,7 @@ import dataclasses
 import pytest
 
 from src.calculator.interpreters import on_hit_strike
-from src.calculator.item_behavior import OnHitStrikeRule, RuleFamily
+from src.calculator.item_behavior import FightFacts, OnHitStrikeRule, RuleFamily
 from src.calculator.item_behavior_catalog import (
     ON_HIT_FORMULA_TERMS,
     behavior_rules,
@@ -43,10 +43,12 @@ def _strike(owner: str) -> "on_hit_strike.PerHitEffect":  # type: ignore[name-de
     """The one on-hit strike an owner declares."""
     strikes = on_hit_strike.per_hit_effects(
         [owner],
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert len(strikes) == 1
     return strikes[0]
@@ -150,10 +152,12 @@ def test_a_build_with_no_on_hit_item_declares_nothing() -> None:
     assert (
         on_hit_strike.per_hit_effects(
             ["Sheen"],
-            level=18,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            facts=FightFacts(
+                level=18,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         )
         == ()
     )
@@ -164,10 +168,12 @@ def test_a_rule_from_another_family_is_refused() -> None:
     amp = behavior_rules("Horizon Focus")[0]
     ctx = build_context(
         "Horizon Focus",
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     with pytest.raises(on_hit_strike.OnHitStrikeInterpretationError):
         on_hit_strike.per_hit_effect(amp, ctx)

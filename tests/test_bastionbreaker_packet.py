@@ -79,6 +79,7 @@ from src.calculator.damage import (
 )
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.interpreters import charged_strike
+from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import (
     DamageInputs,
     required_effect_value,
@@ -102,10 +103,12 @@ def _shaped_charge():
     """
     return charged_strike.resolve_slots(
         (BASTION,),
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     ).shaped_charges[0]
 
 

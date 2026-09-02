@@ -24,6 +24,7 @@ from src.calculator.item_behavior import (
     DefenseField,
     DefenseMechanic,
     EngineLane,
+    FightFacts,
     RuleFamily,
 )
 
@@ -84,10 +85,12 @@ def test_compiling_resolves_every_reference_at_build_time() -> None:
         rule,
         catalog.build_context(
             rule.owner,
-            18,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            FightFacts(
+                level=18,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         ),
         EngineLane.DEFENSE_RESOLVER,
     )

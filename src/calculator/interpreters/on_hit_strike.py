@@ -24,6 +24,7 @@ from ..item_behavior import (
     BehaviorRule,
     BuildContext,
     EngineLane,
+    FightFacts,
     KernelField,
     OnHitStrikeRule,
     RestrictedChannelRule,
@@ -229,34 +230,16 @@ def strike_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
 def per_hit_effects(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> tuple[PerHitEffect, ...]:
-    """Every on-hit strike this build declares, in build order.
-
-    Build order is the order the items were bought, which is the order the
-    registry's own loop appended them in, which is the order the engine's
-    breakdown rows come out in.  Preserving it is what makes the migration
-    provably neutral rather than merely equivalent.
-
-    The fight facts are the build context's required fields and are threaded
-    through rather than defaulted, even though no on-hit coefficient reads
-    one: a placeholder here would be exactly the silent default the context's
-    requiredness exists to prevent, and a strike whose *rate* depended on the
-    fight would be a different mechanic.
-    """
+    """Every on-hit strike this build declares, in build order (purchase order,
+    the registry's append order and the engine's breakdown-row order).  The
+    facts are threaded, not defaulted, though no on-hit coefficient reads one:
+    a placeholder would be the silent default the context refuses."""
     return tuple(
         per_hit_effect(
             rule,
-            build_context(
-                rule.owner,
-                level,
-                fight_duration_seconds=fight_duration_seconds,
-                target_bonus_health=target_bonus_health,
-                holder_is_melee=holder_is_melee,
-            ),
+            build_context(rule.owner, facts),
         )
         for rule in strike_rules(owners)
     )

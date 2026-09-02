@@ -29,6 +29,7 @@ from src.calculator.item_behavior import (
     CritDamageBonusRule,
     CritOccurrence,
     EngineLane,
+    FightFacts,
     ForcedCritRule,
     RuleFamily,
     Subject,
@@ -44,10 +45,12 @@ def _profile(*owners: str):
     """The declared crit profile of a build, at a mid-fight level."""
     return resolve_profile(
         list(owners),
-        level=13,
-        fight_duration_seconds=5.0,
-        target_bonus_health=1000.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=13,
+            fight_duration_seconds=5.0,
+            target_bonus_health=1000.0,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -171,10 +174,12 @@ def test_the_interpreter_refuses_a_rule_of_another_family() -> None:
             other,
             catalog.build_context(
                 other.owner,
-                13,
-                fight_duration_seconds=5.0,
-                target_bonus_health=0.0,
-                holder_is_melee=True,
+                FightFacts(
+                    level=13,
+                    fight_duration_seconds=5.0,
+                    target_bonus_health=0.0,
+                    holder_is_melee=True,
+                ),
             ),
             EngineLane.PAIR_ENGINE,
         )
@@ -187,10 +192,12 @@ def test_the_compiled_field_names_are_what_the_engines_ask_for() -> None:
         rule,
         catalog.build_context(
             rule.owner,
-            13,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            FightFacts(
+                level=13,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         ),
         EngineLane.PAIR_ENGINE,
     )
@@ -202,10 +209,12 @@ def test_the_compiled_field_names_are_what_the_engines_ask_for() -> None:
         refund_rule,
         catalog.build_context(
             refund_rule.owner,
-            13,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            FightFacts(
+                level=13,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         ),
         EngineLane.PAIR_ENGINE,
     )

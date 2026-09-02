@@ -21,6 +21,7 @@ from src.calculator.item_behavior import (
     EmpoweredAutoBuffRule,
     EmpoweredHitRule,
     EngineLane,
+    FightFacts,
     RepeatingStrikeRule,
     RuleFamily,
     ShapedChargeRule,
@@ -48,10 +49,12 @@ def _slots(*owners: str, level: int = 18, is_melee: bool = True):
     """The charged strikes a build of *owners* declares."""
     return charged_strike.resolve_slots(
         owners,
-        level=level,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -227,10 +230,12 @@ def test_the_pair_interpreter_compiles_the_count_each_shape_has() -> None:
     (rule,) = charged_strike.charged_strike_rules([FLAT_REPEAT])
     ctx = build_context(
         FLAT_REPEAT,
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     (field,) = charged_strike.strike_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.name == charged_strike.CHARGE_COUNT_FIELD
@@ -248,10 +253,12 @@ def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
     ]
     ctx = build_context(
         "Tiamat",
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     with pytest.raises(charged_strike.ChargedStrikeInterpretationError):
         charged_strike.strike_fields(foreign, ctx, EngineLane.PAIR_ENGINE)
@@ -416,10 +423,12 @@ def test_a_swing_schedule_compiles_to_its_ramp_ceiling_and_no_damage() -> None:
     """A schedule is not spent, so what it compiles to is the ramp's ceiling."""
     ctx = build_context(
         RAMP,
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     rule = _swing_rule(RAMP)
     (field,) = charged_strike.strike_fields(rule, ctx, EngineLane.PAIR_ENGINE)
@@ -433,10 +442,12 @@ def test_a_window_only_schedule_compiles_to_the_no_sibling_spelling() -> None:
     """No ramp is a declared absence, not a stack count that measured zero."""
     ctx = build_context(
         WINDOW,
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     (field,) = charged_strike.strike_fields(
         _swing_rule(WINDOW), ctx, EngineLane.PAIR_ENGINE

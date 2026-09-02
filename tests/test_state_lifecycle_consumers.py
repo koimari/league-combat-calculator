@@ -22,6 +22,7 @@ from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.interpreters import cast_proc
+from src.calculator.item_behavior import FightFacts
 from src.calculator.item_support_effects import derive_item_support_effects
 
 # ---------------------------------------------------------------------------
@@ -96,10 +97,12 @@ class TestEclipseConsumer:
             p
             for p in cast_proc.resolve_slots(
                 ("Eclipse",),
-                level=11,
-                fight_duration_seconds=5.0,
-                target_bonus_health=0.0,
-                holder_is_melee=True,
+                facts=FightFacts(
+                    level=11,
+                    fight_duration_seconds=5.0,
+                    target_bonus_health=0.0,
+                    holder_is_melee=True,
+                ),
             ).cooldown_procs
             if p.source.item_name == "Eclipse"
         )

@@ -16,6 +16,7 @@ from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.interpreters import on_hit_strike, spellblade
+from src.calculator.item_behavior import FightFacts
 from tests import cc_review
 
 
@@ -73,10 +74,12 @@ def _declared_per_hits(*owners: str, level: int = 18):
     """The on-hit strikes a build declares, through their own rules."""
     return on_hit_strike.per_hit_effects(
         owners,
-        level=level,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -296,10 +299,12 @@ class TestAbilityItemOnHits:
         assert row["count"] == 1
         effect = spellblade.resolve_slot(
             ["Trinity Force"],
-            level=18,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=False,
+            facts=FightFacts(
+                level=18,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=False,
+            ),
         )
         inputs = item_effects.DamageInputs(
             champion_stats=stats,

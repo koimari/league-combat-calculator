@@ -39,6 +39,7 @@ from ..item_behavior import (
     DefenseOutcome,
     DefenseSubject,
     EngineLane,
+    FightFacts,
     KernelField,
     MeleeRangedSplit,
     ReceivedHealingRule,
@@ -177,10 +178,7 @@ def sustain_slot(
     owners: Sequence[str],
     payload_type: type,
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> SustainSlot | None:
     """This build's sustain of one shape, or ``None`` if nobody declares one.
 
@@ -202,13 +200,7 @@ def sustain_slot(
         rule=rule,
         fields=sustain_fields(
             rule,
-            build_context(
-                rule.owner,
-                level,
-                fight_duration_seconds=fight_duration_seconds,
-                target_bonus_health=target_bonus_health,
-                holder_is_melee=holder_is_melee,
-            ),
+            build_context(rule.owner, facts),
             EngineLane.PAIR_ENGINE,
         ),
     )

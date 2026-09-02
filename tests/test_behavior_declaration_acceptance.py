@@ -43,6 +43,7 @@ from src.calculator.item_behavior import (
     AmpChainSlot,
     Compilable,
     EngineLane,
+    FightFacts,
     ReceiptOnly,
     ReceiptScope,
     RuleFamily,
@@ -187,10 +188,12 @@ def test_the_pair_engine_prices_a_declaration_only_amp(declared) -> None:
     slot = delta_amp.resolve_slot(
         (amp,),
         AmpChainSlot.WHOLE_TOTAL,
-        level=18,
-        fight_duration_seconds=FIGHT_DURATION,
-        target_bonus_health=0.0,
-        holder_is_melee=False,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=FIGHT_DURATION,
+            target_bonus_health=0.0,
+            holder_is_melee=False,
+        ),
     )
     assert slot is not None, "the declared whole-total slot resolved to nothing"
     (fraction,) = slot.fractions

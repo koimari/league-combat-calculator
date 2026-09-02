@@ -27,6 +27,7 @@ from ..item_behavior import (
     BehaviorRule,
     BuildContext,
     EngineLane,
+    FightFacts,
     KernelField,
     RuleFamily,
 )
@@ -135,10 +136,7 @@ def active_mechanic_id(owner: str) -> str:
 def active_sources(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> tuple[DamageSource, ...]:
     """Every active this build declares, in build order.
 
@@ -150,13 +148,7 @@ def active_sources(
     return tuple(
         active_source(
             rule,
-            build_context(
-                rule.owner,
-                level,
-                fight_duration_seconds=fight_duration_seconds,
-                target_bonus_health=target_bonus_health,
-                holder_is_melee=holder_is_melee,
-            ),
+            build_context(rule.owner, facts),
         )
         for rule in active_rules(owners)
     )

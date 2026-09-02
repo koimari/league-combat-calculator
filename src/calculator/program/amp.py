@@ -54,6 +54,7 @@ from ..item_behavior import (
     AMP_CHAIN_ORDER,
     Comparison,
     EngineLane,
+    FightFacts,
     LivePredicate,
     Probe,
     Subject,
@@ -260,37 +261,21 @@ class LiveAmpRider:
 def live_amp_riders(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> tuple[LiveAmpRider, ...]:
     """Every live-predicate amplifier *owners* declare, as kernel riders.
 
     A ``delta_amp`` rule whose activation is a
     :class:`~..item_behavior.LivePredicate` reads a pool that exists only inside
-    a simulation, and in a roster that pool is under everyone's fire.  The
-    threshold and fraction compile here from the declaration the pair engine
-    reads; the reading is left to the walk.  Every chain slot is asked and a
-    rule qualifies by declaring a live predicate, never by slot name.
-
-    Three refusals rather than silent skips, because an amplifier the
-    interpreter declined to build is indistinguishable from a bonus of zero:
-    a probe or comparison the kernel has no tag for, a subject other than the
-    holder since a rider rides its own holder's event, and a declaration that
-    compiles no threshold or fraction, which
-    :class:`~..interpreters.delta_amp.AmpSlot` already raises for.
-    """
+    a simulation, so the threshold and fraction compile here from the pair
+    engine's declaration and the reading is left to the walk; every chain slot
+    is asked and a rule qualifies by its live predicate, never by slot name.
+    Three refusals rather than silent skips (an amp declined is indistinguishable
+    from a bonus of zero): a probe the kernel has no tag for, a subject other
+    than the holder, and a declaration with no threshold or fraction."""
     riders: list[LiveAmpRider] = []
     for slot_name in AMP_CHAIN_ORDER:
-        slot = delta_amp.resolve_slot(
-            owners,
-            slot_name,
-            level=level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=target_bonus_health,
-            holder_is_melee=holder_is_melee,
-        )
+        slot = delta_amp.resolve_slot(owners, slot_name, facts=facts)
         if slot is None:
             continue
         for index, rule in enumerate(slot.rules):

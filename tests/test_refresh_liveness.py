@@ -26,7 +26,7 @@ import pytest
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator import item_effects
 from src.calculator.data_fetcher import fetch_item_data
-from src.calculator.item_behavior import RuleFamily
+from src.calculator.item_behavior import FightFacts, RuleFamily
 from src.calculator.value_ref import DerivedValueRef, LevelValueRef, ValueRef
 
 
@@ -268,10 +268,12 @@ def test_a_priced_fight_follows_the_cached_text(cached_items) -> None:
         """What one Recurve Bow auto adds, through the interpreter."""
         effects = per_hit_effects(
             ["Recurve Bow"],
-            level=11,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            facts=FightFacts(
+                level=11,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         )
         inputs = DamageInputs(
             champion_stats={},

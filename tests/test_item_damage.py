@@ -34,7 +34,7 @@ from src.calculator.interpreters import (
     resistance_shred,
     spellblade,
 )
-from src.calculator.item_behavior import Resistance
+from src.calculator.item_behavior import FightFacts, Resistance
 from src.calculator.item_effects import DamageInputs, resolve_damage_effects
 
 
@@ -43,10 +43,12 @@ def _mr_shred(*owners: str) -> "resistance_shred.ShredSlot | None":
     return resistance_shred.resolve_slot(
         owners,
         Resistance.MAGIC_RESIST,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=False,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=False,
+        ),
     )
 
 
@@ -54,10 +56,12 @@ def _charged_strikes(*owners: str, level: int = 18, is_melee: bool = True):
     """The charged strikes a build declares, resolved through their rules."""
     return charged_strike.resolve_slots(
         owners,
-        level=level,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -65,10 +69,12 @@ def _cast_proc_slots(*owners: str, is_melee: bool = True) -> "cast_proc.CastProc
     """The cast-triggered procs a build declares, resolved through their rules."""
     return cast_proc.resolve_slots(
         owners,
-        level=11,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=11,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -76,10 +82,12 @@ def _periodic_slots(*owners: str) -> "periodic.PeriodicSlots":
     """The clock-driven strikes a build declares, resolved through their rules."""
     return periodic.resolve_slots(
         owners,
-        level=11,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=11,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -92,10 +100,12 @@ def _spellblade_slot(*owners: str, level: int = 18, is_melee: bool = True):
     """The spellblade a build arms, resolved through its declaration."""
     return spellblade.resolve_slot(
         owners,
-        level=level,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -111,10 +121,12 @@ def _hypershot_slot(owners):
     return delta_amp.resolve_slot(
         owners,
         AmpChainSlot.HYPERSHOT,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -130,10 +142,12 @@ def _whole_total_fraction(owner: str, duration: float) -> float:
     slot = delta_amp.resolve_slot(
         [owner],
         AmpChainSlot.WHOLE_TOTAL,
-        level=18,
-        fight_duration_seconds=duration,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=duration,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert slot is not None
     return slot.sources()[0][1]
@@ -153,10 +167,12 @@ def _simulate_bork_damage(
     """Readable test adapter around the generic current-health simulation."""
     strikes = on_hit_strike.per_hit_effects(
         ["Blade of the Ruined King"],
-        level=1,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=1,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
     total, hits, _per_hit_damages = _simulate_current_health_on_hit(
         strikes[0],
@@ -196,10 +212,12 @@ def _shadowflame_effect():
     slot = delta_amp.resolve_slot(
         ["Shadowflame"],
         AmpChainSlot.CINDERBLOOM,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert slot is not None
     return slot

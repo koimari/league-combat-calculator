@@ -15,6 +15,7 @@ from src.calculator.interpreters import cast_proc
 from src.calculator.item_behavior import (
     CooldownProcRule,
     EngineLane,
+    FightFacts,
     ProcTrigger,
     RuleFamily,
     UltimateProcRule,
@@ -35,10 +36,12 @@ def _slots(*owners: str, is_melee: bool = True) -> cast_proc.CastProcSlots:
     """The cast-triggered procs a build of *owners* declares."""
     return cast_proc.resolve_slots(
         owners,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -197,10 +200,12 @@ def test_the_pair_interpreter_compiles_the_clock_each_shape_has() -> None:
         (rule,) = cast_proc.cast_proc_rules([owner])
         ctx = build_context(
             owner,
-            18,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            FightFacts(
+                level=18,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         )
         (field,) = cast_proc.proc_fields(rule, ctx, EngineLane.PAIR_ENGINE)
         assert field.name == cast_proc.PROC_COOLDOWN_FIELD
@@ -216,10 +221,12 @@ def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
     ]
     ctx = build_context(
         "Tiamat",
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     with pytest.raises(cast_proc.CastProcInterpretationError):
         cast_proc.proc_fields(foreign, ctx, EngineLane.PAIR_ENGINE)

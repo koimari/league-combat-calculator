@@ -209,6 +209,7 @@ from .item_behavior import (
     ActiveWindowCastEconomyRule,
     AmpChainSlot,
     Comparison,
+    FightFacts,
     Isolation,
     ManaSpentHealRule,
     OnHitHealRule,
@@ -2832,10 +2833,12 @@ def _shred_slot(
     return resistance_shred.resolve_slot(
         [item_effects.resolved_item_name(item) for item in items],
         resistance,
-        level=level,
-        fight_duration_seconds=config.fight_duration_seconds,
-        target_bonus_health=max(0.0, config.target_bonus_health),
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=level,
+            fight_duration_seconds=config.fight_duration_seconds,
+            target_bonus_health=max(0.0, config.target_bonus_health),
+            holder_is_melee=is_melee,
+        ),
     )
 
 
@@ -2844,10 +2847,7 @@ def _part_amp(
     attack_class: AttackClass,
     *,
     armed: bool,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
     holder_stats: Mapping[str, float],
 ) -> tuple[float, str]:
     """The per-part amp for one attack class: its multiplier and its holder.
@@ -2864,10 +2864,7 @@ def _part_amp(
     amp = delta_amp.resolve_part_amp(
         owners,
         attack_class,
-        level=level,
-        fight_duration_seconds=fight_duration_seconds,
-        target_bonus_health=target_bonus_health,
-        holder_is_melee=holder_is_melee,
+        facts=facts,
     )
     if amp is None:
         return 1.0, ""
@@ -2962,19 +2959,19 @@ def _resolve_combat_state(
     # resistances, because Malignance's magic-resistance shred is one of the
     # numbers the resistance ladder is built from.
     owners = [item_effects.resolved_item_name(item) for item in items]
-    item_cast_procs = cast_proc.resolve_slots(
-        owners,
+    facts = FightFacts(
         level=level,
         fight_duration_seconds=fight_duration_seconds,
         target_bonus_health=max(0.0, config.target_bonus_health),
         holder_is_melee=bool(is_melee),
     )
+    item_cast_procs = cast_proc.resolve_slots(
+        owners,
+        facts=facts,
+    )
     item_charged_strikes = charged_strike.resolve_slots(
         owners,
-        level=level,
-        fight_duration_seconds=fight_duration_seconds,
-        target_bonus_health=max(0.0, config.target_bonus_health),
-        holder_is_melee=bool(is_melee),
+        facts=facts,
     )
     actualizer_active_until = (
         item_effects.actualizer_active_seconds(
@@ -3017,20 +3014,14 @@ def _resolve_combat_state(
         owners,
         AttackClass.ABILITY,
         armed=actualizer_active_until > 0.0,
-        level=level,
-        fight_duration_seconds=fight_duration_seconds,
-        target_bonus_health=max(0.0, config.target_bonus_health),
-        holder_is_melee=bool(is_melee),
+        facts=facts,
         holder_stats=champion_stats,
     )
     basic_part_amp = _part_amp(
         owners,
         AttackClass.BASIC_ATTACK,
         armed=True,
-        level=level,
-        fight_duration_seconds=fight_duration_seconds,
-        target_bonus_health=max(0.0, config.target_bonus_health),
-        holder_is_melee=bool(is_melee),
+        facts=facts,
         holder_stats=champion_stats,
     )
 
@@ -3187,44 +3178,29 @@ def _resolve_combat_state(
         damage_effects=damage_effects,
         per_hit_strikes=on_hit_strike.per_hit_effects(
             owners,
-            level=level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=max(0.0, config.target_bonus_health),
-            holder_is_melee=bool(is_melee),
+            facts=facts,
         ),
         class_restricted_strikes=on_hit_strike.class_restricted_per_hit_effects(
             owners, target_class=config.target_class
         ),
         item_actives=active_cast.active_sources(
             owners,
-            level=level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=max(0.0, config.target_bonus_health),
-            holder_is_melee=bool(is_melee),
+            facts=facts,
         ),
         item_cast_procs=item_cast_procs,
         item_charged_strikes=item_charged_strikes,
         item_periodics=periodic.resolve_slots(
             owners,
-            level=level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=max(0.0, config.target_bonus_health),
-            holder_is_melee=bool(is_melee),
+            facts=facts,
         ),
         item_armor_shred=armor_shred,
         item_spellblade=resolve_spellblade_slot(
             owners,
-            level=level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=max(0.0, config.target_bonus_health),
-            holder_is_melee=bool(is_melee),
+            facts=facts,
         ),
         secondary_target_bolts=secondary_target.resolve_slot(
             owners,
-            level=level,
-            fight_duration_seconds=fight_duration_seconds,
-            target_bonus_health=max(0.0, config.target_bonus_health),
-            holder_is_melee=bool(is_melee),
+            facts=facts,
         ),
         cast_order=(
             config.cast_order
@@ -17158,10 +17134,12 @@ def _amp_slot_for(
     return delta_amp.resolve_slot(
         owners,
         slot,
-        level=state.level,
-        fight_duration_seconds=state.fight_duration_seconds,
-        target_bonus_health=max(0.0, state.target_bonus_health),
-        holder_is_melee=state.is_melee,
+        facts=FightFacts(
+            level=state.level,
+            fight_duration_seconds=state.fight_duration_seconds,
+            target_bonus_health=max(0.0, state.target_bonus_health),
+            holder_is_melee=state.is_melee,
+        ),
     )
 
 
@@ -18168,10 +18146,12 @@ def _apply_shield_reaver_venom(
     is_melee = bool(champion_stats["is_melee"])
     bypass = damage_routing.resolve_shield_bypass(
         [item_effects.resolved_item_name(item) for item in items],
-        level=int(champion_stats["level"]),
-        fight_duration_seconds=config.fight_duration_seconds,
-        target_bonus_health=max(0.0, config.target_bonus_health),
-        holder_is_melee=is_melee,
+        facts=FightFacts(
+            level=int(champion_stats["level"]),
+            fight_duration_seconds=config.fight_duration_seconds,
+            target_bonus_health=max(0.0, config.target_bonus_health),
+            holder_is_melee=is_melee,
+        ),
     )
     if bypass is None or bypass.fraction <= 0.0:
         return config, []

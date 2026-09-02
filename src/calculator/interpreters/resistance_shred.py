@@ -39,6 +39,7 @@ from ..item_behavior import (
     BehaviorRule,
     BuildContext,
     EngineLane,
+    FightFacts,
     KernelField,
     RampModel,
     Resistance,
@@ -235,10 +236,7 @@ def _resolve_slot(  # pylint: disable=too-many-arguments
     resistance: Resistance,
     lane: EngineLane,
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> ShredSlot | None:
     """This build's shred of one resistance, compiled for *lane*.
 
@@ -262,13 +260,7 @@ def _resolve_slot(  # pylint: disable=too-many-arguments
         rule=rule,
         fields=ramp_fields(
             rule,
-            build_context(
-                rule.owner,
-                level,
-                fight_duration_seconds=fight_duration_seconds,
-                target_bonus_health=target_bonus_health,
-                holder_is_melee=holder_is_melee,
-            ),
+            build_context(rule.owner, facts),
             lane,
         ),
     )
@@ -278,54 +270,20 @@ def resolve_slot(
     owners: Sequence[str],
     resistance: Resistance,
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> ShredSlot | None:
-    """This build's shred of one resistance, on the pair-engine lane.
-
-    ``None`` is an answer and not a zero: no holder cuts this resistance, so
-    no rule ran and the target keeps its stated value.
-    """
-    return _resolve_slot(
-        owners,
-        resistance,
-        EngineLane.PAIR_ENGINE,
-        level=level,
-        fight_duration_seconds=fight_duration_seconds,
-        target_bonus_health=target_bonus_health,
-        holder_is_melee=holder_is_melee,
-    )
+    """One resistance's shred on the pair-engine lane; ``None`` when no holder cuts it."""
+    return _resolve_slot(owners, resistance, EngineLane.PAIR_ENGINE, facts=facts)
 
 
 def walk_slot(  # pylint: disable=too-many-arguments
     owners: Sequence[str],
     resistance: Resistance,
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> ShredSlot | None:
-    """This build's shred of one resistance, on the receipt-walk lane.
-
-    The walk's cross-participant emitter reads the same declaration the pair
-    engine resolves, compiled by the interpreter the family's declared lane
-    registers, so the packet and the cut cannot be two readings of one ramp.
-
-    ``None`` means nobody declares a shred of this resistance, and the
-    emitter treats that as a stop rather than a packet with no numbers.
-    """
-    return _resolve_slot(
-        owners,
-        resistance,
-        EngineLane.RECEIPT_WALK,
-        level=level,
-        fight_duration_seconds=fight_duration_seconds,
-        target_bonus_health=target_bonus_health,
-        holder_is_melee=holder_is_melee,
-    )
+    """One resistance's shred on the receipt-walk lane; ``None`` is a stop, not zero."""
+    return _resolve_slot(owners, resistance, EngineLane.RECEIPT_WALK, facts=facts)
 
 
 __all__ = [

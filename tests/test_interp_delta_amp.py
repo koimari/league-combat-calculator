@@ -25,6 +25,7 @@ from src.calculator.item_behavior import (
     Comparison,
     Compilable,
     EngineLane,
+    FightFacts,
     Fixed,
     KernelField,
     LivePredicate,
@@ -60,10 +61,12 @@ def _slot(*owners: str) -> "delta_amp.AmpSlot | None":
     return delta_amp.resolve_slot(
         owners,
         AmpChainSlot.HYPERSHOT,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -167,10 +170,12 @@ def test_the_opening_window_slot_declares_its_window_and_its_true_bonus() -> Non
     slot = delta_amp.resolve_slot(
         ["First Strike"],
         AmpChainSlot.OPENING_WINDOW,
-        level=18,
-        fight_duration_seconds=10.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=10.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert slot is not None
     assert slot.window() == (0.0, 3.0)
@@ -184,10 +189,12 @@ def test_the_pair_interpreter_emits_one_value_typed_field() -> None:
     (rule,) = behavior_rules("Horizon Focus")
     ctx = build_context(
         "Horizon Focus",
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     (field,) = delta_amp.amp_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     assert field.name == delta_amp.AMP_FRACTION_FIELD
@@ -199,10 +206,12 @@ def _ctx(duration: float = 5.0, bonus_health: float = 0.0):
     """A build context for magnitude arithmetic, with the two fight facts."""
     return build_context(
         "Horizon Focus",
-        18,
-        fight_duration_seconds=duration,
-        target_bonus_health=bonus_health,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=duration,
+            target_bonus_health=bonus_health,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -271,10 +280,12 @@ def test_the_whole_total_slot_holds_every_declared_general_amp() -> None:
     slot = delta_amp.resolve_slot(
         build,
         AmpChainSlot.WHOLE_TOTAL,
-        level=18,
-        fight_duration_seconds=4.0,
-        target_bonus_health=750.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=4.0,
+            target_bonus_health=750.0,
+            holder_is_melee=True,
+        ),
     )
     assert slot is not None
     assert [owner for owner, _ in slot.sources()] == build
@@ -305,10 +316,12 @@ def _command_slot(*owners: str) -> "delta_amp.AmpSlot | None":
     return delta_amp.resolve_slot(
         owners,
         AmpChainSlot.POST_IMMOBILIZE,
-        level=18,
-        fight_duration_seconds=10.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=10.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -487,10 +500,12 @@ def _cinderbloom_slot(*owners: str) -> "delta_amp.AmpSlot | None":
     return delta_amp.resolve_slot(
         owners,
         AmpChainSlot.CINDERBLOOM,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
 
 
@@ -582,10 +597,12 @@ def test_no_interpreter_precomputes_a_live_predicate_pool() -> None:
         assert rule.payload.activation.requires_live_pool
         ctx = build_context(
             rule.owner,
-            18,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            FightFacts(
+                level=18,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         )
         names = {
             field.name
@@ -740,10 +757,12 @@ def _part_amp(*owners: str, melee: bool, attack_class: AttackClass):
     return delta_amp.resolve_part_amp(
         owners,
         attack_class,
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=melee,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=melee,
+        ),
     )
 
 
@@ -793,10 +812,12 @@ def test_a_stat_scaled_magnitude_has_no_build_time_fraction() -> None:
     rule = behavior_rules("Actualizer")[0]
     ctx = build_context(
         "Actualizer",
-        18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="bonus_mana"):
         delta_amp.magnitude_fraction(rule.payload.magnitude, ctx)

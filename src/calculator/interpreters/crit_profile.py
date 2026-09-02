@@ -29,6 +29,7 @@ from ..item_behavior import (
     CritDamageBonusRule,
     CritOccurrence,
     EngineLane,
+    FightFacts,
     ForcedCritRule,
     KernelField,
     RuleFamily,
@@ -232,10 +233,7 @@ def _forced_crit(rule: BehaviorRule, fields: tuple[KernelField, ...]) -> ForcedC
 def resolve_profile(
     owners: Sequence[str],
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> CritProfile:
     """Fold every holder's crit declarations into one profile.
 
@@ -249,13 +247,7 @@ def resolve_profile(
         owners,
         lambda rule: crit_fields(
             rule,
-            build_context(
-                rule.owner,
-                level,
-                fight_duration_seconds=fight_duration_seconds,
-                target_bonus_health=target_bonus_health,
-                holder_is_melee=holder_is_melee,
-            ),
+            build_context(rule.owner, facts),
             EngineLane.PAIR_ENGINE,
         ),
     )

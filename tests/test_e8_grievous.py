@@ -34,6 +34,7 @@ from src.calculator.healing_reduction import (
     healing_reduction_profiles,
 )
 from src.calculator.interpreters.damage_routing import walk_venom
+from src.calculator.item_behavior import FightFacts
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
@@ -402,10 +403,12 @@ def test_serpents_fang_venom_typed_accessor():
     def venom(owners, *, is_melee):
         return walk_venom(
             owners,
-            level=13,
-            fight_duration_seconds=8.0,
-            target_bonus_health=0.0,
-            holder_is_melee=is_melee,
+            facts=FightFacts(
+                level=13,
+                fight_duration_seconds=8.0,
+                target_bonus_health=0.0,
+                holder_is_melee=is_melee,
+            ),
         )
 
     melee = venom(["Serpent's Fang"], is_melee=True)

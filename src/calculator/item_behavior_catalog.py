@@ -77,6 +77,7 @@ from .item_behavior import (
     EnergizedCharge,
     ExcludeTrigger,
     ExecuteRule,
+    FightFacts,
     Fixed,
     FlatStatGrantRule,
     ForcedCritHeal,
@@ -6251,29 +6252,19 @@ def undeclared_entry_count() -> int:
     return sum(len(registry_entries(owner)) for owner in sorted(undeclared_owners()))
 
 
-def build_context(
-    owner: str,
-    level: int,
-    *,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
-) -> BuildContext:
+def build_context(owner: str, facts: FightFacts) -> BuildContext:
     """The build-time context an interpreter reads, stamped with the data version.
 
     ``data_registry.data_version()`` is read here rather than by each
-    interpreter, so every memo downstream keys on one counter.  The three
-    fight facts are keyword-only and required: a caller that forgets one gets
-    a ``TypeError``, never a defaulted zero duration flattening a ramping
-    magnitude or a defaulted range class paying every holder the ranged rate.
+    interpreter, so every memo downstream keys on one counter.
     """
     return BuildContext(
-        level=level,
+        level=facts.level,
         owner=owner,
         data_version=data_registry.data_version(),
-        fight_duration_seconds=fight_duration_seconds,
-        target_bonus_health=target_bonus_health,
-        holder_is_melee=holder_is_melee,
+        fight_duration_seconds=facts.fight_duration_seconds,
+        target_bonus_health=facts.target_bonus_health,
+        holder_is_melee=facts.holder_is_melee,
     )
 
 

@@ -52,6 +52,7 @@ from ..item_behavior import (
     DeltaAmpRule,
     EngineLane,
     ExcludeTrigger,
+    FightFacts,
     Fixed,
     Isolation,
     KernelField,
@@ -694,10 +695,7 @@ def resolve_part_amp(
     owners: Sequence[str],
     attack_class: AttackClass,
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
     lane: EngineLane = EngineLane.PAIR_ENGINE,
 ) -> PartAmp | None:
     """The per-part amp for one attack class, or ``None`` if nobody has it.
@@ -718,13 +716,7 @@ def resolve_part_amp(
     compiled = tuple(
         amp_fields(
             rule,
-            build_context(
-                rule.owner,
-                level,
-                fight_duration_seconds=fight_duration_seconds,
-                target_bonus_health=target_bonus_health,
-                holder_is_melee=holder_is_melee,
-            ),
+            build_context(rule.owner, facts),
             lane,
         )
         for rule in rules
@@ -738,7 +730,7 @@ def _armed_part_multiplier(
     *,
     armed: bool,
     holder_stats: Mapping[str, float],
-    build: Mapping[str, Any],
+    facts: FightFacts,
 ) -> tuple[float, str]:
     """The walk's reading of one part amp: its multiplier and its holder.
 
@@ -748,7 +740,9 @@ def _armed_part_multiplier(
     """
     if not armed:
         return 1.0, ""
-    amp = resolve_part_amp(owners, attack_class, lane=EngineLane.RECEIPT_WALK, **build)
+    amp = resolve_part_amp(
+        owners, attack_class, lane=EngineLane.RECEIPT_WALK, facts=facts
+    )
     if amp is None:
         return 1.0, ""
     return amp.multiplier(holder_stats), amp.owner
@@ -799,7 +793,7 @@ def resolve_static_holder_amps(
     *,
     holder_stats: Mapping[str, float],
     ability_amp_armed: bool,
-    **build: Any,
+    facts: FightFacts,
 ) -> StaticHolderAmps:
     """One holder's three static amps, read from the declarations that produce them.
 
@@ -808,10 +802,8 @@ def resolve_static_holder_amps(
     rows — Amendment M, Ruling 1's retiring act for this family, in one
     function.
 
-    ``build`` is :func:`resolve_part_amp`'s own build context — level, fight
-    duration, target bonus health, holder range — forwarded rather than
-    re-listed, so a fact the compiler starts needing arrives here without an
-    edit and a fact it stops needing cannot linger.
+    ``facts`` is :func:`resolve_part_amp`'s own fight facts, forwarded as one
+    record rather than re-listed.
 
     ``ability_amp_armed`` is the caller's answer to whether the ability amp's
     window is up, because that amp rides an item active and a build that never
@@ -827,14 +819,14 @@ def resolve_static_holder_amps(
         AttackClass.ABILITY,
         armed=ability_amp_armed,
         holder_stats=holder_stats,
-        build=build,
+        facts=facts,
     )
     basic, basic_owner = _armed_part_multiplier(
         owners,
         AttackClass.BASIC_ATTACK,
         armed=True,
         holder_stats=holder_stats,
-        build=build,
+        facts=facts,
     )
     return StaticHolderAmps(
         magic=declared_magic_amp(owners),
@@ -868,10 +860,7 @@ def resolve_slot(
     owners: Sequence[str],
     slot: AmpChainSlot,
     *,
-    level: int,
-    fight_duration_seconds: float,
-    target_bonus_health: float,
-    holder_is_melee: bool,
+    facts: FightFacts,
 ) -> AmpSlot | None:
     """One chain slot's multiplier for this build, or ``None`` if nobody has it.
 
@@ -886,13 +875,7 @@ def resolve_slot(
     compiled = tuple(
         amp_fields(
             rule,
-            build_context(
-                rule.owner,
-                level,
-                fight_duration_seconds=fight_duration_seconds,
-                target_bonus_health=target_bonus_health,
-                holder_is_melee=holder_is_melee,
-            ),
+            build_context(rule.owner, facts),
             EngineLane.PAIR_ENGINE,
         )
         for rule in rules

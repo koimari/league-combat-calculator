@@ -53,6 +53,7 @@ from .interpreters.sustain import SustainSlot
 from .interpreters.sustain import walk_slot as _sustain_walk_slot
 from .item_behavior import (
     BelowHalfHealingRule,
+    FightFacts,
     PacketKind,
     RegenerationRule,
     ThresholdRegenRule,
@@ -379,10 +380,14 @@ def _holder_amps_of(
             )
             > 0.0
         ),
-        level=attacker.level,
-        fight_duration_seconds=params.fight_duration_seconds,
-        target_bonus_health=max(0.0, float(defender.stats.get("bonus_health", 0.0))),
-        holder_is_melee=bool(attacker.stats.get("is_melee")),
+        facts=FightFacts(
+            level=attacker.level,
+            fight_duration_seconds=params.fight_duration_seconds,
+            target_bonus_health=max(
+                0.0, float(defender.stats.get("bonus_health", 0.0))
+            ),
+            holder_is_melee=bool(attacker.stats.get("is_melee")),
+        ),
     )
 
 
@@ -398,10 +403,14 @@ def _live_amps_of(
     """
     return live_amp_riders(
         [str(item.get("name", "")) for item in attacker.items],
-        level=attacker.level,
-        fight_duration_seconds=params.fight_duration_seconds,
-        target_bonus_health=max(0.0, float(defender.stats.get("bonus_health", 0.0))),
-        holder_is_melee=bool(attacker.stats.get("is_melee")),
+        facts=FightFacts(
+            level=attacker.level,
+            fight_duration_seconds=params.fight_duration_seconds,
+            target_bonus_health=max(
+                0.0, float(defender.stats.get("bonus_health", 0.0))
+            ),
+            holder_is_melee=bool(attacker.stats.get("is_melee")),
+        ),
     )
 
 
@@ -2983,32 +2992,30 @@ def _grey_health_event_receipt(
 
 def _routing_build(
     combatant: Combatant, duration: float
-) -> tuple[list[str], dict[str, Any]]:
-    """One participant's item names and the build facts a routing rule reads.
-
-    ``BuildContext``'s fight facts are keyword-only and defaultless, so this
-    assembles them once for the three walk-lane resolvers.  A routing rule
-    moves a packet rather than scaling one, so ``target_bonus_health`` is 0.
+) -> tuple[list[str], FightFacts]:
+    """One participant's item names and the fight facts a routing rule reads,
+    assembled once for the three walk-lane resolvers.  A routing rule moves a
+    packet rather than scaling one, so ``target_bonus_health`` is 0.
     """
-    return [str(item.get("name", "")) for item in combatant.items], {
-        "level": int(combatant.stats.get("level", 1) or 1),
-        "fight_duration_seconds": duration,
-        "target_bonus_health": 0.0,
-        "holder_is_melee": bool(combatant.stats.get("is_melee", True)),
-    }
+    return [str(item.get("name", "")) for item in combatant.items], FightFacts(
+        level=int(combatant.stats.get("level", 1) or 1),
+        fight_duration_seconds=duration,
+        target_bonus_health=0.0,
+        holder_is_melee=bool(combatant.stats.get("is_melee", True)),
+    )
 
 
 def _venom_profile(combatant: Combatant, duration: float) -> tuple[float, float] | None:
     """The ``(keep, duration)`` pair the kernel's shield ledger reads."""
     owners, facts = _routing_build(combatant, duration)
-    venom = _walk_venom(owners, **facts)
+    venom = _walk_venom(owners, facts=facts)
     return None if venom is None else (venom.keep, venom.duration)
 
 
 def _execution_rider(combatant: Combatant, duration: float) -> Any:
     """The Execute rider this participant's own declarations arm, or ``None``."""
     owners, facts = _routing_build(combatant, duration)
-    return _walk_execution(owners, **facts)
+    return _walk_execution(owners, facts=facts)
 
 
 def _simulate_survival(
@@ -3131,7 +3138,7 @@ def _simulate_survival(
         if float(combatant.defenses.damage_deferral_fraction) <= 0.0:
             continue
         owners, facts = _routing_build(combatant, duration)
-        rider = _walk_deferral(owners, **facts)
+        rider = _walk_deferral(owners, facts=facts)
         if rider is None:
             raise ValueError(
                 f"{participant_id} resolves a damage deferral and declares no "

@@ -119,32 +119,27 @@ def number_and_unit(text: str) -> tuple[list[float], list[str]]:
     return values, units
 
 
-def _content_stable_bytes(
-    domain: str, objects: dict[str, Any], source_ref: str | None
-) -> bytes:
-    """Canonical bytes for a domain payload's content identity; excludes
-    ``generated_at`` so re-runs over unchanged content hash the same."""
-    stable = {"domain": domain, "source_ref": source_ref, "objects": objects}
-    return json.dumps(stable, sort_keys=True, separators=(",", ":")).encode("utf-8")
-
-
-def content_hash(domain: str, objects: dict[str, Any], source_ref: str | None) -> str:
-    """sha256 (first 16 hex chars) of the content-stable payload. This is
-    the exact hash published as the manifest's ``sha256`` receipt for a
-    domain, and is what ``hash_domain_file`` recomputes from disk."""
+def content_hash(payload: Mapping[str, Any]) -> str:
+    """sha256 (first 16 hex chars) of a domain payload's content identity: its
+    ``domain``, ``source_ref`` and ``objects``, canonically serialized, with
+    ``generated_at`` left out so re-runs over unchanged content hash the same.
+    This is the manifest's ``sha256`` receipt, and what ``hash_domain_file``
+    recomputes from disk."""
+    stable = {
+        "domain": payload["domain"],
+        "source_ref": payload.get("source_ref"),
+        "objects": payload["objects"],
+    }
     return hashlib.sha256(
-        _content_stable_bytes(domain, objects, source_ref)
+        json.dumps(stable, sort_keys=True, separators=(",", ":")).encode("utf-8")
     ).hexdigest()[:16]
 
 
 def hash_domain_file(path: Path) -> str:
-    """Recompute the content-stable manifest hash for an on-disk domain atom
-    file. Reads the file's own ``domain``/``source_ref``/``objects`` and
-    ignores ``generated_at``, so it equals the manifest's ``sha256``."""
+    """The manifest ``sha256`` of an on-disk domain atom file, recomputed from
+    its own ``domain``/``source_ref``/``objects`` (``generated_at`` ignored)."""
     payload = json.loads(path.read_text(encoding="utf-8"))
-    return content_hash(
-        payload["domain"], payload["objects"], payload.get("source_ref")
-    )
+    return content_hash(payload)
 
 
 def write_atoms(
@@ -178,7 +173,7 @@ def write_atoms(
         "domain": domain,
         "object_count": len(objects),
         "atom_count": sum(len(rows) for rows in objects.values()),
-        "sha256": content_hash(domain, objects, source_ref),
+        "sha256": content_hash(payload),
         "source_ref": source_ref,
     }
 

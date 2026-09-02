@@ -77,7 +77,7 @@ from src.calculator.interpreters import (
     compilability_for,
     uncompilable_item_receipt,
 )
-from src.calculator.item_behavior import ReceiptOnly, ReceiptScope
+from src.calculator.item_behavior import FightFacts, ReceiptOnly, ReceiptScope
 from src.calculator.item_effects import (
     eclipse_trigger_gate,
     required_effect_value,
@@ -177,10 +177,12 @@ def _eclipse_proc():
         proc
         for proc in cast_proc.resolve_slots(
             ("Eclipse",),
-            level=11,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            facts=FightFacts(
+                level=11,
+                fight_duration_seconds=5.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         ).cooldown_procs
         if proc.source.item_name == "Eclipse"
     )

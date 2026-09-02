@@ -94,6 +94,7 @@ from src.calculator.damage import (
 )
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.interpreters import on_hit_strike
+from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
@@ -126,10 +127,12 @@ def _per_hits():
     """
     return on_hit_strike.per_hit_effects(
         (MURAMANA,),
-        level=18,
-        fight_duration_seconds=5.0,
-        target_bonus_health=0.0,
-        holder_is_melee=False,
+        facts=FightFacts(
+            level=18,
+            fight_duration_seconds=5.0,
+            target_bonus_health=0.0,
+            holder_is_melee=False,
+        ),
     )
 
 

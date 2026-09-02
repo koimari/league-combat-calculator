@@ -27,6 +27,7 @@ from src.calculator.item_behavior import (
     AllyProducer,
     Compilable,
     EngineLane,
+    FightFacts,
     LevelSubject,
     PacketKind,
     PacketTrigger,
@@ -296,10 +297,12 @@ class TestTheWalkLaneCompilesTheDeclaredNumbers:
             rule,
             catalog.build_context(
                 rule.owner,
-                11,
-                fight_duration_seconds=5.0,
-                target_bonus_health=0.0,
-                holder_is_melee=False,
+                FightFacts(
+                    level=11,
+                    fight_duration_seconds=5.0,
+                    target_bonus_health=0.0,
+                    holder_is_melee=False,
+                ),
             ),
             EngineLane.RECEIPT_WALK,
         )
@@ -318,10 +321,12 @@ class TestTheWalkLaneCompilesTheDeclaredNumbers:
                 rule,
                 catalog.build_context(
                     rule.owner,
-                    11,
-                    fight_duration_seconds=5.0,
-                    target_bonus_health=0.0,
-                    holder_is_melee=False,
+                    FightFacts(
+                        level=11,
+                        fight_duration_seconds=5.0,
+                        target_bonus_health=0.0,
+                        holder_is_melee=False,
+                    ),
                 ),
                 EngineLane.RECEIPT_WALK,
             )

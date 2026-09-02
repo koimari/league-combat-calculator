@@ -27,6 +27,7 @@ from src.calculator.item_behavior import (
     DefenseField,
     DefenseSubject,
     EngineLane,
+    FightFacts,
     ReceiptOnly,
     ReceiptScope,
     Resistance,
@@ -279,10 +280,12 @@ def test_compile_rule_dispatches_through_the_registry(
     rule = catalog.behavior_rules("Blade of the Ruined King")[0]
     ctx = catalog.build_context(
         rule.owner,
-        13,
-        fight_duration_seconds=8.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        FightFacts(
+            level=13,
+            fight_duration_seconds=8.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     fields = interpreters.compile_rule(rule, ctx, EngineLane.PAIR_ENGINE)
     assert fields
@@ -795,10 +798,12 @@ def test_the_walk_venom_equals_the_registry_accessor_it_replaced(
     )
     after = damage_routing.walk_venom(
         ["Serpent's Fang"],
-        level=13,
-        fight_duration_seconds=8.0,
-        target_bonus_health=0.0,
-        holder_is_melee=holder_is_melee,
+        facts=FightFacts(
+            level=13,
+            fight_duration_seconds=8.0,
+            target_bonus_health=0.0,
+            holder_is_melee=holder_is_melee,
+        ),
     )
     assert after is not None
     assert (after.keep, after.duration) == before
@@ -814,10 +819,12 @@ def test_the_walk_execution_equals_the_pair_engines_stamp() -> None:
     stamped = damage_routing.declared_execution(["The Collector"])
     rider = damage_routing.walk_execution(
         ["The Collector"],
-        level=13,
-        fight_duration_seconds=8.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=13,
+            fight_duration_seconds=8.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert stamped is not None
     assert rider is not None
@@ -849,10 +856,12 @@ def test_the_walk_deferral_equals_the_resolved_defensive_state(
     resolved = {grant.name: grant.value for grant in outcome.fields}
     rider = damage_routing.walk_deferral(
         ["Death's Dance"],
-        level=13,
-        fight_duration_seconds=8.0,
-        target_bonus_health=0.0,
-        holder_is_melee=holder_is_melee,
+        facts=FightFacts(
+            level=13,
+            fight_duration_seconds=8.0,
+            target_bonus_health=0.0,
+            holder_is_melee=holder_is_melee,
+        ),
     )
     assert rider is not None
     assert rider.fraction == resolved[DefenseField.DAMAGE_DEFERRAL_FRACTION.value]
@@ -878,10 +887,12 @@ def test_no_routing_declaration_is_left_without_a_walk_branch() -> None:
             rule,
             catalog.build_context(
                 rule.owner,
-                13,
-                fight_duration_seconds=8.0,
-                target_bonus_health=0.0,
-                holder_is_melee=True,
+                FightFacts(
+                    level=13,
+                    fight_duration_seconds=8.0,
+                    target_bonus_health=0.0,
+                    holder_is_melee=True,
+                ),
             ),
             EngineLane.RECEIPT_WALK,
         )
@@ -937,10 +948,12 @@ def test_the_walk_shred_ramp_equals_the_ally_packet_numbers_it_replaced(
     slot = resistance_shred.walk_slot(
         [owner],
         resistance,
-        level=13,
-        fight_duration_seconds=0.0,
-        target_bonus_health=0.0,
-        holder_is_melee=True,
+        facts=FightFacts(
+            level=13,
+            fight_duration_seconds=0.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        ),
     )
     assert slot is not None
     assert slot.owner == owner
@@ -962,14 +975,14 @@ def test_both_lanes_of_a_shred_compile_one_declaration_to_one_ramp() -> None:
     differs.
     """
     for owner, resistance, _producer, _prefix in _SHRED_OWNERS:
-        facts = {
-            "level": 13,
-            "fight_duration_seconds": 0.0,
-            "target_bonus_health": 0.0,
-            "holder_is_melee": True,
-        }
-        pair = resistance_shred.resolve_slot([owner], resistance, **facts)
-        walk = resistance_shred.walk_slot([owner], resistance, **facts)
+        facts = FightFacts(
+            level=13,
+            fight_duration_seconds=0.0,
+            target_bonus_health=0.0,
+            holder_is_melee=True,
+        )
+        pair = resistance_shred.resolve_slot([owner], resistance, facts=facts)
+        walk = resistance_shred.walk_slot([owner], resistance, facts=facts)
         assert pair is not None
         assert walk is not None
         assert [(field.name, field.value) for field in pair.fields] == [
@@ -992,10 +1005,12 @@ def test_a_cross_participant_shred_packet_with_no_declared_ramp_is_a_stop() -> N
         resistance_shred.walk_slot(
             ["Bloodletter's Curse"],
             Resistance.ARMOR,
-            level=13,
-            fight_duration_seconds=0.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
+            facts=FightFacts(
+                level=13,
+                fight_duration_seconds=0.0,
+                target_bonus_health=0.0,
+                holder_is_melee=True,
+            ),
         )
         is None
     )
