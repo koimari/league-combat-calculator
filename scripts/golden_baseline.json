@@ -3,6 +3,7 @@
     "Aatrox": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 9.0,
           "damage_type": "magic",
           "detail": "Umbral Dash is a self-heal-amp dash with no enemy-damage attribute of its own (data/champions.json Aatrox E carries damageType: None and no effect row has a leveling entry); its heal is priced through derive_self_healing.",
@@ -18,20 +19,21 @@
           "damage_type": "physical",
           "name": "The Darkin Blade",
           "parts": [
-            "DamagePart(physical, amount=335.43999999999994, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0)",
-            "DamagePart(physical, amount=419.29999999999995, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.0)",
-            "DamagePart(physical, amount=503.15999999999997, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=2.0)"
+            "DamagePart(physical, amount=335.43999999999994, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0, cc_kind='knockup')",
+            "DamagePart(physical, amount=419.29999999999995, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.0, cc_kind='knockup')",
+            "DamagePart(physical, amount=503.15999999999997, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=2.0, cc_kind='knockup')"
           ],
           "rank": 5,
           "total_raw": 1257.9
         },
         "R": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 100.0,
           "damage_type": "physical",
           "name": "World Ender",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 2,
           "stat_buff": {
@@ -45,13 +47,15 @@
           "damage_type": "physical",
           "name": "Infernal Chains",
           "parts": [
-            "DamagePart(physical, amount=104.08, count=2, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0, hit_interval=1.5)"
+            "DamagePart(physical, amount=104.08, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0, cc_kind='slow')",
+            "DamagePart(physical, amount=104.08, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.5, cc_kind='pull')"
           ],
           "rank": 3,
           "skillshot": true,
           "total_raw": 208.16
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "name": "Deathbringer Stance",
           "on_hit": {
@@ -236,22 +240,24 @@
         "R": {
           "area_damage": true,
           "cast_instances": 3,
+          "cc_reviewed": true,
           "damage_type": "magic",
           "name": "Spirit Rush",
           "parts": [
-            "DamagePart(magic, amount=125.0, count=3, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=125.0, count=3, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 2,
           "skillshot": true,
           "total_raw": 375.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 7.0,
           "damage_type": "magic",
           "name": "Fox-Fire",
           "parts": [
-            "DamagePart(magic, amount=80.0, count=1, hp_scaled=no, crit_effectiveness=0.0)",
-            "DamagePart(magic, amount=32.0, count=2, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=80.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')",
+            "DamagePart(magic, amount=32.0, count=2, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 3,
           "resource_cost": 30.0,
@@ -260,6 +266,7 @@
           "total_raw": 144.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "9 Essence Fragment(s): at 9 stacks the passive heals 35 : 95 (based on level) (+ 20% AP); the champion-takedown heal (75 : 165 by level + 30% AP) is a kill boundary, not a fight receipt.",
@@ -410,11 +417,12 @@
       "abilities_level_11": {
         "E": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 16.0,
           "damage_type": "magic",
           "name": "Shuriken Flip",
           "parts": [
-            "DamagePart(magic, amount=161.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=161.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 1,
           "resource_cost": 30.0,
@@ -455,6 +463,7 @@
         },
         "W": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 18.0,
           "damage_type": "magic",
           "detail": "Restores 100 energy and raises maximum energy by 100",
@@ -667,11 +676,12 @@
         "Q": {
           "area_damage": true,
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 5.0,
           "damage_type": "physical",
           "name": "Avengerang",
           "parts": [
-            "DamagePart(physical, amount=330.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=330.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 5,
           "resource_cost": 80.0,
@@ -696,6 +706,7 @@
         },
         "W": {
           "cast_time": 0.5,
+          "cc_reviewed": true,
           "cooldown": 10.0,
           "damage_type": "magic",
           "detail": "Going Rogue is stealth/Scoundrel-mark/resurrection utility with no enemy-damage attribute of its own (data/champions.json Akshan W carries damageType: None); its conditional bonus movement speed (80-120 by rank, only while facing a marked Scoundrel in camouflage) has no default-on consumer for a one-rotation combat calc and stays a documented rider.",
@@ -926,6 +937,7 @@
         },
         "R": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 100.0,
           "damage_type": "magic",
           "detail": "Unbreakable Will reduces incoming physical/magic damage by 65% for 7s (true damage is not reduced).",
@@ -1148,7 +1160,7 @@
           "damage_type": "physical",
           "name": "Lacerate",
           "parts": [
-            "DamagePart(physical, amount=80.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=80.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='slow')"
           ],
           "rank": 1,
           "resource_cost": 70.0,
@@ -1226,11 +1238,12 @@
         },
         "passive": {
           "auto_stack_every": 1,
+          "cc_reviewed": true,
           "damage_type": "physical",
           "event_order_certified": "auto_stack_proc",
           "name": "Drakehound's Step",
           "parts": [
-            "DamagePart(physical, amount=19.71, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=19.71, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "proc_count": 4,
           "requires_auto_timeline_coupling": true,
@@ -1786,12 +1799,13 @@
       "abilities_level_11": {
         "E": {
           "area_damage": true,
+          "cc_reviewed": true,
           "cooldown": 10.0,
           "damage_type": "magic",
           "detail": "0 retaliation landing(s) at 25.00 magic each (once per enemy per cast, while the shield holds)",
           "name": "Molten Shield",
           "parts": [
-            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 1,
           "resource_cost": 60.0,
@@ -2084,12 +2098,13 @@
           "total_raw": 175.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 0.8,
           "damage_type": "physical",
           "detail": "Swap main and off-hand weapons over 0.25 s; the fight holds one main weapon (Calibrum)",
           "name": "Phase",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 1,
           "resource_cost": 0.0,
@@ -2271,6 +2286,7 @@
             "ad_ratio": 1.3,
             "crit_as_bonus": true
           },
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "physical",
           "name": "Ranger's Focus",
@@ -2509,6 +2525,7 @@
         },
         "W": {
           "cast_time": 0.4,
+          "cc_reviewed": true,
           "cooldown": 22.0,
           "damage_type": "magic",
           "detail": "Astral Flight is a damage-less dash; its only cached leveling row is the 'Breath of Light Flat Damage Modifier' (108-112%) already consumed as Q's beam multiplier (_w_beam_modifier, gated by w_active) \u2014 no damage attribute belongs to W itself. Corroborated by the game binary (AurelionSolWAbility): its mSpellCalculations are DashSpeed and dash-speed/level-interpolation helpers only.",
@@ -2520,6 +2537,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Cosmic Creator grants Aurelion Sol permanent Stardust stacks from his damaging abilities; the cached entry's own leveling is empty (data/champions.json AurelionSol P) and the game binary's passive spell record carries no damage-type field (data/bin/characters/aurelionsol.bin.json, AurelionSolPassiveAbility) \u2014 its only mSpellCalculations (QPassiveScaling, EPassiveScalingExecute) are the shared scaling formulas Q's burst and E's execute threshold already read via stardust_stacks. P itself prices nothing.",
@@ -2729,6 +2747,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "name": "Spirit Abjuration",
           "on_hit": {
@@ -2935,6 +2954,7 @@
             "replace_raw": 152.35
           },
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 6.0,
           "damage_type": "magic",
           "detail": "Soldier attacks replace autos: 152 magic per attack",
@@ -3086,6 +3106,7 @@
       "abilities_level_11": {
         "E": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 22.0,
           "damage_type": "magic",
           "detail": "Magical Journey opens a one-way terrain portal; every effect row in the cached entry carries empty leveling and the ability has no damage type (data/champions.json Bard E). Confirmed zero numeric combat effect.",
@@ -3148,6 +3169,7 @@
         },
         "W": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Ally heal (sourced by the support scanner) at the fully-charged shrine; the 5s charge ramp is not modeled.",
@@ -3339,11 +3361,12 @@
             ]
           },
           "cast_instances": 4,
+          "cc_reviewed": true,
           "cooldown": 12.0,
           "damage_type": "physical",
           "name": "Void Surge",
           "parts": [
-            "DamagePart(physical, amount=91.4, count=4, hp_scaled=no, crit_effectiveness=1.0)"
+            "DamagePart(physical, amount=91.4, count=4, hp_scaled=no, crit_effectiveness=1.0, cc_kind='none')"
           ],
           "rank": 5,
           "total_raw": 365.6
@@ -3394,12 +3417,13 @@
             "damage_ratio": 1.0,
             "on_hit_effectiveness": 1.0
           },
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "physical",
           "detail": "+20.0% bonus attack speed; basic attacks deal full damage and on-hit riders deal 100%",
           "name": "Death in Lavender",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 11,
           "stat_buff": {
@@ -3598,11 +3622,12 @@
           "total_raw": 400.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 15.0,
           "damage_type": "magic",
           "name": "Overdrive",
           "parts": [
-            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 3,
           "resource_cost": 75.0,
@@ -3812,14 +3837,15 @@
           "total_raw": 318.75
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "dot_duration": 4.0,
           "dot_stack_count": 3,
           "dot_tick_interval": 0.25,
           "name": "Blaze",
           "parts": [
-            "DamagePart(magic, amount=40.0, count=3, hp_scaled=no, crit_effectiveness=0.0)",
-            "DamagePart(magic, amount=190.6, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=40.0, count=3, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')",
+            "DamagePart(magic, amount=190.6, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "proc_count": 1,
           "timeline_event_model": "brand_blaze",
@@ -3964,6 +3990,7 @@
     "Braum": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 16.0,
           "damage_type": "magic",
           "defensive_interaction": {
@@ -4014,11 +4041,12 @@
           "total_raw": 250.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 10.0,
           "damage_type": "magic",
           "name": "Stand Behind Me",
           "parts": [
-            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 3,
           "resource_cost": 40.0,
@@ -4309,6 +4337,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "physical",
           "name": "Crimson Curse",
           "parts": [],
@@ -4523,13 +4552,14 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "physical",
           "detail": "2 forced headshot attack(s): 1 E-granted + 1 trap; each row includes the base swing",
           "name": "Headshot",
           "parts": [
-            "DamagePart(physical, amount=95.0, count=2, hp_scaled=no, crit_effectiveness=0.0, basic_damage=yes)",
-            "DamagePart(physical, amount=76.0, count=1, hp_scaled=no, crit_effectiveness=0.0, basic_damage=yes)",
-            "DamagePart(physical, amount=201.0, count=1, hp_scaled=no, crit_effectiveness=0.0, basic_damage=yes)"
+            "DamagePart(physical, amount=95.0, count=2, hp_scaled=no, crit_effectiveness=0.0, basic_damage=yes, cc_kind='none')",
+            "DamagePart(physical, amount=76.0, count=1, hp_scaled=no, crit_effectiveness=0.0, basic_damage=yes, cc_kind='none')",
+            "DamagePart(physical, amount=201.0, count=1, hp_scaled=no, crit_effectiveness=0.0, basic_damage=yes, cc_kind='none')"
           ],
           "proc_count": 1,
           "skillshot": true,
@@ -5410,6 +5440,7 @@
         },
         "passive": {
           "basic_attack_true_ratio": 0.2,
+          "cc_reviewed": true,
           "damage_type": "true",
           "name": "Hextech Munitions",
           "parts": [],
@@ -5612,12 +5643,13 @@
         "R": {
           "applies_dot_stack": true,
           "cast_time": 0.62,
+          "cc_reviewed": true,
           "cooldown": 100.0,
           "damage_type": "true",
           "name": "Noxian Guillotine",
           "parts": [
-            "DamagePart(true, amount=250.0, count=1, hp_scaled=no, crit_effectiveness=0.0, bonus_ad_ratio=0.75)",
-            "DamagePart(true, amount=50.0, count=5, hp_scaled=no, crit_effectiveness=0.0, bonus_ad_ratio=0.15, dot_stack_scaled=yes)"
+            "DamagePart(true, amount=250.0, count=1, hp_scaled=no, crit_effectiveness=0.0, bonus_ad_ratio=0.75, cc_kind='none')",
+            "DamagePart(true, amount=50.0, count=5, hp_scaled=no, crit_effectiveness=0.0, bonus_ad_ratio=0.15, dot_stack_scaled=yes, cc_kind='none')"
           ],
           "rank": 2,
           "resource_cost": 100.0,
@@ -5640,6 +5672,7 @@
           "total_raw": 54.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "physical",
           "dot_duration": 5.0,
           "name": "Hemorrhage",
@@ -5804,11 +5837,12 @@
       "abilities_level_11": {
         "E": {
           "cast_instances": 2,
+          "cc_reviewed": true,
           "cooldown": 22.0,
           "damage_type": "magic",
           "name": "Lunar Rush",
           "parts": [
-            "DamagePart(magic, amount=50.0, count=2, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=50.0, count=2, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 1,
           "resource_cost": 40.0,
@@ -5848,11 +5882,12 @@
         },
         "W": {
           "area_damage": true,
+          "cc_reviewed": true,
           "cooldown": 12.0,
           "damage_type": "magic",
           "name": "Pale Cascade",
           "parts": [
-            "DamagePart(magic, amount=132.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=132.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 3,
           "resource_cost": 50.0,
@@ -5862,12 +5897,13 @@
         },
         "passive": {
           "area_damage": true,
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "+80.29% bonus attack speed (tripled post-cast value, assumed always active)",
           "name": "Moonsilver Blade",
           "parts": [
-            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 11,
           "resource_cost": 0.0,
@@ -6046,11 +6082,12 @@
           "total_raw": 600.0
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 120.0,
           "damage_type": "physical",
           "name": "Maximum Dosage",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 2,
           "stat_buff": {
@@ -6261,12 +6298,13 @@
           "total_raw": 600.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 12.0,
           "damage_type": "physical",
           "detail": "30% bonus attack speed for the sourced 3-second Blood Rush window.",
           "name": "Blood Rush",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 3,
           "resource_cost": 30.0,
@@ -6277,6 +6315,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "0 Adoration stack(s) retained; cash-in is not assumed.",
@@ -6686,6 +6725,7 @@
           "total_raw": 240.0
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 3.0,
           "damage_type": "magic",
           "detail": "Explicit Human form selected; transformation and spiderling state are not outgoing damage.",
@@ -6929,6 +6969,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Camouflage and low-health regeneration are self-state; no outgoing damage is implied.",
@@ -7158,12 +7199,13 @@
           "total_raw": 190.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "physical",
           "detail": "+50% bonus attack speed (5 stacks)",
           "name": "Rising Spell Force",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 11,
           "resource_cost": 0.0,
@@ -7375,6 +7417,7 @@
           "total_raw": 270.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Effigy/sweeper state only; the full passive has no outgoing damage formula.",
@@ -7562,6 +7605,7 @@
           "total_raw": 110.0
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 90.0,
           "damage_type": "magic",
           "detail": "Vital highlighting and Victory Zone healing are explicit challenge state, not outgoing damage.",
@@ -7802,6 +7846,7 @@
           "total_raw": 160.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Ghosting and incoming pre-mitigation damage reduction are defensive state, not outgoing TDD.",
@@ -8020,6 +8065,7 @@
             "damage_type": "magic",
             "name": "Colossal Smash"
           },
+          "cc_reviewed": true,
           "name": "Colossal Smash"
         }
       },
@@ -8219,6 +8265,7 @@
         },
         "W": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 18.0,
           "damage_type": "magic",
           "detail": "Heal and cleanse only; no outgoing damage is listed.",
@@ -8427,6 +8474,7 @@
           "total_raw": 200.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 17.0,
           "damage_type": "magic",
           "detail": "Courage resist stacks, shield and damage reduction are defensive state.",
@@ -8436,6 +8484,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Out-of-combat regeneration is self sustain, not outgoing damage.",
@@ -8826,6 +8875,7 @@
           "total_raw": 220.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 6.0,
           "damage_type": "magic",
           "detail": "5.5% maximum-health heal after casting; no outgoing damage.",
@@ -8975,6 +9025,7 @@
     "Graves": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 16.0,
           "damage_type": "magic",
           "detail": "1 True Grit stack(s): +7 armor/+3.5 MR; dash/reload are state-only.",
@@ -9045,6 +9096,7 @@
             "damage_type": "physical",
             "name": "Graves shotgun (all pellets on target)"
           },
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "169.66% AD across the authored pellet cone; critical pellet branch=off.",
@@ -9257,6 +9309,7 @@
           "total_raw": 630.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 20.0,
           "damage_type": "magic",
           "detail": "Mist untargetability and bonus resistances are defensive state; no outgoing damage.",
@@ -9268,6 +9321,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "1% + 0.6% per 100 AP of target maximum health per qualifying hit; champion heal is sustain.",
@@ -9488,12 +9542,13 @@
           "total_raw": 200.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "physical",
           "detail": "24% of 20 bonus movement speed grants 4.8 bonus AD.",
           "name": "Warpath",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 11,
           "resource_cost": 0.0,
@@ -9676,6 +9731,7 @@
           "total_raw": 267.71
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 92.5,
           "damage_type": "magic",
           "detail": "The ultimate is an empowerment toggle; its selected Q/W/E variant carries the outgoing damage.",
@@ -9705,6 +9761,7 @@
           "total_raw": 180.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The passive is movement speed near allied structures or turrets.",
@@ -9897,6 +9954,7 @@
           "total_raw": 385.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 17.0,
           "damage_type": "magic",
           "detail": "Movement-speed path and ghosting are utility state.",
@@ -10082,6 +10140,7 @@
         "Q": {
           "area_damage": true,
           "cast_time": 0.75,
+          "cc_reviewed": true,
           "cooldown": 6.0,
           "damage_type": "magic",
           "detail": "The active commands a Tentacle; its damage is represented by the explicit Tentacle proc count.",
@@ -10133,6 +10192,7 @@
         },
         "passive": {
           "area_damage": true,
+          "cc_reviewed": true,
           "damage_events": [
             {
               "damage": 298.34,
@@ -10146,7 +10206,7 @@
           "event_phase": "effect",
           "name": "Prophet of an Elder God",
           "parts": [
-            "DamagePart(physical, amount=298.33700000000005, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0, hit_interval=0.5)"
+            "DamagePart(physical, amount=298.33700000000005, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0, hit_interval=0.5, cc_kind='none')"
           ],
           "proc_count": 1,
           "skillshot": true,
@@ -10358,6 +10418,7 @@
           "total_raw": 205.2
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "detail": "4 Ionian Fervor stack(s), +75.28% bonus attack speed; max-stack on-hit is explicit.",
           "name": "Ionian Fervor",
@@ -10556,6 +10617,7 @@
           "total_raw": 680.0
         },
         "W": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "detail": "Brushmaker bonus attack magic damage; brush duration and allied-brush branch are explicit state.",
           "name": "Brushmaker",
@@ -10569,6 +10631,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Grove channel, health/mana cost, camp release and full bounty are jungle utility state.",
@@ -10718,6 +10781,7 @@
     "Janna": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 16.0,
           "damage_type": "magic",
           "detail": "Shield and bonus attack damage are ally-facing defensive utility.",
@@ -10771,6 +10835,7 @@
           "total_raw": 115.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "detail": "30% of the explicit 0 bonus movement speed is bonus magic damage on attacks and Zephyr.",
           "name": "Tailwind",
@@ -10984,6 +11049,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "name": "Martial Cadence",
           "on_hit": {
             "current_health_percent": 8.0,
@@ -11199,6 +11265,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "8 attack-speed stacks; fish/river economy is explicit utility.",
@@ -11630,6 +11697,7 @@
           "total_raw": 190.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Every Moment Matters adds 23.90% AD; the fourth-shot missing-health branch is priced by the final_round row.",
@@ -11796,12 +11864,13 @@
           "total_raw": 90.0
         },
         "Q": {
+          "cc_reviewed": true,
           "cooldown": 0.9,
           "damage_type": "physical",
           "detail": "Pow-Pow: 3 Rev'd Up stack(s), 130% bonus attack speed",
           "name": "Switcheroo!",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 5,
           "resource_cost": 20.0,
@@ -11982,6 +12051,7 @@
     "KSante": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 10.0,
           "damage_type": "magic",
           "detail": "Dash and self/ally shield are defensive/ally utility.",
@@ -12037,6 +12107,7 @@
           "total_raw": 265.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_events": [
             {
               "damage": 96.8,
@@ -12050,7 +12121,7 @@
           "event_phase": "effect",
           "name": "Dauntless Instinct",
           "parts": [
-            "DamagePart(physical, amount=96.8, count=1, hp_scaled=no, crit_effectiveness=0.0, basic_damage=yes, time_offset=0.0, hit_interval=0.5)"
+            "DamagePart(physical, amount=96.8, count=1, hp_scaled=no, crit_effectiveness=0.0, basic_damage=yes, time_offset=0.0, hit_interval=0.5, cc_kind='none')"
           ],
           "proc_count": 1,
           "total_raw": 96.8
@@ -12448,6 +12519,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Martial Poise is the windup-dash mechanic and the Oathsworn Bond declaration; all four cached effect rows carry empty leveling (data/champions.json Kalista P) and the game binary's dash spells (KalistaPassiveDashSpell(Actual)) carry no mSpellCalculations table \u2014 only dash duration/speed/range parameters. P prices nothing.",
@@ -12597,6 +12669,7 @@
     "Karma": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 10.0,
           "damage_type": "magic",
           "detail": "Shield, ally spread and movement speed are ally-facing utility.",
@@ -12624,6 +12697,7 @@
           "total_raw": 260.0
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 38.0,
           "damage_type": "magic",
           "detail": "Mantra empowers the next Q/W/E variant; the toggle itself has no outgoing damage.",
@@ -12652,6 +12726,7 @@
           "total_raw": 180.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Mantra cooldown refunds are a cast-state mechanic.",
@@ -12868,6 +12943,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Post-death channel + Requiem: a death-only trigger the deterministic alive-state fight cannot enter (the main never dies in the model); priced at zero damage as a documented boundary. Requiem's damage is already the sourced R row when the alive-state sequence casts it.",
@@ -13086,6 +13162,7 @@
           "total_raw": 100.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Permanent ghosting and 10% reduced magic damage are defensive state.",
@@ -13285,6 +13362,7 @@
           "total_raw": 562.5
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 13.0,
           "damage_type": "magic",
           "detail": "Dagger toss, movement speed and landing location are utility state.",
@@ -13302,6 +13380,7 @@
             ]
           },
           "area_damage": true,
+          "cc_reviewed": true,
           "damage_events": [
             {
               "damage": 142.0,
@@ -13314,7 +13393,7 @@
           "event_phase": "effect",
           "name": "Voracity (Sinister Steel)",
           "parts": [
-            "DamagePart(magic, amount=142.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=142.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "proc_count": 1,
           "total_raw": 142.0
@@ -13519,6 +13598,7 @@
         },
         "W": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 15.0,
           "damage_type": "magic",
           "detail": "Heal, ally targeting and movement speed are support/utility state.",
@@ -13531,6 +13611,7 @@
         },
         "passive": {
           "area_damage": true,
+          "cc_reviewed": true,
           "damage_type": "magic",
           "detail": "Level 11 Aflame wave on every Exalted basic attack; range and Zeal are state.",
           "name": "Divine Ascent (Aflame wave)",
@@ -13682,6 +13763,7 @@
     "Kayn": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 21.0,
           "damage_type": "magic",
           "detail": "Terrain phasing, movement speed and first-entry heal are utility state.",
@@ -13739,6 +13821,7 @@
           "total_raw": 175.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Form transformation and Shadow Assassin post-mitigation bonus/Darkin healing are explicit state; choose form for Q/R branches.",
@@ -14130,6 +14213,7 @@
           "total_raw": 378.0
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 85.0,
           "damage_type": "magic",
           "detail": "Invisibility, evolution and movement speed are state; the recast does not deal enemy damage.",
@@ -14343,6 +14427,7 @@
         },
         "R": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 140.0,
           "damage_type": "magic",
           "detail": "The minimum-health zone and end heal are defensive/utility state, not enemy damage.",
@@ -14380,6 +14465,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "0 Mark(s) of the Kindred: 75 : 250 (based on marks) bonus basic-attack range, +5% attack speed per mark on Q, and +0.5% per mark on E's missing-health term are state/scaling; the hunt target selection is state.",
@@ -14530,11 +14616,12 @@
       "abilities_level_11": {
         "E": {
           "area_damage": true,
+          "cc_reviewed": true,
           "cooldown": 13.0,
           "damage_type": "physical",
           "name": "Jousting",
           "parts": [
-            "DamagePart(physical, amount=70.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=70.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 1,
           "total_raw": 70.0
@@ -14585,6 +14672,7 @@
           "total_raw": 150.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Mounted/dismounted health pool, remount and damage cutoff are participant state.",
@@ -14788,6 +14876,7 @@
           "total_raw": 140.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 17.0,
           "damage_type": "magic",
           "name": "Bio-Arcane Barrage",
@@ -14804,6 +14893,7 @@
         },
         "passive": {
           "area_damage": true,
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "true",
           "detail": "Death-only trigger: after taking fatal damage, Kog'Maw enters a 4-second zombie state then explodes for the sourced 440 true damage (cached 'Bonus True Damage' at champion level 11) to nearby enemies. The deterministic alive-state fight cannot enter (the main never dies in the model); priced at zero damage as a documented boundary.",
@@ -14970,12 +15060,13 @@
         },
         "Q": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 6.0,
           "damage_type": "magic",
           "detail": "Sigil orb plus optional mark consumption are one explicitly ordered target sequence.",
           "name": "Sigil of Malice",
           "parts": [
-            "DamagePart(magic, amount=330.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=330.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 5,
           "resource_cost": 50.0,
@@ -15012,6 +15103,7 @@
           "total_raw": 155.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 60.0,
           "damage_type": "magic",
           "detail": "Clone spawning, invisibility and pet movement are state; the clone's basic attacks deal no damage.",
@@ -15208,6 +15300,7 @@
           "total_raw": 400.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 7.0,
           "damage_type": "magic",
           "detail": "Ally dash and shield are defensive/team state.",
@@ -15219,6 +15312,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Two-attack haste and energy restoration are attack-timeline state.",
@@ -15431,6 +15525,7 @@
           "total_raw": 115.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_events": [
             {
               "damage": 102.0,
@@ -15444,7 +15539,7 @@
           "event_phase": "effect",
           "name": "Sunlight (ally detonation)",
           "parts": [
-            "DamagePart(magic, amount=102.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=102.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "proc_count": 1,
           "total_raw": 102.0
@@ -15651,12 +15746,13 @@
           "total_raw": 360.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Dream Dust over 3 seconds; 6 half-second ticks selected.",
           "name": "Dream-Laden Bough",
           "parts": [
-            "DamagePart(magic, amount=16.666666666666668, count=6, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.5, hit_interval=0.5)"
+            "DamagePart(magic, amount=16.666666666666668, count=6, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.5, hit_interval=0.5, cc_kind='none')"
           ],
           "rank": 11,
           "resource_cost": 0.0,
@@ -16069,6 +16165,7 @@
           "total_raw": 225.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 16.0,
           "damage_type": "magic",
           "detail": "Grey health storage, attack speed, movement speed and recast healing are self-state.",
@@ -16080,6 +16177,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "detail": "On-hit damage doubles linearly with target missing-health ratio, capped by the sourced bonus row.",
           "name": "Silver Stake",
@@ -16231,6 +16329,7 @@
     "Lucian": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 16.0,
           "damage_type": "magic",
           "detail": "Active: Lucian dashes in the target direction, resetting his basic attack timer. Passive: Relentless Pursuit's current cooldown is reduced by 1s per Lightslinger shot hit (2s against champions). Pure movement/cooldown-refund state -- no leveling row and no combat-damage interaction; corroborated by the game binary's LucianE spell record, which carries no mSpellCalculations table.",
@@ -16293,6 +16392,7 @@
           "total_raw": 145.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "physical",
           "double_shot": {
             "ad_ratio": 0.55,
@@ -16477,7 +16577,7 @@
           "detail": "+425 bonus health for 7s; the knock-up and the lingering slow are control the engine records as kinds, not magnitudes",
           "name": "Wild Growth",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='knockup')"
           ],
           "rank": 2,
           "resource_cost": 100.0,
@@ -16506,6 +16606,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "name": "Pix, Faerie Companion",
           "on_hit": {
@@ -16706,6 +16807,7 @@
         },
         "W": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -16718,6 +16820,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_events": [
             {
@@ -16744,7 +16847,7 @@
           "event_phase": "effect",
           "name": "Illumination",
           "parts": [
-            "DamagePart(magic, amount=130.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=130.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "proc_count": 3,
           "rank": 11,
@@ -16960,6 +17063,7 @@
           "total_raw": 124.84
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -17154,6 +17258,7 @@
           "total_raw": 200.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 8.0,
           "damage_type": "magic",
           "detail": "Summons 3 Voidling(s); their attacks are priced on the voidling_attacks row.",
@@ -17165,6 +17270,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -17436,6 +17542,7 @@
           "total_raw": 110.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -17585,11 +17692,12 @@
     "MasterYi": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 14.0,
           "damage_type": "true",
           "name": "Wuju Style",
           "parts": [
-            "DamagePart(true, amount=20.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(true, amount=20.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 1,
           "resource_cost": 0.0,
@@ -17611,12 +17719,13 @@
           "total_raw": 160.9
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 85.0,
           "damage_type": "physical",
           "detail": "+45% bonus attack speed for 7s (45% over the fight window); the row's +45% movement speed, the crowd-control immunities and the takedown cooldown refund have no channel",
           "name": "Highlander",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 2,
           "resource_cost": 100.0,
@@ -17627,6 +17736,7 @@
           "total_raw": 0.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 10.0,
           "damage_type": "physical",
           "detail": "4-second channel: the self-heal (Minimum/Maximum Heal Per Tick, missing-health scaled) is authored by healing.py; the damage-reduction window is a defensive state not staged by the damage model",
@@ -17638,6 +17748,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "physical",
           "name": "Double Strike",
           "on_hit": {
@@ -17841,6 +17952,7 @@
           "total_raw": 221.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 32.0,
           "damage_type": "magic",
           "detail": "Rebuttal shields Mel (80-200 + 70% AP) and reflects enemy projectiles at 40-60% (+ 5% per 100 AP) of their original damage; no enemy projectile source is modeled \u2014 the target never casts \u2014 so the slot prices no damage. The game binary's MelW carries only DamagePercent and ShieldAmount, and no damage.* atom exists for MelW.",
@@ -18027,6 +18139,7 @@
     "Milio": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -18053,6 +18166,7 @@
           "total_raw": 320.0
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -18065,6 +18179,7 @@
         },
         "W": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -18076,6 +18191,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "detail": "1 enchanted hit(s) applying the sourced burn 33.53 (10 : 50 based on level + 20% of Milio's AP over 1.5s, priced at the hit); the 7% / 11% / 15% of the enchanted target's AD on the same hit has no cached row and no sourced level breakpoints",
           "name": "Fired Up!",
@@ -18276,12 +18392,13 @@
           "total_raw": 1209.6
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 12.0,
           "damage_type": "physical",
           "detail": "+70% bonus attack speed for 4s (70% over the fight window); the passive's 30-50 / 60-100 bonus movement speed has no stat_buff key",
           "name": "Strut",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 3,
           "resource_cost": 45.0,
@@ -18292,6 +18409,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "physical",
           "detail": "1 Love Tap(s) of 68.40 physical damage (90% of total AD at level 11); the mark expires only on attacking a NEW enemy, so a duel eats one tap unless the player tags another target",
           "name": "Love Tap",
@@ -18492,12 +18610,13 @@
           "total_raw": 506.75
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "physical",
           "detail": "0 Strength of Stone stack(s); +8.35 bonus armor",
           "name": "Stone Skin",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 11,
           "resource_cost": 0.0,
@@ -18687,6 +18806,7 @@
           "total_raw": 0.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -18696,11 +18816,12 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "name": "Darkness Rise",
           "parts": [
-            "DamagePart(magic, amount=0.0, count=1, hp_scaled=yes, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=0.0, count=1, hp_scaled=yes, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 11,
           "total_raw": 0.0
@@ -18844,6 +18965,7 @@
     "Morgana": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -18906,6 +19028,7 @@
           "total_raw": 440.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Soul Siphon heals Morgana for 18% of the post-mitigation damage dealt by her abilities (authored by this module's derive_self_healing rule); the passive itself deals no enemy damage.",
@@ -19105,12 +19228,13 @@
         },
         "W": {
           "cast_time": 0.75,
+          "cc_reviewed": true,
           "cooldown": 22.0,
           "damage_type": "physical",
           "detail": "+14.6 bonus attack damage for 5s (20% of total AD, wiki W prose corroborated by the game binary's NaafiriADPercentBoost); +14.6 over the fight window.  The hunt also raises the Packmate cap (priced on the We Are More row) and grants +25% movement speed (25% over the window), published as a move_speed_percent stat buff \u2014 a term in the shared movement-speed fold.  The untargetability and the Packmate vanish/reappear are state.",
           "name": "The Call of the Pack",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 3,
           "resource_cost": 60.0,
@@ -19367,6 +19491,7 @@
           "total_raw": 130.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -19622,6 +19747,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "physical",
           "detail": "Innate lifesteal: heals for 12% / 18% / 24% (based on level; game-file breakpoints 7/13) of the post-mitigation physical basic-attack/on-hit damage dealt \u2014 authored by the Soul Eater heal rule (HEALING_RULE_CHAMPIONS), no enemy damage.",
@@ -20056,6 +20182,7 @@
           "total_raw": 100.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -20236,6 +20363,7 @@
           "total_raw": 487.5
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -20264,6 +20392,7 @@
           "total_raw": 120.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -20460,6 +20589,7 @@
           "total_raw": 100.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -20471,6 +20601,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -20694,13 +20825,14 @@
           "total_raw": 275.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 16.0,
           "damage_type": "physical",
           "detail": "+40% bonus attack speed (the passive half, no duration); a successful spell-shield block doubles it to +80% for 5s (not armed: 40% applied)",
           "innate_grant": true,
           "name": "Shroud of Darkness",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 3,
           "resource_cost": 50.0,
@@ -20718,11 +20850,12 @@
               "on_hit"
             ]
           },
+          "cc_reviewed": true,
           "cooldown": 12.0,
           "damage_type": "physical",
           "name": "Umbra Blades",
           "parts": [
-            "DamagePart(physical, amount=23.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=23.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 11,
           "resource_cost": 0.0,
@@ -20928,12 +21061,13 @@
           "total_raw": 270.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "physical",
           "detail": "+20% bonus attack speed, refreshed by every damaging cast and auto against the target; the +10% movement speed, the ally copy of the buff and Willump's secondary-target cleave have no channel",
           "name": "Call of the Freljord",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 11,
           "resource_cost": 0.0,
@@ -21113,12 +21247,13 @@
           "total_raw": 317.25
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 90.0,
           "damage_type": "physical",
           "detail": "+47.25 bonus attack damage and +15 armour/magic resistance for 3s (+47.25 AD over the fight window); the row's +45% movement speed, the crowd-control immunity and the takedown duration extension have no channel",
           "name": "Ragnarok",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 2,
           "resource_cost": 100.0,
@@ -21131,12 +21266,13 @@
           "total_raw": 0.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 14.0,
           "damage_type": "physical",
           "detail": "+60% bonus attack speed for 5s (60% over the fight window); the cast's Shield Strength row is emitted by the ally-support scanner",
           "name": "Tough It Out",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 3,
           "resource_cost": 50.0,
@@ -21147,12 +21283,13 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "physical",
           "detail": "30% missing health of the +75.81% per-level row = +22.743% bonus attack speed; the row's 16.77% life steal has no stat_buff key",
           "name": "Berserker Rage",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 11,
           "resource_cost": 0.0,
@@ -21361,6 +21498,7 @@
           "total_raw": 150.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "name": "Clockwork Windup",
           "on_hit": {
@@ -21792,6 +21930,7 @@
           "total_raw": 140.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -21999,6 +22138,7 @@
           "total_raw": 150.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "name": "Iron Ambassador",
           "on_hit": {
@@ -22195,6 +22335,7 @@
           "total_raw": 265.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -22206,6 +22347,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -22400,6 +22542,7 @@
           "total_raw": 400.0
         },
         "W": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "name": "Terrashape element",
           "on_hit": {
@@ -22412,6 +22555,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "physical",
           "name": "Royal Privilege",
           "on_hit": {
@@ -22606,13 +22750,14 @@
           "total_raw": 90.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 40.0,
           "damage_type": "physical",
           "detail": "+54% bonus attack speed for 2s per Harrier auto \u2014 the same auto stream P prices keeps it refreshed; the row's +30% bonus movement speed has no stat_buff key",
           "innate_grant": true,
           "name": "Heightened Senses",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 3,
           "resource_cost": 0.0,
@@ -22623,6 +22768,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "physical",
           "name": "Harrier",
           "on_hit": {
@@ -22772,6 +22918,7 @@
     "Rakan": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 20.0,
           "damage_type": "magic",
           "detail": "Ally shield (sourced by the support scanner); the free recast within 5s is not modeled.",
@@ -23058,12 +23205,13 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "physical",
           "detail": "+18.60 bonus attack damage = 15% of 74.0 armour + 15% of 50.0 magic resistance; Spiked Shell deals no damage of its own, and reads the build's resistances rather than the stance's, since W's bonus armour is a state row rather than a stat_buff",
           "name": "Spiked Shell",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 11,
           "resource_cost": 0.0,
@@ -23261,6 +23409,7 @@
           "total_raw": 80.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -23470,6 +23619,7 @@
           "total_raw": 120.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "name": "Break the Mold",
           "on_hit": {
@@ -23695,12 +23845,13 @@
           "total_raw": 0.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 26.0,
           "damage_type": "physical",
           "detail": "+20% ramping to +40% bonus attack speed over 5s \u2014 mean 30%, 30% applied",
           "name": "Bailout",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 3,
           "resource_cost": 80.0,
@@ -23711,6 +23862,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_events": [
             {
               "damage": 40.0,
@@ -23723,7 +23875,7 @@
           "event_phase": "effect",
           "name": "Leverage",
           "parts": [
-            "DamagePart(magic, amount=40.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=40.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "proc_count": 1,
           "total_raw": 40.0
@@ -23926,6 +24078,7 @@
           "total_raw": 227.5
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -24106,12 +24259,13 @@
           "total_raw": 164.7
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 90.0,
           "damage_type": "physical",
           "detail": "the empowered attack shreds 20 armour for 4s (the engine weights it by the share of the fight the window covers, timed from the cast rather than from the attack that lands it 2s later); the row's +50% movement speed, the camouflage and the 100% AD rider on that attack have no channel here",
           "name": "Thrill of the Hunt",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 2,
           "target_debuff": {
@@ -24138,6 +24292,7 @@
           "total_raw": 110.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Ferocity: 0/4 Ferocity stacks; at 4 the next basic ability is empowered.  Bonetooth Necklace trophies (up to 5, 1-36% bonus AD) are state; brush leap is mobility state.",
@@ -24285,6 +24440,7 @@
     "Riven": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -24347,6 +24503,7 @@
           "total_raw": 125.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "physical",
           "name": "Runic Blade",
           "on_hit": {
@@ -24539,6 +24696,7 @@
           "total_raw": 1000.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -24548,6 +24706,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "detail": "Overheated: 105.59 bonus magic damage on-hit (level-11 flat + 25% AP + 4% target maximum health) x 0 empowered auto(s); no Overheat window is declared (overheat_windows = 0) and no empowered swing implies one, so neither the bonus attack speed nor the ability lockout applies; the 'Bonus Damage' row is the monster-only cap on the %max-health term, not a damage source",
           "name": "Junkyard Titan",
@@ -24754,6 +24913,7 @@
           "total_raw": 120.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -25181,11 +25341,12 @@
           "total_raw": 265.6
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "name": "Fury of the North",
           "parts": [
-            "DamagePart(magic, amount=8.47, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=8.47, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 11,
           "resource_cost": 0.0,
@@ -25332,6 +25493,7 @@
       "abilities_level_11": {
         "E": {
           "cast_time": 1.0,
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -25420,6 +25582,7 @@
           "total_raw": 177.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "physical",
           "detail": "40 Mist stack(s): +30 bonus AD, +20% crit, +40 range; mark consume 10% of target max health per 2 hits",
           "name": "Absolution",
@@ -25629,6 +25792,7 @@
         },
         "W": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Shield only, priced by the ally-support scanner. The cast's own 20% (+ 2% per 100 AP) grant (20% at this build, 20% over the fight window at the sourced 2.5s) is published as a move_speed_percent stat buff, a term in the shared movement-speed fold; its decay, its 2-stack rule and the ally half of the grant are state.",
@@ -25644,6 +25808,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "detail": "4 Note(s) of 16.35 bonus magic damage each (4 : 27.47 based on level + 4% AP) on one empowered attack; Notes from allies (reduced by 75%) and Echo's free recast are unpriced",
           "name": "Stage Presence",
@@ -25810,12 +25975,13 @@
           "total_raw": 107.0
         },
         "Q": {
+          "cc_reviewed": true,
           "cooldown": 5.0,
           "damage_type": "physical",
           "detail": "both empowered attacks priced from the Total Bonus Physical Damage row (20-100 by rank + %max-HP + % per 100 AD of target max health)",
           "name": "Knuckle Down",
           "parts": [
-            "DamagePart(physical, amount=254.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=254.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 5,
           "total_raw": 254.0
@@ -25849,6 +26015,7 @@
           "total_raw": 120.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Heavy Hands alternates Left and Right punches; the Right Punch deals the sourced bonus physical damage \u2014 set p_right_punches to price it (0 = no Right Punches).",
@@ -26059,6 +26226,7 @@
           "total_raw": 550.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "physical",
           "detail": "1 attack(s) from behind for 25.88 bonus physical (25.88 at level 11 + 20% bonus AD), affected by critical strike modifiers",
           "name": "Backstab",
@@ -26257,6 +26425,7 @@
           "total_raw": 502.94
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 180.0,
           "damage_type": "magic",
           "detail": "Ally shield (sourced by the support scanner) at its sourced floor; the 0-60% missing-health increase and the 3-second channel's teleport are not modeled.",
@@ -26268,6 +26437,7 @@
           "total_raw": 0.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 13.0,
           "damage_type": "magic",
           "detail": "Spirit's Refuge primes a protective zone that blocks all non-turret basic attacks (and basic-damage abilities) hitting Shen or allied champions inside it for 1.75s; the cached W entry carries no damage/heal/shield leveling row at all (data/champions.json Shen W). This engine's attack-block defense convention (interaction_effects.py's ProjectileDefense.blocks_basic_attacks, used by Jax's Counter Strike and Fiora's Riposte) lives on the defender side of a champion-vs-champion interaction, not in a champion's own outgoing SLOTS map, so the zone is priced as an explicit zero-HP-number state rather than left silently absent.",
@@ -26477,12 +26647,13 @@
           "total_raw": 120.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "physical",
           "detail": "0 Scalemail stack(s) x 0.3 armor / 0.3 magic resistance: +0.00 armor, +0.00 magic resistance",
           "name": "Scalemail",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 11,
           "stat_buff": {
@@ -26659,12 +26830,13 @@
           "total_raw": 20.84
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 100.0,
           "damage_type": "magic",
           "detail": "+55 ability power, armour, magic resistance and movement speed for 25s (55 over the fight window); the same row's health/mana regeneration has no stat_buff key, and its Grievous Wounds is an enemy-healing effect the one-pair fight cannot apply",
           "name": "Insanity Potion",
           "parts": [
-            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 2,
           "resource_cost": 100.0,
@@ -26691,6 +26863,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -26906,6 +27079,7 @@
           "total_raw": 370.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Glory in Death is a post-death reanimation state; no enemy damage.",
@@ -27142,12 +27316,13 @@
         "Q": {
           "area_damage": true,
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 8.0,
           "damage_type": "physical",
           "detail": "two-way Boomerang Blade: the crossblade hits out AND back for 2x (Total Maximum Champion Damage 120-320 + 140% bonus AD + 120% AP == 2 x the single-pass row)",
           "name": "Boomerang Blade",
           "parts": [
-            "DamagePart(physical, amount=160.0, count=2, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=160.0, count=2, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 5,
           "resource_cost": 75.0,
@@ -27171,12 +27346,13 @@
           "total_raw": 0.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 12.0,
           "damage_type": "physical",
           "detail": "1 bounce(s) of the cached Bounce Damage row (45% AD = 36.9) \u2014 one per empowered basic attack in the sourced 4s window, each critting with the swing that triggered it (Bounce Critical Damage is exactly 2x the Bounce Damage row). W's own 20-40% bonus attack speed is not modeled, so the swing count is a floor.",
           "name": "Ricochet",
           "parts": [
-            "DamagePart(physical, amount=36.9, count=1, hp_scaled=no, crit_effectiveness=1.0)"
+            "DamagePart(physical, amount=36.9, count=1, hp_scaled=no, crit_effectiveness=1.0, cc_kind='none')"
           ],
           "rank": 3,
           "resource_cost": 60.0,
@@ -27632,6 +27808,7 @@
           "total_raw": 140.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "true",
           "detail": "225 Dragon Practice stack(s).  At 225 stacks (tier 3) Q hits set the enemy on fire for 3s, dealing true damage equal to 2.5% per 100 bonus AD (+ 0.5% per 100 stacks) of the target's maximum health \u2014 priced as Q's post-hit burn.  The 25% : 55% (+ 0% : 9% crit) stack-scaled bonus magic damage on basic abilities and the 6.5% burn execution are documented boundaries.",
@@ -27781,6 +27958,7 @@
     "Sona": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Movement only: the cast's own 20% (+ 2% per 100 AP) grant (20% at this build, 20% over the fight window at the sourced 3s damaged duration) is published as a move_speed_percent stat buff, a term in the shared movement-speed fold. The ranked Melody Bonus to tagged allies is not published: it needs allied champions.",
@@ -27826,6 +28004,7 @@
           "total_raw": 250.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -28025,6 +28204,7 @@
         },
         "R": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 135.0,
           "damage_type": "magic",
           "detail": "Team heal (sourced by the support scanner); the below-40%-health increase is not priced.",
@@ -28037,6 +28217,7 @@
         },
         "W": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 4.0,
           "damage_type": "magic",
           "detail": "Ally-only heal (sourced by the support scanner); costs 10% of max health per cast, not modeled as mana.",
@@ -28249,12 +28430,13 @@
           "total_raw": 140.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "0 Soul Fragment(s) x 15 = +0 permanent bonus health; the 6%-maximum-health heal on claiming one is a claim event this rotation does not author",
           "name": "Ravenous Flock",
           "parts": [
-            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 11,
           "resource_cost": 0.0,
@@ -28433,6 +28615,7 @@
         },
         "R": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -28465,6 +28648,7 @@
             "damage_type": "magic",
             "name": "Petricite Burst"
           },
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "0 empowered basic attack(s) REPLACE their ordinary swing with 113.10 magic damage (130% total AD + 30% AP), not bonus damage on top of it; the secondary-target whirl (40% AD + 20% AP), the nonstandard (175% + 30%) critical strike, the monster multiplier and the 125% bonus attack speed are all unmodeled",
@@ -28661,13 +28845,14 @@
         },
         "R": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 100.0,
           "damage_type": "magic",
           "execute_source": "Unleashed Power",
           "execute_threshold_ratio": 0.15,
           "name": "Unleashed Power",
           "parts": [
-            "DamagePart(magic, amount=120.0, count=3, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=120.0, count=3, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 2,
           "resource_cost": 100.0,
@@ -28692,6 +28877,7 @@
           "total_raw": 145.6
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "name": "Transcendent",
           "parts": [],
@@ -28882,6 +29068,7 @@
           "total_raw": 170.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "detail": "basic attacks and Tongue Lash apply one stack",
           "name": "An Acquired Taste",
@@ -29095,6 +29282,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 2.0,
           "damage_type": "magic",
           "detail": "Innate: 10% / 15% / 25% / 40% (based on level) bonus movement speed near terrain \u2014 self movement state with no damage instance, and it is suppressed while casting or in champion combat.",
@@ -29244,6 +29432,7 @@
     "Talon": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -29301,6 +29490,7 @@
           "total_raw": 190.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_events": [
             {
@@ -29317,7 +29507,7 @@
           "event_phase": "effect",
           "name": "Blade's End",
           "parts": [
-            "DamagePart(physical, amount=12.35, count=16, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=12.35, count=16, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "proc_count": 1,
           "rank": 11,
@@ -29480,6 +29670,7 @@
         },
         "Q": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -29492,6 +29683,7 @@
         },
         "R": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -29504,6 +29696,7 @@
         },
         "W": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -29515,6 +29708,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "detail": "Bravado: 65 (level 11) + 15% bonus armor per empowered attack; a cast arms up to 2 charges for 5s and re-arming refreshes rather than stacks",
           "name": "Bravado",
@@ -29727,6 +29921,7 @@
           "total_raw": 325.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Movement only: 20% bonus movement speed after 5s undamaged, doubled to 40% for 3s on cast (40% over the fight window). The cast's grant is published as a move_speed_percent stat buff, which is a term in the shared movement-speed fold.",
@@ -29741,6 +29936,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Stealth (utility) plus Element of Surprise: 20% / 40% / 60% / 80% (based on level) bonus attack speed for 5s on breaking stealth. Not modeled and not called no_damage. (1) The trigger is unreachable: the cached innate grants the stealth only 'after 1.5 seconds without moving, taking non-over-time damage, performing actions that break stealth' \u2014 a state a modeled fight never enters, which is what separates this from Twitch Q, an active cast the rotation does break. (2) The magnitude has no cached ability atom: both P effect rows carry an empty leveling array, so the ladder exists only as wiki prose plus the binary's TeemoPassive BonusAttackSpeed level breakpoints (0.20 at level 1, +0.20 at 5/10/15) and would have to be republished as a module constant with no cached accessor behind it.",
@@ -29935,6 +30131,7 @@
           "total_raw": 440.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -29947,6 +30144,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "detail": "40 Soul stack(s): +40 ability power, +40 bonus armor",
           "name": "Damnation",
@@ -30118,12 +30316,13 @@
           "auto_attack_override": {
             "active_duration": 7.0
           },
+          "cc_reviewed": true,
           "cooldown": 16.0,
           "damage_type": "physical",
           "detail": "Self buff, no enemy damage: +120% bonus attack speed for 7s from the Q cast. The autos ride the base rate before the cast, the buffed rate inside the window, and the base rate again after it.",
           "name": "Rapid Fire",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 5,
           "resource_cost": 35.0,
@@ -30164,6 +30363,7 @@
           "total_raw": 140.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "physical",
           "detail": "Innate: +88.24 bonus attack range at level 11 (0 : 167.65 by level) on basic attacks, Explosive Charge and Buster Shot. Range is positioning state with no damage instance and no damage channel in this model.",
@@ -30396,12 +30596,13 @@
           "total_raw": 500.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 16.0,
           "damage_type": "physical",
           "detail": "Bonus Attack Speed priced at 100% uptime (60 applied across the fight window)",
           "name": "Frozen Domain",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 3,
           "resource_cost": 40.0,
@@ -30412,6 +30613,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -30574,6 +30776,7 @@
           "total_raw": 80.0
         },
         "Q": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Bloodlust is a heal (Minimum Heal leveling row); no enemy damage.",
@@ -30583,6 +30786,7 @@
           "total_raw": 0.0
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Undying Rage is a minimum-health/fury ultimate; no enemy damage.",
@@ -30602,6 +30806,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Battle Fury is a fury/AD-while-missing state passive; no enemy damage.",
@@ -30781,6 +30986,7 @@
           "total_raw": 240.0
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Destiny reveals and teleports; no enemy damage.",
@@ -30806,6 +31012,7 @@
           "total_raw": 104.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Loaded Dice is a gold/utility passive; no enemy damage.",
@@ -30974,12 +31181,13 @@
           "total_raw": 204.5
         },
         "Q": {
+          "cc_reviewed": true,
           "cooldown": 16.0,
           "damage_type": "physical",
           "detail": "Camouflage and post-stealth attack speed: self buffs only, no enemy damage. Element of Surprise (+40/45/50/55/60% bonus attack speed for 6s) is NOT applied: it needs Twitch to break an existing Ambush, which the fight model does not otherwise enter. Enable the 'opens the fight by breaking Ambush' option to assert that state.",
           "name": "Ambush",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 5,
           "resource_cost": 40.0,
@@ -30987,11 +31195,12 @@
           "total_raw": 0.0
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 90.0,
           "damage_type": "physical",
           "name": "Spray and Pray",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 2,
           "resource_cost": 100.0,
@@ -31016,6 +31225,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_events": [
             {
@@ -31032,7 +31242,7 @@
           "event_phase": "effect",
           "name": "Deadly Venom",
           "parts": [
-            "DamagePart(true, amount=18.0, count=6, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(true, amount=18.0, count=6, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "proc_count": 1,
           "rank": 11,
@@ -31213,6 +31423,7 @@
           "total_raw": 0.0
         },
         "Q": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "physical",
           "detail": "Claw Stance: 2 empowered basic attack(s) at Bonus Physical Damage (140, % max health + 3.5% per 100 bonus AD) + Bonus Physical Damage On-Hit (30, flat + 20% bonus AD + % bonus health)",
@@ -31245,6 +31456,7 @@
           "total_raw": 144.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -31256,6 +31468,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Awakened Spirit (stance swaps, a 1.5s global cooldown and the Awaken recast window) carries no damage instance. Monk Training does move damage and is NOT modeled: after any cast, the next two basic attacks within 4s gain 30% bonus attack speed and refund 5% of Awakened Spirit's cooldown (wiki prose plus the binary's UdyrPassive AttackSpeed calculation 0.30, AttackSpeedDuration 4.0 and UltCDReduction 0.05). Withheld, not called no_damage, on three counts. The engine's only WINDOWED attack-speed path resolves its window start by walking cast_order to the Q slot, so it is Q-slot-only (the Miss Fortune W precedent) and a P-slot steroid cannot reach it. The unwindowed self-buff channel (module_helpers.buff_window_share) weights a bonus purely by TIME, while this window is bounded by attack count as well as time \u2014 it closes on the second empowered attack or at 4s, whichever comes first \u2014 so a time-weighted share would over-credit it whenever the attacks land early. And the cooldown refund has no channel that fits: a champion CAN author one (Ezreal's _with_q_refund divides each emitted entry's cooldown by a refund rate factor), but every such rewrite is static and parse-time, sound only because Ezreal's refund stream is always on, while this one is bounded by the same 4s/2-attack window \u2014 nothing mutates a cooldown mid-fight (item_effects' CooldownProcEffect is read only by the item-proc scheduler).",
@@ -31469,6 +31682,7 @@
         },
         "passive": {
           "area_damage": true,
+          "cc_reviewed": true,
           "damage_events": [
             {
               "damage": 218.0,
@@ -31481,7 +31695,7 @@
           "event_phase": "effect",
           "name": "Echoing Flames",
           "parts": [
-            "DamagePart(physical, amount=218.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=218.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "proc_count": 1,
           "skillshot": true,
@@ -31683,6 +31897,7 @@
           "total_raw": 250.0
         },
         "W": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "event_order_certified": "auto_stack_proc",
           "name": "Blighted Quiver",
@@ -31696,12 +31911,13 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "physical",
           "detail": "not armed: Living Vengeance needs a kill or takedown, which a damage package does not imply.  The unit-kill branch (10%/15%/20% by level) is unpriced either way \u2014 the cache states no level breakpoints for it",
           "name": "Living Vengeance",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 11,
           "resource_cost": 0.0,
@@ -31902,11 +32118,12 @@
           "total_raw": 150.65
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 85.0,
           "damage_type": "physical",
           "name": "Final Hour",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 2,
           "resource_cost": 80.0,
@@ -31917,6 +32134,7 @@
           "total_raw": 0.0
         },
         "W": {
+          "cc_reviewed": true,
           "damage_type": "true",
           "name": "Silver Bolts",
           "on_hit": {
@@ -32132,6 +32350,7 @@
           "total_raw": 195.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Phenomenal Evil Power is a stacking AP passive; no enemy damage.",
@@ -32345,6 +32564,7 @@
           "total_raw": 175.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_events": [
             {
@@ -32359,7 +32579,7 @@
           "event_phase": "effect",
           "name": "Organic Deconstruction",
           "parts": [
-            "DamagePart(true, amount=120.29, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(true, amount=120.29, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "proc_count": 1,
           "rank": 11,
@@ -32937,12 +33157,13 @@
     "Viego": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 14.0,
           "damage_type": "physical",
           "detail": "+30% bonus attack speed inside the mist at 100% uptime (30% applied); the trail's movement speed and camouflage have no channel",
           "name": "Harrowed Path",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 1,
           "skillshot": true,
@@ -33013,6 +33234,7 @@
           "total_raw": 190.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -33280,6 +33502,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -33482,6 +33705,7 @@
           "total_raw": 209.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -33694,6 +33918,7 @@
           "total_raw": 240.9
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "detail": "5/5 stack(s); 25% bonus attack speed (5% per stack)",
           "name": "The Relentless Storm",
@@ -33958,12 +34183,13 @@
         },
         "W": {
           "cast_time": 0.5,
+          "cc_reviewed": true,
           "cooldown": 60.0,
           "damage_type": "physical",
           "detail": "90% bonus attack speed (the sourced Bonus Attack Speed row; the active marks the target regardless of its health); Blood Hunt's movement speed has no engine channel",
           "name": "Blood Hunt",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 3,
           "resource_cost": 55.0,
@@ -33974,6 +34200,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "magic",
           "detail": "34.82 bonus magic damage on-hit (6 : 60.76 based on level + 15% bonus AD + 10% AP); Warwick at 100% health heals for 0% of the post-mitigation damage it deals",
           "name": "Eternal Hunger",
@@ -34207,6 +34434,7 @@
           "total_raw": 40.95
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "physical",
           "detail": "5/5 stack(s); each empowered auto plants one Feather (primary target takes the triggering attack's damage \u2014 no single-target delta); E detonates planted Feathers",
           "name": "Clean Cuts",
@@ -34414,6 +34642,7 @@
           "total_raw": 120.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -34622,6 +34851,7 @@
           "total_raw": 276.8
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_type": "physical",
           "detail": "every 3rd basic attack consumes the stacks for 40.05 bonus physical damage (45% AD + 15% AP at level 11) and the sourced maximum-health heal; Wind Becomes Lightning's first slash and thrust each feed the counter one stack",
           "name": "Determination",
@@ -34815,6 +35045,7 @@
         },
         "W": {
           "cast_time": 0.01,
+          "cc_reviewed": true,
           "cooldown": 21.0,
           "damage_type": "magic",
           "defensive_interaction": {
@@ -34837,6 +35068,7 @@
               "hash": "f375a24fbf0555e1"
             }
           },
+          "cc_reviewed": true,
           "certified_constants": {
             "crit_chance_multiplier": 2.0,
             "crit_damage_multiplier_factor": 0.9,
@@ -34995,6 +35227,7 @@
       "abilities_level_11": {
         "E": {
           "area_damage": true,
+          "cc_reviewed": true,
           "cooldown": 22.0,
           "damage_type": "true",
           "detail": "25% of post-mitigation physical and magic champion damage during Spirit Form, re-dealt as true damage at the five-second auto-recast",
@@ -35065,6 +35298,7 @@
               "hash": "1142fbe0a600fcc8"
             }
           },
+          "cc_reviewed": true,
           "certified_constants": {
             "crit_chance_multiplier": 2.0,
             "crit_damage_multiplier_factor": 0.9,
@@ -35278,6 +35512,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_events": [
             {
               "damage": 57.04,
@@ -35405,7 +35640,7 @@
           "event_phase": "effect",
           "name": "Mist Walkers",
           "parts": [
-            "DamagePart(physical, amount=57.0375, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=57.0375, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "proc_count": 20,
           "total_raw": 1140.75
@@ -35549,6 +35784,7 @@
     "Yunara": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -35582,6 +35818,7 @@
           "total_raw": 25.0
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 90.0,
           "damage_type": "magic",
           "detail": "Transcendent State (15s): a buff that empowers W into Arc of Ruin; with r_transcendent=True the W row prices the empowered base 160/320/480 by R rank + 120% bonus AD + 75% AP",
@@ -35612,6 +35849,7 @@
           "total_raw": 216.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -35761,6 +35999,7 @@
     "Yuumi": {
       "abilities_level_11": {
         "E": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -35802,6 +36041,7 @@
           "total_raw": 250.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Attachment and the Best Friend Bonus: no damage row exists in the slot. The active dashes to a target ALLIED champion and attaches, so a 1v1 surface cannot cast it at all. Its Best Friend Bonus grants Yuumi 6% heal and shield power and her Best Friend 5 (+3% AP) healing on-hit at this rank. Neither is published: the heal-and-shield-power channel EXISTS (heal_and_shield_power_percent, folded back for the caster by healing_reduction.heal_and_shield_power_factor), but the grant is gated on being attached to a Best Friend, which no module-visible state can establish; the on-hit half goes to the ally. Attached Yuumi is also untargetable and casts from her anchor, which the engine has no participant state to express.",
@@ -35813,6 +36053,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -36028,12 +36269,13 @@
           "total_raw": 192.61
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "physical",
           "detail": "12/12 Determination stack(s) = 54.35% AD (+53.26 bonus attack damage); at maximum stacks the per-stack 2.26% row is replaced by the filled 54.35% row.  The maximum-stack resurrection is the revive axis, which has no mid-fight channel",
           "name": "Cultivation of War",
           "parts": [
-            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 11,
           "resource_cost": 0.0,
@@ -36235,6 +36477,7 @@
           "total_raw": 180.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 300.0,
           "damage_type": "magic",
           "detail": "Cell Division deals no enemy damage: the cached 'Max Health Damage' ratio is Zac's own Goo chunk heal (4% : 8.47% of HIS maximum health), priced through the self_healing_rule channel, and the resurrection through starting_revive_defense.",
@@ -36428,6 +36671,7 @@
           "total_raw": 217.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Living Shadow is a shadow/utility placement; no enemy damage.",
@@ -36439,6 +36683,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "Contempt for the Weak is a % max-HP on-hit rider on basic attacks; no separate enemy-damage formula is priced for the passive slot.",
@@ -36657,6 +36902,7 @@
               "hash": "9fa7c9206eb1e3c8"
             }
           },
+          "cc_reviewed": true,
           "certified_constants": {
             "execute_ap_ratio": 0.2,
             "threshold_level_1": 70.0,
@@ -36881,6 +37127,7 @@
           "total_raw": 140.0
         },
         "passive": {
+          "cc_reviewed": true,
           "damage_events": [
             {
               "damage": 80.0,
@@ -36899,7 +37146,7 @@
           "event_phase": "effect",
           "name": "Short Fuse",
           "parts": [
-            "DamagePart(magic, amount=80.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=80.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "proc_count": 2,
           "short_fuse_cooldown": 12.0,
@@ -37117,6 +37364,7 @@
           "total_raw": 300.0
         },
         "R": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -37128,6 +37376,7 @@
           "total_raw": 0.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -37139,6 +37388,7 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -37321,6 +37571,7 @@
         },
         "R": {
           "cast_time": 0.25,
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -37332,12 +37583,13 @@
           "total_raw": 0.0
         },
         "W": {
+          "cc_reviewed": true,
           "cooldown": 0.25,
           "damage_type": "magic",
           "detail": "3 bolts of 35 = the wiki Total Magic Damage row",
           "name": "Spell Thief",
           "parts": [
-            "DamagePart(magic, amount=35.0, count=3, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=35.0, count=3, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 3,
           "resource_cost": 1.0,
@@ -37346,11 +37598,12 @@
           "total_raw": 105.0
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "name": "More Sparkles!",
           "parts": [
-            "DamagePart(magic, amount=66.0, count=1, hp_scaled=no, crit_effectiveness=0.0)"
+            "DamagePart(magic, amount=66.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 11,
           "resource_cost": 0.0,
@@ -37556,6 +37809,7 @@
           "total_raw": 201.18
         },
         "passive": {
+          "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
           "detail": "The pinned Wiki packet contains no enemy-damage formula for this slot; it is modeled as a non-damaging/state-only ability.",
@@ -52935,18 +53189,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60001,
+      "leaves": 60255,
       "numeric_leaves": 46189,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "59063b77ca93cb4ae878a6a6f633027155ffc8df",
+    "git_head": "d189d8a1ea5e57b66fc7031afd2bca9bc67652f9",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "2464616e5d1809ca57eb3dd0b8f5bb6a4084ce12"
+    "src_tree_sha": "47326160a493fbc7d9a5d383f896b1707b1441bc"
   },
   "registered_champion_fights": {
     "Aatrox": {

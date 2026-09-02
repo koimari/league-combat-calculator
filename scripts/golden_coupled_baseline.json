@@ -2959,6 +2959,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:0",
@@ -2975,6 +2976,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:0",
@@ -3038,6 +3040,7 @@
           },
           {
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 333.8,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:4",
@@ -3054,6 +3057,7 @@
           {
             "area_damage": true,
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 222.3,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:5",
@@ -3070,6 +3074,7 @@
           {
             "area_damage": true,
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 132.0,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:6",
@@ -3086,6 +3091,7 @@
           {
             "area_damage": true,
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 0.0,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:7",
@@ -3102,10 +3108,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:1",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 67.5,
             "raw_damage": 151.2,
@@ -3118,10 +3125,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:1",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 78.8,
             "raw_damage": 151.2,
@@ -3135,6 +3143,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:2",
@@ -3151,6 +3160,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:2",
@@ -3167,6 +3177,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:3",
@@ -3183,6 +3194,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:3",
@@ -3198,10 +3210,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:4",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 67.5,
             "raw_damage": 151.2,
@@ -3214,10 +3227,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:4",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 78.8,
             "raw_damage": 151.2,
@@ -3230,6 +3244,7 @@
           },
           {
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 0.0,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:8",
@@ -3282,6 +3297,7 @@
           },
           {
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 0.0,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:11",
@@ -3332,6 +3348,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:5",
@@ -3348,6 +3365,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:5",
@@ -3364,6 +3382,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:6",
@@ -3380,6 +3399,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:6",
@@ -3396,6 +3416,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:7",
@@ -3412,6 +3433,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:7",
@@ -4865,6 +4887,7 @@
               "time": 0.25
             },
             {
+              "cc_kind": "none",
               "damage": 333.8,
               "damage_type": "magic",
               "phase": "ability",
@@ -4873,6 +4896,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 222.3,
               "damage_type": "magic",
               "phase": "ability",
@@ -4881,6 +4905,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 222.3,
               "damage_type": "magic",
               "phase": "ability",
@@ -4889,6 +4914,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 222.3,
               "damage_type": "magic",
               "phase": "ability",
@@ -4897,6 +4923,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 333.8,
               "damage_type": "magic",
               "phase": "ability",
@@ -4925,6 +4952,7 @@
               "time": 4.21
             },
             {
+              "cc_kind": "none",
               "damage": 333.8,
               "damage_type": "magic",
               "phase": "ability",
@@ -9528,6 +9556,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:0",
@@ -9544,6 +9573,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:0",
@@ -9795,6 +9825,7 @@
           },
           {
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 129.3,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:3",
@@ -9810,6 +9841,7 @@
           },
           {
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 132.5,
             "damage_type": "magic",
             "event_id": "main:enemy:Malphite:3",
@@ -9826,6 +9858,7 @@
           {
             "area_damage": true,
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 104.8,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:4",
@@ -9842,6 +9875,7 @@
           {
             "area_damage": true,
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 107.4,
             "damage_type": "magic",
             "event_id": "main:enemy:Malphite:4",
@@ -9858,6 +9892,7 @@
           {
             "area_damage": true,
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 104.8,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:5",
@@ -9874,6 +9909,7 @@
           {
             "area_damage": true,
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 107.4,
             "damage_type": "magic",
             "event_id": "main:enemy:Malphite:5",
@@ -9890,6 +9926,7 @@
           {
             "area_damage": true,
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 104.8,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:6",
@@ -9906,6 +9943,7 @@
           {
             "area_damage": true,
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 107.4,
             "damage_type": "magic",
             "event_id": "main:enemy:Malphite:6",
@@ -9921,10 +9959,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:1",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 67.5,
             "raw_damage": 151.2,
@@ -9937,10 +9976,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:1",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 78.8,
             "raw_damage": 151.2,
@@ -9954,6 +9994,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:2",
@@ -9970,6 +10011,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:2",
@@ -9986,6 +10028,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 296.1,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:3",
@@ -10001,6 +10044,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 345.5,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:3",
@@ -10015,10 +10059,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 67.5,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:4",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 67.5,
             "raw_damage": 151.2,
@@ -10030,10 +10075,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 78.8,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:4",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 78.8,
             "raw_damage": 151.2,
@@ -10045,6 +10091,7 @@
           },
           {
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 129.3,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:7",
@@ -10060,6 +10107,7 @@
           },
           {
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 132.5,
             "damage_type": "magic",
             "event_id": "main:enemy:Malphite:7",
@@ -10076,6 +10124,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 197.4,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:5",
@@ -10091,6 +10140,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 230.3,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:5",
@@ -10206,6 +10256,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 246.8,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:6",
@@ -10221,6 +10272,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 287.9,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:6",
@@ -10236,6 +10288,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:7",
@@ -10252,6 +10305,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:7",
@@ -11967,6 +12021,7 @@
               "time": 0.25
             },
             {
+              "cc_kind": "none",
               "damage": 129.3,
               "damage_type": "magic",
               "phase": "ability",
@@ -11975,6 +12030,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 104.8,
               "damage_type": "magic",
               "phase": "ability",
@@ -11983,6 +12039,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 104.8,
               "damage_type": "magic",
               "phase": "ability",
@@ -11991,6 +12048,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 104.8,
               "damage_type": "magic",
               "phase": "ability",
@@ -11999,6 +12057,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 129.3,
               "damage_type": "magic",
               "phase": "ability",
@@ -12624,6 +12683,7 @@
               "time": 0.25
             },
             {
+              "cc_kind": "none",
               "damage": 132.5,
               "damage_type": "magic",
               "phase": "ability",
@@ -12632,6 +12692,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 107.4,
               "damage_type": "magic",
               "phase": "ability",
@@ -12640,6 +12701,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 107.4,
               "damage_type": "magic",
               "phase": "ability",
@@ -12648,6 +12710,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 107.4,
               "damage_type": "magic",
               "phase": "ability",
@@ -12656,6 +12719,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 132.5,
               "damage_type": "magic",
               "phase": "ability",
@@ -20066,6 +20130,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 216.8,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:2",
@@ -20081,6 +20146,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 213.6,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:2",
@@ -20154,10 +20220,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 74.1,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:3",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 74.1,
             "raw_damage": 151.2,
@@ -20169,10 +20236,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 73.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:3",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 73.0,
             "raw_damage": 151.2,
@@ -20305,6 +20373,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 271.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:6",
@@ -20320,6 +20389,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 267.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:6",
@@ -20532,6 +20602,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:9",
@@ -20548,6 +20619,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:9",
@@ -20563,10 +20635,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:10",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 74.1,
             "raw_damage": 151.2,
@@ -20579,10 +20652,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:10",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 73.0,
             "raw_damage": 151.2,
@@ -21305,6 +21379,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 129.7,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:19",
@@ -21320,6 +21395,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 213.6,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:19",
@@ -21408,6 +21484,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:20",
@@ -21424,6 +21501,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 267.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:20",
@@ -21439,6 +21517,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:21",
@@ -21455,6 +21534,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:21",
@@ -32665,6 +32745,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:2",
@@ -32681,6 +32762,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:2",
@@ -32874,10 +32956,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:3",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 67.5,
             "raw_damage": 151.2,
@@ -32890,10 +32973,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:3",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 77.1,
             "raw_damage": 151.2,
@@ -33095,6 +33179,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:6",
@@ -33111,6 +33196,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:6",
@@ -33315,6 +33401,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 296.1,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:9",
@@ -33330,6 +33417,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 338.4,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:9",
@@ -33372,10 +33460,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 67.5,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:10",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 67.5,
             "raw_damage": 151.2,
@@ -33387,10 +33476,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 77.1,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:10",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 77.1,
             "raw_damage": 151.2,
@@ -34041,6 +34131,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 197.4,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:19",
@@ -34056,6 +34147,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 225.6,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:19",
@@ -34250,6 +34342,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:20",
@@ -34266,6 +34359,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:20",
@@ -34282,6 +34376,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:21",
@@ -34298,6 +34393,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:21",
@@ -49342,6 +49438,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 216.8,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:2",
@@ -49357,6 +49454,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 213.6,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:2",
@@ -49707,10 +49805,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 74.1,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:3",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 74.1,
             "raw_damage": 151.2,
@@ -49722,10 +49821,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 73.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:3",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 73.0,
             "raw_damage": 151.2,
@@ -50114,6 +50214,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 271.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:6",
@@ -50129,6 +50230,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 267.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:6",
@@ -50420,6 +50522,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:9",
@@ -50436,6 +50539,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 320.5,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:9",
@@ -50577,10 +50681,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:10",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 74.1,
             "raw_damage": 151.2,
@@ -50593,10 +50698,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 73.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:10",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 73.0,
             "raw_damage": 151.2,
@@ -52169,6 +52275,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:19",
@@ -52185,6 +52292,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 107.9,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:19",
@@ -52374,6 +52482,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:20",
@@ -52390,6 +52499,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:20",
@@ -52406,6 +52516,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:21",
@@ -52422,6 +52533,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:21",
@@ -61252,6 +61364,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 213.6,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Jax:0",
@@ -61267,6 +61380,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 216.8,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:0",
@@ -61312,10 +61426,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Jax:1",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 0.0,
             "raw_damage": 151.2,
@@ -61331,10 +61446,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 74.1,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:1",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 74.1,
             "raw_damage": 151.2,
@@ -61347,6 +61463,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 267.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Jax:2",
@@ -61362,6 +61479,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 271.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:2",
@@ -61423,6 +61541,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Jax:3",
@@ -61439,6 +61558,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:3",
@@ -61454,10 +61574,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Jax:4",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 73.0,
             "raw_damage": 151.2,
@@ -61470,10 +61591,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:4",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 74.1,
             "raw_damage": 151.2,
@@ -61532,6 +61654,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 213.6,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Jax:5",
@@ -61547,6 +61670,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 216.8,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:5",
@@ -61579,6 +61703,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 267.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Jax:6",
@@ -61594,6 +61719,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 271.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:6",
@@ -61609,6 +61735,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Jax:7",
@@ -61625,6 +61752,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:7",
@@ -65215,6 +65343,7 @@
           },
           {
             "attacker": "enemy:Darius",
+            "cc_kind": "none",
             "damage": 1155.0,
             "damage_type": "true",
             "event_id": "enemy:Darius:main:2",
@@ -66706,6 +66835,7 @@
             "certification": "event_order_certified",
             "coarse_sources": [],
             "complete": true,
+            "control_armed_by": "Fimbulwinter \u2014 Everlasting armed by E (slow) at 0.0s",
             "exact_sources": [
               "E",
               "Q",
@@ -71863,6 +71993,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 216.8,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:2",
@@ -71878,6 +72009,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 213.6,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:2",
@@ -71908,10 +72040,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 74.1,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:3",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 74.1,
             "raw_damage": 151.2,
@@ -71923,10 +72056,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 73.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:3",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 73.0,
             "raw_damage": 151.2,
@@ -72083,6 +72217,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 271.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:6",
@@ -72098,6 +72233,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 267.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:6",
@@ -72225,6 +72361,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 325.2,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:9",
@@ -72240,6 +72377,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 320.5,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:9",
@@ -72254,10 +72392,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 74.1,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:10",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 74.1,
             "raw_damage": 151.2,
@@ -72269,10 +72408,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 73.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:10",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 73.0,
             "raw_damage": 151.2,
@@ -72731,6 +72871,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:19",
@@ -72747,6 +72888,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:19",
@@ -72781,6 +72923,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:20",
@@ -72797,6 +72940,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:20",
@@ -72813,6 +72957,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:21",
@@ -72829,6 +72974,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:21",
@@ -82097,6 +82243,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:2",
@@ -82113,6 +82260,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 72.8,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:2",
@@ -82159,10 +82307,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:3",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 74.1,
             "raw_damage": 151.2,
@@ -82175,10 +82324,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 24.9,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:3",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 24.9,
             "raw_damage": 151.2,
@@ -82333,6 +82483,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 10.4,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:2",
@@ -82349,6 +82500,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 271.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:6",
@@ -82364,6 +82516,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 91.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:6",
@@ -82407,6 +82560,7 @@
           },
           {
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 1245.0,
             "damage_type": "true",
             "event_id": "main:enemy:Aatrox:6",
@@ -82421,11 +82575,12 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 3.6,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:3",
             "event_id": "enemy:Aatrox:main:3:deferred:1",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 3.6,
             "raw_damage": 151.2,
@@ -82596,6 +82751,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 10.4,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:2",
@@ -82612,6 +82768,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 13.0,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:6",
@@ -82628,6 +82785,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 325.2,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:9",
@@ -82643,6 +82801,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 109.3,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:9",
@@ -82671,10 +82830,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 74.1,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:10",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 74.1,
             "raw_damage": 151.2,
@@ -82686,10 +82846,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 24.9,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:10",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 24.9,
             "raw_damage": 151.2,
@@ -82715,11 +82876,12 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 3.6,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:3",
             "event_id": "enemy:Aatrox:main:3:deferred:2",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 3.6,
             "raw_damage": 151.2,
@@ -82920,6 +83082,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 10.4,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:2",
@@ -82936,6 +83099,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 13.0,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:6",
@@ -82952,6 +83116,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 15.6,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:9",
@@ -82967,11 +83132,12 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 3.6,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:10",
             "event_id": "enemy:Aatrox:main:10:deferred:1",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 3.6,
             "raw_damage": 151.2,
@@ -83011,11 +83177,12 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 3.6,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:3",
             "event_id": "enemy:Aatrox:main:3:deferred:3",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 3.6,
             "raw_damage": 151.2,
@@ -83160,6 +83327,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 13.0,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:6",
@@ -83176,6 +83344,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 15.6,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:9",
@@ -83247,11 +83416,12 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 3.6,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:10",
             "event_id": "enemy:Aatrox:main:10:deferred:2",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 3.6,
             "raw_damage": 151.2,
@@ -83394,6 +83564,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 15.6,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:9",
@@ -83439,11 +83610,12 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 3.6,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:10",
             "event_id": "enemy:Aatrox:main:10:deferred:3",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 3.6,
             "raw_damage": 151.2,
@@ -83760,6 +83932,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:19",
@@ -83776,6 +83949,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 72.8,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:19",
@@ -83927,6 +84101,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 10.4,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:19",
@@ -83943,6 +84118,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:20",
@@ -83959,6 +84135,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 91.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:20",
@@ -84067,6 +84244,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:19",
@@ -84084,6 +84262,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:20",
@@ -84101,6 +84280,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:21",
@@ -84117,6 +84297,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 109.3,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:21",
@@ -84164,6 +84345,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:19",
@@ -84181,6 +84363,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:20",
@@ -84198,6 +84381,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:21",
@@ -84230,6 +84414,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:20",
@@ -84247,6 +84432,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:21",
@@ -84294,6 +84480,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "true",
             "deferred_from": "enemy:Aatrox:main:21",
@@ -86445,6 +86632,7 @@
               "time": 1.4
             },
             {
+              "cc_kind": "none",
               "damage": 1245.0,
               "damage_type": "true",
               "phase": "ability",
@@ -92204,6 +92392,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 216.8,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:2",
@@ -92219,6 +92408,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 208.6,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:2",
@@ -92249,10 +92439,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 74.1,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:3",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 74.1,
             "raw_damage": 151.2,
@@ -92264,10 +92455,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 71.3,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:3",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 71.3,
             "raw_damage": 151.2,
@@ -92378,6 +92570,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 271.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:6",
@@ -92393,6 +92586,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 260.7,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:6",
@@ -92522,6 +92716,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 325.2,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:9",
@@ -92537,6 +92732,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 312.9,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:9",
@@ -92551,10 +92747,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 74.1,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:10",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 74.1,
             "raw_damage": 151.2,
@@ -92566,10 +92763,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 71.3,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:10",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 71.3,
             "raw_damage": 151.2,
@@ -93029,6 +93227,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:19",
@@ -93045,6 +93244,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 188.3,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:19",
@@ -93108,6 +93308,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:20",
@@ -93124,6 +93325,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:20",
@@ -93140,6 +93342,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:21",
@@ -93156,6 +93359,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:21",
@@ -98419,6 +98623,7 @@
           },
           {
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 350.1,
             "damage_type": "magic",
             "event_id": "main:enemy:Malphite:6",
@@ -98436,6 +98641,7 @@
           {
             "area_damage": true,
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 221.0,
             "damage_type": "magic",
             "event_id": "main:enemy:Malphite:8",
@@ -98452,6 +98658,7 @@
           {
             "area_damage": true,
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 221.0,
             "damage_type": "magic",
             "event_id": "main:enemy:Malphite:10",
@@ -98468,6 +98675,7 @@
           {
             "area_damage": true,
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 221.0,
             "damage_type": "magic",
             "event_id": "main:enemy:Malphite:12",
@@ -99968,6 +100176,7 @@
               "time": 0.25
             },
             {
+              "cc_kind": "none",
               "damage": 350.1,
               "damage_type": "magic",
               "phase": "ability",
@@ -99983,6 +100192,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 221.0,
               "damage_type": "magic",
               "phase": "ability",
@@ -99998,6 +100208,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 221.0,
               "damage_type": "magic",
               "phase": "ability",
@@ -100013,6 +100224,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 221.0,
               "damage_type": "magic",
               "phase": "ability",
@@ -103869,6 +104081,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:0",
@@ -103885,6 +104098,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:0",
@@ -103962,6 +104176,7 @@
           },
           {
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 225.6,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:5",
@@ -103978,6 +104193,7 @@
           {
             "area_damage": true,
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 166.8,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:7",
@@ -103994,6 +104210,7 @@
           {
             "area_damage": true,
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 166.8,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:9",
@@ -104010,6 +104227,7 @@
           {
             "area_damage": true,
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 166.8,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:11",
@@ -104081,10 +104299,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:1",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 67.5,
             "raw_damage": 151.2,
@@ -104097,10 +104316,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:1",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 78.8,
             "raw_damage": 151.2,
@@ -104114,6 +104334,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:2",
@@ -104130,6 +104351,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:2",
@@ -104146,6 +104368,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 296.1,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:3",
@@ -104161,6 +104384,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 345.5,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:3",
@@ -104175,10 +104399,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 67.5,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:4",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 67.5,
             "raw_damage": 151.2,
@@ -104190,10 +104415,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 78.8,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:4",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 78.8,
             "raw_damage": 151.2,
@@ -104205,6 +104431,7 @@
           },
           {
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 225.6,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:13",
@@ -104269,6 +104496,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:5",
@@ -104285,6 +104513,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:5",
@@ -104300,6 +104529,7 @@
           },
           {
             "attacker": "main",
+            "cc_kind": "none",
             "damage": 0.0,
             "damage_type": "magic",
             "event_id": "main:enemy:Aatrox:17",
@@ -104335,6 +104565,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:6",
@@ -104351,6 +104582,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:6",
@@ -104367,6 +104599,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Pantheon:7",
@@ -104383,6 +104616,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:7",
@@ -106076,6 +106310,7 @@
               "time": 0.25
             },
             {
+              "cc_kind": "none",
               "damage": 225.6,
               "damage_type": "magic",
               "phase": "ability",
@@ -106091,6 +106326,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 166.8,
               "damage_type": "magic",
               "phase": "ability",
@@ -106106,6 +106342,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 166.8,
               "damage_type": "magic",
               "phase": "ability",
@@ -106121,6 +106358,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 166.8,
               "damage_type": "magic",
               "phase": "ability",
@@ -106136,6 +106374,7 @@
               "time": 0.5
             },
             {
+              "cc_kind": "none",
               "damage": 225.6,
               "damage_type": "magic",
               "phase": "ability",
@@ -106171,6 +106410,7 @@
               "time": 5.33
             },
             {
+              "cc_kind": "none",
               "damage": 225.6,
               "damage_type": "magic",
               "phase": "ability",
@@ -122244,6 +122484,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 216.8,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:2",
@@ -122259,6 +122500,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 213.6,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:2",
@@ -122609,10 +122851,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 74.1,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:3",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 74.1,
             "raw_damage": 151.2,
@@ -122624,10 +122867,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "slow",
             "damage": 73.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:3",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 73.0,
             "raw_damage": 151.2,
@@ -122852,6 +123096,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 271.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:6",
@@ -122867,6 +123112,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 267.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:6",
@@ -123290,6 +123536,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:9",
@@ -123306,6 +123553,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 320.5,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:9",
@@ -123320,10 +123568,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:10",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 74.1,
             "raw_damage": 151.2,
@@ -123336,10 +123585,11 @@
           },
           {
             "attacker": "enemy:Aatrox",
+            "cc_kind": "pull",
             "damage": 57.1,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:10",
-            "event_precision": "exact",
+            "event_precision": "hit",
             "overkill": 15.9,
             "pair_damage": 73.0,
             "raw_damage": 151.2,
@@ -124776,6 +125026,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:19",
@@ -124792,6 +125043,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:19",
@@ -124982,6 +125234,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:20",
@@ -124998,6 +125251,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:20",
@@ -125014,6 +125268,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:ally:Lulu:21",
@@ -125030,6 +125285,7 @@
           {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
+            "cc_kind": "knockup",
             "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Aatrox:main:21",
@@ -132409,6 +132665,7 @@
               "time": 0.0
             },
             {
+              "cc_kind": "none",
               "damage": 894.0,
               "damage_type": "magic",
               "phase": "ability",
@@ -134988,6 +135245,7 @@
               "time": 0.0
             },
             {
+              "cc_kind": "none",
               "damage": 840.0,
               "damage_type": "magic",
               "phase": "ability",
@@ -137577,6 +137835,7 @@
               "time": 0.0
             },
             {
+              "cc_kind": "none",
               "damage": 840.0,
               "damage_type": "magic",
               "phase": "ability",
@@ -140200,6 +140459,7 @@
               "time": 0.25
             },
             {
+              "cc_kind": "none",
               "damage": 894.0,
               "damage_type": "magic",
               "phase": "ability",
@@ -142806,6 +143066,7 @@
               "time": 0.25
             },
             {
+              "cc_kind": "none",
               "damage": 840.0,
               "damage_type": "magic",
               "phase": "ability",
@@ -145412,6 +145673,7 @@
               "time": 0.25
             },
             {
+              "cc_kind": "none",
               "damage": 840.0,
               "damage_type": "magic",
               "phase": "ability",
@@ -150662,15 +150924,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 23,
-      "leaves": 95803,
+      "leaves": 96065,
       "numeric_leaves": 31671,
       "sections": "coupled_scenarios"
     },
-    "git_head": "59063b77ca93cb4ae878a6a6f633027155ffc8df",
+    "git_head": "d189d8a1ea5e57b66fc7031afd2bca9bc67652f9",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 23,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "2464616e5d1809ca57eb3dd0b8f5bb6a4084ce12"
+    "src_tree_sha": "47326160a493fbc7d9a5d383f896b1707b1441bc"
   }
 }
