@@ -975,6 +975,14 @@ def _resolve_recurring(match: re.Match) -> str:
     return repr(value)
 
 
+def _first_group(match: re.Match) -> str:
+    return match.group(1)
+
+
+def _percent_ratio(value: str) -> float:
+    return float(value) / 100.0
+
+
 def _resolve_display_templates(text: str) -> str:
     """Inline ``{{fd}}``/``{{ap}}``/``{{sti}}`` wrappers to a fixpoint.
 
@@ -985,9 +993,9 @@ def _resolve_display_templates(text: str) -> str:
     """
     for _ in range(4):
         resolved = _RECURRING.sub(_resolve_recurring, text)
-        resolved = _VARDEFINEECHO.sub(lambda match: match.group(1), resolved)
-        resolved = _FD_NUMBER.sub(lambda match: match.group(1), resolved)
-        resolved = _STI_WRAPPER.sub(lambda match: match.group(1), resolved)
+        resolved = _VARDEFINEECHO.sub(_first_group, resolved)
+        resolved = _FD_NUMBER.sub(_first_group, resolved)
+        resolved = _STI_WRAPPER.sub(_first_group, resolved)
         resolved = _AP_ARITHMETIC.sub(_resolve_ap_arithmetic, resolved)
         if resolved == text:
             break
@@ -1374,27 +1382,27 @@ def _parse_scalar_templates(
         (
             _GLACIAL_SLOW_BASE,
             "glacial_slow_base_ratio",
-            lambda value: float(value) / 100.0,
+            _percent_ratio,
         ),
         (
             _GLACIAL_SLOW_BONUS_AD,
             "glacial_slow_bonus_ad_ratio_per_100",
-            lambda value: float(value) / 100.0,
+            _percent_ratio,
         ),
         (
             _GLACIAL_SLOW_AP,
             "glacial_slow_ap_ratio_per_100",
-            lambda value: float(value) / 100.0,
+            _percent_ratio,
         ),
         (
             _GLACIAL_SLOW_HEAL_SHIELD,
             "glacial_slow_heal_shield_ratio_per_10",
-            lambda value: float(value) / 100.0,
+            _percent_ratio,
         ),
         (
             _GLACIAL_DAMAGE_REDUCTION,
             "glacial_damage_reduction_ratio",
-            lambda value: float(value) / 100.0,
+            _percent_ratio,
         ),
     )
     for pattern, key, converter in glacial_fields:
@@ -1458,18 +1466,16 @@ def _parse_scalar_templates(
         except ValueError as exc:
             recorder.warn(f"Fleet Footwork healing: {exc}")
 
-    fleet_scalings = _FLEET_HEAL_SCALING.findall(description)
-    if fleet_scalings:
-        for percent_melee, percent_ranged, stat in fleet_scalings:
-            key = (
-                "fleet_bonus_ad_ratio_melee_ranged"
-                if stat.upper() == "AD"
-                else "fleet_ap_ratio_melee_ranged"
-            )
-            recorder.record(
-                key,
-                [float(percent_melee) / 100.0, float(percent_ranged) / 100.0],
-            )
+    for percent_melee, percent_ranged, stat in _FLEET_HEAL_SCALING.findall(description):
+        key = (
+            "fleet_bonus_ad_ratio_melee_ranged"
+            if stat.upper() == "AD"
+            else "fleet_ap_ratio_melee_ranged"
+        )
+        recorder.record(
+            key,
+            [float(percent_melee) / 100.0, float(percent_ranged) / 100.0],
+        )
 
     fleet_move_speed = _FLEET_MOVE_SPEED.search(description)
     if fleet_move_speed:

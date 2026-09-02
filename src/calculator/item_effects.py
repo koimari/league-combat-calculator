@@ -1540,10 +1540,7 @@ def item_state_receipts(
             "Guardian Angel",
             "rebirth",
             revived=True,
-            revive_health_restored=(
-                float(required_effect_value("Guardian Angel", "revive_health_ratio"))
-                * base_health
-            ),
+            revive_health_restored=declaration["revive_health_ratio"] * base_health,
             revive_delay=declaration["revive_delay"],
             revive_cooldown=declaration["revive_cooldown"],
             one_use=bool(required_effect_value("Guardian Angel", "one_use")),
@@ -4054,7 +4051,6 @@ def fimbulwinter_mana_gate_authority() -> dict[str, Any]:
     direct source supplies it.
     """
     status = str(required_effect_value("Fimbulwinter", "everlasting_mana_gate_status"))
-    source = ITEM_INPUT_OPTIONS["Fimbulwinter"]
     if status not in AUTHORIZED_MANA_GATE_STATUSES:
         if status != "source_unavailable":
             raise ValueError(
@@ -4068,8 +4064,6 @@ def fimbulwinter_mana_gate_authority() -> dict[str, Any]:
             "current_mana_term": None,
             "maximum_mana_term": None,
             "manaless_behavior": None,
-            "source_url": source["source_url"],
-            "source_revision_id": source["source_revision_id"],
         }
     return {
         "status": status,
@@ -4080,8 +4074,6 @@ def fimbulwinter_mana_gate_authority() -> dict[str, Any]:
         "current_mana_term": "post_cast_current_mana",
         "maximum_mana_term": "holder_maximum_mana",
         "manaless_behavior": "deny",
-        "source_url": source["source_url"],
-        "source_revision_id": source["source_revision_id"],
     }
 
 
@@ -4121,9 +4113,7 @@ def fimbulwinter_nearby_enemy_range_authority() -> dict[str, Any]:
             "Fimbulwinter Everlasting range boundary status must be "
             f"'source_unavailable', got {boundary_status!r}"
         )
-    source = ITEM_INPUT_OPTIONS["Fimbulwinter"]
     return {
-        "status": "source_authorized",
         "range_units": range_units,
         "minimum_enemy_count": minimum_count,
         "multiplier": multiplier,
@@ -4134,10 +4124,7 @@ def fimbulwinter_nearby_enemy_range_authority() -> dict[str, Any]:
             required_effect_value("Fimbulwinter", "everlasting_range_target_kind")
         ),
         "boundary_status": boundary_status,
-        "boundary_operator": None,
         "spatial_input_status": "spatial_input_unavailable",
-        "source_url": source["source_url"],
-        "source_revision_id": source["source_revision_id"],
     }
 
 

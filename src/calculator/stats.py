@@ -133,24 +133,12 @@ def get_champion_base_stats(
         level,
     )
 
-    # Attack speed uses percentage growth with separate AS ratio
-    as_ratio = stats.get("attackSpeedRatio", {}).get(
-        "flat", stats["attackSpeed"]["flat"]
-    )
-    attack_speed_bonus_percent = growth_stat(0, stats["attackSpeed"]["perLevel"], level)
-    attack_speed = calculate_attack_speed(
-        stats["attackSpeed"]["flat"], as_ratio, attack_speed_bonus_percent
-    )
-
     return {
         "health": health,
         "attack_damage": attack_damage,
         "ability_power": 0.0,
         "armor": armor,
         "magic_resistance": magic_resistance,
-        "attack_speed": attack_speed,
-        "magic_penetration_flat": 0.0,
-        "magic_penetration_percent": 0.0,
         "move_speed": stats["movespeed"]["flat"],
     }
 

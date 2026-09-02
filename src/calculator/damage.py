@@ -261,6 +261,11 @@ BASE_CRIT_MULTIPLIER = 2.0
 DEFAULT_CAST_ORDER = ("Q", "Q2", "W", "E", "R")
 
 
+def _row_time(row: Mapping[str, Any]) -> float:
+    """One event row's time, the key every chronological sort uses."""
+    return float(row["time"])
+
+
 def _declared_options(meta: Mapping[str, Any], owner: str) -> Mapping[str, Any]:
     """The option block one meta provider declares for an owner."""
     return meta[owner]["options"] if owner in meta else {}
@@ -7496,7 +7501,7 @@ def _add_precomputed_proc_damage(
             # (Aurora's Spirit Abjuration). Keep the public ledger
             # chronological even when those authored hit times arrive out
             # of order relative to the ambient auto cadence.
-            authored_events.sort(key=lambda event: float(event["time"]))
+            authored_events.sort(key=_row_time)
             state.breakdown[key]["damage_events"] = authored_events
             state.breakdown[key]["event_phase"] = "auto"
         # Champion-minted display text (e.g. Braum P's cycle summary) and
@@ -7555,7 +7560,7 @@ def _ability_dot_tick_events(
                     amount / casts, dtype, dot_duration, tick_interval
                 )
             )
-    events.sort(key=lambda tick: float(tick["time"]))
+    events.sort(key=_row_time)
     return events or None
 
 
@@ -12014,7 +12019,7 @@ def _add_keystone_dark_harvest(state: FightState, rotation: RotationResult) -> N
         next_source = (
             base_events[source_index] if source_index < len(base_events) else None
         )
-        pending.sort(key=lambda item: float(item["time"]))
+        pending.sort(key=_row_time)
         next_proc = pending[0] if pending else None
         source_time = (
             float(next_source.get("time", 0.0)) if next_source is not None else math.inf
@@ -15139,7 +15144,7 @@ def _first_damaging_ability_event(
                 if positive:
                     first = min(
                         positive,
-                        key=lambda event: float(event["time"]),
+                        key=_row_time,
                     )
                     event_time = _finite_numeric_receipt(first.get("time"))
                     if event_time is not None:

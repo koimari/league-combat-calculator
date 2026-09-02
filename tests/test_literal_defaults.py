@@ -1659,7 +1659,6 @@ ENGINE_ROW = frozenset(
             '"armor_penetration_bonus_percent"',
             1,
         ),
-        ("stats.py", "get_champion_base_stats", "dict.get", '"attackSpeedRatio"', 1),
     }
 )
 

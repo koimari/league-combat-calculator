@@ -41,6 +41,9 @@ from .scaling import is_flat_unit, resolve_scaling
 
 ModifierOverride = Callable[[str, float], float | None]
 
+# The cached wiki leveling attribute a per-level ramp is filed under.
+PER_LEVEL_SCALING = "Per-Level Scaling"
+
 
 _MODIFIER_PAIRS_MEMO: dict[tuple[int, int, int | None], tuple[dict, tuple]] = {}
 # Attribute-lookup memos over the same cached JSON, keyed and
@@ -870,7 +873,9 @@ class HitRider:
         return entry
 
 
-def with_hit_rider(parser: SlotParser, rider_for) -> SlotParser:
+def with_hit_rider(
+    parser: SlotParser, rider_for: Callable[[SlotCtx], "HitRider | None"]
+) -> SlotParser:
     """Wrap a slot so every hit its parts deal carries a declared rider.
 
     ``rider_for(ctx)`` returns this fight's :class:`HitRider`, or None when

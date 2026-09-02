@@ -250,10 +250,6 @@ class ResourceAccount:
     def bonus_maximum(self) -> float:
         return self._maximum - self._base_maximum
 
-    @property
-    def regen_per_second(self) -> float:
-        return self._regen_per_second
-
     # ── typed operations ───────────────────────────────────────────────────
     def apply(self, event: ResourceEvent) -> ResourceReceipt:
         """Apply one typed operation and return its receipt."""

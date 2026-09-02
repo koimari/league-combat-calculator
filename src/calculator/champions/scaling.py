@@ -131,6 +131,18 @@ def resolve_scaling(
     return 0.0
 
 
+# "of [the] target's [current/maximum/missing] health" suffix.
+_TARGET_HEALTH_SUFFIX = re.compile(
+    r"of\s+(?:the\s+)?target's\s+(maximum|current|missing)\s+health", re.IGNORECASE
+)
+# Embedded "(+ N% per 100 STAT)" bonuses.
+_PER_100_BONUS = re.compile(
+    r"\+\s*(\d+(?:\.\d+)?)%\s+per\s+100\s+((?:bonus\s+)?(?:AP|AD|armor|"
+    r"magic\s+resistance|health|mana))",
+    re.IGNORECASE,
+)
+
+
 def _parse_compound_unit(
     unit: str,
     value: float,
@@ -146,12 +158,7 @@ def _parse_compound_unit(
     Returns:
         Computed damage, or None if the pattern is not recognized.
     """
-    # Check for "of [the] target's [current/maximum/missing] health" suffix
-    target_hp_match = re.search(
-        r"of\s+(?:the\s+)?target's\s+(maximum|current|missing)\s+health",
-        unit,
-        re.IGNORECASE,
-    )
+    target_hp_match = _TARGET_HEALTH_SUFFIX.search(unit)
     if not target_hp_match:
         return None
 
@@ -164,14 +171,7 @@ def _parse_compound_unit(
     # Base percentage is the value itself
     total_percent = value
 
-    # Find embedded "(+ N% per 100 STAT)" bonuses
-    per_100_matches = re.findall(
-        r"\+\s*(\d+(?:\.\d+)?)%\s+per\s+100\s+((?:bonus\s+)?(?:AP|AD|armor|"
-        r"magic\s+resistance|health|mana))",
-        unit,
-        re.IGNORECASE,
-    )
-    for bonus_pct, stat_name in per_100_matches:
+    for bonus_pct, stat_name in _PER_100_BONUS.findall(unit):
         bonus = float(bonus_pct)
         stat_key = _normalize_per_100_stat(stat_name)
         stat_val = scaling_input(stats, stat_key)

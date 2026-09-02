@@ -517,10 +517,6 @@ class DefenseShape:
             return False
         return all(key in entry for key in self.signature_keys)
 
-    def missing(self, entry: Mapping[str, Any]) -> tuple[str, ...]:
-        """The companion keys *entry* does not carry."""
-        return tuple(key for key in self.requires if key not in entry)
-
 
 @dataclass(frozen=True, slots=True)
 class DefenseDeclaration:  # pylint: disable=too-many-instance-attributes

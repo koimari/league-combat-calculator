@@ -51,6 +51,7 @@ from .healing_contract import self_healing_rule
 from .inputs import champion_stat
 from .packet_module import build_packet_module
 from .slotlib import (
+    PER_LEVEL_SCALING,
     ability_name,
     extract_named,
     find_named_leveling,
@@ -70,7 +71,6 @@ PACKET_SHA256 = "c4661e1dfa5a63e1d512d64efc3bbb6cfb5e5d22f3c5d3e08c363f4d5c672cb
 # Every read below fails closed: a wiki rewrite that moves or renames a
 # term raises here naming the champion and the missing term, rather than
 # silently falling back to a stale literal.
-_BRAVADO_SCALING_ATTRIBUTE = "Per-Level Scaling"
 _BRAVADO_WINDOW_RE = re.compile(
     r"empowers his next (?P<attacks>[a-z]+) basic attacks within "
     r"(?P<seconds>\d+(?:\.\d+)?) seconds"
@@ -136,11 +136,11 @@ def _bravado(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("P", 0)
     if ability is None:
         return None
-    leveling = find_named_leveling(ability, _BRAVADO_SCALING_ATTRIBUTE)
+    leveling = find_named_leveling(ability, PER_LEVEL_SCALING)
     if leveling is None:
         raise ValueError(
             "Taric P (Bravado): the cached P entry has no "
-            f"'{_BRAVADO_SCALING_ATTRIBUTE}' leveling row for its "
+            f"'{PER_LEVEL_SCALING}' leveling row for its "
             "on-attack bonus magic damage"
         )
     charges, duration, armor_ratio = _bravado_window_terms(ability)

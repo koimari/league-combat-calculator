@@ -842,10 +842,6 @@ class SpellShieldAcceptance:
             return False, "control_only_not_blocked"
         return True, ""
 
-    def accepts_deliveries(self) -> tuple[str, ...]:
-        """Every declared delivery class a hostile ability may use."""
-        return DELIVERY_CLASSES
-
     def public_receipt(self) -> dict[str, Any]:
         """JSON-safe acceptance receipt."""
         return {

@@ -754,7 +754,6 @@ def _guardian_selection_template() -> dict[str, Any]:
     """Return the public selection contract for Guardian's Guard target."""
     return {
         "source": "Guardian · Guard target",
-        "target_scope": "one_teammate",
         "target_selection_key": "guardian:target",
     }
 

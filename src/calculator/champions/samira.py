@@ -39,7 +39,13 @@ from .engine import ONHIT, SlotCtx
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
-from .slotlib import HitRider, ability_name, extract_value, with_hit_rider
+from .slotlib import (
+    PER_LEVEL_SCALING,
+    HitRider,
+    ability_name,
+    extract_value,
+    with_hit_rider,
+)
 
 PACKET_SHA256 = "26e75628def53875687d8141eb419c4f2d3a2adb6e68ee714cd39cb4e446ad4e"
 
@@ -68,7 +74,6 @@ def _style_stacks(ctx: SlotCtx) -> int:
 # missing health, which is the amplification below rather than a term of
 # its own (tests/test_samira.py pins the doubling against them).
 _RIDER_FLAT_ATTRIBUTE = "Bonus Magic Damage"
-_RIDER_AD_ATTRIBUTE = "Per-Level Scaling"
 RIDER_MISSING_HEALTH_AMP = 1.0
 
 
@@ -79,7 +84,7 @@ def _blade_rider(ctx: SlotCtx) -> HitRider | None:
         return None
     level = ctx.level
     flat = extract_value(ability, _RIDER_FLAT_ATTRIBUTE, level, level=level)
-    ad_percent = extract_value(ability, _RIDER_AD_ATTRIBUTE, level, level=level)
+    ad_percent = extract_value(ability, PER_LEVEL_SCALING, level, level=level)
     amount = flat + ad_percent / 100.0 * ctx.stat("attack_damage")
     if amount <= 0:
         return None
