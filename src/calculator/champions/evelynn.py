@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..ability_spec import ControlEvent, DamagePart
+from ..ability_spec import ControlEvent, ControlScope, DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import named_damage, no_damage, ranked_slot
@@ -84,12 +84,15 @@ def _allure(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] 
             f"Charmed champion branch: {shred:g}% magic-resistance reduction for 4 seconds."
         )
         if bool(ctx.option("w_charm_triggered")):
+            # Allure curses "the target enemy champion or medium or large
+            # monster", so the first roster enemy holds the charm.
             entry["control_events"] = (
                 ControlEvent(
                     "charm",
                     extract_value(ability, "Disable Duration", rank),
                     time_offset=2.5,
                     skillshot=bool(entry.get("skillshot", False)),
+                    scope=ControlScope.ONE_TARGET,
                 ),
             )
             entry["detail"] += (

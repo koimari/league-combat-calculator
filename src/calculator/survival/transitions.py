@@ -56,7 +56,9 @@ from typing import Any, NamedTuple, Protocol
 
 from .. import shield_ledger
 from ..cleanse_eligibility import (
+    CAST_BLOCKING_CONTROL_KINDS,
     CleanseEligibility,
+    interval_active,
     item_declaration,
     movement_entry,
     resolve_cleanse_item,
@@ -2037,6 +2039,25 @@ def _write_gated_cleanse_use(
     )
 
 
+def _cast_blocking_downtime(
+    state: Mapping[str, Any], activation: float
+) -> list[dict[str, Any]]:
+    """Cast-blocking control the crowd-control ledger does not carry.
+
+    A combat-state Time Stop (Zhonya's Hourglass) writes its interval to
+    the action-downtime ledger alone; a cc-kind stasis (Bard R) writes the
+    same row to both, and the kernel reads the crowd-control one, so the
+    twin is dropped here and each control is receipted once.
+    """
+    return [
+        row
+        for row in state["action_downtime_intervals"]
+        if str(row.get("kind", "")) in CAST_BLOCKING_CONTROL_KINDS
+        and interval_active(row, activation)
+        and row not in state["crowd_control_intervals"]
+    ]
+
+
 def _cleanse_action_view(
     action: SurvivalAction,
     item: str,
@@ -2057,7 +2078,8 @@ def _cleanse_action_view(
         target=target_id,
         holder=holder_id,
         cleanse_group=action.cleanse_group,
-        active_controls=list(state["crowd_control_intervals"]),
+        active_controls=list(state["crowd_control_intervals"])
+        + _cast_blocking_downtime(state, float(action.time)),
     )
 
 

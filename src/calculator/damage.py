@@ -18096,7 +18096,7 @@ def _require_target_class_support(
     denials = item_effects.target_class_denials(
         items,
         config.target_class,
-        adjudicated_classes=on_hit_strike.adjudicated_target_classes,
+        adjudicated_mechanics=on_hit_strike.adjudicated_target_class_mechanics,
     )
     if denials:
         raise ValueError(

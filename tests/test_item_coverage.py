@@ -27,7 +27,11 @@ from src.calculator.item_coverage import (
     target_build_coverage,
     target_item_model_coverage,
 )
-from src.calculator.item_effects import ITEM_EFFECTS
+from src.calculator.item_effects import (
+    ITEM_EFFECTS,
+    SLAY_OMNIVAMP_KEY,
+    entry_schema_keys,
+)
 from src.calculator.item_outcomes import UTILITY_OUTCOMES
 from src.calculator.item_source import is_ordinary_sr_item
 from src.calculator.optimizer import (
@@ -210,6 +214,25 @@ def test_representative_item_classifications(item_name, expected_status):
     assert coverage["optimizer_eligible"] is (
         expected_status not in {"withheld", "review_pending"}
     )
+
+
+def test_every_slay_carrier_publishes_the_omnivamp_grant_in_its_reason():
+    """Slay is one declaration, so both carriers name it (issue #233).
+
+    Immortal Path's entry is tagged for its amp, so the omnivamp reaches
+    the coverage ladder only through the shared
+    ``slay_omnivamp_per_takedown`` spelling that the stacked-stat schema
+    knows; a private key leaves the mechanic out of the published reason
+    while the number keeps moving builds.
+    """
+    carriers = sorted(
+        name for name in ITEM_EFFECTS if SLAY_OMNIVAMP_KEY in entry_schema_keys(name)
+    )
+    assert carriers == ["Gluttonous Greaves", "Immortal Path"]
+    for name in carriers:
+        coverage = item_probe.attacker_coverage(get_item_by_name(name))
+        assert coverage["status"] == "modeled_state", name
+        assert "Omnivamp Percent Per Stack" in coverage["reason"], name
 
 
 def test_gunmetal_gait_source_conflict_keeps_boot_stats_eligible():

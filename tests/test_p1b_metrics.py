@@ -219,7 +219,7 @@ def test_metrics_event_rate_limited(sqlite_database, monkeypatch):
 
     monkeypatch.setattr(app_module, "_rate_limiter", Denied())
     monkeypatch.setitem(app_module.app.config, "TESTING", False)
-    app_module.app.config["RATE_LIMIT_ENABLED"] = True
+    monkeypatch.setitem(app_module.app.config, "RATE_LIMIT_ENABLED", True)
     client = _client()
     denied = client.post(
         "/api/metrics/event", json={"event": "page_view", "took_ms": 100}

@@ -23,6 +23,7 @@ they are ``no_damage`` rather than unmodelled mechanics:
 
 from dataclasses import replace
 
+from ..ability_spec import ControlScope
 from ..champions.skill_orders import get_ability_rank
 from ..data_fetcher import get_champion
 from .engine import CC_PER_PART
@@ -106,11 +107,14 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         # effect's own window ("lasts for 2.5 seconds", the slot's
         # active-duration atom) by the cached "Movement Speed Modifier"
         # row (40/55/70/85/99%) — one row for both branches, so the
-        # enemy branch is what the enemy-facing ledger reads.
+        # enemy branch is what the enemy-facing ledger reads.  Time Warp
+        # is applied "to the target champion", so the slow is allocated to
+        # the first roster enemy.
         "E": lambda parser: with_control_event(
             parser,
             duration_source="active",
             magnitude_attr="Movement Speed Modifier",
+            scope=ControlScope.ONE_TARGET,
         ),
     },
     cc_kinds=MODULE_CC,

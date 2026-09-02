@@ -41,6 +41,7 @@ from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.stats import calculate_total_stats
+from tests import process_state
 from tests.app_config import app_config
 from tests.coverage_resolver import (
     COLLECTED_NODES,
@@ -62,6 +63,26 @@ def _testing_flag():
     """
     with app_config(TESTING=True):
         yield
+
+
+@pytest.fixture(autouse=True)
+def _process_state_is_given_back():
+    """Fail the test that leaves shared process state changed, and put it back.
+
+    Higher-scoped fixtures are set up first, so this brackets everything a
+    test can reach except the session answers themselves.  It restores as
+    well as reports because a leak left standing fails the next test too,
+    and the point of the guard is to name the one that caused it.
+    ``tests/process_state.py`` holds what is watched and why.
+    """
+    before = process_state.snapshot()
+    yield
+    leaked = process_state.restore_and_report(before)
+    assert not leaked, (
+        "this test left shared process state changed, which decides it for "
+        "every later test on the same xdist worker (issue #263) -- borrow it "
+        f"through tests/app_config.py or monkeypatch instead: {leaked}"
+    )
 
 
 @pytest.fixture

@@ -28,6 +28,7 @@ from src.calculator.item_behavior import (
 from src.calculator.item_effects import (
     ALLY_ITEM_EFFECTS,
     ITEM_EFFECTS,
+    SLAY_OMNIVAMP_KEY,
     known_effect_types,
 )
 from src.calculator.survival.actions import ActionKind
@@ -468,34 +469,38 @@ def test_the_ledger_scope_is_derived_from_shapes_and_never_from_a_name() -> None
 
 
 def test_one_entry_declares_both_halves_of_a_health_state_passive() -> None:
-    """Immortal Path's tag names one half and a value key names the other.
+    """Immortal Path's tag names one mechanic and two value keys name the rest.
 
     The entry is tagged ``damage_amp`` for the amplifier it grants above the
-    boundary; the healing bonus it grants below one is a second mechanic on
-    the same entry, routed by its own value key.  Without the routing the
-    below-half number would keep moving fights with no declaration behind it,
-    which is the shape this phase exists to end — so both families are
-    asserted, not just the count.
+    boundary.  The healing bonus it grants below one and the Slay omnivamp it
+    grants per takedown are second mechanics on the same entry, each routed by
+    its own value key.  Without the routing those numbers would keep moving
+    fights with no declaration behind them, so every family is asserted, not
+    just the count.
     """
     families = {rule.family for rule in catalog.behavior_rules("Immortal Path")}
-    assert families == {RuleFamily.DELTA_AMP, RuleFamily.SUSTAIN}
-    assert (
-        catalog.SECONDARY_KEY_FAMILY["ITEM_EFFECTS"][catalog.BELOW_HALF_HEALING_KEY]
-        is RuleFamily.SUSTAIN
-    )
-    assert catalog.BELOW_HALF_HEALING_KEY in ITEM_EFFECTS["Immortal Path"]
+    assert families == {
+        RuleFamily.DELTA_AMP,
+        RuleFamily.SUSTAIN,
+        RuleFamily.STAT_DERIVATION,
+    }
+    secondary = catalog.SECONDARY_KEY_FAMILY["ITEM_EFFECTS"]
+    assert secondary[catalog.BELOW_HALF_HEALING_KEY] is RuleFamily.SUSTAIN
+    assert secondary[SLAY_OMNIVAMP_KEY] is RuleFamily.STAT_DERIVATION
+    for key in (catalog.BELOW_HALF_HEALING_KEY, SLAY_OMNIVAMP_KEY):
+        assert key in ITEM_EFFECTS["Immortal Path"], key
 
 
 def test_the_two_halves_answer_in_two_scopes() -> None:
     """One owner, two answers, and neither answers for the other.
 
-    Immortal Path declares an amp and a healing bonus.  Since H5's stage the
-    amp compiles and the healing bonus is still refused by the survival
-    ledger's transition scope — which makes the point *better* than two
-    refusals did: a fold over both scopes would now report a compilable owner
-    as unstageable, or an unstageable one as compilable, depending on which
-    way it folded.  That is why :func:`compilability_for` takes the scope it
-    is answering for.
+    Immortal Path declares an amp, a Slay omnivamp grant and a healing bonus.
+    The amp and the grant compile; the healing bonus is still refused by the
+    survival ledger's transition scope — which makes the point *better* than
+    a whole-owner refusal did: a fold over both scopes would report a
+    compilable owner as unstageable, or an unstageable one as compilable,
+    depending on which way it folded.  That is why
+    :func:`compilability_for` takes the scope it is answering for.
     """
     scopes = {
         rule.family: rule.compilability.scope
@@ -507,7 +512,7 @@ def test_the_two_halves_answer_in_two_scopes() -> None:
         rule.family
         for rule in catalog.behavior_rules("Immortal Path")
         if isinstance(rule.compilability, Compilable)
-    } == {RuleFamily.DELTA_AMP}
+    } == {RuleFamily.DELTA_AMP, RuleFamily.STAT_DERIVATION}
 
 
 # ── a dropped signature key is a stop, not an un-declaration ──────────────

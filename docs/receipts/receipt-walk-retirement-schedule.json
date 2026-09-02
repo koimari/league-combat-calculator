@@ -444,8 +444,6 @@
      "by_declaration": {
       "guardian_angel.rebirth": {
        "consumed_at": [
-        "participant_timeline._simulate_survival",
-        "program.compile.revive_candidate_actions",
         "survival.receipt_state._build_state_uncached"
        ],
        "fields_no_engine_reads": [],

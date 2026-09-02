@@ -222,6 +222,9 @@ def _require_contract():
 MIKAELS_SOURCE = "Mikael's Blessing — Purify"
 QUICKSILVER_SOURCE = "Quicksilver Sash — Quicksilver"
 MERCURIAL_SOURCE = "Mercurial Scimitar — Quicksilver"
+#: The walk's own label for a combat-state stasis, the shape a mid-fight
+#: Time Stop reaches the cleanse kernel in.
+ZHONYA_SOURCE = "Zhonya's Hourglass — Time Stop"
 
 #: data/items.json id 3222 active Purify branch (templates stripped).
 MIKAELS_WORDING = (
@@ -474,6 +477,18 @@ def _cleanse_packet(
         "utility_kind": "cleanse",
         "sequence": sequence,
         "_event_id": event_id or f"cleanse-{sequence}",
+    }
+
+
+def _time_stop(time: float, *, duration: float = 2.5, holder: str = "target") -> dict:
+    """One mid-fight combat-state stasis packet (a Time Stop the holder
+    self-casts), which the walk books as action downtime."""
+    return {
+        "time": time,
+        "kind": "stasis",
+        "duration": duration,
+        "attacker": holder,
+        "source": ZHONYA_SOURCE,
     }
 
 
@@ -1196,6 +1211,107 @@ def test_a_self_cast_is_denied_under_stasis_as_it_is_under_suppression():
         "stasis",
         "stun",
     }
+
+
+@pytest.mark.parametrize(
+    ("item", "source"),
+    [
+        ("Quicksilver Sash", QUICKSILVER_SOURCE),
+        ("Mercurial Scimitar", MERCURIAL_SOURCE),
+    ],
+)
+def test_a_mid_fight_time_stop_denies_the_self_cast_and_keeps_the_use(item, source):
+    """Timeline level: a combat-state Time Stop is action downtime, not a
+    control packet, so the walk has to hand the kernel the downtime ledger's
+    stasis for the castability rule to reach it.  The same fight without the
+    Time Stop is the control: there the self-cast fires and spends the use."""
+    combatants = [
+        _dummy_combatant("enemy", "enemy"),
+        _dummy_combatant("target", "main"),
+    ]
+    incoming = {"target": [_control_packet(1.0, duration=3.0, source="E")]}
+    stopped = {
+        "target": [
+            _time_stop(1.5),
+            _cleanse_packet(2.0, source=source, target="target", attacker="target"),
+        ]
+    }
+    free = {
+        "target": [
+            _cleanse_packet(2.0, source=source, target="target", attacker="target")
+        ]
+    }
+    result = simulate_survival(combatants, incoming, {}, stopped, 10.0)["target"]
+    _require_contract()
+    assert result["stasis_until"] == pytest.approx(4.0)
+    receipt = result["cleanse"]
+    assert receipt["item"] == item
+    assert receipt["reason"] == "caster_control_blocks_cleanse"
+    assert receipt["use_consumed"] is False
+    assert receipt["removed_controls"] == []
+    assert receipt["rejected_controls"] == [
+        {
+            "control_kind": "stun",
+            "source": "E",
+            "start": pytest.approx(1.0),
+            "end": pytest.approx(4.0),
+            "reason": "caster_control_blocks_cleanse",
+        },
+        {
+            "control_kind": "stasis",
+            "source": ZHONYA_SOURCE,
+            "start": pytest.approx(1.5),
+            "end": pytest.approx(4.0),
+            "reason": "caster_control_blocks_cleanse",
+        },
+    ]
+    assert result["cleanse_use"]["uses_after"] == 1
+    # The stun keeps its whole window: a denied cast truncates nothing.
+    assert result["crowd_control_intervals"][0]["end"] == pytest.approx(4.0)
+
+    control = simulate_survival(combatants, incoming, {}, free, 10.0)["target"]
+    assert control["cleanse"]["reason"] == ""
+    assert control["cleanse"]["use_consumed"] is True
+    assert control["cleanse_use"]["uses_after"] == 0
+    assert control["crowd_control_intervals"][0]["end"] == pytest.approx(2.0)
+
+
+def test_a_cc_kind_stasis_reaches_the_kernel_once():
+    """Timeline level: a stasis authored as crowd control (Bard R) is written
+    to both the crowd-control and the action-downtime ledger, so the kernel
+    must see one row and reject it once."""
+    combatants = [
+        _dummy_combatant("enemy", "enemy"),
+        _dummy_combatant("target", "main"),
+    ]
+    incoming = {
+        "target": [_control_packet(1.0, duration=2.5, source="R", kind="stasis")]
+    }
+    support_effects = {
+        "target": [_cleanse_packet(1.5, target="target", attacker="target")]
+    }
+    result = simulate_survival(combatants, incoming, {}, support_effects, 10.0)
+    _require_contract()
+    receipt = result["target"]["cleanse"]
+    assert receipt["reason"] == "caster_control_blocks_cleanse"
+    assert receipt["use_consumed"] is False
+    assert receipt["rejected_controls"] == [
+        {
+            "control_kind": "stasis",
+            "source": "R",
+            "start": pytest.approx(1.0),
+            "end": pytest.approx(3.5),
+            "reason": "caster_control_blocks_cleanse",
+        }
+    ]
+    assert receipt["active_controls_before"] == [
+        {
+            "control_kind": "stasis",
+            "source": "R",
+            "start": pytest.approx(1.0),
+            "end": pytest.approx(3.5),
+        }
+    ]
 
 
 # ---------------------------------------------------------------------------

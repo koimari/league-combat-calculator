@@ -1,0 +1,17 @@
+{
+  "numeric_change": "none",
+  "numeric_change_proof": "No fight number moves.  Immortal Path's Slay omnivamp was already folded into `bonus_omnivamp` by `item_effects.resolve_stat_effects` and published on the `item_state_receipts` row; this slice changes only the key it is spelled under, from the private `slay_omnivamp_per_stack` to the `slay_omnivamp_per_takedown` that `item_behavior_catalog.STACKED_STATS` already knows, and adds the `slay_max_omnivamp` ceiling the shape requires.  Both numbers are the ones the cached passive states for Slay on both carriers (0.6% per takedown, 10 stacks, 6% total; wiki rev 4030444, binary Items/3008 OmnivampOnTakedown 0.006 / MaxStacks 10), so the accessor pays exactly what it paid before: 10 authored stacks resolve to 6.0 on both items.  `golden_baseline.json` compares identical on this commit, and the coupled compare's output is byte-identical to the same compare on the base commit, so this slice adds no golden movement to either.  The moved record is outside `item_coverage._REFUSAL_STATUSES` on both sides, so `calculation_eligible` and `review_issue_refs` are unchanged and the allowlist grants no eligibility permission at all.",
+  "reason_moves": {
+    "count": 1,
+    "items": [
+      "Immortal Path"
+    ],
+    "reason": "The attacker-lane reason gains `Omnivamp Percent Per Stack` beside `Below Half Healing` and `Whole Total Amp`.  The status is `modeled_state` on both sides; what moved is that the Slay omnivamp is now a declared mechanic the ladder can name, rather than a number reaching the stat block with no declaration behind it."
+  },
+  "receipt": "docs/receipts/item-coverage-classification.json",
+  "rule": "R-36's allowlist: a semantic commit lands against the committed classification receipt and enumerates every key it moves here, and the receipt is re-captured in its own commit, never inside a semantic one (R-32, D-97).",
+  "slice": "233-immortal-path-slay",
+  "status_moves": {},
+  "total_leaves": 1,
+  "unclassified": []
+}

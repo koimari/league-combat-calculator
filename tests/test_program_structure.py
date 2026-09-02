@@ -29,6 +29,8 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from tests.app_config import app_config  # noqa: E402 - after the path bootstrap
+
 SRC = ROOT / "src" / "calculator"
 SURVIVAL = SRC / "survival"
 PROGRAM = SRC / "program"
@@ -174,7 +176,10 @@ class TestTheAllocationBudget:
             "cassiopeia_3champ"
         ]
         ceiling = recorded["peak_bytes"] * (1 + recorded["margin"])
-        assert allocation_probe("cassiopeia_3champ") <= ceiling
+        # The probe puts the app in benchmark mode; a test gives that back.
+        with app_config():
+            measured = allocation_probe("cassiopeia_3champ")
+        assert measured <= ceiling
 
 
 class TestViewPurity:
