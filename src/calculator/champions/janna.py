@@ -151,13 +151,13 @@ SOURCES = load_champion_sources("Janna")
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 # pylint: disable=too-many-locals
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Monsoon pays its sourced per-tick heal on its own 0.25s channel.
 
     Monsoon channels for up to 3 seconds, healing Janna herself and nearby

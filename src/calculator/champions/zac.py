@@ -25,6 +25,7 @@ for it, through the two channels ``COVERAGE_CHANNELS`` names.
 """
 
 from dataclasses import replace
+from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
@@ -236,13 +237,13 @@ ASSUMPTIONS = [
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Resolve Zac self-healing events from its authored packet.
 
     The chunk pays a percentage of Zac's own MAXIMUM health, which the

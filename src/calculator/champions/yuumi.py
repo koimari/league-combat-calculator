@@ -228,13 +228,13 @@ COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
 
 # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def derive_self_healing(
-    champion_data,
-    champion_stats,
-    ability_damages,
-    damage_events,
-    cast_timeline=None,
-    fight_duration_seconds=None,
-):
+    champion_data: dict[str, Any],
+    champion_stats: dict[str, float],
+    ability_damages: dict[str, dict[str, Any]],
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None = None,
+    fight_duration_seconds: float | None = None,
+) -> list[dict[str, Any]]:
     """Final Chapter's five waves and Feline Friendship's on-hit heal.
 
     "Heal per Hit" x5 == the cached "Total Heal" row; the waves land on the
