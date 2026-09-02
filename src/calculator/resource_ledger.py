@@ -3,13 +3,12 @@
 One account per participant and resource kind owns every mana transition:
 current mana, maximum mana, maximum-mana growth, gain/restore, spend,
 refund, regeneration, caps, stable same-time order, source ownership, and
-public receipts.  Tear of the Goddess (Manaflow) and Lost Chapter
-(Enlighten) are runtime consumers; Catalyst's Eternity restores and
-Essence Reaver's Spellblade restores ride the same account as external
-gain operations, and Eternity's mana-spent heal is a pure projection of
-the account's accepted spend receipts
-(``catalyst_eternity_heal_schedule``) — the cast-admission walk in
-``damage._apply_resource_limits`` is the only driver.
+public receipts.  Manaflow and Lost Chapter (Enlighten) are runtime
+consumers; Catalyst's Eternity and Essence Reaver's Spellblade restores
+ride the same account as external gain operations, and Eternity's
+mana-spent heal is a pure projection of the account's accepted spend
+receipts (``catalyst_eternity_heal_schedule``) — the cast-admission walk
+in ``damage._apply_resource_limits`` is the only driver.
 
 Design rules (HANDOVER §11):
 
@@ -27,7 +26,7 @@ Design rules (HANDOVER §11):
 - Fail closed: unknown resource kind or operation, an event whose owner
   does not match the account, non-finite or negative authored amounts, and
   invalid clamp amounts all raise, naming the offending field.  Unclear
-  runtime rules (an unproven Tear hit) become denial receipts, never
+  runtime rules (an unproven Manaflow hit) become denial receipts, never
   guesses.
 
 The empty string is a valid owner in standalone/kernel use (tests compose
@@ -37,11 +36,16 @@ default ``"main"``), so a production fight can never mint an anonymous
 account.
 """
 
+# file-length-ok: architecture.md gives this leaf one contract — the MANA
+# account and every sourced rule that transacts on it.  Splitting the rules
+# out would put a declaration in one module and the account that applies it
+# in another, which is the split this module exists to prevent.
+
 from __future__ import annotations
 
 import math
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from typing import Any
 
 # Floating-point tolerance shared with the engine walks (1e-9).
@@ -173,7 +177,7 @@ class ResourceAccount:
     ``current`` always stays within ``[0, maximum]``; over-restoration is
     receipted as CAPPED, and a spend beyond the current pool is denied with
     ``insufficient_resource``.  ``maximum`` is the opening maximum plus every
-    accepted ``max_increase`` (Tear's bonus-mana growth); it never goes
+    accepted ``max_increase`` (Manaflow's bonus-mana growth); it never goes
     negative, and a max increase never moves ``current`` (the sourced
     Manaflow rule: the grant is MAX mana, not a restore).
     """
@@ -362,24 +366,33 @@ class ResourceLedger:
 
 
 # ---------------------------------------------------------------------------
-# Tear of the Goddess — Manaflow
+# Manaflow (Tear of the Goddess and its four upgrades)
 # ---------------------------------------------------------------------------
+
+#: The two streams a Manaflow clause may spend its one charge pool from.
+TRIGGER_ABILITY_CAST = "ability_cast"
+TRIGGER_BASIC_ATTACK = "basic_attack"
+MANAFLOW_TRIGGERS = frozenset({TRIGGER_ABILITY_CAST, TRIGGER_BASIC_ATTACK})
 
 
 @dataclass(frozen=True, slots=True)
-class TearDeclaration:
-    """Sourced Manaflow rule declaration (wiki branch + typed accessors)."""
+class ManaflowDeclaration:
+    """Sourced Manaflow rule; the holders share a shape and not a number."""
 
-    charge_interval: float = 8.0
-    max_charges: int = 4
-    bonus_mana_per_trigger: float = 3.0
-    bonus_mana_per_champion: float = 6.0
-    bonus_mana_max: float = 360.0
-    source_url: str = "https://wiki.leagueoflegends.com/en-us/Tear_of_the_Goddess"
-    source_revision_id: int = 4026380
-    atom: tuple[str, str] = ("stat.mana", "f8e104e5f65ff397")
+    item: str
+    charge_interval: float
+    max_charges: int
+    bonus_mana_per_trigger: float
+    bonus_mana_per_champion: float
+    bonus_mana_max: float
+    on_hit_charge: bool
+    source_url: str
+    source_revision_id: int
+    atom: tuple[str, str]
 
     def __post_init__(self) -> None:
+        if not self.item.strip():
+            raise ValueError("ManaflowDeclaration.item must name the holder")
         for name, value in (
             ("charge_interval", self.charge_interval),
             ("bonus_mana_per_trigger", self.bonus_mana_per_trigger),
@@ -387,34 +400,32 @@ class TearDeclaration:
             ("bonus_mana_max", self.bonus_mana_max),
         ):
             if isinstance(value, bool) or not math.isfinite(float(value)):
-                raise ValueError(f"TearDeclaration.{name} must be finite")
+                raise ValueError(f"ManaflowDeclaration.{name} must be finite")
             if float(value) <= 0.0:
-                raise ValueError(f"TearDeclaration.{name} must be positive")
+                raise ValueError(f"ManaflowDeclaration.{name} must be positive")
         if self.max_charges < 1:
             raise ValueError(
-                f"TearDeclaration.max_charges must be an int >= 1, got "
+                f"ManaflowDeclaration.max_charges must be an int >= 1, got "
                 f"{self.max_charges!r}"
             )
 
+    @property
+    def source(self) -> str:
+        return f"{self.item} — Manaflow"
+
     def public(self) -> dict[str, Any]:
-        return {
-            "charge_interval": self.charge_interval,
-            "max_charges": self.max_charges,
-            "bonus_mana_per_trigger": self.bonus_mana_per_trigger,
-            "bonus_mana_per_champion": self.bonus_mana_per_champion,
-            "bonus_mana_max": self.bonus_mana_max,
-            "source_url": self.source_url,
-            "source_revision_id": self.source_revision_id,
-            "atom": list(self.atom),
-        }
+        # Every declared field, so the receipt cannot fall behind the rule.
+        published = {item.name: getattr(self, item.name) for item in fields(self)}
+        published["atom"] = list(self.atom)
+        return published
 
 
-class TearManaflow:
+class ManaflowLedger:
     """Manaflow charge/hit state for one holder.
 
     A hit is only a PROVEN ACCEPTED ELIGIBLE HIT: the driver calls ``hit``
     exclusively for casts the resource ledger already admitted (a denied
-    cast cannot spend or trigger Tear), and a missing ``hit_identity``
+    cast cannot spend or trigger Manaflow), and a missing ``hit_identity``
     fails closed with ``missing_hit_identity`` instead of treating every
     cast as a hit.  Same-time hits are ordered by the caller's
     ``(sequence, tier)`` and are deterministic.
@@ -422,7 +433,7 @@ class TearManaflow:
 
     def __init__(
         self,
-        declaration: TearDeclaration,
+        declaration: ManaflowDeclaration,
         *,
         owner: str,
         authored_bonus_mana: float = 0.0,
@@ -451,7 +462,7 @@ class TearManaflow:
         return self._owner
 
     @property
-    def declaration(self) -> TearDeclaration:
+    def declaration(self) -> ManaflowDeclaration:
         return self._declaration
 
     @property
@@ -486,6 +497,7 @@ class TearManaflow:
         time: float,
         hit_identity: str | None,
         target_kind: str = "champion",
+        trigger: str = TRIGGER_ABILITY_CAST,
         sequence: int = 0,
         tier: float = TIER_RESTORE,
     ) -> tuple[dict[str, Any], ResourceEvent | None]:
@@ -494,8 +506,20 @@ class TearManaflow:
         Returns ``(receipt, event)``: ``event`` is the OP_MAX_INCREASE
         ResourceEvent to apply to the same owner's mana account (None when
         nothing was granted).  The receipt is JSON-safe and always records
-        the accepted state and a named reason.
+        the accepted state and a named reason.  Both streams spend the one
+        charge pool, so a basic attack at 1.0 leaves a cast at 1.2 nothing
+        to spend; a basic-attack trigger on a holder whose clause names no
+        on-hit trigger raises rather than inventing one.
         """
+        if trigger not in MANAFLOW_TRIGGERS:
+            raise ValueError(
+                f"unknown Manaflow trigger {trigger!r}; supported: "
+                + ", ".join(sorted(MANAFLOW_TRIGGERS))
+            )
+        if trigger == TRIGGER_BASIC_ATTACK and not self._declaration.on_hit_charge:
+            raise ValueError(
+                f"{self._declaration.item} declares no on-hit Manaflow trigger"
+            )
         if isinstance(time, bool) or not math.isfinite(float(time)):
             raise ValueError(f"time must be finite, got {time!r}")
         if float(time) < 0.0:
@@ -509,6 +533,7 @@ class TearManaflow:
                     target_kind=target_kind,
                     accepted=False,
                     reason="missing_hit_identity",
+                    trigger=trigger,
                     charge_consumed=False,
                     bonus_delta=0.0,
                 ),
@@ -516,7 +541,7 @@ class TearManaflow:
             )
         if target_kind not in {"champion", "minion"}:
             raise ValueError(
-                f"unknown Tear target_kind {target_kind!r}; supported: "
+                f"unknown Manaflow target_kind {target_kind!r}; supported: "
                 "champion, minion"
             )
         grant = (
@@ -533,6 +558,7 @@ class TearManaflow:
                     target_kind=target_kind,
                     accepted=False,
                     reason="cap_reached",
+                    trigger=trigger,
                     charge_consumed=False,
                     bonus_delta=0.0,
                 ),
@@ -546,6 +572,7 @@ class TearManaflow:
                     target_kind=target_kind,
                     accepted=False,
                     reason="no_charge_available",
+                    trigger=trigger,
                     charge_consumed=False,
                     bonus_delta=0.0,
                 ),
@@ -560,13 +587,14 @@ class TearManaflow:
             operation=OP_MAX_INCREASE,
             amount=delta,
             time=float(time),
-            source="Tear of the Goddess — Manaflow",
+            source=self._declaration.source,
             sequence=int(sequence),
             tier=float(tier),
             atoms=(self._declaration.atom,),
             detail={
                 "hit_identity": hit_identity,
                 "target_kind": target_kind,
+                "trigger": trigger,
                 "charge_consumed": True,
                 "use_count": self._use_count,
                 "bonus_total": round(self._bonus_total, 9),
@@ -580,6 +608,7 @@ class TearManaflow:
                 target_kind=target_kind,
                 accepted=True,
                 reason="charge_consumed",
+                trigger=trigger,
                 charge_consumed=True,
                 bonus_delta=delta,
             ),
@@ -594,15 +623,17 @@ class TearManaflow:
         target_kind: str,
         accepted: bool,
         reason: str,
+        trigger: str,
         charge_consumed: bool,
         bonus_delta: float,
     ) -> dict[str, Any]:
         return {
             "time": round(float(time), 9),
-            "source": "Tear of the Goddess — Manaflow",
+            "source": self._declaration.source,
             "accepted": accepted,
             "reason": reason,
             "target_kind": target_kind,
+            "trigger": trigger,
             "hit_identity": hit_identity,
             "charge_consumed": charge_consumed,
             "use_count": self._use_count,

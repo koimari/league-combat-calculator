@@ -899,7 +899,7 @@ def test_m10_jayce_restore_and_tear_share_one_account():
     ledger = result["resource_ledger"]
     restores = _jayce_restores(ledger["receipts"])
     assert restores
-    assert ledger["tear"]["use_count"] == 2  # R at t=0, W at t=10
+    assert ledger["manaflow"]["use_count"] == 2  # R at t=0, W at t=10
     assert ledger["bonus_maximum"] == pytest.approx(12.0)
     assert ledger["closing_maximum"] == pytest.approx(ledger["opening_maximum"] + 12.0)
     max_increases = [r for r in ledger["receipts"] if r["operation"] == "max_increase"]
@@ -939,7 +939,7 @@ def test_m10_ezreal_refund_tear_and_lost_chapter_share_one_account():
     assert [r["time"] for r in refunds] == [
         pytest.approx(time, abs=1e-6) for time, _ in expected
     ]
-    assert ledger["tear"]["use_count"] == 3
+    assert ledger["manaflow"]["use_count"] == 3
     assert ledger["bonus_maximum"] == pytest.approx(18.0)
     assert ledger["enlighten"]["triggered"] is True
     enlighten_gains = [

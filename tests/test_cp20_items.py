@@ -29,13 +29,15 @@ from src.calculator.item_effects import (
     ITEM_EFFECTS,
     first_auto_state_ready,
     item_state_receipts,
+    manaflow_declaration,
+    manaflow_items,
     required_effect_value,
     resolve_damage_effects,
 )
 from src.calculator.item_support_effects import derive_item_support_effects
 from src.calculator.participant_timeline import build_participant_timeline
 from src.calculator.pipeline import FightParams
-from src.calculator.resource_ledger import TearDeclaration, TearManaflow
+from src.calculator.resource_ledger import ManaflowDeclaration, ManaflowLedger
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 from tests import item_probe
@@ -73,11 +75,13 @@ def _tear_ledger_result(
     The engine's mana ledger is the single source of truth for Manaflow
     (P3 slice 1): each authored cast at ``cast_times`` is a proven accepted
     eligible hit (the engine only drives hits for accepted casts), so the
-    kernel's ``TearManaflow.hit`` produces the same receipts the packet
+    kernel's ``ManaflowLedger.hit`` produces the same receipts the packet
     projection consumes.
     """
-    tear = TearManaflow(
-        TearDeclaration(), owner=owner, authored_bonus_mana=authored_bonus_mana
+    tear = ManaflowLedger(
+        ManaflowDeclaration(**manaflow_declaration("Tear of the Goddess")),
+        owner=owner,
+        authored_bonus_mana=authored_bonus_mana,
     )
     hits = []
     for sequence, cast_time in enumerate(cast_times):
@@ -90,7 +94,7 @@ def _tear_ledger_result(
             "contract": "resource_ledger_v1",
             "owner": owner,
             "kind": "mana",
-            "tear": {
+            "manaflow": {
                 "declaration": tear.declaration.public(),
                 "authored_bonus_mana": authored_bonus_mana,
                 "hits": hits,
@@ -423,6 +427,31 @@ def test_tear_state_receipt_exposes_timing_triggers_cap_and_minion_boundary():
     assert receipt["manaflow_bonus_mana_per_champion"] == pytest.approx(6.0)
     assert receipt["helping_hand_minion_only"] is True
     assert receipt["helping_hand_minion_damage"] == pytest.approx(5.0)
+
+
+@pytest.mark.parametrize("holder", manaflow_items())
+def test_every_manaflow_holder_states_its_own_charge_ledger(holder):
+    """Issue #230: the four upgrades carried a flat progress row only."""
+    sourced = manaflow_declaration(holder)
+    receipt = item_state_receipts(
+        [{"name": holder}],
+        {holder: {"manaflow_bonus_mana": 120}},
+        fight_duration_seconds=12.0,
+        is_melee=False,
+        bonus_mana=120.0,
+        max_mana=360.0,
+    )[0]
+    assert receipt["state"] == "manaflow_progress"
+    assert receipt["manaflow_charge_interval"] == sourced["charge_interval"]
+    assert receipt["manaflow_max_charges"] == sourced["max_charges"]
+    assert receipt["manaflow_bonus_mana_per_trigger"] == (
+        sourced["bonus_mana_per_trigger"]
+    )
+    assert receipt["manaflow_bonus_mana_per_champion"] == (
+        sourced["bonus_mana_per_champion"]
+    )
+    assert receipt["manaflow_cap"] == sourced["bonus_mana_max"]
+    assert receipt["manaflow_on_hit_charge"] is sourced["on_hit_charge"]
 
 
 def test_tear_pays_helping_hand_in_a_minion_class_fight():
