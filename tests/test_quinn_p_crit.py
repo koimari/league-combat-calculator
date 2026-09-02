@@ -454,8 +454,7 @@ class TestSourceEvidence:
         assert sources["Quinn P ability entry"]["revision_id"] == 2864147
 
     def test_parse_entry_shape_and_no_cooldown(self):
-        # The P entry carries exactly the on-hit payload; there is NO
-        # cooldown key — the degraded cooldown row prices nothing.
+        # The P entry carries exactly the on-hit payload and MODULE_CC's "none".
         _, abilities = _parse()
         passive = abilities["passive"]
         assert set(passive) == {
@@ -464,6 +463,7 @@ class TestSourceEvidence:
             "total_raw",
             "parts",
             "on_hit",
+            "cc_reviewed",
         }
         assert passive["name"] == "Harrier"
         assert passive["damage_type"] == "physical"

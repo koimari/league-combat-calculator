@@ -386,15 +386,22 @@ class TestReviewedCrowdControl:
     def test_module_cc_is_the_declaration_the_parser_wired(self):
         from src.calculator.champions import ezreal
 
-        assert ezreal.MODULE_CC == {"Q": "none", "W": "none", "E": "none", "R": "none"}
+        assert ezreal.MODULE_CC == {
+            "Q": "none",
+            "W": "none",
+            "E": "none",
+            "R": "none",
+            "P": "none",
+        }
         assert ezreal.parse_abilities.cc_kinds == ezreal.MODULE_CC
 
     def test_control_free_slots_name_every_word_their_text_contains(self):
-        for slot, expected in [["Q", []], ["W", []], ["E", []], ["R", []]]:
+        for slot, expected in [["P", []], ["Q", []], ["W", []], ["E", []], ["R", []]]:
             assert _CC.control_hits(slot) == list(expected), slot
 
     def test_every_reviewed_part_carries_its_kind(self):
         assert _CC.kinds() == {
+            "passive": ["none"],
             "Q": ["none"],
             "W": ["none"],
             "E": ["none"],

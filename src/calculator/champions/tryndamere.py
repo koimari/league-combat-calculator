@@ -21,7 +21,7 @@ hardcoded.
 from typing import Any
 
 from .. import healing_helpers as _healing
-from .engine import build_parser
+from .engine import CC_PER_PART, build_parser
 from .healing_contract import self_healing_rule
 from .module_contract import coverage
 from .module_helpers import no_damage_parser
@@ -73,7 +73,7 @@ OPTIONS: list[dict[str, Any]] = []
 # Shout) is where the slow lives ("they become slowed while facing in the
 # opposite direction of Tryndamere"), and it deals no damage, so no part
 # can carry that answer.
-MODULE_CC = {"E": "none"}
+MODULE_CC = {"E": "none", "P": "none", "Q": "none", "W": CC_PER_PART, "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Tryndamere", cc_kinds=MODULE_CC)
 

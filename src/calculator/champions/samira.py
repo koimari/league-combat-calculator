@@ -35,7 +35,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .engine import ONHIT, SlotCtx
+from .engine import CC_PER_PART, ONHIT, SlotCtx
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import at_level, no_damage
 from .packet_module import build_packet_module
@@ -161,7 +161,7 @@ def _inferno_trigger(packet_r):
 # rather than casting, and its knock-up fires only on the empowered basic
 # attack against a target that is already a monster or airborne — an
 # auto-stream effect, not an ability event.
-MODULE_CC = {"Q": "none", "W": "none", "E": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "none", "E": "none", "R": "none", "P": CC_PER_PART}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Samira",

@@ -16,7 +16,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Ekko")
-        assert ekko.MODULE_CC == {"Q": "slow", "E": "none", "R": "none"}
+        assert ekko.MODULE_CC == {
+            "Q": "slow",
+            "E": "none",
+            "R": "none",
+            "P": "none",
+            "W": "per_part",
+        }
         assert "field that slows nearby enemies" in " ".join(
             cc_review.slot_text(data, "Q").split()
         )

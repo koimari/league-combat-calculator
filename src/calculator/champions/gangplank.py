@@ -235,7 +235,7 @@ SLOTS = {
 # P burns and Q is a ranged shot — neither controls.  E's explosion leaves
 # enemies "slowed for 2 seconds" and each R wave "slows them by 30% for 0.5
 # seconds".  W is the self-cleanse and authors no damage part.
-MODULE_CC = {"P": "none", "Q": "none", "E": "slow", "R": "slow"}
+MODULE_CC = {"P": "none", "Q": "none", "E": "slow", "R": "slow", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Gangplank", cc_kinds=MODULE_CC)
 

@@ -186,14 +186,14 @@ SOURCES = load_champion_sources("LeBlanc")
 # rather than per slot (see ``_ethereal_chains``): the chain's application
 # only tethers, and the fracture 1.5 seconds later is the root.
 #
-# Q stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Q reviews to no control, and its row still lands as one coarse hit.
 # Sigil of Malice controls nothing, but its row is the orb plus the mark's
 # consumption, and the cache gives the consumption no instant: "LeBlanc's
 # next damaging ability against the marked target will consume the mark to
 # deal the same magic damage again" times the second hit to another cast
 # the entry does not name, inside a 3.5-second mark window.  A window is
 # not a cadence, so the two hits stay in one part.
-MODULE_CC = {"W": "none", "E": CC_PER_PART, "R": CC_PER_PART}
+MODULE_CC = {"W": "none", "E": CC_PER_PART, "R": CC_PER_PART, "P": "none", "Q": "none"}
 
 parse_abilities = build_parser(SLOTS, "LeBlanc", cc_kinds=MODULE_CC)
 

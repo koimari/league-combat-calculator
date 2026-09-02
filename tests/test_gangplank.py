@@ -31,6 +31,7 @@ class TestReviewedCrowdControl:
             "Q": "none",
             "E": "slow",
             "R": "slow",
+            "W": "none",
         }
         assert gangplank.parse_abilities.cc_kinds == gangplank.MODULE_CC
 

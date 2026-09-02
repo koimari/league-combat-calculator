@@ -335,7 +335,13 @@ SLOTS["E"] = with_control(
 # basic attacks inside the zone and has no ability damage row of its own.
 # Q2 is control-free by the same text: it "mimics the first cast's
 # effects", adding doubled bonus damage and a true conversion.
-MODULE_CC = {"Q": "none", "Q2": "none", "W": "slow", "E": "immobilize"}
+MODULE_CC = {
+    "Q": "none",
+    "Q2": "none",
+    "W": "slow",
+    "E": "immobilize",
+    "R": "knockback",
+}
 
 parse_abilities = build_parser(SLOTS, "Camille", cc_kinds=MODULE_CC)
 

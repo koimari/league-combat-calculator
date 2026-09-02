@@ -16,7 +16,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Draven")
-        assert draven.MODULE_CC == {"Q": "none", "E": "airborne", "R": "none"}
+        assert draven.MODULE_CC == {
+            "Q": "none",
+            "E": "airborne",
+            "R": "none",
+            "P": "none",
+            "W": "none",
+        }
         assert "knocking them aside" in " ".join(cc_review.slot_text(data, "E").split())
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "R")) == ["slow"]

@@ -232,7 +232,7 @@ SLOTS = {
 # 0.25 seconds"; Q reduces resistances (not control), W empowers basic
 # attacks and R reveals the targets it hits.  P's death-boundary row
 # prices nothing and authors no part, so it declares no kind.
-MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
+MODULE_CC = {"Q": "none", "E": "slow", "R": "none", "P": "none", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Kog'Maw", cc_kinds=MODULE_CC)
 

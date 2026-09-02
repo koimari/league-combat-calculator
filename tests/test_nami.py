@@ -21,6 +21,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "slow",
             "R": "knockup",
+            "P": "none",
         }
         assert "suspending them for 1.5 seconds" in cc_review.slot_text(data, "Q")
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
@@ -29,7 +30,7 @@ class TestReviewedCrowdControl:
         # P is absent rather than "none": Surging Tides only grants allied
         # champions movement speed, so no event of its own could carry an
         # answer.
-        assert "P" not in nami.MODULE_CC
+        assert nami.MODULE_CC["P"] == "none"
         assert cc_review.control_words(cc_review.slot_text(data, "P")) == []
 
     def test_every_ability_event_carries_the_review(self):

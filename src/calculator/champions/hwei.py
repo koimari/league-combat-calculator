@@ -240,7 +240,13 @@ SLOTS = {
 # differs per variant (and, in QE and R, per part), so those kinds are
 # authored on the parts above rather than here.  W's three subjects author
 # no damage part at all.
-MODULE_CC = {"P": "none", "Q": CC_PER_PART, "E": CC_PER_PART, "R": CC_PER_PART}
+MODULE_CC = {
+    "P": "none",
+    "Q": CC_PER_PART,
+    "E": CC_PER_PART,
+    "R": CC_PER_PART,
+    "W": "none",
+}
 
 parse_abilities = build_parser(SLOTS, "Hwei", cc_kinds=MODULE_CC)
 OPTIONS = [

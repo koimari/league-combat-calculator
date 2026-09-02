@@ -123,6 +123,6 @@ SOURCES = load_champion_sources("Lillia")
 # the wake damage this slot prices consumes.  Q's censer swing and W's
 # dash-and-slam apply no control, and P's Dream Dust is a damage-over-
 # time with none either.
-MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "sleep"}
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "sleep", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Lillia", cc_kinds=MODULE_CC)

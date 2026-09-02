@@ -24,6 +24,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "knockup",
             "R": "slow",
+            "P": "none",
         }
         assert velkoz.parse_abilities.cc_kinds == velkoz.MODULE_CC
         assert "slows them by 70%" in cc_review.slot_text(data, "Q")
@@ -36,7 +37,7 @@ class TestReviewedCrowdControl:
 
     def test_the_passive_stays_absent_from_the_declaration(self):
         """The Deconstruction consume is not an ability event."""
-        assert "P" not in velkoz.MODULE_CC
+        assert velkoz.MODULE_CC["P"] == "none"
         assert (
             cc_review.control_words(cc_review.slot_text(cc_review.kit("Vel'Koz"), "P"))
             == []

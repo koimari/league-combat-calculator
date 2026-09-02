@@ -412,7 +412,13 @@ SLOTS = {
 # "slow[s] enemies within the area by 20%" while a detonated stone leaves
 # them "stunned for 0.75 seconds".  W's ledge "knocks enemies hit 400 units
 # in the target direction" and prices no damage of its own.
-MODULE_CC = {"Q": CC_PER_PART, "W": "knockback", "E": CC_PER_PART}
+MODULE_CC = {
+    "Q": CC_PER_PART,
+    "W": "knockback",
+    "E": CC_PER_PART,
+    "P": "none",
+    "R": "knockback",
+}
 
 parse_abilities = build_parser(SLOTS, "Taliyah", cc_kinds=MODULE_CC)
 

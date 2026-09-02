@@ -26,7 +26,13 @@ class TestReviewedCrowdControl:
     def test_module_cc_is_the_declaration_the_parser_wired(self):
         from src.calculator.champions import jhin
 
-        assert jhin.MODULE_CC == {"Q": "none", "W": "root", "E": "slow", "R": "slow"}
+        assert jhin.MODULE_CC == {
+            "Q": "none",
+            "W": "root",
+            "E": "slow",
+            "R": "slow",
+            "P": "none",
+        }
         assert jhin.parse_abilities.cc_kinds == jhin.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):

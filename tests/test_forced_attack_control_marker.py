@@ -75,9 +75,13 @@ def test_an_engine_appended_swing_part_carries_the_kind():
 
 
 @pytest.mark.parametrize("window", NO_STREAM)
-def test_an_undeclared_slot_stays_unreviewed(window):
+def test_a_reviewed_absence_carries_no_marker_and_still_certifies(window):
     """Control: the marker is the module's declaration, never invented —
-    Sett Q carries none and the fight stays honestly coarse."""
-    assert cc_review.unreviewed_ability_slots("Sett", **window) == ["Q"]
+    Sett Q reviews its way to no control, so its events say ``"none"`` and
+    the scan has nothing left to withhold on."""
+    from src.calculator.champions import sett
+
+    assert sett.MODULE_CC["Q"] == "none"
+    assert cc_review.unreviewed_ability_slots("Sett", **window) == []
     coverage = cc_review.fimbulwinter_coverage("Sett", **window)
-    assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+    assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

@@ -104,7 +104,7 @@ SLOTS = {
 # elemental "deals magic damage and slows them for 2 seconds".  P is the
 # on-hit bonus row and E/R author no damage part at all (Monsoon's
 # knockback has no damage formula in the cached entry).
-MODULE_CC = {"Q": "knockup", "W": "slow"}
+MODULE_CC = {"Q": "knockup", "W": "slow", "P": "none", "E": "none", "R": "knockback"}
 
 parse_abilities = build_parser(SLOTS, "Janna", cc_kinds=MODULE_CC)
 OPTIONS = [

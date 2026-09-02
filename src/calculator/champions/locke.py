@@ -139,7 +139,7 @@ SOURCES = load_champion_sources("Locke")
 # two Soul Nails stacks) and R's latching nails slow "by 99% decaying over
 # 2 seconds"; E blinks and dashes without applying control.  W is a
 # self-buff and P an on-hit rider, neither emitting an ability event.
-MODULE_CC = {"Q": "slow", "E": "none", "R": "slow"}
+MODULE_CC = {"Q": "slow", "E": "none", "R": "slow", "P": "none", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Locke", cc_kinds=MODULE_CC)
 

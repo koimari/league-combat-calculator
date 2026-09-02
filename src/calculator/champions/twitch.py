@@ -408,7 +408,7 @@ SLOTS = {
 # only slot whose cast reaches the ability ledger — P's venom rides the
 # attack stream, Q is a stealth buff, R is an attack-range/AD steroid, and
 # W (Venom Cask), where the kit's slow lives, deals no damage at all.
-MODULE_CC = {"E": "none"}
+MODULE_CC = {"E": "none", "P": "none", "Q": "none", "W": "slow", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Twitch", cc_kinds=MODULE_CC)
 

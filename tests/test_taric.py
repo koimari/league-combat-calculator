@@ -16,7 +16,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Taric")
-        assert taric.MODULE_CC == {"E": "stun"}
+        assert taric.MODULE_CC == {
+            "E": "stun",
+            "P": "none",
+            "Q": "none",
+            "W": "none",
+            "R": "none",
+        }
         assert "stuns them for 1.5 seconds" in cc_review.slot_text(data, "E")
         # Q heals, W shields and R grants invulnerability: no other slot
         # damages, so no other slot has a control answer to carry.

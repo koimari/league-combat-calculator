@@ -315,6 +315,6 @@ SLOTS = {
 # and authors no part, and P is the zombie state.  E's aura is equally
 # control-free but its two branches carry that review differently (see
 # _defile), so it is authored on the parts.
-MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "E": "none", "R": "none", "P": "none", "W": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Karthus", cc_kinds=MODULE_CC)

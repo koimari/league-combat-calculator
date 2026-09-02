@@ -26,7 +26,13 @@ class TestReviewedCrowdControl:
     def test_module_cc_is_the_declaration_the_parser_wired(self):
         from src.calculator.champions import illaoi
 
-        assert illaoi.MODULE_CC == {"W": "none", "R": "none"}
+        assert illaoi.MODULE_CC == {
+            "W": "none",
+            "R": "none",
+            "P": "none",
+            "Q": "none",
+            "E": "slow",
+        }
         assert illaoi.parse_abilities.cc_kinds == illaoi.MODULE_CC
 
     def test_control_free_slots_name_every_word_their_text_contains(self):
@@ -34,7 +40,8 @@ class TestReviewedCrowdControl:
             assert _CC.control_hits(slot) == list(expected), slot
 
     def test_every_reviewed_part_carries_its_kind(self):
-        assert _CC.kinds() == {"W": ["none"], "R": ["none"]}
+        """Q and E price no damage part, so their declaration lands nowhere."""
+        assert _CC.kinds() == {"W": ["none"], "R": ["none"], "passive": ["none"]}
 
     def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
         coverage = _CC.coverage()

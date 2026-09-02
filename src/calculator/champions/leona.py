@@ -118,7 +118,7 @@ SOURCES = load_champion_sources("Leona")
 # to have an uncancellable windup, gain 50 bonus range, deal bonus magic
 # damage and stun the target for 1 second" — the stun rides the swing the
 # cast forces, which is the event the engine reattributes to this row.
-MODULE_CC = {"Q": "stun", "W": "none", "E": "root", "R": "slow"}
+MODULE_CC = {"Q": "stun", "W": "none", "E": "root", "R": "slow", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Leona", cc_kinds=MODULE_CC)
 

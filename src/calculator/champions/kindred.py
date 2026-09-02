@@ -310,7 +310,7 @@ SLOTS = {
 # second" on the target its pounce then damages; Q's arrows apply no
 # control, and Wolf's frenzy attacks slow only "against monsters", never
 # the champion this pair fight damages.  P, W_vigor and R deal no damage.
-MODULE_CC = {"Q": "none", "W": "none", "E": "slow"}
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "P": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Kindred", cc_kinds=MODULE_CC)
 

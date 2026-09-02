@@ -32,6 +32,7 @@ class TestReviewedCrowdControl:
             "Q": CC_PER_PART,
             "E": CC_PER_PART,
             "R": CC_PER_PART,
+            "W": "none",
         }
         assert hwei.parse_abilities.cc_kinds == hwei.MODULE_CC
 

@@ -347,7 +347,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Bard")
-        assert bard.MODULE_CC == {"Q": "slow", "R": "stasis"}
+        assert bard.MODULE_CC == {
+            "Q": "slow",
+            "R": "stasis",
+            "P": "per_part",
+            "W": "none",
+            "E": "none",
+        }
         assert "slows them by 60%" in " ".join(cc_review.slot_text(data, "Q").split())
         # R prices no damage, so its stasis rides the entry as a sourced
         # control event off the effect's own 2.5-second window.

@@ -279,7 +279,7 @@ SLOTS = {
 # variants "slow them by 35% for 2 seconds" on every enemy they damage;
 # the 1.5-second stun needs a centre hit the module does not model, so the
 # unconditional slow is the reviewed kind.  P and R author no damage part.
-MODULE_CC = {"Q": "none", "W": "none", "E": "slow"}
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "P": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Heimerdinger", cc_kinds=MODULE_CC)
 OPTIONS = [

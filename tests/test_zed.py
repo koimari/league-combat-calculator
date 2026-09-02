@@ -20,7 +20,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Zed")
-        assert zed.MODULE_CC == {"Q": "none", "E": "none", "R": "none"}
+        assert zed.MODULE_CC == {
+            "Q": "none",
+            "E": "none",
+            "R": "none",
+            "P": "none",
+            "W": "none",
+        }
         assert zed.parse_abilities.cc_kinds == zed.MODULE_CC
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
@@ -33,8 +39,8 @@ class TestReviewedCrowdControl:
         assert cc_review.control_words(e_text) == ["slow"]
 
     def test_the_no_damage_slots_stay_absent(self):
-        assert "P" not in zed.MODULE_CC
-        assert "W" not in zed.MODULE_CC
+        assert zed.MODULE_CC["P"] == "none"
+        assert zed.MODULE_CC["W"] == "none"
         assert get_champion_module_contract("Zed").coverage["P"] == "no_damage"
         assert get_champion_module_contract("Zed").coverage["W"] == "no_damage"
 

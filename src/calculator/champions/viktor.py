@@ -128,7 +128,7 @@ def _siphon_power(packet_q):
 # control-armed item passive keys on; and the W augment Magnetize would
 # make "Viktor's other abilities ... slow enemies hit by 20%", which the
 # Hex Fragment augments (out of scope here) are the only way to buy.
-MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Viktor",

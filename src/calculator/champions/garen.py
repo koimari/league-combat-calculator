@@ -101,7 +101,7 @@ SLOTS = {
 # it), E only spins and shreds armor, R deals true damage and reveals.  Q's
 # own text cleanses slows *from Garen* rather than applying one.  P and W
 # author no damage part.
-MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "E": "none", "R": "none", "P": "none", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Garen", cc_kinds=MODULE_CC)
 

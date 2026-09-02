@@ -417,12 +417,12 @@ SLOTS = {
 # shots now land on their cached 0.231-second beat, which is what lets that
 # review reach the event ledger.
 #
-# Q stays UNREVIEWED, so this kit keeps the coarse control-armed scan: its
-# row is the cached "Total Physical Damage" of both boomerang passes, and
+# Q reviews to no control, and its row still lands as one coarse hit:
+# the row is the cached "Total Physical Damage" of both boomerang passes, and
 # the return pass has no cached arrival time — the cache gives the two
 # speeds ("1500 • 2400") but no distance to fly, and a speed without a
 # distance is half a schedule.
-MODULE_CC = {"R": "none", "P": "none", "E": "none"}
+MODULE_CC = {"R": "none", "P": "none", "E": "none", "Q": "none", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Akshan", cc_kinds=MODULE_CC)
 

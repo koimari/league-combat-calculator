@@ -64,7 +64,7 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Soraka")
-        assert soraka.MODULE_CC == {"Q": "slow", "E": "root"}
+        assert soraka.MODULE_CC == {"Q": "slow", "E": "root", "W": "none", "R": "none"}
         assert "slowing them by 30% for 1.5 seconds" in cc_review.slot_text(data, "Q")
         # Equinox silences while the zone stands and roots when it erupts;
         # the root is the immobilizing half its two hits apply.

@@ -147,7 +147,7 @@ SLOTS = {
 # dealt the same damage and are slowed for 3 seconds", while the pull and
 # stun reach only "enemies in a smaller radius", which the duel model does
 # not place.  Q's answer is charge-dependent and is authored on its part.
-MODULE_CC = {"Q": CC_PER_PART, "W": "none", "E": "slow", "R": "slow"}
+MODULE_CC = {"Q": CC_PER_PART, "W": "none", "E": "slow", "R": "slow", "P": "none"}
 
 MODULE_COVERAGE = coverage(no_damage="P")
 

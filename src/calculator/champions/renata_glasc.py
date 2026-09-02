@@ -469,7 +469,7 @@ def _loyalty_program(packet_e):
 # the auto stream, so none of the three can carry an answer of its own.
 # R (Hostile Takeover) prices no damage; berserk is a forced action, not
 # an immobilize, so it arms no immobilize-gated item.
-MODULE_CC = {"Q": "root", "E": "slow", "R": "berserk"}
+MODULE_CC = {"Q": "root", "E": "slow", "R": "berserk", "P": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Renata Glasc",

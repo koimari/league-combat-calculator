@@ -212,7 +212,7 @@ def _sky_splitter(packet_e):
 # bite now land on the cached cast time, so that review reaches the event
 # ledger; the self-heal rule pays per bite rather than per part
 # (``HealAnchor.CAST``), so the second half is not a second heal.
-MODULE_CC = {"Q": "stun", "W": "none", "E": "slow", "R": "slow"}
+MODULE_CC = {"Q": "stun", "W": "none", "E": "slow", "R": "slow", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Volibear",

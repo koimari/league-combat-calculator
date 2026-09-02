@@ -259,7 +259,7 @@ def _high_note(
 # charms them ... and slows them by 40%" — the charm is the control the
 # damaged target takes.  W and P emit no damage event, so they carry no
 # reviewable control.
-MODULE_CC = {"Q": "none", "E": "slow", "R": "charm"}
+MODULE_CC = {"Q": "none", "E": "slow", "R": "charm", "P": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Seraphine",

@@ -1,5 +1,4 @@
-"""Reviewed crowd control for Master Yi (MODULE_CC) — and the slot that
-still withholds.
+"""Reviewed crowd control for Master Yi (MODULE_CC): nothing he casts controls.
 
 Alpha Strike controls nothing and lands after Master Yi reappears, 1.087
 seconds after the cast starts.  Wuju Style's row prices an on-hit rider
@@ -25,7 +24,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Master Yi")
-        assert master_yi.MODULE_CC == {"Q": "none"}
+        assert master_yi.MODULE_CC == {
+            "Q": "none",
+            "P": "none",
+            "W": "none",
+            "E": "none",
+            "R": "none",
+        }
         assert master_yi.parse_abilities.cc_kinds == master_yi.MODULE_CC
         # Alpha Strike's only "unable to act" clause is about Master Yi.
         q_text = cc_review.slot_text(data, "Q")
@@ -45,10 +50,11 @@ class TestReviewedCrowdControl:
         assert part.time_offset == 1.087
         assert part.cc_kind == "none"
 
-    def test_wuju_style_withholds_because_its_row_is_an_on_hit_rider(self):
-        """E's packet prices one direct hit for a 5-second attack buff."""
+    def test_wuju_style_prices_an_on_hit_rider_as_one_direct_hit(self):
+        """E's packet prices one direct hit for a 5-second attack buff, so
+        its reviewed "none" rides no instant the ledger can read."""
         data = cc_review.kit("Master Yi")
-        assert "E" not in master_yi.MODULE_CC
+        assert master_yi.MODULE_CC["E"] == "none"
         assert "empowers his basic attacks within the next 5 seconds" in (
             cc_review.slot_text(data, "E")
         )
@@ -57,11 +63,12 @@ class TestReviewedCrowdControl:
         assert part.time_offset is None
         assert entry.get("event_order_certified") is None
 
-    def test_the_unreviewable_slot_keeps_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Master Yi") == ["E"]
+    def test_the_reviewed_kit_certifies_the_whole_fight(self):
+        """Every slot answers "none", so no ability event goes unreviewed."""
+        assert cc_review.unreviewed_ability_slots("Master Yi") == []
         coverage = cc_review.fimbulwinter_coverage("Master Yi")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 class TestDoubleStrikeCrits:

@@ -985,6 +985,9 @@ class TestRegressionSurface:
             "test_coverage_truth_sweep.py",
             "test_f0_frontend.py",
             "test_gnar.py",
+            # The MODULE_CC census names Gnar W and R among the declared
+            # kinds no fight row carries.  A roster count, not Gnar code.
+            "test_module_cc_census.py",
             "test_gnar_mega_gamefile.py",
             "test_interaction_atoms.py",
             "test_jayce.py",

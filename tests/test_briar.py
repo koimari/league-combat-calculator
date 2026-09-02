@@ -423,6 +423,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "knockback",
             "R": "none",
+            "P": "none",
         }
         assert "stuns them for 0.85 seconds" in " ".join(
             cc_review.slot_text(data, "Q").split()

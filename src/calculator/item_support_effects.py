@@ -447,6 +447,29 @@ _FIMBULWINTER_TRIGGER_RULE = CcTriggerRule(
     source=SourceReceipt.from_mapping(ITEM_INPUT_OPTIONS["Fimbulwinter"]),
 )
 
+# One rule per control-armed producer, and the shield is granted through
+# it. The pair engine's coverage certificate reads the same entry, so what
+# arms the shield and what the ledger says armed it cannot disagree.
+_CONTROL_TRIGGER_RULES: Mapping[AllyProducer, CcTriggerRule] = {
+    AllyProducer.EVERLASTING: _FIMBULWINTER_TRIGGER_RULE,
+}
+
+
+def control_trigger_rule(producer: AllyProducer) -> CcTriggerRule:
+    """The trigger rule one control-armed producer arms on.
+
+    Raises:
+        ValueError: The producer declares a crowd-control trigger and no
+            rule says which control arms it, so no reader can decide.
+    """
+    rule = _CONTROL_TRIGGER_RULES.get(producer)
+    if rule is None:
+        raise ValueError(
+            f"{producer.value} is armed by crowd control and names no "
+            "CcTriggerRule, so which control arms it is undeclared"
+        )
+    return rule
+
 
 def _cc_event_stream(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
     """The deduplicated damage + control-only event stream.

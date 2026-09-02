@@ -119,7 +119,7 @@ def _death_from_below(ctx: SlotCtx) -> dict[str, Any] | None:
 # "stun[s] enemies around it" and the champions it hits "also take physical
 # damage".  R executes or deals its non-execute damage row and applies no
 # control at all.  W (camouflage) and P (grey health) damage nothing.
-MODULE_CC = {"Q": "pull", "E": "stun", "R": "none"}
+MODULE_CC = {"Q": "pull", "E": "stun", "R": "none", "P": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Pyke",

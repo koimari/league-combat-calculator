@@ -437,8 +437,14 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         passive = cc_review.slot_text(cc_review.kit("Annie"), "P")
-        assert annie.MODULE_CC == {}
-        assert annie.parse_abilities.cc_kinds == {}
+        assert annie.MODULE_CC == {
+            "P": "stun",
+            "Q": "per_part",
+            "W": "per_part",
+            "E": "none",
+            "R": "per_part",
+        }
+        assert annie.parse_abilities.cc_kinds == annie.MODULE_CC
         assert (
             "annie generates a stack of pyromania whenever she hits an "
             "enemy with disintegrate or casts her other abilities, "

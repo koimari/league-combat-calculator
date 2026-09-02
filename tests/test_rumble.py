@@ -19,15 +19,21 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Rumble")
-        assert rumble.MODULE_CC == {"E": "slow", "Q": "none", "R": "slow"}
+        assert rumble.MODULE_CC == {
+            "E": "slow",
+            "Q": "none",
+            "R": "slow",
+            "P": "none",
+            "W": "none",
+        }
         assert rumble.parse_abilities.cc_kinds == rumble.MODULE_CC
         assert "slowing them for 2 seconds" in cc_review.slot_text(data, "E")
         assert "being slowed by 35%" in cc_review.slot_text(data, "R")
         # Flamespitter only scorches: no control word in the whole entry.
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         # W (a shield) and P (the heat system) carry no damage row.
-        assert "W" not in rumble.MODULE_CC
-        assert "P" not in rumble.MODULE_CC
+        assert rumble.MODULE_CC["W"] == "none"
+        assert rumble.MODULE_CC["P"] == "none"
 
     def test_flamespitter_ticks_on_the_cadence_the_cache_states(self):
         """Fifteen ticks on a 0.25-second beat, both halves sourced."""

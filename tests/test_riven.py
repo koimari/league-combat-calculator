@@ -18,7 +18,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Riven")
-        assert riven.MODULE_CC == {"Q": "none", "W": "stun", "R": "none"}
+        assert riven.MODULE_CC == {
+            "Q": "none",
+            "W": "stun",
+            "R": "none",
+            "P": "none",
+            "E": "none",
+        }
         # Q prices one slash of Broken Wings; only the third cast adds a
         # knock back, and this module does not price that specific one.
         q_text = cc_review.slot_text(data, "Q")
@@ -33,10 +39,11 @@ class TestReviewedCrowdControl:
         ]
         assert "stunning them for 0.75 seconds" in cc_review.slot_text(data, "W")
         assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
-        # E deals no damage, P rides the auto stream on-hit, and R_buff is
-        # the AD steroid's zero-damage row.
-        for slot in ("E", "P", "R_buff"):
-            assert slot not in riven.MODULE_CC
+        # E and P carry no control word at all.  R_buff is a result key
+        # rather than a champion slot, so MODULE_CC has no entry for it.
+        for slot in ("E", "P"):
+            assert cc_review.any_control_hits(data, slot) == [], slot
+        assert "R_buff" not in riven.MODULE_CC
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Riven") == []

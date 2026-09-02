@@ -121,7 +121,7 @@ SLOTS = {
 # the stun is what the damaging part applies.  Q answers per cast instead
 # of here because its control belongs to the element (``_edge_of_ixtal``).
 # P and W are absent: both are on-hit riders on the auto stream.
-MODULE_CC = {"Q": CC_PER_PART, "E": "none", "R": "stun"}
+MODULE_CC = {"Q": CC_PER_PART, "E": "none", "R": "stun", "P": "none", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Qiyana", cc_kinds=MODULE_CC)
 

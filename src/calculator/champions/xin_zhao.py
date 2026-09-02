@@ -45,7 +45,7 @@ from .. import healing_helpers as _healing
 from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import ONHIT, SlotCtx
+from .engine import CC_PER_PART, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
 from .module_helpers import at_level
@@ -186,11 +186,11 @@ def _wind_becomes_lightning(ctx: SlotCtx) -> dict[str, Any] | None:
 # champions hit" — so the one enemy this module prices is never displaced
 # by it.
 #
-# Q stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# Q names itself per-part and no part answers yet.
 # Its row is now all three empowered attacks, but only "the third attack
 # knocks up the target" — one of three, and no slot-wide answer covers a
 # row whose hits differ (the Annie Pyromania rule).
-MODULE_CC = {"W": "slow", "E": "slow", "R": "none"}
+MODULE_CC = {"W": "slow", "E": "slow", "R": "none", "P": "none", "Q": CC_PER_PART}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Xin Zhao",

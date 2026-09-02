@@ -278,7 +278,7 @@ SLOTS = {
 # damage and the targets "are also knocked back and stunned for a
 # duration" — two immobilize kinds, so the reviewed answer is the
 # un-narrowed one.  Q and P deal no damage.
-MODULE_CC = {"W": "slow", "E": "none", "R": "immobilize"}
+MODULE_CC = {"W": "slow", "E": "none", "R": "immobilize", "P": "none", "Q": "none"}
 
 parse_abilities = build_parser(SLOTS, "Tristana", cc_kinds=MODULE_CC)
 

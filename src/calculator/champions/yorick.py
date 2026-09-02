@@ -52,7 +52,7 @@ from ..binary_roots import (
     spell_object,
 )
 from ..stats import growth_multiplier
-from .engine import SlotCtx
+from .engine import CC_PER_PART, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_contract import coverage
@@ -191,7 +191,7 @@ def _maiden(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] 
 # nothing.  W (Dark Procession) is where the knock-aside and the pull live,
 # but the ring deals no damage.  P is the Mist Walker pet row, not an
 # ability event.
-MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
+MODULE_CC = {"Q": "none", "E": "slow", "R": "none", "P": "none", "W": CC_PER_PART}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Yorick",

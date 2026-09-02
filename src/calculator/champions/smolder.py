@@ -176,7 +176,7 @@ def _flap_flap_flap(ctx: SlotCtx) -> dict[str, Any] | None:
 # the cached outer "Physical Damage" row (150/250/350 + 100% bonus AD),
 # not the "Increased Physical Damage" centre row — if a later pass prices
 # the centre, R's answer becomes "slow".
-MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "none", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Smolder",

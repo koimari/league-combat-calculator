@@ -21,6 +21,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "root",
             "R": "stun",
+            "P": "none",
         }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
@@ -31,7 +32,7 @@ class TestReviewedCrowdControl:
         assert "knocking up nearby enemies for 0.6 seconds" in r_text
         assert "deals magic damage to nearby enemies and stuns them" in r_text
         # P is absent: Inherent Glamour is a disguise that damages nothing.
-        assert "P" not in neeko.MODULE_CC
+        assert neeko.MODULE_CC["P"] == "none"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Neeko") == []

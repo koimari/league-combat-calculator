@@ -189,7 +189,7 @@ SLOTS = {
 # within", both on the cascade and on the collapse.  P is the Deconstruction
 # consume: its true-damage row is not an ability event, so it carries no
 # reviewable marker.
-MODULE_CC = {"Q": "slow", "W": "none", "E": "knockup", "R": "slow"}
+MODULE_CC = {"Q": "slow", "W": "none", "E": "knockup", "R": "slow", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Vel'Koz", cc_kinds=MODULE_CC)
 

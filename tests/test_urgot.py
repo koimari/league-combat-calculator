@@ -19,6 +19,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "immobilize",
             "R": "slow",
+            "P": "none",
         }
         assert "slow them for 1.25 seconds" in cc_review.slot_text(data, "Q")
         # W's only control word is Urgot's own slow resist, not a debuff.

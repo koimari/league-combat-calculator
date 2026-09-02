@@ -192,6 +192,6 @@ CAST_DEPENDENCIES = (  # sightline-ok: 32 - module_contract reads it by name
 # module's single-instance pricing; Death Mark only stores and detonates
 # damage.  P is the on-hit execute rider and W is the Shadow placement;
 # both are explicit no-damage slots.
-MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "E": "none", "R": "none", "P": "none", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Zed", cc_kinds=MODULE_CC)

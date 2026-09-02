@@ -177,14 +177,14 @@ SOURCES = load_champion_sources("Kled")
 # rather than per slot (see ``_bear_trap``): the thrown trap only reveals
 # and tethers, and the pull 1.75 seconds later is the immobilize.
 #
-# E stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# E reviews to no control, and its row still lands as one coarse hit.
 # Jousting's row is the Total of the first dash and the recast dash, and
 # the cache gives the recast no instant: "Jousting can be recast after 0.5
 # seconds of the first dash ending while the target is marked" states when
 # the recast becomes *available*, not when it happens, and the dash whose
 # ending it counts from has no cached duration.  Half a schedule is not a
 # schedule, so the second dash stays folded into the first hit.
-MODULE_CC = {"Q": CC_PER_PART, "W": "none", "R": "knockback"}
+MODULE_CC = {"Q": CC_PER_PART, "W": "none", "R": "knockback", "P": "none", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Kled", cc_kinds=MODULE_CC)
 

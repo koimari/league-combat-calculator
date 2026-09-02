@@ -153,7 +153,7 @@ SLOTS = {
 }
 
 
-MODULE_CC = {"Q": "none", "W": "none", "E": "knockback", "R": "fear"}
+MODULE_CC = {"Q": "none", "W": "none", "E": "knockback", "R": "fear", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Hecarim", cc_kinds=MODULE_CC)
 OPTIONS = [

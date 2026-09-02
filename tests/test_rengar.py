@@ -39,13 +39,19 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Rengar")
-        assert rengar.MODULE_CC == {"Q": "none", "W": "none", "E": CC_PER_PART}
+        assert rengar.MODULE_CC == {
+            "Q": "none",
+            "W": "none",
+            "E": CC_PER_PART,
+            "P": "none",
+            "R": "none",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
         # R's damage row is the empowered attack's armour-reduction rider
         # and P is the Ferocity state row, so neither carries an event.
-        assert "R" not in rengar.MODULE_CC
-        assert "P" not in rengar.MODULE_CC
+        assert rengar.MODULE_CC["R"] == "none"
+        assert rengar.MODULE_CC["P"] == "none"
 
     def test_e_answers_per_ferocity_branch_because_the_bonus_changes_it(self):
         e_text = cc_review.slot_text(cc_review.kit("Rengar"), "E")

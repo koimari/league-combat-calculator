@@ -3,6 +3,7 @@
 import pytest
 
 from src.calculator.champions import aatrox
+from src.calculator.champions.engine import CC_PER_PART
 from src.calculator.champions.slotlib import extract_named, extract_value
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.stats import calculate_total_stats
@@ -336,14 +337,15 @@ class TestWInfernalChains:
         assert w["total_raw"] > single_hit * 1.5
 
     def test_w_hits_twice_a_cached_tether_apart(self, aatrox_data, parse_at) -> None:
-        """The pull-back is the same hit again when the 1.5s tether expires."""
+        """The pull-back is the same hit again when the 1.5s tether expires,
+        and the two hits carry the two controls the cache states."""
         stats, abilities = parse_at(aatrox_data, 3)
-        (part,) = abilities["W"]["parts"]
-        assert part.count == 2
-        assert part.time_offset == 0.0
-        assert part.hit_interval == 1.5
+        chain, tether = abilities["W"]["parts"]
+        assert (chain.time_offset, chain.cc_kind) == (0.0, "slow")
+        assert (tether.time_offset, tether.cc_kind) == (1.5, "pull")
         ad = stats["attack_damage"]
-        assert part.amount == pytest.approx(30 + 0.40 * ad, abs=0.5)
+        assert chain.amount == pytest.approx(30 + 0.40 * ad, abs=0.5)
+        assert tether.amount == chain.amount
 
     def test_the_two_w_hits_sum_to_the_cached_total_at_every_rank(
         self, aatrox_data
@@ -373,7 +375,7 @@ class TestEUmbralDash:
 
 
 class TestReviewedCrowdControl:
-    """Aatrox declares nothing, and not for want of a cached cadence.
+    """Aatrox names all five slots, and two of them per-part.
 
     Q knocks up only in the Sweetspot - this module's own option - and W
     applies two different kinds across its two hits, while ``MODULE_CC``
@@ -381,12 +383,17 @@ class TestReviewedCrowdControl:
     ``parse_abilities``.
     """
 
-    def test_the_kit_declares_nothing(self):
-        """The empty dict is the declaration: every module states its
-        review at ``MODULE_CC``, and stating none of it there is different
-        from never having asked."""
-        assert aatrox.MODULE_CC == {}
-        assert aatrox.parse_abilities.cc_kinds == {}
+    def test_the_kit_names_every_slot_it_emits(self):
+        """Presence is the point: a slot left out and a reviewed "none"
+        read the same downstream, and only one of them is an answer."""
+        assert aatrox.MODULE_CC == {
+            "P": "none",
+            "Q": CC_PER_PART,
+            "W": CC_PER_PART,
+            "E": "none",
+            "R": "none",
+        }
+        assert aatrox.parse_abilities.cc_kinds == aatrox.MODULE_CC
 
     def test_the_darkin_blades_knockup_is_the_sweetspot_branchs(self):
         text = cc_review.slot_text(cc_review.kit("Aatrox"), "Q")
@@ -417,11 +424,14 @@ class TestReviewedCrowdControl:
             "the area" in text
         )
 
-    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Aatrox") == ["Q", "W"]
+    def test_every_ability_event_now_carries_its_review(self):
+        """The per-part kinds are what certify the fight: the Sweetspot
+        strikes knock up, the normal ones state their reviewed absence, and
+        the two chain hits carry the slow and the pull."""
+        assert cc_review.unreviewed_ability_slots("Aatrox") == []
         coverage = cc_review.fimbulwinter_coverage("Aatrox")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 def test_e_is_modeled_through_the_821_5_umbral_dash_heal() -> None:

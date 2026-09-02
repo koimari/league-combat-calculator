@@ -31,6 +31,7 @@ class TestReviewedCrowdControl:
             "W": "slow",
             "E": "root",
             "R": CC_PER_PART,
+            "P": "none",
         }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert "slowing them by 50% for 1.5 seconds" in cc_review.slot_text(data, "W")

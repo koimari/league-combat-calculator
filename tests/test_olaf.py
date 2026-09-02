@@ -16,13 +16,19 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Olaf")
-        assert olaf.MODULE_CC == {"Q": "slow", "E": "none"}
+        assert olaf.MODULE_CC == {
+            "Q": "slow",
+            "E": "none",
+            "P": "none",
+            "W": "none",
+            "R": "none",
+        }
         assert "slows them for 1 : 3" in cc_review.slot_text(data, "Q")
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
-        # W, R and P are absent rather than "none": the shield, the
-        # self-cleanse and the innate attack speed damage nothing.
+        # The shield, the self-cleanse and the innate attack speed review
+        # as "none" against the wider screen: no control word at all.
         for slot in ("W", "R", "P"):
-            assert slot not in olaf.MODULE_CC
+            assert cc_review.any_control_hits(data, slot) == [], slot
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Olaf") == []

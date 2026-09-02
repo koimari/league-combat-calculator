@@ -111,7 +111,7 @@ SLOTS = {
 # "knock[s] them aside ... and slow[s] them for 2 seconds" — a forced
 # displacement, which is the Wiki's airborne class.  W grants Draven attack
 # and movement speed and P is a gold counter, neither with a damage part.
-MODULE_CC = {"Q": "none", "E": "airborne", "R": "none"}
+MODULE_CC = {"Q": "none", "E": "airborne", "R": "none", "P": "none", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Draven", cc_kinds=MODULE_CC)
 

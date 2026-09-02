@@ -16,7 +16,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Elise")
-        assert elise.MODULE_CC == {"Q": "none", "W": "none", "E": "stun"}
+        assert elise.MODULE_CC == {
+            "Q": "none",
+            "W": "none",
+            "E": "stun",
+            "P": "none",
+            "R": "none",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
         # E answers even though Cocoon deals no damage: the slot carries

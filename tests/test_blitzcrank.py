@@ -445,6 +445,7 @@ class TestReviewedCrowdControl:
             "Q": "immobilize",
             "E": "knockup",
             "R": "silence",
+            "W": "none",
         }
         assert "stunning them for 0.65 seconds, and pulling them" in " ".join(
             cc_review.slot_text(data, "Q").split()

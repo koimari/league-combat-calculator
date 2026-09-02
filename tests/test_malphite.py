@@ -19,6 +19,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "cripple",
             "R": "knockup",
+            "P": "none",
         }
         assert malphite.parse_abilities.cc_kinds == malphite.MODULE_CC
 

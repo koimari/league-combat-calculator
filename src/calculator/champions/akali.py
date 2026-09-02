@@ -19,7 +19,7 @@ All numeric values are read from the champion JSON data.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import level_row, ranked_slot
 from .slotlib import (
@@ -120,7 +120,7 @@ SLOTS = {
 # model carries no range to place the cast in that branch.  W deals no
 # damage, and E's row is the cached "Total Magic Damage" of the throw and
 # the recast dash together, so neither hit can carry an answer of its own.
-MODULE_CC = {"R": "none", "P": "none"}
+MODULE_CC = {"R": "none", "P": "none", "Q": CC_PER_PART, "W": "none", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Akali", cc_kinds=MODULE_CC)
 

@@ -418,11 +418,11 @@ SLOTS = {
 # duration" of a 1.5-second frenzy — so that review is authored on the part
 # in ``_royal_maelstrom``.
 #
-# Q stays UNREVIEWED, so this kit keeps the coarse control-armed scan.  It
-# too is control-free in the cache — Void Surge "deal[s] physical damage to
+# Q reviews to no control, and its row still lands as one coarse hit.
+# It is control-free in the cache — Void Surge "deal[s] physical damage to
 # enemies she passes through" — but its row is the four cardinal dashes in
 # one part and the cache spaces them with nothing but "incurs a cooldown
 # between casts", a cooldown it never names.
-MODULE_CC = {"W": "knockup", "E": "none", "R": "slow"}
+MODULE_CC = {"W": "knockup", "E": "none", "R": "slow", "P": "none", "Q": "none"}
 
 parse_abilities = build_parser(SLOTS, "Bel'Veth", cc_kinds=MODULE_CC)

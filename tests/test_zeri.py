@@ -25,6 +25,7 @@ class TestReviewedCrowdControl:
             "W": "slow",
             "E": "none",
             "R": "none",
+            "P": "none",
         }
         assert zeri.parse_abilities.cc_kinds == zeri.MODULE_CC
         assert "slows them for 2 seconds" in cc_review.slot_text(data, "W")

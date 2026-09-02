@@ -256,7 +256,7 @@ def _dawning_shadow(packet_r):
 # enemy champions hit and reveals them"; the light wave shields allies.  E
 # (camouflage) deals no damage, and P is a stat/on-hit innate whose mark
 # consume rides the auto stream, so neither carries an ability event.
-MODULE_CC = {"Q": "slow", "W": "root", "R": "none"}
+MODULE_CC = {"Q": "slow", "W": "root", "R": "none", "P": "none", "E": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Senna",

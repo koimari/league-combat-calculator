@@ -23,6 +23,7 @@ class TestReviewedCrowdControl:
             "W": "slow",
             "E": "none",
             "R": "none",
+            "P": "none",
         }
         for slot in ("Q", "E", "R"):
             assert cc_review.control_words(cc_review.slot_text(data, slot)) == []
@@ -30,7 +31,7 @@ class TestReviewedCrowdControl:
         # answer rides its entry as a sourced ControlEvent.  P is
         # lifesteal and damages nothing.
         assert "slowing them by 35%" in cc_review.slot_text(data, "W")
-        assert "P" not in nasus.MODULE_CC
+        assert nasus.MODULE_CC["P"] == "none"
         assert cc_review.control_words(cc_review.slot_text(data, "P")) == []
 
     def test_every_ability_event_carries_the_review(self):

@@ -119,7 +119,13 @@ def _depth_charge(
 # Wrath "takes magic damage over time" and the shield is on Nautilus.  P is
 # absent because Staggering Blow is an on-hit rider on the auto stream, not
 # an ability event of its own — its root is real but rides no ability row.
-MODULE_CC = {"Q": "immobilize", "W": "none", "E": "slow", "R": "immobilize"}
+MODULE_CC = {
+    "Q": "immobilize",
+    "W": "none",
+    "E": "slow",
+    "R": "immobilize",
+    "P": "root",
+}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Nautilus",

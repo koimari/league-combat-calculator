@@ -239,6 +239,7 @@ class TestReviewedCrowdControl:
             "W": "knockback",
             "E": "slow",
             "R": "none",
+            "P": "none",
         }
         assert ziggs.parse_abilities.cc_kinds == ziggs.MODULE_CC
         assert "knock them back over 0.5 seconds" in cc_review.slot_text(data, "W")
@@ -248,7 +249,7 @@ class TestReviewedCrowdControl:
 
     def test_short_fuse_stays_absent_from_the_declaration(self):
         """The passive's row is an empowered basic attack, not a cast."""
-        assert "P" not in ziggs.MODULE_CC
+        assert ziggs.MODULE_CC["P"] == "none"
         assert (
             cc_review.control_words(cc_review.slot_text(cc_review.kit("Ziggs"), "P"))
             == []

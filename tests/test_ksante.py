@@ -27,7 +27,13 @@ class TestReviewedCrowdControl:
         from src.calculator.champions import ksante
         from src.calculator.champions.engine import CC_PER_PART
 
-        assert ksante.MODULE_CC == {"Q": "slow", "W": CC_PER_PART, "R": "stun"}
+        assert ksante.MODULE_CC == {
+            "Q": "slow",
+            "W": CC_PER_PART,
+            "R": "stun",
+            "P": "none",
+            "E": "none",
+        }
         assert ksante.parse_abilities.cc_kinds == ksante.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):
@@ -35,7 +41,13 @@ class TestReviewedCrowdControl:
             assert word in _CC.slot_text(slot), slot
 
     def test_every_reviewed_part_carries_its_kind(self):
-        assert _CC.kinds() == {"Q": ["slow"], "W": ["stun"], "R": ["stun"]}
+        """E prices no damage part, so its declaration lands nowhere."""
+        assert _CC.kinds() == {
+            "Q": ["slow"],
+            "W": ["stun"],
+            "R": ["stun"],
+            "passive": ["none"],
+        }
 
     def test_reviewed_kinds_follow_the_other_branch(self):
         """All Out: Path Maker does not apply its knock back and stun, so W is 'none'."""
@@ -43,6 +55,7 @@ class TestReviewedCrowdControl:
             "Q": ["slow"],
             "W": ["none"],
             "R": ["stun"],
+            "passive": ["none"],
         }
 
     def test_a_timed_fimbulwinter_fight_is_fully_certified(self):

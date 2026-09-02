@@ -102,7 +102,7 @@ def _illumination(ctx: SlotCtx) -> dict[str, Any] | None:
 # singularity slows the enemies inside it and its detonation slows the
 # ones it hits, and R's beam only damages and reveals.  W shields allies
 # and P's proc is a bonus-damage mark, neither applying control.
-MODULE_CC = {"Q": "root", "E": "slow", "R": "none"}
+MODULE_CC = {"Q": "root", "E": "slow", "R": "none", "P": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Lux",

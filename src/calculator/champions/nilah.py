@@ -98,7 +98,7 @@ def _formless_blade(ctx: SlotCtx) -> dict[str, Any] | None:
 # slow.  The pull belongs to the unpriced Burst Physical Damage row, so it
 # is not what any emitted part applies.  P and W are absent — the
 # heal/shield innate and the mist damage nothing.
-MODULE_CC = {"Q": "none", "E": "none", "R": "slow"}
+MODULE_CC = {"Q": "none", "E": "none", "R": "slow", "P": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Nilah",

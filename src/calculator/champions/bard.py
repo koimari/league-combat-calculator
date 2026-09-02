@@ -39,7 +39,7 @@ than letting ``SLOTS`` derive ``modeled``.
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .inputs import int_option
 from .module_contract import coverage
 from .module_helpers import no_damage_slot
@@ -257,7 +257,7 @@ SLOTS = {
 # or a second enemy", which the single-target model never supplies, so the
 # slow is the answer for the target Q damages here.  W, E and R deal no
 # damage, and P's Meep slow rides basic attacks rather than an ability.
-MODULE_CC = {"Q": "slow", "R": "stasis"}
+MODULE_CC = {"Q": "slow", "R": "stasis", "P": CC_PER_PART, "W": "none", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Bard", cc_kinds=MODULE_CC)
 

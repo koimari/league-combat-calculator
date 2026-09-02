@@ -67,7 +67,12 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Rakan")
-        assert rakan.MODULE_CC == {"Q": "none", "W": "knockup", "R": "charm"}
+        assert rakan.MODULE_CC == {
+            "Q": "none",
+            "W": "knockup",
+            "R": "charm",
+            "E": "none",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         # W's own "immobilizing" wording is about Rakan being knocked down
         # mid-dash, not about control he applies.
@@ -78,7 +83,7 @@ class TestReviewedCrowdControl:
         # P (self-shield) and E (ally shield and dash) damage nothing and
         # are not in the slot map at all.
         assert "P" not in rakan.MODULE_CC
-        assert "E" not in rakan.MODULE_CC
+        assert rakan.MODULE_CC["E"] == "none"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Rakan") == []

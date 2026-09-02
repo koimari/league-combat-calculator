@@ -103,7 +103,7 @@ SLOTS = {
 # Inner Flame's explosion "slow[s] them by 40% for 1.5 seconds" and its
 # Mantra field slows by 50%, so Q has one answer either way.  W's two hits
 # do not (see _focused_resolve).  P, E and R author no damage part.
-MODULE_CC = {"Q": "slow", "W": CC_PER_PART}
+MODULE_CC = {"Q": "slow", "W": CC_PER_PART, "P": "none", "E": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Karma", cc_kinds=MODULE_CC)
 OPTIONS = [

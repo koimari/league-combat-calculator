@@ -23,13 +23,14 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "none",
             "R": "none",
+            "P": "per_part",
         }
         for slot in ("Q", "W", "E", "R"):
             assert cc_review.control_words(cc_review.slot_text(data, slot)) == []
         # P is absent: it is a state row with no damage, and its knock-up
         # rider fires only on the empowered basic attack against a target
         # already immobilized and either a monster or airborne.
-        assert "P" not in samira.MODULE_CC
+        assert samira.MODULE_CC["P"] == "per_part"
         p_text = cc_review.slot_text(data, "P")
         assert "basic attack against an immobilized target" in p_text
         assert "if the target is a monster or is airborne" in p_text

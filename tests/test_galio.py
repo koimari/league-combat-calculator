@@ -248,6 +248,7 @@ class TestReviewedCrowdControl:
             "W": "taunt",
             "E": "knockup",
             "R": "knockback",
+            "P": "none",
         }
         assert galio.parse_abilities.cc_kinds == galio.MODULE_CC
 

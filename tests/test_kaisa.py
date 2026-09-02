@@ -593,7 +593,7 @@ class TestReviewedCrowdControl:
     def test_module_cc_is_the_declaration_the_parser_wired(self):
         from src.calculator.champions import kaisa
 
-        assert kaisa.MODULE_CC == {"Q": "none", "W": "none"}
+        assert kaisa.MODULE_CC == {"Q": "none", "W": "none", "E": "none", "R": "none"}
         assert kaisa.parse_abilities.cc_kinds == kaisa.MODULE_CC
 
     def test_control_free_slots_name_every_word_their_text_contains(self):

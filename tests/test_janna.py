@@ -26,7 +26,13 @@ class TestReviewedCrowdControl:
     def test_module_cc_is_the_declaration_the_parser_wired(self):
         from src.calculator.champions import janna
 
-        assert janna.MODULE_CC == {"Q": "knockup", "W": "slow"}
+        assert janna.MODULE_CC == {
+            "Q": "knockup",
+            "W": "slow",
+            "P": "none",
+            "E": "none",
+            "R": "knockback",
+        }
         assert janna.parse_abilities.cc_kinds == janna.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):

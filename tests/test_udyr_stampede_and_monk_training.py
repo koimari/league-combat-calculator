@@ -121,6 +121,15 @@ def _coupled_fight() -> dict:
     return response.get_json()
 
 
+def _udyr_control_events(fight: dict) -> list[dict]:
+    """Udyr's own control events; the enemy Aatrox's reach the same ledger."""
+    return [
+        event
+        for event in fight["combat"]["events"]
+        if event.get("cc_kind") and event["attacker"] == "main"
+    ]
+
+
 class TestBlazingStampedeIsASourcedZeroDamageRow:
     """E: movement only, so the slot itself closes ``no_damage``."""
 
@@ -418,21 +427,15 @@ class TestTheStunReachesTheLiveFight:
     """The engine surface: a zero-damage row that still costs enemy actions."""
 
     def test_the_coupled_fight_emits_exactly_one_stun(self):
-        """One stun from E, and the rest of the fight's control is R's.
+        """One stun from E, and the rest of Udyr's control is R's.
 
         The filter names ``stun`` rather than "any reviewed control"
         because Udyr's OTHER reviewed control reaches this same fight:
         ``MODULE_CC`` marks R a slow, so Wingborne Storm's eight blizzard
-        ticks each carry one.  Counting every ``cc_kind`` event would
-        therefore count R's slows as if the stun had repeated.  Both
-        populations are pinned exactly, so a stun that leaked onto the
-        auto stream still fails here.
+        ticks each carry one.  Both populations are pinned exactly, so a
+        stun that leaked onto the auto stream still fails here.
         """
-        events = [
-            event
-            for event in _coupled_fight()["combat"]["events"]
-            if event.get("cc_kind")
-        ]
+        events = _udyr_control_events(_coupled_fight())
         stuns = [event for event in events if event["cc_kind"] == "stun"]
 
         assert len(stuns) == 1
@@ -449,11 +452,7 @@ class TestTheStunReachesTheLiveFight:
         ] * 8
 
     def test_the_live_event_carries_the_atom_receipt(self):
-        event = next(
-            event
-            for event in _coupled_fight()["combat"]["events"]
-            if event.get("cc_kind")
-        )
+        event = _udyr_control_events(_coupled_fight())[0]
         atom = event["control_source_atoms"][0]
 
         assert atom["atom_id"] == "timing.control_duration"
@@ -463,9 +462,7 @@ class TestTheStunReachesTheLiveFight:
 
     def test_the_stun_prices_no_damage(self):
         fight = _coupled_fight()
-        event = next(
-            event for event in fight["combat"]["events"] if event.get("cc_kind")
-        )
+        event = _udyr_control_events(fight)[0]
 
         assert event["damage"] == pytest.approx(0.0)
         assert event["damage_type"] == ""

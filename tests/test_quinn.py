@@ -16,7 +16,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Quinn")
-        assert quinn.MODULE_CC == {"Q": "none", "E": "knockback", "R": "none"}
+        assert quinn.MODULE_CC == {
+            "Q": "none",
+            "E": "knockback",
+            "R": "none",
+            "P": "none",
+            "W": "none",
+        }
         # Q's nearsight is not an immobilize and has no kind in the
         # vocabulary; the disarm branch never reaches a champion.
         q_text = cc_review.slot_text(data, "Q")
@@ -30,8 +36,8 @@ class TestReviewedCrowdControl:
         assert "becoming immobilized, grounded, or silenced ends" in r_text
         assert "dealing physical damage to nearby enemies and marking" in r_text
         # W (vision) deals no damage, P rides the auto stream on-hit.
-        assert "W" not in quinn.MODULE_CC
-        assert "P" not in quinn.MODULE_CC
+        assert quinn.MODULE_CC["W"] == "none"
+        assert quinn.MODULE_CC["P"] == "none"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Quinn") == []

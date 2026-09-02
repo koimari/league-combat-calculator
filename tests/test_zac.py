@@ -28,6 +28,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "knockup",
             "R": CC_PER_PART,
+            "P": "none",
         }
         assert zac.parse_abilities.cc_kinds == zac.MODULE_CC
         q_text = cc_review.slot_text(data, "Q")

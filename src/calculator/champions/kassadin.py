@@ -126,7 +126,7 @@ SLOTS = {
 # Cached kit review: Q disrupts channels (an interrupt, not one of the
 # immobilize kinds), W and R apply no control, and E "slows them for 1
 # second".  P is defensive state and emits no damage event to carry a kind.
-MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "none", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Kassadin", cc_kinds=MODULE_CC)
 OPTIONS = [

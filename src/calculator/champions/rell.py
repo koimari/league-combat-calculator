@@ -64,7 +64,7 @@ _break_the_mold.phase = ONHIT
 # explosion it creates.  R's field "deals magic damage every 0.25 seconds
 # to nearby enemies and drags them towards her".  P is an on-hit rider on
 # the auto stream, so it carries no ability event of its own.
-MODULE_CC = {"Q": "stun", "W": "immobilize", "E": "none", "R": "pull"}
+MODULE_CC = {"Q": "stun", "W": "immobilize", "E": "none", "R": "pull", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Rell",

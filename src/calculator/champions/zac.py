@@ -141,7 +141,7 @@ def _lets_bounce(packet_r: SlotParser) -> SlotParser:
 # them up and stun[ning] them for 0.5 seconds".  R is not here: its opening
 # bounce and its later ones apply different control, so the kinds are
 # authored per part in ``_lets_bounce``.  P is the Goo/revive state row.
-MODULE_CC = {"Q": "slow", "W": "none", "E": "knockup", "R": CC_PER_PART}
+MODULE_CC = {"Q": "slow", "W": "none", "E": "knockup", "R": CC_PER_PART, "P": "none"}
 
 
 def _cell_division(ctx: SlotCtx):

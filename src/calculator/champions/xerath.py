@@ -113,7 +113,7 @@ def _rite_of_the_arcane(
 # only beams (its 0% : 40% slow is Xerath's own charge penalty) and the
 # Arcane Barrages only strike.  P restores mana on a basic attack and
 # authors no ability part.
-MODULE_CC = {"Q": "none", "W": "slow", "E": "stun", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "slow", "E": "stun", "R": "none", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Xerath",

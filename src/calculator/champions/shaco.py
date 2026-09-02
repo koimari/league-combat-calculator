@@ -47,7 +47,7 @@ from typing import Any
 
 from ..ability_spec import ControlEvent, DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import ONHIT, SlotCtx
+from .engine import CC_PER_PART, ONHIT, SlotCtx
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
@@ -241,7 +241,7 @@ PACKET_SHA256 = "3a7a57f56c3c5d06404558fb69b2bdac0244775181a3b338c6cf369b8f328ff
 # absent: with r_clone_attacks set its entry carries a second, separately
 # timed part, so the death-explosion part is not a hit the ledger can
 # time in every configuration.
-MODULE_CC = {"Q": "none", "W": "immobilize", "E": "slow"}
+MODULE_CC = {"Q": "none", "W": "immobilize", "E": "slow", "P": "none", "R": CC_PER_PART}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Shaco",

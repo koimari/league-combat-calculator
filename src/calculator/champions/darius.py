@@ -37,7 +37,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import BUFF, CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, int_option
 from .module_helpers import ranked_slot
@@ -503,7 +503,7 @@ SLOTS["E"] = with_control_event(
 # is the pull/airborne/slow row, but it deals no damage of its own; P is
 # the Hemorrhage bleed.
 #
-# R stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# R reviews to no control, and its row still lands as one coarse hit.
 # Noxian Guillotine is control-free against the champion it damages: it
 # "attempts to execute the target enemy champion ... to deal true damage",
 # and fears only on a kill and only "nearby minions and monsters".  The
@@ -511,7 +511,7 @@ SLOTS["E"] = with_control_event(
 # repeated part is a schedule, which ``single_hit`` refuses and which has no
 # cadence to author, since the stacks land together rather than in sequence.
 # Stating it would take a "scale the amount by stacks" part the spec lacks.
-MODULE_CC = {"Q": "none", "W": "slow"}
+MODULE_CC = {"Q": "none", "W": "slow", "P": "none", "E": CC_PER_PART, "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Darius", cc_kinds=MODULE_CC)
 

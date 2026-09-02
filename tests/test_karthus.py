@@ -267,7 +267,13 @@ class TestReviewedCrowdControl:
     """Lay Waste and Requiem control nothing; Defile's timed branch withholds."""
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
-        assert karthus.MODULE_CC == {"Q": "none", "E": "none", "R": "none"}
+        assert karthus.MODULE_CC == {
+            "Q": "none",
+            "E": "none",
+            "R": "none",
+            "P": "none",
+            "W": "slow",
+        }
         assert karthus.parse_abilities.cc_kinds == karthus.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -279,7 +285,7 @@ class TestReviewedCrowdControl:
         """Wall of Pain slows, but it authors no damage part to stamp."""
         data = cc_review.kit("Karthus")
         assert "become slowed for 5 seconds" in cc_review.slot_text(data, "W")
-        assert "W" not in karthus.MODULE_CC
+        assert karthus.MODULE_CC["W"] == "slow"
 
     def test_defiles_timed_pulse_authors_the_cached_tick_beat(self):
         """Defile's aura controls nothing, and both branches say so on their

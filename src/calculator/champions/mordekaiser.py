@@ -93,7 +93,7 @@ def _realm_of_death(compiled):
 # within and pulls them over 250 units" — the pull lands with the damage
 # on the same 0.5-second claw, which the slot now authors.  P (Darkness
 # Rise) is a basic-attack/aura row, and W and R author no damage part.
-MODULE_CC = {"Q": "none", "E": "pull"}
+MODULE_CC = {"Q": "none", "E": "pull", "P": "none", "W": "none", "R": "slow"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Mordekaiser",

@@ -322,7 +322,7 @@ _hemoplague_amp = amp_slot("r_hemoplague_debuff", _apply_hemoplague)
 # the damage they take from all sources by 10%" and bursts for damage.  P
 # is the AP/health conversion and ``hemoplague`` is the AMP pseudo-slot;
 # neither emits a cast.
-MODULE_CC = {"Q": "none", "W": "slow", "E": "slow", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "slow", "E": "slow", "R": "none", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Vladimir",

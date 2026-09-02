@@ -228,6 +228,6 @@ SLOTS = {
 # "knocks them up for 0.75 seconds", R lands "knocking them back 100
 # units".  P is the auto-attack conversion row — it authors no damage part
 # of its own, so it carries no reviewable marker.
-MODULE_CC = {"Q": "none", "W": "taunt", "E": "knockup", "R": "knockback"}
+MODULE_CC = {"Q": "none", "W": "taunt", "E": "knockup", "R": "knockback", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Galio", cc_kinds=MODULE_CC)

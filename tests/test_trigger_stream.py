@@ -2041,7 +2041,7 @@ def test_every_registered_view_runs_inside_the_boundary():
 
 def _fimbulwinter_gate(rows):
     """``damage._control_armed_event_coverage`` over one hand-built ledger."""
-    complete, source, _note = damage._control_armed_event_coverage(
+    complete, source, _note, _armed = damage._control_armed_event_coverage(
         [{"name": "Fimbulwinter"}], rows
     )
     return complete, source
@@ -2136,7 +2136,7 @@ def test_the_certification_gate_selects_its_holder_from_a_declaration():
     the producer it came from.
     """
     unreviewed = [{"is_ability": True, "source_key": "Q"}]
-    complete, source, note = damage._control_armed_event_coverage(
+    complete, source, note, armed = damage._control_armed_event_coverage(
         [{"name": "Fimbulwinter"}], unreviewed
     )
     rule = next(
@@ -2144,15 +2144,16 @@ def test_the_certification_gate_selects_its_holder_from_a_declaration():
         for rule in catalog.behavior_rules("Fimbulwinter")
         if rule.family is RuleFamily.ALLY_PACKET
     )
-    assert (complete, source) == (False, rule.mechanic_id.replace(".", "_"))
+    assert (complete, source, armed) == (False, rule.mechanic_id.replace(".", "_"), "")
     assert note == (
-        "Fimbulwinter's Everlasting needs an authored immobilize/slow marker; "
-        "the ability packet did not certify its crowd-control state."
+        "Fimbulwinter's Everlasting arms on an authored immobilize/slow, and "
+        "['Q'] reached the ledger with no reviewed crowd-control state."
     )
     # Same trigger, different recipient and different kind: neither is owed.
     for other in ("Imperial Mandate", "Bandlepipes"):
         assert damage._control_armed_event_coverage([{"name": other}], unreviewed) == (
             True,
+            "",
             "",
             "",
         )

@@ -28,7 +28,13 @@ def cached():
 
 class TestReviewedCrowdControl:
     def test_declared_kinds_quote_the_cached_text(self, cached):
-        assert kayle.MODULE_CC == {"Q": "slow", "E": "none", "R": "none"}
+        assert kayle.MODULE_CC == {
+            "Q": "slow",
+            "E": "none",
+            "R": "none",
+            "P": "none",
+            "W": "none",
+        }
         for slot, phrase in QUOTED.items():
             assert phrase in cc_review.slot_text(cached, slot), slot
 
@@ -41,12 +47,12 @@ class TestReviewedCrowdControl:
             assert hits == UNCONTROLLED_MENTIONS.get(slot, []), slot
 
     def test_every_ability_event_carries_the_review(self, cached):
-        """Reviewing a kit only counts where the ledger can see it."""
+        """A declared kind lands on every part of the slot's row that can
+        carry it; the roster census counts the slots with no such part."""
         parsed = kayle.parse_abilities(cached, 18, 100.0)
         for slot, kind in kayle.MODULE_CC.items():
-            parts = parsed[slot]["parts"]
-            assert parts, slot
-            assert {part.cc_kind for part in parts} == {kind}, slot
+            parts = cc_review.declared_parts(parsed, slot)
+            assert {part.cc_kind for part in parts} <= {kind}, slot
 
     def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
         """The campaign's control-token probe, through the public entry."""

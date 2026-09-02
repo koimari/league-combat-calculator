@@ -619,7 +619,7 @@ SLOTS = {
 # them up for 1.3 seconds and dealing physical damage after 0.75 seconds
 # into the grab duration".  W (Denting Blows) is armour reduction, which
 # is not crowd control, and it is the auto-stack row besides.
-MODULE_CC = {"Q": "knockback", "E": "none", "R": "knockup"}
+MODULE_CC = {"Q": "knockback", "E": "none", "R": "knockup", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Vi", cc_kinds=MODULE_CC)
 
