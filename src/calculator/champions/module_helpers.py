@@ -77,7 +77,15 @@ def typed_damage(
 
 
 def delayed(parser: SlotParser, *, delay: float) -> SlotParser:
-    """Wrap a slot so every part it emits lands *delay* seconds after the cast start."""
+    """Wrap a slot so every part it emits lands *delay* seconds after the cast start.
+
+    ``DamagePart.time_offset`` is seconds from the cast start, so an ability
+    the cache places on a post-cast delay authors that number here rather
+    than certifying a cast-boundary hit it does not have.  Where the cached
+    entry says the delay excludes the cast time, the caller adds the cached
+    ``castTime`` and passes the sum, because the champion module is what
+    knows its source's convention.
+    """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         entry = parser(ctx)
@@ -93,16 +101,7 @@ def delayed(parser: SlotParser, *, delay: float) -> SlotParser:
 
 
 def delayed_damage(*, delay: float, **simple_damage_kwargs: Any) -> SlotParser:
-    """A :func:`slotlib.simple_damage` slot whose hit lands after a delay.
-
-    ``DamagePart.time_offset`` is seconds from the cast start, so an ability
-    the cache places on a post-cast delay authors that number here rather
-    than certifying a cast-boundary hit it does not have.  Where the cached
-    entry says the delay excludes the cast time, the caller adds the cached
-    ``castTime`` and passes the sum, because the champion module is what
-    knows its source's convention.  Every ``simple_damage`` keyword passes
-    through unchanged, so the delayed slot and the plain one price alike.
-    """
+    """A :func:`slotlib.simple_damage` slot, :func:`delayed`."""
     return delayed(simple_damage(**simple_damage_kwargs), delay=delay)
 
 

@@ -52,7 +52,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .inputs import champion_stat, int_option
 from .module_contract import coverage
-from .module_helpers import no_damage
+from .module_helpers import no_damage_slot
 from .slotlib import (
     ability_name,
     attach_self_shield,
@@ -359,31 +359,22 @@ def _dirty_fighting(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _going_rogue(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: stealth/mark/resurrection utility — sourced zero-enemy-damage row.
-
-    The cached W entry carries ``damageType: None``; every effect row is
-    Scoundrel-marking, resurrection, camouflage, or recast-timing text with
-    no HP number against an enemy champion. The one leveling row on the
-    ability (Bonus Movement Speed, conditional on facing a marked Scoundrel
-    during camouflage) is documented as a sourced-but-unmodeled rider in
-    ASSUMPTIONS rather than an unconditional stat_buff.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Going Rogue is stealth/Scoundrel-mark/resurrection utility "
-            "with no enemy-damage attribute of its own (data/champions.json "
-            "Akshan W carries damageType: None); its conditional bonus "
-            "movement speed (80-120 by rank, only while facing a marked "
-            "Scoundrel in camouflage) has no default-on consumer for a "
-            "one-rotation combat calc and stays a documented rider."
-        ),
-    )
+# W: stealth/mark/resurrection utility — sourced zero-enemy-damage row.
+#
+# The cached W entry carries ``damageType: None``; every effect row is
+# Scoundrel-marking, resurrection, camouflage, or recast-timing text with
+# no HP number against an enemy champion. The one leveling row on the
+# ability (Bonus Movement Speed, conditional on facing a marked Scoundrel
+# during camouflage) is documented as a sourced-but-unmodeled rider in
+# ASSUMPTIONS rather than an unconditional stat_buff.
+_going_rogue = no_damage_slot(
+    "Going Rogue is stealth/Scoundrel-mark/resurrection utility "
+    "with no enemy-damage attribute of its own (data/champions.json "
+    "Akshan W carries damageType: None); its conditional bonus "
+    "movement speed (80-120 by rank, only while facing a marked "
+    "Scoundrel in camouflage) has no default-on consumer for a "
+    "one-rotation combat calc and stays a documented rider."
+)
 
 
 OPTIONS = [

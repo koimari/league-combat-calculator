@@ -39,7 +39,7 @@ from ..stats import calculate_attack_speed
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_contract import coverage
-from .module_helpers import no_damage
+from .module_helpers import no_damage_slot
 from .slotlib import ability_name, extract_cooldown, extract_value, simple_damage
 from .source_receipts import load_champion_sources
 
@@ -179,26 +179,17 @@ def _frost_shot(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _hawkshot(ctx: SlotCtx) -> dict[str, Any] | None:
-    """E: vision utility — sourced zero-enemy-damage row (no_damage).
-
-    The cached E entry carries ``damageType: None`` and neither effect row
-    has a ``leveling`` attribute — Hawkshot grants vision along its path
-    and at its destination; it has no HP number against an enemy
-    champion anywhere.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Hawkshot is pure vision utility with no enemy-damage "
-            "attribute of its own (data/champions.json Ashe E carries "
-            "damageType: None and no effect row has a leveling entry)."
-        ),
-    )
+# E: vision utility — sourced zero-enemy-damage row (no_damage).
+#
+# The cached E entry carries ``damageType: None`` and neither effect row
+# has a ``leveling`` attribute — Hawkshot grants vision along its path
+# and at its destination; it has no HP number against an enemy
+# champion anywhere.
+_hawkshot = no_damage_slot(
+    "Hawkshot is pure vision utility with no enemy-damage "
+    "attribute of its own (data/champions.json Ashe E carries "
+    "damageType: None and no effect row has a leveling entry)."
+)
 
 
 OPTIONS = [

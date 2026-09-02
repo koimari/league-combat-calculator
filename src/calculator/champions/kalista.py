@@ -44,7 +44,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_contract import coverage
-from .module_helpers import named_damage, no_damage
+from .module_helpers import named_damage, no_damage_slot
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -97,58 +97,40 @@ def _rend(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _martial_poise(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: the windup-dash mechanic — documented zero-damage row.
-
-    All four cached effect rows carry empty leveling; Martial Poise is
-    pure movement/state (the dash itself and the Oathsworn Bond
-    declaration), with no damage attribute of its own.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Martial Poise is the windup-dash mechanic and the Oathsworn "
-            "Bond declaration; all four cached effect rows carry empty "
-            "leveling (data/champions.json Kalista P) and the game "
-            "binary's dash spells (KalistaPassiveDashSpell(Actual)) carry "
-            "no mSpellCalculations table — only dash duration/speed/range "
-            "parameters. P prices nothing."
-        ),
-    )
+# P: the windup-dash mechanic — documented zero-damage row.
+#
+# All four cached effect rows carry empty leveling; Martial Poise is
+# pure movement/state (the dash itself and the Oathsworn Bond
+# declaration), with no damage attribute of its own.
+_martial_poise = no_damage_slot(
+    "Martial Poise is the windup-dash mechanic and the Oathsworn "
+    "Bond declaration; all four cached effect rows carry empty "
+    "leveling (data/champions.json Kalista P) and the game "
+    "binary's dash spells (KalistaPassiveDashSpell(Actual)) carry "
+    "no mSpellCalculations table — only dash duration/speed/range "
+    "parameters. P prices nothing."
+)
 
 
-def _fates_call(ctx: SlotCtx) -> dict[str, Any] | None:
-    """R: the ally-retrieval/CC ultimate — documented zero-damage row.
-
-    R's only sourced number is Airborne Duration (a CC duration, not
-    damage); every other effect is a state applied to the Oathsworn ally
-    (retrieval, cleanse, invulnerability) or a knockback on enemies.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Fate's Call retrieves and holds the Oathsworn ally (cleanse, "
-            "invulnerability, untargetable), lets them dash with "
-            "displacement immunity, then knocks back and keeps nearby "
-            "enemies airborne on landing — no damage sentence anywhere in "
-            "the cached entry (data/champions.json Kalista R); its only "
-            "leveling row is 'Airborne Duration' (1/1.5/2s), a CC "
-            "duration. Corroborated by the game binary (KalistaRx and its "
-            "child spells): the only named DataValues entry is "
-            "KnockupDuration [0, 1, 1.5, 2, ...], matching the wiki "
-            "value, and no spell record carries a mSpellCalculations "
-            "table. R prices nothing; its effects land on the Oathsworn "
-            "ally or as pure enemy CC."
-        ),
-    )
+# R: the ally-retrieval/CC ultimate — documented zero-damage row.
+#
+# R's only sourced number is Airborne Duration (a CC duration, not
+# damage); every other effect is a state applied to the Oathsworn ally
+# (retrieval, cleanse, invulnerability) or a knockback on enemies.
+_fates_call = no_damage_slot(
+    "Fate's Call retrieves and holds the Oathsworn ally (cleanse, "
+    "invulnerability, untargetable), lets them dash with "
+    "displacement immunity, then knocks back and keeps nearby "
+    "enemies airborne on landing — no damage sentence anywhere in "
+    "the cached entry (data/champions.json Kalista R); its only "
+    "leveling row is 'Airborne Duration' (1/1.5/2s), a CC "
+    "duration. Corroborated by the game binary (KalistaRx and its "
+    "child spells): the only named DataValues entry is "
+    "KnockupDuration [0, 1, 1.5, 2, ...], matching the wiki "
+    "value, and no spell record carries a mSpellCalculations "
+    "table. R prices nothing; its effects land on the Oathsworn "
+    "ally or as pure enemy CC."
+)
 
 
 SLOTS = {

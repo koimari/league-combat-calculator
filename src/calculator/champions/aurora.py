@@ -42,7 +42,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import int_option
 from .module_contract import coverage
-from .module_helpers import no_damage
+from .module_helpers import no_damage_slot
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -175,27 +175,18 @@ def _twofold_hex(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _across_the_veil(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: dash/stealth/movement utility — sourced zero-damage row (no_damage).
-
-    The cached W entry carries ``damageType: None`` and its effect rows
-    ("Invisibility Duration", "Bonus Movement Speed", cooldown-reset
-    clause) are pure utility — Across the Veil has no HP number against
-    an enemy champion anywhere.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Across the Veil is a dash/invisibility/movement-speed "
-            "utility with no enemy-damage attribute of its own "
-            "(data/champions.json Aurora W carries damageType: None and "
-            "no effect row carries an HP-damage leveling entry)."
-        ),
-    )
+# W: dash/stealth/movement utility — sourced zero-damage row (no_damage).
+#
+# The cached W entry carries ``damageType: None`` and its effect rows
+# ("Invisibility Duration", "Bonus Movement Speed", cooldown-reset
+# clause) are pure utility — Across the Veil has no HP number against
+# an enemy champion anywhere.
+_across_the_veil = no_damage_slot(
+    "Across the Veil is a dash/invisibility/movement-speed "
+    "utility with no enemy-damage attribute of its own "
+    "(data/champions.json Aurora W carries damageType: None and "
+    "no effect row carries an HP-damage leveling entry)."
+)
 
 
 OPTIONS: list[dict[str, Any]] = [

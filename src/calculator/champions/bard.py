@@ -42,7 +42,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import int_option
 from .module_contract import coverage
-from .module_helpers import no_damage
+from .module_helpers import no_damage_slot
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -175,39 +175,23 @@ def _travelers_call(ctx: SlotCtx) -> dict[str, Any] | None:
 _travelers_call.phase = ONHIT
 
 
-def _magical_journey(ctx: SlotCtx) -> dict[str, Any] | None:
-    """E: one-way terrain portal — documented zero-damage row."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Magical Journey opens a one-way terrain portal; every effect "
-            "row in the cached entry carries empty leveling and the "
-            "ability has no damage type (data/champions.json Bard E). "
-            "Confirmed zero numeric combat effect."
-        ),
-    )
+# E: one-way terrain portal — documented zero-damage row.
+_magical_journey = no_damage_slot(
+    "Magical Journey opens a one-way terrain portal; every effect "
+    "row in the cached entry carries empty leveling and the "
+    "ability has no damage type (data/champions.json Bard E). "
+    "Confirmed zero numeric combat effect."
+)
 
 
-def _tempered_fate(ctx: SlotCtx) -> dict[str, Any] | None:
-    """R: 2.5s stasis/stun — documented zero-damage row."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Tempered Fate puts struck units into 2.5s stasis and stuns "
-            "enemy champions/minions/turrets for the same duration; the "
-            "cached entry's own notes state Tempered Fate deals 0 proc "
-            "true damage (data/champions.json Bard R notes). "
-            "Atoms-confirmed zero numeric combat effect."
-        ),
-    )
+# R: 2.5s stasis/stun — documented zero-damage row.
+_tempered_fate = no_damage_slot(
+    "Tempered Fate puts struck units into 2.5s stasis and stuns "
+    "enemy champions/minions/turrets for the same duration; the "
+    "cached entry's own notes state Tempered Fate deals 0 proc "
+    "true damage (data/champions.json Bard R notes). "
+    "Atoms-confirmed zero numeric combat effect."
+)
 
 
 OPTIONS: list[dict[str, Any]] = [

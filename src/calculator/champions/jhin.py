@@ -8,7 +8,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
-from .module_helpers import no_damage
+from .module_helpers import at_level, no_damage
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -26,14 +26,6 @@ from .source_receipts import load_champion_sources
 # target's missing health" (level brackets 1 / 6 / 11, the wiki's
 # standard three-breakpoint pattern).
 _FOURTH_SHOT_MISSING_RATIOS = ((11, 0.25), (6, 0.20), (1, 0.15))
-
-
-def _fourth_shot_missing_ratio(level: int) -> float:
-    """The final round's missing-health ratio: 15/20/25% at levels 1/6/11."""
-    for min_level, ratio in _FOURTH_SHOT_MISSING_RATIOS:
-        if level >= min_level:
-            return ratio
-    return _FOURTH_SHOT_MISSING_RATIOS[-1][1]
 
 
 def _final_round_active(ctx: SlotCtx) -> bool:
@@ -82,7 +74,7 @@ def _whisper(ctx: SlotCtx) -> dict[str, Any] | None:
     if entry is not None:
         entry["stat_buff"] = {"bonus_attack_damage": bonus_ad}
         if _final_round_active(ctx):
-            missing = _fourth_shot_missing_ratio(ctx.level)
+            missing = at_level(_FOURTH_SHOT_MISSING_RATIOS, ctx.level)
             entry["parts"] = (
                 DamagePart(
                     "physical",
@@ -120,7 +112,9 @@ def _final_round(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     target_max = float(ctx.target_stat("target_max_health") or 0.0)
     missing_ratio = min(max(float(ctx.option("p_missing_health")), 0.0), 1.0)
-    per_round = _fourth_shot_missing_ratio(ctx.level) * target_max * missing_ratio
+    per_round = (
+        at_level(_FOURTH_SHOT_MISSING_RATIOS, ctx.level) * target_max * missing_ratio
+    )
     if per_round <= 0.0:
         return None
     count = _final_round_count(ctx)
@@ -134,7 +128,7 @@ def _final_round(ctx: SlotCtx) -> dict[str, Any] | None:
         "proc_count": count,
         "detail": (
             f"{count} final round(s) x {per_round:.2f} bonus physical damage "
-            f"({_fourth_shot_missing_ratio(ctx.level):.0%} of target missing "
+            f"({at_level(_FOURTH_SHOT_MISSING_RATIOS, ctx.level):.0%} of target missing "
             "health at the declared missing-health ratio)."
         ),
     }

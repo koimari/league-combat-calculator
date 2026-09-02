@@ -63,7 +63,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_contract import coverage
-from .module_helpers import delayed_damage, no_damage
+from .module_helpers import delayed_damage, no_damage_slot
 from .slotlib import (
     ability_name,
     by_option,
@@ -435,56 +435,38 @@ def _singularity(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _cosmic_creator(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: the permanent Stardust counter — documented zero-damage row.
-
-    P grants no damage of its own; it only parameterizes Q's burst and
-    E's execute threshold through the ``stardust_stacks`` option, both
-    priced above via ``AURELION_SOL_STARDUST_RULE``.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Cosmic Creator grants Aurelion Sol permanent Stardust stacks "
-            "from his damaging abilities; the cached entry's own leveling "
-            "is empty (data/champions.json AurelionSol P) and the game "
-            "binary's passive spell record carries no damage-type field "
-            "(data/bin/characters/aurelionsol.bin.json, "
-            "AurelionSolPassiveAbility) — its only mSpellCalculations "
-            "(QPassiveScaling, EPassiveScalingExecute) are the shared "
-            "scaling formulas Q's burst and E's execute threshold already "
-            "read via stardust_stacks. P itself prices nothing."
-        ),
-    )
+# P: the permanent Stardust counter — documented zero-damage row.
+#
+# P grants no damage of its own; it only parameterizes Q's burst and
+# E's execute threshold through the ``stardust_stacks`` option, both
+# priced above via ``AURELION_SOL_STARDUST_RULE``.
+_cosmic_creator = no_damage_slot(
+    "Cosmic Creator grants Aurelion Sol permanent Stardust stacks "
+    "from his damaging abilities; the cached entry's own leveling "
+    "is empty (data/champions.json AurelionSol P) and the game "
+    "binary's passive spell record carries no damage-type field "
+    "(data/bin/characters/aurelionsol.bin.json, "
+    "AurelionSolPassiveAbility) — its only mSpellCalculations "
+    "(QPassiveScaling, EPassiveScalingExecute) are the shared "
+    "scaling formulas Q's burst and E's execute threshold already "
+    "read via stardust_stacks. P itself prices nothing."
+)
 
 
-def _astral_flight(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: the damage-less dash — documented zero-damage row.
-
-    W's only calc effect is Q's beam flat-damage modifier
-    (``_w_beam_modifier`` above), already gated by the ``w_active``
-    option; W itself carries no damage attribute.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Astral Flight is a damage-less dash; its only cached "
-            "leveling row is the 'Breath of Light Flat Damage Modifier' "
-            "(108-112%) already consumed as Q's beam multiplier "
-            "(_w_beam_modifier, gated by w_active) — no damage attribute "
-            "belongs to W itself. Corroborated by the game binary "
-            "(AurelionSolWAbility): its mSpellCalculations are DashSpeed "
-            "and dash-speed/level-interpolation helpers only."
-        ),
-    )
+# W: the damage-less dash — documented zero-damage row.
+#
+# W's only calc effect is Q's beam flat-damage modifier
+# (``_w_beam_modifier`` above), already gated by the ``w_active``
+# option; W itself carries no damage attribute.
+_astral_flight = no_damage_slot(
+    "Astral Flight is a damage-less dash; its only cached "
+    "leveling row is the 'Breath of Light Flat Damage Modifier' "
+    "(108-112%) already consumed as Q's beam multiplier "
+    "(_w_beam_modifier, gated by w_active) — no damage attribute "
+    "belongs to W itself. Corroborated by the game binary "
+    "(AurelionSolWAbility): its mSpellCalculations are DashSpeed "
+    "and dash-speed/level-interpolation helpers only."
+)
 
 
 OPTIONS: list[dict[str, Any]] = [

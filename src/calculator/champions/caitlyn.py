@@ -46,6 +46,7 @@ from ..binary_roots import data_value, spell_object
 from ..damage import effective_cooldown
 from .engine import SlotCtx, build_parser
 from .inputs import int_option
+from .module_helpers import at_level
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -69,14 +70,6 @@ _HEADSHOT_LEVEL_RATIOS = ((13, 1.00), (7, 0.80), (1, 0.60))
 _R_CRIT_EFFECTIVENESS = data_value(
     spell_object("Caitlyn", "CaitlynR"), "CriticalStrikeModifier"
 )
-
-
-def _headshot_level_ratio(level: int) -> float:
-    """Headshot's level-bracket AD ratio: 0.60 / 0.80 / 1.00 at 1/7/13."""
-    for min_level, ratio in _HEADSHOT_LEVEL_RATIOS:
-        if level >= min_level:
-            return ratio
-    return _HEADSHOT_LEVEL_RATIOS[-1][1]
 
 
 def _trap_headshot_increase(ctx: SlotCtx) -> float | None:
@@ -195,7 +188,8 @@ def _headshot(ctx: SlotCtx) -> dict[str, Any] | None:
     crit_chance = min(ctx.stat("critical_strike_chance") / 100.0, 1.0)
     bonus_crit_damage = ctx.stat("crit_damage_bonus")
     bonus = total_ad * (
-        _headshot_level_ratio(ctx.level) + crit_chance * (1.0 + bonus_crit_damage)
+        at_level(_HEADSHOT_LEVEL_RATIOS, ctx.level)
+        + crit_chance * (1.0 + bonus_crit_damage)
     )
     trap_increase = _trap_headshot_increase(ctx)
     trap_grants = _trap_grants(ctx)

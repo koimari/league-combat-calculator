@@ -68,7 +68,7 @@ from ..binary_roots import data_value_at_rank, spell_object
 from .engine import SlotCtx, build_parser
 from .inputs import champion_stat, float_option
 from .module_contract import coverage
-from .module_helpers import no_damage
+from .module_helpers import no_damage_slot
 from .slotlib import ability_name, damage_entry, extract_named, simple_damage
 from .source_receipts import load_champion_sources
 
@@ -135,33 +135,24 @@ def _glacial_storm(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _crystallize(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: knockback wall — documented zero-damage row (no_damage).
-
-    The cached ability's leveling rows are all geometry (Width, Number of
-    ice segments, inter-segment distances) — no damage/heal/shield
-    attribute exists. Confirmed against both the atoms capture
-    (data/atoms/anivia.atoms.json: Crystallize's "damage_type": null) and
-    the game binary (data/bin/characters/anivia.bin.json's
-    CrystallizeAbility DataValues: WallDuration, WallWidth, WallChunks,
-    ChampPushDistance, NonChampPushDistance — no damage field).
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Crystallize summons a 5-second knockback wall (width and "
-            "segment count scale by rank); the cached W entry carries no "
-            "damage/heal/shield leveling row at all (data/champions.json "
-            "Anivia W), confirmed against the atoms capture "
-            "(damage_type: null) and the game binary's DataValues "
-            "(WallDuration/WallWidth/WallChunks/ChampPushDistance/"
-            "NonChampPushDistance — no damage field)."
-        ),
-    )
+# W: knockback wall — documented zero-damage row (no_damage).
+#
+# The cached ability's leveling rows are all geometry (Width, Number of
+# ice segments, inter-segment distances) — no damage/heal/shield
+# attribute exists. Confirmed against both the atoms capture
+# (data/atoms/anivia.atoms.json: Crystallize's "damage_type": null) and
+# the game binary (data/bin/characters/anivia.bin.json's
+# CrystallizeAbility DataValues: WallDuration, WallWidth, WallChunks,
+# ChampPushDistance, NonChampPushDistance — no damage field).
+_crystallize = no_damage_slot(
+    "Crystallize summons a 5-second knockback wall (width and "
+    "segment count scale by rank); the cached W entry carries no "
+    "damage/heal/shield leveling row at all (data/champions.json "
+    "Anivia W), confirmed against the atoms capture "
+    "(damage_type: null) and the game binary's DataValues "
+    "(WallDuration/WallWidth/WallChunks/ChampPushDistance/"
+    "NonChampPushDistance — no damage field)."
+)
 
 
 OPTIONS = [
