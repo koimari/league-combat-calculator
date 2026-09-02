@@ -5660,7 +5660,6 @@ def _split_or_ref(
 def _stat_conversion_rules(
     owner: str,
     registry: ValueRegistry,
-    entry: Mapping[str, Any],
     schema: frozenset[str],
 ) -> list[BehaviorRule]:
     """Every stat one entry derives from another, in table order."""
@@ -6003,7 +6002,7 @@ def _compile_stat_derivation(
     """
     del family
     schema = _schema_keys(owner, registry, entry)
-    rules = _stat_conversion_rules(owner, registry, entry, schema)
+    rules = _stat_conversion_rules(owner, registry, schema)
     rules.extend(
         _stat_rule(
             owner,

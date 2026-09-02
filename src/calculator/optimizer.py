@@ -961,8 +961,6 @@ class _PurchaseSearch:
                 sell_items=[sell] if sell else None,
                 combine_items=combines,
                 combine_policy=self.combine_policy,
-                role=self.role,
-                role_quest_complete=self.role_quest_complete,
                 # Receipt-only shop scan, recomputed for the winner.
                 flag_incomplete_combine=False,
             )

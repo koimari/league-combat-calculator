@@ -1603,7 +1603,6 @@ def run_fight(
     # event-order panel. ``order`` is the engine's actual cooldown-aware
     # cast sequence; ``rationale`` explains the combo.
     result["rotation"] = build_rotation_receipt(
-        champion_data.get("name", ""),
         cast_order=list(params.cast_order or []),
         cast_timeline=list(result.get("cast_timeline", [])),
         rule=resolved_rotation_rule,

@@ -3,8 +3,8 @@
 CURRENT RUNTIME FACTS (verified on branch codex/after-skyway):
 
 - ``src/calculator/champions/yasuo.py`` ships ``_way_of_the_wanderer``: the
-  P crit-conversion payload ``crit_modifier`` (``_CRIT_CHANCE_MULTIPLIER``
-  2.0, ``_CRIT_DAMAGE_MULTIPLIER_FACTOR`` 0.9, ``_EXCESS_CRIT_BONUS_AD_PER_PERCENT``
+  P crit-conversion payload ``crit_modifier`` (``CRIT_CHANCE_MULTIPLIER``
+  2.0, ``CRIT_DAMAGE_MULTIPLIER_FACTOR`` 0.9, ``EXCESS_CRIT_BONUS_AD_PER_PERCENT``
   0.5) plus the Q (Steel Tempest) entry whose AD-ratio part declares
   ``crit_effectiveness=1.0``.  The fight engine (``damage.py``
   ``_apply_stat_buff_ultimates`` ~2590-2640, part pricing ~3064) applies the
@@ -966,9 +966,9 @@ class TestAtomAndSourceReceipts:
 
     def test_atom_backed_certification_of_p_constants(self):
         # The completion should expose an atom-backed certification (atom
-        # ids + hashes) for _CRIT_CHANCE_MULTIPLIER,
-        # _CRIT_DAMAGE_MULTIPLIER_FACTOR, and
-        # _EXCESS_CRIT_BONUS_AD_PER_PERCENT so a patch that changes the
+        # ids + hashes) for CRIT_CHANCE_MULTIPLIER,
+        # CRIT_DAMAGE_MULTIPLIER_FACTOR, and
+        # EXCESS_CRIT_BONUS_AD_PER_PERCENT so a patch that changes the
         # roots trips the tests.
         from src.calculator.champions import (
             yasuo as yasuo_module,

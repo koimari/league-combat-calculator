@@ -165,13 +165,11 @@ def _compile_legend_haste(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     )
 
 
-def _target_health_amp(name: str, entry: Mapping[str, Any]) -> RuneConditionalAmpEffect:
+def _target_health_amp(name: str) -> RuneConditionalAmpEffect:
     """Compile one target-health-gated amplifier: the rune's identity, no more.
 
-    Its share, its amplifier and which side of the threshold arms it are the
-    amp chain's ``TARGET_HEALTH_GATE`` declaration.
-    """
-    del entry  # every number this rune prices is the chain's declaration
+    Its share, its amplifier and its side of the threshold (Coup de Grace
+    below, Cut Down above) are the amp chain's ``TARGET_HEALTH_GATE`` row."""
     return RuneConditionalAmpEffect(
         rune_name=name,
         breakdown_key=breakdown_key(name),
@@ -270,16 +268,6 @@ def _compile_triumph(entry: Mapping[str, Any]) -> RuneHealEffect:
     )
 
 
-def _compile_coup_de_grace(entry: Mapping[str, Any]) -> RuneConditionalAmpEffect:
-    """Compile Coup de Grace: more damage to a champion below a health share."""
-    return _target_health_amp("Coup de Grace", entry)
-
-
-def _compile_cut_down(entry: Mapping[str, Any]) -> RuneConditionalAmpEffect:
-    """Compile Cut Down: more damage to a champion above a health share."""
-    return _target_health_amp("Cut Down", entry)
-
-
 #: Last Stand's gate is the holder's own health, and the pair engine prices
 #: outgoing damage without tracking it — so the health it reads is an option
 #: with a disclosed default (decision 5). The default is full health, which
@@ -373,8 +361,8 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
     "Legend: Alacrity": _compile_legend_alacrity,
     "Legend: Haste": _compile_legend_haste,
     "Legend: Bloodline": _compile_legend_bloodline,
-    "Coup de Grace": _compile_coup_de_grace,
-    "Cut Down": _compile_cut_down,
+    "Coup de Grace": lambda entry: _target_health_amp("Coup de Grace"),
+    "Cut Down": lambda entry: _target_health_amp("Cut Down"),
     "Last Stand": _compile_last_stand,
 }
 

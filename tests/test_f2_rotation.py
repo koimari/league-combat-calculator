@@ -867,7 +867,6 @@ class TestTimedCadence:
 
     def test_receipt_fallback_documents_the_default_order(self) -> None:
         receipt = build_rotation_receipt(
-            "NoSuchChampion",
             cast_order=list(DEFAULT_CAST_ORDER),
             cast_timeline=[],
             rule=None,

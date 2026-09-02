@@ -1502,8 +1502,7 @@ def _matrix_dps_rows(  # pylint: disable=import-outside-toplevel
     return rows
 
 
-def _canonical_kit_parse(  # pylint: disable=import-outside-toplevel,unused-argument
-    champion_name: str,
+def _canonical_kit_parse(  # pylint: disable=import-outside-toplevel
     champion_data: Mapping[str, Any],
     champion_options: Mapping[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
@@ -1687,9 +1686,7 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
     # request's parse — the request may be a partial kit (level 1) and the
     # derivation must reflect the champion's complete mechanic surface.  The
     # request's option state is honored so option-gated slots participate.
-    ability_damages = _canonical_kit_parse(
-        champion_name, champion_data, champion_options
-    )
+    ability_damages = _canonical_kit_parse(champion_data, champion_options)
 
     from .champions import (  # pylint: disable=import-outside-toplevel
         get_champion_cast_dependencies,
@@ -2003,8 +2000,7 @@ def rank_ability_dps(
     return ranked
 
 
-def build_rotation_receipt(  # pylint: disable=unused-argument
-    champion_name: str,
+def build_rotation_receipt(
     *,
     cast_order: list[str],
     cast_timeline: Iterable[Any],

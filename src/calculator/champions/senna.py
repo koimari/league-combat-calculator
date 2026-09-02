@@ -113,41 +113,6 @@ _RELIC_CANNON_AD_RATIO = 0.2
 _RELIC_CANNON_DAMAGE_TYPE = "physical"
 
 
-class _RelicCannonRule:
-    """Relic Cannon's per-auto on-hit receipt (wiki + binary)."""
-
-    def public_receipt(self) -> dict[str, Any]:
-        return {
-            "name": "Relic Cannon (on-hit)",
-            "ad_ratio": _RELIC_CANNON_AD_RATIO,
-            "damage_type": _RELIC_CANNON_DAMAGE_TYPE,
-            "source": {
-                "wiki": {
-                    "url": "https://wiki.leagueoflegends.com/en-us/Senna",
-                    "revision_id": 2864157,  # Template:Data_Senna/I
-                    "prose": (
-                        "Senna's basic attacks on-hit deal 20% AD bonus "
-                        "physical damage ... for 0.5 seconds"
-                    ),
-                },
-                "binary": {
-                    "path": (
-                        "data/bin/characters/senna.bin.json "
-                        "SennaPassive mSpellCalculations.BonusOnHitDamage"
-                    ),
-                    "formula": "StatByCoefficient(mStat 2, no mStatFormula, "
-                    "coefficient 0.2) = 20% of TOTAL AD",
-                },
-                "notes": (
-                    "applied only if the attack deals more than 0 damage; "
-                    "not applied against structures; applies an additional "
-                    "Black Cleaver Carve stack; the MS-steal (10/15/20% for "
-                    "0.5s) is utility and not modeled"
-                ),
-            },
-        }
-
-
 # Dawning Shadow's shield duration and Mist scaling are the binary SennaR
 # ShieldDuration DataValue and TotalShield buff-counter coefficient; the
 # cached prose corroborates the 150% term applied to the user-set Mist count.

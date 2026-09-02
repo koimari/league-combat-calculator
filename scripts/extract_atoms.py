@@ -1203,7 +1203,7 @@ def main(argv=None) -> int:
 
     # sanity checks + suggestions are produced by the caller for a curated set;
     # default run emits the generic report without them.
-    sanity, suggestions = build_sanity_and_suggestions(results, vocab)
+    sanity, suggestions = build_sanity_and_suggestions(results)
     report = build_report(results, vocab, sanity, suggestions)
     # Carry over externally-added report sections (e.g. the autoresearch
     # weak-evidence experiment log) so a regeneration never clobbers them.
@@ -1232,7 +1232,7 @@ def main(argv=None) -> int:
     return 0
 
 
-def build_sanity_and_suggestions(results, vocab):
+def build_sanity_and_suggestions(results):
     """Sanity checks for curated mechanics + classifier improvement list."""
     by_champ = {r["champion"]: r for r in results}
     sanity = []

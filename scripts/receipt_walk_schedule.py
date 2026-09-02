@@ -545,10 +545,8 @@ def _probe_rows(champion: str, items: Sequence[str]) -> frozenset[str]:
     )
 
 
-def authored_rows(
-    family: str, owners: Sequence[str], covering: Sequence[str]
-) -> tuple[str, ...]:
-    """Which priced pair-engine rows *family*'s declarations author.
+def authored_rows(owners: Sequence[str], covering: Sequence[str]) -> tuple[str, ...]:
+    """Which priced pair-engine rows *owners*' declarations author.
 
     Ablation, over two domains, and the union of what both find.
 
@@ -855,7 +853,7 @@ def _triage(family: str, entry: Mapping[str, Any]) -> dict[str, Any]:
     through rows it does not author (class ``c``) and owes a named walk-side
     delivery term before it may retire.
     """
-    rows = authored_rows(family, entry["owners"], entry["covering_coupled_scenarios"])
+    rows = authored_rows(entry["owners"], entry["covering_coupled_scenarios"])
     subjects = _subjects(family, entry["owners"])
     holder_scoped = bool(subjects) and set(subjects) == {Subject.HOLDER.value}
     if rows:
@@ -947,7 +945,7 @@ def reclassified_rows() -> dict[str, Any]:
                 for mechanic in ids
             ),
             "covering_coupled_scenarios": covering,
-            "authored_pair_rows": list(authored_rows(family, owners, covering)),
+            "authored_pair_rows": list(authored_rows(owners, covering)),
             "declared_subjects": list(_subjects(family, owners)),
             "ruled_by": RECLASSIFICATION_RULING,
             "closed_as": "not_a_gap",
@@ -1336,7 +1334,7 @@ def corrected_rows() -> dict[str, Any]:
         ]
         served = sorted(registered_lanes(family) - {LANE})
         act = {"retiring_lane": served}
-        triage = {"authored_pair_rows": list(authored_rows(family, owners, covering))}
+        triage = {"authored_pair_rows": list(authored_rows(owners, covering))}
         closed[family] = {
             "closed_row": f"{family}/{LANE}",
             "owners": owners,

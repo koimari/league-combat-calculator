@@ -403,7 +403,7 @@ _INFERENCE_READS_THE_STUN_BACKWARDS = (
     "the mechanic the wrong way round."
 )
 
-CAST_DEPENDENCIES = (
+CAST_DEPENDENCIES = (  # sightline-ok: 32 module_contract reads it by name
     CastDependency(
         slot="E",
         requires="Q",

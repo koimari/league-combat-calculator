@@ -521,7 +521,7 @@ def _attr_matches_game_row(attribute, spell):
     )
 
 
-def game_spells_by_slot(bin_data, champion_name, cache_abilities):
+def game_spells_by_slot(bin_data, champion_name):
     """Locate the game SpellDataResource per wiki ability slot (best-effort).
 
     Q/W/E/R come from CharacterRecord.spellNames in slot order; form-heavy
@@ -578,7 +578,7 @@ def compare_ability_rows(cache_abilities, bin_data, champion_name, ddragon=None)
     needs_ddragon names the slots whose cooldown/cost rows could not be
     arbitrated from the bin alone.
     """
-    by_slot = game_spells_by_slot(bin_data, champion_name, cache_abilities)
+    by_slot = game_spells_by_slot(bin_data, champion_name)
     checked = 0
     stale = 0
     unchecked = 0
