@@ -32,7 +32,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import BUFF, CC_PER_PART, SlotCtx, build_parser
 from .inputs import float_option, int_option
 from .module_helpers import ability_cast_times, ranked_slot
 from .slotlib import (
@@ -431,18 +431,24 @@ SLOTS = {
     "E": _molten_shield,
 }
 
-# MODULE_CC is empty, and the Pyromania walk is why rather than an excuse
-# for it.  The charge is cross-slot: every cast adds one and the next
-# Disintegrate, Incinerate or Summon: Tibbers at the cap "consume[s] all
-# Pyromania stacks to stun enemies hit".  Which casts of a slot are the
-# empowered ones is therefore a property of the fight's cast stream, and a
+# P owns the stun and Q, W and R name themselves per-part, because the
+# charge is cross-slot: every cast adds one and the next Disintegrate,
+# Incinerate or Summon: Tibbers at the cap "consume[s] all Pyromania
+# stacks to stun enemies hit".  Which casts of a slot are the empowered
+# ones is therefore a property of the fight's cast stream, and a
 # slot-level kind is a constant — so neither a slot-wide stun nor a
-# slot-wide "none" is true of Q, W or R, and the walk publishes the derived
-# stun schedule on P's own row instead.  E only makes "enemies that deal
-# damage to it take magic damage", which is no control at all, but its
-# aggregate landing row has no per-hit boundary for a marker to ride.
-# (Kennen's Mark of the Storm is the same shape, per target.)
-MODULE_CC: dict[str, str] = {}
+# slot-wide "none" is true of Q, W or R, no part of them states one, and
+# the walk publishes the derived stun schedule on P's own row.  E only
+# makes "enemies that deal damage to it take magic damage", which is no
+# control at all.  (Kennen's Mark of the Storm is the same shape, per
+# target.)
+MODULE_CC: dict[str, str] = {
+    "P": "stun",
+    "Q": CC_PER_PART,
+    "W": CC_PER_PART,
+    "E": "none",
+    "R": CC_PER_PART,
+}
 
 parse_abilities = build_parser(SLOTS, "Annie", cc_kinds=MODULE_CC)
 

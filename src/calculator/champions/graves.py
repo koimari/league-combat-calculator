@@ -145,7 +145,7 @@ SLOTS = {
 # immobilize and has no kind in the vocabulary); Q's round and detonation
 # and R's shell only damage.  P's Buckshot knockback lands on non-champion
 # units only, and the row authors no damage part anyway; E deals no damage.
-MODULE_CC = {"Q": "none", "W": "slow", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "slow", "R": "none", "P": "none", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Graves", cc_kinds=MODULE_CC)
 

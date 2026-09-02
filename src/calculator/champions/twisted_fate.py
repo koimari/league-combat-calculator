@@ -148,6 +148,6 @@ OPTIONS = [
 # hit" and applies no control; E (Stacked Deck)'s three-stack attack
 # "deal[s] bonus magic damage" and applies none either.  W's answer is the
 # selected card's and is authored on its part above.
-MODULE_CC = {"Q": "none", "W": CC_PER_PART, "E": "none"}
+MODULE_CC = {"Q": "none", "W": CC_PER_PART, "E": "none", "P": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Twisted Fate", cc_kinds=MODULE_CC)

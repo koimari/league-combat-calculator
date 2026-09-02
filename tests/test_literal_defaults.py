@@ -247,13 +247,6 @@ REQUEST_ITEM_STATE = frozenset(
             "item_effects.py",
             "item_state_receipts",
             "dict.get",
-            '"Tear of the Goddess"',
-            1,
-        ),
-        (
-            "item_effects.py",
-            "item_state_receipts",
-            "dict.get",
             '"Yun Tal Wildarrows"',
             1,
         ),
@@ -283,10 +276,10 @@ REQUEST_ITEM_STATE = frozenset(
         ),
         (
             "item_effects.py",
-            "item_state_receipts",
+            "_manaflow_state",
             "dict.get",
             '"manaflow_bonus_mana"',
-            2,
+            1,
         ),
         (
             "item_effects.py",

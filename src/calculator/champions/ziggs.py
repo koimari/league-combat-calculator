@@ -183,7 +183,7 @@ SLOTS = {
 # explodes "dealing magic damage and slowing them for 1.5 seconds".
 # Bouncing Bomb and Mega Inferno Bomb only explode.  P is the Short Fuse
 # empowered basic attack, not an ability event.
-MODULE_CC = {"Q": "none", "W": "knockback", "E": "slow", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "knockback", "E": "slow", "R": "none", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Ziggs", cc_kinds=MODULE_CC)
 

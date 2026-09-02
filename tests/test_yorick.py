@@ -20,7 +20,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Yorick")
-        assert yorick.MODULE_CC == {"Q": "none", "E": "slow", "R": "none"}
+        assert yorick.MODULE_CC == {
+            "Q": "none",
+            "E": "slow",
+            "R": "none",
+            "P": "none",
+            "W": "per_part",
+        }
         assert yorick.parse_abilities.cc_kinds == yorick.MODULE_CC
         assert "slowed by 30% for 1.5 seconds" in cc_review.slot_text(data, "E")
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
@@ -28,7 +34,7 @@ class TestReviewedCrowdControl:
 
     def test_dark_procession_is_absent_because_the_ring_deals_no_damage(self):
         data = cc_review.kit("Yorick")
-        assert "W" not in yorick.MODULE_CC
+        assert yorick.MODULE_CC["W"] == "per_part"
         w_text = cc_review.slot_text(data, "W")
         assert "knocking aside enemies hit by the walls" in w_text
         assert "they are pulled inside" in w_text

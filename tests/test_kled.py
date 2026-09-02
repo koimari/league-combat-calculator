@@ -1,4 +1,4 @@
-"""Kled's reviewed crowd control (``MODULE_CC``), and the slots that withhold.
+"""Kled's reviewed crowd control (``MODULE_CC``), slot by slot.
 
 A control-armed holder shield (Fimbulwinter's Everlasting) has to know
 whether an ability event was a control event; an ability packet that never
@@ -16,7 +16,13 @@ class TestReviewedCrowdControl:
     """Chaaaaaaaarge!!! knocks back, Bear Trap pulls at its tether's end."""
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
-        assert kled.MODULE_CC == {"Q": CC_PER_PART, "W": "none", "R": "knockback"}
+        assert kled.MODULE_CC == {
+            "Q": CC_PER_PART,
+            "W": "none",
+            "R": "knockback",
+            "P": "none",
+            "E": "none",
+        }
         assert kled.parse_abilities.cc_kinds == kled.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -25,7 +31,7 @@ class TestReviewedCrowdControl:
         assert "knock them back 150 units" in cc_review.slot_text(data, "R")
 
     def test_the_trap_and_its_pull_are_two_hits_the_cache_times(self):
-        """Q is not in MODULE_CC because its two hits answer differently:
+        """Q declares CC_PER_PART because its two hits answer differently:
         the thrown trap only reveals and tethers, and the pull 1.75
         seconds later is the immobilize."""
         q_text = cc_review.slot_text(cc_review.kit("Kled"), "Q")
@@ -50,16 +56,18 @@ class TestReviewedCrowdControl:
         (only_trap,) = row_review.parts("Kled", "Q", q_pull=False)
         assert (only_trap.time_offset, only_trap.cc_kind) == (0.0, "none")
 
-    def test_the_unreviewable_slot_keeps_the_fight_coarse(self):
+    def test_the_reviewed_dash_certifies_the_whole_fight(self):
         """Jousting's row is the first dash plus the recast dash, and the
-        cache times the recast only relative to an unstated dash end."""
+        cache times the recast only relative to an unstated dash end, so
+        the two stay one part.  E controls nothing either way, and with
+        that reviewed the kit leaves no ability event without a kind."""
         e_text = cc_review.slot_text(cc_review.kit("Kled"), "E")
         assert (
             "jousting can be recast after 0.5 seconds of the first dash "
             "ending while the target is marked" in e_text
         )
-        assert "E" not in kled.MODULE_CC
-        assert cc_review.unreviewed_ability_slots("Kled") == ["E"]
+        assert kled.MODULE_CC["E"] == "none"
+        assert cc_review.unreviewed_ability_slots("Kled") == []
         coverage = cc_review.fimbulwinter_coverage("Kled")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

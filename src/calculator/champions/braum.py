@@ -38,7 +38,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..stats import effective_cooldown
-from .engine import BUFF, SlotCtx, build_parser
+from .engine import BUFF, CC_PER_PART, SlotCtx, build_parser
 from .inputs import bool_option, float_option
 from .module_helpers import at_level, ranked_slot
 from .slotlib import (
@@ -407,7 +407,7 @@ SLOTS = {
 # Blows stun is not declared here because the proc is not a cast: the
 # slot authors its own timeline events and stamps the level-scaled stun
 # interval on the one that procs.
-MODULE_CC = {"Q": "slow", "R": "knockup"}
+MODULE_CC = {"Q": "slow", "R": "knockup", "P": CC_PER_PART, "W": "none", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "Braum", cc_kinds=MODULE_CC)
 

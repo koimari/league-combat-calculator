@@ -118,12 +118,18 @@ def class_restricted_packets(
 # Which declaration prices its cached clause at the FIGHT's target class, and
 # the clause it prices, named as the cache names it.  A restricted channel
 # answers that from its own packet; this is the reviewed rest, where the class
-# reading lives in a ledger no declaration can carry — Tear's Manaflow ledger is
+# reading lives in a ledger no declaration can carry — a Manaflow ledger is
 # handed the fight's class, so a minion is paid the trigger amount and not the
-# champion one.  Keyed by mechanic id and not by payload type: the four other
-# Manaflow entries declare the same split and none of them is paid one.
+# champion one.  Keyed by mechanic id and not by payload type: each holder is
+# reviewed on its own, and a holder joins only once the ledger runs every
+# trigger its cached clause names (the three on-hit holders spend a charge on
+# a basic attack too, and did not join until that stream ran).
 CLASS_READING_MECHANICS: Mapping[str, str] = {
+    "archangels_staff.mana_charge": "Manaflow",
+    "manamune.mana_charge": "Manaflow",
     "tear_of_the_goddess.mana_charge": "Manaflow",
+    "whispering_circlet.mana_charge": "Manaflow",
+    "winters_approach.mana_charge": "Manaflow",
 }
 
 

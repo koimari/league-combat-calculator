@@ -114,7 +114,7 @@ def _sapling_toss(
 # "roots them for a duration", E's sapling explosion slows "by 45% for 2
 # seconds", and each R bramble "roots them for 0.75 : 2.25 (based on
 # distance travelled) seconds".  P is a self-heal on-hit.
-MODULE_CC = {"Q": "slow", "W": "root", "E": "slow", "R": "root"}
+MODULE_CC = {"Q": "slow", "W": "root", "E": "slow", "R": "root", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Maokai",

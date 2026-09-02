@@ -29,6 +29,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "slow",
             "R": "slow",
+            "P": "none",
         }
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
         # E's stun and knock-back reach only "a minion or non-epic monster";

@@ -21,7 +21,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Mordekaiser")
-        assert mordekaiser.MODULE_CC == {"Q": "none", "E": "pull"}
+        assert mordekaiser.MODULE_CC == {
+            "Q": "none",
+            "E": "pull",
+            "P": "none",
+            "W": "none",
+            "R": "slow",
+        }
         assert mordekaiser.parse_abilities.cc_kinds == mordekaiser.MODULE_CC
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert "pulls them over 250 units" in cc_review.slot_text(data, "E")
@@ -35,13 +41,15 @@ class TestReviewedCrowdControl:
         assert part.time_offset == 0.5
         assert part.cc_kind == "pull"
 
-    def test_the_state_only_slots_emit_no_ability_event(self):
-        """W and R deal no enemy damage, so they carry no reviewable kind."""
+    def test_the_state_only_slots_have_no_part_to_carry_their_kind(self):
+        """W and R deal no enemy damage, so the kinds declared for them
+        land on nothing: R's 75% cast-time slow is the kit's fact and the
+        Realm of Death row prices no part it could ride."""
         data = cc_review.kit("Mordekaiser")
         parsed = parse_champion_abilities(data, 18, 100.0, _RANKS)
+        assert "slowing them by 75%" in cc_review.slot_text(data, "R")
         for slot in ("W", "R"):
-            assert slot not in mordekaiser.MODULE_CC
-            assert parsed[slot]["parts"] == ()
+            assert cc_review.declared_parts(parsed, slot) == (), slot
 
     def test_the_reviewed_kit_clears_the_control_armed_scan(self):
         assert cc_review.unreviewed_ability_slots("Mordekaiser") == []

@@ -20,7 +20,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Viego")
-        assert viego.MODULE_CC == {"Q": "none", "W": "stun", "R": "slow"}
+        assert viego.MODULE_CC == {
+            "Q": "none",
+            "W": "stun",
+            "R": "slow",
+            "P": "none",
+            "E": "none",
+        }
         assert viego.parse_abilities.cc_kinds == viego.MODULE_CC
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert "stuns them for" in cc_review.slot_text(data, "W")
@@ -36,8 +42,8 @@ class TestReviewedCrowdControl:
         E is ``modeled`` all the same: the mist's attack speed is a
         priced stat_buff row.  P grants nothing the engine prices.
         """
-        assert "E" not in viego.MODULE_CC
-        assert "P" not in viego.MODULE_CC
+        assert viego.MODULE_CC["E"] == "none"
+        assert viego.MODULE_CC["P"] == "none"
         assert get_champion_module_contract("Viego").coverage["E"] == "modeled"
         assert get_champion_module_contract("Viego").coverage["P"] == "no_damage"
 

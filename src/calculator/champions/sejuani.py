@@ -93,7 +93,13 @@ def _winters_wrath(
 # answer for the target this row prices.  W answers per swing
 # (``_winters_wrath``).  P is absent: Icebreaker's bonus rides Sejuani's
 # next attack or ability rather than emitting an ability event of its own.
-MODULE_CC = {"Q": "knockup", "W": CC_PER_PART, "E": "immobilize", "R": "stun"}
+MODULE_CC = {
+    "Q": "knockup",
+    "W": CC_PER_PART,
+    "E": "immobilize",
+    "R": "stun",
+    "P": "none",
+}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Sejuani",

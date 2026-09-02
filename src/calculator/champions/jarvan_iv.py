@@ -196,7 +196,7 @@ SLOTS = {
 # E's flag only damages on landing.  R's impact "knocks aside enemies
 # within the perimeter".  P is the on-hit row; W's own row deals no
 # damage, and its slow is control this model does not price.
-MODULE_CC = {"Q": "none", "E": "none", "R": "knockback"}
+MODULE_CC = {"Q": "none", "E": "none", "R": "knockback", "P": "none", "W": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Jarvan IV", cc_kinds=MODULE_CC)
 

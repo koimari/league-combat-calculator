@@ -102,6 +102,37 @@ def _main_survival(combat):
 
 
 # ---------------------------------------------------------------------------
+# The re-bind every module-authored payload declares
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("champion", "slot", "source"),
+    [
+        ("Vi", "Q", "Blast Shield"),
+        ("Malphite", "Q", "Granite Shield"),
+        ("Camille", "W", "Adaptive Defenses"),
+        ("Shen", "E", "Ki Barrier"),
+    ],
+)
+def test_a_module_authored_payload_declares_the_ability_hit_rebind(
+    champion, slot, source
+):
+    """One producer, so one declaration: whatever calls it re-binds.
+
+    ``slotlib.attach_self_shield`` is the only writer of a module's
+    ``self_shield_events`` payload, so the flag it stamps reaches all
+    seventeen callers.  The walk reads it to move a rider whose authored
+    carrier was blocked onto the first ability packet the holder lands
+    (``survival.transitions._rebind_self_shields``).
+    """
+    _, abilities = _parse(champion)
+    (payload,) = abilities[slot]["self_shield_events"]
+    assert payload["source"] == source
+    assert payload["rebind_on_ability_hit"] is True
+
+
+# ---------------------------------------------------------------------------
 # Annie E — Molten Shield (scanner-emitted: flat + 40% AP at the cast)
 # ---------------------------------------------------------------------------
 

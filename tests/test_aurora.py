@@ -356,6 +356,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "slow",
             "R": "slow",
+            "P": "none",
         }
         assert "slows them by 80%" in " ".join(cc_review.slot_text(data, "E").split())
         assert "slow them by 30%" in " ".join(cc_review.slot_text(data, "R").split())

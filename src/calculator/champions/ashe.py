@@ -244,7 +244,7 @@ SLOTS = {
 # and P are auto-attack riders that emit no ability damage of their own —
 # their Frost Shot slow rides the basic attacks, which this scan does not
 # read as ability control.  E is vision only.
-MODULE_CC = {"W": "slow", "R": "stun", "E": "none"}
+MODULE_CC = {"W": "slow", "R": "stun", "E": "none", "P": "slow", "Q": "none"}
 
 parse_abilities = build_parser(SLOTS, "Ashe", cc_kinds=MODULE_CC)
 

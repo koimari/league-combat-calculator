@@ -403,7 +403,7 @@ SLOTS = {
 # champions and monsters he passes through and taunting them for 1.5
 # seconds".  Both rows already carry their authored swing/dash timing, so
 # the declaration rides an event the ledger can see.
-MODULE_CC = {"E": "taunt", "Q": "slow"}
+MODULE_CC = {"E": "taunt", "Q": "slow", "W": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Shen", cc_kinds=MODULE_CC)
 

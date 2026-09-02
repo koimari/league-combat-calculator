@@ -55,7 +55,7 @@ PACKET_SHA256 = "2590188ce529af2e9f91b00238597c2b85f6f388447f0e0f4f34f6e9c4b692f
 # slowing them by 70%" — the knock-up is the immobilize the slow rides with.
 # P is absent: Surging Tides only grants allies movement speed and damages
 # nothing, so no event of its own could carry an answer.
-MODULE_CC = {"Q": "airborne", "W": "none", "E": "slow", "R": "knockup"}
+MODULE_CC = {"Q": "airborne", "W": "none", "E": "slow", "R": "knockup", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Nami",

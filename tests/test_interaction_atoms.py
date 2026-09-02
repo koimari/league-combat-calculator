@@ -1034,11 +1034,11 @@ def test_additional_structured_cc_rows_emit_typed_duration(
         # shatter's "Stun Duration" is sourced, but a row that is two
         # landings certifies no single hit, so no kind on it could reach
         # the ledger and the slot stays unreviewed rather than guessing.
-        ("Anivia", "Q", None, "Stun Duration"),
+        ("Anivia", "Q", "per_part", "Stun Duration"),
         # Sear's stun is an "Ablaze Bonus" branch: whether a cast controls
         # depends on the target's stack state at that cast, not on the
         # slot, and one kind per slot cannot say both.
-        ("Brand", "Q", None, None),
+        ("Brand", "Q", "per_part", None),
         # Fling's unconditional control is the displacement it names; the
         # root is a second cached effect gated on the target landing in
         # Mega Adhesive, a condition the engine does not track.

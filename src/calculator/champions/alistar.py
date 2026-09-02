@@ -377,7 +377,13 @@ SLOTS = {
 # its two parts disagree (see _trample); P deals no damage and R's own
 # self-cleanse is not a control effect applied to a target, so neither
 # names a CC kind here.
-MODULE_CC = {"Q": "immobilize", "W": "immobilize", "E": CC_PER_PART}
+MODULE_CC = {
+    "Q": "immobilize",
+    "W": "immobilize",
+    "E": CC_PER_PART,
+    "P": "none",
+    "R": "none",
+}
 
 parse_abilities = build_parser(SLOTS, "Alistar", cc_kinds=MODULE_CC)
 

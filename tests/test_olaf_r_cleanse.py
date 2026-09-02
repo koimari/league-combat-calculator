@@ -85,8 +85,8 @@ fail-closed behavior.  CURRENT RUNTIME FACTS (verified before pinning):
   arms nothing), the stat-buff packet kernel (bonus_armor /
   bonus_magic_resistance fields; NO bonus-AD / size / movement fields
   on the stat-buff action), and the score gate
-  (unrepresentable_template_receipt: support_kind=cleanse /
-  support_kind=stat_buff / support_kind=movement; crowd_control_resist
+  (unrepresentable_template_receipt: support_kind=stat_buff /
+  support_kind=movement; cleanse and crowd_control_resist
   representable).
 - Walk dispatch order (same-time ordering): SHIELD / STAT_BUFF /
   UTILITY kinds dispatch BEFORE the attacker-state gate (the
@@ -109,8 +109,8 @@ rows have NO kernel stat-buff field today — the AD+25%-AD and the 10%
 size are receipted as named-unsupported or new fields, the first-
 second MS could ride the movement utility surface) + the named
 denials (use_spent / unknown_control / caster_control_blocks_cleanse),
-and the score fails closed (support_kind=cleanse / stat_buff /
-movement — never a silent re-price).  This matrix pins the CONTRACT;
+and the score fails closed (support_kind=stat_buff / movement — never
+a silent re-price; the cleanse itself stages).  This matrix pins the CONTRACT;
 genuinely-absent mechanics are pytest.mark.xfail (non-strict) with
 reason "awaiting P2-9 ..." — the completion removes the markers.
 
@@ -148,9 +148,9 @@ Contract sections (numbered as in the RLM-2 C brief):
       cleanse-vs-immunity-vs-stat-buff ordering xfailed).
   S10 Missing identity or rows (resolve_cleanse_item fails closed
       naming the source PASS; the require_named_leveling fail-loud precedent).
-  S11 Score fail-closed (the generic gates PASS: support_kind=cleanse /
-      stat_buff / movement / support_cleanse; crowd_control_resist
-      representable — never a silent re-price).
+  S11 Score fail-closed (the generic gates PASS: support_kind=stat_buff
+      / movement; cleanse and crowd_control_resist representable —
+      never a silent re-price).
   S12 Full vs score parity (the Q/W/E/R engine surface byte-identical
       today in both fight modes; the named R divergence xfailed).
   S13 Unchanged boundaries (Q/E damage, the W shield E8c, the module
@@ -197,7 +197,7 @@ from src.calculator.crowd_control_eligibility import (
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.defensive_effects import StartingDefenses
-from src.calculator.participant_timeline import Combatant
+from src.calculator.participant_timeline import Combatant, _WalkCompiler
 from src.calculator.survival.actions import SUPPORT_RANK_KEY, TransitionRank
 from src.calculator.survival.compile import unrepresentable_template_receipt
 from tests.app_config import app_config
@@ -2022,15 +2022,13 @@ class TestMissingIdentityAndRows:
 
 class TestScoreFailClosed:
     def test_score_gate_names_fail_closed_receipts(self):
-        # PASS (the brief's contract #12): the compiled score path
-        # ALREADY fails closed on every Olaf R authoring shape — a
-        # cleanse-kind template (support_kind=cleanse), a stat-buff
-        # template (support_kind=stat_buff) and a movement template
-        # (support_kind=movement) are unrepresentable; the
-        # crowd_control_resist arm stays representable; a heal packet
-        # carrying the cleanse marker fails with support_cleanse.  The
-        # P2-9 wiring must route the R packets through this gate (never
-        # silently re-price the buffs or drop the cleanse).
+        # PASS (the brief's contract #12): of the Olaf R authoring
+        # shapes the compiled score path stages the cleanse (#226) and
+        # the crowd_control_resist arm, and fails closed on the stat-buff
+        # (support_kind=stat_buff) and the movement (support_kind=
+        # movement).  The P2-9 wiring must route the R packets through
+        # this gate — never silently re-price the buffs or drop the
+        # cleanse.
         template = {
             "kind": "cleanse",
             "amount": 1.0,
@@ -2043,7 +2041,7 @@ class TestScoreFailClosed:
             "target": "main",
             "_event_id": "main:cleanse:R:0",
         }
-        assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
+        assert unrepresentable_template_receipt(template) is None
         assert (
             unrepresentable_template_receipt(
                 {"kind": "stat_buff", "amount": 0.0, "bonus_armor": 20.0}
@@ -2058,7 +2056,7 @@ class TestScoreFailClosed:
             unrepresentable_template_receipt(
                 {"kind": "heal", "amount": 100.0, "cleanse": True}
             )
-            == "support_cleanse"
+            is None
         )
         # The Slice 8 resist arm is representable (it only arms state).
         assert (
@@ -2069,29 +2067,32 @@ class TestScoreFailClosed:
         )
 
     def test_score_gate_never_reprices_a_cleanse_carrying_heal(self):
-        # PASS: the same packet WITH the cleanse marker flips from
-        # representable to the named receipt — the gate can never
-        # silently re-price a cleanse-carrying packet as a plain heal.
+        # PASS: both packets compile, and the marker is what tells them
+        # apart on the compiled action — a staged cleanse that arrived
+        # without it would be the silent re-price as a plain heal.
         heal_template = {
             "kind": "heal",
             "amount": 100.0,
+            "attacker": "main",
+            "target": "main",
             "source": _R_CLEANSE_SOURCE,
             "time": 0.5,
         }
+        marked = {**heal_template, "cleanse": True, "cleanse_item": _R_CLEANSE_ITEM}
         assert unrepresentable_template_receipt(heal_template) is None
-        marked = {**heal_template, "cleanse": True}
-        assert unrepresentable_template_receipt(marked) == "support_cleanse"
+        assert unrepresentable_template_receipt(marked) is None
+        compiler = _WalkCompiler()
+        compiler.add_support_templates([heal_template, marked], 0, {"main": 0})
+        plain, cleansing = compiler.actions
+        assert (plain.cleanse, plain.cleanse_item) == (False, "")
+        assert (cleansing.cleanse, cleansing.cleanse_item) == (True, _R_CLEANSE_ITEM)
 
     def test_wired_score_models_or_receipts_the_r(self):
         # P2-9 contract (the brief's contract #12): score_only either
-        # models the R identically (the QSS/Mercurial compiled path) or
-        # returns the named receipt — never a silent re-price.  The
-        # current gate receipts (support_kind=cleanse / stat_buff /
-        # movement) are the named divergence the compiled path must
-        # publish in its notes.
-        # The engine score path prices the R surface identically (0
-        # damage) and the couple score gates name the fail-closed
-        # receipts for the R packets — never a silent re-price.
+        # models the R identically or returns the named receipt — never a
+        # silent re-price.  The cleanse now models; the remaining named
+        # divergences (support_kind=stat_buff / movement) are what the
+        # compiled path publishes in its notes.
         scored = _fight({}, one_rotation=True, score_only=True)
         assert scored["breakdown"]["R"]["total_damage"] == 0.0
         template = {
@@ -2106,7 +2107,7 @@ class TestScoreFailClosed:
             "target": "main",
             "_event_id": "main:olaf:r:cleanse:0",
         }
-        assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
+        assert unrepresentable_template_receipt(template) is None
 
 
 # ---------------------------------------------------------------------------

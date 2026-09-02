@@ -291,7 +291,7 @@ SLOTS = {
 # rides its parts.  E authors no damage part, and P's mark-consumption row
 # is an effect-phase proc with a module-built event list the marker would
 # not reach.
-MODULE_CC = {"Q": "slow", "W": CC_PER_PART, "R": "stun"}
+MODULE_CC = {"Q": "slow", "W": CC_PER_PART, "R": "stun", "P": "none", "E": "none"}
 
 parse_abilities = build_parser(SLOTS, "K'Sante", cc_kinds=MODULE_CC)
 OPTIONS = [

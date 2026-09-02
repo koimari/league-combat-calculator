@@ -87,7 +87,7 @@ PACKET_SHA256 = "96b6e873251ff23f700da4de3600cae2000d53929d77f7f315a48a227ac81d3
 # are Nidalee's own movement and form swap.  Every damaging slot says so
 # explicitly, which is what lets control-armed item passives price a
 # Nidalee fight instead of withholding on an unreviewed kit.
-MODULE_CC = {"Q": "none", "W": "none", "E": "none"}
+MODULE_CC = {"Q": "none", "W": "none", "E": "none", "P": "none", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Nidalee",

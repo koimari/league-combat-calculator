@@ -423,7 +423,7 @@ class WalkResult:
 
 
 def walk(
-    actions: Sequence[SurvivalAction],
+    actions: list[SurvivalAction],
     ctx: TransitionContext,
     *,
     coverage: Sequence[Mapping[str, Any]] = (),

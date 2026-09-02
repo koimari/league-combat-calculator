@@ -129,7 +129,7 @@ _runic_blade.phase = ONHIT
 # and this module prices one slash rather than that specific one.  E deals
 # no damage, P is an on-hit rider on the auto stream, and R_buff is the AD
 # steroid with a zero-damage row, so none of the three carries an event.
-MODULE_CC = {"Q": "none", "W": "stun", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "stun", "R": "none", "P": "none", "E": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Riven",

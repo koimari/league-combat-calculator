@@ -170,7 +170,7 @@ SLOTS["E"] = with_item_on_hits(
 # Cached kit review: nothing in Katarina's kit applies crowd control.  Q
 # bounces, W tosses a dagger and grants movement speed, E blinks, and R's
 # only debuff is Grievous Wounds (healing reduction, not control).
-MODULE_CC = {"Q": "none", "E": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "E": "none", "R": "none", "P": "none", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Katarina", cc_kinds=MODULE_CC)
 

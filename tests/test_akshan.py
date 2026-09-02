@@ -449,16 +449,20 @@ class TestFightEngineIntegration:
 
 
 class TestReviewedCrowdControl:
-    """Akshan's crowd-control review, and the slot that still withholds.
-
-    E's shots ride their cached 0.231-second beat, so its review reaches
-    the ledger.  Q's row is the cached 'Total Physical Damage' of both
-    boomerang passes, and the return pass has no cached arrival time.
+    """Akshan's kit is control-free, and every slot declares it.  E's shots
+    ride their cached 0.231-second beat; Q's row is both boomerang passes
+    summed, on a landing the cache never times.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Akshan")
-        assert akshan.MODULE_CC == {"R": "none", "P": "none", "E": "none"}
+        assert akshan.MODULE_CC == {
+            "R": "none",
+            "P": "none",
+            "E": "none",
+            "Q": "none",
+            "W": "none",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "P")) == []
         # E's own text names control only as something done TO Akshan
@@ -480,15 +484,16 @@ class TestReviewedCrowdControl:
         assert part.hit_interval == 0.231
         assert part.cc_kind == "none"
 
-    def test_avengerangs_return_pass_has_no_cached_arrival(self):
-        """The one slot that still withholds, and the sentence that proves it."""
+    def test_avengerangs_two_passes_review_to_none(self):
+        """The cached return pass has no arrival time; Q declares "none"
+        all the same, so no ability source is left unreviewed."""
         text = cc_review.slot_text(cc_review.kit("Akshan"), "Q")
         assert (
             "once the boomerang has passed its original range and has not hit a "
             "target in the last 500 units of travelling, it homes back to akshan "
             "and applies the same effects to enemies hit." in text
         )
-        assert cc_review.unreviewed_ability_slots("Akshan") == ["Q"]
+        assert cc_review.unreviewed_ability_slots("Akshan") == []
         coverage = cc_review.fimbulwinter_coverage("Akshan")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert coverage["coarse_sources"] == []

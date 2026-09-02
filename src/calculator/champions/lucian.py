@@ -108,7 +108,7 @@ PACKET_SHA256 = "3fe0c536a453a203c13c7bb713274cbc217785ea29e4723c090c474b7607b9e
 # laser, W marks its targets and grants HIM movement speed, E is a dash,
 # and R is 22 shots.  (Vigilance reads an ally's immobilize; it applies
 # none of its own.)
-MODULE_CC = {"Q": "none", "W": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "none", "R": "none", "P": "none", "E": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Lucian",

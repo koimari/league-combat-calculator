@@ -4,6 +4,7 @@ import pytest
 
 from src.calculator import economy
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.item_effects import manaflow_items
 from src.calculator.loadout_rules import (
     ITEM_EXCLUSIVITY_GROUPS,
     exclusivity_groups,
@@ -595,7 +596,10 @@ def test_one_open_slot_is_exhaustive_for_modeled_items_and_has_runner_up():
         locked_boots="Sorcerer's Shoes",
     )
 
-    assert result["is_certified_best"] is False
+    # Both halves of the conjunction hold: every legal candidate is
+    # modelled, and every slot of Ahri's kit states its reviewed control,
+    # so no candidate evaluates coarsely.
+    assert result["is_certified_best"] is True
     assert result["search_guarantee"] == "exhaustive_legal_candidates"
     assert result["candidate_coverage"]["withheld_count"] == 0
     assert len(result["ranked_builds"]) == 2
@@ -608,11 +612,11 @@ def test_candidate_coverage_alone_does_not_certify_a_coarse_search(
     """Certification is a conjunction, and this is the half that fails.
 
     Candidate coverage is complete here by construction, but one candidate
-    — Fimbulwinter — evaluates coarsely: Everlasting needs an authored
-    immobilize/slow marker on the ability packet that armed it, and Ahri's
-    W and R carry no ``cc_kind`` (``MODULE_CC`` names only the slots that
-    bear crowd control).  So the search is exhaustive over a complete
-    candidate set and still not certified, which is exactly the
+    — Fimbulwinter — evaluates coarsely: Everlasting arms on an authored
+    immobilize or slow, and Anivia's Q and R name themselves ``per_part``
+    with no part answering, so their rows reach the ledger with no
+    reviewed crowd-control state.  The search is exhaustive over a
+    complete candidate set and still not certified, which is exactly the
     distinction the two coverage fields exist to keep apart.  The
     both-axes-true case is the test below, which makes the timelines exact
     as well.
@@ -630,8 +634,8 @@ def test_candidate_coverage_alone_does_not_certify_a_coarse_search(
     )
 
     result = optimize_build(
-        "Ahri",
-        get_champion("Ahri"),
+        "Anivia",
+        get_champion("Anivia"),
         level=18,
         max_legendary_slots=2,
         locked_items=["Rabadon's Deathcap"],
@@ -926,7 +930,12 @@ class TestExclusivityGroupsAccessor:
             "Blight",
             "Fatality",
             "Immolate",
+            "Manaflow",
         }
+
+    def test_manaflow_group_holds_every_charge_ledger_item(self):
+        """One named unique passive, so a build benefits from one holder."""
+        assert exclusivity_groups()["Manaflow"] == sorted(manaflow_items())
 
     def test_glory_group_members(self):
         groups = exclusivity_groups()

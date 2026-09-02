@@ -24,7 +24,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Twisted Fate")
-        assert twisted_fate.MODULE_CC == {"Q": "none", "W": CC_PER_PART, "E": "none"}
+        assert twisted_fate.MODULE_CC == {
+            "Q": "none",
+            "W": CC_PER_PART,
+            "E": "none",
+            "P": "none",
+            "R": "none",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
 

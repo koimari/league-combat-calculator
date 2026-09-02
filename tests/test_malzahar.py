@@ -26,6 +26,8 @@ class TestReviewedCrowdControl:
             "Q": "silence",
             "E": "none",
             "R": "suppression",
+            "P": "none",
+            "W": "none",
         }
         assert malzahar.parse_abilities.cc_kinds == malzahar.MODULE_CC
         assert "are dealt magic damage and silenced for a duration" in (
@@ -48,7 +50,7 @@ class TestReviewedCrowdControl:
     def test_the_swarm_is_a_pet_row_not_an_ability_event(self):
         """W's cast authors no part; its Voidlings ride their own row."""
         data = cc_review.kit("Malzahar")
-        assert "W" not in malzahar.MODULE_CC
+        assert malzahar.MODULE_CC["W"] == "none"
         parsed = parse_champion_abilities(
             data,
             18,

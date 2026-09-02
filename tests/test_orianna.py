@@ -254,6 +254,7 @@ class TestReviewedCrowdControl:
             "W": "slow",
             "E": "none",
             "R": "stun",
+            "P": "none",
         }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
@@ -268,7 +269,7 @@ class TestReviewedCrowdControl:
         r_text = cc_review.slot_text(data, "R")
         assert "stuns them for 0.75 seconds, and pulls them over 325 units" in r_text
         # P is absent: Clockwork Windup rides the auto stream on-hit.
-        assert "P" not in orianna.MODULE_CC
+        assert orianna.MODULE_CC["P"] == "none"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Orianna") == []

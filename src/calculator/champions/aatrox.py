@@ -51,7 +51,7 @@ from ..healing_helpers import (
     payments,
     trigger_fields,
 )
-from .engine import ONHIT, SlotCtx, build_parser
+from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import no_damage_slot, ranked_slot
@@ -121,12 +121,19 @@ _Q_TRIAD_COMPONENTS = {
 def _q_strike_parts(
     ctx: SlotCtx, ability: dict[str, Any], rank: int, attrs: Iterable[str]
 ) -> tuple[DamagePart, ...]:
-    """One part per named strike, at the strike's sourced landing time."""
+    """One part per named strike, at the strike's sourced landing time.
+
+    The knock-up is the Sweetspot's, not the slot's: "Enemies hit within a
+    Sweetspot of the area take 75% bonus damage and are also knocked up for
+    0.25 seconds", so the strike priced off a Sweetspot row carries it and
+    the strike priced off a normal row states the reviewed absence.
+    """
     return tuple(
         DamagePart(
             "physical",
             extract_named(ability, attr, rank, ctx.stats, ctx.target),
             time_offset=_Q_STRIKE_ORDINAL[attr] * _Q_STRIKE_INTERVAL_SECONDS,
+            cc_kind="knockup" if attr in _Q_SWEETSPOT_ATTRS else "none",
         )
         for attr in attrs
     )
@@ -199,14 +206,13 @@ def _infernal_chains(
         per_hit * _W_HITS,
         "physical",
     )
+    # The two hits carry two different controls — the chain "slow[s] them
+    # for 1.5 seconds" on impact and the tether "pulled to the center of
+    # the area" when it expires — so they are two parts, one landing each,
+    # rather than one part repeating at the tether's interval.
     entry["parts"] = (
-        DamagePart(
-            "physical",
-            per_hit,
-            count=_W_HITS,
-            time_offset=0.0,
-            hit_interval=tether_seconds,
-        ),
+        DamagePart("physical", per_hit, time_offset=0.0, cc_kind="slow"),
+        DamagePart("physical", per_hit, time_offset=tether_seconds, cc_kind="pull"),
     )
     return entry
 
@@ -279,24 +285,27 @@ SLOTS = {
     "E": _umbral_dash,
 }
 
-# MODULE_CC is empty because neither cast controls unconditionally, not
-# because a cadence is missing: both slots now author their sourced landing
-# times above, so a kind declared here would reach the ledger.
+# Q and W are the two slots whose control is not one answer, so each names
+# itself per-part and the parts above carry the kinds.
 #
 # Q (The Darkin Blade) knocks up only "enemies hit within a Sweetspot of the
 # area" — the sweetspot rows of this module's ``q_variant`` option — so the
-# knockup belongs to a branch of the slot rather than to the slot, and
-# ``MODULE_CC`` is a per-slot map.
+# knockup belongs to a branch of the slot rather than to the slot.
 #
 # W (Infernal Chains) applies two different kinds: the chain hit slows
 # ("slowing them for 1.5 seconds") and the tether hit pulls ("the target is
 # dealt the same physical damage again and pulled to the center of the
-# area").  ``MODULE_CC`` carries one kind per slot, so declaring either
-# would state the other as well.
+# area").
 #
-# R fears "nearby enemy minions and monsters" only and authors no damage
-# part; P is the on-hit stance row.
-MODULE_CC: dict[str, str] = {}
+# R fears "nearby enemy minions and monsters" only, which is no control on
+# any champion the fight prices; P is the on-hit stance row and E the dash.
+MODULE_CC: dict[str, str] = {
+    "P": "none",
+    "Q": CC_PER_PART,
+    "W": CC_PER_PART,
+    "E": "none",
+    "R": "none",
+}
 
 parse_abilities = build_parser(SLOTS, "Aatrox", cc_kinds=MODULE_CC)
 

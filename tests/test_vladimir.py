@@ -26,6 +26,7 @@ class TestReviewedCrowdControl:
             "W": "slow",
             "E": "slow",
             "R": "none",
+            "P": "none",
         }
         assert vladimir.parse_abilities.cc_kinds == vladimir.MODULE_CC
         # Q's only control words describe Vladimir's own Crimson Rush:

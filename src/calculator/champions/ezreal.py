@@ -290,7 +290,7 @@ SLOTS = {
 # record and the game binary.  P is the module's zero-damage attack-speed
 # buff slot — it authors no damage part the ledger can carry a review on,
 # so it is left undeclared rather than stamped.
-MODULE_CC = {"Q": "none", "W": "none", "E": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "none", "E": "none", "R": "none", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Ezreal", cc_kinds=MODULE_CC)
 

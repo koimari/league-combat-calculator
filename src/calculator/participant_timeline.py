@@ -12,7 +12,6 @@ or crowd-control behavior that the packets do not provide.
 from __future__ import annotations
 
 import math
-from bisect import bisect_left
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import replace
@@ -4709,15 +4708,15 @@ def _published_support_phase(event: Mapping[str, Any]) -> TransitionRank:
     )
 
 
-# The named receipt for defect D-VI-1 (docs/receipts/self-shield-carrier-
-# rebind-2026-08-21.md).  A self-shield rider is bound to ONE carrier packet
-# by ordinal, in ``damage._damage_event_row``, long before the ordered
-# survival walk decides which packets land.  When that carrier is skipped the
-# walk correctly refuses the rider (``trigger_event_skipped``) -- but the
-# binding cannot move, so a fight in which a LATER ability packet by the same
-# holder did land publishes a shield of zero that the game would have granted.
-# The zero is a model artifact, not a game fact, and this receipt says so
-# rather than letting the reader take it for one.
+# The named receipt for a self-shield rider that never found a carrier
+# (docs/receipts/self-shield-carrier-rebind-2026-08-21.md).  A rider is bound
+# to ONE carrier packet by ordinal, in ``damage._damage_event_row``, before
+# the ordered survival walk decides which packets land; a rider whose payload
+# declares ``rebind_on_ability_hit`` moves to the first ability packet that
+# does land (``survival.transitions._rebind_self_shields``).  A refusal that
+# survives that means every candidate was blocked, and this receipt says so
+# beside the zero rather than leaving the reader to read the zero as a
+# mechanic that paid nothing.
 SELF_SHIELD_CARRIER_DENIAL = "self_shield_carrier_skipped"
 
 
@@ -4725,25 +4724,27 @@ def _self_shield_carrier_denials(
     support_events: Iterable[Mapping[str, Any]],
     damage_events: Iterable[Mapping[str, Any]],
 ) -> list[dict[str, Any]]:
-    """Name every self-shield rider the ordinal binding stranded (D-VI-1).
+    """Name every self-shield rider whose carriers were all blocked.
 
-    Read-only, post-walk, and deliberately narrow: a rider is stranded only
+    Read-only, post-walk, and deliberately narrow: a rider is named only
     when all three hold.
 
-    1. The rider was refused for its *carrier's* sake, not its own -- the
-       walk stamped ``trigger_event_skipped`` (transitions.py's trigger
-       gate), which is the one skip reason that means "the packet I was
-       nailed to did not land".  A rider refused on its own terms (a dead
-       holder, an expired window) is a game fact and is left alone.
+    1. The rider was refused for a *carrier's* sake, not its own -- the walk
+       stamped ``trigger_event_skipped`` (transitions.py's trigger gate),
+       which is the one skip reason that means "the packet I was bound to
+       did not land".  A rider refused on its own terms (a dead holder, an
+       expired window) is a game fact and is left alone.
     2. That carrier packet really is skipped in the published ledger.  The
        cross-check is what keeps the receipt a statement about this fight
        rather than a re-reading of the stamp.
-    3. The holder landed at least one ability packet at or after the
-       carrier's timestamp.  This is the half that makes the zero *wrong*:
-       an ability hit the game would have paid the shield on exists, and the
-       ordinal binding could not move to it.  A holder who landed nothing
-       after the skip was genuinely never going to be shielded, so no
-       receipt is emitted and no denial is invented.
+    3. The holder authored at least one in-window ability packet at or
+       after the carrier's timestamp and landed none.  A rider that re-binds
+       would have taken the first one that landed, so a surviving refusal
+       means the holder was blocked through every candidate; the row names
+       the last one, which is where the rider gave up.  A holder who
+       authored none was never going to be shielded, and a holder who
+       landed one is carrying a rider that declared this carrier its only
+       one -- neither invents a denial.
 
     Returns rows in the established ``item_denial`` shape (the section's
     comment in ``program/views/receipt.py`` is the contract: a denial is a
@@ -4763,17 +4764,17 @@ def _self_shield_carrier_denials(
         for event in ordered_damage
         if event.get("skipped_reason") and event.get("_event_id")
     }
-    # The landing ability packets, per holder, as a sorted timestamp list:
-    # one pass here instead of a rescan per rider.
-    landed_ability_times: dict[str, list[float]] = {}
+    # Every holder's in-window ability packets in time order, landed or not:
+    # one pass here instead of a rescan per rider.  A packet the walk refused
+    # ``outside_window`` (transitions.py's first gate) is past the fight's
+    # horizon and never reaches a carrier, so it is not a candidate here
+    # either.
+    ability_packets: dict[str, list[Mapping[str, Any]]] = {}
     for event in ordered_damage:
-        if event.get("skipped_reason") or not event.get("is_ability"):
-            continue
-        landed_ability_times.setdefault(str(event["attacker"]), []).append(
-            float(event.get("time", 0.0) or 0.0)
-        )
-    for times in landed_ability_times.values():
-        times.sort()
+        if event.get("is_ability") and event.get("skipped_reason") != "outside_window":
+            ability_packets.setdefault(str(event["attacker"]), []).append(event)
+    for packets in ability_packets.values():
+        packets.sort(key=lambda event: float(event.get("time", 0.0) or 0.0))
 
     denials: list[dict[str, Any]] = []
     for rider in support_events:
@@ -4787,10 +4788,16 @@ def _self_shield_carrier_denials(
             continue
         holder = str(rider.get("attacker", ""))
         carrier_time = float(carrier.get("time", 0.0) or 0.0)
-        candidates = landed_ability_times.get(holder, ())
-        rebind_index = bisect_left(candidates, carrier_time)
-        if rebind_index >= len(candidates):
+        candidates = [
+            event
+            for event in ability_packets.get(holder, ())
+            if float(event.get("time", 0.0) or 0.0) >= carrier_time
+        ]
+        if not candidates or any(
+            not event.get("skipped_reason") for event in candidates
+        ):
             continue
+        last_candidate = candidates[-1]
         denials.append(
             {
                 "time": round(carrier_time, 3),
@@ -4802,7 +4809,10 @@ def _self_shield_carrier_denials(
                 "event_id": str(rider.get("_event_id", "")),
                 "carrier_event_id": carrier_id,
                 "carrier_skipped_reason": str(carrier.get("skipped_reason", "")),
-                "rebind_time": round(candidates[rebind_index], 3),
+                "last_candidate_event_id": str(last_candidate.get("_event_id", "")),
+                "last_candidate_skipped_reason": str(
+                    last_candidate.get("skipped_reason", "")
+                ),
                 "withheld_amount": round(float(rider.get("amount", 0.0) or 0.0), 3),
             }
         )
@@ -5176,6 +5186,12 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                                     # ``_self_shield_carrier_denials`` reads
                                     # to audit that binding; see D-VI-1.
                                     "_self_shield_rider": True,
+                                    # Whether the payload's own trigger lets
+                                    # the walk move that binding to the first
+                                    # ability packet the holder lands.
+                                    "_rebind_on_ability_hit": bool(
+                                        shield_payload.get("rebind_on_ability_hit")
+                                    ),
                                     # A barrier the triggering damage placed:
                                     # it arms after that damage, not before.
                                     SUPPORT_RANK_KEY: TransitionRank.LATE_BARRIER,

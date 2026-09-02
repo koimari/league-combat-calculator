@@ -119,7 +119,7 @@ SLOTS = {
 # units"; the E slot's second entry (Cripple) "slows nearby enemies marked
 # by Tempest", which is the control the Tempest hit sets up; Q only marks
 # and reveals.  P and W deal no damage.
-MODULE_CC = {"Q": "none", "E": "slow", "R": "knockback"}
+MODULE_CC = {"Q": "none", "E": "slow", "R": "knockback", "P": "none", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Lee Sin", cc_kinds=MODULE_CC)
 

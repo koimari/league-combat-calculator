@@ -217,7 +217,7 @@ def _petricite_burst(packet_passive):
 # 1.5 seconds"; its lumped row is declared at the cast boundary (see
 # ``_chain_lash``) rather than split into the two cached rows, which was
 # measured to move the row's ledger position.
-MODULE_CC = {"W": "none", "E": "immobilize", "Q": "slow"}
+MODULE_CC = {"W": "none", "E": "immobilize", "Q": "slow", "P": "none", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Sylas",

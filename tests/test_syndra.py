@@ -23,6 +23,7 @@ from typing import Any
 import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
+from src.calculator.champions.engine import part_reaches_event_ledger
 from src.calculator.damage import FightConfig, calculate_fight_damage
 from src.calculator.item_behavior import FightFacts
 
@@ -616,29 +617,27 @@ class TestScatterTheWeakStun:
 
         assert syndra.MODULE_CC["E"] == "stun"
 
-    def test_the_mixed_landing_is_reviewed_and_the_barrage_is_not(
+    def test_the_mixed_landing_is_reviewed_and_the_barrage_reaches_nothing(
         self, syndra_data
     ) -> None:
         """W is two parts of ONE landing, so it certifies and carries its
         slow; R is one part of ``r_spheres`` hits — a schedule with no
-        sourced cadence, which certification refuses and which therefore
-        carries no reviewed kind."""
+        sourced cadence, so its reviewed "none" reaches no event."""
         parsed = _parse(syndra_data)
-        unreviewed = {
-            slot
-            for slot, entry in parsed.items()
-            if any(part.cc_kind is None for part in entry.get("parts", ()))
-        }
-        assert unreviewed == {"R"}
+        assert parsed["R"].get("event_order_certified") is None
+        assert not any(
+            part_reaches_event_ledger(parsed["R"], part)
+            for part in parsed["R"]["parts"]
+        )
         assert parsed["W"]["event_order_certified"] == "single_hit"
         assert [
             (part.damage_type, part.cc_kind, part.time_offset)
             for part in parsed["W"]["parts"]
         ] == [("magic", "slow", 0.0), ("true", "slow", 0.0)]
 
-    def test_a_timed_fimbulwinter_fight_is_still_coarse(self) -> None:
-        """The honest consequence of the line above: the control token
-        stays until Unleashed Power's spheres author events of their own."""
+    def test_a_timed_fimbulwinter_fight_is_fully_certified(self) -> None:
+        """MODULE_CC is total, so Unleashed Power's uncertified row still
+        carries the reviewed "none" and the control token is released."""
         from src.calculator.calculate import calculate_payload
 
         coverage = calculate_payload(
@@ -651,7 +650,7 @@ class TestScatterTheWeakStun:
             }
         )["timeline_coverage"]
 
-        assert coverage["coarse_sources"] == ["fimbulwinter_everlasting"]
+        assert coverage["coarse_sources"] == []
 
     def test_e_part_carries_stun_marker(self, syndra_data) -> None:
         (part,) = _parse(syndra_data)["E"]["parts"]

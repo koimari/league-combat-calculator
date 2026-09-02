@@ -21,6 +21,7 @@ class TestReviewedCrowdControl:
             "W": "immobilize",
             "E": "none",
             "R": "pull",
+            "P": "none",
         }
         q_text = cc_review.slot_text(data, "Q")
         assert "dealing them magic damage and stunning them for 0.65 seconds" in q_text
@@ -31,7 +32,7 @@ class TestReviewedCrowdControl:
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
         assert "drags them towards her" in cc_review.slot_text(data, "R")
         # P is an on-hit rider on the auto stream.
-        assert "P" not in rell.MODULE_CC
+        assert rell.MODULE_CC["P"] == "none"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Rell") == []

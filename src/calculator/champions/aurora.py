@@ -241,7 +241,7 @@ SLOTS = {
 # which is a mark the recast expunges, not crowd control.  W's dash,
 # invisibility and movement speed touch nobody else, and P is an on-hit
 # stack consume.
-MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "slow"}
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "slow", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Aurora", cc_kinds=MODULE_CC)
 

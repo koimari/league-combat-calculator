@@ -136,7 +136,7 @@ def _transcend_one_self(
 # branches of ``r_transcendent``.  Cultivation of Spirit only adds bonus
 # magic damage on-hit.  E is a dash, R is the Transcendent State buff shell
 # and P is the crit bonus; none of the three authors a damage part.
-MODULE_CC = {"Q": "none", "W": "slow"}
+MODULE_CC = {"Q": "none", "W": "slow", "P": "none", "E": "none", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Yunara",

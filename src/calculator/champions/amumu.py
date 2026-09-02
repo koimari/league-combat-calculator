@@ -175,7 +175,7 @@ SLOTS = {
 # dealing magic damage to nearby enemies" — neither controls anything, a
 # reviewed absence.  P is the amplifier itself: its display row prices
 # nothing, so it carries no declaration.
-MODULE_CC = {"Q": "stun", "W": "none", "E": "none", "R": "stun"}
+MODULE_CC = {"Q": "stun", "W": "none", "E": "none", "R": "stun", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Amumu", cc_kinds=MODULE_CC)
 

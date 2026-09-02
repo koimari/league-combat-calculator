@@ -504,6 +504,7 @@ class TestReviewedCrowdControl:
             "W": "stun",
             "E": "slow",
             "R": "knockback",
+            "P": "none",
         }
         assert gnar.parse_abilities.cc_kinds == gnar.MODULE_CC
 
@@ -515,8 +516,10 @@ class TestReviewedCrowdControl:
         assert _CC.kinds() == {"Q": ["slow"], "E": ["slow"]}
 
     def test_reviewed_kinds_follow_the_other_branch(self):
-        """Mega adds Wallop's stun and GNAR!'s knock away."""
+        """Mega adds Wallop's stun, GNAR!'s knock away, and the Rage Gene
+        stat-buff row, which applies nothing and declares it."""
         assert _CC.kinds(mega=True) == {
+            "passive": ["none"],
             "Q": ["slow"],
             "W": ["stun"],
             "E": ["slow"],

@@ -18,6 +18,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "R": "none",
             "E": "stun",
+            "P": "none",
         }
         assert jax.parse_abilities.cc_kinds == jax.MODULE_CC
 

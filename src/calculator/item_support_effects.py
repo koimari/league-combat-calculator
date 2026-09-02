@@ -45,6 +45,7 @@ from .item_effects import (
     ITEM_INPUT_OPTIONS,
     fimbulwinter_mana_gate_authority,
     fimbulwinter_nearby_enemy_range_authority,
+    manaflow_declaration,
     required_effect_value,
 )
 
@@ -446,6 +447,29 @@ _FIMBULWINTER_TRIGGER_RULE = CcTriggerRule(
     slow_melee_only=True,
     source=SourceReceipt.from_mapping(ITEM_INPUT_OPTIONS["Fimbulwinter"]),
 )
+
+# One rule per control-armed producer, and the shield is granted through
+# it. The pair engine's coverage certificate reads the same entry, so what
+# arms the shield and what the ledger says armed it cannot disagree.
+_CONTROL_TRIGGER_RULES: Mapping[AllyProducer, CcTriggerRule] = {
+    AllyProducer.EVERLASTING: _FIMBULWINTER_TRIGGER_RULE,
+}
+
+
+def control_trigger_rule(producer: AllyProducer) -> CcTriggerRule:
+    """The trigger rule one control-armed producer arms on.
+
+    Raises:
+        ValueError: The producer declares a crowd-control trigger and no
+            rule says which control arms it, so no reader can decide.
+    """
+    rule = _CONTROL_TRIGGER_RULES.get(producer)
+    if rule is None:
+        raise ValueError(
+            f"{producer.value} is armed by crowd control and names no "
+            "CcTriggerRule, so which control arms it is undeclared"
+        )
+    return rule
 
 
 def _cc_event_stream(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
@@ -969,43 +993,40 @@ def derive_item_support_effects(
         ward.declared(PacketKind.VISION)
         packets.extend(_support_quest_packets(attacker, shared_riches, ward))
 
-    # Tear of the Goddess — Manaflow packets are a PROJECTION of the typed
-    # mana resource ledger (P3 slice 1): the fight engine admits casts
-    # through ``resource_ledger``, records every PROVEN accepted eligible
-    # hit (a denied cast can never trigger Tear, and a missing hit identity
+    # Manaflow packets are a PROJECTION of the typed mana resource ledger
+    # (P3 slice 1): the fight engine admits casts through
+    # ``resource_ledger``, records every PROVEN accepted eligible hit (a
+    # denied cast can never trigger Manaflow, and a missing hit identity
     # fails closed), and applies each granted bonus max-mana to the same
     # account.  This layer only shapes the accepted hit receipts into the
     # public kind="resource" packet schema.  It never recomputes cadence,
-    # charges, or caps.  A fight result
-    # without a ledger section has no Manaflow activity by construction, and
-    # that section IS the guard: damage._tear_manaflow_for builds one for no
-    # other holder, so this branch asks the typed ledger whether Manaflow ran
-    # instead of asking the build for an item name (A3).
+    # charges, or caps.  A fight result without a ledger section has no
+    # Manaflow activity by construction, and that section IS the guard: it
+    # names its own holder, so this branch asks the typed ledger which item
+    # ran instead of asking the build for a name (A3).
     ledger_section = result.get("resource_ledger")
-    tear = ledger_section.get("tear") if isinstance(ledger_section, Mapping) else None
-    if isinstance(tear, Mapping):
-        interval = required_effect_value(
-            "Tear of the Goddess", "manaflow_charge_interval"
-        )
-        max_charges = max(
-            1,
-            int(required_effect_value("Tear of the Goddess", "manaflow_max_charges")),
-        )
-        per_trigger = required_effect_value(
-            "Tear of the Goddess", "manaflow_bonus_mana_per_trigger"
-        )
-        per_champion = required_effect_value(
-            "Tear of the Goddess", "manaflow_bonus_mana_per_champion"
-        )
-        mana_cap = required_effect_value(
-            "Tear of the Goddess", "manaflow_bonus_mana_max"
-        )
-        source_meta = ITEM_INPUT_OPTIONS["Tear of the Goddess"]
-        authored_mana = max(
-            0.0, _option(attacker, "Tear of the Goddess", "manaflow_bonus_mana")
-        )
+    manaflow = (
+        ledger_section.get("manaflow") if isinstance(ledger_section, Mapping) else None
+    )
+    if isinstance(manaflow, Mapping):
+        declaration = manaflow.get("declaration")
+        if not isinstance(declaration, Mapping):
+            raise ValueError(
+                "a Manaflow ledger section carries no declaration, so its "
+                "holder cannot be named"
+            )
+        holder = str(declaration["item"])
+        sourced = manaflow_declaration(holder)
+        interval = sourced["charge_interval"]
+        max_charges = max(1, sourced["max_charges"])
+        per_trigger = sourced["bonus_mana_per_trigger"]
+        per_champion = sourced["bonus_mana_per_champion"]
+        mana_cap = sourced["bonus_mana_max"]
+        authored_mana = max(0.0, _option(attacker, holder, "manaflow_bonus_mana"))
         for hit in (
-            tear.get("hits", ()) if isinstance(tear.get("hits"), Iterable) else ()
+            manaflow.get("hits", ())
+            if isinstance(manaflow.get("hits"), Iterable)
+            else ()
         ):
             if not isinstance(hit, Mapping):
                 continue
@@ -1043,7 +1064,7 @@ def derive_item_support_effects(
                     target=attacker,
                     time=hit_time,
                     kind=PacketKind.RESOURCE.value,
-                    source="Tear of the Goddess — Manaflow",
+                    source=f"{holder} — Manaflow",
                     amount=grant,
                     target_scope="self",
                     bonus_mana_total=max(0.0, ledger_total - authored_capped),
@@ -1053,11 +1074,11 @@ def derive_item_support_effects(
                     manaflow_max_charges=max_charges,
                     manaflow_bonus_mana_per_trigger=per_trigger,
                     manaflow_bonus_mana_per_champion=per_champion,
-                    trigger_kind="ability_cast_vs_champion",
+                    trigger_kind=f"{hit.get('trigger')}_vs_{hit.get('target_kind')}",
                     charge_accrued_at=(use_count - 1) * interval,
                     rank=TransitionRank.BARRIER_GRANT,
-                    source_url=source_meta["source_url"],
-                    source_revision_id=source_meta["source_revision_id"],
+                    source_url=sourced["source_url"],
+                    source_revision_id=sourced["source_revision_id"],
                 )
             )
 

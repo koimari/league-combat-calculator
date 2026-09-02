@@ -18,6 +18,7 @@ class TestReviewedCrowdControl:
             "Q": "none",
             "E": "none",
             "R": "slow",
+            "P": "none",
         }
         assert pantheon.parse_abilities.cc_kinds == pantheon.MODULE_CC
 

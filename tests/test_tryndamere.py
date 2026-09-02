@@ -14,7 +14,13 @@ class TestReviewedCrowdControl:
 
     def test_the_whole_cached_kit_puts_its_control_outside_the_damage(self):
         data = cc_review.kit("Tryndamere")
-        assert tryndamere.MODULE_CC == {"E": "none"}
+        assert tryndamere.MODULE_CC == {
+            "E": "none",
+            "P": "none",
+            "Q": "none",
+            "W": "per_part",
+            "R": "none",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
         # Mocking Shout is where the kit's slow lives, and it deals no
         # damage, so no part can carry that answer.

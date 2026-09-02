@@ -26,7 +26,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..cast_dependency import CastDependency
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import delayed_damage, ranked_slot
 from .slotlib import (
@@ -194,7 +194,7 @@ ASSUMPTIONS = [
 # opening Q is the applier and stuns nothing; every later one does.  One
 # kind per slot cannot say both, and Q additionally authors no event
 # (its fireball has no sourced travel time).  P is the Ablaze burn row.
-MODULE_CC = {"E": "none", "W": "none"}
+MODULE_CC = {"E": "none", "W": "none", "P": "none", "Q": CC_PER_PART, "R": CC_PER_PART}
 
 SLOTS = {
     "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),

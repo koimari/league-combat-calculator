@@ -308,19 +308,25 @@ class TestPassiveInFightEngine:
 class TestReviewedCrowdControl:
     """Akali's crowd-control review, and the slot that still withholds.
 
-    E's row is the cached 'Total Magic Damage' of the shuriken and the
-    recast dash together, and Q's slow reaches only 'targets beyond a
-    certain range', which the single-target model does not place.
+    Q declares ``per_part`` and its one part carries no kind, because the
+    slow lands only on 'targets beyond a certain range', which the
+    single-target model does not place.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Akali")
-        assert akali.MODULE_CC == {"R": "none", "P": "none"}
+        assert akali.MODULE_CC == {
+            "R": "none",
+            "P": "none",
+            "Q": "per_part",
+            "W": "none",
+            "E": "none",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "P")) == []
 
-    def test_the_unreviewable_slots_keep_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Akali") == ["E", "Q"]
+    def test_the_unreviewable_slot_keeps_the_fight_coarse(self):
+        assert cc_review.unreviewed_ability_slots("Akali") == ["Q"]
         coverage = cc_review.fimbulwinter_coverage("Akali")
         assert coverage["complete"] is False
         assert "fimbulwinter_everlasting" in coverage["coarse_sources"]

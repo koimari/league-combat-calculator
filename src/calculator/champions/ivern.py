@@ -170,7 +170,7 @@ SLOTS = {
 # "explode[s] to deal magic damage to nearby enemies and slow them for 2
 # seconds".  R is absent because Daisy's two packets differ (see _daisy).
 # P and W author no damage part (W is the on-hit bolt).
-MODULE_CC = {"Q": "root", "E": "slow", "R": CC_PER_PART}
+MODULE_CC = {"Q": "root", "E": "slow", "R": CC_PER_PART, "P": "none", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Ivern", cc_kinds=MODULE_CC)
 OPTIONS = [

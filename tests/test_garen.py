@@ -26,7 +26,13 @@ class TestReviewedCrowdControl:
     def test_module_cc_is_the_declaration_the_parser_wired(self):
         from src.calculator.champions import garen
 
-        assert garen.MODULE_CC == {"Q": "none", "E": "none", "R": "none"}
+        assert garen.MODULE_CC == {
+            "Q": "none",
+            "E": "none",
+            "R": "none",
+            "P": "none",
+            "W": "none",
+        }
         assert garen.parse_abilities.cc_kinds == garen.MODULE_CC
 
     def test_control_free_slots_name_every_word_their_text_contains(self):

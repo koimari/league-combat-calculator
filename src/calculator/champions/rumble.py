@@ -446,7 +446,7 @@ _junkyard_titan.phase = ONHIT
 # and P answers per part (``_junkyard_titan``): the Overheated row can only
 # carry a reviewed kind when it prices a single empowered swing, because
 # nothing sources the arrival times a multi-auto row aggregates.
-MODULE_CC = {"E": "slow", "Q": "none", "R": "slow"}
+MODULE_CC = {"E": "slow", "Q": "none", "R": "slow", "P": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Rumble",

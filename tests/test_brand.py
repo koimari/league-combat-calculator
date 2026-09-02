@@ -213,7 +213,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Brand")
-        assert brand.MODULE_CC == {"E": "none", "W": "none"}
+        assert brand.MODULE_CC == {
+            "E": "none",
+            "W": "none",
+            "P": "none",
+            "Q": "per_part",
+            "R": "per_part",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
         assert "the target takes 25% increased damage" in cc_review.slot_text(data, "W")
 

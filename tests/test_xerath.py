@@ -20,7 +20,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Xerath")
-        assert xerath.MODULE_CC == {"Q": "none", "W": "slow", "E": "stun", "R": "none"}
+        assert xerath.MODULE_CC == {
+            "Q": "none",
+            "W": "slow",
+            "E": "stun",
+            "R": "none",
+            "P": "none",
+        }
         assert xerath.parse_abilities.cc_kinds == xerath.MODULE_CC
         assert "slowing them by 25% for 2.5 seconds" in cc_review.slot_text(data, "W")
         assert "stuns them for" in cc_review.slot_text(data, "E")

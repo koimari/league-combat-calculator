@@ -184,13 +184,20 @@ from src.calculator import delivery_eligibility as de
 from src.calculator.crowd_control_eligibility import classify_control
 from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.interpreters import uncompilable_item_receipt
+from src.calculator.item_effects import (
+    ITEM_EFFECTS,
+    mercurial_quicksilver_movement,
+)
 from src.calculator.participant_timeline import Combatant, _WalkCompiler
 from src.calculator.state_lifecycle import SourceReceipt
 from src.calculator.survival.actions import (
     TransitionRank,
     support_transition_rank,
 )
-from src.calculator.survival.compile import unrepresentable_template_receipt
+from src.calculator.survival.compile import (
+    UncompilableActionError,
+    unrepresentable_template_receipt,
+)
 from tests.survival_probe import simulate_survival, survival_of
 
 try:  # P2 Slice 4 planned kernel — not landed yet; rows fail with the marker.
@@ -935,6 +942,36 @@ def test_r4_cleanse_declarations_three_sourced_items():
     assert movement["duration"] == pytest.approx(2.0)
     assert any(atom["hash"] == "5e5f100f08a793f9" for atom in movement["source_atoms"])
     assert any("3139" in str(receipt) for receipt in mercurial["source_receipts"])
+
+
+def test_quicksilver_movement_atom_and_declaration_share_one_accessor():
+    """Issue #230, rule 5: the 50%/2s pair has one home in item_effects.
+
+    Both the declaration and the atom receipt's ``values`` are that one
+    read, so neither can outlive the other; the record above is the
+    independently transcribed catalog oracle.
+    """
+    ce = _require_contract()
+    sourced = mercurial_quicksilver_movement()
+    movement = ce.ITEM_CLEANSE_DECLARATIONS["Mercurial Scimitar"]["movement"]
+    assert movement["amount"] == sourced["move_speed_percent"]
+    assert movement["duration"] == sourced["duration_seconds"]
+    assert ce.MERCURIAL_MOVEMENT_ATOM["values"] == [
+        sourced["move_speed_percent"],
+        sourced["duration_seconds"],
+    ]
+    assert ce.MERCURIAL_MOVEMENT_ATOM == MERCURIAL_MOVEMENT_ATOM
+
+
+def test_a_missing_quicksilver_key_raises_naming_the_item(monkeypatch):
+    """Rule 5: no literal fallback survives a parser that drops the key."""
+    entry = dict(ITEM_EFFECTS["Mercurial Scimitar"])
+    entry.pop("quicksilver_move_speed_percent")
+    monkeypatch.setitem(ITEM_EFFECTS, "Mercurial Scimitar", entry)
+    with pytest.raises(KeyError) as excinfo:
+        mercurial_quicksilver_movement()
+    assert "Mercurial Scimitar" in str(excinfo.value)
+    assert "quicksilver_move_speed_percent" in str(excinfo.value)
 
 
 # ---------------------------------------------------------------------------
@@ -2081,24 +2118,17 @@ def test_r18_app_parity_today():
 
 
 # ---------------------------------------------------------------------------
-# R19 — Score-path fail-closed (compiled walk)
+# R19 — Score-path staging (compiled walk)
 # ---------------------------------------------------------------------------
 
 
-def test_r19_compiled_walk_current_fail_closed_surface():
-    """Unit, CURRENT + NEW-CONTRACT: the compiled score kernel rejects
-    cleanse- and movement-kind support templates with named receipts and
-    raises UncompilableActionError; the three items themselves and a plain
-    heal are representable (CURRENT).  NEW-CONTRACT (post-integration
-    compile gate): a heal template carrying the cleanse marker must FAIL
-    CLOSED with the named 'support_cleanse' receipt instead of compiling as
-    a plain HEAL — today the marker is silently dropped (the gap this row
-    closes)."""
-    # CURRENT: kind-level rejections, item representability, plain heal.
-    assert (
-        unrepresentable_template_receipt({"kind": "cleanse", "amount": 1.0})
-        == "support_kind=cleanse"
-    )
+def test_r19_compiled_walk_stages_every_cleanse_shape():
+    """Unit: the compiled score kernel stages both cleanse shapes — the
+    cleanse-kind self-cast and the heal that carries the marker — because
+    the truncation itself is a shared-kernel transition both adapters drive
+    (issue #226).  Movement is still refused with its named receipt, and the
+    three cleanse items stay representable as builds."""
+    assert unrepresentable_template_receipt({"kind": "cleanse", "amount": 1.0}) is None
     assert (
         unrepresentable_template_receipt(
             {"kind": "movement", "amount": 50.0, "duration": 2.0}
@@ -2109,87 +2139,85 @@ def test_r19_compiled_walk_current_fail_closed_surface():
     for item in ("Mikael's Blessing", "Quicksilver Sash", "Mercurial Scimitar"):
         assert uncompilable_item_receipt([{"name": item}]) is None
 
-    # CURRENT: cleanse/movement kinds raise with the named receipt.
-    for kind, receipt in (
-        ("cleanse", "support_kind=cleanse"),
-        ("movement", "support_kind=movement"),
-    ):
-        compiler = _WalkCompiler()
-        try:
-            compiler.add_support_templates(
-                [
-                    {
-                        "kind": kind,
-                        "amount": 1.0,
-                        "attacker": "caster",
-                        "target": "main",
-                        "time": 1.0,
-                    }
-                ],
-                0,
-                {"main": 0, "caster": 1},
-            )
-        except Exception as exc:  # noqa: BLE001 - the named receipt is the contract
-            assert receipt in str(exc)  # noqa: PT017 - the receipt is the contract
-        else:  # pragma: no cover - today the compile must fail closed
-            raise AssertionError(f"{kind} compiled without a fail-closed receipt")
-
-    # NEW-CONTRACT: the heal+cleanse template fails closed after integration
-    # (today it compiles as a plain HEAL — the pinned gap).
-    _require_contract()
-    assert (
-        unrepresentable_template_receipt(
-            {"kind": "heal", "amount": 100.0, "cleanse": True}
-        )
-        == "support_cleanse"
-    )
     compiler = _WalkCompiler()
-    template = {
-        "kind": "heal",
-        "amount": 100.0,
-        "cleanse": True,
-        "source": MIKAELS_SOURCE,
-        "attacker": "caster",
-        "target": "main",
-        "time": 2.5,
-    }
-    try:
-        compiler.add_support_templates([template], 0, {"main": 0, "caster": 1})
-    except Exception as exc:  # noqa: BLE001 - the named receipt is the contract
-        assert "support_cleanse" in str(exc)  # noqa: PT017 - the gate is the contract
-    else:  # pragma: no cover - the gate must fail closed after integration
-        raise AssertionError(
-            "heal+cleanse template compiled without the named support_cleanse gate"
+    compiler.add_support_templates(
+        [
+            {
+                "kind": "cleanse",
+                "amount": 1.0,
+                "utility_kind": "cleanse",
+                "cleanse_item": "Quicksilver Sash",
+                "attacker": "caster",
+                "target": "main",
+                "time": 1.0,
+            }
+        ],
+        0,
+        {"main": 0, "caster": 1},
+    )
+    (staged,) = compiler.actions
+    assert staged.utility_kind == "cleanse"
+    assert staged.cleanse_item == "Quicksilver Sash"
+
+    with pytest.raises(UncompilableActionError, match="support_kind=movement"):
+        _WalkCompiler().add_support_templates(
+            [
+                {
+                    "kind": "movement",
+                    "amount": 1.0,
+                    "attacker": "caster",
+                    "target": "main",
+                    "time": 1.0,
+                }
+            ],
+            0,
+            {"main": 0, "caster": 1},
         )
 
-
-def test_r19_compiled_walk_gate_names_the_cleanse_it_cannot_stage():
-    """Unit: the compiled-support gate FAILS CLOSED with a named receipt
-    when a template carries a cleanse marker the compiled kernel cannot
-    reproduce, and leaves a plain heal representable."""
-    template = {
-        "kind": "heal",
-        "amount": 100.0,
-        "cleanse": True,
-        "source": MIKAELS_SOURCE,
-        "attacker": "caster",
-        "target": "main",
-        "time": 2.5,
-    }
-    assert unrepresentable_template_receipt(template) == "support_cleanse"
-    # A plain heal stays representable.
-    assert (
-        unrepresentable_template_receipt(
+    _require_contract()
+    compiler = _WalkCompiler()
+    compiler.add_support_templates(
+        [
             {
                 "kind": "heal",
                 "amount": 100.0,
+                "cleanse": True,
+                "cleanse_item": "Mikael's Blessing",
+                "source": MIKAELS_SOURCE,
                 "attacker": "caster",
                 "target": "main",
                 "time": 2.5,
             }
-        )
-        is None
+        ],
+        0,
+        {"main": 0, "caster": 1},
     )
+    (marked,) = compiler.actions
+    assert marked.cleanse is True
+    assert marked.cleanse_item == "Mikael's Blessing"
+
+
+def test_r19_the_compiled_marker_survives_onto_the_action():
+    """Unit: the marker is what the kernel dispatches on, so a template that
+    compiled without it would be a heal whose truncation silently vanished —
+    the exact failure the old fail-closed receipt existed to prevent."""
+    template = {
+        "kind": "heal",
+        "amount": 100.0,
+        "cleanse": True,
+        "source": MIKAELS_SOURCE,
+        "attacker": "caster",
+        "target": "main",
+        "time": 2.5,
+    }
+    assert unrepresentable_template_receipt(template) is None
+    compiler = _WalkCompiler()
+    compiler.add_support_templates(
+        [template, {**template, "cleanse": False, "_event_id": "plain"}],
+        0,
+        {"main": 0, "caster": 1},
+    )
+    assert [action.cleanse for action in compiler.actions] == [True, False]
 
 
 # ---------------------------------------------------------------------------

@@ -16,7 +16,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Nilah")
-        assert nilah.MODULE_CC == {"Q": "none", "E": "none", "R": "slow"}
+        assert nilah.MODULE_CC == {
+            "Q": "none",
+            "E": "none",
+            "R": "slow",
+            "P": "none",
+            "W": "none",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
         # The module prices R's whirl ticks, and "each hit also slows
@@ -26,8 +32,8 @@ class TestReviewedCrowdControl:
         assert "pulls them 250 units towards her" in r_text
         # P and W are absent: the heal/shield innate and the mist damage
         # nothing, so no event of theirs could carry an answer.
-        assert "P" not in nilah.MODULE_CC
-        assert "W" not in nilah.MODULE_CC
+        assert nilah.MODULE_CC["P"] == "none"
+        assert nilah.MODULE_CC["W"] == "none"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Nilah") == []

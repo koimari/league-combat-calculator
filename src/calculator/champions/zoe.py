@@ -100,12 +100,12 @@ def _spell_thief(ctx: SlotCtx) -> dict[str, Any] | None:
 # drowsy is the ramp, the sleep is the control the cast lands.  R (Portal
 # Jump) is out_of_scope with no damage, and P is the empowered next attack.
 #
-# W stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# W reviews to no control, and its row still lands as one coarse hit.
 # Spell Thief's bolts control nothing, but Wheeeee "shoots one bolt at a
 # time" over its 10-second window and the row is one aggregated part of
 # three hits with no sourced cadence between them, so no event reaches the
 # ledger.
-MODULE_CC = {"Q": "none", "E": "sleep"}
+MODULE_CC = {"Q": "none", "E": "sleep", "P": "none", "W": "none", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zoe",

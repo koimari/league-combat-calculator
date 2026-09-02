@@ -537,7 +537,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Aurelion Sol")
-        assert aurelion_sol.MODULE_CC == {"Q": "none", "E": "none", "R": CC_PER_PART}
+        assert aurelion_sol.MODULE_CC == {
+            "Q": "none",
+            "E": "none",
+            "R": CC_PER_PART,
+            "P": "none",
+            "W": "none",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
 

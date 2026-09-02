@@ -18,7 +18,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Teemo")
-        assert teemo.MODULE_CC == {"Q": "blind", "E": "none", "R": "slow"}
+        assert teemo.MODULE_CC == {
+            "Q": "blind",
+            "E": "none",
+            "R": "slow",
+            "P": "none",
+            "W": "none",
+        }
         assert "blinds them for a duration" in cc_review.slot_text(data, "Q")
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
         assert "slowing them for 4 seconds" in cc_review.slot_text(data, "R")

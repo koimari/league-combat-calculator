@@ -15,7 +15,13 @@ class TestReviewedCrowdControl:
     """Skip 'n Slash controls nothing, Needlework slows, Snip Snip! cuts."""
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
-        assert gwen.MODULE_CC == {"E": "none", "Q": "none", "R": "slow"}
+        assert gwen.MODULE_CC == {
+            "E": "none",
+            "Q": "none",
+            "R": "slow",
+            "P": "none",
+            "W": "none",
+        }
         assert gwen.parse_abilities.cc_kinds == gwen.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):

@@ -33,6 +33,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "slow",
             "R": "airborne",
+            "P": "none",
         }
         assert kalista.parse_abilities.cc_kinds == kalista.MODULE_CC
 

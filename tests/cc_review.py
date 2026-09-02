@@ -97,6 +97,18 @@ def any_control_hits(champion_data, slot):
     return sorted(word for word in ANY_CONTROL_WORDS if word in text)
 
 
+def declared_parts(parsed, slot):
+    """The parts of one declared slot's row, under the row's result key.
+
+    ``()`` where the row prices nothing a marker could ride — a passive
+    with no cast, a state-only slot, a branch an option emptied.  Which
+    slots those are is a roster count, so ``test_module_cc_census.py``
+    keeps it; here it only means there is no part to check.
+    """
+    entry = parsed.get("passive" if slot == "P" else slot) or {}
+    return entry.get("parts") or ()
+
+
 def fimbulwinter_coverage(champion, **window):
     """The campaign's control-token probe, through the public entry.
 
@@ -118,6 +130,28 @@ def damage_events(champion, **window):
         resolved.items,
         FightParams.from_request(request),
     )["damage_events"]
+
+
+def fight_ledger(champion, **window):
+    """Both authored streams of the probe fight, as one row list.
+
+    Damage-attached control rides ``damage_events`` and control-only
+    packets ride ``control_events``; a reader asking what the fight showed
+    wants the same two the item passives read.
+    """
+    request = {"champion": champion, **_PROBE, **window}
+    resolved = resolve_scenario(parse_scenario_request(request))
+    result = run_fight(
+        resolved.champion_data,
+        _PROBE["level"],
+        resolved.items,
+        FightParams.from_request(request),
+    )
+    return [
+        row
+        for row in (*result["damage_events"], *(result.get("control_events") or ()))
+        if isinstance(row, Mapping)
+    ]
 
 
 def unreviewed_ability_slots(champion, **window):

@@ -144,7 +144,7 @@ SLOTS = {
 # suppressed during Devour's cast time and while attached".  P is an
 # on-hit rider on the attack stream and Q's answer is stack-dependent, so
 # Q authors its own kind on its part.
-MODULE_CC = {"Q": CC_PER_PART, "W": "immobilize", "R": "suppression"}
+MODULE_CC = {"Q": CC_PER_PART, "W": "immobilize", "R": "suppression", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Tahm Kench", cc_kinds=MODULE_CC)
 

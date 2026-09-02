@@ -277,7 +277,7 @@ SLOTS = {
 # exploding" and each R bullet stops on a champion, "slowing them by 80%".
 # P and its final-round proc row author no cast the ledger reads as an
 # ability event.
-MODULE_CC = {"Q": "none", "W": "root", "E": "slow", "R": "slow"}
+MODULE_CC = {"Q": "none", "W": "root", "E": "slow", "R": "slow", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Jhin", cc_kinds=MODULE_CC)
 OPTIONS = [

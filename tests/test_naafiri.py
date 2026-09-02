@@ -21,6 +21,7 @@ class TestReviewedCrowdControl:
             "Q": "none",
             "E": "none",
             "R": "slow",
+            "W": "none",
         }
         assert naafiri.parse_abilities.cc_kinds == naafiri.MODULE_CC
 

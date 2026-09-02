@@ -209,7 +209,7 @@ PACKET_SHA256 = "3c5d28681b774a275e1c2b8bfd6150c08bad192051ac56c0a49c6a96462ad2f
 # Cached kit review: E's bullet storm deals damage every 0.25 seconds
 # "and slow[s] them by 40% (+ 6% per 100 AP)"; Q's shot only bounces and
 # R's waves only damage.  P is an on-hit mark and W a self-buff.
-MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
+MODULE_CC = {"Q": "none", "E": "slow", "R": "none", "P": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Miss Fortune",

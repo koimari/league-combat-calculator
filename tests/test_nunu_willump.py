@@ -21,6 +21,7 @@ class TestReviewedCrowdControl:
             "W": "immobilize",
             "E": "slow",
             "R": "slow",
+            "P": "none",
         }
         # Q's devour stun-and-pull is gated on killing a minion or a
         # small/medium monster; against the fight's champion target it
@@ -38,7 +39,7 @@ class TestReviewedCrowdControl:
         assert "will remain slowed" in cc_review.slot_text(data, "R")
         # P is absent: Call of the Freljord is an attack-speed buff with no
         # damage row of its own.
-        assert "P" not in nunu_willump.MODULE_CC
+        assert nunu_willump.MODULE_CC["P"] == "none"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Nunu & Willump") == []

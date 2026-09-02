@@ -87,7 +87,7 @@ PACKET_SHA256 = "1795828f6486a1da27c639b301d6ebca7047735f17a173075d41d59369c8294
 # 1 second"; Final Chapter's waves hit enemies who "take magic damage and
 # are slowed by 10% for 1.25 seconds".  W (You and Me!) and E (Zoomies) are
 # out_of_scope ally rows and P heals — none authors a damage part.
-MODULE_CC = {"Q": "slow", "R": "slow"}
+MODULE_CC = {"Q": "slow", "R": "slow", "P": "none", "W": "none", "E": "none"}
 
 # What consumes Feline Friendship's empowered attack, per the cached innate:
 # "Upon hitting them with the basic attack or Prowling Projectile ... the

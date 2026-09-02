@@ -369,6 +369,8 @@ class TestReviewedCrowdControl:
             "Q": CC_PER_PART,
             "W": "knockback",
             "E": CC_PER_PART,
+            "P": "none",
+            "R": "knockback",
         }
         assert taliyah.parse_abilities.cc_kinds == taliyah.MODULE_CC
         assert "slowing all targets hit for 1.5 seconds" in cc_review.slot_text(

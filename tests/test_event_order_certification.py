@@ -296,14 +296,14 @@ def test_optimize_api_certifies_shyvana_form_packets():
 def test_optimize_api_labels_partial_candidate_search_without_claiming_certified_best():
     """A complete winner cannot certify an exhaustive search with coarse candidates.
 
-    Ahri's W and R carry no reviewed control kind (docs/coverage-residue.json),
-    so her Fimbulwinter candidates are honestly coarse in every window.
+    Anivia's Q and R name themselves per-part and no part answers, so her
+    Fimbulwinter candidates are honestly coarse in every window.
     """
     with app.test_client() as client:
         response = client.post(
             "/api/optimize",
             json={
-                "champion": "Ahri",
+                "champion": "Anivia",
                 "level": 18,
                 "fight_mode": "time_based",
                 "max_legendary_slots": 1,
@@ -331,7 +331,11 @@ def test_optimize_api_labels_partial_candidate_search_without_claiming_certified
 
 
 def test_optimize_api_darius_returns_visible_event_certified_build():
-    """Browser-facing Darius optimization succeeds without overclaiming search."""
+    """Browser-facing Darius optimization certifies on both axes.
+
+    Every legal candidate is modelled and every slot of Darius' kit states
+    its reviewed control, so no candidate evaluates coarsely.
+    """
     with app.test_client() as client:
         response = client.post(
             "/api/optimize",
@@ -348,13 +352,11 @@ def test_optimize_api_darius_returns_visible_event_certified_build():
     assert payload["ranked_builds"]
     assert payload["timeline_coverage"]["certification"] == "event_order_certified"
     assert payload["timeline_coverage"]["coarse_sources"] == []
-    assert payload["is_certified_best"] is False
-    # MERGE: the label is coupled to search coverage (optimizer.py) - an
-    # item-scope gap is only reported when the SEARCH covered everything.
-    # These two searches carry coarse candidate evaluations (7 here), so
-    # the partial label is the certification, and it is the same fact the
-    # partial_evaluations assertion below states.
-    assert payload["selection_certification"] == "partial_or_unexhaustive"
+    assert payload["is_certified_best"] is True
+    # The label is coupled to search coverage (optimizer.py): with no
+    # coarse candidate evaluation left, the search covered everything and
+    # says so.
+    assert payload["selection_certification"] == "exhaustive_event_ordered"
 
 
 def test_optimize_api_certifies_ziggs_minefield_cadence():

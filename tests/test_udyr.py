@@ -16,7 +16,13 @@ class TestReviewedCrowdControl:
         data = cc_review.kit("Udyr")
         # A cc-only slot states its kind in MODULE_CC like any other and
         # publishes the sourced interval as a ControlEvent (CF8).
-        assert udyr.MODULE_CC == {"E": "stun", "R": "slow"}
+        assert udyr.MODULE_CC == {
+            "E": "stun",
+            "R": "slow",
+            "P": "none",
+            "Q": "none",
+            "W": "none",
+        }
         assert "slows them while they remain within" in cc_review.slot_text(data, "R")
         # Blazing Stampede is where the kit's stun lives, and it deals no
         # damage of its own, so no part can carry that answer: the stun is

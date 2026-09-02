@@ -701,7 +701,13 @@ class TestReviewedCrowdControl:
     """
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
-        assert caitlyn.MODULE_CC == {"Q": "none", "E": "slow", "R": "none"}
+        assert caitlyn.MODULE_CC == {
+            "Q": "none",
+            "E": "slow",
+            "R": "none",
+            "P": "none",
+            "W": "root",
+        }
         assert caitlyn.parse_abilities.cc_kinds == caitlyn.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -715,7 +721,7 @@ class TestReviewedCrowdControl:
         is the trap Headshot the passive prices, so W authors no part."""
         text = cc_review.slot_text(cc_review.kit("Caitlyn"), "W")
         assert "springs the trap is rooted for 1.5 seconds" in text
-        assert "W" not in caitlyn.MODULE_CC
+        assert caitlyn.MODULE_CC["W"] == "root"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Caitlyn") == []

@@ -424,7 +424,13 @@ class TestReviewedCrowdControl:
     def test_module_cc_is_the_declaration_the_parser_wired(self):
         from src.calculator.champions import jarvan_iv
 
-        assert jarvan_iv.MODULE_CC == {"Q": "none", "E": "none", "R": "knockback"}
+        assert jarvan_iv.MODULE_CC == {
+            "Q": "none",
+            "E": "none",
+            "R": "knockback",
+            "P": "none",
+            "W": "slow",
+        }
         assert jarvan_iv.parse_abilities.cc_kinds == jarvan_iv.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):

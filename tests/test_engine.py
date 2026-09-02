@@ -1454,17 +1454,17 @@ class TestDeclarationOnAPartlessSlot:
             "cc_reviewed": True,
         }
 
-    def test_a_swing_rider_is_refused(self) -> None:
+    def test_a_swing_rider_states_its_review_and_carries_no_marker(self) -> None:
         """Corki's Hextech Munitions: a ratio priced onto every basic
         attack, in every branch it has.  Its damage is auto-stream, never
-        an ability event, so no declaration there can ever be read."""
+        an ability event, so the declaration has nothing to ride — which is
+        a fact about the row, not a reason to leave the slot undeclared."""
         parse = build_parser(
             {"Q": _empower_shell(basic_attack_true_ratio=0.2)},
             "TestChamp",
             cc_kinds={"Q": "none"},
         )
-        with pytest.raises(ValueError, match="would reach nothing"):
-            parse(_champion(Q=[_ability()]), 9, 0.0)
+        assert parse(_champion(Q=[_ability()]), 9, 0.0)["Q"]["parts"] == ()
 
     def test_a_row_that_prices_nothing_this_parse_is_left_alone(self) -> None:
         """An option can empty a slot (Corki's barrage at zero charges) or

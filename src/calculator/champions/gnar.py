@@ -437,7 +437,7 @@ SLOTS = {
 # authors on top of it (see ``_r``).  W's kind rides Wallop itself (above)
 # because Mini's W is an on-hit shell; P is the Mega stat-buff row and
 # applies nothing.
-MODULE_CC = {"Q": "slow", "W": "stun", "E": "slow", "R": "knockback"}
+MODULE_CC = {"Q": "slow", "W": "stun", "E": "slow", "R": "knockback", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Gnar", cc_kinds=MODULE_CC)
 

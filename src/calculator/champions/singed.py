@@ -105,7 +105,7 @@ _insanity_potion.phase = BUFF
 # Adhesive's area of effect after the displacement, they are rooted"
 # (Root Duration 1/1.25/1.5/1.75/2) — so the slot's one unconditional
 # control is the displacement, not the root.
-MODULE_CC = {"Q": "none", "E": "airborne"}
+MODULE_CC = {"Q": "none", "E": "airborne", "P": "none", "W": "slow", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Singed",

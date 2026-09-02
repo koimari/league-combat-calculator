@@ -32,6 +32,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "slow",
             "R": "none",
+            "P": "none",
         }
         assert fiddlesticks.parse_abilities.cc_kinds == fiddlesticks.MODULE_CC
 

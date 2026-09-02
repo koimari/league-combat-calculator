@@ -151,7 +151,7 @@ SLOTS = {
 # W (Empower) empowers "his next basic attack or Leap Strike ... to deal
 # additional magic damage" and nothing else — a reviewed absence of
 # control, riding the swing the cast forces.
-MODULE_CC = {"Q": "none", "W": "none", "R": "none", "E": "stun"}
+MODULE_CC = {"Q": "none", "W": "none", "R": "none", "E": "stun", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Jax", cc_kinds=MODULE_CC)
 OPTIONS = [

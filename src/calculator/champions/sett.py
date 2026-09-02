@@ -238,7 +238,7 @@ def _haymaker(
 # then slams.  Q is deliberately absent: its row is BOTH empowered basic
 # attacks summed at the cast, so no part of it is a hit the ledger can
 # time, and an unreachable declaration reviews nothing.
-MODULE_CC = {"W": "none", "E": "pull", "R": "suppression"}
+MODULE_CC = {"W": "none", "E": "pull", "R": "suppression", "P": "none", "Q": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Sett",

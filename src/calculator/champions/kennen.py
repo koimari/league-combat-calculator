@@ -14,7 +14,7 @@ import re
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_contract import coverage
 from .module_helpers import (
@@ -262,23 +262,29 @@ ASSUMPTIONS = [
 ]
 SOURCES = load_champion_sources("Kennen")
 
-# MODULE_CC is empty, and the Mark of the Storm walk is why rather than an
-# excuse for it.  The stun sits on the target's stack count, not on any
-# ability — "Kennen's abilities apply a stack of Mark of the Storm to
-# enemies hit ... stacking up to 3 times" and "the third stack against a
-# target consumes them all to stun them for 1.25 seconds".  Which casts of
-# a slot are the third application is therefore a property of the fight's
-# hit stream, and a slot-level kind is a constant — so neither a slot-wide
-# stun nor a slot-wide "none" is true of Q, W, E or R, and the walk
-# publishes the derived stun schedule on P's own row instead.  (The Annie
-# Pyromania rule, per target rather than cross-slot.)
+# P owns the stun and Q, W, E and R name themselves per-part, because the
+# stun sits on the target's stack count, not on any ability — "Kennen's
+# abilities apply a stack of Mark of the Storm to enemies hit ... stacking
+# up to 3 times" and "the third stack against a target consumes them all
+# to stun them for 1.25 seconds".  Which casts of a slot are the third
+# application is therefore a property of the fight's hit stream, and a
+# slot-level kind is a constant — so neither a slot-wide stun nor a
+# slot-wide "none" is true of Q, W, E or R, no part of them states one,
+# and the walk publishes the derived stun schedule on P's own row.  (The
+# Annie Pyromania rule, per target rather than cross-slot.)
 #
 # The blocker is the kind alone, never the timing: Slicing Maelstrom
 # already lands on the cadence the cache states ("summons a storm around
 # himself for 3 seconds", striking "every 0.5 seconds" — the six bolts
 # ``_slicing_maelstrom`` authors), so R's hits reach the event ledger and
 # still have nothing true to carry.
-MODULE_CC: dict[str, str] = {}
+MODULE_CC: dict[str, str] = {
+    "P": "stun",
+    "Q": CC_PER_PART,
+    "W": CC_PER_PART,
+    "E": CC_PER_PART,
+    "R": CC_PER_PART,
+}
 
 parse_abilities = build_parser(SLOTS, "Kennen", cc_kinds=MODULE_CC)
 

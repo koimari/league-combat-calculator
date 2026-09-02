@@ -37,6 +37,7 @@ class TestReviewedCrowdControl:
             "W": CC_PER_PART,
             "E": "taunt",
             "R": "slow",
+            "P": "none",
         }
         # Q applies two immobilize kinds in one cast, which is what the
         # un-narrowed "immobilize" states.
@@ -54,7 +55,7 @@ class TestReviewedCrowdControl:
         assert "monsters are additionally dealt magic damage" in cc_review.slot_text(
             data, "E"
         )
-        assert "P" not in rammus.MODULE_CC
+        assert rammus.MODULE_CC["P"] == "none"
 
     def test_the_thorns_row_answers_only_where_the_ledger_can_hear_it(self):
         # W applies no control; it can only say so when it prices a single

@@ -97,7 +97,7 @@ SOURCES = load_champion_sources("Kha'Zix")
 # Leap lands, none of them applying control.  The kit's two slows are the
 # evolution bonus (Evolved Spike Racks) and the Unseen Threat empowered
 # attack, neither of which is a slot packet this module emits.
-MODULE_CC = {"Q": "none", "W": "none", "E": "none"}
+MODULE_CC = {"Q": "none", "W": "none", "E": "none", "P": "slow", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Kha'Zix", cc_kinds=MODULE_CC)
 

@@ -498,10 +498,13 @@ class TestSpellbladeSiblingParsing:
 class TestFimbulwinterTimelineCertification:
     """Everlasting never guesses an unreviewed ability control state."""
 
-    def test_unreviewed_ability_control_is_coarse(self, ahri_data: dict) -> None:
-        """Fox-Fire is the kit's still-unreviewed row: the first flame plus
-        two more in one repeated part, a schedule with no sourced cadence,
-        so nothing may state its control either way."""
+    def test_a_reviewed_no_control_row_arms_nothing_and_certifies(
+        self, ahri_data: dict
+    ) -> None:
+        """Fox-Fire is a coarse row - the first flame plus two more in one
+        repeated part - and ``MODULE_CC`` reviews it as no control, which
+        the entry carries to every event it does author. Nothing arms the
+        shield, so the window is exact and names no arming event."""
         from src.calculator.data_fetcher import get_item_by_name
         from src.calculator.stats import calculate_total_stats
 
@@ -523,16 +526,16 @@ class TestFimbulwinterTimelineCertification:
             ),
         )
 
-        assert result["timeline_coverage"]["complete"] is False
-        assert (
-            "fimbulwinter_everlasting" in result["timeline_coverage"]["coarse_sources"]
-        )
+        coverage = result["timeline_coverage"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+        assert "control_armed_by" not in coverage
 
-    def test_one_unreviewed_ability_keeps_mixed_timeline_coarse(
+    def test_the_certificate_names_the_control_that_armed_the_shield(
         self, ahri_data: dict
     ) -> None:
-        """Charm is reviewed and Fox-Fire is not: one unreviewed row in the
-        cast order is enough to withhold."""
+        """Charm is an immobilize, which arms Everlasting on any holder, so
+        the certificate names the cast and the instant it read."""
         from src.calculator.data_fetcher import get_item_by_name
         from src.calculator.stats import calculate_total_stats
 
@@ -555,9 +558,12 @@ class TestFimbulwinterTimelineCertification:
             ),
         )
 
-        assert result["timeline_coverage"]["complete"] is False
+        coverage = result["timeline_coverage"]
+        assert coverage["complete"] is True
+        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
         assert (
-            "fimbulwinter_everlasting" in result["timeline_coverage"]["coarse_sources"]
+            coverage["control_armed_by"]
+            == "Fimbulwinter — Everlasting armed by E (immobilize) at 0.0s"
         )
 
 

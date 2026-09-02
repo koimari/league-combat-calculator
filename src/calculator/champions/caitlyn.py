@@ -405,7 +405,7 @@ SLOTS = {
 # hits" and reveals, which is not control.  W is the trap row — its root
 # is real, but the row prices the trap Headshot the passive owns, not a
 # cast of Caitlyn's own, and P is that passive.
-MODULE_CC = {"Q": "none", "E": "slow", "R": "none"}
+MODULE_CC = {"Q": "none", "E": "slow", "R": "none", "P": "none", "W": "root"}
 
 parse_abilities = build_parser(SLOTS, "Caitlyn", cc_kinds=MODULE_CC)
 

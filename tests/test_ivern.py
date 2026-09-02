@@ -27,7 +27,13 @@ class TestReviewedCrowdControl:
         from src.calculator.champions import ivern
         from src.calculator.champions.engine import CC_PER_PART
 
-        assert ivern.MODULE_CC == {"Q": "root", "E": "slow", "R": CC_PER_PART}
+        assert ivern.MODULE_CC == {
+            "Q": "root",
+            "E": "slow",
+            "R": CC_PER_PART,
+            "P": "none",
+            "W": "none",
+        }
         assert ivern.parse_abilities.cc_kinds == ivern.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):

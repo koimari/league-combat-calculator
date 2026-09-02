@@ -16,7 +16,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Shaco")
-        assert shaco.MODULE_CC == {"Q": "none", "W": "immobilize", "E": "slow"}
+        assert shaco.MODULE_CC == {
+            "Q": "none",
+            "W": "immobilize",
+            "E": "slow",
+            "P": "none",
+            "R": "per_part",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         # Two immobilize kinds land together, so the reviewed kind is the
         # un-narrowed one rather than a choice between them.
@@ -41,7 +47,7 @@ class TestReviewedCrowdControl:
             "the clone will explode upon dying or expiring to deal magic "
             "damage to nearby enemies" in r_text
         )
-        assert "R" not in shaco.MODULE_CC
+        assert shaco.MODULE_CC["R"] == "per_part"
 
     def test_the_unreviewable_slot_keeps_the_fight_coarse(self):
         assert cc_review.unreviewed_ability_slots("Shaco") == ["R"]

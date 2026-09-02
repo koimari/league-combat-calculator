@@ -583,7 +583,7 @@ class TestLedgerReceipts:
 
 class TestMalformedSoulEventsFailClosed:
     def test_soul_event_without_identity_fails_closed(self):
-        # A soul event without event identity (mirrors TearManaflow's
+        # A soul event without event identity (mirrors ManaflowLedger's
         # missing_hit_identity): named fail-closed receipt, no gain.
         result = _fight({"senna_mist_stacks": 0})
         account = _souls_account(result)

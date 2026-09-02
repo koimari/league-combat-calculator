@@ -65,7 +65,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value_at_rank, spell_object
-from .engine import SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import champion_stat, float_option
 from .module_contract import coverage
 from .module_helpers import no_damage_slot, ranked_slot
@@ -222,19 +222,18 @@ SLOTS = {
 
 # Cached kit review.  E "blasts a freezing wind at the target enemy that
 # deals magic damage" and applies nothing else (Chilled comes from Q and
-# R, and only doubles E's damage).  R's ticks now land on their cached
-# every-0.5-second beat, but their slow stays undeclared for a reason that
-# is not the ledger's (see ``_glacial_storm``).
+# R, and only doubles E's damage).
 #
-# Q stays UNREVIEWED regardless, so this kit keeps the coarse control-armed
-# scan: its row is the cached "Total Magic Damage" of the pass-through
-# (which slows) and the recast shatter (which stuns), and the cache times
+# Q and R both name themselves per-part and neither part states a kind.
+# Q's row is the cached "Total Magic Damage" of the pass-through (which
+# slows) and the recast shatter (which stuns), and the cache times
 # neither — the recast happens "while the ice is in flight after its cast
-# time", on a flight the cache gives a speed for and no distance.  The
-# shatter's stun IS sourced ("Stun Duration" 1.1 : 1.5), but one row that
-# is two landings cannot certify a single hit, so a kind on it would never
-# reach the event ledger.  W's wall pushes and authors no damage part.
-MODULE_CC = {"E": "none"}
+# time", on a flight the cache gives a speed for and no distance.  R's
+# ticks land on their cached every-0.5-second beat and every one of them
+# slows, but stating it here is the ``enhanced_consume`` ruling reserved
+# to its own slice (see ``_glacial_storm``).  W's wall "knock[s] all units
+# away from it" and authors no damage part.
+MODULE_CC = {"E": "none", "Q": CC_PER_PART, "W": "knockback", "R": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Anivia", cc_kinds=MODULE_CC)
 

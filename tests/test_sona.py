@@ -30,7 +30,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Sona")
-        assert sona.MODULE_CC == {"Q": "none", "R": "stun"}
+        assert sona.MODULE_CC == {
+            "Q": "none",
+            "R": "stun",
+            "P": "per_part",
+            "W": "none",
+            "E": "none",
+        }
         # Power Chord's Tempo slow rides the passive's empowered attack,
         # not Q, so Q's own text carries no control at all.
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []

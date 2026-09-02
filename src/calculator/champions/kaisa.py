@@ -692,7 +692,7 @@ SLOTS = {
 # passive reads *other* people's immobilizes to stack Plasma; it applies
 # none of its own.)  E and R author no damage part — Supercharge is the
 # attack-speed window and Killer Instinct is a shield plus a dash.
-MODULE_CC = {"Q": "none", "W": "none"}
+MODULE_CC = {"Q": "none", "W": "none", "E": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Kai'Sa", cc_kinds=MODULE_CC)
 

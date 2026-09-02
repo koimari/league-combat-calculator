@@ -60,7 +60,7 @@ from ..ability_atoms import (
 from ..ability_spec import AttackClass, DamageClass
 from ..binary_roots import data_value, spell_object
 from ..survival.actions import TransitionRank
-from .engine import BUFF, ONHIT, SlotCtx
+from .engine import BUFF, CC_PER_PART, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import missing_hp_fraction, named_damage, ranked_slot
 from .packet_module import build_packet_module
@@ -285,7 +285,13 @@ PACKET_SHA256 = "2c91dcf27a641c6a177969744e204b672765d8fc7291214c069ecacc64511a1
 # its fear rides the *recast*, which this module does not price, so there
 # is no event a control review could reach.  W is a pure stat buff and P an
 # on-hit rider on basic attacks, so neither authors a part either.
-MODULE_CC = {"Q": "none", "R": "suppression"}
+MODULE_CC = {
+    "Q": "none",
+    "R": "suppression",
+    "P": "none",
+    "W": "none",
+    "E": CC_PER_PART,
+}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Warwick",

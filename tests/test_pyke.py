@@ -30,7 +30,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Pyke")
-        assert pyke.MODULE_CC == {"Q": "pull", "E": "stun", "R": "none"}
+        assert pyke.MODULE_CC == {
+            "Q": "pull",
+            "E": "stun",
+            "R": "none",
+            "P": "none",
+            "W": "none",
+        }
         q_text = cc_review.slot_text(data, "Q")
         assert "dealing physical damage to the first enemy hit and pulling" in q_text
         assert "then slowing them by 90% for 1 second" in q_text
@@ -40,8 +46,8 @@ class TestReviewedCrowdControl:
         assert cc_review.control_words(cc_review.slot_text(data, "R")) == []
         # W (camouflage) and P (grey health) damage nothing, so no event of
         # theirs could carry an answer.
-        assert "W" not in pyke.MODULE_CC
-        assert "P" not in pyke.MODULE_CC
+        assert pyke.MODULE_CC["W"] == "none"
+        assert pyke.MODULE_CC["P"] == "none"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Pyke") == []

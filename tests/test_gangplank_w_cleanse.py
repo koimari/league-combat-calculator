@@ -46,11 +46,11 @@ CURRENT RUNTIME FACTS (verified before pinning):
   ``resolve_cleanse_item("Remove Scurvy")`` FAILS CLOSED today with a
   KeyError naming the source (the "unavailable source" denial) — the
   completion must declare the champion cleanse source.
-- Score fail-closed gate (already generic):
-  ``unrepresentable_template_receipt`` returns ``support_kind=cleanse``
-  for cleanse-kind templates and ``support_cleanse`` for heal packets
-  carrying the cleanse marker — the compiled score path can never
-  silently re-price a cleanse (HANDOVER section 9 rule).
+- Score staging gate (already generic): both cleanse shapes — the
+  cleanse-kind template and the heal carrying the marker — are staged by
+  the compiled score path, which carries the marker fields the shared
+  kernel dispatches on, so a cleanse can never be silently re-priced or
+  dropped there (HANDOVER section 9 rule; issue #226).
 
 Contract sections (numbered as in the RLM-2 C brief):
   S1  Source evidence + typed values (cached W rows; the module parse
@@ -1192,23 +1192,18 @@ class TestNamedDenials:
             resolve_cleanse_item("Bogus Cleanse")
         assert "Bogus Cleanse" in str(excinfo.value)
         # Score fail-closed receipts.
+        assert unrepresentable_template_receipt({"kind": "cleanse"}) is None
         assert (
-            unrepresentable_template_receipt({"kind": "cleanse"})
-            == "support_kind=cleanse"
+            unrepresentable_template_receipt({"kind": "heal", "cleanse": True}) is None
         )
         assert (
-            unrepresentable_template_receipt({"kind": "heal", "cleanse": True})
-            == "support_cleanse"
-        )
-        assert (
-            unrepresentable_template_receipt({"kind": "cleanse", "amount": 1.0})
-            == "support_kind=cleanse"
+            unrepresentable_template_receipt({"kind": "cleanse", "amount": 1.0}) is None
         )
         assert (
             unrepresentable_template_receipt(
                 {"kind": "heal", "amount": 100.0, "cleanse": True}
             )
-            == "support_cleanse"
+            is None
         )
 
     def test_w_denials_receipted_in_fight(self):
@@ -1234,27 +1229,23 @@ class TestNamedDenials:
 
 
 # ---------------------------------------------------------------------------
-# S8 — Score fail-closed behavior
+# S8 — Score staging behavior
 # ---------------------------------------------------------------------------
 
 
 class TestScoreFailClosed:
     def test_score_gate_names_fail_closed_receipts(self):
-        # PASS: the compiled score path ALREADY fails closed on every W
-        # authoring shape — a cleanse-kind template (support_kind=cleanse)
-        # and a heal packet carrying the cleanse marker (support_cleanse)
-        # are unrepresentable; a plain heal stays representable.  The
-        # P2-5 wiring must route the W through this gate (never silently
-        # re-price the heal as a plain heal or drop the cleanse).
-        assert (
-            unrepresentable_template_receipt({"kind": "cleanse"})
-            == "support_kind=cleanse"
-        )
+        # The compiled score path stages both W authoring shapes — a
+        # cleanse-kind template and a heal carrying the cleanse marker —
+        # because the truncation is a shared-kernel transition (#226).
+        # Movement is still refused with its named receipt, and a plain
+        # heal stays representable.
+        assert unrepresentable_template_receipt({"kind": "cleanse"}) is None
         assert (
             unrepresentable_template_receipt(
                 {"kind": "heal", "amount": 100.0, "cleanse": True}
             )
-            == "support_cleanse"
+            is None
         )
         assert (
             unrepresentable_template_receipt({"kind": "movement"})
@@ -1265,12 +1256,10 @@ class TestScoreFailClosed:
         )
 
     def test_w_score_only_never_silently_reprices(self):
-        # P2-5 contract (the completion rule): the score adapter cannot
-        # model the champion cleanse (interval truncation), so the W
-        # cleanse packet fails closed with the NAMED receipt
-        # (support_kind=cleanse) and the fight is priced by the receipt
-        # walk — never a silent re-priced plain heal, never a silent
-        # drop.
+        # P2-5 contract (the completion rule): the W cleanse packet is
+        # staged by the score adapter and priced by the same shared-kernel
+        # truncation the receipt walk runs — never a silent re-priced plain
+        # heal, never a silent drop.
         template = {
             "kind": "cleanse",
             "amount": 1.0,
@@ -1283,7 +1272,7 @@ class TestScoreFailClosed:
             "target": "main",
             "_event_id": "main:cleanse:W:0",
         }
-        assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
+        assert unrepresentable_template_receipt(template) is None
         # The receipt walk prices the fight (the app-level couple payload
         # shows the full cleanse decision).
         combat = _app_combat({}, {"Q": 5, "W": 0, "E": 5, "R": 0})
@@ -1322,9 +1311,8 @@ class TestModeParity:
     def test_w_mode_parity_contract_with_option(self):
         # P2-5 contract: the engine surface (W row, mana, totals) is
         # byte-identical full vs score_only — the W stays OUT of outgoing
-        # damage in both modes — and the couple score gate names the
-        # fail-closed receipt for the cleanse packet (the completion
-        # rule's pinned divergence).
+        # damage in both modes — and the couple score gate stages the
+        # cleanse packet rather than diverging on it.
         full = _fight({}, one_rotation=True)
         scored = _fight({}, one_rotation=True, score_only=True)
         assert full["breakdown"]["W"] == scored["breakdown"]["W"]
@@ -1341,7 +1329,7 @@ class TestModeParity:
             "target": "main",
             "_event_id": "main:cleanse:W:0",
         }
-        assert unrepresentable_template_receipt(template) == "support_kind=cleanse"
+        assert unrepresentable_template_receipt(template) is None
 
 
 # ---------------------------------------------------------------------------

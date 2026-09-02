@@ -40,7 +40,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_interpolation, data_value, spell_object
-from .engine import SlotCtx
+from .engine import CC_PER_PART, SlotCtx
 from .inputs import int_option
 from .module_contract import coverage
 from .module_helpers import no_damage
@@ -146,14 +146,14 @@ def _plants(ctx: SlotCtx) -> dict[str, Any] | None:
 # Deadly Spines only damages ("dealing magic damage to enemies hit"); its
 # sprout delay is authored above, so the row carries that answer.
 #
-# W stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
-# The W row is not a cast at all but ``plant_count`` plants' basic
-# attacks, and the two plant kinds do not answer alike: a Thorn Spitter
-# (sprouted by Q) controls nothing while a Vine Lasher (sprouted by E)
-# slows — a pets-page fact this module already records as unmodelled
-# state and one the cached champion entry does not carry at all.  The
-# option cannot tell them apart, so no one kind is true of the row.
-MODULE_CC = {"Q": "none", "E": "root", "R": "knockup"}
+# W names itself per-part and no part states a kind.  The W row is not a
+# cast at all but ``plant_count`` plants' basic attacks, and the two plant
+# kinds do not answer alike: a Thorn Spitter (sprouted by Q) controls
+# nothing while a Vine Lasher (sprouted by E) slows — a pets-page fact
+# this module already records as unmodelled state and one the cached
+# champion entry does not carry at all.  The option cannot tell them
+# apart, so no one kind is true of the row.
+MODULE_CC = {"Q": "none", "E": "root", "R": "knockup", "P": "none", "W": CC_PER_PART}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zyra",

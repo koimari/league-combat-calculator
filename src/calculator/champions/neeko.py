@@ -157,7 +157,7 @@ def _pop_blossom(ctx: SlotCtx) -> dict[str, Any] | None:
 # absent because Inherent Glamour is a disguise with no damage (its
 # "immobilized" wording is about Neeko losing the disguise, not about
 # control she applies).
-MODULE_CC = {"Q": "none", "W": "none", "E": "root", "R": "stun"}
+MODULE_CC = {"Q": "none", "W": "none", "E": "root", "R": "stun", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Neeko",

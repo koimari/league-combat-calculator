@@ -22,6 +22,7 @@ from src.calculator.item_behavior_catalog import (
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     DamageInputs,
+    required_effect_value,
     target_class_denials,
 )
 from src.calculator.item_source import effect_entries
@@ -321,18 +322,25 @@ def test_every_reviewed_class_reading_key_names_a_declared_clause() -> None:
         assert mechanic in _cached_mechanics(owners[0])
 
 
-def test_an_unreviewed_manaflow_holder_still_refuses_a_minion_fight() -> None:
-    """Only Tear's Manaflow ledger reads the fight's class.
+def test_every_manaflow_clause_is_adjudicated_at_the_fights_class() -> None:
+    """Every holder's ledger runs every trigger its cached clause names.
 
-    Every other Manaflow entry declares the same champion split and none is
-    paid one, so their clause is refused rather than paid the champion amount.
+    The three on-hit holders spend a charge on a basic attack as well as on
+    an ability cast; both streams read the fight's own class, so no half of
+    the clause is left unpriced and none is refused.
     """
-    others = sorted(
-        name
-        for name in ITEM_EFFECTS
-        if name != "Tear of the Goddess" and "Manaflow" in _cached_mechanics(name)
+    holders = sorted(
+        name for name in ITEM_EFFECTS if "Manaflow" in _cached_mechanics(name)
     )
-    assert others
+    assert len(holders) == 5
+    on_hit = [
+        name
+        for name in holders
+        if required_effect_value(name, "manaflow_on_hit_charge")
+    ]
+    assert on_hit == ["Manamune", "Whispering Circlet", "Winter's Approach"]
     reader = on_hit_strike.adjudicated_target_class_mechanics
-    for owner in others:
-        assert any("'Manaflow'" in denial for denial in _minion_denials(owner, reader))
+    for owner in holders:
+        assert not any(
+            "'Manaflow'" in denial for denial in _minion_denials(owner, reader)
+        )

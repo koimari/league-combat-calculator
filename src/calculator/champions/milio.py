@@ -76,7 +76,7 @@ _RANK_GATED_R = rank_gated_no_damage_parser(
 # 1 second" — the enemy the bounced explosion this packet prices then
 # damages (and slows).  W, E and R are ally heals/shields and P is an
 # enchantment on allies, so no other slot emits an enemy damage event.
-MODULE_CC = {"Q": "stun"}
+MODULE_CC = {"Q": "stun", "P": "none", "W": "none", "E": "none", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Milio",

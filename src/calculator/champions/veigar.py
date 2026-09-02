@@ -30,7 +30,7 @@ hardcoded.
 from collections.abc import Callable
 from typing import Any
 
-from ..ability_spec import ControlEvent, DamagePart
+from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .module_contract import coverage
 from .module_helpers import delayed_damage, no_damage_parser, ranked_slot
@@ -39,6 +39,7 @@ from .slotlib import (
     extract_cooldown,
     extract_named,
     extract_value,
+    park_control_interval,
     simple_damage,
 )
 from .source_receipts import load_champion_sources
@@ -57,22 +58,19 @@ def _event_horizon(
     _ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
     """E: one sourced stun interval after the cage rises."""
-    return {
+    entry = {
         "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
         "damage_type": "magic",
         "total_raw": 0.0,
         "parts": (),
-        "control_events": (
-            ControlEvent(
-                "stun",
-                extract_value(ability, "Stun Duration", rank),
-                time_offset=0.5,
-            ),
-        ),
         "detail": "One edge stun after the sourced 0.5 second cage delay.",
     }
+    park_control_interval(
+        entry, extract_value(ability, "Stun Duration", rank), time_offset=0.5
+    )
+    return entry
 
 
 def _primordial_burst_scaled(base: float) -> Callable[[float], float]:
@@ -163,6 +161,6 @@ OPTIONS: list[dict[str, Any]] = []
 # ("knocked down and stunned for a duration"); the cage deals no damage,
 # so there is no part for a marker to ride and the slot authors the stun
 # as a typed ``control_events`` interval instead (``_event_horizon``).
-MODULE_CC = {"Q": "none", "W": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "none", "R": "none", "P": "none", "E": "stun"}
 
 parse_abilities = build_parser(SLOTS, "Veigar", cc_kinds=MODULE_CC)

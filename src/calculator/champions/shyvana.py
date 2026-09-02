@@ -290,7 +290,7 @@ SLOTS = {
 # "and slowing them by 30% for 2 seconds".  R (Dragon's Descent) "deals
 # magic damage to enemies hit and fears them for 0.75 seconds, as well as
 # slows them by 99%" — the fear is the immobilizing half.
-MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "fear"}
+MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "fear", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Shyvana", cc_kinds=MODULE_CC)
 

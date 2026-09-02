@@ -31,7 +31,7 @@ PACKET_SHA256 = "d331bfbe1255392c5667aa32b6403badc5674e16c7196822d0a8bee5a94a4f3
 # the kit's one control: the empowered attack "strike[s] the target twice,
 # dealing modified physical damage and stunning them for 0.75 seconds".  P
 # is Fury bookkeeping with no damage row.
-MODULE_CC = {"Q": "none", "W": "stun", "E": "none", "R": "none"}
+MODULE_CC = {"Q": "none", "W": "stun", "E": "none", "R": "none", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Renekton",

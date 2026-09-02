@@ -255,6 +255,8 @@ class TestReviewedCrowdControl:
             "Q": "immobilize",
             "W": "immobilize",
             "E": CC_PER_PART,
+            "P": "none",
+            "R": "none",
         }
         assert "stunning and knocking them up simultaneously" in " ".join(
             cc_review.slot_text(data, "Q").split()

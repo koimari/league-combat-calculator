@@ -162,6 +162,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": CC_PER_PART,
             "R": "knockback",
+            "P": "none",
         }
         assert fizz.parse_abilities.cc_kinds == fizz.MODULE_CC
 

@@ -160,7 +160,7 @@ def _unstoppable_force(packet_r):
 # — damage clauses only, in a kit whose control all sits on Q/E/R.  Its
 # row is the two halves of that one swing, which ``single_hit`` now
 # certifies as one shared landing.
-MODULE_CC = {"Q": "slow", "W": "none", "E": "cripple", "R": "knockup"}
+MODULE_CC = {"Q": "slow", "W": "none", "E": "cripple", "R": "knockup", "P": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Malphite",

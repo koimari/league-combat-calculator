@@ -228,7 +228,7 @@ SLOTS["R"] = with_control(
 # coarser "immobilize" — the pull stays named-but-unmodeled utility.  P is
 # absent — Clockwork Windup is an on-hit rider on the auto stream, not an
 # ability event of its own.
-MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "stun"}
+MODULE_CC = {"Q": "none", "W": "slow", "E": "none", "R": "stun", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Orianna", cc_kinds=MODULE_CC)
 

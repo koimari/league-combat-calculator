@@ -381,22 +381,21 @@ def test_stable_event_key_is_the_decision_identity():
 
 
 def test_unrepresentable_template_receipt_gate():
+    """Every cleanse shape is staged; movement is still refused (#226)."""
     assert (
         unrepresentable_template_receipt(
             {"kind": "heal", "amount": 100.0, "cleanse": True}
         )
-        == "support_cleanse"
+        is None
     )
     assert (
         unrepresentable_template_receipt(
             {"kind": "heal", "amount": 100.0, "cleanse_item": "Mikael's Blessing"}
         )
-        == "support_cleanse"
+        is None
     )
     assert unrepresentable_template_receipt({"kind": "heal", "amount": 100.0}) is None
-    assert unrepresentable_template_receipt({"kind": "cleanse", "amount": 1.0}) == (
-        "support_kind=cleanse"
-    )
+    assert unrepresentable_template_receipt({"kind": "cleanse", "amount": 1.0}) is None
     assert unrepresentable_template_receipt({"kind": "movement", "amount": 50.0}) == (
         "support_kind=movement"
     )

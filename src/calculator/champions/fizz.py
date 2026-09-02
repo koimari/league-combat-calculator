@@ -185,7 +185,7 @@ SLOTS = {
 # immobilize the pair reads.  E is absent because Playful slows and
 # Trickster does not, so its kind is authored per variant in _playful; P
 # carries no damage part at all.
-MODULE_CC = {"Q": "none", "W": "none", "E": CC_PER_PART, "R": "knockback"}
+MODULE_CC = {"Q": "none", "W": "none", "E": CC_PER_PART, "R": "knockback", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Fizz", cc_kinds=MODULE_CC)
 

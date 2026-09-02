@@ -90,7 +90,7 @@ _heightened_senses.phase = BUFF
 # "immobilized" wording on that entry is about Quinn losing the ability, not
 # about control she applies.  W (vision) deals no damage and P is an on-hit
 # rider on the auto stream.
-MODULE_CC = {"Q": "none", "E": "knockback", "R": "none"}
+MODULE_CC = {"Q": "none", "E": "knockback", "R": "none", "P": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Quinn",

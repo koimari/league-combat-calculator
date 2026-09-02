@@ -241,7 +241,7 @@ SLOTS["Q"] = _rocket_grab
 # un-narrowed kind states; E "knock[s] up the target for 1 second"; R's
 # active "silences them for 0.5 seconds" — real control, but neither an
 # immobilizing effect nor a slow.  W deals no damage.
-MODULE_CC = {"Q": "immobilize", "E": "knockup", "R": "silence"}
+MODULE_CC = {"Q": "immobilize", "E": "knockup", "R": "silence", "W": "none"}
 
 parse_abilities = build_parser(SLOTS, "Blitzcrank", cc_kinds=MODULE_CC)
 

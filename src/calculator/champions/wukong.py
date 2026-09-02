@@ -174,7 +174,7 @@ SLOTS = {
 # shred, not control — and Nimbus Strike only strikes.  W is the clone's
 # pet timeline (no direct cast packet) and P is the armor buff; neither
 # authors a damage part.
-MODULE_CC = {"Q": "none", "E": "none", "R": "knockup"}
+MODULE_CC = {"Q": "none", "E": "none", "R": "knockup", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Wukong", cc_kinds=MODULE_CC)
 

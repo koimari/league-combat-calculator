@@ -331,7 +331,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Ashe")
-        assert ashe.MODULE_CC == {"W": "slow", "R": "stun", "E": "none"}
+        assert ashe.MODULE_CC == {
+            "W": "slow",
+            "R": "stun",
+            "E": "none",
+            "P": "slow",
+            "Q": "none",
+        }
         assert "applying critical slow to enemy champions hit" in " ".join(
             cc_review.slot_text(data, "W").split()
         )

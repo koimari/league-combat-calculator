@@ -31,6 +31,7 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "knockback",
             "R": "knockback",
+            "P": "none",
         }
         assert gragas.parse_abilities.cc_kinds == gragas.MODULE_CC
 

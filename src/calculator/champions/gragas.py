@@ -83,7 +83,7 @@ SLOTS = {
 # attack; E and R each lead with a displacement ("knocking them back") on
 # the enemies they damage, so each declares its first-listed immobilize.
 # P is the self-heal and authors no damage part.
-MODULE_CC = {"Q": "slow", "W": "none", "E": "knockback", "R": "knockback"}
+MODULE_CC = {"Q": "slow", "W": "none", "E": "knockback", "R": "knockback", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Gragas", cc_kinds=MODULE_CC)
 

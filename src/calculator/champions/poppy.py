@@ -91,7 +91,13 @@ def _keepers_verdict(packet_r):
 # second" in both priced branches; the fully-charged branch adds a knock
 # back on top, which is a second immobilize and not a different answer.
 # P is absent — Iron Ambassador is an on-hit rider on the auto stream.
-MODULE_CC = {"Q": "slow", "W": "knockup", "E": "immobilize", "R": "knockup"}
+MODULE_CC = {
+    "Q": "slow",
+    "W": "knockup",
+    "E": "immobilize",
+    "R": "knockup",
+    "P": "none",
+}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Poppy",

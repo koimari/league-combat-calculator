@@ -26,7 +26,13 @@ class TestReviewedCrowdControl:
     def test_module_cc_is_the_declaration_the_parser_wired(self):
         from src.calculator.champions import graves
 
-        assert graves.MODULE_CC == {"Q": "none", "W": "slow", "R": "none"}
+        assert graves.MODULE_CC == {
+            "Q": "none",
+            "W": "slow",
+            "R": "none",
+            "P": "none",
+            "E": "none",
+        }
         assert graves.parse_abilities.cc_kinds == graves.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):

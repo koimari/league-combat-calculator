@@ -29,6 +29,15 @@ ITEM_EXCLUSIVITY_GROUPS: dict[str, frozenset[str]] = {
             "Dusk and Dawn",
         }
     ),
+    "Manaflow": frozenset(
+        {
+            "Archangel's Staff",
+            "Manamune",
+            "Tear of the Goddess",
+            "Whispering Circlet",
+            "Winter's Approach",
+        }
+    ),
     "Immolate": frozenset(
         {
             "Bami's Cinder",

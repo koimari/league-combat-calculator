@@ -290,7 +290,7 @@ _bridge_between = with_detail(
 # ``with_control_event`` wrapper below (the Rammus-E shape).
 # E (Blazing Stampede) prices no damage of its own; its reviewed stun rides
 # the entry as a sourced ControlEvent read off the slot's prose atom.
-MODULE_CC = {"E": "stun", "R": "slow"}
+MODULE_CC = {"E": "stun", "R": "slow", "P": "none", "Q": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Udyr",

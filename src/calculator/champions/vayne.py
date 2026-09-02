@@ -203,7 +203,7 @@ SLOTS = {
 # Bolts on-hit shell
 # (its true damage rides a basic attack, not an ability event) and R is a
 # pure stat buff, so neither authors a part a review could reach.
-MODULE_CC = {"Q": "none", "E": "knockback"}
+MODULE_CC = {"Q": "none", "E": "knockback", "W": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Vayne", cc_kinds=MODULE_CC)
 

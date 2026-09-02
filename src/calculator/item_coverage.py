@@ -2378,7 +2378,7 @@ FRONTIER: Mapping[str, str] = {
         "Breaking Shockwave emits a walk packet no focused test exercises; #43 "
         "tracks the multi-target authoring debt."
     ),
-    "packet:Tear of the Goddess — Manaflow": (
+    "packet:{} — Manaflow": (
         "the Manaflow row is a PROJECTION of the typed mana ledger rather "
         "than a mechanic of its own, so it owes no separate claim; #44 tracks "
         "the charge-ledger review that would give it one."

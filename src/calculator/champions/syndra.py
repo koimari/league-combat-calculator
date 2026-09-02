@@ -372,11 +372,18 @@ SLOTS = {
 # W (Force of Will) throws the grabbed target and deals its damage "once
 # they land"; "all targets hit are slowed by 25% for 1.5 seconds".
 #
-# R stays UNREVIEWED, so this kit keeps the coarse control-armed scan.
+# R reviews to no control, and its row still lands as one coarse hit.
 # Unleashed Power is control-free ("each dealing magic damage upon hit")
 # but its row is one aggregated part of ``r_spheres`` hits with no sourced
 # cadence between them — a schedule, which ``single_hit`` refuses.
-MODULE_CC = {"E": "stun", "Q": "none", "Q2": "none", "W": "slow"}
+MODULE_CC = {
+    "E": "stun",
+    "Q": "none",
+    "Q2": "none",
+    "W": "slow",
+    "P": "none",
+    "R": "none",
+}
 
 # The revision these declarations were read from, in the shape
 # scripts/cast_dependency_audit.py will resolve against the committed

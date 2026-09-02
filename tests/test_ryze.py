@@ -16,7 +16,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Ryze")
-        assert ryze.MODULE_CC == {"Q": "none", "W": "slow", "E": "none", "R": "none"}
+        assert ryze.MODULE_CC == {
+            "Q": "none",
+            "W": "slow",
+            "E": "none",
+            "R": "none",
+            "P": "none",
+        }
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == []
         # W's Flux bonus roots instead of slowing, but that empowerment has
@@ -30,7 +36,7 @@ class TestReviewedCrowdControl:
         assert "ryze and all allied units within the portal will blink" in r_text
         assert "become rooted, disarmed, silenced and untargetable" in r_text
         # P only raises Ryze's maximum mana.
-        assert "P" not in ryze.MODULE_CC
+        assert ryze.MODULE_CC["P"] == "none"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Ryze") == []

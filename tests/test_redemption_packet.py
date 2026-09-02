@@ -1038,8 +1038,7 @@ def _timeline(include_receipt: bool = True, **kwargs):
 
 def test_compiled_score_kernel_can_stage_both_redemption_packet_kinds():
     """The Redemption heal and true-damage packets are PLAIN packets: the
-    compiled kernel's fail-closed guards accept both (unlike Mikael's
-    cleanse marker, which fails closed with support_cleanse).  The heal
+    compiled kernel's fail-closed guards accept both.  The heal
     template is a flat heal (no cleanse, no duration) and the damage event
     carries no execute/redirect/deferred payload, so the compiled path CAN
     stage them and does not fall back."""

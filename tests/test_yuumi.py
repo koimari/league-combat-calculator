@@ -68,7 +68,13 @@ class TestReviewedCrowdControl:
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Yuumi")
-        assert yuumi.MODULE_CC == {"Q": "slow", "R": "slow"}
+        assert yuumi.MODULE_CC == {
+            "Q": "slow",
+            "R": "slow",
+            "P": "none",
+            "W": "none",
+            "E": "none",
+        }
         assert yuumi.parse_abilities.cc_kinds == yuumi.MODULE_CC
         assert "slowed by 20% for 1 second" in cc_review.slot_text(data, "Q")
         assert "slowed by 10% for 1.25 seconds" in cc_review.slot_text(data, "R")
@@ -81,8 +87,8 @@ class TestReviewedCrowdControl:
         while W prices nothing an enemy takes and reads ``no_damage``
         (TestYouAndMeIsASourcedZeroDamageRow re-derives that verdict).
         """
-        assert "W" not in yuumi.MODULE_CC
-        assert "E" not in yuumi.MODULE_CC
+        assert yuumi.MODULE_CC["W"] == "none"
+        assert yuumi.MODULE_CC["E"] == "none"
         assert get_champion_module_contract("Yuumi").coverage["W"] == "no_damage"
         assert get_champion_module_contract("Yuumi").coverage["E"] == "modeled"
 

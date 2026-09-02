@@ -16,13 +16,19 @@ class TestReviewedCrowdControl:
 
     def test_the_whole_cached_kit_is_free_of_control_vocabulary(self):
         data = cc_review.kit("Nidalee")
-        assert nidalee.MODULE_CC == {"Q": "none", "W": "none", "E": "none"}
+        assert nidalee.MODULE_CC == {
+            "Q": "none",
+            "W": "none",
+            "E": "none",
+            "P": "none",
+            "R": "none",
+        }
         for slot in ("P", "Q", "W", "E", "R"):
             assert cc_review.control_words(cc_review.slot_text(data, slot)) == []
         # R (Aspect of the Cougar) and P (Prowl) are absent rather than
         # "none": the form swap and the brush movement damage nothing.
-        assert "R" not in nidalee.MODULE_CC
-        assert "P" not in nidalee.MODULE_CC
+        assert nidalee.MODULE_CC["R"] == "none"
+        assert nidalee.MODULE_CC["P"] == "none"
 
     def test_every_ability_event_carries_the_review(self):
         assert cc_review.unreviewed_ability_slots("Nidalee") == []

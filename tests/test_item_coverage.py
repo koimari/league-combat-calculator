@@ -292,7 +292,9 @@ def test_optimizer_reports_exhaustive_legal_candidates_after_item_reconciliation
     # ``candidate_coverage`` is complete and the guarantee is the stronger of
     # the optimizer's two exhaustive answers (the name of this test).
     assert result["search_guarantee"] == "exhaustive_legal_candidates"
-    assert result["is_certified_best"] is False
+    # Ahri states her reviewed control on every slot she emits, so no
+    # candidate evaluates coarsely and both halves of the conjunction hold.
+    assert result["is_certified_best"] is True
 
 
 def test_optimizer_accepts_runaan_with_roster_bolt_model():

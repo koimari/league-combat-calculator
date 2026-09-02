@@ -179,7 +179,7 @@ _ragnarok.phase = BUFF
 # and attack speed), R (Olaf's own cleanse and immunity) and P (attack
 # speed and life steal) damage nothing, so no event of theirs could carry
 # an answer.
-MODULE_CC = {"Q": "slow", "E": "none"}
+MODULE_CC = {"Q": "slow", "E": "none", "P": "none", "W": "none", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Olaf",

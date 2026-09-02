@@ -387,9 +387,8 @@ class TestSourceEvidence:
         assert [o["key"] for o in meta["options"]] == ["senna_mist_stacks"]
 
     def test_parse_snapshot_has_exactly_one_on_hit_payload(self):
-        # The engine contract is one per-auto on_hit payload per entry —
-        # the mark rides the P (passive) entry; the rider rides its OWN
-        # P2 entry with its own payload (the smallest safe extension).
+        # One on_hit payload per entry: the mark rides the P entry, the
+        # Relic Cannon rider its own P2 entry (the smallest safe extension).
         _, abilities = _parse({"senna_mist_stacks": 40})
         passive = abilities["passive"]
         assert set(passive) == {
@@ -401,6 +400,7 @@ class TestSourceEvidence:
             "stat_buff",
             "on_hit",
             "detail",
+            "cc_reviewed",
         }
         assert set(passive["on_hit"]) == {
             "name",

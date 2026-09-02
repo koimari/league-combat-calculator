@@ -435,7 +435,7 @@ SLOTS = {
 # dies or is a small monster" — the enemy this module prices survives the
 # hit, so the row applies no control.  R is the self-buff and authors no
 # damage part.
-MODULE_CC = {"Q": "slow", "W": "none", "E": "none"}
+MODULE_CC = {"Q": "slow", "W": "none", "E": "none", "R": "none"}
 
 parse_abilities = build_parser(SLOTS, "Dr. Mundo", cc_kinds=MODULE_CC)
 

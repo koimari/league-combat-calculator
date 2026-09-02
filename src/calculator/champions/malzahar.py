@@ -237,7 +237,7 @@ _Q_PORTAL_SECONDS = data_value(spell_object("Malzahar", "MalzaharQ"), "DelayPost
 # every 0.25 seconds" — the suppression is what the damaged target takes.
 # W's cast authors no damage part (the swarm rides its own pet row, which
 # is not an ability event) and P is a self-buff.
-MODULE_CC = {"Q": "silence", "E": "none", "R": "suppression"}
+MODULE_CC = {"Q": "silence", "E": "none", "R": "suppression", "P": "none", "W": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Malzahar",
