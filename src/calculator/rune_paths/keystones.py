@@ -21,7 +21,6 @@ from types import MappingProxyType
 from typing import Any
 
 from ..ability_spec import Disposition, ZeroPolicy
-from ..champions.inputs import champion_stat
 from ..item_effects import DamageInputs
 from ..rune_effects import (
     KeystoneAeryEffect,
@@ -42,15 +41,17 @@ from ..rune_effects import (
     RuneProcEffect,
     RuneValues,
     RuneWindowAmpEffect,
-    at_level,
+    adaptive_formula,
     breakdown_key,
     display_name,
+    leveled_damage,
     no_damage_compiler,
     pure_adaptive_type,
     ratio_adaptive_type,
     required_cooldown_by_level,
     required_level_table,
     required_leveling,
+    required_leveling_pair,
     required_pair,
     zero_receipts,
 )
@@ -126,18 +127,8 @@ def _compile_electrocute(entry: Mapping[str, Any]) -> RuneProcEffect:
     """Compile Electrocute: 3 stacks in 3s strike for leveled adaptive damage."""
     name = "Electrocute"
     effects = RuneValues(name, entry.get("effects", {}))
-    base_by_level = required_leveling(name, effects)
-    bonus_ad_ratio = effects.number("bonus_ad_ratio")
-    ap_ratio = effects.number("ap_ratio")
+    raw, bonus_ad_ratio, ap_ratio = adaptive_formula(name, effects)
     top = RuneValues(name, entry)
-
-    def raw(inputs: DamageInputs) -> float:
-        stats = inputs.champion_stats
-        return (
-            at_level(base_by_level, inputs.level)
-            + bonus_ad_ratio * champion_stat(stats, "bonus_attack_damage")
-            + ap_ratio * champion_stat(stats, "ability_power")
-        )
 
     return RuneProcEffect(
         rune_name=name,
@@ -171,11 +162,8 @@ def _compile_press_the_attack(entry: Mapping[str, Any]) -> RuneProcAmpEffect:
     """Compile Press the Attack: 3 autos proc leveled damage plus a lasting amp."""
     name = "Press the Attack"
     effects = RuneValues(name, entry.get("effects", {}))
-    base_by_level = required_leveling(name, effects)
+    raw = leveled_damage(name, effects)
     top = RuneValues(name, entry)
-
-    def raw(inputs: DamageInputs) -> float:
-        return at_level(base_by_level, inputs.level)
 
     return RuneProcAmpEffect(
         rune_name=name,
@@ -219,10 +207,7 @@ def _distance_amp_ratio(
 
 
 def _certify_comet_leveling_order(
-    name: str,
-    effects: "RuneValues",
-    base_by_level: list[float],
-    scaling: Mapping[str, Any],
+    name: str, effects: "RuneValues", scaling: Mapping[str, Any]
 ) -> None:
     """Certify leveling[0] is the minimum-damage table, not the max-range one.
 
@@ -233,6 +218,7 @@ def _certify_comet_leveling_order(
     multiplier over base and ratios together.
     """
     leveling = effects.value("leveling")
+    base_by_level = [float(value) for value in leveling[0]]
     span_end = float(scaling["distance_range"][1])
     full_amp = _distance_amp_ratio(name, scaling, span_end)
     max_by_level = [float(value) for value in leveling[1]] if len(leveling) > 1 else []
@@ -256,20 +242,13 @@ def _compile_arcane_comet(entry: Mapping[str, Any]) -> RuneAbilityProcEffect:
     """
     name = "Arcane Comet"
     effects = RuneValues(name, entry.get("effects", {}))
-    base_by_level = required_leveling(name, effects)
-    bonus_ad_ratio = effects.number("bonus_ad_ratio")
-    ap_ratio = effects.number("ap_ratio")
+    minimum, bonus_ad_ratio, ap_ratio = adaptive_formula(name, effects)
     scaling = effects.value("distance_scaling")
     amp_ratio = _distance_amp_ratio(name, scaling, ARCANE_COMET_ASSUMED_TRAVEL_DISTANCE)
-    _certify_comet_leveling_order(name, effects, base_by_level, scaling)
+    _certify_comet_leveling_order(name, effects, scaling)
 
     def raw(inputs: DamageInputs) -> float:
-        stats = inputs.champion_stats
-        return (
-            at_level(base_by_level, inputs.level)
-            + bonus_ad_ratio * champion_stat(stats, "bonus_attack_damage")
-            + ap_ratio * champion_stat(stats, "ability_power")
-        ) * (1.0 + amp_ratio)
+        return minimum(inputs) * (1.0 + amp_ratio)
 
     return RuneAbilityProcEffect(
         rune_name=name,
@@ -288,19 +267,9 @@ def _compile_summon_aery(entry: Mapping[str, Any]) -> KeystoneAeryEffect:
     """Compile Summon Aery's sourced damage and shielding tables."""
     name = "Summon Aery"
     effects = RuneValues(name, entry.get("effects", {}))
-    leveling = effects.value("leveling")
-    if not isinstance(leveling, list) or len(leveling) < 2:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] leveling must contain damage and shield "
-            "tables — wiki parse degraded; check rune_parser and data/runes.json"
-        )
-    damage_by_level = tuple(float(value) for value in leveling[0])
-    shield_by_level = tuple(float(value) for value in leveling[1])
-    if len(damage_by_level) < 20 or len(shield_by_level) < 20:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] leveling tables must cover 20 levels — "
-            "wiki parse degraded; check rune_parser and data/runes.json"
-        )
+    damage_by_level, shield_by_level = required_leveling_pair(
+        name, effects, "damage and shield"
+    )
     bonus_ad_ratio = effects.number("bonus_ad_ratio")
     ap_ratio = effects.number("ap_ratio")
 
@@ -324,19 +293,9 @@ def _compile_guardian(entry: Mapping[str, Any]) -> KeystoneGuardianEffect:
     """Compile Guardian's threshold, paired shield, and cooldown tables."""
     name = "Guardian"
     effects = RuneValues(name, entry.get("effects", {}))
-    leveling = effects.value("leveling")
-    if not isinstance(leveling, list) or len(leveling) < 2:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] leveling must contain threshold and shield "
-            "tables — wiki parse degraded; check rune_parser and data/runes.json"
-        )
-    threshold_by_level = tuple(float(value) for value in leveling[0])
-    shield_by_level = tuple(float(value) for value in leveling[1])
-    if len(threshold_by_level) < 20 or len(shield_by_level) < 20:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] leveling tables must cover 20 levels — "
-            "wiki parse degraded; check rune_parser and data/runes.json"
-        )
+    threshold_by_level, shield_by_level = required_leveling_pair(
+        name, effects, "threshold and shield"
+    )
     return KeystoneGuardianEffect(
         rune_name=name,
         breakdown_key=breakdown_key(name),
@@ -356,20 +315,9 @@ def _compile_aftershock(entry: Mapping[str, Any]) -> KeystoneAftershockEffect:
     """Compile Aftershock's resistance cap and delayed shockwave tables."""
     name = "Aftershock"
     effects = RuneValues(name, entry.get("effects", {}))
-    leveling = effects.value("leveling")
-    if not isinstance(leveling, list) or len(leveling) < 2:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] leveling must contain resistance cap and "
-            "shockwave tables — wiki parse degraded; check rune_parser and "
-            "data/runes.json"
-        )
-    cap_by_level = tuple(float(value) for value in leveling[0])
-    shockwave_by_level = tuple(float(value) for value in leveling[1])
-    if len(cap_by_level) < 20 or len(shockwave_by_level) < 20:
-        raise KeyError(
-            f"RUNE_EFFECTS[{name!r}] leveling tables must cover 20 levels — "
-            "wiki parse degraded; check rune_parser and data/runes.json"
-        )
+    cap_by_level, shockwave_by_level = required_leveling_pair(
+        name, effects, "resistance cap and shockwave"
+    )
     return KeystoneAftershockEffect(
         rune_name=name,
         breakdown_key=breakdown_key(name),
@@ -633,8 +581,7 @@ def _compile_dark_harvest(entry: Mapping[str, Any]) -> KeystoneDarkHarvestEffect
     name = "Dark Harvest"
     effects = RuneValues(name, entry.get("effects", {}))
     top = RuneValues(name, entry)
-    bonus_ad_ratio = effects.number("bonus_ad_ratio")
-    ap_ratio = effects.number("ap_ratio")
+    bonus_ad_ratio, ap_ratio = effects.numbers("bonus_ad_ratio", "ap_ratio")
     return KeystoneDarkHarvestEffect(
         rune_name=name,
         breakdown_key=breakdown_key(name),

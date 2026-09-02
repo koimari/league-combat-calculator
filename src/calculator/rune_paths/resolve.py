@@ -128,8 +128,9 @@ def _compile_shield_bash(entry: Mapping[str, Any]) -> RuneProcEffect:
     name = "Shield Bash"
     effects = RuneValues(name, entry.get("effects", {}))
     base_by_level = required_leveling(name, effects)
-    bonus_health_ratio = effects.number("bonus_health_ratio")
-    shield_ratio = effects.number("shield_amount_ratio")
+    bonus_health_ratio, shield_ratio = effects.numbers(
+        "bonus_health_ratio", "shield_amount_ratio"
+    )
 
     def raw(inputs: DamageInputs) -> float:
         bonus_health = champion_stat(inputs.champion_stats, "health") - champion_stat(

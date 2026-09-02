@@ -161,10 +161,8 @@ def calculation_breakpoints(
     )
 
 
-def calculation_interpolation(
-    spell_obj: dict[str, Any], calculation_name: str
-) -> tuple[float, float]:
-    """A calculation's finite character-level interpolation endpoints."""
+def _formula_parts(spell_obj: dict[str, Any], calculation_name: str) -> list:
+    """A calculation's non-empty ``mFormulaParts``, or raise naming it."""
     spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
     calcs = spell.get("mSpellCalculations") if isinstance(spell, dict) else None
     node = calcs.get(calculation_name) if isinstance(calcs, dict) else None
@@ -173,6 +171,14 @@ def calculation_interpolation(
         raise RuntimeError(
             f"calculation {calculation_name!r} not found or has no formula parts"
         )
+    return parts
+
+
+def calculation_interpolation(
+    spell_obj: dict[str, Any], calculation_name: str
+) -> tuple[float, float]:
+    """A calculation's finite character-level interpolation endpoints."""
+    parts = _formula_parts(spell_obj, calculation_name)
     matches = [
         part
         for part in parts
@@ -198,14 +204,7 @@ def calculation_interpolation(
 
 def calculation_coefficient(spell_obj: dict[str, Any], calculation_name: str) -> float:
     """A calculation's one finite scalar coefficient, or raise if ambiguous."""
-    spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
-    calcs = spell.get("mSpellCalculations") if isinstance(spell, dict) else None
-    node = calcs.get(calculation_name) if isinstance(calcs, dict) else None
-    parts = node.get("mFormulaParts") if isinstance(node, dict) else None
-    if not isinstance(parts, list) or not parts:
-        raise RuntimeError(
-            f"calculation {calculation_name!r} not found or has no formula parts"
-        )
+    parts = _formula_parts(spell_obj, calculation_name)
     matches = [
         part for part in parts if isinstance(part, dict) and "mCoefficient" in part
     ]
@@ -230,14 +229,7 @@ def calculation_stat_coefficient(
     spell_obj: dict[str, Any], calculation_name: str, stat: int
 ) -> float:
     """One calculation coefficient attached to an exact ``mStat`` part."""
-    spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
-    calcs = spell.get("mSpellCalculations") if isinstance(spell, dict) else None
-    node = calcs.get(calculation_name) if isinstance(calcs, dict) else None
-    parts = node.get("mFormulaParts") if isinstance(node, dict) else None
-    if not isinstance(parts, list) or not parts:
-        raise RuntimeError(
-            f"calculation {calculation_name!r} not found or has no formula parts"
-        )
+    parts = _formula_parts(spell_obj, calculation_name)
     matches = [
         part
         for part in parts
@@ -274,14 +266,7 @@ def calculation_coefficients(
     coefficient; missing or malformed coefficients fail closed instead of
     silently dropping a component.
     """
-    spell = spell_obj.get("mSpell") if isinstance(spell_obj, dict) else None
-    calcs = spell.get("mSpellCalculations") if isinstance(spell, dict) else None
-    node = calcs.get(calculation_name) if isinstance(calcs, dict) else None
-    parts = node.get("mFormulaParts") if isinstance(node, dict) else None
-    if not isinstance(parts, list) or not parts:
-        raise RuntimeError(
-            f"calculation {calculation_name!r} not found or has no formula parts"
-        )
+    parts = _formula_parts(spell_obj, calculation_name)
     coefficients = []
     for index, part in enumerate(parts):
         if not isinstance(part, dict) or "mCoefficient" not in part:
