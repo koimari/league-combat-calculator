@@ -72,16 +72,7 @@ def _sibling(reference: AnyValueRef | None, level: int) -> float:
 def spellblade_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
-    """One spellblade's compiled numbers, stamped with *lane*.
-
-    The cooldown, plus the proof that this spellblade's bases resolve.
-    Compiling here surfaces a formula's build-time failures, a missing
-    registry key or a basis with no reading, when the build is made rather
-    than on whichever proc first asks for the number.
-
-    One body serves both the pair engine and the receipt walk, so the two
-    cannot drift over which declaration they read.
-    """
+    """One spellblade's compiled numbers, stamped with *lane*."""
     return damage_formula.compiled_field(
         _payload(rule), "cooldown", SPELLBLADE_COOLDOWN_FIELD, rule, ctx, lane
     )

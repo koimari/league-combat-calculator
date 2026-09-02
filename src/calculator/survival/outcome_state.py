@@ -22,7 +22,7 @@ from typing import Any
 
 from ..ability_spec import Measured, Quantity, Starved, StructuralZero
 from ..trigger_stream import StarvedSignal
-from .actions import NO_SLOT, SurvivalAction
+from .actions import NO_SLOT, SurvivalAction, TriggerLinkage
 
 __all__ = [
     "OUTCOME_FIELDS",
@@ -132,7 +132,7 @@ class Outcome:
     skipped_reason: str | None = None
 
 
-class OutcomeLedger:
+class OutcomeLedger(TriggerLinkage):
     """Write-once observation of the shared kernel, projected at end of walk.
 
     Implements the same adapter protocol :mod:`survival.transitions`
@@ -150,9 +150,9 @@ class OutcomeLedger:
     __slots__ = (
         "_applied_by",
         "_fields",
-        "_status",
         "annotating",
         "records_annotations",
+        "trigger_status",
     )
 
     records_event_fields = True
@@ -182,7 +182,7 @@ class OutcomeLedger:
         self.annotating = annotating
         self.records_annotations = annotating
         self._fields: dict[int, dict[str, Any]] = {}
-        self._status: dict[int, str] = {}
+        self.trigger_status: dict[int, str] = {}
         self._applied_by: dict[tuple[Any, ...], int] = {}
 
     # -- observation -------------------------------------------------------
@@ -254,23 +254,6 @@ class OutcomeLedger:
                 slot, "skipped_reason", recorded["skipped_reason"], reason
             )
         recorded["skipped_reason"] = reason
-
-    # -- trigger linkage ----------------------------------------------------
-    def trigger_applied(self, action: SurvivalAction) -> bool:
-        """Whether this action's trigger applied; no trigger passes."""
-        if action.trigger_slot == NO_SLOT:
-            return True
-        return self._status.get(action.trigger_slot) == "applied"
-
-    def mark_applied(self, action: SurvivalAction) -> None:
-        """Mark this action's event as applied for trigger linkage."""
-        if action.event_slot != NO_SLOT:
-            self._status[action.event_slot] = "applied"
-
-    def mark_blocked(self, action: SurvivalAction) -> None:
-        """Mark this action's event as blocked for trigger linkage."""
-        if action.event_slot != NO_SLOT:
-            self._status[action.event_slot] = "blocked"
 
     # -- walk-authored scheduling (fail closed) -----------------------------
     def schedule_heal(self, heal_event: dict[str, Any], recipient_id: str) -> None:

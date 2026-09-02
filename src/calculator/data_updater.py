@@ -208,6 +208,20 @@ def _process_champions(
     skipped: list[str] = []
     processed_keys: set[str] = set()
 
+    def processed_champion(champion: Any, ddragon_champion: Any) -> dict[str, Any]:
+        nonlocal processed
+        champions.append(
+            _build_champion_payload(champion, latest_version, ddragon_champion)
+        )
+        processed += 1
+        return {
+            "phase": "champions",
+            "status": f"Processed {champion.name}",
+            "current": processed,
+            "total": total_champions,
+            "champion": champion.name,
+        }
+
     # ------------------------------------------------------------------
     # Phase 1: Bulk generator (fastest — single wiki download + parse)
     # ------------------------------------------------------------------
@@ -228,21 +242,7 @@ def _process_champions(
                 if champion_key not in ddragon_champions:
                     continue
 
-                ddragon_champion = ddragon_champions[champion_key]
-                payload = _build_champion_payload(
-                    champion,
-                    latest_version,
-                    ddragon_champion,
-                )
-                champions.append(payload)
-                processed += 1
-                yield {
-                    "phase": "champions",
-                    "status": f"Processed {champion.name}",
-                    "current": processed,
-                    "total": total_champions,
-                    "champion": champion.name,
-                }
+                yield processed_champion(champion, ddragon_champions[champion_key])
             except Exception as exc:
                 name = getattr(champion, "name", "Unknown")
                 processed_keys.add(getattr(champion, "key", name))
@@ -288,21 +288,7 @@ def _process_champions(
                 for champion in single_handler.get_champions():
                     found = True
                     processed_keys.add(champion.key)
-                    ddragon_champion = ddragon_champions[champion_key]
-                    payload = _build_champion_payload(
-                        champion,
-                        latest_version,
-                        ddragon_champion,
-                    )
-                    champions.append(payload)
-                    processed += 1
-                    yield {
-                        "phase": "champions",
-                        "status": f"Processed {champion.name}",
-                        "current": processed,
-                        "total": total_champions,
-                        "champion": champion.name,
-                    }
+                    yield processed_champion(champion, ddragon_champions[champion_key])
                 if not found:
                     # Champion exists in ddragon but not in wiki data
                     processed += 1

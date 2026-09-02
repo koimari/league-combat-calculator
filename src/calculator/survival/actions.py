@@ -1045,6 +1045,38 @@ def classify_event_kind(event: Mapping[str, Any], phase: TransitionRank) -> Acti
 # hot fields and resolves a packet's declared class sets: a leading
 # underscore on a name another layer must call is a boundary nobody can
 # see.  What stays here is the vocabulary that constructor converts *into*.
+
+
+class TriggerLinkage:
+    """Trigger-linkage status by event slot, the protocol every ledger carries.
+
+    ``trigger_status`` is the adapter's own dict; a slot is ``"applied"`` or
+    ``"blocked"`` once its packet resolved and absent until then.
+    """
+
+    __slots__ = ()
+    trigger_status: dict[int, str]
+
+    def trigger_applied(self, action: SurvivalAction) -> bool:
+        """Whether this action's trigger applied; no trigger passes, and a
+        skipped trigger fails closed rather than silently applying."""
+        if action.trigger_slot == NO_SLOT:
+            return True
+        return self.trigger_status.get(action.trigger_slot) == "applied"
+
+    def mark_applied(self, action: SurvivalAction) -> None:
+        """Mark this action's event as applied for trigger linkage."""
+        self._mark(action, "applied")
+
+    def mark_blocked(self, action: SurvivalAction) -> None:
+        """Mark this action's event as blocked for trigger linkage."""
+        self._mark(action, "blocked")
+
+    def _mark(self, action: SurvivalAction, status: str) -> None:
+        if action.event_slot != NO_SLOT:
+            self.trigger_status[action.event_slot] = status
+
+
 __all__ = [
     "EVENT_SLOTS",
     "NO_SLOT",
@@ -1056,6 +1088,7 @@ __all__ = [
     "LiveProbe",
     "SurvivalAction",
     "TransitionRank",
+    "TriggerLinkage",
     "action_key",
     "attack_class_of",
     "classify_event_kind",

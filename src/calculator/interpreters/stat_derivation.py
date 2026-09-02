@@ -159,15 +159,7 @@ def stat_derivation_rules(
 def sole_declared_derivation(
     owners: Sequence[str], payload_type: type
 ) -> StatSlot | None:
-    """This build's one derivation of a shape that does not compose, or ``None``.
-
-    The companion to :func:`declared_stat_derivations` for shapes whose
-    numbers multiply rather than grant.  Nothing declares how two casting
-    trades compose, so a second holder is a named stop rather than whichever
-    slot sorts first.  ``None`` is an answer and not a zero: no holder
-    declares the shape, so the number the caller would have multiplied stays
-    as it was.
-    """
+    """This build's one derivation of a shape that does not compose, or ``None``."""
     slots = declared_stat_derivations(owners, payload_type)
     return sole_declaration(
         slots,

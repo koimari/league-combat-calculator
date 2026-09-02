@@ -34,6 +34,7 @@ from pathlib import Path
 import pytest
 
 from src import app as app_module
+from src.calculator.healing_helpers import modifier_at_rank
 
 _DATA = json.loads(
     Path(__file__)
@@ -93,13 +94,7 @@ def _value(
         for leveling in effect.get("leveling", []):
             if leveling.get("attribute") != attribute:
                 continue
-            modifiers = leveling.get("modifiers", [])
-            if modifier_index >= len(modifiers):
-                return 0.0
-            values = modifiers[modifier_index].get("values", [])
-            if not values:
-                return 0.0
-            return float(values[min(max(rank, 1) - 1, len(values) - 1)])
+            return modifier_at_rank(leveling, modifier_index, rank)
     raise AssertionError(f"{champion} {slot} has no leveling attribute {attribute!r}")
 
 

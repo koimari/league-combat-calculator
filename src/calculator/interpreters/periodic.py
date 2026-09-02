@@ -72,15 +72,7 @@ _payload = partial(
 def cadence_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
-    """One periodic strike's compiled numbers, stamped with *lane*.
-
-    The cadence this strike compiles to, plus the proof its bases resolve.
-
-    Registered for both the pair engine and the receipt walk: the lane is the
-    only thing that differs between them, so one body is what makes "the walk
-    reads the same declaration the pair engine reads" a property of the tree
-    rather than a claim two functions could drift out of.
-    """
+    """One periodic strike's compiled numbers, stamped with *lane*."""
     return damage_formula.compiled_field(
         _payload(rule), "interval", PERIODIC_INTERVAL_FIELD, rule, ctx, lane
     )

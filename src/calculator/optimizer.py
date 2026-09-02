@@ -43,8 +43,8 @@ from .participant_timeline import CoupledSearchContext, build_participant_timeli
 from .pipeline import FightParams, run_fight
 from .program.views import RankingWriter, name_every_number
 from .timeline_coverage import (
+    aggregate_timeline_coverage,
     applicability_exclusion_sources,
-    combine_timeline_coverages,
 )
 from .work_counters import WorkCounterSink
 
@@ -442,7 +442,7 @@ def _evaluate_build_uncached(
     for target_params in targets:
         result = run_fight(champion_data, level, items, target_params)
         results.append(result)
-    coverage = _combined_build_timeline_coverage(results)
+    coverage = aggregate_timeline_coverage(results)
     excluded_sources = (
         applicability_exclusion_sources(coverage) if require_complete_timeline else []
     )
@@ -514,17 +514,7 @@ def _build_timeline_coverage(
         run_fight(champion_data, level, items, target_params)
         for target_params in targets
     ]
-    return _combined_build_timeline_coverage(results)
-
-
-def _combined_build_timeline_coverage(
-    results: list[dict[str, Any]],
-) -> dict[str, Any]:
-    """Combine targets and fail partial on post-ledger charged allocation."""
-    return combine_timeline_coverages(
-        (result.get("timeline_coverage", {}) for result in results),
-        target_count=len(results),
-    )
+    return aggregate_timeline_coverage(results)
 
 
 def _build_receipt_key(items: Iterable[dict[str, Any]]) -> tuple[str, ...]:
@@ -724,6 +714,22 @@ def _greedy_fill(
     return current, boots, final_score
 
 
+def _score_with_swap(
+    champion_data: dict[str, Any],
+    level: int,
+    base: list[dict[str, Any]],
+    index: int,
+    candidate: dict[str, Any],
+    boots: dict[str, Any] | None,
+    eval_kwargs: dict[str, Any],
+) -> tuple[list[dict[str, Any]], float]:
+    """*base* with *candidate* in slot *index*, and that build's score."""
+    trial = list(base)
+    trial[index] = candidate
+    trial_items = ([boots] if boots else []) + trial
+    return trial, _evaluate_build(champion_data, level, trial_items, **eval_kwargs)
+
+
 def _hill_climb(
     champion_data: dict[str, Any],
     level: int,
@@ -778,15 +784,14 @@ def _hill_climb(
                 if _conflicts_with_build(name, other_groups):
                     continue
 
-                trial = list(current)
-                trial[slot_idx] = candidate
-                trial_items = ([current_boots] if current_boots else []) + trial
-
-                score = _evaluate_build(
+                trial, score = _score_with_swap(
                     champion_data,
                     level,
-                    trial_items,
-                    **eval_kwargs,
+                    current,
+                    slot_idx,
+                    candidate,
+                    current_boots,
+                    eval_kwargs,
                 )
                 evals += 1
 
@@ -2059,11 +2064,14 @@ def optimize_build(
                     continue
                 if _conflicts_with_build(candidate["name"], other_groups):
                     continue
-                trial = list(best_legendaries)
-                trial[slot_index] = candidate
-                trial_items = ([best_boots] if best_boots else []) + trial
-                score = _evaluate_build(
-                    champion_data, level, trial_items, **eval_kwargs
+                trial, score = _score_with_swap(
+                    champion_data,
+                    level,
+                    best_legendaries,
+                    slot_index,
+                    candidate,
+                    best_boots,
+                    eval_kwargs,
                 )
                 total_evals += 1
                 remember_candidate(trial, best_boots, score)

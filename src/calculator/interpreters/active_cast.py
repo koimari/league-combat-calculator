@@ -70,14 +70,7 @@ _payload = partial(
 def active_fields(
     rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
 ) -> tuple[KernelField, ...]:
-    """One active's compiled numbers, stamped with *lane*.
-
-    Registered for both the pair engine and the receipt walk, whose only
-    difference is the lane, so one body makes "the walk reads the same
-    declaration the pair engine reads" a property of the tree.  Compiling the
-    formula here fails a missing registry key when the build is made rather
-    than on whichever event first asks for the number.
-    """
+    """One active's compiled numbers, stamped with *lane*, for both engines."""
     return damage_formula.compiled_field(
         _payload(rule), "cooldown", ACTIVE_COOLDOWN_FIELD, rule, ctx, lane
     )

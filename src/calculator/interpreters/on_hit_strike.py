@@ -234,19 +234,7 @@ def per_hit_effects(
     target_bonus_health: float,
     holder_is_melee: bool,
 ) -> tuple[PerHitEffect, ...]:
-    """Every on-hit strike this build declares, in build order.
-
-    Build order is the order the items were bought, which is the order the
-    registry's own loop appended them in, which is the order the engine's
-    breakdown rows come out in.  Preserving it is what makes the migration
-    provably neutral rather than merely equivalent.
-
-    The fight facts are the build context's required fields and are threaded
-    through rather than defaulted, even though no on-hit coefficient reads
-    one: a placeholder here would be exactly the silent default the context's
-    requiredness exists to prevent, and a strike whose *rate* depended on the
-    fight would be a different mechanic.
-    """
+    """Every on-hit strike this build declares, in build order."""
     return tuple(
         per_hit_effect(rule, ctx)
         for rule, ctx in rule_contexts(

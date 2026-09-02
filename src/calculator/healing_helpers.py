@@ -22,45 +22,38 @@ from enum import Enum
 from typing import Any
 
 
+def modifier_at_rank(
+    leveling: Mapping[str, Any], modifier_index: int, rank: int
+) -> float:
+    """One leveling row's modifier value at ``rank``; 0.0 when it has none."""
+    modifiers = leveling.get("modifiers", [])
+    if modifier_index >= len(modifiers):
+        return 0.0
+    values = modifiers[modifier_index].get("values", [])
+    if not values:
+        return 0.0
+    return float(values[min(max(rank, 1) - 1, len(values) - 1)])
+
+
 def leveling_value(ability: Mapping[str, Any], attribute: str, rank: int) -> float:
     """Read one sourced leveling attribute without inventing a fallback."""
     for effect in ability.get("effects", []):
         for leveling in effect.get("leveling", []):
             if leveling.get("attribute") != attribute:
                 continue
-            modifiers = leveling.get("modifiers", [])
-            if not modifiers:
-                return 0.0
-            values = modifiers[0].get("values", [])
-            if not values:
-                return 0.0
-            return float(values[min(max(rank, 1) - 1, len(values) - 1)])
+            return modifier_at_rank(leveling, 0, rank)
     return 0.0
 
 
 def leveling_modifier(
     ability: Mapping[str, Any], attribute: str, rank: int, modifier_index: int = 0
 ) -> float:
-    """Read one sourced leveling modifier at rank without scaling resolution.
-
-    ``extract_named`` sums every modifier and resolves stat-scaling units,
-    but a missing-health percentage (e.g. Tahm Kench's ``"% of missing
-    health"``) is not a stat the scaling layer knows, so it resolves to 0.0.
-    This helper reads the raw percentage value for those formula components;
-    the caller folds it into an amount formula evaluated against the
-    fighter's live health.
-    """
+    """Read one sourced leveling modifier at rank, without scaling resolution."""
     for effect in ability.get("effects", []):
         for leveling in effect.get("leveling", []):
             if leveling.get("attribute") != attribute:
                 continue
-            modifiers = leveling.get("modifiers", [])
-            if modifier_index >= len(modifiers):
-                return 0.0
-            values = modifiers[modifier_index].get("values", [])
-            if not values:
-                return 0.0
-            return float(values[min(max(rank, 1) - 1, len(values) - 1)])
+            return modifier_at_rank(leveling, modifier_index, rank)
     return 0.0
 
 

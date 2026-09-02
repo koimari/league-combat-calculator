@@ -59,7 +59,7 @@ certified module ``CAST_ORDER`` (when present) or the engine's historical
 from __future__ import annotations
 
 import re
-from collections.abc import Collection, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
@@ -1197,7 +1197,7 @@ def _matching_suppression(dep: CastDependency, edge: _Edge):
     reverse pair, so only the inferred *kind* is left to match.
     """
     for suppression in dep.suppresses:
-        if (suppression.setup, suppression.consume, suppression.kind) == (
+        if suppression.triple == (
             edge.setup,
             edge.consume,
             edge.kind,
@@ -1274,7 +1274,7 @@ def merge_declared_edges(
                     f"{edge.kind!r} and saying why the inference reads the "
                     "mechanic backwards."
                 )
-            matched.add((suppression.setup, suppression.consume, suppression.kind))
+            matched.add(suppression.triple)
             suppressed_rows.append(
                 f"{edge.setup} -> {edge.consume} ({edge.kind}) suppressed by "
                 f"{dep.slot} requires {dep.requires}: {suppression.reason}"
@@ -1286,7 +1286,7 @@ def merge_declared_edges(
             )
 
         for suppression in dep.suppresses:
-            triple = (suppression.setup, suppression.consume, suppression.kind)
+            triple = suppression.triple
             if triple in matched:
                 continue
             if suppression.latent_reason is None:
@@ -1851,23 +1851,20 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
     fight_dps = rank_ability_dps(ability_damages, target_count=1, aoe=aoe)
     dps_idx = {s: i for i, (s, *_) in enumerate(fight_dps)}
 
-    def tie_dps(s: str) -> tuple[Any, ...]:
-        return (dps_idx.get(s, 10**9), 0 if outgoing.get(s) else 1, base_idx.get(s, 99))
+    def tie_by(idx: dict[str, int]) -> Callable[[str], tuple[Any, ...]]:
+        """Rank a slot by its row in *idx*, then outgoing edges, then base order."""
+        return lambda s: (
+            idx.get(s, 10**9),
+            0 if outgoing.get(s) else 1,
+            base_idx.get(s, 99),
+        )
 
-    fight_order = _kahn_order(base, edges, tie_dps)
+    fight_order = _kahn_order(base, edges, tie_by(dps_idx))
     use_dps_order = fight_order is not None
     if fight_order is not None:
         for point_rows in _matrix_dps_rows(champion_name, champion_data, aoe):
             idx = {s: i for i, (s, *_) in enumerate(point_rows)}
-
-            def tie(s: str, idx=idx) -> tuple[Any, ...]:
-                return (
-                    idx.get(s, 10**9),
-                    0 if outgoing.get(s) else 1,
-                    base_idx.get(s, 99),
-                )
-
-            if _kahn_order(base, edges, tie) != fight_order:
+            if _kahn_order(base, edges, tie_by(idx)) != fight_order:
                 use_dps_order = False
                 break
 
@@ -2033,6 +2030,9 @@ def build_rotation_receipt(  # pylint: disable=unused-argument
     if not order:
         order = [str(slot) for slot in cast_order]
 
+    setup: list[Any] = []
+    consume: list[Any] = []
+    aoe: dict[str, Any] = {}
     if user_order is not None:
         sequence = ", ".join(user_order)
         rationale = (
@@ -2040,9 +2040,6 @@ def build_rotation_receipt(  # pylint: disable=unused-argument
             "exactly as given; the combo layer defers to explicit input."
         )
         sources = ["request-supplied cast_order"]
-        setup = []
-        consume = []
-        aoe = {}
     elif rule is not None:
         rationale = rule.rationale
         sources = list(rule.sources)
@@ -2057,15 +2054,9 @@ def build_rotation_receipt(  # pylint: disable=unused-argument
             "transforms before casting)."
         )
         sources = ["champion module CAST_ORDER (certified)"]
-        setup = []
-        consume = []
-        aoe = {}
     else:
         rationale = _DEFAULT_RATIONALE
         sources = []
-        setup = []
-        consume = []
-        aoe = {}
 
     return {
         "order": order,
