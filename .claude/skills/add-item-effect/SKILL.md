@@ -49,9 +49,9 @@ def _parse_my_item(text: str) -> dict[str, Any]:
 ```
 
 **Common parser patterns:**
-- `_resolve_simple_templates(text)` — resolves `{{fd|N}}`, `{{ap|EXPR}}`, `{{#vardefineecho:...|N}}`
-- `_extract_rd_values(text)` — extracts melee/ranged from `{{rd|M|R}}`
-- `_extract_ft_parts(text)` — extracts display/tooltip from `{{ft|D|T}}`
+- `_resolve_simple_templates(text)`: resolves `{{fd|N}}`, `{{ap|EXPR}}`, `{{#vardefineecho:...|N}}`
+- `_extract_rd_values(text)`: extracts melee/ranged from `{{rd|M|R}}`
+- `_extract_ft_parts(text)`: extracts display/tooltip from `{{ft|D|T}}`
 - Use `cooldown_field` parameter + `"use_cooldown_field": True` in config to get the JSON cooldown field
 
 ### Step 3: Add schema and reference values in `item_effects.py`
@@ -126,18 +126,18 @@ Items that modify stats beyond their flat values (AP multipliers, mana→AP, hea
 
 **Data flow:** `passive_parser.py` → `ITEM_EFFECTS` registry → `stats.py` looks up values at calculation time.
 
-**Important:** `stats.py` must **never hardcode** numeric item values — and neither `stats.py` nor the accessors use literal fallbacks in `.get()` calls. A missing key is a parser/schema bug that must fail loudly (see `required_effect_value()`), not silently borrow a stale literal.
+`stats.py` holds no numeric item values, and neither it nor the accessors use literal fallbacks in `.get()` calls (CLAUDE.md rule 5): a missing key is a parser/schema bug, and `required_effect_value()` raises naming the item and key.
 
 ### Where stat passives live
 
-- **`item_effects.py` stat-passive accessors** (section "Stat-modifying passives") — own the lookup and numeric semantics: `ap_multiplier()` (Rabadon's, Blackfire — additive), `mana_to_ap_bonus()`, `dawncore_bonus_ap()`, `flowing_water_bonus_ap()`, `passive_attack_speed_bonus()`, `muramana_bonus_ad()`, `bloodmail_bonus_ad()`, `steraks_bonus_ad()`, `terminus_max_stack_bonuses()`, `basic_ability_haste()`.
-- **`resolve_stat_effects()` in `item_effects.py`** — bundles every accessor into one `StatBonuses` record; `calculate_total_stats()` in `stats.py` consumes the bundle (orchestration only — no item names paired with magic numbers, and no new `stats.py` import per item).
+- **`item_effects.py` stat-passive accessors** (section "Stat-modifying passives"), own the lookup and numeric semantics: `ap_multiplier()` (Rabadon's, Blackfire: additive), `mana_to_ap_bonus()`, `dawncore_bonus_ap()`, `flowing_water_bonus_ap()`, `passive_attack_speed_bonus()`, `muramana_bonus_ad()`, `bloodmail_bonus_ad()`, `steraks_bonus_ad()`, `terminus_max_stack_bonuses()`, `basic_ability_haste()`.
+- **`resolve_stat_effects()` in `item_effects.py`**: bundles every accessor into one `StatBonuses` record; `calculate_total_stats()` in `stats.py` consumes the bundle (orchestration only, no item names paired with magic numbers, and no new `stats.py` import per item).
 
 ### Step-by-Step: Adding a Stat-Granting Passive
 
 #### Step 1: Check the item's JSON data
 
-Same as damage effects — look up the item in `data/items.json` and find the passive name and wiki markup text.
+Same as damage effects: look up the item in `data/items.json` and find the passive name and wiki markup text.
 
 #### Step 2: Add a parser in `passive_parser.py`
 
@@ -224,7 +224,7 @@ For AP multipliers, extend `ap_multiplier()` instead.
 
 **Key rules:**
 - The accessor owns the `ITEM_EFFECTS` lookup and the numeric semantics; `stats.py` never touches `ITEM_EFFECTS` directly
-- **No literal fallbacks** — `required_effect_value()` raises a KeyError naming the item and key if live parsing or static schema is incomplete. `_REFERENCE_ITEM_EFFECTS` is the parity reference, never a fallback
+- **No literal fallbacks**: `required_effect_value()` raises a KeyError naming the item and key if live parsing or static schema is incomplete. `_REFERENCE_ITEM_EFFECTS` is the parity reference, never a fallback
 - AP multipliers stack **additively** (Rabadon's 30% + Blackfire 4% = 34% total, not 1.30 × 1.04)
 
 #### Step 5: Test
@@ -261,14 +261,14 @@ def test_my_item_reads_from_registry(self, champion_data: dict, monkeypatch) -> 
 
 ## Common Pitfalls
 
-- **The census receipt is exact**: modelling an item moves `docs/coverage-census.json`, and CI's `coverage-census` job compares it dict-for-dict — regenerate it (`python scripts/coverage_census.py run --output docs/coverage-census.json`, ~1 min on 16 cores) in the same commit.
+- **The census receipt is exact**: modelling an item moves `docs/coverage-census.json`, and CI's `coverage-census` job compares it dict-for-dict. Regenerate it (`python scripts/coverage_census.py run --output docs/coverage-census.json`, ~1 min on 16 cores) in the same commit.
 - **Parser first**: Always check if values can be parsed from JSON before hardcoding. Only hardcode values that truly aren't in the data.
 - **No hardcoded values in stats.py**: All item-specific numeric values come from `ITEM_EFFECTS` via the stat-passive accessors, with no literal fallbacks anywhere. This ensures values auto-update when wiki data is refreshed and that parser failures surface loudly instead of silently using stale numbers (the Statikk Shiv bug class).
 - **Penetration order**: Percent penetration applies before flat penetration
-- **True damage**: Ignores all resistances — never pass through `apply_resistance()`
+- **True damage**: Ignores all resistances. Never pass through `apply_resistance()`
 - **BoRK simulation**: Must be iterative (decreasing target HP per auto), not flat
 - **Spellblade cooldown**: 1.5s internal cooldown shared across all spellblade items
 - **AP multipliers**: Stack additively, not multiplicatively
 - **Item names**: Use the exact name in `data/items.json` for `_ITEM_PARSE_CONFIG`, defaults, tests, and build scenarios. `_NAME_ALIASES` is only an extension hook for a proven code-name/cache-name mismatch; do not add an alias for a stale label.
 - **Burn refresh windows are mode-dependent**: A `burn` effect is ONE base-duration application stretched by its refresh window. In one-rotation mode that window is the GCD combo spread (0.5s/cast); in time-based mode abilities recast on cooldown across the whole fight, so the window runs to `rotation.last_cast_time` (the fight's final recast) + the burn duration, capped at fight end. Liandry's bug class: using the combo spread in a 10s timed fight halved the burn (one 3s application + spread instead of ~fight-long 2%/s uptime).
-- **Base-stat-converting items must react to base-stat buffs**: Items computed at build-stats time from a base stat (Sterak's: 45% base AD) miss champion base-stat grants (Mega Gnar) that land later. `_apply_stat_buff_ultimates` in `damage.py` re-applies the conversion on the buffed delta via the item's `item_effects` accessor — if you add an item that scales off base AD/base HP/base armor, wire its accessor into that hook too.
+- **Base-stat-converting items must react to base-stat buffs**: Items computed at build-stats time from a base stat (Sterak's: 45% base AD) miss champion base-stat grants (Mega Gnar) that land later. `_apply_stat_buff_ultimates` in `damage.py` re-applies the conversion on the buffed delta via the item's `item_effects` accessor. If you add an item that scales off base AD/base HP/base armor, wire its accessor into that hook too.
