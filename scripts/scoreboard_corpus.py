@@ -3,8 +3,11 @@
 
     read  <image>... [--sheet out.png]     read frames, print rows, draw a contact sheet
     scan  <video.mp4> [--step 10]          rank a VoD's frames by scoreboard evidence
-    grab  <youtube-url> --at SECONDS --out frame.jpg   one 1080p frame via yt-dlp + ffmpeg
+    grab  <video.mp4> --at SECONDS --out frame.jpg   cut one full-resolution frame
     label <image> --league LCK --source ID@T   append the reader's rows to labels.json for review
+
+A VoD comes down once with yt-dlp (a 480p stream is enough to scan, the 1080p
+one to grab from): yt-dlp -f "bv*[height=1080][ext=mp4]" -o "%(id)s.%(ext)s" URL
 
 Every subcommand reads through the one Node harness (tests/js/scoreboard_harness.mjs)
 so the corpus is judged by the code the browser runs. Frames and labels live in
@@ -158,17 +161,10 @@ def cmd_scan(args: argparse.Namespace) -> int:
 
 
 def cmd_grab(args: argparse.Namespace) -> int:
-    with tempfile.TemporaryDirectory() as tmp:
-        clip = Path(tmp) / "clip.mp4"
-        subprocess.run(
-            ["yt-dlp", "-q", "--no-warnings", "-f", "bv*[height=1080][ext=mp4]/bv*[height<=1080]",
-             "--download-sections", f"*{args.at}-{args.at + 1}", "-o", str(clip), args.url],
-            check=True,
-        )
-        subprocess.run(
-            ["ffmpeg", "-v", "error", "-y", "-i", str(clip), "-frames:v", "1", "-q:v", "2", str(args.out)],
-            check=True,
-        )
+    subprocess.run(
+        ["ffmpeg", "-v", "error", "-y", "-ss", str(args.at), "-i", str(args.video), "-frames:v", "1", "-q:v", "2", str(args.out)],
+        check=True,
+    )
     print("wrote", args.out)
     return 0
 
@@ -204,7 +200,7 @@ def main(argv: list[str] | None = None) -> int:
     scan.add_argument("--step", type=int, default=10)
     scan.set_defaults(run=cmd_scan)
     grab = commands.add_parser("grab")
-    grab.add_argument("url")
+    grab.add_argument("video")
     grab.add_argument("--at", type=int, required=True)
     grab.add_argument("--out", type=Path, required=True)
     grab.set_defaults(run=cmd_grab)

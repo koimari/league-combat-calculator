@@ -24,6 +24,10 @@ const ScoreboardVision = (() => {
   const COARSE_DIMS = 24;
   const SHORTLIST = 6;
   const MIN_SCORE = { champion: 0.78, item: 0.72 };
+  /* Margin over the runner-up key. Footage and HUD texture reach 0.85 against
+   * some dark portrait but never with a clear runner-up; real portraits carry
+   * 0.3 or more. Items have true lookalikes (component swords), so none. */
+  const MIN_GAP = { champion: 0.28, item: 0 };
   /* A slot on a player's established item grid is strong evidence on its own,
    * so a cell there is accepted at a lower correlation than a free detection. */
   const FILL_SCORE = 0.62;
@@ -36,10 +40,18 @@ const ScoreboardVision = (() => {
   const CHAMPION_CROPS = [1, 0.85];
   const SIZE_RATIO = 1.15;
   /* Coarse candidates verified per search: a few per size for the anchor,
-   * every one (to a cap) inside the column, row and item bands. */
-  const VERIFY = { anchor: 12, cap: 400 };
+   * every one (to a cap, or a run of rejections) inside the column, row and
+   * item bands. */
+  const VERIFY = { anchor: 12, cap: 400, patience: { champion: Infinity, item: 80 } };
+  /* Portrait sizes the anchor is sought at, on a frame no wider than the
+   * page's 2200px working width; tried nearest this typical size first. */
+  const PORTRAIT = { min: 24, max: 64, typical: 34 };
+  /* An anchor this certain ends the size search early. */
+  const SURE_ANCHOR = 0.9;
   /* Inventory slots a scoreboard shows per player: six items and a seventh. */
   const MAX_SLOTS = 7;
+  /* Players per team, so rows per column. */
+  const MAX_ROWS = 5;
 
   /* --- fingerprints --------------------------------------------------- */
 
@@ -257,10 +269,11 @@ const ScoreboardVision = (() => {
   /**
    * The full-resolution verdict on a candidate. A pyramid peak can sit a
    * whole cell off the icon (its `reach`), so unless the candidate is
-   * `anchored` (a slot on a known grid) the thumbnail score is re-taken on
-   * a 2px grid over that window first: a cell that never looks like an icon
-   * is rejected there, before any classification, and the three best spots
-   * are classified, since a 4x4 thumbnail can prefer the edge of a
+   * `anchored` (a slot on a known grid, classified over a 3x3 window two
+   * pixels apart) the thumbnail score is re-taken on
+   * a 2px grid over that window first: a cell that never looks like an
+   * icon is rejected there, before any classification, and the two best
+   * spots are classified, since a 4x4 thumbnail can prefer the edge of a
    * neighbour. The survivor is polished by 1px steps and at most one size
    * step either way, re-classifying so the key may change as it settles.
    */
@@ -269,7 +282,14 @@ const ScoreboardVision = (() => {
     if (!inside(candidate.x, candidate.y, candidate.size)) return null;
     let best = null;
     if (anchored) {
-      best = classify(raster, candidate.x, candidate.y, candidate.size, refs, kind);
+      for (const dy of [-2, 0, 2]) {
+        for (const dx of [-2, 0, 2]) {
+          const hit = inside(candidate.x + dx, candidate.y + dy, candidate.size)
+            ? classify(raster, candidate.x + dx, candidate.y + dy, candidate.size, refs, kind)
+            : null;
+          if (hit && (!best || hit.score > best.score)) best = hit;
+        }
+      }
     } else {
       const vec = new Float32Array(refs.thumbLen);
       const proj = new Float32Array(THUMB_DIMS);
@@ -284,7 +304,7 @@ const ScoreboardVision = (() => {
       }
       spots.sort((a, b) => b.score - a.score);
       if (!spots.length || spots[0].score < THUMB_GATE) return null;
-      for (const spot of spots.slice(0, 3)) {
+      for (const spot of spots.slice(0, 2)) {
         const hit = classify(raster, spot.x, spot.y, candidate.size, refs, kind);
         if (hit && (!best || hit.score > best.score)) best = hit;
       }
@@ -429,19 +449,30 @@ const ScoreboardVision = (() => {
     return kept;
   }
 
-  function sizesBetween(min, max) {
+  function sizesBetween(min, max, ratio = SIZE_RATIO) {
     const sizes = [];
-    for (let s = min; s <= max; s = Math.max(s + 1, Math.round(s * SIZE_RATIO))) sizes.push(Math.round(s));
+    for (let s = min; s <= max; s = Math.max(s + 1, Math.round(s * ratio))) sizes.push(Math.round(s));
     return sizes;
   }
 
-  /** Verified hits of `kind` at `size` within `region`, strongest first, no overlaps. */
+  /**
+   * Verified hits of `kind` at `size` within `region`, strongest first, no
+   * overlaps. Candidates are taken in coarse-score order and the search
+   * gives up after VERIFY.patience straight rejections: real icons sit near
+   * the top of that order and the tail is footage.
+   */
   function search(raster, refs, kind, size, region, levels, verifyCount) {
     const candidates = coarseSearch(raster, refs, kind, size, region, levels, Boolean(region)).slice(0, verifyCount || VERIFY.cap);
     const hits = [];
+    let rejected = 0;
     for (const candidate of candidates) {
       const hit = verify(raster, candidate, refs, kind);
-      if (hit && hit.score >= MIN_SCORE[kind]) hits.push(hit);
+      if (hit && hit.score >= MIN_SCORE[kind] && hit.gap >= MIN_GAP[kind]) {
+        hits.push(hit);
+        rejected = 0;
+      } else if ((rejected += 1) >= VERIFY.patience[kind]) {
+        break;
+      }
     }
     return suppress(hits.sort((a, b) => b.score - a.score));
   }
@@ -457,33 +488,92 @@ const ScoreboardVision = (() => {
 
   /**
    * The strongest portrait anywhere, any size: the anchor every other search
-   * hangs off. Only the few best coarse candidates per size are verified.
+   * hangs off. Only the few best coarse candidates per size are verified,
+   * a certain hit at a likely size spares the unlikely ones, and the winner
+   * is re-verified one size step either way, since everything downstream
+   * is searched at its size.
    */
   function anchor(raster, refs, sizes, levels) {
     let best = null;
-    for (const size of sizes) {
+    for (const size of [...sizes].sort((a, b) => Math.abs(a - PORTRAIT.typical) - Math.abs(b - PORTRAIT.typical))) {
       for (const hit of search(raster, refs, "champion", size, null, levels, VERIFY.anchor)) {
         if (!best || hit.score > best.score) best = hit;
       }
+      if (best && best.score >= SURE_ANCHOR) break;
     }
-    return best && best.score >= MIN_SCORE.champion + 0.05 ? best : null;
+    if (!best || best.score < MIN_SCORE.champion + 0.05) return null;
+    for (const size of [Math.round(best.size / SIZE_RATIO), Math.round(best.size * SIZE_RATIO)]) {
+      const hit = verify(raster, { x: best.x, y: best.y, size, reach: 3 }, refs, "champion");
+      if (hit && hit.score > best.score) best = hit;
+    }
+    return best;
   }
 
   /**
    * Every portrait sharing the anchor's column and size: a team reads down
-   * the panel. Then, per portrait, the opposing portrait on its row.
+   * the panel. Then the opposing portraits, found on the team's rows and kept
+   * only where they line up in a column of their own, since a stray match on
+   * one row never has the others above and below it.
    */
   function portraits(raster, refs, first, levels) {
     const size = first.size;
     const column = { x0: first.x - size / 2, x1: first.x + size * 1.5, y0: 0, y1: raster.height };
     const team = search(raster, refs, "champion", size, column, levels)
       .filter((hit) => Math.abs(hit.size - size) <= size * 0.2 && Math.abs(hit.x - first.x) <= size / 2);
-    const all = [...team];
+    const mates = [];
     for (const hit of team) {
       const row = { x0: 0, x1: raster.width, y0: centreY(hit) - size * 0.75, y1: centreY(hit) + size * 0.75 };
       for (const mate of search(raster, refs, "champion", size, row, levels)) {
-        if (Math.abs(mate.x - hit.x) >= size && all.every((h) => Math.abs(h.x - mate.x) >= size / 2 || Math.abs(h.y - mate.y) >= size / 2)) all.push(mate);
+        if (Math.abs(mate.x - hit.x) >= size) mates.push(mate);
       }
+    }
+    let opposing = [];
+    for (const anchorMate of mates) {
+      const aligned = mates.filter((m) => Math.abs(m.x - anchorMate.x) <= size / 2);
+      const strength = aligned.reduce((sum, m) => sum + m.score, 0);
+      if (strength > opposing.reduce((sum, m) => sum + m.score, 0)) opposing = aligned;
+    }
+    return fillColumns(raster, refs, suppress([...team, ...opposing].sort((a, b) => b.score - a.score)), size);
+  }
+
+  /**
+   * Portraits missed by the searches, recovered from the grid the found ones
+   * define: each column's x and the rows' uniform pitch give every slot,
+   * and an empty slot is classified in place, at half the free-search margin
+   * since the slot itself vouches for it. A column keeps its strongest
+   * MAX_ROWS-tall window.
+   */
+  function fillColumns(raster, refs, found, size) {
+    const columns = [];
+    for (const hit of [...found].sort((a, b) => b.score - a.score)) {
+      const column = columns.find((c) => Math.abs(c.x - hit.x) <= size / 2);
+      if (column) column.hits.push(hit);
+      else columns.push({ x: hit.x, hits: [hit] });
+    }
+    const ys = [...new Set(found.map((h) => Math.round(centreY(h))))].sort((a, b) => a - b);
+    const gaps = [];
+    for (let i = 1; i < ys.length; i += 1) if (ys[i] - ys[i - 1] > size / 2 && ys[i] - ys[i - 1] < size * 2.5) gaps.push(ys[i] - ys[i - 1]);
+    const pitch = median(gaps);
+    if (!pitch || columns.length > 2) return found;
+    const all = [];
+    for (const column of columns) {
+      const x = Math.round(median(column.hits.map((h) => h.x)));
+      const slot = new Map(column.hits.map((h) => [Math.round((centreY(h) - ys[0]) / pitch), h]));
+      const known = [...slot.keys()].sort((a, b) => a - b);
+      const filled = [];
+      for (let k = known[0] - MAX_ROWS + 1; k <= known[known.length - 1] + MAX_ROWS - 1; k += 1) {
+        const y = Math.round(ys[0] + k * pitch - size / 2);
+        if (y < 0 || y + size > raster.height) continue;
+        const hit = slot.get(k) || verify(raster, { x, y, size }, refs, "champion", true);
+        filled.push(hit && hit.score >= MIN_SCORE.champion && hit.gap >= MIN_GAP.champion / 2 ? hit : null);
+      }
+      let best = null;
+      for (let start = 0; start < filled.length; start += 1) {
+        const window = filled.slice(start, start + MAX_ROWS);
+        const strength = window.reduce((sum, hit) => sum + (hit ? hit.score : 0), 0);
+        if (!best || strength > best.strength) best = { window, strength };
+      }
+      if (best) all.push(...best.window.filter(Boolean));
     }
     return all;
   }
@@ -506,7 +596,8 @@ const ScoreboardVision = (() => {
    * every empty position is classified so a missed icon is recovered and a
    * blank slot stays blank. The strongest MAX_SLOTS-wide window is the
    * strip, which drops whatever text past its ends resembled an icon.
-   * `pitchHint` is the panel-wide pitch, for a player with one item found.
+   * `pitchHint` is the panel-wide pitch, preferred over the player's own
+   * few gaps, which round a pixel off and drift the outer slots.
    */
   function fillStrip(raster, refs, items, itemSize, pitchHint, champion, bounds) {
     const sorted = [...items].sort((a, b) => a.x - b.x);
@@ -516,7 +607,7 @@ const ScoreboardVision = (() => {
       const gap = sorted[i].x - sorted[i - 1].x;
       if (gap < itemSize * 1.6) gaps.push(gap);
     }
-    const rough = median(gaps) || pitchHint || itemSize + 1;
+    const rough = pitchHint || median(gaps) || itemSize + 1;
     const slot = sorted.map((h) => Math.round((h.x - sorted[0].x) / rough));
     const span = slot[slot.length - 1] - slot[0];
     const pitch = span ? (sorted[sorted.length - 1].x - sorted[0].x) / span : rough;
@@ -554,7 +645,7 @@ const ScoreboardVision = (() => {
    */
   function readScoreboard(raster, refs, options = {}) {
     const levels = new Map();
-    const portraitSizes = options.portraitSizes || sizesBetween(24, Math.min(96, Math.floor(raster.height / 6)));
+    const portraitSizes = options.portraitSizes || sizesBetween(PORTRAIT.min, Math.min(PORTRAIT.max, Math.floor(raster.height / 6)));
     const first = anchor(raster, refs, portraitSizes, levels);
     if (!first) return { hits: [], rows: [] };
     const champions = portraits(raster, refs, first, levels);
@@ -564,7 +655,13 @@ const ScoreboardVision = (() => {
     const items = [];
     let itemSize = null;
     for (const band of bands) {
-      const region = { x0: 0, x1: raster.width, y0: band.y - size * 0.6, y1: band.y + size * 0.6 };
+      const xs = band.hits.map((hit) => hit.x);
+      const region = {
+        x0: Math.min(...xs) - size * (MAX_SLOTS + 2),
+        x1: Math.max(...xs) + size * (MAX_SLOTS + 3),
+        y0: band.y - size * 0.6,
+        y1: band.y + size * 0.6,
+      };
       const trial = itemSize ? [itemSize] : itemSizes;
       let bestForBand = null;
       for (const candidate of trial) {
