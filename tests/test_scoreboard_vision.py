@@ -1,0 +1,169 @@
+"""The scoreboard reader against its labeled corpus, and the sprite it reads with.
+
+tests/fixtures/scoreboard/labels.json names, per frame, the rows the reader
+must produce: top to bottom, players left to right, each a champion and its
+item ids in strip order (None for an empty slot, "?" for an icon the labeler
+could not name, which the reader may fill or leave). Champions are exact;
+items are held to a corpus-wide floor, ratcheted to what the tree reads, so
+a threshold change that costs a slot goes red. scripts/scoreboard_corpus.py
+grows the corpus.
+"""
+
+from __future__ import annotations
+
+import json
+import shutil
+import subprocess
+from pathlib import Path
+
+import pytest
+
+from scripts.build_icon_sprite import check as sprite_check
+from scripts.scoreboard_corpus import CORPUS, LABELS, read_frames
+
+ROOT = Path(__file__).resolve().parents[1]
+ITEM_FLOOR = 0.99
+EXTRA_CEILING = 0.0
+
+
+def test_sprite_matches_the_caches() -> None:
+    """The committed sprite covers every cached champion and item."""
+    champions = json.loads(
+        (ROOT / "data" / "champions.json").read_text(encoding="utf-8")
+    )
+    items = json.loads((ROOT / "data" / "items.json").read_text(encoding="utf-8"))
+    reason = sprite_check(
+        ROOT / "static" / "icon-sprite.json",
+        ROOT / "static" / "icon-sprite.webp",
+        champions,
+        items,
+    )
+    assert reason is None, reason
+
+
+def test_no_script_points_an_image_at_an_object_url_the_csp_blocks() -> None:
+    """The page's `img-src` has no `blob:`, so an <img> on an object URL never
+    loads: the reader shipped that way and rejected every screenshot. Decode
+    blobs with `createImageBitmap`, or widen the policy along with them."""
+    from src.app import _SECURITY_HEADERS
+
+    policy = _SECURITY_HEADERS["Content-Security-Policy"]
+    img_src = next(d for d in policy.split("; ") if d.startswith("img-src "))
+    if "blob:" in img_src:
+        return
+    sources = {
+        p.name: p.read_text("utf-8") for p in (ROOT / "static" / "js").glob("*.js")
+    }
+    offenders = [
+        n for n, s in sources.items() if "createObjectURL" in s and "new Image(" in s
+    ]
+    assert offenders == []
+
+
+def test_a_pasted_file_is_refused_by_size_before_it_decodes() -> None:
+    """Over the cap the status names the size and the cap; under it the file
+    reaches the decoder, and one that is not an image says so."""
+    if shutil.which("node") is None:  # pragma: no cover - toolchain dependent
+        pytest.skip("node is not installed")
+    harness = ROOT / "tests" / "js" / "scoreboard_paste_harness.mjs"
+    cases = CORPUS / "paste_cases.json"
+    result = subprocess.run(
+        [
+            "node",
+            str(harness),
+            str(ROOT / "static" / "js" / "scoreboard.js"),
+            str(cases),
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    status = json.loads(result.stdout)
+    assert status["oversized"] == "That file is 26 MB; a screenshot is under 25 MB."
+    assert status["at_the_cap"] == "That file is not an image the browser can open."
+    assert status["not_an_image"] == "That file is not an image the browser can open."
+
+
+@pytest.fixture(scope="module")
+def readings() -> dict:
+    """Labels and the reader's output for every corpus frame, read once."""
+    if shutil.which("node") is None:  # pragma: no cover - toolchain dependent
+        pytest.skip("node is not installed")
+    labels = json.loads(LABELS.read_text(encoding="utf-8"))
+    return {"labels": labels, "read": read_frames([CORPUS / name for name in labels])}
+
+
+def _players(rows: list) -> list[dict]:
+    return [player for row in rows for player in row]
+
+
+def test_every_labeled_champion_is_read(readings: dict) -> None:
+    """Every row reads the labeled champions, in order."""
+    misses = []
+    for name, label in readings["labels"].items():
+        want = [[p["champion"] for p in row] for row in label["rows"]]
+        got = [
+            [p["champion"]["key"] for p in row]
+            for row in readings["read"][name]["rows"]
+        ]
+        if want != got:
+            misses.append(f"{name}: wanted {want}, read {got}")
+    assert not misses, "\n".join(misses)
+
+
+def test_items_clear_the_corpus_floor(readings: dict) -> None:
+    """Items are read at ITEM_FLOOR or better with phantoms under EXTRA_CEILING."""
+    correct = labeled = extra = 0
+    report = []
+    for name, label in readings["labels"].items():
+        want = _players(label["rows"])
+        got = _players(readings["read"][name]["rows"])
+        frame_correct = frame_labeled = frame_extra = 0
+        for wanted, read in zip(want, got, strict=True):
+            want_ids = [i for i in wanted["items"] if i and i != "?"]
+            unscored = wanted["items"].count("?")
+            read_ids = [hit["key"] for hit in read["items"] if hit]
+            matched = sum(
+                min(want_ids.count(i), read_ids.count(i)) for i in set(want_ids)
+            )
+            frame_correct += matched
+            frame_labeled += len(want_ids)
+            frame_extra += max(0, len(read_ids) - matched - unscored)
+        correct += frame_correct
+        labeled += frame_labeled
+        extra += frame_extra
+        report.append(
+            f"{name}: {frame_correct}/{frame_labeled} items, {frame_extra} extra, "
+            f"{readings['read'][name]['ms']} ms"
+        )
+    summary = "\n".join(report)
+    assert labeled, "the corpus has no labeled items"
+    assert correct / labeled >= ITEM_FLOOR, f"{correct}/{labeled} items read\n{summary}"
+    assert (
+        extra / labeled <= EXTRA_CEILING
+    ), f"{extra} items read that were not there\n{summary}"
+
+
+ZOOMED_FRAME = "lck-2026-crop-clipped.jpg"
+ZOOM = 2
+
+
+def test_a_zoomed_crop_reads_the_same_champions(readings: dict, tmp_path: Path) -> None:
+    """A crop pasted at twice the size reads the rows its label names: the
+    reader brings a frame whose portraits are larger than the tuned size
+    back to it before reading."""
+    from PIL import Image
+
+    zoomed = tmp_path / ZOOMED_FRAME
+    with Image.open(CORPUS / ZOOMED_FRAME) as frame:
+        frame.resize((frame.width * ZOOM, frame.height * ZOOM), Image.BILINEAR).save(
+            zoomed
+        )
+    want = [
+        [p["champion"] for p in row] for row in readings["labels"][ZOOMED_FRAME]["rows"]
+    ]
+    got = [
+        [p["champion"]["key"] for p in row]
+        for row in read_frames([zoomed])[ZOOMED_FRAME]["rows"]
+    ]
+    assert got == want

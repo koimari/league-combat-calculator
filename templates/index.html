@@ -244,6 +244,8 @@
                 <button class="add-button" id="addAlly" type="button">+ Add ally</button>
               </div>
               <button class="add-button add-button-wide" id="addPracticeEnemy" type="button">vs target dummy</button>
+              <button class="add-button add-button-wide" id="scoreboardPaste" type="button" title="Or paste a screenshot anywhere on the page">Read a scoreboard screenshot</button>
+              <input id="scoreboardFile" class="visually-hidden" type="file" accept="image/*" aria-label="Scoreboard screenshot" />
               <button class="rail-primary" type="button" data-step-toggle="none">Done · back to the duel</button>
             </div>
           </section>
@@ -584,9 +586,26 @@
     </div>
   </dialog>
 
+  <dialog id="scoreboardDialog" class="dialog scoreboard-dialog">
+    <div class="dialog-shell">
+      <header class="dialog-head">
+        <div><p class="dialog-kicker">Scoreboard</p><h2>Read from a screenshot</h2></div>
+        <button class="dialog-close" id="scoreboardClose" type="button" aria-label="Close scoreboard reader">×</button>
+      </header>
+      <p class="bis-intro" id="scoreboardStatus" role="status"></p>
+      <canvas id="scoreboardPreview" class="scoreboard-preview" aria-label="Screenshot with the icons it read outlined"></canvas>
+      <div id="scoreboardRows" class="scoreboard-rows" role="radiogroup" aria-label="Which champion is yours"></div>
+      <div class="scoreboard-actions">
+        <span class="scoreboard-legend"><i class="is-unsure"></i> low confidence <i class="is-unknown"></i> not buildable here</span>
+        <button class="rail-primary" id="scoreboardApply" type="button" disabled>Load into the calculator</button>
+      </div>
+    </div>
+  </dialog>
+
   <script src="/static/js/app.js"></script>
   <script src="/static/js/eventorder.js"></script>
   <script src="/static/js/staleness.js"></script>
   <script src="/static/js/feedback.js"></script>
+  <script src="/static/js/scoreboard.js"></script>
 </body>
 </html>

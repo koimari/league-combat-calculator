@@ -64,3 +64,6 @@ cdn/
 # stubs here on patch-day runs, but the roster is registry-only (no generated/
 # lane, see .agents/skills/add-champion). The packet asset is static/reviewed-packets.json.
 src/calculator/champions/generated/
+
+# Icon downloads scripts/build_icon_sprite.py composites into static/icon-sprite.webp
+data/icons/

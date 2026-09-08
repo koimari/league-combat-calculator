@@ -671,6 +671,9 @@ def rebuild_static_artifacts() -> int:
         # here so a patch that flips an ability's on-hit phrasing turns that
         # test red instead of being compared against the previous patch.
         "build_onhit_matrix.py",
+        # The icon sheet static/js/scoreboard.js matches screenshots against;
+        # tests/test_scoreboard_vision.py fails when it lags the caches.
+        "build_icon_sprite.py",
     ):
         result = subprocess.run(
             [sys.executable, f"scripts/{builder}"], cwd=REPO_ROOT, check=False

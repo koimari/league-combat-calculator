@@ -7,7 +7,7 @@ disable-model-invocation: true
 
 # Champion Analyst
 
-You are a champion analyst preparing a champion for implementation in the LoL damage calculator. Your job is to **read the wiki**, **identify every edge case**, **ask the user targeted questions**, and **output a complete `/add-champion` prompt** with all decisions baked in.
+You are a champion analyst preparing a champion for implementation in the LoL damage calculator. Your job is to **read the wiki**, **identify every edge case**, **ask the user targeted questions**, and **hand an implementation agent a complete `/add-champion` spec** with all decisions baked in.
 
 ## Input
 
@@ -19,7 +19,7 @@ $ARGUMENTS
 
 ### Step 1: Fetch the Wiki Page
 
-Fetch the champion's wiki page at: `https://wiki.leagueoflegends.com/en-us/<ChampionName>`
+Fetch the champion's wiki page at `https://wiki.leagueoflegends.com/en-us/<ChampionName>` for prose: mechanics and interaction notes. Take every number from the raw data templates, `https://wiki.leagueoflegends.com/en-us/Template:Data_<ChampionName>/<Ability>?action=raw`, reading `{{pp|values|breakpoints}}` verbatim. A summarized fetch of the rendered page garbles progression tables and invents rules the champion once had (Bard and Cassiopeia in bug-history).
 
 Extract for each ability (P, Q, W, E, R):
 - Name
@@ -48,7 +48,7 @@ for slot in ['P', 'Q', 'W', 'E', 'R']:
                 print(f'  effect[{i}].leveling[{j}]: attr="{attr}" mods={mods}')
 ```
 
-Iterate **every** entry in each slot's list — recasts and subspells live in
+Iterate **every** entry in each slot's list: recasts and subspells live in
 the extra entries (Ambessa Q2 is `Q[1]`; reading only `[0]` is how its %HP
 component was missed).
 
@@ -78,11 +78,11 @@ An ability can belong to multiple categories.
 
 ### Step 4: Identify Red Flags
 
-Check for these **specific pitfalls** that have caused bugs in past implementations. For each one found, you MUST flag it:
+Each of these pitfalls has shipped as a bug at least once. Flag every one the kit exhibits:
 
-1. **Pet/summon secondary damage**: Tibbers aura, Daisy, Heimer turrets — the summon's ongoing DPS is usually NOT modeled. Flag it and ask.
+1. **Pet/summon secondary damage**: Tibbers aura, Daisy, Heimer turrets: the summon's ongoing DPS is usually NOT modeled. Flag it and ask.
 
-2. **Retaliation/shield damage**: Annie E, Rammus W — enemies take damage for hitting you. Usually NOT modeled. Flag it and ask.
+2. **Retaliation/shield damage**: Annie E, Rammus W: enemies take damage for hitting you. Usually NOT modeled. Flag it and ask.
 
 3. **Stat-granting abilities not applied before damage calc**: If R grants bonus AD/AP/armor pen, it must be a BUFF-phase slot (the `stat_buff` archetype with `apply_to=` for parse-time scaling stats) so the engine guarantees damage slots see buffed stats. Past bug (pre-engine): Ambessa R armor pen wasn't applied before Q/W/E damage. Note: fight-engine-applied stats like armor pen take no `apply_to`.
 
@@ -94,7 +94,7 @@ Check for these **specific pitfalls** that have caused bugs in past implementati
 
 7. **% max HP damage component missed**: Ambessa Q2 has %HP damage that was initially missed. Check every ability's description for "%HP", "% maximum health", "% current health", "% missing health".
 
-8. **Missing HP scaling on R**: Akali R2, Akshan R — damage scales with target's missing health. Need to decide: assume full HP target? 50% HP? Configurable?
+8. **Missing HP scaling on R**: Akali R2, Akshan R: damage scales with target's missing health. Need to decide: assume full HP target? 50% HP? Configurable?
 
 9. **Unusual crit scaling**: Some abilities scale with crit chance/damage at reduced effectiveness (Akshan R at 30%). The wiki value might be misread. Verify the exact formula.
 
@@ -104,16 +104,16 @@ Check for these **specific pitfalls** that have caused bugs in past implementati
 
 12. **Abilities with both passive and active components**: Ambessa R has passive (armor pen) + active (damage). Both need handling. The passive stat should always be active if ranked.
 
-13. **Transform/form-swap champions** (Gnar, Nidalee, Jayce, Elise, Shyvana...): four coupled traps, all hit on Gnar —
+13. **Transform/form-swap champions** (Gnar, Nidalee, Jayce, Elise, Shyvana...): four coupled traps, all hit on Gnar:
     - The alternate form's stat grants often parse as empty JSON. Source them from the **Community Dragon game files** (`<unit>.bin.json` CharacterRecords/Root, e.g. `gnarbig`), NOT the wiki stat box (it was stale for Gnar: 5.7 vs real 5.5 AD growth) and not ddragon (lists Gnar's AD growth as 0).
     - Classify the grant **base vs bonus**: a form that is a separate in-game unit grants BASE stats (bonus-AD ratios like Gnar R must see 0 without items); ability steroids (Vayne/Aatrox R) grant BONUS AD.
-    - Base-stat grants interact with base-stat-converting items (Sterak's) — the `_apply_stat_buff_ultimates` hook handles it, but verify with the item equipped.
+    - Base-stat grants interact with base-stat-converting items (Sterak's): the `_apply_stat_buff_ultimates` hook handles it, but verify with the item equipped.
     - Verify the UI stats panel (`run_fight()["champion_stats"]`) reflects the form toggle, not just the damage rows.
 
-14. **Ability "applies on-hit effects"**: on an on-hit-item champion (Bel'Veth, Kai'Sa-style builds) this is a top-tier damage source, not a footnote — Bel'Veth's Q/E item on-hits were 22% of her fight total. Three coupled requirements (engine supports all three via `applies_item_on_hits`):
-    - Item on-hit damage applies per application at the ability's stated effectiveness — never assumption-list it away.
+14. **Ability "applies on-hit effects"**: on an on-hit-item champion (Bel'Veth, Kai'Sa-style builds) this is a top-tier damage source, not a footnote. Bel'Veth's Q/E item on-hits were 22% of her fight total. Three coupled requirements (engine supports all three via `applies_item_on_hits`):
+    - Item on-hit damage applies per application at the ability's stated effectiveness. Never assumption-list it away.
     - Counter-gated items (Kraken every-3rd, Hullbreaker every-5th) run on ONE shared hit sequence across autos + ability applications; procs fire at the triggering hit's effectiveness.
-    - Classify the ability's trigger scope from the wiki notes: on-hit only vs on-hit + on-attack (`triggers=`). The on-attack list is closed (`item_effects.ON_ATTACK_TRIGGER_ITEMS`: Guinsoo's, Navori, RFC, Runaan's, Voltaic, Yun Tal); spellblade is neither. Ask the user — wiki interaction notes can be stale (see Azir in bug-history).
+    - Classify the ability's trigger scope from the wiki notes: on-hit only vs on-hit + on-attack (`triggers=`). Each item's class is its registry `counter_trigger` key, read through `item_effects.counter_trigger(name)` (the wiki's closed On-Attacking list: Guinsoo's, Navori, RFC, Runaan's, Voltaic, Yun Tal); spellblade is neither. Ask the user: wiki interaction notes can be stale (see Azir in bug-history).
 
 ### Step 5: Present Findings and Ask the User
 
@@ -124,14 +124,11 @@ First, present your ability analysis as a text summary. For each ability show:
 [Any red flags found, with specific numbers from wiki]
 ```
 
-Then use the **AskUserQuestion** tool to ask decision questions as interactive pop-ups. You can ask up to 4 questions per AskUserQuestion call, so batch related decisions together. Make multiple AskUserQuestion calls if you have more than 4 questions.
+Then ask the decision questions through **AskUserQuestion**, batching related decisions into one call.
 
-**Guidelines for AskUserQuestion:**
-- Each question should cover one decision point for an ability
-- Put your recommended answer as the first option with "(Recommended)" in the label
-- Use clear, short headers like "Passive", "Q mechanic", "R scaling"
-- Use `multiSelect: false` for yes/no or either/or decisions
-- Group questions logically: handle skips/includes first, then mechanic details, then champion options
+**Guidelines:**
+- Each question covers one decision point for an ability, under a header like "Passive", "Q mechanic", "R scaling"
+- Order: skips/includes first, then mechanic details, then champion options
 
 **Example questions:**
 - "Annie E deals 25 (+40% AP) to enemies that hit the shielded target. Should we model this?" → Options: "Skip (Recommended)" / "Include"
@@ -140,7 +137,7 @@ Then use the **AskUserQuestion** tool to ask decision questions as interactive p
 
 ### Step 6: Launch Implementation Agent
 
-After the user answers all questions, do NOT paste the `/add-champion` prompt as text. Instead:
+After the user answers all questions, hand the spec to an implementation agent so the user never has to copy it:
 
 1. Build the complete `/add-champion` prompt internally with all the user's decisions baked in (format below).
 2. Use the **Agent** tool to launch an implementation agent that will execute the skill.
@@ -170,27 +167,17 @@ Agent tool:
     - [any discrepancies between wiki and JSON data found in Step 2]
 ```
 
-**Critical rules for the prompt you pass to the agent:**
-- Say which slot shapes you expect (archetype slot map / custom slot fns), scoped from the cached kit in Step 2 — every champion ships as a named module (issue #161)
+**The prompt you pass to the agent includes:**
+- Say which slot shapes you expect (archetype slot map / custom slot fns), scoped from the cached kit in Step 2, since every champion ships as a named module
 - Include the exact JSON `attribute` names for each damage value (e.g., "use `Total Physical Damage` attribute, not `Physical Damage`")
 - Specify damage types explicitly
 - For stat buffs: specify a BUFF-phase `stat_buff` slot (with `apply_to=` when the stat scales other abilities at parse time)
-- Champion options become the module's `OPTIONS` declarations (key/type/default/label/min/max) and assumptions become `ASSUMPTIONS` — no JS work
+- Champion options become the module's `OPTIONS` declarations (key/type/default/label/min/max) and assumptions become `ASSUMPTIONS`, no JS work
 - For skipped abilities: explain WHY so the implementer doesn't add them
 - For multi-hit: specify exact hit count or formula
 - For conditionals: specify the default assumption AND the champion option toggle
-- Include expected damage ranges at a reference level (e.g., "at rank 3 with 100 AD, Q should do ~X damage") if you can calculate them from the wiki values — this helps the implementer verify correctness
+- Include expected damage ranges at a reference level (e.g., "at rank 3 with 100 AD, Q should do ~X damage") if you can calculate them from the wiki values. This helps the implementer verify correctness
 
 ## Reference: Past Issues by Champion
 
-These are real bugs from past implementations. Use them to calibrate your analysis. **Also check `.claude/skills/analyze-champion/bug-history.md`** for additional bugs logged after implementation — that file is the living record and may have entries not yet in this table.
-
-| Champion | Issue | Root Cause |
-|---|---|---|
-| Aatrox | R showed damage in breakdown | R is stat-buff only, should be `total_raw: 0.0` |
-| Aatrox | Passive applied every auto | Passive has cooldown, should be configurable proc count |
-| Akshan | R damage overestimated | Crit/crit-damage scaling at 30% effectiveness misunderstood |
-| Alistar | E empowered auto every attack | Empowered auto is once per cast, not per auto |
-| Ambessa | R stats not applied before calc | Armor pen from R passive must go into stats_context first |
-| Ambessa | Q missed %HP damage | Q2 has % max HP component in addition to flat+ratio |
-| Ambessa | Q2 casts didn't match Q1 | Recast should always have same cast count as original |
+Read `.claude/skills/analyze-champion/bug-history.md` before Step 4. Every logged bug ends in a "Pattern to watch for" line; those patterns calibrate this analysis.

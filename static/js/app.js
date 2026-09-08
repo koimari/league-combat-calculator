@@ -494,6 +494,7 @@ const CONTROL_FAMILY_GATES = {
   roster_membership: { selector: "#addEnemy, #addAlly" },
   purchase_optimize: { selector: "#economicsGold, #economicsOptimize" },
   picker: { selector: "[data-picker]" },
+  scoreboard: { selector: "#scoreboardPaste, #scoreboardFile", hide: true },
 };
 
 /**

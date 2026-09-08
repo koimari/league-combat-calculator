@@ -1,6 +1,6 @@
 ---
 name: patch-update
-description: Patch-day workflow — re-pull wiki data when a new LoL patch drops, audit what the calculator implements, update code if needed, and re-capture the golden baseline. Use when the user says a new patch dropped or asks to update/re-pull wiki data.
+description: Patch-day workflow. Re-pull wiki data when a new LoL patch drops, audit what the calculator implements, update code if needed, and re-capture the golden baseline. Use when the user says a new patch dropped or asks to update/re-pull wiki data.
 ---
 
 # Patch Update
@@ -24,7 +24,7 @@ the bis-profiles rebuild and the packet-currency check in isolation). See
 the old patch), fetches the new data, refreshes `data/economics-sourced.json`
 from DDragon for the release the new cache pins (`economy.py` prices every
 purchase plan from it), diffs the data against the last committed patch (git
-HEAD — `data/` is tracked), rebuilds the static catalogues the web UI fetches,
+HEAD, `data/` is tracked), rebuilds the static catalogues the web UI fetches,
 runs the patch-day gates, pytest and the golden compare, and re-captures the
 baseline **only if pytest is green**.
 
@@ -32,14 +32,14 @@ The rebuild covers `static/ability-catalog.json`, `static/effect-catalog.json`
 and `static/bis-profiles.json`. The last merges an Axword Meraki kit reference
 from the `lol-strength-analysis` sibling repo supplying 24 damage packets the
 wiki parser cannot read, so the run needs that repo checked out
-(`LCC_AXWORD_SOURCE`) — it refuses to write rather than dropping them, on an
+(`LCC_AXWORD_SOURCE`). It refuses to write rather than dropping them, on an
 absent kit source, zero champions, zero merged packets, or a merged count
 below the checked-in asset.
 
 Modifier-parse ERROR spam during the pull ("FAILURE TO PARSE MODIFIER") is
 normal lolstaticdata noise; only the `Skipped N` summary lines mean data was
 actually dropped. The known offenders (gimmick scalings) are listed under
-"Known-degraded wiki parses" in CLAUDE.md's Known Quirks — compare new spam
+"Known-degraded wiki parses" in CLAUDE.md's Known Quirks. Compare new spam
 against that list. To attribute a NEW error to a champion: the ability names
 streamed to stdout right before the error belong to the champion being parsed
 (the `Processed X` line prints only after X finishes, so the error belongs to
@@ -47,19 +47,19 @@ the champion AFTER the last `Processed` line).
 
 ## Triage the audit report
 
-**Champions** (every cached champion is a registered named module — issue #161):
-- `text-only` — usually nothing to do. Exception: if that champion's module
-  regex-parses prose (custom slots), confirm the parse still works — the
+**Champions** (every cached champion is a registered named module):
+- `text-only`: usually nothing to do. Exception: if that champion's module
+  regex-parses prose (custom slots), confirm the parse still works. The
   golden gate will catch value drift either way.
-- `NEEDS REVIEW` — a number we may hard-depend on moved. Check the
+- `NEEDS REVIEW`: a number we may hard-depend on moved. Check the
   champion's module and `tests/test_<champion>.py` for hand-validated
   expectations; update them citing old → new wiki values.
 
 **Configured items:**
-- `stats.*` diffs flow through the JSON automatically — no code change.
+- `stats.*` diffs flow through the JSON automatically, no code change.
 - Passive/active *text* diffs feed the parser: verify the item's values in
   the golden item sweep still look right; a broken parse raises by design.
-- `NOTE: code-owned values [...]` — those keys live in
+- `NOTE: code-owned values [...]`: those keys live in
   `item_effects._REFERENCE_ITEM_EFFECTS` and the wiki does NOT update them.
   Read the new wiki text for that item and update by hand if they moved.
 
@@ -70,7 +70,7 @@ the champion AFTER the last `Processed` line).
   stat-conversion passive worth modeling, use `/add-item-effect`.
 
 **Roster delta:** a new champion fails closed at runtime until a named,
-tested module and full-entry evidence exist — run `/add-champion`.
+tested module and full-entry evidence exist. Run `/add-champion`.
 `build_receipts.py` likewise refuses a cached champion without a registered
 module, so the roster addition and its module must land together.
 
@@ -81,10 +81,10 @@ for a disagreement, review it against the wiki page and record it in that
 script's `ACKNOWLEDGED_TOTAL_DIVERGENCES` (a row that stops reproducing is
 reported too).
 
-## Packet-evidence re-pin (issue #161)
+## Packet-evidence re-pin
 
 Rebuilding `static/reviewed-packets.json` (`build_reviewed_modules.py`)
-rewrites the manifest entry — including its revision receipts — for every
+rewrites the manifest entry, including its revision receipts, for every
 champion the patch touched. Each packet-backed module pins the SHA-256 of
 the entry it accepted, so those champions now **fail closed at import**
 ("packet evidence drifted") until re-pinned. That failure IS the review
@@ -101,7 +101,7 @@ step, not an error to suppress:
 
 Hand-authored modules (no digest) never import-fail on evidence changes;
 `full_entry_audit.py` instead reports an advisory `stale_review_sources`
-field when their pinned SOURCES revision falls behind the manifest — use it
+field when their pinned SOURCES revision falls behind the manifest. Use it
 as the re-review triage list.
 
 ## Gates and the commit
@@ -110,7 +110,7 @@ as the re-review triage list.
   derivations (cite old → new wiki values), then
   `python scripts/golden_snapshot.py capture scripts/golden_baseline.json`.
 - Golden compare diffs are EXPECTED after a real patch. Every line must be
-  traced to a wiki change before committing — use `detail <name>` for the
+  traced to a wiki change before committing. Use `detail <name>` for the
   affected named modules. Also verify surprising *absences*
   (e.g. a buff that didn't move the baseline because the snapshot has 0 AP,
   0% crit, or the ability sits at rank 1 at the snapshot level).
@@ -118,24 +118,24 @@ as the re-review triage list.
   `src/` tree of the merge base with `main`, so an in-branch `src/` change
   leaves every scenario *executed* and a broken receipt fails on its numbers.
   A patch that legitimately moves a receipt is re-pinned with
-  `python scripts/repin_corpus.py` in a data-only follow-up commit — it
+  `python scripts/repin_corpus.py` in a data-only follow-up commit. It
   re-probes `/api/calculate` first and refuses to stamp a receipt that no
-  longer reproduces — and `python scripts/repin_corpus.py --check` is the
+  longer reproduces, and `python scripts/repin_corpus.py --check` is the
   gate that the pins and the executed selection are both intact.
 - Commit `data/`, `scripts/golden_baseline.json`, and any code changes
   together, with every baseline diff explained in the commit message
   (see commit f7e8aad for the format).
 
-## Patch-day gates (issue #134)
+## Patch-day gates
 
 `python scripts/patch_update.py run` fails closed BEFORE re-capturing the
 golden baseline when any of these are missing/stale:
-- reviewed champion packets — both halves of `patch_update.py packets`: the
+- reviewed champion packets, both halves of `patch_update.py packets`: the
   source receipts (vs champions.json + the Meraki axword kit + per-champion
   wiki revisions) and a rebuild that must still reproduce the asset's slots.
   They catch disjoint drift (a changed source vs a changed builder), and
   neither is covered by the import-time `PACKET_SHA256` pin, which only
-  proves the 76 packet-backed modules accepted *this* asset. Rebuild with
+  proves each packet-backed module accepted *this* asset. Rebuild with
   `build_reviewed_modules.py` and commit the asset with its source receipts,
 - the full-entry audit tool (`--query-tool`/`LCC_WIKI_QUERY`/PATH/vendor),
 - the game-file refresh and the patch-regression staleness check (`CDTB_BIN`
@@ -147,8 +147,8 @@ golden baseline when any of these are missing/stale:
   new cache pins) and its audit section,
 - the coverage census (`scripts/coverage_census.py run --output
   docs/coverage-census.json`, ~1 min on 16 cores): a frontier entry no
-  `docs/coverage-residue.json` row acknowledges, or a row that no longer
-  reproduces, aborts. Commit the refreshed receipt with the data.
+  `docs/coverage-residue.json` row acknowledges, or a row that stops
+  reproducing, aborts. Commit the refreshed receipt with the data.
 
 Environment: build the wiki revision index (`scripts/decompose_wiki.py
 --wiki-db`, ~4.5 min, no variable needed at its default path), set

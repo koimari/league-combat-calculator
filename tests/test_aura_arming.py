@@ -205,5 +205,5 @@ class TestThePublishedLedgerGainsItsSeventhPhase:
         # rune page's request fields and catalogs, 6 the survival row's
         # certification fields, 7 nulled the locators on unsupported
         # capability fields, 8 the stat-surface labels).
-        assert CAPABILITY_SCHEMA_VERSION == 8
+        assert CAPABILITY_SCHEMA_VERSION == 9
         assert len(PARTICIPANT_LEDGER_CONTRACT["phases"]) == 7
