@@ -28,9 +28,9 @@ Any written source page requires review, including a changed template whose
 parent article revision stayed the same. Exit 1
 means the refreshed source needs packet review; exit 0 means the packet check
 is clean. Download, build, or report failures preserve the active index and
-leave `failure.txt` in the staged generation. A lock prevents overlapping
-runs. After a process crash, confirm that it stopped before removing the
-`*.refresh-lock` directory.
+leave `failure.txt` in the staged generation. An operating-system file lock prevents overlapping
+runs. The system releases the lock when the process exits, including after
+a crash. The persistent `*.refresh.lock` file can remain in place.
 
 The upstream downloader reuses files whose revisions and hashes match. It
 still requests every text page's wikitext during the scan. File namespace 6
