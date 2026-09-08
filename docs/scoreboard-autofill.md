@@ -29,10 +29,10 @@ row band for items at one shared size. Grid fills recover what the searches
 missed: rows sit on a uniform pitch, strips sit on a uniform pitch, and the
 matcher classifies each empty slot in place.
 
-The thresholds `MIN_SCORE`, `MIN_GAP`, `FILL_SCORE`, `FILL_GAP`, `SURE_FILL`
-and `THUMB_GATE` in `scoreboard.js` were set on the LCK frames, and the corpus
-test holds them. If a new overlay fails, add its frames to the corpus before
-you move a threshold.
+Every tuned number is a named constant in the block at the top of
+`scoreboard.js`, each with the reason beside it. They were set on the LCK
+frames, and the corpus test holds them at what the tree reads. If a new
+overlay fails, add its frames to the corpus before you move one.
 
 ## Grow the corpus
 
@@ -54,4 +54,15 @@ portraits below the 24 px floor in `PORTRAIT`, so scan the 1080p stream.
 label is truth, not the reader's output. Check every pair on the contact sheet
 from `read --sheet`, then edit `labels.json`: write `"?"` for an icon you
 cannot name from the frame and `null` for an empty slot. The test holds
-champions exact and items to at least 95% read with at most 5% phantom.
+champions exact and items to `ITEM_FLOOR` read with at most `EXTRA_CEILING`
+phantom, both ratcheted to what the tree reads.
+
+## Known gaps
+
+The corpus holds the 2026 LCK panel only. The 2026 LEC panel draws its
+portraits from different art than the square champion icon, a tighter face
+crop with a level badge, so on most LEC frames no portrait clears the anchor
+bar (score 0.83 with margin 0.28) and the read returns nothing; on the
+frame at `youtube:qHAn7zWJE_Q@690` it reads 7 of 10. Reading LEC needs a
+second reference variant built from that art, not a threshold change. LPL
+and LCS panels are untested.

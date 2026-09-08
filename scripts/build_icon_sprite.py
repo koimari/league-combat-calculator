@@ -20,7 +20,6 @@ import argparse
 import json
 import sys
 from concurrent.futures import ThreadPoolExecutor
-from io import BytesIO
 from pathlib import Path
 
 import requests
@@ -60,7 +59,7 @@ def _fetch(kind: str, key: str, url: str) -> Image.Image:
         response = requests.get(url, timeout=30)
         response.raise_for_status()
         path.write_bytes(response.content)
-    return Image.open(BytesIO(path.read_bytes())).convert("RGB")
+    return Image.open(path).convert("RGB")
 
 
 def build(champions: dict, items: dict) -> tuple[Image.Image, dict]:
@@ -92,6 +91,8 @@ def check(
     if not index_path.exists() or not sheet_path.exists():
         return "sprite assets are missing"
     index = json.loads(index_path.read_text(encoding="utf-8"))
+    if index.get("patch") != cache_patch(champions):
+        return f"sheet is from patch {index.get('patch')}, cache is {cache_patch(champions)}"
     expected = sprite_entries(champions, items)
     listed = {
         (kind[:-1], key)

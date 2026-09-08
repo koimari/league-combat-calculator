@@ -6,8 +6,8 @@
     grab  <video.mp4> --at SECONDS --out frame.jpg   cut one full-resolution frame
     label <image> --league LCK --source ID@T   append the reader's rows to labels.json for review
 
-A VoD comes down once with yt-dlp (a 480p stream is enough to scan, the 1080p
-one to grab from): yt-dlp -f "bv*[height=1080][ext=mp4]" -o "%(id)s.%(ext)s" URL
+A VoD comes down once with yt-dlp, at 1080p: a 480p frame puts portraits under
+the reader's floor. yt-dlp -f "bv*[height=1080][ext=mp4]" -o "%(id)s-1080.%(ext)s" URL
 
 Every subcommand reads through the one Node harness (tests/js/scoreboard_harness.mjs)
 so the corpus is judged by the code the browser runs. Frames and labels live in
@@ -91,7 +91,7 @@ def describe(reading: dict[str, Any], names: dict[str, str]) -> str:
             items = " | ".join(
                 (
                     f"{names.get(hit['key'], hit['key'])} {hit['score']:.2f}"
-                    + ("?" if hit["gap"] < 0.08 else "")
+                    + ("?" if hit["unsure"] else "")
                     if hit
                     else "-"
                 )
@@ -112,7 +112,7 @@ def contact_sheet(
         frame = frame.convert("RGB")
         sheet = sheet.convert("RGB")
         players = [p for row in reading["rows"] for p in row]
-        width = 2 * tile * 9
+        width = 2 * tile * (1 + max((len(p["items"]) for p in players), default=0))
         out = Image.new("RGB", (width, max(1, len(players)) * tile), (20, 20, 20))
         draw = ImageDraw.Draw(out)
         cell, columns = sprite_index["cell"], sprite_index["columns"]
@@ -130,7 +130,7 @@ def contact_sheet(
                 ref = sheet.crop((sx, sy, sx + cell, sy + cell)).resize((tile, tile))
                 out.paste(crop, (c * 2 * tile, r * tile))
                 out.paste(ref, (c * 2 * tile + tile, r * tile))
-                colour = (255, 170, 0) if hit["gap"] < 0.08 else (0, 220, 0)
+                colour = (255, 170, 0) if hit["unsure"] else (0, 220, 0)
                 draw.text(
                     (c * 2 * tile + 2, r * tile + 2), f"{hit['score']:.2f}", fill=colour
                 )
@@ -164,7 +164,7 @@ def cmd_read(args: argparse.Namespace) -> int:
 def cmd_scan(args: argparse.Namespace) -> int:
     """Rank a VoD's frames by champions and items read, one frame per --step seconds."""
     video = Path(args.video)
-    frames_dir = video.with_name(f"{video.stem}_frames")
+    frames_dir = video.with_name(f"{video.stem}_frames_{args.step}s")
     frames_dir.mkdir(exist_ok=True)
     if not any(frames_dir.glob("*.jpg")):
         subprocess.run(

@@ -4,8 +4,9 @@ tests/fixtures/scoreboard/labels.json names, per frame, the rows the reader
 must produce: top to bottom, players left to right, each a champion and its
 item ids in strip order (None for an empty slot, "?" for an icon the labeler
 could not name, which the reader may fill or leave). Champions are exact;
-items are held to a corpus-wide floor because component lookalikes and lossy
-video cost the odd slot. scripts/scoreboard_corpus.py grows the corpus.
+items are held to a corpus-wide floor, ratcheted to what the tree reads, so
+a threshold change that costs a slot goes red. scripts/scoreboard_corpus.py
+grows the corpus.
 """
 
 from __future__ import annotations
@@ -20,8 +21,8 @@ from scripts.build_icon_sprite import check as sprite_check
 from scripts.scoreboard_corpus import CORPUS, LABELS, read_frames
 
 ROOT = Path(__file__).resolve().parents[1]
-ITEM_FLOOR = 0.95
-EXTRA_CEILING = 0.05
+ITEM_FLOOR = 0.99
+EXTRA_CEILING = 0.0
 
 
 def test_sprite_matches_the_caches() -> None:
@@ -74,7 +75,7 @@ def test_items_clear_the_corpus_floor(readings: dict) -> None:
         want = _players(label["rows"])
         got = _players(readings["read"][name]["rows"])
         frame_correct = frame_labeled = frame_extra = 0
-        for wanted, read in zip(want, got):
+        for wanted, read in zip(want, got, strict=True):
             want_ids = [i for i in wanted["items"] if i and i != "?"]
             unscored = wanted["items"].count("?")
             read_ids = [hit["key"] for hit in read["items"] if hit]

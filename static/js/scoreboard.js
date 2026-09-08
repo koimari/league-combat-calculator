@@ -25,21 +25,38 @@ const ScoreboardVision = (() => {
   const THUMB_DIMS = 12;
   const COARSE_DIMS = 24;
   const SHORTLIST = 6;
+  /* Free-search acceptance: the 24x24 correlation a hit needs, by kind. A
+   * candidate this far under it is dropped before the polish that could
+   * lift it. */
   const MIN_SCORE = { champion: 0.78, item: 0.72 };
+  const POLISH_SLACK = 0.1;
   /* Margin over the runner-up key. Footage and HUD texture reach 0.85 against
    * some dark portrait but never with a clear runner-up; real portraits carry
-   * 0.3 or more. Items have true lookalikes (component swords), so none. */
+   * 0.3 or more. Items have true lookalikes (component swords), so the
+   * free search asks none of them; the strip rule below does. */
   const MIN_GAP = { champion: 0.28, item: 0 };
-  /* A slot on a player's established item grid is strong evidence on its own,
-   * so a cell there is kept at a lower correlation than a free detection, if
-   * it also has a clear runner-up margin; text past a strip's end matches
-   * some icon at 0.7 but never with one. A high score alone still passes. */
+  /* The anchor must beat MIN_SCORE by this, and a portrait filled into a
+   * confirmed column needs only this share of MIN_GAP, since the slot itself
+   * vouches for it. */
+  const ANCHOR_MARGIN = 0.05;
+  const GRID_GAP_SHARE = 0.5;
+  /* The rule every cell of a finished item strip meets, found or filled: a
+   * grid slot is strong evidence on its own, so a cell is kept at a lower
+   * correlation than the free search asks, if it also has a clear runner-up
+   * margin; text past a strip's end matches some icon at 0.7 but never with
+   * one. A high score alone still passes. */
   const FILL_SCORE = 0.62;
   const FILL_GAP = 0.22;
   const SURE_FILL = 0.78;
-  /* Only hits this strong vote on the shared item size. */
+  /* Only hits this strong vote on the shared item size, and it takes this
+   * many of them in one row to settle it. */
   const SURE_SCORE = 0.8;
-  /* A refined 4x4 thumbnail must score this before the cell is classified. */
+  const SURE_VOTES = 3;
+  /* A hit whose runner-up margin is under this is flagged for the reviewer. */
+  const UNSURE_GAP = 0.08;
+  /* A 4x4 thumbnail must score this on the pyramid to be a peak at all, and
+   * this once refined at full resolution before the cell is classified. */
+  const PEAK_FLOOR = 0.3;
   const THUMB_GATE = 0.55;
   const MIN_CONTRAST = 24;
   /* Portraits on broadcast panels are often a zoomed crop of the square icon. */
@@ -58,6 +75,12 @@ const ScoreboardVision = (() => {
   const MAX_SLOTS = 8;
   /* Players per team, so rows per column. */
   const MAX_ROWS = 5;
+  /* Item icon sizes tried, as shares of the portrait size, and the share
+   * assumed when no row settles one. */
+  const ITEM_SHARES = [0.72, 0.78, 0.85, 0.92, 1];
+  const ITEM_SHARE_DEFAULT = 0.8;
+  /* Two icons further apart than this many icon widths are not neighbours. */
+  const NEIGHBOUR_GAP = 1.6;
 
   /* --- fingerprints --------------------------------------------------- */
 
@@ -254,15 +277,17 @@ const ScoreboardVision = (() => {
         second = Math.max(second, score);
       }
     }
-    if (best) best.gap = best.score - second;
+    if (best) {
+      best.gap = best.score - second;
+      best.unsure = best.gap < UNSURE_GAP;
+    }
     return best;
   }
 
-  /** The projected 4x4 score of one full-resolution cell against every icon of `kind`. */
-  function thumbScore(raster, refs, kind, x, y, size, vec, proj) {
+  /** The best projected 4x4 correlation of a normalized thumbnail against every icon of `kind`. */
+  function bestThumb(vec, proj, refs, kind) {
     const { axes, projected } = refs.kinds[kind].thumb;
     const count = refs.kinds[kind].indices.length;
-    fingerprint(raster, x, y, size, THUMB, vec);
     for (let c = 0; c < THUMB_DIMS; c += 1) proj[c] = dot(vec, 0, axes, c * refs.thumbLen, refs.thumbLen);
     let best = -1;
     for (let r = 0; r < count; r += 1) {
@@ -270,6 +295,12 @@ const ScoreboardVision = (() => {
       if (score > best) best = score;
     }
     return best;
+  }
+
+  /** The projected 4x4 score of one full-resolution cell against every icon of `kind`. */
+  function thumbScore(raster, refs, kind, x, y, size, vec, proj) {
+    fingerprint(raster, x, y, size, THUMB, vec);
+    return bestThumb(vec, proj, refs, kind);
   }
 
   /**
@@ -317,7 +348,7 @@ const ScoreboardVision = (() => {
         if (hit && (!best || hit.score > best.score)) best = hit;
       }
     }
-    if (!best || best.contrast < MIN_CONTRAST || best.score < MIN_SCORE[kind] - 0.1) return null;
+    if (!best || best.contrast < MIN_CONTRAST || best.score < MIN_SCORE[kind] - POLISH_SLACK) return null;
     const smallest = Math.round(candidate.size / SIZE_RATIO);
     const largest = Math.round(candidate.size * SIZE_RATIO);
     for (let moved = true, rounds = 0; moved && rounds < 6; rounds += 1) {
@@ -400,14 +431,12 @@ const ScoreboardVision = (() => {
     const block = fine ? 2 : 1;
     const factor = size / (THUMB * block);
     const key = `${size}:${block}`;
-    let level = levels && levels.get(key);
+    let level = levels.get(key);
     if (!level) {
       level = pyramidLevel(raster, factor);
-      if (levels) levels.set(key, level);
+      levels.set(key, level);
     }
     const { width, height, data } = level;
-    const { axes, projected } = refs.kinds[kind].thumb;
-    const count = refs.kinds[kind].indices.length;
     const thumbLen = refs.thumbLen;
     const span = THUMB * block;
     const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -435,20 +464,14 @@ const ScoreboardVision = (() => {
           }
         }
         normalize(vec);
-        for (let c = 0; c < THUMB_DIMS; c += 1) proj[c] = dot(vec, 0, axes, c * thumbLen, thumbLen);
-        let best = -1;
-        for (let r = 0; r < count; r += 1) {
-          const score = dot(proj, 0, projected, r * THUMB_DIMS, THUMB_DIMS);
-          if (score > best) best = score;
-        }
-        scores[i * width + j] = best;
+        scores[i * width + j] = bestThumb(vec, proj, refs, kind);
       }
     }
     const found = [];
     for (let i = i0; i <= iEnd; i += 1) {
       for (let j = j0; j <= jEnd; j += 1) {
         const score = scores[i * width + j];
-        if (score < 0.3) continue;
+        if (score < PEAK_FLOOR) continue;
         let peak = true;
         for (let di = -1; di <= 1 && peak; di += 1) {
           for (let dj = -1; dj <= 1; dj += 1) {
@@ -472,9 +495,9 @@ const ScoreboardVision = (() => {
     return kept;
   }
 
-  function sizesBetween(min, max, ratio = SIZE_RATIO) {
+  function sizesBetween(min, max) {
     const sizes = [];
-    for (let s = min; s <= max; s = Math.max(s + 1, Math.round(s * ratio))) sizes.push(Math.round(s));
+    for (let s = min; s <= max; s = Math.max(s + 1, Math.round(s * SIZE_RATIO))) sizes.push(s);
     return sizes;
   }
 
@@ -517,7 +540,7 @@ const ScoreboardVision = (() => {
       }
       if (best && best.score >= SURE_ANCHOR) break;
     }
-    if (!best || best.score < MIN_SCORE.champion + 0.05) return null;
+    if (!best || best.score < MIN_SCORE.champion + ANCHOR_MARGIN) return null;
     for (const size of [Math.round(best.size / SIZE_RATIO), Math.round(best.size * SIZE_RATIO)]) {
       const hit = verify(raster, { x: best.x, y: best.y, size, reach: 3 }, refs, "champion");
       if (hit && hit.score > best.score) best = hit;
@@ -537,7 +560,7 @@ const ScoreboardVision = (() => {
     const team = search(raster, refs, "champion", size, column, levels)
       .filter((hit) => Math.abs(hit.size - size) <= size * 0.2 && Math.abs(hit.x - first.x) <= size / 2);
     let opposing = [];
-    for (const hit of [...team].sort((a, b) => b.score - a.score)) {
+    for (const hit of team) {
       const row = { x0: 0, x1: raster.width, y0: centreY(hit) - size * 0.75, y1: centreY(hit) + size * 0.75 };
       const mate = search(raster, refs, "champion", size, row, levels).find((m) => Math.abs(m.x - hit.x) >= size);
       if (!mate) continue;
@@ -548,45 +571,62 @@ const ScoreboardVision = (() => {
     return fillColumns(raster, refs, suppress([...team, ...opposing].sort((a, b) => b.score - a.score)), size);
   }
 
+  /** The `width` consecutive entries of `filled` (hits or null) with the highest total score. */
+  function strongestWindow(filled, width) {
+    let best = null;
+    for (let start = 0; start < filled.length; start += 1) {
+      const window = filled.slice(start, start + width);
+      const strength = window.reduce((sum, hit) => sum + (hit ? hit.score : 0), 0);
+      if (!best || strength > best.strength) best = { window, strength };
+    }
+    return best ? best.window : [];
+  }
+
+  /** `hits` keyed by `slotOf`, the strongest hit winning a shared slot. */
+  function slotMap(hits, slotOf) {
+    const map = new Map();
+    for (const hit of [...hits].sort((a, b) => a.score - b.score)) map.set(slotOf(hit), hit);
+    return map;
+  }
+
   /**
    * Portraits missed by the searches, recovered from the grid the found ones
    * define: each column's x and the rows' uniform pitch give every slot,
-   * and an empty slot is classified in place, at half the free-search margin
-   * since the slot itself vouches for it. A column keeps its strongest
-   * MAX_ROWS-tall window.
+   * and an empty slot is classified in place at GRID_GAP_SHARE of the
+   * free-search margin. A column keeps its strongest MAX_ROWS-tall window.
+   * Every portrait leaves tagged with its `column`, left to right, which is
+   * the team it belongs to.
    */
   function fillColumns(raster, refs, found, size) {
     const columns = [];
-    for (const hit of [...found].sort((a, b) => b.score - a.score)) {
+    for (const hit of found) {
       const column = columns.find((c) => Math.abs(c.x - hit.x) <= size / 2);
       if (column) column.hits.push(hit);
       else columns.push({ x: hit.x, hits: [hit] });
     }
+    columns.sort((a, b) => a.x - b.x);
+    columns.forEach((column, index) => column.hits.forEach((hit) => { hit.column = index; }));
     const ys = [...new Set(found.map((h) => Math.round(centreY(h))))].sort((a, b) => a - b);
     const gaps = [];
     for (let i = 1; i < ys.length; i += 1) if (ys[i] - ys[i - 1] > size / 2 && ys[i] - ys[i - 1] < size * 2.5) gaps.push(ys[i] - ys[i - 1]);
     const pitch = median(gaps);
     if (!pitch || columns.length > 2) return found;
     const all = [];
-    for (const column of columns) {
+    columns.forEach((column, index) => {
       const x = Math.round(median(column.hits.map((h) => h.x)));
-      const slot = new Map(column.hits.map((h) => [Math.round((centreY(h) - ys[0]) / pitch), h]));
+      const slot = slotMap(column.hits, (h) => Math.round((centreY(h) - ys[0]) / pitch));
       const known = [...slot.keys()].sort((a, b) => a - b);
       const filled = [];
       for (let k = known[0] - MAX_ROWS + 1; k <= known[known.length - 1] + MAX_ROWS - 1; k += 1) {
         const y = Math.round(ys[0] + k * pitch - size / 2);
         if (y < 0 || y + size > raster.height) continue;
         const hit = slot.get(k) || verify(raster, { x, y, size }, refs, "champion", true);
-        filled.push(hit && hit.score >= MIN_SCORE.champion && hit.gap >= MIN_GAP.champion / 2 ? hit : null);
+        const kept = hit && hit.score >= MIN_SCORE.champion && hit.gap >= MIN_GAP.champion * GRID_GAP_SHARE;
+        if (kept) hit.column = index;
+        filled.push(kept ? hit : null);
       }
-      let best = null;
-      for (let start = 0; start < filled.length; start += 1) {
-        const window = filled.slice(start, start + MAX_ROWS);
-        const strength = window.reduce((sum, hit) => sum + (hit ? hit.score : 0), 0);
-        if (!best || strength > best.strength) best = { window, strength };
-      }
-      if (best) all.push(...best.window.filter(Boolean));
-    }
+      all.push(...strongestWindow(filled, MAX_ROWS).filter(Boolean));
+    });
     return all;
   }
 
@@ -617,7 +657,7 @@ const ScoreboardVision = (() => {
     const gaps = [];
     for (let i = 1; i < sorted.length; i += 1) {
       const gap = sorted[i].x - sorted[i - 1].x;
-      if (gap < itemSize * 1.6) gaps.push(gap);
+      if (gap < itemSize * NEIGHBOUR_GAP) gaps.push(gap);
     }
     const rough = pitchHint || median(gaps) || itemSize + 1;
     const slot = sorted.map((h) => Math.round((h.x - sorted[0].x) / rough));
@@ -625,9 +665,9 @@ const ScoreboardVision = (() => {
     const pitch = span ? (sorted[sorted.length - 1].x - sorted[0].x) / span : rough;
     const y = Math.round(median(sorted.map((h) => h.y)));
     const size = Math.round(itemSize);
-    const known = new Map(sorted.map((h, i) => [slot[i], h]));
+    const known = slotMap(sorted, (h) => slot[sorted.indexOf(h)]);
     const filled = [];
-    for (let k = slot[0] - 7; k <= slot[slot.length - 1] + 7; k += 1) {
+    for (let k = slot[0] - MAX_SLOTS + 1; k <= slot[slot.length - 1] + MAX_SLOTS - 1; k += 1) {
       let nearest = 0;
       slot.forEach((s, i) => { if (Math.abs(s - k) < Math.abs(slot[nearest] - k)) nearest = i; });
       const x = Math.round(sorted[nearest].x + (k - slot[nearest]) * pitch);
@@ -637,33 +677,29 @@ const ScoreboardVision = (() => {
       const hit = known.get(k) || verify(raster, { x, y, size }, refs, "item", true);
       filled.push(hit && hit.score >= FILL_SCORE && (hit.gap >= FILL_GAP || hit.score >= SURE_FILL) ? hit : null);
     }
-    let best = null;
-    for (let start = 0; start < filled.length; start += 1) {
-      const window = filled.slice(start, start + MAX_SLOTS);
-      const strength = window.reduce((sum, hit) => sum + (hit ? hit.score : 0), 0);
-      if (!best || strength > best.strength) best = { window, strength };
-    }
-    if (!best) return [];
-    const first = best.window.findIndex(Boolean);
-    const last = best.window.length - 1 - [...best.window].reverse().findIndex(Boolean);
-    return first < 0 ? [] : best.window.slice(first, last + 1);
+    const window = strongestWindow(filled, MAX_SLOTS);
+    const first = window.findIndex(Boolean);
+    const last = window.length - 1 - [...window].reverse().findIndex(Boolean);
+    return first < 0 ? [] : window.slice(first, last + 1);
   }
 
   /**
    * Read a whole scoreboard: rows of players, each a champion with the items
-   * nearest it on its row. Rows are returned top to bottom; within a row,
-   * players left to right, so a two-column broadcast panel yields
-   * `[left, right]` per row and role order down the rows.
+   * nearest it on its row and the `side` (portrait column, left to right)
+   * it plays for. Rows are returned top to bottom, in role order on a
+   * broadcast panel; within a row, players left to right. A row can hold one
+   * player when its other portrait was not read, so `side` is the team, not
+   * the position in the row.
    */
-  function readScoreboard(raster, refs, options = {}) {
+  function readScoreboard(raster, refs) {
     const levels = new Map();
-    const portraitSizes = options.portraitSizes || sizesBetween(PORTRAIT.min, Math.min(PORTRAIT.max, Math.floor(raster.height / 6)));
+    const portraitSizes = sizesBetween(PORTRAIT.min, Math.min(PORTRAIT.max, Math.floor(raster.height / 6)));
     const first = anchor(raster, refs, portraitSizes, levels);
     if (!first) return { hits: [], rows: [] };
     const champions = portraits(raster, refs, first, levels);
     const size = first.size;
     const bands = rows(champions, size);
-    const itemSizes = [0.72, 0.78, 0.85, 0.92, 1].map((share) => Math.round(size * share));
+    const itemSizes = ITEM_SHARES.map((share) => Math.round(size * share));
     const items = [];
     let itemSize = null;
     for (const band of bands) {
@@ -683,14 +719,14 @@ const ScoreboardVision = (() => {
         const strength = sure.reduce((sum, hit) => sum + hit.score, 0);
         if (!bestForBand || strength > bestForBand.strength) bestForBand = { found, sure, strength };
       }
-      if (!itemSize && bestForBand.sure.length >= 3) itemSize = median(bestForBand.sure.map((h) => h.size));
+      if (!itemSize && bestForBand.sure.length >= SURE_VOTES) itemSize = median(bestForBand.sure.map((h) => h.size));
       items.push(...bestForBand.found);
     }
-    const strip = itemSize || size * 0.8;
+    const strip = itemSize || size * ITEM_SHARE_DEFAULT;
     const neighbours = [];
     for (const band of bands) {
       const xs = items.filter((hit) => Math.abs(centreY(hit) - band.y) <= size * 0.5).map((hit) => hit.x).sort((a, b) => a - b);
-      for (let i = 1; i < xs.length; i += 1) if (xs[i] - xs[i - 1] < strip * 1.6) neighbours.push(xs[i] - xs[i - 1]);
+      for (let i = 1; i < xs.length; i += 1) if (xs[i] - xs[i - 1] < strip * NEIGHBOUR_GAP) neighbours.push(xs[i] - xs[i - 1]);
     }
     const pitchHint = median(neighbours);
     const result = bands.map((band) => {
@@ -711,13 +747,13 @@ const ScoreboardVision = (() => {
           min: left.length ? (champion.x + Math.max(...left)) / 2 : -Infinity,
           max: right.length ? (champion.x + Math.min(...right)) / 2 : Infinity,
         };
-        return { champion, items: fillStrip(raster, refs, owned[i], strip, pitchHint, champion, bounds) };
+        return { champion, side: champion.column || 0, items: fillStrip(raster, refs, owned[i], strip, pitchHint, champion, bounds) };
       });
     });
     return { hits: [...champions, ...items], rows: result };
   }
 
-  return { fingerprint, buildReferences, classify, coarseSearch, verify, readScoreboard, MIN_SCORE, MIN_CONTRAST };
+  return { buildReferences, readScoreboard };
 })();
 
 /* --- page wiring ------------------------------------------------------- */
@@ -731,7 +767,9 @@ const ScoreboardVision = (() => {
 
   async function loadReferences() {
     if (references) return references;
-    const index = await (await fetch("/static/icon-sprite.json")).json();
+    const response = await fetch("/static/icon-sprite.json");
+    if (!response.ok) throw new Error(`The icon sprite index did not load (${response.status}).`);
+    const index = await response.json();
     const image = await new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => resolve(img);
@@ -764,25 +802,33 @@ const ScoreboardVision = (() => {
     });
   }
 
+  /** Every player read, top to bottom then left to right, with the role its row implies. */
+  function playersOf(reading) {
+    return reading.rows.flatMap((row, r) => row.map((p) => ({ ...p, row: r, role: ROLES[r] || "" })));
+  }
+
   /**
    * The reading as the share loader expects it: names, not ids, boots split
    * out. The items also settle the role quest, which the backend enforces:
-   * tier-3 boots and an upgraded support item exist only once the quest is
-   * done, and any support quest item puts the player in the support role.
+   * boots above the tier an unfinished quest allows and an upgraded support
+   * item exist only once the quest is done, and any support quest item puts
+   * the player in the support role.
    */
   function payloadFor(reading, attackerIndex, level) {
-    const players = reading.rows.flatMap((row, r) => row.map((p, side) => ({ ...p, role: ROLES[r] || "", side })));
+    const players = playersOf(reading);
     const attacker = players[attackerIndex];
     const loadout = (player) => {
       const ids = player.items.filter(Boolean).map((hit) => Number(hit.key)).filter((id) => getItem(id));
       const boots = ids.find((id) => isRoleBoot(id));
       const tier = Number(engine.boots.find((item) => Number(item.id) === boots)?.tier);
       const questStages = ids.map((id) => getItem(id).supportQuestStage).filter(Boolean);
+      const role = questStages.length ? "support" : player.role;
+      const questBoots = roleBootsTier(role, false);
       return {
         champion: player.champion.key,
         level,
-        role: questStages.length ? "support" : player.role,
-        role_quest_complete: tier >= 3 || questStages.includes("upgraded"),
+        role,
+        role_quest_complete: (questBoots !== null && tier > questBoots) || questStages.includes("upgraded"),
         items: ids.filter((id) => id !== boots).map((id) => itemName(id)),
         boots: boots ? itemName(boots) : "",
       };
@@ -815,20 +861,19 @@ const ScoreboardVision = (() => {
     context.lineWidth = 2;
     reading.rows.flat().forEach((player) => {
       [player.champion, ...player.items.filter(Boolean)].forEach((hit) => {
-        context.strokeStyle = hit.kind === "champion" ? "#2f7d4f" : hit.gap < 0.08 ? "#c8891a" : "#e8dcc0";
+        context.strokeStyle = hit.kind === "champion" ? "#2f7d4f" : hit.unsure ? "#c8891a" : "#e8dcc0";
         context.strokeRect((hit.x / scale) * ratio, (hit.y / scale) * ratio, (hit.size / scale) * ratio, (hit.size / scale) * ratio);
       });
     });
   }
 
   function renderRows(reading) {
-    const players = reading.rows.flatMap((row, r) => row.map((p, side) => ({ ...p, row: r, side })));
-    table.innerHTML = players.map((player, index) => {
+    table.innerHTML = playersOf(reading).map((player, index) => {
       const champion = getChampion(player.champion.key);
       const items = player.items.map((hit) => {
         if (!hit) return '<span class="scoreboard-item is-empty" title="Empty slot"></span>';
         const item = getItem(Number(hit.key));
-        const flag = !item ? " is-unknown" : hit.gap < 0.08 ? " is-unsure" : "";
+        const flag = !item ? " is-unknown" : hit.unsure ? " is-unsure" : "";
         const title = `${item ? item.name : "Not a buildable item"} · ${(hit.score * 100).toFixed(0)}%`;
         return `<span class="scoreboard-item${flag}" title="${escapeHtml(title)}"><img src="${itemImage(hit.key)}" alt="${escapeHtml(item ? item.name : hit.key)}" /></span>`;
       }).join("");
@@ -845,14 +890,15 @@ const ScoreboardVision = (() => {
 
   async function readBlob(blob) {
     if (!dialog) return;
-    dialog.showModal();
+    if (!dialog.open) dialog.showModal();
     say("Reading the scoreboard…");
     table.innerHTML = "";
     apply.disabled = true;
     try {
       const [refs, image] = await Promise.all([loadReferences(), loadImage(blob)]);
       const raster = rasterOf(image);
-      /* ceiling: the read blocks the page for a few seconds; a worker if that grates. */
+      /* One paint, so "Reading…" shows before the synchronous read blocks
+       * the page for a few seconds. ceiling: a worker if that grates. */
       await new Promise((resolve) => setTimeout(resolve, 30));
       const started = performance.now();
       const reading = ScoreboardVision.readScoreboard(raster, refs);
