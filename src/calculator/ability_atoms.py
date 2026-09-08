@@ -246,6 +246,7 @@ ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
                 "cast_instances": 1,
                 "cast_time": 0.0,
                 "control_events": (),
+                "control_scope": None,
                 "control_source_atoms": (),
                 "cooldown": 0.0,
                 "deathfire_category": "",

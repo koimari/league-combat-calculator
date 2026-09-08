@@ -17917,7 +17917,12 @@ def _declared_cc_kind(parts: Iterable[Any]) -> str | None:
 
 
 def _entry_control_scope(info: Mapping[str, Any]) -> ControlScope | None:
-    """Return one authored scope when all control events share it."""
+    """Read an explicit cast scope or the shared scope of its control events."""
+    authored = ability_field(info, "control_scope")
+    if authored is not None:
+        if not isinstance(authored, ControlScope):
+            raise TypeError("control_scope must be a ControlScope")
+        return authored
     scopes = {
         control.scope
         for control in ability_field(info, "control_events")
