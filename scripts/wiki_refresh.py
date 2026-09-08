@@ -159,7 +159,7 @@ def refresh(
                     if active_vault.is_dir():
                         seed_vault = active_vault
                 except (sqlite3.Error, ValueError, KeyError):
-                    # A legacy revision-only index has no reusable source vault.
+                    # A revision-only index has no reusable source vault.
                     pass
             generation = Path(
                 tempfile.mkdtemp(prefix="wiki-generation-", dir=database.parent)
