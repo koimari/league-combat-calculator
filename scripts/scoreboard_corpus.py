@@ -91,7 +91,7 @@ def contact_sheet(path: Path, reading: dict[str, Any], sprite_index: dict, names
         frame = frame.convert("RGB")
         sheet = sheet.convert("RGB")
         players = [p for row in reading["rows"] for p in row]
-        width = 2 * tile * 8
+        width = 2 * tile * 9
         out = Image.new("RGB", (width, max(1, len(players)) * tile), (20, 20, 20))
         draw = ImageDraw.Draw(out)
         cell, columns = sprite_index["cell"], sprite_index["columns"]

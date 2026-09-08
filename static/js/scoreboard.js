@@ -769,17 +769,25 @@ const ScoreboardVision = (() => {
     });
   }
 
-  /** The reading as the share loader expects it: names, not ids, boots split out. */
+  /**
+   * The reading as the share loader expects it: names, not ids, boots split
+   * out. The items also settle the role quest, which the backend enforces:
+   * tier-3 boots and an upgraded support item exist only once the quest is
+   * done, and any support quest item puts the player in the support role.
+   */
   function payloadFor(reading, attackerIndex, level) {
     const players = reading.rows.flatMap((row, r) => row.map((p, side) => ({ ...p, role: ROLES[r] || "", side })));
     const attacker = players[attackerIndex];
     const loadout = (player) => {
       const ids = player.items.filter(Boolean).map((hit) => Number(hit.key)).filter((id) => getItem(id));
       const boots = ids.find((id) => isRoleBoot(id));
+      const tier = Number(engine.boots.find((item) => Number(item.id) === boots)?.tier);
+      const questStages = ids.map((id) => getItem(id).supportQuestStage).filter(Boolean);
       return {
         champion: player.champion.key,
         level,
-        role: player.role,
+        role: questStages.length ? "support" : player.role,
+        role_quest_complete: tier >= 3 || questStages.includes("upgraded"),
         items: ids.filter((id) => id !== boots).map((id) => itemName(id)),
         boots: boots ? itemName(boots) : "",
       };
@@ -832,10 +840,9 @@ const ScoreboardVision = (() => {
       const known = Boolean(champion);
       return `<label class="scoreboard-player${known ? "" : " is-unknown"}">
         <input type="radio" name="scoreboardAttacker" value="${index}" ${index === 0 ? "checked" : ""} ${known ? "" : "disabled"} />
-        <span class="scoreboard-side">${player.side ? "Right" : "Left"} · ${ROLES[player.row] || "row " + (player.row + 1)}</span>
+        <span class="scoreboard-side">${(player.champion.score * 100).toFixed(0)}% · ${player.side ? "Right" : "Left"} · ${ROLES[player.row] || "row " + (player.row + 1)}${known ? "" : " · not modeled"}</span>
         <img class="scoreboard-portrait" src="${championImage(player.champion.key)}" alt="" />
         <strong>${escapeHtml(player.champion.key)}</strong>
-        <small>${(player.champion.score * 100).toFixed(0)}%${known ? "" : " · not modeled"}</small>
         <span class="scoreboard-items">${items}</span>
       </label>`;
     }).join("");

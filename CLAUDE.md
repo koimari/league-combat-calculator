@@ -40,6 +40,8 @@ python scripts/prose_lint.py                                            # Docstr
 python scripts/literal_defaults.py    # Rule-5 lint over the whole package: literal fallbacks on cached data (tests/test_literal_defaults.py owns the covered set `ROOTS` and the ratcheted `ER5_TAIL`)
 python scripts/patch_update.py run    # Patch day, the one orchestrator: detect/audit/fetch/bis/packets are its other subcommands (see /patch-update skill)
 python scripts/bench_request.py --compare benchmarks.md  # Request-latency instrument, not a gate (its medians are one machine's); benchmarks.md is the one home for perf numbers
+python scripts/build_icon_sprite.py --check   # The icon sheet the scoreboard reader matches against must cover the caches (rebuilt on patch day)
+python scripts/scoreboard_corpus.py read <frame> --sheet sheet.png   # Read a scoreboard frame through the shipped matcher; docs/scoreboard-autofill.md covers scan, grab, label
 ```
 
 `pytest` gates every task; `pylint src/` and `black --check` gate any code change.
