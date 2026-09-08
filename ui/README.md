@@ -36,3 +36,9 @@ theme choices. They are excluded from the shared source sync.
 Scryglass synchronizes these source files as one hash-bound set:
 `Calculator.tsx`, `api.ts`, `types.ts`, and `calculator.css`. The application that
 hosts them owns its navigation and theme controls.
+
+## League HUD and rune page
+
+The HUD reads stats from `/api/loadout-stats`, and each champion exposes the engine's default ranks by level. The item shop includes a BIS builder that submits its total gold budget. Uncertified searches show an explicitly labeled candidate only when its event timeline is complete.
+
+`assets/league/README.md` records the patch-specific HUD atlases, sprite coordinates, rune backgrounds, and client CSS. The UI uses versioned remote assets and preserves the source files and hashes here. Rune selections enforce one primary rune per row and two secondary runes from distinct rows. Unimplemented runes remain disabled.

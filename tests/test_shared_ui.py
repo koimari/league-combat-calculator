@@ -32,3 +32,30 @@ def test_advanced_workspace_remains_behind_browser_auth(monkeypatch):
         response = app_module.app.test_client().get("/advanced")
     assert response.status_code == 302
     assert response.headers["Location"].endswith("/auth/login?next=/advanced")
+
+
+def test_hud_rank_defaults_follow_engine_skill_orders():
+    from src.calculator.champions.skill_orders import get_ability_rank
+
+    champions = app_module.app.test_client().get("/api/champions").get_json()
+    for name in ("Ashe", "Jayce", "Udyr"):
+        champion = next(entry for entry in champions if entry["name"] == name)
+        for level in (1, 6, 11, 18, 20):
+            assert champion["rank_defaults_by_level"][str(level)] == {
+                slot: get_ability_rank(slot, level, name)
+                for slot in ("Q", "W", "E", "R")
+            }
+
+
+def test_hud_tooltip_preserves_all_cached_ability_branches():
+    champions = app_module.app.test_client().get("/api/champions").get_json()
+    ashe = next(entry for entry in champions if entry["name"] == "Ashe")
+    tooltip = ashe["abilities"]["Q"]
+    assert "Passive:" in tooltip["description"]
+    assert "Active:" in tooltip["description"]
+    assert "resets Ashe's basic attack timer" in tooltip["description"]
+    attack_speed = next(
+        row for row in tooltip["rank_values"] if row["label"] == "Bonus Attack Speed"
+    )
+    assert attack_speed["values"] == ["20%", "30%", "40%", "50%", "60%"]
+    assert any(row["label"] == "Cost" for row in tooltip["rank_values"])

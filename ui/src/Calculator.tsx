@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, useId } from "react";
+import { useEffect, useRef, useState, useId, type ReactNode } from "react";
+import { ChampionHud } from "./ChampionHud";
+import { RunePage } from "./RunePage";
+import { GameTooltip } from "./Tooltip";
+import "./rune-page.css";
+import { useLoadoutStats } from "./useLoadoutStats";
 import { request } from "./api";
 import { shopGroup, wikiText } from "./shop";
 import type {
@@ -244,6 +249,7 @@ interface ShopState {
   onSlot: (index: number, boots: boolean) => void;
   onClear: () => void;
   onTab: (boots: boolean) => void;
+  optimizer?: ReactNode;
 }
 function ItemShop({
   shop,
@@ -256,6 +262,7 @@ function ItemShop({
   onPick: (name: string) => void;
   onClose: () => void;
 }) {
+  const [bisOpen, setBisOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [stats, setStats] = useState<string[]>([]);
   const [affordable, setAffordable] = useState(false);
@@ -370,38 +377,59 @@ function ItemShop({
       onPick(item.name);
   }
   function iconButton(item: Item, tree = false, keepTree = false) {
+    const description = [
+      ...itemStatLabels
+        .filter(([key]) => Number(item[key]) > 0)
+        .map(
+          ([key, label, percent]) =>
+            `${format(item[key])}${percent ? "%" : ""} ${label}`,
+        ),
+      ...(item.effects ?? []).map(
+        (effect) => `${effect.name ?? effect.kind}\n${wikiText(effect.text)}`,
+      ),
+    ].join("\n\n");
     return (
-      <button
-        type="button"
-        className={tree ? "calculator-shop-tree-item" : "calculator-shop-item"}
+      <GameTooltip
         key={item.id}
-        aria-label={`${item.name}, ${format(item.price)} gold`}
-        title={`${item.name} · ${format(item.price)} gold`}
-        aria-pressed={item.name === selectedName}
-        onClick={() => choose(item, keepTree)}
-        onDoubleClick={() => add(item)}
-        onContextMenu={(event) => {
-          event.preventDefault();
-          choose(item);
-          add(item);
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault();
-            add(item);
-          }
-        }}
+        title={item.name}
+        description={description}
+        meta={`${format(item.price)} gold`}
+        className="calculator-shop-tooltip"
       >
-        <span className="calculator-shop-item-art">
-          <img src={item.icon} alt="" loading="lazy" />
-          {shop.inventory.some((slot) => slot.name === item.name) && (
-            <span className="calculator-shop-owned" aria-label="In build">
-              ✓
-            </span>
-          )}
-        </span>
-        <span className="calculator-shop-item-price">{format(item.price)}</span>
-      </button>
+        <button
+          type="button"
+          className={
+            tree ? "calculator-shop-tree-item" : "calculator-shop-item"
+          }
+          aria-label={`${item.name}, ${format(item.price)} gold`}
+          aria-pressed={item.name === selectedName}
+          onClick={() => choose(item, keepTree)}
+          onDoubleClick={() => add(item)}
+          onContextMenu={(event) => {
+            event.preventDefault();
+            choose(item);
+            add(item);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              add(item);
+            }
+          }}
+        >
+          <span className="calculator-shop-item-art">
+            <img src={item.icon} alt="" loading="lazy" />
+            {shop.inventory.some((slot) => slot.name === item.name) && (
+              <span className="calculator-shop-owned" aria-label="In build">
+                ✓
+              </span>
+            )}
+          </span>
+          <span className="calculator-shop-item-price">
+            {format(item.price)}
+          </span>
+        </button>
+      </GameTooltip>
     );
   }
   return (
@@ -555,7 +583,21 @@ function ItemShop({
               <ShopIcon name="boot" />
               Boots
             </button>
+            {shop.optimizer && (
+              <button
+                type="button"
+                aria-pressed={bisOpen}
+                onClick={() => setBisOpen(!bisOpen)}
+              >
+                BIS builder
+              </button>
+            )}
           </div>
+          {bisOpen && (
+            <section className="calculator-shop-bis" aria-label="BIS builder">
+              {shop.optimizer}
+            </section>
+          )}
           <div className="calculator-shop-tools">
             <label className="calculator-shop-search">
               <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -1059,6 +1101,11 @@ function CalculatorSession({
   const [level, setLevel] = useState(18);
   const [target, setTarget] = useState("");
   const [targetLevel, setTargetLevel] = useState(18);
+  const [targetRanks, setTargetRanks] = useState<Record<string, number> | null>(
+    null,
+  );
+  const [targetBuild, setTargetBuild] = useState<Build>(emptyBuild());
+  const [hudSide, setHudSide] = useState(0);
   const [role, setRole] = useState("");
   const [questComplete, setQuestComplete] = useState(false);
   const [builds, setBuilds] = useState<[Build, Build]>([
@@ -1086,6 +1133,7 @@ function CalculatorSession({
   const [resultKey, setResultKey] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [runeSide, setRuneSide] = useState<number | null>(null);
   const [optimization, setOptimization] = useState<Optimization | null>(null);
   const active = useRef<AbortController | null>(null);
   const version = useRef(0);
@@ -1115,6 +1163,8 @@ function CalculatorSession({
     level,
     target,
     targetLevel,
+    targetRanks,
+    targetBuild,
     targetStats,
     targetItems,
     role,
@@ -1125,6 +1175,7 @@ function CalculatorSession({
     ranks,
     autos,
     enemyAttack,
+    budgets,
   });
   const [previousInputKey, setPreviousInputKey] = useState(inputKey);
   if (previousInputKey !== inputKey) {
@@ -1213,7 +1264,13 @@ function CalculatorSession({
                 champion: target,
                 level: targetLevel,
                 items: targetItems.filter(Boolean),
-                include_boots: false,
+                boots: targetBuild.boots,
+                include_boots: Boolean(targetBuild.boots),
+                ability_ranks: targetRanks,
+                keystone: targetBuild.keystone,
+                minor_runes: targetBuild.minor_runes,
+                stat_shards: targetBuild.stat_shards,
+                rune_options: targetBuild.rune_options,
               },
             ],
           }
@@ -1225,6 +1282,46 @@ function CalculatorSession({
           }),
     };
   }
+  function statsBody(
+    name: string,
+    atLevel: number,
+    build: Build,
+    targetSide = false,
+  ) {
+    return name
+      ? {
+          champion: name,
+          level: atLevel,
+          items: (targetSide ? targetItems : build.items).filter(Boolean),
+          boots: build.boots,
+          include_boots: Boolean(build.boots),
+          role: targetSide ? "" : role,
+          role_quest_complete: targetSide ? false : questComplete,
+          keystone: build.keystone,
+          minor_runes: build.minor_runes,
+          stat_shards: build.stat_shards,
+          rune_options: build.rune_options,
+          item_options: build.item_options,
+          champion_options: targetSide ? {} : championOptions,
+        }
+      : null;
+  }
+  const ownHudStats = useLoadoutStats(
+    apiBase,
+    statsBody(champion, level, builds[hudSide]),
+  );
+  const enemyHudStats = useLoadoutStats(
+    apiBase,
+    statsBody(target, targetLevel, targetBuild, true),
+  );
+  const defaultRanks = (selected: Champion | undefined, atLevel: number) =>
+    selected?.rank_defaults_by_level?.[String(atLevel)] ?? null;
+  const rankCapsAtLevel = (atLevel: number) => ({
+    Q: Math.min(5, Math.ceil(atLevel / 2)),
+    W: Math.min(5, Math.ceil(atLevel / 2)),
+    E: Math.min(5, Math.ceil(atLevel / 2)),
+    R: atLevel >= 16 ? 3 : atLevel >= 11 ? 2 : atLevel >= 6 ? 1 : 0,
+  });
   async function calculate() {
     if (!chosen?.engine_registration || !catalog) return;
     active.current?.abort();
@@ -1270,7 +1367,7 @@ function CalculatorSession({
       if (current === version.current) setBusy(false);
     }
   }
-  async function optimize() {
+  async function optimize(side: number) {
     if (!champion) return;
     active.current?.abort();
     const controller = new AbortController();
@@ -1284,11 +1381,14 @@ function CalculatorSession({
         "optimize",
         controller.signal,
         {
-          ...payload(builds[0]),
+          ...payload(builds[side]),
           objective: "total_damage",
-          locked_items: builds[0].items.filter(Boolean),
-          locked_boots: builds[0].boots,
-          max_legendary_slots: ordinarySlots(builds[0]),
+          locked_items: builds[side].items.filter(Boolean),
+          locked_boots: builds[side].boots,
+          max_legendary_slots: ordinarySlots(builds[side]),
+          ...(budgets[side] === ""
+            ? {}
+            : { gold_budget: Number(budgets[side]) }),
         },
       );
       if (!controller.signal.aborted && current === version.current)
@@ -1311,7 +1411,9 @@ function CalculatorSession({
     const entries =
       picker.kind === "boots"
         ? catalog.boots.filter(
-            (item) => item.tier <= (roleValue("boots_tier") ?? 2),
+            (item) =>
+              item.tier <=
+              (picker.side === 2 ? 2 : (roleValue("boots_tier") ?? 2)),
           )
         : catalog.items;
     return entries.map((item) => ({
@@ -1330,10 +1432,18 @@ function CalculatorSession({
   const spendFor = (names: (string | null)[]) =>
     names.reduce((sum, name) => sum + (itemByName(name)?.price ?? 0), 0);
   const shopIndex = picker?.kind === "targetItem" ? 2 : (picker?.side ?? 0);
-  const shopBuild = builds[shopIndex === 2 ? 0 : shopIndex];
+  const shopBuild =
+    shopIndex === 2
+      ? { ...targetBuild, items: targetItems }
+      : builds[shopIndex];
+  const shopCapacity = shopIndex === 2 ? 6 : (capacity ?? 6);
+  const shopOrdinarySlots = Math.min(
+    6,
+    shopCapacity - (shopBuild.boots ? 1 : 0),
+  );
   const shopSpend =
     shopIndex === 2
-      ? spendFor(targetItems)
+      ? spendFor([...targetItems, targetBuild.boots])
       : spendFor([...shopBuild.items, shopBuild.boots]);
   const replacingName =
     (picker?.kind === "boots"
@@ -1343,38 +1453,30 @@ function CalculatorSession({
         : shopBuild.items[picker?.slot ?? 0]) ?? null;
   const shopSlotAvailable =
     picker?.kind === "boots"
-      ? !shopBuild.items[5] || (capacity ?? 6) >= 7
-      : (picker?.slot ?? -1) >= 0;
-  const shopSlots = (
-    shopIndex === 2
-      ? targetItems
-      : shopBuild.items.slice(0, ordinarySlots(shopBuild))
-  ).map((name, index) => ({
-    name,
-    index,
-    label: `Item ${index + 1}`,
-    active: picker?.kind !== "boots" && picker?.slot === index,
-  }));
-  const shopInventory: ShopState["inventory"] =
-    shopIndex === 2
-      ? shopSlots
-      : [
-          ...shopSlots,
-          {
-            name: shopBuild.boots || null,
-            index: -1,
-            label: "Boots",
-            boots: true,
-            active: picker?.kind === "boots",
-          },
-        ];
+      ? !shopBuild.items[5] || shopCapacity >= 7
+      : (picker?.slot ?? -1) >= 0 && (picker?.slot ?? 0) < shopOrdinarySlots;
+  const shopSlots = shopBuild.items
+    .slice(0, shopOrdinarySlots)
+    .map((name, index) => ({
+      name,
+      index,
+      label: `Item ${index + 1}`,
+      active: picker?.kind !== "boots" && picker?.slot === index,
+    }));
+  const shopInventory: ShopState["inventory"] = [
+    ...shopSlots,
+    {
+      name: shopBuild.boots || null,
+      index: -1,
+      label: "Boots",
+      boots: true,
+      active: picker?.kind === "boots",
+    },
+  ];
   function changeShopTab(boots: boolean) {
-    if (boots && shopIndex !== 2) setPicker({ kind: "boots", side: shopIndex });
+    if (boots) setPicker({ kind: "boots", side: shopIndex });
     else {
-      const slots =
-        shopIndex === 2
-          ? targetItems
-          : shopBuild.items.slice(0, ordinarySlots(shopBuild));
+      const slots = shopBuild.items.slice(0, shopOrdinarySlots);
       setPicker({
         kind: shopIndex === 2 ? "targetItem" : "item",
         side: shopIndex,
@@ -1384,8 +1486,11 @@ function CalculatorSession({
   }
   function clearShopSlot() {
     if (!picker) return;
-    if (picker.kind === "boots") editBuild(shopIndex, { boots: "" });
-    else if (shopIndex === 2)
+    if (picker.kind === "boots") {
+      if (shopIndex === 2)
+        setTargetBuild((current) => ({ ...current, boots: "" }));
+      else editBuild(shopIndex, { boots: "" });
+    } else if (shopIndex === 2)
       setTargetItems((current) =>
         current.map((name, index) => (index === picker.slot ? null : name)),
       );
@@ -1400,13 +1505,16 @@ function CalculatorSession({
       setPicker(null);
     } else if (picker.kind === "target") {
       setTarget(name);
+      setTargetRanks(null);
       setPicker(null);
     } else if (picker.kind === "boots") {
       if (!shopSlotAvailable) return;
-      editBuild(shopIndex, { boots: name });
-      const slots = shopBuild.items.slice(0, Math.min(6, (capacity ?? 6) - 1));
+      if (shopIndex === 2)
+        setTargetBuild((current) => ({ ...current, boots: name }));
+      else editBuild(shopIndex, { boots: name });
+      const slots = shopBuild.items.slice(0, Math.min(6, shopCapacity - 1));
       setPicker({
-        kind: "item",
+        kind: shopIndex === 2 ? "targetItem" : "item",
         side: shopIndex,
         slot: slots.findIndex((item) => !item),
       });
@@ -1419,7 +1527,7 @@ function CalculatorSession({
       );
       if (picker.kind === "targetItem") setTargetItems(items);
       else editBuild(shopIndex, { items });
-      const limit = picker.kind === "targetItem" ? 6 : ordinarySlots(shopBuild);
+      const limit = shopOrdinarySlots;
       setPicker({
         ...picker,
         slot: items.slice(0, limit).findIndex((item) => !item),
@@ -1508,95 +1616,183 @@ function CalculatorSession({
         </div>
       ) : (
         <>
-          <section className="calculator-setup" aria-label="Matchup">
-            <div className="calculator-contender">
-              <span className="calculator-eyebrow">Your champion</span>
+          <section className="calculator-hud-matchup" aria-label="Matchup">
+            <div
+              className="calculator-hud-build-switch"
+              role="group"
+              aria-label="Displayed build"
+            >
               <button
                 type="button"
-                className="calculator-champion-button"
-                onClick={() => open("champion")}
+                aria-pressed={hudSide === 0}
+                onClick={() => setHudSide(0)}
               >
-                {chosen ? (
-                  <img src={chosen.icon} alt="" />
-                ) : (
-                  <span className="calculator-portrait-placeholder">+</span>
-                )}
-                <span>
-                  <strong>{champion || "Choose champion"}</strong>
-                  <small>
-                    {champion ? "Change champion" : "Start with your pick"}
-                  </small>
-                </span>
-                <span aria-hidden="true">⌄</span>
+                Your build A
               </button>
-              <label className="calculator-inline-field">
-                Level
-                <input
-                  type="number"
-                  min={1}
-                  max={levelCap}
-                  value={level}
-                  onChange={(e) => {
-                    setLevel(Number(e.target.value));
-                    setRanks(null);
-                  }}
-                />
-              </label>
-            </div>
-            <span className="calculator-versus" aria-hidden="true">
-              vs.
-            </span>
-            <div className="calculator-contender">
-              <span className="calculator-eyebrow">Target</span>
-              <button
-                type="button"
-                className="calculator-champion-button"
-                onClick={() => open("target")}
-              >
-                {targetChampion ? (
-                  <img src={targetChampion.icon} alt="" />
-                ) : (
-                  <span className="calculator-portrait-placeholder">◎</span>
-                )}
-                <span>
-                  <strong>{target || "Practice target"}</strong>
-                  <small>
-                    {target
-                      ? "Change target"
-                      : `${format(targetStats.health)} health · ${format(targetStats.armor)} armor · ${format(targetStats.mr)} MR`}
-                  </small>
-                </span>
-                <span aria-hidden="true">⌄</span>
-              </button>
-              {target ? (
-                <div className="calculator-target-footer">
-                  <label className="calculator-inline-field">
-                    Level
-                    <input
-                      type="number"
-                      min={1}
-                      max={18}
-                      value={targetLevel}
-                      onChange={(e) => setTargetLevel(Number(e.target.value))}
-                    />
-                  </label>
-                  <button
-                    className="calculator-text-button"
-                    type="button"
-                    onClick={() => {
-                      setTarget("");
-                      setTargetItems(Array(6).fill(null));
-                    }}
-                  >
-                    Use practice target
-                  </button>
-                </div>
-              ) : (
-                <span className="calculator-muted">
-                  Set defenses in fight settings below.
-                </span>
+              {compare && (
+                <button
+                  type="button"
+                  aria-pressed={hudSide === 1}
+                  onClick={() => setHudSide(1)}
+                >
+                  Your build B
+                </button>
               )}
             </div>
+            <ChampionHud
+              champion={chosen}
+              label={`Your champion · build ${hudSide === 0 ? "A" : "B"}`}
+              level={level}
+              maxLevel={levelCap ?? 18}
+              onLevel={(value) => {
+                setRanks(
+                  value > level &&
+                    config?.domain_contract.rank_allocation.by_champion[
+                      champion
+                    ] !== "level_derived"
+                    ? (ranks ?? defaultRanks(chosen, level))
+                    : null,
+                );
+                setLevel(value);
+              }}
+              onChampion={() => open("champion")}
+              ranks={ranks}
+              defaultRanks={defaultRanks(chosen, level) ?? undefined}
+              onRanks={setRanks}
+              rankCaps={rankCapsAtLevel(level)}
+              ranksDerived={
+                config?.domain_contract.rank_allocation.by_champion[
+                  champion
+                ] === "level_derived"
+              }
+              {...ownHudStats}
+              items={[
+                ...builds[hudSide].items.slice(
+                  0,
+                  ordinarySlots(builds[hudSide]),
+                ),
+                ...(builds[hudSide].boots ? [builds[hudSide].boots] : []),
+              ].map(itemByName)}
+              onItem={(index) =>
+                builds[hudSide].boots && index >= ordinarySlots(builds[hudSide])
+                  ? open("boots", hudSide)
+                  : open("item", hudSide, index)
+              }
+              onShop={() =>
+                open(
+                  "item",
+                  hudSide,
+                  Math.max(
+                    0,
+                    builds[hudSide].items.findIndex((name) => !name),
+                  ),
+                )
+              }
+              onRunes={() => setRuneSide(hudSide)}
+              gold={
+                budgets[hudSide] === ""
+                  ? "Open shop · BIS"
+                  : `${format(Number(budgets[hudSide]) - spendFor([...builds[hudSide].items, builds[hudSide].boots]))} gold · BIS`
+              }
+              resourceLabel={chosen?.resource}
+            />
+            <ChampionHud
+              champion={targetChampion}
+              label="Enemy champion"
+              level={targetLevel}
+              maxLevel={18}
+              onLevel={(value) => {
+                setTargetRanks(
+                  value > targetLevel &&
+                    config?.domain_contract.rank_allocation.by_champion[
+                      target
+                    ] !== "level_derived"
+                    ? (targetRanks ?? defaultRanks(targetChampion, targetLevel))
+                    : null,
+                );
+                setTargetLevel(value);
+              }}
+              onChampion={() => open("target")}
+              ranks={targetRanks}
+              defaultRanks={
+                defaultRanks(targetChampion, targetLevel) ?? undefined
+              }
+              onRanks={setTargetRanks}
+              rankCaps={rankCapsAtLevel(targetLevel)}
+              ranksDerived={
+                config?.domain_contract.rank_allocation.by_champion[target] ===
+                "level_derived"
+              }
+              stats={
+                target
+                  ? enemyHudStats.stats
+                  : {
+                      health: targetStats.health,
+                      armor: targetStats.armor,
+                      magic_resistance: targetStats.mr,
+                    }
+              }
+              loading={enemyHudStats.loading}
+              error={enemyHudStats.error}
+              items={[
+                ...targetItems.slice(0, targetBuild.boots ? 5 : 6),
+                ...(targetBuild.boots ? [targetBuild.boots] : []),
+              ].map(itemByName)}
+              onItem={(index) =>
+                targetBuild.boots && index === 5
+                  ? open("boots", 2)
+                  : open("targetItem", 2, index)
+              }
+              onShop={() =>
+                open(
+                  "targetItem",
+                  2,
+                  Math.max(
+                    0,
+                    targetItems.findIndex((name) => !name),
+                  ),
+                )
+              }
+              onRunes={target ? () => setRuneSide(2) : undefined}
+              gold="Enemy items"
+              resourceLabel={targetChampion?.resource}
+            />
+            {target && (
+              <button
+                type="button"
+                className="calculator-text-button"
+                onClick={() => {
+                  setTarget("");
+                  setTargetItems(Array(6).fill(null));
+                  setTargetRanks(null);
+                }}
+              >
+                Use practice target
+              </button>
+            )}
+            {!target && (
+              <div className="calculator-practice-controls">
+                {Object.entries(targetStats).map(([key, value]) => (
+                  <label className="calculator-field" key={key}>
+                    <span>
+                      Target {key === "mr" ? "magic resistance" : label(key)}
+                    </span>
+                    <input
+                      type="number"
+                      min={config?.input_limits[`target_${key}`]?.[0]}
+                      max={config?.input_limits[`target_${key}`]?.[1]}
+                      value={value}
+                      onChange={(event) =>
+                        setTargetStats({
+                          ...targetStats,
+                          [key]: Number(event.target.value),
+                        })
+                      }
+                    />
+                  </label>
+                ))}
+              </div>
+            )}
           </section>
           <div className="calculator-build-toolbar">
             <h2>Loadout</h2>
@@ -1604,249 +1800,200 @@ function CalculatorSession({
               <input
                 type="checkbox"
                 checked={compare}
-                onChange={(e) => setCompare(e.target.checked)}
+                onChange={(e) => {
+                  setCompare(e.target.checked);
+                  if (!e.target.checked) setHudSide(0);
+                }}
               />
               Compare two builds
             </label>
           </div>
-          <div
-            className={`calculator-builds ${compare ? "" : "calculator-single"}`}
-          >
-            {builds.slice(0, compare ? 2 : 1).map((build, side) => (
-              <section
-                className="calculator-build-card"
-                key={side}
-                aria-label={`Build ${side === 0 ? "A" : "B"}`}
-              >
-                <div className="calculator-card-heading">
-                  <div className="calculator-build-title">
-                    <span>{side === 0 ? "A" : "B"}</span>
-                    <h3>{side === 0 ? "First build" : "Alternative build"}</h3>
-                  </div>
-                  <button
-                    type="button"
-                    className="calculator-text-button"
-                    onClick={() => editBuild(side, emptyBuild())}
-                  >
-                    Clear build
-                  </button>
-                </div>
-                <div className="calculator-build-cost">
-                  <span>
-                    Selected items:{" "}
-                    <strong>
-                      {format(spendFor([...build.items, build.boots]))} gold
-                    </strong>
-                  </span>
-                  {budgets[side] !== "" && (
-                    <span>
-                      Remaining budget:{" "}
-                      <strong>
-                        {format(
-                          Number(budgets[side]) -
-                            spendFor([...build.items, build.boots]),
-                        )}{" "}
-                        gold
-                      </strong>
-                    </span>
-                  )}
-                </div>
-                <div className="calculator-slots">
-                  {build.items
-                    .slice(
-                      0,
-                      Math.max(
-                        ordinarySlots(build),
-                        build.items.reduce(
-                          (last, item, index) => (item ? index + 1 : last),
-                          0,
-                        ),
-                      ),
-                    )
-                    .map((name, index) => itemSlot(name, index, side))}
-                  {build.boots && (
-                    <div className="calculator-item-slot calculator-item-filled">
+          <details className="calculator-details calculator-loadout-drawer">
+            <summary>Build settings</summary>
+            <div
+              className={`calculator-builds ${compare ? "" : "calculator-single"}`}
+            >
+              {builds.slice(0, compare ? 2 : 1).map((build, side) => (
+                <section
+                  className="calculator-build-card"
+                  key={side}
+                  aria-label={`Build ${side === 0 ? "A" : "B"}`}
+                >
+                  <div className="calculator-card-heading">
+                    <div className="calculator-build-title">
+                      <span>{side === 0 ? "A" : "B"}</span>
+                      <h3>
+                        {side === 0 ? "First build" : "Alternative build"}
+                      </h3>
                       <button
                         type="button"
-                        onClick={() => open("boots", side)}
-                        aria-label={`Replace boots for build ${side === 0 ? "A" : "B"}`}
+                        className="calculator-text-button"
+                        onClick={() => setRuneSide(side)}
                       >
-                        <img src={itemByName(build.boots)?.icon} alt="" />
-                        <span>{build.boots}</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="calculator-clear"
-                        aria-label={`Clear boots from build ${side === 0 ? "A" : "B"}`}
-                        onClick={() => editBuild(side, { boots: "" })}
-                      >
-                        ×
+                        Runes
                       </button>
                     </div>
-                  )}
-                </div>
-                <div className="calculator-build-footer">
-                  <button
-                    type="button"
-                    className="calculator-text-button"
-                    onClick={() => open("boots", side)}
-                  >
-                    {build.boots ? "Change boots" : "+ Add boots"}
-                  </button>
-                  {side === 1 && (
                     <button
                       type="button"
                       className="calculator-text-button"
-                      onClick={() => editBuild(1, structuredClone(builds[0]))}
+                      onClick={() => editBuild(side, emptyBuild())}
                     >
-                      Copy build A
+                      Clear build
                     </button>
-                  )}
-                </div>
-                <details className="calculator-details">
-                  <summary>Runes & item settings</summary>
-                  <div className="calculator-detail-content">
-                    <label className="calculator-field">
-                      <span>Keystone</span>
-                      <select
-                        value={build.keystone}
-                        onChange={(e) =>
-                          editBuild(side, {
-                            keystone: e.target.value,
-                            minor_runes: [],
-                            keystone_options: {},
-                          })
-                        }
+                  </div>
+                  <div className="calculator-build-cost">
+                    <span>
+                      Selected items:{" "}
+                      <strong>
+                        {format(spendFor([...build.items, build.boots]))} gold
+                      </strong>
+                    </span>
+                    {budgets[side] !== "" && (
+                      <span>
+                        Remaining budget:{" "}
+                        <strong>
+                          {format(
+                            Number(budgets[side]) -
+                              spendFor([...build.items, build.boots]),
+                          )}{" "}
+                          gold
+                        </strong>
+                      </span>
+                    )}
+                  </div>
+                  <div className="calculator-slots">
+                    {build.items
+                      .slice(
+                        0,
+                        Math.max(
+                          ordinarySlots(build),
+                          build.items.reduce(
+                            (last, item, index) => (item ? index + 1 : last),
+                            0,
+                          ),
+                        ),
+                      )
+                      .map((name, index) => itemSlot(name, index, side))}
+                    {build.boots && (
+                      <div className="calculator-item-slot calculator-item-filled">
+                        <button
+                          type="button"
+                          onClick={() => open("boots", side)}
+                          aria-label={`Replace boots for build ${side === 0 ? "A" : "B"}`}
+                        >
+                          <img src={itemByName(build.boots)?.icon} alt="" />
+                          <span>{build.boots}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="calculator-clear"
+                          aria-label={`Clear boots from build ${side === 0 ? "A" : "B"}`}
+                          onClick={() => editBuild(side, { boots: "" })}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="calculator-build-footer">
+                    <button
+                      type="button"
+                      className="calculator-text-button"
+                      onClick={() => open("boots", side)}
+                    >
+                      {build.boots ? "Change boots" : "+ Add boots"}
+                    </button>
+                    {side === 1 && (
+                      <button
+                        type="button"
+                        className="calculator-text-button"
+                        onClick={() => editBuild(1, structuredClone(builds[0]))}
                       >
-                        <option value="">No keystone</option>
-                        {config?.keystones
-                          .filter((r) => r.implemented)
-                          .map((r) => (
-                            <option key={r.name}>{r.name}</option>
-                          ))}
-                      </select>
-                    </label>
-                    <Options
-                      options={Object.entries(
-                        config?.keystone_options[build.keystone]?.options ?? {},
-                      ).map(([key, value]) => ({ key, ...value }))}
-                      values={build.keystone_options}
-                      onChange={(values) =>
-                        editBuild(side, { keystone_options: values })
-                      }
-                    />
-                    <div className="calculator-options">
-                      {config?.rune_shards.map((row, index) => (
-                        <label className="calculator-field" key={row.row}>
-                          <span>{row.name} shard</span>
-                          <select
-                            value={build.stat_shards[index] ?? ""}
-                            onChange={(e) => {
-                              const shards = (config?.rune_shards ?? []).map(
-                                (_, i) => build.stat_shards[i] ?? "",
-                              );
-                              shards[index] = e.target.value;
-                              editBuild(side, { stat_shards: shards });
-                            }}
-                          >
-                            <option value="">No shard</option>
-                            {row.options
-                              .filter((o) => o.implemented)
-                              .map((o) => (
-                                <option key={o.name}>{o.name}</option>
-                              ))}
-                          </select>
-                        </label>
-                      ))}
-                    </div>
-                    <details className="calculator-details">
-                      <summary>Minor runes</summary>
-                      <div className="calculator-rune-list">
-                        {config?.runes
-                          .filter((r) => r.row > 0 && r.implemented)
-                          .map((r) => (
-                            <label className="calculator-check" key={r.name}>
-                              <input
-                                type="checkbox"
-                                checked={build.minor_runes.includes(r.name)}
-                                onChange={(e) =>
+                        Copy build A
+                      </button>
+                    )}
+                  </div>
+                  <details className="calculator-details">
+                    <summary>Rune effects & item settings</summary>
+                    <div className="calculator-detail-content">
+                      <button
+                        type="button"
+                        className="calculator-secondary"
+                        onClick={() => setRuneSide(side)}
+                      >
+                        Edit rune page
+                      </button>
+                      <p>
+                        {build.keystone || "Choose runes"}
+                        {build.minor_runes.length
+                          ? ` · ${build.minor_runes.join(" · ")}`
+                          : ""}
+                      </p>
+                      <Options
+                        options={Object.entries(
+                          config?.keystone_options[build.keystone]?.options ??
+                            {},
+                        ).map(([key, value]) => ({ key, ...value }))}
+                        values={build.keystone_options}
+                        onChange={(values) =>
+                          editBuild(side, { keystone_options: values })
+                        }
+                      />
+                      {[build.keystone, ...build.minor_runes]
+                        .filter(Boolean)
+                        .map((name) => {
+                          const options =
+                            config?.runes.find((r) => r.name === name)
+                              ?.options ?? [];
+                          return options.length ? (
+                            <div key={name}>
+                              <h4>{name}</h4>
+                              <Options
+                                options={options}
+                                values={build.rune_options[name] ?? {}}
+                                onChange={(values) =>
                                   editBuild(side, {
-                                    minor_runes: e.target.checked
-                                      ? [...build.minor_runes, r.name]
-                                      : build.minor_runes.filter(
-                                          (n) => n !== r.name,
-                                        ),
+                                    rune_options: {
+                                      ...build.rune_options,
+                                      [name]: values,
+                                    },
                                   })
                                 }
                               />
-                              <span>
-                                {r.name}
-                                <small>
-                                  {r.path} · row {r.row}
-                                </small>
-                              </span>
-                            </label>
-                          ))}
-                      </div>
-                      <p className="calculator-muted">
-                        The engine checks path and row limits when you
-                        calculate.
-                      </p>
-                    </details>
-                    {[build.keystone, ...build.minor_runes]
-                      .filter(Boolean)
-                      .map((name) => {
-                        const options =
-                          config?.runes.find((r) => r.name === name)?.options ??
-                          [];
-                        return options.length ? (
-                          <div key={name}>
-                            <h4>{name}</h4>
-                            <Options
-                              options={options}
-                              values={build.rune_options[name] ?? {}}
-                              onChange={(values) =>
-                                editBuild(side, {
-                                  rune_options: {
-                                    ...build.rune_options,
-                                    [name]: values,
-                                  },
-                                })
-                              }
-                            />
-                          </div>
-                        ) : null;
-                      })}
-                    {[...build.items, build.boots]
-                      .filter((n): n is string => Boolean(n))
-                      .map((name) => {
-                        const opts = config?.item_options[name]?.options;
-                        if (!opts) return null;
-                        return (
-                          <div key={name}>
-                            <h4>{name}</h4>
-                            <Options
-                              options={Object.entries(opts).map(
-                                ([key, value]) => ({ key, ...value }),
-                              )}
-                              values={build.item_options[name] ?? {}}
-                              onChange={(values) =>
-                                editBuild(side, {
-                                  item_options: {
-                                    ...build.item_options,
-                                    [name]: values,
-                                  },
-                                })
-                              }
-                            />
-                          </div>
-                        );
-                      })}
-                  </div>
-                </details>
-              </section>
-            ))}
-          </div>
+                            </div>
+                          ) : null;
+                        })}
+                      {[...build.items, build.boots]
+                        .filter((n): n is string => Boolean(n))
+                        .map((name) => {
+                          const opts = config?.item_options[name]?.options;
+                          if (!opts) return null;
+                          return (
+                            <div key={name}>
+                              <h4>{name}</h4>
+                              <Options
+                                options={Object.entries(opts).map(
+                                  ([key, value]) => ({ key, ...value }),
+                                )}
+                                values={build.item_options[name] ?? {}}
+                                onChange={(values) =>
+                                  editBuild(side, {
+                                    item_options: {
+                                      ...build.item_options,
+                                      [name]: values,
+                                    },
+                                  })
+                                }
+                              />
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </details>
+                </section>
+              ))}
+            </div>
+          </details>
           <section className="calculator-fight-bar" aria-label="Fight controls">
             <label className="calculator-duration">
               <span>Fight length</span>
@@ -1972,49 +2119,6 @@ function CalculatorSession({
                     values={championOptions}
                     onChange={setChampionOptions}
                   />
-                  {config?.domain_contract.rank_allocation.by_champion[
-                    champion
-                  ] !== "level_derived" && (
-                    <>
-                      <label className="calculator-check">
-                        <input
-                          type="checkbox"
-                          checked={ranks !== null}
-                          onChange={(e) =>
-                            setRanks(
-                              e.target.checked
-                                ? { Q: 0, W: 0, E: 0, R: 0 }
-                                : null,
-                            )
-                          }
-                        />
-                        Set ability ranks manually
-                      </label>
-                      {ranks && (
-                        <div className="calculator-options">
-                          {["Q", "W", "E", "R"].map((slot) => (
-                            <label className="calculator-field" key={slot}>
-                              <span>
-                                {slot} · {chosen?.abilities[slot]?.name}
-                              </span>
-                              <input
-                                type="number"
-                                min={0}
-                                max={slot === "R" ? 3 : 5}
-                                value={ranks[slot]}
-                                onChange={(e) =>
-                                  setRanks({
-                                    ...ranks,
-                                    [slot]: Number(e.target.value),
-                                  })
-                                }
-                              />
-                            </label>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  )}
                   <details className="calculator-details">
                     <summary>Champion assumptions & sources</summary>
                     <div className="calculator-detail-content">
@@ -2095,50 +2199,6 @@ function CalculatorSession({
               </div>
             </div>
           )}
-          <details className="calculator-details calculator-optimizer">
-            <summary>Find items for build A</summary>
-            <div className="calculator-detail-content">
-              <p>
-                Search fills the open slots around your selected items. A build
-                is available to apply when the engine certifies the search.
-              </p>
-              <button
-                type="button"
-                className="calculator-secondary"
-                disabled={!chosen?.engine_registration || busy}
-                onClick={optimize}
-              >
-                Search open slots
-              </button>
-              {optimization && (
-                <div role="status">
-                  <p>
-                    {optimization.is_certified_best
-                      ? (optimization.items ?? []).join(" · ")
-                      : "The engine withheld a build recommendation."}
-                  </p>
-                  <p>{optimization.search_timeline_coverage?.note}</p>
-                  {optimization.is_certified_best && (
-                    <button
-                      type="button"
-                      className="calculator-secondary"
-                      onClick={() =>
-                        editBuild(0, {
-                          items: [
-                            ...(optimization.items ?? []),
-                            ...Array(6).fill(null),
-                          ].slice(0, 6),
-                          boots: optimization.boots ?? "",
-                        })
-                      }
-                    >
-                      Apply to build A
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          </details>
           <footer className="calculator-footer">
             <span>
               Calculated from the selected fight. Champion assumptions apply.
@@ -2147,6 +2207,18 @@ function CalculatorSession({
               <a href={advancedHref}>Open full fight controls ↗</a>
             )}
           </footer>
+          {runeSide !== null && config && (
+            <RunePage
+              config={config}
+              build={runeSide === 2 ? targetBuild : builds[runeSide]}
+              onChange={(change) =>
+                runeSide === 2
+                  ? setTargetBuild((current) => ({ ...current, ...change }))
+                  : editBuild(runeSide, change)
+              }
+              onClose={() => setRuneSide(null)}
+            />
+          )}
           {picker &&
             (picker.kind === "champion" || picker.kind === "target" ? (
               <Picker
@@ -2181,12 +2253,11 @@ function CalculatorSession({
                     ...(catalog?.items ?? []),
                     ...(catalog?.boots ?? []),
                   ],
-                  quickBoots:
-                    shopIndex === 2
-                      ? []
-                      : (catalog?.boots ?? []).filter(
-                          (item) => item.tier <= (roleValue("boots_tier") ?? 2),
-                        ),
+                  quickBoots: (catalog?.boots ?? []).filter(
+                    (item) =>
+                      item.tier <=
+                      (shopIndex === 2 ? 2 : (roleValue("boots_tier") ?? 2)),
+                  ),
                   inventory: shopInventory,
                   onBudget: (value) =>
                     setBudgets((current) =>
@@ -2206,6 +2277,92 @@ function CalculatorSession({
                     }),
                   onClear: clearShopSlot,
                   onTab: changeShopTab,
+                  optimizer:
+                    shopIndex < 2 ? (
+                      <>
+                        <h3>
+                          Find items for build {shopIndex === 0 ? "A" : "B"}
+                        </h3>
+                        <p>
+                          Your selected items stay locked. Search fills the open
+                          slots within the total budget.
+                        </p>
+                        <button
+                          type="button"
+                          className="calculator-primary"
+                          disabled={!chosen?.engine_registration || busy}
+                          onClick={() => optimize(shopIndex)}
+                        >
+                          {busy ? "Searching…" : "Find best items"}
+                        </button>
+                        {!chosen && (
+                          <p>Select your champion before searching.</p>
+                        )}
+                        {error && <p role="alert">{error}</p>}
+                        {optimization && (
+                          <div role="status">
+                            <h4>
+                              {optimization.is_certified_best
+                                ? "Certified result"
+                                : "Candidate build"}
+                            </h4>
+                            <p>
+                              {[
+                                ...(optimization.items ?? []),
+                                optimization.boots,
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </p>
+                            <p>
+                              {format(optimization.total_damage)} damage in this
+                              fight.
+                            </p>
+                            {!optimization.is_certified_best && (
+                              <p>
+                                BIS remains unconfirmed.{" "}
+                                {optimization.search_guarantee ===
+                                "local_search"
+                                  ? "The search sampled builds; it did not test every combination."
+                                  : "Some candidates could not be compared with complete timing."}
+                              </p>
+                            )}
+                            <p>{optimization.search_timeline_coverage?.note}</p>
+                            {optimization.timeline_coverage?.complete && (
+                              <button
+                                type="button"
+                                className="calculator-secondary"
+                                onClick={() =>
+                                  editBuild(shopIndex, {
+                                    items: [
+                                      ...(optimization.items ?? []),
+                                      ...Array(6).fill(null),
+                                    ].slice(0, 6),
+                                    boots: optimization.boots ?? "",
+                                  })
+                                }
+                              >
+                                {optimization.is_certified_best
+                                  ? "Apply result"
+                                  : "Use candidate build"}
+                              </button>
+                            )}
+                            <details>
+                              <summary>Search details</summary>
+                              <p>
+                                {format(optimization.evaluations)} evaluations
+                              </p>
+                              <p>{optimization.timeline_coverage?.note}</p>
+                              {optimization.search_timeline_coverage?.coarse_sources?.map(
+                                (source) => (
+                                  <p key={source}>{source}</p>
+                                ),
+                              )}
+                            </details>
+                          </div>
+                        )}
+                      </>
+                    ) : undefined,
                 }}
               />
             ))}

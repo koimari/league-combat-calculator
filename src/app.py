@@ -80,6 +80,7 @@ from src.calculator.item_effects import (
     stat_conversion_metadata,
 )
 from src.calculator.item_source import effect_entries, effect_text
+from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.loadout_rules import exclusivity_groups, validate_resolved_loadout
 from src.calculator.optimizer import (
     get_eligible_boots,
@@ -1017,11 +1018,7 @@ def _cached_champion_field(champ_data: Mapping[str, Any], key: str) -> Any:
 
 
 def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
-    """Slot identity for /api/champions: name, icon, and whether it was ingested.
-
-    Descriptive text (blurb, damage type, targeting) is the static ability
-    catalogue's job (``static/ability-catalog.json``), not the API's.
-    """
+    """Serve cached slot identity and complete effect text for HUD tooltips."""
     entries = ability_list if isinstance(ability_list, list) else []
     first = entries[0] if entries and isinstance(entries[0], dict) else {}
     return {
@@ -1029,6 +1026,47 @@ def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
         "name": first.get("name", slot),
         "icon": _https_icon(first.get("icon", "")),
         "ingested": bool(first),
+        "description": "\n\n".join(
+            effect["description"]
+            for entry in entries
+            for effect in entry.get("effects", [])
+            if effect.get("description")
+        ),
+        "rank_values": [
+            {
+                "label": leveling["attribute"],
+                "values": [
+                    f"{value}{unit}"
+                    for value, unit in zip(
+                        modifier.get("values", []),
+                        modifier.get("units", []),
+                        strict=True,
+                    )
+                ],
+            }
+            for entry in entries
+            for effect in entry.get("effects", [])
+            for leveling in effect.get("leveling", [])
+            for modifier in leveling.get("modifiers", [])
+            if leveling.get("attribute")
+        ]
+        + [
+            {
+                "label": label,
+                "values": [
+                    f"{value}{unit}"
+                    for value, unit in zip(
+                        modifier.get("values", []),
+                        modifier.get("units", []),
+                        strict=True,
+                    )
+                ],
+            }
+            for entry in entries
+            for key, label in (("cost", "Cost"), ("cooldown", "Cooldown (seconds)"))
+            if isinstance(entry.get(key), dict)
+            for modifier in entry[key].get("modifiers", [])
+        ],
     }
 
 
@@ -1060,6 +1098,14 @@ def api_champions() -> Response:
                     champ_data, "patchLastChanged"
                 ),
                 "abilities": ability_slots,
+                "resource": champ_data.get("resource"),
+                "rank_defaults_by_level": {
+                    str(level): {
+                        slot: get_ability_rank(slot, level, champ_data["name"])
+                        for slot in ("Q", "W", "E", "R")
+                    }
+                    for level in range(1, 21)
+                },
                 "ability_ingestion": {
                     "complete": all(
                         entry["ingested"] for entry in ability_slots.values()

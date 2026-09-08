@@ -17,7 +17,17 @@ export interface Champion {
   name: string;
   icon: string;
   engine_registration: string | null;
-  abilities: Record<string, { name: string; icon?: string }>;
+  resource?: string;
+  rank_defaults_by_level?: Record<string, Record<string, number>>;
+  abilities: Record<
+    string,
+    {
+      name: string;
+      icon?: string;
+      description?: string;
+      rank_values?: { label: string; values: string[] }[];
+    }
+  >;
 }
 export interface ShopRelation {
   id: number;
@@ -67,6 +77,7 @@ export interface Item {
   model_coverage?: { status?: string; optimizer_eligible?: boolean };
 }
 export interface Rune {
+  icon?: string;
   name: string;
   path: string;
   row: number;
@@ -163,7 +174,10 @@ export interface Optimization {
   items?: string[];
   boots?: string;
   selection_certification?: string;
-  search_timeline_coverage?: { note?: string };
+  search_timeline_coverage?: { note?: string; coarse_sources?: string[] };
+  timeline_coverage?: { complete: boolean; note?: string };
+  total_damage?: number;
+  search_guarantee?: string;
   evaluations?: number;
   error?: string;
 }

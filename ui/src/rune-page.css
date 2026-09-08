@@ -1,0 +1,708 @@
+.calculator-rune-page {
+  width: min(850px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  border: 1px solid var(--line, #b7b7af);
+  border-radius: 0;
+  background: var(--surface, #fff);
+  color: var(--ink, #080807);
+  font: 14px/1.35 var(--type-ui, "Atkinson Hyperlegible Next", sans-serif);
+  overflow: auto;
+  box-shadow: 0 20px 100px #0008;
+}
+.calculator-rune-page::backdrop {
+  background: #0009;
+  backdrop-filter: blur(4px);
+}
+.calculator-rune-page * {
+  box-sizing: border-box;
+}
+.calculator-rune-page button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.calculator-rune-page button:focus-visible {
+  outline: 2px solid var(--rune-path-color, var(--ink, #080807));
+  outline-offset: 5px;
+}
+.calculator-rune-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 53px;
+  padding: 8px 20px;
+  border-bottom: 1px solid var(--line, #b7b7af);
+  background: var(--surface, #fff);
+}
+.calculator-rune-page-header > div {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+}
+.calculator-rune-page-header h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.calculator-rune-page-header span {
+  font-size: 11px;
+  color: var(--ink-muted, #3b3b37);
+}
+.calculator-rune-page-header > button {
+  background: transparent;
+  border: 0;
+  font-size: 25px;
+  line-height: 1;
+  padding: 3px 5px;
+}
+.calculator-rune-canvas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  min-height: 620px;
+  padding: 24px 22px 25px 7px;
+  background-image:
+    linear-gradient(90deg, #10101785, #10101775), var(--rune-environment);
+  background-position: center;
+  background-size: cover;
+  color: #d7cfb4;
+}
+.calculator-rune-tree {
+  min-width: 0;
+  position: relative;
+}
+.calculator-rune-secondary {
+  margin-left: 20px;
+}
+.calculator-rune-tree-header {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  height: 91px;
+  align-items: start;
+  position: relative;
+  z-index: 2;
+}
+.calculator-rune-path-emblem {
+  display: grid;
+  place-items: center;
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border: 2px solid var(--rune-path-color);
+  border-radius: 50%;
+  color: var(--rune-path-color);
+}
+.calculator-rune-path-emblem::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px solid var(--rune-path-color);
+  border-radius: 50%;
+  opacity: 0.7;
+}
+.calculator-rune-path-emblem::after {
+  content: "";
+  position: absolute;
+  width: 67px;
+  height: 15px;
+  left: 0;
+  bottom: -13px;
+  border-bottom: 2px solid var(--rune-path-color);
+  border-radius: 0 0 50% 50%;
+  opacity: 0.6;
+}
+.calculator-rune-path-emblem img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+}
+.calculator-rune-paths {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  padding: 12px 6px 0 6px;
+}
+.calculator-rune-path-choice {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  padding: 5px;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  opacity: 0.65;
+  flex-shrink: 0;
+}
+.calculator-rune-path-choice img {
+  width: 29px;
+  height: 29px;
+  object-fit: contain;
+}
+.calculator-rune-path-choice[aria-pressed="true"] {
+  border-color: var(--rune-path-color);
+  opacity: 1;
+}
+.calculator-rune-path-choice:hover {
+  opacity: 1;
+}
+.calculator-rune-tree-rows {
+  position: relative;
+  padding-left: 88px;
+}
+.calculator-rune-tree-rows::before,
+.calculator-rune-tree-rows::after {
+  content: "";
+  position: absolute;
+  top: -9px;
+  left: 34px;
+  bottom: 17px;
+  width: 4px;
+  background: var(--rune-path-color);
+  opacity: 0.2;
+}
+.calculator-rune-tree-rows::after {
+  left: 31px;
+  width: 10px;
+  border-left: 1px solid var(--rune-path-color);
+  border-right: 1px solid var(--rune-path-color);
+  background: transparent;
+  opacity: 0.5;
+}
+.calculator-rune-row {
+  position: relative;
+  height: 107px;
+  display: flex;
+  align-items: center;
+}
+.calculator-rune-row-choices {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 12px 0 8px;
+  gap: 10px;
+}
+.calculator-rune-rail-node {
+  position: absolute;
+  left: -63px;
+  top: calc(50% - 11px);
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--rune-path-color);
+  border-radius: 50%;
+  background: #111a20;
+  z-index: 1;
+}
+.calculator-rune-rail-node::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: #c6c9c3;
+  opacity: 0.26;
+  box-shadow: 0 0 4px #c6c9c3;
+}
+.calculator-rune-row-selected > .calculator-rune-rail-node::after {
+  opacity: 1;
+}
+.calculator-rune-row-divider {
+  position: absolute;
+  height: 1px;
+  bottom: 0;
+  left: 12px;
+  right: 8px;
+  background: linear-gradient(90deg, #8d744080, #8d744045);
+}
+.calculator-rune-row-divider::before,
+.calculator-rune-row-divider::after {
+  content: "";
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  top: -2px;
+  border: 1px solid #8d7440a0;
+  transform: rotate(45deg);
+  background: #302936;
+}
+.calculator-rune-row-divider::before {
+  left: -3px;
+}
+.calculator-rune-row-divider::after {
+  right: -3px;
+}
+.calculator-rune-row:last-child > .calculator-rune-row-divider {
+  display: none;
+}
+.calculator-rune-choice {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  width: 50px;
+  height: 50px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+.calculator-rune-icon {
+  width: 47px;
+  height: 47px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #76818880;
+  border-radius: 50%;
+  background: #122029aa;
+  overflow: hidden;
+  opacity: 0.65;
+  transition: opacity 120ms;
+}
+.calculator-rune-icon > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: grayscale(1);
+  opacity: 0.65;
+}
+.calculator-rune-letter {
+  font-size: 20px;
+}
+.calculator-rune-choice[aria-pressed="true"] .calculator-rune-icon {
+  border-color: var(--rune-path-color);
+  opacity: 1;
+  box-shadow: 0 0 14px
+    color-mix(in srgb, var(--rune-path-color) 18%, transparent);
+}
+.calculator-rune-choice[aria-pressed="true"] img {
+  filter: none;
+  opacity: 1;
+}
+.calculator-rune-choice:hover .calculator-rune-icon,
+.calculator-rune-choice:focus-visible .calculator-rune-icon {
+  opacity: 1;
+}
+.calculator-rune-choice:hover img {
+  filter: none;
+  opacity: 1;
+}
+.calculator-rune-choice[aria-disabled="true"] {
+  opacity: 0.3;
+  cursor: default;
+}
+.calculator-rune-hover-label {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%);
+  min-width: 90px;
+  max-width: 170px;
+  width: max-content;
+  z-index: 5;
+  background: #0c131bea;
+  border: 1px solid #8d7440;
+  color: #eee5d0;
+  padding: 7px 10px;
+  font-size: 11px;
+  text-align: center;
+  pointer-events: none;
+}
+.calculator-rune-hover-label small {
+  display: block;
+  font-size: 10px;
+  color: #b5aba0;
+  margin-top: 4px;
+}
+.calculator-rune-choice:hover .calculator-rune-hover-label,
+.calculator-rune-choice:focus-visible .calculator-rune-hover-label {
+  display: block;
+}
+.calculator-rune-keystone-row {
+  height: 147px;
+  margin-bottom: 2px;
+}
+.calculator-rune-keystone-row > .calculator-rune-rail-node {
+  width: 28px;
+  height: 28px;
+  left: -66px;
+  top: calc(50% - 14px);
+}
+.calculator-rune-keystone-row::before {
+  content: "";
+  position: absolute;
+  top: 16px;
+  height: 1px;
+  left: -88px;
+  right: 0;
+  background: linear-gradient(90deg, #8d744085, #8d744060, transparent);
+}
+.calculator-rune-row-label {
+  position: absolute;
+  top: -2px;
+  left: 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--rune-path-color);
+  font-size: 10px;
+}
+.calculator-rune-keystone-row .calculator-rune-row-choices {
+  padding-inline: 0;
+  gap: 0;
+}
+.calculator-rune-keystone {
+  width: 64px;
+  height: 76px;
+  border-radius: 0;
+}
+.calculator-rune-keystone .calculator-rune-icon {
+  width: 64px;
+  height: 72px;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+}
+.calculator-rune-keystone .calculator-rune-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.calculator-rune-keystone[aria-pressed="true"] .calculator-rune-icon {
+  box-shadow: none;
+  filter: drop-shadow(
+    0 0 7px color-mix(in srgb, var(--rune-path-color) 22%, transparent)
+  );
+}
+.calculator-rune-secondary .calculator-rune-row {
+  height: 96px;
+}
+.calculator-rune-secondary .calculator-rune-tree-rows::before,
+.calculator-rune-secondary .calculator-rune-tree-rows::after {
+  bottom: 191px;
+}
+.calculator-rune-shards {
+  --rune-path-color: #c8aa6e;
+  position: relative;
+  margin-top: 20px;
+}
+.calculator-rune-shards::before,
+.calculator-rune-shards::after {
+  content: "";
+  position: absolute;
+  left: -54px;
+  width: 4px;
+  top: 23px;
+  bottom: 24px;
+  background: var(--rune-path-color);
+  opacity: 0.2;
+}
+.calculator-rune-shards::after {
+  left: -57px;
+  width: 10px;
+  border-left: 1px solid var(--rune-path-color);
+  border-right: 1px solid var(--rune-path-color);
+  background: transparent;
+  opacity: 0.5;
+}
+.calculator-rune-shard-row {
+  position: relative;
+  height: 51px;
+  display: flex;
+  align-items: center;
+}
+.calculator-rune-shard-row .calculator-rune-rail-node {
+  width: 21px;
+  height: 21px;
+}
+.calculator-rune-shard {
+  width: 38px;
+  height: 38px;
+}
+.calculator-rune-shard .calculator-rune-icon {
+  width: 34px;
+  height: 34px;
+}
+.calculator-rune-shard .calculator-rune-icon img {
+  width: 29px;
+  height: 29px;
+}
+.calculator-rune-page-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 13px 20px;
+  border-top: 1px solid var(--line, #b7b7af);
+  background: var(--surface, #fff);
+}
+.calculator-rune-page-status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.calculator-rune-page-status > span {
+  font-size: 12px;
+}
+.calculator-rune-page-status > small {
+  font-size: 10px;
+  color: var(--ink-muted, #3b3b37);
+}
+.calculator-rune-page-footer > div:last-child {
+  display: flex;
+  gap: 9px;
+  flex-shrink: 0;
+}
+.calculator-rune-clear,
+.calculator-rune-done {
+  border: 1px solid var(--line, #b7b7af);
+  background: var(--surface, #fff);
+  padding: 8px 14px;
+  font-size: 12px !important;
+}
+.calculator-rune-done {
+  border-color: var(--ink, #080807);
+  background: var(--ink, #080807);
+  color: var(--surface, #fff) !important;
+}
+@media (max-width: 700px) {
+  .calculator-rune-page {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+  .calculator-rune-canvas {
+    padding: 18px 12px 18px 7px;
+    min-height: 555px;
+  }
+  .calculator-rune-secondary {
+    margin-left: 12px;
+  }
+  .calculator-rune-tree-header {
+    grid-template-columns: 45px minmax(0, 1fr);
+    height: 78px;
+  }
+  .calculator-rune-path-emblem {
+    width: 42px;
+    height: 42px;
+    border-width: 1px;
+  }
+  .calculator-rune-path-emblem img {
+    width: 29px;
+    height: 29px;
+  }
+  .calculator-rune-path-emblem::before {
+    inset: 4px;
+  }
+  .calculator-rune-path-emblem::after {
+    width: 38px;
+    bottom: -8px;
+    height: 8px;
+  }
+  .calculator-rune-paths {
+    gap: 0;
+    padding: 9px 0 0 2px;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+  .calculator-rune-path-choice {
+    width: 25px;
+    height: 25px;
+    padding: 3px;
+    border-width: 1px;
+  }
+  .calculator-rune-path-choice img {
+    width: 20px;
+    height: 20px;
+  }
+  .calculator-rune-tree-rows {
+    padding-left: 44px;
+  }
+  .calculator-rune-tree-rows::before {
+    left: 19px;
+  }
+  .calculator-rune-tree-rows::after {
+    left: 16px;
+  }
+  .calculator-rune-rail-node {
+    left: -32px;
+    width: 18px;
+    height: 18px;
+    border-width: 1px;
+    top: calc(50% - 9px);
+  }
+  .calculator-rune-row {
+    height: 94px;
+  }
+  .calculator-rune-row-choices {
+    padding: 0;
+    gap: 5px;
+  }
+  .calculator-rune-choice {
+    width: 34px;
+    height: 34px;
+  }
+  .calculator-rune-icon {
+    width: 32px;
+    height: 32px;
+    border-width: 1px;
+  }
+  .calculator-rune-row-divider {
+    left: 4px;
+    right: 1px;
+  }
+  .calculator-rune-keystone-row {
+    height: 132px;
+  }
+  .calculator-rune-keystone-row > .calculator-rune-rail-node {
+    left: -34px;
+    width: 22px;
+    height: 22px;
+    top: calc(50% - 11px);
+  }
+  .calculator-rune-keystone-row::before {
+    left: -44px;
+  }
+  .calculator-rune-keystone {
+    width: 35px;
+    height: 57px;
+  }
+  .calculator-rune-keystone .calculator-rune-icon {
+    width: 35px;
+    height: 53px;
+  }
+  .calculator-rune-row-label {
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    left: 1px;
+  }
+  .calculator-rune-secondary .calculator-rune-row {
+    height: 83px;
+  }
+  .calculator-rune-secondary .calculator-rune-tree-rows::before,
+  .calculator-rune-secondary .calculator-rune-tree-rows::after {
+    bottom: 170px;
+  }
+  .calculator-rune-shards {
+    margin-top: 18px;
+  }
+  .calculator-rune-shards::before {
+    left: -25px;
+  }
+  .calculator-rune-shards::after {
+    left: -28px;
+  }
+  .calculator-rune-shard-row {
+    height: 46px;
+  }
+  .calculator-rune-shard-row .calculator-rune-rail-node {
+    width: 18px;
+    height: 18px;
+  }
+  .calculator-rune-shard {
+    width: 28px;
+    height: 28px;
+  }
+  .calculator-rune-shard .calculator-rune-icon {
+    width: 27px;
+    height: 27px;
+  }
+  .calculator-rune-shard .calculator-rune-icon img {
+    width: 23px;
+    height: 23px;
+  }
+}
+@media (max-width: 450px) {
+  .calculator-rune-page-header {
+    padding: 8px 12px;
+  }
+  .calculator-rune-page-header span {
+    font-size: 10px;
+  }
+  .calculator-rune-canvas {
+    padding-right: 9px;
+    min-height: 535px;
+  }
+  .calculator-rune-secondary {
+    margin-left: 7px;
+  }
+  .calculator-rune-tree-header {
+    grid-template-columns: 39px minmax(0, 1fr);
+  }
+  .calculator-rune-path-emblem {
+    width: 36px;
+    height: 36px;
+  }
+  .calculator-rune-path-emblem img {
+    width: 25px;
+    height: 25px;
+  }
+  .calculator-rune-path-emblem::after {
+    width: 33px;
+  }
+  .calculator-rune-paths {
+    padding-top: 5px;
+  }
+  .calculator-rune-path-choice {
+    width: 24px;
+    height: 24px;
+  }
+  .calculator-rune-tree-rows {
+    padding-left: 37px;
+  }
+  .calculator-rune-tree-rows::before {
+    left: 16px;
+    width: 3px;
+  }
+  .calculator-rune-tree-rows::after {
+    left: 13px;
+    width: 9px;
+  }
+  .calculator-rune-rail-node {
+    left: -28px;
+  }
+  .calculator-rune-keystone-row > .calculator-rune-rail-node {
+    left: -30px;
+  }
+  .calculator-rune-keystone-row::before {
+    left: -37px;
+  }
+  .calculator-rune-choice {
+    width: 30px;
+    height: 30px;
+  }
+  .calculator-rune-icon {
+    width: 29px;
+    height: 29px;
+  }
+  .calculator-rune-keystone {
+    width: 29px;
+    height: 47px;
+  }
+  .calculator-rune-keystone .calculator-rune-icon {
+    width: 29px;
+    height: 43px;
+  }
+  .calculator-rune-shards::before {
+    left: -21px;
+  }
+  .calculator-rune-shards::after {
+    left: -24px;
+  }
+  .calculator-rune-page-footer {
+    padding: 11px 12px;
+    gap: 7px;
+  }
+  .calculator-rune-page-status > span {
+    font-size: 10px;
+  }
+  .calculator-rune-page-status > small {
+    font-size: 9px;
+  }
+  .calculator-rune-clear,
+  .calculator-rune-done {
+    padding: 7px 9px;
+    font-size: 10px !important;
+  }
+}

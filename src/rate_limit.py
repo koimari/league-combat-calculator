@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import sqlite3
 import time
+from collections.abc import Iterator
+from contextlib import closing, contextmanager
 from pathlib import Path
 
 
@@ -37,9 +39,12 @@ class TokenBucketStore:
                 ) WITHOUT ROWID
                 """)
 
-    def _connect(self) -> sqlite3.Connection:
-        """Open one short-lived connection; SQLite coordinates the workers."""
-        return sqlite3.connect(self._database, timeout=2.0)
+    @contextmanager
+    def _connect(self) -> Iterator[sqlite3.Connection]:
+        """Finish each transaction and close its connection on every exit."""
+        with closing(sqlite3.connect(self._database, timeout=2.0)) as connection:
+            with connection:
+                yield connection
 
     def consume(
         self,

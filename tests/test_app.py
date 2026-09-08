@@ -2333,6 +2333,8 @@ class TestChampionRegistrationField:
             "patch_last_changed",
             "abilities",
             "ability_ingestion",
+            "resource",
+            "rank_defaults_by_level",
         }
 
     def test_registered_champions_sort_first(self):
