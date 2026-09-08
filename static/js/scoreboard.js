@@ -835,16 +835,17 @@ const ScoreboardVision = (() => {
 
   /**
    * The reading as the share loader expects it: names, not ids, boots split
-   * out. The items also settle the role quest, which the backend enforces:
-   * boots above the tier an unfinished quest allows and an upgraded support
-   * item exist only once the quest is done, and any support quest item puts
-   * the player in the support role.
+   * out, one of each since the loadout rules refuse a duplicate. The items
+   * also settle the role quest, which the backend enforces: boots above the
+   * tier an unfinished quest allows and an upgraded support item exist only
+   * once the quest is done, and any support quest item puts the player in
+   * the support role.
    */
   function payloadFor(reading, attackerIndex, level) {
     const players = playersOf(reading);
     const attacker = players[attackerIndex];
     const loadout = (player) => {
-      const ids = player.items.filter(Boolean).map((hit) => Number(hit.key)).filter((id) => getItem(id));
+      const ids = [...new Set(player.items.filter(Boolean).map((hit) => Number(hit.key)).filter((id) => getItem(id)))];
       const boots = ids.find((id) => isRoleBoot(id));
       const tier = Number(engine.boots.find((item) => Number(item.id) === boots)?.tier);
       const questStages = ids.map((id) => getItem(id).supportQuestStage).filter(Boolean);
@@ -896,11 +897,15 @@ const ScoreboardVision = (() => {
   function renderRows(reading) {
     table.innerHTML = playersOf(reading).map((player, index) => {
       const champion = getChampion(player.champion.key);
+      const seen = new Set();
       const items = player.items.map((hit) => {
         if (!hit) return '<span class="scoreboard-item is-empty" title="Empty slot"></span>';
         const item = getItem(Number(hit.key));
-        const flag = !item ? " is-unknown" : hit.unsure ? " is-unsure" : "";
-        const title = `${item ? item.name : "Not a buildable item"} · ${(hit.score * 100).toFixed(0)}%`;
+        const duplicate = item && seen.has(item.id);
+        if (item) seen.add(item.id);
+        const flag = !item || duplicate ? " is-unknown" : hit.unsure ? " is-unsure" : "";
+        const why = !item ? "Not a buildable item" : duplicate ? `${item.name}, a second copy the calculator cannot hold` : item.name;
+        const title = `${why} · ${(hit.score * 100).toFixed(0)}%`;
         return `<span class="scoreboard-item${flag}" title="${escapeHtml(title)}"><img src="${itemImage(hit.key)}" alt="${escapeHtml(item ? item.name : hit.key)}" /></span>`;
       }).join("");
       const known = Boolean(champion);
