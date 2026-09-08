@@ -818,9 +818,16 @@ const ScoreboardVision = (() => {
     return raster;
   }
 
+  /* Screenshots are a few MB; a small file that decodes to a huge bitmap
+   * would freeze the tab, so size is checked before anything decodes. */
+  const MAX_SCREENSHOT_MB = 25;
+
   /* Decoded off the blob, never through an object URL: the page's CSP
    * `img-src` has no `blob:`, so an <img> pointed at one never loads. */
-  function loadImage(blob) {
+  async function loadImage(blob) {
+    if (blob.size > MAX_SCREENSHOT_MB * 1e6) {
+      throw new Error(`That file is ${Math.round(blob.size / 1e6)} MB; a screenshot is under ${MAX_SCREENSHOT_MB} MB.`);
+    }
     return createImageBitmap(blob).catch(() => {
       throw new Error("That file is not an image the browser can open.");
     });

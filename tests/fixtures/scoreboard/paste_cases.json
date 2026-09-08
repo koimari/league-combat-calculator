@@ -1,0 +1,5 @@
+[
+  { "name": "oversized", "type": "image/png", "size": 26000000 },
+  { "name": "at_the_cap", "type": "image/png", "size": 25000000 },
+  { "name": "not_an_image", "type": "image/png", "size": 4096 }
+]

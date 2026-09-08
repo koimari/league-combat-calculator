@@ -15,6 +15,7 @@ current attacker level and resets the rest, as a shared build does.
 | matcher (`ScoreboardVision`, DOM-free) and page wiring | `static/js/scoreboard.js` |
 | review dialog | `#scoreboardDialog` in `templates/index.html`, styles under "scoreboard reader dialog" in `static/css/style.css` |
 | Node harness that tests and tooling read through | `tests/js/scoreboard_harness.mjs` |
+| Node harness that drives the paste handler with files the reader refuses (over `MAX_SCREENSHOT_MB`, not an image) | `tests/js/scoreboard_paste_harness.mjs` over `tests/fixtures/scoreboard/paste_cases.json` |
 | corpus frames and labels | `tests/fixtures/scoreboard/`, held by `tests/test_scoreboard_vision.py` |
 | corpus tooling: read, scan, grab, label | `scripts/scoreboard_corpus.py` |
 

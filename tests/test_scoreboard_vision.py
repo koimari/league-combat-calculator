@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -57,6 +58,30 @@ def test_no_script_points_an_image_at_an_object_url_the_csp_blocks() -> None:
         n for n, s in sources.items() if "createObjectURL" in s and "new Image(" in s
     ]
     assert offenders == []
+
+
+def test_a_pasted_file_is_refused_by_size_before_it_decodes() -> None:
+    """Over the cap the status names the size and the cap; under it the file
+    reaches the decoder, and one that is not an image says so."""
+    if shutil.which("node") is None:  # pragma: no cover - toolchain dependent
+        pytest.skip("node is not installed")
+    harness = ROOT / "tests" / "js" / "scoreboard_paste_harness.mjs"
+    cases = CORPUS / "paste_cases.json"
+    result = subprocess.run(
+        [
+            "node",
+            str(harness),
+            str(ROOT / "static" / "js" / "scoreboard.js"),
+            str(cases),
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    status = json.loads(result.stdout)
+    assert status["oversized"] == "That file is 26 MB; a screenshot is under 25 MB."
+    assert status["at_the_cap"] == "That file is not an image the browser can open."
+    assert status["not_an_image"] == "That file is not an image the browser can open."
 
 
 @pytest.fixture(scope="module")
