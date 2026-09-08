@@ -179,6 +179,7 @@ from src.db import (
     validation_summary,
 )
 from src.rate_limit import TokenBucketStore
+from src.service_auth import authorize_service_request
 
 app = Flask(
     __name__,
@@ -511,6 +512,19 @@ def _enforce_authentication():
     validation API, and the public legal pages (privacy, terms, Riot
     disclaimer).
     """
+    service_access = authorize_service_request(
+        request.headers.get("Authorization", ""),
+        method=request.method,
+        path=request.path,
+        configured_token=os.environ.get("CALCULATOR_SERVICE_TOKEN", ""),
+    )
+    if service_access is not None:
+        if service_access:
+            return None
+        response = jsonify({"error": "Calculator service authentication failed"})
+        response.status_code = 401
+        response.headers["WWW-Authenticate"] = 'Bearer realm="calculator"'
+        return response
     if not _auth_enabled():
         return None
     if (
