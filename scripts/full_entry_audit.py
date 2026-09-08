@@ -34,8 +34,6 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
-from src.calculator.item_source import audit_scope
-
 ROOT = Path(__file__).resolve().parent.parent
 # The audit is invoked both as ``python scripts/...`` and as an imported
 # module.  Put the project root on the import path before any champion module
@@ -49,6 +47,7 @@ except ImportError:  # imported as scripts.full_entry_audit in tests
     from scripts.gate_receipt import build_receipt
 
 from src.calculator.champions.module_contract import REQUIRED_CHAMPION_SLOTS
+from src.calculator.item_source import audit_scope
 
 CHAMPIONS_PATH = ROOT / "data" / "champions.json"
 ITEMS_PATH = ROOT / "data" / "items.json"
@@ -161,6 +160,37 @@ def _champion_module_receipt(name: str) -> dict[str, Any]:
         contract.packet_sha256 != manifest_packet_sha256
         or contract.packet_spec != manifest_champion
     )
+    named_module_errors = []
+    for slot, spec in (manifest_champion or {}).get("slots", {}).items():
+        if spec.get("kind") != "named_module":
+            continue
+        owner = str(spec.get("owner", "")).removesuffix(".py").replace("/", ".")
+        if (
+            owner != f"src.calculator.champions.{contract.module_name}"
+            or slot not in contract.slots
+        ):
+            named_module_errors.append(f"{slot} requires named owner {owner}")
+        try:
+            source_slot, source_index = spec["source"]
+            if (
+                source_slot != slot
+                or not isinstance(source_index, int)
+                or source_index < 0
+            ):
+                raise ValueError("invalid slot pointer")
+            effect_index = spec["source_effect_index"]
+            if not isinstance(effect_index, int) or effect_index < 0:
+                raise ValueError("invalid effect pointer")
+            ability = _cached_record("champion", name)["abilities"][source_slot][
+                source_index
+            ]
+            formula = ability["effects"][effect_index]["description"]
+            if not formula or spec["source_formula"] != formula:
+                raise ValueError("source formula differs from the cache")
+        except (KeyError, IndexError, TypeError, ValueError) as exc:
+            named_module_errors.append(
+                f"{slot} has invalid named-module evidence: {exc}"
+            )
     stale_sources = None
     if contract.packet_sha256 is None and isinstance(manifest_champion, dict):
         module_revision = _max_revision(contract.sources)
@@ -179,6 +209,7 @@ def _champion_module_receipt(name: str) -> dict[str, Any]:
         and bool(contract.sources)
         and set(coverage) == set(REQUIRED_CHAMPION_SLOTS)
         and not packet_drift
+        and not named_module_errors
     )
     return {
         "name": name,
@@ -200,6 +231,7 @@ def _champion_module_receipt(name: str) -> dict[str, Any]:
         "packet_sha256": contract.packet_sha256,
         "status": "ready" if ready else "review_pending",
         **({"stale_review_sources": stale_sources} if stale_sources else {}),
+        **({"named_module_errors": named_module_errors} if named_module_errors else {}),
         **(
             {"error": "packet declaration drift between module and reviewed evidence"}
             if packet_drift
@@ -557,8 +589,6 @@ def audit_entry(kind: str, name: str) -> dict[str, Any]:
     runtime = _runtime_entry_receipt(kind, name)
     expected = _expected_effects(kind, _cached_record(kind, name))
     if kind == "item":
-        from src.calculator.item_source import audit_scope
-
         scope = audit_scope(_cached_record(kind, name) or {})
         receipt["audit_scope"] = {
             "in_scope": scope.in_scope,

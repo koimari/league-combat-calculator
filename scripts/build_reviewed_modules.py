@@ -302,6 +302,29 @@ def _wiki_packet(
 def _wiki_specs(entries: list[dict[str, Any]], slot: str) -> list[dict[str, Any]]:
     specs: list[dict[str, Any]] = []
     for ability_index, ability in enumerate(entries):
+        if slot == "P" and ability.get("name") == "A Thousand Cuts":
+            specs.append(
+                {
+                    "kind": "named_module",
+                    "name": ability["name"],
+                    "source": [slot, ability_index],
+                    "owner": "src/calculator/champions/gwen.py",
+                    "source_effect_index": 0,
+                    "reason": "The named module owns the AP-scaled target-health proc; parsed level rows describe healing and minion damage.",
+                    "source_formula": ability["effects"][0]["description"],
+                }
+            )
+            continue
+        if (
+            slot == "P"
+            and ability.get("affects") == "Self"
+            and not ability.get("damageType")
+            and any(
+                "shield" in effect.get("description", "").lower()
+                for effect in ability.get("effects", [])
+            )
+        ):
+            continue
         candidates: list[tuple[int, dict[str, Any]]] = []
         for effect in ability.get("effects", []):
             effect_description = str(effect.get("description", "")).lower()
@@ -514,7 +537,8 @@ def build(
                 "formula_slots": sorted(
                     slot
                     for slot, value in slots.items()
-                    if value.get("kind") in {"packet", "variants", "wiki_attribute"}
+                    if value.get("kind")
+                    in {"packet", "variants", "wiki_attribute", "named_module"}
                 ),
                 "no_damage_slots": sorted(
                     slot

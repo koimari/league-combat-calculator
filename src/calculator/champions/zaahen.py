@@ -50,7 +50,7 @@ from .slotlib import (
     with_item_on_hits,
 )
 
-PACKET_SHA256 = "5f5796aa0364becd253cbb3b7b05939147841a3f76e41cfa061242d344ec9f63"
+PACKET_SHA256 = "3f503513da5502ab7521ed9ad58c654c8729e4f4bc857719f6e74c8ed5cbabb8"
 
 # Grim Deliverance's damage is the slam's, not the launch's: "He then slams
 # his glaive down after a 0.6-second delay, unleashing a shockwave that

@@ -96,7 +96,7 @@ from .slotlib import (
     with_control,
 )
 
-PACKET_SHA256 = "4814ec27868dfc6c584834af7a9e7e17d4febc980aa3532143466c34cf7b995b"
+PACKET_SHA256 = "f0a371bec307e04499165e0b091f2917ee8127cd28815549bb69cb57cbfc7b43"
 
 
 # The sourced cap on Notes held by one unit: "stacks up to 4 times on

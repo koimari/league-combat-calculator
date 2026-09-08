@@ -35,7 +35,7 @@ from .slotlib import (
     sum_modifiers,
 )
 
-PACKET_SHA256 = "1f62c9ad3216116b491935d3b92ff91949b3bea5a6a7381af05e7b6cfcbf5577"
+PACKET_SHA256 = "8cd0eacf4fa3f8ac9dc2353f0b6f6edb853a72c59b2dcf737d60980d28900c2c"
 
 
 # Rooted in SkarnerW.InitialShieldRatio / ShieldDuration; the cached W

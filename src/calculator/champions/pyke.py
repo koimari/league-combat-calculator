@@ -53,7 +53,7 @@ from .slotlib import (
     sum_modifiers,
 )
 
-PACKET_SHA256 = "fa316ebd6555cbf73fb34eabf69516cdc0f150ae01232f50527fd416eb6657db"
+PACKET_SHA256 = "0c59f6680d5be1482e65394566e4bc1e8e758efcd4d424c85135bf2553a009ea"
 
 # P's stat half, declared where the stat fold reads it.  The cached wiki
 # description states one rule twice — "1 bonus attack damage per 14 bonus

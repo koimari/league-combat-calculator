@@ -43,7 +43,7 @@ from .slotlib import (
     sum_modifiers,
 )
 
-PACKET_SHA256 = "65d9e8cd0840ba7f346dd7faad26a485494c4825f438be91e63491b17ecc5169"
+PACKET_SHA256 = "fba3384adee7755ce0b4adcfad1f4abef6da73244cc511c141ce127b1b15de3a"
 
 # Rooted in SwainPassive.HealthIncrement; the passive carries no leveling row,
 # and the cache states no cap, so the option's ceiling remains the module's

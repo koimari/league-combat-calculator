@@ -43,7 +43,7 @@ from .slotlib import (
     simple_damage,
 )
 
-PACKET_SHA256 = "73c072964c8c0863856fbd128d75afd0584bb1763baf64063b3bfb8a7df2ac3f"
+PACKET_SHA256 = "29e792e87270f7bf57970661c6adc97beedb7fa72b05efebcbc3ac4e893107f3"
 
 
 # E8d: sourced Cell Division revive values.  Cached passive prose (data/
