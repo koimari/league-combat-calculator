@@ -44,7 +44,7 @@ data/bin/characters/*
 !data/bin/characters/*.bin.json
 data/wiki-raw/
 data/wiki/wiki-generation-*/
-data/wiki/*.refresh-lock/
+data/wiki/*.refresh.lock
 data/wiki/wiki-schedule/
 # Wiki revision index the reviewed-packet gate reads (plus its staging file).
 # Current wiki state, so it is rebuilt per patch day, never committed:
