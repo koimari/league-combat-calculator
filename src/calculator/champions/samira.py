@@ -47,7 +47,7 @@ from .slotlib import (
     with_hit_rider,
 )
 
-PACKET_SHA256 = "26e75628def53875687d8141eb419c4f2d3a2adb6e68ee714cd39cb4e446ad4e"
+PACKET_SHA256 = "f6bfaf95646670e30bbc7d87d92690acdfb06e59894bcaee20172d25fba4fbf2"
 
 _STYLE_MAX = 6
 # Style bonus movement speed per stack by level bracket (wiki prose:

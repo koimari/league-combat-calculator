@@ -63,7 +63,7 @@ _SELF_CAST = "self"
 _ALLY_CAST = "ally"
 _ENEMY_CAST = "enemy"
 
-PACKET_SHA256 = "2dcdd74eafe747d8fbd7233f3202b76fca9be9d6250a336ce0fe7f8ef2f2f1e1"
+PACKET_SHA256 = "415ac434abcaefd90a9a1ccf061d7d9b31cde1a7179b7ad7de8e6e83b6b46eef"
 
 
 def _pix_bolts(ctx: SlotCtx) -> dict[str, Any] | None:

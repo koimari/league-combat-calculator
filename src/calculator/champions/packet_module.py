@@ -660,6 +660,8 @@ def _compiled_slot(
     A spec whose ``kind`` this does not know compiles to a no-damage slot
     with the generic reason rather than to nothing.
     """
+    if spec.get("kind") == "named_module":
+        raise ValueError(f"{spec['name']} requires its named module: {spec['owner']}")
     single_hit = slot in overrides.single_hit_slots
     if spec.get("kind") == "variants" and spec.get("variants"):
         return _variant_slot(spec, slot, overrides)

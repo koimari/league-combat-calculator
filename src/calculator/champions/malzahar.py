@@ -218,7 +218,7 @@ _nether_grasp = named_damage(
 )
 
 
-PACKET_SHA256 = "914a2a28fdee65829d311570f62107c1b9c39d397b2782c147e5bdbe894a4f8f"
+PACKET_SHA256 = "e1c6fe3b8c168990c3791edc8d20ed60157d8670ebf0d4ad1be01494bab33e8b"
 
 # Call of the Void lands on its own delay: Malzahar "opens two portals to
 # the void centered at the target location ... After 0.4 seconds, enemies

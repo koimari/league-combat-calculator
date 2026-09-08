@@ -41,7 +41,7 @@ from .slotlib import (
     with_control,
 )
 
-PACKET_SHA256 = "f3732d39aae761199c06bfc606515aee50fa1cc74ea65f28a15b0ef78d02f366"
+PACKET_SHA256 = "13ed879eea3657a5f23e4b9905fb5df614fb6d4fe52fcababf018a51f6aed830"
 
 
 # HARDCODED cadence: the attached-sapling burn ticks every 0.75 seconds
