@@ -152,3 +152,46 @@ def test_a_targeted_cast_holds_one_roster_enemy(
     rows = _control_rows(payload, kind)
     assert rows, f"{champion} {slot} published no {kind} interval"
     assert {row["target"] for row in rows} == {"enemy:Garen"}
+
+
+TARGETED_CONTROL_CASES = [
+    ("Nasus", {}, "slow"),
+    ("Rammus", {}, "taunt"),
+    ("Vayne", {}, "knockback"),
+    ("Vayne", {}, "stun"),
+    ("Elise", {}, "stun"),
+    ("Zilean", {}, "slow"),
+    ("Udyr", {}, "stun"),
+    ("Nocturne", {}, "fear"),
+    (
+        "Evelynn",
+        {"champion_options": {"w_charmed": True, "w_charm_triggered": True}},
+        "charm",
+    ),
+]
+
+
+@pytest.mark.parametrize("champion, options, kind", TARGETED_CONTROL_CASES)
+def test_targeted_control_casts_do_not_broadcast(
+    champion: str, options: dict, kind: str
+) -> None:
+    """Targeted authored controls land on only the allocated enemy."""
+    payload = calculate_payload(
+        {
+            "champion": champion,
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 10.0,
+            "enemies": TWO_ENEMIES,
+            **options,
+        },
+        deterministic=True,
+    )
+    rows = [
+        event
+        for event in payload["combat"]["events"]
+        if event.get("attacker") == "main" and event.get("cc_kind") == kind
+    ]
+    assert rows
+    assert {row["target"] for row in rows} == {"enemy:Garen"}
