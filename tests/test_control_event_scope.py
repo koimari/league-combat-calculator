@@ -195,3 +195,43 @@ def test_targeted_control_casts_do_not_broadcast(
     ]
     assert rows
     assert {row["target"] for row in rows} == {"enemy:Garen"}
+
+
+@pytest.mark.parametrize("champion", ["Nocturne", "Vayne"])
+def test_scoped_control_keeps_fimbulwinter_review_coverage(champion):
+    payload = calculate_payload(
+        {
+            "champion": champion,
+            "level": 18,
+            "items": ["Fimbulwinter"],
+            "fight_mode": "time_based",
+            "fight_duration": 10.0,
+            "enemies": TWO_ENEMIES,
+        },
+        deterministic=True,
+    )
+    assert payload["timeline_coverage"]["complete"], payload["timeline_coverage"]
+
+
+@pytest.mark.parametrize("champion", ["Nocturne", "Vayne"])
+def test_cheap_shot_only_procs_on_the_control_recipient(champion):
+    payload = calculate_payload(
+        {
+            "champion": champion,
+            "level": 18,
+            "items": [],
+            "minor_runes": ["Cheap Shot"],
+            "fight_mode": "time_based",
+            "fight_duration": 10.0,
+            "enemies": TWO_ENEMIES,
+        },
+        deterministic=True,
+    )
+    procs = [
+        event
+        for event in payload["combat"]["events"]
+        if event.get("attacker") == "main" and event.get("source") == "rune_Cheap Shot"
+    ]
+    assert procs
+    assert {event["target"] for event in procs} == {"enemy:Garen"}
+    assert all(event["damage"] > 0 for event in procs)

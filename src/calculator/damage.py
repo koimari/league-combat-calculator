@@ -4151,15 +4151,12 @@ def _evaluate_cast_parts(
                             ),
                             **(
                                 {"cc_reviewed": True}
-                                if (
-                                    cc_reaches_target
-                                    and (cc_reviewed or cc_kind_reviewed(part.cc_kind))
-                                )
+                                if cc_reviewed or cc_kind_reviewed(part.cc_kind)
                                 else {}
                             ),
                             **(
                                 {"cc_duration": float(part.cc_duration)}
-                                if part.cc_duration > 0.0
+                                if part.cc_duration > 0.0 and cc_reaches_target
                                 else {}
                             ),
                             **(
@@ -4168,7 +4165,7 @@ def _evaluate_cast_parts(
                                         dict(atom) for atom in part.control_source_atoms
                                     ]
                                 }
-                                if part.control_source_atoms
+                                if part.control_source_atoms and cc_reaches_target
                                 else {}
                             ),
                             **({"skillshot": True} if part.skillshot else {}),
@@ -11601,7 +11598,9 @@ def _impaired_instance_times(
         slot
         for slot, entry in state.ability_damages.items()
         if float(entry.get("total_raw", 0.0)) > 0
-        and applies_control(_declared_cc_marker(entry))
+        and applies_control(
+            _declared_cc_marker(entry, roster_target_index=state.roster_target_index)
+        )
     }
     return sorted(
         float(event["time"])
@@ -17927,10 +17926,20 @@ def _entry_control_scope(info: Mapping[str, Any]) -> ControlScope | None:
     return next(iter(scopes)) if len(scopes) == 1 else None
 
 
-def _declared_cc_marker(info: Mapping[str, Any]) -> dict[str, Any]:
+def _declared_cc_marker(
+    info: Mapping[str, Any], *, roster_target_index: int | None = None
+) -> dict[str, Any]:
     """The reviewed control kind an entry's parts declare, as an event marker
     on the swings an empowering entry forces."""
     kind = _declared_cc_kind(ability_field(info, "parts"))
+    scope = _entry_control_scope(info)
+    if (
+        kind is not None
+        and roster_target_index is not None
+        and scope is not None
+        and not scope.reaches(roster_target_index)
+    ):
+        return {"cc_reviewed": True}
     return {"cc_kind": kind, "cc_reviewed": True} if kind is not None else {}
 
 
