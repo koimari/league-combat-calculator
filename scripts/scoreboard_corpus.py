@@ -41,7 +41,7 @@ def _dump(image: Image.Image, path: Path) -> dict[str, Any]:
     return {"bin": path.name, "width": rgba.width, "height": rgba.height}
 
 
-def read_frames(paths: list[Path], options: dict | None = None) -> dict[str, Any]:
+def read_frames(paths: list[Path]) -> dict[str, Any]:
     """Run the harness over `paths`; the per-frame readings keyed by file name."""
     if shutil.which("node") is None:
         raise RuntimeError("node is not installed")
@@ -59,7 +59,6 @@ def read_frames(paths: list[Path], options: dict | None = None) -> dict[str, Any
                     {
                         "name": path.name,
                         **_dump(image, work / f"{path.stem}.bin"),
-                        "options": options or {},
                     }
                 )
         manifest = work / "manifest.json"
@@ -141,9 +140,7 @@ def contact_sheet(
 def cmd_read(args: argparse.Namespace) -> int:
     """Print each frame's rows; with --sheet, draw every read cell beside its match."""
     names = item_names()
-    readings = read_frames(
-        [Path(p) for p in args.images], {"keep": args.keep} if args.keep else None
-    )
+    readings = read_frames([Path(p) for p in args.images])
     index = json.loads(SPRITE.with_suffix(".json").read_text(encoding="utf-8"))
     sheets = []
     for image in args.images:
@@ -284,9 +281,6 @@ def main(argv: list[str] | None = None) -> int:
     read = commands.add_parser("read")
     read.add_argument("images", nargs="+")
     read.add_argument("--sheet", type=Path)
-    read.add_argument(
-        "--keep", type=int, default=0, help="candidate squares kept per size"
-    )
     read.set_defaults(run=cmd_read)
     scan = commands.add_parser("scan")
     scan.add_argument("video")

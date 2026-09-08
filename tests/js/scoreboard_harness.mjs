@@ -29,7 +29,7 @@ const refs = vision.buildReferences(raster(manifest.sprite), manifest.sprite.ind
 const frames = {};
 for (const frame of manifest.frames) {
   const started = performance.now();
-  const reading = vision.readScoreboard(raster(frame), refs, frame.options || {});
+  const reading = vision.readScoreboard(raster(frame), refs);
   frames[frame.name] = { ...reading, ms: Math.round(performance.now() - started) };
 }
 process.stdout.write(JSON.stringify({ frames }));
