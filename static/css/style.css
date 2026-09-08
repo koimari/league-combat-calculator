@@ -2641,3 +2641,36 @@ a { color: inherit; }
 .champion-options-grid .ability-rank { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; }
 .champion-options-grid .ability-variants small,
 .champion-options-grid .ability-rank small { font: 700 9px var(--font); letter-spacing: .12em; text-transform: uppercase; color: rgba(246, 242, 223, .68); }
+
+/* --- scoreboard reader dialog: the screenshot, then one row per player --- */
+.scoreboard-dialog { width: min(920px, calc(100vw - 48px)); }
+.scoreboard-preview { display: block; width: 100%; height: auto; margin-top: 12px; border: 1px solid var(--line-3); border-radius: var(--radius); }
+.scoreboard-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; margin-top: 12px; overflow-y: auto; }
+.scoreboard-player {
+  display: grid;
+  grid-template-columns: auto 30px 1fr;
+  grid-template-areas: "radio portrait name" "radio portrait items";
+  align-items: center;
+  column-gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--line-2);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.scoreboard-player:has(input:checked) { border-color: var(--win); background: var(--paper-tint-panel); }
+.scoreboard-player input { grid-area: radio; }
+.scoreboard-player.is-unknown { opacity: .55; cursor: not-allowed; }
+.scoreboard-portrait { grid-area: portrait; width: 30px; height: 30px; object-fit: cover; border: 1px solid var(--line-3); }
+.scoreboard-player strong { grid-area: name; font: 700 13px var(--font); }
+.scoreboard-player small, .scoreboard-side { font: 600 10px var(--mono); color: var(--ink-muted); }
+.scoreboard-side { grid-area: name; justify-self: end; }
+.scoreboard-player small { grid-area: name; justify-self: end; margin-right: 64px; }
+.scoreboard-items { grid-area: items; display: flex; gap: 3px; margin-top: 3px; }
+.scoreboard-item { width: 22px; height: 22px; overflow: hidden; border: 1px solid var(--line-3); background: var(--paper); }
+.scoreboard-item img { width: 100%; height: 100%; object-fit: cover; }
+.scoreboard-item.is-empty { border-style: dashed; background: transparent; }
+.scoreboard-item.is-unsure, .scoreboard-legend .is-unsure { border: 2px solid #c8891a; }
+.scoreboard-item.is-unknown, .scoreboard-legend .is-unknown { opacity: .4; border: 2px dotted var(--ink-muted); }
+.scoreboard-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+.scoreboard-legend { display: inline-flex; align-items: center; gap: 6px; font: 600 10px var(--mono); color: var(--ink-muted); }
+.scoreboard-legend i { display: inline-block; width: 12px; height: 12px; margin-left: 8px; }

@@ -29,8 +29,12 @@ const ScoreboardVision = (() => {
    * 0.3 or more. Items have true lookalikes (component swords), so none. */
   const MIN_GAP = { champion: 0.28, item: 0 };
   /* A slot on a player's established item grid is strong evidence on its own,
-   * so a cell there is accepted at a lower correlation than a free detection. */
+   * so a cell there is kept at a lower correlation than a free detection, if
+   * it also has a clear runner-up margin; text past a strip's end matches
+   * some icon at 0.7 but never with one. A high score alone still passes. */
   const FILL_SCORE = 0.62;
+  const FILL_GAP = 0.22;
+  const SURE_FILL = 0.78;
   /* Only hits this strong vote on the shared item size. */
   const SURE_SCORE = 0.8;
   /* A refined 4x4 thumbnail must score this before the cell is classified. */
@@ -42,14 +46,14 @@ const ScoreboardVision = (() => {
   /* Coarse candidates verified per search: a few per size for the anchor,
    * every one (to a cap, or a run of rejections) inside the column, row and
    * item bands. */
-  const VERIFY = { anchor: 12, cap: 400, patience: { champion: Infinity, item: 80 } };
+  const VERIFY = { anchor: 12, cap: 400, patience: { champion: Infinity, item: Infinity } };
   /* Portrait sizes the anchor is sought at, on a frame no wider than the
    * page's 2200px working width; tried nearest this typical size first. */
   const PORTRAIT = { min: 24, max: 64, typical: 34 };
   /* An anchor this certain ends the size search early. */
   const SURE_ANCHOR = 0.9;
-  /* Inventory slots a scoreboard shows per player: six items and a seventh. */
-  const MAX_SLOTS = 7;
+  /* Slots a scoreboard shows per player: six items, boots, and a trinket. */
+  const MAX_SLOTS = 8;
   /* Players per team, so rows per column. */
   const MAX_ROWS = 5;
 
@@ -270,7 +274,7 @@ const ScoreboardVision = (() => {
    * The full-resolution verdict on a candidate. A pyramid peak can sit a
    * whole cell off the icon (its `reach`), so unless the candidate is
    * `anchored` (a slot on a known grid, classified over a 3x3 window two
-   * pixels apart) the thumbnail score is re-taken on
+   * pixels apart at three sizes) the thumbnail score is re-taken on
    * a 2px grid over that window first: a cell that never looks like an
    * icon is rejected there, before any classification, and the two best
    * spots are classified, since a 4x4 thumbnail can prefer the edge of a
@@ -282,12 +286,14 @@ const ScoreboardVision = (() => {
     if (!inside(candidate.x, candidate.y, candidate.size)) return null;
     let best = null;
     if (anchored) {
-      for (const dy of [-2, 0, 2]) {
-        for (const dx of [-2, 0, 2]) {
-          const hit = inside(candidate.x + dx, candidate.y + dy, candidate.size)
-            ? classify(raster, candidate.x + dx, candidate.y + dy, candidate.size, refs, kind)
-            : null;
-          if (hit && (!best || hit.score > best.score)) best = hit;
+      for (const size of [candidate.size - 1, candidate.size, candidate.size + 1]) {
+        for (const dy of [-2, 0, 2]) {
+          for (const dx of [-2, 0, 2]) {
+            const hit = inside(candidate.x + dx, candidate.y + dy, size)
+              ? classify(raster, candidate.x + dx, candidate.y + dy, size, refs, kind)
+              : null;
+            if (hit && (!best || hit.score > best.score)) best = hit;
+          }
         }
       }
     } else {
@@ -331,13 +337,28 @@ const ScoreboardVision = (() => {
 
   /* --- coarse search -------------------------------------------------- */
 
-  /** Box-filter `raster` down by `factor`; RGB floats, no alpha. */
-  function downscale(raster, factor) {
+  /**
+   * A pyramid level: `raster` box-filtered down by `factor` as RGB floats,
+   * one row at a time on first use, since a band search touches a few rows
+   * of a level and a whole-frame filter per level was most of a read.
+   */
+  function pyramidLevel(raster, factor) {
     const width = Math.floor(raster.width / factor);
     const height = Math.floor(raster.height / factor);
-    const out = new Float32Array(width * height * 3);
+    const level = { width, height, factor, data: new Float32Array(width * height * 3), ready: new Uint8Array(height) };
+    level.prepare = (i0, i1) => {
+      for (let i = Math.max(0, i0); i < Math.min(height, i1); i += 1) {
+        if (!level.ready[i]) filterRow(raster, level, i);
+      }
+    };
+    return level;
+  }
+
+  function filterRow(raster, level, i) {
+    const { width, factor, data: out } = level;
     const { data } = raster;
-    for (let i = 0; i < height; i += 1) {
+    level.ready[i] = 1;
+    {
       const y0 = Math.round(i * factor);
       const y1 = Math.max(y0 + 1, Math.round((i + 1) * factor));
       for (let j = 0; j < width; j += 1) {
@@ -361,7 +382,6 @@ const ScoreboardVision = (() => {
         out[q + 2] = b / count;
       }
     }
-    return { width, height, data: out, factor };
   }
 
   /**
@@ -380,7 +400,7 @@ const ScoreboardVision = (() => {
     const key = `${size}:${block}`;
     let level = levels && levels.get(key);
     if (!level) {
-      level = downscale(raster, factor);
+      level = pyramidLevel(raster, factor);
       if (levels) levels.set(key, level);
     }
     const { width, height, data } = level;
@@ -395,6 +415,7 @@ const ScoreboardVision = (() => {
     const j1 = region ? clamp(Math.ceil(region.x1 / factor), 0, width) : width;
     const iEnd = Math.min(height, i1 + span) - span;
     const jEnd = Math.min(width, j1 + span) - span;
+    level.prepare(i0, iEnd + span);
     const scores = new Float32Array(width * height).fill(-1);
     const vec = new Float32Array(thumbLen);
     const proj = new Float32Array(THUMB_DIMS);
@@ -511,27 +532,23 @@ const ScoreboardVision = (() => {
 
   /**
    * Every portrait sharing the anchor's column and size: a team reads down
-   * the panel. Then the opposing portraits, found on the team's rows and kept
-   * only where they line up in a column of their own, since a stray match on
-   * one row never has the others above and below it.
+   * the panel. Then the opposing team: one full-width search along the
+   * strongest teammate's row finds its opponent, and that opponent's column
+   * holds the rest, so a stray match elsewhere on a row is never taken.
    */
   function portraits(raster, refs, first, levels) {
     const size = first.size;
     const column = { x0: first.x - size / 2, x1: first.x + size * 1.5, y0: 0, y1: raster.height };
     const team = search(raster, refs, "champion", size, column, levels)
       .filter((hit) => Math.abs(hit.size - size) <= size * 0.2 && Math.abs(hit.x - first.x) <= size / 2);
-    const mates = [];
-    for (const hit of team) {
-      const row = { x0: 0, x1: raster.width, y0: centreY(hit) - size * 0.75, y1: centreY(hit) + size * 0.75 };
-      for (const mate of search(raster, refs, "champion", size, row, levels)) {
-        if (Math.abs(mate.x - hit.x) >= size) mates.push(mate);
-      }
-    }
     let opposing = [];
-    for (const anchorMate of mates) {
-      const aligned = mates.filter((m) => Math.abs(m.x - anchorMate.x) <= size / 2);
-      const strength = aligned.reduce((sum, m) => sum + m.score, 0);
-      if (strength > opposing.reduce((sum, m) => sum + m.score, 0)) opposing = aligned;
+    for (const hit of [...team].sort((a, b) => b.score - a.score)) {
+      const row = { x0: 0, x1: raster.width, y0: centreY(hit) - size * 0.75, y1: centreY(hit) + size * 0.75 };
+      const mate = search(raster, refs, "champion", size, row, levels).find((m) => Math.abs(m.x - hit.x) >= size);
+      if (!mate) continue;
+      const theirs = { x0: mate.x - size / 2, x1: mate.x + size * 1.5, y0: 0, y1: raster.height };
+      opposing = search(raster, refs, "champion", size, theirs, levels).filter((m) => Math.abs(m.x - mate.x) <= size / 2);
+      break;
     }
     return fillColumns(raster, refs, suppress([...team, ...opposing].sort((a, b) => b.score - a.score)), size);
   }
@@ -623,7 +640,7 @@ const ScoreboardVision = (() => {
       if (Math.abs(x - champion.x) < champion.size && Math.abs(y - champion.y) < champion.size) continue;
       if (bounds && (x < bounds.min || x > bounds.max)) continue;
       const hit = known.get(k) || verify(raster, { x, y, size }, refs, "item", true);
-      filled.push(hit && hit.score >= FILL_SCORE ? hit : null);
+      filled.push(hit && hit.score >= FILL_SCORE && (hit.gap >= FILL_GAP || hit.score >= SURE_FILL) ? hit : null);
     }
     let best = null;
     for (let start = 0; start < filled.length; start += 1) {
@@ -651,7 +668,7 @@ const ScoreboardVision = (() => {
     const champions = portraits(raster, refs, first, levels);
     const size = first.size;
     const bands = rows(champions, size);
-    const itemSizes = sizesBetween(Math.round(size * 0.5), Math.round(size * 1.05));
+    const itemSizes = [0.72, 0.78, 0.85, 0.92, 1].map((share) => Math.round(size * share));
     const items = [];
     let itemSize = null;
     for (const band of bands) {
@@ -833,6 +850,8 @@ const ScoreboardVision = (() => {
     try {
       const [refs, image] = await Promise.all([loadReferences(), loadImage(blob)]);
       const raster = rasterOf(image);
+      /* ceiling: the read blocks the page for a few seconds; a worker if that grates. */
+      await new Promise((resolve) => setTimeout(resolve, 30));
       const started = performance.now();
       const reading = ScoreboardVision.readScoreboard(raster, refs);
       const players = reading.rows.flat().length;
@@ -859,7 +878,7 @@ const ScoreboardVision = (() => {
 
   document.addEventListener("paste", (event) => {
     const file = [...(event.clipboardData?.files || [])].find((f) => f.type.startsWith("image/"));
-    if (!file || event.target.closest("input, textarea")) return;
+    if (!file || event.target?.closest?.("input, textarea")) return;
     event.preventDefault();
     readBlob(file);
   });

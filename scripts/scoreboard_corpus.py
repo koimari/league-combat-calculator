@@ -169,6 +169,19 @@ def cmd_grab(args: argparse.Namespace) -> int:
     return 0
 
 
+def write_labels(labels: dict[str, Any]) -> None:
+    """labels.json with one player per line, so a review diff reads as rows."""
+    frames = []
+    for name, entry in labels.items():
+        rows = ",\n".join(
+            "   [" + ", ".join(json.dumps(player, ensure_ascii=False) for player in row) + "]"
+            for row in entry["rows"]
+        )
+        head = ", ".join(f"{json.dumps(k)}: {json.dumps(v, ensure_ascii=False)}" for k, v in entry.items() if k != "rows")
+        frames.append(f' {json.dumps(name)}: {{{head}, "rows": [\n{rows}\n  ]}}')
+    LABELS.write_text("{\n" + ",\n".join(frames) + "\n}\n", encoding="utf-8")
+
+
 def cmd_label(args: argparse.Namespace) -> int:
     path = Path(args.image)
     reading = read_frames([path])[path.name]
@@ -181,7 +194,7 @@ def cmd_label(args: argparse.Namespace) -> int:
             for row in reading["rows"]
         ],
     }
-    LABELS.write_text(json.dumps(labels, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    write_labels(labels)
     print(describe(reading, item_names()))
     print(f"appended {path.name} to {LABELS}; review it against a contact sheet before committing")
     return 0
