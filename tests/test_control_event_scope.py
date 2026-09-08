@@ -14,6 +14,7 @@ import pytest
 from src.calculator.ability_spec import ControlEvent, ControlScope
 from src.calculator.calculate import calculate_payload
 from src.calculator.data_fetcher import get_champion
+from src.calculator.damage import _entry_control_scope
 
 TWO_ENEMIES = [
     {"champion": "Garen", "level": 18, "items": []},
@@ -195,3 +196,94 @@ def test_targeted_control_casts_do_not_broadcast(
     ]
     assert rows
     assert {row["target"] for row in rows} == {"enemy:Garen"}
+
+
+@pytest.mark.parametrize("champion", ["Nocturne", "Vayne"])
+def test_scoped_control_keeps_fimbulwinter_review_coverage(champion):
+    payload = calculate_payload(
+        {
+            "champion": champion,
+            "level": 18,
+            "items": ["Fimbulwinter"],
+            "fight_mode": "time_based",
+            "fight_duration": 10.0,
+            "enemies": TWO_ENEMIES,
+        },
+        deterministic=True,
+    )
+    assert payload["timeline_coverage"]["complete"], payload["timeline_coverage"]
+
+
+@pytest.mark.parametrize("champion", ["Nocturne", "Vayne"])
+def test_cheap_shot_only_procs_on_the_control_recipient(champion):
+    payload = calculate_payload(
+        {
+            "champion": champion,
+            "level": 18,
+            "items": [],
+            "minor_runes": ["Cheap Shot"],
+            "fight_mode": "time_based",
+            "fight_duration": 10.0,
+            "enemies": TWO_ENEMIES,
+        },
+        deterministic=True,
+    )
+    procs = [
+        event
+        for event in payload["combat"]["events"]
+        if event.get("attacker") == "main" and event.get("source") == "rune_Cheap Shot"
+    ]
+    assert procs
+    assert {event["target"] for event in procs} == {"enemy:Garen"}
+    assert all(event["damage"] > 0 for event in procs)
+
+
+@pytest.mark.parametrize("condemn_wall", [False, True])
+def test_vayne_condemn_scope_applies_with_and_without_a_wall(condemn_wall):
+    payload = calculate_payload(
+        {
+            "champion": "Vayne",
+            "level": 18,
+            "items": ["Fimbulwinter"],
+            "champion_options": {"condemn_wall": condemn_wall},
+            "minor_runes": ["Cheap Shot"],
+            "fight_mode": "time_based",
+            "fight_duration": 10.0,
+            "enemies": TWO_ENEMIES,
+        },
+        deterministic=True,
+    )
+    events = [
+        event
+        for event in payload["combat"]["events"]
+        if event.get("attacker") == "main"
+    ]
+    procs = [event for event in events if event.get("source") == "rune_Cheap Shot"]
+    assert procs
+    assert {event["target"] for event in procs} == {"enemy:Garen"}
+    knockbacks = [event for event in events if event.get("cc_kind") == "knockback"]
+    assert knockbacks
+    assert {event["target"] for event in knockbacks} == {"enemy:Garen"}
+    stuns = [event for event in events if event.get("cc_kind") == "stun"]
+    assert bool(stuns) is condemn_wall
+    assert payload["timeline_coverage"]["complete"]
+
+
+@pytest.mark.parametrize("invalid", ["one_target", 0, False, {}])
+def test_authored_control_scope_rejects_untyped_values(invalid):
+    with pytest.raises(TypeError, match="control_scope must be a ControlScope"):
+        _entry_control_scope({"control_scope": invalid})
+
+
+def test_absent_cast_scope_uses_event_scope_or_remains_unspecified():
+    assert _entry_control_scope({}) is None
+    assert (
+        _entry_control_scope(
+            {
+                "control_events": (
+                    ControlEvent("stun", 1.0, scope=ControlScope.ONE_TARGET),
+                )
+            }
+        )
+        is ControlScope.ONE_TARGET
+    )

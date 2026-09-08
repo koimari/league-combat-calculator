@@ -155,6 +155,44 @@ ASSUMPTIONS = [
     "(no_damage, not out_of_scope).",
 ]
 
+_condemn_damage = by_option(
+    "condemn_wall",
+    {
+        # The wall branch adds the sourced 1.5s stun as its own control
+        # event: the slot's declared kind stays the knockback every cast
+        # applies, so the no-wall branch cannot report a stun it never
+        # lands.  Condemn "fires a heavy bolt at the target enemy" and
+        # the stun is "if the target collides with terrain", so the one
+        # enemy hit holds it — the first roster enemy.
+        True: with_control_event(
+            simple_damage(
+                attr="Total Physical Damage",
+                dmg_type="physical",
+                event_order_certified="single_hit",
+            ),
+            kind="stun",
+            duration_attr="Stun Duration",
+            effect_index=1,
+            scope=ControlScope.ONE_TARGET,
+        ),
+        False: simple_damage(
+            attr="Physical Damage",
+            dmg_type="physical",
+            event_order_certified="single_hit",
+        ),
+    },
+    default=True,
+)
+
+
+def _condemn(ctx: SlotCtx) -> dict[str, Any] | None:
+    """Condemn targets one enemy in both terrain branches."""
+    entry = _condemn_damage(ctx)
+    if entry is not None:
+        entry["control_scope"] = ControlScope.ONE_TARGET
+    return entry
+
+
 SLOTS = {
     "R": stat_buff(
         "Bonus Attack Damage",
@@ -164,34 +202,7 @@ SLOTS = {
     ),
     "Q": _tumble,
     "W": _silver_bolts,
-    "E": by_option(
-        "condemn_wall",
-        {
-            # The wall branch adds the sourced 1.5s stun as its own control
-            # event: the slot's declared kind stays the knockback every cast
-            # applies, so the no-wall branch cannot report a stun it never
-            # lands.  Condemn "fires a heavy bolt at the target enemy" and
-            # the stun is "if the target collides with terrain", so the one
-            # enemy hit holds it — the first roster enemy.
-            True: with_control_event(
-                simple_damage(
-                    attr="Total Physical Damage",
-                    dmg_type="physical",
-                    event_order_certified="single_hit",
-                ),
-                kind="stun",
-                duration_attr="Stun Duration",
-                effect_index=1,
-                scope=ControlScope.ONE_TARGET,
-            ),
-            False: simple_damage(
-                attr="Physical Damage",
-                dmg_type="physical",
-                event_order_certified="single_hit",
-            ),
-        },
-        default=True,
-    ),
+    "E": _condemn,
 }
 
 # Tumble only "empowers her next basic attack ... to deal bonus physical

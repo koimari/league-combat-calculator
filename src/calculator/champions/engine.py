@@ -141,6 +141,7 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # from aggregate totals.
         "damage_events",
         "control_events",
+        "control_scope",
         "control_source_atoms",
         "cc_reviewed",
         "event_phase",
