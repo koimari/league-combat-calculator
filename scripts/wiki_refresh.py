@@ -7,6 +7,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+from contextlib import contextmanager
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable
@@ -112,6 +113,23 @@ def run_audit(*, wiki_db: Path, runner: Callable = subprocess.run) -> dict:
     return report
 
 
+@contextmanager
+def _refresh_lock(database: Path):
+    """Hold a POSIX process lock for this launchd refresh until the handle closes."""
+    if os.name != "posix":
+        raise RuntimeError("Wiki refresh requires POSIX file locking")
+    import fcntl
+
+    path = database.with_name(database.name + ".refresh.lock")
+    # Keep the inode in place so concurrent openers lock the same file.
+    with path.open("a+b") as handle:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
 def refresh(
     *,
     source_root: Path,
@@ -132,89 +150,88 @@ def refresh(
     if database.is_symlink():
         raise ValueError("Choose a local index output; the active path is a symlink")
     database.parent.mkdir(parents=True, exist_ok=True)
-    lock = database.with_name(database.name + ".refresh-lock")
-    lock.mkdir()
-    generation = None
-    try:
-        if database.exists():
-            try:
-                active_vault = Path(inspect_database(database)["vault_path"])
-                if active_vault.is_dir():
-                    seed_vault = active_vault
-            except (sqlite3.Error, ValueError, KeyError):
-                # A legacy revision-only index has no reusable source vault.
-                pass
-        generation = Path(
-            tempfile.mkdtemp(prefix="wiki-generation-", dir=database.parent)
-        )
-        vault = generation / "vault"
-        if seed_vault is not None:
-            runner(
+    with _refresh_lock(database):
+        generation = None
+        try:
+            if database.exists():
+                try:
+                    active_vault = Path(inspect_database(database)["vault_path"])
+                    if active_vault.is_dir():
+                        seed_vault = active_vault
+                except (sqlite3.Error, ValueError, KeyError):
+                    # A legacy revision-only index has no reusable source vault.
+                    pass
+            generation = Path(
+                tempfile.mkdtemp(prefix="wiki-generation-", dir=database.parent)
+            )
+            vault = generation / "vault"
+            if seed_vault is not None:
+                runner(
+                    source_root,
+                    "league_wiki_vault",
+                    ["validate", "--vault", str(seed_vault), "--require-complete"],
+                )
+                shutil.copytree(seed_vault, vault)
+            common = ["--vault", str(vault)]
+            inventory = runner(
                 source_root,
                 "league_wiki_vault",
-                ["validate", "--vault", str(seed_vault), "--require-complete"],
+                ["inventory", *common, "--all-content-namespaces"],
             )
-            shutil.copytree(seed_vault, vault)
-        common = ["--vault", str(vault)]
-        inventory = runner(
-            source_root,
-            "league_wiki_vault",
-            ["inventory", *common, "--all-content-namespaces"],
-        )
-        if not inventory.get("page_count"):
-            raise ValueError("Wiki inventory is empty")
-        namespaces = ",".join(
-            key for key in inventory["pages_by_namespace"] if int(key) != 6
-        )
-        if not namespaces:
-            raise ValueError("Wiki inventory has no text namespaces")
-        snapshot = runner(
-            source_root,
-            "league_wiki_vault",
-            ["snapshot", *common, "--namespace", namespaces],
-        )
-        if snapshot.get("error_pages") or snapshot.get("complete") is not True:
-            raise ValueError(
-                "Wiki acquisition failed or returned an incomplete snapshot"
+            if not inventory.get("page_count"):
+                raise ValueError("Wiki inventory is empty")
+            namespaces = ",".join(
+                key for key in inventory["pages_by_namespace"] if int(key) != 6
             )
-        runner(source_root, "league_wiki_vault", ["finalize", *common])
-        candidate = generation / "league-wiki.sqlite3"
-        index = runner(
-            source_root,
-            "league_wiki_db",
-            ["build", *common, "--database", str(candidate)],
-        )
-        inspect_database(candidate)
-        packets = packet_report(wiki_db=candidate)
-        if packets.get("rebuild_skipped"):
-            raise ValueError(
-                f"Packet report could not rebuild: {packets['rebuild_skipped']}"
+            if not namespaces:
+                raise ValueError("Wiki inventory has no text namespaces")
+            snapshot = runner(
+                source_root,
+                "league_wiki_vault",
+                ["snapshot", *common, "--namespace", namespaces],
             )
-        audit = audit_report(wiki_db=candidate)
-        index["database"] = str(database)
-        changed_pages = snapshot["written_pages"]
-        report = {
-            "database": str(database),
-            "vault": str(vault),
-            "inventory": inventory,
-            "snapshot": snapshot,
-            "index": index,
-            "packets": packets,
-            "full_entry_audit": audit,
-            "source_pages_written": changed_pages,
-            "review_required": bool(changed_pages)
-            or not packets["clean"]
-            or not audit["passed"],
-            "formula_authority": False,
-        }
-        (generation / "report.json").write_text(
-            json.dumps(report, indent=2) + "\n", encoding="utf-8"
-        )
-        os.replace(candidate, database)
-        return report
-    except Exception as exc:
-        if generation is not None:
-            (generation / "failure.txt").write_text(str(exc) + "\n", encoding="utf-8")
-        raise
-    finally:
-        lock.rmdir()
+            if snapshot.get("error_pages") or snapshot.get("complete") is not True:
+                raise ValueError(
+                    "Wiki acquisition failed or returned an incomplete snapshot"
+                )
+            runner(source_root, "league_wiki_vault", ["finalize", *common])
+            candidate = generation / "league-wiki.sqlite3"
+            index = runner(
+                source_root,
+                "league_wiki_db",
+                ["build", *common, "--database", str(candidate)],
+            )
+            inspect_database(candidate)
+            packets = packet_report(wiki_db=candidate)
+            if packets.get("rebuild_skipped"):
+                raise ValueError(
+                    f"Packet report could not rebuild: {packets['rebuild_skipped']}"
+                )
+            audit = audit_report(wiki_db=candidate)
+            index["database"] = str(database)
+            changed_pages = snapshot["written_pages"]
+            report = {
+                "database": str(database),
+                "vault": str(vault),
+                "inventory": inventory,
+                "snapshot": snapshot,
+                "index": index,
+                "packets": packets,
+                "full_entry_audit": audit,
+                "source_pages_written": changed_pages,
+                "review_required": bool(changed_pages)
+                or not packets["clean"]
+                or not audit["passed"],
+                "formula_authority": False,
+            }
+            (generation / "report.json").write_text(
+                json.dumps(report, indent=2) + "\n", encoding="utf-8"
+            )
+            os.replace(candidate, database)
+            return report
+        except Exception as exc:
+            if generation is not None:
+                (generation / "failure.txt").write_text(
+                    str(exc) + "\n", encoding="utf-8"
+                )
+            raise

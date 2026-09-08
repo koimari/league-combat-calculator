@@ -49,6 +49,7 @@ def job(
                 / "vendor/league-wiki-query/scripts/query_league_wiki.py"
             ),
         },
+        "RunAtLoad": True,
         "StartCalendarInterval": {"Weekday": 3, "Hour": 9, "Minute": 0},
         "StandardOutPath": str(logs.absolute() / "wiki-refresh.stdout.log"),
         "StandardErrorPath": str(logs.absolute() / "wiki-refresh.stderr.log"),

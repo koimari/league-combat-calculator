@@ -1,6 +1,10 @@
 """Exercise refresh failures against temporary source and active-index paths."""
 
 import json
+import os
+import subprocess
+import sys
+import time
 import sqlite3
 import plistlib
 from types import SimpleNamespace
@@ -124,7 +128,12 @@ def test_failed_stage_keeps_active_index_and_seed(source, tmp_path, stage):
         )
     assert active.read_bytes() == original
     assert (seed / "document").read_text() == "accepted source"
-    assert not active.with_name(active.name + ".refresh-lock").exists()
+    refresh(
+        source_root=source,
+        database=active,
+        runner=_runner,
+        packet_report=lambda **_: {"clean": True},
+    )
 
 
 def test_acquisition_errors_cannot_reuse_old_text_as_success(source, tmp_path):
@@ -147,18 +156,54 @@ def test_acquisition_errors_cannot_reuse_old_text_as_success(source, tmp_path):
     assert active.read_bytes() == b"active"
 
 
-def test_existing_lock_stops_concurrent_refresh(source, tmp_path):
+@pytest.mark.skipif(os.name != "posix", reason="launchd refresh uses POSIX locks")
+def test_killed_refresh_releases_lock_for_next_attempt(source, tmp_path):
     active = tmp_path / "active.sqlite3"
-    lock = active.with_name(active.name + ".refresh-lock")
-    lock.mkdir()
-    with pytest.raises(FileExistsError):
-        refresh(
+    ready = tmp_path / "ready"
+    script = """
+import sys
+import time
+from pathlib import Path
+from scripts.wiki_refresh import refresh
+
+def wait_for_termination(*args):
+    Path(sys.argv[3]).write_text("locked")
+    time.sleep(60)
+
+refresh(source_root=Path(sys.argv[1]), database=Path(sys.argv[2]),
+        runner=wait_for_termination, packet_report=lambda **_: {},
+        audit_report=lambda **_: {})
+"""
+    child = subprocess.Popen(
+        [sys.executable, "-c", script, str(source), str(active), str(ready)],
+        cwd=Path(__file__).resolve().parents[1],
+    )
+    try:
+        deadline = time.monotonic() + 10
+        while not ready.exists() and time.monotonic() < deadline:
+            assert child.poll() is None, "refresh exited before acquiring its lock"
+            time.sleep(0.01)
+        assert ready.exists(), "refresh did not acquire its lock"
+        with pytest.raises(BlockingIOError):
+            refresh(
+                source_root=source,
+                database=active,
+                runner=lambda *_: pytest.fail("concurrent download ran"),
+                packet_report=lambda **_: {},
+            )
+        child.kill()
+        child.wait(timeout=10)
+        result = refresh(
             source_root=source,
             database=active,
-            runner=lambda *_: pytest.fail("download ran"),
-            packet_report=lambda **_: {},
+            runner=_runner,
+            packet_report=lambda **_: {"clean": True},
         )
-    assert lock.exists()
+        assert result["database"] == str(active)
+    finally:
+        if child.poll() is None:
+            child.kill()
+        child.wait(timeout=10)
 
 
 @pytest.mark.parametrize("day", [date(2026, 9, 8), date(2026, 9, 2)])
@@ -235,6 +280,7 @@ def test_launchd_command_round_trips_with_spaces(tmp_path):
         tmp_path / "a repo/scripts/patch_update.py"
     )
     assert "--scheduled" in value["ProgramArguments"]
+    assert value["RunAtLoad"] is True
 
 
 def test_audit_infrastructure_failure_is_distinct_from_review_drift(tmp_path):
