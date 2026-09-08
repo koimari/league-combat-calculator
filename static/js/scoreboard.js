@@ -9,9 +9,11 @@
  * pyramid is scored against every icon in a 12-dimensional projection, the
  * strongest positions are verified by 8x8 then 24x24 correlation at full
  * resolution, and once one portrait is certain the rest are read off the
- * panel's structure: its column for teammates, each row for the opponent,
- * each row band for items at one shared size. The DOM wiring underneath
- * turns a pasted image into a request payload for loadSharedBuildIntoAnalyst.
+ * panel's structure: its column for teammates, one row for an opponent and
+ * that opponent's column, each row band for items at one shared size, and
+ * the grids those define for whatever a search missed. The DOM wiring
+ * underneath turns a pasted image into a request payload for
+ * loadSharedBuildIntoAnalyst.
  */
 const ScoreboardVision = (() => {
   "use strict";
@@ -44,9 +46,9 @@ const ScoreboardVision = (() => {
   const CHAMPION_CROPS = [1, 0.85];
   const SIZE_RATIO = 1.15;
   /* Coarse candidates verified per search: a few per size for the anchor,
-   * every one (to a cap, or a run of rejections) inside the column, row and
-   * item bands. */
-  const VERIFY = { anchor: 12, cap: 400, patience: { champion: Infinity, item: Infinity } };
+   * every one to a cap inside the column, row and item bands. Real icons can
+   * rank past 200 in coarse order, so no early stop. */
+  const VERIFY = { anchor: 12, cap: 400 };
   /* Portrait sizes the anchor is sought at, on a frame no wider than the
    * page's 2200px working width; tried nearest this typical size first. */
   const PORTRAIT = { min: 24, max: 64, typical: 34 };
@@ -478,22 +480,15 @@ const ScoreboardVision = (() => {
 
   /**
    * Verified hits of `kind` at `size` within `region`, strongest first, no
-   * overlaps. Candidates are taken in coarse-score order and the search
-   * gives up after VERIFY.patience straight rejections: real icons sit near
-   * the top of that order and the tail is footage.
+   * overlaps. A band search takes the fine pyramid level; a whole-frame one
+   * the cheap level.
    */
-  function search(raster, refs, kind, size, region, levels, verifyCount) {
-    const candidates = coarseSearch(raster, refs, kind, size, region, levels, Boolean(region)).slice(0, verifyCount || VERIFY.cap);
+  function search(raster, refs, kind, size, region, levels, verifyCount = VERIFY.cap) {
+    const candidates = coarseSearch(raster, refs, kind, size, region, levels, Boolean(region)).slice(0, verifyCount);
     const hits = [];
-    let rejected = 0;
     for (const candidate of candidates) {
       const hit = verify(raster, candidate, refs, kind);
-      if (hit && hit.score >= MIN_SCORE[kind] && hit.gap >= MIN_GAP[kind]) {
-        hits.push(hit);
-        rejected = 0;
-      } else if ((rejected += 1) >= VERIFY.patience[kind]) {
-        break;
-      }
+      if (hit && hit.score >= MIN_SCORE[kind] && hit.gap >= MIN_GAP[kind]) hits.push(hit);
     }
     return suppress(hits.sort((a, b) => b.score - a.score));
   }
