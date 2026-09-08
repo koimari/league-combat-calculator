@@ -72,6 +72,7 @@ rather than monkeypatching a module attribute.
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -80,7 +81,7 @@ import tempfile
 import urllib.error
 import urllib.request
 from collections.abc import Callable, Iterable, Mapping
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -1392,6 +1393,21 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="check the source receipts only; skip the rebuild-and-diff half",
     )
+    wiki = commands.add_parser(
+        "wiki-refresh", help="refresh the source vault and query index"
+    )
+    wiki.add_argument(
+        "--scryglass-root", type=Path, default=os.environ.get("LCC_SCRYGLASS_ROOT")
+    )
+    wiki.add_argument(
+        "--wiki-db", type=Path, default=REPO_ROOT / "data/wiki/league-wiki.sqlite3"
+    )
+    wiki.add_argument("--seed-vault", type=Path, default=None)
+    wiki.add_argument("--axword-source", type=Path, default=None)
+    wiki.add_argument("--scheduled", action="store_true")
+    wiki.add_argument(
+        "--anchor-date", type=date.fromisoformat, default=date(2026, 9, 9)
+    )
     return parser
 
 
@@ -1404,6 +1420,34 @@ def main(argv: list[str] | None = None) -> int:
     ``packets`` print one JSON report so they compose with ``jq``.
     """
     args = _build_parser().parse_args(argv)
+
+    if args.command == "wiki-refresh":
+        from functools import partial
+        from scripts.wiki_refresh import refresh, run_audit, scheduled_refresh
+
+        if args.scryglass_root is None:
+            raise ValueError("Supply --scryglass-root or LCC_SCRYGLASS_ROOT")
+        action = partial(
+            refresh,
+            source_root=args.scryglass_root,
+            database=args.wiki_db,
+            seed_vault=args.seed_vault,
+            audit_report=run_audit,
+            packet_report=lambda **kwargs: reviewed_packet_report(
+                axword_source=args.axword_source, **kwargs
+            ),
+        )
+        report = (
+            scheduled_refresh(
+                anchor=args.anchor_date,
+                state_dir=args.wiki_db.parent / "wiki-schedule",
+                action=action,
+            )
+            if args.scheduled
+            else action()
+        )
+        print(json.dumps(report, indent=2))
+        return 1 if report.get("review_required") else 0
 
     if args.command == "run":
         return run_full(
