@@ -69,7 +69,8 @@ from .survival.actions import TransitionRank, public_phase
 # else, so a derivation edit that comes out byte-identical leaves it alone.
 # 8 is ``stat_surfaces``: the response publishes two stat blocks that answer
 # two different questions, and each now names which one it is.
-CAPABILITY_SCHEMA_VERSION = 8
+# 9 adds the ``scoreboard`` control family: the screenshot reader's dialog.
+CAPABILITY_SCHEMA_VERSION = 9
 
 # The two states a published stat block can report. Both are correct and
 # neither can replace the other: a loadout block is renderable before any
@@ -476,6 +477,14 @@ def _feature_fields() -> dict[str, dict[str, Any]]:
             payload_field="roster_membership",
             state_path="targets|allies",
             frontend_token="data-remove-target",
+        ),
+        # The scoreboard reader (static/js/scoreboard.js) fills the attacker
+        # and both rosters from a pasted screenshot through the shared-build
+        # loader; its dialog is the control the page mounts.
+        "scoreboard": _field(
+            payload_field="scoreboard",
+            state_path="attacker|targets|allies",
+            frontend_token='id="scoreboardDialog"',
         ),
     }
 

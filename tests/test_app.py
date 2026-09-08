@@ -1270,7 +1270,7 @@ def test_config_exposes_one_authoritative_capability_contract_for_every_particip
 
     assert response.status_code == 200
     contract = response.get_json()["capabilities"]
-    assert contract["schema_version"] == 8
+    assert contract["schema_version"] == 9
     assert set(contract["participants"]) == {"main", "enemy", "ally"}
     assert (
         contract["participants"]["enemy"]["fields"]["champion"]["state_path"]
