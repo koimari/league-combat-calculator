@@ -3,6 +3,7 @@
 import json
 import sqlite3
 import plistlib
+from types import SimpleNamespace
 from datetime import date
 from pathlib import Path
 
@@ -10,6 +11,7 @@ import pytest
 
 from scripts.wiki_refresh import refresh as refresh_source, scheduled_refresh
 from scripts.install_wiki_refresh import job
+from scripts.wiki_refresh import run_audit
 
 
 def refresh(**kwargs):
@@ -233,3 +235,18 @@ def test_launchd_command_round_trips_with_spaces(tmp_path):
         tmp_path / "a repo/scripts/patch_update.py"
     )
     assert "--scheduled" in value["ProgramArguments"]
+
+
+def test_audit_infrastructure_failure_is_distinct_from_review_drift(tmp_path):
+    candidate = tmp_path / "candidate.sqlite3"
+
+    def runner(_command, **kwargs):
+        assert kwargs["env"]["SCRYGLASS_LEAGUE_WIKI_DB"] == str(candidate)
+        return SimpleNamespace(
+            returncode=1,
+            stdout=json.dumps({"passed": False, "infrastructure": {"ok": False}}),
+            stderr="",
+        )
+
+    with pytest.raises(RuntimeError, match="could not read"):
+        run_audit(wiki_db=candidate, runner=runner)

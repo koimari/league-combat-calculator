@@ -84,11 +84,11 @@ def inspect_database(database: Path) -> dict:
         return meta
 
 
-def run_audit(*, wiki_db: Path) -> dict:
+def run_audit(*, wiki_db: Path, runner: Callable = subprocess.run) -> dict:
     """Run the full-entry audit against the candidate rich index."""
     repo = Path(__file__).resolve().parent.parent
     environment = {**os.environ, "SCRYGLASS_LEAGUE_WIKI_DB": str(wiki_db)}
-    result = subprocess.run(
+    result = runner(
         [
             sys.executable,
             str(repo / "scripts/full_entry_audit.py"),
@@ -107,6 +107,8 @@ def run_audit(*, wiki_db: Path) -> dict:
     report = json.loads(result.stdout)
     if "passed" not in report:
         raise ValueError("Full-entry audit returned no verdict")
+    if report.get("infrastructure", {}).get("ok") is False:
+        raise RuntimeError("Full-entry audit could not read its source index")
     return report
 
 
