@@ -1,0 +1,285 @@
+.calculator-standalone {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  --type-ui: "Atkinson Hyperlegible Next", sans-serif;
+  --type-display: "Instrument Serif", serif;
+  --type-data: "Atkinson Hyperlegible Mono", monospace;
+  --canvas: #eeeeea;
+  --surface: #fff;
+  --surface-subtle: #e2e2dc;
+  --ink: #080807;
+  --ink-muted: #3b3b37;
+  --ink-faint: #5f5f59;
+  --line: #b7b7af;
+  --signal-positive: #187267;
+  --danger: #a22a32;
+  color-scheme: light;
+}
+.calculator-shell-header {
+  height: 70px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 max(24px, calc((100vw - 1232px) / 2));
+  font-family: var(--type-ui);
+  gap: 20px;
+  background: var(--surface);
+}
+.calculator-shell-brand {
+  font-family: var(--type-display);
+  font-size: 29px;
+  color: var(--ink);
+  text-decoration: none;
+  letter-spacing: -0.03em;
+}
+.calculator-shell-nav {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  font-size: 12px;
+}
+.calculator-shell-nav a {
+  color: var(--ink);
+  text-underline-offset: 4px;
+}
+.calculator-shell-nav select {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 5px 7px;
+  border-radius: 4px;
+  font-family: inherit;
+}
+.calculator-shell-auth {
+  font-family: var(--type-ui);
+  font-size: 11px;
+  text-align: right;
+  padding: 8px 24px;
+}
+.calculator-shell-auth a {
+  color: inherit;
+}
+@media (max-width: 620px) {
+  .calculator-shell-header {
+    height: 60px;
+    padding: 0 16px;
+  }
+  .calculator-shell-brand {
+    font-size: 26px;
+  }
+  .calculator-shell-nav {
+    gap: 14px;
+  }
+  .calculator-shell-nav > a {
+    display: none;
+  }
+  .calculator-shell-auth {
+    font-size: 10px;
+    padding: 8px 16px;
+  }
+}
+
+.calculator-standalone[data-theme="midnight"] {
+  color-scheme: dark;
+  --type-ui: "Space Grotesk", sans-serif;
+  --type-display: "Space Grotesk", sans-serif;
+  --type-data: "Atkinson Hyperlegible Mono", monospace;
+  --canvas: #090d18;
+  --surface: #121a2b;
+  --surface-subtle: #1b263b;
+  --ink: #f4f7ff;
+  --ink-muted: #bdc8dc;
+  --ink-faint: #8e9bb2;
+  --line: #33415c;
+  --line-strong: #7181a0;
+  --accent: #a9c7ff;
+  --accent-ink: #a9c7ff;
+  --danger: #ff8792;
+  --signal-positive: #71d6bb;
+  --shadow-float: 0 1rem 3rem rgb(0 0 0 / 28%);
+}
+
+.calculator-standalone[data-theme="terminal"] {
+  color-scheme: dark;
+  --type-ui: "IBM Plex Mono", sans-serif;
+  --type-display: "IBM Plex Mono", sans-serif;
+  --type-data: "IBM Plex Mono", sans-serif;
+  --canvas: #071009;
+  --surface: #0c1910;
+  --surface-subtle: #12251a;
+  --ink: #c7ffd8;
+  --ink-muted: #8dcc9f;
+  --ink-faint: #6a9e78;
+  --line: #285a38;
+  --line-strong: #65a978;
+  --accent: #a7ffc2;
+  --accent-ink: #a7ffc2;
+  --danger: #ff8b84;
+  --signal-positive: #7dff9e;
+  --radius-sm: 0.18rem;
+  --radius-md: 0.28rem;
+  --radius-lg: 0.4rem;
+}
+
+.calculator-standalone[data-theme="amber"] {
+  color-scheme: light;
+  --type-ui: "Lora", serif;
+  --type-display: "Lora", serif;
+  --type-data: "Atkinson Hyperlegible Mono", monospace;
+  --canvas: #f4e8cf;
+  --surface: #fff8e8;
+  --surface-subtle: #ead8b5;
+  --ink: #2a1c0d;
+  --ink-muted: #675039;
+  --ink-faint: #8d7457;
+  --line: #c6a978;
+  --line-strong: #75552b;
+  --accent: #a64d11;
+  --accent-ink: #8f3d0a;
+  --danger: #b3302f;
+  --signal-positive: #28735a;
+  --radius-sm: 0.35rem;
+  --radius-md: 0.55rem;
+  --radius-lg: 0.7rem;
+}
+
+.calculator-standalone[data-theme="groovebox"] {
+  color-scheme: dark;
+  --type-ui: "Syne", sans-serif;
+  --type-display: "Syne", sans-serif;
+  --type-data: "Syne", sans-serif;
+  --canvas: #15100f;
+  --surface: #241a18;
+  --surface-subtle: #33231f;
+  --ink: #f9ead2;
+  --ink-muted: #d2bda0;
+  --ink-faint: #a48d72;
+  --line: #62483e;
+  --line-strong: #b28d6e;
+  --accent: #ff8a3d;
+  --accent-ink: #ff9d5e;
+  --danger: #ff6674;
+  --signal-positive: #9bd767;
+  --radius-sm: 0.7rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.35rem;
+}
+
+.calculator-standalone[data-theme="cobalt"] {
+  color-scheme: light;
+  --type-ui: "Manrope", sans-serif;
+  --type-display: "Manrope", sans-serif;
+  --type-data: "Atkinson Hyperlegible Mono", monospace;
+  --canvas: #edf3ff;
+  --surface: #ffffff;
+  --surface-subtle: #dce7ff;
+  --ink: #0a1b3d;
+  --ink-muted: #405579;
+  --ink-faint: #6c7e9d;
+  --line: #a9bce0;
+  --line-strong: #45659e;
+  --accent: #2458e6;
+  --accent-ink: #1947c8;
+  --danger: #c52d55;
+  --signal-positive: #047667;
+}
+
+.calculator-standalone[data-theme="rosewater"] {
+  color-scheme: light;
+  --type-ui: "DM Sans", sans-serif;
+  --type-display: "DM Sans", sans-serif;
+  --type-data: "Atkinson Hyperlegible Mono", monospace;
+  --canvas: #fff0f1;
+  --surface: #fffafa;
+  --surface-subtle: #f4dfe2;
+  --ink: #331c23;
+  --ink-muted: #72525c;
+  --ink-faint: #9a747e;
+  --line: #d9b5be;
+  --line-strong: #8c5f6c;
+  --accent: #9e4762;
+  --accent-ink: #8c3653;
+  --danger: #b62443;
+  --signal-positive: #247361;
+  --radius-sm: 0.8rem;
+  --radius-md: 1.1rem;
+  --radius-lg: 1.45rem;
+}
+
+.calculator-standalone[data-theme="moss"] {
+  color-scheme: dark;
+  --type-ui: "Newsreader", serif;
+  --type-display: "Newsreader", serif;
+  --type-data: "Atkinson Hyperlegible Mono", monospace;
+  --canvas: #10150f;
+  --surface: #1a2118;
+  --surface-subtle: #263022;
+  --ink: #edf0df;
+  --ink-muted: #c1c7ad;
+  --ink-faint: #919b80;
+  --line: #46523d;
+  --line-strong: #849274;
+  --accent: #c7d87d;
+  --accent-ink: #d4e990;
+  --danger: #ff8b7b;
+  --signal-positive: #91d6a1;
+}
+
+.calculator-standalone[data-theme="ultraviolet"] {
+  color-scheme: dark;
+  --type-ui: "Sora", sans-serif;
+  --type-display: "Sora", sans-serif;
+  --type-data: "Atkinson Hyperlegible Mono", monospace;
+  --canvas: #10091d;
+  --surface: #1c1230;
+  --surface-subtle: #2a1b45;
+  --ink: #f5efff;
+  --ink-muted: #cdbce3;
+  --ink-faint: #9c88b8;
+  --line: #503a70;
+  --line-strong: #9678bd;
+  --accent: #c49aff;
+  --accent-ink: #d4b5ff;
+  --danger: #ff7f9e;
+  --signal-positive: #77dfc4;
+  --radius-sm: 0.65rem;
+  --radius-md: 0.9rem;
+  --radius-lg: 1.2rem;
+}
+
+.calculator-standalone[data-theme="monochrome"] {
+  color-scheme: light;
+  --type-ui: "IBM Plex Sans", sans-serif;
+  --type-display: "IBM Plex Sans", sans-serif;
+  --type-data: "IBM Plex Sans", sans-serif;
+  --canvas: #f3f3f3;
+  --surface: #ffffff;
+  --surface-subtle: #e2e2e2;
+  --ink: #000000;
+  --ink-muted: #444444;
+  --ink-faint: #707070;
+  --line: #b8b8b8;
+  --line-strong: #555555;
+  --accent: #000000;
+  --accent-ink: #000000;
+  --danger: #9d1f27;
+  --signal-positive: #126454;
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+}
+
+.calculator-shell-footer {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 24px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+.calculator-shell-footer a {
+  color: var(--ink-muted);
+}

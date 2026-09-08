@@ -1,0 +1,28 @@
+{
+  "name": "@scryglass/combat-calculator",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/Calculator.tsx",
+    "./styles.css": "./src/calculator.css"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test src/api.test.ts src/shop.test.ts",
+    "format": "prettier --write src build.mjs package.json tsconfig.json"
+  },
+  "dependencies": {
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "esbuild": "0.25.12",
+    "typescript": "6.0.3",
+    "@types/node": "26.0.0",
+    "prettier": "3.6.2"
+  }
+}

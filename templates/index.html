@@ -9,6 +9,11 @@
   <link rel="icon" href="/static/img/summoners-rift-bg.png" type="image/png" />
   <link rel="preconnect" href="https://ddragon.leagueoflegends.com" />
   <link rel="stylesheet" href="/static/css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;500&family=Atkinson+Hyperlegible+Next:wght@400;500;600&family=Instrument+Serif&family=Space+Grotesk:wght@400;500&family=IBM+Plex+Mono:wght@400;500&family=Lora:wght@400;500&family=Syne:wght@400;500&family=Manrope:wght@400;500&family=DM+Sans:wght@400;500&family=Newsreader:wght@400;500&family=Sora:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='calculator/calculator.css') }}">
+  <link rel="stylesheet" href="/static/css/scryglass-theme.css">
   <style>
     /* P1a first-run onboarding overlay.
        Self-contained styles so the shared stylesheet stays untouched: the JS
@@ -113,7 +118,12 @@
     }
   </style>
 </head>
-<body>
+<body class="calculator-standalone calculator-advanced" data-theme="paper">
+  <header class="calculator-shell-header">
+    <a class="calculator-shell-brand" href="/">Scryglass</a>
+    <nav class="calculator-shell-nav" aria-label="Calculator navigation"><a href="https://scryglass.xyz">Research ↗</a><a href="/">Build comparison</a><label><span class="calculator-sr-only">Theme</span><select id="calculator-theme" aria-label="Theme"><option value="paper">Paper</option><option value="midnight">Midnight</option><option value="terminal">Terminal</option><option value="amber">Amber</option><option value="groovebox">Groovebox</option><option value="cobalt">Cobalt</option><option value="rosewater">Rosewater</option><option value="moss">Moss</option><option value="ultraviolet">Ultraviolet</option><option value="monochrome">Monochrome</option></select></label></nav>
+  </header>
+
   <div class="map-wash" aria-hidden="true"></div>
   <h1 class="visually-hidden">Scryglass — item calculator</h1>
 
@@ -588,5 +598,6 @@
   <script src="/static/js/eventorder.js"></script>
   <script src="/static/js/staleness.js"></script>
   <script src="/static/js/feedback.js"></script>
+  <script type="module" src="/static/calculator/calculator.js"></script>
 </body>
 </html>

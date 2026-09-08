@@ -336,7 +336,10 @@ def test_every_interactive_control_id_maps_to_a_declared_capability():
         for tag in soup.find_all(["button", "select", "input", "dialog", "textarea"])
         if tag.get("id")
     }
-    unknown = found - set(CONTROL_IDS)
+    # Theme selection changes presentation and has no calculation capability.
+    theme = soup.select_one("#calculator-theme")
+    assert theme is not None and theme.get("aria-label") == "Theme"
+    unknown = found - set(CONTROL_IDS) - {"calculator-theme"}
     assert not unknown, f"unmapped control id(s): {sorted(unknown)}"
     for control_id, (kind, field) in CONTROL_IDS.items():
         assert control_id in FRONTEND, control_id
@@ -501,7 +504,8 @@ def test_every_gated_control_family_is_declared_and_mounted(tmp_path):
     whose controls are in the served document when the pass runs."""
     contract = _contract()
     soup = BeautifulSoup(
-        app_module.app.test_client().get("/").get_data(as_text=True), "html.parser"
+        app_module.app.test_client().get("/advanced").get_data(as_text=True),
+        "html.parser",
     )
     for name, gate in _control_gates(contract, tmp_path)["gates"].items():
         assert name in contract["controls"]["fields"], name

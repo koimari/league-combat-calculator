@@ -13,12 +13,26 @@ concurrency:
   group: tests-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# The three jobs are independent and run in parallel; wall time is the
-# slowest job, not the sum.  `test` owns behavior (pytest, golden gate,
-# acceptance matrices), `static` owns code quality and dependency/security
-# scanning, `container` owns the production image.
+# Jobs run independently. The shared UI gate checks the committed browser assets.
 
 jobs:
+  shared-ui:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: node build.mjs --check
+
   test:
     runs-on: ubuntu-latest
 

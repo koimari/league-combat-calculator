@@ -1,0 +1,79 @@
+/* Adapt the advanced controls to the shared Scryglass theme tokens. */
+body.calculator-advanced {
+  --page-wash: var(--canvas);
+  --paper: var(--surface);
+  --paper-tint: var(--surface-subtle);
+  --paper-panel: var(--surface);
+  --paper-tint-panel: var(--surface-subtle);
+  --spine-green: var(--surface-subtle);
+  --spine-hatch: var(--line);
+  --spine-panel: var(--surface-subtle);
+  --rail: var(--surface);
+  --rail-active: var(--surface-subtle);
+  --rail-card: var(--surface);
+  --rail-chip: var(--surface-subtle);
+  --rail-panel: var(--surface);
+  --rail-active-panel: var(--surface-subtle);
+  --rail-card-panel: var(--surface);
+  --rail-chip-panel: var(--surface-subtle);
+  --band: var(--ink);
+  --hatch-a: var(--ink);
+  --hatch-b: var(--ink-muted);
+  --ink-soft: var(--ink-muted);
+  --cream: var(--ink);
+  --cream-78: var(--ink);
+  --cream-70: var(--ink-muted);
+  --cream-62: var(--ink-muted);
+  --win: var(--signal-positive);
+  --win-dark: var(--signal-positive);
+  --lose: var(--danger);
+  --lose-dark: var(--danger);
+  --line-1: var(--line);
+  --line-2: var(--line);
+  --line-3: var(--line);
+  --line-4: var(--line);
+  --line-5: var(--line);
+  --dline-1: var(--line);
+  --dline-2: var(--line);
+  --dline-3: var(--line);
+  --font: var(--type-ui);
+  --mono: var(--type-data);
+  --radius: 6px;
+  --card-shadow: none;
+  padding: 0;
+  font-weight: 400;
+  font-family: var(--type-ui);
+}
+.calculator-advanced .map-wash { display: none; }
+.calculator-advanced .app-card { margin: 28px auto; width: calc(100% - 48px); max-width: 1440px; }
+.calculator-advanced .rail {
+  --cream: var(--ink);
+  --cream-78: var(--ink);
+  --cream-70: var(--ink-muted);
+  --cream-62: var(--ink-muted);
+}
+.calculator-advanced .app-card,
+.calculator-advanced .rail,
+.calculator-advanced .onboarding-overlay {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.calculator-advanced .brand-word { font: 400 25px var(--type-display); }
+.calculator-advanced .rail-primary { background: var(--ink); color: var(--surface); }
+.calculator-advanced .step.is-open { background: var(--surface-subtle); }
+.calculator-advanced input,
+.calculator-advanced select { font-family: var(--type-ui); }
+@media (max-width: 640px) {
+  .calculator-advanced .app-card { width: calc(100% - 24px); margin: 16px auto; }
+}
+
+.calculator-advanced .verdict,
+.calculator-advanced .wiki-popover,
+.calculator-advanced .site-footer,
+.calculator-advanced .buy-band {
+  --cream: var(--surface);
+  --cream-78: var(--surface);
+  --cream-70: var(--surface);
+  --cream-62: var(--surface);
+}
+html:has(body.calculator-advanced) { background: var(--canvas, #eeeeea); }

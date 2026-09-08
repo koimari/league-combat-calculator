@@ -90,6 +90,22 @@ None of this changes which builds are evaluated or how they score: cache-vs-no-c
 
 ## Public boundary
 
+`ui/src/Calculator.tsx` owns the shared build-comparison interface. Its transport
+accepts an API prefix, so the standalone Flask page and Scryglass's native
+`/calculator` page use the same controls and response presentation. The standalone
+bundle is built with `cd ui && npm ci && npm run build`. Scryglass imports the
+reviewed source through `scripts/sync-calculator-ui.mjs`; its receipt binds each
+shared file to a calculator commit. Changes to the shared interface start here.
+
+The Scryglass server checks membership before its calculator proxy forwards an
+allowlisted request. `src/service_auth.py` restricts the server credential to
+catalog reads and calculation requests. The credential stays on the servers.
+The Python pipeline remains the owner of all calculated numbers.
+
+The standalone `/` route mounts the shared interface. `/advanced` retains the
+complete roster workspace and its event inspectors. Existing `?share=` links
+still open that workspace.
+
 `app.py` is the HTTP adapter: it decodes JSON, applies cache/rate policy, delegates, translates typed failures, and serializes stable JSON. `request_parsing.py` owns the public scalar/list coercion policy; `calculate.py` owns the pure calculate payload, its comparison-curve orchestration, and the one-request deterministic Build A/Build B boundary (`compare_payload`); `bis.py` owns candidate construction, scoring, ranking, receipts, and the batch payload; `certainty.py` and `validation_receipts.py` own trust and observed-result classification. Validation receipts call `calculate_payload()` directly, never round-trip through a Flask `Response` (issue #158).
 
 `capabilities.py` publishes the mounted control contract — every loadout, scenario, feature and catalog field the browser may render, each with a stable `frontend_token` — so a control is rendered only when the backend can consume its value, or disabled with an honest reason. `CAPABILITY_SCHEMA_VERSION` moves whenever a published shape does.

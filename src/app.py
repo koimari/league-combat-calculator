@@ -68,7 +68,7 @@ from src.calculator.champions import (
     get_champion_module_meta,
     registered_champion_names,
 )
-from src.calculator.data_fetcher import fetch_champion_data
+from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.item_coverage import (
     ATTACKER_LANES,
     item_model_coverage,
@@ -79,6 +79,7 @@ from src.calculator.item_effects import (
     refresh_item_effects,
     stat_conversion_metadata,
 )
+from src.calculator.item_source import effect_entries, effect_text
 from src.calculator.loadout_rules import exclusivity_groups, validate_resolved_loadout
 from src.calculator.optimizer import (
     get_eligible_boots,
@@ -843,7 +844,19 @@ def riot_disclaimer() -> str:
 
 @app.route("/")
 def index() -> str:
-    """Serve the main calculator page."""
+    """Serve the shared Scryglass calculator interface."""
+    if request.args.get("share"):
+        return advanced_calculator()
+    session = _current_session()
+    return render_template(
+        "calculator.html",
+        auth_user=session.get("username") if session else None,
+    )
+
+
+@app.route("/advanced")
+def advanced_calculator() -> str:
+    """Serve the complete roster and event inspection workspace."""
     session = _current_session()
     return render_template(
         "index.html",
@@ -1065,6 +1078,45 @@ def api_champions() -> Response:
     return jsonify(result)
 
 
+def _item_shop_fields(
+    item: Mapping[str, Any],
+    sources: Mapping[str, Any],
+    catalog_ids: set[int],
+) -> dict[str, Any]:
+    """Expose source ranks and recipe edges without changing selection policy."""
+
+    def relations(key: str) -> list[dict[str, Any]]:
+        result = []
+        for item_id in item.get(key, []):
+            source = sources.get(str(item_id))
+            result.append(
+                {
+                    "id": item_id,
+                    "name": source["name"] if source else None,
+                    "icon": _https_icon(source["icon"]) if source else None,
+                    "price": item_gold(source) if source else None,
+                    "catalog_available": item_id in catalog_ids,
+                }
+            )
+        return result
+
+    return {
+        "rank": item.get("rank"),
+        "shop_tags": item.get("shop", {}).get("tags", []),
+        "effects": [
+            {
+                "kind": kind,
+                "name": entry.get("name"),
+                "text": effect_text(entry),
+                "text_format": "wikitext",
+            }
+            for kind, entry in effect_entries(item)
+        ],
+        "builds_from": relations("buildsFrom"),
+        "builds_into": relations("buildsInto"),
+    }
+
+
 def _item_picker_stat_fields(item: Mapping[str, Any]) -> dict[str, Any]:
     """Every number the item picker and hover card display, from the typed
     stats accessor and the sourced shop price — never a literal fallback on
@@ -1105,6 +1157,9 @@ def _item_picker_stat_fields(item: Mapping[str, Any]) -> dict[str, Any]:
 @app.route("/api/items")
 def api_items() -> Response:
     """Return ordinary build items for manual attacker/roster loadouts."""
+    selectable = get_selectable_items()
+    catalog_ids = {item["id"] for item in [*selectable, *get_eligible_boots(tier=None)]}
+    sources = fetch_item_data()
     result = sorted(
         [
             {
@@ -1112,6 +1167,7 @@ def api_items() -> Response:
                 "name": item["name"],
                 "icon": _https_icon(item.get("icon", "")),
                 **_item_picker_stat_fields(item),
+                **_item_shop_fields(item, sources, catalog_ids),
                 "tier": item["tier"],
                 "support_quest_stage": support_quest_item_stage(item.get("name")),
                 "model_coverage": item_model_coverage(
@@ -1119,7 +1175,7 @@ def api_items() -> Response:
                 ).as_payload(),
                 "target_model_coverage": target_item_model_coverage(item),
             }
-            for item in get_selectable_items()
+            for item in selectable
         ],
         key=lambda i: i["name"],
     )
@@ -1129,6 +1185,9 @@ def api_items() -> Response:
 @app.route("/api/boots")
 def api_boots() -> Response:
     """Return tier-2 and quest-only tier-3 boots for the role-aware picker."""
+    boots = get_eligible_boots(tier=None)
+    catalog_ids = {item["id"] for item in [*get_selectable_items(), *boots]}
+    sources = fetch_item_data()
     upgrade_pairs = boot_upgrade_contract()
     upgrade_from = {pair["upgraded"]: pair["base"] for pair in upgrade_pairs.values()}
     result = sorted(
@@ -1138,6 +1197,7 @@ def api_boots() -> Response:
                 "name": item["name"],
                 "icon": _https_icon(item.get("icon", "")),
                 **_item_picker_stat_fields(item),
+                **_item_shop_fields(item, sources, catalog_ids),
                 "tier": item["tier"],
                 "upgrade_from": upgrade_from.get(item.get("name")),
                 "upgrade_to": next(
@@ -1153,7 +1213,7 @@ def api_boots() -> Response:
                 ).as_payload(),
                 "target_model_coverage": target_item_model_coverage(item),
             }
-            for item in get_eligible_boots(tier=None)
+            for item in boots
         ],
         key=lambda i: i["name"],
     )

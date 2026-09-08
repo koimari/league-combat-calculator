@@ -26,6 +26,25 @@ pip install -r requirements.txt
 python -m flask --app src.app run
 ```
 
+The home page compares item builds with the Scryglass interface. Open `/advanced`
+for the full roster controls and event inspectors. Existing shared links open
+that workspace.
+
+The shared React source is in `ui/src`. Node.js 24 is required when editing it:
+
+```bash
+cd ui
+npm ci
+npm run typecheck
+npm test
+npm run build
+node build.mjs --check
+```
+
+Commit the generated `static/calculator` assets with their source changes. The
+Scryglass site imports the same source with a commit and file-hash receipt. See
+[the service connection](docs/calculator-service.md) for server configuration.
+
 ## Verify
 
 ```bash

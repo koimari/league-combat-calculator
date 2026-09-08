@@ -107,7 +107,7 @@ def test_index_renders_the_analyst_view_surface():
     """Product decision 2026-08-06: the analyst view IS the app. Quick mode is
     hidden, the view-switch tab bar is gone, and the analyst builder is the
     visible landing."""
-    page = _client().get("/").get_data(as_text=True)
+    page = _client().get("/advanced").get_data(as_text=True)
     soup = BeautifulSoup(page, "html.parser")
 
     assert soup.select(".view-tab") == []  # no Quick/Analyst tabs
@@ -127,7 +127,7 @@ def test_index_renders_the_analyst_view_surface():
 def test_analyst_view_is_touch_first_and_has_no_hover_dependency():
     """The analyst builder's controls are real <button>/<input> elements, never
     hover-revealed (mobile-safe)."""
-    page = _client().get("/").get_data(as_text=True)
+    page = _client().get("/advanced").get_data(as_text=True)
     soup = BeautifulSoup(page, "html.parser")
     picker = soup.select_one("#championPicker")
     assert picker is not None
@@ -387,7 +387,7 @@ def test_breakdown_rows_carry_slot_keys_for_certainty_chips():
 def test_trust_panels_render_not_modeled_list():
     source = APP_JS.read_text(encoding="utf-8")
     assert 'document.getElementById("notModeledList")' in source
-    page = _client().get("/").get_data(as_text=True)
+    page = _client().get("/advanced").get_data(as_text=True)
     assert 'id="notModeledList"' in page
 
 
