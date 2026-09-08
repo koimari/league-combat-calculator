@@ -28,7 +28,7 @@ dependencies = [
   "SQLAlchemy==2.0.52",
   "psycopg==3.3.4",
   "redis==8.1.0",
-  "sentry-sdk==2.68.0",
+  "sentry-sdk==2.68.1",
 ]
 
 [tool.black]
