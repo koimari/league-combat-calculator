@@ -32084,6 +32084,7 @@
           "control_events": [
             "ControlEvent('stun', duration=1.5, time_offset=0.0, scope=one_target)"
           ],
+          "control_scope": "<ControlScope.ONE_TARGET: 'one_target'>",
           "control_source_atoms": [
             {
               "atom_id": "timing.control_duration",
@@ -53205,18 +53206,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60271,
+      "leaves": 60272,
       "numeric_leaves": 46189,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "852f587df33ffcae4392baebf79491b14fb4c643",
+    "git_head": "5f070400eb159ee07d477e5533e4c5619b531f24",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "b2121584c041ba4a3bbdf07f3c2afc82abb74317"
+    "src_tree_sha": "0790474065a9faf97897e05fbc2f4ae1b925e86b"
   },
   "registered_champion_fights": {
     "Aatrox": {
