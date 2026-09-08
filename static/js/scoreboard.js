@@ -59,8 +59,19 @@ const ScoreboardVision = (() => {
   const PEAK_FLOOR = 0.3;
   const THUMB_GATE = 0.55;
   const MIN_CONTRAST = 24;
-  /* Portraits on broadcast panels are often a zoomed crop of the square icon. */
-  const CHAMPION_CROPS = [1, 0.85];
+  /* How a panel draws a portrait, as crops of the square icon, each a share
+   * of the cell lifted up by a share of the cell. LCK draws the icon itself,
+   * at most slightly zoomed. Riot's LEC and LCS package draws a level badge
+   * over art that is the icon for some champions and a tight face crop for
+   * others, so its pool holds both. The styles are tried in this order and
+   * a read settles on the first that yields MIN_PLAYERS portraits, since the
+   * wider pool also shrinks the runner-up margins the icon style enjoys. */
+  const ICON_CROPS = [{ crop: 1, lift: 0 }, { crop: 0.85, lift: 0 }];
+  const PORTRAIT_STYLES = {
+    icon: ICON_CROPS,
+    badge: [...ICON_CROPS, { crop: 0.65, lift: 0.1 }, { crop: 0.5, lift: 0.15 }],
+  };
+  const MIN_PLAYERS = 8;
   const SIZE_RATIO = 1.15;
   /* Coarse candidates verified per search: a few per size for the anchor,
    * every one to a cap inside the column, row and item bands. Real icons can
@@ -183,20 +194,23 @@ const ScoreboardVision = (() => {
 
   /**
    * Fingerprint every sprite cell. `index` is static/icon-sprite.json and
-   * `sheet` the decoded sprite. Champion cells also get a center-cropped
-   * variant; variants share a key and the classifier scores a key by its
-   * best variant. Per kind, the 4x4 and 8x8 fingerprints are projected onto
-   * their own principal axes, which is what makes scoring a cell against
-   * every reference cheap enough to do thousands of times per read.
+   * `sheet` the decoded sprite. Champion cells are cropped once per variant
+   * of each portrait style; variants share a key and the classifier scores
+   * a key by its best variant. Per pool (a portrait style, or the items),
+   * the 4x4 and 8x8 fingerprints are projected onto their own principal
+   * axes, which is what makes scoring a cell against every reference cheap
+   * enough to do thousands of times per read.
    */
   function buildReferences(sheet, index) {
     const cell = index.cell;
     const entries = [];
-    for (const [name, number] of Object.entries(index.champions)) {
-      CHAMPION_CROPS.forEach((crop) => entries.push({ kind: "champion", key: name, number, crop }));
+    for (const [style, crops] of Object.entries(PORTRAIT_STYLES)) {
+      for (const [name, number] of Object.entries(index.champions)) {
+        crops.forEach(({ crop, lift }) => entries.push({ kind: "champion", pool: `champion:${style}`, key: name, number, crop, lift }));
+      }
     }
     for (const [id, number] of Object.entries(index.items)) {
-      entries.push({ kind: "item", key: id, number, crop: 1 });
+      entries.push({ kind: "item", pool: "item", key: id, number, crop: 1, lift: 0 });
     }
     const thumbLen = THUMB * THUMB * 3;
     const coarseLen = COARSE * COARSE * 3;
@@ -207,7 +221,7 @@ const ScoreboardVision = (() => {
     entries.forEach((entry, i) => {
       const inset = Math.round((cell * (1 - entry.crop)) / 2);
       const x = (entry.number % index.columns) * cell + inset;
-      const y = Math.floor(entry.number / index.columns) * cell + inset;
+      const y = Math.floor(entry.number / index.columns) * cell + inset - Math.round(cell * entry.lift);
       fingerprint(sheet, x, y, cell - 2 * inset, THUMB, thumb.subarray(i * thumbLen, (i + 1) * thumbLen));
       fingerprint(sheet, x, y, cell - 2 * inset, COARSE, coarse.subarray(i * coarseLen, (i + 1) * coarseLen));
       fingerprint(sheet, x, y, cell - 2 * inset, FINE, fine.subarray(i * fineLen, (i + 1) * fineLen));
@@ -222,27 +236,30 @@ const ScoreboardVision = (() => {
       }
       return { axes, projected };
     };
-    const kinds = {};
-    for (const kind of ["champion", "item"]) {
-      const indices = entries.map((e, i) => (e.kind === kind ? i : -1)).filter((i) => i >= 0);
-      kinds[kind] = {
+    const pools = {};
+    for (const pool of new Set(entries.map((e) => e.pool))) {
+      const indices = entries.map((e, i) => (e.pool === pool ? i : -1)).filter((i) => i >= 0);
+      pools[pool] = {
         indices,
         thumb: projection(indices, thumb, thumbLen, THUMB_DIMS),
         coarse: projection(indices, coarse, coarseLen, COARSE_DIMS),
       };
     }
-    return { entries, fine, fineLen, coarseLen, thumbLen, kinds };
+    return { entries, fine, fineLen, coarseLen, thumbLen, pools };
   }
 
+  /** The kind a pool holds: `champion:icon` and `champion:badge` are both champions. */
+  const kindOf = (pool) => pool.split(":")[0];
+
   /**
-   * Best key of `kind` for one cell: shortlist by the projected 8x8
+   * Best key in `pool` for one cell: shortlist by the projected 8x8
    * correlation, decide by the exact 24x24 one. `gap` is the margin over the
    * best *different* key, the confidence the review sheet flags on;
    * `contrast` is the cell's RMS deviation, which is what tells a blank slot
    * from a dark icon.
    */
-  function classify(raster, x, y, size, refs, kind) {
-    const { indices, coarse } = refs.kinds[kind];
+  function classify(raster, x, y, size, refs, pool) {
+    const { indices, coarse } = refs.pools[pool];
     const coarseVec = new Float32Array(refs.coarseLen);
     fingerprint(raster, x, y, size, COARSE, coarseVec);
     const proj = new Float32Array(COARSE_DIMS);
@@ -272,7 +289,7 @@ const ScoreboardVision = (() => {
       const entry = refs.entries[i];
       if (!best || score > best.score) {
         if (best && best.key !== entry.key) second = Math.max(second, best.score);
-        best = { kind, key: entry.key, score, gap: 0, contrast, x, y, size };
+        best = { kind: entry.kind, key: entry.key, score, gap: 0, contrast, x, y, size };
       } else if (entry.key !== best.key) {
         second = Math.max(second, score);
       }
@@ -284,10 +301,10 @@ const ScoreboardVision = (() => {
     return best;
   }
 
-  /** The best projected 4x4 correlation of a normalized thumbnail against every icon of `kind`. */
-  function bestThumb(vec, proj, refs, kind) {
-    const { axes, projected } = refs.kinds[kind].thumb;
-    const count = refs.kinds[kind].indices.length;
+  /** The best projected 4x4 correlation of a normalized thumbnail against every icon in `pool`. */
+  function bestThumb(vec, proj, refs, pool) {
+    const { axes, projected } = refs.pools[pool].thumb;
+    const count = refs.pools[pool].indices.length;
     for (let c = 0; c < THUMB_DIMS; c += 1) proj[c] = dot(vec, 0, axes, c * refs.thumbLen, refs.thumbLen);
     let best = -1;
     for (let r = 0; r < count; r += 1) {
@@ -297,10 +314,10 @@ const ScoreboardVision = (() => {
     return best;
   }
 
-  /** The projected 4x4 score of one full-resolution cell against every icon of `kind`. */
-  function thumbScore(raster, refs, kind, x, y, size, vec, proj) {
+  /** The projected 4x4 score of one full-resolution cell against every icon in `pool`. */
+  function thumbScore(raster, refs, pool, x, y, size, vec, proj) {
     fingerprint(raster, x, y, size, THUMB, vec);
-    return bestThumb(vec, proj, refs, kind);
+    return bestThumb(vec, proj, refs, pool);
   }
 
   /**
@@ -314,7 +331,8 @@ const ScoreboardVision = (() => {
    * neighbour. The survivor is polished by 1px steps and at most one size
    * step either way, re-classifying so the key may change as it settles.
    */
-  function verify(raster, candidate, refs, kind, anchored = false) {
+  function verify(raster, candidate, refs, pool, anchored = false) {
+    const kind = kindOf(pool);
     const inside = (x, y, size) => x >= 0 && y >= 0 && x + size <= raster.width && y + size <= raster.height;
     if (!inside(candidate.x, candidate.y, candidate.size)) return null;
     let best = null;
@@ -323,7 +341,7 @@ const ScoreboardVision = (() => {
         for (const dy of [-2, 0, 2]) {
           for (const dx of [-2, 0, 2]) {
             const hit = inside(candidate.x + dx, candidate.y + dy, size)
-              ? classify(raster, candidate.x + dx, candidate.y + dy, size, refs, kind)
+              ? classify(raster, candidate.x + dx, candidate.y + dy, size, refs, pool)
               : null;
             if (hit && (!best || hit.score > best.score)) best = hit;
           }
@@ -338,13 +356,13 @@ const ScoreboardVision = (() => {
         for (let dx = -reach; dx <= reach; dx += 2) {
           const x = candidate.x + dx;
           const y = candidate.y + dy;
-          if (inside(x, y, candidate.size)) spots.push({ x, y, score: thumbScore(raster, refs, kind, x, y, candidate.size, vec, proj) });
+          if (inside(x, y, candidate.size)) spots.push({ x, y, score: thumbScore(raster, refs, pool, x, y, candidate.size, vec, proj) });
         }
       }
       spots.sort((a, b) => b.score - a.score);
       if (!spots.length || spots[0].score < THUMB_GATE) return null;
       for (const spot of spots.slice(0, 2)) {
-        const hit = classify(raster, spot.x, spot.y, candidate.size, refs, kind);
+        const hit = classify(raster, spot.x, spot.y, candidate.size, refs, pool);
         if (hit && (!best || hit.score > best.score)) best = hit;
       }
     }
@@ -358,7 +376,7 @@ const ScoreboardVision = (() => {
         const y = best.y + dy;
         const size = best.size + ds;
         if (!inside(x, y, size) || size < smallest || size > largest) continue;
-        const hit = classify(raster, x, y, size, refs, kind);
+        const hit = classify(raster, x, y, size, refs, pool);
         if (hit && hit.score > best.score) {
           best = hit;
           moved = true;
@@ -418,7 +436,7 @@ const ScoreboardVision = (() => {
   }
 
   /**
-   * Where icons of `kind` at about `size` px could be inside `region`
+   * Where icons of `pool` at about `size` px could be inside `region`
    * ({x0, y0, x1, y1}, full-resolution, whole raster when null): every
    * position of a pyramid level, scored by its projected 4x4 thumbnail
    * against every reference, kept when it beats its 3x3 neighbours,
@@ -427,7 +445,7 @@ const ScoreboardVision = (() => {
    * an eighth of the icon instead of a quarter; a whole-frame search takes
    * the cheap level, a band search the fine one. `levels` memoizes per level.
    */
-  function coarseSearch(raster, refs, kind, size, region, levels, fine = false) {
+  function coarseSearch(raster, refs, pool, size, region, levels, fine = false) {
     const block = fine ? 2 : 1;
     const factor = size / (THUMB * block);
     const key = `${size}:${block}`;
@@ -464,7 +482,7 @@ const ScoreboardVision = (() => {
           }
         }
         normalize(vec);
-        scores[i * width + j] = bestThumb(vec, proj, refs, kind);
+        scores[i * width + j] = bestThumb(vec, proj, refs, pool);
       }
     }
     const found = [];
@@ -502,15 +520,16 @@ const ScoreboardVision = (() => {
   }
 
   /**
-   * Verified hits of `kind` at `size` within `region`, strongest first, no
+   * Verified hits from `pool` at `size` within `region`, strongest first, no
    * overlaps. A band search takes the fine pyramid level; a whole-frame one
    * the cheap level.
    */
-  function search(raster, refs, kind, size, region, levels, verifyCount = VERIFY.cap) {
-    const candidates = coarseSearch(raster, refs, kind, size, region, levels, Boolean(region)).slice(0, verifyCount);
+  function search(raster, refs, pool, size, region, levels, verifyCount = VERIFY.cap) {
+    const kind = kindOf(pool);
+    const candidates = coarseSearch(raster, refs, pool, size, region, levels, Boolean(region)).slice(0, verifyCount);
     const hits = [];
     for (const candidate of candidates) {
-      const hit = verify(raster, candidate, refs, kind);
+      const hit = verify(raster, candidate, refs, pool);
       if (hit && hit.score >= MIN_SCORE[kind] && hit.gap >= MIN_GAP[kind]) hits.push(hit);
     }
     return suppress(hits.sort((a, b) => b.score - a.score));
@@ -532,17 +551,17 @@ const ScoreboardVision = (() => {
    * is re-verified one size step either way, since everything downstream
    * is searched at its size.
    */
-  function anchor(raster, refs, sizes, levels) {
+  function anchor(raster, refs, pool, sizes, levels) {
     let best = null;
     for (const size of [...sizes].sort((a, b) => Math.abs(a - PORTRAIT.typical) - Math.abs(b - PORTRAIT.typical))) {
-      for (const hit of search(raster, refs, "champion", size, null, levels, VERIFY.anchor)) {
+      for (const hit of search(raster, refs, pool, size, null, levels, VERIFY.anchor)) {
         if (!best || hit.score > best.score) best = hit;
       }
       if (best && best.score >= SURE_ANCHOR) break;
     }
     if (!best || best.score < MIN_SCORE.champion + ANCHOR_MARGIN) return null;
     for (const size of [Math.round(best.size / SIZE_RATIO), Math.round(best.size * SIZE_RATIO)]) {
-      const hit = verify(raster, { x: best.x, y: best.y, size, reach: 3 }, refs, "champion");
+      const hit = verify(raster, { x: best.x, y: best.y, size, reach: 3 }, refs, pool);
       if (hit && hit.score > best.score) best = hit;
     }
     return best;
@@ -554,21 +573,21 @@ const ScoreboardVision = (() => {
    * strongest teammate's row finds its opponent, and that opponent's column
    * holds the rest, so a stray match elsewhere on a row is never taken.
    */
-  function portraits(raster, refs, first, levels) {
+  function portraits(raster, refs, pool, first, levels) {
     const size = first.size;
     const column = { x0: first.x - size / 2, x1: first.x + size * 1.5, y0: 0, y1: raster.height };
-    const team = search(raster, refs, "champion", size, column, levels)
+    const team = search(raster, refs, pool, size, column, levels)
       .filter((hit) => Math.abs(hit.size - size) <= size * 0.2 && Math.abs(hit.x - first.x) <= size / 2);
     let opposing = [];
     for (const hit of team) {
       const row = { x0: 0, x1: raster.width, y0: centreY(hit) - size * 0.75, y1: centreY(hit) + size * 0.75 };
-      const mate = search(raster, refs, "champion", size, row, levels).find((m) => Math.abs(m.x - hit.x) >= size);
+      const mate = search(raster, refs, pool, size, row, levels).find((m) => Math.abs(m.x - hit.x) >= size);
       if (!mate) continue;
       const theirs = { x0: mate.x - size / 2, x1: mate.x + size * 1.5, y0: 0, y1: raster.height };
-      opposing = search(raster, refs, "champion", size, theirs, levels).filter((m) => Math.abs(m.x - mate.x) <= size / 2);
+      opposing = search(raster, refs, pool, size, theirs, levels).filter((m) => Math.abs(m.x - mate.x) <= size / 2);
       break;
     }
-    return fillColumns(raster, refs, suppress([...team, ...opposing].sort((a, b) => b.score - a.score)), size);
+    return fillColumns(raster, refs, pool, suppress([...team, ...opposing].sort((a, b) => b.score - a.score)), size);
   }
 
   /** The `width` consecutive entries of `filled` (hits or null) with the highest total score. */
@@ -597,7 +616,7 @@ const ScoreboardVision = (() => {
    * Every portrait leaves tagged with its `column`, left to right, which is
    * the team it belongs to.
    */
-  function fillColumns(raster, refs, found, size) {
+  function fillColumns(raster, refs, pool, found, size) {
     const columns = [];
     for (const hit of found) {
       const column = columns.find((c) => Math.abs(c.x - hit.x) <= size / 2);
@@ -620,7 +639,7 @@ const ScoreboardVision = (() => {
       for (let k = known[0] - MAX_ROWS + 1; k <= known[known.length - 1] + MAX_ROWS - 1; k += 1) {
         const y = Math.round(ys[0] + k * pitch - size / 2);
         if (y < 0 || y + size > raster.height) continue;
-        const hit = slot.get(k) || verify(raster, { x, y, size }, refs, "champion", true);
+        const hit = slot.get(k) || verify(raster, { x, y, size }, refs, pool, true);
         const kept = hit && hit.score >= MIN_SCORE.champion && hit.gap >= MIN_GAP.champion * GRID_GAP_SHARE;
         if (kept) hit.column = index;
         filled.push(kept ? hit : null);
@@ -694,9 +713,16 @@ const ScoreboardVision = (() => {
   function readScoreboard(raster, refs) {
     const levels = new Map();
     const portraitSizes = sizesBetween(PORTRAIT.min, Math.min(PORTRAIT.max, Math.floor(raster.height / 6)));
-    const first = anchor(raster, refs, portraitSizes, levels);
+    let first = null;
+    let champions = [];
+    for (const style of Object.keys(PORTRAIT_STYLES)) {
+      const pool = `champion:${style}`;
+      const found = anchor(raster, refs, pool, portraitSizes, levels);
+      const read = found ? portraits(raster, refs, pool, found, levels) : [];
+      if (read.length > champions.length) [first, champions] = [found, read];
+      if (champions.length >= MIN_PLAYERS) break;
+    }
     if (!first) return { hits: [], rows: [] };
-    const champions = portraits(raster, refs, first, levels);
     const size = first.size;
     const bands = rows(champions, size);
     const itemSizes = ITEM_SHARES.map((share) => Math.round(size * share));

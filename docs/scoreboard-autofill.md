@@ -59,12 +59,12 @@ phantom, both ratcheted to what the tree reads.
 
 ## Known gaps
 
-The corpus holds the 2026 LCK panel only. The 2026 LEC and LCS panels share
-Riot's broadcast package, whose portraits are a different asset from the
-square champion icon: a tighter face crop with a level badge. On most of
-those frames no portrait clears the anchor bar and the read returns nothing;
-the LEC frame at `youtube:qHAn7zWJE_Q@690` reads 7 of 10 and the LCS frame at
-`youtube:yDHo-UNcICo@1530` reads none. A center crop of the square icon down
-to 55% does not close the gap, so reading that package needs a second
-champion reference variant built from the asset it uses, added to the sprite
-under the same champion key, not a threshold change.
+The corpus holds four 2026 LCK frames and one 2026 LEC frame. LEC and LCS
+share Riot's broadcast package, whose portraits carry a level badge over art
+that is the square icon for some champions and a tight face crop for others;
+the `badge` style in `PORTRAIT_STYLES` reads them, and the icon-only style is
+tried first so LCK keeps its margins. A gold-difference label drawn over a
+portrait still hides it: the LEC frame at `youtube:qHAn7zWJE_Q@1450` reads 8
+of 10 and the LCS frame at `youtube:yDHo-UNcICo@1530` reads 8 of 10. The 2026
+LPL panel (`youtube:dQpiSHdwgls@1290`) reads one portrait; its portraits are
+smaller and ringed, and need their own look before a third style is added.

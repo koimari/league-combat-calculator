@@ -26,5 +26,12 @@
    [{"champion": "Taliyah", "items": ["3363", null, "1082", "1052", "1056", "?", "4646", "3040"]}, {"champion": "Cassiopeia", "items": ["6657", "3116", "1058", "3171", "1056", "1082"]}],
    [{"champion": "Lucian", "items": ["3363", "1001", "2055", "1029", "1086", "6675", "3508", "3036"]}, {"champion": "Xayah", "items": ["3031", "3508", "6675", "1086", null, null, "3006", "?"]}],
    [{"champion": "Milio", "items": ["2055", null, null, "2422", "3870", "2065", "6620"]}, {"champion": "Rakan", "items": ["3050", "3869", "2422", null, null, "2055"]}]
+  ]},
+ "lec-g2-kc-g1-690.jpg": {"league": "LEC", "source": "youtube:qHAn7zWJE_Q@690", "rows": [
+   [{"champion": "Shen", "items": ["?", null, null, null, null, "2010", "1054"]}, {"champion": "Ambessa", "items": ["1054", "2010", null, null, null, null, "?"]}],
+   [{"champion": "Aatrox", "items": ["?", null, null, null, "2055", "?", "2021"]}, {"champion": "Jarvan IV", "items": ["2021", "?", "2055", null, null, null, "?"]}],
+   [{"champion": "Orianna", "items": ["?", null, "?", "2055", "1027", "1056", "1052"]}, {"champion": "Galio", "items": ["1056", "1082", "2031", null, null, null, "?"]}],
+   [{"champion": "Caitlyn", "items": ["?", null, null, "2031", "1036", "1036", "1055"]}, {"champion": "Lucian", "items": ["1055", "1036", "1036", "2031", null, null, "?"]}],
+   [{"champion": "Bard", "items": ["?", null, null, null, "2031", "1028", "3865"]}, {"champion": "Nami", "items": ["3865", "1004", null, null, null, null, "?"]}]
   ]}
 }
