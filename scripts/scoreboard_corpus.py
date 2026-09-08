@@ -49,16 +49,28 @@ def read_frames(paths: list[Path], options: dict | None = None) -> dict[str, Any
         work = Path(tmp)
         with Image.open(SPRITE) as sheet:
             sprite = _dump(sheet, work / "sprite.bin")
-        sprite["index"] = json.loads(SPRITE.with_suffix(".json").read_text(encoding="utf-8"))
+        sprite["index"] = json.loads(
+            SPRITE.with_suffix(".json").read_text(encoding="utf-8")
+        )
         frames = []
         for path in paths:
             with Image.open(path) as image:
-                frames.append({"name": path.name, **_dump(image, work / f"{path.stem}.bin"), "options": options or {}})
+                frames.append(
+                    {
+                        "name": path.name,
+                        **_dump(image, work / f"{path.stem}.bin"),
+                        "options": options or {},
+                    }
+                )
         manifest = work / "manifest.json"
-        manifest.write_text(json.dumps({"sprite": sprite, "frames": frames}), encoding="utf-8")
+        manifest.write_text(
+            json.dumps({"sprite": sprite, "frames": frames}), encoding="utf-8"
+        )
         result = subprocess.run(
             ["node", str(HARNESS), str(SCRIPT), str(manifest)],
-            capture_output=True, text=True, check=False,
+            capture_output=True,
+            text=True,
+            check=False,
         )
     if result.returncode != 0:
         raise RuntimeError(result.stderr)
@@ -71,20 +83,30 @@ def item_names() -> dict[str, str]:
 
 
 def describe(reading: dict[str, Any], names: dict[str, str]) -> str:
-    lines = [f"  {len(reading['hits'])} hits, {len(reading['rows'])} rows, {reading['ms']} ms"]
+    lines = [
+        f"  {len(reading['hits'])} hits, {len(reading['rows'])} rows, {reading['ms']} ms"
+    ]
     for r, row in enumerate(reading["rows"]):
         for player in row:
             champion = player["champion"]
             items = " | ".join(
-                f"{names.get(hit['key'], hit['key'])} {hit['score']:.2f}" + ("?" if hit["gap"] < 0.08 else "")
-                if hit else "-"
+                (
+                    f"{names.get(hit['key'], hit['key'])} {hit['score']:.2f}"
+                    + ("?" if hit["gap"] < 0.08 else "")
+                    if hit
+                    else "-"
+                )
                 for hit in player["items"]
             )
-            lines.append(f"  row{r} {champion['key']:<14} {champion['score']:.2f}  [{items}]")
+            lines.append(
+                f"  row{r} {champion['key']:<14} {champion['score']:.2f}  [{items}]"
+            )
     return "\n".join(lines)
 
 
-def contact_sheet(path: Path, reading: dict[str, Any], sprite_index: dict, names: dict[str, str]) -> Image.Image:
+def contact_sheet(
+    path: Path, reading: dict[str, Any], sprite_index: dict
+) -> Image.Image:
     """Each read cell beside the sprite cell it was matched to, one row per player."""
     tile = 48
     with Image.open(path) as frame, Image.open(SPRITE) as sheet:
@@ -99,20 +121,29 @@ def contact_sheet(path: Path, reading: dict[str, Any], sprite_index: dict, names
             for c, hit in enumerate([player["champion"], *player["items"]]):
                 if not hit:
                     continue
-                crop = frame.crop((hit["x"], hit["y"], hit["x"] + hit["size"], hit["y"] + hit["size"])).resize((tile, tile))
-                number = sprite_index["champions" if hit["kind"] == "champion" else "items"][hit["key"]]
+                crop = frame.crop(
+                    (hit["x"], hit["y"], hit["x"] + hit["size"], hit["y"] + hit["size"])
+                ).resize((tile, tile))
+                number = sprite_index[
+                    "champions" if hit["kind"] == "champion" else "items"
+                ][hit["key"]]
                 sx, sy = (number % columns) * cell, (number // columns) * cell
                 ref = sheet.crop((sx, sy, sx + cell, sy + cell)).resize((tile, tile))
                 out.paste(crop, (c * 2 * tile, r * tile))
                 out.paste(ref, (c * 2 * tile + tile, r * tile))
                 colour = (255, 170, 0) if hit["gap"] < 0.08 else (0, 220, 0)
-                draw.text((c * 2 * tile + 2, r * tile + 2), f"{hit['score']:.2f}", fill=colour)
+                draw.text(
+                    (c * 2 * tile + 2, r * tile + 2), f"{hit['score']:.2f}", fill=colour
+                )
     return out
 
 
 def cmd_read(args: argparse.Namespace) -> int:
+    """Print each frame's rows; with --sheet, draw every read cell beside its match."""
     names = item_names()
-    readings = read_frames([Path(p) for p in args.images], {"keep": args.keep} if args.keep else None)
+    readings = read_frames(
+        [Path(p) for p in args.images], {"keep": args.keep} if args.keep else None
+    )
     index = json.loads(SPRITE.with_suffix(".json").read_text(encoding="utf-8"))
     sheets = []
     for image in args.images:
@@ -120,7 +151,7 @@ def cmd_read(args: argparse.Namespace) -> int:
         print(image)
         print(describe(reading, names))
         if args.sheet:
-            sheets.append(contact_sheet(Path(image), reading, index, names))
+            sheets.append(contact_sheet(Path(image), reading, index))
     if args.sheet:
         height = sum(s.height for s in sheets)
         out = Image.new("RGB", (max(s.width for s in sheets), height))
@@ -134,25 +165,40 @@ def cmd_read(args: argparse.Namespace) -> int:
 
 
 def cmd_scan(args: argparse.Namespace) -> int:
+    """Rank a VoD's frames by champions and items read, one frame per --step seconds."""
     video = Path(args.video)
     frames_dir = video.with_name(f"{video.stem}_frames")
     frames_dir.mkdir(exist_ok=True)
     if not any(frames_dir.glob("*.jpg")):
         subprocess.run(
-            ["ffmpeg", "-v", "error", "-i", str(video), "-vf", f"fps=1/{args.step}", "-q:v", "3", str(frames_dir / "f%05d.jpg")],
+            [
+                "ffmpeg",
+                "-v",
+                "error",
+                "-i",
+                str(video),
+                "-vf",
+                f"fps=1/{args.step}",
+                "-q:v",
+                "3",
+                str(frames_dir / "f%05d.jpg"),
+            ],
             check=True,
         )
     paths = sorted(frames_dir.glob("*.jpg"))
     ranked = []
     for start in range(0, len(paths), 20):
-        batch = paths[start:start + 20]
+        batch = paths[start : start + 20]
         for name, reading in read_frames(batch).items():
             players = [p for row in reading["rows"] for p in row]
             items = sum(1 for p in players for hit in p["items"] if hit)
             seconds = (int(name[1:6]) - 1) * args.step
             ranked.append((items, len(players), seconds, name))
             if len(players) >= 8:
-                print(f"  t={seconds:5d}s champions={len(players):2d} items={items:2d}  {name}", flush=True)
+                print(
+                    f"  t={seconds:5d}s champions={len(players):2d} items={items:2d}  {name}",
+                    flush=True,
+                )
     ranked.sort(reverse=True)
     print("== top candidates ==")
     for items, players, seconds, name in ranked[:12]:
@@ -161,8 +207,23 @@ def cmd_scan(args: argparse.Namespace) -> int:
 
 
 def cmd_grab(args: argparse.Namespace) -> int:
+    """Cut the frame at --at seconds out of a local VoD."""
     subprocess.run(
-        ["ffmpeg", "-v", "error", "-y", "-ss", str(args.at), "-i", str(args.video), "-frames:v", "1", "-q:v", "2", str(args.out)],
+        [
+            "ffmpeg",
+            "-v",
+            "error",
+            "-y",
+            "-ss",
+            str(args.at),
+            "-i",
+            str(args.video),
+            "-frames:v",
+            "1",
+            "-q:v",
+            "2",
+            str(args.out),
+        ],
         check=True,
     )
     print("wrote", args.out)
@@ -174,15 +235,22 @@ def write_labels(labels: dict[str, Any]) -> None:
     frames = []
     for name, entry in labels.items():
         rows = ",\n".join(
-            "   [" + ", ".join(json.dumps(player, ensure_ascii=False) for player in row) + "]"
+            "   ["
+            + ", ".join(json.dumps(player, ensure_ascii=False) for player in row)
+            + "]"
             for row in entry["rows"]
         )
-        head = ", ".join(f"{json.dumps(k)}: {json.dumps(v, ensure_ascii=False)}" for k, v in entry.items() if k != "rows")
+        head = ", ".join(
+            f"{json.dumps(k)}: {json.dumps(v, ensure_ascii=False)}"
+            for k, v in entry.items()
+            if k != "rows"
+        )
         frames.append(f' {json.dumps(name)}: {{{head}, "rows": [\n{rows}\n  ]}}')
     LABELS.write_text("{\n" + ",\n".join(frames) + "\n}\n", encoding="utf-8")
 
 
 def cmd_label(args: argparse.Namespace) -> int:
+    """Write the reader's rows for one frame into labels.json, to be reviewed by eye."""
     path = Path(args.image)
     reading = read_frames([path])[path.name]
     labels = json.loads(LABELS.read_text(encoding="utf-8")) if LABELS.exists() else {}
@@ -190,23 +258,35 @@ def cmd_label(args: argparse.Namespace) -> int:
         "league": args.league,
         "source": args.source,
         "rows": [
-            [{"champion": p["champion"]["key"], "items": [hit["key"] if hit else None for hit in p["items"]]} for p in row]
+            [
+                {
+                    "champion": p["champion"]["key"],
+                    "items": [hit["key"] if hit else None for hit in p["items"]],
+                }
+                for p in row
+            ]
             for row in reading["rows"]
         ],
     }
     write_labels(labels)
     print(describe(reading, item_names()))
-    print(f"appended {path.name} to {LABELS}; review it against a contact sheet before committing")
+    print(
+        f"appended {path.name} to {LABELS}; review it against a contact sheet before committing"
+    )
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     commands = parser.add_subparsers(dest="command", required=True)
     read = commands.add_parser("read")
     read.add_argument("images", nargs="+")
     read.add_argument("--sheet", type=Path)
-    read.add_argument("--keep", type=int, default=0, help="candidate squares kept per size")
+    read.add_argument(
+        "--keep", type=int, default=0, help="candidate squares kept per size"
+    )
     read.set_defaults(run=cmd_read)
     scan = commands.add_parser("scan")
     scan.add_argument("video")

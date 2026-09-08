@@ -38,7 +38,9 @@ ICON_CACHE = ROOT / "data" / "icons"
 
 def sprite_entries(champions: dict, items: dict) -> list[tuple[str, str, str]]:
     """(kind, key, url) per cell, in the order the index assigns cell numbers."""
-    rows = [("champion", record["name"], record["icon"]) for record in champions.values()]
+    rows = [
+        ("champion", record["name"], record["icon"]) for record in champions.values()
+    ]
     rows += [
         (
             "item",
@@ -69,7 +71,13 @@ def build(champions: dict, items: dict) -> tuple[Image.Image, dict]:
         icons = list(pool.map(lambda entry: _fetch(*entry), entries))
     rows = -(-len(entries) // COLUMNS)
     sheet = Image.new("RGB", (COLUMNS * CELL, rows * CELL))
-    index: dict = {"cell": CELL, "columns": COLUMNS, "patch": cache_patch(champions), "champions": {}, "items": {}}
+    index: dict = {
+        "cell": CELL,
+        "columns": COLUMNS,
+        "patch": cache_patch(champions),
+        "champions": {},
+        "items": {},
+    }
     for number, ((kind, key, _url), icon) in enumerate(zip(entries, icons)):
         resampled = icon.resize((CELL, CELL), Image.Resampling.BOX)
         sheet.paste(resampled, ((number % COLUMNS) * CELL, (number // COLUMNS) * CELL))
@@ -77,13 +85,19 @@ def build(champions: dict, items: dict) -> tuple[Image.Image, dict]:
     return sheet, index
 
 
-def check(index_path: Path, sheet_path: Path, champions: dict, items: dict) -> str | None:
+def check(
+    index_path: Path, sheet_path: Path, champions: dict, items: dict
+) -> str | None:
     """The reason the committed sprite is stale, or None when it is current."""
     if not index_path.exists() or not sheet_path.exists():
         return "sprite assets are missing"
     index = json.loads(index_path.read_text(encoding="utf-8"))
     expected = sprite_entries(champions, items)
-    listed = {(kind[:-1], key) for kind in ("champions", "items") for key in index.get(kind, {})}
+    listed = {
+        (kind[:-1], key)
+        for kind in ("champions", "items")
+        for key in index.get(kind, {})
+    }
     wanted = {(kind, key) for kind, key, _url in expected}
     if listed != wanted:
         missing = sorted(wanted - listed)
@@ -98,10 +112,18 @@ def check(index_path: Path, sheet_path: Path, champions: dict, items: dict) -> s
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--champions", type=Path, default=ROOT / "data" / "champions.json")
+    parser.add_argument(
+        "--champions", type=Path, default=ROOT / "data" / "champions.json"
+    )
     parser.add_argument("--items", type=Path, default=ROOT / "data" / "items.json")
-    parser.add_argument("--output", type=Path, default=ROOT / "static" / "icon-sprite.webp")
-    parser.add_argument("--check", action="store_true", help="fail instead of writing when the sprite has drifted")
+    parser.add_argument(
+        "--output", type=Path, default=ROOT / "static" / "icon-sprite.webp"
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="fail instead of writing when the sprite has drifted",
+    )
     args = parser.parse_args()
     champions = json.loads(args.champions.read_text(encoding="utf-8"))
     items = json.loads(args.items.read_text(encoding="utf-8"))
@@ -110,14 +132,21 @@ def main() -> None:
     if args.check:
         reason = check(index_path, args.output, champions, items)
         if reason:
-            raise SystemExit(f"{args.output}: {reason}; rebuild with: python scripts/build_icon_sprite.py")
+            raise SystemExit(
+                f"{args.output}: {reason}; rebuild with: python scripts/build_icon_sprite.py"
+            )
         print(f"{args.output} is current")
         return
 
     sheet, index = build(champions, items)
     sheet.save(args.output, quality=92, method=6)
-    index_path.write_text(json.dumps(index, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
-    print(f"wrote {args.output} ({len(index['champions'])} champions, {len(index['items'])} items)")
+    index_path.write_text(
+        json.dumps(index, ensure_ascii=False, separators=(",", ":")) + "\n",
+        encoding="utf-8",
+    )
+    print(
+        f"wrote {args.output} ({len(index['champions'])} champions, {len(index['items'])} items)"
+    )
 
 
 if __name__ == "__main__":

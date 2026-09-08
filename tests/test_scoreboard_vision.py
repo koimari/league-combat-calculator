@@ -25,14 +25,23 @@ EXTRA_CEILING = 0.05
 
 
 def test_sprite_matches_the_caches() -> None:
-    champions = json.loads((ROOT / "data" / "champions.json").read_text(encoding="utf-8"))
+    """The committed sprite covers every cached champion and item."""
+    champions = json.loads(
+        (ROOT / "data" / "champions.json").read_text(encoding="utf-8")
+    )
     items = json.loads((ROOT / "data" / "items.json").read_text(encoding="utf-8"))
-    reason = sprite_check(ROOT / "static" / "icon-sprite.json", ROOT / "static" / "icon-sprite.webp", champions, items)
+    reason = sprite_check(
+        ROOT / "static" / "icon-sprite.json",
+        ROOT / "static" / "icon-sprite.webp",
+        champions,
+        items,
+    )
     assert reason is None, reason
 
 
 @pytest.fixture(scope="module")
 def readings() -> dict:
+    """Labels and the reader's output for every corpus frame, read once."""
     if shutil.which("node") is None:  # pragma: no cover - toolchain dependent
         pytest.skip("node is not installed")
     labels = json.loads(LABELS.read_text(encoding="utf-8"))
@@ -44,16 +53,21 @@ def _players(rows: list) -> list[dict]:
 
 
 def test_every_labeled_champion_is_read(readings: dict) -> None:
+    """Every row reads the labeled champions, in order."""
     misses = []
     for name, label in readings["labels"].items():
         want = [[p["champion"] for p in row] for row in label["rows"]]
-        got = [[p["champion"]["key"] for p in row] for row in readings["read"][name]["rows"]]
+        got = [
+            [p["champion"]["key"] for p in row]
+            for row in readings["read"][name]["rows"]
+        ]
         if want != got:
             misses.append(f"{name}: wanted {want}, read {got}")
     assert not misses, "\n".join(misses)
 
 
 def test_items_clear_the_corpus_floor(readings: dict) -> None:
+    """Items are read at ITEM_FLOOR or better with phantoms under EXTRA_CEILING."""
     correct = labeled = extra = 0
     report = []
     for name, label in readings["labels"].items():
@@ -64,15 +78,21 @@ def test_items_clear_the_corpus_floor(readings: dict) -> None:
             want_ids = [i for i in wanted["items"] if i and i != "?"]
             unscored = wanted["items"].count("?")
             read_ids = [hit["key"] for hit in read["items"] if hit]
-            matched = sum(min(want_ids.count(i), read_ids.count(i)) for i in set(want_ids))
+            matched = sum(
+                min(want_ids.count(i), read_ids.count(i)) for i in set(want_ids)
+            )
             frame_correct += matched
             frame_labeled += len(want_ids)
             frame_extra += max(0, len(read_ids) - matched - unscored)
         correct += frame_correct
         labeled += frame_labeled
         extra += frame_extra
-        report.append(f"{name}: {frame_correct}/{frame_labeled} items, {frame_extra} extra, {readings['read'][name]['ms']} ms")
+        report.append(
+            f"{name}: {frame_correct}/{frame_labeled} items, {frame_extra} extra, {readings['read'][name]['ms']} ms"
+        )
     summary = "\n".join(report)
     assert labeled, "the corpus has no labeled items"
     assert correct / labeled >= ITEM_FLOOR, f"{correct}/{labeled} items read\n{summary}"
-    assert extra / labeled <= EXTRA_CEILING, f"{extra} items read that were not there\n{summary}"
+    assert (
+        extra / labeled <= EXTRA_CEILING
+    ), f"{extra} items read that were not there\n{summary}"
