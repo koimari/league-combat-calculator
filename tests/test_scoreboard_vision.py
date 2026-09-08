@@ -40,6 +40,25 @@ def test_sprite_matches_the_caches() -> None:
     assert reason is None, reason
 
 
+def test_no_script_points_an_image_at_an_object_url_the_csp_blocks() -> None:
+    """The page's `img-src` has no `blob:`, so an <img> on an object URL never
+    loads: the reader shipped that way and rejected every screenshot. Decode
+    blobs with `createImageBitmap`, or widen the policy along with them."""
+    from src.app import _SECURITY_HEADERS
+
+    policy = _SECURITY_HEADERS["Content-Security-Policy"]
+    img_src = next(d for d in policy.split("; ") if d.startswith("img-src "))
+    if "blob:" in img_src:
+        return
+    sources = {
+        p.name: p.read_text("utf-8") for p in (ROOT / "static" / "js").glob("*.js")
+    }
+    offenders = [
+        n for n, s in sources.items() if "createObjectURL" in s and "new Image(" in s
+    ]
+    assert offenders == []
+
+
 @pytest.fixture(scope="module")
 def readings() -> dict:
     """Labels and the reader's output for every corpus frame, read once."""
@@ -89,7 +108,8 @@ def test_items_clear_the_corpus_floor(readings: dict) -> None:
         labeled += frame_labeled
         extra += frame_extra
         report.append(
-            f"{name}: {frame_correct}/{frame_labeled} items, {frame_extra} extra, {readings['read'][name]['ms']} ms"
+            f"{name}: {frame_correct}/{frame_labeled} items, {frame_extra} extra, "
+            f"{readings['read'][name]['ms']} ms"
         )
     summary = "\n".join(report)
     assert labeled, "the corpus has no labeled items"

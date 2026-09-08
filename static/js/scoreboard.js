@@ -818,13 +818,11 @@ const ScoreboardVision = (() => {
     return raster;
   }
 
+  /* Decoded off the blob, never through an object URL: the page's CSP
+   * `img-src` has no `blob:`, so an <img> pointed at one never loads. */
   function loadImage(blob) {
-    return new Promise((resolve, reject) => {
-      const url = URL.createObjectURL(blob);
-      const img = new Image();
-      img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("That file is not an image the browser can open.")); };
-      img.src = url;
+    return createImageBitmap(blob).catch(() => {
+      throw new Error("That file is not an image the browser can open.");
     });
   }
 
