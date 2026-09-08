@@ -77,9 +77,12 @@ const ScoreboardVision = (() => {
    * every one to a cap inside the column, row and item bands. Real icons can
    * rank past 200 in coarse order, so no early stop. */
   const VERIFY = { anchor: 12, cap: 400 };
-  /* Portrait sizes the anchor is sought at, on a frame no wider than the
-   * page's 2200px working width; tried nearest this typical size first. */
-  const PORTRAIT = { min: 24, max: 64, typical: 34 };
+  /* Portrait sizes the anchor is sought at, tried nearest the typical size
+   * first. Every threshold below was tuned on 1080p frames, whose portraits
+   * are 24 to 36 px; a frame whose anchor comes out larger (a zoomed crop
+   * of the panel) is resampled so its portrait is the typical size and read
+   * there, so the max only bounds the anchor search. */
+  const PORTRAIT = { min: 24, max: 128, typical: 34 };
   /* An anchor this certain ends the size search early. */
   const SURE_ANCHOR = 0.9;
   /* Slots a scoreboard shows per player: six items, boots, and a trinket. */
@@ -92,15 +95,20 @@ const ScoreboardVision = (() => {
   const ITEM_SHARE_DEFAULT = 0.8;
   /* Two icons further apart than this many icon widths are not neighbours. */
   const NEIGHBOUR_GAP = 1.6;
+  /* A cell may run this share of its size past the frame: a crop of the
+   * panel cuts a sliver off its bottom row and outer item slots. */
+  const EDGE_OVERHANG = 0.25;
 
   /* --- fingerprints --------------------------------------------------- */
 
   /**
    * Area-resample the square at (x, y, size) into `vec` as n×n RGB, zero-mean
    * and unit length; returns the cell's RMS deviation before normalizing.
+   * A cell may run past the frame: a pixel outside repeats the nearest edge
+   * pixel, so a slot a crop cuts a sliver off is still read in place.
    */
   function fingerprint(raster, x, y, size, n, vec) {
-    const { width, data } = raster;
+    const { width, height, data } = raster;
     const left = Math.round(x);
     const top = Math.round(y);
     const edges = new Int32Array(n + 1);
@@ -112,15 +120,30 @@ const ScoreboardVision = (() => {
       for (let j = 0; j < n; j += 1) {
         const x0 = left + edges[j];
         const x1 = left + Math.max(edges[j] + 1, edges[j + 1]);
+        const cx0 = x0 < 0 ? 0 : x0;
+        const cx1 = x1 > width ? width : x1;
         let r = 0;
         let g = 0;
         let b = 0;
         for (let yy = y0; yy < y1; yy += 1) {
-          let p = (yy * width + x0) * 4;
-          for (let xx = x0; xx < x1; xx += 1, p += 4) {
+          const row = (yy < 0 ? 0 : yy >= height ? height - 1 : yy) * width;
+          let p = (row + cx0) * 4;
+          for (let xx = cx0; xx < cx1; xx += 1, p += 4) {
             r += data[p];
             g += data[p + 1];
             b += data[p + 2];
+          }
+          if (cx0 > x0) {
+            const q = row * 4;
+            r += data[q] * (cx0 - x0);
+            g += data[q + 1] * (cx0 - x0);
+            b += data[q + 2] * (cx0 - x0);
+          }
+          if (x1 > cx1) {
+            const q = (row + width - 1) * 4;
+            r += data[q] * (x1 - cx1);
+            g += data[q + 1] * (x1 - cx1);
+            b += data[q + 2] * (x1 - cx1);
           }
         }
         const count = (y1 - y0) * (x1 - x0);
@@ -333,7 +356,8 @@ const ScoreboardVision = (() => {
    */
   function verify(raster, candidate, refs, pool, anchored = false) {
     const kind = kindOf(pool);
-    const inside = (x, y, size) => x >= 0 && y >= 0 && x + size <= raster.width && y + size <= raster.height;
+    const slack = candidate.size * EDGE_OVERHANG;
+    const inside = (x, y, size) => x >= -slack && y >= -slack && x + size <= raster.width + slack && y + size <= raster.height + slack;
     if (!inside(candidate.x, candidate.y, candidate.size)) return null;
     let best = null;
     if (anchored) {
@@ -609,12 +633,38 @@ const ScoreboardVision = (() => {
   }
 
   /**
+   * The row pitches the found rows' centre gaps allow: each gap is a whole
+   * number of pitches, one when the rows are neighbours, more when the rows
+   * between were missed. Portraits do not overlap and a panel row is under
+   * 2.5 portraits tall. The pitches explaining the most gaps are kept, each
+   * settled as the median of the gaps it explains so a pixel of jitter
+   * between rows does not make two.
+   */
+  function rowPitches(ys, size) {
+    const gaps = [];
+    for (let i = 1; i < ys.length; i += 1) if (ys[i] - ys[i - 1] > size / 2) gaps.push(ys[i] - ys[i - 1]);
+    const explained = (pitch) => gaps.filter((gap) => Math.abs(gap / pitch - Math.round(gap / pitch)) < 0.1);
+    const pitches = new Map();
+    for (const gap of gaps) {
+      for (let k = 1; gap / k >= size * 0.8; k += 1) {
+        if (gap / k > size * 2.5) continue;
+        const fits = explained(gap / k);
+        const pitch = Math.round(median(fits.map((g) => g / Math.round(g / (gap / k)))));
+        pitches.set(pitch, Math.max(pitches.get(pitch) || 0, fits.length));
+      }
+    }
+    const most = Math.max(0, ...pitches.values());
+    return [...pitches].filter(([, count]) => count === most).map(([pitch]) => pitch);
+  }
+
+  /**
    * Portraits missed by the searches, recovered from the grid the found ones
-   * define: each column's x and the rows' uniform pitch give every slot,
-   * and an empty slot is classified in place at GRID_GAP_SHARE of the
-   * free-search margin. A column keeps its strongest MAX_ROWS-tall window.
-   * Every portrait leaves tagged with its `column`, left to right, which is
-   * the team it belongs to.
+   * define: each column's x and a row pitch give every slot, and an empty
+   * slot is classified in place at GRID_GAP_SHARE of the free-search margin.
+   * A column keeps its strongest MAX_ROWS-tall window, and of the pitches
+   * the found rows allow, the one whose windows score highest wins. Every
+   * portrait leaves tagged with its `column`, left to right,
+   * which is the team it belongs to.
    */
   function fillColumns(raster, refs, pool, found, size) {
     const columns = [];
@@ -626,27 +676,28 @@ const ScoreboardVision = (() => {
     columns.sort((a, b) => a.x - b.x);
     columns.forEach((column, index) => column.hits.forEach((hit) => { hit.column = index; }));
     const ys = [...new Set(found.map((h) => Math.round(centreY(h))))].sort((a, b) => a - b);
-    const gaps = [];
-    for (let i = 1; i < ys.length; i += 1) if (ys[i] - ys[i - 1] > size / 2 && ys[i] - ys[i - 1] < size * 2.5) gaps.push(ys[i] - ys[i - 1]);
-    const pitch = median(gaps);
-    if (!pitch || columns.length > 2) return found;
-    const all = [];
-    columns.forEach((column, index) => {
-      const x = Math.round(median(column.hits.map((h) => h.x)));
-      const slot = slotMap(column.hits, (h) => Math.round((centreY(h) - ys[0]) / pitch));
-      const known = [...slot.keys()].sort((a, b) => a - b);
-      const filled = [];
-      for (let k = known[0] - MAX_ROWS + 1; k <= known[known.length - 1] + MAX_ROWS - 1; k += 1) {
-        const y = Math.round(ys[0] + k * pitch - size / 2);
-        if (y < 0 || y + size > raster.height) continue;
-        const hit = slot.get(k) || verify(raster, { x, y, size }, refs, pool, true);
-        const kept = hit && hit.score >= MIN_SCORE.champion && hit.gap >= MIN_GAP.champion * GRID_GAP_SHARE;
-        if (kept) hit.column = index;
-        filled.push(kept ? hit : null);
-      }
-      all.push(...strongestWindow(filled, MAX_ROWS).filter(Boolean));
-    });
-    return all;
+    if (columns.length > 2) return found;
+    let best = { all: found, strength: -1 };
+    for (const pitch of rowPitches(ys, size)) {
+      const all = [];
+      columns.forEach((column, index) => {
+        const x = Math.round(median(column.hits.map((h) => h.x)));
+        const slot = slotMap(column.hits, (h) => Math.round((centreY(h) - ys[0]) / pitch));
+        const known = [...slot.keys()].sort((a, b) => a - b);
+        const filled = [];
+        for (let k = known[0] - MAX_ROWS + 1; k <= known[known.length - 1] + MAX_ROWS - 1; k += 1) {
+          const y = Math.round(ys[0] + k * pitch - size / 2);
+          const hit = slot.get(k) || verify(raster, { x, y, size }, refs, pool, true);
+          const kept = hit && hit.score >= MIN_SCORE.champion && hit.gap >= MIN_GAP.champion * GRID_GAP_SHARE;
+          if (kept) hit.column = index;
+          filled.push(kept ? hit : null);
+        }
+        all.push(...strongestWindow(filled, MAX_ROWS).filter(Boolean));
+      });
+      const strength = all.reduce((sum, hit) => sum + hit.score, 0);
+      if (strength > best.strength) best = { all, strength };
+    }
+    return best.all;
   }
 
   /** Group hits into rows by centre y, tolerance half a portrait. */
@@ -690,7 +741,6 @@ const ScoreboardVision = (() => {
       let nearest = 0;
       slot.forEach((s, i) => { if (Math.abs(s - k) < Math.abs(slot[nearest] - k)) nearest = i; });
       const x = Math.round(sorted[nearest].x + (k - slot[nearest]) * pitch);
-      if (x < 0 || x + size > raster.width) continue;
       if (Math.abs(x - champion.x) < champion.size && Math.abs(y - champion.y) < champion.size) continue;
       if (bounds && (x < bounds.min || x > bounds.max)) continue;
       const hit = known.get(k) || verify(raster, { x, y, size }, refs, "item", true);
@@ -700,6 +750,32 @@ const ScoreboardVision = (() => {
     const first = window.findIndex(Boolean);
     const last = window.length - 1 - [...window].reverse().findIndex(Boolean);
     return first < 0 ? [] : window.slice(first, last + 1);
+  }
+
+  /** `raster` box-filtered down by `factor`, as the RGBA raster the reader takes. */
+  function resample(raster, factor) {
+    const level = pyramidLevel(raster, factor);
+    level.prepare(0, level.height);
+    const data = new Uint8ClampedArray(level.width * level.height * 4);
+    for (let p = 0, q = 0; q < data.length; p += 3, q += 4) {
+      data[q] = level.data[p];
+      data[q + 1] = level.data[p + 1];
+      data[q + 2] = level.data[p + 2];
+      data[q + 3] = 255;
+    }
+    return { width: level.width, height: level.height, data };
+  }
+
+  /** `reading` with every hit's cell scaled up by `factor`, back into the frame it was read from. */
+  function rescaled(reading, factor) {
+    const cells = new Set(reading.hits);
+    reading.rows.flat().forEach((player) => player.items.concat(player.champion).forEach((hit) => hit && cells.add(hit)));
+    for (const hit of cells) {
+      hit.x *= factor;
+      hit.y *= factor;
+      hit.size *= factor;
+    }
+    return reading;
   }
 
   /**
@@ -718,6 +794,12 @@ const ScoreboardVision = (() => {
     for (const style of Object.keys(PORTRAIT_STYLES)) {
       const pool = `champion:${style}`;
       const found = anchor(raster, refs, pool, portraitSizes, levels);
+      /* A zoomed frame is read at the size the thresholds were tuned at;
+       * the resampled frame anchors near PORTRAIT.typical, so this runs once. */
+      if (found && found.size > PORTRAIT.typical * SIZE_RATIO) {
+        const factor = found.size / PORTRAIT.typical;
+        return rescaled(readScoreboard(resample(raster, factor), refs), factor);
+      }
       const read = found ? portraits(raster, refs, pool, found, levels) : [];
       if (read.length > champions.length) [first, champions] = [found, read];
       if (champions.length >= MIN_PLAYERS) break;

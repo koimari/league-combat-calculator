@@ -27,13 +27,19 @@ search, 8x8 projected to 24 to shortlist, 24x24 exact to decide. The search is
 anchored. It finds the strongest portrait anywhere, then its column for
 teammates, then one row for an opponent and that opponent's column, then each
 row band for items at one shared size. Grid fills recover what the searches
-missed: rows sit on a uniform pitch, strips sit on a uniform pitch, and the
-matcher classifies each empty slot in place.
+missed: rows sit on a uniform pitch, a whole number of pitches apart when a
+row between them was missed, strips sit on a uniform pitch, and the matcher
+classifies each empty slot in place. A slot a crop cuts up to `EDGE_OVERHANG`
+of a cell off is read where it is, the pixels past the edge repeating the edge.
 
 Every tuned number is a named constant in the block at the top of
-`scoreboard.js`, each with the reason beside it. They were set on the LCK
-frames, and the corpus test holds them at what the tree reads. If a new
-overlay fails, add its frames to the corpus before you move one.
+`scoreboard.js`, each with the reason beside it. They were set on 1080p LCK
+frames, whose portraits are 24 to 36 px. A frame whose anchor comes out larger
+than `PORTRAIT.typical`, a zoomed crop of the panel, is resampled to that size
+and read there, so the constants meet every frame at the scale they were tuned
+at. The corpus test holds them at what the tree reads and reads one crop at
+twice its size. If a new overlay fails, add its frames to the corpus before
+you move one.
 
 ## Grow the corpus
 
@@ -60,7 +66,9 @@ phantom, both ratcheted to what the tree reads.
 
 ## Known gaps
 
-The corpus holds four 2026 LCK frames and one 2026 LEC frame. LEC and LCS
+The corpus holds five 2026 LCK frames, one a 1361x399 crop with 55 px
+portraits whose bottom row runs past the frame, and one 2026 LEC frame. A dead
+player's greyed portrait is not read (the crop reads 9 of 10). LEC and LCS
 share Riot's broadcast package, whose portraits carry a level badge over art
 that is the square icon for some champions and a tight face crop for others;
 the `badge` style in `PORTRAIT_STYLES` reads them, and the icon-only style is

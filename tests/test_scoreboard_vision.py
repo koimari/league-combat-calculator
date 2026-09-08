@@ -142,3 +142,28 @@ def test_items_clear_the_corpus_floor(readings: dict) -> None:
     assert (
         extra / labeled <= EXTRA_CEILING
     ), f"{extra} items read that were not there\n{summary}"
+
+
+ZOOMED_FRAME = "lck-2026-crop-clipped.jpg"
+ZOOM = 2
+
+
+def test_a_zoomed_crop_reads_the_same_champions(readings: dict, tmp_path: Path) -> None:
+    """A crop pasted at twice the size reads the rows its label names: the
+    reader brings a frame whose portraits are larger than the tuned size
+    back to it before reading."""
+    from PIL import Image
+
+    zoomed = tmp_path / ZOOMED_FRAME
+    with Image.open(CORPUS / ZOOMED_FRAME) as frame:
+        frame.resize((frame.width * ZOOM, frame.height * ZOOM), Image.BILINEAR).save(
+            zoomed
+        )
+    want = [
+        [p["champion"] for p in row] for row in readings["labels"][ZOOMED_FRAME]["rows"]
+    ]
+    got = [
+        [p["champion"]["key"] for p in row]
+        for row in read_frames([zoomed])[ZOOMED_FRAME]["rows"]
+    ]
+    assert got == want

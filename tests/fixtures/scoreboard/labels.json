@@ -33,5 +33,12 @@
    [{"champion": "Orianna", "items": ["?", null, "?", "2055", "1027", "1056", "1052"]}, {"champion": "Galio", "items": ["1056", "1082", "2031", null, null, null, "?"]}],
    [{"champion": "Caitlyn", "items": ["?", null, null, "2031", "1036", "1036", "1055"]}, {"champion": "Lucian", "items": ["1055", "1036", "1036", "2031", null, null, "?"]}],
    [{"champion": "Bard", "items": ["?", null, null, null, "2031", "1028", "3865"]}, {"champion": "Nami", "items": ["3865", "1004", null, null, null, null, "?"]}]
+  ]},
+ "lck-2026-crop-clipped.jpg": {"league": "LCK", "source": "user screenshot of a 2026 LCK broadcast, a 1361x399 crop with 55px portraits whose bottom row runs 4px past the frame; the row-4 opponent is dead and greyed, so only Jhin is labeled there; an item drawn dark under a cooldown sweep is ?", "rows": [
+   [{"champion": "Gwen", "items": ["3340", null, "2031", "1001", "1082", "1052", "1056", "4633"]}, {"champion": "K'Sante", "items": ["?", "3111", "1031", "1120", "2031"]}],
+   [{"champion": "Qiyana", "items": ["2055", "2422", "1036", "1036", "2020", "?"]}, {"champion": "Jarvan IV", "items": ["?", "3044", "2422"]}],
+   [{"champion": "Anivia", "items": ["1082", "1056", "1026", "3171", "3802", "6657"]}, {"champion": "Ahri", "items": ["3118", "3175", "1056", "1082", "2031"]}],
+   [{"champion": "Jhin", "items": ["3363", "3009", null, "2055", "2031", "1120", "3094"]}],
+   [{"champion": "Blitzcrank", "items": ["2055", null, null, null, null, "?", "3009", "?"]}, {"champion": "Lulu", "items": ["3504", "3158", "3870", null, null, null, "2055"]}]
   ]}
 }
