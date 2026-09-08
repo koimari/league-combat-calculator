@@ -13,7 +13,7 @@ lxml==6.1.2
 SLPP==1.2.3
 dataclasses-json==0.6.7
 natsort==8.4.0
-RapidFuzz==3.14.5
+RapidFuzz==3.14.6
 thefuzz==0.22.1
 stringcase==1.2.0
 
