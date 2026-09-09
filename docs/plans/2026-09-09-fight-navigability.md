@@ -2,8 +2,8 @@
 
 Goal: a reader can answer "where does this champion's damage with this item come from, at each
 step" by opening one file per step, and adding an item touches one declaration per fact. Sightline
-#27's line counter is a proxy for this and is no longer the target: its residue stays baselined
-with reasons. One branch, `sightline/27-navigability`, one PR at the end.
+#27's line counter is a proxy for this, not the target: its residue stays baselined with
+reasons. One branch, `sightline/27-navigability`, one PR at the end.
 
 ## Order
 
@@ -12,11 +12,10 @@ with reasons. One branch, `sightline/27-navigability`, one PR at the end.
 | 1 | `damage.py` bands into the `fight/` package | goldens identical, bench flat, every band under one concept name |
 | 2 | one item, one home: the on-hit and single-proc functions become loops over catalog declarations; a per-fight trace | Dusk and Dawn on Kog'Maw traced row by row; a new on-hit item is one catalog entry plus one test |
 | 3 | stages 1 to 8 of the #27 plan (test fixtures, small leaves, defenses, `program` and `survival` layers, shared ledgers, interpreters, eligibility families, the champion package) | goldens identical |
-| 4 | stage 11 (compositions: `pipeline` receipts, `champion_loadout`, `item_support_effects` per item family, `support_effects`, optimizer, bis, rotation) | goldens identical |
+| 4 | stages 10 and 11 (the `ability_spec` leaves `quantity` and `control_spec` with their reader codemod; compositions: `pipeline` receipts, `champion_loadout`, `item_support_effects` per item family, `support_effects`, optimizer, bis, rotation) | goldens identical |
 
-Dropped from the earlier plan: stage 12 (scripts and test files) and stage 9 (parser and registry
-carves), which move lines and help no reader. Stage 10 (`ability_spec` leaves) joins step 3 only
-if the codemod is free.
+Not taken: stage 12 (scripts and test files) and stage 9 (parser and registry carves), which
+move lines and help no reader.
 
 ## Step 1: the `fight/` package
 
