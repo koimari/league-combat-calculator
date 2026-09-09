@@ -11,10 +11,10 @@ from __future__ import annotations
 
 import pytest
 
-from src.calculator.ability_spec import ControlEvent, ControlScope
+from src.calculator.ability_spec import ControlEvent, ControlScope, DamagePart
 from src.calculator.calculate import calculate_payload
+from src.calculator.damage import _entry_control_scope, _ordered_damage_events
 from src.calculator.data_fetcher import get_champion
-from src.calculator.damage import _entry_control_scope
 
 TWO_ENEMIES = [
     {"champion": "Garen", "level": 18, "items": []},
@@ -172,7 +172,7 @@ TARGETED_CONTROL_CASES = [
 ]
 
 
-@pytest.mark.parametrize("champion, options, kind", TARGETED_CONTROL_CASES)
+@pytest.mark.parametrize(("champion", "options", "kind"), TARGETED_CONTROL_CASES)
 def test_targeted_control_casts_do_not_broadcast(
     champion: str, options: dict, kind: str
 ) -> None:
@@ -287,3 +287,27 @@ def test_absent_cast_scope_uses_event_scope_or_remains_unspecified():
         )
         is ControlScope.ONE_TARGET
     )
+
+
+@pytest.mark.parametrize(
+    ("roster_target_index", "cc_kind"), [(None, "stun"), (0, "stun"), (1, None)]
+)
+def test_a_lumped_cast_carries_its_scoped_control_for_the_target_it_reaches(
+    roster_target_index, cc_kind
+):
+    """A row without authored events lumps each cast, and a one-target stun
+    marks the lump for target 0 and no other."""
+    events = _ordered_damage_events(
+        {"Q": {"casts": 1, "total_damage": 100.0, "damage_type": "magic"}},
+        {
+            "Q": {
+                "name": "Scoped stun",
+                "parts": (DamagePart("magic", 100.0, cc_kind="stun", cc_duration=1.0),),
+                "control_scope": ControlScope.ONE_TARGET,
+            }
+        },
+        ["Q"],
+        roster_target_index=roster_target_index,
+    )
+
+    assert [event.get("cc_kind") for event in events] == [cc_kind]
