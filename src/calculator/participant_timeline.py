@@ -16,7 +16,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import replace
 from operator import itemgetter
-from typing import Any, TypeVar
+from typing import Any, NamedTuple, TypeVar
 
 from . import rune_effects
 from .ability_spec import AttackClass, DamageClass
@@ -86,6 +86,7 @@ from .program import route as program_route
 # but it is the reason S4's vocabulary commit could say "nothing in src/
 # imports them yet" and the next commit could not.
 from .program.amp import (
+    AmpRiders,
     ArmingLedger,
     LiveAmpRider,
     live_amp_riders,
@@ -771,6 +772,19 @@ def _guardian_selection_template() -> dict[str, Any]:
     }
 
 
+class TimelineScene(NamedTuple):
+    """The roster and the three event books a scheduler authors into.
+
+    The books are held by reference, so a scheduler appends to the same lists
+    the composition goes on to read.
+    """
+
+    all_actors: list[Combatant]
+    incoming: MutableMapping[str, list[dict[str, Any]]]
+    outgoing: MutableMapping[str, list[dict[str, Any]]]
+    support_effects: MutableMapping[str, list[dict[str, Any]]]
+
+
 #: The compiled keystone effect a scheduler resolved, whatever its shape.
 _KeystoneEffect = TypeVar("_KeystoneEffect")
 
@@ -850,9 +864,7 @@ def _reactive_candidate(
 
 
 def _schedule_guardian_events(
-    all_actors: list[Combatant],
-    incoming: Mapping[str, list[dict[str, Any]]],
-    support_effects: Mapping[str, list[dict[str, Any]]],
+    scene: TimelineScene,
     *,
     keystone_name: str,
 ) -> None:
@@ -863,13 +875,13 @@ def _schedule_guardian_events(
     the recent 2.5-second window reaches the sourced threshold.
     """
     resolved = _keystone_holder(
-        all_actors, keystone_name, "Guardian", rune_effects.KeystoneGuardianEffect
+        scene.all_actors, keystone_name, "Guardian", rune_effects.KeystoneGuardianEffect
     )
     if resolved is None:
         return
     holder, effect = resolved
-    combatant_by_id = {actor.participant_id: actor for actor in all_actors}
-    selected = _guardian_target(holder, all_actors)
+    combatant_by_id = {actor.participant_id: actor for actor in scene.all_actors}
+    selected = _guardian_target(holder, scene.all_actors)
     if selected is None:
         return
     guarded, target_policy = selected
@@ -879,7 +891,7 @@ def _schedule_guardian_events(
     threshold = effect.threshold_at(holder.level)
     cooldown = effect.cooldown_at(holder.level)
     for trigger_target_id in protected_ids:
-        events = incoming.get(trigger_target_id, [])
+        events = scene.incoming.get(trigger_target_id, [])
         for event_index, trigger in enumerate(events):
             attacker = combatant_by_id.get(str(trigger.get("attacker", "")))
             if attacker is None or attacker.team == holder.team:
@@ -899,7 +911,7 @@ def _schedule_guardian_events(
             activation_id = f"{holder.participant_id}:{trigger_id}"
             for recipient in protected:
                 is_holder = recipient.participant_id == holder.participant_id
-                support_effects[recipient.participant_id].append(
+                scene.support_effects[recipient.participant_id].append(
                     _reactive_candidate(
                         holder=holder,
                         recipient=recipient.participant_id,
@@ -996,15 +1008,16 @@ def _trigger_reading_order(
 
 
 def _schedule_aftershock_events(
-    all_actors: list[Combatant],
-    outgoing: Mapping[str, list[dict[str, Any]]],
-    support_effects: Mapping[str, list[dict[str, Any]]],
+    scene: TimelineScene,
     *,
     keystone_name: str,
 ) -> None:
     """Author Aftershock's resistance snapshot after an accepted control."""
     resolved = _keystone_holder(
-        all_actors, keystone_name, "Aftershock", rune_effects.KeystoneAftershockEffect
+        scene.all_actors,
+        keystone_name,
+        "Aftershock",
+        rune_effects.KeystoneAftershockEffect,
     )
     if resolved is None:
         return
@@ -1015,14 +1028,14 @@ def _schedule_aftershock_events(
     )
     gate = TriggerGate(effect.cooldown_seconds, inclusive=True)
     for event, cc_kind, _duration in _immobilizing_controls(
-        outgoing.get(holder.participant_id, [])
+        scene.outgoing.get(holder.participant_id, [])
     ):
         trigger_time = float(event.get("time", 0.0) or 0.0)
         key = (str(event.get("source_key", "")), round(trigger_time, 9), cc_kind)
         if not gate.accepts(trigger_time, key):
             continue
         trigger_id = str(event.get("_event_id", ""))
-        support_effects[holder.participant_id].append(
+        scene.support_effects[holder.participant_id].append(
             _reactive_candidate(
                 holder=holder,
                 recipient=holder.participant_id,
@@ -1047,15 +1060,13 @@ def _schedule_aftershock_events(
 
 
 def _schedule_grasp_events(
-    all_actors: list[Combatant],
-    outgoing: Mapping[str, list[dict[str, Any]]],
-    support_effects: Mapping[str, list[dict[str, Any]]],
+    scene: TimelineScene,
     *,
     keystone_name: str,
 ) -> None:
     """Author Grasp's permanent health gain after each accepted proc."""
     resolved = _keystone_holder(
-        all_actors,
+        scene.all_actors,
         keystone_name,
         "Grasp of the Undying",
         rune_effects.KeystoneGraspEffect,
@@ -1066,7 +1077,7 @@ def _schedule_grasp_events(
     proc_events = sorted(
         (
             event
-            for event in outgoing.get(holder.participant_id, [])
+            for event in scene.outgoing.get(holder.participant_id, [])
             if str(event.get("source_key", "")) == effect.breakdown_key
         ),
         key=_sequence_reading_order,
@@ -1078,7 +1089,7 @@ def _schedule_grasp_events(
         if not gate.accepts(trigger_time, trigger_time):
             continue
         trigger_id = str(event.get("_event_id", ""))
-        support_effects[holder.participant_id].append(
+        scene.support_effects[holder.participant_id].append(
             _reactive_candidate(
                 holder=holder,
                 recipient=holder.participant_id,
@@ -1098,30 +1109,31 @@ def _schedule_grasp_events(
 
 
 def _schedule_glacial_events(
-    all_actors: list[Combatant],
-    outgoing: Mapping[str, list[dict[str, Any]]],
-    support_effects: Mapping[str, list[dict[str, Any]]],
+    scene: TimelineScene,
     *,
     keystone_name: str,
 ) -> None:
     """Author Glacial's zones from the holder's reviewed control events."""
     resolved = _keystone_holder(
-        all_actors, keystone_name, "Glacial Augment", rune_effects.KeystoneGlacialEffect
+        scene.all_actors,
+        keystone_name,
+        "Glacial Augment",
+        rune_effects.KeystoneGlacialEffect,
     )
     if resolved is None:
         return
     holder, effect = resolved
-    actor_by_id = {actor.participant_id: actor for actor in all_actors}
+    actor_by_id = {actor.participant_id: actor for actor in scene.all_actors}
     allied_targets = [
         actor
-        for actor in all_actors
+        for actor in scene.all_actors
         if actor.participant_id != holder.participant_id
         and ("main" if actor.team in {"main", "ally"} else actor.team) == "main"
     ]
     slow_percent = effect.slow_ratio(holder.stats) * 100.0
     gate = TriggerGate(effect.cooldown_seconds, inclusive=True)
     for event, cc_kind, cc_duration in _immobilizing_controls(
-        outgoing.get(holder.participant_id, [])
+        scene.outgoing.get(holder.participant_id, [])
     ):
         target_id = str(event.get("target", ""))
         target_actor = actor_by_id.get(target_id)
@@ -1146,7 +1158,7 @@ def _schedule_glacial_events(
         }
         # The zone outlives the control that dropped it, so its rows are not
         # reactive republishes and the walk sorts them itself.
-        support_effects[target_id].append(
+        scene.support_effects[target_id].append(
             _reactive_candidate(
                 holder=holder,
                 recipient=target_id,
@@ -1170,7 +1182,7 @@ def _schedule_glacial_events(
             )
         )
         for ally in allied_targets:
-            support_effects[ally.participant_id].append(
+            scene.support_effects[ally.participant_id].append(
                 _reactive_candidate(
                     holder=holder,
                     recipient=ally.participant_id,
@@ -1204,15 +1216,13 @@ def _schedule_glacial_events(
 
 
 def _schedule_stormraider_events(
-    all_actors: list[Combatant],
-    outgoing: Mapping[str, list[dict[str, Any]]],
-    support_effects: Mapping[str, list[dict[str, Any]]],
+    scene: TimelineScene,
     *,
     keystone_name: str,
 ) -> None:
     """Author Stormraider's movement burst from exact damage windows."""
     resolved = _keystone_holder(
-        all_actors,
+        scene.all_actors,
         keystone_name,
         "Stormraider's Surge",
         rune_effects.KeystoneStormraiderEffect,
@@ -1220,11 +1230,11 @@ def _schedule_stormraider_events(
     if resolved is None:
         return
     holder, effect = resolved
-    actors_by_id = {actor.participant_id: actor for actor in all_actors}
+    actors_by_id = {actor.participant_id: actor for actor in scene.all_actors}
     events_by_target: dict[str, list[tuple[float, int, dict[str, Any], float]]] = (
         defaultdict(list)
     )
-    for event_index, event in enumerate(outgoing.get(holder.participant_id, [])):
+    for event_index, event in enumerate(scene.outgoing.get(holder.participant_id, [])):
         target_id = str(event.get("target", ""))
         target = actors_by_id.get(target_id)
         if target is None or target.team != "enemy":
@@ -1284,7 +1294,7 @@ def _schedule_stormraider_events(
         )
         if not gate.accepts(trigger_time, trigger_id):
             continue
-        support_effects[holder.participant_id].append(
+        scene.support_effects[holder.participant_id].append(
             _reactive_candidate(
                 holder=holder,
                 recipient=holder.participant_id,
@@ -2310,9 +2320,7 @@ def _target_allocation_receipt(
 
 
 def _schedule_thorns_events(
-    all_actors: Iterable[Combatant],
-    incoming: dict[str, list[dict[str, Any]]],
-    outgoing: dict[str, list[dict[str, Any]]],
+    scene: TimelineScene,
 ) -> None:
     """Emit reactive Thorns events from modeled incoming basic attacks.
 
@@ -2322,14 +2330,14 @@ def _schedule_thorns_events(
     wearer) never retaliates. The event also carries the wound window the
     survival walk applies to the striker's healing.
     """
-    combatant_by_id = {actor.participant_id: actor for actor in all_actors}
-    for wearer in all_actors:
+    combatant_by_id = {actor.participant_id: actor for actor in scene.all_actors}
+    for wearer in scene.all_actors:
         profiles = thorns_effects(list(wearer.items))
         if not profiles:
             continue
         strikes = [
             event
-            for event in incoming.get(wearer.participant_id, [])
+            for event in scene.incoming.get(wearer.participant_id, [])
             if event.get("source_key") == "auto_attacks"
             or bool(event.get("basic_attack"))
             if not any(
@@ -2373,8 +2381,8 @@ def _schedule_thorns_events(
                     "_wound_until": float(strike.get("time", 0.0))
                     + float(profile.grievous_duration),
                 }
-                incoming.setdefault(striker.participant_id, []).append(event)
-                outgoing.setdefault(wearer.participant_id, []).append(event)
+                scene.incoming.setdefault(striker.participant_id, []).append(event)
+                scene.outgoing.setdefault(wearer.participant_id, []).append(event)
 
 
 def _schedule_authored_reactive_events(
@@ -3930,8 +3938,10 @@ def _context_setup(
                 defender.participant_id,
                 defender_index,
                 champion_wounds=wounds,
-                live_amps=_live_amps_of(attacker, defender, params),
-                holder_amps=_holder_amps_of(attacker, defender, params),
+                amps=AmpRiders(
+                    _live_amps_of(attacker, defender, params),
+                    _holder_amps_of(attacker, defender, params),
+                ),
             )
             pair_result_cache[cache_key] = view
         attacker_i = context.index_of[attacker.participant_id]
@@ -3947,8 +3957,7 @@ def _context_setup(
             id_strings=context.panel_id_strings[pair_id],
             defender_index=defender_index,
             champion_wounds=wounds,
-            live_amps=view.live_amps,
-            holder_amps=view.holder_amps,
+            amps=view.amps,
             # An enemy attacker's ordered pair list is [main, *allies], so
             # the dedup always keeps its main-pair copy, which lives in the
             # signature panel, not here.  Skip the ally-pair copies; the
@@ -4086,8 +4095,10 @@ def _build_signature_panel(
                 attacker.participant_id,
                 "main",
                 champion_wounds=wounds,
-                live_amps=_live_amps_of(attacker, main, params),
-                holder_amps=_holder_amps_of(attacker, main, params),
+                amps=AmpRiders(
+                    _live_amps_of(attacker, main, params),
+                    _holder_amps_of(attacker, main, params),
+                ),
             )
             pair_result_cache[cache_key] = view
         attacker_i = context.index_of[attacker.participant_id]
@@ -4107,8 +4118,7 @@ def _build_signature_panel(
             heal_dedup=dict(context.base_heal_dedup.get(attacker_i) or {}),
             id_strings=context.panel_id_strings[(attacker.participant_id, "main")],
             champion_wounds=wounds,
-            live_amps=view.live_amps,
-            holder_amps=view.holder_amps,
+            amps=view.amps,
         )
         sig.add_support_templates(
             _attached_support_templates(
@@ -4301,8 +4311,10 @@ def _score_with_search_context(
             id_strings=context.pair_id_strings[defender.participant_id],
             defender_index=defender_index,
             champion_wounds=main_champion_wounds,
-            live_amps=_live_amps_of(main, defender, params),
-            holder_amps=_holder_amps_of(main, defender, params),
+            amps=AmpRiders(
+                _live_amps_of(main, defender, params),
+                _holder_amps_of(main, defender, params),
+            ),
         )
     if first_result is not None and first_defender is not None:
         # The item support scan reads per-event target/id fields that only
@@ -5094,8 +5106,10 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                         defender.participant_id,
                         defender_index,
                         champion_wounds=_champion_wounds_of(attacker.champion_data),
-                        live_amps=_live_amps_of(attacker, defender, params),
-                        holder_amps=_holder_amps_of(attacker, defender, params),
+                        amps=AmpRiders(
+                            _live_amps_of(attacker, defender, params),
+                            _holder_amps_of(attacker, defender, params),
+                        ),
                     )
                     if cacheable and pair_result_cache is not None:
                         pair_result_cache[cache_key] = view
@@ -5320,39 +5334,16 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     # the redirect and holder-heal receipts share the same event order.
     schedule_knights_vow(all_actors, incoming, outgoing, support_effects)
 
+    scene = TimelineScene(all_actors, incoming, outgoing, support_effects)
     _coalesce_darius_q_heals(healing)
-    _schedule_thorns_events(all_actors, incoming, outgoing)
+    _schedule_thorns_events(scene)
     _schedule_authored_reactive_events(incoming, outgoing)
-    _schedule_guardian_events(
-        all_actors,
-        incoming,
-        support_effects,
-        keystone_name=str(getattr(params, "keystone", "") or ""),
-    )
-    _schedule_aftershock_events(
-        all_actors,
-        outgoing,
-        support_effects,
-        keystone_name=str(getattr(params, "keystone", "") or ""),
-    )
-    _schedule_glacial_events(
-        all_actors,
-        outgoing,
-        support_effects,
-        keystone_name=str(getattr(params, "keystone", "") or ""),
-    )
-    _schedule_stormraider_events(
-        all_actors,
-        outgoing,
-        support_effects,
-        keystone_name=str(getattr(params, "keystone", "") or ""),
-    )
-    _schedule_grasp_events(
-        all_actors,
-        outgoing,
-        support_effects,
-        keystone_name=str(getattr(params, "keystone", "") or ""),
-    )
+    keystone_name = str(getattr(params, "keystone", "") or "")
+    _schedule_guardian_events(scene, keystone_name=keystone_name)
+    _schedule_aftershock_events(scene, keystone_name=keystone_name)
+    _schedule_glacial_events(scene, keystone_name=keystone_name)
+    _schedule_stormraider_events(scene, keystone_name=keystone_name)
+    _schedule_grasp_events(scene, keystone_name=keystone_name)
 
     if not params.enemies_attack:
         # The Enemy Hits constraint promises exactly zero enemy damage. Enemy

@@ -485,7 +485,7 @@ def test_a_half_declared_key_group_raises_naming_the_missing_key(
     monkeypatch.setattr(
         item_behavior_catalog,
         "_schema_keys",
-        lambda owner, registry, entry: frozenset(entry),
+        lambda source, entry: frozenset(entry),
     )
     with pytest.raises(BehaviorCatalogError, match="seething_duration"):
         behavior_rules(RAMP)

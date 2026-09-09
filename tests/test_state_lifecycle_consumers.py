@@ -612,13 +612,13 @@ class TestAsheFocusConsumer:
     def test_kernel_state_drains_after_the_window(self):
         state = sl.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=4)
         assert state.stacks == 4
-        state._materialize_expiries(4.0, sequence=0)
+        state._materialize_expiries(sl.EventStamp(4.0, 0))
         assert state.stacks == 3
-        state._materialize_expiries(5.0, sequence=0)
+        state._materialize_expiries(sl.EventStamp(5.0, 0))
         assert state.stacks == 2
-        state._materialize_expiries(6.0, sequence=0)
+        state._materialize_expiries(sl.EventStamp(6.0, 0))
         assert state.stacks == 1
-        state._materialize_expiries(7.0, sequence=0)
+        state._materialize_expiries(sl.EventStamp(7.0, 0))
         assert state.stacks == 0
 
 
@@ -665,7 +665,7 @@ class TestRengarFerocityConsumer:
 
     def test_kernel_state_consume_empowers(self):
         state = sl.TimedStackState(RENGAR_FEROCITY_STACK_RULE, starting_stacks=4)
-        consumed = state.consume(0.0, sequence=0)
+        consumed = state.consume(sl.EventStamp(0.0, 0))
         assert consumed is not None
         assert consumed.detail["empowered"] is True
         assert state.stacks == 0

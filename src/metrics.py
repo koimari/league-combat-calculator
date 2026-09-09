@@ -30,7 +30,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import ModuleType
-from typing import Any
+from typing import Any, NamedTuple
 
 from sqlalchemy import select
 
@@ -67,10 +67,17 @@ def _naive_utc(value: datetime | None) -> datetime:
     return value
 
 
-def _week_windows(beta_start: datetime, weeks: int) -> list[tuple[datetime, datetime]]:
-    """Return ``[(start, end), ...]`` for each 7-day week of the beta."""
+class Window(NamedTuple):
+    """One span every persisted row is counted inside, both ends included."""
+
+    start: datetime
+    end: datetime
+
+
+def _week_windows(beta_start: datetime, weeks: int) -> list[Window]:
+    """Return one :class:`Window` for each 7-day week of the beta."""
     return [
-        (
+        Window(
             beta_start + timedelta(days=7 * index),
             beta_start + timedelta(days=7 * (index + 1)),
         )
@@ -78,9 +85,7 @@ def _week_windows(beta_start: datetime, weeks: int) -> list[tuple[datetime, date
     ]
 
 
-def _activity_rows(
-    db_module: Any, start: datetime, end: datetime
-) -> list[tuple[str | None, datetime]]:
+def _activity_rows(db_module: Any, window: Window) -> list[tuple[str | None, datetime]]:
     """``(session_id, created_at)`` pairs from every instrumented source."""
     rows: list[tuple[str | None, datetime]] = []
     with db_module.session() as db_session:
@@ -91,19 +96,19 @@ def _activity_rows(
             db_module.MetricsEvent,
         ):
             statement = select(model.session_id, model.created_at).where(
-                model.created_at >= start, model.created_at <= end
+                model.created_at >= window.start, model.created_at <= window.end
             )
             rows.extend(db_session.execute(statement).all())
     return rows
 
 
-def _receipt_count(db_module: Any, start: datetime, end: datetime) -> int:
+def _receipt_count(db_module: Any, window: Window) -> int:
     """Validation receipts (feedback rows carrying a signed delta)."""
     with db_module.session() as db_session:
         statement = select(db_module.ValidationFeedback.id).where(
             db_module.ValidationFeedback.delta.is_not(None),
-            db_module.ValidationFeedback.created_at >= start,
-            db_module.ValidationFeedback.created_at <= end,
+            db_module.ValidationFeedback.created_at >= window.start,
+            db_module.ValidationFeedback.created_at <= window.end,
         )
         return len(db_session.execute(statement).scalars().all())
 
@@ -331,13 +336,13 @@ def _weekly_gate(week_results: Sequence[dict]) -> str:
 # verbatim computation is moved from the operator CLI (scripts/beta_metrics.py).
 
 
-def _source_counts(db_module: Any, start: datetime, end: datetime) -> dict[str, int]:
+def _source_counts(db_module: Any, window: Window) -> dict[str, int]:
     """Row counts of every persisted source inside the window."""
 
     def _count_rows(model):
         with db_module.session() as db_session:
             statement = select(model.id).where(
-                model.created_at >= start, model.created_at <= end
+                model.created_at >= window.start, model.created_at <= window.end
             )
             return len(db_session.execute(statement).scalars().all())
 
@@ -351,7 +356,7 @@ def _source_counts(db_module: Any, start: datetime, end: datetime) -> dict[str, 
 
 def _retention_section(
     timeline: Any,
-    windows: Sequence[tuple[datetime, datetime]],
+    windows: Sequence[Window],
     beta_start: datetime,
     effective_end: datetime,
     *,
@@ -383,12 +388,12 @@ def _retention_section(
 
 
 def _receipt_weeks(
-    db_module: Any, windows: Sequence[tuple[datetime, datetime]], now: datetime
+    db_module: Any, windows: Sequence[Window], now: datetime
 ) -> list[dict]:
     """Validation receipts per week against ``RECEIPTS_PER_WEEK``."""
     weeks = []
     for index, (wk_start, wk_end) in enumerate(windows, start=1):
-        count = _receipt_count(db_module, wk_start, min(now, wk_end))
+        count = _receipt_count(db_module, Window(wk_start, min(now, wk_end)))
         complete = now >= wk_end
         weeks.append(
             {
@@ -405,9 +410,7 @@ def _receipt_weeks(
     return weeks
 
 
-def _bias_weeks(
-    db_module: Any, windows: Sequence[tuple[datetime, datetime]], now: datetime
-) -> list[dict]:
+def _bias_weeks(db_module: Any, windows: Sequence[Window], now: datetime) -> list[dict]:
     """Champions the bias scan flags, per week, against ``BIAS_FLAGGED_MAX``."""
     weeks = []
     for index, (_wk_start, wk_end) in enumerate(windows, start=1):
@@ -431,7 +434,7 @@ def _bias_weeks(
 def _staleness_weeks(
     report: dict | None,
     checked_at: datetime | None,
-    windows: Sequence[tuple[datetime, datetime]],
+    windows: Sequence[Window],
     now: datetime,
 ) -> list[dict]:
     """The staleness report's verdict per week."""
@@ -522,11 +525,12 @@ def compute_scorecard(
     report = _staleness_report(report_path)
     checked_at = _checked_at_naive(report)
 
-    all_rows = _activity_rows(db_module, beta_start, effective_end)
+    beta_window = Window(beta_start, effective_end)
+    all_rows = _activity_rows(db_module, beta_window)
     timeline = _session_timeline(all_rows)
     rows_without_id = sum(1 for session_id, _ in all_rows if not session_id)
-    source_counts = _source_counts(db_module, beta_start, effective_end)
-    receipts_total = _receipt_count(db_module, beta_start, effective_end)
+    source_counts = _source_counts(db_module, beta_window)
+    receipts_total = _receipt_count(db_module, beta_window)
 
     retention_overall, retention_weeks, retention_gate = _retention_section(
         timeline, windows, beta_start, effective_end, now=now

@@ -18,6 +18,7 @@ from src.calculator.participant_timeline import (
     ActorRequest,
     Combatant,
     CoupledSearchContext,
+    TimelineScene,
     _actor_params,
     _owned_state_event_id,
     _regeneration_windows,
@@ -3309,7 +3310,7 @@ def test_thorns_strikes_back_and_wounds_the_attacker_from_incoming_autos():
         ],
     }
     outgoing = {"source": list(incoming["target"]), "target": []}
-    _schedule_thorns_events([striker, wearer], incoming, outgoing)
+    _schedule_thorns_events(TimelineScene([striker, wearer], incoming, outgoing, {}))
 
     thorns_events = [
         event
@@ -3366,7 +3367,7 @@ def test_thornmail_thorns_scales_from_wearer_bonus_armor():
         ],
     }
     outgoing = {"source": list(incoming["target"]), "target": []}
-    _schedule_thorns_events([striker, wearer], incoming, outgoing)
+    _schedule_thorns_events(TimelineScene([striker, wearer], incoming, outgoing, {}))
     thorns_events = [
         event
         for event in incoming["source"]
@@ -3396,7 +3397,7 @@ def test_thorns_from_a_skipped_strike_never_fires():
         ],
     }
     outgoing = {"source": list(incoming["target"]), "target": []}
-    _schedule_thorns_events([striker, wearer], incoming, outgoing)
+    _schedule_thorns_events(TimelineScene([striker, wearer], incoming, outgoing, {}))
 
     result = _simulated_rows([striker, wearer], incoming, {}, {}, 10.0)
     assert result["target"]["survived_window"] is False
@@ -3865,7 +3866,7 @@ def test_thorns_does_not_fire_for_missed_or_blocked_basic_attack_receipts():
         ]
     }
     outgoing = {"source": list(incoming["target"]), "target": []}
-    _schedule_thorns_events([striker, wearer], incoming, outgoing)
+    _schedule_thorns_events(TimelineScene([striker, wearer], incoming, outgoing, {}))
     assert not any(
         event.get("source_key") == "thorns_Bramble Vest"
         for event in incoming.get("source", [])

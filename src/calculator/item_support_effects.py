@@ -60,6 +60,7 @@ from .roster_composition import Combatant
 from .state_lifecycle import (
     CooldownRule,
     CooldownState,
+    EventStamp,
     InstanceCadence,
     SourceReceipt,
 )
@@ -1305,7 +1306,7 @@ def derive_item_support_effects(
                 everlasting.value("everlasting_base_shield")
                 + current_mana * everlasting.value("everlasting_current_mana_ratio")
             ) * multiplier
-            cooldown_state.start(time, sequence=0)
+            cooldown_state.start(EventStamp(time))
             packets.append(
                 _packet(
                     attacker=attacker,

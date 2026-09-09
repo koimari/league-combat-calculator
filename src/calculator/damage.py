@@ -235,7 +235,12 @@ from .resistance import (
     apply_resistance,
     reduce_resistance,
 )
-from .state_lifecycle import InstanceCadence, TimedStackState, TriggerGate
+from .state_lifecycle import (
+    EventStamp,
+    InstanceCadence,
+    TimedStackState,
+    TriggerGate,
+)
 from .stats import calculate_attack_speed, effective_cooldown, resolve_move_speed
 from .survival.actions import TransitionRank, event_timestamp
 from .survival.pricing import (
@@ -1585,16 +1590,27 @@ class DecayingTarget:
         return max(0.0, float(state.target_health) - dealt)
 
 
+class AutoSwings(NamedTuple):
+    """The auto-attack stream an on-hit proc walk decays its target against.
+
+    ``auto_damage_per_hit`` and ``other_on_hit_per_hit`` are the mitigated
+    damage every swing lands beside the proc being priced, so the walk knows
+    the target's live health at each proc.
+    """
+
+    target_health: float
+    num_auto_attacks: int
+    auto_damage_per_hit: float
+    other_on_hit_per_hit: float
+    resists: Resists
+    magic_amp: float
+
+
 def _simulate_stacking_on_hit_damage(
     effect: item_effects.StackingOnHitEffect,
     base_inputs: item_effects.DamageInputs,
-    target_health: float,
-    num_auto_attacks: int,
+    swings: AutoSwings,
     *,
-    auto_damage_per_hit: float,
-    other_on_hit_per_hit: float,
-    resists: Resists,
-    magic_amp: float,
     proc_autos: list[int],
     effectiveness: float = 1.0,
     target_basic_damage_multiplier: float = 1.0,
@@ -1607,12 +1623,7 @@ def _simulate_stacking_on_hit_damage(
     effects) reduces target HP, changing the missing ratio for later procs.
 
     Args:
-        target_health: Target's starting (max) health.
-        num_auto_attacks: Number of auto attacks in the fight.
-        auto_damage_per_hit: Mitigated base auto attack damage per hit.
-        other_on_hit_per_hit: Mitigated damage from other on-hit items per hit.
-        resists: Resolved target resistances.
-        magic_amp: Magic-damage multiplier.
+        swings: The auto-attack stream to decay the target against.
         proc_autos: Sorted 0-indexed auto indices where the effect procs.
         effectiveness: On-hit effectiveness multiplier on each proc's raw
             damage (Azir soldiers proc at 50%).
@@ -1630,10 +1641,10 @@ def _simulate_stacking_on_hit_damage(
     # Convert proc list to a counter: how many procs fire on each auto
     proc_counts: dict[int, int] = Counter(proc_autos)
 
-    target = DecayingTarget.at_full(target_health)
+    target = DecayingTarget.at_full(swings.target_health)
     proc_damages: list[StackingProc] = []
 
-    for i in range(num_auto_attacks):
+    for i in range(swings.num_auto_attacks):
         procs_this_auto = proc_counts.get(i, 0)
 
         for _ in range(procs_this_auto):
@@ -1642,8 +1653,8 @@ def _simulate_stacking_on_hit_damage(
             mitigated = _mitigate(
                 raw_damage,
                 effect.source.damage_type,
-                resists,
-                magic_amp,
+                swings.resists,
+                swings.magic_amp,
             )
             basic_share = 1.0
             if effect.source.basic_damage and effect.source.damage_type != "true":
@@ -1653,7 +1664,7 @@ def _simulate_stacking_on_hit_damage(
             target.take_proc(mitigated)
 
         # Reduce HP from auto attack + other on-hit damage
-        target.settle_auto(auto_damage_per_hit + other_on_hit_per_hit)
+        target.settle_auto(swings.auto_damage_per_hit + swings.other_on_hit_per_hit)
 
     return proc_damages
 
@@ -1703,13 +1714,8 @@ def _hp_scaled_on_hit_raw(
 
 def _simulate_hp_scaled_on_hit_procs(
     on_hit_data: dict[str, Any],
-    target_health: float,
-    num_auto_attacks: int,
-    auto_damage_per_hit: float,
+    swings: AutoSwings,
     *,
-    other_on_hit_per_hit: float,
-    resists: Resists,
-    magic_amp: float,
     proc_autos: list[int],
     effectiveness: float = 1.0,
 ) -> list[float]:
@@ -1723,21 +1729,23 @@ def _simulate_hp_scaled_on_hit_procs(
     if not proc_autos:
         return []
 
-    raw_for = _hp_scaled_on_hit_raw(on_hit_data, target_health)
+    raw_for = _hp_scaled_on_hit_raw(on_hit_data, swings.target_health)
     dmg_type = ability_field(on_hit_data, "damage_type", form="on_hit")
     proc_set = set(proc_autos)
 
-    target = DecayingTarget.at_full(target_health)
+    target = DecayingTarget.at_full(swings.target_health)
     proc_damages: list[float] = []
-    for i in range(num_auto_attacks):
+    for i in range(swings.num_auto_attacks):
         if i in proc_set:
             raw_damage = raw_for(target.current_health) * effectiveness
-            mitigated = _mitigate(raw_damage, dmg_type, resists, magic_amp)
+            mitigated = _mitigate(
+                raw_damage, dmg_type, swings.resists, swings.magic_amp
+            )
             proc_damages.append(mitigated)
             target.take_proc(mitigated)
 
         # Reduce HP from auto attack + other on-hit damage
-        target.settle_auto(auto_damage_per_hit + other_on_hit_per_hit)
+        target.settle_auto(swings.auto_damage_per_hit + swings.other_on_hit_per_hit)
 
     return proc_damages
 
@@ -1745,13 +1753,8 @@ def _simulate_hp_scaled_on_hit_procs(
 def _simulate_current_health_on_hit(
     effect: item_effects.PerHitEffect,
     base_inputs: item_effects.DamageInputs,
-    target_health: float,
-    num_auto_attacks: int,
+    swings: AutoSwings,
     *,
-    auto_damage_per_hit: float,
-    other_on_hit_per_hit: float,
-    resists: Resists,
-    magic_amp: float,
     phantom_hit_autos: set[int] | None = None,
     double_hit_all: bool = False,
     effectiveness: float = 1.0,
@@ -1768,12 +1771,7 @@ def _simulate_current_health_on_hit(
     Akshan double shot), BoRK procs an extra time on every auto.
 
     Args:
-        target_health: Target's starting health.
-        num_auto_attacks: Number of auto attacks in the fight.
-        auto_damage_per_hit: Mitigated base auto attack damage per hit.
-        other_on_hit_per_hit: Mitigated damage from non-BoRK on-hit items per hit.
-        resists: Resolved target resistances.
-        magic_amp: Magic-damage multiplier.
+        swings: The auto-attack stream to decay the target against.
         phantom_hit_autos: Set of 0-indexed auto numbers that trigger phantom
             hits (from Guinsoo's Rageblade). BoRK procs an extra time on these.
         double_hit_all: If True, BoRK procs an extra time on every auto
@@ -1790,12 +1788,12 @@ def _simulate_current_health_on_hit(
     if phantom_hit_autos is None:
         phantom_hit_autos = set()
 
-    target = DecayingTarget.at_full(target_health)
+    target = DecayingTarget.at_full(swings.target_health)
     total_damage = 0.0
     total_hits = 0
     hit_damages: list[OnHitProc] = []
 
-    for i in range(num_auto_attacks):
+    for i in range(swings.num_auto_attacks):
         # How many times BoRK procs this auto (1 normally, +1 on phantom hit,
         # +1 if double_hit_all e.g. Akshan double shot)
         procs_this_auto = 1
@@ -1810,8 +1808,8 @@ def _simulate_current_health_on_hit(
             mitigated = _mitigate(
                 raw_damage,
                 effect.source.damage_type,
-                resists,
-                magic_amp,
+                swings.resists,
+                swings.magic_amp,
             )
             total_damage += mitigated
             total_hits += 1
@@ -1822,16 +1820,16 @@ def _simulate_current_health_on_hit(
         # Also reduce HP by auto attack damage and other on-hit damage
         # (other on-hit phantom procs are accounted for in other_on_hit_per_hit
         #  which is already multiplied by the average hits-per-auto)
-        on_hit_this_auto = other_on_hit_per_hit
+        on_hit_this_auto = swings.other_on_hit_per_hit
         if i in phantom_hit_autos:
-            on_hit_this_auto += other_on_hit_per_hit  # phantom extra proc
+            on_hit_this_auto += swings.other_on_hit_per_hit  # phantom extra proc
         # First-auto packets are authored by the single-proc pass, but they
         # still land on this auto and must lower the HP used by later
         # current-health procs. Keep this as an HP-only input: the packet is
         # added to the breakdown exactly once by _add_single_proc_on_hits.
         if i < len(first_auto_damage_by_auto):
             on_hit_this_auto += max(0.0, float(first_auto_damage_by_auto[i]))
-        target.settle_auto(auto_damage_per_hit + on_hit_this_auto)
+        target.settle_auto(swings.auto_damage_per_hit + on_hit_this_auto)
 
     return total_damage, total_hits, hit_damages
 
@@ -9882,12 +9880,14 @@ def _layer_on_hit_effects(
         ) = _simulate_current_health_on_hit(
             effect=current_health_effect,
             base_inputs=_damage_inputs(state),
-            target_health=state.target_health,
-            num_auto_attacks=num_auto_attacks,
-            auto_damage_per_hit=autos.auto_damage_per_hit,
-            other_on_hit_per_hit=result.static_on_hit_per_hit,
-            resists=resists,
-            magic_amp=magic_amp,
+            swings=AutoSwings(
+                target_health=state.target_health,
+                num_auto_attacks=num_auto_attacks,
+                auto_damage_per_hit=autos.auto_damage_per_hit,
+                other_on_hit_per_hit=result.static_on_hit_per_hit,
+                resists=resists,
+                magic_amp=magic_amp,
+            ),
             phantom_hit_autos=result.phantom_hit_autos,
             double_hit_all=autos.double_shot_info is not None,
             effectiveness=on_hit_effectiveness,
@@ -9996,13 +9996,15 @@ def _layer_on_hit_effects(
                 continue
             proc_damages = _simulate_hp_scaled_on_hit_procs(
                 on_hit_data,
-                state.target_health,
-                num_auto_attacks,
-                autos.auto_damage_per_hit,
-                other_on_hit_per_hit=result.static_on_hit_per_hit
-                + result.current_health_on_hit_avg,
-                resists=resists,
-                magic_amp=magic_amp,
+                AutoSwings(
+                    target_health=state.target_health,
+                    num_auto_attacks=num_auto_attacks,
+                    auto_damage_per_hit=autos.auto_damage_per_hit,
+                    other_on_hit_per_hit=result.static_on_hit_per_hit
+                    + result.current_health_on_hit_avg,
+                    resists=resists,
+                    magic_amp=magic_amp,
+                ),
                 proc_autos=proc_autos,
                 effectiveness=on_hit_effectiveness,
             )
@@ -12736,11 +12738,10 @@ def _build_ferocity_timeline(
     for cast_time, ability_key, ordinal in casts:
         before = stack.stacks
         transitions = stack.apply_gain(
-            cast_time,
+            EventStamp(cast_time, sequence),
             kind="basic_ability_cast",
             packet="ability_cast",
             meta={"source": f"{ability_key} cast", "source_key": ability_key},
-            sequence=sequence,
         )
         sequence += 1
         denied = any(transition.kind == "gain_denied" for transition in transitions)
@@ -12766,8 +12767,7 @@ def _build_ferocity_timeline(
             # and price the module's ferocity parts.
             consume_before = stack.stacks
             stack.consume(
-                cast_time,
-                sequence=sequence,
+                EventStamp(cast_time, sequence),
                 meta={"source": f"{ability_key} cast"},
             )
             sequence += 1
@@ -12908,11 +12908,10 @@ def _add_keystone_conqueror(state: FightState, rotation: RotationResult) -> None
     for trigger in triggers:
         trigger_time = float(trigger["time"])
         transitions = stack_state.apply_gain(
-            trigger_time,
+            EventStamp(trigger_time, int(trigger.get("sequence", 0))),
             kind=trigger["packet"],
             packet=trigger["packet"],
             meta=trigger,
-            sequence=int(trigger.get("sequence", 0)),
         )
         gain_transition = None
         for transition in reversed(transitions):
@@ -13017,20 +13016,31 @@ def _add_keystone_conqueror(state: FightState, rotation: RotationResult) -> None
     )
 
 
+class StackEvent(NamedTuple):
+    """One thing that happened to a champion stack resource, as receipted.
+
+    ``accepted`` with an empty ``reason`` is the stream a ledger counts;
+    a refusal names its reason and moves no count.  ``fields`` are extra
+    columns the mechanic publishes beside the shared ones.
+    """
+
+    operation: str
+    amount: float
+    time: float
+    source: str
+    accepted: bool
+    reason: str
+    fields: Mapping[str, Any] | None = None
+
+
 def _stack_receipt_row(
     kind: str,
     sequence: int,
-    operation: str,
-    amount: float,
-    time: float,
-    source: str,
+    event: StackEvent,
     *,
     current_before: Any,
     current_after: Any,
     maximum: Any,
-    accepted: bool,
-    reason: str,
-    detail: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """One row of a champion stack ledger, in the shape every kind publishes.
 
@@ -13041,10 +13051,10 @@ def _stack_receipt_row(
     return {
         "owner": "main",
         "kind": kind,
-        "operation": operation,
-        "amount": amount,
-        "time": round(float(time), 3),
-        "source": source,
+        "operation": event.operation,
+        "amount": event.amount,
+        "time": round(float(event.time), 3),
+        "source": event.source,
         "sequence": sequence,
         "tier": 0.0,
         "atoms": [],
@@ -13052,9 +13062,9 @@ def _stack_receipt_row(
         "maximum_before": maximum,
         "current_after": current_after,
         "maximum_after": maximum,
-        "accepted": accepted,
-        "reason": reason,
-        **(dict(detail) if detail else {}),
+        "accepted": event.accepted,
+        "reason": event.reason,
+        **(dict(event.fields) if event.fields else {}),
     }
 
 
@@ -13075,36 +13085,20 @@ class _StackAccount:
         self.gains = 0
         self.receipts: list[dict[str, Any]] = []
 
-    def add(
-        self,
-        operation: str,
-        amount: float,
-        time: float,
-        source: str,
-        *,
-        accepted: bool,
-        reason: str,
-        detail: Mapping[str, Any] | None = None,
-    ) -> None:
+    def add(self, event: StackEvent) -> None:
         """Append one receipt, moving the count when it is accepted."""
         before = self.current
-        if accepted and self.counting:
-            self.current += amount
+        if event.accepted and self.counting:
+            self.current += event.amount
             self.gains += 1
         self.receipts.append(
             _stack_receipt_row(
                 self.kind,
                 len(self.receipts) + 1,
-                operation,
-                amount,
-                time,
-                source,
+                event,
                 current_before=before,
                 current_after=self.current,
                 maximum=self.maximum,
-                accepted=accepted,
-                reason=reason,
-                detail=detail,
             )
         )
 
@@ -13174,47 +13168,55 @@ def _add_senna_souls(
             default=0.0,
         )
         account.add(
-            "gain",
-            1.0,
-            kill_time,
-            "champion takedown",
-            accepted=True,
-            reason="",
-            detail={
-                "event": "takedown",
-                "target": shield_outcome.get("target", "target"),
-                "event_time": round(kill_time, 3),
-            },
+            StackEvent(
+                "gain",
+                1.0,
+                kill_time,
+                "champion takedown",
+                accepted=True,
+                reason="",
+                fields={
+                    "event": "takedown",
+                    "target": shield_outcome.get("target", "target"),
+                    "event_time": round(kill_time, 3),
+                },
+            )
         )
     else:
         account.add(
-            "gain",
-            0.0,
-            0.0,
-            "champion takedown",
-            accepted=False,
-            reason="no_takedown_event",
+            StackEvent(
+                "gain",
+                0.0,
+                0.0,
+                "champion takedown",
+                accepted=False,
+                reason="no_takedown_event",
+            )
         )
     # Named fail-closed denials for the unsupported soul sources (the
     # module's documented boundaries): the model never authors these
     # events, but a future source must not silently mint souls.
     for source in ("minion_drop", "wraith_farm", "mark_consume"):
         account.add(
+            StackEvent(
+                "gain",
+                0.0,
+                0.0,
+                f"unsupported_soul_source:{source}",
+                accepted=False,
+                reason=f"unsupported_soul_source:{source}",
+                fields={"event": source, "event_time": 0.0},
+            )
+        )
+    account.add(
+        StackEvent(
             "gain",
             0.0,
             0.0,
-            f"unsupported_soul_source:{source}",
+            "soul_event_without_identity",
             accepted=False,
-            reason=f"unsupported_soul_source:{source}",
-            detail={"event": source, "event_time": 0.0},
+            reason="missing_identity",
         )
-    account.add(
-        "gain",
-        0.0,
-        0.0,
-        "soul_event_without_identity",
-        accepted=False,
-        reason="missing_identity",
     )
 
     # Every-20 threshold crossings: documented, never re-priced.
@@ -13305,15 +13307,10 @@ def _feed_ashe_focus_stack(
             _stack_receipt_row(
                 "focus",
                 len(receipts) + 1,
-                operation,
-                amount,
-                time,
-                source,
+                StackEvent(operation, amount, time, source, accepted, reason),
                 current_before=before,
                 current_after=current,
                 maximum=4,
-                accepted=accepted,
-                reason=reason,
             )
         )
 
@@ -13330,8 +13327,7 @@ def _feed_ashe_focus_stack(
         if kind == "consume":
             before = stack.stacks
             stack.consume(
-                time,
-                sequence=sequence,
+                EventStamp(time, sequence),
                 meta={"source": "Ranger's Focus activation"},
             )
             after = stack.stacks
@@ -13367,14 +13363,13 @@ def _feed_ashe_focus_stack(
         else:
             before = stack.stacks
             transitions = stack.apply_gain(
-                time,
+                EventStamp(time, sequence),
                 kind="auto_attack",
                 packet="basic_attack",
                 meta={
                     "source": f"auto attack {index}",
                     "source_key": "auto_attacks",
                 },
-                sequence=sequence,
             )
             after = stack.stacks
             denied = bool(transitions) and transitions[-1].kind == "gain_denied"
@@ -13589,39 +13584,45 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
             damage_type = part.damage_type
             event_time = float(offset) if offset is not None else 0.0
             account.add(
-                "hit",
-                amount,
-                event_time,
-                f"w_part:{damage_type}",
-                accepted=True,
-                reason="",
-                detail={
-                    "event": "w_part",
-                    "part_index": index,
-                    "damage_type": damage_type,
-                    "event_time": round(event_time, 3),
-                },
+                StackEvent(
+                    "hit",
+                    amount,
+                    event_time,
+                    f"w_part:{damage_type}",
+                    accepted=True,
+                    reason="",
+                    fields={
+                        "event": "w_part",
+                        "part_index": index,
+                        "damage_type": damage_type,
+                        "event_time": round(event_time, 3),
+                    },
+                )
             )
     else:
         account.add(
-            "deny",
-            0.0,
-            0.0,
-            "w_unavailable",
-            accepted=False,
-            reason="w_unavailable — no W cast",
+            StackEvent(
+                "deny",
+                0.0,
+                0.0,
+                "w_unavailable",
+                accepted=False,
+                reason="w_unavailable — no W cast",
+            )
         )
 
     if missing_bonus_state:
         account.add(
-            "deny",
-            0.0,
-            0.0,
-            "w_missing_resist_state",
-            accepted=False,
-            reason="w_missing_resist_state — bonus armor/magic resistance absent; "
-            "the resist terms priced at 0 (no invented stats)",
-            detail={"event": "missing_resist_state", "event_time": 0.0},
+            StackEvent(
+                "deny",
+                0.0,
+                0.0,
+                "w_missing_resist_state",
+                accepted=False,
+                reason="w_missing_resist_state — bonus armor/magic resistance absent; "
+                "the resist terms priced at 0 (no invented stats)",
+                fields={"event": "missing_resist_state", "event_time": 0.0},
+            )
         )
     # Named fail-closed denials for the unsupported state boundaries.
     for source, reason in (
@@ -13652,21 +13653,25 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
         ),
     ):
         account.add(
+            StackEvent(
+                "deny",
+                0.0,
+                0.0,
+                source,
+                accepted=False,
+                reason=reason,
+                fields={"event": source, "event_time": 0.0},
+            )
+        )
+    account.add(
+        StackEvent(
             "deny",
             0.0,
             0.0,
-            source,
+            "w_event_without_identity",
             accepted=False,
-            reason=reason,
-            detail={"event": source, "event_time": 0.0},
+            reason="missing_identity",
         )
-    account.add(
-        "deny",
-        0.0,
-        0.0,
-        "w_event_without_identity",
-        accepted=False,
-        reason="missing_identity",
     )
 
     _resource_ledger(rotation)["w"] = {
@@ -13723,35 +13728,41 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
             for index, event in enumerate(events, start=1):
                 event_time = float(event["time"])
                 account.add(
-                    "hit",
-                    float(event.get("raw_damage", 0.0)),
-                    event_time,
-                    f"{slot.lower()}_part",
-                    accepted=True,
-                    reason="",
-                    detail={
-                        "event": f"{slot.lower()}_part",
-                        "event_index": index,
-                        "event_time": round(event_time, 3),
-                    },
+                    StackEvent(
+                        "hit",
+                        float(event.get("raw_damage", 0.0)),
+                        event_time,
+                        f"{slot.lower()}_part",
+                        accepted=True,
+                        reason="",
+                        fields={
+                            "event": f"{slot.lower()}_part",
+                            "event_index": index,
+                            "event_time": round(event_time, 3),
+                        },
+                    )
                 )
         elif row is None:
             account.add(
-                "deny",
-                0.0,
-                0.0,
-                f"{slot}_unavailable",
-                accepted=False,
-                reason=f"{slot}_unavailable — no {slot} cast in this fight",
+                StackEvent(
+                    "deny",
+                    0.0,
+                    0.0,
+                    f"{slot}_unavailable",
+                    accepted=False,
+                    reason=f"{slot}_unavailable — no {slot} cast in this fight",
+                )
             )
         else:
             account.add(
-                "deny",
-                0.0,
-                0.0,
-                f"{slot}_part_without_identity",
-                accepted=False,
-                reason="missing_identity",
+                StackEvent(
+                    "deny",
+                    0.0,
+                    0.0,
+                    f"{slot}_part_without_identity",
+                    accepted=False,
+                    reason="missing_identity",
+                )
             )
 
     # Named fail-closed denials for the unsupported multi-target claims.
@@ -13786,21 +13797,25 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
         ),
     ):
         account.add(
+            StackEvent(
+                "deny",
+                0.0,
+                0.0,
+                source,
+                accepted=False,
+                reason=reason,
+                fields={"event": source, "event_time": 0.0},
+            )
+        )
+    account.add(
+        StackEvent(
             "deny",
             0.0,
             0.0,
-            source,
+            "w_e_event_without_identity",
             accepted=False,
-            reason=reason,
-            detail={"event": source, "event_time": 0.0},
+            reason="missing_identity",
         )
-    account.add(
-        "deny",
-        0.0,
-        0.0,
-        "w_e_event_without_identity",
-        accepted=False,
-        reason="missing_identity",
     )
 
     _resource_ledger(rotation)["w_e"] = {
@@ -13883,35 +13898,20 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
     current = seeded
     consumed = 0
 
-    def _add_receipt(
-        operation: str,
-        amount: float,
-        time: float,
-        source: str,
-        *,
-        accepted: bool,
-        reason: str,
-        detail: Mapping[str, Any] | None = None,
-    ) -> None:
+    def _add_receipt(event: StackEvent) -> None:
         nonlocal current, consumed
         before = current
-        if accepted:
-            current -= amount
+        if event.accepted:
+            current -= event.amount
             consumed += 1
         receipts.append(
             _stack_receipt_row(
                 "chimes",
                 len(receipts) + 1,
-                operation,
-                amount,
-                time,
-                source,
+                event,
                 current_before=before,
                 current_after=current,
                 maximum=200,
-                accepted=accepted,
-                reason=reason,
-                detail=detail,
             )
         )
 
@@ -13927,77 +13927,91 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
         for index, event in enumerate(events, start=1):
             event_time = float(event["time"])
             _add_receipt(
-                "spend",
-                1.0,
-                event_time,
-                "meep_empowered_auto",
-                accepted=True,
-                reason="",
-                detail={
-                    "event": "meep_auto",
-                    "event_index": index,
-                    "event_time": round(event_time, 3),
-                },
+                StackEvent(
+                    "spend",
+                    1.0,
+                    event_time,
+                    "meep_empowered_auto",
+                    accepted=True,
+                    reason="",
+                    fields={
+                        "event": "meep_auto",
+                        "event_index": index,
+                        "event_time": round(event_time, 3),
+                    },
+                )
             )
     elif meep_row is None or opening <= 0:
         _add_receipt(
-            "deny",
-            0.0,
-            0.0,
-            "no_meep_auto_event",
-            accepted=False,
-            reason="no_meep_auto_event",
+            StackEvent(
+                "deny",
+                0.0,
+                0.0,
+                "no_meep_auto_event",
+                accepted=False,
+                reason="no_meep_auto_event",
+            )
         )
     else:
         _add_receipt(
-            "deny",
-            0.0,
-            0.0,
-            "meep_auto_without_identity",
-            accepted=False,
-            reason="missing_identity",
+            StackEvent(
+                "deny",
+                0.0,
+                0.0,
+                "meep_auto_without_identity",
+                accepted=False,
+                reason="missing_identity",
+            )
         )
 
     # Named fail-closed denials for the unsupported chime/meep surfaces.
     for source in ("chime_spawn", "chime_collect"):
         _add_receipt(
+            StackEvent(
+                "deny",
+                0.0,
+                0.0,
+                f"unsupported_chime_source:{source}",
+                accepted=False,
+                reason="unsupported_chime_source:"
+                + source
+                + " — the model cannot simulate map chime spawning/collection",
+                fields={"event": source, "event_time": 0.0},
+            )
+        )
+    _add_receipt(
+        StackEvent(
             "deny",
             0.0,
             0.0,
-            f"unsupported_chime_source:{source}",
+            "unsupported_meep_effect:slow",
             accepted=False,
-            reason="unsupported_chime_source:"
-            + source
-            + " — the model cannot simulate map chime spawning/collection",
-            detail={"event": source, "event_time": 0.0},
+            reason="unsupported_meep_effect:slow — the meep slow (25%..75% at 5+ "
+            "chimes) is CC with no damage component",
+            fields={"event": "meep_slow", "event_time": 0.0},
         )
-    _add_receipt(
-        "deny",
-        0.0,
-        0.0,
-        "unsupported_meep_effect:slow",
-        accepted=False,
-        reason="unsupported_meep_effect:slow — the meep slow (25%..75% at 5+ "
-        "chimes) is CC with no damage component",
-        detail={"event": "meep_slow", "event_time": 0.0},
     )
     _add_receipt(
-        "deny",
-        0.0,
-        0.0,
-        "unsupported_meep_effect:splash",
-        accepted=False,
-        reason="unsupported_meep_effect:splash — the 15+ chime splash/cone "
-        "never hits the primary target (single-target model)",
-        detail={"event": "meep_splash", "event_time": 0.0},
+        StackEvent(
+            "deny",
+            0.0,
+            0.0,
+            "unsupported_meep_effect:splash",
+            accepted=False,
+            reason="unsupported_meep_effect:splash — the 15+ chime splash/cone "
+            "never hits the primary target (single-target model)",
+            fields={"event": "meep_splash", "event_time": 0.0},
+        )
     )
     _add_receipt(
-        "deny",
-        0.0,
-        0.0,
-        "meep_event_without_identity",
-        accepted=False,
-        reason="missing_identity",
+        StackEvent(
+            "deny",
+            0.0,
+            0.0,
+            "meep_event_without_identity",
+            accepted=False,
+            reason="missing_identity",
+        )
     )
 
     availability = {
@@ -14103,28 +14117,32 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
             ordinal = int(cast.get("ordinal", 0) or 0)
             for burst_index in range(bursts_per_cast):
                 account.add(
-                    "gain",
-                    _STARDUST_PER_Q_BURST,
-                    cast_time,
-                    "q_burst_champion",
-                    accepted=True,
-                    reason="",
-                    detail={
-                        "event": "q_burst",
-                        "source_key": "Q",
-                        "cast_ordinal": ordinal,
-                        "burst_index": burst_index + 1,
-                        "event_time": round(cast_time, 3),
-                    },
+                    StackEvent(
+                        "gain",
+                        _STARDUST_PER_Q_BURST,
+                        cast_time,
+                        "q_burst_champion",
+                        accepted=True,
+                        reason="",
+                        fields={
+                            "event": "q_burst",
+                            "source_key": "Q",
+                            "cast_ordinal": ordinal,
+                            "burst_index": burst_index + 1,
+                            "event_time": round(cast_time, 3),
+                        },
+                    )
                 )
     else:
         account.add(
-            "gain",
-            0.0,
-            0.0,
-            "q_burst_champion",
-            accepted=False,
-            reason="no_q_burst_event",
+            StackEvent(
+                "gain",
+                0.0,
+                0.0,
+                "q_burst_champion",
+                accepted=False,
+                reason="no_q_burst_event",
+            )
         )
 
     # Named fail-closed denials for the unsupported Stardust sources.
@@ -14136,21 +14154,25 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
         "minion_farm",
     ):
         account.add(
+            StackEvent(
+                "gain",
+                0.0,
+                0.0,
+                f"unsupported_stardust_source:{source}",
+                accepted=False,
+                reason=f"unsupported_stardust_source:{source}",
+                fields={"event": source, "event_time": 0.0},
+            )
+        )
+    account.add(
+        StackEvent(
             "gain",
             0.0,
             0.0,
-            f"unsupported_stardust_source:{source}",
+            "stardust_event_without_identity",
             accepted=False,
-            reason=f"unsupported_stardust_source:{source}",
-            detail={"event": source, "event_time": 0.0},
+            reason="missing_identity",
         )
-    account.add(
-        "gain",
-        0.0,
-        0.0,
-        "stardust_event_without_identity",
-        accepted=False,
-        reason="missing_identity",
     )
 
     # Per-100 display milestones: both priced terms are LINEAR — the rows
@@ -16341,12 +16363,14 @@ def _add_single_proc_on_hits(
                     simulated = _simulate_stacking_on_hit_damage(
                         effect,
                         _damage_inputs(state),
-                        state.target_health,
-                        num_auto_attacks,
-                        auto_damage_per_hit=autos.auto_damage_per_hit,
-                        other_on_hit_per_hit=other_on_hit_per_hit,
-                        resists=resists,
-                        magic_amp=state.magic_amp,
+                        AutoSwings(
+                            target_health=state.target_health,
+                            num_auto_attacks=num_auto_attacks,
+                            auto_damage_per_hit=autos.auto_damage_per_hit,
+                            other_on_hit_per_hit=other_on_hit_per_hit,
+                            resists=resists,
+                            magic_amp=state.magic_amp,
+                        ),
                         proc_autos=proc_autos,
                         effectiveness=effectiveness,
                         target_basic_damage_multiplier=(

@@ -47,6 +47,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
+from typing import Final, NamedTuple
 
 from ..ability_spec import AttackClass, DamageClass
 from ..interpreters import delta_amp
@@ -258,6 +259,23 @@ class LiveAmpRider:
         return damage_type in self.damage_types
 
 
+class AmpRiders(NamedTuple):
+    """One attacker's amplifiers as a pair fight carries them.
+
+    :attr:`live` are the riders the kernel evaluates at the instant of a hit;
+    :attr:`holder` is the static, pair-local factor a re-priced preview's
+    declaration is composed with.
+    """
+
+    live: Sequence[LiveAmpRider] = ()
+    holder: delta_amp.StaticHolderAmps | None = None
+
+
+#: An attacker who declared no amplifier, as one shared frozen value the
+#: signatures that default to it can name.
+NO_AMPS: Final = AmpRiders()
+
+
 def live_amp_riders(
     owners: Sequence[str],
     *,
@@ -341,6 +359,8 @@ def _rider_for(slot, rule, index: int, activation: LivePredicate) -> LiveAmpRide
 
 
 __all__ = [
+    "NO_AMPS",
+    "AmpRiders",
     "AppliesTo",
     "ArmKey",
     "ArmingDrop",

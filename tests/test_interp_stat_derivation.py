@@ -58,7 +58,7 @@ from src.calculator.item_behavior import (
     validate_rule,
 )
 from src.calculator.stats import get_item_stats
-from src.calculator.value_ref import LevelValueRef
+from src.calculator.value_ref import LevelValueRef, ValueSource
 
 CONVERSION_HOLDER = "Muramana"
 MULTIPLIER_HOLDER = "Rabadon's Deathcap"
@@ -160,8 +160,7 @@ def test_a_manaflow_ledger_missing_half_its_keys_is_a_stop() -> None:
     entry = dict(item_effects.ITEM_EFFECTS[MANAFLOW_HOLDER])
     with pytest.raises(catalog.BehaviorCatalogError, match="claimed whole"):
         catalog._manaflow_rule(
-            MANAFLOW_HOLDER,
-            "ITEM_EFFECTS",
+            ValueSource("ITEM_EFFECTS", MANAFLOW_HOLDER),
             frozenset(entry) - {"manaflow_bonus_mana_max"},
         )
 
@@ -342,8 +341,7 @@ def test_an_entry_the_family_claims_with_no_signature_key_is_a_stop() -> None:
     with pytest.raises(catalog.BehaviorCatalogError, match="derives nothing"):
         catalog._compile_stat_derivation(
             RuleFamily.STAT_DERIVATION,
-            "Long Sword",
-            "ITEM_EFFECTS",
+            ValueSource("ITEM_EFFECTS", "Long Sword"),
             {"type": "stat_conversion"},
         )
 

@@ -35,7 +35,7 @@ from src.calculator.ability_spec import (
     ProjectionStarvation,
     projection_starvation,
 )
-from src.calculator.champions.engine import _validate_cc_event_contract
+from src.calculator.champions.engine import EmittedSlot, _validate_cc_event_contract
 from src.calculator.interpreters import INTERPRETERS
 from src.calculator.item_behavior import (
     AllyProducer,
@@ -2643,8 +2643,7 @@ def test_an_out_of_vocabulary_cc_kind_raises_on_every_path_p2b_repointed():
     # spelling of the same kind never gets near the walk.
     with pytest.raises(ValueError, match="unknown cc_kind"):
         _validate_cc_event_contract(
-            "Fakechamp",
-            "Q",
+            EmittedSlot("Fakechamp", "Q"),
             {"parts": (DamagePart("magic", 100.0, cc_kind="mesmerize"),)},
         )
 
@@ -2665,14 +2664,12 @@ class TestAnAuthoredCcKindIsUncheckedUntilTheWalk:
         assert self.UNKNOWN_KIND not in CC_KIND_VOCABULARY
         with pytest.raises(ValueError, match="unknown cc_kind"):
             _validate_cc_event_contract(
-                "Fakechamp",
-                "Q",
+                EmittedSlot("Fakechamp", "Q"),
                 {"parts": (DamagePart("magic", 1.0, cc_kind=self.UNKNOWN_KIND),)},
             )
         # The same kind, authored as a declared event, passes parse time...
         _validate_cc_event_contract(
-            "Fakechamp",
-            "Q",
+            EmittedSlot("Fakechamp", "Q"),
             {
                 "parts": (),
                 "damage_events": [{"time": 0.0, "cc_kind": self.UNKNOWN_KIND}],

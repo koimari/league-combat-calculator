@@ -146,7 +146,7 @@ def _registry(registry: ValueRegistry) -> Mapping[str, Mapping[str, object]]:
     )
 
 
-def _entry_receipt(registry: ValueRegistry, owner: str) -> SourceReceipt | None:
+def _entry_receipt(source: ValueSource) -> SourceReceipt | None:
     """The receipt an owner's own registry entry carries, if it carries one.
 
     A *complete* citation is all three of ``source_url``,
@@ -155,7 +155,7 @@ def _entry_receipt(registry: ValueRegistry, owner: str) -> SourceReceipt | None:
     silently filling in the missing third of a citation is how a receipt
     starts describing a revision nobody read.
     """
-    entry = _registry(registry).get(owner)
+    entry = _registry(source.registry).get(source.owner)
     if not isinstance(entry, Mapping):
         return None
     url = entry.get("source_url")
@@ -182,13 +182,14 @@ def receipt_for(
     families live in ``item_behavior`` — which imports this module — so a
     family-keyed fallback table in this file would invert the dependency.
     """
-    entry = _entry_receipt(registry, owner)
+    source = ValueSource(registry, owner)
+    entry = _entry_receipt(source)
     if entry is not None:
         return entry
     if declared is not None:
         return declared
     raise UnsourcedDeclarationError(
-        f"{registry}[{owner!r}] carries no complete citation "
+        f"{source.label} carries no complete citation "
         "(source_url + source_revision_id + source_revision_timestamp) and the "
         "family declared no constant receipt — a rule may not be declared "
         "against an unsourced number"
@@ -270,6 +271,27 @@ class ValueRef:
         if self.registry == "ALLY_ITEM_EFFECTS":
             return item_effects.ally_item_effect_value(self.owner, self.key)
         return rune_effects.rune_effect_value(self.owner, self.key)
+
+
+@dataclass(frozen=True, slots=True)
+class ValueSource:
+    """One owner's numbers in one registry: the pair every read names."""
+
+    registry: ValueRegistry
+    owner: str
+
+    @property
+    def label(self) -> str:
+        """How a refusal names the entry, owner spelling included."""
+        return f"{self.registry}[{self.owner!r}]"
+
+    def ref(self, key: str) -> ValueRef:
+        """The reference to one of this owner's keys."""
+        return ValueRef(self.registry, self.owner, key)
+
+    def receipt(self, *, declared: SourceReceipt | None = None) -> SourceReceipt:
+        """This source's citation, resolved by :func:`receipt_for`."""
+        return receipt_for(self.registry, self.owner, declared=declared)
 
 
 @dataclass(frozen=True, slots=True)
@@ -507,6 +529,7 @@ __all__ = [
     "ValueRef",
     "ValueRefError",
     "ValueRegistry",
+    "ValueSource",
     "declared_reference",
     "receipt_for",
     "resolve",

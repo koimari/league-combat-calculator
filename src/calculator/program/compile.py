@@ -106,7 +106,7 @@ from ..survival.pricing import (
 )
 from ..trigger_stream import HolderStacking, is_immobilizing_event
 from . import events as ev
-from .amp import LiveAmpRider, live_amp_for
+from .amp import NO_AMPS, AmpRiders, live_amp_for
 from .build import (
     Program,
     Projection,
@@ -154,13 +154,14 @@ class PairView:
     templates, memoized by the composition on first use; a cached fight
     serves them to every later evaluation.
 
-    ``live_amps`` and ``holder_amps`` travel with the fight because they are
-    facts about this pair, and resolving them is not free: a search that
-    re-compiles one cached fight into a panel per defensive signature would
-    otherwise pay for them once per signature instead of once per pair.
+    ``amps`` travels with the fight because its riders are facts about this
+    pair, and resolving them is not free: a search that re-compiles one
+    cached fight into a panel per defensive signature would otherwise pay
+    for them once per signature instead of once per pair.
     """
 
     __slots__ = (
+        "amps",
         # The engine's own result, unmodified: what the per-pair ``fights``
         # receipt publishes and what the score panels compile.
         "engine",
@@ -171,8 +172,6 @@ class PairView:
         "event_id_by_aidx",
         "events",
         "heals",
-        "holder_amps",
-        "live_amps",
         "result",
         "source_names",
         "support",
@@ -182,13 +181,11 @@ class PairView:
     def __init__(
         self,
         result: Mapping[str, Any],
-        live_amps: Sequence[LiveAmpRider] = (),
-        holder_amps: StaticHolderAmps | None = None,
+        amps: AmpRiders = NO_AMPS,
     ) -> None:
         self.engine: Mapping[str, Any] = result
         self.result: Mapping[str, Any] = result
-        self.live_amps = live_amps
-        self.holder_amps = holder_amps
+        self.amps = amps
         self.events: list[dict[str, Any]] = []
         self.heals: list[dict[str, Any]] = []
         self.source_names: dict[str, dict[str, Any]] = {}
@@ -292,8 +289,7 @@ def pair_view(
     defender_index: int = 0,
     *,
     champion_wounds: Mapping[str, Any] | None = None,
-    live_amps: Sequence[LiveAmpRider] = (),
-    holder_amps: StaticHolderAmps | None = None,
+    amps: AmpRiders = NO_AMPS,
 ) -> PairView:
     """One pair fight's receipt view, through the one packet compiler.
 
@@ -303,7 +299,7 @@ def pair_view(
     and no cross-fight heal dedup to replay.  The composition owns that
     dedup itself, over the copies this view publishes.
     """
-    view = PairView(result, live_amps, holder_amps)
+    view = PairView(result, amps)
     WalkCompiler(0).add_engine_result(
         result,
         attacker_id,
@@ -316,8 +312,7 @@ def pair_view(
         id_strings=[],
         defender_index=defender_index,
         champion_wounds=champion_wounds,
-        live_amps=live_amps,
-        holder_amps=holder_amps,
+        amps=amps,
         view=view,
     )
     return view
@@ -831,8 +826,7 @@ class WalkCompiler:
         id_strings: list[str],
         defender_index: int = 0,
         champion_wounds: Mapping[str, Any] | None = None,
-        live_amps: Sequence[LiveAmpRider] = (),
-        holder_amps: StaticHolderAmps | None = None,
+        amps: AmpRiders = NO_AMPS,
         suppress_actor_wide_heals: bool = False,
         view: PairView | None = None,
     ) -> None:
@@ -860,13 +854,12 @@ class WalkCompiler:
         * ``champion_wounds`` — the attacker's wound-declaring source keys
           (Katarina R, Varus E) mapped to their packets, so a champion wound
           rides its damage event as the same receipt an item wound does.
-        * ``live_amps`` — the attacker's declared live-predicate amplifiers.
-          They ride their own damage packets so the bonus dies with its host.
-          The default is empty because most holders declare none, never
-          because a caller may leave it out.
-        * ``holder_amps`` — the attacker's own static, pair-local
-          amplifiers, needed to compose a re-priced preview's declaration and
-          required, not defaulted, the moment this fight carries one.
+        * ``amps`` — the attacker's amplifiers. ``live`` riders ride their own
+          damage packets so the bonus dies with its host, and the default is
+          empty because most holders declare none, never because a caller may
+          leave it out. ``holder`` is the static, pair-local factor a
+          re-priced preview's declaration needs, required rather than
+          defaulted the moment this fight carries one.
 
         ``suppress_actor_wide_heals`` marks a fight whose actor-wide heal
         copies are never the kept copy: an enemy attacker's ordered pair list
@@ -894,7 +887,7 @@ class WalkCompiler:
         # declaration, so dropping it would delete the family's damage.
         dropped = dropped_pair_previews(result_breakdown)
         repriced = previewed - dropped
-        if repriced and holder_amps is None:
+        if repriced and amps.holder is None:
             raise ValueError(
                 f"{attacker_id} carries {len(repriced)} re-priced pair "
                 "preview(s) and no resolved static holder amps; pricing them "
@@ -1133,9 +1126,9 @@ class WalkCompiler:
                 if champion_wounds
                 else None
             )
-            live_amp = live_amp_for(live_amps, damage_type)
+            live_amp = live_amp_for(amps.live, damage_type)
             declared = (
-                declared_packet_of(declaration, damage_type, source_key, holder_amps)
+                declared_packet_of(declaration, damage_type, source_key, amps.holder)
                 if source_key in repriced
                 else None
             )
