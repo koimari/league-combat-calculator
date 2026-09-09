@@ -6,6 +6,21 @@ import plistlib
 import sys
 from datetime import date
 from pathlib import Path
+from typing import TypedDict
+
+
+class LaunchdJob(TypedDict):
+    """One launchd job, keyed by the property names launchd itself reads."""
+
+    Label: str
+    ProgramArguments: list[str]
+    WorkingDirectory: str
+    EnvironmentVariables: dict[str, str]
+    RunAtLoad: bool
+    StartCalendarInterval: dict[str, int]
+    StandardOutPath: str
+    StandardErrorPath: str
+    ProcessType: str
 
 
 def job(
@@ -17,7 +32,7 @@ def job(
     anchor: date,
     axword: Path,
     seed: Path,
-) -> dict:
+) -> LaunchdJob:
     """Build an absolute command with a weekly Wednesday wakeup."""
     if anchor.weekday() != 2:
         raise ValueError("The fortnight anchor must be a Wednesday")

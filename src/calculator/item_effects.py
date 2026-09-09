@@ -1277,12 +1277,11 @@ def _manaflow_state(
     item_options: Mapping[str, Mapping[str, int | float]] | None,
     *,
     bonus_mana: float,
-    max_mana: float,
 ) -> tuple[str, dict[str, Any]]:
-    """One Manaflow holder's receipt state and fields.
+    """One Manaflow holder's receipt state and the fields it owns.
 
-    Every number is that holder's own — the five do not share a cadence, a
-    grant pair or a ceiling — and each extra field is claimed by a declared
+    Every number is that holder's own (the five do not share a cadence, a
+    grant pair or a ceiling), and each extra field is claimed by a declared
     key rather than by the item's name, so a holder gaining or losing Awe or
     Helping Hand changes its receipt by itself.
     """
@@ -1325,7 +1324,6 @@ def _manaflow_state(
             "packet on every qualifying basic attack, and Manaflow pays that "
             "fight the trigger amount rather than the champion one."
         )
-    fields["total_mana"] = max_mana
     state = "manaflow_progress"
     if complete:
         state = "transformed" if transforms else "manaflow_complete"
@@ -1469,10 +1467,8 @@ def item_state_receipts(
     for item_name in manaflow_items():
         if item_name not in names:
             continue
-        state, fields = _manaflow_state(
-            item_name, item_options, bonus_mana=bonus_mana, max_mana=max_mana
-        )
-        add(item_name, state, **fields)
+        state, fields = _manaflow_state(item_name, item_options, bonus_mana=bonus_mana)
+        add(item_name, state, **fields, total_mana=max_mana)
 
     if "Doran's Helm" in names:
         add(
@@ -4045,9 +4041,9 @@ def refresh_item_effects() -> None:
 ITEM_EFFECTS: dict[str, dict[str, Any]] = _build_item_effects()
 
 
-def required_effect_value(
+def required_effect_value(  # sightline-ok: 1 - key-typed read
     item_name: str, key: str
-) -> Any:  # sightline-ok: 1 - key-typed read
+) -> Any:
     """Read a required key from an item's effect entry, failing loudly.
 
     A missing key means the parser omitted a required parser-owned value or

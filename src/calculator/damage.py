@@ -236,7 +236,7 @@ from .resistance import (
 )
 from .state_lifecycle import InstanceCadence, TimedStackState, TriggerGate
 from .stats import calculate_attack_speed, effective_cooldown, resolve_move_speed
-from .survival.actions import TransitionRank
+from .survival.actions import TransitionRank, event_timestamp
 from .survival.pricing import (
     AuthoredDeclaration,
     BasicAttackSwing,
@@ -300,9 +300,9 @@ def declared_option_spec(family: str, owner: str, key: str) -> Mapping[str, Any]
     return spec
 
 
-def declared_option_default(
+def declared_option_default(  # sightline-ok: 1 - key-typed read
     family: str, owner: str, key: str
-) -> Any:  # sightline-ok: 1 - key-typed read
+) -> Any:
     """The value an unset option prices at, as its own spec declares it."""
     return declared_option_spec(family, owner, key)["default"]
 
@@ -2031,6 +2031,7 @@ def _ordered_damage_events(
     cast_events: list[dict[str, Any]] | None = None,
     light: bool = False,
     lean: bool = False,
+    roster_target_index: int | None = None,
 ) -> list[Any]:
     """Reconstruct the engine's certified damage order from its own rows.
 
@@ -2195,7 +2196,11 @@ def _ordered_damage_events(
                 part
                 for part in authored_parts
                 if part.cc_kind is not None
-                and (cc_scope is None or cc_scope.reaches(state.roster_target_index))
+                and (
+                    cc_scope is None
+                    or roster_target_index is None
+                    or cc_scope.reaches(roster_target_index)
+                )
             ),
             None,
         )
@@ -2225,7 +2230,11 @@ def _ordered_damage_events(
         # same reviewed slot certified with the stream on and went coarse
         # with it off.
         cast_fields = {
-            **(_declared_cc_marker(info) if info.get("empowers_next_auto") else {}),
+            **(
+                _declared_cc_marker(info, roster_target_index=roster_target_index)
+                if info.get("empowers_next_auto")
+                else {}
+            ),
             "basic_attack": bool(entry.get("basic_attack")),
             "cc_reviewed": bool(info.get("cc_reviewed")),
             "skillshot": bool(entry.get("skillshot")),
@@ -2497,7 +2506,7 @@ def _control_armed_event_coverage(
     melee holder, and its shield lands after that authored cast.  Which
     authored control arms it is therefore the mechanic's own question, and
     the certificate names the event that answered it: the predicate here is
-    :func:`item_support_effects.control_trigger_rule`, the same
+    :attr:`interpreters.ally_packet.AllyPacketSlot.control_arming`, the same
     ``state_lifecycle.CcTriggerRule`` the roster walk grants the shield
     through, read against the same raw rows.  A reviewed ``"none"`` row is
     not a candidate for it — that is the reviewed absence of control, which
@@ -2510,8 +2519,6 @@ def _control_armed_event_coverage(
     producer, so a second such producer is reported as itself rather than
     under the first one's name.
     """
-    from .item_support_effects import _event_time, control_trigger_rule
-
     # An ability that carries its control on a ``control_events`` row rather
     # than on a damage packet is the same evidence, so both ledgers feed one
     # scan: a reviewed control row certifies the cast that authored it.
@@ -2523,7 +2530,7 @@ def _control_armed_event_coverage(
     ledger = {"damage_events": rows}
     armed_by = ""
     for slot in _control_armed_holder_shields(items):
-        rule = control_trigger_rule(slot.producer)
+        rule = slot.control_arming
         for row in rows:
             branch = rule.match(row, is_melee=is_melee)
             if branch and not armed_by:
@@ -2531,7 +2538,7 @@ def _control_armed_event_coverage(
                     f"{slot.owner} — "
                     f"{slot.producer.value.replace('_', ' ').title()} armed by "
                     f"{row.get('source') or row.get('source_key')} ({branch}) at "
-                    f"{round(_event_time(row), 3)}s"
+                    f"{round(event_timestamp(row), 3)}s"
                 )
                 break
         # The sixth control-reading site, on the bus.  ``cc_reviewed`` on a
@@ -2690,6 +2697,7 @@ def _simulate_ordered_damage(
     target_threshold_health_heal: float = 0.0,
     target_threshold_health_ratio: float = 0.0,
     target_threshold_health_duration: float = 0.0,
+    roster_target_index: int | None = None,
 ) -> tuple[float, dict[str, float], list[dict[str, Any]], dict[str, Any]]:
     """Simulate the ordered damage ledger against the target's pools.
 
@@ -2741,6 +2749,7 @@ def _simulate_ordered_damage(
         ability_damages,
         cast_order,
         cast_events=cast_events,
+        roster_target_index=roster_target_index,
     )
 
     # 4. Simulate damage order, tracking target HP
@@ -7367,6 +7376,7 @@ def _add_precomputed_proc_damage(
                 state.ability_damages,
                 state.cast_order,
                 cast_events=rotation.cast_events,
+                roster_target_index=state.roster_target_index,
             )
             stack_times = [
                 float(event["time"])
@@ -9531,6 +9541,7 @@ def _layer_on_hit_effects(
                 state.ability_damages,
                 state.cast_order,
                 cast_events=rotation.cast_events,
+                roster_target_index=state.roster_target_index,
             )
             if event.get("phase") == "ability"
             and event.get("source_key") in state.ability_damages
@@ -10761,6 +10772,7 @@ def _unique_ledger_hits(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        roster_target_index=state.roster_target_index,
     )
     unique_hits: list[dict[str, Any]] = []
     seen: set[tuple[str, int, float]] = set()
@@ -10868,6 +10880,7 @@ def _damage_threshold_trigger_time(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        roster_target_index=state.roster_target_index,
         light=True,
     )
     window_sum = 0.0
@@ -11857,6 +11870,7 @@ def _aery_trigger_times(state: FightState, rotation: RotationResult) -> list[flo
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        roster_target_index=state.roster_target_index,
     ):
         if float(event["damage"]) <= 0.0:
             continue
@@ -11960,6 +11974,7 @@ def _aftershock_trigger_events(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        roster_target_index=state.roster_target_index,
     ):
         add(event)
     return sorted(triggers, key=lambda event: (event["time"], event["sequence"]))
@@ -12042,6 +12057,7 @@ def _add_keystone_dark_harvest(state: FightState, rotation: RotationResult) -> N
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        roster_target_index=state.roster_target_index,
     )
     if not base_events:
         state.notes.append(
@@ -12174,6 +12190,7 @@ def _certified_only_pool(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        roster_target_index=state.roster_target_index,
     )
     coverage = _event_timeline_coverage(
         state.breakdown,
@@ -12787,6 +12804,7 @@ def _conqueror_trigger_events(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        roster_target_index=state.roster_target_index,
     )
     detailed = [event for event in ordered if isinstance(event, Mapping)]
     ability_events = [
@@ -14319,6 +14337,7 @@ def _deathfire_trigger_events(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        roster_target_index=state.roster_target_index,
     )
     detailed = [
         event
@@ -16836,6 +16855,7 @@ def _add_shadowflame_cinderbloom(
         target_threshold_health_heal=config.target_threshold_health_heal,
         target_threshold_health_ratio=config.target_threshold_health_ratio,
         target_threshold_health_duration=config.target_threshold_health_duration,
+        roster_target_index=state.roster_target_index,
     )
     _apply_liandry_reprice(state, adjustments)
     if shadowflame_bonus > 0:
@@ -16884,6 +16904,7 @@ def _expose_weakness_pool(state: FightState, rotation: RotationResult) -> list[A
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        roster_target_index=state.roster_target_index,
         light=True,
     )
     boundary = min((row[0] for row in ledger if row[3] in proc_keys), default=None)
@@ -17001,6 +17022,7 @@ def _hypershot_delta_events(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        roster_target_index=state.roster_target_index,
         light=True,
     )
     trigger_key = next(
@@ -17150,6 +17172,7 @@ def _apply_general_amplifiers(state: FightState, rotation: RotationResult) -> No
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        roster_target_index=state.roster_target_index,
         light=True,
     )
     # Create per-source breakdown entries
@@ -17313,6 +17336,7 @@ def _add_rune_conditional_amp_damage(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        roster_target_index=state.roster_target_index,
         light=True,
     )
     max_health = max(0.0, state.target_health)
@@ -17401,6 +17425,7 @@ def _add_rune_flat_amp_damage(state: FightState, rotation: RotationResult) -> No
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        roster_target_index=state.roster_target_index,
         light=True,
     )
     for effect in effects:
@@ -17487,6 +17512,7 @@ def _apply_command_amp(state: FightState, rotation: RotationResult) -> None:
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        roster_target_index=state.roster_target_index,
         light=True,
     )
     amped = [row for row in events if slot.window_holds(windows, row[0][0])]
@@ -17676,6 +17702,7 @@ def _add_stored_damage(state: FightState, rotation: RotationResult) -> None:
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        roster_target_index=state.roster_target_index,
     )
     cast_positions = {slot: index for index, slot in enumerate(state.cast_order)}
     cast_times_by_slot: dict[str, list[float]] = {}
@@ -18375,6 +18402,7 @@ def calculate_fight_damage(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
+        roster_target_index=state.roster_target_index,
         light=tuple_ledger,
         lean=score_only,
     )

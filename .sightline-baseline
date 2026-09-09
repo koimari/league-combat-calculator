@@ -1,0 +1,207 @@
+# sightline baseline: `<rule>|<symbol> <count> [<shape>]`, one per line; `merge=union` is safe
+11|scripts.cast_dependency_audit.main 1 c0cc533b382319ae
+11|scripts.item_umbrella_audit.main 1 e984afd710c2d8e0
+11|scripts.migrate_single_hit_slots._keyword 1 0b118b77e4249a32
+11|scripts.patch_regression._compare_entry_rows 1 a6672e3792be167a
+11|scripts.patch_regression.compare_ability_rows 1 4656a61145790542
+11|src.calculator.champions.alistar._unbreakable_will 1 6ae02be834fd1c77
+11|src.calculator.champions.ambessa._repudiation_shield_amount 1 c677eaca59915093
+11|src.calculator.champions.ambessa._sundering_slam 1 ccefc2658003f827
+11|src.calculator.champions.blitzcrank._rocket_grab 1 68c3f8dec9fed304
+11|src.calculator.champions.briar._snack_attack 1 33c78a3be0cded57
+11|src.calculator.champions.briar.derive_self_healing 1 003694ea51e0e450
+11|src.calculator.champions.caitlyn._piltover_peacemaker 2 c815572f3bc912f6
+11|src.calculator.champions.camille._hookshot 1 f20b99f69201e21f
+11|src.calculator.champions.camille._tactical_sweep_with_shield 1 8b51301aaa87cb21
+11|src.calculator.champions.dr_mundo._nearby_champions 1 7ede7e7684c2bcfe
+11|src.calculator.champions.ekko._timewinder 1 a54bdd2f3c7e9240
+11|src.calculator.champions.evelynn._whiplash 1 9e7e89cdf11d4a27
+11|src.calculator.champions.get_champion_cast_order 1 95e33889444c7c9b
+11|src.calculator.champions.get_custom_cast_order_unavailable_reason 1 68cb99b0644b4d9f
+11|src.calculator.champions.gnar._boomerang_throw 2 e1869beb16803700
+11|src.calculator.champions.gnar._crunch 1 68d42e80d28f702c
+11|src.calculator.champions.gnar._hop 1 48594d5375a1f63b
+11|src.calculator.champions.gnar._hyper 1 4b57c21d9383a018
+11|src.calculator.champions.graves._end_of_line 1 6c54e17a65dc0e92
+11|src.calculator.champions.inputs.float_option 1 c7081570b1da3ea4
+11|src.calculator.champions.inputs.int_option 1 622ee095342eefc0
+11|src.calculator.champions.janna.derive_self_healing 1 bd1010a0abd267d4
+11|src.calculator.champions.jax._empower 1 71fdc5d54325f924
+11|src.calculator.champions.kaisa._killer_instinct 1 12cd16d75076e862
+11|src.calculator.champions.kaisa._supercharge 1 173d42e4bfc90a29
+11|src.calculator.champions.karma._focused_resolve 1 335e386de57f3638
+11|src.calculator.champions.karma._inner_flame 1 94a415a7a57cc688
+11|src.calculator.champions.kayle._kayle_e 1 784dbbf6555db383
+11|src.calculator.champions.khazix._unseen_threat 1 4427eeb4d358be7b
+11|src.calculator.champions.khazix.derive_self_healing 1 5036581c43688a9d
+11|src.calculator.champions.kindred._marks 1 f1b60389bc78a3b5
+11|src.calculator.champions.kled._violent_tendencies 1 3b7210500d0903ff
+11|src.calculator.champions.kogmaw._icathian_surprise 1 fd2339b99f6fd2aa
+11|src.calculator.champions.leona._shield_of_daybreak 1 b41cbadfd39c1a52
+11|src.calculator.champions.lillia._watch_out_eep 1 b0a6013453fb78e3
+11|src.calculator.champions.lissandra._iceborn_subjugation 1 88a1cdfbe1e3b3a9
+11|src.calculator.champions.lissandra.derive_self_healing 1 dfc41b7b60a57a28
+11|src.calculator.champions.locke._ashen_pursuit 1 b005ef0b5f6a1968
+11|src.calculator.champions.master_yi._meditate 1 3c381544c952bb9b
+11|src.calculator.champions.mel._rebuttal 1 b025af6ff4f4c48a
+11|src.calculator.champions.milio._fired_up 1 3a692401836c1fef
+11|src.calculator.champions.miss_fortune._strut 1 52a6f4f2ff63693e
+11|src.calculator.champions.mordekaiser._realm_of_death.parse 1 848694fcc7483770
+11|src.calculator.champions.morgana._soul_siphon 1 649cce1a949e216f
+11|src.calculator.champions.naafiri._eviscerate 1 315ffb25e7928ac1
+11|src.calculator.champions.nasus._fury_of_the_sands 1 ba3716ecd05782f0
+11|src.calculator.champions.nasus._soul_eater 1 b9a546f231e0f6a8
+11|src.calculator.champions.neeko._pop_blossom 1 27b44cd236410f8e
+11|src.calculator.champions.nidalee.derive_self_healing 1 5739d39ac46ea583
+11|src.calculator.champions.nilah._formless_blade 1 8503d1391c8bb5c0
+11|src.calculator.champions.olaf._tough_it_out 1 29ad8868a549f6d9
+11|src.calculator.champions.orianna._command_attack 1 611350104cf61a82
+11|src.calculator.champions.packet_module.packet_spec_sha256 1 8898f081b439fd1d
+11|src.calculator.champions.rengar._battle_roar 1 c130ee6952bde8a0
+11|src.calculator.champions.rengar._savagery 1 b629017fb4498144
+11|src.calculator.champions.samira._style_stacks 1 23b18bc05cb0b3c8
+11|src.calculator.champions.senna.derive_self_healing 1 c45131a3bdd24bad
+11|src.calculator.champions.sett._haymaker 1 9c20889f144de0b6
+11|src.calculator.champions.sett._knuckle_down 1 36484c39d820160e
+11|src.calculator.champions.shaco._two_shiv_poison 1 e66d0c379a959f84
+11|src.calculator.champions.skarner._seismic_bastion 1 6f991dccfd21fca7
+11|src.calculator.champions.sona._power_chord 1 7117ab66fe82f115
+11|src.calculator.champions.soraka.derive_self_healing 1 132aeb6160317d07
+11|src.calculator.champions.sylas.derive_self_healing 1 306a79ede8b83f8e
+11|src.calculator.champions.syndra._splinters 1 07c769857abc317e
+11|src.calculator.champions.tahm_kench._acquired_taste 1 22b7b4d92922666c
+11|src.calculator.champions.tahm_kench.derive_self_healing 1 b5be307aa0be8ae7
+11|src.calculator.champions.taliyah._seismic_shove 1 d5c34c86e5c362c6
+11|src.calculator.champions.teemo._move_quick.parse 2 30088ee3f5b9645b
+11|src.calculator.champions.udyr._blazing_stampede.parse 2 c2390dbf079a91ab
+11|src.calculator.champions.udyr._target_max_health_percent 1 21d6870e8c1bab4b
+11|src.calculator.champions.velkoz._disintegration_ray 1 5c4fba7c9e8a13d7
+11|src.calculator.champions.vi._carry_blast_shield 1 d6e15e4a62bea1a0
+11|src.calculator.champions.viktor._siphon_shield 1 3210e4502545202e
+11|src.calculator.champions.volibear.derive_self_healing 1 e5302f52757f09f6
+11|src.calculator.champions.warwick._primal_howl 1 24932abaddac67e2
+11|src.calculator.champions.yunara._transcend_one_self 1 e4216e935f7a856f
+11|src.calculator.champions.yuumi._you_and_me.parse 1 94548377b885ecf3
+11|src.calculator.interpreters.active_cast.active_fields 1 ad547a987db5493c
+11|src.calculator.interpreters.active_cast.active_mechanic_id 1 7a120da91304d2b3
+11|src.calculator.interpreters.active_cast.active_sources 1 bb797bfbb216b48a
+11|src.calculator.interpreters.ally_packet.AllyPacketSlot.level_value 1 40ed0ebc14b73e0c
+11|src.calculator.interpreters.ally_packet.AllyPacketSlot.value 2 073499d987fd5173
+11|src.calculator.interpreters.cast_proc.proc_mechanic_id 1 81b3ee97eb06e80d
+11|src.calculator.interpreters.defense_state.DefenseSlot.late_ramp 1 7a124be039115d4d
+11|src.calculator.interpreters.defense_state.DefenseSlot.ramp 1 ee559c4953a462d4
+11|src.calculator.interpreters.defense_state.DefenseSlot.value 1 eec7e8ed8d8293ad
+11|src.calculator.interpreters.delta_amp.AmpSlot.value 1 985550e4b470cbd1
+11|src.calculator.interpreters.delta_amp.PartAmp._value 1 a1800f40748738ed
+11|src.calculator.interpreters.on_hit_strike.per_hit_effects 1 11a073fed4f9c6ca
+11|src.calculator.interpreters.periodic.cadence_fields 1 967f7a3b99d86d83
+11|src.calculator.interpreters.periodic.periodic_mechanic_id 1 c4cf11c3bdefe8ea
+11|src.calculator.interpreters.spellblade.spellblade_fields 1 9a2010933aee6bcc
+11|src.calculator.interpreters.spellblade.spellblade_mechanic_id 1 c942b880497d46d7
+11|src.calculator.interpreters.stat_derivation.sole_declared_derivation 1 7b07a76106682347
+11|src.calculator.interpreters.sustain._sole_rule 1 fd68f2b39dc8c2bf
+11|src.calculator.optimizer._build_receipt_key 1 f7569ea177ce4e6f
+11|src.calculator.role_quests.inventory_capacity 1 25c50ecdfbe0b03c
+11|src.calculator.role_quests.required_boots_tier 1 cfb6b4a42481ad5a
+14|scripts.coverage_census._item_cells 1 7efb3b6c68f9c014
+14|scripts.patch_update._receipt_problems 1 7c2e642e968c4181
+14|src.calculator.champions.darius._ad_ratio 1 698961c32f749a31
+14|src.calculator.champions.engine._validate_entry_keys 1 c42294610f111a67
+14|src.calculator.champions.module_contract._declared_cast_dependencies 1 8b595bdf49077b95
+14|src.calculator.champions.slotlib.attach_self_shield 1 7893fce214ca57cb
+14|src.calculator.champions.slotlib.extract_named 1 c965621702476998
+14|src.calculator.coverage_evidence._require_text 1 85a78231339ed94a
+14|src.calculator.damage._simulate_stacking_on_hit_damage 1 a5b0512eac4f14d9
+14|src.calculator.damage._stack_receipt_row 1 1810ecc87d547ea1
+14|src.calculator.item_behavior_catalog._formula_terms 1 5874f1d7fc3ab72f
+14|src.calculator.item_behavior_catalog._whole_total_magnitude 1 e21d82c1e87ee6f9
+14|src.calculator.item_support_effects.schedule_knights_vow 1 7148389825ebc37c
+14|src.calculator.participant_timeline._schedule_aftershock_events 1 711c4a5970ff2d14
+14|src.calculator.participant_timeline._schedule_guardian_events 1 5f16f04c936af29d
+14|src.calculator.program.compile.PairView.__init__ 1 c2fa1ad483ee589f
+14|src.calculator.state_lifecycle.TimedStackState.apply_gain 1 1d834530e7a3d58d
+14|src.calculator.survival.outcome_state.OutcomeLedger.skip 1 3460f80924bf8d84
+14|src.metrics._activity_rows 1 4a51f7bf65a8e655
+27|scripts.behavior_frontier 1
+27|scripts.bench_coupled_optimizer 1
+27|scripts.build_reviewed_modules 1
+27|scripts.cast_dependency_audit 1
+27|scripts.coverage_census 1
+27|scripts.full_entry_audit 1
+27|scripts.golden_snapshot 1
+27|scripts.patch_mechanics 1
+27|scripts.patch_regression 1
+27|scripts.patch_update 1
+27|src.app 1
+27|src.calculator.ability_spec 1
+27|src.calculator.atomizer_domains 1
+27|src.calculator.bis 1
+27|src.calculator.capabilities 1
+27|src.calculator.cast_dependency 1
+27|src.calculator.champions 1
+27|src.calculator.champions.aphelios 1
+27|src.calculator.champions.aurelion_sol 1
+27|src.calculator.champions.briar 1
+27|src.calculator.champions.darius 1
+27|src.calculator.champions.dr_mundo 1
+27|src.calculator.champions.engine 1
+27|src.calculator.champions.jayce 1
+27|src.calculator.champions.mel 1
+27|src.calculator.champions.module_contract 1
+27|src.calculator.champions.naafiri 1
+27|src.calculator.champions.packet_module 1
+27|src.calculator.champions.renata_glasc 1
+27|src.calculator.champions.rumble 1
+27|src.calculator.champions.slotlib 1
+27|src.calculator.cleanse_eligibility 1
+27|src.calculator.coverage_evidence 1
+27|src.calculator.damage 2
+27|src.calculator.data_updater 1
+27|src.calculator.defensive_effects 2
+27|src.calculator.delivery_eligibility 1
+27|src.calculator.interaction_effects 1
+27|src.calculator.interpreters 1
+27|src.calculator.interpreters.charged_strike 1
+27|src.calculator.interpreters.damage_routing 1
+27|src.calculator.interpreters.delta_amp 1
+27|src.calculator.item_behavior 1
+27|src.calculator.item_behavior_catalog 1
+27|src.calculator.item_coverage 1
+27|src.calculator.item_effects 1
+27|src.calculator.item_source 1
+27|src.calculator.item_support_effects 1
+27|src.calculator.ledger_projection 2
+27|src.calculator.optimizer 1
+27|src.calculator.participant_timeline 2
+27|src.calculator.passive_parser 1
+27|src.calculator.pipeline 2
+27|src.calculator.program.build 1
+27|src.calculator.program.compile 1
+27|src.calculator.program.precision 1
+27|src.calculator.program.views 1
+27|src.calculator.program.views.survival 1
+27|src.calculator.program.walk 1
+27|src.calculator.resource_ledger 1
+27|src.calculator.rotation_resolver 1
+27|src.calculator.rune_effects 1
+27|src.calculator.rune_parser 1
+27|src.calculator.rune_paths.keystones 1
+27|src.calculator.scenario 2
+27|src.calculator.shield_ledger 1
+27|src.calculator.state_lifecycle 1
+27|src.calculator.stats 1
+27|src.calculator.support_effects 1
+27|src.calculator.survival.actions 1
+27|src.calculator.survival.receipt_state 1
+27|src.calculator.survival.transitions 1
+27|src.calculator.trigger_stream 1
+27|src.calculator.value_ref 1
+27|src.db 1
+27|src.metrics 1
+27|tests.coverage_resolver 1
+27|tests.test_behavior_frontier 1
+27|tests.test_item_support_effects 1
+27|tests.test_survival_kernel 1
+35|src.calculator.ability_atoms 1
+54|src.calculator.damage._mitigate 1 03b4c85ecf7f3de3
+54|src.calculator.damage._mitigate_hits 1 0a77d37c376a99c9

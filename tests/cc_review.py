@@ -16,6 +16,7 @@ This is a test helper, not a test module: it holds no assertions.
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import Any
 
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import parse_champion_abilities
@@ -109,7 +110,7 @@ def declared_parts(parsed, slot):
     return entry.get("parts") or ()
 
 
-def fimbulwinter_coverage(champion, **window):
+def fimbulwinter_coverage(champion, **window) -> dict[str, Any]:
     """The campaign's control-token probe, through the public entry.
 
     ``window`` overrides the probe's timed, autos-on fight (``fight_mode``,

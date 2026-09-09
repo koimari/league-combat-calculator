@@ -283,6 +283,41 @@ def test_cp13_state_receipt_contains_all_conversion_and_timed_boundaries() -> No
     assert by_item["The Collector"]["feeds_takedown_state"] is True
 
 
+def test_a_manaflow_row_publishes_the_holders_numbers_then_the_pool() -> None:
+    """A manaflow row's published shape, in key order.
+
+    Every ``manaflow_*`` number is the holder's own; ``total_mana`` is the
+    champion pool the caller priced the row against, and it lands last.
+    """
+    [row] = item_state_receipts(
+        _build("Archangel's Staff"),
+        {"Archangel's Staff": {"manaflow_bonus_mana": 120}},
+        fight_duration_seconds=12.0,
+        is_melee=False,
+        bonus_mana=600.0,
+        max_mana=1200.0,
+    )
+    assert list(row) == [
+        "item",
+        "state",
+        "source_url",
+        "source_revision_id",
+        "manaflow_bonus_mana",
+        "manaflow_cap",
+        "manaflow_charge_interval",
+        "manaflow_max_charges",
+        "manaflow_bonus_mana_per_trigger",
+        "manaflow_bonus_mana_per_champion",
+        "manaflow_on_hit_charge",
+        "transformed",
+        "awe_conversion",
+        "total_mana",
+    ]
+    assert row["manaflow_bonus_mana"] == pytest.approx(120.0)
+    assert row["manaflow_bonus_mana_per_trigger"] == pytest.approx(5.0)
+    assert row["total_mana"] == pytest.approx(1200.0)
+
+
 def test_cp16_stasis_seconds_is_a_bounded_float_state() -> None:
     parsed = validate_item_input_options(
         {"Zhonya's Hourglass": {"stasis_active_seconds": 2.5}}

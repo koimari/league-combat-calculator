@@ -1426,6 +1426,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "wiki-refresh":
         from functools import partial
+
         from scripts.wiki_refresh import refresh, run_audit, scheduled_refresh
 
         if args.scryglass_root is None:

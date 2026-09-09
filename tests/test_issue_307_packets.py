@@ -1,9 +1,9 @@
 """Reviewed evidence separates shield and healing rows from enemy damage."""
 
 import copy
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 

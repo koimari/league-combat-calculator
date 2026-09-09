@@ -515,7 +515,7 @@ def _validate_entry_keys(
     _VALIDATED_ENTRY_SHAPES.add(shape)
 
 
-def part_reaches_event_ledger(entry: Mapping[str, Any], part: Any) -> bool:
+def part_reaches_event_ledger(entry: Mapping[str, Any], part: DamagePart) -> bool:
     """Whether one part's hits become authored events the ledger can read.
 
     The parse-side reading of the emission gate in
@@ -632,7 +632,7 @@ _EMPOWER_MARKER_ZERO = ZeroPolicy(
 
 
 def _empower_marker_part(
-    entry: dict[str, Any],
+    entry: Mapping[str, Any],
     kind: str,
     champion_name: str,
     slot: str,

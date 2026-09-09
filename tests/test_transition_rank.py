@@ -33,6 +33,7 @@ from src.calculator.survival.actions import (
     action_key,
     classify_event_kind,
     compiled_damage_action,
+    event_timestamp,
     ordering_slot,
     support_transition_rank,
 )
@@ -806,7 +807,7 @@ def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:
         "healing_and_regeneration",
         "death_or_terminal_cutoff",
     ]
-    # 8 is the stat-surface labels and 9 the scoreboard control family; neither touches a phase name.
+    # 8 is the stat-surface labels, 9 the scoreboard control family; neither touches a phase name.
     assert CAPABILITY_SCHEMA_VERSION == 9
 
 
@@ -837,3 +838,24 @@ def test_s6_moved_the_ordering_and_not_the_classification() -> None:
         for rank in TransitionRank
         if ordering_slot(rank) is TransitionRank.DEBUFF_ARM
     } == {TransitionRank.DEBUFF_ARM}
+
+
+class TestOneRawRowsTimestamp:
+    """``event_timestamp`` is the ordering axis read off a raw event row.
+
+    A row that states no time is at the fight's origin, which is what
+    separates it from the engine's ``time``-keyed sorts; a row that states
+    an unusable one is a stop, because no total order can place it.
+    """
+
+    def test_a_row_that_states_no_time_is_at_the_origin(self) -> None:
+        assert event_timestamp({"cc_kind": "stun"}) == 0.0
+
+    @pytest.mark.parametrize("bad", [None, "not-a-time"])
+    def test_an_unusable_timestamp_is_a_stop(self, bad) -> None:
+        with pytest.raises(ValueError, match="must be numeric"):
+            event_timestamp({"time": bad})
+
+    def test_a_non_finite_timestamp_is_a_stop(self) -> None:
+        with pytest.raises(ValueError, match="must be finite"):
+            event_timestamp({"time": float("inf")})

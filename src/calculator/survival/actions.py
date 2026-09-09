@@ -637,6 +637,23 @@ def event_sequence(event: Mapping[str, Any]) -> int:
         return 0
 
 
+def event_timestamp(event: Mapping[str, Any]) -> float:
+    """Return one raw event row's timestamp, the walk's ordering axis.
+
+    A row that states no time is at 0.0, the fight's own origin; a row
+    that states an unusable one is a stop, because no total order can
+    place it.
+    """
+    value = event.get("time", 0.0)
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("event time must be numeric") from exc
+    if not math.isfinite(parsed):
+        raise ValueError("event time must be finite")
+    return parsed
+
+
 def participant_order(participant_id: object) -> tuple[int, str]:
     """Use a deterministic side order when sources share a timestamp."""
     text = str(participant_id or "")
@@ -1091,6 +1108,7 @@ __all__ = [
     "declared_class_set",
     "declared_modifier_classes",
     "event_sequence",
+    "event_timestamp",
     "ordering_slot",
     "participant_order",
     "public_phase",
