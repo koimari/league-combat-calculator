@@ -23,6 +23,8 @@ projection, and the campaign's propagation rule for aggregates is
 ``__add__`` on the type rather than a discipline each consumer maintains.
 """
 
+# file-length-ok: the leaf every layer imports and that imports no sibling,
+# so a split would hand one closed vocabulary two homes rather than fewer lines.
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from enum import Enum
@@ -40,6 +42,35 @@ class DamageClass(Enum):
     MAGIC = "magic"
     PHYSICAL = "physical"
     TRUE = "true"
+
+    @classmethod
+    def named(cls, damage_type: str) -> "DamageClass | None":
+        """The member spelled ``damage_type``, or ``None`` outside the vocabulary."""
+        return _DAMAGE_CLASSES.get(damage_type)
+
+    @property
+    def is_mitigable(self) -> bool:
+        """Whether a resistance answers for this class at all."""
+        return self in _MITIGATING_RESISTANCE
+
+    @property
+    def resistance_name(self) -> str:
+        """This class's resistance by combatant-stat name; raises when none answers."""
+        name = _MITIGATING_RESISTANCE.get(self)
+        if name is None:
+            raise KeyError(
+                f"{self.value!r} damage meets no resistance, so it has no "
+                "resistance name"
+            )
+        return name
+
+    def resistance_term(
+        self, *, armor: float | None, magic_resistance: float | None
+    ) -> float | None:
+        """The caller's term for this class's resistance, ``None`` when none answers."""
+        if self is DamageClass.PHYSICAL:
+            return armor
+        return magic_resistance if self is DamageClass.MAGIC else None
 
 
 class AttackClass(Enum):
@@ -353,10 +384,22 @@ class Authority(Enum):
     COUPLED_ONLY = "COUPLED_ONLY"
 
 
+# The enum's own lookup by spelling, so ``named()`` refuses an unknown
+# string instead of raising the way ``DamageClass(value)`` does.
+_DAMAGE_CLASSES = {member.value: member for member in DamageClass}
+
+# Each class's resistance by combatant-stat name, which is also the walk's
+# receipt label. TRUE is absent because no resistance answers for it, so
+# each reader turns that absence into its own refusal.
+_MITIGATING_RESISTANCE = {
+    DamageClass.PHYSICAL: "armor",
+    DamageClass.MAGIC: "magic_resistance",
+}
+
 # The projection every DamagePart is validated against, computed from the
 # enum once at import: the vocabulary has one home (DamageClass) and this
 # is its cached string view, not a second declaration of the same fact.
-_PART_DAMAGE_TYPES = frozenset(damage_class.value for damage_class in DamageClass)
+_PART_DAMAGE_TYPES = frozenset(_DAMAGE_CLASSES)
 
 
 def part_damage_types() -> frozenset[str]:

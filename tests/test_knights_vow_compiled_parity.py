@@ -134,6 +134,9 @@ test_knights_vow_* tests ~3512/3557 and the typed-action reuse
 (test_knights_vow_redirect_poisons_context_and_falls_back ~657); the
 front-end option schema in ``tests/test_app.py`` (~1644/1686).  This
 file is disjoint and pins only the Knight's Vow acceptance observables.
+
+file-length-ok: one acceptance matrix per item, and the tether, the split
+and the holder heal are one item's observables.
 """
 
 from collections import defaultdict
@@ -164,7 +167,7 @@ from src.calculator.participant_timeline import (
     build_participant_timeline,
 )
 from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.program.compile import knights_vow_target_factor
+from src.calculator.program.compile import TargetMitigation, knights_vow_target_factor
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 from tests.survival_probe import simulate_survival
@@ -1750,3 +1753,34 @@ def test_one_owner_prices_both_lanes_splits():
         )
         is None
     )
+
+
+@pytest.mark.parametrize("damage_type", ["adaptive", "mixed", "", "Physical"])
+def test_a_damage_type_outside_the_vocabulary_prices_no_split(damage_type):
+    """A spelling ``DamageClass`` does not name leaves the packet unsplit
+    rather than pricing it at a guessed resistance."""
+    assert (
+        knights_vow_target_factor(
+            damage_type=damage_type,
+            basic_attack=False,
+            damage_over_time=False,
+            source=_combatant("source", "red"),
+            target=_combatant("protected", "blue", armor=100.0),
+            raw_amount=100.0,
+        )
+        is None
+    )
+
+
+def test_true_damage_splits_whole_at_no_resistance():
+    """Neither recipient's resistances answer for true damage, so each side
+    of the split pays its share in full and reports no resistance."""
+    share = knights_vow_target_factor(
+        damage_type="true",
+        basic_attack=False,
+        damage_over_time=False,
+        source=_combatant("source", "red"),
+        target=_combatant("protected", "blue", armor=100.0, magic_resistance=100.0),
+        raw_amount=100.0,
+    )
+    assert share == TargetMitigation(1.0, None)

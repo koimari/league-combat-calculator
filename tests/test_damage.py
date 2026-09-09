@@ -12,7 +12,7 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator import damage
-from src.calculator.ability_spec import DamagePart
+from src.calculator.ability_spec import DamagePart, part_damage_types
 from src.calculator.champions import (
     parse_champion_abilities as parse_ahri_abilities,
 )
@@ -21,6 +21,7 @@ from src.calculator.damage import (
     FightConfig,
     _event_timeline_coverage,
     _mitigate,
+    _mitigate_hits,
     _navori_effective_cd,
     _ordered_damage_events,
     _simulate_current_health_on_hit,
@@ -113,6 +114,40 @@ class TestMitigate:
 
     def test_true_damage_ignores_resists_and_magic_amp(self, resists) -> None:
         assert _mitigate(300.0, "true", resists, 1.2) == 300.0
+
+    def test_an_ability_mr_override_replaces_the_fights_resolved_mr(
+        self, resists
+    ) -> None:
+        override = _mitigate(300.0, "magic", resists, 1.2, ability_mr=200.0)
+        assert override == pytest.approx(120.0)
+        assert override != _mitigate(300.0, "magic", resists, 1.2)
+
+    def test_a_type_outside_the_vocabulary_is_paid_raw(self, resists) -> None:
+        assert "adaptive" not in part_damage_types()
+        assert _mitigate(300.0, "adaptive", resists, 1.2) == 300.0
+
+    @pytest.mark.parametrize("damage_type", sorted(part_damage_types()))
+    def test_three_hits_cost_three_times_one_mitigated_hit(self, damage_type) -> None:
+        """Every class prices three hits as three times one mitigated hit."""
+        state = SimpleNamespace(
+            resists=SimpleNamespace(
+                effective_armor=100.0,
+                effective_mr=50.0,
+                physical_damage_flat_reduction=15.0,
+                physical_damage_flat_reduction_cap=0.2,
+            ),
+            magic_amp=1.35,
+            basic_amp=1.0,
+            target_basic_damage_multiplier=1.0,
+            target_basic_damage_flat_reduction=0.0,
+            target_basic_damage_flat_reduction_cap=0.0,
+            target_champion_damage_flat_reduction=0.0,
+            target_champion_dot_damage_flat_reduction=0.0,
+        )
+        part = DamagePart(damage_type, 300.0)
+        # What three 300-raw hits cost at the state above, per class.
+        expected = {"magic": 405.0, "physical": 427.5, "true": 900.0}[damage_type]
+        assert _mitigate_hits(state, part, 300.0, 200.0, hits=3) == expected
 
 
 class TestTimelineCoverage:

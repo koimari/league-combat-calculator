@@ -55,6 +55,7 @@ from dataclasses import dataclass, field
 from typing import Any, NamedTuple, Protocol
 
 from .. import shield_ledger
+from ..ability_spec import DamageClass
 from ..cleanse_eligibility import (
     CAST_BLOCKING_CONTROL_KINDS,
     CleanseEligibility,
@@ -661,16 +662,15 @@ def reprice_dynamic_resistance(
     the authoritative walk re-read the mutated event), or ``None`` when no
     reprice applied.
     """
-    if action.damage_type == "physical":
-        delta = float(state.get("dynamic_bonus_armor", 0.0) or 0.0)
-        label = "armor"
-        baseline = action.baseline_effective_armor
-    elif action.damage_type == "magic":
-        delta = float(state.get("dynamic_bonus_magic_resistance", 0.0) or 0.0)
-        label = "magic_resistance"
-        baseline = action.baseline_effective_mr
-    else:
+    damage_class = DamageClass.named(action.damage_type)
+    if damage_class is None or not damage_class.is_mitigable:
         return None
+    term, label = damage_class.resistance_term, damage_class.resistance_name
+    armed_armor = state.get("dynamic_bonus_armor", 0.0)
+    armed_mr = state.get("dynamic_bonus_magic_resistance", 0.0)
+    delta = float(term(armor=armed_armor, magic_resistance=armed_mr) or 0.0)
+    base_armor, base_mr = action.baseline_effective_armor, action.baseline_effective_mr
+    baseline = term(armor=base_armor, magic_resistance=base_mr)
     if delta <= 0.0:
         return None
     if baseline is None:

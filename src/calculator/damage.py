@@ -173,6 +173,7 @@ from .ability_spec import (
     AttackClass,
     ControlEvent,
     ControlScope,
+    DamageClass,
     DamagePart,
     cc_kind_reviewed,
 )
@@ -552,11 +553,19 @@ def _mitigate(
     damage_type: str,
     resists: Resists,
     magic_amp: float,
+    *,
+    ability_mr: float | None = None,
 ) -> float:
-    """Apply the fight's resolved resistance and magic-only amplifier."""
-    if damage_type == "magic":
-        return apply_resistance(raw_damage, resists.effective_mr) * magic_amp
-    if damage_type == "physical":
+    """Apply the fight's resolved resistance and magic-only amplifier.
+
+    ``ability_mr`` is the MR one ability's own hits meet; absent it, the
+    fight's resolved MR answers.
+    """
+    damage_class = DamageClass.named(damage_type)
+    if damage_class is DamageClass.MAGIC:
+        mr = resists.effective_mr if ability_mr is None else ability_mr
+        return apply_resistance(raw_damage, mr) * magic_amp
+    if damage_class is DamageClass.PHYSICAL:
         reduced_raw = _apply_physical_damage_reduction(raw_damage, resists)
         return apply_resistance(reduced_raw, resists.effective_armor)
     return raw_damage
@@ -3899,13 +3908,12 @@ def _mitigate_hits(
     damage_over_time: bool = False,
 ) -> float:
     """Mitigated damage for *hits* identical hits of one damage part."""
-    if part.damage_type == "true":
-        mitigated = raw * hits
-    elif part.damage_type == "physical":
-        reduced_raw = _apply_physical_damage_reduction(raw, state.resists)
-        mitigated = apply_resistance(reduced_raw, state.resists.effective_armor) * hits
-    else:
-        mitigated = apply_resistance(raw, ability_mr) * state.magic_amp * hits
+    # ``DamagePart.__post_init__`` refuses a class outside the vocabulary, so
+    # no part reaches here whose type ``_mitigate`` pays raw.
+    one_hit = _mitigate(
+        raw, part.damage_type, state.resists, state.magic_amp, ability_mr=ability_mr
+    )
+    mitigated = one_hit * hits
     mitigated = _apply_basic_amp(state, part, mitigated)
     if part.basic_damage and part.damage_type != "true":
         mitigated = _apply_target_basic_damage_reduction(
