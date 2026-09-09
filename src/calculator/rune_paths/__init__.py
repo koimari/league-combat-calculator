@@ -28,7 +28,7 @@ the roster says its slot is.
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from ..rune_effects import RuneEffect, RuneOption
+from ..rune_effects import RuneEffect, RuneOption, register_rune_compilers
 from . import (
     domination,
     inspiration,
@@ -81,6 +81,13 @@ def path_options() -> dict[str, tuple[RuneOption, ...]]:
                 )
             merged[name] = options
     return merged
+
+
+def publish_rune_compilers() -> None:
+    """Hand this package's tables to ``rune_effects``; ``src.calculator`` calls it."""
+    register_rune_compilers(
+        keystone_compilers(), path_compilers(), shard_compilers(), path_options()
+    )
 
 
 def keystone_compilers() -> dict[str, RuneCompiler]:

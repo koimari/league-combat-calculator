@@ -14,6 +14,7 @@ from .resistance import (
     apply_magic_penetration,
     apply_resistance,
 )
+from .rune_paths import publish_rune_compilers
 from .stats import calculate_total_stats, growth_stat
 
 __all__ = [
@@ -34,3 +35,5 @@ __all__ = [
     "is_champion_supported",
     "parse_abilities",
 ]
+
+publish_rune_compilers()

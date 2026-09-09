@@ -36,6 +36,7 @@ P1 addition over the reviewed packet:
 import math
 from typing import Any
 
+from ..ability_prose import extract_description_duration
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
@@ -43,7 +44,6 @@ from .inputs import int_option
 from .packet_module import build_packet_module
 from .slotlib import (
     attach_self_shield,
-    extract_description_duration,
     extract_named,
     find_named_leveling,
     on_hit_entry,

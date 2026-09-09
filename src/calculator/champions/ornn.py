@@ -15,7 +15,7 @@ import re
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..stats import MAX_LEVEL
+from ..stat_formulas import MAX_LEVEL
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import int_option
 from .module_contract import coverage

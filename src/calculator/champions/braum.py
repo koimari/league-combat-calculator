@@ -37,7 +37,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from ..stats import effective_cooldown
+from ..stat_formulas import effective_cooldown
 from .engine import BUFF, CC_PER_PART, SlotCtx, build_parser
 from .inputs import bool_option, float_option
 from .module_helpers import at_level, ranked_slot

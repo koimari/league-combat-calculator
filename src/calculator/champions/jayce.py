@@ -84,7 +84,7 @@ from ..binary_roots import (
     data_value,
     spell_object,
 )
-from ..stats import ATTACK_SPEED_CAP, calculate_attack_speed
+from ..stat_formulas import ATTACK_SPEED_CAP, calculate_attack_speed
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import bool_option
 from .module_contract import coverage

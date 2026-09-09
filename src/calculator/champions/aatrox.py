@@ -42,6 +42,7 @@ from collections.abc import Iterable
 from typing import Any
 
 from ..ability_atoms import ability_field, ability_payload
+from ..ability_prose import extract_description_duration
 from ..ability_spec import DamagePart
 from ..healing_helpers import (
     HealAnchor,
@@ -59,7 +60,6 @@ from .slotlib import (
     ability_name,
     damage_entry,
     extract_cooldown,
-    extract_description_duration,
     extract_named,
     on_hit_entry,
     pct_health_per_hit,

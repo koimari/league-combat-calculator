@@ -186,6 +186,7 @@ from . import (
     zoe,
     zyra,
 )
+from .inputs import use_options_rows
 from .module_contract import ChampionModuleContract, contract_from_module
 
 # Map display name -> module name within this package.  This is the single
@@ -1067,3 +1068,14 @@ def engine_registration_kind(champion_name: str) -> str | None:
 def is_champion_supported(champion_name: str) -> bool:
     """Whether this champion has a dedicated module with ability damage."""
     return champion_name in _CHAMPION_MODULES
+
+
+def declared_options_rows(champion_name: str) -> list[dict[str, Any]]:
+    """The OPTIONS rows one champion's module declares, read by ``inputs``."""
+    return get_champion_options_meta(champion_name)["options"]
+
+
+# ``inputs`` is a leaf of this tree, so the registry hands it this reader
+# rather than being imported back.  A contract is validated when a formula
+# asks for a default, not here.
+use_options_rows(declared_options_rows)

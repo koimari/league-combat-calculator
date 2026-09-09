@@ -17,8 +17,7 @@ import re
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from .atomizer import Atomizer, number_and_unit, split_effect_fragments
-from .champions.slotlib import (
+from .ability_prose import (
     extract_description_control_durations,
     extract_description_damage_reduction,
     extract_description_damage_reduction_cap,
@@ -26,6 +25,7 @@ from .champions.slotlib import (
     extract_description_invulnerability_timing,
     extract_description_shield_duration,
 )
+from .atomizer import Atomizer, number_and_unit, split_effect_fragments
 
 # keyword -> (atom_id, behavior)
 # Coverage classes: damage, heal, shield, crowd-control

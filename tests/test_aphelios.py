@@ -4,9 +4,9 @@ import re
 
 import pytest
 
+from src.calculator.ability_prose import effect_description
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import aphelios, parse_champion_abilities
-from src.calculator.champions.slotlib import effect_description
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
 

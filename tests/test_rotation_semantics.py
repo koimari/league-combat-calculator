@@ -279,12 +279,10 @@ class TestNoSignalGuard:
     ) -> None:
         """A receipt cannot claim "no detectable setup/consume signal" while
         an enabled option is unclassified (issue #145 acceptance)."""
-        from src.calculator import champions as champions_module
-
         data = champion_by_name["Fiddlesticks"]
         parsed = _parse(data, 11, (), items_by_name)
 
-        real = champions_module.get_champion_option_rotation
+        real = rotation_resolver.get_champion_option_rotation
 
         def unclassified(name):
             result = dict(real(name))
@@ -292,7 +290,7 @@ class TestNoSignalGuard:
             return result
 
         monkeypatch.setattr(
-            champions_module, "get_champion_option_rotation", unclassified
+            rotation_resolver, "get_champion_option_rotation", unclassified
         )
         rotation_resolver._DERIVED_RULE_CACHE.clear()
         _order, rule = _resolve(data, parsed)

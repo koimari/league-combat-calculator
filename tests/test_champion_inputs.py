@@ -216,6 +216,20 @@ def test_option_defaults_come_from_the_module_s_own_options_rows() -> None:
     assert set(RESERVED_OPTION_DEFAULTS) <= set(defaults)
 
 
+def test_the_registry_wires_the_options_rows_port() -> None:
+    """Importing the champion package is what fills the port."""
+    assert inputs._OPTIONS_ROWS is not None
+
+
+def test_option_defaults_refuse_to_answer_with_no_wired_source(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An unwired port names the registry that fills it, never a bare default."""
+    monkeypatch.setattr(inputs, "_OPTIONS_ROWS", None)
+    with pytest.raises(ChampionInputError, match="champions/__init__"):
+        declared_option_defaults("Pantheon")
+
+
 class TestTheEscalatedDefectIsStillTracked:
     """``docs/receipts/escalated-defects-P3-3.7.json``, gated (R-16 Shape).
 

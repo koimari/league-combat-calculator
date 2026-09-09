@@ -1129,7 +1129,7 @@ class TestTheDerivationReadsDeclarations:
         the module, and serving the base order would be exactly the
         silent fallback this phase exists to end.
         """
-        from src.calculator import champions as champions_module
+        from src.calculator import rotation_resolver
 
         cycle = (
             CastDependency(
@@ -1148,7 +1148,7 @@ class TestTheDerivationReadsDeclarations:
             ),
         )
         monkeypatch.setattr(
-            champions_module, "get_champion_cast_dependencies", lambda name: cycle
+            rotation_resolver, "get_champion_cast_dependencies", lambda name: cycle
         )
         _DERIVED_RULE_CACHE.clear()
         data = champion_by_name["Ahri"]

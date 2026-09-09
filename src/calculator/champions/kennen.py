@@ -13,6 +13,11 @@ import math
 import re
 from typing import Any
 
+from ..ability_prose import (
+    effect_description,
+    extract_description_control_durations,
+    extract_description_duration,
+)
 from ..ability_spec import DamagePart
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import bool_option, int_option
@@ -26,10 +31,7 @@ from .module_helpers import (
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
-    effect_description,
     extract_cooldown,
-    extract_description_control_durations,
-    extract_description_duration,
     extract_named,
     simple_damage,
 )

@@ -2,18 +2,28 @@
 
 import pytest
 
+from src.calculator import stats as stats_module
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_effects import swiftmarch_adaptive_force
 from src.calculator.rune_effects import validate_rune_page
-from src.calculator.stats import (
+from src.calculator.stat_formulas import (
     apply_movement_speed_soft_caps,
     calculate_attack_speed,
+    growth_stat,
+)
+from src.calculator.stats import (
     calculate_total_stats,
     get_champion_base_stats,
     get_item_stats,
-    growth_stat,
     item_mana_reaches_pool,
 )
+
+
+def test_stats_re_exports_the_formula_objects() -> None:
+    """``stats`` publishes the leaf's own objects, not copies."""
+    assert stats_module.growth_stat is growth_stat
+    assert stats_module.calculate_attack_speed is calculate_attack_speed
+    assert stats_module.apply_movement_speed_soft_caps is apply_movement_speed_soft_caps
 
 
 class TestLethality:

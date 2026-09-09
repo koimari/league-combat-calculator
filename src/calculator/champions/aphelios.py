@@ -38,6 +38,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_atoms import ability_field, ability_payload
+from ..ability_prose import extract_description_duration
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, CC_PER_PART, SlotCtx
@@ -49,7 +50,6 @@ from .slotlib import (
     ability_name,
     damage_entry,
     extract_cooldown,
-    extract_description_duration,
     extract_value,
     find_named_leveling,
     sum_modifiers,

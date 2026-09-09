@@ -51,7 +51,7 @@ from ..binary_roots import (
     data_value_at_rank,
     spell_object,
 )
-from ..stats import growth_multiplier
+from ..stat_formulas import growth_multiplier
 from .engine import CC_PER_PART, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
