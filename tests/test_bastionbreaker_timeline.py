@@ -3,10 +3,8 @@
 from types import SimpleNamespace
 
 from src.calculator.ability_spec import DamagePart
-from src.calculator.damage import (
-    RotationResult,
-    _shaped_charge_proc_receipts,
-)
+from src.calculator.fight.results import RotationResult
+from src.calculator.fight.rotation.shaped_charge import _shaped_charge_proc_receipts
 
 
 def _state() -> SimpleNamespace:

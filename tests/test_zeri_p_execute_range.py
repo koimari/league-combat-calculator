@@ -203,8 +203,9 @@ from tests.committed_bytes import sha256_as_committed
 # Coverage has one home now: the validated module contract (a module only
 # restates it as ``MODULE_COVERAGE`` when it differs from what SLOTS derive).
 MODULE_COVERAGE = get_champion_module_contract("Zeri").coverage
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.config import FightConfig
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _ZERI_DATA = _CHAMPION_DATA["Zeri"]

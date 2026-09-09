@@ -69,9 +69,10 @@ import pytest
 from src.app import _load_public_champion
 from src.calculator import participant_timeline
 from src.calculator.ability_spec import DamagePart
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
+from src.calculator.fight.config import FightConfig
 from src.calculator.interpreters import (
     cast_proc,
     compilability_for,
@@ -886,7 +887,7 @@ class TestFailClosedMetadata:
         # exactly like the non-finite time branch; pin the caller's
         # withheld handling through that branch.
         monkeypatch.setattr(
-            "src.calculator.damage._stacked_champion_proc_times",
+            "src.calculator.fight.autos.single_proc_on_hits._stacked_champion_proc_times",
             lambda *args, **kwargs: None,
         )
         fight = _fight(

@@ -173,9 +173,10 @@ from src.calculator.crowd_control_eligibility import (
     KNOWN_CONTROL_KINDS,
     classify_control,
 )
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.fight.config import FightConfig
 from src.calculator.healing import derive_self_healing
 from src.calculator.participant_timeline import Combatant
 from src.calculator.survival.compile import unrepresentable_template_receipt

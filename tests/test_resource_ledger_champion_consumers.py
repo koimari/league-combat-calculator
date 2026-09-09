@@ -16,8 +16,9 @@ the direct-engine low-mana scenarios the run_fight fixtures cannot reach:
 import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.config import FightConfig
 
 JAYCE_SOURCE = "Jayce W passive (Mana Restored)"
 EZREAL_SOURCE = "Ezreal W (Essence Flux) mark refund"

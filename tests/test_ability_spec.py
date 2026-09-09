@@ -1,6 +1,6 @@
 """Unit tests for the typed champion→engine damage contract.
 
-Exercises damage._evaluate_cast_parts directly with a stub FightState:
+Exercises fight.rotation.cast_parts._evaluate_cast_parts directly with a stub FightState:
 the evaluator owns HP-threading, per-part mitigation, and reduced-
 effectiveness crit — champion files own only the closures.  Also pins the
 four closed vocabularies the leaf declares, member for member.
@@ -28,7 +28,7 @@ from src.calculator.ability_spec import (
     Disposition,
     part_damage_types,
 )
-from src.calculator.damage import _evaluate_cast_parts
+from src.calculator.fight.rotation.cast_parts import _evaluate_cast_parts
 from src.calculator.resistance import apply_resistance
 from tests import ability_math
 

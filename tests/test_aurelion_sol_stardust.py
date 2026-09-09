@@ -146,8 +146,9 @@ from src.calculator.champions.aurelion_sol import (
     AURELION_SOL_STARDUST_RULE,
 )
 from src.calculator.champions.slotlib import find_named_leveling
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.config import FightConfig
 from src.calculator.pipeline import ONE_ROTATION_DURATION, FightParams, run_fight
 from tests.parse_stats import parse_stats
 

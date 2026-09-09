@@ -124,8 +124,9 @@ from src.calculator.champions import (
     registered_champion_names,
 )
 from src.calculator.champions import jayce as jayce_module
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.config import FightConfig
 from src.calculator.pipeline import FightParams, run_fight
 
 _ROOT = Path(__file__).resolve().parents[1]

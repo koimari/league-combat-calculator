@@ -13,8 +13,9 @@ import pytest
 
 from src.calculator.ability_spec import ControlEvent, ControlScope, DamagePart
 from src.calculator.calculate import calculate_payload
-from src.calculator.damage import _entry_control_scope, _ordered_damage_events
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.cast_control_marker import _entry_control_scope
+from src.calculator.fight.ledger.event_ledger import _ordered_damage_events
 
 TWO_ENEMIES = [
     {"champion": "Garen", "level": 18, "items": []},

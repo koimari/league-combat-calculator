@@ -3473,7 +3473,7 @@ def _rebind_self_shields(
     """Move the holder's waiting self-shield riders onto the packet that landed.
 
     A rider declaring ``rebinds_on_ability_hit`` is bound to one carrier
-    packet by ordinal, in ``damage._damage_event_row``, before the walk
+    packet by ordinal, in ``fight.ledger.event_rows._damage_event_row``, before the walk
     knows which packets land.  The trigger gate parks it when that carrier
     is skipped and this arms it on the holder's next landing ability packet,
     at that packet's timestamp.  It is the same action and the same ledger

@@ -16,17 +16,17 @@ from src.calculator.ability_spec import DamagePart
 from src.calculator.champions import (
     parse_champion_abilities as parse_ahri_abilities,
 )
-from src.calculator.damage import (
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.autos.decaying_health_walk import (
     AutoSwings,
-    FightConfig,
-    _calculate_stacking_procs,
     _simulate_current_health_on_hit,
     _simulate_stacking_on_hit_damage,
-    calculate_fight_damage,
 )
-from src.calculator.damage import (
+from src.calculator.fight.autos.on_hit_stream import (
     _calculate_phantom_hits as _calculate_phantom_hits_compiled,
 )
+from src.calculator.fight.autos.on_hit_stream import _calculate_stacking_procs
+from src.calculator.fight.config import FightConfig
 from src.calculator.interpreters import (
     cast_proc,
     charged_strike,
@@ -815,7 +815,7 @@ class TestShadowflameCinderbloom:
 
     def test_no_bonus_when_target_above_threshold(self) -> None:
         """No Shadowflame bonus when all damage is dealt above 40% HP."""
-        from src.calculator.damage import _simulate_ordered_damage
+        from src.calculator.fight.ledger.pool_walk import _simulate_ordered_damage
 
         breakdown = {
             "Q": {
@@ -841,7 +841,7 @@ class TestShadowflameCinderbloom:
 
     def test_bonus_when_target_below_threshold(self) -> None:
         """Damage dealt when target is below 40% should get 20% bonus."""
-        from src.calculator.damage import _simulate_ordered_damage
+        from src.calculator.fight.ledger.pool_walk import _simulate_ordered_damage
 
         # Q does 700 damage (drops target from 1000 to 300, below 400)
         # W does 200 magic damage (target already below 40%)
@@ -886,7 +886,7 @@ class TestShadowflameCinderbloom:
 
     def test_magic_shield_delays_shadowflame_health_threshold(self) -> None:
         """A ready magic shield must absorb events before health falls."""
-        from src.calculator.damage import _simulate_ordered_damage
+        from src.calculator.fight.ledger.pool_walk import _simulate_ordered_damage
 
         breakdown = {
             slot: {
@@ -923,7 +923,7 @@ class TestShadowflameCinderbloom:
 
     def test_timed_cast_timeline_controls_threshold_crossing(self) -> None:
         """Recasts must not be grouped ahead of intervening abilities."""
-        from src.calculator.damage import _simulate_ordered_damage
+        from src.calculator.fight.ledger.pool_walk import _simulate_ordered_damage
 
         breakdown = {
             "Q": {
@@ -961,7 +961,7 @@ class TestShadowflameCinderbloom:
         assert bonus == pytest.approx(100.0)
 
     def test_lifeline_shield_delays_shadowflame_health_threshold(self) -> None:
-        from src.calculator.damage import _simulate_ordered_damage
+        from src.calculator.fight.ledger.pool_walk import _simulate_ordered_damage
 
         breakdown = {
             slot: {
@@ -995,7 +995,7 @@ class TestShadowflameCinderbloom:
 
     def test_physical_damage_not_affected(self) -> None:
         """Physical damage below threshold should not get Shadowflame bonus."""
-        from src.calculator.damage import _simulate_ordered_damage
+        from src.calculator.fight.ledger.pool_walk import _simulate_ordered_damage
 
         breakdown = {
             "Q": {
@@ -1026,7 +1026,7 @@ class TestShadowflameCinderbloom:
 
     def test_mixed_damage_splits_correctly(self) -> None:
         """Mixed abilities (like Ahri Q) should split into magic and true events."""
-        from src.calculator.damage import _simulate_ordered_damage
+        from src.calculator.fight.ledger.pool_walk import _simulate_ordered_damage
 
         # Q: 300 magic (mitigated) + 500 true = 800 total
         # Target at 1000 HP: after Q magic (300), HP = 700 (above 400)
@@ -1169,7 +1169,7 @@ class TestShadowflameCinderbloom:
         Counting the Q2 breakdown row AGAIN as an "item effect" event would
         add a bogus below-threshold event worth another 80.
         """
-        from src.calculator.damage import _simulate_ordered_damage
+        from src.calculator.fight.ledger.pool_walk import _simulate_ordered_damage
 
         breakdown = {
             "Q": {
@@ -1225,8 +1225,8 @@ class TestShadowflameCinderbloom:
         parse_at,
     ) -> None:
         """A real synthetic recast and a triggered proc each enter once."""
-        from src.calculator.damage import _ordered_damage_events
         from src.calculator.data_fetcher import get_item_by_name
+        from src.calculator.fight.ledger.event_ledger import _ordered_damage_events
 
         items = [shadowflame, get_item_by_name("Luden's Echo")]
         stats, abilities = parse_at(ambessa_data, 18, items=items)
@@ -3146,7 +3146,9 @@ class TestFiendhunterBolts:
         }
         abilities = {}
         # Force no crits: random.random() always returns 0.99 (> 0.25)
-        with patch("src.calculator.damage.random.random", return_value=0.99):
+        with patch(
+            "src.calculator.fight.autos.simulation.random.random", return_value=0.99
+        ):
             fight = calculate_fight_damage(
                 stats,
                 abilities,
@@ -3201,7 +3203,10 @@ class TestFiendhunterBolts:
         abilities = {}
         # 1st auto crits (0.1 < 0.25), 2nd and 3rd don't (0.99 > 0.25)
         crit_rolls = iter([0.1, 0.99, 0.99])
-        with patch("src.calculator.damage.random.random", side_effect=crit_rolls):
+        with patch(
+            "src.calculator.fight.autos.simulation.random.random",
+            side_effect=crit_rolls,
+        ):
             fight = calculate_fight_damage(
                 stats,
                 abilities,
@@ -3258,7 +3263,10 @@ class TestFiendhunterBolts:
         }
         abilities = {}
         crit_rolls = iter([0.1, 0.1, 0.99])
-        with patch("src.calculator.damage.random.random", side_effect=crit_rolls):
+        with patch(
+            "src.calculator.fight.autos.simulation.random.random",
+            side_effect=crit_rolls,
+        ):
             fight = calculate_fight_damage(
                 stats,
                 abilities,
@@ -3313,7 +3321,10 @@ class TestFiendhunterBolts:
         }
         abilities = {}
         crit_rolls = iter([0.1, 0.1, 0.1])
-        with patch("src.calculator.damage.random.random", side_effect=crit_rolls):
+        with patch(
+            "src.calculator.fight.autos.simulation.random.random",
+            side_effect=crit_rolls,
+        ):
             fight = calculate_fight_damage(
                 stats,
                 abilities,
@@ -3497,7 +3508,9 @@ class TestFiendhunterBolts:
             },
         }
         # Use no crits for deterministic comparison
-        with patch("src.calculator.damage.random.random", return_value=0.99):
+        with patch(
+            "src.calculator.fight.autos.simulation.random.random", return_value=0.99
+        ):
             fight_with = calculate_fight_damage(
                 stats,
                 abilities,
@@ -3626,7 +3639,9 @@ class TestFiendhunterBolts:
         }
         # 5 autos, rolls: crit, no crit, crit, no crit, no crit
         rolls = iter([0.1, 0.9, 0.1, 0.9, 0.9])
-        with patch("src.calculator.damage.random.random", side_effect=rolls):
+        with patch(
+            "src.calculator.fight.autos.simulation.random.random", side_effect=rolls
+        ):
             fight = calculate_fight_damage(
                 stats,
                 abilities,

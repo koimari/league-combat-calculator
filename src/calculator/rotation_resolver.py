@@ -80,9 +80,9 @@ from .champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from .damage import DEFAULT_CAST_ORDER
 from .data_fetcher import fetch_item_data
 from .data_registry import data_version
+from .fight.cast_slots import DEFAULT_CAST_ORDER
 from .stats import calculate_total_stats, effective_cooldown
 
 # Fallback rationale when no combo rule and no certified order exists.

@@ -1139,7 +1139,7 @@ class TestSwingTermCoverage:
     scenario's job.  ``survival.pricing.price_declared_packet`` carries what
     ``_mitigate`` carries — a resistance and the holder's own amps — while a
     packet delivered as a basic-attack swing is priced by
-    ``damage._mitigate_basic_attack_swing`` and meets three further terms on
+    ``fight.mitigation._mitigate_basic_attack_swing`` and meets three further terms on
     the *target's* side.  One of them is a capped flat subtraction no declared
     magnitude can reproduce, so a family delivered as a swing and retired
     while no scenario arms it would delete the term behind a green zero.

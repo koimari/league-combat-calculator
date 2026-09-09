@@ -13,7 +13,7 @@ CURRENT RUNTIME FACTS (verify-before-pin completed against
   (R rank 3 halves it: 2.0 -> 1.0; the module ASSUMPTIONS record "the
   dash is an attack reset, so it costs no attack time (reset
   acceleration not modeled)").
-- ``damage._resolve_cast_plan`` caps empowered-auto casts at the auto
+- ``fight.rotation.cast_plan._resolve_cast_plan`` caps empowered-auto casts at the auto
   count: the casts are "spent in attack-cooldown dead time (the
   in-game reset acceleration is not modeled — conservative)".  With no
   auto stream at all each cast forces its own swing (the zero-uptime
@@ -104,13 +104,13 @@ from src.calculator.champions import (
     registered_champion_names,
 )
 from src.calculator.champions import vayne as vayne_module
-from src.calculator.damage import (
-    FightConfig,
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.config import FightConfig
+from src.calculator.fight.empower_declaration import (
     _empower_burst_attack_speed,
     _empower_hits,
-    calculate_fight_damage,
 )
-from src.calculator.data_fetcher import get_champion
 from src.calculator.pipeline import FightParams, run_fight
 
 _ROOT = Path(__file__).resolve().parents[1]

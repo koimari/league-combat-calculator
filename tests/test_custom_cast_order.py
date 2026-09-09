@@ -36,8 +36,8 @@ from src.calculator.champions import (
     parse_champion_abilities,
     registered_champion_names,
 )
-from src.calculator.damage import _ridden_parent_slot
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.rotation.cast_schedule import _ridden_parent_slot
 from src.calculator.pipeline import (
     CAST_SLOT_SPELLING,
     FightParams,

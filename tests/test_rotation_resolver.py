@@ -12,8 +12,8 @@ from src.calculator import champions as champions_package
 from src.calculator import rotation_resolver
 from src.calculator.champions import get_champion_cast_order, parse_champion_abilities
 from src.calculator.champions.engine import _apply_module_cc
-from src.calculator.damage import DEFAULT_CAST_ORDER
 from src.calculator.data_fetcher import fetch_champion_data
+from src.calculator.fight.cast_slots import DEFAULT_CAST_ORDER
 from src.calculator.rotation_resolver import (
     _DERIVED_RULE_CACHE,
     _PRE_CAMPAIGN_CC_ORDERING,

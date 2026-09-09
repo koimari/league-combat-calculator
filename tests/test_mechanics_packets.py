@@ -392,7 +392,8 @@ class TestApheliosMoonlightVigilFollowups:
 
 def _fight(abilities, stats, **overrides):
     """Unmitigated one-rotation fight (0 resistances) for exact numbers."""
-    from src.calculator.damage import FightConfig, calculate_fight_damage
+    from src.calculator.damage import calculate_fight_damage
+    from src.calculator.fight.config import FightConfig
 
     config = {
         "target_health": 10000.0,

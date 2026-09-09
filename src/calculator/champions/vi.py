@@ -240,7 +240,7 @@ def _timed_cast_starts(ctx: SlotCtx, duration: float) -> dict[str, list[float]]:
     recasts when its cooldown — running from the end of the cast — is
     back up and no other cast is in progress, ties break by cast order,
     and a cast counts if it starts within the fight window
-    (``damage._schedule_shared_casts``).  Item cooldown modifiers (Navori
+    (``fight.rotation.cast_schedule._schedule_shared_casts``).  Item cooldown modifiers (Navori
     refunds, Actualizer) and mana exhaustion are not mirrored, matching
     the Braum-pattern walk's approximation.
     """

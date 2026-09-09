@@ -2,7 +2,7 @@
 
 Imperial Mandate's Command is the incident this campaign is named after, and
 it is dual-sided: the pair engine prices the holder's own post-immobilize amp
-(``damage._apply_command_amp``) and the coupled walk prices every *other*
+(``fight.after.amplifiers._apply_command_amp``) and the coupled walk prices every *other*
 participant's through the ``Imperial Mandate — Command`` packet, with the
 holder carried as ``owner`` so the two halves can never both price him.
 
@@ -206,7 +206,7 @@ class TestTheRosterAuthorsTheMarkerCommandNeeds:
 
 
 class TestDeletingThePairSidePricerFailsOnANumber:
-    """``damage._apply_command_amp`` — the holder's own half."""
+    """``fight.after.amplifiers._apply_command_amp`` — the holder's own half."""
 
     def test_the_holder_total_is_pinned_and_differs_from_the_control(self):
         holder = _outgoing(with_command(), "main")

@@ -386,7 +386,7 @@ class TestCommandWindowsMergeByRefresh:
         assert sweep.authors, (
             "D-12: no registered champion authors an immobilize a Mandate "
             "holder can read, so every Command sentinel below is green over "
-            "nothing.  The emission gate in damage._evaluate_cast_parts or "
+            "nothing.  The emission gate in fight.rotation.cast_parts._evaluate_cast_parts or "
             "the cc_kind markers themselves have regressed."
         )
         assert len(sweep.authors) >= COMMAND_CC_AUTHORS, (
@@ -394,7 +394,7 @@ class TestCommandWindowsMergeByRefresh:
             f"{sorted(sweep.authors)}.  A champion that stops authoring an "
             "immobilize a Mandate holder can read has lost a reviewed "
             "cc_kind marker or stopped reaching the emission gate in "
-            "damage._evaluate_cast_parts; growth is decision 6 landing and "
+            "fight.rotation.cast_parts._evaluate_cast_parts; growth is decision 6 landing and "
             "raises this floor, a shrink is the regression."
         )
 

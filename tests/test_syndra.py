@@ -24,7 +24,8 @@ import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.champions.engine import part_reaches_event_ledger
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.config import FightConfig
 from src.calculator.item_behavior import FightFacts
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]

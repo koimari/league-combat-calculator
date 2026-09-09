@@ -735,7 +735,7 @@ def _armed_part_multiplier(
 
     ``armed`` is whether the amp's activation is up at all.  An unarmed build
     gets ``(1.0, "")``, so an amp is never reported against an item whose window
-    did not run, which is ``damage._part_amp``'s convention for the pair engine.
+    did not run, which is ``fight.setup.combat_state._part_amp``'s convention for the pair engine.
     """
     if not armed:
         return 1.0, ""
@@ -755,7 +755,7 @@ class StaticHolderAmps:
     and reached by two selectors, which is why this type exists instead of a
     bare float per caller.  ``ability`` and ``basic`` are selected by the
     attack class they price; ``magic`` is Abyssal Mask's Unmake, selected by
-    the damage class it restricts and applied by ``damage._mitigate`` on the
+    the damage class it restricts and applied by ``fight.resists._mitigate`` on the
     defender's side.  Both readings meet here, once, because dropping either
     term is the exact deletion Amendment M, Ruling 1 forbids.
 
@@ -775,7 +775,7 @@ class StaticHolderAmps:
     def factor_for(self, damage_type: str, attack_class: AttackClass) -> float:
         """What one packet of this class and this delivery is multiplied by.
 
-        The pair engine's own order: ``damage._mitigate`` multiplies magic damage by
+        The pair engine's own order: ``fight.resists._mitigate`` multiplies magic damage by
         the magic amp whatever delivered it, and the part amp multiplies on top, by
         the ability amp or the basic amp.  ``AttackClass.OTHER`` takes neither.
         """

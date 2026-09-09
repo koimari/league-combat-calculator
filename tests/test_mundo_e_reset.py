@@ -118,13 +118,13 @@ from src.calculator.champions import (
     parse_champion_abilities,
     registered_champion_names,
 )
-from src.calculator.damage import (
-    FightConfig,
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.config import FightConfig
+from src.calculator.fight.empower_declaration import (
     _empower_burst_attack_speed,
     _empower_hits,
-    calculate_fight_damage,
 )
-from src.calculator.data_fetcher import get_champion
 from src.calculator.pipeline import FightParams, run_fight
 
 _ROOT = Path(__file__).resolve().parents[1]

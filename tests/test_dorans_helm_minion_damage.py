@@ -70,8 +70,9 @@ import pytest
 import src.app as app_module
 import src.calculator.item_effects as item_effects_module
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.fight.config import FightConfig
 from src.calculator.item_coverage import ATTACKER_LANES, item_model_coverage
 from src.calculator.item_effects import (
     ITEM_EFFECTS,

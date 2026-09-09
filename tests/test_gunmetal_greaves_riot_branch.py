@@ -99,8 +99,9 @@ import pytest
 
 import src.app as app_module
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.fight.config import FightConfig
 from src.calculator.interpreters import (
     active_cast,
     cast_proc,

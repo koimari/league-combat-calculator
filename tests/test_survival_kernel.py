@@ -50,6 +50,9 @@ from src.calculator import shield_ledger
 from src.calculator.ability_spec import AttackClass, DamageClass
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
+from src.calculator.fight.after import reprice
+from src.calculator.fight.autos import single_proc_on_hits, swing_profile
+from src.calculator.fight.items import actives, burns
 from src.calculator.interpreters import (
     INTERPRETERS,
     active_cast,
@@ -2308,7 +2311,7 @@ class TestTheFromDeclarationPriceReproducesThePairEngines:
 # the reading the walk itself makes.
 #
 # THE ORDERING, AND WHAT IT COSTS, MEASURED.  The pair engine applies these
-# amps *after* mitigation: `damage._mitigate` returns
+# amps *after* mitigation: `fight.resists._mitigate` returns
 # `apply_resistance(raw, mr) * magic_amp`, and `_add_item_proc_damage`
 # multiplies that by the ability amp.  Ruling 1 rules the walk's term
 # **pre-mitigation** instead, so the composed value is mitigated once rather
@@ -2699,9 +2702,9 @@ def _window_readings(seed, request_key):
     parsed = parse_scenario_request(dict(request), deterministic=True)
     resolved = resolve_scenario(parsed)
     step = (
-        pair_engine._add_item_active_damage
+        actives._add_item_active_damage
         if seed.damage_type == "physical"
-        else pair_engine._add_burn_damage
+        else burns._add_burn_damage
     )
     readings = []
     with pytest.MonkeyPatch.context() as patch:
@@ -2884,7 +2887,7 @@ class TestTheLiandryRepriceKeepsTheDeclarationInStep:
         authored = [{"damage": 10.0, "declared": ("fixture.burn", 20.0, "other", 30.0)}]
         repriced = [{"time": 0.0, "damage_type": "magic", "damage": 12.0}]
         assert "declared" not in repriced[0]
-        pair_engine._carry_declarations_onto_repriced_ticks(authored, repriced)
+        reprice._carry_declarations_onto_repriced_ticks(authored, repriced)
         assert repriced[0]["declared"] == (
             "fixture.burn",
             24.0,
@@ -2906,14 +2909,14 @@ class TestTheLiandryRepriceKeepsTheDeclarationInStep:
         """
         undeclared = [{"damage": 10.0}, {"damage": 10.0}]
         one_tick = [{"time": 0.0, "damage_type": "magic", "damage": 12.0}]
-        pair_engine._carry_declarations_onto_repriced_ticks(undeclared, one_tick)
+        reprice._carry_declarations_onto_repriced_ticks(undeclared, one_tick)
 
         declared = [
             {"damage": 10.0, "declared": ("fixture.burn", 20.0, "other", 30.0)},
             {"damage": 10.0},
         ]
         with pytest.raises(RuntimeError, match="positional carry"):
-            pair_engine._carry_declarations_onto_repriced_ticks(declared, one_tick)
+            reprice._carry_declarations_onto_repriced_ticks(declared, one_tick)
 
 
 # ---------------------------------------------------------------------------
@@ -3605,10 +3608,10 @@ def test_both_declared_spellblade_damage_classes_are_inside_the_fixture_set():
 # ---------------------------------------------------------------------------
 #
 # Umbrella Amendment R, Ruling 1.  Every family retired before this one reaches
-# its target through `damage._mitigate` and nothing else — a resistance and the
+# its target through `fight.resists._mitigate` and nothing else — a resistance and the
 # holder's own amps, which is exactly what `price_declared_packet` carried.  A
 # packet delivered as a BASIC-ATTACK SWING is priced by
-# `damage._mitigate_basic_attack_swing` instead: it meets the target's plating
+# `fight.mitigation._mitigate_basic_attack_swing` instead: it meets the target's plating
 # multiplier, its critical-strike damage multiplier and Warden's Mail's Rock
 # Solid, and the deterministic reading blends a crit branch against a non-crit
 # one with each branch having met the flat subtraction on its own.
@@ -3638,7 +3641,7 @@ def test_both_declared_spellblade_damage_classes_are_inside_the_fixture_set():
 #: The pair engine's own step for the bolt row, and the row it authors.  Named
 #: rather than searched for: the stamp has to land where the family's own
 #: retirement slice would put it.
-SWING_SEED_STEP = pair_engine._add_single_proc_on_hits
+SWING_SEED_STEP = single_proc_on_hits._add_single_proc_on_hits
 SWING_SEED_ROW = "secondary_Runaan's Hurricane"
 SWING_SEED_RULE = "runaans_hurricane.secondary_target"
 SWING_SEED_ITEMS = ("Runaan's Hurricane", "Blade of the Ruined King")
@@ -3706,12 +3709,12 @@ def _declare_swing_row(state):
     declaration as the swing composition.
     """
     row = state.breakdown.get(SWING_SEED_ROW)
-    bolts = state.secondary_target_bolts
+    bolts = state.declared.secondary_target_bolts
     if not isinstance(row, dict) or bolts is None:
         return
     raw = bolts.bolt_damage(
         state.champion_stats["attack_damage"]
-    ) * pair_engine._on_hit_effectiveness(state)
+    ) * swing_profile._on_hit_effectiveness(state)
     plating = float(state.target_basic_damage_multiplier)
     swing = BasicAttackSwing(
         crit_chance=float(state.crit_chance),
@@ -4086,7 +4089,7 @@ def _routing_slot():
     captured = {}
 
     def capture(state):
-        bolts = state.secondary_target_bolts
+        bolts = state.declared.secondary_target_bolts
         if bolts is None:  # pragma: no cover - the seed always holds one
             return
         captured.setdefault(
@@ -4094,7 +4097,7 @@ def _routing_slot():
             (
                 bolts,
                 float(state.champion_stats["attack_damage"]),
-                pair_engine._on_hit_effectiveness(state),
+                swing_profile._on_hit_effectiveness(state),
                 tuple(state.per_hit_strikes),
                 float(state.target_health),
                 state.level,
@@ -4358,7 +4361,7 @@ class TestTheCopiedRowPricesFromItsRoutedDeclarations:
     def test_every_copied_event_prices_to_the_pair_engines_own_number(self):
         """Bit-exact per event, over the seed's own five target-side states.
 
-        The copied packets are priced by `damage._mitigate` and not by the
+        The copied packets are priced by `fight.resists._mitigate` and not by the
         swing composition — a copied on-hit effect is not itself a swing — so
         what varies across the five states is the SUBJECT's health rather than
         the packet's terms, and the equality has to hold in each of them

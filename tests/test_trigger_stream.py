@@ -23,7 +23,6 @@ from types import MappingProxyType, SimpleNamespace
 
 import pytest
 
-from src.calculator import damage
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator import trigger_stream as ts
 from src.calculator.ability_spec import (
@@ -36,6 +35,8 @@ from src.calculator.ability_spec import (
     projection_starvation,
 )
 from src.calculator.champions.engine import EmittedSlot, _validate_cc_event_contract
+from src.calculator.fight.after import amplifiers
+from src.calculator.fight.ledger import coverage, event_rows
 from src.calculator.interpreters import INTERPRETERS
 from src.calculator.item_behavior import (
     AllyProducer,
@@ -414,7 +415,9 @@ def test_sequence_zero_is_a_sequence_and_not_an_absent_one():
     assert ts.event_triggers(_row(sequence=None))[0].sequence == -1
     assert ts.event_triggers(_row(sequence="third"))[0].sequence == -1
     assert ts.event_triggers(_row(sequence=float("inf")))[0].sequence == -1
-    ledger = (SRC / "calculator" / "damage.py").read_text(encoding="utf-8")
+    ledger = (SRC / "calculator" / "fight" / "ledger" / "event_ledger.py").read_text(
+        encoding="utf-8"
+    )
     assert "\n    sequence = 0\n" in ledger
 
 
@@ -997,7 +1000,7 @@ CC_KIND_READERS = {
     # ``_damage_event_row`` copies the token onto the ledger row; it is
     # the one reader that never classifies.  D-34's certification gate left
     # this map at P2b, when it moved onto the bus.
-    "src/calculator/damage.py": frozenset({"_damage_event_row"}),
+    "src/calculator/fight/ledger/event_rows.py": frozenset({"_damage_event_row"}),
     # The two compiler entries are copies too, and the distinction is the
     # whole of A1: each stamps the raw token onto ``SurvivalAction.cc_kind``
     # and neither branches on it.  Every "is this an immobilize?" question
@@ -2040,8 +2043,8 @@ def test_every_registered_view_runs_inside_the_boundary():
 
 
 def _fimbulwinter_gate(rows):
-    """``damage._control_armed_event_coverage`` over one hand-built ledger."""
-    complete, source, _note, _armed = damage._control_armed_event_coverage(
+    """``fight.ledger.coverage._control_armed_event_coverage`` over one hand-built ledger."""
+    complete, source, _note, _armed = coverage._control_armed_event_coverage(
         [{"name": "Fimbulwinter"}], rows
     )
     return complete, source
@@ -2102,7 +2105,7 @@ def test_the_certification_gate_is_not_exactly_the_disjunction_it_replaced():
         {"cc_reviewed": True},
         {},
     ):
-        row = damage._damage_event_row(
+        row = event_rows._damage_event_row(
             False,
             False,
             "Q",
@@ -2136,7 +2139,7 @@ def test_the_certification_gate_selects_its_holder_from_a_declaration():
     the producer it came from.
     """
     unreviewed = [{"is_ability": True, "source_key": "Q"}]
-    complete, source, note, armed = damage._control_armed_event_coverage(
+    complete, source, note, armed = coverage._control_armed_event_coverage(
         [{"name": "Fimbulwinter"}], unreviewed
     )
     rule = next(
@@ -2151,14 +2154,16 @@ def test_the_certification_gate_selects_its_holder_from_a_declaration():
     )
     # Same trigger, different recipient and different kind: neither is owed.
     for other in ("Imperial Mandate", "Bandlepipes"):
-        assert damage._control_armed_event_coverage([{"name": other}], unreviewed) == (
+        assert coverage._control_armed_event_coverage(
+            [{"name": other}], unreviewed
+        ) == (
             True,
             "",
             "",
             "",
         )
-    assert damage._control_armed_holder_shields([{"name": "Fimbulwinter"}]) != ()
-    assert damage._control_armed_holder_shields([{"name": "Bandlepipes"}]) == ()
+    assert coverage._control_armed_holder_shields([{"name": "Fimbulwinter"}]) != ()
+    assert coverage._control_armed_holder_shields([{"name": "Bandlepipes"}]) == ()
 
 
 def test_the_certification_gate_reads_every_mapping_not_only_a_dict():
@@ -2191,7 +2196,9 @@ def test_the_certification_gate_propagates_the_damage_field_contract():
         _fimbulwinter_gate(
             [{"is_ability": True, "source_key": "Q", "damage_type": "mixed"}]
         )
-    ledger = (SRC / "calculator" / "damage.py").read_text(encoding="utf-8")
+    ledger = (SRC / "calculator" / "fight" / "ledger" / "event_ledger.py").read_text(
+        encoding="utf-8"
+    )
     assert (
         ledger.count('damage_type not in {"physical", "magic", "true"}') == 2
     ), "both ledger builders must keep the filter that makes 'mixed' unreachable"
@@ -2210,7 +2217,7 @@ def test_a_control_trigger_is_not_judged_by_the_damage_type_contract():
     scanner accepted, which a refactor may not do" — and the two fields now
     say the same thing.
 
-    ``damage._damage_type_fields`` really does emit ``"mixed"``, so the
+    ``fight.ledger.event_rows._damage_type_fields`` really does emit ``"mixed"``, so the
     reading matters even though the ledger filter keeps it off the engine's
     stream.  The controls: the type is still enforced on the damage stream,
     and it still reaches the control trigger as a verbatim receipt token.
@@ -2230,7 +2237,9 @@ def test_a_control_trigger_is_not_judged_by_the_damage_type_contract():
     assert control.damage_type == "mixed"
     with pytest.raises(ValueError, match="damage_type"):
         ts.event_triggers(row, kinds=frozenset({ts.TriggerKind.DAMAGE}))
-    assert "mixed" in (SRC / "calculator" / "damage.py").read_text(encoding="utf-8")
+    assert "mixed" in (
+        SRC / "calculator" / "fight" / "ledger" / "event_rows.py"
+    ).read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize(
@@ -2625,7 +2634,7 @@ def test_an_out_of_vocabulary_cc_kind_raises_on_every_path_p2b_repointed():
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
         ts.is_immobilizing_event(row)
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
-        damage._control_armed_event_coverage([{"name": "Fimbulwinter"}], [row])
+        coverage._control_armed_event_coverage([{"name": "Fimbulwinter"}], [row])
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
         action_from_event(row, TransitionRank.DAMAGE, 0, {"enemy:Aatrox": 0})
     holder = _support_actor("ally:Lulu", "ally", ("Imperial Mandate",))
@@ -2634,10 +2643,10 @@ def test_an_out_of_vocabulary_cc_kind_raises_on_every_path_p2b_repointed():
         derive_item_support_effects(holder, {"damage_events": [row]}, [holder, enemy])
     # The fourth path is reached through a FightState the walk builds; the
     # control is that it reads the same predicate and no other.
-    command_amp = inspect.getsource(damage._apply_command_amp)
+    command_amp = inspect.getsource(amplifiers._apply_command_amp)
     assert "is_immobilizing_event(event)" in command_amp
-    assert "from .trigger_stream import" in (
-        SRC / "calculator" / "damage.py"
+    assert "from ...trigger_stream import" in (
+        SRC / "calculator" / "fight" / "after" / "amplifiers.py"
     ).read_text(encoding="utf-8")
     # ...and the control that this is a refusal, not a regression: the part
     # spelling of the same kind never gets near the walk.

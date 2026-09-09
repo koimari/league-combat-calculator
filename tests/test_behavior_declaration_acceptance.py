@@ -37,7 +37,8 @@ import pytest
 from src.calculator import interpreters, item_effects, trigger_stream
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator.ability_spec import AttackClass, Authority, DamageClass, DamagePart
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.config import FightConfig
 from src.calculator.interpreters import delta_amp
 from src.calculator.item_behavior import (
     AmpChainSlot,

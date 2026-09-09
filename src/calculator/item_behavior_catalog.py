@@ -2076,7 +2076,7 @@ def _magic_part_amp_rule(source: ValueSource) -> BehaviorRule:
     """Abyssal Mask's Unmake: every magic part the cursed target takes.
 
     Not a chain slot and deliberately so — the curse multiplies each magic
-    packet where ``damage._mitigate`` prices it, which is what the two
+    packet where ``fight.resists._mitigate`` prices it, which is what the two
     attack-class part amps do for their own deliveries.  The mechanic id is
     the one ``trigger_stream`` already pairs the walk's aura against, so the
     pair half it names is now a declaration rather than a ladder field.

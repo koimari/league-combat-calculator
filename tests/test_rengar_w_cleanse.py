@@ -120,9 +120,10 @@ from src.calculator.cleanse_eligibility import (
     resolve_cleanse_item,
     truncate_intervals,
 )
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.fight.config import FightConfig
 from src.calculator.participant_timeline import Combatant
 from src.calculator.survival.compile import unrepresentable_template_receipt
 from tests.app_config import app_config

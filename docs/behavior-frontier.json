@@ -6,8 +6,11 @@
     "calculator/cleanse_eligibility.py": {
       "counter_1": 20
     },
-    "calculator/damage.py": {
-      "counter_1": 8
+    "calculator/fight/rotation/mana_declarations.py": {
+      "counter_1": 4
+    },
+    "calculator/fight/rotation/mana_walk.py": {
+      "counter_1": 4
     },
     "calculator/interaction_effects.py": {
       "counter_1": 3

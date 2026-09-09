@@ -4,14 +4,30 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from scripts.rename_evidence import EVIDENCE_HOMES, rewrite
 
 ROOT = Path(__file__).resolve().parents[1]
 
+#: One path each home authors today.  A home that stops authoring any is a home
+#: the codemod would rewrite nothing in, which is the silence it exists to stop.
+LIVE_PATH_PER_HOME = {
+    "src/calculator/item_coverage.py": "fight.items.burns._add_burn_damage",
+    "src/calculator/ledger_projection.py": (
+        "fight.after.shield_outcome._resolve_starting_shield_outcome"
+    ),
+    "src/calculator/trigger_stream.py": (
+        "fight.items.ultimate_procs._add_ultimate_proc_damage"
+    ),
+}
+
 
 def test_only_the_whole_quoted_path_is_rewritten():
-    text = '"damage._add_burn_damage", "damage._add_burn_damage_extra", add_burn\n'
-    rewritten, count = rewrite(text, "damage._add_burn_damage", "damage._add_burn")
+    text = '"fight.items.burns._add_burn_damage", "damage._add_burn_damage_extra", add_burn\n'
+    rewritten, count = rewrite(
+        text, "fight.items.burns._add_burn_damage", "damage._add_burn"
+    )
     assert count == 1
     assert (
         rewritten == '"damage._add_burn", "damage._add_burn_damage_extra", add_burn\n'
@@ -24,6 +40,14 @@ def test_every_authoring_home_exists():
         assert (ROOT / relative).is_file(), relative
 
 
+@pytest.mark.parametrize("relative", EVIDENCE_HOMES, ids=lambda p: p.stem)
+def test_each_home_authors_a_path_the_codemod_reaches(relative):
+    """Every listed home carries at least one dotted path this rewrite finds."""
+    text = (ROOT / relative).read_text(encoding="utf-8")
+    live = LIVE_PATH_PER_HOME[relative.as_posix()]
+    assert rewrite(text, live, "damage._renamed")[1] >= 1
+
+
 def test_a_dry_run_reports_the_live_paths_and_writes_nothing():
     home = ROOT / EVIDENCE_HOMES[0]
     before = home.read_bytes()
@@ -32,7 +56,7 @@ def test_a_dry_run_reports_the_live_paths_and_writes_nothing():
             sys.executable,
             "scripts/rename_evidence.py",
             "--check",
-            "damage._add_burn_damage",
+            "fight.items.burns._add_burn_damage",
             "damage._renamed",
         ],
         cwd=ROOT,

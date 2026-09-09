@@ -108,9 +108,10 @@ from src.calculator.cleanse_eligibility import (
     CleanseEligibility,
     resolve_cleanse_item,
 )
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.fight.config import FightConfig
 from src.calculator.healing import derive_self_healing
 
 # MERGE: the shared healing readers moved out of ``healing.py`` into

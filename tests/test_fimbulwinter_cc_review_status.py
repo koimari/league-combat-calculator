@@ -12,12 +12,10 @@ import pytest
 pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
 
 from src.calculator.champions import ezreal, karma, morgana, parse_champion_abilities
-from src.calculator.damage import (
-    FightConfig,
-    _control_armed_event_coverage,
-    calculate_fight_damage,
-)
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.fight.config import FightConfig
+from src.calculator.fight.ledger.coverage import _control_armed_event_coverage
 from src.calculator.item_support_effects import derive_item_support_effects
 from src.calculator.stats import calculate_total_stats
 

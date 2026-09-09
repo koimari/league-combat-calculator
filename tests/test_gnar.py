@@ -36,7 +36,8 @@ from src.calculator.champions.gnar import (
     MEGA_BONUS_HEALTH,
     MEGA_BONUS_MR,
 )
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.config import FightConfig
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import growth_stat
 from tests import cc_review

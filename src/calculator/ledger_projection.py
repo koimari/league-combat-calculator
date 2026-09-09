@@ -261,16 +261,16 @@ class LedgerInputs:  # pylint: disable=too-many-instance-attributes
 
 
 _ITEM_HEAL_READER = "pipeline._item_self_healing_events"
-_LIFESTEAL_READER = "damage._add_lifesteal_events"
-_OMNIVAMP_READER = "damage._add_omnivamp_events"
-_BASIC_ATTACK_READER = "damage._ordered_damage_events"
+_LIFESTEAL_READER = "fight.autos.on_hit_stream._add_lifesteal_events"
+_OMNIVAMP_READER = "fight.autos.on_hit_stream._add_omnivamp_events"
+_BASIC_ATTACK_READER = "fight.ledger.event_ledger._ordered_damage_events"
 _SUPPORT_SCAN_READER = "item_support_effects.derive_item_support_effects"
-_EXECUTE_READER = "damage._add_execute_display"
+_EXECUTE_READER = "fight.after.execute_display._add_execute_display"
 _KEYSTONE_HEAL_READER = "pipeline._keystone_self_healing_events"
-_INTERACTION_ROW_READER = "damage._ordered_damage_events"
+_INTERACTION_ROW_READER = "fight.ledger.event_ledger._ordered_damage_events"
 _TAKEDOWN_READER = "trigger_stream.authored_triggers"
 _HEALING_READER = "healing.derive_self_healing"
-_THRESHOLD_READER = "damage._resolve_starting_shield_outcome"
+_THRESHOLD_READER = "fight.after.shield_outcome._resolve_starting_shield_outcome"
 
 
 _DECLARATIONS: tuple[AdequacyDeclaration, ...] = (

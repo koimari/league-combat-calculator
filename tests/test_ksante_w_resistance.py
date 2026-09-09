@@ -104,8 +104,9 @@ from src.calculator.champions.slotlib import (
     extract_value,
     find_named_leveling,
 )
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.config import FightConfig
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 # The data-file cache key is "KSante"; the dispatcher/module name is "K'Sante".

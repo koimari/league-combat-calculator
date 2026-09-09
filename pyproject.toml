@@ -113,7 +113,7 @@ ignore = [
 "tests/**" = ["E402", "S603", "S607", "RUF012", "N802", "N806", "S105", "S107"]
 "src/calculator/capabilities.py" = ["S106"]
 "src/calculator/rotation_resolver.py" = ["S105", "S106"]
-"src/calculator/damage.py" = ["S311"]
+"src/calculator/fight/autos/simulation.py" = ["S311"]
 # BLE001: broad catches wrap untrusted wiki parses and scenario evaluation and re-report
 # the error as data. PTH: the Windows download_soup mirrors lolstaticdata's os.path body.
 "src/calculator/data_updater.py" = ["E402", "S310", "BLE001", "PTH"]

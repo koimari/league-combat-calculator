@@ -4722,7 +4722,7 @@ def _published_support_phase(event: Mapping[str, Any]) -> TransitionRank:
 
 # The named receipt for a self-shield rider that never found a carrier
 # (docs/receipts/self-shield-carrier-rebind-2026-08-21.md).  A rider is bound
-# to ONE carrier packet by ordinal, in ``damage._damage_event_row``, before
+# to ONE carrier packet by ordinal, in ``fight.ledger.event_rows._damage_event_row``, before
 # the ordered survival walk decides which packets land; a rider whose payload
 # declares ``rebind_on_ability_hit`` moves to the first ability packet that
 # does land (``survival.transitions._rebind_self_shields``).  A refusal that
@@ -5194,7 +5194,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                                     # This row is a *rider*: it was bound to
                                     # one already-chosen carrier packet (the
                                     # ordinal-aligned event
-                                    # ``damage._damage_event_row`` copied the
+                                    # ``fight.ledger.event_rows._damage_event_row`` copied the
                                     # payload onto), before the walk knew
                                     # which packets land.  The marker is what
                                     # ``_self_shield_carrier_denials`` reads

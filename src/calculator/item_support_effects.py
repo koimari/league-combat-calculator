@@ -1832,7 +1832,7 @@ def derive_item_support_effects(
                     damage_classes=frozenset(DamageClass),
                     attack_classes=frozenset(AttackClass),
                     # The holder's pair engine prices its own amp
-                    # (damage._apply_command_amp); the walk applies
+                    # (fight.after.amplifiers._apply_command_amp); the walk applies
                     # this packet to every other participant only.
                     # Command's authority move to
                     # coupled-authoritative-with-preview is what H2 still

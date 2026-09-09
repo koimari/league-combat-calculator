@@ -12,7 +12,13 @@ ROOT = Path(__file__).parents[1]
 SRC_ROOT = ROOT / "src" / "calculator"
 TEST_ROOT = ROOT / "tests"
 
-DAMAGE_PATH = ROOT / "src" / "calculator" / "damage.py"
+# The fight engine: the orchestrator and every step of the `fight/` package.
+# Both rules below are about the engine rather than about one file, so they
+# read the whole package.
+FIGHT_ENGINE_PATHS = (
+    SRC_ROOT / "damage.py",
+    *sorted((SRC_ROOT / "fight").rglob("*.py")),
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,6 +27,71 @@ class FrontierEntry:
 
     owning_phase: str
     reason: str
+
+
+# The steps of the `fight/` package whose whole contract is the numbers
+# `calculate_fight_damage` publishes.  A sibling step that also states
+# something no total can show -- a schedule, a vocabulary, a refusal -- has an
+# importing suite and is not here; these have nothing to assert except through
+# the fight, so an import written into a suite to satisfy this rule would be a
+# front door that backs nothing.  That is a property of the package rather
+# than a deferral, so no phase owes them one.  They are listed one by one, so
+# the set still cannot grow by accident.
+FIGHT_STEP = FrontierEntry(
+    owning_phase="none — a property of the fight package, not a deferral",
+    reason=(
+        "a step of the fight engine whose whole contract is the numbers "
+        "damage.calculate_fight_damage publishes, asserted there by every "
+        "suite that exercises it"
+    ),
+)
+
+FIGHT_STEPS_WITHOUT_A_FRONT_DOOR = (
+    "fight.after.amp_chain",
+    "fight.after.empowered_swings",
+    "fight.after.execute_display",
+    "fight.after.fight_notes",
+    "fight.after.lethality_windows",
+    "fight.after.shield_outcome",
+    "fight.after.stored_damage",
+    "fight.autos.copied_on_hit",
+    "fight.autos.on_hit_healing",
+    "fight.autos.on_hit_layering",
+    "fight.autos.simulation",
+    "fight.declarations",
+    "fight.items.cast_procs",
+    "fight.items.energized_packets",
+    "fight.items.proc_triggers",
+    "fight.items.ultimate_procs",
+    "fight.ledger.breakdown",
+    "fight.ledger.execute_stamps",
+    "fight.rotation.ability_rotation",
+    "fight.rotation.burst_autos",
+    "fight.rotation.cast_plan",
+    "fight.rotation.energy_walk",
+    "fight.rotation.mana_walk",
+    "fight.rotation.precomputed_procs",
+    "fight.rotation.stack_timeline",
+    "fight.runes.amplifiers",
+    "fight.runes.keystone_attacks",
+    "fight.runes.keystone_casts",
+    "fight.runes.keystone_ledger_walk",
+    "fight.runes.keystone_stacks",
+    "fight.runes.page_damage",
+    "fight.runes.streams",
+    "fight.setup.combat_state",
+    "fight.setup.shield_reaver",
+    "fight.setup.stat_buff_ultimates",
+    "fight.stacks.account",
+    "fight.stacks.ashe",
+    "fight.stacks.aurelion_sol",
+    "fight.stacks.bard",
+    "fight.stacks.heimerdinger",
+    "fight.stacks.ksante",
+    "fight.stacks.rengar",
+    "fight.stacks.senna",
+    "fight.state",
+)
 
 
 # The modules `front_door_report` finds today, each with the reason it has no
@@ -80,30 +151,31 @@ FRONT_DOOR_FRONTIER: Mapping[str, FrontierEntry] = {
     # note above gives: the set is the receipt, and a member that leaves
     # without a sentence saying why is indistinguishable from a member
     # somebody deleted to make a gate pass.
+    **dict.fromkeys(FIGHT_STEPS_WITHOUT_A_FRONT_DOOR, FIGHT_STEP),
 }
 
 
 def test_damage_engine_does_not_read_item_registry() -> None:
-    """Registry dictionaries belong to item_effects, never damage.py."""
-    source = DAMAGE_PATH.read_text(encoding="utf-8")
-    assert "ITEM_EFFECTS" not in source
+    """Registry dictionaries belong to item_effects, never the fight engine."""
+    for path in FIGHT_ENGINE_PATHS:
+        assert "ITEM_EFFECTS" not in path.read_text(encoding="utf-8"), path
 
 
 def test_damage_engine_does_not_dispatch_on_item_names() -> None:
     """Item identity compiles into typed effects before engine execution."""
-    tree = ast.parse(DAMAGE_PATH.read_text(encoding="utf-8"))
     item_names = frozenset(_REFERENCE_ITEM_EFFECTS)
-    offenders: list[tuple[int, str]] = []
+    offenders: list[tuple[str, int, str]] = []
 
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Compare):
-            continue
-        compared = [node.left, *node.comparators]
-        offenders.extend(
-            (node.lineno, value.value)
-            for value in compared
-            if isinstance(value, ast.Constant) and value.value in item_names
-        )
+    for path in FIGHT_ENGINE_PATHS:
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if not isinstance(node, ast.Compare):
+                continue
+            compared = [node.left, *node.comparators]
+            offenders.extend(
+                (path.name, node.lineno, value.value)
+                for value in compared
+                if isinstance(value, ast.Constant) and value.value in item_names
+            )
 
     assert offenders == []
 

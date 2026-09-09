@@ -209,8 +209,9 @@ from src.calculator.champions.vladimir import (
     MODULE_COVERAGE,
     PACKET_SHA256,
 )
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.config import FightConfig
 from tests.committed_bytes import sha256_as_committed
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))

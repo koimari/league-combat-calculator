@@ -298,3 +298,5 @@ roster takes map D's name, to match the plan's `event_rows`.
 | `src/calculator/single_proc_on_hits.py` | `D-A` | items that proc once or on a stack counter rather than per hit | `_add_single_proc_on_hits`, `_add_copied_stacking_on_hit_packets` | 1115 |
 
 67 rows against the plan's "about 55": `resource_admission.py` and `fight_cast_plan.py` are two maps' names for one resource band, `cast_slots.py`, `event_rows.py` and `single_proc_on_hits.py` each share a definition with a neighbouring module, and `stack_ledgers/` is seven champion files a coarser count reads as one.
+
+75 modules shipped against these 67 rows. Eight are splits this roster does not name, each along a concept line a reader would use: `fight/autos/swing_profile.py` (what one swing carries, as opposed to when it lands), `fight/declarations.py` (what a build declares, off `FightState`'s field list), `fight/rotation/burst_autos.py` (the auto stream an empowered burst re-times), `fight/items/ultimate_procs.py` (the zone an ultimate cast opens), `fight/ledger/execute_stamps.py`, `fight/setup/shield_reaver.py`, `fight/after/execute_display.py` and `fight/after/fight_notes.py`.

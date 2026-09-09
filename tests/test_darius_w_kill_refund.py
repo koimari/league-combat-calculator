@@ -21,7 +21,7 @@ Focused TDD matrix for the sourced W kill rule.  CURRENT RUNTIME FACTS
 - The module's ASSUMPTIONS record "W's kill-triggered cooldown reduction
   and mana refund are not modeled"; the only runtime kill assertion is
   R's ``r_execute_recast`` (the execute-assertion shape).
-- The resource walk (``damage._apply_mana_resource_limits``) owns the
+- The resource walk (``fight.rotation.mana_walk._apply_mana_resource_limits``) owns the
   typed mana ledger; champion refund rules ride the same account as cast
   admission (the Ezreal ``mark_refund`` seam) and a denied cast never
   restores anything.
@@ -100,8 +100,10 @@ from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from src.calculator.damage import FightConfig, _empower_hits, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.config import FightConfig
+from src.calculator.fight.empower_declaration import _empower_hits
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.resource_ledger import (
     OP_REFUND,

@@ -309,5 +309,5 @@ def test_an_engine_owned_condition_names_the_deriving_function():
     }
 
     assert demands[C.LIFESTEAL_STAT].owner == EngineOwner(
-        "damage._add_lifesteal_events"
+        "fight.autos.on_hit_stream._add_lifesteal_events"
     )

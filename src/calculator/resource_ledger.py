@@ -8,7 +8,7 @@ consumers; Catalyst's Eternity and Essence Reaver's Spellblade restores
 ride the same account as external gain operations, and Eternity's
 mana-spent heal is a pure projection of the account's accepted spend
 receipts (``catalyst_eternity_heal_schedule``) — the cast-admission walk
-in ``damage._apply_resource_limits`` is the only driver.
+in ``fight.rotation.resource_admission._apply_resource_limits`` is the only driver.
 
 Design rules (HANDOVER §11):
 

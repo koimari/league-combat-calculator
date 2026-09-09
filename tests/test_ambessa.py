@@ -4,8 +4,9 @@ import pytest
 
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import ambessa
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.fight.config import FightConfig
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.scenario import load_public_champion
 from tests import cc_review

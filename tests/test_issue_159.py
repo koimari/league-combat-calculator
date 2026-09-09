@@ -71,10 +71,14 @@ class TestOneOwner:
         Issue #137 left a single damage transition on the participant side;
         this pins that no path grew a second copy of the absorption order.
         """
-        damage = (SRC / "damage.py").read_text(encoding="utf-8")
-        transitions = (SRC / "survival" / "transitions.py").read_text(encoding="utf-8")
-        assert damage.count("shield_ledger.absorb(") == 2
-        assert transitions.count("shield_ledger.absorb(") == 1
+        walks = (
+            SRC / "fight" / "after" / "shield_outcome.py",
+            SRC / "fight" / "ledger" / "pool_walk.py",
+            SRC / "survival" / "transitions.py",
+        )
+        for walk in walks:
+            source = walk.read_text(encoding="utf-8")
+            assert source.count("shield_ledger.absorb(") == 1, walk
 
 
 def _coupled(items, **kwargs):

@@ -59,7 +59,7 @@ IMPL = Symbol(
     path="item_support_effects.derive_item_support_effects",
     role="walk_packet_builder",
 )
-PAIR_IMPL = Symbol(path="damage._apply_command_amp", role="pair_engine")
+PAIR_IMPL = Symbol(path="fight.after.amplifiers._apply_command_amp", role="pair_engine")
 GUARD = Symbol(path="damage._validate_cc_event_contract", role="certification_guard")
 NODE = TestRef(node_id="tests/test_command_amp_roster.py::test_command_amp_is_priced")
 OTHER_NODE = TestRef(node_id="tests/test_item_support_effects.py::test_mandate_packet")
@@ -365,7 +365,7 @@ def test_key_that_is_not_a_triple_is_rejected() -> None:
             id="symbol-non-identifier-segment",
         ),
         pytest.param(
-            Symbol(path="damage._apply_command_amp", role="referee"),
+            Symbol(path="fight.after.amplifiers._apply_command_amp", role="referee"),
             "Symbol.role 'referee'",
             id="symbol-unknown-role",
         ),

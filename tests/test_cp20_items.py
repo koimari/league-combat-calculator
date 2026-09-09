@@ -463,7 +463,8 @@ def test_tear_pays_helping_hand_in_a_minion_class_fight():
     target class, so the 6-mana champion amount is not paid to a minion.
     """
     from src.calculator.champions import parse_champion_abilities
-    from src.calculator.damage import FightConfig, calculate_fight_damage
+    from src.calculator.damage import calculate_fight_damage
+    from src.calculator.fight.config import FightConfig
 
     champion = get_champion("Ahri")
     abilities = parse_champion_abilities(champion, 18, 0.0, ability_ranks={"Q": 5})

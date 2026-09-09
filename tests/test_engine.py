@@ -37,7 +37,7 @@ from src.calculator.champions.slotlib import (
     stat_buff,
     sum_modifiers,
 )
-from src.calculator.damage import _declared_cc_marker
+from src.calculator.fight.cast_control_marker import _declared_cc_marker
 
 # ---------------------------------------------------------------------------
 # Fixtures and helpers
@@ -1419,7 +1419,7 @@ class TestDeclarationOnAPartlessSlot:
 
     The empower shells (Leona Q, Fiora E, Jax W) emit no damage part: the
     row's damage is the swing ``damage._reattribute_empowered_swings``
-    moves onto it, and ``damage._declared_cc_marker`` reads the kind to
+    moves onto it, and ``fight.cast_control_marker._declared_cc_marker`` reads the kind to
     stamp on those swing events off the entry's parts.  Returning quietly
     on ``parts == ()`` therefore made the declaration a no-op that read as
     reviewed — the exact shape this campaign exists to end.

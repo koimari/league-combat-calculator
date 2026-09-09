@@ -1,7 +1,7 @@
 """P3 slice 1 — mana resource ledger consumer integration tests.
 
 Driver-level coverage for the typed mana ledger (RLM-1 owned): the cast
-admission walk in ``damage._apply_mana_resource_limits``, Tear of the
+admission walk in ``fight.rotation.mana_walk._apply_mana_resource_limits``, Tear of the
 Goddess (Manaflow) packets projected from ledger receipts, Lost Chapter
 (Enlighten) level-up restores, and the regression guarantees the slice
 must not break (ordinary cast receipts, manaless champions, Catalyst's
@@ -363,12 +363,12 @@ def test_tear_manaflow_pays_the_fights_own_target_class():
 def test_enlighten_runs_the_declaration_and_not_a_second_registry_read():
     """The three Enlighten numbers have one home: the ``ResourceRestoreRule``.
 
-    ``damage._enlighten_decl_for`` resolves the rule rather than reading the
-    registry keys directly (which would leave the compiled declaration
-    consumed by nothing — two homes for one schedule), so the declaration's
-    numbers ARE the ones the ledger schedules.
+    ``fight.rotation.mana_declarations._enlighten_decl_for`` resolves the rule
+    rather than reading the registry keys directly (which would leave the
+    compiled declaration consumed by nothing — two homes for one schedule),
+    so the declaration's numbers ARE the ones the ledger schedules.
     """
-    from src.calculator.damage import _enlighten_decl_for
+    from src.calculator.fight.rotation.mana_declarations import _enlighten_decl_for
     from src.calculator.interpreters.stat_derivation import sole_declared_derivation
     from src.calculator.item_behavior import ResourceRestoreRule
 

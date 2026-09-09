@@ -2,7 +2,7 @@
 
 An ability entry carries its damage arithmetic as a tuple of DamageParts;
 the fight engine evaluates parts generically
-(``damage._evaluate_cast_parts``) and never branches on
+(``fight.rotation.cast_parts._evaluate_cast_parts``) and never branches on
 champion-specific keys. Champion-unique scaling math lives in the
 champion module as a ``hp_scaled_damage`` closure on the part.
 

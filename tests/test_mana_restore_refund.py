@@ -3,7 +3,7 @@
 Acceptance matrix for the planned ResourceLedger mechanics (RLM-2 C, written
 against the RLM-1 contract; the mechanics themselves land in a follow-up
 implementation).  One ledger per fight (resource_ledger_v1 section); the cast
-admission walk in ``damage._apply_mana_resource_limits`` is the only driver.
+admission walk in ``fight.rotation.mana_walk._apply_mana_resource_limits`` is the only driver.
 
 Coverage map (matrix numbers from the RLM-1 brief; S1/S2 are the two
 additionally-required pins):
@@ -69,8 +69,9 @@ import pytest
 
 from src.calculator.ability_atoms import required_ranked_attribute_atom
 from src.calculator.champions import parse_champion_abilities as parse_abilities
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.fight.config import FightConfig
 from src.calculator.pipeline import FightParams, run_fight
 
 # The sourced atom behind Jayce's W-slot mana restore (verified against
@@ -1052,16 +1053,16 @@ def test_mana_temporary_maximum_bonus_fails_closed(monkeypatch):
     # Only the energy walk models a temporary resource maximum (Akali W).
     # A future MANA kit declaring one must stop the fight, not silently
     # lose the mechanic: the mana account's maximum grows and never falls.
-    from src.calculator import damage as damage_module
+    from src.calculator.fight.rotation import resource_admission
 
     champ = get_champion("Jayce")
-    real = damage_module.ability_field
+    real = resource_admission.ability_field
 
     def patched(info, key, **kwargs):
         if key == "resource_maximum_bonus":
             return 100.0
         return real(info, key, **kwargs)
 
-    monkeypatch.setattr(damage_module, "ability_field", patched)
+    monkeypatch.setattr(resource_admission, "ability_field", patched)
     with pytest.raises(ValueError, match="temporary resource maximum"):
         run_fight(champ, 6, [], _params(champion_options={"hammer_stance": True}))

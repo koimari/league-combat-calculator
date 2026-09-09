@@ -31,8 +31,9 @@ from src.calculator.champions import get_champion_cast_order
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.champions.slotlib import extract_value
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.fight.config import FightConfig
 from src.calculator.stats import ATTACK_SPEED_CAP
 from tests import cc_review
 

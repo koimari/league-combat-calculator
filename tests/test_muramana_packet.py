@@ -86,13 +86,11 @@ from src.calculator.bis import (
     bis_defensive_effect_receipt,
 )
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.damage import (
-    FightConfig,
-    RotationResult,
-    _muramana_proc_events,
-    calculate_fight_damage,
-)
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.fight.config import FightConfig
+from src.calculator.fight.items.muramana import _muramana_proc_events
+from src.calculator.fight.results import RotationResult
 from src.calculator.interpreters import on_hit_strike
 from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import (
@@ -608,7 +606,7 @@ class TestMalformedLedgerWithholding:
         # damage_events; it is stamped with the NAMED withheld reason and
         # the coverage classifier marks it coarse.
         monkeypatch.setattr(
-            "src.calculator.damage._muramana_proc_events",
+            "src.calculator.fight.autos.single_proc_on_hits._muramana_proc_events",
             lambda *args, **kwargs: None,
         )
         fight = _fight(
@@ -639,7 +637,7 @@ class TestMalformedLedgerWithholding:
         # proc count is the trusted cast receipt) but the events are
         # withheld with the named reason.
         monkeypatch.setattr(
-            "src.calculator.damage._muramana_proc_events",
+            "src.calculator.fight.autos.single_proc_on_hits._muramana_proc_events",
             lambda *args, **kwargs: None,
         )
         fight = _fight(

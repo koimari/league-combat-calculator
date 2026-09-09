@@ -4,7 +4,8 @@ import pytest
 
 from src.calculator.champions import amumu
 from src.calculator.champions.amumu import _CURSE_BONUS_FRACTION
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.config import FightConfig
 from tests import cc_review
 from tests.ability_math import parts_raw_total
 

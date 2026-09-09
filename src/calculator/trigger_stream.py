@@ -308,7 +308,7 @@ class Trigger:  # pylint: disable=too-many-instance-attributes
     damage row typed outside the vocabulary is a row they would misprice.
     Nothing dispatches on a control row's type, and a control row may carry
     any type at all, including the ``"mixed"`` that
-    ``damage._damage_type_fields`` really does emit.  On the
+    ``fight.ledger.event_rows._damage_type_fields`` really does emit.  On the
     control stream the field is therefore carried verbatim as a receipt of
     what the row said, exactly as ``source_key`` is.
     """
@@ -816,7 +816,9 @@ def _retired_family_halves(
 # walk prices each from its own declaration and the pair engine's row is the
 # honest single-attacker preview of it.
 _ACTIVE_CAST_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
-    RetiredFamilyMechanic(f"{slug}.active", item, "damage._add_item_active_damage")
+    RetiredFamilyMechanic(
+        f"{slug}.active", item, "fight.items.actives._add_item_active_damage"
+    )
     for slug, item in (
         ("hextech_gunblade", "Hextech Gunblade"),
         ("hextech_rocketbelt", "Hextech Rocketbelt"),
@@ -828,22 +830,26 @@ _ACTIVE_CAST_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 )
 
 
+_COOLDOWN_PROC_HOME = "fight.items.cast_procs._add_item_proc_damage"
+_ULTIMATE_PROC_HOME = "fight.items.ultimate_procs._add_ultimate_proc_damage"
+
+
 # The eight cast-triggered procs the coupled walk prices.  One row per
-# declared rule in ``item_behavior_catalog``'s ``cast_proc`` family.
-# Both proc shapes author their rows in one engine function, so both name it:
-# a cooldown proc's row and an ultimate proc's differ in how their events are
-# timed and not in who writes them.
+# declared rule in ``item_behavior_catalog``'s ``cast_proc`` family.  The two
+# proc shapes are timed differently and each has its own authoring step: a
+# cooldown proc lands where its trigger fires, an ultimate proc opens a zone
+# stamped at the accepted R cast.
 _CAST_PROC_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
-    RetiredFamilyMechanic(mechanic, item, "damage._add_item_proc_damage")
-    for mechanic, item in (
-        ("eclipse.proc", "Eclipse"),
-        ("hextech_alternator.proc", "Hextech Alternator"),
-        ("ludens_echo.proc", "Luden's Echo"),
-        ("malignance.ultimate_proc", "Malignance"),
-        ("scouts_slingshot.proc", "Scout's Slingshot"),
-        ("stormsurge.proc", "Stormsurge"),
-        ("zazzaks_realmspike.proc", "Zaz'Zak's Realmspike"),
-        ("zekes_convergence.ultimate_proc", "Zeke's Convergence"),
+    RetiredFamilyMechanic(mechanic, item, home)
+    for mechanic, item, home in (
+        ("eclipse.proc", "Eclipse", _COOLDOWN_PROC_HOME),
+        ("hextech_alternator.proc", "Hextech Alternator", _COOLDOWN_PROC_HOME),
+        ("ludens_echo.proc", "Luden's Echo", _COOLDOWN_PROC_HOME),
+        ("malignance.ultimate_proc", "Malignance", _ULTIMATE_PROC_HOME),
+        ("scouts_slingshot.proc", "Scout's Slingshot", _COOLDOWN_PROC_HOME),
+        ("stormsurge.proc", "Stormsurge", _COOLDOWN_PROC_HOME),
+        ("zazzaks_realmspike.proc", "Zaz'Zak's Realmspike", _COOLDOWN_PROC_HOME),
+        ("zekes_convergence.ultimate_proc", "Zeke's Convergence", _ULTIMATE_PROC_HOME),
     )
 )
 
@@ -866,49 +872,57 @@ _CHARGED_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
         (
             "bastionbreaker.shaped_charge",
             "Bastionbreaker",
-            "damage._add_shaped_charge_damage",
+            "fight.rotation.shaped_charge._add_shaped_charge_damage",
         ),
         (
             "dead_mans_plate.empowered_hit",
             "Dead Man's Plate",
-            "damage._add_single_proc_on_hits",
+            "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
         ),
         (
             "fiendhunter_bolts.empowered_autos",
             "Fiendhunter Bolts",
-            "damage._simulate_auto_attacks",
+            "fight.autos.simulation._simulate_auto_attacks",
         ),
-        ("heartsteel.empowered_hit", "Heartsteel", "damage._add_single_proc_on_hits"),
+        (
+            "heartsteel.empowered_hit",
+            "Heartsteel",
+            "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
+        ),
         (
             "hullbreaker.repeating_strike",
             "Hullbreaker",
-            "damage._add_single_proc_on_hits",
+            "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
         ),
         (
             "kraken_slayer.repeating_strike",
             "Kraken Slayer",
-            "damage._add_single_proc_on_hits",
+            "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
         ),
         (
             "rapid_firecannon.empowered_hit",
             "Rapid Firecannon",
-            "damage._add_single_proc_on_hits",
+            "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
         ),
         (
             "statikk_shiv.empowered_hit",
             "Statikk Shiv",
-            "damage._add_single_proc_on_hits",
+            "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
         ),
-        ("stormrazor.empowered_hit", "Stormrazor", "damage._add_single_proc_on_hits"),
+        (
+            "stormrazor.empowered_hit",
+            "Stormrazor",
+            "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
+        ),
         (
             "umbral_glaive.empowered_hit",
             "Umbral Glaive",
-            "damage._add_single_proc_on_hits",
+            "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
         ),
         (
             "voltaic_cyclosword.empowered_hit",
             "Voltaic Cyclosword",
-            "damage._author_energized_ability_proc",
+            "fight.items.energized_packets._author_energized_ability_proc",
         ),
     )
 )
@@ -916,7 +930,7 @@ _CHARGED_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 
 # The eight on-hit strikes the coupled walk prices.  One row
 # per declared rule in ``item_behavior_catalog``'s ``on_hit_strike`` family,
-# and one authoring site for all of them: ``damage._layer_on_hit_effects``
+# and one authoring site for all of them: ``fight.autos.on_hit_layering._layer_on_hit_effects``
 # lays every declared strike onto the applications of the fight's swings,
 # whether the strike's magnitude is fixed per application or re-read against
 # the target's falling health.
@@ -930,7 +944,9 @@ _CHARGED_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 # measures a family's rows by removing the ITEM, which is conservative by
 # construction and lists every mechanic that item holds.
 _ON_HIT_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
-    RetiredFamilyMechanic(f"{slug}.on_hit", item, "damage._layer_on_hit_effects")
+    RetiredFamilyMechanic(
+        f"{slug}.on_hit", item, "fight.autos.on_hit_layering._layer_on_hit_effects"
+    )
     for slug, item in (
         ("blade_of_the_ruined_king", "Blade of the Ruined King"),
         ("guinsoos_rageblade", "Guinsoo's Rageblade"),
@@ -946,7 +962,7 @@ _ON_HIT_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 
 # The seven periodic strikes the coupled walk prices.  One row
 # per declared rule in ``item_behavior_catalog``'s ``periodic`` family, and
-# one authoring site for all three of its cadences: ``damage._add_burn_damage``
+# one authoring site for all three of its cadences: ``fight.items.burns._add_burn_damage``
 # prices a refreshed burn over the window the fight's casts stretched it to,
 # an aura as a rate times the fight, and a fixed-interval strike as one packet
 # per completed interval, and splits each aggregate into the ticks that carry
@@ -957,7 +973,7 @@ _ON_HIT_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 # Liandry's Torment declares two rules in two families and only the burn is
 # this one's.
 _PERIODIC_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
-    RetiredFamilyMechanic(mechanic, item, "damage._add_burn_damage")
+    RetiredFamilyMechanic(mechanic, item, "fight.items.burns._add_burn_damage")
     for mechanic, item in (
         ("bamis_cinder.continuous_aura", "Bami's Cinder"),
         ("blackfire_torch.refreshed_burn", "Blackfire Torch"),
@@ -972,7 +988,7 @@ _PERIODIC_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 
 # The seven spellblades the coupled walk prices.  One row per
 # declared rule in ``item_behavior_catalog``'s ``spellblade`` family, and one
-# authoring site for all of them: ``damage._add_spellblade_damage`` prices the
+# authoring site for all of them: ``fight.autos.spellblade._add_spellblade_damage`` prices the
 # one spellblade a build arms, since the mechanics are mutually exclusive in game
 # and the engine arms the first the build carries — and lays its procs onto
 # the weave schedule the fight's casts resolved.
@@ -988,7 +1004,9 @@ _PERIODIC_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 # ability declares: one declaration cannot state two damage classes, and
 # stamping it would file a champion's number under an item mechanic.
 _SPELLBLADE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
-    RetiredFamilyMechanic(f"{slug}.spellblade", item, "damage._add_spellblade_damage")
+    RetiredFamilyMechanic(
+        f"{slug}.spellblade", item, "fight.autos.spellblade._add_spellblade_damage"
+    )
     for slug, item in (
         ("bloodsong", "Bloodsong"),
         ("dusk_and_dawn", "Dusk and Dawn"),
@@ -1004,8 +1022,8 @@ _SPELLBLADE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 # Wind's Fury, priced by the coupled walk.
 # One row, because one declared rule in
 # ``item_behavior_catalog``'s ``secondary_target`` family is the whole family,
-# and one authoring site: ``damage._add_single_proc_on_hits`` authors both the
-# bolt and the copied on-hit row inside one block.
+# and one authoring site: ``fight.autos.single_proc_on_hits._add_single_proc_on_hits``
+# authors both the bolt and the copied on-hit row inside one block.
 #
 # ONE STAMP, TWO ROWS, TWO PRODUCERS.  The pair half this generates previews
 # both rows, because both are rows this family authors and neither survives
@@ -1021,7 +1039,7 @@ _SECONDARY_TARGET_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = (
     RetiredFamilyMechanic(
         "runaans_hurricane.secondary_target",
         "Runaan's Hurricane",
-        "damage._add_single_proc_on_hits",
+        "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
     ),
 )
 
@@ -1397,46 +1415,46 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     _pair_half(
         "guinsoos_rageblade.swing_rate",
         ItemOwner("Guinsoo's Rageblade"),
-        "damage._auto_attack_timestamps",
+        "fight.autos.swing_schedule._auto_attack_timestamps",
         authority=Authority.PAIR_ONLY,
         view_tag=ViewTag.APPLIED,
     ),
     _pair_half(
         "yun_tal_wildarrows.swing_rate",
         ItemOwner("Yun Tal Wildarrows"),
-        "damage._auto_attack_timestamps",
+        "fight.autos.swing_schedule._auto_attack_timestamps",
         authority=Authority.PAIR_ONLY,
         view_tag=ViewTag.APPLIED,
     ),
     _pair_half(
         "abyssal_mask.magic_amp",
         ItemOwner("Abyssal Mask"),
-        "damage._mitigate",
+        "fight.resists._mitigate",
         authority=Authority.SPLIT,
     ),
     _pair_half(
         "bloodsong.expose_weakness_preview",
         ItemOwner("Bloodsong"),
-        "damage._add_expose_weakness",
+        "fight.after.amplifiers._add_expose_weakness",
         authority=Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
         view_tag=ViewTag.THEORETICAL,
     ),
     _pair_half(
         "black_cleaver.armor_reduction",
         ItemOwner("Black Cleaver"),
-        "damage._resolve_combat_state",
+        "fight.setup.combat_state._resolve_combat_state",
         authority=Authority.SPLIT,
     ),
     _pair_half(
         "bloodletters_curse.mr_reduction",
         ItemOwner("Bloodletter's Curse"),
-        "damage._resolve_combat_state",
+        "fight.setup.combat_state._resolve_combat_state",
         authority=Authority.SPLIT,
     ),
     _pair_half(
         "imperial_mandate.command_preview",
         ItemOwner("Imperial Mandate"),
-        "damage._apply_command_amp",
+        "fight.after.amplifiers._apply_command_amp",
         authority=Authority.SPLIT,
     ),
     # -- pair-only mechanics the umbrella's authority table rules ------------
@@ -1450,14 +1468,14 @@ _DECLARATIONS: tuple[MechanicCapability, ...] = (
     _pair_half(
         "horizon_focus.hypershot",
         ItemOwner("Horizon Focus"),
-        "damage._apply_damage_amplifiers",
+        "fight.after.amplifiers._apply_damage_amplifiers",
         authority=Authority.PAIR_ONLY,
         view_tag=ViewTag.APPLIED,
     ),
     _pair_half(
         "shadowflame.cinderbloom_preview",
         ItemOwner("Shadowflame"),
-        "damage._add_shadowflame_cinderbloom",
+        "fight.after.reprice._add_shadowflame_cinderbloom",
         authority=Authority.COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW,
         view_tag=ViewTag.THEORETICAL,
     ),

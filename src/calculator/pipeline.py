@@ -34,15 +34,13 @@ from .champions import (
     parse_champion_abilities,
 )
 from .champions.skill_orders import get_ability_rank
-from .damage import (
+from .damage import calculate_fight_damage, split_auto_vs_ability, split_by_damage_type
+from .data_registry import data_version
+from .fight.config import (
     MINION_SOURCED_TARGET_FIELDS,
     FightConfig,
-    calculate_fight_damage,
     sourced_minion_target,
-    split_auto_vs_ability,
-    split_by_damage_type,
 )
-from .data_registry import data_version
 from .healing import derive_self_healing, self_heal_rule_owner
 from .healing_reduction import amplifies_recovery, heal_and_shield_power_factor
 from .interpreters import sustain

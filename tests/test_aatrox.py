@@ -5,7 +5,8 @@ import pytest
 from src.calculator.champions import aatrox
 from src.calculator.champions.engine import CC_PER_PART
 from src.calculator.champions.slotlib import extract_named, extract_value
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.config import FightConfig
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
 

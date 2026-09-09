@@ -71,13 +71,11 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator.ability_spec import DamagePart
-from src.calculator.damage import (
-    FightConfig,
-    RotationResult,
-    _shaped_charge_proc_receipts,
-    calculate_fight_damage,
-)
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.fight.config import FightConfig
+from src.calculator.fight.results import RotationResult
+from src.calculator.fight.rotation.shaped_charge import _shaped_charge_proc_receipts
 from src.calculator.interpreters import charged_strike
 from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import (
@@ -701,7 +699,7 @@ class TestCoarseFallbackAndWithholding:
         # source — callers can distinguish a malformed ledger from a
         # passive that never fired (which authors no row at all).
         monkeypatch.setattr(
-            "src.calculator.damage._shaped_charge_proc_receipts",
+            "src.calculator.fight.rotation.shaped_charge._shaped_charge_proc_receipts",
             lambda *args, **kwargs: None,
         )
         fight = _fight(
@@ -728,7 +726,7 @@ class TestCoarseFallbackAndWithholding:
         # ledger from a passive that never fired without re-deriving the
         # coverage.
         monkeypatch.setattr(
-            "src.calculator.damage._shaped_charge_proc_receipts",
+            "src.calculator.fight.rotation.shaped_charge._shaped_charge_proc_receipts",
             lambda *args, **kwargs: None,
         )
         fight = _fight(

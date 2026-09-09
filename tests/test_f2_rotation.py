@@ -23,8 +23,8 @@ import pytest
 
 from src.calculator.cast_dependency import CustomOrderViolatesDependencyError
 from src.calculator.champions import registered_champion_names
-from src.calculator.damage import DEFAULT_CAST_ORDER
 from src.calculator.data_fetcher import fetch_champion_data
+from src.calculator.fight.cast_slots import DEFAULT_CAST_ORDER
 from src.calculator.pipeline import ONE_ROTATION_DURATION, FightParams, run_fight
 from src.calculator.rotation_resolver import (
     CAST_ORDER_OVERRIDES,

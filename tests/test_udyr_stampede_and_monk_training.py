@@ -17,7 +17,7 @@ zero-damage rows adjudicated DIFFERENTLY under the Olaf-R / Sivir-R rule.
   is bounded by ATTACK COUNT as well as time.
 
 Every number is re-derived from ``data/champions.json``, the typed atom
-catalog, ``src/calculator/damage.py`` itself and
+catalog, the fight engine's own source and
 ``data/gamefiles/characters/udyr.bin.json`` rather than trusted from the
 module's prose, so a patch that adds a damage row to E, or that starts
 publishing the steroid, fails here instead of leaving a stale verdict.
@@ -33,6 +33,7 @@ from src.calculator import ability_atoms
 from src.calculator.ability_atoms import _ability_atoms
 from src.calculator.champions import udyr
 from src.calculator.data_fetcher import get_champion
+from tests.engine_source import engine_source, step_source
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 5}
 
@@ -46,7 +47,7 @@ _WIKI = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))["Udy
 _BIN_PATH = Path("data/gamefiles/characters/udyr.bin.json")
 _BIN = json.loads(_BIN_PATH.read_text(encoding="utf-8")) if _BIN_PATH.exists() else None
 
-_DAMAGE_SOURCE = Path("src/calculator/damage.py").read_text(encoding="utf-8")
+_DAMAGE_SOURCE = engine_source()
 
 
 def _binary_record(object_name: str) -> dict:
@@ -569,16 +570,17 @@ class TestBridgeBetweenStaysReceiptedOpen:
         assert tuple(_ability_atoms("Udyr", get_champion("Udyr"))["P"]) == ()
 
     def test_the_windowed_attack_speed_kernel_is_q_slot_only(self):
-        """Blocker one, asserted against the engine source.
+        """Blocker one, asserted against the step that owns it.
 
-        ``damage.py`` resolves an ``auto_attack_override.active_duration``
-        window's START by walking ``cast_order`` and breaking on ``"Q"``.
-        A P-slot steroid has no window to ride, so it could only be
-        published unwindowed for the entire fight.
+        ``fight/setup/stat_buff_ultimates.py`` resolves an
+        ``auto_attack_override.active_duration`` window's START by walking
+        ``cast_order`` and breaking on ``"Q"``.  A P-slot steroid has no
+        window to ride, so it could only be published unwindowed for the
+        entire fight.
         """
-        anchor = _DAMAGE_SOURCE.index('if "bonus_attack_speed" in stat_buff:')
-        kernel = _DAMAGE_SOURCE[anchor : anchor + 2000]
+        kernel = step_source("fight/setup/stat_buff_ultimates.py")
 
+        assert 'if "bonus_attack_speed" in stat_buff:' in kernel
         assert "auto_attack_override" in kernel
         assert "for slot in state.cast_order:" in kernel
         assert 'if slot == "Q":' in kernel

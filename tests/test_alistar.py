@@ -8,7 +8,8 @@ from src.calculator.champions.alistar import (
 )
 from src.calculator.champions.engine import CC_PER_PART
 from src.calculator.champions.slotlib import extract_named
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.config import FightConfig
 from tests import cc_review
 
 

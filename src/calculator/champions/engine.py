@@ -182,7 +182,7 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # ledger as typed state transitions.
         "self_state_events",
         # Seconds of the fight the champion silences ITSELF and can cast
-        # nothing (Rumble's Overheat).  ``damage._schedule_shared_casts``
+        # nothing (Rumble's Overheat).  ``fight.rotation.cast_schedule._schedule_shared_casts``
         # takes them off the shared timeline's horizon, so the fight buys
         # the casts the lockout leaves rather than the casts it would have
         # had.  WHERE in the fight the span sits is deliberately not
@@ -426,7 +426,7 @@ def part_reaches_event_ledger(entry: Mapping[str, Any], part: DamagePart) -> boo
     """Whether one part's hits become authored events the ledger can read.
 
     The parse-side reading of the emission gate in
-    ``damage._evaluate_cast_parts``, clause for clause: a part with one
+    ``fight.rotation.cast_parts._evaluate_cast_parts``, clause for clause: a part with one
     certified landing, an authored instant, a live target-health formula,
     module-authored events, an empowered swing behind it, a sourced control
     interval of its own or a skillshot's own event lands somewhere a
@@ -450,9 +450,9 @@ def part_reaches_event_ledger(entry: Mapping[str, Any], part: DamagePart) -> boo
         or isinstance(entry.get("damage_events"), list)
         # An empowering cast is delivered BY the basic attacks it forces, so
         # its row's events are authored from the swings the fight engine
-        # reattributes to it (``damage._author_empowered_swing_events``) and
+        # reattributes to it (``fight.after.empowered_swings._author_empowered_swing_events``) and
         # the marker on them is this entry's own declaration, read back by
-        # ``damage._declared_cc_marker``.
+        # ``fight.cast_control_marker._declared_cc_marker``.
         or entry.get("empowers_next_auto")
         or part.cc_duration > 0.0
         or part.skillshot
@@ -545,7 +545,7 @@ def _empower_marker_part(
     The empower shells return ``parts = ()`` and their damage is the swing
     ``damage._reattribute_empowered_swings`` moves onto the row, so one
     zero-damage part is what gives the marker somewhere to live for
-    ``damage._declared_cc_marker`` to read.
+    ``fight.cast_control_marker._declared_cc_marker`` to read.
 
     ``None`` is the quiet answer: a row with no parts and no empower
     prices nothing an ability event could carry this parse, and
@@ -742,7 +742,7 @@ def _certify_shared_instant(
     Transcendent's true bonus, Ahri's Q is one pass out and one back, and
     Malphite's W is the empowered attack's bonus plus its cone.  The fight
     engine's certified export carries only a one-part cast
-    (``damage._evaluate_cast_parts``), so the split parts say what they
+    (``fight.rotation.cast_parts._evaluate_cast_parts``), so the split parts say what they
     are instead: each authors the shared instant as its own
     ``time_offset``, the per-part path that already exports an authored
     hit.  Modules that hand-wrote that offset (Twitch E, Seraphine Q) keep

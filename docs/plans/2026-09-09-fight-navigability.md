@@ -19,29 +19,33 @@ move lines and help no reader.
 
 ## Step 1: the `fight/` package
 
-`src/calculator/damage.py` keeps `calculate_fight_damage`, `FightConfig`'s public import path,
-`split_auto_vs_ability`, `split_by_damage_type` and `DEFAULT_CAST_ORDER`; its body becomes the
-ordered list of step calls. Every other definition moves into `src/calculator/fight/`, a package
-whose subpackages are the engine's steps in the order the orchestrator runs them. Each
-`__init__.py` holds one docstring line naming its step and nothing else: no re-export.
+`src/calculator/damage.py` keeps `calculate_fight_damage`, `shield_outcome_inputs`,
+`split_auto_vs_ability` and `split_by_damage_type`; its body becomes the ordered list of step
+calls. Every other definition moves into `src/calculator/fight/`, a package whose subpackages are
+the engine's steps in the order the orchestrator runs them, and every reader is repointed with no
+re-export left behind: `FightConfig` is `fight/config.py`, `DEFAULT_CAST_ORDER` is
+`fight/cast_slots.py`. Each `__init__.py` holds one docstring line naming its step and nothing
+else. The assignment file the split runs from is `scripts/assignments/damage.json`.
 
 | subpackage | what it means | modules (defs per `sl_scratch/phase-27/modules.md`, stage 13) |
 |---|---|---|
-| `fight/` | the vocabulary every step reads | `config`, `state`, `results`, `resists`, `mitigation`, `cast_slots`, `empower_declaration`, `cast_control_marker` |
-| `fight/ledger/` | the reconstructed event ledger and what reads it | `event_rows`, `event_ledger`, `coverage`, `pool_walk`, `breakdown` |
-| `fight/setup/` | resolving the request into a `FightState` | `combat_state`, `stat_buff_ultimates`, `target_debuffs` |
-| `fight/rotation/` | which abilities cast when, admitted against resources, and what each cast prices | `cast_parts`, `cast_schedule`, `cast_plan`, `resource_admission`, `energy_walk`, `mana_declarations`, `mana_walk`, `stack_timeline`, `ability_rotation`, `precomputed_procs`, `dot_ticks`, `shaped_charge` |
-| `fight/autos/` | the swing schedule and everything that rides a basic attack | `swing_schedule`, `simulation`, `on_hit_stream`, `empower_windows`, `on_hit_layering`, `spellblade`, `decaying_health_walk`, `single_proc_on_hits`, `copied_on_hit`, `on_hit_healing` |
-| `fight/items/` | item packets that are not on-hits | `burns`, `proc_triggers`, `cast_procs`, `eclipse_stack_gate`, `actives`, `muramana`, `energized_packets` |
+| `fight/` | the vocabulary every step reads | `config`, `state`, `declarations`, `results`, `resists`, `mitigation`, `cast_slots`, `empower_declaration`, `cast_control_marker` |
+| `fight/ledger/` | the reconstructed event ledger and what reads it | `event_rows`, `event_ledger`, `coverage`, `execute_stamps`, `pool_walk`, `breakdown` |
+| `fight/setup/` | resolving the request into a `FightState` | `combat_state`, `stat_buff_ultimates`, `target_debuffs`, `shield_reaver` |
+| `fight/rotation/` | which abilities cast when, admitted against resources, and what each cast prices | `cast_parts`, `cast_schedule`, `burst_autos`, `cast_plan`, `resource_admission`, `energy_walk`, `mana_declarations`, `mana_walk`, `stack_timeline`, `ability_rotation`, `precomputed_procs`, `dot_ticks`, `shaped_charge` |
+| `fight/autos/` | the swing schedule and everything that rides a basic attack | `swing_schedule`, `swing_profile`, `simulation`, `on_hit_stream`, `empower_windows`, `on_hit_layering`, `spellblade`, `decaying_health_walk`, `single_proc_on_hits`, `copied_on_hit`, `on_hit_healing` |
+| `fight/items/` | item packets that are not on-hits | `burns`, `proc_triggers`, `cast_procs`, `ultimate_procs`, `eclipse_stack_gate`, `actives`, `muramana`, `energized_packets` |
 | `fight/runes/` | the rune page's procs, keystones and amplifiers | `streams`, `page_damage`, `keystone_casts`, `keystone_ledger_walk`, `keystone_attacks`, `keystone_stacks`, `amplifiers` |
 | `fight/stacks/` | champion stack resources as receipt ledgers | `account`, `senna`, `ashe`, `ksante`, `heimerdinger`, `bard`, `aurelion_sol`, `rengar` |
-| `fight/after/` | what runs over the finished ledger | `amp_chain`, `amplifiers`, `lethality_windows`, `stored_damage`, `reprice`, `empowered_swings`, `shield_outcome` |
+| `fight/after/` | what runs over the finished ledger | `amp_chain`, `amplifiers`, `lethality_windows`, `stored_damage`, `reprice`, `empowered_swings`, `shield_outcome`, `execute_display`, `fight_notes` |
 
 Decisions. `Resists` and `_mitigate` stay together (one file for pricing one instance).
 `FightState` and `FightConfig` are leaves under `fight/` because every step annotates them and
 `damage.py` has no `from __future__ import annotations`. The five functions over 500 lines
 (`mana_walk`, `ability_rotation`, `simulation`, `on_hit_layering`, `single_proc_on_hits`) move
-whole; step 2 restructures the last two. `_restate_declaration` moves to `survival/pricing.py`.
+whole; step 2 restructures the last two, and `single_proc_on_hits` stays over sightline #27's line
+counter until it does. `restate_declaration` moves to `survival/pricing.py` and loses its
+underscore there, because three `fight/after/` steps read it across a package boundary.
 Where two maps name one band two ways (`resource_admission` and `cast_plan`), the assignment file
 picks one and the DAG check decides.
 

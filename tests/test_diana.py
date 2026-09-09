@@ -16,12 +16,9 @@ from src.calculator.champions.slotlib import (
     find_named_leveling,
     sum_modifiers,
 )
-from src.calculator.damage import (
-    FightConfig,
-    calculate_fight_damage,
-    split_auto_vs_ability,
-)
+from src.calculator.damage import calculate_fight_damage, split_auto_vs_ability
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.fight.config import FightConfig
 from src.calculator.pipeline import FightParams, run_fight
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
