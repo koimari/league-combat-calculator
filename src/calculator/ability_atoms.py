@@ -372,9 +372,9 @@ ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
 _MISSING = object()
 
 
-def ability_field(
+def ability_field(  # sightline-ok: 1 - key-typed read
     payload: Mapping[str, Any], key: str, *, form: str = "ability"
-) -> Any:  # sightline-ok: 1 - key-typed read
+) -> Any:
     """One field of an authored ability payload, through its declared schema.
 
     The payload identifies itself by the ability ``name`` its module authored,

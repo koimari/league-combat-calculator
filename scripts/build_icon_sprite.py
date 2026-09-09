@@ -19,15 +19,17 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Any
 
 import requests
 from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from scripts.source_receipt import cache_patch  # noqa: E402
+from scripts.source_receipt import cache_patch
 
 ROOT = Path(__file__).resolve().parents[1]
 CELL = 40
@@ -35,7 +37,9 @@ COLUMNS = 24
 ICON_CACHE = ROOT / "data" / "icons"
 
 
-def sprite_entries(champions: dict, items: dict) -> list[tuple[str, str, str]]:
+def sprite_entries(
+    champions: Mapping[str, Any], items: Mapping[str, Any]
+) -> list[tuple[str, str, str]]:
     """(kind, key, url) per cell, in the order the index assigns cell numbers."""
     rows = [
         ("champion", record["name"], record["icon"]) for record in champions.values()
@@ -62,7 +66,9 @@ def _fetch(kind: str, key: str, url: str) -> Image.Image:
     return Image.open(path).convert("RGB")
 
 
-def build(champions: dict, items: dict) -> tuple[Image.Image, dict]:
+def build(
+    champions: Mapping[str, Any], items: Mapping[str, Any]
+) -> tuple[Image.Image, dict[str, Any]]:
     """Composite every icon into one sheet and return it with its index."""
     entries = sprite_entries(champions, items)
     ICON_CACHE.mkdir(parents=True, exist_ok=True)
@@ -70,14 +76,16 @@ def build(champions: dict, items: dict) -> tuple[Image.Image, dict]:
         icons = list(pool.map(lambda entry: _fetch(*entry), entries))
     rows = -(-len(entries) // COLUMNS)
     sheet = Image.new("RGB", (COLUMNS * CELL, rows * CELL))
-    index: dict = {
+    index: dict[str, Any] = {
         "cell": CELL,
         "columns": COLUMNS,
         "patch": cache_patch(champions),
         "champions": {},
         "items": {},
     }
-    for number, ((kind, key, _url), icon) in enumerate(zip(entries, icons)):
+    for number, ((kind, key, _url), icon) in enumerate(
+        zip(entries, icons, strict=True)
+    ):
         resampled = icon.resize((CELL, CELL), Image.Resampling.BOX)
         sheet.paste(resampled, ((number % COLUMNS) * CELL, (number // COLUMNS) * CELL))
         index[f"{kind}s"][key] = number
@@ -85,7 +93,10 @@ def build(champions: dict, items: dict) -> tuple[Image.Image, dict]:
 
 
 def check(
-    index_path: Path, sheet_path: Path, champions: dict, items: dict
+    index_path: Path,
+    sheet_path: Path,
+    champions: Mapping[str, Any],
+    items: Mapping[str, Any],
 ) -> str | None:
     """The reason the committed sprite is stale, or None when it is current."""
     if not index_path.exists() or not sheet_path.exists():
@@ -106,8 +117,9 @@ def check(
         return f"index drift: missing {missing[:5]}, extra {extra[:5]}"
     with Image.open(sheet_path) as sheet:
         rows = -(-len(expected) // index["columns"])
-        if sheet.size != (index["columns"] * index["cell"], rows * index["cell"]):
-            return f"sheet is {sheet.size}, index implies {index['columns'] * index['cell']}x{rows * index['cell']}"
+        implied = (index["columns"] * index["cell"], rows * index["cell"])
+        if sheet.size != implied:
+            return f"sheet is {sheet.size}, index implies {implied[0]}x{implied[1]}"
     return None
 
 

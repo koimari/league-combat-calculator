@@ -22,6 +22,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
@@ -41,7 +42,7 @@ def _dump(image: Image.Image, path: Path) -> dict[str, Any]:
     return {"bin": path.name, "width": rgba.width, "height": rgba.height}
 
 
-def read_frames(paths: list[Path]) -> dict[str, Any]:
+def read_frames(paths: Iterable[Path]) -> dict[str, Any]:
     """Run the harness over `paths`; the per-frame readings keyed by file name."""
     if shutil.which("node") is None:
         raise RuntimeError("node is not installed")
@@ -81,7 +82,7 @@ def item_names() -> dict[str, str]:
     return {str(record["id"]): record["name"] for record in items.values()}
 
 
-def describe(reading: dict[str, Any], names: dict[str, str]) -> str:
+def describe(reading: Mapping[str, Any], names: Mapping[str, str]) -> str:
     lines = [
         f"  {len(reading['hits'])} hits, {len(reading['rows'])} rows, {reading['ms']} ms"
     ]
@@ -104,13 +105,13 @@ def describe(reading: dict[str, Any], names: dict[str, str]) -> str:
 
 
 def contact_sheet(
-    path: Path, reading: dict[str, Any], sprite_index: dict
+    path: Path, reading: Mapping[str, Any], sprite_index: Mapping[str, Any]
 ) -> Image.Image:
     """Each read cell beside the sprite cell it was matched to, one row per player."""
     tile = 48
-    with Image.open(path) as frame, Image.open(SPRITE) as sheet:
-        frame = frame.convert("RGB")
-        sheet = sheet.convert("RGB")
+    with Image.open(path) as frame_file, Image.open(SPRITE) as sheet_file:
+        frame = frame_file.convert("RGB")
+        sheet = sheet_file.convert("RGB")
         players = [p for row in reading["rows"] for p in row]
         width = 2 * tile * (1 + max((len(p["items"]) for p in players), default=0))
         out = Image.new("RGB", (width, max(1, len(players)) * tile), (20, 20, 20))
@@ -227,7 +228,7 @@ def cmd_grab(args: argparse.Namespace) -> int:
     return 0
 
 
-def write_labels(labels: dict[str, Any]) -> None:
+def write_labels(labels: Mapping[str, Mapping[str, Any]]) -> None:
     """labels.json with one player per line, so a review diff reads as rows."""
     frames = []
     for name, entry in labels.items():
