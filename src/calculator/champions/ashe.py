@@ -34,8 +34,8 @@ from collections.abc import Mapping
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
+from ..stat_formulas import calculate_attack_speed
 from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
-from ..stats import calculate_attack_speed
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_contract import coverage

@@ -38,7 +38,7 @@ from typing import Any
 
 from ..ability_spec import ControlEvent, DamagePart
 from ..binary_roots import character_record_root, record_value
-from ..stats import growth_stat
+from ..stat_formulas import growth_stat
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .slotlib import (

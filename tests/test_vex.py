@@ -9,9 +9,9 @@ import math
 
 import pytest
 
+from src.calculator.ability_prose import extract_description_duration
 from src.calculator.champions import parse_champion_abilities, vex
 from src.calculator.champions.slotlib import (
-    extract_description_duration,
     extract_named,
     find_named_leveling,
     sum_modifiers,

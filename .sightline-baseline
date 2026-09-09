@@ -105,11 +105,11 @@
 11|src.calculator.role_quests.required_boots_tier 1 cfb6b4a42481ad5a
 14|scripts.coverage_census._item_cells 1 7efb3b6c68f9c014
 14|scripts.patch_update._receipt_problems 1 7c2e642e968c4181
+14|src.calculator.champions.aatrox._q_strike_parts 1 2e42e91ec5a9c64b
 14|src.calculator.champions.darius._ad_ratio 1 698961c32f749a31
 14|src.calculator.champions.engine._validate_entry_keys 1 c42294610f111a67
 14|src.calculator.champions.module_contract._declared_cast_dependencies 1 8b595bdf49077b95
 14|src.calculator.champions.slotlib.attach_self_shield 1 7893fce214ca57cb
-14|src.calculator.champions.slotlib.extract_named 1 c965621702476998
 14|src.calculator.coverage_evidence._require_text 1 85a78231339ed94a
 14|src.calculator.damage._simulate_stacking_on_hit_damage 1 a5b0512eac4f14d9
 14|src.calculator.damage._stack_receipt_row 1 1810ecc87d547ea1
@@ -202,6 +202,5 @@
 27|tests.test_behavior_frontier 1
 27|tests.test_item_support_effects 1
 27|tests.test_survival_kernel 1
-35|src.calculator.ability_atoms 1
 54|src.calculator.damage._mitigate 1 03b4c85ecf7f3de3
 54|src.calculator.damage._mitigate_hits 1 0a77d37c376a99c9

@@ -18,6 +18,12 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, replace
 from typing import Any
 
+from ..ability_atoms import (
+    AbilityAtomQuery,
+    ranked_ability_atom_value,
+    required_ability_atom,
+    required_ranked_attribute_atom,
+)
 from ..ability_spec import (
     ControlEvent,
     ControlScope,
@@ -30,9 +36,15 @@ from .attribute_classifier import (
     is_damage_attribute,
     is_primary_damage_attribute,
 )
-from .engine import BUFF, DAMAGE, PENDING_CONTROL_EVENTS, SlotCtx, SlotParser
 from .inputs import ChampionInputError, target_stat
 from .scaling import is_flat_unit, resolve_scaling
+from .slot_context import (
+    BUFF,
+    DAMAGE,
+    PENDING_CONTROL_EVENTS,
+    SlotCtx,
+    SlotParser,
+)
 
 # ---------------------------------------------------------------------------
 # Extraction core
@@ -50,132 +62,6 @@ _MODIFIER_PAIRS_MEMO: dict[tuple[int, int, int | None], tuple[dict, tuple]] = {}
 # identity-verified the same way.
 _NAMED_LEVELING_MEMO: dict[tuple[int, str, int], tuple[dict, Any]] = {}
 _PRIMARY_LEVELING_MEMO: dict[int, tuple[dict, Any]] = {}
-
-_PROSE_SECONDS_RE = re.compile(
-    r"(?<![\w.])(?P<value>\d+(?:\.\d+)?)\s+seconds?\b", re.IGNORECASE
-)
-_PROSE_SHIELD_SECONDS_RE = re.compile(
-    r"\bshield(?:s|ed|ing)?\b.*?\bfor\s+(?:up to\s+)?"
-    r"(?P<value>\d+(?:\.\d+)?)\s+seconds?\b",
-    re.IGNORECASE,
-)
-_PROSE_INVULNERABILITY_DELAY_RE = re.compile(
-    r"\bdescends?\b.*?\bover\s+(?P<value>\d+(?:\.\d+)?)\s+seconds?\b",
-    re.IGNORECASE,
-)
-_PROSE_INVULNERABILITY_DURATION_RE = re.compile(
-    r"\binvulnerable\b.*?\bfor\s+(?P<value>\d+(?:\.\d+)?)\s+seconds?\b",
-    re.IGNORECASE,
-)
-_PROSE_CONTROL_DURATION_RE = re.compile(
-    r"\b(?:airborne|charm(?:s|ed|ing)?|fear(?:s|ed|ing)?|"
-    r"immobiliz(?:e|es|ed|ing)|knockback|knockup|"
-    r"knock(?:s|ed|ing)?\s+(?:\w+\s+)?up|polymorph(?:s|ed|ing)?|"
-    r"root(?:s|ed|ing)?|sleep(?:s|ed|ing)?|slow(?:s|ed|ing)?|"
-    r"stun(?:s|ned|ning)?|"
-    r"suppression|suppress(?:es|ed|ing)?|taunt(?:s|ed|ing)?)\b"
-    r".*?\bfor\s+(?P<value>\d+(?:\.\d+)?)\s+seconds?\b",
-    re.IGNORECASE,
-)
-_PROSE_DAMAGE_REDUCTION_CAP_RE = re.compile(
-    r"\bcapped\s+at\s+(?P<value>\d+(?:\.\d+)?)\s*%\s+of\s+"
-    r"(?:the\s+)?damage\s+instance\b",
-    re.IGNORECASE,
-)
-_PROSE_DAMAGE_REDUCTION_RE = re.compile(
-    r"\b(?:gains?|has)\s+(?P<value>\d+(?:\.\d+)?)\s*%\s+" r"damage\s+reduction\b",
-    re.IGNORECASE,
-)
-
-
-def effect_description(ability: Mapping[str, Any], effect_index: int) -> str:
-    """One cached effect's description text, or "" when that effect is gone.
-
-    A mechanic the cache states only in prose (Annie's Pyromania charge,
-    Kennen's Mark of the Storm) is read out of this string by the module
-    that owns it, which then raises if the sentence stopped saying what it
-    priced.  ``""`` is the one quiet answer: a patch that drops an effect
-    row entirely is the same failure, and the caller names it.
-    """
-    effects = ability.get("effects")
-    if not isinstance(effects, list) or not 0 <= effect_index < len(effects):
-        return ""
-    effect = effects[effect_index]
-    if not isinstance(effect, dict):
-        return ""
-    description = effect.get("description")
-    return "" if description is None else str(description)
-
-
-def _prose_value(
-    pattern: re.Pattern[str], ability: Mapping[str, Any], effect_index: int
-) -> float | None:
-    """The ``value`` group of *pattern*'s first match in one effect description."""
-    match = pattern.search(effect_description(ability, effect_index))
-    return float(match.group("value")) if match else None
-
-
-def extract_description_duration(
-    ability: Mapping[str, Any], effect_index: int = 0
-) -> float | None:
-    """Read the first seconds value from one cached effect description."""
-    return _prose_value(_PROSE_SECONDS_RE, ability, effect_index)
-
-
-def extract_description_shield_duration(
-    ability: Mapping[str, Any], effect_index: int = 0
-) -> float | None:
-    """Read the duration attached to a shield phrase in one effect."""
-    description = effect_description(ability, effect_index)
-    sentences = re.split(r"(?<=[.!?])\s+(?=[A-Z])", description)
-    for sentence in sentences:
-        match = _PROSE_SHIELD_SECONDS_RE.search(sentence)
-        if match:
-            return float(match.group("value"))
-    return None
-
-
-def extract_description_invulnerability_timing(
-    ability: Mapping[str, Any], effect_index: int = 0
-) -> tuple[float | None, float | None]:
-    """Read a sourced invulnerability delay and window from one description."""
-    return (
-        _prose_value(_PROSE_INVULNERABILITY_DELAY_RE, ability, effect_index),
-        _prose_value(_PROSE_INVULNERABILITY_DURATION_RE, ability, effect_index),
-    )
-
-
-def extract_description_control_duration(
-    ability: dict[str, Any], effect_index: int = 0
-) -> float | None:
-    """Read the first action-blocking control duration from one description."""
-    durations = extract_description_control_durations(ability, effect_index)
-    return durations[0] if durations else None
-
-
-def extract_description_control_durations(
-    ability: Mapping[str, Any], effect_index: int = 0
-) -> list[float]:
-    """Read every action-blocking control duration from one description."""
-    description = effect_description(ability, effect_index)
-    return [
-        float(match.group("value"))
-        for match in _PROSE_CONTROL_DURATION_RE.finditer(description)
-    ]
-
-
-def extract_description_damage_reduction_cap(
-    ability: Mapping[str, Any], effect_index: int = 0
-) -> float | None:
-    """Read a percentage cap on one pre-mitigation damage instance."""
-    return _prose_value(_PROSE_DAMAGE_REDUCTION_CAP_RE, ability, effect_index)
-
-
-def extract_description_damage_reduction(
-    ability: Mapping[str, Any], effect_index: int = 0
-) -> float | None:
-    """Read a sourced percentage of incoming damage reduction."""
-    return _prose_value(_PROSE_DAMAGE_REDUCTION_RE, ability, effect_index)
 
 
 # An ability's rank array holds one value per rank — five, or six for
@@ -956,14 +842,6 @@ def _control_duration_atom(
 ) -> tuple[float, dict[str, Any]]:
     """Read a control duration through the validated ability atom catalog."""
     src_slot, src_index = source or (ctx.slot, 0)
-    # Deferred import avoids the slotlib -> atomizer_domains -> slotlib cycle.
-    from ..ability_atoms import (
-        AbilityAtomQuery,
-        ranked_ability_atom_value,
-        required_ability_atom,
-        required_ranked_attribute_atom,
-    )
-
     champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
     try:
         value, atom = required_ranked_attribute_atom(
@@ -1035,13 +913,6 @@ def _prose_control_atom(
     which it means rather than the reader guessing.
     """
     src_slot, src_index = source or (ctx.slot, 0)
-    # Deferred import avoids the slotlib -> atomizer_domains -> slotlib cycle.
-    from ..ability_atoms import (
-        AbilityAtomQuery,
-        ranked_ability_atom_value,
-        required_ability_atom,
-    )
-
     champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
     source_path = (
         f"{ctx.champion_name}.{src_slot}[{src_index}].effects[{effect_index}]"
@@ -1075,9 +946,6 @@ def _control_magnitude_atom(
     fallback here would be the literal-default shape rule 5 refuses.
     """
     src_slot, src_index = source or (ctx.slot, 0)
-    # Deferred import avoids the slotlib -> atomizer_domains -> slotlib cycle.
-    from ..ability_atoms import required_ranked_attribute_atom
-
     value, atom = required_ranked_attribute_atom(
         ctx.champion_name,
         {"name": ctx.champion_name, "abilities": ctx.abilities},

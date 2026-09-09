@@ -27,7 +27,7 @@ engine publishes — never a silent zero.
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from functools import cache, partial
+from functools import partial
 from types import MappingProxyType
 from typing import Any
 
@@ -1627,43 +1627,71 @@ def no_damage_compiler(
     return compile_declared
 
 
-@cache
-def _compilers() -> Mapping[str, Callable[[Mapping[str, Any]], RuneEffect]]:
-    """Every rune compiler: the keystones in one table, the minors per path.
+#: What ``rune_paths`` publishes: every rune's compiler in one vocabulary, the
+#: stat shards under the ``(row, name)`` that selects them, and the options a
+#: rune's formula needs the request to carry.
+_COMPILERS: Mapping[str, Callable[[Mapping[str, Any]], RuneEffect]] | None = None
+_SHARD_COMPILERS: Mapping[tuple[int, str], Callable[[Mapping], RuneEffect]] | None = (
+    None
+)
+_DECLARED_OPTIONS: Mapping[str, tuple[RuneOption, ...]] | None = None
 
-    Built once, on first use rather than at import, because the compiler
-    modules import this one for the vocabulary they compile into. The result
-    is compiler *functions*, which no data refresh can invalidate — the
+
+def register_rune_compilers(
+    keystones: Mapping[str, Callable[[Mapping[str, Any]], RuneEffect]],
+    paths: Mapping[str, Callable[[Mapping[str, Any]], RuneEffect]],
+    shards: Mapping[tuple[int, str], Callable[[Mapping], RuneEffect]],
+    options: Mapping[str, tuple[RuneOption, ...]],
+) -> None:
+    """Publish the path tables, the keystones and the minor runes merged.
+
+    The compiler modules read this module for the vocabulary they compile
+    into, so they hand their tables over instead of being imported here. What
+    lands is compiler *functions*, which no data refresh can invalidate: the
     numbers they read are looked up when a rune resolves, not when it
-    registers.
+    registers. A name both tables claim raises, because a rune is compiled by
+    exactly one of them.
     """
-    # Local import: rune_paths compiles into this module's vocabulary, so it
-    # cannot be imported while this module is still executing.
-    from .rune_paths import (  # pylint: disable=import-outside-toplevel
-        keystone_compilers,
-        path_compilers,
-    )
-
-    merged: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = dict(
-        keystone_compilers()
-    )
-    for name, compiler in path_compilers().items():
+    # pylint: disable-next=global-statement
+    global _COMPILERS, _DECLARED_OPTIONS, _SHARD_COMPILERS
+    merged: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = dict(keystones)
+    for name, compiler in paths.items():
         if name in merged:
             raise ValueError(
                 f"Rune {name!r} has two compilers; a rune is compiled by "
                 "exactly one path module or by the keystone table"
             )
         merged[name] = compiler
-    return MappingProxyType(merged)
+    _COMPILERS = MappingProxyType(merged)
+    _SHARD_COMPILERS = MappingProxyType(dict(shards))
+    _DECLARED_OPTIONS = MappingProxyType(dict(options))
 
 
-@cache
+def _registered[KeyT, ValueT](
+    table: Mapping[KeyT, ValueT] | None, what: str
+) -> Mapping[KeyT, ValueT]:
+    """One published table, or the refusal that nothing published it."""
+    if table is None:
+        raise ValueError(
+            f"No {what} are registered; src.calculator.rune_paths publishes "
+            "them through register_rune_compilers"
+        )
+    return table
+
+
+def _compilers() -> Mapping[str, Callable[[Mapping[str, Any]], RuneEffect]]:
+    """Every rune compiler: the keystones and the minor runes, in one table."""
+    return _registered(_COMPILERS, "rune compilers")
+
+
 def _shard_compilers() -> Mapping[tuple[int, str], Callable[[Mapping], RuneEffect]]:
     """Every stat-shard compiler, keyed by the (row, name) that selects it."""
-    # Local import, for the same reason as the rune compilers above.
-    from .rune_paths import shard_compilers  # pylint: disable=import-outside-toplevel
+    return _registered(_SHARD_COMPILERS, "stat-shard compilers")
 
-    return shard_compilers()
+
+def _declared_options() -> Mapping[str, tuple[RuneOption, ...]]:
+    """Every option a rune declares, keyed by rune name."""
+    return _registered(_DECLARED_OPTIONS, "rune options")
 
 
 def resolve_rune(name: str) -> RuneEffect | None:
@@ -2012,10 +2040,7 @@ def _validated_rune_options(value: Any, page: RunePage) -> dict[str, dict[str, f
         return {}
     if not isinstance(value, Mapping):
         raise ValueError("rune_options must be an object")
-    # Local import, for the same reason as the rune compilers above.
-    from .rune_paths import path_options  # pylint: disable=import-outside-toplevel
-
-    declared = path_options()
+    declared = _declared_options()
     selected = set(page.rune_names)
     resolved: dict[str, dict[str, float]] = {}
     for rune, options in value.items():
@@ -2217,12 +2242,9 @@ def rune_catalog() -> list[dict[str, Any]]:
 
 def rune_options_catalog() -> dict[str, list[dict[str, Any]]]:
     """Every declared rune option, keyed by rune name, in catalog shape."""
-    # Local import, for the same reason as the rune compilers above.
-    from .rune_paths import path_options  # pylint: disable=import-outside-toplevel
-
     return {
         name: [option.as_catalog_entry() for option in options]
-        for name, options in path_options().items()
+        for name, options in _declared_options().items()
     }
 
 

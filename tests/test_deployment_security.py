@@ -39,7 +39,8 @@ def test_runtime_manifest_excludes_local_tools():
 def test_ci_covers_net_new_main_branch_and_uses_immutable_actions():
     workflow = Path(".github/workflows/tests.yml").read_text(encoding="utf-8")
 
-    assert workflow.count("branches: [main]") == 2
+    assert "push:\n    branches: [main]\n" in workflow
+    assert "pull_request:\n    branches: [main, chore/sightline-zero]\n" in workflow
     assert "pip-audit -r requirements.txt" in workflow
     assert "bandit -r src -ll" in workflow
     assert "docker build --tag lol-calculator:ci ." in workflow

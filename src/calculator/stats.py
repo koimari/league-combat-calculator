@@ -5,6 +5,7 @@ from collections.abc import Mapping
 from functools import partial
 from typing import Any
 
+from .champions import get_champion_stat_conversion
 from .data_registry import data_version, store_for_generation
 from .interpreters.stat_derivation import armor_penetration_split
 from .item_effects import (
@@ -18,23 +19,32 @@ from .item_effects import (
 from .role_quests import MID_QUEST_AP_PERCENT, MID_QUEST_BONUS_AD_PERCENT
 from .rune_effects import RunePage, compile_rune_page
 from .stat_conversion import BonusHealthConversion
+from .stat_formulas import (
+    ATTACK_SPEED_CAP,
+    MAX_LEVEL,
+    apply_movement_speed_soft_caps,
+    calculate_attack_speed,
+    effective_cooldown,
+    growth_stat,
+    resolve_move_speed,
+)
 
-# Level cap — 20 is top-lane-only as of this season, so this is
-# season-volatile. Single source of truth: the API guards and the UI
-# slider (via the index template) both read this constant.
-MAX_LEVEL = 20
-
-
-def growth_multiplier(level: int) -> float:
-    """The growth formula's progression term, ``0.7025 + 0.0175 * (level - 1)``."""
-    if level < 1 or level > MAX_LEVEL:
-        raise ValueError(f"Level must be between 1 and {MAX_LEVEL}, got {level}")
-    return 0.7025 + 0.0175 * (level - 1)
-
-
-def growth_stat(base: float, growth: float, level: int) -> float:
-    """``base + growth * (level - 1) * (0.7025 + 0.0175 * (level - 1))``."""
-    return base + growth * (level - 1) * growth_multiplier(level)
+__all__ = [
+    "ATTACK_SPEED_CAP",
+    "MAX_LEVEL",
+    "apply_movement_speed_soft_caps",
+    "calculate_attack_speed",
+    "calculate_total_stats",
+    "champion_stat_conversion",
+    "effective_cooldown",
+    "get_champion_base_stats",
+    "get_item_stats",
+    "growth_stat",
+    "item_mana_reaches_pool",
+    "item_stat_type_count",
+    "resolve_move_speed",
+    "resolve_pre_combat_stats",
+]
 
 
 # Where two of the engine's item-stat keys name ONE stat in game.  What
@@ -67,51 +77,6 @@ def item_stat_type_count(total_item_stats: Mapping[str, float]) -> int:
             if value
         }
     )
-
-
-# The game clamps a unit's TOTAL attack speed to 3.003 (one basic attack
-# per 0.333s); the floor is 0.2. See
-# https://wiki.leagueoflegends.com/en-us/Attack_speed
-# NOTE: ``calculate_attack_speed`` deliberately does NOT clamp — applying
-# the cap fight-wide would move every attack-speed champion's numbers at
-# once. Today only a burst that is *designed* to reach the cap reads it
-# (Jayce's Hyper Charge: 360% on his 0.658 ratio lands at 3.027, which is
-# why the in-game tooltip reads "maximum Attack Speed" and not a percent).
-ATTACK_SPEED_CAP = 3.003
-
-
-# base AS and the AS ratio are separate per-champion values.
-# https://wiki.leagueoflegends.com/en-us/Attack_speed
-def calculate_attack_speed(
-    base_attack_speed: float,
-    attack_speed_ratio: float,
-    bonus_percent: float,
-) -> float:
-    """Attacks per second: ``base_AS + AS_ratio * (bonus_percent / 100)``."""
-    return base_attack_speed + attack_speed_ratio * (bonus_percent / 100.0)
-
-
-def resolve_move_speed(flat_total: float, percent_total: float) -> float:
-    """The one fold from movement-speed components to a displayed number."""
-    return apply_movement_speed_soft_caps(flat_total * (1.0 + percent_total / 100.0))
-
-
-def apply_movement_speed_soft_caps(raw_speed: float) -> float:
-    """Apply League's displayed movement-speed soft caps."""
-    if raw_speed > 490:
-        return raw_speed * 0.5 + 230
-    if raw_speed > 415:
-        return raw_speed * 0.8 + 83
-    if raw_speed < 220:
-        return raw_speed * 0.5 + 110
-    return raw_speed
-
-
-def effective_cooldown(base_cooldown: float, ability_haste: float) -> float:
-    """Effective cooldown in seconds: ``base_cd * 100 / (100 + ability_haste)``."""
-    if base_cooldown <= 0:
-        return 0.0
-    return base_cooldown * (100.0 / (100.0 + ability_haste))
 
 
 def get_champion_base_stats(
@@ -322,16 +287,10 @@ def get_item_stats(item_data: dict[str, Any]) -> dict[str, float]:
     return extracted
 
 
-# Champion modules import this module, so the registry that owns their
-# declarations is reached at call time rather than at import.
 def champion_stat_conversion(
     champion_data: Mapping[str, Any],
 ) -> BonusHealthConversion | None:
     """This champion's declared stat conversion, or ``None``."""
-    from .champions import (  # pylint: disable=import-outside-toplevel
-        get_champion_stat_conversion,
-    )
-
     return get_champion_stat_conversion(str(champion_data.get("name", "")))
 
 

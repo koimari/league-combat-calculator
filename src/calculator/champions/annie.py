@@ -30,6 +30,7 @@ Tibbers aura and auto-attack constants (wiki pets entry).
 import re
 from typing import Any
 
+from ..ability_prose import effect_description
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, CC_PER_PART, SlotCtx, build_parser
@@ -38,7 +39,6 @@ from .module_helpers import ability_cast_times, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
-    effect_description,
     extract_cooldown,
     extract_named,
     extract_value,

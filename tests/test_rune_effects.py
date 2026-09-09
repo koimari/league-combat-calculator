@@ -969,3 +969,35 @@ class TestTheSharedTableAccessors:
         values = rune_effects.RuneValues("Synthetic", {"gates": []})
         with pytest.raises(KeyError, match="states no gates"):
             rune_effects.threshold_gates("Synthetic", values, "gates")
+
+
+class TestThePathsPublishTheirCompilerTables:
+    """``rune_paths`` registers its tables and this module only reads them.
+
+    ``src.calculator`` makes the one call, so importing anything under the
+    package arms the resolver; a table nobody registered refuses instead of
+    answering an empty vocabulary, which would read as "no rune is modeled".
+    """
+
+    def test_importing_the_package_fills_every_table(self):
+        assert rune_effects._compilers()
+        assert rune_effects._shard_compilers()
+        assert rune_effects._declared_options()
+
+    def test_a_read_refuses_when_nothing_registered(self, monkeypatch):
+        """The refusal names the package that publishes the table."""
+        monkeypatch.setattr(rune_effects, "_COMPILERS", None)
+        with pytest.raises(ValueError, match="rune_paths publishes"):
+            rune_effects.resolve_rune("Electrocute")
+
+    def test_two_compilers_for_one_rune_refuse_to_register(self, monkeypatch):
+        """A rune is compiled by one path module or by the keystone table."""
+        # The setter writes these three, so the call is bracketed rather than
+        # trusted to raise before its first assignment.
+        for table in ("_COMPILERS", "_SHARD_COMPILERS", "_DECLARED_OPTIONS"):
+            monkeypatch.setattr(rune_effects, table, getattr(rune_effects, table))
+        name, compiler = next(iter(rune_effects._compilers().items()))
+        with pytest.raises(ValueError, match="has two compilers"):
+            rune_effects.register_rune_compilers(
+                {name: compiler}, {name: compiler}, {}, {}
+            )

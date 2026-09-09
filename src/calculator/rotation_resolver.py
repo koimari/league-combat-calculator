@@ -72,10 +72,18 @@ from .cast_dependency import (
     SuppressedInference,
     active_dependencies,
 )
+from .champions import (
+    get_champion_cast_dependencies,
+    get_champion_cast_order,
+    get_champion_module_contract,
+    get_champion_option_rotation,
+    get_champion_options_meta,
+    parse_champion_abilities,
+)
 from .damage import DEFAULT_CAST_ORDER
 from .data_fetcher import fetch_item_data
 from .data_registry import data_version
-from .stats import effective_cooldown
+from .stats import calculate_total_stats, effective_cooldown
 
 # Fallback rationale when no combo rule and no certified order exists.
 _DEFAULT_RATIONALE = (
@@ -629,14 +637,9 @@ _PRE_CAMPAIGN_CC_ORDERING: dict[str, frozenset[str]] = {
 def _has_champion_module(champion_name: str) -> bool:
     """Whether this name resolves to a validated champion module.
 
-    The synthetic and development fixtures do not, which is the whole of
-    the distinction below: their markers are authored by a test or a
-    scratch kit, not sourced from a reviewed module.
+    Synthetic and development fixtures do not: a test or a scratch kit
+    authored their markers, not a reviewed module.
     """
-    from .champions import (  # pylint: disable=import-outside-toplevel
-        get_champion_module_contract,
-    )
-
     try:
         get_champion_module_contract(champion_name)
     except KeyError:
@@ -669,10 +672,6 @@ def detect_setup_consume_edges(  # pylint: disable=too-many-locals,too-many-bran
     :class:`_Edge` constraints; a champion with no detectable signal
     returns ``[]`` and keeps its certified/default order.
     """
-
-    from .champions import (
-        get_champion_option_rotation,
-    )  # pylint: disable=import-outside-toplevel
 
     slots = [s for s in _CAST_SLOTS if isinstance(ability_damages.get(s), Mapping)]
     corpora = {
@@ -1343,7 +1342,7 @@ def _absent_endpoints(dep: CastDependency, live_slots: Collection[str]) -> str:
     return " and ".join(absent) if absent else "no endpoint"
 
 
-def resolved_edges(  # pylint: disable=import-outside-toplevel
+def resolved_edges(
     champion_name: str,
     ability_damages: Mapping[str, Any],
     champion_data: Mapping[str, Any],
@@ -1363,10 +1362,6 @@ def resolved_edges(  # pylint: disable=import-outside-toplevel
     and a receipt of what the merge did.
     """
     if declarations is None:
-
-        from .champions import (
-            get_champion_cast_dependencies,
-        )  # pylint: disable=import-outside-toplevel
 
         declarations = get_champion_cast_dependencies(champion_name)
     inferred = detect_setup_consume_edges(
@@ -1462,7 +1457,7 @@ _DERIVED_RULE_CACHE: dict[
 ] = {}
 
 
-def _matrix_dps_rows(  # pylint: disable=import-outside-toplevel
+def _matrix_dps_rows(
     champion_name: str, champion_data: Mapping[str, Any], aoe: Mapping[str, int]
 ) -> list[list[tuple[str, float]]]:
     """Per-rank DPS at the reference level/build matrix, cached.
@@ -1476,11 +1471,6 @@ def _matrix_dps_rows(  # pylint: disable=import-outside-toplevel
     cached = _MATRIX_DPS_CACHE.get(cache_key)
     if cached is not None:
         return cached
-
-    from .champions import (
-        parse_champion_abilities,
-    )  # pylint: disable=import-outside-toplevel
-    from .stats import calculate_total_stats  # pylint: disable=import-outside-toplevel
 
     items_by_name = {d["name"]: d for d in fetch_item_data().values()}
     target_stats = {
@@ -1506,7 +1496,7 @@ def _matrix_dps_rows(  # pylint: disable=import-outside-toplevel
     return rows
 
 
-def _canonical_kit_parse(  # pylint: disable=import-outside-toplevel
+def _canonical_kit_parse(
     champion_data: Mapping[str, Any],
     champion_options: Mapping[str, Any] | None = None,
 ) -> dict[str, dict[str, Any]]:
@@ -1519,11 +1509,6 @@ def _canonical_kit_parse(  # pylint: disable=import-outside-toplevel
     option-sensitive edges are derived per option state, so a cold cache
     cannot drop a slot the fight actually casts.
     """
-
-    from .champions import (
-        parse_champion_abilities,
-    )  # pylint: disable=import-outside-toplevel
-    from .stats import calculate_total_stats  # pylint: disable=import-outside-toplevel
 
     data = dict(champion_data)
     stats = calculate_total_stats(data, 11, [])
@@ -1567,10 +1552,6 @@ def _option_signature(
     """
     if not champion_options:
         return None
-
-    from .champions import (
-        get_champion_options_meta,
-    )  # pylint: disable=import-outside-toplevel
 
     declared = {
         str(opt.get("key", ""))
@@ -1691,12 +1672,6 @@ def derive_champion_rule(  # pylint: disable=too-many-locals,too-many-branches,t
     # derivation must reflect the champion's complete mechanic surface.  The
     # request's option state is honored so option-gated slots participate.
     ability_damages = _canonical_kit_parse(champion_data, champion_options)
-
-    from .champions import (  # pylint: disable=import-outside-toplevel
-        get_champion_cast_dependencies,
-        get_champion_option_rotation,
-        get_champion_options_meta,
-    )
 
     base = [
         s
@@ -1945,10 +1920,6 @@ def resolve_cast_order(
     if champion_data is None and not ability_damages:
         return list(DEFAULT_CAST_ORDER), None
     if certified_order is None:
-
-        from .champions import (
-            get_champion_cast_order,
-        )  # pylint: disable=import-outside-toplevel
 
         certified_order = get_champion_cast_order(champion_name)
     derived = derive_champion_rule(

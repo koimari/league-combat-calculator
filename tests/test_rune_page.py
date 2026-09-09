@@ -15,6 +15,7 @@ import json
 import shutil
 import subprocess
 from pathlib import Path
+from types import MappingProxyType
 
 import pytest
 
@@ -23,7 +24,6 @@ from src.calculator import rune_effects
 from src.calculator.ability_spec import DamagePart
 from src.calculator.calculate import calculate_payload
 from src.calculator.damage import FightConfig, calculate_fight_damage
-from src.calculator.rune_paths import precision
 
 # ---------------------------------------------------------------------------
 # The roster
@@ -104,16 +104,19 @@ def fixture_uncompiled_rune(monkeypatch):
     """One roster rune with its compiler taken away, and its name.
 
     Every rune the roster offers compiles, so the refusal an *unmodeled*
-    rune is owed cannot be proved by naming one — it is proved by
-    removing a compiler. The merged vocabulary is cached, so the cache is
-    cleared on the way in and again on the way out, once monkeypatch has put
-    the compiler back.
+    rune is owed cannot be proved by naming one: it is proved by removing a
+    compiler. ``rune_paths`` publishes one merged vocabulary and the resolver
+    reads that table, so the removal lands there and monkeypatch puts the
+    whole table back.
     """
+    published = rune_effects._compilers()
     name = "Triumph"
-    monkeypatch.delitem(precision.COMPILERS, name)
-    rune_effects._compilers.cache_clear()
-    yield name
-    rune_effects._compilers.cache_clear()
+    monkeypatch.setattr(
+        rune_effects,
+        "_COMPILERS",
+        MappingProxyType({r: c for r, c in published.items() if r != name}),
+    )
+    return name
 
 
 class TestPageValidation:

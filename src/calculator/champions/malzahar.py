@@ -47,7 +47,7 @@ from functools import partial
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
-from ..stats import growth_multiplier
+from ..stat_formulas import growth_multiplier
 from .engine import SlotCtx
 from .inputs import champion_stat, int_option
 from .module_contract import coverage
@@ -94,8 +94,8 @@ _VOIDLING_ATTACK_ATTR = "Magic Damage"
 
 def _voidling_attack_speed(level: int) -> float:
     """One Voidling's attacks per second at champion level (wiki pets).
-    Relative growth reuses ``stats.growth_multiplier``, so one place holds
-    the level 1-20 contract."""
+    Relative growth reuses ``stat_formulas.growth_multiplier``, so one
+    place holds the level 1-20 contract."""
     return _VOIDLING_AS_BASE * (
         1.0 + _VOIDLING_AS_GROWTH * (level - 1) * growth_multiplier(level)
     )

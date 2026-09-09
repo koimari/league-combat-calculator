@@ -14,13 +14,13 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..ability_prose import extract_description_control_duration
 from ..ability_spec import DamagePart
 from .engine import DAMAGE, SlotCtx, SlotParser
 from .slotlib import (
     ability_name,
     damage_entry,
     extract_cooldown,
-    extract_description_control_duration,
     extract_named,
     extract_value,
 )

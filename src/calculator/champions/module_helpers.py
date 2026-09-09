@@ -14,7 +14,7 @@ from dataclasses import replace
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..stats import effective_cooldown
+from ..stat_formulas import effective_cooldown
 from .engine import AMP, DAMAGE, ONHIT, SlotCtx, SlotParser
 from .slotlib import (
     MODULE_FORMULA_ZERO,

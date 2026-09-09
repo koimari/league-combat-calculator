@@ -42,6 +42,7 @@ from ..item_effects import (
     UltimateAutoBuffEffect,
     row_presentation,
 )
+from ..stat_formulas import calculate_attack_speed
 from ..value_ref import AnyValueRef, resolve
 from . import damage_formula
 
@@ -487,9 +488,6 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
     active_until = 0.0 if window is None else window.duration
     cooldown = 0.0 if window is None else window.cooldown
     refund = 0.0 if window is None else window.refund(critical_chance)
-    # Call-time import: stats -> interpreters -> this module at import time.
-    from ..stats import calculate_attack_speed
-
     first_attack = True
     while True:
         if ramp is None:
