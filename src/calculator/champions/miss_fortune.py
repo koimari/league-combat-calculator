@@ -37,8 +37,9 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, ONHIT, SlotCtx
-from .module_helpers import buff_window_share, ranked_slot, steroid_entry
+from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
+from .shared_mechanics import attack_speed_steroid
 from .slotlib import (
     PER_LEVEL_SCALING,
     ability_name,
@@ -177,26 +178,14 @@ _love_tap.phase = ONHIT
 
 @ranked_slot
 def _strut(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
-    """W: the active's sourced bonus attack speed over its own window.
+    """W: the steroid alone; the atoms capture holds no damage instance."""
 
-    The slot deals no damage at all (no damage instance exists in the
-    atoms capture), so the row is the steroid: the cached Bonus Attack
-    Speed value, taken through :func:`buff_window_share` so a 4-second
-    active does not hold full uptime of a longer fight.  The two
-    movement-speed rows have no ``stat_buff`` key to land in.
-    """
-
-    granted = extract_value(ability, "Bonus Attack Speed", rank)
-    bonus_as = granted * buff_window_share(ctx, _STRUT_ACTIVE_SECONDS)
-    return steroid_entry(
+    return attack_speed_steroid(
+        ctx,
         ability,
         rank,
-        {"bonus_attack_speed": bonus_as},
-        (
-            f"+{granted:g}% bonus attack speed for {_STRUT_ACTIVE_SECONDS:g}s "
-            f"({bonus_as:g}% over the fight window); the passive's 30-50 / "
-            "60-100 bonus movement speed has no stat_buff key"
-        ),
+        duration=_STRUT_ACTIVE_SECONDS,
+        aside="the passive's 30-50 / 60-100 bonus movement speed has no stat_buff key",
     )
 
 

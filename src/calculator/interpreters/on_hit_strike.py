@@ -31,7 +31,7 @@ from ..item_behavior import (
     RestrictedPacket,
     RuleFamily,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import behavior_rules, built_per_rule
 from ..item_effects import PerHitEffect, damage_source
 from ..value_ref import resolve
 from . import damage_formula
@@ -258,14 +258,8 @@ def per_hit_effects(
     *,
     facts: FightFacts,
 ) -> tuple[PerHitEffect, ...]:
-    """Every on-hit strike this build declares, in build order (purchase order,
-    the registry's append order and the engine's breakdown-row order).  The
-    facts are threaded, not defaulted, though no on-hit coefficient reads one:
-    a placeholder would be the silent default the context refuses."""
-    return tuple(
-        per_hit_effect(rule, build_context(rule.owner, facts))
-        for rule in strike_rules(owners)
-    )
+    """Every on-hit strike this build declares, its facts threaded, not defaulted."""
+    return built_per_rule(strike_rules(owners), per_hit_effect, facts=facts)
 
 
 __all__ = [

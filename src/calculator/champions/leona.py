@@ -19,9 +19,8 @@ from typing import Any
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, delayed_damage
+from .shared_mechanics import empowered_auto_entry
 from .slotlib import (
-    ability_name,
-    ability_on_hit_entry,
     extract_cooldown,
     extract_named,
     proc_damage,
@@ -59,8 +58,8 @@ def _shield_of_daybreak(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     rank = ctx.rank_for()
     value = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
-    result = ability_on_hit_entry(
-        ability_name(ability),
+    return empowered_auto_entry(
+        ability,
         rank,
         "magic",
         {
@@ -69,10 +68,8 @@ def _shield_of_daybreak(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_type": "magic",
         },
         cooldown=extract_cooldown(ability, rank),
+        detail="One empowered basic attack; the stun is control state.",
     )
-    result["empowers_next_auto"] = True
-    result["detail"] = "One empowered basic attack; the stun is control state."
-    return result
 
 
 _sunlight.phase = ONHIT

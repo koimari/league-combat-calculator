@@ -284,6 +284,56 @@ def test_the_build_context_carries_the_data_version() -> None:
     assert context.level == 18
 
 
+class TestBuiltPerRule:
+    """Every declared rule, built in its owner's context, in build order."""
+
+    _FACTS = FightFacts(
+        level=13,
+        fight_duration_seconds=5.0,
+        target_bonus_health=0.0,
+        holder_is_melee=True,
+    )
+
+    def test_each_rule_is_built_against_its_own_owners_context(self) -> None:
+        rules = catalog.behavior_rules("Black Cleaver") + catalog.behavior_rules(
+            "Horizon Focus"
+        )
+        built = catalog.built_per_rule(
+            rules,
+            lambda rule, ctx: (rule.owner, ctx.owner, ctx.level),
+            facts=self._FACTS,
+        )
+        assert [owner for owner, _, _ in built] == [rule.owner for rule in rules]
+        assert all(owner == ctx_owner for owner, ctx_owner, _ in built)
+        assert {level for _, _, level in built} == {13}
+
+    def test_build_order_is_the_order_the_rules_arrive_in(self) -> None:
+        """Purchase order, the registry's append order and the breakdown order."""
+        rules = catalog.behavior_rules("Horizon Focus") + catalog.behavior_rules(
+            "Black Cleaver"
+        )
+        built = catalog.built_per_rule(
+            rules, lambda rule, ctx: rule.mechanic_id, facts=self._FACTS
+        )
+        assert list(built) == [rule.mechanic_id for rule in rules]
+
+    def test_no_rules_build_nothing_rather_than_one_empty_row(self) -> None:
+        assert (
+            catalog.built_per_rule((), lambda rule, ctx: rule, facts=self._FACTS) == ()
+        )
+
+    def test_a_builder_that_refuses_is_not_swallowed(self) -> None:
+        """The fold adds no error handling of its own: a stop reaches the caller."""
+
+        def build(rule, ctx):
+            raise catalog.BehaviorCatalogError(f"{rule.owner} cannot build")
+
+        with pytest.raises(catalog.BehaviorCatalogError, match="cannot build"):
+            catalog.built_per_rule(
+                catalog.behavior_rules("Black Cleaver"), build, facts=self._FACTS
+            )
+
+
 def test_an_unexplained_certified_mechanic_fails_the_catalog() -> None:
     """R-05's red for the certification closure, through the validator's seam.
 

@@ -76,7 +76,7 @@ from collections.abc import Iterable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATA_DIR = REPO_ROOT / "data"
@@ -591,26 +591,42 @@ def game_spells_by_slot(
     return by_slot
 
 
+class _RowTally(NamedTuple):
+    """What one wiki-vs-game comparison found: row counts, notes, open questions.
+
+    ``needs_ddragon`` names the row kinds the bin alone could not arbitrate.
+    """
+
+    checked: int = 0
+    stale: int = 0
+    unchecked: int = 0
+    notes: tuple[str, ...] = ()
+    needs_ddragon: frozenset[str] = frozenset()
+
+    def merged(self, other: "_RowTally") -> "_RowTally":
+        """This tally and *other*, notes in the order they were recorded."""
+        return _RowTally(
+            self.checked + other.checked,
+            self.stale + other.stale,
+            self.unchecked + other.unchecked,
+            self.notes + other.notes,
+            self.needs_ddragon | other.needs_ddragon,
+        )
+
+
 def compare_ability_rows(
     cache_abilities: Mapping[str, Any],
     bin_data: Mapping[str, Any],
     champion_name: str,
     ddragon: Mapping[str, Any] | None = None,
-) -> tuple[int, int, int, list[str], set[str]]:
+) -> _RowTally:
     """Compare wiki ability rows against the game bin (best-effort).
 
     ``ddragon`` is the champion's official tooltip row dict keyed by slot
-    (see ddragon_rows_by_slot).  Returns
-    (rows_checked, rows_stale, unchecked, notes, needs_ddragon) where
-    needs_ddragon names the slots whose cooldown/cost rows could not be
-    arbitrated from the bin alone.
+    (see ddragon_rows_by_slot).
     """
     by_slot = game_spells_by_slot(bin_data, champion_name)
-    checked = 0
-    stale = 0
-    unchecked = 0
-    notes = []
-    needs_ddragon = set()
+    tally = _RowTally()
     for slot in ("P", "Q", "W", "E", "R"):
         entries = cache_abilities.get(slot) or []
         spells = by_slot.get(slot) or []
@@ -620,29 +636,15 @@ def compare_ability_rows(
                 continue
             if spell is None:
                 rows = _wiki_row_count(entry)
-                unchecked += rows
-                if rows:
-                    notes.append(f"{slot}[{index}] no game spell")
+                absent = (f"{slot}[{index}] no game spell",) if rows else ()
+                tally = tally.merged(_RowTally(unchecked=rows, notes=absent))
                 continue
-            (
-                rows_checked,
-                rows_stale,
-                rows_unchecked,
-                row_notes,
-                row_needs,
-            ) = _compare_entry_rows(
-                entry,
-                spell,
-                slot,
-                index,
-                ddragon=(ddragon or {}).get(slot),
+            tally = tally.merged(
+                _compare_entry_rows(
+                    entry, spell, slot, index, ddragon=(ddragon or {}).get(slot)
+                )
             )
-            checked += rows_checked
-            stale += rows_stale
-            unchecked += rows_unchecked
-            notes.extend(row_notes)
-            needs_ddragon.update(row_needs)
-    return checked, stale, unchecked, notes, needs_ddragon
+    return tally
 
 
 def _wiki_row_count(entry):
@@ -663,7 +665,7 @@ def _wiki_row_count(entry):
 
 def _compare_entry_rows(
     entry, spell: dict[str, Any], slot: str, index: int, *, ddragon=None
-):
+) -> _RowTally:
     """Compare one wiki ability entry against one game spell.
 
     ``ddragon`` is Riot's official per-spell tooltip row dict (cooldown/cost),
@@ -806,7 +808,7 @@ def _compare_entry_rows(
                 notes.append(f"{prefix} {attribute} drifted vs game row")
             else:
                 unchecked += 1
-    return checked, stale, unchecked, notes, needs_ddragon
+    return _RowTally(checked, stale, unchecked, tuple(notes), frozenset(needs_ddragon))
 
 
 # ---------------------------------------------------------------------------
@@ -895,32 +897,26 @@ def build_staleness(
         stat_drift, checked, unchecked = compare_champion_stats(
             cache_entry.get("stats") or {}, game_stats
         )
-        (
-            rows_checked,
-            rows_stale,
-            rows_unchecked,
-            row_notes,
-            row_needs,
-        ) = compare_ability_rows(
+        rows = compare_ability_rows(
             cache_entry.get("abilities") or {},
             bin_data,
             name,
             ddragon=(ddragon or {}).get(name),
         )
-        if row_needs:
-            pending[name] = sorted(row_needs)
+        if rows.needs_ddragon:
+            pending[name] = sorted(rows.needs_ddragon)
         notes = []
         if unchecked:
             notes.append(f"{unchecked} stat(s) unchecked (no game field)")
-        if rows_unchecked:
-            notes.append(f"{rows_unchecked} ability row(s) unchecked (no game mapping)")
-        notes.extend(row_notes[:3])
+        if rows.unchecked:
+            notes.append(f"{rows.unchecked} ability row(s) unchecked (no game mapping)")
+        notes.extend(rows.notes[:3])
         champions[name] = {
-            "stale": bool(stat_drift) or rows_stale > 0,
+            "stale": bool(stat_drift) or rows.stale > 0,
             "stat_drift": stat_drift,
             "stats_checked": checked,
-            "ability_rows_checked": rows_checked,
-            "ability_rows_stale": rows_stale,
+            "ability_rows_checked": rows.checked,
+            "ability_rows_stale": rows.stale,
             "note": "; ".join(notes),
         }
 

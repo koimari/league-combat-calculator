@@ -198,10 +198,14 @@ def derive_self_healing(
 ) -> list[dict[str, Any]]:
     """Resolve Soraka self-healing events from its authored packet."""
     healing = []
-    ability = _healing.ability_json(champion_data, "Q")
-    rank = _healing.parsed_rank(ability_damages, "Q")
-    per_tick = extract_named(ability, "Heal per Tick", rank, champion_stats, {})
-    total = extract_named(ability, "Total Heal", rank, champion_stats, {})
+    per_tick, total = _healing.ranked_rows(
+        champion_data,
+        ability_damages,
+        champion_stats,
+        "Q",
+        "Heal per Tick",
+        "Total Heal",
+    )
     tick_count = (
         max(1, min(100, round(total / per_tick)))
         if per_tick > 0.0 and total > 0.0

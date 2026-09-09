@@ -183,7 +183,6 @@ AMBIGUITY NOTES for the coordinator:
    receipt, mirroring the Asol _StardustRule pattern.
 """
 
-import hashlib
 import json
 from pathlib import Path
 
@@ -196,6 +195,7 @@ from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
+from src.calculator.champions.packet_module import packet_spec_sha256
 from src.calculator.champions.slotlib import extract_named, find_named_leveling
 from src.calculator.champions.zeri import PACKET_SHA256
 from tests.committed_bytes import sha256_as_committed
@@ -441,13 +441,6 @@ def _atom(atom_id: str, name: str | None = None) -> dict:
     return matches[0]
 
 
-def _packet_sha256(packet: dict) -> str:
-    payload = json.dumps(
-        packet, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-    ).encode("utf-8")
-    return hashlib.sha256(payload).hexdigest()
-
-
 # ---------------------------------------------------------------------------
 # S1 - Source evidence (three P effects, notes, leveling rows, atoms,
 #      module declaration)
@@ -568,7 +561,7 @@ class TestSourceEvidence:
             PACKET_SHA256
             == "f03ac495eb30baef9672e60deb2f448b0da551e22e39c3113cbc0cfee9e1c055"
         )
-        assert _packet_sha256(_PACKET_ZERI) == PACKET_SHA256
+        assert packet_spec_sha256(_PACKET_ZERI) == PACKET_SHA256
 
     def test_module_meta_declares_no_options(self):
         meta = get_champion_options_meta("Zeri")
@@ -947,7 +940,7 @@ class TestSourceAndAtomReceipts:
     def test_packet_spec_receipt_is_the_module_hash(self):
         # The static/reviewed-packets.json Zeri entry digests to the
         # module's pinned PACKET_SHA256 (S1 cross-check).
-        assert _packet_sha256(_PACKET_ZERI) == PACKET_SHA256
+        assert packet_spec_sha256(_PACKET_ZERI) == PACKET_SHA256
 
     def test_module_sources_pin_wiki_revisions(self):
         meta = get_champion_options_meta("Zeri")

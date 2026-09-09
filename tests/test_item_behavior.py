@@ -49,8 +49,10 @@ from src.calculator.item_behavior import (
     UtilityDimension,
     ZeroPolicy,
     is_value_reference,
+    mechanic_id_reading,
     policy_values,
     policy_walk,
+    sole_declared,
     validate_rule,
 )
 from src.calculator.item_behavior_catalog import behavior_rules, rule_owners
@@ -444,3 +446,75 @@ def test_no_utility_census_read_is_a_bare_string_literal() -> None:
         census,
     )
     assert bare == []
+
+
+class _FamilyStop(ValueError):
+    """One interpreter family's refusal type."""
+
+
+class TestMechanicIdReading:
+    """A family's front door onto ``declared_mechanic_id``, bound once."""
+
+    def test_the_bound_reader_answers_the_owners_first_rule(self) -> None:
+        read = mechanic_id_reading(
+            lambda owners: (_rule(owner=owners[0]),),
+            _FamilyStop,
+            authors="an item active",
+            declares="active_cast",
+        )
+        assert read("Test Item") == "test_item.amp"
+
+    def test_an_owner_with_no_rule_of_the_family_is_a_stop(self) -> None:
+        """A stop rather than a default: an unstamped row double counts."""
+        read = mechanic_id_reading(
+            lambda owners: (),
+            _FamilyStop,
+            authors="an item active",
+            declares="active_cast",
+        )
+        with pytest.raises(_FamilyStop, match="authors an item active"):
+            read("Test Item")
+
+    def test_the_reader_is_handed_only_the_owner_asked_for(self) -> None:
+        seen: list[object] = []
+
+        def rules(owners):
+            seen.append(list(owners))
+            return (_rule(),)
+
+        mechanic_id_reading(rules, _FamilyStop, authors="a", declares="b")("Sheen")
+        assert seen == [["Sheen"]]
+
+
+class TestSoleDeclared:
+    """The build's one declaration of a shape that does not compose."""
+
+    def test_one_declaration_is_the_answer(self) -> None:
+        only = _rule()
+        assert (
+            sole_declared(lambda o, t: (only,), ("Test Item",), object, _FamilyStop)
+            is only
+        )
+
+    def test_no_declaration_is_none_rather_than_a_zero(self) -> None:
+        assert (
+            sole_declared(lambda o, t: (), ("Test Item",), object, _FamilyStop) is None
+        )
+
+    def test_two_declarations_are_a_stop_listing_both_owners(self) -> None:
+        """Nothing declares how two of them compose, so neither is picked."""
+        declared = (_rule(owner="First"), _rule(owner="Second"))
+        with pytest.raises(_FamilyStop) as raised:
+            sole_declared(
+                lambda o, t: declared, ("First", "Second"), object, _FamilyStop
+            )
+        assert "'First', 'Second'" in str(raised.value)
+
+    def test_the_owner_list_is_derived_from_the_declarations(self) -> None:
+        """Not from the build: the refusal names who declared, not who was asked."""
+        declared = (_rule(owner="First"), _rule(owner="Second"))
+        with pytest.raises(_FamilyStop) as raised:
+            sole_declared(
+                lambda o, t: declared, ("First", "Second", "Third"), object, _FamilyStop
+            )
+        assert "Third" not in str(raised.value)

@@ -41,7 +41,7 @@ being mislabelled in either direction (the Dr. Mundo P precedent).
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, NamedTuple
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
@@ -196,45 +196,109 @@ def _unseen_predator(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-@ranked_slot
-def _savagery(
-    ctx: SlotCtx, ability: dict[str, Any], rank: int
-) -> dict[str, Any] | None:
-    """Q: Savagery — base or Ferocity-empowered (level array) bonus damage."""
-    # Both part sets are emitted unconditionally (P3 package 3V): the
-    # engine prices the FEROCITY parts for a live empowered cast (the
-    # post-rotation stack walk's consume) and the base parts otherwise,
-    # so the seeded static read below only drives the parse detail text.
-    base_bonus = extract_named(
-        ability, "Additional Physical Damage", rank, ctx.stats, ctx.target
-    )
-    ferocity_bonus = _ferocity_bonus(ctx, ability, "Bonus Physical Damage") or 0.0
+class _FerocityBranch(NamedTuple):
+    """The rows, the published details and the control one basic ability has.
+
+    The Ferocity branch is a different cached row, a different published
+    sentence and (on E) a different control kind, so a slot states all
+    three once and the shared body reads them.
+    """
+
+    dmg_type: str
+    base_row: str
+    ferocity_row: str
+    base_detail: str
+    empowered_detail: str
+    base_cc: str | None = None
+    ferocity_cc: str | None = None
+
+
+_SAVAGERY = _FerocityBranch(
+    dmg_type="physical",
+    base_row="Additional Physical Damage",
+    ferocity_row="Bonus Physical Damage",
+    base_detail=(
+        "Base Savagery: 20 : 160 by rank + 5% AD on the first "
+        "empowered basic attack; the attack can crit at "
+        "(100% + 30%) AD effectiveness."
+    ),
+    empowered_detail=(
+        "Ferocity-empowered: 35 : 260 by level + 20% AD (the wiki "
+        "Ferocity Bonus), consuming all 4 stacks."
+    ),
+)
+_BATTLE_ROAR = _FerocityBranch(
+    dmg_type="magic",
+    base_row="Magic Damage",
+    ferocity_row="Bonus Magic Damage",
+    base_detail=(
+        "Base Battle Roar: 50 : 170 by rank + 80% AP; the grey-health " "heal is state."
+    ),
+    empowered_detail=(
+        "Ferocity-empowered: 50 : 240 by level + 80% AP (the wiki "
+        "Ferocity Bonus), consuming all 4 stacks."
+    ),
+)
+# E is declared ``CC_PER_PART`` because the Ferocity bonus changes the kind:
+# the base bola "slows them for 1.75 seconds", and the empowered one roots
+# "instead of slowed".
+_BOLA_STRIKE = _FerocityBranch(
+    dmg_type="physical",
+    base_row="Physical Damage",
+    ferocity_row="Bonus Physical Damage",
+    base_detail=(
+        "Base Bola Strike: 55 : 235 by rank + 80% bonus AD; the bola "
+        "slows the first enemy hit for 1.75 seconds."
+    ),
+    empowered_detail=(
+        "Ferocity-empowered: 50 : 335 by level + 80% bonus AD (the "
+        "wiki Ferocity Bonus), consuming all 4 stacks; the target "
+        "is rooted instead of slowed."
+    ),
+    base_cc="slow",
+    ferocity_cc="root",
+)
+
+
+def _ferocity_entry(
+    ctx: SlotCtx, ability: Mapping[str, Any], rank: int, branch: _FerocityBranch
+) -> dict[str, Any]:
+    """One basic ability in both Ferocity branches, base parts and empowered parts.
+
+    Both part sets are emitted unconditionally (P3 package 3V): the engine
+    prices the FEROCITY parts for a live empowered cast (the post-rotation
+    stack walk's consume) and the base parts otherwise, so the seeded
+    static read only picks the headline ``total_raw`` the parse panel
+    shows and the detail text.  The two sets carry their own crowd-control
+    answers, so whichever set the engine prices states the control that
+    cast applied.
+    """
+    dmg_type = branch.dmg_type
+    base = extract_named(ability, branch.base_row, rank, ctx.stats, ctx.target)
+    ferocity = _ferocity_bonus(ctx, ability, branch.ferocity_row) or 0.0
     empowered = _ferocity(ctx) >= _FEROCITY_MAX
     entry = damage_entry(
         ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
-        ferocity_bonus if empowered else base_bonus,
-        "physical",
+        ferocity if empowered else base,
+        dmg_type,
         event_order_certified="single_hit",
     )
-    # The engine prices the BASE parts by default and the FEROCITY parts
-    # only for a live empowered cast (the post-rotation consume); the
-    # seeded total_raw remains the headline the parse panel shows.
-    entry["parts"] = (DamagePart("physical", base_bonus),)
-    entry["ferocity_parts"] = (DamagePart("physical", ferocity_bonus),)
-    if empowered:
-        entry["detail"] = (
-            "Ferocity-empowered: 35 : 260 by level + 20% AD (the wiki "
-            "Ferocity Bonus), consuming all 4 stacks."
-        )
-    else:
-        entry["detail"] = (
-            "Base Savagery: 20 : 160 by rank + 5% AD on the first "
-            "empowered basic attack; the attack can crit at "
-            "(100% + 30%) AD effectiveness."
-        )
+    entry["parts"] = (DamagePart(dmg_type, base, cc_kind=branch.base_cc),)
+    entry["ferocity_parts"] = (
+        DamagePart(dmg_type, ferocity, cc_kind=branch.ferocity_cc),
+    )
+    entry["detail"] = branch.empowered_detail if empowered else branch.base_detail
     return entry
+
+
+@ranked_slot
+def _savagery(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
+    """Q: Savagery — base or Ferocity-empowered (level array) bonus damage."""
+    return _ferocity_entry(ctx, ability, rank, _SAVAGERY)
 
 
 @ranked_slot
@@ -242,69 +306,15 @@ def _battle_roar(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
     """W: Battle Roar — base or Ferocity-empowered (level array) magic damage."""
-    base_damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    ferocity_damage = _ferocity_bonus(ctx, ability, "Bonus Magic Damage") or 0.0
-    empowered = _ferocity(ctx) >= _FEROCITY_MAX
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        ferocity_damage if empowered else base_damage,
-        "magic",
-        event_order_certified="single_hit",
-    )
-    entry["parts"] = (DamagePart("magic", base_damage),)
-    entry["ferocity_parts"] = (DamagePart("magic", ferocity_damage),)
-    if empowered:
-        entry["detail"] = (
-            "Ferocity-empowered: 50 : 240 by level + 80% AP (the wiki "
-            "Ferocity Bonus), consuming all 4 stacks."
-        )
-    else:
-        entry["detail"] = (
-            "Base Battle Roar: 50 : 170 by rank + 80% AP; the grey-health "
-            "heal is state."
-        )
-    return entry
+    return _ferocity_entry(ctx, ability, rank, _BATTLE_ROAR)
 
 
 @ranked_slot
 def _bola_strike(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
-    """E: Bola Strike — base or Ferocity-empowered (level array) physical damage.
-
-    E is declared ``CC_PER_PART`` because the Ferocity bonus changes the
-    kind: the base bola "slows them for 1.75 seconds",
-    and the empowered one roots "instead of slowed".
-    """
-    base_damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    ferocity_damage = _ferocity_bonus(ctx, ability, "Bonus Physical Damage") or 0.0
-    empowered = _ferocity(ctx) >= _FEROCITY_MAX
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        ferocity_damage if empowered else base_damage,
-        "physical",
-        event_order_certified="single_hit",
-    )
-    # The two part sets carry the two crowd-control answers with them, so
-    # whichever set the engine prices states the control that cast applied.
-    entry["parts"] = (DamagePart("physical", base_damage, cc_kind="slow"),)
-    entry["ferocity_parts"] = (DamagePart("physical", ferocity_damage, cc_kind="root"),)
-    if empowered:
-        entry["detail"] = (
-            "Ferocity-empowered: 50 : 335 by level + 80% bonus AD (the "
-            "wiki Ferocity Bonus), consuming all 4 stacks; the target "
-            "is rooted instead of slowed."
-        )
-    else:
-        entry["detail"] = (
-            "Base Bola Strike: 55 : 235 by rank + 80% bonus AD; the bola "
-            "slows the first enemy hit for 1.75 seconds."
-        )
-    return entry
+    """E: Bola Strike — base or Ferocity-empowered (level array) physical damage."""
+    return _ferocity_entry(ctx, ability, rank, _BOLA_STRIKE)
 
 
 # Cached kit review.  Q's empowered stab only "deal[s] additional physical

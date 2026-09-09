@@ -193,7 +193,6 @@ AMBIGUITY NOTES for the coordinator:
    level-18 stats (health 2470, AP 0).
 """
 
-import hashlib
 import json
 from pathlib import Path
 
@@ -202,6 +201,7 @@ import pytest
 from src import app as app_module
 from src.calculator.atomizer import hash_domain_file
 from src.calculator.champions import get_champion_options_meta, parse_champion_abilities
+from src.calculator.champions.packet_module import packet_spec_sha256
 from src.calculator.champions.slotlib import extract_value
 from src.calculator.champions.vladimir import (
     _E_CHANNEL_SECONDS,
@@ -377,13 +377,6 @@ def _champion_atom(atom_id: str, behavior: str | None = None) -> dict:
     ]
     assert len(matches) == 1, f"champion atom {atom_id!r} {behavior!r}: {len(matches)}"
     return matches[0]
-
-
-def _packet_sha256(packet: dict) -> str:
-    payload = json.dumps(
-        packet, ensure_ascii=False, sort_keys=True, separators=(",", ":")
-    ).encode("utf-8")
-    return hashlib.sha256(payload).hexdigest()
 
 
 # ---------------------------------------------------------------------------
@@ -963,7 +956,7 @@ class TestSourceAndAtomReceipts:
         )
 
     def test_packet_spec_digests_to_the_module_hash(self):
-        assert _packet_sha256(_PACKET_VLADIMIR) == PACKET_SHA256
+        assert packet_spec_sha256(_PACKET_VLADIMIR) == PACKET_SHA256
 
     def test_module_sources_pin_wiki_revisions(self):
         meta = get_champion_options_meta("Vladimir")

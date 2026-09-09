@@ -28,6 +28,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
+from .shared_mechanics import prose_numbers
 from .slotlib import simple_damage
 
 PACKET_SHA256 = "62dd25de0191c8de67cec4f56eaebf7ad2bfa32cf704569b553e18049647d228"
@@ -63,17 +64,10 @@ def _realm_of_death(compiled):
         # roster must not heal Mordekaiser once per enemy.
         if int(ctx.target_stat("roster_target_index")) != 0:
             return entry
-        ability = ctx.ability("R")
-        if ability is None:
+        drain = prose_numbers(ctx, "R", _R_DRAIN_PROSE)
+        if drain is None:
             return entry
-        match = _R_DRAIN_PROSE.search(
-            " ".join(
-                effect.get("description", "") for effect in ability.get("effects", [])
-            )
-        )
-        if match is None:
-            return entry
-        percent = float(match.group(1))
+        percent = drain[0]
         amount = percent / 100.0 * float(ctx.target_stat("target_max_health"))
         if amount <= 0.0:
             return entry

@@ -510,6 +510,50 @@ def declared_reference[T](
     raise stop(missing)
 
 
+@dataclass(frozen=True, slots=True)
+class DeclaredNumbers:
+    """The numbers one compiled rule declares, read by reference kind or refused.
+
+    An interpreter's slot holds one of these rather than re-spelling the
+    lookup once per accessor: a plain value, a one-to-eighteen ramp and a
+    late ramp are three reference kinds over one declaration, and each
+    refuses rather than defaulting, because the point of the declaration is
+    that the reader cannot reach past it.  ``noun`` is how the refusal
+    names the reader ("a producer", "a defence").
+    """
+
+    values: Sequence[object]
+    mechanic_id: str
+    stop: type[Exception]
+    noun: str
+
+    def _declared[T](self, kind: type[T], key: str, missing: str) -> T:
+        """The *kind* reference this declaration names *key* by, or the stop."""
+        return declared_reference(self.values, kind, key, self.stop, missing=missing)
+
+    def value(self, key: str) -> float:
+        """One declared number, read live from the registry that owns it."""
+        return self._declared(
+            ValueRef,
+            key,
+            f"{self.mechanic_id} declares no {key!r} value; {self.noun} reads "
+            "the numbers its declaration names and no others",
+        ).get()
+
+    def _ramp[T](self, kind: type[T], key: str, level: int, noun: str) -> float:
+        """One declared ramp of *kind*, read at *level* and named by its low key."""
+        missing = f"{self.mechanic_id} declares no {key!r} {noun}"
+        return self._declared(kind, key, missing).get(level)
+
+    def ramp(self, key: str, level: int) -> float:
+        """One declared one-to-eighteen ramp, read at *level*."""
+        return self._ramp(LevelValueRef, key, level, "level ramp")
+
+    def late_ramp(self, key: str, level: int) -> float:
+        """One declared late ramp, flat until the level the entry names."""
+        return self._ramp(LateLevelValueRef, key, level, "late level ramp")
+
+
 __all__ = [
     "DERIVED_OPS",
     "LEVEL_SCALES",
@@ -518,6 +562,7 @@ __all__ = [
     "VALUE_REGISTRIES",
     "AnyValueRef",
     "Const",
+    "DeclaredNumbers",
     "DerivedOp",
     "DerivedValueRef",
     "LateLevelValueRef",

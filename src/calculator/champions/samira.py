@@ -39,6 +39,7 @@ from .engine import CC_PER_PART, ONHIT, SlotCtx
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import at_level, no_damage
 from .packet_module import build_packet_module
+from .shared_mechanics import capped_option
 from .slotlib import (
     PER_LEVEL_SCALING,
     HitRider,
@@ -56,7 +57,7 @@ _STYLE_MS_BRACKETS = ((16, 3.5), (11, 3.25), (6, 3.0), (1, 2.75))
 
 
 def _style_stacks(ctx: SlotCtx) -> int:
-    return min(max(int(ctx.option("p_style_stacks")), 0), _STYLE_MAX)
+    return capped_option(ctx, "p_style_stacks", _STYLE_MAX)
 
 
 # The blade rider's two cached rows both live on P's third innate and

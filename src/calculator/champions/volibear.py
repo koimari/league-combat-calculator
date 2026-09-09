@@ -273,34 +273,26 @@ def derive_self_healing(
     fight_duration_seconds: float | None = None,
 ) -> list[dict[str, Any]]:
     """Resolve Volibear self-healing events from its authored packet."""
-    healing = []
-    w = _healing.ability_json(champion_data, "W")
     w_rank = _healing.parsed_rank(ability_damages, "W")
-    w_flat = extract_named(w, "Heal", w_rank, champion_stats, {})
-    w_missing_pct = _healing.leveling_modifier(w, "Heal", w_rank, 1)
-
-    frenzied_maul_heal = _healing.flat_plus_missing_heal(w_flat, w_missing_pct)
+    (w_flat,) = _healing.ranked_rows(
+        champion_data, ability_damages, champion_stats, "W", "Heal"
+    )
+    w_missing_pct = _healing.leveling_modifier(
+        _healing.ability_json(champion_data, "W"), "Heal", w_rank, 1
+    )
     # One bite, one heal: the cached note is "Frenzied Maul deals bonus
     # damage and heals if the target is still Wounded after the cast time",
     # so the payment is the cast, not the parts this module prices that bite
     # with (base slash + Wounded surplus).  The first W applies the Wound;
     # the heal lands on every later W.
-    for index, payment in enumerate(
-        _healing.payments(_healing.HealAnchor.CAST, "W", damage_events, cast_timeline)
-    ):
-        if index < 1:
-            continue
-        healing.append(
-            {
-                "time": float(payment.event.get("time", 0.0)),
-                "amount": 0.0,
-                "amount_formula": frenzied_maul_heal,
-                "source": "Frenzied Maul",
-                "kind": "champion_ability",
-                **_healing.trigger_fields(payment.event),
-            }
-        )
-    return healing
+    return _healing.cast_heals(
+        "W",
+        "Frenzied Maul",
+        damage_events,
+        cast_timeline,
+        amount_formula=_healing.flat_plus_missing_heal(w_flat, w_missing_pct),
+        skip_casts=1,
+    )
 
 
 SELF_HEALING_RULE = self_healing_rule("Volibear")(derive_self_healing)

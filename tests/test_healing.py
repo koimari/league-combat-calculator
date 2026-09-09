@@ -6,10 +6,12 @@ Taric case here gives the shared healing module an obvious first file.
 
 import pytest
 
+from src.calculator import healing_helpers as _healing
 from src.calculator.champions.healing_contract import (
     heal_receipt_order,
     self_healing_rule,
 )
+from src.calculator.champions.slotlib import extract_named
 from src.calculator.data_fetcher import get_champion
 from src.calculator.healing import derive_self_healing
 
@@ -234,3 +236,134 @@ class TestSelfHealingRuleDeclaration:
     def test_one_key_orders_both_the_declaration_and_the_entrypoint(self) -> None:
         event = {"time": 1.5, "amount": 1.0, "source": "Q"}
         assert heal_receipt_order(event) == (1.5, "Q")
+
+
+def _healing_champion() -> dict:
+    """A champion whose W carries a flat Heal row and a missing-health one."""
+    return {
+        "name": "TestChamp",
+        "abilities": {
+            "W": [
+                {
+                    "name": "Frenzied Maul",
+                    "effects": [
+                        {
+                            "leveling": [
+                                {
+                                    "attribute": "Heal",
+                                    "modifiers": [
+                                        {"values": [10, 20, 30], "units": ["", "", ""]},
+                                        {
+                                            "values": [4, 5, 6],
+                                            "units": [
+                                                "% of missing health",
+                                                "% of missing health",
+                                                "% of missing health",
+                                            ],
+                                        },
+                                    ],
+                                }
+                            ]
+                        }
+                    ],
+                }
+            ]
+        },
+    }
+
+
+class TestRankedRows:
+    """One slot's named rows at the rank the parser used."""
+
+    def test_the_rows_are_read_at_the_emitted_rank(self) -> None:
+        (flat,) = _healing.ranked_rows(
+            _healing_champion(), {"W": {"rank": 2}}, {}, "W", "Heal"
+        )
+        assert flat == pytest.approx(20.0)
+
+    def test_it_reads_several_rows_in_the_order_named(self) -> None:
+        champion = _healing_champion()
+        champion["abilities"]["W"][0]["effects"][0]["leveling"].append(
+            {
+                "attribute": "Bonus",
+                "modifiers": [{"values": [7, 8, 9], "units": ["", "", ""]}],
+            }
+        )
+        rows = _healing.ranked_rows(
+            champion, {"W": {"rank": 3}}, {}, "W", "Heal", "Bonus"
+        )
+        assert rows == (pytest.approx(30.0), pytest.approx(9.0))
+
+    def test_an_absent_slot_or_row_prices_zero_rather_than_guessing(self) -> None:
+        assert _healing.ranked_rows({}, {}, {}, "W", "Heal") == (0.0,)
+        assert _healing.ranked_rows(
+            _healing_champion(), {"W": {"rank": 2}}, {}, "W", "Gone"
+        ) == (0.0,)
+
+    def test_the_target_free_read_matches_omitting_the_target(self) -> None:
+        """Passing ``{}`` is what ``scaling.resolve_scaling`` reads for no target."""
+        champion = _healing_champion()
+        ability = champion["abilities"]["W"][0]
+        assert _healing.ranked_rows(champion, {"W": {"rank": 1}}, {}, "W", "Heal") == (
+            extract_named(ability, "Heal", 1, {}),
+        )
+
+
+def _damage_event(time: float, damage: float = 100.0) -> dict:
+    return {"time": time, "damage": damage, "source_key": "W", "sequence": 0}
+
+
+class TestCastHeals:
+    """The self-heal a rule pays once per cast of one slot."""
+
+    _EVENTS = [_damage_event(0.0), _damage_event(5.0), _damage_event(10.0)]
+    _CASTS = [{"slot": "W", "time": t} for t in (0.0, 5.0, 10.0)]
+
+    def test_a_flat_amount_pays_once_per_cast(self) -> None:
+        heals = _healing.cast_heals("W", "Maul", self._EVENTS, self._CASTS, amount=30.0)
+        assert [heal["time"] for heal in heals] == [0.0, 5.0, 10.0]
+        assert {heal["amount"] for heal in heals} == {30.0}
+        assert {heal["source"] for heal in heals} == {"Maul"}
+
+    def test_skip_casts_drops_the_leading_activations(self) -> None:
+        """The first W applies the Wound the heal reads; it pays from the second."""
+        heals = _healing.cast_heals(
+            "W", "Maul", self._EVENTS, self._CASTS, amount=30.0, skip_casts=1
+        )
+        assert [heal["time"] for heal in heals] == [5.0, 10.0]
+
+    def test_a_flat_amount_reproduces_heal_from_damage(self) -> None:
+        expected: list[dict] = []
+        for event in self._EVENTS:
+            _healing.heal_from_damage(expected, event, 30.0, "Maul")
+        assert (
+            _healing.cast_heals("W", "Maul", self._EVENTS, self._CASTS, amount=30.0)
+            == expected
+        )
+
+    def test_a_zero_amount_pays_nothing_at_all(self) -> None:
+        """The clamp and the ``amount <= 0`` skip are the flat path's, kept."""
+        assert _healing.cast_heals("W", "Maul", self._EVENTS, self._CASTS) == []
+        assert (
+            _healing.cast_heals("W", "Maul", self._EVENTS, self._CASTS, amount=-5.0)
+            == []
+        )
+
+    def test_a_linked_heal_skips_a_cast_whose_damage_never_landed(self) -> None:
+        events = [_damage_event(0.0, damage=0.0)]
+        casts = [{"slot": "W", "time": 0.0}]
+        assert _healing.cast_heals("W", "Maul", events, casts, amount=30.0) == []
+        unlinked = _healing.cast_heals(
+            "W", "Maul", events, casts, amount=30.0, link_to_damage=False
+        )
+        assert len(unlinked) == 1
+
+    def test_a_formula_heal_carries_the_formula_and_a_zero_amount(self) -> None:
+        formula = _healing.flat_plus_missing_heal(20.0, 5.0)
+        heals = _healing.cast_heals(
+            "W", "Maul", self._EVENTS, self._CASTS, amount_formula=formula
+        )
+        assert [heal["amount"] for heal in heals] == [0.0, 0.0, 0.0]
+        assert all(heal["amount_formula"] is formula for heal in heals)
+        assert heals[0]["kind"] == "champion_ability"
+        assert heals[0]["_trigger_source"] == "W"

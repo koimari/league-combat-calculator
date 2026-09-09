@@ -27,14 +27,12 @@ from ..item_behavior import (
     ActiveCastRule,
     BehaviorRule,
     BuildContext,
-    EngineLane,
     FightFacts,
-    KernelField,
     RuleFamily,
-    declared_mechanic_id,
+    mechanic_id_reading,
     typed_payload,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import behavior_rules, built_per_rule
 from ..item_effects import DamageSource, damage_source
 from ..value_ref import resolve
 from . import damage_formula
@@ -68,13 +66,9 @@ _payload = partial(
 )
 
 
-def active_fields(
-    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
-) -> tuple[KernelField, ...]:
-    """One active's compiled numbers, stamped with *lane*, for both engines."""
-    return damage_formula.compiled_field(
-        _payload(rule), "cooldown", ACTIVE_COOLDOWN_FIELD, rule, ctx=ctx, lane=lane
-    )
+active_fields = damage_formula.field_reading(
+    _payload, "cooldown", ACTIVE_COOLDOWN_FIELD
+)
 
 
 def active_source(rule: BehaviorRule, ctx: BuildContext) -> DamageSource:
@@ -105,21 +99,12 @@ def active_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
     )
 
 
-def active_mechanic_id(owner: str) -> str:
-    """*owner*'s active mechanic id, or a stop.
-
-    The pair engine stamps its row with the mechanic that row previews, so
-    reading the id off the declaration keeps the stamp from being a second
-    spelling of the slug.  A missing rule stops rather than defaults: an
-    unstamped row would double count, in the roster total and in the walk.
-    """
-    return declared_mechanic_id(
-        owner,
-        active_rules([owner]),
-        ActiveCastInterpretationError,
-        authors="an item active",
-        declares="active_cast",
-    )
+active_mechanic_id = mechanic_id_reading(
+    active_rules,
+    ActiveCastInterpretationError,
+    authors="an item active",
+    declares="active_cast",
+)
 
 
 def active_sources(
@@ -127,12 +112,8 @@ def active_sources(
     *,
     facts: FightFacts,
 ) -> tuple[DamageSource, ...]:
-    """Every active this build declares, in build order (purchase order, the
-    registry's append order and the engine's breakdown-row order)."""
-    return tuple(
-        active_source(rule, build_context(rule.owner, facts))
-        for rule in active_rules(owners)
-    )
+    """Every active this build declares, in the build's own purchase order."""
+    return built_per_rule(active_rules(owners), active_source, facts=facts)
 
 
 __all__ = [

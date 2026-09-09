@@ -57,6 +57,7 @@ from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_contract import coverage
 from .module_helpers import no_damage, ranked_slot, typed_damage
+from .shared_mechanics import capped_option
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -108,7 +109,7 @@ _E_POUNCE_CRIT_EFFECTIVENESS = data_value(
 
 
 def _marks(ctx: SlotCtx) -> int:
-    return min(max(int(ctx.option("marks")), 0), _MARK_MAX)
+    return capped_option(ctx, "marks", _MARK_MAX)
 
 
 def _mark_scaled_override(

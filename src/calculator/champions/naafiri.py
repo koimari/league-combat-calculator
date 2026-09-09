@@ -134,6 +134,7 @@ from .healing_contract import self_healing_rule
 from .inputs import bool_option
 from .module_helpers import buff_window_share, ranked_slot
 from .packet_module import build_packet_module
+from .shared_mechanics import multi_pass_damage
 from .slotlib import (
     STEROID_ZERO,
     ability_name,
@@ -391,32 +392,15 @@ def _darkin_daggers(
     return entry
 
 
-@ranked_slot
-def _eviscerate(
-    ctx: SlotCtx, ability: dict[str, Any], rank: int
-) -> dict[str, Any] | None:
-    """E: dash damage plus the Flurry explosion on arrival."""
-
-    dash = extract_named(ability, "Dash Physical Damage", rank, ctx.stats, ctx.target)
-    flurry = extract_named(
-        ability, "Flurry Physical Damage", rank, ctx.stats, ctx.target
-    )
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        dash + flurry,
-        "physical",
-    )
-    entry["parts"] = (
-        DamagePart("physical", dash, time_offset=0.0),
-        DamagePart("physical", flurry, time_offset=0.5),
-    )
-    entry["detail"] = (
+# E: dash damage plus the Flurry explosion on arrival.
+_eviscerate = multi_pass_damage(
+    "physical",
+    passes=(("Dash Physical Damage", 0.0), ("Flurry Physical Damage", 0.5)),
+    detail=(
         "Dash Physical Damage + Flurry Physical Damage == Total Physical "
         "Damage (the flurry explodes on arrival, 0.5s cadence authored)."
-    )
-    return entry
+    ),
+)
 
 
 # Reviewed crowd control, read from the cached kit.  Q (Darkin Daggers)

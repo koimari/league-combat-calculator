@@ -61,12 +61,10 @@ _NILAH_EXCESS_SHIELD_DURATION_SECONDS = 6.0
 
 def _formless_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: minimum-row physical damage, scaled linearly by crit chance."""
-    ability = ctx.ability("Q", 0)
-    if ability is None:
+    ranked = ctx.ranked("Q", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     min_damage = extract_named(
         ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target
     )

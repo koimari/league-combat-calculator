@@ -74,9 +74,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 try:
-    from gate_receipt import build_receipt
+    from gate_receipt import build_receipt, emit_receipt
 except ImportError:  # imported as scripts.cast_dependency_audit in tests
-    from scripts.gate_receipt import build_receipt
+    from scripts.gate_receipt import build_receipt, emit_receipt
 
 from src.calculator.cast_dependency import (
     INFERRED_EDGE_KINDS,
@@ -1286,15 +1286,7 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="emit the full receipt")
     parser.add_argument("--output", type=Path, help="write the full receipt to a file")
     args = parser.parse_args()
-    receipt = run_audit()
-    encoded = json.dumps(receipt, indent=2, sort_keys=True) + "\n"
-    if args.output:
-        args.output.write_text(encoded, encoding="utf-8")
-    if args.json:
-        print(encoded, end="")
-    else:
-        print(json.dumps({"passed": receipt["passed"], "counts": receipt["counts"]}))
-    return 0 if receipt["passed"] else 1
+    return emit_receipt(run_audit(), output=args.output, as_json=args.json)
 
 
 if __name__ == "__main__":

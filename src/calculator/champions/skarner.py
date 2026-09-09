@@ -23,13 +23,13 @@ from typing import Any
 
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
+from .module_helpers import named_damage
 from .packet_module import build_packet_module, repeat_damage_parser
+from .shared_mechanics import with_self_shield
 from .slotlib import (
     ability_name,
-    attach_self_shield,
     damage_entry,
     extract_cooldown,
-    extract_named,
     find_named_leveling,
     simple_damage,
     sum_modifiers,
@@ -45,34 +45,19 @@ _W_SHIELD_MAX_HEALTH_RATIO = data_value(_SKARNER_W_SPELL, "InitialShieldRatio")
 _W_SHIELD_DURATION = data_value(_SKARNER_W_SPELL, "ShieldDuration")
 
 
-def _seismic_bastion(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: shockwave magic damage + the 8%-max-health self-shield."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        damage,
-        "magic",
-    )
-    entry["event_order_certified"] = "single_hit"
-    shield = _W_SHIELD_MAX_HEALTH_RATIO * float(ctx.stat("health") or 0.0)
-    attach_self_shield(
-        entry,
-        amount=shield,
-        duration=_W_SHIELD_DURATION,
-        source="Seismic Bastion",
-        detail=(
-            f"W also shields Skarner for {shield:g} "
-            f"({_W_SHIELD_MAX_HEALTH_RATIO * 100:g}% of his maximum "
-            f"health) for {_W_SHIELD_DURATION:g}s (self)"
-        ),
-    )
-    return entry
+# W's shockwave carries the shield the cached description sources, so the
+# ledger grants it at the same event.
+_seismic_bastion = with_self_shield(
+    named_damage("Magic Damage", "magic"),
+    shield=lambda ctx: _W_SHIELD_MAX_HEALTH_RATIO * float(ctx.stat("health") or 0.0),
+    window=_W_SHIELD_DURATION,
+    source="Seismic Bastion",
+    detail=lambda ctx, shield: (
+        f"W also shields Skarner for {shield:g} "
+        f"({_W_SHIELD_MAX_HEALTH_RATIO * 100:g}% of his maximum "
+        f"health) for {_W_SHIELD_DURATION:g}s (self)"
+    ),
+)
 
 
 def _ixtals_impact(ctx: SlotCtx) -> dict[str, Any] | None:

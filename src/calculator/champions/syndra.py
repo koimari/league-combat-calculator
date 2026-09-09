@@ -46,6 +46,7 @@ from ..cast_dependency import CastDependency, SuppressedInference
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import ranked_slot
+from .shared_mechanics import capped_option
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -91,10 +92,8 @@ _DEFAULT_R_SPHERES = _R_MIN_SPHERES
 
 
 def _splinters(ctx: SlotCtx) -> int:
-    """Current Splinters of Wrath stacks — the ONE source every
-    threshold consumer (P, Q2, W) reads."""
-    stacks = int(ctx.options.get("splinters", _DEFAULT_SPLINTERS))
-    return min(max(stacks, 0), _MAX_SPLINTERS)
+    """Current Splinters of Wrath stacks: the ONE source P, Q2 and W read."""
+    return capped_option(ctx, "splinters", _MAX_SPLINTERS)
 
 
 # ---------------------------------------------------------------------------

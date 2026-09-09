@@ -38,6 +38,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from functools import partial
 from typing import Any
 
 from ..ability_spec import AttackClass, DamageClass
@@ -264,6 +265,21 @@ def amp_fields(
     return tuple(fields)
 
 
+def _declared_field(
+    rule: BehaviorRule, fields: Sequence[KernelField], name: str
+) -> float:
+    """One compiled field of one holder's rule, or a stop.
+
+    A missing field means the rule's activation or magnitude does not declare
+    what the caller is asking for — asking a window's end of a rule with no
+    window — and that is a programming error, never a zero."""
+    missing = (
+        f"{rule.mechanic_id} compiles no {name!r} field; the "
+        "engine asked its declaration a question it does not answer"
+    )
+    return compiled_value(fields, name, DeltaAmpInterpretationError, missing)
+
+
 @dataclass(frozen=True, slots=True)
 class AmpSlot:
     """One chain slot, resolved for one build.
@@ -295,19 +311,8 @@ class AmpSlot:
         )
 
     def value(self, name: str, index: int = 0) -> float:
-        """One compiled field of one holder's rule, or a stop.
-
-        A missing field means the rule's activation or magnitude does not
-        declare what the caller is asking for — asking a window's end of a
-        rule with no window — and that is a programming error, never a zero.
-        """
-        return compiled_value(
-            self.fields[index],
-            name,
-            DeltaAmpInterpretationError,
-            f"{self.rules[index].mechanic_id} compiles no {name!r} field; the "
-            "engine asked its declaration a question it does not answer",
-        )
+        """One compiled field of one holder's rule, or a stop."""
+        return _declared_field(self.rules[index], self.fields[index], name)
 
     def window(self, index: int = 0) -> tuple[float, float]:
         """The ``[start, end)`` an absolute-window holder declares."""
@@ -552,16 +557,6 @@ class PartAmp:
     rules: tuple[BehaviorRule, ...]
     fields: tuple[tuple[KernelField, ...], ...]
 
-    def _value(self, name: str, index: int) -> float:
-        """One compiled field of one holder's rule, or a stop."""
-        return compiled_value(
-            self.fields[index],
-            name,
-            DeltaAmpInterpretationError,
-            f"{self.rules[index].mechanic_id} compiles no {name!r} field; the "
-            "engine asked its declaration a question it does not answer",
-        )
-
     def _terms(
         self, index: int, holder_stats: Mapping[str, float]
     ) -> tuple[float, ...]:
@@ -579,8 +574,9 @@ class PartAmp:
         programming error and never a zero-mana Actualizer.
         """
         magnitude = self.rules[index].payload.magnitude
+        declared = partial(_declared_field, self.rules[index], self.fields[index])
         if not isinstance(magnitude, StatScaled):
-            return (self._value(AMP_FRACTION_FIELD, index),)
+            return (declared(AMP_FRACTION_FIELD),)
         if magnitude.stat.value not in holder_stats:
             raise DeltaAmpInterpretationError(
                 f"{self.rules[index].mechanic_id} scales with the holder's "
@@ -589,8 +585,8 @@ class PartAmp:
             )
         reading = float(holder_stats[magnitude.stat.value])
         return (
-            self._value(AMP_BASE_FRACTION_FIELD, index),
-            self._value(AMP_PER_HUNDRED_STAT_FIELD, index) * (reading / 100.0),
+            declared(AMP_BASE_FRACTION_FIELD),
+            declared(AMP_PER_HUNDRED_STAT_FIELD) * (reading / 100.0),
         )
 
     def fractions(self, holder_stats: Mapping[str, float]) -> tuple[float, ...]:

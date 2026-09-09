@@ -34,7 +34,7 @@ from ..item_behavior import (
     KernelField,
 )
 from ..item_behavior_catalog import behavior_rules
-from ..value_ref import LateLevelValueRef, LevelValueRef, ValueRef, declared_reference
+from ..value_ref import DeclaredNumbers, LateLevelValueRef, LevelValueRef
 
 # What a defence compiles to for inspection at build time: how many sourced
 # numbers its declaration carries.  A defence's *value* is not a build-time
@@ -65,11 +65,16 @@ class DefenseSlot:
     was chosen by.
     """
 
-    __slots__ = ("rule",)
+    __slots__ = ("_numbers", "rule")
 
     def __init__(self, rule: BehaviorRule) -> None:
-        """Bind the slot to one compiled rule."""
-        payload(rule)
+        """Bind the slot to one compiled rule and the numbers it may read."""
+        self._numbers = DeclaredNumbers(
+            payload(rule).values,
+            rule.mechanic_id,
+            DefenseInterpretationError,
+            "a defence",
+        )
         self.rule = rule
 
     @property
@@ -84,38 +89,15 @@ class DefenseSlot:
 
     def value(self, key: str) -> float:
         """One declared number, read live from the registry that owns it."""
-        return declared_reference(
-            payload(self.rule).values,
-            ValueRef,
-            key,
-            DefenseInterpretationError,
-            missing=f"{self.rule.mechanic_id} declares no {key!r} value; a defence "
-            "reads the numbers its declaration names and no others",
-        ).get()
+        return self._numbers.value(key)
 
     def ramp(self, key: str, level: int) -> float:
-        """One declared one-to-eighteen ramp, read at *level*.
-
-        *key* is the ramp's low key, which is how the declaration names it: a
-        ramp is one number with two ends, not two numbers.
-        """
-        return declared_reference(
-            payload(self.rule).values,
-            LevelValueRef,
-            key,
-            DefenseInterpretationError,
-            missing=f"{self.rule.mechanic_id} declares no {key!r} level ramp",
-        ).get(level)
+        """One declared one-to-eighteen ramp, read at *level*."""
+        return self._numbers.ramp(key, level)
 
     def late_ramp(self, key: str, level: int) -> float:
         """One declared late ramp — flat until the level the entry names."""
-        return declared_reference(
-            payload(self.rule).values,
-            LateLevelValueRef,
-            key,
-            DefenseInterpretationError,
-            missing=f"{self.rule.mechanic_id} declares no {key!r} late level ramp",
-        ).get(level)
+        return self._numbers.late_ramp(key, level)
 
     def threshold(self) -> float:
         """The health fraction that arms this defence, or a stop."""

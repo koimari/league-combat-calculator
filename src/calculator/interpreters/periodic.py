@@ -25,13 +25,11 @@ from functools import partial
 from ..item_behavior import (
     BehaviorRule,
     BuildContext,
-    EngineLane,
     FightFacts,
-    KernelField,
     PeriodicCadence,
     PeriodicRule,
     RuleFamily,
-    declared_mechanic_id,
+    mechanic_id_reading,
     typed_payload,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
@@ -70,29 +68,9 @@ _payload = partial(
 )
 
 
-def cadence_fields(
-    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
-) -> tuple[KernelField, ...]:
-    """One periodic strike's compiled numbers, stamped with *lane*."""
-    return damage_formula.compiled_field(
-        _payload(rule), "interval", PERIODIC_INTERVAL_FIELD, rule, ctx=ctx, lane=lane
-    )
-
-
-def periodic_mechanic_id(owner: str) -> str:
-    """*owner*'s periodic strike mechanic id, or a stop.
-
-    A stop rather than a default: an unstamped periodic row keeps the pair
-    engine's number in every roster total while the walk prices the same
-    declaration, and that is a double count.
-    """
-    return declared_mechanic_id(
-        owner,
-        periodic_rules([owner]),
-        PeriodicInterpretationError,
-        authors="a periodic row",
-        declares="periodic",
-    )
+cadence_fields = damage_formula.field_reading(
+    _payload, "interval", PERIODIC_INTERVAL_FIELD
+)
 
 
 def _row(
@@ -150,6 +128,14 @@ def periodic_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
         for rule in behavior_rules(owner)
         if rule.family is RuleFamily.PERIODIC
     )
+
+
+periodic_mechanic_id = mechanic_id_reading(
+    periodic_rules,
+    PeriodicInterpretationError,
+    authors="a periodic row",
+    declares="periodic",
+)
 
 
 def declares_self_heal(owners: Sequence[str]) -> bool:
