@@ -63,6 +63,7 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
+from ..ability_spec import DamageClass
 from ..resistance import apply_resistance
 
 
@@ -257,11 +258,6 @@ class DeclaredPacket(NamedTuple):
         return float(swing.crit_raw_amount) * float(self.holder_amp)
 
 
-#: The damage classes a resistance answers for.  ``true`` is deliberately
-#: outside it: true damage is *priced* (at no resistance), never refused, and
-#: the branch below says so rather than leaning on a missing entry.
-MITIGATED_DAMAGE_TYPES = frozenset({"physical", "magic"})
-
 #: The fight published no effective resistance of the packet's class, so
 #: there is nothing for the declaration to be mitigated against.  This is the
 #: from-declaration path's only refusal, and it is the same fact the ratio
@@ -390,15 +386,19 @@ def price_declared_packet(
     A refusal is returned rather than raised: an unpriceable packet is a fact
     about the fight the walk receipts and goes on from, not a bug.
     """
-    damage_type = packet.damage_type
-    if damage_type == "true":
-        return DeclaredPrice(_priced_at(packet, 0.0), None)
-    if damage_type not in MITIGATED_DAMAGE_TYPES:
+    damage_class = DamageClass.named(packet.damage_type)
+    if damage_class is None:
         return DeclaredPrice(None, None, UNPRICEABLE_DAMAGE_TYPE)
-    if damage_type == "physical":
-        baseline, delta = baseline_effective_armor, dynamic_bonus_armor
-    else:
-        baseline, delta = baseline_effective_mr, dynamic_bonus_magic_resistance
+    # True damage is priced, at no resistance, rather than refused.
+    if not damage_class.is_mitigable:
+        return DeclaredPrice(_priced_at(packet, 0.0), None)
+    term = damage_class.resistance_term
+    baseline = term(
+        armor=baseline_effective_armor, magic_resistance=baseline_effective_mr
+    )
+    delta = term(
+        armor=dynamic_bonus_armor, magic_resistance=dynamic_bonus_magic_resistance
+    )
     if packet.effective_resistance is not None:
         baseline = packet.effective_resistance
     if baseline is None:
@@ -429,7 +429,6 @@ def _priced_at(packet: DeclaredPacket, resistance: float) -> float:
 
 
 __all__ = [
-    "MITIGATED_DAMAGE_TYPES",
     "NO_RESISTANCE_PUBLISHED",
     "UNPRICEABLE_DAMAGE_TYPE",
     "AuthoredDeclaration",

@@ -4,6 +4,9 @@ Exercises damage._evaluate_cast_parts directly with a stub FightState:
 the evaluator owns HP-threading, per-part mitigation, and reduced-
 effectiveness crit — champion files own only the closures.  Also pins the
 four closed vocabularies the leaf declares, member for member.
+
+file-length-ok: one test file per module under test, and the leaf's four
+vocabularies plus the contract they serve are one module.
 """
 
 import ast
@@ -209,6 +212,48 @@ class TestClosedVocabularies:
         assert [member.name for member in standalone.Disposition] == [
             member.name for member in Disposition
         ]
+
+
+# One row per DamageClass: the member, whether a resistance answers for it,
+# its resistance name (None where the read raises) and the term it selects
+# from armor=30.0 / magic_resistance=70.0.
+_RESISTANCE_AXIS = [
+    (DamageClass.MAGIC, True, "magic_resistance", 70.0),
+    (DamageClass.PHYSICAL, True, "armor", 30.0),
+    (DamageClass.TRUE, False, None, None),
+]
+
+
+class TestResistanceAxis:
+    """The resistance facts the engine bodies switch on, owned by the type."""
+
+    def test_the_axis_rows_cover_every_damage_class(self) -> None:
+        # Exhaustive by construction, so a fourth member fails here rather
+        # than picking up whichever arm a reader falls through to.
+        assert [row[0] for row in _RESISTANCE_AXIS] == list(DamageClass)
+
+    @pytest.mark.parametrize("row", _RESISTANCE_AXIS)
+    def test_each_class_answers_its_own_row(
+        self, row: tuple[DamageClass, bool, str | None, float | None]
+    ) -> None:
+        member, is_mitigable, resistance_name, term = row
+        assert member.is_mitigable is is_mitigable
+        assert member.resistance_term(armor=30.0, magic_resistance=70.0) == term
+        if resistance_name is None:
+            with pytest.raises(KeyError, match="meets no resistance"):
+                _ = member.resistance_name
+        else:
+            assert member.resistance_name == resistance_name
+
+    def test_named_round_trips_every_member(self) -> None:
+        for member in DamageClass:
+            assert DamageClass.named(member.value) is member
+
+    @pytest.mark.parametrize("spelling", ["adaptive", ""])
+    def test_named_refuses_a_spelling_outside_the_vocabulary(
+        self, spelling: str
+    ) -> None:
+        assert DamageClass.named(spelling) is None
 
 
 class TestDamagePartValidation:

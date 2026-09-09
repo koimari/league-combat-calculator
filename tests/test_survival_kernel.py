@@ -47,7 +47,7 @@ import golden_snapshot as gs
 
 from src.calculator import damage as pair_engine
 from src.calculator import shield_ledger
-from src.calculator.ability_spec import AttackClass
+from src.calculator.ability_spec import AttackClass, DamageClass
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
 from src.calculator.interpreters import (
@@ -104,7 +104,6 @@ from src.calculator.survival import (
 )
 from src.calculator.survival.compile import thorns_return_damage
 from src.calculator.survival.pricing import (
-    MITIGATED_DAMAGE_TYPES,
     NO_RESISTANCE_PUBLISHED,
     UNPRICEABLE_DAMAGE_TYPE,
     AuthoredDeclaration,
@@ -1679,7 +1678,7 @@ class TestTheWalkPricesADeclarationAgainstWhatItMeets:
         )
         assert price.amount is None
         assert price.unavailable == UNPRICEABLE_DAMAGE_TYPE
-        assert "adaptive" not in MITIGATED_DAMAGE_TYPES
+        assert DamageClass.named("adaptive") is None
 
 
 def test_the_strike_back_prices_through_the_shared_arithmetic():

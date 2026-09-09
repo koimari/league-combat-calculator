@@ -202,5 +202,3 @@
 27|tests.test_behavior_frontier 1
 27|tests.test_item_support_effects 1
 27|tests.test_survival_kernel 1
-54|src.calculator.damage._mitigate 1 03b4c85ecf7f3de3
-54|src.calculator.damage._mitigate_hits 1 0a77d37c376a99c9

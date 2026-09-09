@@ -1801,7 +1801,12 @@ def knights_vow_target_factor(
     leaves the packet unsplit rather than splitting it at a guessed factor.
     Both lanes call this one function, so a split cannot be priced two ways.
     """
-    if damage_type == "physical":
+    damage_class = DamageClass.named(damage_type)
+    if damage_class is None:
+        return None
+    if not damage_class.is_mitigable:
+        return TargetMitigation(1.0, None)
+    if damage_class is DamageClass.PHYSICAL:
         effective = apply_armor_penetration(
             float(target.stats.get("armor", 0.0) or 0.0),
             float(source.stats.get("flat_armor_penetration", 0.0) or 0.0),
@@ -1810,16 +1815,12 @@ def knights_vow_target_factor(
             / 100.0,
             bonus_armor=float(target.stats.get("bonus_armor", 0.0) or 0.0),
         )
-    elif damage_type == "magic":
+    else:
         effective = apply_magic_penetration(
             float(target.stats.get("magic_resistance", 0.0) or 0.0),
             float(source.stats.get("magic_penetration_flat", 0.0) or 0.0),
             float(source.stats.get("magic_penetration_percent", 0.0) or 0.0) / 100.0,
         )
-    elif damage_type == "true":
-        return TargetMitigation(1.0, None)
-    else:
-        return None
     factor = apply_resistance(1.0, effective)
     if not math.isfinite(factor) or factor < 0.0:
         return None
@@ -1917,10 +1918,13 @@ def stage_knights_vow_redirect_actions(
             action.subject != target_i
             or action.kind not in _DAMAGE_ACTION_KINDS
             or action.amount <= 0.0
-            or str(action.damage_type) not in {"physical", "magic"}
             or action.deferred
             or action.redirected
         ):
+            rebuilt.append(action)
+            continue
+        damage_class = DamageClass.named(str(action.damage_type))
+        if damage_class is None or not damage_class.is_mitigable:
             rebuilt.append(action)
             continue
         source = (
@@ -1946,10 +1950,9 @@ def stage_knights_vow_redirect_actions(
         if candidate > 0.0 and math.isfinite(candidate):
             raw_amount = candidate
         else:
-            baseline = (
-                action.baseline_effective_armor
-                if str(action.damage_type) == "physical"
-                else action.baseline_effective_mr
+            baseline = damage_class.resistance_term(
+                armor=action.baseline_effective_armor,
+                magic_resistance=action.baseline_effective_mr,
             )
             if baseline is not None:
                 try:
@@ -2024,12 +2027,12 @@ def stage_knights_vow_redirect_actions(
             # direct share alone.
             baseline_effective_armor=(
                 holder_resistance
-                if str(action.damage_type) == "physical"
+                if damage_class is DamageClass.PHYSICAL
                 else action.baseline_effective_armor
             ),
             baseline_effective_mr=(
                 holder_resistance
-                if str(action.damage_type) == "magic"
+                if damage_class is DamageClass.MAGIC
                 else action.baseline_effective_mr
             ),
             declared=routed_declaration(action.declared, fraction),
