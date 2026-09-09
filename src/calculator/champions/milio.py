@@ -23,7 +23,8 @@ from .healing_contract import self_healing_rule
 from .inputs import int_option
 from .module_helpers import rank_gated_no_damage_parser
 from .packet_module import build_packet_module
-from .slotlib import ability_name, extract_named, on_hit_entry
+from .shared_mechanics import per_level_on_hit
+from .slotlib import extract_named
 
 PACKET_SHA256 = "fce2851d13e50c61a320c2195e1618e540b56a81742d3e44cfaa4a0ffe2c163f"
 
@@ -31,34 +32,32 @@ PACKET_SHA256 = "fce2851d13e50c61a320c2195e1618e540b56a81742d3e44cfaa4a0ffe2c163
 # every 3 seconds thereafter" — one enchantment per cast is the default.
 _FIRED_UP_PROCS_PER_CAST = 1
 
+# The burn's ability-power share, on top of the cached per-level row.  The
+# AD share of the same hit ("7% / 11% / 15% (based on level) of enchanted
+# target's AD") is prose with no cached row and no stated level breakpoints
+# on the wiki either, and it reads the *enchanted target's* AD (an ally this
+# single-attacker engine cannot stand in for), so it is disclosed rather
+# than guessed; the burn is the half the cache sources.
+_FIRED_UP_AP_RATIO = 0.20
 
-def _fired_up(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: the burn the enchanted hit applies.
 
-    The AD share of the same hit ("7% / 11% / 15% (based on level) of
-    enchanted target's AD") is prose with no cached row and no stated level
-    breakpoints on the wiki either, and it reads the *enchanted target's* AD
-    (an ally this single-attacker engine cannot stand in for), so it is
-    disclosed rather than guessed; the burn is the half the cache sources.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    burn = extract_named(
-        ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target, level=ctx.level
-    ) + 0.20 * float(ctx.stat("ability_power") or 0.0)
-    if burn <= 0:
-        return None
-    procs = max(0, int(ctx.option("p_procs")))
-    entry = on_hit_entry(ability_name(ability), burn, "magic")
-    entry["on_hit"]["max_procs"] = procs
-    entry["detail"] = (
+def _fired_up_detail(burn: float, procs: int) -> str:
+    return (
         f"{procs} enchanted hit(s) applying the sourced burn {burn:.2f} "
         "(10 : 50 based on level + 20% of Milio's AP over 1.5s, priced at "
         "the hit); the 7% / 11% / 15% of the enchanted target's AD on the "
         "same hit has no cached row and no sourced level breakpoints"
     )
-    return entry
+
+
+def _fired_up(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the burn the enchanted hit applies."""
+    return per_level_on_hit(
+        ctx,
+        ap_ratio=_FIRED_UP_AP_RATIO,
+        count_option="p_procs",
+        detail=_fired_up_detail,
+    )
 
 
 _fired_up.phase = ONHIT

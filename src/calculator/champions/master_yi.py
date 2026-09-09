@@ -32,13 +32,11 @@ from .. import healing_helpers as _healing
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
-from .module_helpers import buff_window_share, ranked_slot, steroid_entry
+from .module_helpers import buff_window_share, no_damage, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
-    damage_entry,
-    extract_cooldown,
     extract_named,
     extract_value,
 )
@@ -104,24 +102,20 @@ _double_strike.phase = ONHIT
 
 @ranked_slot
 def _meditate(
-    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+    ctx: SlotCtx, ability: dict[str, Any], _rank: int
 ) -> dict[str, Any] | None:
     """W: a zero-damage channel receipt (the heal lives in healing.py)."""
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        0.0,
-        "physical",
+    return no_damage(
+        ctx,
+        name=ability_name(ability),
+        reason=(
+            "4-second channel: the self-heal (Minimum/Maximum Heal Per Tick, "
+            "missing-health scaled) is authored by healing.py; the damage-"
+            "reduction window is a defensive state not staged by the damage "
+            "model"
+        ),
+        dmg_type="physical",
     )
-    entry["parts"] = ()
-    entry["detail"] = (
-        "4-second channel: the self-heal (Minimum/Maximum Heal Per Tick, "
-        "missing-health scaled) is authored by healing.py; the damage-"
-        "reduction window is a defensive state not staged by the damage "
-        "model"
-    )
-    return entry
 
 
 @ranked_slot

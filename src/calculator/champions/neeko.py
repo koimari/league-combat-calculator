@@ -38,10 +38,11 @@ from ..binary_roots import (
 )
 from .engine import SlotCtx
 from .module_contract import coverage
+from .module_helpers import named_damage
 from .packet_module import build_packet_module
+from .shared_mechanics import with_self_shield
 from .slotlib import (
     ability_name,
-    attach_self_shield,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -111,40 +112,39 @@ def _blooming_burst(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _pop_blossom(ctx: SlotCtx) -> dict[str, Any] | None:
-    """R: magic damage + the 2s self-shield (1 nearby enemy champion)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        damage,
-        "magic",
-    )
-    shield_rank = min(max(rank, 1), 3) - 1
+def _r_shield_rows(ctx: SlotCtx) -> tuple[float, float]:
+    """R's flat and per-champion shield rows at the cast's rank."""
+    index = min(max(ctx.rank_for("R"), 1), 3) - 1
+    return _R_SHIELD_AMOUNT[index], _R_SHIELD_PER_CHAMPION[index]
+
+
+def _r_shield(ctx: SlotCtx) -> float:
+    """R's 2s self-shield: both rows plus the AP share of each."""
+    flat, per_champion = _r_shield_rows(ctx)
     ap = float(ctx.stat("ability_power") or 0.0)
-    shield = (
-        _R_SHIELD_AMOUNT[shield_rank]
-        + _R_SHIELD_PER_CHAMPION[shield_rank]
-        + ap * (_R_SHIELD_AP_RATIO + _R_SHIELD_PER_CHAMPION_AP_RATIO)
+    ratio = _R_SHIELD_AP_RATIO + _R_SHIELD_PER_CHAMPION_AP_RATIO
+    return flat + per_champion + ap * ratio
+
+
+def _r_shield_detail(ctx: SlotCtx, _shield: float) -> str:
+    """R's published shield row, quoting the game-file rows it sums."""
+    flat, per_champion = _r_shield_rows(ctx)
+    return (
+        f"game-file R shield: {flat:g} + "
+        f"{per_champion:g} (1 nearby enemy "
+        "champion) + 115% AP for 2s"
     )
-    entry["event_order_certified"] = "single_hit"
-    attach_self_shield(
-        entry,
-        amount=shield,
-        duration=_R_SHIELD_DURATION,
-        source="Pop Blossom",
-        detail=(
-            f"game-file R shield: {_R_SHIELD_AMOUNT[shield_rank]:g} + "
-            f"{_R_SHIELD_PER_CHAMPION[shield_rank]:g} (1 nearby enemy "
-            "champion) + 115% AP for 2s"
-        ),
-    )
-    return entry
+
+
+# The 1v1 fight's own target is the one nearby enemy champion the shield
+# counts, and the burst it rides is R's whole damage.
+_pop_blossom = with_self_shield(
+    named_damage("Magic Damage", "magic"),
+    shield=_r_shield,
+    window=_R_SHIELD_DURATION,
+    source="Pop Blossom",
+    detail=_r_shield_detail,
+)
 
 
 # Cached kit review.  Q's seed and re-blooms only "deal magic damage"; W's

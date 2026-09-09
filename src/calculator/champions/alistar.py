@@ -49,23 +49,16 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from ..ability_atoms import (
-    AbilityAtomQuery,
-    ability_payload,
-    ranked_ability_atom_value,
-    required_ability_atom,
-    required_ranked_attribute_atom,
-)
-from ..ability_spec import AttackClass, DamageClass, DamagePart
+from ..ability_atoms import ability_payload
+from ..ability_spec import DamageClass, DamagePart
 from ..healing_helpers import HealAnchor, ability_json, payments, trigger_fields
-from ..survival.actions import TransitionRank
 from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import ranked_slot
+from .shared_mechanics import damage_reduction_window
 from .slotlib import (
     ability_name,
-    atom_receipt,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -244,72 +237,21 @@ def _unbreakable_will(
     and stays unmodeled (see the module docstring).
     """
 
-    champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
-    reduction_percent, reduction_atom = required_ranked_attribute_atom(
-        ctx.champion_name, champion_data, "R", "Damage Reduction", rank
-    )
-    # The wiki row carries one unit entry per rank (['%', '%', '%']); require
-    # every entry to be percent (fail-closed on any non-percent unit) rather
-    # than pinning the list shape.
-    reduction_units = {str(unit).strip().lower() for unit in reduction_atom["units"]}
-    if not reduction_units or reduction_units != {"%"}:
-        raise ValueError("Alistar R damage-reduction atom must use percent")
-
-    duration_atom = required_ability_atom(
-        ctx.champion_name,
-        champion_data,
-        "R",
-        query=AbilityAtomQuery(
-            source=_R_DURATION_SOURCE,
-            behavior="timing",
-            evidence_prefix="active duration@",
-        ),
-    )
-    if [str(unit).strip().lower() for unit in duration_atom["units"]] != ["s"]:
-        raise ValueError("Alistar R active-duration atom must use seconds")
-    duration = ranked_ability_atom_value(duration_atom, 1, source=_R_DURATION_SOURCE)
-
-    name = ability_name(ability)
-    return {
-        "name": name,
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "magic",
-        "total_raw": 0.0,
-        "parts": (),
-        "self_state_events": [
-            {
-                "kind": "damage_modifier",
-                # 55/65/75% damage reduction -> take (1 - pct/100) of each
-                # incoming physical/magic packet.
-                "multiplier": 1.0 - reduction_percent / 100.0,
-                "duration": duration,
-                "source": f"{name} · damage reduction",
-                "source_atoms": [
-                    atom_receipt(reduction_atom),
-                    atom_receipt(duration_atom),
-                ],
-                # The cached prose reduces "incoming damage taken" with no
-                # attack/spell-only carve-out, so the modifier gates no
-                # source kind (the Briar-E / Glacial-Augment convention).
-                "all_sources": True,
-                # D-04: true damage is explicitly excluded by the cached
-                # ability note ("True damage cannot be reduced by any
-                # means"), so the declared set is physical + magic only —
-                # NOT the full DamageClass enum.
-                "damage_classes": frozenset({DamageClass.PHYSICAL, DamageClass.MAGIC}),
-                "attack_classes": frozenset(AttackClass),
-                # An amplification already in force at its own timestamp
-                # must price the hit landing at that timestamp.
-                "_rank": TransitionRank.AURA_ARM,
-            }
-        ],
-        "detail": (
+    return damage_reduction_window(
+        ctx,
+        ability,
+        rank,
+        duration_source=_R_DURATION_SOURCE,
+        # D-04: true damage is explicitly excluded by the cached ability
+        # note ("True damage cannot be reduced by any means"), so the
+        # declared set is physical + magic only, NOT the full enum.
+        damage_classes=frozenset({DamageClass.PHYSICAL, DamageClass.MAGIC}),
+        detail=lambda percent, duration: (
             f"Unbreakable Will reduces incoming physical/magic damage by "
-            f"{reduction_percent:g}% for {duration:g}s (true damage is not "
+            f"{percent:g}% for {duration:g}s (true damage is not "
             "reduced)."
         ),
-    }
+    )
 
 
 OPTIONS: list[dict[str, Any]] = [

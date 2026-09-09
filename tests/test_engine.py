@@ -1744,3 +1744,38 @@ class TestModuleCcNamesTheControlEvent:
         )
         with pytest.raises(ValueError, match="authors control_events"):
             parse(_champion(E=[_ability()]), 9, 0.0)
+
+
+class TestSlotCtxRankedSub:
+    """``SlotCtx.ranked_sub()`` — the prologue a two-entry slot opens with."""
+
+    @staticmethod
+    def _ctx(abilities: dict, **overrides) -> SlotCtx:
+        fields = {
+            "slot": "W",
+            "champion_name": "TestChamp",
+            "abilities": abilities,
+            "level": 9,
+            "ability_ranks": {"W": 2, "E": 4},
+            **overrides,
+        }
+        return SlotCtx(**fields)
+
+    def test_it_returns_the_parent_the_sub_entry_and_one_rank(self) -> None:
+        parent, sub = _ability(name="Frenzy"), _ability(name="Snack Attack")
+        ctx = self._ctx({"W": [parent, sub]})
+        assert ctx.ranked_sub() == (parent, sub, 2)
+
+    def test_the_slot_and_index_select_the_sub_entry(self) -> None:
+        parent, first, second = (_ability(name=n) for n in ("E", "E1", "E2"))
+        ctx = self._ctx({"E": [parent, first, second]})
+        assert ctx.ranked_sub("E", 2) == (parent, second, 4)
+
+    def test_a_missing_half_of_the_pair_is_none(self) -> None:
+        """Either entry absent answers the way ``ranked`` answers: nothing."""
+        assert self._ctx({"W": [_ability()]}).ranked_sub() is None
+        assert self._ctx({}).ranked_sub() is None
+
+    def test_an_unlearned_slot_is_none(self) -> None:
+        ctx = self._ctx({"W": [_ability(), _ability()]}, ability_ranks={"W": 0})
+        assert ctx.ranked_sub() is None

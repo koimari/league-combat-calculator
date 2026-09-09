@@ -263,10 +263,33 @@ def compiled_field(
     )
 
 
+def field_reading(
+    payload_of: Callable[[BehaviorRule], FormulaPayload],
+    attribute: str,
+    name: str,
+) -> Callable[[BehaviorRule, BuildContext, EngineLane], tuple[KernelField, ...]]:
+    """A ``(rule, ctx, lane)`` reading of one compiled field of a family's payload.
+
+    A family whose whole compiled form is one clock (a cooldown, a cadence)
+    binds its typed payload reader and the field's name once here, so the
+    pair engine and the receipt walk cannot drift over which they read.
+    """
+
+    def read(
+        rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
+    ) -> tuple[KernelField, ...]:
+        return compiled_field(
+            payload_of(rule), attribute, name, rule, ctx=ctx, lane=lane
+        )
+
+    return read
+
+
 __all__ = [
     "DamageFormulaError",
     "basis_value",
     "compile_formula",
     "compiled_field",
+    "field_reading",
     "reads_target_current_health",
 ]

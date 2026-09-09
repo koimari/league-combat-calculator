@@ -35,6 +35,7 @@ from .engine import SlotCtx, build_parser
 from .inputs import float_option, int_option
 from .module_contract import coverage
 from .module_helpers import clamp, ranked_slot
+from .shared_mechanics import prose_numbers
 from .slotlib import (
     ability_name,
     attach_self_shield,
@@ -125,15 +126,10 @@ def _carry_blast_shield(ctx: SlotCtx, entry: dict[str, Any]) -> dict[str, Any]:
     ):
         return entry
     ability = ctx.ability("P")
-    if ability is None:
+    shield = prose_numbers(ctx, "P", _P_SHIELD_PROSE)
+    if ability is None or shield is None:
         return entry
-    match = _P_SHIELD_PROSE.search(
-        " ".join(effect.get("description", "") for effect in ability.get("effects", []))
-    )
-    if match is None:
-        return entry
-    percent = float(match.group(1))
-    duration = float(match.group(2))
+    percent, duration = shield
     amount = percent / 100.0 * ctx.stat("health")
     if amount <= 0.0:
         return entry

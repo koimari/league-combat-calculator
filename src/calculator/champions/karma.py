@@ -20,14 +20,29 @@ from .slotlib import (
 from .source_receipts import load_champion_sources
 
 
-def _inner_flame(ctx: SlotCtx) -> dict[str, Any] | None:
-    mantra = bool(ctx.option("q_mantra"))
-    ability = ctx.ability("Q", 1 if mantra else 0)
+def _mantra_variant(
+    ctx: SlotCtx, slot: str, toggle: str
+) -> tuple[dict[str, Any], int] | None:
+    """The entry a Mantra toggle picks for one slot, and the rank it prices at.
+
+    The empowered variant is the slot's second cached entry, ranked by
+    Mantra's own four ranks; the plain cast is the first, ranked by the
+    slot.
+    """
+    mantra = bool(ctx.option(toggle))
+    ability = ctx.ability(slot, 1 if mantra else 0)
     if ability is None:
         return None
-    rank = ctx.rank_for("R") if mantra else ctx.rank_for("Q")
-    rank = max(1, min(rank, 4 if mantra else 5))
-    attr = "Total Damage" if mantra else "Magic Damage"
+    rank = ctx.rank_for("R") if mantra else ctx.rank_for(slot)
+    return ability, max(1, min(rank, 4 if mantra else 5))
+
+
+def _inner_flame(ctx: SlotCtx) -> dict[str, Any] | None:
+    variant = _mantra_variant(ctx, "Q", "q_mantra")
+    if variant is None:
+        return None
+    ability, rank = variant
+    attr = "Total Damage" if bool(ctx.option("q_mantra")) else "Magic Damage"
     value = extract_named(ability, attr, rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),
@@ -44,12 +59,11 @@ def _inner_flame(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 def _focused_resolve(ctx: SlotCtx) -> dict[str, Any] | None:
-    renewal = bool(ctx.option("w_renewal"))
-    ability = ctx.ability("W", 1 if renewal else 0)
-    if ability is None:
+    variant = _mantra_variant(ctx, "W", "w_renewal")
+    if variant is None:
         return None
-    rank = ctx.rank_for("R") if renewal else ctx.rank_for("W")
-    rank = max(1, min(rank, 4 if renewal else 5))
+    ability, rank = variant
+    renewal = bool(ctx.option("w_renewal"))
     value = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     holds = bool(ctx.option("w_tether_holds"))
     # The opening hit only tethers and reveals; the root arrives with the

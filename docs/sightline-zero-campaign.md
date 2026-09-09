@@ -12,11 +12,12 @@ the count fell. Each phase's PR body holds its gate outputs.
 | 1 | #35 import-topology | 217 | 216 | five deferred back edges cut: `use_options_rows` port, `stat_formulas.py`, `publish_rune_compilers()`, `champions/slot_context.py`, `ability_prose.py` |
 | 2 | #54 kind-switch | 216 | 214 | `DamageClass` owns `named`, `is_mitigable`, `resistance_name`, `resistance_term`; `_mitigate` is the one mitigation home |
 | 3 | #14 data-clump | 214 | 198 | sixteen clumps got a record (table below); three left with reason |
+| 4 | #11 structural-clones | 198 | 92 | 51 groups dissolved: 16 kit mechanics in `champions/shared_mechanics.py`, interpreter front doors in `item_behavior` and `value_ref`, `gate_receipt.emit_receipt`; the finished `migrate_single_hit_slots.py` codemod deleted; two left |
 
 ## Residue by phase
 
-Phase 1: moving `SlotCtx` into a leaf made the `(ability, ctx, rank)` clump typed, so its key
-replaced `slotlib.extract_named` and the count fell by one, not two.
+Phase 1: `SlotCtx` in a leaf made the `(ability, ctx, rank)` clump typed; its key replaced
+`slotlib.extract_named`.
 
 Phase 2: ten `damage_type in {...}` membership tests (#54 reads `if` comparisons only) and
 `participant_timeline._insert_receipt_clone`'s untyped twin of the Knight's Vow redirect switch
@@ -38,3 +39,7 @@ types once on its `body`; its readers take an axis index that is a rank at 763 s
 at 64, so a record would misname one. `(ability, attribute, rank)` are those readers.
 `(damage_phase, preserve_reason, reason)` is `SurvivalLedger.skip`, a Protocol with three
 implementations; the interface is the type.
+
+Phase 4 leaves: `inputs.int_option`/`float_option` are two typed delegations to `_option`, and
+the typed signature is the reason two names exist. `optimizer._build_receipt_key` pairs with a
+test helper that shares one comprehension and no fact.

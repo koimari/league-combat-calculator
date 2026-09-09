@@ -164,6 +164,78 @@ def heal_from_damage(
     healing.append(heal)
 
 
+def ranked_rows(
+    champion_data: Mapping[str, Any],
+    ability_damages: Mapping[str, dict[str, Any]],
+    champion_stats: dict[str, float],
+    slot: str,
+    *attributes: str,
+) -> tuple[float, ...]:
+    """One slot's named rows at the rank the parser used.
+
+    Resolution carries no target: a self-heal reads the healer's stats.
+    """
+    # Read at call time: champion modules read this leaf, so an import-time
+    # edge into their package would invert that direction.
+    from .champions.slotlib import (  # pylint: disable=import-outside-toplevel
+        extract_named,
+    )
+
+    ability = ability_json(champion_data, slot, 0)
+    rank = parsed_rank(ability_damages, slot)
+    return tuple(
+        extract_named(ability, attribute, rank, champion_stats, {})
+        for attribute in attributes
+    )
+
+
+def cast_heals(  # pylint: disable=too-many-arguments
+    slot: str,
+    source: str,
+    damage_events: list[dict[str, Any]],
+    cast_timeline: list[dict[str, Any]] | None,
+    *,
+    amount: float = 0.0,
+    amount_formula: Callable[[float, float], float] | None = None,
+    skip_casts: int = 0,
+    link_to_damage: bool = True,
+) -> list[dict[str, Any]]:
+    """The self-heal a rule pays once per cast of one slot.
+
+    With no ``amount_formula`` the payment is the flat one
+    :func:`heal_from_damage` authors, clamp and all.  With one, the walk
+    evaluates it against the recipient's live health when the heal lands,
+    so the receipt carries the formula and a zero amount.  ``skip_casts``
+    drops the leading activations a rule does not pay on (the first cast
+    that only applies the mark its heal reads).
+    """
+    healing: list[dict[str, Any]] = []
+    for index, payment in enumerate(
+        payments(HealAnchor.CAST, slot, damage_events, cast_timeline)
+    ):
+        if index < skip_casts:
+            continue
+        event = payment.event
+        if amount_formula is None:
+            heal_from_damage(
+                healing, event, amount, source, link_to_damage=link_to_damage
+            )
+            continue
+        # ``trigger_fields`` is the one home for the event's own timestamp.
+        fields = trigger_fields(event)
+        healing.append(
+            {
+                "time": fields["_trigger_time"],
+                "amount": amount,
+                "amount_formula": amount_formula,
+                "source": source,
+                "kind": "champion_ability",
+                **fields,
+            }
+        )
+    return healing
+
+
 def flat_plus_missing_heal(
     flat: float, missing_pct: float
 ) -> Callable[[float, float], float]:

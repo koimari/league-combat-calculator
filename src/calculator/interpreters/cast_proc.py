@@ -35,7 +35,7 @@ from ..item_behavior import (
     KernelField,
     RuleFamily,
     UltimateProcRule,
-    declared_mechanic_id,
+    mechanic_id_reading,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..item_effects import (
@@ -110,22 +110,6 @@ def proc_fields(
             lane=lane,
             rule_id=rule.mechanic_id,
         ),
-    )
-
-
-def proc_mechanic_id(owner: str) -> str:
-    """*owner*'s cast-proc mechanic id, or a stop.
-
-    A stop rather than a default: an unstamped proc row keeps the pair
-    engine's number in every roster total while the walk prices the same
-    declaration, and that is a double count.
-    """
-    return declared_mechanic_id(
-        owner,
-        cast_proc_rules([owner]),
-        CastProcInterpretationError,
-        authors="a cast-triggered proc",
-        declares="cast_proc",
     )
 
 
@@ -270,6 +254,14 @@ def cast_proc_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
         for rule in behavior_rules(owner)
         if rule.family is RuleFamily.CAST_PROC
     )
+
+
+proc_mechanic_id = mechanic_id_reading(
+    cast_proc_rules,
+    CastProcInterpretationError,
+    authors="a cast-triggered proc",
+    declares="cast_proc",
+)
 
 
 def self_shield_owners(owners: Sequence[str]) -> tuple[str, ...]:

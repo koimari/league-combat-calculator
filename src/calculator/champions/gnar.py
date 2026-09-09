@@ -36,11 +36,12 @@ Why each slot is non-generic:
 
 from typing import Any
 
-from ..ability_spec import ControlEvent, DamagePart
+from ..ability_spec import ControlEvent
 from ..binary_roots import character_record_root, record_value
 from ..stat_formulas import growth_stat
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
+from .shared_mechanics import reduced_secondary_hits
 from .slotlib import (
     ability_name,
     ability_on_hit_entry,
@@ -101,6 +102,18 @@ _CRUNCH_OWN_HP_UNIT = "% of his maximum health"
 def _form_index(ctx: SlotCtx) -> int:
     """JSON entry index for the current form: 0 = Mini, 1 = Mega."""
     return 1 if ctx.option("mega") else 0
+
+
+def _form_leveling(
+    ctx: SlotCtx, slot: str, index: int, attribute: str
+) -> tuple[dict[str, Any], dict[str, Any], int] | None:
+    """One form's entry, its named leveling row, and the rank both price at."""
+    ranked = ctx.ranked(slot, index)
+    if ranked is None:
+        return None
+    ability, rank = ranked
+    leveling = find_named_leveling(ability, attribute)
+    return None if leveling is None else (ability, leveling, rank)
 
 
 # ---------------------------------------------------------------------------
@@ -177,39 +190,17 @@ def _boomerang_throw(ctx: SlotCtx) -> dict[str, Any] | None:
     if ranked is None:
         return None
     ability, rank = ranked
-
-    primary = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
-    secondary = min(max(int(ctx.option("q_secondary_targets")), 0), 5)
-    total = primary + reduced * secondary
-    entry = damage_entry(
-        ability_name(ability),
+    return reduced_secondary_hits(
+        ctx,
+        ability,
         rank,
-        extract_cooldown(ability, rank),
-        total,
-        "physical",
+        dmg_type="physical",
+        primary_row="Physical Damage",
+        reduced_row="Reduced Damage",
+        option="q_secondary_targets",
+        lead="primary hit",
+        noun="return-pass target(s)",
     )
-    if secondary:
-        # The return pass lands on its own targets, one hit each, so the
-        # row is timed rather than certified as one landing — the timing
-        # is what carries Q's reviewed slow into the event ledger.
-        parts = [
-            DamagePart("physical", primary, time_offset=0.0),
-            DamagePart(
-                "physical", reduced, count=secondary, time_offset=0.0, hit_interval=0.0
-            ),
-        ]
-        entry["detail"] = (
-            f"primary hit + {secondary} return-pass target(s) at the "
-            f"sourced {reduced / primary * 100:g}% Reduced Damage row each"
-        )
-    else:
-        # One boomerang, one enemy: one part and one hit, the
-        # certification that carries the same answer.
-        parts = [DamagePart("physical", primary)]
-        entry["event_order_certified"] = "single_hit"
-    entry["parts"] = tuple(parts)
-    return entry
 
 
 _q_forms = (
@@ -252,16 +243,10 @@ _wallop = simple_damage(
 
 def _hyper(ctx: SlotCtx) -> dict[str, Any] | None:
     """W Mini: magic proc every 3rd hit — flat + %target max HP + AP."""
-    ability = ctx.ability("W", 0)
-    if ability is None:
+    found = _form_leveling(ctx, "W", 0, "Bonus Magic Damage")
+    if found is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
-    leveling = find_named_leveling(ability, "Bonus Magic Damage")
-    if leveling is None:
-        return None
-
+    ability, leveling, rank = found
     per_proc = sum_modifiers(leveling, rank, ctx.stats, ctx.target)
     name = ability_name(ability)
     return ability_on_hit_entry(
@@ -289,13 +274,10 @@ def _w(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _hop(ctx: SlotCtx) -> dict[str, Any] | None:
     """E Mini: damage (6% of own max HP) + the Bonus Attack Speed buff."""
-    ability = ctx.ability("E", 0)
-    if ability is None:
+    ranked = ctx.ranked("E", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
-
+    ability, rank = ranked
     total = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),
@@ -313,15 +295,10 @@ def _hop(ctx: SlotCtx) -> dict[str, Any] | None:
 
 def _crunch(ctx: SlotCtx) -> dict[str, Any] | None:
     """E Mega: single hit; own-max-HP unit resolved by local override."""
-    ability = ctx.ability("E", 1)
-    if ability is None:
+    found = _form_leveling(ctx, "E", 1, "Physical Damage")
+    if found is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
-    leveling = find_named_leveling(ability, "Physical Damage")
-    if leveling is None:
-        return None
+    ability, leveling, rank = found
 
     def _own_max_hp(unit: str, value: float) -> float | None:
         if unit.strip() == _CRUNCH_OWN_HP_UNIT:

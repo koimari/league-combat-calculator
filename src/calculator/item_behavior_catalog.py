@@ -6146,6 +6146,16 @@ def build_context(owner: str, facts: FightFacts) -> BuildContext:
     )
 
 
+def built_per_rule[T](
+    rules: Sequence[BehaviorRule],
+    build: Callable[[BehaviorRule, BuildContext], T],
+    *,
+    facts: FightFacts,
+) -> tuple[T, ...]:
+    """Every declared rule, built in its owner's context, in build order."""
+    return tuple(build(rule, build_context(rule.owner, facts)) for rule in rules)
+
+
 # ── closure ───────────────────────────────────────────────────────────────
 
 
@@ -6528,6 +6538,7 @@ __all__ = [
     "TermSchema",
     "behavior_rules",
     "build_context",
+    "built_per_rule",
     "cached_source_receipt",
     "declared_owners",
     "declared_tags",

@@ -39,13 +39,8 @@ from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
 from .module_contract import coverage
 from .packet_module import build_packet_module, first_plus_repeats_parser
-from .slotlib import (
-    attach_self_shield,
-    extract_named,
-    find_named_leveling,
-    sum_modifiers,
-    with_control_event,
-)
+from .shared_mechanics import per_level_row
+from .slotlib import attach_self_shield, extract_named, with_control_event
 
 # HARDCODED: verify on patch updates — the shield window (2.5s) and the
 # Discharge window (4s) are wiki Q prose; the shield base row and the
@@ -63,14 +58,11 @@ def _siphon_shield(ctx: SlotCtx) -> float:
     """Q's shield: per-LEVEL base (40 : 140, 18 cached values) + 25% AP;
     the long row reads at the level.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return 0.0
-    leveling = find_named_leveling(ability, "Bonus Damage")
-    if leveling is None:
-        raise ValueError("Viktor Q shield leveling row is unavailable")
-    return sum_modifiers(
-        leveling, ctx.rank_for(), ctx.stats, ctx.target, level=ctx.level
+    return per_level_row(
+        ctx,
+        "Bonus Damage",
+        champion="Viktor",
+        stop="Viktor Q shield leveling row is unavailable",
     )
 
 

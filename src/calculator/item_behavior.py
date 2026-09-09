@@ -3809,6 +3809,28 @@ def declared_mechanic_id(
     return rules[0].mechanic_id
 
 
+def mechanic_id_reading(
+    rules: Callable[[Sequence[str]], Sequence[BehaviorRule]],
+    stop: type[Exception],
+    *,
+    authors: str,
+    declares: str,
+) -> Callable[[str], str]:
+    """A family's front door onto :func:`declared_mechanic_id`, bound once.
+
+    Every family stamps its pair row with the mechanic that row previews,
+    and every one of them refuses the same way, so the family binds its own
+    rule reader and its own words here instead of re-spelling the call.
+    """
+
+    def read(owner: str) -> str:
+        return declared_mechanic_id(
+            owner, rules([owner]), stop, authors=authors, declares=declares
+        )
+
+    return read
+
+
 def compiled_value(
     fields: Iterable[KernelField], name: str, stop: type[Exception], missing: str
 ) -> float:
@@ -3839,6 +3861,22 @@ def sole_declaration[T](
             "the fold"
         )
     return items[0]
+
+
+def sole_declared[T](
+    lookup: Callable[[Sequence[str], type], Sequence[T]],
+    owners: Sequence[str],
+    payload_type: type,
+    stop: type[Exception],
+) -> T | None:
+    """The build's one declaration of a shape that does not compose, or ``None``.
+
+    Every declaration *lookup* returns names the owner the refusal lists.
+    """
+    declared = lookup(owners, payload_type)
+    return sole_declaration(
+        declared, [item.owner for item in declared], payload_type, stop
+    )
 
 
 def flat_fields(
@@ -4067,9 +4105,11 @@ __all__ = [
     "is_denial_receipt",
     "is_packet_kind",
     "is_value_reference",
+    "mechanic_id_reading",
     "policy_values",
     "policy_walk",
     "sole_declaration",
+    "sole_declared",
     "typed_payload",
     "validate_rule",
 ]

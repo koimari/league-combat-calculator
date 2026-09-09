@@ -32,17 +32,15 @@ from typing import Any
 
 from ..healing_helpers import (
     HealAnchor,
-    ability_json,
     missing_health_scaled_heal,
-    parsed_rank,
     payments,
+    ranked_rows,
     trigger_fields,
 )
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .module_contract import coverage
 from .packet_module import build_packet_module
-from .slotlib import extract_named
 
 # "Up to a maximum of 4 / 6 / 8 / 10 (based on level) traps may be
 # active at once" — 10 at level 18 (the test level).
@@ -161,10 +159,14 @@ def derive_self_healing(
     not the damage ledger's row count.
     """
     healing: list[dict] = []
-    ability = ability_json(champion_data, "E")
-    e_rank = parsed_rank(ability_damages, "E")
-    min_heal = extract_named(ability, "Minimum Heal", e_rank, champion_stats)
-    max_heal = extract_named(ability, "Maximum Heal", e_rank, champion_stats)
+    min_heal, max_heal = ranked_rows(
+        champion_data,
+        ability_damages,
+        champion_stats,
+        "E",
+        "Minimum Heal",
+        "Maximum Heal",
+    )
     healing.extend(
         {
             "time": float(payment.event.get("time", 0.0)),

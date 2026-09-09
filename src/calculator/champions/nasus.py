@@ -44,6 +44,7 @@ from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
 from .module_contract import coverage
 from .module_helpers import ranked_slot
+from .shared_mechanics import innate_zero_row, ticked_channel
 from .slotlib import (
     ability_name,
     damage_entry,
@@ -156,53 +157,35 @@ def _fury_of_the_sands(
 ) -> dict[str, Any] | None:
     """R: all 30 sourced 0.5s ticks (E2 fix)."""
 
-    per_tick = extract_named(
-        ability, "Magic Damage Per Tick", rank, ctx.stats, ctx.target
-    )
-    total = per_tick * _R_TICKS
-    entry = damage_entry(
-        ability_name(ability),
+    return ticked_channel(
+        ctx,
+        ability,
         rank,
-        extract_cooldown(ability, rank),
-        total,
-        "magic",
-    )
-    entry["parts"] = (
-        DamagePart(
-            "magic",
-            per_tick,
-            count=_R_TICKS,
-            time_offset=_R_TICK_INTERVAL,
-            hit_interval=_R_TICK_INTERVAL,
+        attr="Magic Damage Per Tick",
+        dmg_type="magic",
+        ticks=_R_TICKS,
+        interval=_R_TICK_INTERVAL,
+        dot_duration=_R_DOT_DURATION,
+        detail=(
+            f"{_R_TICKS} sourced {_R_TICK_INTERVAL:g}s-interval ticks "
+            f"(Magic Damage Per Tick x{_R_TICKS} = Fury of the Sands total)"
         ),
     )
-    entry["dot_duration"] = _R_DOT_DURATION
-    entry["detail"] = (
-        f"{_R_TICKS} sourced {_R_TICK_INTERVAL:g}s-interval ticks "
-        f"(Magic Damage Per Tick x{_R_TICKS} = Fury of the Sands total)"
-    )
-    return entry
 
 
 def _soul_eater(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: innate lifesteal — no enemy damage, self-heal via healing.py."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return {
-        "name": ability_name(ability),
-        "rank": ctx.level,
-        "cooldown": 0.0,
-        "damage_type": "physical",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": (
+    """P: innate lifesteal with no enemy damage, self-heal via healing.py."""
+
+    return innate_zero_row(
+        ctx,
+        detail=(
             "Innate lifesteal: heals for 12% / 18% / 24% (based on level; "
             "game-file breakpoints 7/13) of the post-mitigation physical "
             "basic-attack/on-hit damage dealt — authored by the Soul Eater "
             "heal rule (HEALING_RULE_CHAMPIONS), no enemy damage."
         ),
-    }
+        dmg_type="physical",
+    )
 
 
 def _wither(ctx: SlotCtx) -> dict[str, Any] | None:

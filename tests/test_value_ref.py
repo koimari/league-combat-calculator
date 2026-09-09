@@ -15,7 +15,9 @@ from src.calculator import item_effects, rune_effects
 from src.calculator.value_ref import (
     VALUE_REGISTRIES,
     Const,
+    DeclaredNumbers,
     DerivedValueRef,
+    LateLevelValueRef,
     LevelValueRef,
     SourceReceipt,
     UnsourcedDeclarationError,
@@ -241,6 +243,81 @@ def test_resolve_flat_reads_level_independent_references() -> None:
             "Warmog's Armor", "heart_bonus_health_threshold"
         ),
     )
+
+
+class TestDeclaredNumbers:
+    """One rule's declared numbers, read by reference kind or refused.
+
+    Three kinds live in one tuple and each accessor names the one it reads,
+    so a reader that asks for a ramp cannot be handed a plain value.
+    """
+
+    _VALUE = ValueRef("ITEM_EFFECTS", "Warmog's Armor", "heart_bonus_health_threshold")
+    _RAMP = LevelValueRef(
+        "ITEM_EFFECTS",
+        "Warmog's Armor",
+        "heart_tick_interval",
+        "heart_tick_interval",
+        "linear_1_18",
+    )
+    _LATE = LateLevelValueRef(
+        "ITEM_EFFECTS",
+        "Bloodthirster",
+        "ichorshield_min",
+        "ichorshield_max",
+        "ichorshield_scale_start_level",
+        "ichorshield_scale_end_level",
+    )
+
+    def _declared(self, *references: object) -> DeclaredNumbers:
+        return DeclaredNumbers(references, "Mechanic.ID", ValueRefError, "a producer")
+
+    def test_each_accessor_reads_its_own_reference_kind(self) -> None:
+        declared = self._declared(self._VALUE, self._RAMP, self._LATE)
+        assert declared.value("heart_bonus_health_threshold") == self._VALUE.get()
+        assert declared.ramp("heart_tick_interval", 9) == self._RAMP.get(9)
+        assert declared.late_ramp("ichorshield_min", 12) == self._LATE.get(12)
+
+    def test_a_ramp_is_named_by_its_low_key_and_read_at_the_level(self) -> None:
+        """A ramp is one number with two ends, so one key names it."""
+        declared = self._declared(self._LATE)
+        assert declared.late_ramp("ichorshield_min", 1) <= declared.late_ramp(
+            "ichorshield_min", 18
+        )
+
+    def test_an_undeclared_value_is_refused_naming_the_reader(self) -> None:
+        with pytest.raises(ValueRefError) as raised:
+            self._declared(self._VALUE).value("never_declared")
+        assert str(raised.value) == (
+            "Mechanic.ID declares no 'never_declared' value; a producer reads "
+            "the numbers its declaration names and no others"
+        )
+
+    def test_the_noun_is_the_readers_own_word(self) -> None:
+        declared = DeclaredNumbers((), "Mechanic.ID", ValueRefError, "a defence")
+        with pytest.raises(ValueRefError, match="a defence reads"):
+            declared.value("anything")
+
+    def test_an_undeclared_ramp_of_either_kind_is_refused(self) -> None:
+        declared = self._declared(self._VALUE)
+        with pytest.raises(ValueRefError, match="declares no 'x' level ramp"):
+            declared.ramp("x", 9)
+        with pytest.raises(ValueRefError, match="declares no 'x' late level ramp"):
+            declared.late_ramp("x", 9)
+
+    def test_a_ramp_may_not_be_read_as_a_plain_value(self) -> None:
+        """The kind is part of the lookup, so the wrong accessor stops."""
+        declared = self._declared(self._RAMP)
+        with pytest.raises(ValueRefError, match="declares no 'heart_tick_interval'"):
+            declared.value("heart_tick_interval")
+
+    def test_the_stop_is_the_familys_own_exception(self) -> None:
+        class _FamilyStop(ValueError):
+            """One family's refusal type."""
+
+        declared = DeclaredNumbers((), "Mechanic.ID", _FamilyStop, "a producer")
+        with pytest.raises(_FamilyStop):
+            declared.ramp("x", 9)
 
 
 def test_resolve_flat_refuses_a_reference_that_needs_a_level() -> None:

@@ -47,7 +47,7 @@ from ..item_behavior import (
     RuleFamily,
     SustainStat,
     SustainStatRule,
-    sole_declaration,
+    sole_declared,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..value_ref import ValueRefError, resolve, resolve_flat
@@ -228,16 +228,9 @@ def walk_slot(owners: Sequence[str], payload_type: type) -> SustainSlot | None:
 def _sole_rule(owners: Sequence[str], payload_type: type) -> BehaviorRule | None:
     """The one rule of *payload_type* this build declares, or ``None``.
 
-    ``None`` is an answer and not a zero: no holder restores health this way,
-    so no rule ran.  Two holders of one shape is a stop, because nothing
-    declares how two of them compose — the same refusal the shred slot makes.
-    """
-    rules = sustain_rules(owners, payload_type)
-    return sole_declaration(
-        rules,
-        [rule.owner for rule in rules],
-        payload_type,
-        SustainInterpretationError,
+    ``None`` is an answer and not a zero: no holder restores health this way."""
+    return sole_declared(
+        sustain_rules, owners, payload_type, SustainInterpretationError
     )
 
 

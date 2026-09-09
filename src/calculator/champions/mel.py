@@ -55,7 +55,7 @@ from ..binary_roots import (
 from .engine import CC_PER_PART, ONHIT, SlotCtx
 from .inputs import int_option
 from .module_contract import coverage
-from .module_helpers import ranked_slot
+from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slotlib import (
     PER_LEVEL_SCALING,
@@ -247,7 +247,7 @@ _searing_brilliance.phase = ONHIT
 
 @ranked_slot
 def _rebuttal(
-    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+    ctx: SlotCtx, ability: dict[str, Any], _rank: int
 ) -> dict[str, Any] | None:
     """W: shield + conditional projectile reflection, priced ``no_damage``.
 
@@ -256,14 +256,10 @@ def _rebuttal(
     never a damage amount, and the multiplicand is structurally absent:
     this calculator models one attacker against a target that never casts.
     """
-    return {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "magic",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": (
+    return no_damage(
+        ctx,
+        name=ability_name(ability),
+        reason=(
             "Rebuttal shields Mel (80-200 + 70% AP) and reflects enemy "
             "projectiles at 40-60% (+ 5% per 100 AP) of their original "
             "damage; no enemy projectile source is modeled — the target "
@@ -271,7 +267,7 @@ def _rebuttal(
             "MelW carries only DamagePercent and ShieldAmount, and no "
             "damage.* atom exists for MelW."
         ),
-    }
+    )
 
 
 @ranked_slot

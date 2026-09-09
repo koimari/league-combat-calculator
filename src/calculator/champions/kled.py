@@ -24,9 +24,9 @@ from .engine import CC_PER_PART, SlotCtx, build_parser
 from .inputs import bool_option, float_option
 from .module_contract import coverage
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, ranked_slot
+from .shared_mechanics import empowered_auto_entry
 from .slotlib import (
     ability_name,
-    ability_on_hit_entry,
     damage_entry,
     extract_cooldown,
     extract_named,
@@ -95,8 +95,8 @@ def _violent_tendencies(ctx: SlotCtx) -> dict[str, Any] | None:
     value = extract_named(
         ability, "Additional Physical Damage", rank, ctx.stats, ctx.target
     )
-    result = ability_on_hit_entry(
-        ability_name(ability),
+    return empowered_auto_entry(
+        ability,
         rank,
         "physical",
         {
@@ -105,18 +105,13 @@ def _violent_tendencies(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_type": "physical",
         },
         cooldown=0.0,
+        empowered_damage=value,
+        target_max_health_sensitive=True,
+        detail=(
+            "Fourth attack of the four-hit Violent Tendencies sequence; 150% "
+            "attack speed is state."
+        ),
     )
-    result["parts"] = (
-        DamagePart("physical", value, basic_damage=True, time_offset=0.1),
-    )
-    result["total_raw"] = value
-    result["empowers_next_auto"] = True
-    result["target_max_health_sensitive"] = True
-    result["detail"] = (
-        "Fourth attack of the four-hit Violent Tendencies sequence; 150% "
-        "attack speed is state."
-    )
-    return result
 
 
 @ranked_slot

@@ -499,6 +499,12 @@ def _supercharge_uptime(
     return casts, min(1.0, active / duration)
 
 
+def _timed_ranked(ctx: SlotCtx) -> tuple[tuple[float, float], tuple[dict, int]] | None:
+    """The timed fight window and the slot's ranked entry, together or not at all."""
+    window, ranked = _timed_window(ctx), ctx.ranked()
+    return None if window is None or ranked is None else (window, ranked)
+
+
 def _supercharge(ctx: SlotCtx) -> dict[str, Any] | None:
     """E (timed only): recurring 4s attack-speed windows as an average grant.
 
@@ -509,14 +515,10 @@ def _supercharge(ctx: SlotCtx) -> dict[str, Any] | None:
     sees the same cadence) and as a ``stat_buff`` the fight engine folds
     into its swing schedule.
     """
-    window = _timed_window(ctx)
-    if window is None:
+    timed = _timed_ranked(ctx)
+    if timed is None:
         return None
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
-    duration, uptime = window
+    (duration, uptime), (ability, rank) = timed
 
     bonus_percent = extract_value(ability, "Bonus Attack Speed", rank)
     if bonus_percent <= 0:
@@ -559,13 +561,10 @@ def _killer_instinct(ctx: SlotCtx) -> dict[str, Any] | None:
     stream is uniform-rate and the shield ledger rides damage events) and
     stay documented assumptions.
     """
-    window = _timed_window(ctx)
-    if window is None:
+    timed = _timed_ranked(ctx)
+    if timed is None:
         return None
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
+    window, (ability, rank) = timed
 
     entry = damage_entry(
         ability_name(ability),

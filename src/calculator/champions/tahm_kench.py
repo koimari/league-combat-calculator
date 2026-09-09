@@ -27,35 +27,26 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
+from .engine import CC_PER_PART, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, int_option
 from .module_contract import coverage
-from .module_helpers import ranked_slot
+from .module_helpers import innate_on_hit, ranked_slot
 from .slotlib import (
     ability_name,
     damage_entry,
     extract_cooldown,
     extract_named,
-    on_hit_entry,
     simple_damage,
 )
 from .source_receipts import load_champion_sources
 
-
-def _acquired_taste(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("P")
-    if ability is None:
-        return None
-    bonus = extract_named(
-        ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target
-    )
-    entry = on_hit_entry("An Acquired Taste", bonus, "magic")
-    entry["detail"] = "basic attacks and Tongue Lash apply one stack"
-    return entry
-
-
-_acquired_taste.phase = ONHIT
+_acquired_taste = innate_on_hit(
+    "Per-Level Scaling",
+    "magic",
+    name="An Acquired Taste",
+    detail="basic attacks and Tongue Lash apply one stack",
+)
 
 
 @ranked_slot
@@ -212,28 +203,20 @@ def derive_self_healing(
     fight_duration_seconds: float | None = None,
 ) -> list[dict[str, Any]]:
     """Resolve Tahm Kench self-healing events from its authored packet."""
-    healing = []
-    q = _healing.ability_json(champion_data, "Q")
     q_rank = _healing.parsed_rank(ability_damages, "Q")
-    q_flat = extract_named(q, "Heal", q_rank, champion_stats, {})
-    q_missing_pct = _healing.leveling_modifier(q, "Heal", q_rank, 1)
-
-    tongue_lash_heal = _healing.flat_plus_missing_heal(q_flat, q_missing_pct)
-    for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
-    ):
-        event = payment.event
-        healing.append(
-            {
-                "time": float(event.get("time", 0.0)),
-                "amount": 0.0,
-                "amount_formula": tongue_lash_heal,
-                "source": "Tongue Lash",
-                "kind": "champion_ability",
-                **_healing.trigger_fields(event),
-            }
-        )
-    return healing
+    (q_flat,) = _healing.ranked_rows(
+        champion_data, ability_damages, champion_stats, "Q", "Heal"
+    )
+    q_missing_pct = _healing.leveling_modifier(
+        _healing.ability_json(champion_data, "Q"), "Heal", q_rank, 1
+    )
+    return _healing.cast_heals(
+        "Q",
+        "Tongue Lash",
+        damage_events,
+        cast_timeline,
+        amount_formula=_healing.flat_plus_missing_heal(q_flat, q_missing_pct),
+    )
 
 
 SELF_HEALING_RULE = self_healing_rule("Tahm Kench")(derive_self_healing)

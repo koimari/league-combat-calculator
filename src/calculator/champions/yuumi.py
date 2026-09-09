@@ -73,6 +73,7 @@ from .healing_contract import self_healing_rule
 from .inputs import champion_stat
 from .module_contract import coverage
 from .packet_module import build_packet_module, first_plus_repeats_parser
+from .shared_mechanics import ranked_packet_slot
 from .slotlib import (
     extract_cooldown,
     extract_named,
@@ -105,14 +106,9 @@ def _you_and_me(packet_w):
     published; the reason is the condition, and it is stated in ASSUMPTIONS.
     """
 
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = packet_w(ctx)
-        if entry is None:
-            return None
-        ability = ctx.ability()
-        rank = ctx.rank_for()
-        if ability is None or rank < 1:
-            return entry
+    def body(
+        _ctx: SlotCtx, entry: dict[str, Any], ability: dict[str, Any], rank: int
+    ) -> dict[str, Any]:
         for attribute in ("Heal and Shield Power", "Healing On-Hit"):
             if find_named_leveling(ability, attribute) is None:
                 # Fail closed: the emitted row quotes both of these, so a
@@ -143,7 +139,7 @@ def _you_and_me(packet_w):
         )
         return entry
 
-    return parse
+    return ranked_packet_slot(packet_w, body)
 
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
