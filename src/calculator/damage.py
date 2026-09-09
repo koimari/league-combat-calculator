@@ -236,7 +236,7 @@ from .resistance import (
 )
 from .state_lifecycle import InstanceCadence, TimedStackState, TriggerGate
 from .stats import calculate_attack_speed, effective_cooldown, resolve_move_speed
-from .survival.actions import TransitionRank
+from .survival.actions import TransitionRank, event_timestamp
 from .survival.pricing import (
     AuthoredDeclaration,
     BasicAttackSwing,
@@ -300,9 +300,9 @@ def declared_option_spec(family: str, owner: str, key: str) -> Mapping[str, Any]
     return spec
 
 
-def declared_option_default(
+def declared_option_default(  # sightline-ok: 1 - key-typed read
     family: str, owner: str, key: str
-) -> Any:  # sightline-ok: 1 - key-typed read
+) -> Any:
     """The value an unset option prices at, as its own spec declares it."""
     return declared_option_spec(family, owner, key)["default"]
 
@@ -2497,7 +2497,7 @@ def _control_armed_event_coverage(
     melee holder, and its shield lands after that authored cast.  Which
     authored control arms it is therefore the mechanic's own question, and
     the certificate names the event that answered it: the predicate here is
-    :func:`item_support_effects.control_trigger_rule`, the same
+    :attr:`interpreters.ally_packet.AllyPacketSlot.control_arming`, the same
     ``state_lifecycle.CcTriggerRule`` the roster walk grants the shield
     through, read against the same raw rows.  A reviewed ``"none"`` row is
     not a candidate for it — that is the reviewed absence of control, which
@@ -2510,8 +2510,6 @@ def _control_armed_event_coverage(
     producer, so a second such producer is reported as itself rather than
     under the first one's name.
     """
-    from .item_support_effects import _event_time, control_trigger_rule
-
     # An ability that carries its control on a ``control_events`` row rather
     # than on a damage packet is the same evidence, so both ledgers feed one
     # scan: a reviewed control row certifies the cast that authored it.
@@ -2523,7 +2521,7 @@ def _control_armed_event_coverage(
     ledger = {"damage_events": rows}
     armed_by = ""
     for slot in _control_armed_holder_shields(items):
-        rule = control_trigger_rule(slot.producer)
+        rule = slot.control_arming
         for row in rows:
             branch = rule.match(row, is_melee=is_melee)
             if branch and not armed_by:
@@ -2531,7 +2529,7 @@ def _control_armed_event_coverage(
                     f"{slot.owner} — "
                     f"{slot.producer.value.replace('_', ' ').title()} armed by "
                     f"{row.get('source') or row.get('source_key')} ({branch}) at "
-                    f"{round(_event_time(row), 3)}s"
+                    f"{round(event_timestamp(row), 3)}s"
                 )
                 break
         # The sixth control-reading site, on the bus.  ``cc_reviewed`` on a

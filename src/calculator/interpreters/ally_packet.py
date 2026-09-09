@@ -26,7 +26,7 @@ Two consequences are the point of the exercise:
 from __future__ import annotations
 
 from collections.abc import Collection, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import partial
 
 from ..item_behavior import (
@@ -45,6 +45,8 @@ from ..item_behavior import (
     typed_payload,
 )
 from ..item_behavior_catalog import behavior_rules
+from ..item_effects import ITEM_INPUT_OPTIONS
+from ..state_lifecycle import CcTriggerRule, SourceReceipt
 from ..value_ref import LevelValueRef, ValueRef, declared_reference
 
 
@@ -58,6 +60,18 @@ _payload = partial(
     stop=AllyPacketInterpretationError,
     noun="an ally-packet rule",
 )
+
+# Which authored control arms each control-triggered producer, as the
+# kernel states it (state_lifecycle.CcTriggerRule).  Everlasting is an
+# immobilize from the sourced action-blocking vocabulary, or a slow for a
+# melee holder; a bare ``crowd_control`` flag cannot tell the branches
+# apart.  Owner-free like every declaration here: the owner binds at read
+# time, so the entry states the mechanic and never an item name.
+_CONTROL_ARMING: Mapping[AllyProducer, CcTriggerRule] = {
+    AllyProducer.EVERLASTING: CcTriggerRule(
+        name="Everlasting crowd-control trigger", slow_melee_only=True
+    ),
+}
 
 
 def packet_fields(
@@ -163,6 +177,28 @@ class AllyPacketSlot:
         raise AllyPacketInterpretationError(
             f"{self.rule.mechanic_id} declares no {key!r} level ramp, so "
             "nothing states whose level would read it"
+        )
+
+    @property
+    def control_arming(self) -> CcTriggerRule:
+        """The authored control that arms this producer, bound to its owner.
+
+        The pair engine's coverage certificate and the roster walk's grant
+        read this one object, so what arms the shield and what the ledger
+        says armed it cannot disagree.  Asked of a producer whose declared
+        trigger is ``CROWD_CONTROL``; any other producer names no rule and
+        is a stop.
+        """
+        arming = _CONTROL_ARMING.get(self.producer)
+        if arming is None:
+            raise AllyPacketInterpretationError(
+                f"{self.rule.mechanic_id} names no CcTriggerRule, so which "
+                "control arms it is undeclared"
+            )
+        return replace(
+            arming,
+            name=f"{self.owner} — {arming.name}",
+            source=SourceReceipt.from_mapping(ITEM_INPUT_OPTIONS[self.owner]),
         )
 
     def declared(self, kind: PacketKind) -> PacketSpec:

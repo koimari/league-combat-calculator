@@ -26,7 +26,7 @@
       "class_c": 7
     },
     "calculator/item_support_effects.py": {
-      "counter_1": 10
+      "counter_1": 9
     },
     "calculator/loadout_rules.py": {
       "class_c": 33
@@ -91,7 +91,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 42
+      "value": 41
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",
@@ -441,8 +441,8 @@
       "counter_1": {
         "bound": 0,
         "criterion": "criterion 1: runtime item-name dispatch reaches zero",
-        "gap": 42,
-        "measured": 42,
+        "gap": 41,
+        "measured": 41,
         "met": false,
         "owed_to": "post-merge lane: runtime item-name dispatch (frontier-open-debts.json)"
       },

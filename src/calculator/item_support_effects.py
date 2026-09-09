@@ -58,7 +58,6 @@ from .program.identity import PIdx
 from .program.scope import Unreviewed, reviewed_scope, scope_policy
 from .roster_composition import Combatant
 from .state_lifecycle import (
-    CcTriggerRule,
     CooldownRule,
     CooldownState,
     InstanceCadence,
@@ -71,7 +70,7 @@ from .state_lifecycle import (
 # ``.survival.actions`` executes ``survival/__init__.py``, so the whole
 # kernel package loads with this module.  Acyclic: nothing under
 # ``survival/`` imports ``item_support_effects``.
-from .survival.actions import SUPPORT_RANK_KEY, TransitionRank
+from .survival.actions import SUPPORT_RANK_KEY, TransitionRank, event_timestamp
 
 # The typed bus: one home for "what does this raw row mean?" and one for
 # "which streams does this holder read?".  A hand name set drifts from the
@@ -214,17 +213,6 @@ def _active_seconds_for(attacker: Any, item_name: str) -> float:
     return input_option_float_value(
         list(attacker.items), item_options, item_name, "active_seconds"
     )
-
-
-def _event_time(event: Mapping[str, Any]) -> float:
-    value = event.get("time", 0.0)
-    try:
-        parsed = float(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("item support event time must be numeric") from exc
-    if not math.isfinite(parsed):
-        raise ValueError("item support event time must be finite")
-    return parsed
 
 
 def _packet(  # pylint: disable=too-many-arguments
@@ -435,41 +423,6 @@ def _support_triggers(
         if str(event.get("kind", "")) in {"heal", "shield"}
         and str(event.get("target", "")) != attacker.participant_id
     ]
-
-
-# Everlasting's crowd-control trigger predicate is kernel-owned
-# (state_lifecycle.CcTriggerRule): immobilize from the sourced
-# action-blocking vocabulary, or slow for a melee holder.  A bare
-# ``crowd_control`` flag does not distinguish the branches and stays
-# insufficient, exactly as the reviewed item coverage decided.
-_FIMBULWINTER_TRIGGER_RULE = CcTriggerRule(
-    name="Fimbulwinter — Everlasting crowd-control trigger",
-    slow_melee_only=True,
-    source=SourceReceipt.from_mapping(ITEM_INPUT_OPTIONS["Fimbulwinter"]),
-)
-
-# One rule per control-armed producer, and the shield is granted through
-# it. The pair engine's coverage certificate reads the same entry, so what
-# arms the shield and what the ledger says armed it cannot disagree.
-_CONTROL_TRIGGER_RULES: Mapping[AllyProducer, CcTriggerRule] = {
-    AllyProducer.EVERLASTING: _FIMBULWINTER_TRIGGER_RULE,
-}
-
-
-def control_trigger_rule(producer: AllyProducer) -> CcTriggerRule:
-    """The trigger rule one control-armed producer arms on.
-
-    Raises:
-        ValueError: The producer declares a crowd-control trigger and no
-            rule says which control arms it, so no reader can decide.
-    """
-    rule = _CONTROL_TRIGGER_RULES.get(producer)
-    if rule is None:
-        raise ValueError(
-            f"{producer.value} is armed by crowd control and names no "
-            "CcTriggerRule, so which control arms it is undeclared"
-        )
-    return rule
 
 
 def _cc_event_stream(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
@@ -1142,6 +1095,7 @@ def derive_item_support_effects(
     everlasting = _producer(slots, AllyProducer.EVERLASTING)
     if everlasting is not None:
         everlasting.declared(PacketKind.SHIELD)
+        arming = everlasting.control_arming
         # The kernel's trigger rule reads the raw event rows, not the bus's
         # typed ``Trigger`` view: a denial receipt names the row's own
         # ``_event_id``, ``cc_kind`` and cast instance, and the bus does not
@@ -1154,9 +1108,7 @@ def derive_item_support_effects(
         # Filtering on the bus predicate would drop rows Everlasting's own
         # declaration accepts.
         everlasting_events = [
-            event
-            for event in _cc_event_stream(result)
-            if _FIMBULWINTER_TRIGGER_RULE.is_candidate(event)
+            event for event in _cc_event_stream(result) if arming.is_candidate(event)
         ]
         is_melee = bool(attacker.stats.get("is_melee", False))
         champion_stats = result.get("champion_stats", attacker.stats)
@@ -1188,14 +1140,14 @@ def derive_item_support_effects(
             return _packet(
                 attacker=attacker,
                 target=attacker,
-                time=_event_time(event),
+                time=event_timestamp(event),
                 kind=PacketKind.ITEM_DENIAL.value,
                 source="Fimbulwinter — Everlasting",
                 target_scope="self",
                 reason=reason,
                 cc_kind=str(event.get("cc_kind", "") or ""),
                 event_id=event.get("_event_id"),
-                trigger_rule=_FIMBULWINTER_TRIGGER_RULE.public_receipt(),
+                trigger_rule=arming.public_receipt(),
                 mana_gate_status=mana_gate["status"],
                 nearby_enemy_range_units=range_authority["range_units"],
                 range_center=(
@@ -1214,7 +1166,7 @@ def derive_item_support_effects(
             packets.extend(
                 _denial(event, "missing_holder_identity")
                 for event in everlasting_events
-                if _FIMBULWINTER_TRIGGER_RULE.match(event, is_melee=is_melee)
+                if arming.match(event, is_melee=is_melee)
             )
             everlasting_events = []
 
@@ -1223,7 +1175,7 @@ def derive_item_support_effects(
         # is receipted once (an event with NO CC metadata is not a candidate
         # and produces nothing).
         for event in _cc_event_stream(result):
-            reason = _FIMBULWINTER_TRIGGER_RULE.denial_reason(event, is_melee=is_melee)
+            reason = arming.denial_reason(event, is_melee=is_melee)
             if reason:
                 packets.append(_denial(event, reason))
 
@@ -1238,13 +1190,13 @@ def derive_item_support_effects(
         # several CC-marked events still arms Everlasting once.
         cast_cadence = InstanceCadence(once_only=True)
         for event in everlasting_events:
-            trigger_kind = _FIMBULWINTER_TRIGGER_RULE.match(event, is_melee=is_melee)
+            trigger_kind = arming.match(event, is_melee=is_melee)
             if not trigger_kind:
                 # The CC-adjacent scan above already receipted this event
                 # with its named reason (ranged_slow / untyped_cc /
                 # unknown_cc_kind); it is not an eligible branch.
                 continue
-            time = _event_time(event)
+            time = event_timestamp(event)
             raw_cast_identity = event.get("ability_instance")
             if not isinstance(raw_cast_identity, str) or not raw_cast_identity.strip():
                 packets.append(_denial(event, "missing_instance_identity"))
@@ -1389,7 +1341,7 @@ def derive_item_support_effects(
                     multi_target_multiplier=multiplier,
                     cooldown=cooldown_rule.cooldown_seconds,
                     cooldown_until=time + cooldown_rule.cooldown_seconds,
-                    trigger_rule=_FIMBULWINTER_TRIGGER_RULE.public_receipt(),
+                    trigger_rule=arming.public_receipt(),
                     source_url=source_meta["source_url"],
                     source_revision_id=source_meta["source_revision_id"],
                     rank=TransitionRank.LATE_BARRIER,
@@ -1615,7 +1567,7 @@ def derive_item_support_effects(
         target = _target_by_id(all_actors, str(trigger.get("target", "")))
         if target is None:
             continue
-        time = _event_time(trigger)
+        time = event_timestamp(trigger)
         if sanctify is not None:
             packets.extend(
                 _packet(
@@ -2211,7 +2163,7 @@ def schedule_knights_vow(
                 _packet(
                     attacker=holder,
                     target=holder,
-                    time=_event_time(event),
+                    time=event_timestamp(event),
                     kind="heal",
                     source="Knight's Vow — Sacrifice",
                     amount=amount * heal_fraction,
