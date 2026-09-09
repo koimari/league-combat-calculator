@@ -32,6 +32,7 @@ from src.calculator.item_behavior import (
 )
 from src.calculator.item_behavior_catalog import BehaviorCatalogError, behavior_rules
 from src.calculator.rune_paths import precision, sorcery
+from src.calculator.value_ref import ValueSource
 from src.calculator.value_ref import resolve as resolve_ref
 
 # ---------------------------------------------------------------------------
@@ -67,8 +68,9 @@ class TestCutDownNeedsNoNewKind:
             "damage_amp_health_gate",
             "target_below",
         )
+        source = ValueSource("RUNE_EFFECTS", "Cut Down")
         with pytest.raises(BehaviorCatalogError, match="description reordered"):
-            item_behavior_catalog._target_health_gate_rule("Cut Down", "RUNE_EFFECTS")
+            item_behavior_catalog._target_health_gate_rule(source)
 
 
 class TestLastStandsRamp:

@@ -11,7 +11,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 from string import hexdigits
 from types import ModuleType
-from typing import Any
+from typing import Any, NamedTuple
 
 from ..ability_spec import CC_KIND_VOCABULARY
 from ..cast_dependency import (
@@ -114,6 +114,16 @@ class ChampionModuleContract:  # pylint: disable=too-many-instance-attributes
     stat_conversion: BonusHealthConversion | None = None
 
 
+class DeclarationSites(NamedTuple):
+    """The three places a champion module may declare a contract fact on: the
+    module itself, the ``parse_abilities`` it publishes, and its slot map.
+    """
+
+    module: ModuleType
+    parser: Callable[..., Any]
+    slots: dict[str, Any]
+
+
 def _present(carriers: tuple[tuple[str, Any, str], ...]) -> list[tuple[str, Any]]:
     """The carriers that hold something, as ``(label, value)`` rows.  One fact
     can have three carriers, and surveying them beats a ``getattr`` default
@@ -170,7 +180,7 @@ def _agreeing(
 
 
 def _declared_cast_dependencies(
-    module: ModuleType, parser: Callable[..., Any], slots: dict[str, Any]
+    sites: DeclarationSites,
 ) -> tuple[CastDependency, ...]:
     """The one declaration the module, its parser and its slot map agree on.
 
@@ -180,9 +190,9 @@ def _declared_cast_dependencies(
     """
     declared = _present(
         (
-            ("module CAST_DEPENDENCIES", module, "CAST_DEPENDENCIES"),
-            ("parse_abilities.cast_dependencies", parser, "cast_dependencies"),
-            ("SLOTS.cast_dependencies", slots, "cast_dependencies"),
+            ("module CAST_DEPENDENCIES", sites.module, "CAST_DEPENDENCIES"),
+            ("parse_abilities.cast_dependencies", sites.parser, "cast_dependencies"),
+            ("SLOTS.cast_dependencies", sites.slots, "cast_dependencies"),
         )
     )
     if not declared:
@@ -192,12 +202,12 @@ def _declared_cast_dependencies(
             not isinstance(row, CastDependency) for row in value
         ):
             raise ChampionModuleContractError(
-                f"{module.__name__} {label} must be a sequence of "
+                f"{sites.module.__name__} {label} must be a sequence of "
                 "CastDependency declarations"
             )
     return tuple(
         _agreeing(
-            module,
+            sites.module,
             [(label, tuple(value)) for label, value in declared],
             "cast dependencies",
         )
@@ -205,7 +215,7 @@ def _declared_cast_dependencies(
 
 
 def _packet_declaration(
-    module: ModuleType, parser: Callable[..., Any], slots: dict[str, Any]
+    sites: DeclarationSites,
 ) -> tuple[dict[str, Any] | None, str | None]:
     """The reviewed packet evidence and the digest that pins it.
 
@@ -226,36 +236,38 @@ def _packet_declaration(
     """
     spec_rows = _present(
         (
-            ("parse_abilities.packet_spec", parser, "packet_spec"),
-            ("SLOTS.packet_spec", slots, "packet_spec"),
+            ("parse_abilities.packet_spec", sites.parser, "packet_spec"),
+            ("SLOTS.packet_spec", sites.slots, "packet_spec"),
         )
     )
     digest_rows = _present(
         (
-            ("module PACKET_SHA256", module, "PACKET_SHA256"),
-            ("parse_abilities.packet_sha256", parser, "packet_sha256"),
-            ("SLOTS.packet_sha256", slots, "packet_sha256"),
+            ("module PACKET_SHA256", sites.module, "PACKET_SHA256"),
+            ("parse_abilities.packet_sha256", sites.parser, "packet_sha256"),
+            ("SLOTS.packet_sha256", sites.slots, "packet_sha256"),
         )
     )
     packet_spec = (
-        _agreeing(module, spec_rows, "packet declarations") if spec_rows else None
+        _agreeing(sites.module, spec_rows, "packet declarations") if spec_rows else None
     )
     packet_sha256 = (
-        _agreeing(module, digest_rows, "packet digests") if digest_rows else None
+        _agreeing(sites.module, digest_rows, "packet digests") if digest_rows else None
     )
-    if (spec_rows or digest_rows) and getattr(parser, "packet_sha256", None) is None:
+    if (spec_rows or digest_rows) and getattr(
+        sites.parser, "packet_sha256", None
+    ) is None:
         raise ChampionModuleContractError(
-            f"{module.__name__} pins a packet digest its parse_abilities does "
+            f"{sites.module.__name__} pins a packet digest its parse_abilities does "
             "not carry: the parser was not the one build_packet_module "
             "compiled, so the pin guards nothing"
         )
     if packet_spec is not None and not isinstance(packet_spec, dict):
         raise ChampionModuleContractError(
-            f"{module.__name__} packet spec must be a dict when stamped"
+            f"{sites.module.__name__} packet spec must be a dict when stamped"
         )
     if (packet_spec is None) != (packet_sha256 is None):
         raise ChampionModuleContractError(
-            f"{module.__name__} packet declaration and digest must be paired"
+            f"{sites.module.__name__} packet declaration and digest must be paired"
         )
     if packet_sha256 is not None and (
         not isinstance(packet_sha256, str)
@@ -263,14 +275,12 @@ def _packet_declaration(
         or any(character not in hexdigits for character in packet_sha256)
     ):
         raise ChampionModuleContractError(
-            f"{module.__name__} PACKET_SHA256 must be a SHA-256 hex digest"
+            f"{sites.module.__name__} PACKET_SHA256 must be a SHA-256 hex digest"
         )
     return packet_spec, packet_sha256
 
 
-def _cast_dependencies(
-    module: ModuleType, parser: Callable[..., Any], slots: dict[str, Any]
-) -> tuple[CastDependency, ...]:
+def _cast_dependencies(sites: DeclarationSites) -> tuple[CastDependency, ...]:
     """The module's declared ordering prerequisites, validated at import.
 
     Both validators run against this module's own slot surface, never a
@@ -281,27 +291,25 @@ def _cast_dependencies(
     something, so a champion that declares no dependency reaches no new
     failure mode.
     """
-    dependencies = _declared_cast_dependencies(module, parser, slots)
+    dependencies = _declared_cast_dependencies(sites)
     if not dependencies:
         return ()
-    slot_surface = set(slots)
+    slot_surface = set(sites.slots)
     validate_cast_dependencies(
-        dependencies, slot_surface=slot_surface, module=module.__name__
+        dependencies, slot_surface=slot_surface, module=sites.module.__name__
     )
-    cast_order = getattr(module, "CAST_ORDER", None)
+    cast_order = getattr(sites.module, "CAST_ORDER", None)
     if cast_order:
         validate_cast_order_declaration(
             cast_order,
             dependencies,
             slot_surface=slot_surface,
-            module=module.__name__,
+            module=sites.module.__name__,
         )
     return dependencies
 
 
-def _module_cc(
-    module: ModuleType, parser: Callable[..., Any], slots: dict[str, Any]
-) -> dict[str, str]:
+def _module_cc(sites: DeclarationSites) -> dict[str, str]:
     """The module's reviewed crowd control, one entry per slot it emits.
 
     ``MODULE_CC`` is the single declaration site for a kit's crowd-control
@@ -339,25 +347,25 @@ def _module_cc(
     """
     wiring = (
         "build_packet_module"
-        if getattr(parser, "packet_sha256", None)
+        if getattr(sites.parser, "packet_sha256", None)
         else "build_parser"
     )
-    declared = getattr(module, "MODULE_CC", None)
+    declared = getattr(sites.module, "MODULE_CC", None)
     if declared is None:
         raise ChampionModuleContractError(
-            f"{module.__name__} declares no MODULE_CC — every module states "
+            f"{sites.module.__name__} declares no MODULE_CC — every module states "
             "its reviewed crowd control at that one name, one entry for "
             "every champion slot it emits"
         )
     if not isinstance(declared, dict):
         raise ChampionModuleContractError(
-            f"{module.__name__} MODULE_CC must be a dict of slot -> cc kind"
+            f"{sites.module.__name__} MODULE_CC must be a dict of slot -> cc kind"
         )
-    unknown_slots = sorted(set(declared) - set(slots))
+    unknown_slots = sorted(set(declared) - set(sites.slots))
     if unknown_slots:
         raise ChampionModuleContractError(
-            f"{module.__name__} MODULE_CC declares slot(s) {unknown_slots} "
-            f"the module does not emit (its slots are {sorted(slots)})"
+            f"{sites.module.__name__} MODULE_CC declares slot(s) {unknown_slots} "
+            f"the module does not emit (its slots are {sorted(sites.slots)})"
         )
     allowed = CC_KIND_VOCABULARY | {CC_PER_PART}
     invalid = sorted(
@@ -367,30 +375,30 @@ def _module_cc(
     )
     if invalid:
         raise ChampionModuleContractError(
-            f"{module.__name__} MODULE_CC has invalid cc kind(s) {invalid} "
+            f"{sites.module.__name__} MODULE_CC has invalid cc kind(s) {invalid} "
             "(known kinds are defined by ability_spec.CC_KIND_VOCABULARY, "
             "plus engine.CC_PER_PART for a slot whose kind varies)"
         )
-    wired = getattr(parser, "cc_kinds", None)
+    wired = getattr(sites.parser, "cc_kinds", None)
     if declared and wired is None:
         raise ChampionModuleContractError(
-            f"{module.__name__} declares MODULE_CC but never wired it into "
+            f"{sites.module.__name__} declares MODULE_CC but never wired it into "
             f"{wiring}(..., cc_kinds=MODULE_CC) — an unwired declaration "
             "reviews nothing"
         )
     if wired is not None and dict(wired) != dict(declared):
         raise ChampionModuleContractError(
-            f"{module.__name__} declares MODULE_CC {dict(declared)} but wired "
+            f"{sites.module.__name__} declares MODULE_CC {dict(declared)} but wired "
             f"{dict(wired)} into {wiring} — one declaration, one wiring"
         )
     unnamed = [
         slot
         for slot in REQUIRED_CHAMPION_SLOTS
-        if slot in slots and slot not in declared
+        if slot in sites.slots and slot not in declared
     ]
     if unnamed:
         raise ChampionModuleContractError(
-            f"{module.__name__} MODULE_CC names no kind for slot(s) {unnamed} "
+            f"{sites.module.__name__} MODULE_CC names no kind for slot(s) {unnamed} "
             "— the map is total over the slots the module emits, because an "
             "absent slot and a reviewed 'none' read the same downstream; "
             f"state the cached kit's kind, {CC_PER_PART!r}, or 'none'"
@@ -568,9 +576,10 @@ def contract_from_module(
         )
 
     coverage_channels = _coverage_channels(module, coverage, slots)
-    packet_spec, packet_sha256 = _packet_declaration(module, parser, slots)
-    cast_dependencies = _cast_dependencies(module, parser, slots)
-    cc_kinds = _module_cc(module, parser, slots)
+    sites = DeclarationSites(module, parser, slots)
+    packet_spec, packet_sha256 = _packet_declaration(sites)
+    cast_dependencies = _cast_dependencies(sites)
+    cc_kinds = _module_cc(sites)
     stat_conversion = _stat_conversion(module)
 
     return ChampionModuleContract(

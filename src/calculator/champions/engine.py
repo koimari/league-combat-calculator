@@ -22,7 +22,7 @@ vanish). Dropping a non-damaging slot is the parser's decision.
 
 from collections.abc import Callable, Mapping
 from dataclasses import replace
-from typing import Any
+from typing import Any, NamedTuple
 
 from ..ability_spec import (
     CC_KIND_VOCABULARY,
@@ -358,9 +358,23 @@ def _stamp_slot_facts(
 _VALIDATED_ENTRY_SHAPES: set[tuple[Any, ...]] = set()
 
 
+class EmittedSlot(NamedTuple):
+    """Which champion's entry a parse-time refusal is about.
+
+    Every validator below names the same two facts, so the prefix they
+    share is built here once.
+    """
+
+    champion_name: str
+    result_key: str
+
+    def refuse(self, message: str) -> ValueError:
+        """The refusal for this entry, for the caller to raise."""
+        return ValueError(f"{self.champion_name} entry {self.result_key!r}: {message}")
+
+
 def _validate_entry_keys(
-    champion_name: str,
-    result_key: str,
+    emitted: EmittedSlot,
     entry: dict[str, Any],
 ) -> None:
     """Reject unknown keys on an emitted entry and its target_debuff.
@@ -370,8 +384,7 @@ def _validate_entry_keys(
     """
     post_hit_proc = entry.get("post_hit_proc") or {}
     shape = (
-        champion_name,
-        result_key,
+        emitted,
         tuple(entry),
         tuple(entry.get("target_debuff", ())),
         tuple(post_hit_proc),
@@ -402,10 +415,9 @@ def _validate_entry_keys(
     ):
         unknown = keys - allowed
         if unknown:
-            raise ValueError(
-                f"{champion_name} entry {result_key!r}: unknown {label} "
-                f"key(s) {sorted(unknown)} (allowed keys are defined by "
-                f"engine.{constant})"
+            raise emitted.refuse(
+                f"unknown {label} key(s) {sorted(unknown)} (allowed keys "
+                f"are defined by engine.{constant})"
             )
     _VALIDATED_ENTRY_SHAPES.add(shape)
 
@@ -448,8 +460,7 @@ def part_reaches_event_ledger(entry: Mapping[str, Any], part: DamagePart) -> boo
 
 
 def _validate_cc_event_contract(
-    champion_name: str,
-    result_key: str,
+    emitted: EmittedSlot,
     entry: Mapping[str, Any],
     declared: str | None = None,
 ) -> None:
@@ -482,19 +493,17 @@ def _validate_cc_event_contract(
             getattr(part, "cc_duration", 0.0) > 0
             and getattr(part, "cc_kind", None) is None
         ):
-            raise ValueError(
-                f"{champion_name} entry {result_key!r}: a part authors "
-                f"cc_duration={part.cc_duration} without a cc_kind"
+            raise emitted.refuse(
+                f"a part authors cc_duration={part.cc_duration} " "without a cc_kind"
             )
     cc_parts = [part for part in parts if getattr(part, "cc_kind", None) is not None]
     if not cc_parts:
         return
     for part in cc_parts:
         if part.cc_kind.lower().strip() not in CC_KIND_VOCABULARY:
-            raise ValueError(
-                f"{champion_name} entry {result_key!r}: unknown cc_kind "
-                f"{part.cc_kind!r} (known kinds are defined by "
-                "ability_spec.CC_KIND_VOCABULARY)"
+            raise emitted.refuse(
+                f"unknown cc_kind {part.cc_kind!r} (known kinds are "
+                "defined by ability_spec.CC_KIND_VOCABULARY)"
             )
     if declared and declared != CC_PER_PART:
         # A constant declaration is stamped on every part of the slot,
@@ -502,9 +511,8 @@ def _validate_cc_event_contract(
         return
     for part in cc_parts:
         if not part_reaches_event_ledger(entry, part):
-            raise ValueError(
-                f"{champion_name} entry {result_key!r}: cc_kind "
-                f"{part.cc_kind!r} would never reach the event ledger — "
+            raise emitted.refuse(
+                f"cc_kind {part.cc_kind!r} would never reach the event ledger — "
                 "certify event_order_certified='single_hit' (one landing), "
                 "author the part's time_offset, author damage_events, or "
                 "empower a basic attack; without one of these the CC "
@@ -672,8 +680,7 @@ def _apply_module_cc(
 
 
 def _refuse_undeclared_part_cc(
-    champion_name: str,
-    result_key: str,
+    emitted: EmittedSlot,
     entry: Mapping[str, Any],
     declared_keys: frozenset[str],
 ) -> None:
@@ -684,7 +691,7 @@ def _refuse_undeclared_part_cc(
             module's ``MODULE_CC`` does not declare, so the kit's control
             has a second, unlisted home.
     """
-    if result_key in declared_keys:
+    if emitted.result_key in declared_keys:
         return
     authored = sorted(
         {
@@ -694,16 +701,16 @@ def _refuse_undeclared_part_cc(
         }
     )
     if authored:
-        raise ValueError(
-            f"{champion_name} entry {result_key!r}: parts author cc_kind(s) "
-            f"{authored} for a slot MODULE_CC does not declare — declare the "
-            f"slot (the constant kind, or {CC_PER_PART!r} when the kind "
+        raise emitted.refuse(
+            f"parts author cc_kind(s) {authored} for a slot MODULE_CC does "
+            f"not declare — declare the slot (the constant kind, or "
+            f"{CC_PER_PART!r} when the kind "
             "varies within the cast)"
         )
 
 
 def _resolve_pending_control_events(
-    champion_name: str, result_key: str, entry: dict[str, Any]
+    emitted: EmittedSlot, entry: dict[str, Any]
 ) -> None:
     """Refuse a sourced control interval no ``MODULE_CC`` entry gave a kind.
 
@@ -712,11 +719,10 @@ def _resolve_pending_control_events(
             so its slot is one the module never declared.
     """
     if entry.pop(PENDING_CONTROL_EVENTS, ()):
-        raise ValueError(
-            f"{champion_name} entry {result_key!r}: a control event carries a "
-            "sourced duration but no kind, because MODULE_CC does not declare "
-            "the slot — declare it there, which is where a kit's crowd control "
-            "is stated once"
+        raise emitted.refuse(
+            "a control event carries a sourced duration but no kind, because "
+            "MODULE_CC does not declare the slot — declare it there, which is "
+            "where a kit's crowd control is stated once"
         )
 
 
@@ -726,17 +732,14 @@ _SHARED_INSTANT = 0.0
 
 
 def _certify_shared_instant(
-    champion_name: str,
-    result_key: str,
+    emitted: EmittedSlot,
     entry: dict[str, Any],
 ) -> None:
     """Give a multi-part ``single_hit`` row the instant it certifies.
 
     ``single_hit`` says the row is ONE landing.  A landing is regularly
     computed in more than one part: Syndra's W lands magic plus
-    Transcendent's true bonus, Ahri's Q is one pass out and one back,
-    Amumu's Cursed Touch appends a true part to every entry in the kit,
-    Seraphine's Q is a flat term plus a missing-health term, and
+    Transcendent's true bonus, Ahri's Q is one pass out and one back, and
     Malphite's W is the empowered attack's bonus plus its cone.  The fight
     engine's certified export carries only a one-part cast
     (``damage._evaluate_cast_parts``), so the split parts say what they
@@ -765,8 +768,7 @@ def _certify_shared_instant(
         return
     for part in parts:
         if part.count > 1:
-            raise ValueError(
-                f"{champion_name} entry {result_key!r}: "
+            raise emitted.refuse(
                 "event_order_certified='single_hit' but a part hits "
                 f"{part.count} times — a repeated part is a schedule, not "
                 "one landing; author its time_offset and hit_interval "
@@ -774,8 +776,7 @@ def _certify_shared_instant(
             )
     offsets = {part.time_offset for part in parts if part.time_offset is not None}
     if len(offsets) > 1:
-        raise ValueError(
-            f"{champion_name} entry {result_key!r}: "
+        raise emitted.refuse(
             "event_order_certified='single_hit' but its parts author "
             f"{sorted(offsets)} — a row whose parts sit at different "
             "instants is not one landing"
@@ -884,15 +885,12 @@ def build_parser(
                 _apply_module_cc(entry, declared_cc, champion_name, slot)
         declared_by_key = {_result_key(s): k for s, k in declared_cc_kinds.items()}
         for result_key, entry in results.items():
-            _resolve_pending_control_events(champion_name, result_key, entry)
-            _certify_shared_instant(champion_name, result_key, entry)
-            _validate_entry_keys(champion_name, result_key, entry)
-            _refuse_undeclared_part_cc(
-                champion_name, result_key, entry, declared_result_keys
-            )
-            _validate_cc_event_contract(
-                champion_name, result_key, entry, declared_by_key.get(result_key)
-            )
+            emitted = EmittedSlot(champion_name, result_key)
+            _resolve_pending_control_events(emitted, entry)
+            _certify_shared_instant(emitted, entry)
+            _validate_entry_keys(emitted, entry)
+            _refuse_undeclared_part_cc(emitted, entry, declared_result_keys)
+            _validate_cc_event_contract(emitted, entry, declared_by_key.get(result_key))
 
         return results
 

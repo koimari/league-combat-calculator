@@ -96,7 +96,7 @@ from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from src.calculator.champions.engine import _validate_cc_event_contract
+from src.calculator.champions.engine import EmittedSlot, _validate_cc_event_contract
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.pipeline import cast_slot_surface
 from src.calculator.rotation_resolver import (
@@ -573,7 +573,7 @@ def _record_markers(
             continue
         cc_markers.setdefault((name, slot), set()).update(kinds)
         try:
-            _validate_cc_event_contract(name, slot, dict(entry))
+            _validate_cc_event_contract(EmittedSlot(name, slot), dict(entry))
         except ValueError as error:  # pragma: no cover - a red gate
             cc_contract[(name, slot)] = str(error)
 

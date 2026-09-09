@@ -32,7 +32,7 @@ from __future__ import annotations
 import math
 from collections.abc import Hashable, Mapping
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Literal, NamedTuple
 
 from .ability_spec import IMMOBILIZING_CC_KINDS
 
@@ -132,6 +132,19 @@ TransitionKind = Literal[
 ]
 
 
+class EventStamp(NamedTuple):
+    """When a kernel event happens, in the walk's deterministic total order.
+
+    ``sequence`` breaks ties between events sharing one ``time``: every
+    ledger here sorts on ``(time, tier, sequence, insertion_order)``, and
+    the caller feeds stamps in the same order the survival/damage walks
+    author their packets.
+    """
+
+    time: float
+    sequence: int = 0
+
+
 @dataclass(frozen=True, slots=True)
 class Transition:
     """One timestamped state transition in the kernel's total order."""
@@ -170,18 +183,17 @@ class StateTimeline:
 
     def record(
         self,
-        time: float,
+        stamp: EventStamp,
         kind: TransitionKind,
         *,
-        sequence: int = 0,
         tier: float = TIER_GAIN,
         detail: Mapping[str, Any] | None = None,
     ) -> Transition:
         """Record one transition and return it."""
         transition = Transition(
-            time=time,
+            time=stamp.time,
             kind=kind,
-            sequence=sequence,
+            sequence=stamp.sequence,
             tier=tier,
             detail=dict(detail or {}),
         )
@@ -488,9 +500,8 @@ class TimedStackState:
         self._freeze_until: float | None = None
         if seed:
             self._timeline.record(
-                starting_time,
+                EventStamp(starting_time),
                 "gain",
-                sequence=0,
                 tier=TIER_GAIN,
                 detail={
                     "state": rule.name,
@@ -528,24 +539,23 @@ class TimedStackState:
 
     # -- expiry materialization --------------------------------------------
 
-    def _materialize_expiries(self, time: float, sequence: int) -> list[Transition]:
-        """Apply expiry at *time* and record every transition."""
+    def _materialize_expiries(self, stamp: EventStamp) -> list[Transition]:
+        """Apply expiry at the stamp's time and record every transition."""
         out: list[Transition] = []
-        if self._is_frozen(time) or not self._entries:
+        if self._is_frozen(stamp.time) or not self._entries:
             return out
         if self.rule.per_stack_timers:
             # Per-stack timers: each stack dies 1 duration after its own
             # gain, oldest first.
             while self._entries:
                 entry = self._entries[0]
-                if time + _EPS < entry.gained_at + self.rule.duration_seconds:
+                if stamp.time + _EPS < entry.gained_at + self.rule.duration_seconds:
                     break
                 self._entries.pop(0)
                 out.append(
                     self._timeline.record(
-                        time,
+                        stamp,
                         "expire",
-                        sequence=sequence,
                         tier=TIER_EXPIRE,
                         detail={
                             "state": self.rule.name,
@@ -561,7 +571,7 @@ class TimedStackState:
         deadline = self._shared_deadline
         if deadline is None:
             return out
-        if time + _EPS < deadline:
+        if stamp.time + _EPS < deadline:
             return out
         if self.rule.expiry == "all_at_once":
             if not self._entries:
@@ -572,9 +582,8 @@ class TimedStackState:
             self._shared_deadline = None
             out.append(
                 self._timeline.record(
-                    time,
+                    stamp,
                     "expire",
-                    sequence=sequence,
                     tier=TIER_EXPIRE,
                     detail={
                         "state": self.rule.name,
@@ -592,7 +601,7 @@ class TimedStackState:
         while self._entries:
             step_index = self._decay_steps_applied + 1
             step_time = deadline + (step_index - 1) * step
-            if time + _EPS < step_time:
+            if stamp.time + _EPS < step_time:
                 break
             before = len(self._entries)
             remove = min(self.rule.decay_stacks_per_step, before)
@@ -601,9 +610,8 @@ class TimedStackState:
             self._decay_steps_applied += 1
             out.append(
                 self._timeline.record(
-                    time,
+                    stamp,
                     "expire",
-                    sequence=sequence,
                     tier=TIER_EXPIRE,
                     detail={
                         "state": self.rule.name,
@@ -623,27 +631,27 @@ class TimedStackState:
 
     def apply_gain(
         self,
-        time: float,
+        stamp: EventStamp,
         *,
         kind: str = "",
         packet: str = "",
         instance: str | None = None,
         meta: Mapping[str, Any] | None = None,
-        sequence: int = 0,
     ) -> list[Transition]:
-        """Process one trigger at *time*; return its transitions.
+        """Process one trigger at the stamp's time; return its transitions.
 
         Expiry at the trigger timestamp materializes first (recorded),
         then the interval gate, then the gain/refresh per the rule.
         ``meta`` may carry the rule's ``interval_key`` field when
         ``instance`` is not given.
         """
+        time = stamp.time
         if not math.isfinite(time) or time < 0.0:
             raise ValueError(
                 f"{self.rule.name}: trigger time must be finite and >= 0, "
                 f"got {time!r}"
             )
-        out = self._materialize_expiries(time, sequence)
+        out = self._materialize_expiries(stamp)
 
         # Combat freeze: dealing damage (a gain trigger) re-arms the
         # expiry freeze when the rule declares one.
@@ -654,9 +662,8 @@ class TimedStackState:
             )
             out.append(
                 self._timeline.record(
-                    time,
+                    stamp,
                     "combat_freeze",
-                    sequence=sequence,
                     tier=TIER_GAIN,
                     detail={
                         "state": self.rule.name,
@@ -687,9 +694,8 @@ class TimedStackState:
                 if last is not None and time - last < interval - _EPS:
                     out.append(
                         self._timeline.record(
-                            time,
+                            stamp,
                             "gain_denied",
-                            sequence=sequence,
                             tier=TIER_GAIN,
                             detail={
                                 "state": self.rule.name,
@@ -717,9 +723,8 @@ class TimedStackState:
             if self.rule.cap_behavior == "noop":
                 out.append(
                     self._timeline.record(
-                        time,
+                        stamp,
                         "gain_denied",
-                        sequence=sequence,
                         tier=TIER_GAIN,
                         detail={
                             "state": self.rule.name,
@@ -737,9 +742,8 @@ class TimedStackState:
             self._decay_steps_applied = 0
             out.append(
                 self._timeline.record(
-                    time,
+                    stamp,
                     "refresh",
-                    sequence=sequence,
                     tier=TIER_GAIN,
                     detail={
                         "state": self.rule.name,
@@ -788,9 +792,8 @@ class TimedStackState:
 
         out.append(
             self._timeline.record(
-                time,
+                stamp,
                 transition_kind,
-                sequence=sequence,
                 tier=TIER_GAIN,
                 detail={
                     "state": self.rule.name,
@@ -811,26 +814,24 @@ class TimedStackState:
 
     def materialize_expiries(self, time: float, sequence: int = 0) -> list[Transition]:
         """Close a stack state at the fight end, for the walk consumers."""
-        return self._materialize_expiries(time, sequence)
+        return self._materialize_expiries(EventStamp(time, sequence))
 
     def note_activity(
         self,
-        time: float,
+        stamp: EventStamp,
         *,
         kind: str = "",
-        sequence: int = 0,
     ) -> Transition | None:
         """Re-arm the combat-expiry freeze from a damage event."""
         if self.rule.combat_extension_seconds <= 0.0:
             return None
         self._freeze_until = max(
             self._freeze_until if self._freeze_until is not None else float("-inf"),
-            time + self.rule.combat_extension_seconds,
+            stamp.time + self.rule.combat_extension_seconds,
         )
         return self._timeline.record(
-            time,
+            stamp,
             "combat_freeze",
-            sequence=sequence,
             tier=TIER_GAIN,
             detail={
                 "state": self.rule.name,
@@ -845,9 +846,8 @@ class TimedStackState:
 
     def consume(
         self,
-        time: float,
+        stamp: EventStamp,
         *,
-        sequence: int = 0,
         meta: Mapping[str, Any] | None = None,
     ) -> Transition | None:
         """Consume all stacks when at cap; return the transition or None.
@@ -857,12 +857,11 @@ class TimedStackState:
         prices the base ability).  Expiries at the consume timestamp are
         materialized and recorded first.
         """
-        self._materialize_expiries(time, sequence)
+        self._materialize_expiries(stamp)
         if self.stacks < self.rule.max_stacks:
             self._timeline.record(
-                time,
+                stamp,
                 "consume_denied",
-                sequence=sequence,
                 tier=TIER_CONSUME,
                 detail={
                     "state": self.rule.name,
@@ -874,9 +873,8 @@ class TimedStackState:
             return None
         before = self._wipe()
         return self._timeline.record(
-            time,
+            stamp,
             "consume",
-            sequence=sequence,
             tier=TIER_CONSUME,
             detail={
                 "state": self.rule.name,
@@ -914,9 +912,8 @@ class TimedStackState:
         if before == to:
             return None
         return self._timeline.record(
-            time,
+            EventStamp(time, sequence),
             "reset",
-            sequence=sequence,
             tier=TIER_CONSUME,
             detail={
                 "state": self.rule.name,
@@ -1031,13 +1028,13 @@ class WindowStackGate:
         target: str | None = None,
     ) -> list[WindowProc]:
         """Process one trigger; return procs completed at this timestamp."""
+        stamp = EventStamp(time, sequence)
         target = target or "default"
         ready_at = self._ready_at.get(target, float("-inf"))
         if time + _EPS < ready_at:
             self._timeline.record(
-                time,
+                stamp,
                 "trigger_skipped",
-                sequence=sequence,
                 tier=TIER_GAIN,
                 detail={
                     "state": self.rule.name,
@@ -1053,9 +1050,8 @@ class WindowStackGate:
         if first is None or time - first > self.rule.window_seconds + _EPS:
             if first is not None:
                 self._timeline.record(
-                    time,
+                    stamp,
                     "expire",
-                    sequence=sequence,
                     tier=TIER_EXPIRE,
                     detail={
                         "state": self.rule.name,
@@ -1068,9 +1064,8 @@ class WindowStackGate:
                 )
             self._first_stack[target] = time
             self._timeline.record(
-                time,
+                stamp,
                 "gain",
-                sequence=sequence,
                 tier=TIER_GAIN,
                 detail={
                     "state": self.rule.name,
@@ -1086,9 +1081,8 @@ class WindowStackGate:
         )
         self._procs.append(proc)
         self._timeline.record(
-            time,
+            stamp,
             "proc",
-            sequence=sequence,
             tier=TIER_GAIN,
             detail={
                 "state": self.rule.name,
@@ -1102,9 +1096,8 @@ class WindowStackGate:
         cooldown_until = time + self.rule.cooldown_seconds
         self._ready_at[target] = cooldown_until
         self._timeline.record(
-            time,
+            stamp,
             "cooldown_start",
-            sequence=sequence,
             tier=TIER_COOLDOWN_START,
             detail={
                 "state": self.rule.name,
@@ -1204,20 +1197,18 @@ class CooldownState:
 
     def start(
         self,
-        time: float,
+        stamp: EventStamp,
         *,
         target: str = "default",
-        sequence: int = 0,
         meta: Mapping[str, Any] | None = None,
     ) -> Transition:
         """Start the cooldown now; returns the start transition."""
         key = target if self.rule.per_target else "default"
-        cooldown_until = time + self.rule.cooldown_seconds
+        cooldown_until = stamp.time + self.rule.cooldown_seconds
         self._ready_at[key] = cooldown_until
         return self._timeline.record(
-            time,
+            stamp,
             "cooldown_start",
-            sequence=sequence,
             tier=TIER_COOLDOWN_START,
             detail={
                 "state": self.rule.name,

@@ -17,6 +17,7 @@ from src.calculator.champions import (
     parse_champion_abilities as parse_ahri_abilities,
 )
 from src.calculator.damage import (
+    AutoSwings,
     DecayingTarget,
     FightConfig,
     _event_timeline_coverage,
@@ -63,17 +64,19 @@ def _simulate_bork_damage(
     total, hits, _per_hit_damages = _simulate_current_health_on_hit(
         strikes[0],
         DamageInputs({}, 1, is_melee, target_health, target_health),
-        target_health,
-        num_auto_attacks,
-        auto_damage_per_hit=auto_damage_per_hit,
-        other_on_hit_per_hit=other_on_hit_per_hit,
-        resists=SimpleNamespace(
-            effective_armor=effective_armor,
-            effective_mr=0.0,
-            physical_damage_flat_reduction=0.0,
-            physical_damage_flat_reduction_cap=0.0,
+        AutoSwings(
+            target_health=target_health,
+            num_auto_attacks=num_auto_attacks,
+            auto_damage_per_hit=auto_damage_per_hit,
+            other_on_hit_per_hit=other_on_hit_per_hit,
+            resists=SimpleNamespace(
+                effective_armor=effective_armor,
+                effective_mr=0.0,
+                physical_damage_flat_reduction=0.0,
+                physical_damage_flat_reduction_cap=0.0,
+            ),
+            magic_amp=1.0,
         ),
-        magic_amp=1.0,
         phantom_hit_autos=phantom_hit_autos,
         double_hit_all=double_hit_all,
     )

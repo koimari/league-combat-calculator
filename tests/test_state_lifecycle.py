@@ -20,11 +20,11 @@ from src.calculator import state_lifecycle as sl
 class TestDeterministicOrdering:
     def test_expiry_precedes_gain_precedes_cooldown_start_at_one_timestamp(self):
         timeline = sl.StateTimeline()
-        gain = timeline.record(1.0, "gain", sequence=7, tier=sl.TIER_GAIN)
+        gain = timeline.record(sl.EventStamp(1.0, 7), "gain", tier=sl.TIER_GAIN)
         cooldown = timeline.record(
-            1.0, "cooldown_start", sequence=7, tier=sl.TIER_COOLDOWN_START
+            sl.EventStamp(1.0, 7), "cooldown_start", tier=sl.TIER_COOLDOWN_START
         )
-        expiry = timeline.record(1.0, "expire", sequence=7, tier=sl.TIER_EXPIRE)
+        expiry = timeline.record(sl.EventStamp(1.0, 7), "expire", tier=sl.TIER_EXPIRE)
         ordered = timeline.transitions()
         assert [t.kind for t in ordered] == ["expire", "gain", "cooldown_start"]
         assert ordered[0] is expiry
@@ -33,9 +33,9 @@ class TestDeterministicOrdering:
 
     def test_same_tier_ties_break_by_sequence_then_insertion(self):
         timeline = sl.StateTimeline()
-        first = timeline.record(0.0, "gain", sequence=2)
-        second = timeline.record(0.0, "gain", sequence=1)
-        third = timeline.record(0.0, "gain", sequence=1)
+        first = timeline.record(sl.EventStamp(0.0, 2), "gain")
+        second = timeline.record(sl.EventStamp(0.0, 1), "gain")
+        third = timeline.record(sl.EventStamp(0.0, 1), "gain")
         ordered = timeline.transitions()
         assert ordered[0] is second
         assert ordered[1] is third
@@ -43,8 +43,8 @@ class TestDeterministicOrdering:
 
     def test_public_receipt_is_json_safe_and_ordered(self):
         timeline = sl.StateTimeline()
-        timeline.record(2.0, "gain", sequence=0, detail={"stacks_after": 1})
-        timeline.record(1.0, "expire", sequence=0, tier=sl.TIER_EXPIRE)
+        timeline.record(sl.EventStamp(2.0, 0), "gain", detail={"stacks_after": 1})
+        timeline.record(sl.EventStamp(1.0, 0), "expire", tier=sl.TIER_EXPIRE)
         receipt = timeline.public_receipt()
         assert [row["time"] for row in receipt] == [1.0, 2.0]
         assert receipt[0]["kind"] == "expire"
@@ -114,7 +114,7 @@ class TestStackRuleFailClosed:
             )
         )
         with pytest.raises(ValueError, match="trigger time"):
-            state.apply_gain(-1.0, kind="hit")
+            state.apply_gain(sl.EventStamp(-1.0), kind="hit")
 
     def test_missing_source_is_optional_but_never_a_number(self):
         # A rule without a source is allowed only when every value came
@@ -146,14 +146,14 @@ class TestTimedStackRefreshAndDrain:
     def test_gain_refresh_and_drain_sequence(self):
         state = sl.TimedStackState(self._ashe_rule())
         for time, seq in ((0.0, 0), (1.0, 1), (2.0, 2), (3.0, 3)):
-            state.apply_gain(time, kind="on_attack", sequence=seq)
+            state.apply_gain(sl.EventStamp(time, seq), kind="on_attack")
         assert state.stacks == 4
         # The window lasts 4s after the last gain (t=3 -> deadline 7).
         assert state.public_receipt()["expires_at"] == pytest.approx(7.0)
         # First drain step lands AT the deadline, then one per second.
         expected = [(7.0, 4, 3), (8.0, 3, 2), (9.0, 2, 1), (10.0, 1, 0)]
         for time, before, after in expected:
-            transitions = state._materialize_expiries(time, sequence=99)
+            transitions = state._materialize_expiries(sl.EventStamp(time, 99))
             assert transitions, f"expected an expiry at t={time}"
             assert transitions[-1].detail["stacks_before"] == before
             assert transitions[-1].detail["stacks_after"] == after
@@ -161,8 +161,8 @@ class TestTimedStackRefreshAndDrain:
 
     def test_refresh_moves_the_deadline(self):
         state = sl.TimedStackState(self._ashe_rule())
-        state.apply_gain(0.0, kind="on_attack", sequence=0)
-        state.apply_gain(3.0, kind="on_attack", sequence=1)
+        state.apply_gain(sl.EventStamp(0.0, 0), kind="on_attack")
+        state.apply_gain(sl.EventStamp(3.0, 1), kind="on_attack")
         assert state.public_receipt()["expires_at"] == pytest.approx(7.0)
         kinds = [t.kind for t in state.timeline.transitions()]
         assert kinds == ["gain", "refresh"]
@@ -170,9 +170,9 @@ class TestTimedStackRefreshAndDrain:
     def test_capped_gain_does_not_refresh_with_noop_cap_behavior(self):
         state = sl.TimedStackState(self._ashe_rule())
         for time in (0.0, 1.0, 2.0, 3.0):
-            state.apply_gain(time, kind="on_attack", sequence=int(time))
+            state.apply_gain(sl.EventStamp(time, int(time)), kind="on_attack")
         deadline_before = state.public_receipt()["expires_at"]
-        denied = state.apply_gain(4.0, kind="on_attack", sequence=4)
+        denied = state.apply_gain(sl.EventStamp(4.0, 4), kind="on_attack")
         assert state.stacks == 4
         assert state.public_receipt()["expires_at"] == deadline_before
         assert denied[-1].kind == "gain_denied"
@@ -181,15 +181,15 @@ class TestTimedStackRefreshAndDrain:
     def test_capped_gain_refreshes_with_refresh_cap_behavior(self):
         state = sl.TimedStackState(self._ashe_rule(cap_behavior="refresh"))
         for time in (0.0, 1.0, 2.0, 3.0):
-            state.apply_gain(time, kind="on_attack", sequence=int(time))
-        state.apply_gain(4.0, kind="on_attack", sequence=4)
+            state.apply_gain(sl.EventStamp(time, int(time)), kind="on_attack")
+        state.apply_gain(sl.EventStamp(4.0, 4), kind="on_attack")
         assert state.stacks == 4
         assert state.public_receipt()["expires_at"] == pytest.approx(8.0)
 
     def test_expiry_at_the_exact_boundary_precedes_a_same_time_gain(self):
         state = sl.TimedStackState(self._ashe_rule())
-        state.apply_gain(0.0, kind="on_attack", sequence=0)
-        transitions = state.apply_gain(4.0, kind="on_attack", sequence=7)
+        state.apply_gain(sl.EventStamp(0.0, 0), kind="on_attack")
+        transitions = state.apply_gain(sl.EventStamp(4.0, 7), kind="on_attack")
         kinds = [t.kind for t in transitions]
         assert kinds == ["expire", "gain"]
         assert transitions[0].detail["stacks_after"] == 0
@@ -214,8 +214,8 @@ class TestStackRefreshPolicies:
 
     def test_extend_keeps_the_later_deadline(self):
         state = sl.TimedStackState(self._rule("extend"))
-        state.apply_gain(0.0, kind="hit", sequence=0)
-        state.apply_gain(2.0, kind="hit", sequence=1)
+        state.apply_gain(sl.EventStamp(0.0, 0), kind="hit")
+        state.apply_gain(sl.EventStamp(2.0, 1), kind="hit")
         # extend moves the deadline to at least gain + duration
         # (max(4.0, 2.0 + 4.0) = 6.0); refresh would have reset it to 6.0
         # too, but extend never shortens a later deadline.
@@ -232,9 +232,9 @@ class TestStackRefreshPolicies:
             gain_by_kind={"big": 2},
         )
         state = sl.TimedStackState(rule)
-        state.apply_gain(0.0, kind="big", sequence=0)
+        state.apply_gain(sl.EventStamp(0.0, 0), kind="big")
         assert state.stacks == 2
-        state.apply_gain(2.0, kind="hit", sequence=1)
+        state.apply_gain(sl.EventStamp(2.0, 1), kind="hit")
         assert state.stacks == 1
         assert state.timeline.transitions()[-1].kind == "replace"
 
@@ -249,14 +249,14 @@ class TestStackRefreshPolicies:
             )
         )
         for time, seq in ((0.0, 0), (0.4, 1), (0.8, 2)):
-            state.apply_gain(time, kind="basic_ability_cast", sequence=seq)
+            state.apply_gain(sl.EventStamp(time, seq), kind="basic_ability_cast")
         assert state.stacks == 3
         # Each stack dies 1s after its own gain, oldest first.
-        state._materialize_expiries(1.0, sequence=99)
+        state._materialize_expiries(sl.EventStamp(1.0, 99))
         assert state.stacks == 2
-        state._materialize_expiries(1.4, sequence=99)
+        state._materialize_expiries(sl.EventStamp(1.4, 99))
         assert state.stacks == 1
-        state._materialize_expiries(1.8, sequence=99)
+        state._materialize_expiries(sl.EventStamp(1.8, 99))
         assert state.stacks == 0
 
     def test_combat_freeze_suppresses_expiry_and_rearms(self):
@@ -270,13 +270,13 @@ class TestStackRefreshPolicies:
                 combat_extension_seconds=10.0,
             )
         )
-        state.apply_gain(0.0, kind="basic_ability_cast", sequence=0)
-        state.note_activity(0.5, kind="damage_taken", sequence=5)
-        state._materialize_expiries(1.0, sequence=99)
+        state.apply_gain(sl.EventStamp(0.0, 0), kind="basic_ability_cast")
+        state.note_activity(sl.EventStamp(0.5, 5), kind="damage_taken")
+        state._materialize_expiries(sl.EventStamp(1.0, 99))
         assert state.stacks == 1  # frozen
-        state._materialize_expiries(10.4, sequence=99)
+        state._materialize_expiries(sl.EventStamp(10.4, 99))
         assert state.stacks == 1  # freeze re-armed to 10.5 at t=0.5
-        state._materialize_expiries(10.5, sequence=99)
+        state._materialize_expiries(sl.EventStamp(10.5, 99))
         assert state.stacks == 0  # expired at the freeze boundary
         freeze = [t for t in state.timeline.transitions() if t.kind == "combat_freeze"]
         assert len(freeze) == 2
@@ -294,8 +294,8 @@ class TestStackRefreshPolicies:
             )
         )
         for seq in range(4):
-            state.apply_gain(float(seq), kind="basic_ability_cast", sequence=seq)
-        consumed = state.consume(4.0, sequence=4)
+            state.apply_gain(sl.EventStamp(float(seq), seq), kind="basic_ability_cast")
+        consumed = state.consume(sl.EventStamp(4.0, 4))
         assert consumed is not None
         assert consumed.kind == "consume"
         assert consumed.detail["empowered"] is True
@@ -313,8 +313,8 @@ class TestStackRefreshPolicies:
                 combat_extension_seconds=10.0,
             )
         )
-        state.apply_gain(0.0, kind="basic_ability_cast", sequence=0)
-        assert state.consume(1.0, sequence=1) is None
+        state.apply_gain(sl.EventStamp(0.0, 0), kind="basic_ability_cast")
+        assert state.consume(sl.EventStamp(1.0, 1)) is None
         assert state.stacks == 1
         assert state.timeline.transitions()[-1].kind == "consume_denied"
 
@@ -324,7 +324,7 @@ class TestStackRefreshPolicies:
                 name="S", max_stacks=4, gain_per_application=1, duration_seconds=5.0
             )
         )
-        state.apply_gain(0.0, kind="hit", sequence=0)
+        state.apply_gain(sl.EventStamp(0.0, 0), kind="hit")
         first = state.reset(1.0, sequence=1, reason="cash_in")
         assert first is not None
         assert first.kind == "reset"
@@ -353,18 +353,16 @@ class TestIntervalGate:
     def test_repeat_cast_within_interval_is_denied(self):
         state = sl.TimedStackState(self._rule())
         state.apply_gain(
-            0.0,
+            sl.EventStamp(0.0, 0),
             kind="ability_cast",
             packet="ability_cast",
             meta={"source_key": "Q", "source": "Q"},
-            sequence=0,
         )
         denied = state.apply_gain(
-            2.0,
+            sl.EventStamp(2.0, 1),
             kind="ability_cast",
             packet="ability_cast",
             meta={"source_key": "Q", "source": "Q"},
-            sequence=1,
         )
         assert denied[-1].kind == "gain_denied"
         assert denied[-1].detail["reason"] == "interval_gate"
@@ -373,54 +371,48 @@ class TestIntervalGate:
     def test_gate_is_per_source_slot(self):
         state = sl.TimedStackState(self._rule())
         state.apply_gain(
-            0.0,
+            sl.EventStamp(0.0, 0),
             kind="ability_cast",
             packet="ability_cast",
             meta={"source_key": "Q", "source": "Q"},
-            sequence=0,
         )
         state.apply_gain(
-            1.0,
+            sl.EventStamp(1.0, 1),
             kind="ability_cast",
             packet="ability_cast",
             meta={"source_key": "W", "source": "W"},
-            sequence=1,
         )
         assert state.stacks == 4
 
     def test_gate_only_applies_to_declared_packets(self):
         state = sl.TimedStackState(self._rule())
         state.apply_gain(
-            0.0,
+            sl.EventStamp(0.0, 0),
             kind="ability_cast",
             packet="ability_cast",
             meta={"source_key": "Q", "source": "Q"},
-            sequence=0,
         )
         state.apply_gain(
-            1.0,
+            sl.EventStamp(1.0, 1),
             kind="basic_attack",
             packet="basic_attack",
             meta={"source_key": "auto_attacks", "source": "auto"},
-            sequence=1,
         )
         assert state.stacks == 4
 
     def test_interval_boundary_is_inclusive(self):
         state = sl.TimedStackState(self._rule())
         state.apply_gain(
-            0.0,
+            sl.EventStamp(0.0, 0),
             kind="ability_cast",
             packet="ability_cast",
             meta={"source_key": "Q", "source": "Q"},
-            sequence=0,
         )
         state.apply_gain(
-            4.0,
+            sl.EventStamp(4.0, 1),
             kind="ability_cast",
             packet="ability_cast",
             meta={"source_key": "Q", "source": "Q"},
-            sequence=1,
         )
         assert state.stacks == 4
 
@@ -527,7 +519,7 @@ class TestCooldownState:
             sl.CooldownRule(name="Everlasting", cooldown_seconds=8.0)
         )
         assert state.is_ready(0.0)
-        start = state.start(1.0, sequence=0)
+        start = state.start(sl.EventStamp(1.0, 0))
         assert start.kind == "cooldown_start"
         assert start.detail["cooldown_until"] == pytest.approx(9.0)
         assert not state.is_ready(5.0)
@@ -537,8 +529,8 @@ class TestCooldownState:
         state = sl.CooldownState(
             sl.CooldownRule(name="PerTarget", cooldown_seconds=4.0, per_target=True)
         )
-        state.start(0.0, target="A", sequence=0)
-        state.start(0.5, target="B", sequence=1)
+        state.start(sl.EventStamp(0.0, 0), target="A")
+        state.start(sl.EventStamp(0.5, 1), target="B")
         assert not state.is_ready(1.0, target="A")
         assert not state.is_ready(1.0, target="B")
         assert state.is_ready(4.0, target="A")
