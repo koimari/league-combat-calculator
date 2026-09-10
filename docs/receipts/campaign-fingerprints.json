@@ -41,7 +41,8 @@
     "Audit-fix re-capture (issues #209-#213 campaign), both jurisdictions, metadata only. The F-9 capture recorded src_tree_sha fea8a83f -- a worktree state never committed, so the receipt could not be re-verified against any checkout. Both baselines are re-captured at the audit-fix merge head fee0b716: the git diff of each file is exactly its two metadata lines (git_head, src_tree_sha) -- entries, leaves, numeric_leaves and every value leaf are byte-identical across the re-capture, so golden.src_tree_sha and coupled_golden.src_tree_sha move to HEAD:src 46520f9d, a committed tree, and NOTHING ELSE in this file moves. captured_at_src_tree is NOT moved: no counter, wall, alloc, pylint, corpus or tests value was re-measured against this tip.",
     "Merge of the #209-#213 campaign branch with main's #214 slots20 work, pair jurisdiction metadata only. 'compare' on the merged tree reported both baselines identical before any re-capture: the slots20 pair capture (entries 672, leaves 60001, numeric_leaves 46189, its 6 moved values attributed in golden-recapture-2026-08-21-slots20.md) and the campaign's coupled capture compose with zero numeric interaction. The pair baseline is re-captured at the merge tree only because slots20's capture again recorded an uncommitted src_tree_sha (fea8a83f): the file diff is exactly its two metadata lines, and golden.src_tree_sha moves to the merge commit's committed HEAD:src ee97c5f9. The coupled blocks do not move: that file is byte-identical across the merge, so it keeps the committed tree of its own capture (46520f9d). No other value in this file moves.",
     "Superseding correction to the previous note: its recorded golden.src_tree_sha ee97c5f9 was the PRE-merge HEAD:src, because 'capture' stamps 'git rev-parse HEAD:src' rather than the tree it actually read - a capture on a mid-merge or dirty tree records the wrong sha, which is the same instrument defect behind every uncommitted-sha entry above. Re-captured on the clean merge commit 13941323: the file diff is again exactly its two metadata lines, and golden.src_tree_sha now names the merge commit's committed HEAD:src f9e4a1b5. Counts unchanged (672 / 60001 / 46189). Nothing else moves.",
-    "PR 313 Condemn scope follow-up: the pair baseline adds /champion_baselines/Vayne/abilities_level_11/E/control_scope as ControlScope.ONE_TARGET. Its fingerprint leaf count changes from 60271 to 60272. Entries remain 672 and numeric_leaves remain 46189; all numeric damage values are unchanged. The pair capture follows the committed source fix. Coupled baselines and their fingerprint blocks are unchanged."
+    "PR 313 Condemn scope follow-up: the pair baseline adds /champion_baselines/Vayne/abilities_level_11/E/control_scope as ControlScope.ONE_TARGET. Its fingerprint leaf count changes from 60271 to 60272. Entries remain 672 and numeric_leaves remain 46189; all numeric damage values are unchanged. The pair capture follows the committed source fix. Coupled baselines and their fingerprint blocks are unchanged.",
+    "Issue 323 re-capture, all three jurisdictions, one line of cause per moved counter (R-34, R-32): a cast none of whose hits can land inside a timed fight is dropped from the cast plan, and any remaining single-instant hit timed past the fight's end is skipped by the cast pricing loop (fight/rotation/cast_plan.py, cast_parts.py), so Time Bomb, Requiem, Hemoplague and Bear Trap's pull stop pricing before they go off; a DoT's tick train keeps the tick ledger's committed-tail rule. Every diff is declared in docs/receipts/expected-golden-diff-323-fight-window-landing.json. golden.src_tree_sha, coupled_golden.src_tree_sha and coupled_golden_exact.src_tree_sha move to 62287f76, the HEAD:src tree all three captures read. golden.leaves 60272 -> 60270 and golden.numeric_leaves 46189 -> 46187: two proc rows whose only trigger was a late hit vanish; entries stay 672 and sections are unchanged, so the population did not move; 128 numeric leaves moved value on existing paths, every one downward, all in 'sustained' scenarios. coupled_golden.leaves 124224 -> 122433 and numeric_leaves 40444 -> 40005: the late events the walk used to refuse as outside_window, one cast that produced only such events, and the healing rows they carried vanish (32 events, 28 healing events, one cast_timeline entry, with their disposition and view_tag pairs); entries stay 26; the two upward leaves are that cast's unspent mana. coupled_golden_exact.entries stays 30, leaves 224 and numeric_leaves 0: the exact file holds repr-string totals, so only its src_tree_sha moves; the per-attacker totals behind those strings that moved are the same late hits and are covered by the same receipt. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured on this tip."
   ],
   "provenance": {
     "golden": "VERIFIED",
@@ -56,23 +57,23 @@
   "golden": {
     "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights",
     "entries": 672,
-    "leaves": 60272,
-    "numeric_leaves": 46189,
-    "src_tree_sha": "0790474065a9faf97897e05fbc2f4ae1b925e86b"
+    "leaves": 60270,
+    "numeric_leaves": 46187,
+    "src_tree_sha": "62287f7677c3e5840578f57a376b197028785dbd"
   },
   "coupled_golden": {
     "sections": "coupled_scenarios",
     "entries": 26,
-    "leaves": 124224,
-    "numeric_leaves": 40444,
-    "src_tree_sha": "509e6018c883679ae0957b6babd9b52296a0aaf0"
+    "leaves": 122433,
+    "numeric_leaves": 40005,
+    "src_tree_sha": "62287f7677c3e5840578f57a376b197028785dbd"
   },
   "coupled_golden_exact": {
     "sections": "coupled_scenarios",
     "entries": 30,
     "leaves": 224,
     "numeric_leaves": 0,
-    "src_tree_sha": "509e6018c883679ae0957b6babd9b52296a0aaf0"
+    "src_tree_sha": "62287f7677c3e5840578f57a376b197028785dbd"
   },
   "bench": {
     "cassiopeia_3champ": {
