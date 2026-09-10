@@ -41,7 +41,7 @@ from .healing_contract import self_healing_rule
 from .inputs import target_stat
 from .module_helpers import ranked_slot, with_detail
 from .packet_module import build_packet_module, repeat_damage_parser
-from .shared_mechanics import move_speed_grant, ranked_packet_slot
+from .shared_mechanics import ranked_packet_slot
 from .slot_control import with_control_event
 from .slot_entries import ability_on_hit_entry
 from .slot_extract import (
@@ -51,6 +51,7 @@ from .slot_extract import (
     find_named_leveling,
     sum_modifiers,
 )
+from .stat_grants import move_speed_grant
 
 # The Awaken lightning chain's strike COUNT is the binary UdyrQ.Bounces
 # DataValue; the strike INTERVAL (0.2s) has no binary home (script-side)

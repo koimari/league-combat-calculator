@@ -49,6 +49,7 @@ from typing import Any
 
 from ... import item_effects
 from ...ability_atoms import ability_field
+from ..cast_slots import slot_cast_start
 from ..items.energized_packets import _first_auto_damage_by_auto_for_health_walk
 from ..ledger.event_ledger import _ordered_damage_events
 from ..ledger.event_rows import _damage_type_fields
@@ -839,14 +840,21 @@ def _layer_on_hit_effects(
             elif "proc_window" in on_hit_data:
                 if breakdown.get(ability_key, {}).get("casts", 0) < 1:
                     continue  # rider exists only after the ability is cast
-                # The triggering auto at t=0 always fits a positive window.
-                autos_in_window = max(
-                    1,
-                    sum(
-                        1 for time in proc_schedule if time < on_hit_data["proc_window"]
-                    ),
-                )
-                proc_autos = list(range(min(num_auto_attacks, autos_in_window)))
+                # The window opens at the slot's first cast (Master Yi E
+                # after Q and W's cast times), and the triggering auto
+                # always fits a positive window: the first swing at or
+                # after the cast procs even when the window closes first.
+                start = slot_cast_start(state, ability_key)
+                end = start + on_hit_data["proc_window"]
+                proc_autos = [
+                    index
+                    for index, time in enumerate(proc_schedule)
+                    if start <= time < end
+                ] or [
+                    index for index, time in enumerate(proc_schedule) if time >= start
+                ][
+                    :1
+                ]
             else:
                 continue
             if not proc_autos:

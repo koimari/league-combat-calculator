@@ -19,6 +19,7 @@ from ..ability_prose import (
     extract_description_duration,
 )
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
@@ -33,6 +34,14 @@ from .slot_entries import ability_on_hit_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
+from .stat_grants import with_attack_speed_window
+
+# Lightning Rush's recast grants the E row's bonus attack speed for the
+# binary KennenLightningRush.DurationAfterBall; the cached E prose ("for
+# 4 seconds") corroborates it.
+_E_ATTACK_SPEED_SECONDS = data_value(
+    spell_object("Kennen", "KennenLightningRush"), "DurationAfterBall"
+)
 
 # Mark of the Storm is prose only — its cached effects carry no leveling
 # row — so the cap, the repeat-stun rule and Slicing Maelstrom's own stack
@@ -233,7 +242,15 @@ SLOTS = {
     "P": _mark_of_the_storm,
     "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
     "W": _electrical_surge,
-    "E": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    "E": with_attack_speed_window(
+        simple_damage(attr="Magic Damage", dmg_type="magic"),
+        duration=_E_ATTACK_SPEED_SECONDS,
+        aside=(
+            "the recast's grant, placed at the cast itself (the lightning "
+            "form's 0.5s minimum before the recast and its no-attack time "
+            "are not modeled)."
+        ),
+    ),
     "R": _slicing_maelstrom,
 }
 OPTIONS = [
@@ -258,6 +275,11 @@ ASSUMPTIONS = [
     "are not mirrored",
     "Mark applications are counted against ONE target — the pair fight's "
     "own — so allied hits and multi-target spread are outside the walk",
+    "E (Lightning Rush) places its recast's bonus attack speed as a "
+    "4-second window at the first E cast (one window per fight); the "
+    "lightning form's 0.5-second minimum before the recast, its no-attack "
+    "time, the crit-extended duration and the cap exemption are not "
+    "modeled, and the Mark walk keeps the base swing cadence.",
 ]
 SOURCES = load_champion_sources("Kennen")
 

@@ -1,11 +1,11 @@
 """Teemo — CP10.8 full-entry-reviewed packet module.
 
-E9-1 closes the last audit gap: E (Toxic Shot) now prices the on-hit
-PLUS the full 4-second poison DoT.  The packet priced only the
-"Magic Damage On-Hit" row; the cached JSON's "Magic Damage per Tick"
-(6-30 + 2.5% bonus AD + 10% AP) and "Total Poison Damage"
-(24-120 + 10% bonus AD + 40% AP) rows are now expressed as 4 ticks at
-1-second intervals (this module's packet timing declaration).
+E (Toxic Shot) rides the swing stream: the "Magic Damage On-Hit" row
+(9-65 + 5% bonus AD + 30% AP) is an on-hit on every basic attack, and the
+"Total Poison Damage" row (24-120 + 10% bonus AD + 40% AP) is a
+one-stack refreshing DoT every attack re-applies, integrated by the
+engine's stacking-DoT walk over the fight's hit timeline (the reviewed
+packet had priced one on-hit and one 4-tick poison per fight).
 
 E4 summon: R (Noxious Trap) is a summoned trap.  The E2-3 tick fix
 already prices one shroom detonation as the full 4-second poison (4
@@ -44,10 +44,12 @@ from typing import Any
 from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .module_helpers import with_detail
+from .module_helpers import ranked_slot, with_detail
 from .packet_module import build_packet_module, repeat_damage_parser
-from .shared_mechanics import move_speed_grant, ranked_packet_slot
-from .slot_extract import extract_value
+from .shared_mechanics import ranked_packet_slot
+from .slot_entries import ability_on_hit_entry
+from .slot_extract import ability_name, extract_named, extract_value
+from .stat_grants import move_speed_grant
 
 # Sourced cadence for one Noxious Trap detonation (cache + wiki):
 # "the target takes magic damage every second over 4 seconds" — 4 ticks
@@ -153,6 +155,53 @@ def _move_quick(packet_w):
     return ranked_packet_slot(packet_w, body)
 
 
+# Toxic Shot's poison lasts the binary TeemoE.PoisonDuration and ticks at
+# its TickFrequency; the cached E prose ("magic damage every second over
+# 4 seconds") corroborates both.
+_TEEMO_E_SPELL = spell_object("Teemo", "TeemoE")
+_E_POISON_SECONDS = data_value(_TEEMO_E_SPELL, "PoisonDuration")
+_E_POISON_TICK_SECONDS = data_value(_TEEMO_E_SPELL, "TickFrequency")
+
+
+@ranked_slot
+def _toxic_shot(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
+    """E: the on-hit on every basic attack, and the poison each attack refreshes."""
+
+    on_hit = extract_named(ability, "Magic Damage On-Hit", rank, ctx.stats, ctx.target)
+    poison = extract_named(ability, "Total Poison Damage", rank, ctx.stats, ctx.target)
+    entry = ability_on_hit_entry(
+        ability_name(ability),
+        rank,
+        "magic",
+        {
+            "name": "Toxic Shot (on-hit)",
+            "damage_per_hit": on_hit,
+            "damage_type": "magic",
+        },
+    )
+    # One refreshing poison: a second application while it runs only
+    # refreshes the duration ("Subsequent inflictions refresh the
+    # duration"), which is a one-stack stacking DoT applied by autos.
+    entry["stacking_dot"] = {
+        "name": "Toxic Shot (poison)",
+        "damage_type": "magic",
+        "single_stack_raw": poison,
+        "duration": _E_POISON_SECONDS,
+        "max_stacks": 1,
+        "extra_stack_effectiveness": 0.0,
+        "applied_by_autos": True,
+        "tick_interval": _E_POISON_TICK_SECONDS,
+    }
+    entry["detail"] = (
+        f"{on_hit:g} bonus magic damage on-hit on every basic attack, each "
+        f"refreshing a {poison:g} poison over {_E_POISON_SECONDS:g}s "
+        f"({_E_POISON_TICK_SECONDS:g}s ticks)"
+    )
+    return entry
+
+
 # P: stealth + a real but unmodelable attack-speed steroid.  Kept
 # ``out_of_scope`` (receipted open, the Olaf-R rule) because Element of
 # Surprise WOULD change damage if it could be modeled.  The row states the
@@ -196,20 +245,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Noxious Trap prices the full 4-second poison: 4 ticks of Magic "
         "Damage per Tick (== Total Magic Damage) at 1-second intervals.",
     ),
-    packet_tick_fixes={
-        "Toxic Shot": {
-            "initial_tick": 0.0,
-            "extra_part": {
-                "attribute": "Magic Damage per Tick",
-                "count": 4,
-                "damage_type": "magic",
-                "first_tick": 1.0,
-                "tick_interval": 1.0,
-                "dot_duration": 4.0,
-            },
-        }
-    },
     slot_parsers={
+        "E": _toxic_shot,
         "R": repeat_damage_parser(
             attr="Magic Damage per Tick",
             dmg_type="magic",
@@ -217,7 +254,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             time_offset=1.0,
             hit_interval=1.0,
             dot_duration=4.0,
-        )
+        ),
     },
     slot_wrappers={
         "R": _noxious_trap,
@@ -232,10 +269,13 @@ ASSUMPTIONS.extend(
         "full 4-second poison DoT (E2-3 ticks); r_shrooms prices "
         "sequential detonations, because multiple shrooms only refresh "
         "the poison duration and never stack.",
-        "E (Toxic Shot) prices the on-hit PLUS the full 4-second poison: "
-        "4 ticks of Magic Damage per Tick (== Total Poison Damage) at "
-        "1-second intervals (this module's packet timing declaration); the "
-        "poison refreshes rather than stacks (wiki note).",
+        "E (Toxic Shot) is an on-hit on every basic attack (Rageblade "
+        "phantom hits and spellblade re-application apply it again) plus "
+        "the poison: a one-stack DoT every attack refreshes rather than "
+        "stacks (wiki note), integrated over the fight's swing timeline "
+        "with the engine's committed accounting (the last attack's full "
+        "4 seconds of ticks count). Only basic attacks poison; Blinding "
+        "Dart does not.",
         "The shroom slow (30/40/50% by R rank for 4 seconds) and reveal "
         "are crowd-control/vision utility the fight model does not price.",
         "Trap placement, arm time, trigger radius and the shroom's 6-HP "

@@ -55,6 +55,8 @@ def _urchin_strike(
         "hits": 1,
         "triggers": ("on_hit",),
     }
+    # The strike's on-hit application also lands Seastone Trident's rend.
+    entry["applies_dot_stack"] = True
     entry["detail"] = (
         "Fixed-distance dash: magic spell damage plus one 100% AD attack component."
     )
@@ -62,41 +64,55 @@ def _urchin_strike(
 
 
 _FIZZ_W_SPELL = spell_object("Fizz", "FizzW")
-# W's passive burn cadence is rooted in the binary's duration and tick rate.
+# W's passive rend cadence and its post-hit on-hit window are rooted in the
+# binary; the cached prose ("every 0.5 seconds over 3 seconds", "for the
+# next 5 seconds") corroborates them.
 _W_PASSIVE_DURATION = data_value(_FIZZ_W_SPELL, "PassiveDoTDuration")
 _W_PASSIVE_TICK_INTERVAL = 1.0 / data_value(_FIZZ_W_SPELL, "DoTTicksPerSecond")
-_W_PASSIVE_TICKS = int(_W_PASSIVE_DURATION / _W_PASSIVE_TICK_INTERVAL)
+_W_ON_HIT_WINDOW = data_value(_FIZZ_W_SPELL, "OnHitBuffDuration")
 
 
 @ranked_slot
 def _seastone_trident(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
+    """W: the empowered hit, the rend every attack refreshes, the post-hit on-hit."""
     active = extract_named(ability, "Active Magic Damage", rank, ctx.stats, ctx.target)
-    passive_per_tick = extract_named(
-        ability, "Passive Magic Damage per Tick", rank, ctx.stats, ctx.target
+    rend = extract_named(
+        ability, "Total Passive Magic Damage", rank, ctx.stats, ctx.target
+    )
+    on_hit = extract_named(
+        ability, "Active On-Hit Magic Damage", rank, ctx.stats, ctx.target
     )
     entry = damage_entry(
         ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
-        active + passive_per_tick * _W_PASSIVE_TICKS,
+        active,
         "magic",
     )
-    # Every part carries authored timing, so the engine attaches the row's
-    # exact event ledger (active hit at the cast instant, then the sourced
-    # 0.5s ticks) and the coverage classifier certifies the DoT row by its
-    # sum-reconciled events instead of downgrading it at the cast boundary.
-    entry["parts"] = (
-        DamagePart("magic", active, time_offset=0.0),
-        DamagePart(
-            "magic",
-            passive_per_tick,
-            count=_W_PASSIVE_TICKS,
-            time_offset=_W_PASSIVE_TICK_INTERVAL,
-            hit_interval=_W_PASSIVE_TICK_INTERVAL,
-        ),
-    )
+    # The empowered hit lands at the cast instant (the swing is one of the
+    # ambient stream's, below); the rend is the one-stack DoT every basic
+    # attack and Urchin Strike's on-hit refresh, integrated over the fight's
+    # hit timeline; the post-hit on-hit rides every swing inside its window
+    # after the cast.
+    entry["parts"] = (DamagePart("magic", active, time_offset=0.0),)
+    entry["stacking_dot"] = {
+        "name": "Seastone Trident (rend)",
+        "damage_type": "magic",
+        "single_stack_raw": rend,
+        "duration": _W_PASSIVE_DURATION,
+        "max_stacks": 1,
+        "extra_stack_effectiveness": 0.0,
+        "applied_by_autos": True,
+        "tick_interval": _W_PASSIVE_TICK_INTERVAL,
+    }
+    entry["on_hit"] = {
+        "name": "Seastone Trident (on-hit)",
+        "damage_per_hit": on_hit,
+        "damage_type": "magic",
+        "proc_window": _W_ON_HIT_WINDOW,
+    }
     # With an ambient auto stream, the empowered attack IS one of that
     # stream's swings — the swing stays priced (and evented) on the auto
     # row, keeping this row's ledger sum-exact (the engine's swing
@@ -116,11 +132,12 @@ def _seastone_trident(
             "hits": 1,
             "authored_timing": {"first_attack_delay": 0.0, "attack_interval": 0.0},
         }
-    entry["dot_duration"] = _W_PASSIVE_DURATION
     entry["detail"] = (
-        "Active trident damage rides the next basic attack; the sourced "
-        "6-tick passive burn trails the empowered hit (post-kill refund "
-        "remains explicit state)."
+        f"Active trident damage ({active:g}) rides the next basic attack; every "
+        f"basic attack refreshes the {rend:g} rend over {_W_PASSIVE_DURATION:g}s "
+        f"({_W_PASSIVE_TICK_INTERVAL:g}s ticks), and each swing inside the "
+        f"{_W_ON_HIT_WINDOW:g}s after the cast carries {on_hit:g} more on-hit "
+        "(the post-kill refund remains explicit state)."
     )
     return entry
 
@@ -212,9 +229,12 @@ ASSUMPTIONS = [
     "when the timed window contains at least one; with no stream the cast "
     "forces its own swing. W therefore casts on cooldown in timed fights even "
     "when the stream is sparse (the sourced 4s empower window is not walked).",
-    "The W burn is applied once per W cast (its 6 sourced 0.5s ticks trail the "
-    "empowered hit); ordinary basic attacks between casts refresh the same "
-    "bleed in game but are not priced as extra applications.",
+    "Seastone Trident's rend is a one-stack DoT every basic attack and Urchin "
+    "Strike's on-hit refresh (never stacks), integrated over the fight's hit "
+    "timeline with the engine's committed accounting (the last hit's full 3 "
+    "seconds of ticks count); its post-hit on-hit rides every swing inside "
+    "the 5-second window after the first W cast (one window per fight, and "
+    "the kill branch that skips it is not taken), never on phantom hits.",
     "Chum the Waters exposes all three sourced distance branches rather than treating "
     "the largest shark as a default.",
 ]

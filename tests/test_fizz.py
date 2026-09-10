@@ -1,8 +1,10 @@
 """Event-certification and sourced-cadence tests for Fizz's module.
 
-Wave 1B: Seastone Trident's burn must be event-certified in timed fights —
-the W row authors its active hit and the sourced 6-tick 0.5s ledger, and
-the ledger sum-reconciles to the row total exactly.
+Seastone Trident is three things on the swing stream: the W row authors
+its active hit at each cast, the rend is a one-stack DoT every basic
+attack refreshes (the fight's stacking-DoT row, ticking at the sourced
+0.5s cadence), and the post-hit on-hit rides the swings inside the 5-second
+window after the cast; every ledger sum-reconciles to its row total.
 """
 
 import pytest
@@ -58,20 +60,28 @@ def test_timed_w_ledger_sums_and_ticks_at_the_sourced_cadence():
     row = result["breakdown"]["W"]
     events = row["damage_events"]
     casts = row["casts"]
-    # One active hit plus the six sourced burn ticks per cast.
-    assert len(events) == casts * (1 + _W_TICKS)
+    # One active hit per cast; the rend is the stacking-DoT row's.
+    assert len(events) == casts
     assert sum(event["damage"] for event in events) == pytest.approx(
         row["total_damage"]
     )
     assert not any(event.get("event_precision") == "cast_boundary" for event in events)
-    # The first cast lands at t=0: its active hit at the cast instant and
-    # its ticks every 0.5s through 3.0s.
-    tick_times = sorted(
-        event["time"] for event in events if event.get("event_precision") == "exact"
-    )[:_W_TICKS]
+
+    rend = result["breakdown"]["stacking_dot_W"]
+    swings = result["breakdown"]["auto_attacks"]["count"]
+    # Every basic attack and every Urchin Strike refreshes the rend.
+    assert rend["count"] == swings + result["breakdown"]["Q"]["casts"]
+    assert sum(event["damage"] for event in rend["damage_events"]) == pytest.approx(
+        rend["total_damage"]
+    )
+    # The first application lands at t=0 and ticks every 0.5s from there.
+    tick_times = sorted(event["time"] for event in rend["damage_events"])[:_W_TICKS]
     assert tick_times == pytest.approx(
         [_W_TICK_INTERVAL * step for step in range(1, _W_TICKS + 1)]
     )
+
+    on_hit = result["breakdown"]["on_hit_ability_W"]
+    assert 0 < on_hit["count"] < swings
 
 
 def test_timed_auto_stream_keeps_its_swings_when_w_rides_it():

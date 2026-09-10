@@ -91,6 +91,7 @@ from .packet_module import build_packet_module
 from .slot_control import atom_receipt
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
+from .stat_grants import attack_speed_window
 
 PACKET_SHA256 = "ac50a4316c8ffc3f6f326c6be14ec20867f6301066621ff49ec26c1fad1b97a7"
 
@@ -126,9 +127,11 @@ _W_DURATION_SOURCE = "Sivir.W[0].effects[0].description"
 # of its own; a window with no auto stream still earns one, because the
 # cache's "Ricochet resets Sivir's basic attack timer" makes the first
 # empowered attack immediate.
-def _empowered_swings(ctx: SlotCtx, window: float) -> int:
-    """Empowered basic attacks Ricochet's sourced window earns this fight."""
-    rate = ctx.stat("attack_speed") * float(ctx.option("auto_attack_uptime"))
+def _empowered_swings(ctx: SlotCtx, window: float, *, bonus_rate: float) -> int:
+    """Empowered basic attacks Ricochet's sourced window earns at its own rate."""
+    rate = (ctx.stat("attack_speed") + bonus_rate) * float(
+        ctx.option("auto_attack_uptime")
+    )
     return max(1, math.floor(rate * window))
 
 
@@ -160,14 +163,20 @@ def _ricochet(
         raise ValueError("Sivir W empowered-window atom must use seconds")
     window = ranked_ability_atom_value(window_atom, 1, source=_W_DURATION_SOURCE)
     per_bounce = ratio / 100.0 * ctx.stat("attack_damage")
-    bounces = _empowered_swings(ctx, window)
     entry = damage_entry(
         ability_name(ability),
         rank,
         extract_cooldown(ability, rank),
-        per_bounce * bounces,
+        0.0,
         "physical",
     )
+    # The window's own attack speed: the engine places it at the W cast,
+    # and the bounce count is the empowered swings that rate earns.
+    bonus_as = attack_speed_window(ctx, entry, ability, rank, duration=window)
+    bounces = _empowered_swings(
+        ctx, window, bonus_rate=ctx.stat("attack_speed_ratio") * bonus_as / 100.0
+    )
+    entry["total_raw"] = per_bounce * bounces
     # The cached bounce cap ("up to 8 times ... per empowered attack") is a
     # per-attack ceiling across enemies, and the same sentence allows each
     # enemy "up to one additional time per empowered attack" — so one priced
@@ -180,8 +189,8 @@ def _ricochet(
         f"({ratio:g}% AD = {per_bounce:g}) — one per empowered basic attack "
         f"in the sourced {window:g}s window, each critting with the swing "
         "that triggered it (Bounce Critical Damage is exactly 2x the "
-        "Bounce Damage row). W's own 20-40% bonus attack speed is not "
-        "modeled, so the swing count is a floor."
+        f"Bounce Damage row); the window's +{bonus_as:g}% bonus attack speed "
+        "is placed at the W cast and rates those swings."
     )
     return entry
 
@@ -354,15 +363,15 @@ ASSUMPTIONS = [
     "occur 'only up to 8 times' and 'can target each enemy up to one "
     "additional time per empowered attack'. A pair fight has one enemy "
     "and no new target, so it takes exactly one bounce per swing and the "
-    "8 never binds. The swing count is the fight's own auto cadence "
-    "(attack_speed x auto_attack_uptime) across the sourced 4 second "
-    "window (atom timing.active_duration), with a floor of one swing "
-    "because 'Ricochet resets Sivir's basic attack timer'. Each bounce "
-    "crits with the swing that triggered it at full effectiveness: the "
-    "cached 'Bounce Critical Damage' row is exactly 2x 'Bounce Damage' "
-    "at every rank. W's own 20-40% bonus attack speed is NOT modeled, so "
-    "the swing count is a floor, and the bounces carry no authored "
-    "sub-cast timing.",
+    "8 never binds. The swing count is the window's own auto cadence "
+    "((attack_speed + the window's bonus) x auto_attack_uptime) across the "
+    "sourced 4 second window (atom timing.active_duration), with a floor "
+    "of one swing because 'Ricochet resets Sivir's basic attack timer'. "
+    "Each bounce crits with the swing that triggered it at full "
+    "effectiveness: the cached 'Bounce Critical Damage' row is exactly 2x "
+    "'Bounce Damage' at every rank. W's own 20-40% bonus attack speed is "
+    "placed by the engine as a 4-second window at the first W cast (one "
+    "window per fight), and the bounces carry no authored sub-cast timing.",
     "P (Fleet of Foot) has no enemy-damage clause anywhere in its cached "
     "entry: the single effect grants Sivir 55:75 (based on level) bonus "
     "movement speed decaying over 1.5 seconds on her own attacks and "

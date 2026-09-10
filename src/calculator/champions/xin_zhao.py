@@ -54,6 +54,7 @@ from .slot_cc import CC_PER_PART
 from .slot_entries import ability_on_hit_entry, damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .slotlib import simple_damage
+from .stat_grants import with_attack_speed_window
 
 PACKET_SHA256 = "c39efd0eac006d4b59799a0b3c5de44ef6ec31f9f9a23bea7ab8a25d2f4ccf64"
 
@@ -136,6 +137,9 @@ _Q_CRIT_EFFECTIVENESS = 1.0
 # alone: the four slashes take no amplifier.
 _XIN_ZHAO_W_SPELL = spell_object("Xin Zhao", "XinZhaoW")
 _W_THRUST_CRIT_CHANCE_AMP = data_value(_XIN_ZHAO_W_SPELL, "CritChanceAmp")
+# Audacious Charge's bonus attack speed lasts the binary XinZhaoE.ASDuration;
+# the cached E prose ("for 5 seconds") corroborates it.
+_E_ATTACK_SPEED_SECONDS = data_value(spell_object("Xin Zhao", "XinZhaoE"), "ASDuration")
 
 
 def _wind_becomes_lightning(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -236,7 +240,20 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "(ability_stack_slots {'W': 2}) rather than through the "
         "kit-wide ability-hit counter, which would also count E and R, "
         "and they generate none.  The Challenged mark is state.",
+        "E (Audacious Charge) places its bonus attack speed (the cached "
+        "row's base plus its AP term) as a 5-second window at the first E "
+        "cast; the row's third term, 1% per 5% bonus attack speed from "
+        "non-buff sources, has no attributable unit in the cache and is "
+        "not priced, and the second window a longer fight earns is not "
+        "placed.",
     ),
+    slot_wrappers={
+        "E": lambda packet_e: with_attack_speed_window(
+            packet_e,
+            duration=_E_ATTACK_SPEED_SECONDS,
+            aside="granted after the dash, placed at the cast.",
+        ),
+    },
     cc_kinds=MODULE_CC,
 )
 

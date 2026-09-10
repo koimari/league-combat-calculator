@@ -141,19 +141,19 @@ class TestBladeRider:
         )
 
     def test_the_rider_reaches_the_fight_on_both_channels(self):
-        """Level 18, no items, timed: +225.8 damage over the un-ridden kit."""
+        """Level 18, no items, timed: seven swings, Wild Rush's window inside."""
         on = rider_probe.fight("Samira", deterministic=True)
         off = rider_probe.fight(
             "Samira", deterministic=True, champion_options={"p_blade_zone": False}
         )
         row = on["breakdown"][rider_probe.RIDER_ROW]
         assert row["name"] == "Daredevil Impulse (on-hit)"
-        assert row["count"] == on["breakdown"]["auto_attacks"]["count"] == 6
+        assert row["count"] == on["breakdown"]["auto_attacks"]["count"] == 7
         # Each proc reads the target's decayed health, so they escalate.
-        assert row["total_damage"] == pytest.approx(107.1, abs=0.05)
+        assert row["total_damage"] == pytest.approx(128.8, abs=0.05)
         # Outside the blade zone no attack carries it and Flair is the
         # ranged shot; Blade Whirl and Wild Rush still do.
         assert rider_probe.RIDER_ROW not in off["breakdown"]
         assert off["breakdown"]["Q"]["total_damage"] == pytest.approx(277.6, abs=0.05)
         assert on["breakdown"]["Q"]["total_damage"] == pytest.approx(346.1, abs=0.05)
-        assert on["total_damage"] == pytest.approx(1414.4, abs=0.05)
+        assert on["total_damage"] == pytest.approx(1490.1, abs=0.05)

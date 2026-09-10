@@ -36,7 +36,6 @@ from .engine import BUFF, SlotCtx
 from .inputs import int_option
 from .module_helpers import buff_window_share, ranked_slot
 from .packet_module import build_packet_module
-from .shared_mechanics import attack_speed_steroid
 from .slot_entries import STEROID_ZERO, damage_entry
 from .slot_extract import (
     ability_name,
@@ -46,6 +45,7 @@ from .slot_extract import (
     find_named_leveling,
     sum_modifiers,
 )
+from .stat_grants import attack_speed_steroid
 
 PACKET_SHA256 = "abc0765ed94d66999d26bc7fe98c41c49c3d5e3631c4cca2a96a59de1ba776eb"
 

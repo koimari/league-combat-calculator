@@ -233,23 +233,22 @@ class TestGuerrillaWarfareStaysReceiptedOpen:
         assert [atom["atom_id"] for atom in atoms] == ["timing.active_duration"]
         assert atoms[0]["values"] == [1.5]
 
-    def test_the_windowed_attack_speed_kernel_is_q_slot_only(self):
-        """The structural blocker, asserted against the step that owns it.
+    def test_the_windowed_attack_speed_kernel_opens_at_the_granting_slots_cast(self):
+        """The kernel is not the blocker any more, so the trigger is the whole reason.
 
         ``fight/setup/stat_buff_ultimates.py`` resolves an
-        ``auto_attack_override.active_duration`` window's START by walking
-        ``cast_order`` and breaking on ``"Q"``.  A P-slot steroid has no
-        window to ride, so it could only be published unwindowed for the
-        entire fight.
+        ``auto_attack_override.active_duration`` window's START at the
+        first cast of whichever row grants it (``slot_cast_start``), so a
+        P-slot steroid could ride a window from the fight open; Element of
+        Surprise stays withheld only because its stealth trigger is a state
+        the fight never enters.
         """
         kernel = step_source("fight/setup/stat_buff_ultimates.py")
 
         assert 'if "bonus_attack_speed" in stat_buff:' in kernel
         assert "auto_attack_override" in kernel
-        assert "for slot in state.cast_order:" in kernel
-        assert 'if slot == "Q":' in kernel
-        # No other slot letter opens that window.
-        assert 'if slot == "P":' not in kernel
+        assert "cast_start = slot_cast_start(state, key)" in kernel
+        assert 'if slot == "Q":' not in kernel
 
 
 class TestModuleCoverageRecordsTheSplitVerdict:
@@ -263,9 +262,17 @@ class TestModuleCoverageRecordsTheSplitVerdict:
         }
 
     def test_closing_w_did_not_move_any_priced_row(self, abilities):
-        """Both adjudicated slots are zero, so the damage totals stand."""
+        """Both adjudicated slots are zero, so the damage totals stand.
+
+        E's own total is zero too: Toxic Shot rides the swing stream (its
+        on-hit and poison are priced per attack by the fight), not the cast.
+        """
         assert abilities["Q"]["total_raw"] == pytest.approx(260.0)
-        assert abilities["E"]["total_raw"] == pytest.approx(185.0)
+        assert abilities["E"]["total_raw"] == 0.0
+        assert abilities["E"]["on_hit"]["damage_per_hit"] == pytest.approx(65.0)
+        assert abilities["E"]["stacking_dot"]["single_stack_raw"] == pytest.approx(
+            120.0
+        )
         assert abilities["R"]["total_raw"] == pytest.approx(450.0)
         assert abilities["W"]["total_raw"] == 0.0
         assert abilities["passive"]["total_raw"] == 0.0

@@ -112,15 +112,18 @@ class FightState:
     attack_speed_ratio: float
     num_auto_attacks: int
     empowered_autos: int
-    # P1 Slice 11 (Ashe Q active window): the flurry/AS window [0, end) —
-    # the first ``q_window_autos`` swings ride the buffed rate + flurry
-    # ratio, the rest revert to the base rate + the normal 1.0 ratio from
-    # ``q_window_end`` (end-exclusive).
-    q_window_autos: int = 0
-    q_window_pre_autos: int = 0
-    q_window_start: float = 0.0
-    q_window_end: float = 0.0
-    q_window_base_rate: float = 0.0
+    # The kit's one attack-speed window [start, end), placed at the first
+    # cast of the slot that grants it (Ashe Q, Tristana Q, Kennen E, Xayah
+    # W): ``as_window_pre_autos`` swings ride the base rate before it,
+    # ``as_window_autos`` the buffed rate (and the flurry ratio) inside it,
+    # the rest the base rate and the normal 1.0 ratio from ``as_window_end``
+    # (end-exclusive).  A second windowed grant on the same kit raises.
+    as_window_slot: str = ""
+    as_window_autos: int = 0
+    as_window_pre_autos: int = 0
+    as_window_start: float = 0.0
+    as_window_end: float = 0.0
+    as_window_base_rate: float = 0.0
     # ── Crit (resolved after stat-buff ultimates) ─────────────────────────
     crit_chance: float = 0.0
     crit_multiplier: float = BASE_CRIT_MULTIPLIER

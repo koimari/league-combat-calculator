@@ -56,8 +56,8 @@ explicit state assertion.
   Twitch walked in already stealthed and breaks Ambush as the fight
   opens — which is the same shape as ``poison_stacks`` asserting stacks
   already on the target.  Under that assertion the window [0, 6) is
-  exact, because ``damage.py`` resolves the window start by walking
-  ``state.cast_order`` and breaking on ``"Q"``.
+  exact, because the engine places a window at the first cast of the row
+  that grants it, and Q is first in ``state.cast_order``.
 
   That exactness is why the window is published rather than folded into
   the magnitude by ``module_helpers.buff_window_share``: the share helper

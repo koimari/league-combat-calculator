@@ -25,7 +25,7 @@ from ..ability_atoms import (
 )
 from ..ability_spec import AttackClass, DamageClass, DamagePart
 from ..survival.phases import TransitionRank
-from .module_helpers import buff_window_share, no_damage, ranked_slot, steroid_entry
+from .module_helpers import no_damage, ranked_slot
 from .slot_context import DAMAGE, SlotCtx, SlotParser
 from .slot_control import atom_receipt
 from .slot_entries import (
@@ -38,7 +38,6 @@ from .slot_extract import (
     ability_name,
     extract_cooldown,
     extract_named,
-    extract_value,
     find_named_leveling,
     sum_modifiers,
 )
@@ -49,7 +48,6 @@ SECONDARY_TARGET_CAP = 5
 #: Seconds from a cast to the basic attack its payload rides.
 _EMPOWERED_SWING_OFFSET = 0.1
 
-_ATTACK_SPEED_ROW = "Bonus Attack Speed"
 _DAMAGE_REDUCTION_ROW = "Damage Reduction"
 _PER_LEVEL_ROW = "Per-Level Scaling"
 
@@ -246,47 +244,6 @@ def empowered_auto_entry(  # pylint: disable=too-many-arguments
     entry["empowers_next_auto"] = True
     entry.update(entry_keys)
     entry["detail"] = detail
-    return entry
-
-
-def attack_speed_steroid(
-    ctx: SlotCtx,
-    ability: dict[str, Any],
-    rank_value: int,
-    *,
-    duration: float,
-    aside: str,
-) -> dict[str, Any]:
-    """The cached bonus attack speed, weighted by the share of the fight it covers.
-
-    ``aside`` is the kit's own closing clause, the one sentence the two
-    numbers and the window do not say.
-    """
-
-    granted = extract_value(ability, _ATTACK_SPEED_ROW, rank_value)
-    published = granted * buff_window_share(ctx, duration)
-    return steroid_entry(
-        ability,
-        rank_value,
-        {"bonus_attack_speed": published},
-        f"+{granted:g}% bonus attack speed for {duration:g}s "
-        f"({published:g}% over the fight window); {aside}",
-    )
-
-
-def move_speed_grant(
-    ctx: SlotCtx,
-    entry: dict[str, Any],
-    *,
-    granted: float,
-    duration: float,
-    detail: Callable[[float], str],
-) -> dict[str, Any]:
-    """A cast's own movement grant, time weighted, published on the shared fold."""
-
-    published = granted * buff_window_share(ctx, duration)
-    entry["stat_buff"] = {"move_speed_percent": published}
-    entry["detail"] = detail(published)
     return entry
 
 

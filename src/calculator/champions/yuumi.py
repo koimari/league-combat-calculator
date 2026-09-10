@@ -61,6 +61,7 @@ instead of Yuumi").
 
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from ..healing_helpers import (
     HealAnchor,
     ability_json,
@@ -80,8 +81,14 @@ from .slot_extract import (
     extract_value,
     find_named_leveling,
 )
+from .stat_grants import with_attack_speed_window
 
 PACKET_SHA256 = "1795828f6486a1da27c639b301d6ebca7047735f17a173075d41d59369c82942"
+
+# Zoomies lasts the binary YuumiE.MSDuration: the buff whose shield the
+# movement speed rides ("while the shield holds"), which the cached E prose
+# puts at "bonus attack speed for 3 seconds".
+_E_ZOOMIES_SECONDS = data_value(spell_object("Yuumi", "YuumiE"), "MSDuration")
 
 # Prowling Projectile's missile "deals magic damage to the first enemy hit.
 # If the target is a champion, they are also revealed and slowed by 20% for
@@ -163,10 +170,22 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             dot_duration=3.5,
         )
     },
-    slot_wrappers={"W": _you_and_me},
+    slot_wrappers={
+        "W": _you_and_me,
+        "E": lambda packet_e: with_attack_speed_window(
+            packet_e,
+            duration=_E_ZOOMIES_SECONDS,
+            aside="Yuumi's own grant on the 1v1 surface, where she is unattached.",
+        ),
+    },
 )
 ASSUMPTIONS = [
     *ASSUMPTIONS,
+    "E (Zoomies) places its bonus attack speed (the cached row's base plus "
+    "its AP term) as a 3-second window at the first E cast, as Yuumi's own "
+    "grant: the 1v1 surface cannot attach her. Attached, Zoomies affects "
+    "the Anchor instead, and that transfer is outside module sight (the "
+    "shield's anchor transfer is the ally scanner's).",
     "R (Final Chapter) emits, per cast on the selected teammate (the "
     "anchor/Best Friend): the sourced Total Heal (150-350 + 60% AP), the "
     "sourced per-level Best Friend bonus packet (30% : 60% based on "

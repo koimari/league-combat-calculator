@@ -1196,9 +1196,8 @@ class TestBatch28RootedConstants:
             fizz._W_PASSIVE_DURATION
         )
         assert pytest.approx(1.0 / rate) == fizz._W_PASSIVE_TICK_INTERVAL
-        assert (
-            int(fizz._W_PASSIVE_DURATION / fizz._W_PASSIVE_TICK_INTERVAL)
-            == fizz._W_PASSIVE_TICKS
+        assert data_value(spell, "OnHitBuffDuration") == pytest.approx(
+            fizz._W_ON_HIT_WINDOW
         )
 
     def test_jinx(self):

@@ -570,22 +570,21 @@ class TestBridgeBetweenStaysReceiptedOpen:
 
         assert tuple(_ability_atoms("Udyr", get_champion("Udyr"))["P"]) == ()
 
-    def test_the_windowed_attack_speed_kernel_is_q_slot_only(self):
+    def test_the_windowed_attack_speed_kernel_is_time_bounded(self):
         """Blocker one, asserted against the step that owns it.
 
         ``fight/setup/stat_buff_ultimates.py`` resolves an
-        ``auto_attack_override.active_duration`` window's START by walking
-        ``cast_order`` and breaking on ``"Q"``.  A P-slot steroid has no
-        window to ride, so it could only be published unwindowed for the
-        entire fight.
+        ``auto_attack_override.active_duration`` window's START at the
+        first cast of whichever row grants it, so the slot is no longer
+        the blocker; the window is bounded in SECONDS only, and Monk
+        Training ends on its second attack.
         """
         kernel = step_source("fight/setup/stat_buff_ultimates.py")
 
         assert 'if "bonus_attack_speed" in stat_buff:' in kernel
         assert "auto_attack_override" in kernel
-        assert "for slot in state.cast_order:" in kernel
-        assert 'if slot == "Q":' in kernel
-        assert 'if slot == "P":' not in kernel
+        assert "cast_start = slot_cast_start(state, key)" in kernel
+        assert "attack_count" not in kernel
 
     def test_the_engine_window_is_time_bounded_with_no_attack_count_bound(self):
         """Blocker one, second half: Monk Training ends on the 2nd attack.

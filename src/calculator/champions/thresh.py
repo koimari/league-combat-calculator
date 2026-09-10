@@ -19,10 +19,11 @@ is a separate, already-modeled mechanism.
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
-from .engine import BUFF, SlotCtx
+from .engine import BUFF, ONHIT, SlotCtx
 from .inputs import int_option
 from .packet_module import build_packet_module
-from .slot_extract import ability_name
+from .slot_entries import ability_on_hit_entry
+from .slot_extract import ability_name, extract_value
 
 PACKET_SHA256 = "73d6faf368aec7c57d302a065771b4a343b530aeb9da36b99913f298ad06c1be"
 
@@ -79,6 +80,75 @@ def _damnation(ctx: SlotCtx) -> dict[str, Any] | None:
 _damnation.phase = BUFF
 
 
+def _flay_rows(ctx: SlotCtx) -> tuple[dict[str, Any], int, float] | None:
+    """Flay's passive rows: the E entry, its rank and the per-Soul term."""
+    ranked = ctx.ranked("E")
+    if ranked is None:
+        return None
+    ability, rank = ranked
+    per_soul = extract_value(ability, "Minimum Bonus Magic Damage", rank)
+    souls = min(max(int(ctx.options.get("souls", _DEFAULT_SOULS)), 0), _MAX_SOULS)
+    return ability, rank, per_soul * souls
+
+
+def _flay_passive(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E passive: the per-Soul bonus magic damage on every basic attack.
+
+    "Thresh's basic attacks are empowered to deal bonus magic damage, with
+    the AD ratio increasing over 10 seconds without basic attacking": the
+    Minimum Bonus Magic Damage row is what every swing of a sustained fight
+    carries (its AD ratio is 0%); the charged opener is ``E_opener``.
+    """
+    rows = _flay_rows(ctx)
+    if rows is None:
+        return None
+    ability, rank, per_hit = rows
+    entry = ability_on_hit_entry(
+        f"{ability_name(ability)} (passive)",
+        rank,
+        "magic",
+        {"name": "Flay (on-hit)", "damage_per_hit": per_hit, "damage_type": "magic"},
+    )
+    entry["innate_grant"] = True
+    entry["detail"] = (
+        f"{per_hit:g} bonus magic damage on-hit on every basic attack (the "
+        "Minimum Bonus Magic Damage row: 1.7 per Soul, 0% AD while attacking)"
+    )
+    return entry
+
+
+def _flay_opener(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E opener: the charged AD share on the fight's first basic attack only."""
+    rows = _flay_rows(ctx)
+    if rows is None:
+        return None
+    ability, rank, _per_soul = rows
+    ratio = extract_value(ability, "Maximum Bonus Magic Damage", rank, modifier_index=1)
+    charged = ratio / 100.0 * float(ctx.stat("attack_damage"))
+    entry = ability_on_hit_entry(
+        f"{ability_name(ability)} (charged opener)",
+        rank,
+        "magic",
+        {
+            "name": "Flay (charged opener)",
+            "damage_per_hit": charged,
+            "damage_type": "magic",
+            "max_procs": 1,
+        },
+    )
+    entry["innate_grant"] = True
+    entry["detail"] = (
+        f"the first basic attack carries the fully charged {ratio:g}% AD "
+        f"({charged:g}) on top of the per-Soul term: the fight opens after 10 "
+        "seconds without basic attacking"
+    )
+    return entry
+
+
+_flay_passive.phase = ONHIT
+_flay_opener.phase = ONHIT
+
+
 # Reviewed crowd control, read from the cached kit.  Q (Death Sentence)'s
 # scythe catches to "deal magic damage, stun and reveal them for 1.5
 # seconds, and render them airborne for 0.4 seconds" — two immobilize
@@ -99,6 +169,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"Q", "E", "R"}),
     slot_parsers={
         "P": _damnation,
+        "E_passive": _flay_passive,
+        "E_opener": _flay_opener,
     },
     cc_kinds=MODULE_CC,
 )
@@ -117,6 +189,12 @@ ASSUMPTIONS = [
     "Each Soul grants 1 ability power and 1 bonus armor — wiki prose "
     "(module constants); the AP buff applies before all damage slots "
     "parse",
+    "E's passive (Flay) rides the swing stream: every basic attack carries "
+    "the Minimum Bonus Magic Damage row (1.7 per Soul, 0% AD while "
+    "attacking) as an on-hit, and the first basic attack alone carries the "
+    "Maximum row's charged AD share (90-210% AD by rank): the fight is "
+    "assumed to open after 10 seconds without basic attacking, and the "
+    "charge does not rebuild mid-fight",
     "W (Dark Passage) shields Thresh and the first allied champion for "
     "4s at the cast; the ally-support scanner emits the ally packet "
     "(flat 50/70/90/110/130; the +2-per-Soul term and Thresh's own "

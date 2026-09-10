@@ -21,12 +21,10 @@ from src.calculator.champions.module_helpers import (
     no_damage,
 )
 from src.calculator.champions.shared_mechanics import (
-    attack_speed_steroid,
     capped_option,
     damage_reduction_window,
     empowered_auto_entry,
     innate_zero_row,
-    move_speed_grant,
     multi_pass_damage,
     per_level_on_hit,
     per_level_row,
@@ -40,6 +38,7 @@ from src.calculator.champions.shared_mechanics import (
 from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.champions.slot_context import SlotCtx
 from src.calculator.champions.slot_extract import extract_cast_time
+from src.calculator.champions.stat_grants import attack_speed_steroid, move_speed_grant
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import effective_cooldown
 

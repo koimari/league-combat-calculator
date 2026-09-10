@@ -32,17 +32,24 @@ from ..binary_roots import data_value, spell_object
 from ..control_spec import ControlEvent
 from .engine import SlotCtx
 from .inputs import int_option
-from .module_helpers import ranked_slot
+from .module_helpers import ranked_slot, steroid_entry
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
-from .slot_extract import ability_name, extract_cooldown
+from .slot_extract import ability_name, extract_cooldown, extract_value
 
 PACKET_SHA256 = "1aaff9137640dc9212a82420983ce8b4c7734417696e4529f59d8302d5fbc8e6"
 
 # Rooted in XayahR.RAttackDelay; the cached R prose corroborates the
 # one-second delay before the five feathers launch.
 _R_LEAP_SECONDS = data_value(spell_object("Xayah", "XayahR"), "RAttackDelay")
+# Deadly Plumage's frenzy lasts XayahW.WAttackSpeedDuration, and its extra
+# feather deals XayahW.BonusDamagePercent of the triggering attack; the
+# cached W prose ("for 4 seconds", "25% damage of the triggering attack's
+# damage") corroborates both.
+_XAYAH_W_SPELL = spell_object("Xayah", "XayahW")
+_W_DURATION_SECONDS = data_value(_XAYAH_W_SPELL, "WAttackSpeedDuration")
+_W_FEATHER_RATIO = data_value(_XAYAH_W_SPELL, "BonusDamagePercent") / 100.0
 
 
 # HARDCODED: verify on patch updates — Clean Cuts' stack bookkeeping
@@ -166,6 +173,29 @@ def _clean_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 @ranked_slot
+def _deadly_plumage(
+    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
+    """W: the 4-second frenzy, bonus attack speed and a 25% feather on every attack."""
+
+    bonus_as = extract_value(ability, "Bonus Attack Speed", rank)
+    return steroid_entry(
+        ability,
+        rank,
+        {"bonus_attack_speed": bonus_as},
+        f"Deadly Plumage: +{bonus_as:g}% bonus attack speed for "
+        f"{_W_DURATION_SECONDS:g}s from the W cast, and every attack inside "
+        f"the window fires an extra feather for {_W_FEATHER_RATIO * 100:g}% of "
+        "its damage (the swings are priced at "
+        f"{(1 + _W_FEATHER_RATIO) * 100:g}% AD)",
+        auto_attack_override={
+            "ad_ratio": 1.0 + _W_FEATHER_RATIO,
+            "active_duration": _W_DURATION_SECONDS,
+        },
+    )
+
+
+@ranked_slot
 def _bladecaller(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
@@ -256,8 +286,6 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Double Daggers prices both daggers (Physical Damage Per Hit x 2 "
         "== Total Physical Damage).",
     ),
-    # W's row is the one extra feather the frenzy fires per attack.
-    single_hit_slots=frozenset({"W"}),
     # "After 1 second, she shoots 5 Feathers" — R's hit is not at the
     # cast, so it authors the sourced delay instead of certifying.
     packet_part_timings={"R": {"time_offset": _R_LEAP_SECONDS}},
@@ -270,6 +298,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             hit_interval=0.1,
         ),
         "P": _clean_cuts,
+        "W": _deadly_plumage,
         "E": _bladecaller,
     },
     cc_kinds=MODULE_CC,
@@ -322,6 +351,12 @@ ASSUMPTIONS = [
     "empowered autos land before the recall",
     "Bladecaller's crit-chance damage increase (0-50% + 0-15%) is not "
     "modeled; the root is emitted when at least three Feathers are recalled",
-    "W's bonus attack speed is the packet read; its extra 25%-damage "
-    "feather to the primary target is not double-counted with Clean Cuts",
+    "W (Deadly Plumage) is a 4-second window placed once at the W cast "
+    "(the second frenzy a longer fight would earn is not placed): the "
+    "swings inside it ride the sourced bonus attack speed and are priced "
+    "at 125% AD for the extra 25%-damage feather, which crits with its "
+    "triggering attack and applies no on-hit of its own; the reviewed "
+    "packet had read the attack-speed row as one 55%-AD hit per cast. "
+    "The feather is not double-counted with Clean Cuts, and Rakan's "
+    "empowerment is another champion's",
 ]

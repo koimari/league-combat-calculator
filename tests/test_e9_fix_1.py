@@ -380,22 +380,27 @@ class TestWarwick:
 
 
 class TestTeemo:
-    def test_e_prices_on_hit_plus_full_poison_do_t(self):
-        """On-hit + 4 x Magic Damage per Tick == on-hit + Total Poison."""
+    def test_e_rides_every_swing_with_the_poison_each_swing_refreshes(self):
+        """On-hit per attack, and Total Poison Damage per refreshed 4 seconds.
+
+        The E cast itself prices nothing: a rotation with no swings earns no
+        Toxic Shot, and a timed fight pays it on every basic attack.
+        """
         data = _fight("Teemo", enemies=False)
         stats = data["champion_stats"]
         on_hit = _resolve("Teemo", "E", "Magic Damage On-Hit", 5, stats, 2000.0)
         poison_total = _resolve("Teemo", "E", "Total Poison Damage", 5, stats, 2000.0)
         assert on_hit == pytest.approx(65.0)
         assert poison_total == pytest.approx(120.0)
-        expected = on_hit + poison_total
-        assert data["breakdown"]["E"]["total_damage"] == pytest.approx(expected)
-        events_data = _fight("Teemo")
-        events = _main_events(events_data, "E")
-        assert len(events) == 5  # on-hit + 4 poison ticks
-        assert sum(float(event["raw_damage"]) for event in events) == pytest.approx(
-            expected, abs=0.6
-        )
+        assert data["breakdown"]["E"]["total_damage"] == 0.0
+        timed = _fight("Teemo", autos=True, mode="timed", enemies=False)
+        swings = timed["breakdown"]["auto_attacks"]["count"]
+        rider = timed["breakdown"]["on_hit_ability_E"]
+        assert rider["count"] == swings
+        assert rider["total_damage"] == pytest.approx(on_hit * swings)
+        poison = timed["breakdown"]["stacking_dot_E"]
+        assert poison["count"] == swings
+        assert poison["total_damage"] > poison_total
 
 
 # ---------------------------------------------------------------------------

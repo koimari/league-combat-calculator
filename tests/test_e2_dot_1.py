@@ -287,16 +287,22 @@ def test_fiddlesticks_crowstorm_prices_all_twenty_ticks():
 # ---------------------------------------------------------------------------
 
 
-def test_fizz_seastone_trident_prices_the_six_tick_passive_burn():
+def test_fizz_seastone_trident_rends_at_the_sourced_six_tick_cadence():
+    """The rend is the fight's stacking-DoT row, applied here by Urchin
+    Strike's on-hit (one rotation has no swings), ticking every 0.5s over 3s."""
     combat = _fight("Fizz")
     per_tick = _value("Fizz", "W", "Passive Magic Damage per Tick", 5)
     total = _value("Fizz", "W", "Total Passive Magic Damage", 5)
     ticks = 6
     assert total == pytest.approx(per_tick * ticks)
-    events = _tick_events(combat, "W", per_tick)
-    assert len(events) == ticks
-    assert sum(e["raw_damage"] for e in events) == pytest.approx(total, abs=1.0)
-    assert all(e["raw_damage"] == pytest.approx(per_tick, abs=0.06) for e in events)
+    tick_times = [
+        float(event["time"])
+        for event in combat.get("events", [])
+        if event.get("attacker") == "main" and event.get("source") == "stacking_dot_W"
+    ]
+    assert tick_times == pytest.approx([0.5 * step for step in range(1, ticks + 1)])
+    active = _value("Fizz", "W", "Active Magic Damage", 5)
+    assert len(_tick_events(combat, "W", active)) == 1
 
 
 # ---------------------------------------------------------------------------

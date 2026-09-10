@@ -229,7 +229,8 @@ def test_every_module_names_every_slot_it_emits():
     }
     assert unnamed == set()
     declared = sum(len(get_champion_module_contract(n).cc_kinds) for n in CHAMPIONS)
-    assert declared == 854
+    # 854 champion slots plus Mordekaiser's reviewed aura row.
+    assert declared == 855
 
 
 @pytest.mark.parametrize("name", CHAMPIONS)

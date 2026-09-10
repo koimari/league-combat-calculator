@@ -35,6 +35,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import at_level, no_damage
@@ -43,8 +44,15 @@ from .shared_mechanics import capped_option
 from .slot_cc import CC_PER_PART
 from .slot_entries import HitRider, with_hit_rider
 from .slot_extract import PER_LEVEL_SCALING, ability_name, extract_value
+from .stat_grants import with_attack_speed_window
 
 PACKET_SHA256 = "f6bfaf95646670e30bbc7d87d92690acdfb06e59894bcaee20172d25fba4fbf2"
+
+# Wild Rush's bonus attack speed lasts the binary SamiraE.AttackSpeedDuration;
+# the cached E prose ("for 5 seconds") corroborates it.
+_E_ATTACK_SPEED_SECONDS = data_value(
+    spell_object("Samira", "SamiraE"), "AttackSpeedDuration"
+)
 
 _STYLE_MAX = 6
 # Style bonus movement speed per stack by level bracket (wiki prose:
@@ -180,6 +188,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "option states both; turning it off prices Q as the ranged shot and no attack carries "
         "the rider (Blade Whirl and Wild Rush still do)",
         "Q/W/E and R damage keep the reviewed CP10.7 packet pricing (R: 10 sourced 0.2s shots)",
+        "E (Wild Rush) places its bonus attack speed as a 5-second window at the first E "
+        "cast; the takedown reset and the second window a longer fight earns are not placed",
         "W Blade Whirl destroys selected champion projectiles during its sourced "
         "0.75 second window; the source selection is an explicit incoming-event "
         "contract.",
@@ -210,7 +220,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_wrappers={
         "Q": lambda packet_q: with_hit_rider(packet_q, _blade_zone_rider),
         "W": lambda packet_w: with_hit_rider(packet_w, _blade_rider),
-        "E": lambda packet_e: with_hit_rider(packet_e, _blade_rider),
+        "E": lambda packet_e: with_attack_speed_window(
+            with_hit_rider(packet_e, _blade_rider),
+            duration=_E_ATTACK_SPEED_SECONDS,
+            aside="granted with the dash.",
+        ),
         "R": _inferno_trigger,
     },
     slot_order=("P", "Q", "W", "E", "R"),

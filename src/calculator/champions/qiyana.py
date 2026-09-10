@@ -75,9 +75,15 @@ def _edge_of_ixtal(ctx: SlotCtx) -> dict[str, Any] | None:
 def _terrashape(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
-    """Terrashape's bonus is an on-hit rider, not a direct spell hit."""
+    """Terrashape's bonus is an on-hit rider, not a direct spell hit.
+
+    "While holding an Element, Qiyana gains bonus attack speed" (cached W
+    passive): the held-Element state the fight assumes is the same one that
+    arms the on-hit, so the attack speed is an innate grant on the row.
+    """
     total = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
-    return ability_on_hit_entry(
+    bonus_as = extract_named(ability, "Bonus Attack Speed", rank, ctx.stats, ctx.target)
+    entry = ability_on_hit_entry(
         "Terrashape element",
         rank,
         "magic",
@@ -87,6 +93,13 @@ def _terrashape(
             "damage_type": "magic",
         },
     )
+    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+    entry["innate_grant"] = True
+    entry["detail"] = (
+        f"holding an Element: +{bonus_as:g}% bonus attack speed and {total:g} "
+        "bonus magic damage on-hit on every basic attack"
+    )
+    return entry
 
 
 _terrashape.phase = ONHIT
@@ -136,6 +149,9 @@ OPTIONS = [
 ASSUMPTIONS = [
     "Royal Privilege and Terrashape are modeled as on-hit riders; they are not free "
     "direct spell damage.",
+    "Terrashape's passive bonus attack speed is an innate grant for the whole fight "
+    "(autos-only too): the fight assumes an Element is held, the same state that arms "
+    "the on-hit.",
     "Terrain Q's increased damage is enabled only when the target-below-half state is explicit.",
     "Element control and per-target passive cooldowns remain explicit scenario state.",
 ]
