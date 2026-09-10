@@ -176,7 +176,7 @@ def test_r_grants_temporary_health_to_the_chosen_ally():
 
 
 def test_r_rejects_an_enemy_recipient():
-    with pytest.raises(ValueError, match="friendly recipient"):
+    with pytest.raises(ValueError, match="cannot name 'enemy'"):
         payload([event(slot="R")])
 
 
@@ -367,7 +367,7 @@ def test_reviewed_single_target_slots_route_to_the_selected_enemy(champion):
     assert rows
     assert {row["target"] for row in rows} == {"enemy:Malphite"}
     assert any(row.get("cc_kind") for row in rows)
-    with pytest.raises(ValueError, match="friendly-target"):
+    with pytest.raises(ValueError, match="cannot name"):
         calculate_payload(
             {**body, "combat_events": [event(recipient="main")]}, deterministic=True
         )
@@ -496,3 +496,131 @@ def test_a_blocked_whimsy_preserves_the_original_ashe_q_schedule():
         if row["event_id"] == "authored:cast-1:support"
     )
     assert support["skipped_reason"] == "attacker_state_blocked"
+
+
+# ---------------------------------------------------------------------------
+# Every ally-targeting cast the support scanner prices is certified for
+# authored casts, with recipients that follow the packet's sourced scope.
+# ---------------------------------------------------------------------------
+
+
+def _scanner_certification():
+    """The certified table, re-derived from the scanner over every module."""
+    from src.calculator.champions import _CHAMPION_MODULES
+    from src.calculator.combat_events import CERTIFIED_SUPPORT_CASTS
+    from src.calculator.data_fetcher import get_champion
+    from src.calculator.support_effects import derive_ally_effects
+    from src.calculator.support_scan import _ability, _support_profile
+
+    stats = {
+        "ability_power": 100.0,
+        "attack_damage": 100.0,
+        "health": 2000.0,
+        "bonus_health": 500.0,
+        "armor": 100.0,
+        "magic_resist": 50.0,
+        "max_health": 2000.0,
+    }
+    derived = {}
+    for name in sorted(_CHAMPION_MODULES):
+        data = get_champion(name)
+        for slot in ("Q", "W", "E", "R"):
+            try:
+                rows = derive_ally_effects(
+                    data,
+                    18,
+                    dict(stats),
+                    [{"slot": slot, "time": 0.0}],
+                    ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 3},
+                )
+            except ValueError:
+                continue
+            scopes = {row.get("target_scope") for row in rows}
+            if not scopes:
+                continue
+            scope = sorted(scopes)[0]
+            target_self = _support_profile(_ability(data, slot))[2]
+            if scope == "self":
+                recipients = ("self",)
+            elif scope == "one_teammate":
+                recipients = ("self", "ally") if target_self else ("ally",)
+            else:
+                recipients = ("self", "ally")
+            derived[(name, slot)] = recipients
+    return derived, CERTIFIED_SUPPORT_CASTS
+
+
+def test_the_certified_support_table_is_what_the_scanner_prices():
+    derived, certified = _scanner_certification()
+    assert derived == certified
+
+
+def _roster(champion, events, allies=("Ashe", "Garen"), duration=10):
+    return calculate_payload(
+        {
+            "champion": champion,
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": duration,
+            "combat_events_mode": "overrides",
+            "combat_events": events,
+            "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+            "enemies": [{"champion": "Malphite", "level": 18, "items": []}],
+            "allies": [{"champion": ally, "level": 18, "items": []} for ally in allies],
+        },
+        deterministic=True,
+    )
+
+
+def _support(result, source):
+    return [
+        row
+        for row in result["combat"]["support_events"]
+        if str(row["source"]).startswith(source) and row["attacker"] == "main"
+    ]
+
+
+def test_a_certified_shield_lands_on_the_named_ally_at_the_authored_time():
+    result = _roster("Janna", [event(slot="E", time=3.0, recipient="ally:Ashe")])
+    rows = _support(result, "Eye of the Storm")
+    assert [(row["target"], row["time"], row["kind"]) for row in rows] == [
+        ("ally:Ashe", 3.0, "shield")
+    ]
+    assert rows[0]["amount"] > 0
+
+
+def test_a_self_or_ally_cast_can_shield_the_caster():
+    result = _roster("Karma", [event(slot="E", time=1.5, recipient="main")])
+    rows = _support(result, "Inspire")
+    assert [(row["target"], row["time"]) for row in rows] == [("main", 1.5)]
+
+
+def test_a_whole_team_cast_covers_the_side_whoever_is_named():
+    result = _roster("Seraphine", [event(slot="W", time=2.0, recipient="ally:Ashe")])
+    rows = _support(result, "Surround Sound")
+    assert sorted(row["target"] for row in rows) == ["ally:Ashe", "ally:Garen", "main"]
+    assert {row["time"] for row in rows} == {2.0}
+    assert (
+        len({row["_event_id"] for row in rows} if "_event_id" in rows[0] else rows) == 3
+    )
+
+
+def test_a_self_and_one_cast_covers_the_caster_and_the_named_ally():
+    result = _roster("Sona", [event(slot="W", time=2.5, recipient="ally:Garen")])
+    rows = _support(result, "Aria of Perseverance")
+    # The shield covers both; the heal's ally copy goes to the named ally and
+    # its self copy stays in Sona's own healing ledger.
+    assert sorted({row["target"] for row in rows}) == ["ally:Garen", "main"]
+    assert [row["target"] for row in rows if row["kind"] == "heal"] == ["ally:Garen"]
+
+
+def test_a_self_only_shield_lands_on_the_caster_when_authored():
+    result = _roster("Garen", [event(slot="W", time=4.0, recipient="main")])
+    rows = _support(result, "Courage")
+    assert [(row["target"], row["time"]) for row in rows] == [("main", 4.0)]
+
+
+def test_an_ally_only_cast_refuses_the_caster_as_recipient():
+    with pytest.raises(ValueError):
+        _roster("Thresh", [event(slot="W", time=1.0, recipient="main")])

@@ -26,6 +26,7 @@ from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
 from .champion_loadout import ResolvedLoadout
 from .champions.inputs import declared_option_defaults
 from .champions.lulu_events import derive_lulu_support_events
+from .combat_events import certified_recipients
 from .champions.skill_orders import get_ability_rank
 from .champions.slot_extract import extract_cooldown, extract_named
 from .defensive_effects import armed_revive
@@ -1515,9 +1516,26 @@ def _support_effect_templates(
             )
             if (recipient.team == "enemy") != (attacker.team == "enemy"):
                 continue
-            target_ids, target_policy = [
-                recipient.participant_id
-            ], "authored_cast_recipient"
+            # The packet's sourced scope, not the named recipient, decides
+            # who a whole-team cast reaches: Seraphine W and Soraka R cover
+            # the side whoever the author named, Sona W and Taric W cover
+            # the caster and the one ally named, and every other cast lands
+            # on the recipient alone.
+            scope = str(effect.get("target_scope", ""))
+            if scope in {"all_teammates", "self_and_all_teammates"}:
+                target_ids, target_policy = _support_target_ids(
+                    attacker, effect, all_actors
+                )
+                target_policy = f"authored_cast_{target_policy}"
+            elif scope == "self_and_one_teammate":
+                target_ids = [attacker.participant_id]
+                if recipient.participant_id != attacker.participant_id:
+                    target_ids.append(recipient.participant_id)
+                target_policy = "authored_cast_recipient_and_self"
+            else:
+                target_ids, target_policy = [
+                    recipient.participant_id
+                ], "authored_cast_recipient"
         else:
             target_ids, target_policy = _support_target_ids(
                 attacker, effect, all_actors
@@ -1539,7 +1557,10 @@ def _support_effect_templates(
                 ),
             }
             if "combat_events" in result:
-                resolved_template["_event_id"] = f"authored:{authored['id']}:support"
+                resolved_template["_event_id"] = (
+                    f"authored:{authored['id']}:support"
+                    + (f":{target_index}" if len(target_ids) > 1 else "")
+                )
                 resolved_template["cast_blocked_by_attacker_control"] = True
             # P1-Renata-W: a champion-authored fail-closed denial (Bailout's
             # withheld lethal-damage half) is a RECEIPT, not an applied
@@ -1595,6 +1616,34 @@ def _support_effect_templates(
         target_ids, target_policy = _support_target_ids(
             attacker, resolved_heal_event, all_actors
         )
+        # An authored cast names the one ally a self-and-one heal reaches
+        # (Sona W); a whole-side heal keeps the roster it already resolved.
+        if (
+            "combat_events" in result
+            and str(heal_event.get("target_scope", "")) == "self_and_one_teammate"
+        ):
+            # A heal row names its ability, not its slot; the cast names
+            # its slot, so the kit's slot names join the two.
+            slot_names = {
+                slot: entries[0].get("name")
+                for slot, entries in attacker.champion_data.get("abilities", {}).items()
+                if entries and isinstance(entries[0], Mapping)
+            }
+            authored_heal = next(
+                (
+                    authored
+                    for authored in result["combat_events"]
+                    if slot_names.get(authored["slot"]) == heal_event.get("source")
+                    and abs(authored["time"] - float(heal_event.get("time", 0)))
+                    < 0.00051
+                ),
+                None,
+            )
+            if authored_heal is not None:
+                target_ids = [attacker.participant_id]
+                if authored_heal["recipient_id"] != attacker.participant_id:
+                    target_ids.append(authored_heal["recipient_id"])
+                target_policy = "authored_cast_recipient_and_self"
         raw_id = heal_event.get("_event_id") or (
             f"{attacker.participant_id}:heal:{heal_index}"
         )
@@ -5082,19 +5131,17 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             ):
                 raise ValueError(f"Cast {event.id}: this caster cannot act")
             friendly = (caster.team == "enemy") == (recipient.team == "enemy")
-            if (
-                not friendly
-                and caster.champion_data["name"] == "Lulu"
-                and event.slot == "R"
-            ):
+            recipient_kind = (
+                "self"
+                if recipient.participant_id == caster.participant_id
+                else "ally" if friendly else "enemy"
+            )
+            allowed = certified_recipients(caster.champion_data["name"], event.slot)
+            if allowed is None or recipient_kind not in allowed:
                 raise ValueError(
-                    f"Cast {event.id}: Lulu R requires a friendly recipient"
-                )
-            if friendly and not (
-                caster.champion_data["name"] == "Lulu" and event.slot in {"E", "W", "R"}
-            ):
-                raise ValueError(
-                    f"Cast {event.id}: this friendly-target effect requires timed support"
+                    f"Cast {event.id}: {caster.champion_data['name']} {event.slot} "
+                    f"cannot name {recipient_kind!r} as its recipient; certified "
+                    f"recipients: {list(allowed or ())}"
                 )
             if (
                 caster.team == "ally"
