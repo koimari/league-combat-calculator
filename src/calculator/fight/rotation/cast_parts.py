@@ -13,6 +13,10 @@ from ..results import CastPricing
 from ..setup.target_debuffs import _apply_target_shred, _debuff_coverage
 from ..state import FightState
 
+# A landing instant this close to the fight end still lands: float sums of
+# cast times and offsets reach the boundary a few ulps late.
+_LANDING_EPSILON = 1e-9
+
 
 def _evaluate_cast_parts(
     state: "FightState",
@@ -203,8 +207,34 @@ def _evaluate_cast_parts(
                 event_missing_ratio = (
                     missing_ratio if part.hp_scaled_damage is not None else None
                 )
+            # A hit the source times past the fight's end never lands: a
+            # Time Bomb thrown at 0.0 in a 1-second fight is still fused
+            # when the fight ends, and Requiem's channel is still running.
+            # Only authored timing can say so; a cast-boundary part has no
+            # landing instant to compare. A part with a hit interval is a
+            # DoT's tick train, and an applied DoT's ticks are committed
+            # past the cutoff by the ledger's own rule (fight/rotation/
+            # dot_ticks.py), so only single-instant hits are clipped. A
+            # one-rotation fight is "cast everything once and let it land",
+            # so it keeps every hit.
+            landing_base = None
+            if (
+                part.time_offset is not None
+                and part.hit_interval is None
+                and not state.one_rotation
+            ):
+                landing_base = (
+                    cast_times[cast_index]
+                    if cast_times is not None and cast_index < len(cast_times)
+                    else 0.0
+                ) + part.time_offset
             mitigated = 0.0
             for hit_index in range(hits):
+                if (
+                    landing_base is not None
+                    and landing_base > state.fight_duration_seconds + _LANDING_EPSILON
+                ):
+                    continue
                 if repeat_damage is not None and (
                     hit_index > 0 or not rock_solid_instances
                 ):

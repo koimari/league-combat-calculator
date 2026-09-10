@@ -438,8 +438,10 @@ class TestReviewedCrowdControl:
 def test_e_is_modeled_through_the_821_5_umbral_dash_heal() -> None:
     """E's own row is a sourced zero; the heal rule is what prices the slot.
 
-    A level-18 itemless timed fight with autos pays Umbral Dash 821.5 —
-    the receipt behind E's ``modeled`` label.
+    A level-18 itemless timed fight with autos pays Umbral Dash 715.4,
+    the receipt behind E's ``modeled`` label. It was 821.5 before hits
+    timed past the fight's end stopped landing (#323): the second Q's third
+    strike lands at 8.85 s in an 8 s window, and the heal it fed went with it.
     """
     from src.calculator.calculate import calculate_payload
     from src.calculator.champions import get_champion_module_contract
@@ -461,7 +463,7 @@ def test_e_is_modeled_through_the_821_5_umbral_dash_heal() -> None:
         for event in payload["self_healing_events"]
         if event["source"] == "Umbral Dash"
     )
-    assert paid == pytest.approx(821.5, abs=0.1)
+    assert paid == pytest.approx(715.4, abs=0.1)
 
 
 class TestModuleCoverage:

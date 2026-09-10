@@ -177,10 +177,12 @@ def test_lay_waste_recasts_on_its_cooldown_across_the_window():
     ten = _timed_payload(10)
 
     # 0.25s cast + 1.0s cooldown on one shared timeline: casts at 0.25,
-    # then 3.75 and 5.0 once R's 3.25s channel releases the hands (3 in
-    # 5s), continuing every 1.25s through 10.0 (7 in 10s).
-    assert five["breakdown"]["Q"]["casts"] == 3
-    assert ten["breakdown"]["Q"]["casts"] == 7
+    # then 3.75 and 5.0 once R's 3.25s channel releases the hands,
+    # continuing every 1.25s through 10.0. The cast at the window's last
+    # instant is dropped: its detonation (0.25s cast + 0.75s delay) lands
+    # after the fight ends (#323), so 2 casts land in 5s and 6 in 10s.
+    assert five["breakdown"]["Q"]["casts"] == 2
+    assert ten["breakdown"]["Q"]["casts"] == 6
 
 
 def test_timed_defile_ignores_the_one_rotation_tick_selector():
