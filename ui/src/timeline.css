@@ -1,0 +1,138 @@
+.calculator-timeline {
+  margin: 0 0 28px;
+}
+.calculator-timeline-grid {
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr);
+  border: 1px solid var(--calculator-line);
+  border-radius: var(--calculator-control-radius, 3px);
+  background: var(--calculator-surface);
+  overflow: hidden;
+}
+.calculator-timeline-corner,
+.calculator-timeline-axis {
+  border-bottom: 1px solid var(--calculator-line);
+  background: var(--calculator-subtle);
+}
+.calculator-timeline-axis {
+  position: relative;
+  height: 26px;
+  font-size: 11px;
+  color: var(--calculator-muted);
+  font-variant-numeric: tabular-nums;
+}
+.calculator-timeline-axis span {
+  position: absolute;
+  top: 6px;
+  transform: translateX(-50%);
+}
+.calculator-timeline-axis span:first-child {
+  transform: none;
+  padding-left: 4px;
+}
+.calculator-timeline-axis span:last-child {
+  transform: translateX(-100%);
+  padding-right: 4px;
+}
+.calculator-timeline-row {
+  display: contents;
+}
+.calculator-timeline-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--calculator-line);
+  font-size: 13px;
+  line-height: 1.2;
+}
+.calculator-timeline-label img {
+  width: 28px;
+  height: 28px;
+  border-radius: 3px;
+  object-fit: cover;
+  flex: none;
+}
+.calculator-timeline-label span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.calculator-timeline-label small {
+  display: block;
+  color: var(--calculator-faint);
+  font-size: 11px;
+}
+.calculator-timeline-lane {
+  position: relative;
+  min-height: 46px;
+  border-bottom: 1px solid var(--calculator-line);
+}
+.calculator-timeline-lane.is-editable {
+  cursor: copy;
+}
+.calculator-timeline-lane i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed
+    color-mix(in srgb, var(--calculator-line) 60%, transparent);
+  pointer-events: none;
+}
+.calculator-timeline-ghost {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  color: var(--calculator-faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.calculator-timeline-ghost.is-cast {
+  padding: 2px 5px;
+  border: 1px dashed var(--calculator-line);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--calculator-surface) 80%, transparent);
+}
+.calculator-timeline-ghost.is-auto {
+  width: 2px;
+  height: 12px;
+  background: var(--calculator-line);
+}
+.calculator-timeline-mark {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--calculator-positive);
+  border-radius: 15px;
+  background: var(--calculator-surface);
+  color: var(--calculator-positive);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.calculator-timeline-mark.is-selected {
+  background: var(--calculator-positive);
+  color: var(--calculator-surface);
+}
+.calculator-timeline-mark.is-dragging {
+  cursor: grabbing;
+  box-shadow: 0 2px 8px #0003;
+}
+@media (max-width: 680px) {
+  .calculator-timeline-grid {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+  .calculator-timeline-label span {
+    font-size: 12px;
+  }
+  .calculator-timeline-label small {
+    display: none;
+  }
+}
