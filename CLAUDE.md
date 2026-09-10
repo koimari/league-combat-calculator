@@ -42,6 +42,7 @@ python scripts/patch_update.py run    # Patch day, the one orchestrator: detect/
 python scripts/bench_request.py --compare benchmarks.md  # Request-latency instrument, not a gate (its medians are one machine's); benchmarks.md is the one home for perf numbers
 python scripts/build_icon_sprite.py --check   # The icon sheet the scoreboard reader matches against must cover the caches (rebuilt on patch day)
 python scripts/scoreboard_corpus.py read <frame> --sheet sheet.png   # Read a scoreboard frame through the shipped matcher; docs/scoreboard-autofill.md covers scan, grab, label
+python scripts/certify_damage_casts.py --check   # The authored-cast table (src/calculator/certified_casts.py) must match what the registered modules price; --write regenerates it
 ```
 
 `pytest` gates every task; `pylint src/` and `black --check` gate any code change.

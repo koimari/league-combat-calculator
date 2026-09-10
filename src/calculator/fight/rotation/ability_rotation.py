@@ -337,12 +337,18 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         shred_ramp = _make_shred_ramp(resists, ability_info, ability_stacks)
         cast_times = plan.times.get(ability_key, ())
         if state.combat_events is not None:
+            # An area cast reaches every enemy the roster holds, so every
+            # pair prices it whoever the author named; any other cast is
+            # priced only in the pair whose target the author named. A
+            # damage cast may only name an enemy (combat_events certifies
+            # the recipients), so "any recipient" here is "any enemy".
+            reaches_every_enemy = bool(ability_info.get("area_damage"))
             selected_times = {
                 event.time
                 for event in state.combat_events
                 if event.caster_id == state.event_actor_id
                 and event.slot == ability_key
-                and event.recipient_id == state.event_target_id
+                and (reaches_every_enemy or event.recipient_id == state.event_target_id)
             }
             cast_times = tuple(time for time in cast_times if time in selected_times)
         authored_controls = tuple(ability_field(ability_info, "control_events"))
