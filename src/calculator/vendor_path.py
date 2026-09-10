@@ -16,8 +16,8 @@ LOLSTATICDATA_ROOT = (
 if str(LOLSTATICDATA_ROOT) not in sys.path:
     sys.path.insert(0, str(LOLSTATICDATA_ROOT))  # sightline-ok: 9 - vendored root
 
-from lolstaticdata.common import utils as lsd_utils  # noqa: E402
-from lolstaticdata.common.utils import (  # noqa: E402
+from lolstaticdata.common import utils as lsd_utils  # noqa: E402 - after the path bootstrap
+from lolstaticdata.common.utils import (  # noqa: E402 - after the path bootstrap
     download_json,
     get_latest_patch_version,
 )
