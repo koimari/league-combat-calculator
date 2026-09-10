@@ -117,6 +117,9 @@ const ScoreboardVision = (() => {
   /* A cell may run this share of its size past the frame: a crop of the
    * panel cuts a sliver off its bottom row and outer item slots. */
   const EDGE_OVERHANG = 0.25;
+  /* The moves the polish climbs by, as [dx, dy, ds] on a cell's top-left
+   * corner and side: one axis at a time. */
+  const POLISH_MOVES = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
 
   /* --- fingerprints --------------------------------------------------- */
 
@@ -423,23 +426,38 @@ const ScoreboardVision = (() => {
    * spots are classified, since a 4x4 thumbnail can prefer the edge of a
    * neighbour. The survivor is polished by 1px steps and at most one size
    * step either way, re-classifying so the key may change as it settles.
+   *
+   * An anchored window keeps the strongest cell of each size, not just the
+   * strongest of all: the climb walks one axis at a time, so it cannot cross
+   * from the size that won the window to a better one whose peak also sits
+   * at a different position. Only the strongest is polished, and only if
+   * `accept` refuses the result are the other sizes climbed too, so a call
+   * that settles today settles the same way. The Trinity Force on the LCK
+   * crop's top row is the saddle this recovers: the window settles on
+   * (226, 40, 30) at 0.65, a thousandth of runner-up margin under FILL_GAP,
+   * while (227, 41, 28), which only the 28px climb reaches, reads 0.74
+   * with 0.32.
    */
-  function verify(raster, candidate, refs, pool, anchored = false) {
+  function verify(raster, candidate, refs, pool, anchored = false, accept = null) {
     const kind = kindOf(pool);
     const slack = candidate.size * EDGE_OVERHANG;
     const inside = (x, y, size) => x >= -slack && y >= -slack && x + size <= raster.width + slack && y + size <= raster.height + slack;
     if (!inside(candidate.x, candidate.y, candidate.size)) return null;
     let best = null;
+    const starts = [];
     if (anchored) {
       for (const size of [candidate.size - 1, candidate.size, candidate.size + 1]) {
+        let atSize = null;
         for (const dy of [-2, 0, 2]) {
           for (const dx of [-2, 0, 2]) {
             const hit = inside(candidate.x + dx, candidate.y + dy, size)
               ? classify(raster, candidate.x + dx, candidate.y + dy, size, refs, pool)
               : null;
-            if (hit && (!best || hit.score > best.score)) best = hit;
+            if (hit && (!atSize || hit.score > atSize.score)) atSize = hit;
           }
         }
+        if (atSize) starts.push(atSize);
+        if (atSize && (!best || atSize.score > best.score)) best = atSize;
       }
     } else {
       const vec = new Float32Array(refs.thumbLen);
@@ -460,24 +478,36 @@ const ScoreboardVision = (() => {
         if (hit && (!best || hit.score > best.score)) best = hit;
       }
     }
-    if (!best || best.contrast < MIN_CONTRAST || best.score < MIN_SCORE[kind] - POLISH_SLACK) return null;
+    const floor = MIN_SCORE[kind] - POLISH_SLACK;
+    if (!best || best.contrast < MIN_CONTRAST || best.score < floor) return null;
     const smallest = Math.round(candidate.size / SIZE_RATIO);
     const largest = Math.round(candidate.size * SIZE_RATIO);
-    for (let moved = true, rounds = 0; moved && rounds < 6; rounds += 1) {
-      moved = false;
-      for (const [dx, dy, ds] of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]) {
-        const x = best.x + dx;
-        const y = best.y + dy;
-        const size = best.size + ds;
-        if (!inside(x, y, size) || size < smallest || size > largest) continue;
-        const hit = classify(raster, x, y, size, refs, pool);
-        if (hit && hit.score > best.score) {
-          best = hit;
-          moved = true;
+    const climb = (from) => {
+      let settled = from;
+      for (let moved = true, rounds = 0; moved && rounds < 6; rounds += 1) {
+        moved = false;
+        for (const [dx, dy, ds] of POLISH_MOVES) {
+          const x = settled.x + dx;
+          const y = settled.y + dy;
+          const size = settled.size + ds;
+          if (!inside(x, y, size) || size < smallest || size > largest) continue;
+          const hit = classify(raster, x, y, size, refs, pool);
+          if (hit && hit.score > settled.score) {
+            settled = hit;
+            moved = true;
+          }
         }
       }
+      return settled.contrast >= MIN_CONTRAST ? settled : null;
+    };
+    const settled = climb(best);
+    if (!accept || (settled && accept(settled))) return settled;
+    for (const start of starts) {
+      if (start === best || start.contrast < MIN_CONTRAST || start.score < floor) continue;
+      const other = climb(start);
+      if (other && accept(other)) return other;
     }
-    return best.contrast >= MIN_CONTRAST ? best : null;
+    return settled;
   }
 
   /* --- coarse search -------------------------------------------------- */
@@ -736,6 +766,8 @@ const ScoreboardVision = (() => {
    * portrait leaves tagged with its `column`, left to right,
    * which is the team it belongs to.
    */
+  const takesGridSlot = (hit) => hit.score >= MIN_SCORE.champion && hit.gap >= MIN_GAP.champion * GRID_GAP_SHARE;
+
   function fillColumns(raster, refs, pool, found, size) {
     const columns = [];
     for (const hit of found) {
@@ -757,8 +789,8 @@ const ScoreboardVision = (() => {
         const filled = [];
         for (let k = known[0] - MAX_ROWS + 1; k <= known[known.length - 1] + MAX_ROWS - 1; k += 1) {
           const y = Math.round(ys[0] + k * pitch - size / 2);
-          const plain = slot.get(k) || verify(raster, { x, y, size }, refs, pool, true);
-          const kept = plain && plain.score >= MIN_SCORE.champion && plain.gap >= MIN_GAP.champion * GRID_GAP_SHARE;
+          const plain = slot.get(k) || verify(raster, { x, y, size }, refs, pool, true, takesGridSlot);
+          const kept = plain && takesGridSlot(plain);
           const hit = kept ? plain : classifyMasked(raster, x, y, size, refs, pool);
           if (hit) hit.column = index;
           filled.push(hit);
@@ -792,6 +824,8 @@ const ScoreboardVision = (() => {
    * `pitchHint` is the panel-wide pitch, preferred over the player's own
    * few gaps, which round a pixel off and drift the outer slots.
    */
+  const takesStripSlot = (hit) => hit.score >= FILL_SCORE && (hit.gap >= FILL_GAP || hit.score >= SURE_FILL);
+
   function fillStrip(raster, refs, items, itemSize, pitchHint, champion, bounds) {
     const sorted = [...items].sort((a, b) => a.x - b.x);
     if (!sorted.length) return [];
@@ -814,8 +848,8 @@ const ScoreboardVision = (() => {
       const x = Math.round(sorted[nearest].x + (k - slot[nearest]) * pitch);
       if (Math.abs(x - champion.x) < champion.size && Math.abs(y - champion.y) < champion.size) continue;
       if (bounds && (x < bounds.min || x > bounds.max)) continue;
-      const hit = known.get(k) || verify(raster, { x, y, size }, refs, "item", true);
-      filled.push(hit && hit.score >= FILL_SCORE && (hit.gap >= FILL_GAP || hit.score >= SURE_FILL) ? hit : null);
+      const hit = known.get(k) || verify(raster, { x, y, size }, refs, "item", true, takesStripSlot);
+      filled.push(hit && takesStripSlot(hit) ? hit : null);
     }
     const window = strongestWindow(filled, MAX_SLOTS);
     const first = window.findIndex(Boolean);

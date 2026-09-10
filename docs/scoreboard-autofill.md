@@ -72,6 +72,16 @@ cannot name from the frame and `null` for an empty slot. The test holds
 champions exact and items to `ITEM_FLOOR` read with at most `EXTRA_CEILING`
 phantom, both ratcheted to what the tree reads.
 
+## Polish climbs each anchored size
+
+An anchored window keeps the strongest cell of each size, not only the
+strongest overall: the 1px climb walks one axis at a time, so it cannot cross
+from the size that won the window to a better peak at another size and
+position. The strongest is polished first; only when the caller's acceptance
+rule (`takesGridSlot`, `takesStripSlot`) refuses the result are the other
+sizes climbed. That recovered the last item the LCK crop missed, and the two
+trinkets and one `?` it also surfaced were label gaps, now written.
+
 ## Masked second opinion
 
 A grid slot the free search and the plain fill both left empty is classified
