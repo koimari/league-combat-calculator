@@ -12,9 +12,12 @@ from dataclasses import field as dataclass_field
 from typing import Any
 
 from .ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
+from .auto_attack_policy import AUTO_ATTACK_UPTIME_MODES
 from .capabilities import PRE_COMBAT_STATS
+from .combat_events import roster_ids
 from .champions import get_champion_options_meta
 from .champions.skill_orders import get_ability_rank
+from .rank_allocation import validate_manual_ranks
 from .data_fetcher import get_champion, get_item_by_name
 from .defensive_effects import StartingDefenses, resolve_starting_defenses
 from .interaction_effects import target_physical_damage_reduction_params
@@ -25,7 +28,13 @@ from .item_coverage import (
 )
 from .item_effects import validate_item_input_options
 from .loadout_rules import validate_resolved_loadout
-from .pipeline import MAX_ALLIES, MAX_ENEMIES, FightParams, validate_cast_order_shape
+from .pipeline import (
+    MAX_ALLIES,
+    MAX_ENEMIES,
+    FightParams,
+    validate_cast_order_shape,
+    _bounded_request_float,
+)
 from .practice_dummy import (
     PRACTICE_DUMMY_KIND,
     PRACTICE_DUMMY_LEVEL,
@@ -36,6 +45,7 @@ from .practice_dummy import (
 )
 from .request_parsing import (
     request_index_map,
+    request_bool,
     short_string,
 )
 from .request_parsing import (
@@ -183,6 +193,9 @@ class ChampionLoadout:
     #: participant starts the fight at full health; a number starts them at
     #: exactly that many health, bounded by their resolved maximum health.
     current_health: float | None = None
+    include_auto_attacks: bool | None = None
+    auto_attack_uptime_mode: str | None = None
+    auto_attack_uptime: float | None = None
 
     @property
     def is_practice_dummy(self) -> bool:
@@ -277,7 +290,7 @@ class ChampionLoadout:
             for slot, rank in raw_ranks.items():
                 if isinstance(rank, bool) or not isinstance(rank, int):
                     raise ValueError(f"{field}.ability_ranks.{slot} must be an integer")
-                if not 0 <= rank <= (3 if slot == "R" else 6):
+                if not 0 <= rank <= 6:
                     raise ValueError(
                         f"{field}.ability_ranks.{slot} is outside the legal rank range"
                     )
@@ -321,6 +334,24 @@ class ChampionLoadout:
             if current_health <= 0.0:
                 raise ValueError(f"{field}.current_health must be greater than 0")
 
+        include_auto_attacks = (
+            request_bool(value, "include_auto_attacks", False)
+            if "include_auto_attacks" in value
+            else None
+        )
+        auto_attack_uptime_mode = value.get("auto_attack_uptime_mode")
+        if "auto_attack_uptime_mode" in value and (
+            not isinstance(auto_attack_uptime_mode, str)
+            or auto_attack_uptime_mode not in AUTO_ATTACK_UPTIME_MODES
+        ):
+            raise ValueError(
+                f"{field}.auto_attack_uptime_mode must be legacy, explicit, or calculated"
+            )
+        auto_attack_uptime = (
+            _bounded_request_float(value, "auto_attack_uptime", 0.0)
+            if "auto_attack_uptime" in value
+            else None
+        )
         equipped_names = (*items, *((boots,) if boots else ()))
         if len(set(equipped_names)) != len(equipped_names):
             raise ValueError(f"{field} must not contain duplicate items")
@@ -346,6 +377,9 @@ class ChampionLoadout:
             target_stats=target_stats,
             rune_page=rune_page,
             current_health=current_health,
+            include_auto_attacks=include_auto_attacks,
+            auto_attack_uptime_mode=auto_attack_uptime_mode,
+            auto_attack_uptime=auto_attack_uptime,
         )
 
     def resolve(self) -> "ResolvedLoadout":
@@ -458,22 +492,6 @@ class ResolvedLoadout:
         }
 
 
-def _ability_max_rank(champion_data: Mapping[str, Any], slot: str) -> int:
-    """Read the authored rank cardinality, including six-rank kits such as Jayce."""
-    entries = champion_data.get("abilities", {}).get(slot, [])
-    maximum = 0
-    for ability in entries:
-        if not isinstance(ability, Mapping):
-            continue
-        for effect in ability.get("effects", []):
-            for leveling in effect.get("leveling", []):
-                for modifier in leveling.get("modifiers", []):
-                    maximum = max(maximum, len(modifier.get("values", [])))
-    if maximum:
-        return maximum
-    return 3 if slot == "R" else 5
-
-
 def _validate_ability_ranks(
     champion_data: Mapping[str, Any],
     level: int,
@@ -489,24 +507,10 @@ def _validate_ability_ranks(
         slot: int(supplied.get(slot, get_ability_rank(slot, level, name)))
         for slot in ("Q", "W", "E", "R")
     }
-    for slot, rank in effective.items():
-        maximum = _ability_max_rank(champion_data, slot)
-        if rank < 0 or rank > maximum:
-            raise ValueError(
-                f"{field}.{slot} rank {rank} exceeds the authored maximum {maximum}"
-            )
-        if slot == "R":
-            minimum_level = (0, 6, 11, 16)[min(rank, 3)]
-        else:
-            minimum_level = max(1, 2 * rank - 1) if rank else 0
-        if rank and level < minimum_level:
-            raise ValueError(
-                f"{field}.{slot} rank {rank} requires champion level {minimum_level}"
-            )
-    if sum(effective.values()) > min(level, 18):
-        raise ValueError(
-            f"{field} spends more skill points than champion level {level} allows"
-        )
+    try:
+        validate_manual_ranks(name, level, effective)
+    except ValueError as exc:
+        raise ValueError(f"{field}: {exc}") from exc
 
 
 def parse_roster(
@@ -695,10 +699,14 @@ def resolve_scenario(request: ScenarioRequest) -> ResolvedScenario:
             ally_stat_bonuses=combine_ally_stat_effects(ally_effects),
         )
 
+    event_target_ids = roster_ids(
+        [enemy.champion_data["name"] for enemy in enemies], "enemy"
+    )
     target_fight_params = tuple(
         replace(
             fight_params,
             roster_target_index=target_index,
+            event_target_id=event_target_ids[target_index],
             roster_target_count=len(enemies),
             target_health=enemy.stats["health"],
             target_bonus_health=enemy.stats["bonus_health"],

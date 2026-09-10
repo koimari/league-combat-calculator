@@ -1,39 +1,46 @@
 "use client";
 
 import { useEffect, useRef, useState, useId, type ReactNode } from "react";
+import { Options } from "./Options";
 import { ChampionHud } from "./ChampionHud";
 import { RunePage } from "./RunePage";
 import { GameTooltip } from "./Tooltip";
 import "./rune-page.css";
+import {
+  parseScenario,
+  encodeScenario,
+  decodeScenario,
+  type SavedScenario,
+} from "./scenario-storage";
+import { SupportTargets } from "./SupportTargets";
+import { EventEditor } from "./EventEditor";
+import { PurchasePlanner } from "./PurchasePlanner";
+import { SlotSearch } from "./SlotSearch";
+import { CombatResults } from "./CombatResults";
+import {
+  newParticipant,
+  newBuild,
+  zeroRanks,
+  domainValue,
+  skillCaps,
+  reduceRanksForLevel,
+  serializeParticipant,
+  compactSlotIndex,
+  reindexSupportTargets,
+  type Participant,
+  type AuthoredEvent,
+} from "./scenario-state";
+import "./roster-workspace.css";
 import { useLoadoutStats } from "./useLoadoutStats";
 import { request } from "./api";
 import { shopGroup, wikiText } from "./shop";
-import type {
-  Build,
-  Champion,
-  Config,
-  Item,
-  Optimization,
-  Option,
-  Result,
-  Values,
-} from "./types";
+import type { Build, Champion, Config, Item, Result } from "./types";
 
 export interface CalculatorProps {
   apiBase?: string;
   className?: string;
   advancedHref?: string;
 }
-const emptyBuild = (): Build => ({
-  items: Array(6).fill(null),
-  boots: "",
-  keystone: "",
-  keystone_options: {},
-  minor_runes: [],
-  stat_shards: [],
-  item_options: {},
-  rune_options: {},
-});
 const format = (value: unknown) =>
   typeof value === "number" && Number.isFinite(value)
     ? new Intl.NumberFormat("en-US", { maximumFractionDigits: 1 }).format(value)
@@ -41,112 +48,6 @@ const format = (value: unknown) =>
 const label = (value: string) => value.replaceAll("_", " ");
 const normalize = (value: string) =>
   value.toLowerCase().replace(/[^a-z0-9]/g, "");
-
-function Options({
-  options,
-  values,
-  onChange,
-}: {
-  options: Option[];
-  values: Values;
-  onChange: (values: Values) => void;
-}) {
-  return (
-    <div className="calculator-options">
-      {options.map((option) => {
-        const value = values[option.key] ?? option.default ?? "";
-        const type =
-          option.type ?? (option.kind === "switch" ? "switch" : "int");
-        const change = (next: Values[string]) =>
-          onChange({ ...values, [option.key]: next });
-        const choices = option.options ?? option.choices;
-        return (
-          <label
-            className={
-              type === "bool" || type === "switch"
-                ? "calculator-check"
-                : "calculator-field"
-            }
-            key={option.key}
-          >
-            {type === "bool" || type === "switch" ? (
-              <>
-                <input
-                  type="checkbox"
-                  checked={Boolean(value)}
-                  onChange={(e) =>
-                    change(
-                      type === "switch"
-                        ? Number(e.target.checked)
-                        : e.target.checked,
-                    )
-                  }
-                />
-                <span>{option.label ?? label(option.key)}</span>
-              </>
-            ) : (
-              <>
-                <span>{option.label ?? label(option.key)}</span>
-                {choices ? (
-                  <select
-                    value={String(value)}
-                    onChange={(e) => change(e.target.value)}
-                  >
-                    {choices.map((choice) =>
-                      typeof choice === "string" ? (
-                        <option key={choice}>{choice}</option>
-                      ) : (
-                        <option key={choice.value} value={choice.value}>
-                          {choice.label}
-                        </option>
-                      ),
-                    )}
-                  </select>
-                ) : type === "string_list" ? (
-                  <input
-                    value={
-                      Array.isArray(value) ? value.join(", ") : String(value)
-                    }
-                    placeholder="Separate values with commas"
-                    onChange={(e) =>
-                      change(
-                        e.target.value
-                          .split(",")
-                          .map((s) => s.trim())
-                          .filter(Boolean),
-                      )
-                    }
-                  />
-                ) : (
-                  <input
-                    type={
-                      ["int", "float", "number"].includes(type)
-                        ? "number"
-                        : "text"
-                    }
-                    min={option.min ?? option.minimum}
-                    max={option.max ?? option.maximum}
-                    step={option.step ?? (type === "int" ? 1 : "any")}
-                    value={String(value)}
-                    onChange={(e) =>
-                      change(
-                        e.target.type === "number"
-                          ? e.target.value === ""
-                            ? ""
-                            : Number(e.target.value)
-                          : e.target.value,
-                      )
-                    }
-                  />
-                )}
-              </>
-            )}
-          </label>
-        );
-      })}
-    </div>
-  );
-}
 
 const shopStats = [
   ["Attack damage", ["ad"], "sword"],
@@ -262,7 +163,6 @@ function ItemShop({
   onPick: (name: string) => void;
   onClose: () => void;
 }) {
-  const [bisOpen, setBisOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [stats, setStats] = useState<string[]>([]);
   const [affordable, setAffordable] = useState(false);
@@ -583,18 +483,12 @@ function ItemShop({
               <ShopIcon name="boot" />
               Boots
             </button>
-            {shop.optimizer && (
-              <button
-                type="button"
-                aria-pressed={bisOpen}
-                onClick={() => setBisOpen(!bisOpen)}
-              >
-                BIS builder
-              </button>
-            )}
           </div>
-          {bisOpen && (
-            <section className="calculator-shop-bis" aria-label="BIS builder">
+          {shop.optimizer && (
+            <section
+              className="calculator-shop-bis"
+              aria-label="Rank selected item slot"
+            >
               {shop.optimizer}
             </section>
           )}
@@ -1097,46 +991,42 @@ function CalculatorSession({
   } | null>(null);
   const [loadVersion, setLoadVersion] = useState(0);
   const [loadError, setLoadError] = useState("");
-  const [champion, setChampion] = useState("");
-  const [level, setLevel] = useState(18);
-  const [target, setTarget] = useState("");
-  const [targetLevel, setTargetLevel] = useState(18);
-  const [targetRanks, setTargetRanks] = useState<Record<string, number> | null>(
-    null,
-  );
-  const [targetBuild, setTargetBuild] = useState<Build>(emptyBuild());
-  const [hudSide, setHudSide] = useState(0);
-  const [role, setRole] = useState("");
-  const [questComplete, setQuestComplete] = useState(false);
-  const [builds, setBuilds] = useState<[Build, Build]>([
-    emptyBuild(),
-    emptyBuild(),
-  ]);
+  const [main, setMain] = useState(() => newParticipant("main"));
+  const [alternative, setAlternative] = useState<Build>(newBuild);
+  const [allies, setAllies] = useState<Participant[]>([]);
+  const [enemies, setEnemies] = useState<Participant[]>([]);
+  const [selectedId, setSelectedId] = useState("main");
+  const [side, setSide] = useState(0);
   const [compare, setCompare] = useState(true);
-  const [duration, setDuration] = useState(10);
-  const [targetStats, setTargetStats] = useState<Record<string, number>>({});
-  const [targetItems, setTargetItems] = useState<(string | null)[]>(
-    Array(6).fill(null),
-  );
-  const [championOptions, setChampionOptions] = useState<Values>({});
-  const [ranks, setRanks] = useState<Record<string, number> | null>(null);
-  const [autos, setAutos] = useState(true);
-  const [enemyAttack, setEnemyAttack] = useState(true);
-  const [budgets, setBudgets] = useState(["", "", ""]);
-  const [shopSelection, setShopSelection] = useState("");
+  const [duration, setDuration] = useState(8);
+  const [objective, setObjective] = useState("team_outcome");
+  const [autosOnly, setAutosOnly] = useState(false);
+  const [setupMessage, setSetupMessage] = useState("");
+  const setupFile = useRef<HTMLInputElement>(null);
+  const [includeActives, setIncludeActives] = useState(true);
+  const [enemiesAttack, setEnemiesAttack] = useState(true);
+  const [dummyStats, setDummyStats] = useState<Record<string, number>>({});
+  const [useSequence, setUseSequence] = useState(false);
+  const [events, setEvents] = useState<AuthoredEvent[]>([]);
+  const [budgets, setBudgets] = useState<Record<string, string>>({});
   const [picker, setPicker] = useState<{
-    kind: "champion" | "target" | "item" | "boots" | "targetItem";
-    side?: number;
-    slot?: number;
+    kind: "champion" | "item" | "boots";
+    id: string;
+    side: number;
+    slot: number;
   } | null>(null);
+  const [runeOwner, setRuneOwner] = useState<{
+    id: string;
+    side: number;
+  } | null>(null);
+  const [shopSelection, setShopSelection] = useState("");
   const [results, setResults] = useState<Result[]>([]);
   const [resultKey, setResultKey] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [runeSide, setRuneSide] = useState<number | null>(null);
-  const [optimization, setOptimization] = useState<Optimization | null>(null);
   const active = useRef<AbortController | null>(null);
-  const version = useRef(0);
+  const requestVersion = useRef(0);
+  const setupLoaded = useRef(false);
   useEffect(() => {
     const controller = new AbortController();
     Promise.all([
@@ -1146,198 +1036,341 @@ function CalculatorSession({
       request<Config>(apiBase, "config", controller.signal),
     ])
       .then(([champions, items, boots, config]) => {
-        if (controller.signal.aborted) return;
-        setCatalog({ champions, items, boots, config });
-        setDuration(config.fight_defaults.duration_seconds);
-        setTargetStats(config.default_target);
+        if (!controller.signal.aborted) {
+          setCatalog({ champions, items, boots, config });
+          if (!setupLoaded.current) {
+            setDuration(config.fight_defaults.duration_seconds);
+            setDummyStats(config.default_target);
+          }
+        }
       })
       .catch((e) => {
         if (!controller.signal.aborted) setLoadError(e.message);
       });
     return () => controller.abort();
   }, [apiBase, loadVersion]);
-  const inputKey = JSON.stringify({
-    apiBase,
-    questComplete,
-    champion,
-    level,
-    target,
-    targetLevel,
-    targetRanks,
-    targetBuild,
-    targetStats,
-    targetItems,
-    role,
-    builds,
-    compare,
-    duration,
-    championOptions,
-    ranks,
-    autos,
-    enemyAttack,
-    budgets,
-  });
-  const [previousInputKey, setPreviousInputKey] = useState(inputKey);
-  if (previousInputKey !== inputKey) {
-    setPreviousInputKey(inputKey);
-    setBusy(false);
-    setError("");
-    setOptimization(null);
-  }
-  useEffect(() => {
-    version.current++;
-    active.current?.abort();
-  }, [inputKey]);
-  useEffect(() => () => active.current?.abort(), []);
-  const stale = resultKey !== inputKey;
+  const participants = [main, ...allies, ...enemies];
+  const selected =
+    participants.find((actor) => actor.id === selectedId) ?? main;
   const config = catalog?.config;
-  const roleRules = config?.domain_contract.role_quest;
-  const roleValue = (key: "level_cap" | "inventory_capacity" | "boots_tier") =>
-    roleRules?.[key].by_role[role]?.[
-      questComplete ? "complete" : "incomplete"
-    ] ?? roleRules?.[key].default;
-  const levelCap = roleValue("level_cap");
-  const capacity = roleValue("inventory_capacity");
-  const ordinarySlots = (build: Build) =>
-    Math.min(6, (capacity ?? 6) - (build.boots ? 1 : 0));
-  const chosen = catalog?.champions.find((c) => c.name === champion);
-  const targetChampion = catalog?.champions.find((c) => c.name === target);
-  const itemByName = (name: string | null) =>
-    catalog?.items.find((i) => i.name === name) ??
-    catalog?.boots.find((i) => i.name === name);
-  const editBuild = (index: number, change: Partial<Build>) =>
-    setBuilds(
-      (previous) =>
-        previous.map((build, i) =>
-          i === index ? { ...build, ...change } : build,
-        ) as [Build, Build],
+  const rankRules = (actor: Participant) =>
+    config?.domain_contract.rank_allocation.rules_by_champion?.[
+      actor.champion
+    ] ?? config?.domain_contract.rank_allocation.default_rules;
+  const championFor = (actor: Participant) =>
+    catalog?.champions.find((champion) => champion.name === actor.champion);
+  const itemFor = (name: string | null) =>
+    catalog?.items.find((item) => item.name === name) ??
+    catalog?.boots.find((item) => item.name === name);
+  const getBuild = (actor: Participant, buildSide = side) =>
+    actor.id === "main" && buildSide === 1 ? alternative : actor.build;
+  const selectedBuild = getBuild(selected);
+  const participantLabel = (actor: Participant) =>
+    actor.id === "main"
+      ? "Your champion"
+      : allies.some((ally) => ally.id === actor.id)
+        ? `Ally ${allies.findIndex((ally) => ally.id === actor.id) + 1}`
+        : `Enemy ${enemies.findIndex((enemy) => enemy.id === actor.id) + 1}`;
+  function editParticipant(id: string, change: Partial<Participant>) {
+    if (change.champion !== undefined) {
+      if (id === "main" || allies.some((actor) => actor.id === id)) {
+        const previous = [main, ...allies];
+        const next = reindexSupportTargets(
+          previous,
+          previous.map((actor) =>
+            actor.id === id ? { ...actor, ...change } : actor,
+          ),
+        );
+        setMain(next[0]);
+        setAllies(next.slice(1));
+      } else
+        setEnemies(
+          reindexSupportTargets(
+            enemies,
+            enemies.map((actor) =>
+              actor.id === id ? { ...actor, ...change } : actor,
+            ),
+          ),
+        );
+    } else if (id === "main") setMain((current) => ({ ...current, ...change }));
+    else if (allies.some((actor) => actor.id === id))
+      setAllies((current) =>
+        current.map((actor) =>
+          actor.id === id ? { ...actor, ...change } : actor,
+        ),
+      );
+    else
+      setEnemies((current) =>
+        current.map((actor) =>
+          actor.id === id ? { ...actor, ...change } : actor,
+        ),
+      );
+  }
+  function editBuild(id: string, buildSide: number, change: Partial<Build>) {
+    const actor = participants.find((actor) => actor.id === id);
+    if (!actor) return;
+    if (id === "main" && buildSide === 1)
+      setAlternative((current) => ({ ...current, ...change }));
+    else editParticipant(id, { build: { ...actor.build, ...change } });
+  }
+  function editLevel(actor: Participant, level: number) {
+    editParticipant(actor.id, {
+      level,
+      ranks: reduceRanksForLevel(actor.ranks, level, rankRules(actor)),
+    });
+  }
+  function roleChange(
+    actor: Participant,
+    role: string,
+    questComplete = actor.questComplete,
+  ) {
+    const next = { ...actor, role, questComplete };
+    const level = config
+      ? Math.min(actor.level, domainValue(config, next, "level_cap"))
+      : actor.level;
+    editParticipant(actor.id, {
+      role,
+      questComplete,
+      level,
+      ranks: reduceRanksForLevel(actor.ranks, level, rankRules(actor)),
+    });
+  }
+  function addParticipant(team: "ally" | "enemy") {
+    const actor = newParticipant(crypto.randomUUID());
+    if (team === "ally") setAllies((current) => [...current, actor]);
+    else setEnemies((current) => [...current, actor]);
+    setSelectedId(actor.id);
+    setPicker({ kind: "champion", id: actor.id, side: 0, slot: 0 });
+  }
+  function removeParticipant(id: string) {
+    if (allies.some((actor) => actor.id === id)) {
+      const previous = [main, ...allies];
+      const next = reindexSupportTargets(
+        previous,
+        previous.filter((actor) => actor.id !== id),
+      );
+      setMain(next[0]);
+      setAllies(next.slice(1));
+    } else
+      setEnemies(
+        reindexSupportTargets(
+          enemies,
+          enemies.filter((actor) => actor.id !== id),
+        ),
+      );
+    setSetupMessage(
+      "Participant removed. Recipient choices for that participant were cleared.",
     );
-  const setItem = (side: number, slot: number, name: string | null) => {
-    const items = [...builds[side].items];
-    items[slot] = name;
-    editBuild(side, { items });
+    setEvents((current) =>
+      current.filter(
+        (event) => event.caster_id !== id && event.recipient_id !== id,
+      ),
+    );
+    if (selectedId === id) setSelectedId("main");
+  }
+  const openShop = (actor: Participant, index = 0, boots = false) => {
+    setSelectedId(actor.id);
+    setShopSelection(
+      boots ? getBuild(actor).boots : (getBuild(actor).items[index] ?? ""),
+    );
+    setPicker({
+      kind: boots ? "boots" : "item",
+      id: actor.id,
+      side: actor.id === "main" ? side : 0,
+      slot: index,
+    });
   };
-  const open = (
-    kind: NonNullable<typeof picker>["kind"],
-    side?: number,
-    slot?: number,
-  ) => setPicker({ kind, side, slot });
+  const slotsFor = (actor: Participant, build: Build) =>
+    Math.min(
+      6,
+      (config ? domainValue(config, actor, "inventory_capacity") : 6) -
+        (build.boots ? 1 : 0),
+    );
+  const spend = (build: Build) =>
+    [...build.items, build.boots].reduce<number>(
+      (sum, name) => sum + (itemFor(name)?.price ?? 0),
+      0,
+    );
+  // Receipt IDs use names and a suffix for duplicates; UI IDs remain stable through edits.
+  const runtimeIds = new Map<string, string>([["main", "main"]]);
+  for (const [team, roster] of [
+    ["ally", allies],
+    ["enemy", enemies],
+  ] as const) {
+    const counts = new Map<string, number>();
+    for (const actor of roster.filter((actor) => actor.champion)) {
+      const count = (counts.get(actor.champion) ?? 0) + 1;
+      counts.set(actor.champion, count);
+      runtimeIds.set(
+        actor.id,
+        `${team}:${actor.champion}${count > 1 ? `:${count}` : ""}`,
+      );
+    }
+  }
   function payload(build: Build) {
     return {
-      champion,
-      level,
-      role,
-      role_quest_complete: questComplete,
-      items: build.items.filter(Boolean),
-      boots: build.boots,
-      include_boots: Boolean(build.boots),
-      keystone: build.keystone,
-      minor_runes: build.minor_runes,
-      stat_shards: build.stat_shards,
-      item_options: Object.fromEntries(
-        Object.entries(build.item_options).filter(
-          ([name]) => build.items.includes(name) || name === build.boots,
-        ),
-      ),
-      rune_options: Object.fromEntries(
-        Object.entries(build.rune_options).filter(
-          ([name]) =>
-            name === build.keystone || build.minor_runes.includes(name),
-        ),
-      ),
-      keystone_options: build.keystone_options,
-      champion_options: championOptions,
-      ability_ranks: ranks,
-      fight_mode: "time_based",
+      ...serializeParticipant(main, build),
+      fight_mode: autosOnly ? "auto_only" : "time_based",
       fight_duration: duration,
-      include_auto_attacks: autos,
-      auto_attack_uptime_mode: "calculated",
-      auto_attack_uptime: 0,
-      enemies_attack: enemyAttack,
-      include_actives: true,
+      include_actives: includeActives,
+      enemies_attack: enemiesAttack,
       deterministic: true,
-      ...(target
+      allies: allies
+        .filter((actor) => actor.champion)
+        .map((actor) => serializeParticipant(actor)),
+      ...(enemies.some((actor) => actor.champion)
         ? {
-            enemies: [
-              {
-                kind: "champion",
-                champion: target,
-                level: targetLevel,
-                items: targetItems.filter(Boolean),
-                boots: targetBuild.boots,
-                include_boots: Boolean(targetBuild.boots),
-                ability_ranks: targetRanks,
-                keystone: targetBuild.keystone,
-                minor_runes: targetBuild.minor_runes,
-                stat_shards: targetBuild.stat_shards,
-                rune_options: targetBuild.rune_options,
-              },
-            ],
+            enemies: enemies
+              .filter((actor) => actor.champion)
+              .map((actor) => serializeParticipant(actor)),
           }
         : {
-            target_health: targetStats.health,
-            target_bonus_health: targetStats.bonus_health,
-            target_armor: targetStats.armor,
-            target_mr: targetStats.mr,
+            target_health: dummyStats.health,
+            target_bonus_health: dummyStats.bonus_health,
+            target_armor: dummyStats.armor,
+            target_mr: dummyStats.mr,
           }),
+      ...(useSequence
+        ? {
+            combat_events_mode: "overrides",
+            combat_events: events.map((event) => ({
+              ...event,
+              caster_id: runtimeIds.get(event.caster_id) ?? event.caster_id,
+              recipient_id:
+                runtimeIds.get(event.recipient_id) ?? event.recipient_id,
+            })),
+          }
+        : {}),
     };
   }
-  function statsBody(
-    name: string,
-    atLevel: number,
-    build: Build,
-    targetSide = false,
-  ) {
-    return name
-      ? {
-          champion: name,
-          level: atLevel,
-          items: (targetSide ? targetItems : build.items).filter(Boolean),
-          boots: build.boots,
-          include_boots: Boolean(build.boots),
-          role: targetSide ? "" : role,
-          role_quest_complete: targetSide ? false : questComplete,
-          keystone: build.keystone,
-          minor_runes: build.minor_runes,
-          stat_shards: build.stat_shards,
-          rune_options: build.rune_options,
-          item_options: build.item_options,
-          champion_options: targetSide ? {} : championOptions,
-        }
-      : null;
-  }
-  const ownHudStats = useLoadoutStats(
-    apiBase,
-    statsBody(champion, level, builds[hudSide]),
-  );
-  const enemyHudStats = useLoadoutStats(
-    apiBase,
-    statsBody(target, targetLevel, targetBuild, true),
-  );
-  const defaultRanks = (selected: Champion | undefined, atLevel: number) =>
-    selected?.rank_defaults_by_level?.[String(atLevel)] ?? null;
-  const rankCapsAtLevel = (atLevel: number) => ({
-    Q: Math.min(5, Math.ceil(atLevel / 2)),
-    W: Math.min(5, Math.ceil(atLevel / 2)),
-    E: Math.min(5, Math.ceil(atLevel / 2)),
-    R: atLevel >= 16 ? 3 : atLevel >= 11 ? 2 : atLevel >= 6 ? 1 : 0,
+  const inputKey = JSON.stringify({
+    main,
+    alternative,
+    allies,
+    enemies,
+    duration,
+    autosOnly,
+    includeActives,
+    enemiesAttack,
+    dummyStats,
+    useSequence,
+    events,
+    compare,
   });
+  const [previousInput, setPreviousInput] = useState(inputKey);
+  if (previousInput !== inputKey) {
+    setPreviousInput(inputKey);
+    setBusy(false);
+    setError("");
+  }
+  useEffect(() => {
+    active.current?.abort();
+    requestVersion.current++;
+  }, [inputKey]);
+  useEffect(() => () => active.current?.abort(), []);
+  function currentSetup(): SavedScenario {
+    return {
+      version: 1,
+      main,
+      alternative,
+      allies,
+      enemies,
+      compare,
+      duration,
+      objective,
+      autosOnly,
+      includeActives,
+      enemiesAttack,
+      dummyStats,
+      useSequence,
+      events,
+      budgets,
+    };
+  }
+  function loadSetup(value: SavedScenario) {
+    setupLoaded.current = true;
+    setMain(value.main);
+    setAlternative(value.alternative);
+    setAllies(value.allies);
+    setEnemies(value.enemies);
+    setCompare(value.compare);
+    setDuration(value.duration);
+    setObjective(value.objective);
+    setAutosOnly(value.autosOnly);
+    setIncludeActives(value.includeActives);
+    setEnemiesAttack(value.enemiesAttack);
+    setDummyStats(value.dummyStats);
+    setUseSequence(value.useSequence);
+    setEvents(value.events);
+    setBudgets(value.budgets);
+    setSelectedId("main");
+    setSide(0);
+    setResults([]);
+    setSetupMessage("Setup loaded.");
+  }
+  useEffect(() => {
+    const readLink = () => {
+      const hash = window.location.hash;
+      if (!hash.startsWith("#setup=")) return;
+      try {
+        loadSetup(decodeScenario(decodeURIComponent(hash.slice(7))));
+      } catch (e) {
+        setSetupMessage(
+          e instanceof Error ? e.message : "The setup link could not be read.",
+        );
+      }
+    };
+    // Read the browser URL after hydration and respond to explicitly opened setup links.
+    const frame = window.requestAnimationFrame(readLink);
+    window.addEventListener("hashchange", readLink);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("hashchange", readLink);
+    };
+  }, []);
+  function downloadSetup() {
+    const url = URL.createObjectURL(
+      new Blob([JSON.stringify(currentSetup(), null, 2)], {
+        type: "application/json",
+      }),
+    );
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "scryglass-fight.json";
+    link.click();
+    URL.revokeObjectURL(url);
+    setSetupMessage("Setup saved.");
+  }
+  async function copySetupLink() {
+    try {
+      const url = `${window.location.origin}${window.location.pathname}#setup=${encodeURIComponent(encodeScenario(currentSetup()))}`;
+      await navigator.clipboard.writeText(url);
+      setSetupMessage("Setup link copied.");
+    } catch {
+      setSetupMessage(
+        "The browser could not copy the link. Save the setup as a file.",
+      );
+    }
+  }
+  const hudStats = useLoadoutStats(
+    apiBase,
+    selected.champion ? serializeParticipant(selected, selectedBuild) : null,
+  );
   async function calculate() {
-    if (!chosen?.engine_registration || !catalog) return;
+    if (!main.champion) return;
     active.current?.abort();
     const controller = new AbortController();
     active.current = controller;
-    const current = ++version.current;
+    const version = ++requestVersion.current;
     setBusy(true);
     setError("");
-    setOptimization(null);
     try {
       const response = compare
         ? await request<{ results: Result[] }>(
             apiBase,
             "compare",
             controller.signal,
-            { builds: builds.map(payload) },
+            { builds: [payload(main.build), payload(alternative)] },
           )
         : {
             results: [
@@ -1345,18 +1378,19 @@ function CalculatorSession({
                 apiBase,
                 "calculate",
                 controller.signal,
-                payload(builds[0]),
+                payload(main.build),
               ),
             ],
           };
-      if (controller.signal.aborted || current !== version.current) return;
+      if (controller.signal.aborted || version !== requestVersion.current)
+        return;
       if (
         !Array.isArray(response.results) ||
         response.results.some((result) => result.error)
       )
         throw new Error(
           response.results?.find((result) => result.error)?.error ??
-            "The engine returned an incomplete result.",
+            "The calculation returned an incomplete result.",
         );
       setResults(response.results);
       setResultKey(inputKey);
@@ -1364,239 +1398,240 @@ function CalculatorSession({
       if (!controller.signal.aborted)
         setError(e instanceof Error ? e.message : String(e));
     } finally {
-      if (current === version.current) setBusy(false);
+      if (version === requestVersion.current) setBusy(false);
     }
   }
-  async function optimize(side: number) {
-    if (!champion) return;
-    active.current?.abort();
-    const controller = new AbortController();
-    active.current = controller;
-    const current = ++version.current;
-    setBusy(true);
-    setError("");
-    try {
-      const response = await request<Optimization>(
-        apiBase,
-        "optimize",
-        controller.signal,
-        {
-          ...payload(builds[side]),
-          objective: "total_damage",
-          locked_items: builds[side].items.filter(Boolean),
-          locked_boots: builds[side].boots,
-          max_legendary_slots: ordinarySlots(builds[side]),
-          ...(budgets[side] === ""
-            ? {}
-            : { gold_budget: Number(budgets[side]) }),
-        },
-      );
-      if (!controller.signal.aborted && current === version.current)
-        setOptimization(response);
-    } catch (e) {
-      if (!controller.signal.aborted)
-        setError(e instanceof Error ? e.message : String(e));
-    } finally {
-      if (current === version.current) setBusy(false);
-    }
-  }
-  function pickerEntries() {
-    if (!picker || !catalog) return [];
-    if (picker.kind === "champion" || picker.kind === "target")
-      return catalog.champions.map((c) => ({
-        ...c,
-        disabled: picker.kind === "champion" && !c.engine_registration,
-        detail: !c.engine_registration ? "Attacker unavailable" : undefined,
-      }));
-    const entries =
-      picker.kind === "boots"
-        ? catalog.boots.filter(
-            (item) =>
-              item.tier <=
-              (picker.side === 2 ? 2 : (roleValue("boots_tier") ?? 2)),
-          )
-        : catalog.items;
-    return entries.map((item) => ({
-      ...item,
-      stats: item,
-      detail: [
-        `${format(item.price)} gold`,
-        item.ap ? `${format(item.ap)} AP` : "",
-        item.ad ? `${format(item.ad)} AD` : "",
-        item.hp ? `${format(item.hp)} health` : "",
-      ]
-        .filter(Boolean)
-        .join(" · "),
-    }));
-  }
-  const spendFor = (names: (string | null)[]) =>
-    names.reduce((sum, name) => sum + (itemByName(name)?.price ?? 0), 0);
-  const shopIndex = picker?.kind === "targetItem" ? 2 : (picker?.side ?? 0);
-  const shopBuild =
-    shopIndex === 2
-      ? { ...targetBuild, items: targetItems }
-      : builds[shopIndex];
-  const shopCapacity = shopIndex === 2 ? 6 : (capacity ?? 6);
-  const shopOrdinarySlots = Math.min(
-    6,
-    shopCapacity - (shopBuild.boots ? 1 : 0),
-  );
-  const shopSpend =
-    shopIndex === 2
-      ? spendFor([...targetItems, targetBuild.boots])
-      : spendFor([...shopBuild.items, shopBuild.boots]);
+  const shopActor =
+    participants.find((actor) => actor.id === picker?.id) ?? selected;
+  const shopBuild = getBuild(shopActor, picker?.side ?? 0);
+  const shopCapacity = config
+    ? domainValue(config, shopActor, "inventory_capacity")
+    : 6;
+  const shopSlots = slotsFor(shopActor, shopBuild);
+  const slotIndex = picker?.slot ?? 0;
+  const isBoots = picker?.kind === "boots";
   const replacingName =
-    (picker?.kind === "boots"
-      ? shopBuild.boots
-      : picker?.kind === "targetItem"
-        ? targetItems[picker.slot ?? 0]
-        : shopBuild.items[picker?.slot ?? 0]) ?? null;
-  const shopSlotAvailable =
-    picker?.kind === "boots"
-      ? !shopBuild.items[5] || shopCapacity >= 7
-      : (picker?.slot ?? -1) >= 0 && (picker?.slot ?? 0) < shopOrdinarySlots;
-  const shopSlots = shopBuild.items
-    .slice(0, shopOrdinarySlots)
-    .map((name, index) => ({
-      name,
-      index,
-      label: `Item ${index + 1}`,
-      active: picker?.kind !== "boots" && picker?.slot === index,
-    }));
-  const shopInventory: ShopState["inventory"] = [
-    ...shopSlots,
-    {
-      name: shopBuild.boots || null,
-      index: -1,
-      label: "Boots",
-      boots: true,
-      active: picker?.kind === "boots",
-    },
-  ];
-  function changeShopTab(boots: boolean) {
-    if (boots) setPicker({ kind: "boots", side: shopIndex });
-    else {
-      const slots = shopBuild.items.slice(0, shopOrdinarySlots);
-      setPicker({
-        kind: shopIndex === 2 ? "targetItem" : "item",
-        side: shopIndex,
-        slot: slots.findIndex((name) => !name),
-      });
-    }
+    (isBoots ? shopBuild.boots : shopBuild.items[slotIndex]) ?? null;
+  const budgetKey = `${shopActor.id}:${picker?.side ?? 0}`;
+  const budget = budgets[budgetKey] ?? "";
+  const slotAvailable = isBoots
+    ? shopBuild.items.filter(Boolean).length < shopCapacity ||
+      Boolean(shopBuild.boots)
+    : slotIndex >= 0 && slotIndex < shopSlots;
+  const shopItems = isBoots
+    ? (catalog?.boots ?? []).filter(
+        (item) =>
+          item.tier <=
+          (config ? domainValue(config, shopActor, "boots_tier") : 2),
+      )
+    : (catalog?.items ?? []);
+  function setShopSlot(index: number, boots: boolean) {
+    if (picker)
+      setPicker({ ...picker, kind: boots ? "boots" : "item", slot: index });
   }
-  function clearShopSlot() {
-    if (!picker) return;
-    if (picker.kind === "boots") {
-      if (shopIndex === 2)
-        setTargetBuild((current) => ({ ...current, boots: "" }));
-      else editBuild(shopIndex, { boots: "" });
-    } else if (shopIndex === 2)
-      setTargetItems((current) =>
-        current.map((name, index) => (index === picker.slot ? null : name)),
-      );
-    else if ((picker.slot ?? -1) >= 0) setItem(shopIndex, picker.slot!, null);
-  }
-  function pick(name: string) {
-    if (!picker) return;
-    if (picker.kind === "champion") {
-      setChampion(name);
-      setChampionOptions({});
-      setRanks(null);
-      setPicker(null);
-    } else if (picker.kind === "target") {
-      setTarget(name);
-      setTargetRanks(null);
-      setPicker(null);
-    } else if (picker.kind === "boots") {
-      if (!shopSlotAvailable) return;
-      if (shopIndex === 2)
-        setTargetBuild((current) => ({ ...current, boots: name }));
-      else editBuild(shopIndex, { boots: name });
-      const slots = shopBuild.items.slice(0, Math.min(6, shopCapacity - 1));
-      setPicker({
-        kind: shopIndex === 2 ? "targetItem" : "item",
-        side: shopIndex,
-        slot: slots.findIndex((item) => !item),
-      });
+  function equip(name: string | null, advance = true) {
+    if (!picker || (!slotAvailable && name !== null)) return;
+    const items = [...shopBuild.items];
+    if (isBoots) {
+      if (name) {
+        const limit = Math.min(6, shopCapacity - 1);
+        for (let index = limit; index < items.length; index++) {
+          if (items[index]) {
+            const empty = items.slice(0, limit).findIndex((item) => !item);
+            if (empty >= 0) {
+              items[empty] = items[index];
+              items[index] = null;
+            }
+          }
+        }
+      }
+      editBuild(shopActor.id, picker.side, { boots: name ?? "", items });
     } else {
-      if ((picker.slot ?? -1) < 0) return;
-      const current =
-        picker.kind === "targetItem" ? targetItems : shopBuild.items;
-      const items = current.map((item, index) =>
-        index === picker.slot ? name : item,
-      );
-      if (picker.kind === "targetItem") setTargetItems(items);
-      else editBuild(shopIndex, { items });
-      const limit = shopOrdinarySlots;
-      setPicker({
-        ...picker,
-        slot: items.slice(0, limit).findIndex((item) => !item),
-      });
+      items[slotIndex] = name;
+      editBuild(shopActor.id, picker.side, { items });
+    }
+    if (advance && name) {
+      const limit = isBoots ? Math.min(6, shopCapacity - 1) : shopSlots;
+      const next = items.slice(0, limit).findIndex((item) => !item);
+      if (next >= 0) setPicker({ ...picker, kind: "item", slot: next });
     }
   }
-  const itemSlot = (
-    name: string | null,
-    index: number,
-    side: number,
-    targetSlot = false,
-  ) => {
-    const item = itemByName(name);
+  function pickChampion(name: string) {
+    if (!picker) return;
+    editParticipant(picker.id, {
+      champion: name,
+      ranks: {
+        ...zeroRanks(),
+        ...config?.domain_contract.rank_allocation.rules_by_champion?.[name]
+          ?.free_ranks,
+      },
+      championOptions: {},
+    });
+    setPicker(null);
+  }
+  const selectedChampion = championFor(selected);
+  const objectives = config?.domain_contract.bis_objectives ?? {
+    team_outcome: {
+      label: "Team damage advantage",
+      description:
+        "Selected team's damage before defeat minus the opposing team's damage before defeat.",
+    },
+  };
+  const subjectTeam =
+    shopActor.id === "main"
+      ? "main"
+      : allies.some((actor) => actor.id === shopActor.id)
+        ? "ally"
+        : "enemy";
+  const subjectRoster = subjectTeam === "ally" ? allies : enemies;
+  const bisBody = {
+    ...payload(side === 1 ? alternative : main.build),
+    objective,
+    subject_team: subjectTeam,
+    subject_index:
+      subjectTeam === "main"
+        ? 0
+        : subjectRoster
+            .filter((actor) => actor.champion)
+            .findIndex((actor) => actor.id === shopActor.id),
+    slot_kind: isBoots ? "boots" : "item",
+    slot_index: isBoots ? 0 : compactSlotIndex(shopBuild.items, slotIndex),
+    ...(budget === ""
+      ? {}
+      : {
+          max_item_gold: Math.max(
+            0,
+            Math.floor(
+              Number(budget) -
+                spend(shopBuild) +
+                (itemFor(replacingName)?.price ?? 0),
+            ),
+          ),
+        }),
+  };
+  const searchReady = !main.champion
+    ? "Choose your champion first."
+    : !shopActor.champion
+      ? "Choose a champion for this participant."
+      : !slotAvailable
+        ? "Select an available inventory slot."
+        : subjectTeam !== "main" && !shopActor.role
+          ? "Set this champion's role before ranking items."
+          : "";
+  function rosterRow(actor: Participant) {
+    const build = getBuild(actor);
+    const champion = championFor(actor);
     return (
       <div
-        className={`calculator-item-slot ${name ? "calculator-item-filled" : ""}`}
-        key={index}
+        className={`calculator-roster-row ${actor.id === selectedId ? "is-selected" : ""}`}
+        key={actor.id}
       >
         <button
           type="button"
-          onClick={() => open(targetSlot ? "targetItem" : "item", side, index)}
-          aria-label={`${name ? "Replace " + name : "Choose item " + (index + 1)} for ${targetSlot ? "target" : "build " + (side === 0 ? "A" : "B")}`}
+          className="calculator-roster-identity"
+          aria-pressed={actor.id === selectedId}
+          onClick={() => {
+            setSelectedId(actor.id);
+            if (!actor.champion)
+              setPicker({ kind: "champion", id: actor.id, side: 0, slot: 0 });
+          }}
+          aria-label={`Edit ${participantLabel(actor)} ${actor.champion || "empty slot"}`}
         >
-          {item ? (
-            <img src={item.icon} alt="" />
+          {champion ? (
+            <img src={champion.icon} alt="" />
           ) : (
-            <span className="calculator-slot-plus">+</span>
+            <span
+              className="calculator-roster-empty-portrait"
+              aria-hidden="true"
+            >
+              +
+            </span>
           )}
-          <span>{name ?? `Item ${index + 1}`}</span>
+          <span>
+            <strong>{actor.champion || "Choose champion"}</strong>
+            <small>
+              {participantLabel(actor)}
+              {actor.champion ? ` · Level ${actor.level}` : ""}
+            </small>
+          </span>
         </button>
-        {name && (
-          <button
-            type="button"
-            className="calculator-clear"
-            aria-label={`Clear ${name} from ${targetSlot ? "target" : "build " + (side === 0 ? "A" : "B")}`}
-            onClick={() => {
-              if (targetSlot) {
-                const next = [...targetItems];
-                next[index] = null;
-                setTargetItems(next);
-              } else setItem(side, index, null);
-            }}
-          >
-            ×
-          </button>
-        )}
+        <div
+          className="calculator-roster-inventory"
+          aria-label={`${participantLabel(actor)} item slots`}
+        >
+          {Array.from({ length: slotsFor(actor, build) }, (_, index) => (
+            <button
+              type="button"
+              key={index}
+              aria-label={`${participantLabel(actor)} ${actor.champion}: ${build.items[index] ?? `empty item slot ${index + 1}`}`}
+              onClick={() => openShop(actor, index)}
+            >
+              {itemFor(build.items[index]) ? (
+                <img src={itemFor(build.items[index])!.icon} alt="" />
+              ) : (
+                <span>{index + 1}</span>
+              )}
+            </button>
+          ))}
+          {build.boots && (
+            <button
+              type="button"
+              aria-label={`${participantLabel(actor)} ${actor.champion}: ${build.boots}`}
+              onClick={() => openShop(actor, 0, true)}
+            >
+              <img src={itemFor(build.boots)?.icon} alt="" />
+            </button>
+          )}
+        </div>
       </div>
     );
-  };
+  }
   return (
-    <div className={`calculator-root ${className}`}>
+    <div className={`calculator-root calculator-roster-workspace ${className}`}>
       <header className="calculator-intro">
         <div>
-          <p className="calculator-eyebrow">
-            League of Legends · Build research
-          </p>
           <h1>Combat calculator</h1>
-          <p>Compare items in the same fight.</p>
+          <p>Build the teams. Set the fight.</p>
         </div>
         <div className="calculator-patch">
-          {config?.data_snapshot.patch.public ? (
-            <>
-              Patch <strong>{config.data_snapshot.patch.public}</strong>
-            </>
-          ) : (
-            "Loading patch…"
-          )}
+          Patch <strong>{config?.data_snapshot.patch.public ?? "…"}</strong>
         </div>
       </header>
+      <div className="calculator-setup-actions">
+        <button type="button" onClick={downloadSetup} disabled={!catalog}>
+          Save setup
+        </button>
+        <button type="button" onClick={() => setupFile.current?.click()}>
+          Load setup
+        </button>
+        <button type="button" onClick={copySetupLink} disabled={!catalog}>
+          Copy setup link
+        </button>
+        <input
+          ref={setupFile}
+          type="file"
+          accept="application/json,.json"
+          className="calculator-sr-only"
+          aria-label="Load calculator setup"
+          onChange={async (event) => {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            try {
+              if (file.size > 200_000)
+                throw new Error("Choose a setup file under 200 KB.");
+              loadSetup(parseScenario(await file.text()));
+            } catch (e) {
+              setSetupMessage(
+                e instanceof Error
+                  ? e.message
+                  : "The setup file could not be read.",
+              );
+            }
+            event.target.value = "";
+          }}
+        />
+        <span role="status">{setupMessage}</span>
+      </div>
       {loadError ? (
         <div className="calculator-notice" role="alert">
           <p>{loadError}</p>
@@ -1604,396 +1639,477 @@ function CalculatorSession({
             type="button"
             onClick={() => {
               setLoadError("");
-              setLoadVersion((v) => v + 1);
+              setLoadVersion((value) => value + 1);
             }}
           >
             Retry connection
           </button>
         </div>
       ) : !catalog ? (
-        <div className="calculator-loading" role="status">
+        <div role="status" className="calculator-loading">
           Loading champions and items…
         </div>
       ) : (
         <>
-          <section className="calculator-hud-matchup" aria-label="Matchup">
-            <div
-              className="calculator-hud-build-switch"
-              role="group"
-              aria-label="Displayed build"
-            >
-              <button
-                type="button"
-                aria-pressed={hudSide === 0}
-                onClick={() => setHudSide(0)}
-              >
-                Your build A
-              </button>
-              {compare && (
+          <section
+            className="calculator-team-rosters"
+            aria-label="Team rosters"
+          >
+            <div className="calculator-team">
+              <div className="calculator-section-heading">
+                <h2>
+                  Your team <span>{1 + allies.length}/5</span>
+                </h2>
                 <button
                   type="button"
-                  aria-pressed={hudSide === 1}
-                  onClick={() => setHudSide(1)}
+                  className="calculator-text-button"
+                  disabled={allies.length >= 4}
+                  onClick={() => addParticipant("ally")}
                 >
-                  Your build B
+                  Add ally
+                </button>
+              </div>
+              {rosterRow(main)}
+              {allies.map(rosterRow)}
+              {!allies.length && (
+                <p className="calculator-roster-hint">
+                  Add allies to model their damage and support.
+                </p>
+              )}
+            </div>
+            <div className="calculator-team">
+              <div className="calculator-section-heading">
+                <h2>
+                  Enemy team <span>{enemies.length}/5</span>
+                </h2>
+                <button
+                  type="button"
+                  className="calculator-text-button"
+                  disabled={enemies.length >= 5}
+                  onClick={() => addParticipant("enemy")}
+                >
+                  Add enemy
+                </button>
+              </div>
+              {enemies.map(rosterRow)}
+              {!enemies.length && (
+                <div className="calculator-dummy-panel">
+                  <strong>Practice target</strong>
+                  <div className="calculator-practice-controls">
+                    {Object.entries(dummyStats).map(([key, value]) => (
+                      <label className="calculator-field" key={key}>
+                        <span>
+                          {key === "mr" ? "Magic resistance" : label(key)}
+                        </span>
+                        <input
+                          type="number"
+                          min={config?.input_limits[`target_${key}`]?.[0]}
+                          max={config?.input_limits[`target_${key}`]?.[1]}
+                          value={value}
+                          onChange={(e) =>
+                            setDummyStats({
+                              ...dummyStats,
+                              [key]: Number(e.target.value),
+                            })
+                          }
+                        />
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+          <section
+            className="calculator-selected-participant"
+            aria-label="Selected participant"
+          >
+            <div className="calculator-participant-toolbar">
+              <div
+                className="calculator-hud-build-switch"
+                role="group"
+                aria-label="Displayed build"
+              >
+                <button
+                  type="button"
+                  aria-pressed={side === 0}
+                  onClick={() => setSide(0)}
+                >
+                  Build A
+                </button>
+                {compare && (
+                  <button
+                    type="button"
+                    aria-pressed={side === 1}
+                    onClick={() => setSide(1)}
+                  >
+                    Build B
+                  </button>
+                )}
+              </div>
+              <label className="calculator-check">
+                <input
+                  type="checkbox"
+                  checked={compare}
+                  onChange={(e) => {
+                    setCompare(e.target.checked);
+                    if (!e.target.checked) setSide(0);
+                  }}
+                />
+                Compare builds
+              </label>
+              {selected.id !== "main" && (
+                <button
+                  type="button"
+                  className="calculator-text-button"
+                  onClick={() => removeParticipant(selected.id)}
+                >
+                  Remove {participantLabel(selected).toLowerCase()}
                 </button>
               )}
             </div>
             <ChampionHud
-              champion={chosen}
-              label={`Your champion · build ${hudSide === 0 ? "A" : "B"}`}
-              level={level}
-              maxLevel={levelCap ?? 18}
-              onLevel={(value) => {
-                setRanks(
-                  value > level &&
-                    config?.domain_contract.rank_allocation.by_champion[
-                      champion
-                    ] !== "level_derived"
-                    ? (ranks ?? defaultRanks(chosen, level))
-                    : null,
-                );
-                setLevel(value);
-              }}
-              onChampion={() => open("champion")}
-              ranks={ranks}
-              defaultRanks={defaultRanks(chosen, level) ?? undefined}
-              onRanks={setRanks}
-              rankCaps={rankCapsAtLevel(level)}
-              ranksDerived={
-                config?.domain_contract.rank_allocation.by_champion[
-                  champion
-                ] === "level_derived"
+              champion={selectedChampion}
+              label={`${participantLabel(selected)}${selected.id === "main" ? ` · build ${side === 0 ? "A" : "B"}` : ""}`}
+              level={selected.level}
+              maxLevel={domainValue(catalog.config, selected, "level_cap")}
+              onLevel={(value) => editLevel(selected, value)}
+              onChampion={() =>
+                setPicker({
+                  kind: "champion",
+                  id: selected.id,
+                  side: 0,
+                  slot: 0,
+                })
               }
-              {...ownHudStats}
+              ranks={selected.ranks}
+              onRanks={(ranks) =>
+                editParticipant(selected.id, { ranks: ranks ?? zeroRanks() })
+              }
+              rankCaps={skillCaps(selected.level, rankRules(selected))}
+              minimumRanks={rankRules(selected)?.free_ranks}
+              {...hudStats}
               items={[
-                ...builds[hudSide].items.slice(
+                ...selectedBuild.items.slice(
                   0,
-                  ordinarySlots(builds[hudSide]),
+                  slotsFor(selected, selectedBuild),
                 ),
-                ...(builds[hudSide].boots ? [builds[hudSide].boots] : []),
-              ].map(itemByName)}
+                ...(selectedBuild.boots ? [selectedBuild.boots] : []),
+              ].map(itemFor)}
               onItem={(index) =>
-                builds[hudSide].boots && index >= ordinarySlots(builds[hudSide])
-                  ? open("boots", hudSide)
-                  : open("item", hudSide, index)
+                openShop(
+                  selected,
+                  index,
+                  index >= slotsFor(selected, selectedBuild),
+                )
               }
               onShop={() =>
-                open(
-                  "item",
-                  hudSide,
+                openShop(
+                  selected,
                   Math.max(
                     0,
-                    builds[hudSide].items.findIndex((name) => !name),
+                    selectedBuild.items
+                      .slice(0, slotsFor(selected, selectedBuild))
+                      .findIndex((item) => !item),
                   ),
                 )
               }
-              onRunes={() => setRuneSide(hudSide)}
-              gold={
-                budgets[hudSide] === ""
-                  ? "Open shop · BIS"
-                  : `${format(Number(budgets[hudSide]) - spendFor([...builds[hudSide].items, builds[hudSide].boots]))} gold · BIS`
+              onRunes={() =>
+                setRuneOwner({
+                  id: selected.id,
+                  side: selected.id === "main" ? side : 0,
+                })
               }
-              resourceLabel={chosen?.resource}
+              gold="Open item shop"
+              resourceLabel={selectedChampion?.resource}
             />
-            <ChampionHud
-              champion={targetChampion}
-              label="Enemy champion"
-              level={targetLevel}
-              maxLevel={18}
-              onLevel={(value) => {
-                setTargetRanks(
-                  value > targetLevel &&
-                    config?.domain_contract.rank_allocation.by_champion[
-                      target
-                    ] !== "level_derived"
-                    ? (targetRanks ?? defaultRanks(targetChampion, targetLevel))
-                    : null,
-                );
-                setTargetLevel(value);
-              }}
-              onChampion={() => open("target")}
-              ranks={targetRanks}
-              defaultRanks={
-                defaultRanks(targetChampion, targetLevel) ?? undefined
-              }
-              onRanks={setTargetRanks}
-              rankCaps={rankCapsAtLevel(targetLevel)}
-              ranksDerived={
-                config?.domain_contract.rank_allocation.by_champion[target] ===
-                "level_derived"
-              }
-              stats={
-                target
-                  ? enemyHudStats.stats
-                  : {
-                      health: targetStats.health,
-                      armor: targetStats.armor,
-                      magic_resistance: targetStats.mr,
-                    }
-              }
-              loading={enemyHudStats.loading}
-              error={enemyHudStats.error}
-              items={[
-                ...targetItems.slice(0, targetBuild.boots ? 5 : 6),
-                ...(targetBuild.boots ? [targetBuild.boots] : []),
-              ].map(itemByName)}
-              onItem={(index) =>
-                targetBuild.boots && index === 5
-                  ? open("boots", 2)
-                  : open("targetItem", 2, index)
-              }
-              onShop={() =>
-                open(
-                  "targetItem",
-                  2,
-                  Math.max(
-                    0,
-                    targetItems.findIndex((name) => !name),
-                  ),
-                )
-              }
-              onRunes={target ? () => setRuneSide(2) : undefined}
-              gold="Enemy items"
-              resourceLabel={targetChampion?.resource}
-            />
-            {target && (
+            <div className="calculator-participant-actions">
               <button
                 type="button"
-                className="calculator-text-button"
-                onClick={() => {
-                  setTarget("");
-                  setTargetItems(Array(6).fill(null));
-                  setTargetRanks(null);
-                }}
+                className="calculator-secondary"
+                onClick={() => openShop(selected, 0, true)}
               >
-                Use practice target
+                {selectedBuild.boots ? "Change boots" : "Choose boots"}
               </button>
-            )}
-            {!target && (
-              <div className="calculator-practice-controls">
-                {Object.entries(targetStats).map(([key, value]) => (
-                  <label className="calculator-field" key={key}>
-                    <span>
-                      Target {key === "mr" ? "magic resistance" : label(key)}
-                    </span>
-                    <input
-                      type="number"
-                      min={config?.input_limits[`target_${key}`]?.[0]}
-                      max={config?.input_limits[`target_${key}`]?.[1]}
-                      value={value}
-                      onChange={(event) =>
-                        setTargetStats({
-                          ...targetStats,
-                          [key]: Number(event.target.value),
+              <button
+                type="button"
+                className="calculator-secondary"
+                onClick={() =>
+                  setRuneOwner({
+                    id: selected.id,
+                    side: selected.id === "main" ? side : 0,
+                  })
+                }
+              >
+                Edit runes
+                {selectedBuild.keystone ? ` · ${selectedBuild.keystone}` : ""}
+              </button>
+              {selected.id === "main" && side === 1 && (
+                <button
+                  type="button"
+                  className="calculator-text-button"
+                  onClick={() => setAlternative(structuredClone(main.build))}
+                >
+                  Copy build A
+                </button>
+              )}
+              <span>{format(spend(selectedBuild))} gold in items</span>
+            </div>
+            <div className="calculator-participant-settings">
+              <label className="calculator-field">
+                <span>Role</span>
+                <select
+                  aria-label={`${participantLabel(selected)} role`}
+                  value={selected.role}
+                  onChange={(e) => roleChange(selected, e.target.value)}
+                >
+                  <option value="">Choose role</option>
+                  {config?.domain_contract.role_quest.roles.map((role) => (
+                    <option key={role} value={role}>
+                      {label(role)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="calculator-check">
+                <input
+                  type="checkbox"
+                  checked={selected.questComplete}
+                  disabled={!selected.role}
+                  onChange={(e) =>
+                    roleChange(selected, selected.role, e.target.checked)
+                  }
+                />
+                Role quest complete
+              </label>
+              <label className="calculator-check">
+                <input
+                  type="checkbox"
+                  checked={selected.autos}
+                  onChange={(e) =>
+                    editParticipant(selected.id, { autos: e.target.checked })
+                  }
+                />
+                Basic attacks
+              </label>
+              <label className="calculator-field">
+                <span>Attack uptime</span>
+                <select
+                  value={selected.uptimeMode}
+                  onChange={(e) =>
+                    editParticipant(selected.id, {
+                      uptimeMode: e.target.value as Participant["uptimeMode"],
+                    })
+                  }
+                >
+                  <option value="calculated">Calculated</option>
+                  <option value="explicit">Manual</option>
+                </select>
+              </label>
+              {selected.uptimeMode === "explicit" && (
+                <label className="calculator-field">
+                  <span>Uptime %</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={selected.uptime * 100}
+                    onChange={(e) =>
+                      editParticipant(selected.id, {
+                        uptime:
+                          Math.max(0, Math.min(100, Number(e.target.value))) /
+                          100,
+                      })
+                    }
+                  />
+                </label>
+              )}
+            </div>
+            {selectedBuild.items
+              .slice(slotsFor(selected, selectedBuild))
+              .some(Boolean) && (
+              <div className="calculator-notice" role="alert">
+                <p>
+                  This role and boots leave fewer item slots. Remove the extra
+                  items before calculating.
+                </p>
+                {selectedBuild.items.map((name, index) =>
+                  name && index >= slotsFor(selected, selectedBuild) ? (
+                    <button
+                      type="button"
+                      key={index}
+                      onClick={() =>
+                        editBuild(selected.id, side, {
+                          items: selectedBuild.items.map((item, itemIndex) =>
+                            itemIndex === index ? null : item,
+                          ),
                         })
                       }
-                    />
-                  </label>
-                ))}
+                    >
+                      Remove {name}
+                    </button>
+                  ) : null,
+                )}
               </div>
             )}
-          </section>
-          <div className="calculator-build-toolbar">
-            <h2>Loadout</h2>
-            <label className="calculator-check">
-              <input
-                type="checkbox"
-                checked={compare}
-                onChange={(e) => {
-                  setCompare(e.target.checked);
-                  if (!e.target.checked) setHudSide(0);
-                }}
-              />
-              Compare two builds
-            </label>
-          </div>
-          <details className="calculator-details calculator-loadout-drawer">
-            <summary>Build settings</summary>
-            <div
-              className={`calculator-builds ${compare ? "" : "calculator-single"}`}
-            >
-              {builds.slice(0, compare ? 2 : 1).map((build, side) => (
-                <section
-                  className="calculator-build-card"
-                  key={side}
-                  aria-label={`Build ${side === 0 ? "A" : "B"}`}
-                >
-                  <div className="calculator-card-heading">
-                    <div className="calculator-build-title">
-                      <span>{side === 0 ? "A" : "B"}</span>
-                      <h3>
-                        {side === 0 ? "First build" : "Alternative build"}
-                      </h3>
-                      <button
-                        type="button"
-                        className="calculator-text-button"
-                        onClick={() => setRuneSide(side)}
-                      >
-                        Runes
-                      </button>
-                    </div>
-                    <button
-                      type="button"
-                      className="calculator-text-button"
-                      onClick={() => editBuild(side, emptyBuild())}
-                    >
-                      Clear build
-                    </button>
-                  </div>
-                  <div className="calculator-build-cost">
-                    <span>
-                      Selected items:{" "}
-                      <strong>
-                        {format(spendFor([...build.items, build.boots]))} gold
-                      </strong>
-                    </span>
-                    {budgets[side] !== "" && (
-                      <span>
-                        Remaining budget:{" "}
-                        <strong>
-                          {format(
-                            Number(budgets[side]) -
-                              spendFor([...build.items, build.boots]),
-                          )}{" "}
-                          gold
-                        </strong>
-                      </span>
-                    )}
-                  </div>
-                  <div className="calculator-slots">
-                    {build.items
-                      .slice(
-                        0,
-                        Math.max(
-                          ordinarySlots(build),
-                          build.items.reduce(
-                            (last, item, index) => (item ? index + 1 : last),
-                            0,
-                          ),
-                        ),
-                      )
-                      .map((name, index) => itemSlot(name, index, side))}
-                    {build.boots && (
-                      <div className="calculator-item-slot calculator-item-filled">
-                        <button
-                          type="button"
-                          onClick={() => open("boots", side)}
-                          aria-label={`Replace boots for build ${side === 0 ? "A" : "B"}`}
-                        >
-                          <img src={itemByName(build.boots)?.icon} alt="" />
-                          <span>{build.boots}</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="calculator-clear"
-                          aria-label={`Clear boots from build ${side === 0 ? "A" : "B"}`}
-                          onClick={() => editBuild(side, { boots: "" })}
-                        >
-                          ×
-                        </button>
+            {selected.id !== "main" &&
+              allies.some((actor) => actor.id === selected.id) && (
+                <label className="calculator-check">
+                  <input
+                    type="checkbox"
+                    checked={selected.allyEffectsEnabled}
+                    onChange={(event) =>
+                      editParticipant(selected.id, {
+                        allyEffectsEnabled: event.target.checked,
+                      })
+                    }
+                  />
+                  Apply this ally’s support effects
+                </label>
+              )}
+            <details className="calculator-details">
+              <summary>
+                {selected.champion || "Champion"} options and item state
+              </summary>
+              <div className="calculator-detail-content">
+                <Options
+                  options={
+                    config?.champion_options[selected.champion]?.options ?? []
+                  }
+                  values={selected.championOptions}
+                  onChange={(championOptions) =>
+                    editParticipant(selected.id, { championOptions })
+                  }
+                />
+                {[...selectedBuild.items, selectedBuild.boots]
+                  .filter((name): name is string => Boolean(name))
+                  .map((name) => {
+                    const options = config?.item_options[name]?.options;
+                    if (!options) return null;
+                    return (
+                      <div key={name}>
+                        <h3>{name}</h3>
+                        <Options
+                          options={Object.entries(options).map(
+                            ([key, value]) => ({ key, ...value }),
+                          )}
+                          values={selectedBuild.item_options[name] ?? {}}
+                          onChange={(values) =>
+                            editBuild(selected.id, side, {
+                              item_options: {
+                                ...selectedBuild.item_options,
+                                [name]: values,
+                              },
+                            })
+                          }
+                        />
                       </div>
-                    )}
-                  </div>
-                  <div className="calculator-build-footer">
-                    <button
-                      type="button"
-                      className="calculator-text-button"
-                      onClick={() => open("boots", side)}
-                    >
-                      {build.boots ? "Change boots" : "+ Add boots"}
-                    </button>
-                    {side === 1 && (
-                      <button
-                        type="button"
-                        className="calculator-text-button"
-                        onClick={() => editBuild(1, structuredClone(builds[0]))}
-                      >
-                        Copy build A
-                      </button>
-                    )}
-                  </div>
-                  <details className="calculator-details">
-                    <summary>Rune effects & item settings</summary>
-                    <div className="calculator-detail-content">
-                      <button
-                        type="button"
-                        className="calculator-secondary"
-                        onClick={() => setRuneSide(side)}
-                      >
-                        Edit rune page
-                      </button>
-                      <p>
-                        {build.keystone || "Choose runes"}
-                        {build.minor_runes.length
-                          ? ` · ${build.minor_runes.join(" · ")}`
-                          : ""}
+                    );
+                  })}
+                <Options
+                  options={Object.entries(
+                    config?.keystone_options[selectedBuild.keystone]?.options ??
+                      {},
+                  ).map(([key, value]) => ({ key, ...value }))}
+                  values={selectedBuild.keystone_options}
+                  onChange={(values) =>
+                    editBuild(selected.id, side, { keystone_options: values })
+                  }
+                />
+                {[selectedBuild.keystone, ...selectedBuild.minor_runes]
+                  .filter(Boolean)
+                  .map((name) => {
+                    const options =
+                      config?.runes.find((rune) => rune.name === name)
+                        ?.options ?? [];
+                    return options.length ? (
+                      <div key={name}>
+                        <h3>{name}</h3>
+                        <Options
+                          options={options}
+                          values={selectedBuild.rune_options[name] ?? {}}
+                          onChange={(values) =>
+                            editBuild(selected.id, side, {
+                              rune_options: {
+                                ...selectedBuild.rune_options,
+                                [name]: values,
+                              },
+                            })
+                          }
+                        />
+                      </div>
+                    ) : null;
+                  })}
+                <details>
+                  <summary>Champion assumptions and sources</summary>
+                  {config?.champion_options[selected.champion]?.assumptions.map(
+                    (text, index) => (
+                      <p key={index}>{text}</p>
+                    ),
+                  )}
+                  {config?.champion_options[selected.champion]?.sources.map(
+                    (source, index) => (
+                      <p key={index}>
+                        {source.url ? (
+                          <a href={source.url} target="_blank" rel="noreferrer">
+                            {source.label}
+                          </a>
+                        ) : (
+                          source.label
+                        )}
                       </p>
-                      <Options
-                        options={Object.entries(
-                          config?.keystone_options[build.keystone]?.options ??
-                            {},
-                        ).map(([key, value]) => ({ key, ...value }))}
-                        values={build.keystone_options}
-                        onChange={(values) =>
-                          editBuild(side, { keystone_options: values })
-                        }
-                      />
-                      {[build.keystone, ...build.minor_runes]
-                        .filter(Boolean)
-                        .map((name) => {
-                          const options =
-                            config?.runes.find((r) => r.name === name)
-                              ?.options ?? [];
-                          return options.length ? (
-                            <div key={name}>
-                              <h4>{name}</h4>
-                              <Options
-                                options={options}
-                                values={build.rune_options[name] ?? {}}
-                                onChange={(values) =>
-                                  editBuild(side, {
-                                    rune_options: {
-                                      ...build.rune_options,
-                                      [name]: values,
-                                    },
-                                  })
-                                }
-                              />
-                            </div>
-                          ) : null;
-                        })}
-                      {[...build.items, build.boots]
-                        .filter((n): n is string => Boolean(n))
-                        .map((name) => {
-                          const opts = config?.item_options[name]?.options;
-                          if (!opts) return null;
-                          return (
-                            <div key={name}>
-                              <h4>{name}</h4>
-                              <Options
-                                options={Object.entries(opts).map(
-                                  ([key, value]) => ({ key, ...value }),
-                                )}
-                                values={build.item_options[name] ?? {}}
-                                onChange={(values) =>
-                                  editBuild(side, {
-                                    item_options: {
-                                      ...build.item_options,
-                                      [name]: values,
-                                    },
-                                  })
-                                }
-                              />
-                            </div>
-                          );
-                        })}
-                    </div>
-                  </details>
-                </section>
-              ))}
-            </div>
-          </details>
+                    ),
+                  )}
+                </details>
+              </div>
+            </details>
+          </section>
+          {!useSequence && results[0] && (
+            <SupportTargets
+              result={results[0]}
+              actors={participants
+                .filter((actor) => actor.champion)
+                .map((actor) => ({
+                  id: actor.id,
+                  runtimeId: runtimeIds.get(actor.id)!,
+                  name: actor.champion,
+                  team: enemies.some((enemy) => enemy.id === actor.id)
+                    ? "enemy"
+                    : "ally",
+                  selections: actor.supportTargets,
+                }))}
+              onChange={(id, key, value) => {
+                const actor = participants.find((actor) => actor.id === id)!;
+                editParticipant(id, {
+                  supportTargets: { ...actor.supportTargets, [key]: value },
+                });
+              }}
+            />
+          )}
+          <EventEditor
+            enabled={useSequence}
+            onEnabled={(enabled) => {
+              setUseSequence(enabled);
+              if (enabled) setAutosOnly(false);
+            }}
+            events={events}
+            onChange={setEvents}
+            duration={duration}
+            capabilities={
+              config?.domain_contract.combat_events?.champions ?? {}
+            }
+            actors={participants
+              .filter((actor) => actor.champion)
+              .map((actor) => ({
+                id: actor.id,
+                label: `${actor.champion} · ${participantLabel(actor)}`,
+                team: enemies.some((enemy) => enemy.id === actor.id)
+                  ? "enemy"
+                  : "ally",
+                champion: championFor(actor),
+                ranks: actor.ranks,
+              }))}
+          />
           <section className="calculator-fight-bar" aria-label="Fight controls">
             <label className="calculator-duration">
               <span>Fight length</span>
@@ -2001,158 +2117,52 @@ function CalculatorSession({
                 type="range"
                 min={config?.input_limits.fight_duration[0]}
                 max={config?.input_limits.fight_duration[1]}
-                step={1}
+                step={0.5}
                 value={duration}
                 onChange={(e) => setDuration(Number(e.target.value))}
               />
               <output>{duration}s</output>
             </label>
+            <label className="calculator-check">
+              <input
+                type="checkbox"
+                checked={autosOnly}
+                onChange={(event) => {
+                  setAutosOnly(event.target.checked);
+                  if (event.target.checked) setUseSequence(false);
+                }}
+              />
+              Basic attacks only
+            </label>
+            <label className="calculator-check">
+              <input
+                type="checkbox"
+                checked={includeActives}
+                onChange={(e) => setIncludeActives(e.target.checked)}
+              />
+              Item actives
+            </label>
+            <label className="calculator-check">
+              <input
+                type="checkbox"
+                checked={enemiesAttack}
+                onChange={(e) => setEnemiesAttack(e.target.checked)}
+              />
+              Enemies attack
+            </label>
             <button
               type="button"
               className="calculator-primary"
-              disabled={!chosen?.engine_registration || busy}
+              disabled={!championFor(main)?.engine_registration || busy}
               onClick={calculate}
             >
               {busy
                 ? "Calculating…"
                 : compare
                   ? "Compare builds"
-                  : "Calculate damage"}
-              <span aria-hidden="true">↗</span>
+                  : "Calculate fight"}
             </button>
           </section>
-          <details className="calculator-details calculator-settings">
-            <summary>Fight settings & champion options</summary>
-            <div className="calculator-detail-content">
-              <div className="calculator-options">
-                <label className="calculator-field">
-                  <span>Role</span>
-                  <select
-                    value={role}
-                    onChange={(e) => {
-                      setRole(e.target.value);
-                      const cap =
-                        roleRules?.level_cap.by_role[e.target.value]?.[
-                          questComplete ? "complete" : "incomplete"
-                        ] ?? roleRules?.level_cap.default;
-                      if (cap && level > cap) setLevel(cap);
-                    }}
-                  >
-                    <option value="">No role selected</option>
-                    {(roleRules?.roles ?? []).map((r) => (
-                      <option key={r} value={r}>
-                        {label(r)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="calculator-check">
-                  <input
-                    type="checkbox"
-                    disabled={!role}
-                    checked={questComplete}
-                    onChange={(e) => {
-                      setQuestComplete(e.target.checked);
-                      const cap =
-                        roleRules?.level_cap.by_role[role]?.[
-                          e.target.checked ? "complete" : "incomplete"
-                        ];
-                      if (cap && level > cap) setLevel(cap);
-                    }}
-                  />
-                  Role quest complete
-                </label>
-                <label className="calculator-check">
-                  <input
-                    type="checkbox"
-                    checked={autos}
-                    onChange={(e) => setAutos(e.target.checked)}
-                  />
-                  Include basic attacks
-                </label>
-                <label className="calculator-check">
-                  <input
-                    type="checkbox"
-                    checked={enemyAttack}
-                    onChange={(e) => setEnemyAttack(e.target.checked)}
-                  />
-                  Target attacks back
-                </label>
-              </div>
-              {!target ? (
-                <div className="calculator-options">
-                  {Object.entries(targetStats).map(([key, value]) => (
-                    <label className="calculator-field" key={key}>
-                      <span>
-                        Target {key === "mr" ? "magic resistance" : label(key)}
-                      </span>
-                      <input
-                        type="number"
-                        min={config?.input_limits[`target_${key}`]?.[0]}
-                        max={config?.input_limits[`target_${key}`]?.[1]}
-                        value={value}
-                        onChange={(e) =>
-                          setTargetStats({
-                            ...targetStats,
-                            [key]: Number(e.target.value),
-                          })
-                        }
-                      />
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <>
-                  <h4>Target items</h4>
-                  <div className="calculator-slots calculator-target-slots">
-                    {targetItems.map((name, index) =>
-                      itemSlot(name, index, 0, true),
-                    )}
-                  </div>
-                </>
-              )}
-              {champion && (
-                <>
-                  <h4>{champion} options</h4>
-                  <Options
-                    options={config?.champion_options[champion]?.options ?? []}
-                    values={championOptions}
-                    onChange={setChampionOptions}
-                  />
-                  <details className="calculator-details">
-                    <summary>Champion assumptions & sources</summary>
-                    <div className="calculator-detail-content">
-                      {config?.champion_options[champion]?.assumptions.map(
-                        (text, index) => (
-                          <p key={index}>{text}</p>
-                        ),
-                      )}
-                      {config?.champion_options[champion]?.sources.map(
-                        (source, index) => (
-                          <p key={index}>
-                            {source.url ? (
-                              <a
-                                href={source.url}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                {source.label}
-                              </a>
-                            ) : (
-                              source.label
-                            )}
-                            {source.revision_id
-                              ? ` · revision ${source.revision_id}`
-                              : ""}
-                          </p>
-                        ),
-                      )}
-                    </div>
-                  </details>
-                </>
-              )}
-            </div>
-          </details>
           {error && (
             <div className="calculator-notice" role="alert">
               <strong>Calculation unavailable</strong>
@@ -2160,209 +2170,175 @@ function CalculatorSession({
             </div>
           )}
           <div className="calculator-results-heading">
-            <h2>Results</h2>
+            <h2>Fight result</h2>
             <span role="status">
               {busy
                 ? "Waiting for the engine…"
                 : results.length
-                  ? error
-                    ? "Previous result. Resolve the error, then calculate."
-                    : stale
-                      ? "Inputs changed. Calculate to update."
-                      : "Calculation complete"
-                  : "Choose a champion, then calculate."}
+                  ? resultKey !== inputKey
+                    ? "Inputs changed. Calculate to update."
+                    : "Calculation complete"
+                  : "Choose a champion and allocate skill points."}
             </span>
           </div>
           {results.length ? (
-            <div
-              className={`calculator-results ${results.length === 1 ? "calculator-single" : ""}`}
-              aria-busy={busy}
-            >
-              {results.map((result, index) => (
-                <ResultCard
-                  key={index}
-                  result={result}
-                  side={index === 0 ? "A" : "B"}
-                  stale={stale || Boolean(error)}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="calculator-results-empty">
-              <span aria-hidden="true">↗</span>
-              <div>
-                <h3>Your builds, in one fight.</h3>
-                <p>
-                  Damage, healing, and each ability’s contribution appear here
-                  after calculation.
-                </p>
+            <>
+              <div
+                className={`calculator-results ${results.length === 1 ? "calculator-single" : ""}`}
+              >
+                {results.map((result, index) => (
+                  <ResultCard
+                    key={index}
+                    result={result}
+                    side={index === 0 ? "A" : "B"}
+                    stale={resultKey !== inputKey || Boolean(error)}
+                  />
+                ))}
               </div>
-            </div>
+              {results.map((result, index) => (
+                <div key={index}>
+                  {(resultKey !== inputKey || Boolean(error)) && (
+                    <p className="calculator-notice">
+                      Previous team result. Calculate to update.
+                    </p>
+                  )}
+                  <CombatResults
+                    result={result}
+                    title={`Build ${index === 0 ? "A" : "B"} · team fight`}
+                  />
+                </div>
+              ))}
+            </>
+          ) : (
+            <p className="calculator-results-empty">
+              The result shows damage, health, shields, and healing for the
+              selected fight.
+            </p>
           )}
           <footer className="calculator-footer">
             <span>
-              Calculated from the selected fight. Champion assumptions apply.
+              Patch-pinned mechanics. Coverage details appear with each result.
             </span>
             {advancedHref && (
-              <a href={advancedHref}>Open full fight controls ↗</a>
+              <a href={advancedHref}>Full calculator workspace</a>
             )}
           </footer>
-          {runeSide !== null && config && (
+          {runeOwner && (
             <RunePage
-              config={config}
-              build={runeSide === 2 ? targetBuild : builds[runeSide]}
+              config={catalog.config}
+              build={getBuild(
+                participants.find((actor) => actor.id === runeOwner.id) ?? main,
+                runeOwner.side,
+              )}
               onChange={(change) =>
-                runeSide === 2
-                  ? setTargetBuild((current) => ({ ...current, ...change }))
-                  : editBuild(runeSide, change)
+                editBuild(runeOwner.id, runeOwner.side, change)
               }
-              onClose={() => setRuneSide(null)}
+              onClose={() => setRuneOwner(null)}
             />
           )}
           {picker &&
-            (picker.kind === "champion" || picker.kind === "target" ? (
+            (picker.kind === "champion" ? (
               <Picker
-                title={
-                  picker.kind === "champion"
-                    ? "Choose your champion"
-                    : "Choose target"
-                }
-                entries={pickerEntries()}
-                onPick={pick}
+                title={`Choose ${participantLabel(shopActor).toLowerCase()}`}
+                entries={catalog.champions.map((champion) => ({
+                  ...champion,
+                  disabled: !champion.engine_registration,
+                  detail: !champion.engine_registration
+                    ? "Engine unavailable"
+                    : undefined,
+                }))}
+                onPick={pickChampion}
                 onClose={() => setPicker(null)}
               />
             ) : (
               <ItemShop
-                items={pickerEntries() as Item[]}
-                onPick={pick}
+                items={shopItems}
+                onPick={(name) => equip(name)}
                 onClose={() => setPicker(null)}
                 shop={{
+                  budget,
+                  spend: spend(shopBuild),
+                  replacement: itemFor(replacingName)?.price ?? 0,
+                  replacingName,
+                  label: `${shopActor.champion || participantLabel(shopActor)} · ${isBoots ? "Boots" : `Slot ${slotIndex + 1}`}`,
                   selectedName: shopSelection,
                   onSelect: setShopSelection,
-                  budget: budgets[shopIndex],
-                  spend: shopSpend,
-                  replacement: itemByName(replacingName)?.price ?? 0,
-                  replacingName,
-                  label:
-                    shopIndex === 2
-                      ? "Target"
-                      : `Build ${shopIndex === 0 ? "A" : "B"}`,
-                  boots: picker.kind === "boots",
-                  slotAvailable: shopSlotAvailable,
-                  catalogue: [
-                    ...(catalog?.items ?? []),
-                    ...(catalog?.boots ?? []),
-                  ],
-                  quickBoots: (catalog?.boots ?? []).filter(
+                  boots: isBoots,
+                  slotAvailable,
+                  catalogue: [...catalog.items, ...catalog.boots],
+                  quickBoots: catalog.boots.filter(
                     (item) =>
                       item.tier <=
-                      (shopIndex === 2 ? 2 : (roleValue("boots_tier") ?? 2)),
+                      domainValue(catalog.config, shopActor, "boots_tier"),
                   ),
-                  inventory: shopInventory,
+                  inventory: [
+                    ...shopBuild.items
+                      .slice(0, shopSlots)
+                      .map((name, index) => ({
+                        name,
+                        index,
+                        label: `Item ${index + 1}`,
+                        active: !isBoots && index === slotIndex,
+                      })),
+                    {
+                      name: shopBuild.boots || null,
+                      index: 0,
+                      label: "Boots",
+                      boots: true,
+                      active: isBoots,
+                    },
+                  ],
                   onBudget: (value) =>
-                    setBudgets((current) =>
-                      current.map((budget, index) =>
-                        index === shopIndex ? value : budget,
-                      ),
+                    setBudgets((current) => ({
+                      ...current,
+                      [budgetKey]: value,
+                    })),
+                  onSlot: setShopSlot,
+                  onClear: () => equip(null, false),
+                  onTab: (boots) =>
+                    setShopSlot(
+                      boots
+                        ? 0
+                        : Math.max(
+                            0,
+                            shopBuild.items
+                              .slice(0, shopSlots)
+                              .findIndex((item) => !item),
+                          ),
+                      boots,
                     ),
-                  onSlot: (index, boots) =>
-                    setPicker({
-                      kind: boots
-                        ? "boots"
-                        : shopIndex === 2
-                          ? "targetItem"
-                          : "item",
-                      side: shopIndex,
-                      slot: index,
-                    }),
-                  onClear: clearShopSlot,
-                  onTab: changeShopTab,
-                  optimizer:
-                    shopIndex < 2 ? (
-                      <>
-                        <h3>
-                          Find items for build {shopIndex === 0 ? "A" : "B"}
-                        </h3>
-                        <p>
-                          Your selected items stay locked. Search fills the open
-                          slots within the total budget.
-                        </p>
-                        <button
-                          type="button"
-                          className="calculator-primary"
-                          disabled={!chosen?.engine_registration || busy}
-                          onClick={() => optimize(shopIndex)}
-                        >
-                          {busy ? "Searching…" : "Find best items"}
-                        </button>
-                        {!chosen && (
-                          <p>Select your champion before searching.</p>
-                        )}
-                        {error && <p role="alert">{error}</p>}
-                        {optimization && (
-                          <div role="status">
-                            <h4>
-                              {optimization.is_certified_best
-                                ? "Certified result"
-                                : "Candidate build"}
-                            </h4>
-                            <p>
-                              {[
-                                ...(optimization.items ?? []),
-                                optimization.boots,
-                              ]
-                                .filter(Boolean)
-                                .join(" · ")}
-                            </p>
-                            <p>
-                              {format(optimization.total_damage)} damage in this
-                              fight.
-                            </p>
-                            {!optimization.is_certified_best && (
-                              <p>
-                                BIS remains unconfirmed.{" "}
-                                {optimization.search_guarantee ===
-                                "local_search"
-                                  ? "The search sampled builds; it did not test every combination."
-                                  : "Some candidates could not be compared with complete timing."}
-                              </p>
-                            )}
-                            <p>{optimization.search_timeline_coverage?.note}</p>
-                            {optimization.timeline_coverage?.complete && (
-                              <button
-                                type="button"
-                                className="calculator-secondary"
-                                onClick={() =>
-                                  editBuild(shopIndex, {
-                                    items: [
-                                      ...(optimization.items ?? []),
-                                      ...Array(6).fill(null),
-                                    ].slice(0, 6),
-                                    boots: optimization.boots ?? "",
-                                  })
-                                }
-                              >
-                                {optimization.is_certified_best
-                                  ? "Apply result"
-                                  : "Use candidate build"}
-                              </button>
-                            )}
-                            <details>
-                              <summary>Search details</summary>
-                              <p>
-                                {format(optimization.evaluations)} evaluations
-                              </p>
-                              <p>{optimization.timeline_coverage?.note}</p>
-                              {optimization.search_timeline_coverage?.coarse_sources?.map(
-                                (source) => (
-                                  <p key={source}>{source}</p>
-                                ),
-                              )}
-                            </details>
-                          </div>
-                        )}
-                      </>
-                    ) : undefined,
+                  optimizer: (
+                    <>
+                      <SlotSearch
+                        apiBase={apiBase}
+                        body={bisBody}
+                        title={`${shopActor.champion || "Champion"} · ${isBoots ? "Boots" : `Item slot ${slotIndex + 1}`}`}
+                        ready={searchReady}
+                        objective={objective}
+                        objectives={objectives}
+                        onObjective={setObjective}
+                        onPick={(name) => equip(name, false)}
+                      />
+                      {shopActor.id === "main" && (
+                        <PurchasePlanner
+                          apiBase={apiBase}
+                          body={payload(
+                            picker.side === 1 ? alternative : main.build,
+                          )}
+                          disabled={!main.champion}
+                          onApply={(items, boots) =>
+                            editBuild("main", picker.side, {
+                              items: Array.from(
+                                { length: 6 },
+                                (_, index) => items[index] ?? null,
+                              ),
+                              boots,
+                            })
+                          }
+                        />
+                      )}
+                    </>
+                  ),
                 }}
               />
             ))}
@@ -2371,4 +2347,3 @@ function CalculatorSession({
     </div>
   );
 }
-export default Calculator;

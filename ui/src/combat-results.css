@@ -1,0 +1,139 @@
+.calculator-root .combat-results {
+  margin-block: 24px;
+  color: var(--calculator-ink, #182822);
+  font-variant-numeric: tabular-nums;
+}
+.combat-results > header {
+  margin-bottom: 16px;
+}
+.combat-results h3 {
+  margin: 0;
+  font-size: 20px;
+}
+.combat-results header p {
+  margin: 6px 0 0;
+}
+.combat-team-outcomes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 32px;
+  margin: 0 0 24px;
+}
+.combat-team-outcomes div {
+  max-width: 200px;
+}
+.combat-team-outcomes dt {
+  font-size: 12px;
+}
+.combat-team-outcomes dd {
+  margin: 5px 0 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+.combat-table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  margin-block: 12px 20px;
+}
+.combat-results table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.combat-results caption {
+  text-align: left;
+  font-size: 15px;
+  font-weight: 600;
+  padding-bottom: 12px;
+}
+.combat-results th,
+.combat-results td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--calculator-line, #a4b3a7);
+  vertical-align: top;
+}
+.combat-results th {
+  font-weight: 600;
+}
+.combat-results thead {
+  background: var(--calculator-subtle, #e7eee5);
+}
+.combat-results small {
+  display: block;
+  font-size: 11px;
+  margin-top: 5px;
+  font-weight: 400;
+}
+.combat-results meter {
+  display: block;
+  width: 120px;
+  height: 10px;
+  margin-top: 6px;
+  accent-color: var(--calculator-positive, #306349);
+}
+.combat-ledger {
+  border-top: 1px solid var(--calculator-line, #a4b3a7);
+}
+.combat-ledger > summary {
+  padding-block: 16px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+}
+.combat-ledger > summary span {
+  margin-left: 16px;
+  font-size: 12px;
+  font-weight: 400;
+}
+.combat-source-details {
+  min-width: 145px;
+}
+.combat-source-details summary {
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.combat-source-details dl {
+  margin: 12px 0 0;
+  width: 260px;
+  max-height: 300px;
+  overflow: auto;
+}
+.combat-source-details dl div {
+  padding-block: 5px;
+}
+.combat-source-details dt {
+  font-size: 11px;
+  font-weight: 600;
+}
+.combat-source-details dd {
+  margin: 3px 0 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.calculator-root .combat-show-more {
+  padding: 9px 14px;
+  margin-bottom: 16px;
+  border: 1px solid var(--calculator-line, #a4b3a7);
+  color: inherit;
+  background: var(--calculator-subtle, #e7eee5);
+  cursor: pointer;
+}
+.combat-results :is(summary, button, [tabindex]):focus-visible {
+  outline: 2px solid var(--calculator-positive, #306349);
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .combat-team-outcomes {
+    gap: 14px 20px;
+  }
+  .combat-team-outcomes div {
+    flex: 1 1 130px;
+  }
+  .combat-results th,
+  .combat-results td {
+    padding: 10px 8px;
+  }
+}

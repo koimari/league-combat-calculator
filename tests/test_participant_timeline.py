@@ -2619,8 +2619,8 @@ def test_enemy_bis_uses_threat_after_survival_gate(monkeypatch):
         bis_module,
         "bis_candidate_pool",
         lambda *_args, **_kwargs: [
-            {"name": "Luden's Echo", "icon": "", "stats": {}},
-            {"name": "Warmog's Armor", "icon": "", "stats": {}},
+            get_item_by_name("Luden's Echo"),
+            get_item_by_name("Warmog's Armor"),
         ],
     )
 

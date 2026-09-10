@@ -417,6 +417,60 @@ class TransitionContext:
         return () if profiles is None else profiles
 
 
+def grant_temporary_health(
+    state: dict[str, Any],
+    *,
+    amount: float,
+    until: float,
+    source: str,
+    refresh_source: bool = False,
+) -> None:
+    """Grant a health window while retaining independent expiry boundaries."""
+    windows = state.setdefault("temporary_health_windows", [])
+    if not windows and state["temporary_health_amount"] > 0.0:
+        windows.append(
+            {
+                "amount": state["temporary_health_amount"],
+                "until": state["temporary_health_until"],
+                "source": state["temporary_health_source"],
+                "refresh": True,
+            }
+        )
+    existing = next(
+        (
+            window
+            for window in windows
+            if refresh_source and window.get("refresh") and window["source"] == source
+        ),
+        None,
+    )
+    if existing is None:
+        windows.append(
+            {
+                "amount": amount,
+                "until": until,
+                "source": source,
+                "refresh": refresh_source,
+            }
+        )
+    else:
+        existing["amount"] += amount
+        existing["until"] = max(existing["until"], until)
+    state["pools"].max_health += amount
+    state["pools"].health += amount
+    state["temporary_health_received"] += amount
+    state["temporary_health_amount"] = sum(window["amount"] for window in windows)
+    state["temporary_health_until"] = max(window["until"] for window in windows)
+    state["temporary_health_source"] = source
+
+
+def expire_support_buffs(state: dict[str, Any], event_time: float) -> None:
+    """Remove expired support stat windows before the next event reads them."""
+    buffs = state.get("support_buffs")
+    if buffs:
+        buffs[:] = [buff for buff in buffs if event_time < buff["until"]]
+
+
 def expire_temporary_health(state: dict[str, Any], event_time: float) -> bool:
     """Expire a temporary-health window at ``event_time``; return whether any
     bonus was removed.
@@ -426,6 +480,23 @@ def expire_temporary_health(state: dict[str, Any], event_time: float) -> bool:
     with the ordered damage walk's Lifeline expiry.  What stays here is this
     walk's own bookkeeping: which window closed, and when.
     """
+    windows = state.get("temporary_health_windows")
+    if windows:
+        expired = [window for window in windows if event_time >= window["until"]]
+        if not expired:
+            return False
+        shield_ledger.expire_temporary_max_health(
+            state["pools"], sum(window["amount"] for window in expired)
+        )
+        windows[:] = [window for window in windows if event_time < window["until"]]
+        state["temporary_health_amount"] = sum(window["amount"] for window in windows)
+        state["temporary_health_until"] = max(
+            (window["until"] for window in windows), default=0.0
+        )
+        state["temporary_health_expired_at"] = round(
+            max(window["until"] for window in expired), 3
+        )
+        return True
     if (
         state["temporary_health_amount"] <= 0.0
         or state["temporary_health_until"] <= 0.0
@@ -1748,7 +1819,9 @@ def _apply_stat_buff(
         "until": (
             action.time + action.duration if action.duration > 0.0 else float("inf")
         ),
+        "from": action.time,
         "bonus_attack_speed_percent": action.bonus_attack_speed_percent,
+        "bonus_move_speed_percent": action.bonus_move_speed_percent,
         "bonus_armor": action.bonus_armor,
         "bonus_magic_resistance": action.bonus_magic_resistance,
         "bonus_health": permanent_health,
@@ -2135,15 +2208,11 @@ def _apply_temp_health(
     if amount <= 0.0 or action.duration <= 0.0:
         ctx.ledger.skip(action, "temporary_health_not_available")
         return
-    state["pools"].max_health += amount
-    state["pools"].health += amount
-    state["temporary_health_received"] += amount
-    state["temporary_health_amount"] += amount
-    state["temporary_health_until"] = max(
-        state["temporary_health_until"], action.time + action.duration
-    )
-    state["temporary_health_source"] = str(
-        action.source or action.source_key or "Temporary Health"
+    grant_temporary_health(
+        state,
+        amount=amount,
+        until=action.time + action.duration,
+        source=str(action.source or action.source_key or "Temporary Health"),
     )
     ctx.ledger.write(
         action,
@@ -2245,15 +2314,12 @@ def _apply_heal(
     pools.health += received
     state["healing_received"] += received
     if temporary_health > 0.0:
-        pools.max_health += temporary_health
-        pools.health += temporary_health
-        state["temporary_health_received"] += temporary_health
-        state["temporary_health_amount"] += temporary_health
-        state["temporary_health_until"] = max(
-            state["temporary_health_until"], event_time + temporary_duration
-        )
-        state["temporary_health_source"] = str(
-            action.source or action.source_key or "Temporary Health"
+        grant_temporary_health(
+            state,
+            amount=temporary_health,
+            until=event_time + temporary_duration,
+            source=str(action.source or action.source_key or "Temporary Health"),
+            refresh_source=True,
         )
         ctx.ledger.write(
             action,
@@ -3546,6 +3612,9 @@ def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> 
         if last_snapshot_time != snapshot_time:
             for snapshot_index, snapshot_state in enumerate(states):
                 snapshot_pools = snapshot_state["pools"]
+                expire_support_buffs(snapshot_state, event_time)
+                if snapshot_state.get("temporary_health_windows"):
+                    expire_temporary_health(snapshot_state, event_time)
                 if snapshot_pools.timed:
                     shield_ledger.expire_timed(snapshot_pools, event_time)
                 ctx.shield_presence_at_time[(snapshot_index, snapshot_time)] = (
@@ -3705,6 +3774,23 @@ def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> 
             # a dead target contribute post-death damage to TTD/BIS.
             ledger.skip(action, "target_dead", damage_phase=True)
             continue
+        if (
+            action.cast_blocked_by_attacker_control
+            and kind
+            in {ActionKind.SHIELD, ActionKind.STAT_BUFF, ActionKind.TEMP_HEALTH}
+            and 0 <= action.attacker < len(states)
+        ):
+            caster = states[action.attacker]
+            if caster["death_time"] is not None:
+                ledger.skip(action, "attacker_dead")
+                continue
+            if _actor_stasis_blocks(caster, event_time) or (
+                caster["crowd_control_until"] > event_time
+                and not action.cast_while_disabled
+            ):
+                ledger.mark_blocked(action)
+                ledger.skip(action, "attacker_state_blocked")
+                continue
         if kind is ActionKind.SHIELD:
             _apply_shield(ctx, action, state)
             continue
@@ -4111,6 +4197,7 @@ def finalize_states(states: Sequence[dict[str, Any]], duration: float) -> None:
         shield_ledger.expire_timed(state["pools"], float(duration))
         _finalize_crowd_control_immunity(state, float(duration))
         expire_temporary_health(state, float(duration))
+        expire_support_buffs(state, float(duration))
         shield_ledger.expire_threshold_health(state["pools"], float(duration))
 
 

@@ -921,3 +921,111 @@
     height: 191px;
   }
 }
+
+/* Source portrait rectangle: x335/y1050 relative to frame x312/y1032. */
+.calculator-root .champion-hud-portrait > img,
+.calculator-root .champion-hud-portrait > span {
+  position: absolute;
+  left: 23px;
+  top: 18px;
+  width: 124px;
+  height: 124px;
+  margin: 0;
+  object-fit: cover;
+  object-position: center;
+}
+.calculator-root .champion-hud-decrement {
+  display: grid;
+  place-items: center;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #827047;
+  border-radius: 2px;
+  background: #101b1e;
+  color: #ead8a4;
+  cursor: pointer;
+}
+.champion-hud-decrement svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+.calculator-root .champion-hud-decrement:hover:enabled {
+  border-color: #e4c777;
+  background: #29372f;
+}
+.calculator-root .champion-hud-decrement:disabled {
+  color: #877d64;
+  border-color: #494738;
+  cursor: default;
+}
+.champion-hud-decrement:focus-visible {
+  outline: 2px solid #e4c777;
+  outline-offset: 2px;
+}
+.calculator-root .champion-hud-rank {
+  display: grid;
+  grid-template-columns: 18px 38px;
+  grid-template-rows: 18px 4px;
+  gap: 1px 3px;
+  justify-content: center;
+  align-items: center;
+  height: 23px;
+}
+.calculator-root .champion-hud-rank input {
+  width: 38px;
+  height: 18px;
+  font-size: 12px;
+}
+.calculator-root .champion-hud-rank .champion-hud-decrement {
+  width: 18px;
+  height: 18px;
+}
+.champion-hud-rank .champion-hud-pips {
+  grid-column: 1 / -1;
+  justify-content: center;
+}
+.champion-hud-mobile-skills {
+  display: none;
+}
+@media (max-width: 600px) {
+  .champion-hud-mobile-skills {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin: 14px 0;
+  }
+  .champion-hud-mobile-skills strong {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  .champion-hud-mobile-skills strong span {
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+  .champion-hud-mobile-skills > div > div {
+    display: grid;
+    gap: 4px;
+  }
+  .calculator-root .champion-hud-mobile-skills button {
+    min-height: 44px;
+    display: grid;
+    place-items: center;
+    background: var(--calculator-surface);
+    border: 1px solid var(--calculator-line);
+    color: var(--calculator-ink);
+  }
+  .champion-hud-mobile-skills svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+  }
+}

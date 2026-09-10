@@ -19,9 +19,11 @@ from operator import itemgetter
 from typing import Any, TypeVar
 
 from . import rune_effects
+from .attack_windows import AttackSpeedWindow
 from .ability_spec import AttackClass, DamageClass
 from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
 from .champions.inputs import declared_option_defaults
+from .champions.lulu_events import derive_lulu_support_events
 from .champions.skill_orders import get_ability_rank
 from .champions.slotlib import extract_cooldown, extract_named
 from .defensive_effects import StartingDefenses, armed_revive
@@ -1458,6 +1460,16 @@ def _support_effect_templates(
         ability_ranks=request.ability_ranks,
         champion_options=request.champion_options,
     )
+    if "combat_events" in result and attacker.champion_data["name"] == "Lulu":
+        effects.extend(
+            derive_lulu_support_events(
+                attacker.champion_data,
+                attacker.level,
+                result.get("champion_stats", attacker.stats),
+                list(result.get("cast_timeline", [])),
+                ability_ranks=request.ability_ranks,
+            )
+        )
     templates = []
     state_events = [
         *result.get("self_state_events", []),
@@ -1483,7 +1495,32 @@ def _support_effect_templates(
     ):
         return templates
     for effect_index, effect in enumerate(effects):
-        target_ids, target_policy = _support_target_ids(attacker, effect, all_actors)
+        if "combat_events" in result:
+            authored = next(
+                (
+                    event
+                    for event in result["combat_events"]
+                    if event["slot"] == effect.get("slot")
+                    and abs(event["time"] - float(effect.get("time", 0))) < 0.00051
+                ),
+                None,
+            )
+            if authored is None:
+                continue
+            recipient = next(
+                actor
+                for actor in all_actors
+                if actor.participant_id == authored["recipient_id"]
+            )
+            if (recipient.team == "enemy") != (attacker.team == "enemy"):
+                continue
+            target_ids, target_policy = [
+                recipient.participant_id
+            ], "authored_cast_recipient"
+        else:
+            target_ids, target_policy = _support_target_ids(
+                attacker, effect, all_actors
+            )
         for target_index, ally_target_id in enumerate(target_ids):
             resolved_effect = dict(effect)
             if resolved_effect.get("shield_gate_target") == "attacker":
@@ -1500,6 +1537,9 @@ def _support_effect_templates(
                     )
                 ),
             }
+            if "combat_events" in result:
+                resolved_template["_event_id"] = f"authored:{authored['id']}:support"
+                resolved_template["cast_blocked_by_attacker_control"] = True
             # P1-Renata-W: a champion-authored fail-closed denial (Bailout's
             # withheld lethal-damage half) is a RECEIPT, not an applied
             # packet — it rides the same split the item scan already uses so
@@ -4880,7 +4920,34 @@ def build_participant_timeline(
             pass_index=pass_index,
         )
 
-    return run_passes(compose, _cross_pass_dependencies(items, enemies, allies))
+    if params.combat_events is None:
+        return run_passes(compose, _cross_pass_dependencies(items, enemies, allies))
+    # Buff receipts determine which source casts survived the walk. A later
+    # pass prices only those windows. Since buffs change future attacks, at
+    # most one pass per authored cast propagates their causal consequences.
+    pair_result_cache = None
+    search_context = None
+    include_receipt = True
+    params = replace(params, event_attack_speed_windows=())
+    for _ in range(len(params.combat_events) + 2):
+        receipt = run_passes(compose, _cross_pass_dependencies(items, enemies, allies))
+        windows = tuple(
+            AttackSpeedWindow(
+                event_id=str(event["event_id"]),
+                recipient_id=str(event["target"]),
+                start=float(event["time"]),
+                end=float(event["time"]) + float(event["duration"]),
+                bonus_percent=float(event["bonus_attack_speed_percent"]),
+            )
+            for event in receipt.get("support_events", ())
+            if str(event.get("event_id", "")).startswith("authored:")
+            and float(event.get("bonus_attack_speed_percent", 0)) > 0
+            and not event.get("skipped_reason")
+        )
+        if windows == params.event_attack_speed_windows:
+            return receipt
+        params = replace(params, event_attack_speed_windows=windows)
+    raise ValueError("Authored support casts did not reach a stable causal timeline")
 
 
 def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arguments
@@ -4993,6 +5060,47 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     enemy_attackers = [actor for actor in enemy_actors if not actor.is_practice_dummy]
     ally_actors = _roster_actors(allies, "ally")
     all_actors = [main, *ally_actors, *enemy_actors]
+    if params.combat_events is not None:
+        actors_by_id = {actor.participant_id: actor for actor in all_actors}
+        for event in params.combat_events:
+            if (
+                event.caster_id not in actors_by_id
+                or event.recipient_id not in actors_by_id
+            ):
+                raise ValueError(
+                    f"Cast {event.id}: caster and recipient must exist in the roster"
+                )
+            caster, recipient = (
+                actors_by_id[event.caster_id],
+                actors_by_id[event.recipient_id],
+            )
+            if caster.is_practice_dummy or (
+                caster.team == "enemy" and not params.enemies_attack
+            ):
+                raise ValueError(f"Cast {event.id}: this caster cannot act")
+            friendly = (caster.team == "enemy") == (recipient.team == "enemy")
+            if (
+                not friendly
+                and caster.champion_data["name"] == "Lulu"
+                and event.slot == "R"
+            ):
+                raise ValueError(
+                    f"Cast {event.id}: Lulu R requires a friendly recipient"
+                )
+            if friendly and not (
+                caster.champion_data["name"] == "Lulu" and event.slot in {"E", "W", "R"}
+            ):
+                raise ValueError(
+                    f"Cast {event.id}: this friendly-target effect requires timed support"
+                )
+            if (
+                caster.team == "ally"
+                and friendly
+                and not caster.request.ally_effects_enabled
+            ):
+                raise ValueError(
+                    f"Cast {event.id}: enable ally effects for this caster"
+                )
     outgoing: dict[str, list[dict[str, Any]]] = defaultdict(list)
     incoming: dict[str, list[dict[str, Any]]] = defaultdict(list)
     healing: dict[str, list[dict[str, Any]]] = defaultdict(list)

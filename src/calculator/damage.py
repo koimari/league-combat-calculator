@@ -164,6 +164,8 @@ from types import MappingProxyType
 from typing import Any, NamedTuple, TypeVar
 
 from . import item_effects, minion_stats, resource_ledger, rune_effects, shield_ledger
+from .combat_events import CombatEvent
+from .attack_windows import AttackSpeedWindow, attack_times_for_windows
 from .ability_atoms import (
     ability_field,
     ability_payload,
@@ -633,6 +635,11 @@ class FightConfig:
     one_rotation: bool = False
     include_actives: bool = True
     cast_order: list[str] | None = None
+    combat_events: tuple[CombatEvent, ...] | None = None
+    combat_events_mode: str = "replace"
+    event_actor_id: str = "main"
+    event_target_id: str = ""
+    event_attack_speed_windows: tuple[AttackSpeedWindow, ...] = ()
     auto_attacks_only: bool = False
     # Whether the timed scheduler may recast R on its (hasted) cooldown.
     # Set from the champion module's reviewed ``ULTIMATE_RECASTS``
@@ -859,6 +866,11 @@ class FightState:
     item_armor_shred: "resistance_shred.ShredSlot | None"
     secondary_target_bolts: "secondary_target.SecondaryTargetSlot | None"
     cast_order: list[str]
+    combat_events: tuple[CombatEvent, ...] | None
+    event_actor_id: str
+    event_target_id: str
+    event_attack_speed_windows: tuple[AttackSpeedWindow, ...]
+    support_attack_times: tuple[float, ...] | None
     target_health: float
     target_bonus_health: float
     fight_duration_seconds: float
@@ -2031,6 +2043,7 @@ def _ordered_damage_events(
     cast_events: list[dict[str, Any]] | None = None,
     light: bool = False,
     lean: bool = False,
+    roster_target_index: int = 0,
 ) -> list[Any]:
     """Reconstruct the engine's certified damage order from its own rows.
 
@@ -2195,7 +2208,7 @@ def _ordered_damage_events(
                 part
                 for part in authored_parts
                 if part.cc_kind is not None
-                and (cc_scope is None or cc_scope.reaches(state.roster_target_index))
+                and (cc_scope is None or cc_scope.reaches(roster_target_index))
             ),
             None,
         )
@@ -3206,6 +3219,11 @@ def _resolve_combat_state(
     keystone_effect = _dedicated_keystone(config.keystone)
 
     return FightState(
+        combat_events=config.combat_events,
+        event_actor_id=config.event_actor_id,
+        event_target_id=config.event_target_id,
+        event_attack_speed_windows=config.event_attack_speed_windows,
+        support_attack_times=None,
         champion_stats=champion_stats,
         ability_damages=ability_damages,
         items=items,
@@ -4276,6 +4294,7 @@ def _effective_timed_cooldown(
     ability_info: dict,
     *,
     basic_ability_haste: float,
+    control_applies: bool = True,
 ) -> float:
     """Effective recast cooldown in timed mode: ability haste, Spear of
     Shojin basic-ability haste (Q/W/E), ultimate haste (R), the haste an
@@ -4294,7 +4313,8 @@ def _effective_timed_cooldown(
         total_haste += basic_ability_haste
     elif slot == "R":
         total_haste += float(state.champion_stats["ultimate_haste"])
-    total_haste += _immobilize_ability_haste(state, ability_info)
+    if control_applies:
+        total_haste += _immobilize_ability_haste(state, ability_info)
     cd = effective_cooldown(base_cd, total_haste)
     if result.navori_refund > 0 and cd > 0 and slot in ("Q", "W", "E"):
         cd = _navori_effective_cd(cd, result.autos_per_second, result.navori_refund)
@@ -4351,6 +4371,50 @@ def _self_cast_lockout(state: "FightState") -> float:
     )
 
 
+def _schedule_authored_casts(
+    state: "FightState", result: "RotationResult", basic_ability_haste: float
+) -> dict[str, list[float]]:
+    """Check requested times against the sourced cooldown rules."""
+    times: dict[str, list[float]] = {key: [] for key in state.cast_order}
+    ready: dict[str, float] = {}
+    hands_free = 0.0
+    for event in state.combat_events or ():
+        if event.caster_id != state.event_actor_id:
+            continue
+        key = event.slot
+        info = state.ability_damages.get(key)
+        if info is None or key not in times:
+            raise ValueError(f"Cast {event.id}: {key} is unavailable at this rank")
+        if event.time >= state.fight_duration_seconds:
+            raise ValueError(f"Cast {event.id}: time must precede the fight end")
+        if event.time + _CAST_SCHEDULE_EPS < max(hands_free, ready.get(key, 0.0)):
+            raise ValueError(f"Cast {event.id}: cast time or cooldown is still active")
+        if times[key] and key == "R" and not state.ultimate_recasts:
+            raise ValueError(f"Cast {event.id}: this ultimate supports one cast")
+        cast_time = ability_field(info, "cast_time")
+        cooldown = _effective_timed_cooldown(
+            state,
+            result,
+            key,
+            info,
+            basic_ability_haste=basic_ability_haste,
+            control_applies=event.caster_id.startswith("enemy:")
+            != event.recipient_id.startswith("enemy:"),
+        )
+        if times[key] and cooldown <= 0:
+            raise ValueError(
+                f"Cast {event.id}: this slot has no certified recast cooldown"
+            )
+        hands_free = event.time + cast_time
+        ready[key] = _cooldown_ready_at(
+            state,
+            hands_free + _empower_cooldown_delay(info.get("empowers_next_auto")),
+            cooldown,
+        )
+        times[key].append(event.time)
+    return times
+
+
 def _schedule_shared_casts(
     state: "FightState",
     result: "RotationResult",
@@ -4377,6 +4441,8 @@ def _schedule_shared_casts(
     much casting the lockout costs without claiming where the span sits —
     the module declaring it could not source the instant, only the length.
     """
+    if state.combat_events is not None:
+        return _schedule_authored_casts(state, result, basic_ability_haste)
     duration = max(0.0, state.fight_duration_seconds - _self_cast_lockout(state))
     # Mirror the rotation loop's recast pairing exactly: an entry rides
     # its parent's casts only when the parent appears EARLIER in the
@@ -4661,7 +4727,12 @@ def _resolve_cast_plan(
             continue
 
         scheduled: list[float] = []
-        if state.auto_attacks_only:
+        if state.combat_events is not None:
+            scheduled = list(schedule.get(ability_key, ()))
+            num_casts = len(scheduled)
+            if scheduled:
+                last_cast_time = max(last_cast_time, scheduled[-1])
+        elif state.auto_attacks_only:
             num_casts = 0
         elif state.one_rotation:
             num_casts = 1
@@ -6548,7 +6619,9 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     # Timed mode: all abilities share one cast timeline (cast times lock
     # out other casts). One-rotation and autos-only modes never recast,
     # so they skip scheduling entirely.
-    timed_mode = not (state.one_rotation or state.auto_attacks_only)
+    timed_mode = state.combat_events is not None or not (
+        state.one_rotation or state.auto_attacks_only
+    )
     schedule = (
         _schedule_shared_casts(state, result, basic_ability_haste) if timed_mode else {}
     )
@@ -6557,7 +6630,10 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     # Resolve WHEN everything casts before pricing anything: the stack
     # timeline (Case 4/5) must exist before the first cast is priced, and
     # both it and the DoT integration afterwards read this one plan.
-    plan = _apply_resource_limits(state, _resolve_cast_plan(state, schedule))
+    requested_plan = _resolve_cast_plan(state, schedule)
+    plan = _apply_resource_limits(state, requested_plan)
+    if state.combat_events is not None and plan.counts != requested_plan.counts:
+        raise ValueError("combat_events contains a cast with insufficient resource")
     result.last_cast_time = plan.last_cast_time
     result.resource_spent = plan.resource_spent
     result.resource_remaining = plan.resource_remaining
@@ -6778,6 +6854,15 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # hits; an unramped one lands in full after it (below).
         shred_ramp = _make_shred_ramp(resists, ability_info, ability_stacks)
         cast_times = plan.times.get(ability_key, ())
+        if state.combat_events is not None:
+            selected_times = {
+                event.time
+                for event in state.combat_events
+                if event.caster_id == state.event_actor_id
+                and event.slot == ability_key
+                and event.recipient_id == state.event_target_id
+            }
+            cast_times = tuple(time for time in cast_times if time in selected_times)
         authored_controls = tuple(ability_field(ability_info, "control_events"))
         for control in authored_controls:
             if not isinstance(control, ControlEvent):
@@ -6792,7 +6877,8 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         control_specs = tuple(
             control
             for control in authored_controls
-            if control.scope.reaches(state.roster_target_index)
+            if state.combat_events is not None
+            or control.scope.reaches(state.roster_target_index)
         )
         if control_specs:
             serialized_controls: list[dict[str, Any]] = []
@@ -6816,7 +6902,12 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 for control in control_specs
             )
             for cast_index, cast_time in enumerate(cast_times):
-                cast_id = f"{ability_key}:{cast_index + 1}"
+                ordinal = (
+                    plan.times[ability_key].index(cast_time) + 1
+                    if state.combat_events is not None
+                    else cast_index + 1
+                )
+                cast_id = f"{ability_key}:{ordinal}"
                 target_id = f"target:{state.roster_target_index}"
                 for control in control_specs:
                     offset = (
@@ -6880,7 +6971,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         ) = _evaluate_cast_parts(
             state,
             parts,
-            num_casts,
+            len(cast_times) if state.combat_events is not None else num_casts,
             ability_mr,
             mitigated_damage_dealt,
             on_hit=shred_ramp.stage if shred_ramp is not None else None,
@@ -7366,6 +7457,9 @@ def _add_precomputed_proc_damage(
                 state.breakdown,
                 state.ability_damages,
                 state.cast_order,
+                roster_target_index=(
+                    0 if state.combat_events is not None else state.roster_target_index
+                ),
                 cast_events=rotation.cast_events,
             )
             stack_times = [
@@ -8040,6 +8134,79 @@ def _swings_at_rate(count: int, rate: float, start: float = 0.0) -> list[float]:
     return [start + index / rate for index in range(count)]
 
 
+def _prepare_support_attack_schedule(state: FightState) -> None:
+    """Price the attack count from accepted Whimsy windows before any casts."""
+    windows = tuple(
+        window
+        for window in state.event_attack_speed_windows
+        if window.recipient_id == state.event_actor_id
+    )
+    if not windows or state.auto_attack_uptime <= 0:
+        return
+    if isinstance(
+        state.keystone_effect,
+        (
+            rune_effects.KeystoneHailOfBladesEffect,
+            rune_effects.KeystoneLethalTempoEffect,
+        ),
+    ):
+        raise ValueError(
+            "Timed Whimsy with a keystone that changes attack cadence "
+            "requires combined schedule support"
+        )
+    if (
+        state.item_charged_strikes.swing_schedule is not None
+        or state.item_charged_strikes.empowered_auto_buff is not None
+        or (
+            state.item_spellblade is not None
+            and state.item_spellblade.bonus_attack_speed_percent > 0
+        )
+    ):
+        raise ValueError(
+            "Timed Whimsy with another temporary attack-speed schedule requires combined support"
+        )
+    base_rate = state.attack_speed
+    reset_at: tuple[float, ...] = ()
+    if state.q_window_end > 0:
+        # The champion parser supplied this active window and its rate.
+        # Keep Q's phase boundaries while Whimsy adds its separate grant.
+        base_rate = state.q_window_base_rate
+        if state.attack_speed_ratio <= 0:
+            raise ValueError(
+                "The champion attack-speed window requires a positive attack-speed ratio"
+            )
+        windows += (
+            AttackSpeedWindow(
+                event_id=f"{state.event_actor_id}:Q:active",
+                recipient_id=state.event_actor_id,
+                start=state.q_window_start,
+                end=state.q_window_end,
+                bonus_percent=(state.attack_speed - base_rate)
+                / state.attack_speed_ratio
+                * 100.0,
+                stack_group="champion_active",
+            ),
+        )
+        reset_at = (state.q_window_start, state.q_window_end)
+    state.support_attack_times = attack_times_for_windows(
+        windows,
+        attack_speed=base_rate,
+        ratio=state.attack_speed_ratio,
+        duration=state.fight_duration_seconds,
+        uptime=state.auto_attack_uptime,
+        reset_at=reset_at,
+    )
+    if state.q_window_end > 0:
+        state.q_window_pre_autos = sum(
+            time < state.q_window_start for time in state.support_attack_times
+        )
+        state.q_window_autos = sum(
+            state.q_window_start <= time < state.q_window_end
+            for time in state.support_attack_times
+        )
+    _install_swing_count(state, len(state.support_attack_times))
+
+
 def _base_auto_attack_timestamps(state: FightState) -> list[float]:
     """Return the per-swing schedule the auto count is derived from.
 
@@ -8054,6 +8221,8 @@ def _base_auto_attack_timestamps(state: FightState) -> list[float]:
     is woven around those blocks — the same two-rate accounting the count
     was derived from, which is what keeps every swing inside the fight.
     """
+    if state.support_attack_times is not None:
+        return list(state.support_attack_times)
     if state.num_auto_attacks <= 0 or state.auto_attack_uptime <= 0:
         return []
     normal_rate = state.attack_speed * state.auto_attack_uptime
@@ -9530,6 +9699,9 @@ def _layer_on_hit_effects(
                 state.breakdown,
                 state.ability_damages,
                 state.cast_order,
+                roster_target_index=(
+                    0 if state.combat_events is not None else state.roster_target_index
+                ),
                 cast_events=rotation.cast_events,
             )
             if event.get("phase") == "ability"
@@ -10760,6 +10932,9 @@ def _unique_ledger_hits(
         state.breakdown,
         state.ability_damages,
         state.cast_order,
+        roster_target_index=(
+            0 if state.combat_events is not None else state.roster_target_index
+        ),
         cast_events=rotation.cast_events,
     )
     unique_hits: list[dict[str, Any]] = []
@@ -10867,6 +11042,9 @@ def _damage_threshold_trigger_time(
         state.breakdown,
         state.ability_damages,
         state.cast_order,
+        roster_target_index=(
+            0 if state.combat_events is not None else state.roster_target_index
+        ),
         cast_events=rotation.cast_events,
         light=True,
     )
@@ -11856,6 +12034,9 @@ def _aery_trigger_times(state: FightState, rotation: RotationResult) -> list[flo
         state.breakdown,
         state.ability_damages,
         state.cast_order,
+        roster_target_index=(
+            0 if state.combat_events is not None else state.roster_target_index
+        ),
         cast_events=rotation.cast_events,
     ):
         if float(event["damage"]) <= 0.0:
@@ -11959,6 +12140,9 @@ def _aftershock_trigger_events(
         state.breakdown,
         state.ability_damages,
         state.cast_order,
+        roster_target_index=(
+            0 if state.combat_events is not None else state.roster_target_index
+        ),
         cast_events=rotation.cast_events,
     ):
         add(event)
@@ -12041,6 +12225,9 @@ def _add_keystone_dark_harvest(state: FightState, rotation: RotationResult) -> N
         state.breakdown,
         state.ability_damages,
         state.cast_order,
+        roster_target_index=(
+            0 if state.combat_events is not None else state.roster_target_index
+        ),
         cast_events=rotation.cast_events,
     )
     if not base_events:
@@ -12173,6 +12360,9 @@ def _certified_only_pool(
         state.breakdown,
         state.ability_damages,
         state.cast_order,
+        roster_target_index=(
+            0 if state.combat_events is not None else state.roster_target_index
+        ),
         cast_events=rotation.cast_events,
     )
     coverage = _event_timeline_coverage(
@@ -12786,6 +12976,9 @@ def _conqueror_trigger_events(
         state.breakdown,
         state.ability_damages,
         state.cast_order,
+        roster_target_index=(
+            0 if state.combat_events is not None else state.roster_target_index
+        ),
         cast_events=rotation.cast_events,
     )
     detailed = [event for event in ordered if isinstance(event, Mapping)]
@@ -14318,6 +14511,9 @@ def _deathfire_trigger_events(
         state.breakdown,
         state.ability_damages,
         state.cast_order,
+        roster_target_index=(
+            0 if state.combat_events is not None else state.roster_target_index
+        ),
         cast_events=rotation.cast_events,
     )
     detailed = [
@@ -16883,6 +17079,9 @@ def _expose_weakness_pool(state: FightState, rotation: RotationResult) -> list[A
         state.breakdown,
         state.ability_damages,
         state.cast_order,
+        roster_target_index=(
+            0 if state.combat_events is not None else state.roster_target_index
+        ),
         cast_events=rotation.cast_events,
         light=True,
     )
@@ -17000,6 +17199,9 @@ def _hypershot_delta_events(
         state.breakdown,
         state.ability_damages,
         state.cast_order,
+        roster_target_index=(
+            0 if state.combat_events is not None else state.roster_target_index
+        ),
         cast_events=rotation.cast_events,
         light=True,
     )
@@ -17149,6 +17351,9 @@ def _apply_general_amplifiers(state: FightState, rotation: RotationResult) -> No
         state.breakdown,
         state.ability_damages,
         state.cast_order,
+        roster_target_index=(
+            0 if state.combat_events is not None else state.roster_target_index
+        ),
         cast_events=rotation.cast_events,
         light=True,
     )
@@ -17312,6 +17517,9 @@ def _add_rune_conditional_amp_damage(
         state.breakdown,
         state.ability_damages,
         state.cast_order,
+        roster_target_index=(
+            0 if state.combat_events is not None else state.roster_target_index
+        ),
         cast_events=rotation.cast_events,
         light=True,
     )
@@ -17400,6 +17608,9 @@ def _add_rune_flat_amp_damage(state: FightState, rotation: RotationResult) -> No
         state.breakdown,
         state.ability_damages,
         state.cast_order,
+        roster_target_index=(
+            0 if state.combat_events is not None else state.roster_target_index
+        ),
         cast_events=rotation.cast_events,
         light=True,
     )
@@ -17486,6 +17697,9 @@ def _apply_command_amp(state: FightState, rotation: RotationResult) -> None:
         state.breakdown,
         state.ability_damages,
         state.cast_order,
+        roster_target_index=(
+            0 if state.combat_events is not None else state.roster_target_index
+        ),
         cast_events=rotation.cast_events,
         light=True,
     )
@@ -17675,6 +17889,9 @@ def _add_stored_damage(state: FightState, rotation: RotationResult) -> None:
         state.breakdown,
         state.ability_damages,
         state.cast_order,
+        roster_target_index=(
+            0 if state.combat_events is not None else state.roster_target_index
+        ),
         cast_events=rotation.cast_events,
     )
     cast_positions = {slot: index for index, slot in enumerate(state.cast_order)}
@@ -18266,6 +18483,7 @@ def calculate_fight_damage(
 
     # ── Stat buffs from abilities (e.g. Aatrox R bonus AD) ─────────────
     _apply_stat_buff_ultimates(state)
+    _prepare_support_attack_schedule(state)
 
     # ── Ability rotation, precomputed procs, DoTs, and Shaped Charge ────
     rotation = _compute_ability_rotation(state)
@@ -18374,6 +18592,9 @@ def calculate_fight_damage(
         state.breakdown,
         state.ability_damages,
         state.cast_order,
+        roster_target_index=(
+            0 if state.combat_events is not None else state.roster_target_index
+        ),
         cast_events=rotation.cast_events,
         light=tuple_ledger,
         lean=score_only,

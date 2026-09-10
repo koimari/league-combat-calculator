@@ -20,7 +20,7 @@ each candidate's combat map before folding a score out of it.
 
 import math
 import time
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from copy import deepcopy
 from dataclasses import replace
 from typing import Any
@@ -35,6 +35,7 @@ from .loadout_rules import role_quest_legal_items, role_scoped_shop_items
 from .optimizer import (
     get_eligible_boots,
     get_eligible_legendaries,
+    item_gold,
     optimizer_supported_items,
 )
 from .participant_timeline import CoupledSearchContext, build_participant_timeline
@@ -237,6 +238,16 @@ def enemy_bis_rank_key(
 # Keep the definitions in one place so the API receipt and the browser filter
 # cannot silently disagree about direction or units.
 BIS_OBJECTIVES: dict[str, dict[str, str]] = {
+    "team_outcome": {
+        "label": "Team damage advantage",
+        "direction": "higher",
+        "metric": "selected-side damage minus opposing-side damage before defeat",
+        "description": (
+            "Selected-side damage before defeat minus opposing-side damage before "
+            "defeat, from the coupled fight. This score measures damage advantage; "
+            "it is not a win probability."
+        ),
+    },
     "overall": {
         "label": "Overall",
         "direction": "higher",
@@ -309,7 +320,7 @@ def bis_objective_meta(key: str) -> dict[str, str]:
     meta = BIS_OBJECTIVES.get(key)
     if meta is None:
         raise ValueError(
-            "objective must be one of: overall, kill, survival, damage, utility"
+            "objective must be one of: team_outcome, overall, kill, survival, damage, utility"
         )
     return {"key": key, **meta}
 
@@ -317,6 +328,7 @@ def bis_objective_meta(key: str) -> dict[str, str]:
 def bis_objective_contract() -> dict[str, dict[str, str]]:
     """Return the complete objective map for public clients."""
     units = {
+        "team_outcome": "TDD",
         "overall": "TDD",
         "kill": "",
         "survival": "eHP",
@@ -396,6 +408,38 @@ def _focus_survival_path(
     )
 
 
+def _team_damage_advantage(
+    subject_team: str,
+    objective: Mapping[str, object],
+    part: Callable[[str, float], Tagged],
+) -> tuple[float, str, dict[str, float], None]:
+    """Subtract the opposing side's published damage from the selected side."""
+    damage = {
+        team: ranked_total(
+            [
+                part(
+                    f"objective.{team}_team_damage_before_death",
+                    float(objective[f"{team}_team_damage_before_death"]),
+                )
+            ],
+            surface=BIS_SURFACE,
+        )
+        for team in ("main", "enemy")
+    }
+    selected, opposing = (
+        ("enemy", "main") if subject_team == "enemy" else ("main", "enemy")
+    )
+    return (
+        damage[selected] - damage[opposing],
+        BIS_OBJECTIVES["team_outcome"]["metric"],
+        {
+            "selected_side_damage_before_death": damage[selected],
+            "opposing_side_damage_before_death": damage[opposing],
+        },
+        None,
+    )
+
+
 def bis_objective_score(
     objective_key: str,
     *,
@@ -434,8 +478,7 @@ def bis_objective_score(
         )
 
     focus_survival = focus.get("survival", {})
-    if not isinstance(focus_survival, Mapping):
-        focus_survival = {}
+    focus_survival = focus_survival if isinstance(focus_survival, Mapping) else {}
     duration = float(combat.get("duration", 0.0) or 0.0)
     if duration <= 0.0:
         duration = DEFAULT_FIGHT_DURATION
@@ -446,6 +489,8 @@ def bis_objective_score(
     support_value = float(objective.get("focus_support_value", 0.0) or 0.0)
     damage_part = part("objective.focus_damage_before_death", focus_damage)
     health_part = part(f"{survival_path}.effective_health", effective_health)
+    if objective_key == "team_outcome":
+        return _team_damage_advantage(subject_team, objective, part)
     if objective_key == "overall":
         if subject_team == "main":
             score = ranked_total([damage_part], surface=BIS_SURFACE)
@@ -671,6 +716,11 @@ def bis_payload(
     subject_index = request_int(data, "subject_index", 0, minimum=0, maximum=4)
     objective_meta = bis_objective_meta(request_string(data, "objective", "overall"))
     objective_key = objective_meta["key"]
+    max_item_gold = (
+        request_int(data, "max_item_gold", 0, minimum=0, maximum=30_000)
+        if data.get("max_item_gold") not in (None, "")
+        else None
+    )
     if subject_team == "ally" and subject_index >= len(request.allies):
         raise ValueError("subject_index is outside the selected ally roster")
     if subject_team == "enemy" and subject_index >= len(request.enemies):
@@ -722,6 +772,12 @@ def bis_payload(
             for candidate in candidates
             if candidate.get("name") != equipped_slot_item
         ]
+
+    budget_excluded_count = 0
+    if max_item_gold is not None:
+        affordable = [item for item in candidates if item_gold(item) <= max_item_gold]
+        budget_excluded_count = len(candidates) - len(affordable)
+        candidates = affordable
 
     ranked: list[dict] = []
     withheld: list[dict[str, object]] = []
@@ -846,6 +902,7 @@ def bis_payload(
                 {
                     "name": candidate["name"],
                     "icon": https_icon(candidate.get("icon", "")),
+                    "price": item_gold(candidate),
                     "score": round(score, 1),
                     "objective_value": round(score, 3),
                     "metric": metric,
@@ -906,6 +963,8 @@ def bis_payload(
         "slot_index": slot_index,
         "slot_kind": slot_kind,
         "excluded_equipped_item": equipped_slot_item or None,
+        "max_item_gold": max_item_gold,
+        "budget_excluded_candidate_count": budget_excluded_count,
         "candidate_scope": (
             f"role-tagged:{role}" if role and slot_kind != "boots" else "all-supported"
         ),

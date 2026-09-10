@@ -116,13 +116,26 @@ export interface Config {
     fetched_at?: string;
   };
   domain_contract: {
+    combat_events?: {
+      schema_version: number;
+      modes: string[];
+      champions: Record<string, Record<string, { recipients: string[] }>>;
+    };
+    bis_objectives?: Record<
+      string,
+      { label: string; description?: string; direction?: string }
+    >;
     role_quest: {
       roles: string[];
       level_cap: DomainValue;
       inventory_capacity: DomainValue;
       boots_tier: DomainValue;
     };
-    rank_allocation: { by_champion: Record<string, string> };
+    rank_allocation: {
+      by_champion: Record<string, string>;
+      default_rules?: RankRules;
+      rules_by_champion?: Record<string, RankRules>;
+    };
   };
 }
 export interface DomainValue {
@@ -180,4 +193,9 @@ export interface Optimization {
   search_guarantee?: string;
   evaluations?: number;
   error?: string;
+}
+
+export interface RankRules {
+  rank_unlock_levels: Record<string, number[]>;
+  free_ranks: Record<string, number>;
 }

@@ -3,7 +3,11 @@ import type { Champion, Item } from "./types";
 import "./champion-hud.css";
 import { GameTooltip } from "./Tooltip";
 import { wikiText } from "./shop";
-import { increaseSkillRank, unspentSkillPoints } from "./hud-ranks";
+import {
+  decreaseSkillRank,
+  increaseSkillRank,
+  unspentSkillPoints,
+} from "./hud-ranks";
 
 export interface ChampionHudProps {
   champion?: Champion;
@@ -15,7 +19,8 @@ export interface ChampionHudProps {
   ranks: Record<string, number> | null;
   onRanks?: (ranks: Record<string, number> | null) => void;
   rankCaps?: Record<string, number>;
-  defaultRanks?: Record<string, number>;
+  minimumRanks?: Record<string, number>;
+  skillPointBudget?: number;
   ranksDerived?: boolean;
   stats: Record<string, number> | null;
   loading?: boolean;
@@ -273,7 +278,8 @@ export function ChampionHud({
   ranks,
   onRanks,
   rankCaps,
-  defaultRanks,
+  minimumRanks = {},
+  skillPointBudget,
   ranksDerived = false,
   stats,
   loading = false,
@@ -288,8 +294,13 @@ export function ChampionHud({
   const id = useId();
   const [statTab, setStatTab] = useState("Basic");
   const editable = Boolean(onRanks && rankCaps && !ranksDerived && champion);
-  const resolvedRanks = ranks ?? defaultRanks ?? { Q: 0, W: 0, E: 0, R: 0 };
-  const points = unspentSkillPoints(level, resolvedRanks);
+  const resolvedRanks = ranks ?? { Q: 0, W: 0, E: 0, R: 0 };
+  const points = unspentSkillPoints(
+    level,
+    resolvedRanks,
+    minimumRanks,
+    skillPointBudget,
+  );
   const visibleStats = loading || error ? null : stats;
   const health = visibleStats?.health;
   const resource = visibleStats?.max_mana;
@@ -311,27 +322,21 @@ export function ChampionHud({
             <button
               type="button"
               className="champion-hud-rank-mode"
-              onClick={() => onRanks?.({ Q: 0, W: 0, E: 0, R: 0 })}
-            >
-              Reset skill points
-            </button>
-            <button
-              className="champion-hud-rank-mode"
-              type="button"
               onClick={() =>
-                onRanks?.(
-                  ranks === null
-                    ? { ...(defaultRanks ?? { Q: 0, W: 0, E: 0, R: 0 }) }
-                    : null,
-                )
+                onRanks?.({ Q: 0, W: 0, E: 0, R: 0, ...minimumRanks })
               }
             >
-              {ranks === null ? "Edit ability ranks" : "Use automatic ranks"}
+              Reset skill points
             </button>
           </div>
         )}
       </header>
-      <div className="champion-hud-viewport">
+      <div
+        className="champion-hud-viewport"
+        tabIndex={0}
+        role="region"
+        aria-label={`${label} HUD, scroll to view all controls`}
+      >
         <div className="champion-hud-frame">
           <div className="champion-hud-identity">
             <button
@@ -370,8 +375,8 @@ export function ChampionHud({
               {["P", "Q", "W", "E", "R"].map((slot) => {
                 const ability = champion?.abilities[slot];
                 const cap = rankCaps?.[slot];
-                const rank = (ranks ?? defaultRanks)?.[slot];
-                const usedElsewhere = Object.entries(ranks ?? {}).reduce(
+                const rank = resolvedRanks[slot] ?? 0;
+                const usedElsewhere = Object.entries(resolvedRanks).reduce(
                   (sum, [key, value]) => sum + (key === slot ? 0 : value),
                   0,
                 );
@@ -411,6 +416,8 @@ export function ChampionHud({
                               resolvedRanks,
                               slot,
                               cap,
+                              minimumRanks,
+                              skillPointBudget,
                             ) === null
                           }
                           onClick={() => {
@@ -420,6 +427,8 @@ export function ChampionHud({
                               resolvedRanks,
                               slot,
                               cap,
+                              minimumRanks,
+                              skillPointBudget,
                             );
                             if (next) onRanks?.(next);
                           }}
@@ -451,37 +460,53 @@ export function ChampionHud({
                     </GameTooltip>
                     {slot !== "P" && (
                       <div className="champion-hud-rank">
-                        {editable && ranks !== null && cap !== undefined ? (
+                        <button
+                          type="button"
+                          className="champion-hud-decrement"
+                          aria-label={`${label}: decrease ${slot} ${ability?.name ?? "ability"} rank from ${rank} to ${Math.max(minimumRanks[slot] ?? 0, rank - 1)}`}
+                          disabled={
+                            !editable || rank <= (minimumRanks[slot] ?? 0)
+                          }
+                          onClick={() => {
+                            if (!editable) return;
+                            const next = decreaseSkillRank(
+                              resolvedRanks,
+                              slot,
+                              minimumRanks,
+                            );
+                            if (next) onRanks?.(next);
+                          }}
+                        >
+                          <svg viewBox="0 0 16 16" aria-hidden="true">
+                            <path d="M3 8h10" />
+                          </svg>
+                        </button>
+                        {editable && cap !== undefined ? (
                           <label>
                             <span className="champion-hud-sr">
                               {label} {slot} rank
                             </span>
                             <input
                               type="number"
-                              min={0}
+                              min={minimumRanks[slot] ?? 0}
                               max={allowedRank}
                               value={rank ?? 0}
                               onChange={(event) => {
                                 const value = event.currentTarget.valueAsNumber;
                                 if (
                                   Number.isInteger(value) &&
-                                  value >= 0 &&
+                                  value >= (minimumRanks[slot] ?? 0) &&
                                   value <= allowedRank
                                 )
-                                  onRanks?.({ ...ranks, [slot]: value });
+                                  onRanks?.({
+                                    ...resolvedRanks,
+                                    [slot]: value,
+                                  });
                               }}
                             />
                           </label>
                         ) : (
-                          <span
-                            title={
-                              ranksDerived
-                                ? "Ranks follow champion level"
-                                : "The engine sets automatic ranks"
-                            }
-                          >
-                            {rank === undefined ? "Auto" : rank}
-                          </span>
+                          <span>{rank}</span>
                         )}
                         {cap !== undefined && (
                           <span
@@ -629,6 +654,66 @@ export function ChampionHud({
           </dl>
         </div>
       </div>
+      {editable && (
+        <div
+          className="champion-hud-mobile-skills"
+          aria-label="Skill point controls"
+        >
+          {(["Q", "W", "E", "R"] as const).map((slot) => {
+            const rank = resolvedRanks[slot] ?? 0;
+            const cap = rankCaps?.[slot];
+            return (
+              <div key={slot}>
+                <strong>
+                  {slot}{" "}
+                  <span>
+                    {rank}/{cap}
+                  </span>
+                </strong>
+                <div>
+                  <button
+                    type="button"
+                    aria-label={`Add ${slot} skill point`}
+                    disabled={!points || cap === undefined || rank >= cap}
+                    onClick={() => {
+                      const next = increaseSkillRank(
+                        level,
+                        resolvedRanks,
+                        slot,
+                        cap,
+                        minimumRanks,
+                        skillPointBudget,
+                      );
+                      if (next) onRanks?.(next);
+                    }}
+                  >
+                    <svg viewBox="0 0 20 20" aria-hidden="true">
+                      <path d="M10 4v12M4 10h12" />
+                    </svg>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Remove ${slot} skill point`}
+                    disabled={rank <= (minimumRanks[slot] ?? 0)}
+                    onClick={() => {
+                      const next = decreaseSkillRank(
+                        resolvedRanks,
+                        slot,
+                        minimumRanks,
+                      );
+                      if (next) onRanks?.(next);
+                    }}
+                  >
+                    <svg viewBox="0 0 20 20" aria-hidden="true">
+                      <path d="M4 10h12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
       <div
         className="champion-hud-stat-tabs"
         role="tablist"

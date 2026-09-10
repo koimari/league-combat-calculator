@@ -52,6 +52,7 @@ from src.calculator.application_errors import ApplicationError
 from src.calculator.bis import bis_batch_payload, bis_objective_contract, bis_payload
 from src.calculator.calculate import calculate_payload, compare_payload
 from src.calculator.capabilities import public_capability_contract
+from src.calculator.combat_events import combat_event_contract
 from src.calculator.cast_dependency import BASE_CAST_SLOTS
 from src.calculator.certainty import (
     CERTAINTY_BOUNDARY as _CERTAINTY_BOUNDARY,
@@ -1314,6 +1315,7 @@ def api_config() -> Response:
                 "role_quest": role_quest_domain_contract(),
                 "rank_allocation": rank_allocation_contract(),
                 "bis_objectives": bis_objective_contract(),
+                "combat_events": combat_event_contract(),
             },
             "capabilities": public_capability_contract(
                 input_limits=PUBLIC_INPUT_LIMITS,

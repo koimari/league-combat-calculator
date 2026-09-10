@@ -12,6 +12,12 @@ from dataclasses import dataclass, replace
 from typing import Any
 
 from . import item_effects, minion_stats, resource_ledger
+from .combat_events import (
+    combat_event_contract,
+    event_receipt,
+    parse_combat_events,
+    parse_combat_events_mode,
+)
 from .auto_attack_policy import (
     AUTO_ATTACK_UPTIME_MODE_CALCULATED,
     AUTO_ATTACK_UPTIME_MODE_EXPLICIT,
@@ -34,6 +40,7 @@ from .champions import (
     parse_champion_abilities,
 )
 from .champions.skill_orders import get_ability_rank
+from .rank_allocation import SPECIAL_CHAMPIONS, rank_rules, validate_manual_ranks
 from .damage import (
     MINION_SOURCED_TARGET_FIELDS,
     FightConfig,
@@ -121,16 +128,15 @@ PUBLIC_INPUT_LIMITS: dict[str, tuple[float, float]] = {
     "target_mr": (0.0, 500.0),
 }
 _PUBLIC_FIGHT_MODES = frozenset({"one_rotation", "time_based", "timed", "auto_only"})
-_NONSTANDARD_RANK_CHAMPIONS = frozenset({"Elise", "Jayce", "Karma", "Nidalee", "Udyr"})
 
 
 def rank_allocation_contract() -> dict[str, object]:
-    """Return the backend-owned rank allocation modes for public clients."""
+    """Return the backend-owned manual rank rules for public clients."""
     return {
         "default": "manual",
-        "by_champion": dict.fromkeys(
-            sorted(_NONSTANDARD_RANK_CHAMPIONS), "level_derived"
-        ),
+        "by_champion": dict.fromkeys(SPECIAL_CHAMPIONS, "manual"),
+        "default_rules": rank_rules(""),
+        "rules_by_champion": {name: rank_rules(name) for name in SPECIAL_CHAMPIONS},
     }
 
 
@@ -1017,6 +1023,7 @@ class FightParams(FightConfig):
     passes a ``FightParams`` straight through because it IS one.
     """
 
+    include_auto_attacks: bool | None = None
     ability_ranks: dict[str, int] | None = None
     champion_options: dict[str, Any] | None = None
     item_options: dict[str, dict[str, int | float]] | None = None
@@ -1174,12 +1181,19 @@ class FightParams(FightConfig):
                 data, "target_mr", DEFAULT_TARGET["mr"]
             ),
             fight_duration_seconds=duration,
+            include_auto_attacks=(
+                _request_bool(data, "include_auto_attacks", False)
+                if "include_auto_attacks" in data
+                else None
+            ),
             auto_attack_uptime=uptime,
             auto_attack_uptime_mode=uptime_mode,
             rotation_count=rotation_count,
             one_rotation=one_rotation,
             include_actives=_request_bool(data, "include_actives", True),
             cast_order=data.get("cast_order"),
+            combat_events=parse_combat_events(data.get("combat_events")),
+            combat_events_mode=parse_combat_events_mode(data.get("combat_events_mode")),
             auto_attacks_only=auto_attacks_only,
             ability_ranks=dict(ability_ranks) if ability_ranks is not None else None,
             champion_options=(
@@ -1197,7 +1211,7 @@ class FightParams(FightConfig):
             role=role,
             role_quest_complete=role_quest_complete,
             enemies_attack=_request_bool(data, "enemies_attack", True),
-            deterministic=deterministic,
+            deterministic=deterministic or data.get("combat_events") is not None,
         )
         params._validate_request_values()
         return params
@@ -1223,13 +1237,13 @@ class FightParams(FightConfig):
             value = self.ability_ranks.get(key, 0)
             if isinstance(value, bool) or not isinstance(value, int):
                 raise ValueError(f"{key} rank must be an integer")
-            if value < 0 or value > 5:
-                raise ValueError(f"{key} rank must be 0-5")
+            if value < 0 or value > 6:
+                raise ValueError(f"{key} rank must be 0-6")
         ultimate_rank = self.ability_ranks.get("R", 0)
         if isinstance(ultimate_rank, bool) or not isinstance(ultimate_rank, int):
             raise ValueError("R rank must be an integer")
-        if ultimate_rank < 0 or ultimate_rank > 3:
-            raise ValueError("R rank must be 0-3")
+        if ultimate_rank < 0 or ultimate_rank > 6:
+            raise ValueError("R rank must be 0-6")
 
     def target_stats(self) -> dict[str, float]:
         """Build the champion-parser target context for a full-health target."""
@@ -1251,9 +1265,7 @@ class FightParams(FightConfig):
         """Reject a rank allocation or a cast order this champion cannot run.
 
         Rank-free requests use the champion's sourced default order. Manual
-        allocations are accepted only for the standard five-rank basic and
-        three-rank ultimate layout. Transformation and auto-levelled kits fail
-        closed until their individual allocation rules are represented.
+        allocations use the champion rank limits and free starting ranks.
 
         ``kit`` is the parsed ability package.  Which slots a request may
         name is a property of the parsed kit, not of the champion's name, so
@@ -1274,36 +1286,13 @@ class FightParams(FightConfig):
 
         if self.ability_ranks is None:
             return
-        if champion_name in _NONSTANDARD_RANK_CHAMPIONS:
-            raise ValueError(
-                f"Manual ability ranks are unavailable for {champion_name}; "
-                "use the level-derived ranks"
-            )
-
         effective = {
             key: self.ability_ranks.get(
                 key, get_ability_rank(key, level, champion_name)
             )
             for key in ("Q", "W", "E", "R")
         }
-        for key in ("Q", "W", "E"):
-            rank = effective[key]
-            minimum_level = max(1, 2 * rank - 1) if rank else 0
-            if rank and level < minimum_level:
-                raise ValueError(
-                    f"{key} rank {rank} requires champion level {minimum_level}"
-                )
-        ultimate_rank = effective["R"]
-        minimum_ultimate_level = (0, 6, 11, 16)[ultimate_rank]
-        if ultimate_rank and level < minimum_ultimate_level:
-            raise ValueError(
-                f"R rank {ultimate_rank} requires champion level "
-                f"{minimum_ultimate_level}"
-            )
-        if sum(effective.values()) > min(level, 18):
-            raise ValueError(
-                "Ability ranks spend more skill points than the champion level allows"
-            )
+        validate_manual_ranks(champion_name, level, effective)
 
     def validate_cast_order_for_kit(
         self, champion_name: str, kit: Mapping[str, Any]
@@ -1407,6 +1396,50 @@ def run_fight(
     (``damage_events_tuple`` is set) — same events, same order, no dict
     per event; only the scoring fast path consumes that shape.
     """
+    if params.include_auto_attacks is False:
+        params = replace(
+            params,
+            auto_attack_uptime=0.0,
+            auto_attack_uptime_mode=AUTO_ATTACK_UPTIME_MODE_EXPLICIT,
+        )
+    if (
+        params.combat_events is not None
+        and params.combat_events_mode == "overrides"
+        and not any(
+            event.caster_id == params.event_actor_id for event in params.combat_events
+        )
+    ):
+        params = replace(params, combat_events=None)
+    if params.combat_events is not None:
+        actor_events = tuple(
+            event
+            for event in params.combat_events
+            if event.caster_id == params.event_actor_id
+        )
+        certified_slots = combat_event_contract()["champions"].get(
+            champion_data.get("name"), {}
+        )
+        if any(event.slot not in certified_slots for event in actor_events):
+            raise ValueError("This champion slot requires authored-event certification")
+        authored_slots = list(dict.fromkeys(event.slot for event in actor_events))
+        params = replace(
+            params,
+            cast_order=authored_slots or None,
+            auto_attacks_only=not authored_slots,
+            one_rotation=False,
+            deterministic=True,
+        )
+        if champion_data.get("name") == "Lulu":
+            # The event recipient selects E's damage/shield branch in the roster.
+            # W's buff branch requires an attack schedule that can change mid-fight.
+            params = replace(
+                params,
+                champion_options={
+                    **(params.champion_options or {}),
+                    "lulu_whimsy_target": "enemy",
+                    "lulu_wild_growth_target": "ally",
+                },
+            )
     if not validated:
         params.validate_for_champion(champion_data.get("name", ""), level)
     champion_stats = (
@@ -1583,6 +1616,29 @@ def run_fight(
         item_options=params.item_options,
         champion_options=params.champion_options,
     )
+    if params.combat_events is not None:
+        result["combat_events"] = [
+            event_receipt(event)
+            for event in params.combat_events
+            if event.caster_id == params.event_actor_id
+        ]
+        for cast in result.get("cast_timeline", ()):
+            authored = next(
+                (
+                    event
+                    for event in params.combat_events
+                    if event.caster_id == params.event_actor_id
+                    and event.slot == cast["slot"]
+                    and abs(event.time - cast["time"]) < 0.00051
+                ),
+                None,
+            )
+            if authored is not None:
+                cast.update(
+                    authored_event_id=authored.id,
+                    caster_id=authored.caster_id,
+                    recipient_id=authored.recipient_id,
+                )
     result["self_state_events"] = derive_self_state_effects(
         ability_damages,
         list(result.get("cast_timeline", [])),

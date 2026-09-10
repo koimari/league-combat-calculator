@@ -1947,6 +1947,7 @@
   gap: 12px;
 }
 .calculator-shop-bis {
+  flex: 0 0 auto;
   padding: 16px;
   background: var(--calculator-surface);
   border-block-end: 1px solid var(--calculator-line);
