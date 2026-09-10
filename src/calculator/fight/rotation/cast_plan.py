@@ -65,6 +65,7 @@ def _resolve_cast_plan(
                     scheduled = scheduled[
                         : state.num_auto_attacks // _empower_hits(empower)
                     ]
+                scheduled = _landable_cast_times(state, ability_info, scheduled)
                 num_casts = len(scheduled)
                 # Burns use the fight-wide last cast as their final refresh.
                 if scheduled:
@@ -74,6 +75,28 @@ def _resolve_cast_plan(
         times[ability_key] = tuple(scheduled) if scheduled else (0.0,) * num_casts
 
     return CastPlan(counts=counts, times=times, last_cast_time=last_cast_time)
+
+
+def _landable_cast_times(
+    state: FightState,
+    ability_info: Mapping[str, Any],
+    scheduled: list[float],
+) -> list[float]:
+    """Drop a cast whose every hit is a single instant past the fight's end.
+
+    Dropped before pricing so the cast count, the cast timeline and every
+    proc that counts ability hits agree (#323); a cast that lands anything
+    at the boundary, as a tick train or through a next attack is kept and
+    cast_parts clips its late hits one by one.
+    """
+    parts = ability_info.get("parts")
+    if not parts or ability_info.get("empowers_next_auto"):
+        return scheduled
+    if any(part.time_offset is None or part.hit_interval is not None for part in parts):
+        return scheduled
+    earliest = min(part.time_offset for part in parts)
+    limit = state.fight_duration_seconds + _CAST_SCHEDULE_EPS
+    return [cast_time for cast_time in scheduled if cast_time + earliest <= limit]
 
 
 def _cast_admission_events(

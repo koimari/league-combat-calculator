@@ -746,6 +746,18 @@
   width: 100%;
   height: 55px;
   aspect-ratio: auto;
+  overflow: hidden;
+}
+/* The inventory sprite's cells are 69x55; a square 64px icon is shown at
+   the cell height, centred, rather than at the cell width. */
+.calculator-root
+  .champion-hud-slots
+  > .champion-hud-item-tooltip
+  > button:first-child
+  img {
+  width: 53px;
+  height: 53px;
+  object-fit: cover;
 }
 .champion-hud-gold {
   display: block;
@@ -945,14 +957,17 @@
   }
 }
 
-/* Source portrait rectangle: x335/y1050 relative to frame x312/y1032. */
+/* The ring sprite's transparent window is a 103px circle centred at
+   (66, 71) of the 174x180 portrait box, measured on clarity_hudatlas.png
+   (the layout json's 124px rectangle at 23/18 belongs to a differently
+   scaled frame). The art is 108px so it runs under the ring's inner shadow. */
 .calculator-root .champion-hud-portrait > img,
 .calculator-root .champion-hud-portrait > span {
   position: absolute;
-  left: 23px;
-  top: 18px;
-  width: 124px;
-  height: 124px;
+  left: 12px;
+  top: 17px;
+  width: 108px;
+  height: 108px;
   margin: 0;
   object-fit: cover;
   object-position: center;

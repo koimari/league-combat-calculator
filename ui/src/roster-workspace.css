@@ -500,3 +500,179 @@
   max-height: 240px;
   overflow: auto;
 }
+
+/* --- steps: one screen per stage, the result always in view --- */
+.calculator-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  margin: 0 0 24px;
+  padding: 10px 0;
+  background: var(--calculator-canvas);
+}
+.calculator-steps button {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: center;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid var(--calculator-line);
+  border-radius: var(--calculator-control-radius);
+  background: var(--calculator-surface);
+  color: var(--calculator-ink);
+}
+.calculator-steps button[aria-current="step"] {
+  border-color: var(--calculator-positive);
+  box-shadow: inset 0 0 0 1px var(--calculator-positive);
+}
+.calculator-step-number {
+  grid-row: 1 / span 2;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--calculator-subtle);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.calculator-steps button[aria-current="step"] .calculator-step-number {
+  background: var(--calculator-positive);
+  color: var(--calculator-surface);
+}
+.calculator-step-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+.calculator-step-hint {
+  font-size: 12px;
+  color: var(--calculator-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.calculator-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 32px;
+  align-items: start;
+}
+.calculator-stage-main {
+  min-width: 0;
+}
+.calculator-step-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 24px 0 8px;
+}
+.calculator-step-nav .calculator-primary:only-child {
+  margin-left: auto;
+}
+.calculator-result-rail {
+  position: sticky;
+  top: 86px;
+  display: grid;
+  gap: 16px;
+  max-height: calc(100dvh - 100px);
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--calculator-line);
+  border-radius: var(--calculator-control-radius);
+  background: var(--calculator-surface);
+}
+.calculator-result-rail .calculator-fight-bar {
+  display: grid;
+  gap: 10px;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.calculator-result-rail .calculator-duration {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+}
+.calculator-result-rail .calculator-results {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+.calculator-result-rail .calculator-results-heading {
+  margin: 0;
+}
+.calculator-result-rail .calculator-results-heading h2 {
+  font-size: 17px;
+}
+.calculator-result-rail .calculator-results-empty {
+  margin: 0;
+  font-size: 13px;
+}
+.calculator-result-details {
+  margin-top: 28px;
+}
+.calculator-participant-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 20px;
+}
+.calculator-participant-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  border: 1px solid var(--calculator-line);
+  border-radius: 999px;
+  background: var(--calculator-surface);
+  font-size: 13px;
+}
+.calculator-participant-chip img,
+.calculator-participant-chip > span:first-child {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: grid;
+  place-items: center;
+  background: var(--calculator-subtle);
+}
+.calculator-participant-chip.is-enemy {
+  border-style: dashed;
+}
+.calculator-participant-chip.is-selected {
+  border-color: var(--calculator-positive);
+  box-shadow: inset 0 0 0 1px var(--calculator-positive);
+}
+@media (max-width: 1100px) {
+  .calculator-stage {
+    grid-template-columns: 1fr;
+  }
+  .calculator-result-rail {
+    position: static;
+    max-height: none;
+    order: 2;
+  }
+  .calculator-stage-main {
+    order: 1;
+  }
+}
+@media (max-width: 680px) {
+  .calculator-steps {
+    gap: 6px;
+  }
+  .calculator-steps button {
+    grid-template-columns: 22px minmax(0, 1fr);
+    padding: 8px;
+  }
+  .calculator-step-hint {
+    display: none;
+  }
+}

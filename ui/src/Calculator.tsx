@@ -17,6 +17,7 @@ import { EventEditor } from "./EventEditor";
 import { PurchasePlanner } from "./PurchasePlanner";
 import { SlotSearch } from "./SlotSearch";
 import { CombatResults } from "./CombatResults";
+import { Timeline, type ScheduledMark } from "./Timeline";
 import { ScoreboardReader } from "./ScoreboardReader";
 import {
   newParticipant,
@@ -873,6 +874,13 @@ function Picker({
   );
 }
 
+type StepKey = "teams" | "build" | "fight";
+const STEPS: { key: StepKey; title: string }[] = [
+  { key: "teams", title: "Teams" },
+  { key: "build", title: "Build" },
+  { key: "fight", title: "Fight" },
+];
+
 function ResultCard({
   result,
   side,
@@ -1012,6 +1020,8 @@ function CalculatorSession({
   const [dummyStats, setDummyStats] = useState<Record<string, number>>({});
   const [useSequence, setUseSequence] = useState(false);
   const [events, setEvents] = useState<AuthoredEvent[]>([]);
+  const [selectedEventId, setSelectedEventId] = useState("");
+  const [step, setStep] = useState<StepKey>("teams");
   const [budgets, setBudgets] = useState<Record<string, string>>({});
   const [picker, setPicker] = useState<{
     kind: "champion" | "item" | "boots";
@@ -1247,6 +1257,58 @@ function CalculatorSession({
         : {}),
     };
   }
+  const eventActors = participants
+    .filter((actor) => actor.champion)
+    .map((actor) => ({
+      id: actor.id,
+      label: `${actor.champion} · ${participantLabel(actor)}`,
+      team: enemies.some((enemy) => enemy.id === actor.id) ? "enemy" : "ally",
+      champion: championFor(actor),
+      ranks: actor.ranks,
+    }));
+  /* The engine's own schedule for the main champion, read off the last
+   * result: each cast from cast_timeline and each landed basic attack from
+   * damage_events. Other lanes show only authored casts until the engine
+   * publishes their schedules. */
+  const schedule: ScheduledMark[] = (() => {
+    const result = results[0];
+    if (!result) return [];
+    const casts = (result.cast_timeline ?? []).map((cast) => ({
+      actorId: "main",
+      time: cast.time,
+      kind: "cast" as const,
+      label: cast.slot,
+    }));
+    const autoTimes = new Set<number>();
+    for (const row of Array.isArray(result.damage_events)
+      ? (result.damage_events as { time?: number; basic_attack?: boolean }[])
+      : []) {
+      if (row.basic_attack && typeof row.time === "number")
+        autoTimes.add(Number(row.time.toFixed(2)));
+    }
+    return [
+      ...casts,
+      ...[...autoTimes].map((time) => ({
+        actorId: "main",
+        time,
+        kind: "auto" as const,
+        label: "Basic attack",
+      })),
+    ];
+  })();
+  const stepHint = (key: StepKey) => {
+    const chosen = participants.filter((actor) => actor.champion).length;
+    if (key === "teams")
+      return chosen
+        ? `${chosen} champion${chosen === 1 ? "" : "s"}`
+        : "Pick champions";
+    if (key === "build") return selected.champion || "Choose a champion";
+    return results.length
+      ? resultKey !== inputKey
+        ? "Inputs changed"
+        : "Calculated"
+      : `${duration}s fight`;
+  };
   const inputKey = JSON.stringify({
     main,
     alternative,
@@ -1655,554 +1717,706 @@ function CalculatorSession({
         </div>
       ) : (
         <>
-          <section
-            className="calculator-team-rosters"
-            aria-label="Team rosters"
-          >
-            <div className="calculator-scoreboard-trigger">
-              <ScoreboardReader
-                assetBase={assetBase}
-                catalog={catalog}
-                main={main}
-                onLoad={(result) => {
-                  setMain(result.main);
-                  setAllies(result.allies);
-                  setEnemies(result.enemies);
-                  setSelectedId("main");
-                }}
-              />
-            </div>
-            <div className="calculator-team">
-              <div className="calculator-section-heading">
-                <h2>
-                  Your team <span>{1 + allies.length}/5</span>
-                </h2>
-                <button
-                  type="button"
-                  className="calculator-text-button"
-                  disabled={allies.length >= 4}
-                  onClick={() => addParticipant("ally")}
-                >
-                  Add ally
-                </button>
-              </div>
-              {rosterRow(main)}
-              {allies.map(rosterRow)}
-              {!allies.length && (
-                <p className="calculator-roster-hint">
-                  Add allies to model their damage and support.
-                </p>
+          <nav className="calculator-steps" aria-label="Setup steps">
+            {STEPS.map((entry, index) => (
+              <button
+                type="button"
+                key={entry.key}
+                aria-current={step === entry.key ? "step" : undefined}
+                onClick={() => setStep(entry.key)}
+              >
+                <span className="calculator-step-number">{index + 1}</span>
+                <span className="calculator-step-title">{entry.title}</span>
+                <span className="calculator-step-hint">
+                  {stepHint(entry.key)}
+                </span>
+              </button>
+            ))}
+          </nav>
+          <div className="calculator-stage">
+            <div className="calculator-stage-main">
+              {step === "teams" && (
+                <>
+                  <section
+                    className="calculator-team-rosters"
+                    aria-label="Team rosters"
+                  >
+                    <div className="calculator-scoreboard-trigger">
+                      <ScoreboardReader
+                        assetBase={assetBase}
+                        catalog={catalog}
+                        main={main}
+                        onLoad={(result) => {
+                          setMain(result.main);
+                          setAllies(result.allies);
+                          setEnemies(result.enemies);
+                          setSelectedId("main");
+                        }}
+                      />
+                    </div>
+                    <div className="calculator-team">
+                      <div className="calculator-section-heading">
+                        <h2>
+                          Your team <span>{1 + allies.length}/5</span>
+                        </h2>
+                        <button
+                          type="button"
+                          className="calculator-text-button"
+                          disabled={allies.length >= 4}
+                          onClick={() => addParticipant("ally")}
+                        >
+                          Add ally
+                        </button>
+                      </div>
+                      {rosterRow(main)}
+                      {allies.map(rosterRow)}
+                      {!allies.length && (
+                        <p className="calculator-roster-hint">
+                          Add allies to model their damage and support.
+                        </p>
+                      )}
+                    </div>
+                    <div className="calculator-team">
+                      <div className="calculator-section-heading">
+                        <h2>
+                          Enemy team <span>{enemies.length}/5</span>
+                        </h2>
+                        <button
+                          type="button"
+                          className="calculator-text-button"
+                          disabled={enemies.length >= 5}
+                          onClick={() => addParticipant("enemy")}
+                        >
+                          Add enemy
+                        </button>
+                      </div>
+                      {enemies.map(rosterRow)}
+                      {!enemies.length && (
+                        <div className="calculator-dummy-panel">
+                          <strong>Practice target</strong>
+                          <div className="calculator-practice-controls">
+                            {Object.entries(dummyStats).map(([key, value]) => (
+                              <label className="calculator-field" key={key}>
+                                <span>
+                                  {key === "mr"
+                                    ? "Magic resistance"
+                                    : label(key)}
+                                </span>
+                                <input
+                                  type="number"
+                                  min={
+                                    config?.input_limits[`target_${key}`]?.[0]
+                                  }
+                                  max={
+                                    config?.input_limits[`target_${key}`]?.[1]
+                                  }
+                                  value={value}
+                                  onChange={(e) =>
+                                    setDummyStats({
+                                      ...dummyStats,
+                                      [key]: Number(e.target.value),
+                                    })
+                                  }
+                                />
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                  <div className="calculator-step-nav">
+                    <button
+                      type="button"
+                      className="calculator-primary"
+                      onClick={() => setStep("build")}
+                    >
+                      Next · Build
+                    </button>
+                  </div>
+                </>
               )}
-            </div>
-            <div className="calculator-team">
-              <div className="calculator-section-heading">
-                <h2>
-                  Enemy team <span>{enemies.length}/5</span>
-                </h2>
-                <button
-                  type="button"
-                  className="calculator-text-button"
-                  disabled={enemies.length >= 5}
-                  onClick={() => addParticipant("enemy")}
-                >
-                  Add enemy
-                </button>
-              </div>
-              {enemies.map(rosterRow)}
-              {!enemies.length && (
-                <div className="calculator-dummy-panel">
-                  <strong>Practice target</strong>
-                  <div className="calculator-practice-controls">
-                    {Object.entries(dummyStats).map(([key, value]) => (
-                      <label className="calculator-field" key={key}>
-                        <span>
-                          {key === "mr" ? "Magic resistance" : label(key)}
-                        </span>
+              {step === "build" && (
+                <>
+                  <div
+                    className="calculator-participant-strip"
+                    role="tablist"
+                    aria-label="Participants"
+                  >
+                    {participants.map((actor) => (
+                      <button
+                        type="button"
+                        role="tab"
+                        key={actor.id}
+                        aria-selected={actor.id === selectedId}
+                        className={`calculator-participant-chip${actor.id === selectedId ? " is-selected" : ""}${enemies.some((enemy) => enemy.id === actor.id) ? " is-enemy" : ""}`}
+                        onClick={() => setSelectedId(actor.id)}
+                        title={participantLabel(actor)}
+                      >
+                        {championFor(actor)?.icon ? (
+                          <img src={championFor(actor)!.icon} alt="" />
+                        ) : (
+                          <span aria-hidden="true">+</span>
+                        )}
+                        <span>{actor.champion || participantLabel(actor)}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <section
+                    className="calculator-selected-participant"
+                    aria-label="Selected participant"
+                  >
+                    <div className="calculator-participant-toolbar">
+                      <div
+                        className="calculator-hud-build-switch"
+                        role="group"
+                        aria-label="Displayed build"
+                      >
+                        <button
+                          type="button"
+                          aria-pressed={side === 0}
+                          onClick={() => setSide(0)}
+                        >
+                          Build A
+                        </button>
+                        {compare && (
+                          <button
+                            type="button"
+                            aria-pressed={side === 1}
+                            onClick={() => setSide(1)}
+                          >
+                            Build B
+                          </button>
+                        )}
+                      </div>
+                      <label className="calculator-check">
                         <input
-                          type="number"
-                          min={config?.input_limits[`target_${key}`]?.[0]}
-                          max={config?.input_limits[`target_${key}`]?.[1]}
-                          value={value}
+                          type="checkbox"
+                          checked={compare}
+                          onChange={(e) => {
+                            setCompare(e.target.checked);
+                            if (!e.target.checked) setSide(0);
+                          }}
+                        />
+                        Compare builds
+                      </label>
+                      {selected.id !== "main" && (
+                        <button
+                          type="button"
+                          className="calculator-text-button"
+                          onClick={() => removeParticipant(selected.id)}
+                        >
+                          Remove {participantLabel(selected).toLowerCase()}
+                        </button>
+                      )}
+                    </div>
+                    <ChampionHud
+                      champion={selectedChampion}
+                      label={`${participantLabel(selected)}${selected.id === "main" ? ` · build ${side === 0 ? "A" : "B"}` : ""}`}
+                      level={selected.level}
+                      maxLevel={domainValue(
+                        catalog.config,
+                        selected,
+                        "level_cap",
+                      )}
+                      onLevel={(value) => editLevel(selected, value)}
+                      onChampion={() =>
+                        setPicker({
+                          kind: "champion",
+                          id: selected.id,
+                          side: 0,
+                          slot: 0,
+                        })
+                      }
+                      ranks={selected.ranks}
+                      onRanks={(ranks) =>
+                        editParticipant(selected.id, {
+                          ranks: ranks ?? zeroRanks(),
+                        })
+                      }
+                      rankCaps={skillCaps(selected.level, rankRules(selected))}
+                      minimumRanks={rankRules(selected)?.free_ranks}
+                      {...hudStats}
+                      items={[
+                        ...selectedBuild.items.slice(
+                          0,
+                          slotsFor(selected, selectedBuild),
+                        ),
+                        ...(selectedBuild.boots ? [selectedBuild.boots] : []),
+                      ].map(itemFor)}
+                      onItem={(index) =>
+                        openShop(
+                          selected,
+                          index,
+                          index >= slotsFor(selected, selectedBuild),
+                        )
+                      }
+                      onShop={() =>
+                        openShop(
+                          selected,
+                          Math.max(
+                            0,
+                            selectedBuild.items
+                              .slice(0, slotsFor(selected, selectedBuild))
+                              .findIndex((item) => !item),
+                          ),
+                        )
+                      }
+                      onRunes={() =>
+                        setRuneOwner({
+                          id: selected.id,
+                          side: selected.id === "main" ? side : 0,
+                        })
+                      }
+                      gold="Open item shop"
+                      runesLabel={
+                        selectedBuild.keystone
+                          ? `Runes · ${selectedBuild.keystone}`
+                          : "Runes"
+                      }
+                      resourceLabel={selectedChampion?.resource}
+                    />
+                    <div className="calculator-participant-actions">
+                      <button
+                        type="button"
+                        className="calculator-secondary"
+                        onClick={() => openShop(selected, 0, true)}
+                      >
+                        {selectedBuild.boots ? "Change boots" : "Choose boots"}
+                      </button>
+                      {selected.id === "main" && side === 1 && (
+                        <button
+                          type="button"
+                          className="calculator-text-button"
+                          onClick={() =>
+                            setAlternative(structuredClone(main.build))
+                          }
+                        >
+                          Copy build A
+                        </button>
+                      )}
+                      <span>{format(spend(selectedBuild))} gold in items</span>
+                    </div>
+                    <div className="calculator-participant-settings">
+                      <label className="calculator-field">
+                        <span>Role</span>
+                        <select
+                          aria-label={`${participantLabel(selected)} role`}
+                          value={selected.role}
+                          onChange={(e) => roleChange(selected, e.target.value)}
+                        >
+                          <option value="">Choose role</option>
+                          {config?.domain_contract.role_quest.roles.map(
+                            (role) => (
+                              <option key={role} value={role}>
+                                {label(role)}
+                              </option>
+                            ),
+                          )}
+                        </select>
+                      </label>
+                      <label className="calculator-check">
+                        <input
+                          type="checkbox"
+                          checked={selected.questComplete}
+                          disabled={!selected.role}
                           onChange={(e) =>
-                            setDummyStats({
-                              ...dummyStats,
-                              [key]: Number(e.target.value),
+                            roleChange(
+                              selected,
+                              selected.role,
+                              e.target.checked,
+                            )
+                          }
+                        />
+                        Role quest complete
+                      </label>
+                      <label className="calculator-check">
+                        <input
+                          type="checkbox"
+                          checked={selected.autos}
+                          onChange={(e) =>
+                            editParticipant(selected.id, {
+                              autos: e.target.checked,
                             })
                           }
                         />
+                        Basic attacks
                       </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
-          <section
-            className="calculator-selected-participant"
-            aria-label="Selected participant"
-          >
-            <div className="calculator-participant-toolbar">
-              <div
-                className="calculator-hud-build-switch"
-                role="group"
-                aria-label="Displayed build"
-              >
-                <button
-                  type="button"
-                  aria-pressed={side === 0}
-                  onClick={() => setSide(0)}
-                >
-                  Build A
-                </button>
-                {compare && (
-                  <button
-                    type="button"
-                    aria-pressed={side === 1}
-                    onClick={() => setSide(1)}
-                  >
-                    Build B
-                  </button>
-                )}
-              </div>
-              <label className="calculator-check">
-                <input
-                  type="checkbox"
-                  checked={compare}
-                  onChange={(e) => {
-                    setCompare(e.target.checked);
-                    if (!e.target.checked) setSide(0);
-                  }}
-                />
-                Compare builds
-              </label>
-              {selected.id !== "main" && (
-                <button
-                  type="button"
-                  className="calculator-text-button"
-                  onClick={() => removeParticipant(selected.id)}
-                >
-                  Remove {participantLabel(selected).toLowerCase()}
-                </button>
-              )}
-            </div>
-            <ChampionHud
-              champion={selectedChampion}
-              label={`${participantLabel(selected)}${selected.id === "main" ? ` · build ${side === 0 ? "A" : "B"}` : ""}`}
-              level={selected.level}
-              maxLevel={domainValue(catalog.config, selected, "level_cap")}
-              onLevel={(value) => editLevel(selected, value)}
-              onChampion={() =>
-                setPicker({
-                  kind: "champion",
-                  id: selected.id,
-                  side: 0,
-                  slot: 0,
-                })
-              }
-              ranks={selected.ranks}
-              onRanks={(ranks) =>
-                editParticipant(selected.id, { ranks: ranks ?? zeroRanks() })
-              }
-              rankCaps={skillCaps(selected.level, rankRules(selected))}
-              minimumRanks={rankRules(selected)?.free_ranks}
-              {...hudStats}
-              items={[
-                ...selectedBuild.items.slice(
-                  0,
-                  slotsFor(selected, selectedBuild),
-                ),
-                ...(selectedBuild.boots ? [selectedBuild.boots] : []),
-              ].map(itemFor)}
-              onItem={(index) =>
-                openShop(
-                  selected,
-                  index,
-                  index >= slotsFor(selected, selectedBuild),
-                )
-              }
-              onShop={() =>
-                openShop(
-                  selected,
-                  Math.max(
-                    0,
-                    selectedBuild.items
-                      .slice(0, slotsFor(selected, selectedBuild))
-                      .findIndex((item) => !item),
-                  ),
-                )
-              }
-              onRunes={() =>
-                setRuneOwner({
-                  id: selected.id,
-                  side: selected.id === "main" ? side : 0,
-                })
-              }
-              gold="Open item shop"
-              runesLabel={
-                selectedBuild.keystone
-                  ? `Runes · ${selectedBuild.keystone}`
-                  : "Runes"
-              }
-              resourceLabel={selectedChampion?.resource}
-            />
-            <div className="calculator-participant-actions">
-              <button
-                type="button"
-                className="calculator-secondary"
-                onClick={() => openShop(selected, 0, true)}
-              >
-                {selectedBuild.boots ? "Change boots" : "Choose boots"}
-              </button>
-              {selected.id === "main" && side === 1 && (
-                <button
-                  type="button"
-                  className="calculator-text-button"
-                  onClick={() => setAlternative(structuredClone(main.build))}
-                >
-                  Copy build A
-                </button>
-              )}
-              <span>{format(spend(selectedBuild))} gold in items</span>
-            </div>
-            <div className="calculator-participant-settings">
-              <label className="calculator-field">
-                <span>Role</span>
-                <select
-                  aria-label={`${participantLabel(selected)} role`}
-                  value={selected.role}
-                  onChange={(e) => roleChange(selected, e.target.value)}
-                >
-                  <option value="">Choose role</option>
-                  {config?.domain_contract.role_quest.roles.map((role) => (
-                    <option key={role} value={role}>
-                      {label(role)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="calculator-check">
-                <input
-                  type="checkbox"
-                  checked={selected.questComplete}
-                  disabled={!selected.role}
-                  onChange={(e) =>
-                    roleChange(selected, selected.role, e.target.checked)
-                  }
-                />
-                Role quest complete
-              </label>
-              <label className="calculator-check">
-                <input
-                  type="checkbox"
-                  checked={selected.autos}
-                  onChange={(e) =>
-                    editParticipant(selected.id, { autos: e.target.checked })
-                  }
-                />
-                Basic attacks
-              </label>
-              <label className="calculator-field">
-                <span>Attack uptime</span>
-                <select
-                  value={selected.uptimeMode}
-                  onChange={(e) =>
-                    editParticipant(selected.id, {
-                      uptimeMode: e.target.value as Participant["uptimeMode"],
-                    })
-                  }
-                >
-                  <option value="calculated">Calculated</option>
-                  <option value="explicit">Manual</option>
-                </select>
-              </label>
-              {selected.uptimeMode === "explicit" && (
-                <label className="calculator-field">
-                  <span>Uptime %</span>
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={selected.uptime * 100}
-                    onChange={(e) =>
-                      editParticipant(selected.id, {
-                        uptime:
-                          Math.max(0, Math.min(100, Number(e.target.value))) /
-                          100,
-                      })
-                    }
-                  />
-                </label>
-              )}
-            </div>
-            {selectedBuild.items
-              .slice(slotsFor(selected, selectedBuild))
-              .some(Boolean) && (
-              <div className="calculator-notice" role="alert">
-                <p>
-                  This role and boots leave fewer item slots. Remove the extra
-                  items before calculating.
-                </p>
-                {selectedBuild.items.map((name, index) =>
-                  name && index >= slotsFor(selected, selectedBuild) ? (
+                      <label className="calculator-field">
+                        <span>Attack uptime</span>
+                        <select
+                          value={selected.uptimeMode}
+                          onChange={(e) =>
+                            editParticipant(selected.id, {
+                              uptimeMode: e.target
+                                .value as Participant["uptimeMode"],
+                            })
+                          }
+                        >
+                          <option value="calculated">Calculated</option>
+                          <option value="explicit">Manual</option>
+                        </select>
+                      </label>
+                      {selected.uptimeMode === "explicit" && (
+                        <label className="calculator-field">
+                          <span>Uptime %</span>
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            value={selected.uptime * 100}
+                            onChange={(e) =>
+                              editParticipant(selected.id, {
+                                uptime:
+                                  Math.max(
+                                    0,
+                                    Math.min(100, Number(e.target.value)),
+                                  ) / 100,
+                              })
+                            }
+                          />
+                        </label>
+                      )}
+                    </div>
+                    {selectedBuild.items
+                      .slice(slotsFor(selected, selectedBuild))
+                      .some(Boolean) && (
+                      <div className="calculator-notice" role="alert">
+                        <p>
+                          This role and boots leave fewer item slots. Remove the
+                          extra items before calculating.
+                        </p>
+                        {selectedBuild.items.map((name, index) =>
+                          name && index >= slotsFor(selected, selectedBuild) ? (
+                            <button
+                              type="button"
+                              key={index}
+                              onClick={() =>
+                                editBuild(selected.id, side, {
+                                  items: selectedBuild.items.map(
+                                    (item, itemIndex) =>
+                                      itemIndex === index ? null : item,
+                                  ),
+                                })
+                              }
+                            >
+                              Remove {name}
+                            </button>
+                          ) : null,
+                        )}
+                      </div>
+                    )}
+                    {selected.id !== "main" &&
+                      allies.some((actor) => actor.id === selected.id) && (
+                        <label className="calculator-check">
+                          <input
+                            type="checkbox"
+                            checked={selected.allyEffectsEnabled}
+                            onChange={(event) =>
+                              editParticipant(selected.id, {
+                                allyEffectsEnabled: event.target.checked,
+                              })
+                            }
+                          />
+                          Apply this ally’s support effects
+                        </label>
+                      )}
+                    <details className="calculator-details">
+                      <summary>
+                        {selected.champion || "Champion"} options and item state
+                      </summary>
+                      <div className="calculator-detail-content">
+                        <Options
+                          options={
+                            config?.champion_options[selected.champion]
+                              ?.options ?? []
+                          }
+                          values={selected.championOptions}
+                          onChange={(championOptions) =>
+                            editParticipant(selected.id, { championOptions })
+                          }
+                        />
+                        {[...selectedBuild.items, selectedBuild.boots]
+                          .filter((name): name is string => Boolean(name))
+                          .map((name) => {
+                            const options = config?.item_options[name]?.options;
+                            if (!options) return null;
+                            return (
+                              <div key={name}>
+                                <h3>{name}</h3>
+                                <Options
+                                  options={Object.entries(options).map(
+                                    ([key, value]) => ({ key, ...value }),
+                                  )}
+                                  values={
+                                    selectedBuild.item_options[name] ?? {}
+                                  }
+                                  onChange={(values) =>
+                                    editBuild(selected.id, side, {
+                                      item_options: {
+                                        ...selectedBuild.item_options,
+                                        [name]: values,
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
+                            );
+                          })}
+                        <Options
+                          options={Object.entries(
+                            config?.keystone_options[selectedBuild.keystone]
+                              ?.options ?? {},
+                          ).map(([key, value]) => ({ key, ...value }))}
+                          values={selectedBuild.keystone_options}
+                          onChange={(values) =>
+                            editBuild(selected.id, side, {
+                              keystone_options: values,
+                            })
+                          }
+                        />
+                        {[selectedBuild.keystone, ...selectedBuild.minor_runes]
+                          .filter(Boolean)
+                          .map((name) => {
+                            const options =
+                              config?.runes.find((rune) => rune.name === name)
+                                ?.options ?? [];
+                            return options.length ? (
+                              <div key={name}>
+                                <h3>{name}</h3>
+                                <Options
+                                  options={options}
+                                  values={
+                                    selectedBuild.rune_options[name] ?? {}
+                                  }
+                                  onChange={(values) =>
+                                    editBuild(selected.id, side, {
+                                      rune_options: {
+                                        ...selectedBuild.rune_options,
+                                        [name]: values,
+                                      },
+                                    })
+                                  }
+                                />
+                              </div>
+                            ) : null;
+                          })}
+                      </div>
+                    </details>
+                  </section>
+                  {!useSequence && results[0] && (
+                    <SupportTargets
+                      result={results[0]}
+                      actors={participants
+                        .filter((actor) => actor.champion)
+                        .map((actor) => ({
+                          id: actor.id,
+                          runtimeId: runtimeIds.get(actor.id)!,
+                          name: actor.champion,
+                          team: enemies.some((enemy) => enemy.id === actor.id)
+                            ? "enemy"
+                            : "ally",
+                          selections: actor.supportTargets,
+                        }))}
+                      onChange={(id, key, value) => {
+                        const actor = participants.find(
+                          (actor) => actor.id === id,
+                        )!;
+                        editParticipant(id, {
+                          supportTargets: {
+                            ...actor.supportTargets,
+                            [key]: value,
+                          },
+                        });
+                      }}
+                    />
+                  )}
+                  <div className="calculator-step-nav">
                     <button
                       type="button"
-                      key={index}
-                      onClick={() =>
-                        editBuild(selected.id, side, {
-                          items: selectedBuild.items.map((item, itemIndex) =>
-                            itemIndex === index ? null : item,
-                          ),
-                        })
-                      }
+                      className="calculator-secondary"
+                      onClick={() => setStep("teams")}
                     >
-                      Remove {name}
+                      Back · Teams
                     </button>
-                  ) : null,
-                )}
-              </div>
-            )}
-            {selected.id !== "main" &&
-              allies.some((actor) => actor.id === selected.id) && (
+                    <button
+                      type="button"
+                      className="calculator-primary"
+                      onClick={() => setStep("fight")}
+                    >
+                      Next · Fight
+                    </button>
+                  </div>
+                </>
+              )}
+              {step === "fight" && (
+                <>
+                  <Timeline
+                    enabled={useSequence}
+                    onEnabled={(enabled) => {
+                      setUseSequence(enabled);
+                      if (enabled) setAutosOnly(false);
+                    }}
+                    duration={duration}
+                    actors={eventActors}
+                    events={events}
+                    onChange={setEvents}
+                    capabilities={
+                      config?.domain_contract.combat_events?.champions ?? {}
+                    }
+                    schedule={schedule}
+                    selectedId={selectedEventId}
+                    onSelect={setSelectedEventId}
+                  />
+                  <EventEditor
+                    enabled={useSequence}
+                    onEnabled={(enabled) => {
+                      setUseSequence(enabled);
+                      if (enabled) setAutosOnly(false);
+                    }}
+                    events={events}
+                    onChange={setEvents}
+                    duration={duration}
+                    capabilities={
+                      config?.domain_contract.combat_events?.champions ?? {}
+                    }
+                    actors={participants
+                      .filter((actor) => actor.champion)
+                      .map((actor) => ({
+                        id: actor.id,
+                        label: `${actor.champion} · ${participantLabel(actor)}`,
+                        team: enemies.some((enemy) => enemy.id === actor.id)
+                          ? "enemy"
+                          : "ally",
+                        champion: championFor(actor),
+                        ranks: actor.ranks,
+                      }))}
+                  />
+                  {results.length > 0 && (
+                    <div className="calculator-result-details">
+                      {results.map((result, index) => (
+                        <div key={index}>
+                          {(resultKey !== inputKey || Boolean(error)) && (
+                            <p className="calculator-notice">
+                              Previous team result. Calculate to update.
+                            </p>
+                          )}
+                          <CombatResults
+                            result={result}
+                            title={`Build ${index === 0 ? "A" : "B"} · team fight`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="calculator-step-nav">
+                    <button
+                      type="button"
+                      className="calculator-secondary"
+                      onClick={() => setStep("build")}
+                    >
+                      Back · Build
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+            <aside className="calculator-result-rail" aria-label="Fight result">
+              <section
+                className="calculator-fight-bar"
+                aria-label="Fight controls"
+              >
+                <label className="calculator-duration">
+                  <span>Fight length</span>
+                  <input
+                    type="range"
+                    min={config?.input_limits.fight_duration[0]}
+                    max={config?.input_limits.fight_duration[1]}
+                    step={0.5}
+                    value={duration}
+                    onChange={(e) => setDuration(Number(e.target.value))}
+                  />
+                  <output>{duration}s</output>
+                </label>
                 <label className="calculator-check">
                   <input
                     type="checkbox"
-                    checked={selected.allyEffectsEnabled}
-                    onChange={(event) =>
-                      editParticipant(selected.id, {
-                        allyEffectsEnabled: event.target.checked,
-                      })
-                    }
+                    checked={autosOnly}
+                    onChange={(event) => {
+                      setAutosOnly(event.target.checked);
+                      if (event.target.checked) setUseSequence(false);
+                    }}
                   />
-                  Apply this ally’s support effects
+                  Basic attacks only
                 </label>
-              )}
-            <details className="calculator-details">
-              <summary>
-                {selected.champion || "Champion"} options and item state
-              </summary>
-              <div className="calculator-detail-content">
-                <Options
-                  options={
-                    config?.champion_options[selected.champion]?.options ?? []
-                  }
-                  values={selected.championOptions}
-                  onChange={(championOptions) =>
-                    editParticipant(selected.id, { championOptions })
-                  }
-                />
-                {[...selectedBuild.items, selectedBuild.boots]
-                  .filter((name): name is string => Boolean(name))
-                  .map((name) => {
-                    const options = config?.item_options[name]?.options;
-                    if (!options) return null;
-                    return (
-                      <div key={name}>
-                        <h3>{name}</h3>
-                        <Options
-                          options={Object.entries(options).map(
-                            ([key, value]) => ({ key, ...value }),
-                          )}
-                          values={selectedBuild.item_options[name] ?? {}}
-                          onChange={(values) =>
-                            editBuild(selected.id, side, {
-                              item_options: {
-                                ...selectedBuild.item_options,
-                                [name]: values,
-                              },
-                            })
-                          }
-                        />
-                      </div>
-                    );
-                  })}
-                <Options
-                  options={Object.entries(
-                    config?.keystone_options[selectedBuild.keystone]?.options ??
-                      {},
-                  ).map(([key, value]) => ({ key, ...value }))}
-                  values={selectedBuild.keystone_options}
-                  onChange={(values) =>
-                    editBuild(selected.id, side, { keystone_options: values })
-                  }
-                />
-                {[selectedBuild.keystone, ...selectedBuild.minor_runes]
-                  .filter(Boolean)
-                  .map((name) => {
-                    const options =
-                      config?.runes.find((rune) => rune.name === name)
-                        ?.options ?? [];
-                    return options.length ? (
-                      <div key={name}>
-                        <h3>{name}</h3>
-                        <Options
-                          options={options}
-                          values={selectedBuild.rune_options[name] ?? {}}
-                          onChange={(values) =>
-                            editBuild(selected.id, side, {
-                              rune_options: {
-                                ...selectedBuild.rune_options,
-                                [name]: values,
-                              },
-                            })
-                          }
-                        />
-                      </div>
-                    ) : null;
-                  })}
-              </div>
-            </details>
-          </section>
-          {!useSequence && results[0] && (
-            <SupportTargets
-              result={results[0]}
-              actors={participants
-                .filter((actor) => actor.champion)
-                .map((actor) => ({
-                  id: actor.id,
-                  runtimeId: runtimeIds.get(actor.id)!,
-                  name: actor.champion,
-                  team: enemies.some((enemy) => enemy.id === actor.id)
-                    ? "enemy"
-                    : "ally",
-                  selections: actor.supportTargets,
-                }))}
-              onChange={(id, key, value) => {
-                const actor = participants.find((actor) => actor.id === id)!;
-                editParticipant(id, {
-                  supportTargets: { ...actor.supportTargets, [key]: value },
-                });
-              }}
-            />
-          )}
-          <EventEditor
-            enabled={useSequence}
-            onEnabled={(enabled) => {
-              setUseSequence(enabled);
-              if (enabled) setAutosOnly(false);
-            }}
-            events={events}
-            onChange={setEvents}
-            duration={duration}
-            capabilities={
-              config?.domain_contract.combat_events?.champions ?? {}
-            }
-            actors={participants
-              .filter((actor) => actor.champion)
-              .map((actor) => ({
-                id: actor.id,
-                label: `${actor.champion} · ${participantLabel(actor)}`,
-                team: enemies.some((enemy) => enemy.id === actor.id)
-                  ? "enemy"
-                  : "ally",
-                champion: championFor(actor),
-                ranks: actor.ranks,
-              }))}
-          />
-          <section className="calculator-fight-bar" aria-label="Fight controls">
-            <label className="calculator-duration">
-              <span>Fight length</span>
-              <input
-                type="range"
-                min={config?.input_limits.fight_duration[0]}
-                max={config?.input_limits.fight_duration[1]}
-                step={0.5}
-                value={duration}
-                onChange={(e) => setDuration(Number(e.target.value))}
-              />
-              <output>{duration}s</output>
-            </label>
-            <label className="calculator-check">
-              <input
-                type="checkbox"
-                checked={autosOnly}
-                onChange={(event) => {
-                  setAutosOnly(event.target.checked);
-                  if (event.target.checked) setUseSequence(false);
-                }}
-              />
-              Basic attacks only
-            </label>
-            <label className="calculator-check">
-              <input
-                type="checkbox"
-                checked={includeActives}
-                onChange={(e) => setIncludeActives(e.target.checked)}
-              />
-              Item actives
-            </label>
-            <label className="calculator-check">
-              <input
-                type="checkbox"
-                checked={enemiesAttack}
-                onChange={(e) => setEnemiesAttack(e.target.checked)}
-              />
-              Enemies attack
-            </label>
-            <button
-              type="button"
-              className="calculator-primary"
-              disabled={!championFor(main)?.engine_registration || busy}
-              onClick={calculate}
-            >
-              {busy
-                ? "Calculating…"
-                : compare
-                  ? "Compare builds"
-                  : "Calculate fight"}
-            </button>
-          </section>
-          {error && (
-            <div className="calculator-notice" role="alert">
-              <strong>Calculation unavailable</strong>
-              <p>{error}</p>
-            </div>
-          )}
-          <div className="calculator-results-heading">
-            <h2>Fight result</h2>
-            <span role="status">
-              {busy
-                ? "Waiting for the engine…"
-                : results.length
-                  ? resultKey !== inputKey
-                    ? "Inputs changed. Calculate to update."
-                    : "Calculation complete"
-                  : "Choose a champion and allocate skill points."}
-            </span>
-          </div>
-          {results.length ? (
-            <>
-              <div
-                className={`calculator-results ${results.length === 1 ? "calculator-single" : ""}`}
-              >
-                {results.map((result, index) => (
-                  <ResultCard
-                    key={index}
-                    result={result}
-                    side={index === 0 ? "A" : "B"}
-                    stale={resultKey !== inputKey || Boolean(error)}
+                <label className="calculator-check">
+                  <input
+                    type="checkbox"
+                    checked={includeActives}
+                    onChange={(e) => setIncludeActives(e.target.checked)}
                   />
-                ))}
-              </div>
-              {results.map((result, index) => (
-                <div key={index}>
-                  {(resultKey !== inputKey || Boolean(error)) && (
-                    <p className="calculator-notice">
-                      Previous team result. Calculate to update.
-                    </p>
-                  )}
-                  <CombatResults
-                    result={result}
-                    title={`Build ${index === 0 ? "A" : "B"} · team fight`}
+                  Item actives
+                </label>
+                <label className="calculator-check">
+                  <input
+                    type="checkbox"
+                    checked={enemiesAttack}
+                    onChange={(e) => setEnemiesAttack(e.target.checked)}
                   />
+                  Enemies attack
+                </label>
+                <button
+                  type="button"
+                  className="calculator-primary"
+                  disabled={!championFor(main)?.engine_registration || busy}
+                  onClick={calculate}
+                >
+                  {busy
+                    ? "Calculating…"
+                    : compare
+                      ? "Compare builds"
+                      : "Calculate fight"}
+                </button>
+              </section>
+              {error && (
+                <div className="calculator-notice" role="alert">
+                  <strong>Calculation unavailable</strong>
+                  <p>{error}</p>
                 </div>
-              ))}
-            </>
-          ) : (
-            <p className="calculator-results-empty">
-              The result shows damage, health, shields, and healing for the
-              selected fight.
-            </p>
-          )}
+              )}
+              <div className="calculator-results-heading">
+                <h2>Fight result</h2>
+                <span role="status">
+                  {busy
+                    ? "Waiting for the engine…"
+                    : results.length
+                      ? resultKey !== inputKey
+                        ? "Inputs changed. Calculate to update."
+                        : "Calculation complete"
+                      : "Choose a champion and allocate skill points."}
+                </span>
+              </div>
+              {results.length ? (
+                <div
+                  className={`calculator-results ${results.length === 1 ? "calculator-single" : ""}`}
+                >
+                  {results.map((result, index) => (
+                    <ResultCard
+                      key={index}
+                      result={result}
+                      side={index === 0 ? "A" : "B"}
+                      stale={resultKey !== inputKey || Boolean(error)}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="calculator-results-empty">
+                  The result shows damage, health, shields, and healing for the
+                  selected fight.
+                </p>
+              )}
+            </aside>
+          </div>
           <footer className="calculator-footer">
             <span>
               Patch-pinned mechanics. Coverage details appear with each result.

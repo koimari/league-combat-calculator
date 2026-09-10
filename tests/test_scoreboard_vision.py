@@ -22,7 +22,7 @@ from scripts.build_icon_sprite import check as sprite_check
 from scripts.scoreboard_corpus import CORPUS, LABELS, read_frames
 
 ROOT = Path(__file__).resolve().parents[1]
-ITEM_FLOOR = 0.99
+ITEM_FLOOR = 1.0
 EXTRA_CEILING = 0.0
 
 

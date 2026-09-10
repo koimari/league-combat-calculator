@@ -114,11 +114,14 @@ def test_the_declared_zero_reaches_a_payload_at_all() -> None:
     # as one event each: three strikes a second apart and two chain hits 1.5
     # seconds apart give a disabled window and the fight's end far more
     # leaves to refuse, and spread the same damage out so that fewer
-    # attackers and targets die inside the window at all.
+    # attackers and targets die inside the window at all. ``outside_window``
+    # left the composition with #323: a single-instant hit timed past the
+    # fight's end is no longer authored by the pair rotation, so the walk
+    # has none to refuse (a DoT's committed ticks are the only late leaves
+    # left, and this roster prices none).
     assert collections.Counter(entry["reason"] for entry in declared) == {
         "attacker_state_blocked": 16,
         "trigger_event_skipped": 11,
-        "outside_window": 8,
         "attacker_dead": 2,
         "target_dead": 2,
     }
