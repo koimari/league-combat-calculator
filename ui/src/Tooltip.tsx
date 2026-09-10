@@ -14,6 +14,8 @@ import {
 import { createPortal } from "react-dom";
 import "./tooltip.css";
 
+const HOVER_DELAY_MS = 350;
+
 export interface GameTooltipProps {
   children: ReactNode;
   title: string;
@@ -146,15 +148,29 @@ export function GameTooltip({
     window.clearTimeout(closeTimer.current);
     closeTimer.current = undefined;
   };
+  const openTimer = useRef<number | undefined>(undefined);
+  const cancelOpen = () => {
+    window.clearTimeout(openTimer.current);
+    openTimer.current = undefined;
+  };
   const show = () => {
     cancelClose();
+    cancelOpen();
     setPortalRoot(anchor.current?.closest("dialog") ?? document.body);
     document.dispatchEvent(
       new CustomEvent("game-tooltip-open", { detail: id }),
     );
     setOpen(true);
   };
+  /* A pointer crossing the ability row must not pop a tooltip per icon; the
+   * hover waits this long before opening. Focus and touch open at once. */
+  const scheduleShow = () => {
+    cancelClose();
+    cancelOpen();
+    openTimer.current = window.setTimeout(show, HOVER_DELAY_MS);
+  };
   const scheduleClose = () => {
+    cancelOpen();
     if (!pinned) {
       cancelClose();
       closeTimer.current = window.setTimeout(() => setOpen(false), 150);
@@ -182,16 +198,37 @@ export function GameTooltip({
           width - size.width - gap,
         ),
       );
+      /* Above the trigger first, clear of the HUD row it sits in; then
+       * beside it; below only when nothing else has room. */
+      const centered = Math.max(
+        gap,
+        Math.min(
+          source.top + source.height / 2 - size.height / 2,
+          height - size.height - gap,
+        ),
+      );
+      const right = source.right + gap;
+      const leftSide = source.left - size.width - gap;
       const above = source.top - size.height - gap;
       const below = source.bottom + gap;
-      const top =
-        above >= gap
-          ? above
-          : below + size.height <= height - gap
+      let x = left;
+      let y: number;
+      if (above >= gap) {
+        y = above;
+      } else if (right + size.width <= width - gap) {
+        x = right;
+        y = centered;
+      } else if (leftSide >= gap) {
+        x = leftSide;
+        y = centered;
+      } else {
+        y =
+          below + size.height <= height - gap
             ? below
             : Math.max(gap, height - size.height - gap);
-      tooltip.style.left = `${left}px`;
-      tooltip.style.top = `${top}px`;
+      }
+      tooltip.style.left = `${x}px`;
+      tooltip.style.top = `${y}px`;
       tooltip.style.visibility = "visible";
     };
     place();
@@ -247,7 +284,7 @@ export function GameTooltip({
       className={`game-tooltip-anchor ${className}`}
       ref={anchor}
       onPointerEnter={(event) => {
-        if (event.pointerType !== "touch") show();
+        if (event.pointerType !== "touch") scheduleShow();
       }}
       onPointerLeave={scheduleClose}
       onFocusCapture={show}

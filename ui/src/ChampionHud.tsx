@@ -29,6 +29,8 @@ export interface ChampionHudProps {
   onItem: (index: number) => void;
   onShop: () => void;
   onRunes?: () => void;
+  /** The HUD is the one runes control; the label names the keystone. */
+  runesLabel?: string;
   gold: string;
   resourceLabel?: string;
 }
@@ -288,6 +290,7 @@ export function ChampionHud({
   onItem,
   onShop,
   onRunes,
+  runesLabel,
   gold,
   resourceLabel = "Mana",
 }: ChampionHudProps) {
@@ -618,7 +621,7 @@ export function ChampionHud({
               type="button"
               onClick={onRunes}
             >
-              Runes
+              {runesLabel ?? "Runes"}
             </button>
           )}
           <dl className="champion-hud-stats" aria-label="Stats before combat">

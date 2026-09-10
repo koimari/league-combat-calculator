@@ -591,22 +591,53 @@
 }
 
 /* Absolute placements from PlayerFrame and PlayerInventory UIBase.
-   Source origin: portrait x312, frame x415/y1022. Scale the complete row. */
+   Source origin: portrait x312, frame x415/y1022. Scale the complete row.
+   The viewport is the one shared plate background: everything below (the
+   portrait ring's transparent corners, the level-up chevrons that sit above
+   the ability row in the source layout, the item panel and the stats/runes
+   column) paints on this single background instead of floating on the page,
+   so the composed HUD reads as one console. --hud-scale is fluid (container
+   query units) rather than a ladder of fixed breakpoints, so every width
+   between the tested 1440/1024/390px gets a proportional, non-jumping size. */
 .champion-hud {
   container-type: inline-size;
 }
 .champion-hud-viewport {
-  --hud-scale: 1;
-  height: calc(186px * var(--hud-scale));
+  --hud-scale: min(1, calc((100cqi - 20px) / 1080px));
+  position: relative;
+  height: calc(186px * var(--hud-scale) + 76px);
+  box-sizing: border-box;
+  /* 64px above the plate: the level-up chevrons (56px, docked 59px above
+     each ability icon) must sit inside the painted panel, not over its
+     top border. */
+  padding: 64px 10px 12px;
+  background: linear-gradient(
+    180deg,
+    #172b26,
+    #091510 12%,
+    #091510 85%,
+    #172c25
+  );
+  border: 2px solid #6c6038;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 0 2px #020805,
+    inset 0 0 0 3px #344137,
+    0 4px 16px #0005;
 }
 .champion-hud-frame {
-  position: relative;
+  position: absolute;
   display: block;
+  left: 50%;
+  /* Below the viewport's top padding, so the chevrons above the ability
+     row (59px tall over the plate) stay inside the painted panel. */
+  top: 64px;
   width: 1080px;
   height: 186px;
+  margin: 0;
   padding: 0;
-  transform: scale(var(--hud-scale));
-  transform-origin: left top;
+  transform: translateX(-50%) scale(var(--hud-scale));
+  transform-origin: center top;
 }
 .champion-hud-identity {
   position: absolute;
@@ -734,9 +765,11 @@
   position: absolute;
   left: 920px;
   top: 0;
+  bottom: 51px;
   width: 150px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: center;
   margin: 0;
   padding: 12px 8px;
   gap: 8px;
@@ -747,34 +780,35 @@
 .champion-hud-stat-tooltip {
   display: block !important;
 }
-@container (max-width:1079px) {
+
+/* Below this container width the side-by-side 1080px canvas no longer fits
+   next to the ability row without scrolling, so the item panel, stats box
+   and Runes button move onto a second row under the portrait/plate/health
+   group instead (a narrower 700px canvas), stacking rather than scrolling. */
+@container (max-width: 749px) {
   .champion-hud-viewport {
-    --hud-scale: 0.84;
+    --hud-scale: min(1, calc((100cqi - 20px) / 700px));
+    height: calc(390px * var(--hud-scale) + 76px);
   }
-}
-@container (max-width:909px) {
-  .champion-hud-viewport {
-    --hud-scale: 0.69;
+  .champion-hud-frame {
+    width: 700px;
+    height: 390px;
   }
-}
-@container (max-width:749px) {
-  .champion-hud-viewport {
-    --hud-scale: 0.54;
+  .champion-hud-inventory {
+    left: 0;
+    top: 210px;
   }
-}
-@container (max-width:589px) {
-  .champion-hud-viewport {
-    --hud-scale: 0.4;
+  .champion-hud-stats {
+    left: 266px;
+    top: 210px;
+    bottom: auto;
+    height: 122px;
+    align-content: start;
   }
-}
-@container (max-width:435px) {
-  .champion-hud-viewport {
-    --hud-scale: 0.3;
-  }
-}
-@container (max-width:329px) {
-  .champion-hud-viewport {
-    --hud-scale: 0.27;
+  .champion-hud-runes {
+    left: 266px;
+    top: 346px;
+    bottom: auto;
   }
 }
 .champion-hud-heading h3 {
@@ -829,22 +863,7 @@
   background-position: 68.0124% 20.3512%;
   cursor: default;
 }
-.champion-hud-viewport {
-  padding-top: 40px;
-  height: calc(186px * var(--hud-scale));
-  box-sizing: content-box;
-}
-@container (max-width:749px) {
-  .champion-hud-viewport {
-    --hud-scale: 0.8;
-    overflow-x: auto;
-    overflow-y: hidden;
-    height: 149px;
-    padding-top: 42px;
-  }
-  .champion-hud-frame {
-    width: 1080px;
-  }
+@container (max-width: 749px) {
   .champion-hud-level input {
     width: 56px;
     height: 38px;
@@ -905,10 +924,14 @@
   }
 }
 
-/* Include the arrow band in the border-box height used by the shared shell. */
+/* Same box the base .champion-hud-viewport rule computes; restated at
+   calculator-root's higher specificity so the shared page shell can't win
+   with a stale height and reopen the gap the plate background is meant to
+   close (that mismatch is what let the chevrons and level badge render
+   outside the painted panel before). */
 .calculator-root .champion-hud-viewport {
   box-sizing: border-box;
-  height: calc(186px * var(--hud-scale) + 40px);
+  height: calc(186px * var(--hud-scale) + 76px);
 }
 .calculator-root .champion-hud-stat-tabs button {
   color: var(--calculator-ink, #182822);
@@ -916,9 +939,9 @@
 .calculator-root .champion-hud-stat-tabs button[aria-selected="true"] {
   color: #e9d99e;
 }
-@container (max-width:749px) {
+@container (max-width: 749px) {
   .calculator-root .champion-hud-viewport {
-    height: 191px;
+    height: calc(390px * var(--hud-scale) + 76px);
   }
 }
 
