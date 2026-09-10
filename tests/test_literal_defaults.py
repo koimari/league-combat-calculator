@@ -2052,6 +2052,7 @@ MODULE_DECLARATION = frozenset(
 ROOTS = (
     "rank_allocation.py",
     "attack_windows.py",
+    "certified_casts.py",
     "combat_events.py",
     "damage.py",
     "fight",

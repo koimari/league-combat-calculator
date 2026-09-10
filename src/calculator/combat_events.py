@@ -5,6 +5,8 @@ from dataclasses import dataclass
 import math
 from typing import Any
 
+from .certified_casts import CERTIFIED_DAMAGE_CASTS
+
 
 @dataclass(frozen=True, slots=True)
 class CombatEvent:
@@ -172,29 +174,41 @@ CERTIFIED_ENEMY_CASTS: dict[tuple[str, str], tuple[str, ...]] = {
 }
 
 
+def certified_reach(champion: str, slot: str) -> str | None:
+    """How far an authored damage cast of this slot reaches, or None."""
+    return CERTIFIED_DAMAGE_CASTS.get((champion, slot))
+
+
 def certified_recipients(champion: str, slot: str) -> tuple[str, ...] | None:
     """The recipients an authored cast of this slot may name, or None."""
     enemy = CERTIFIED_ENEMY_CASTS.get((champion, slot))
     support = CERTIFIED_SUPPORT_CASTS.get((champion, slot))
-    if enemy is None and support is None:
+    damage = ("enemy",) if (champion, slot) in CERTIFIED_DAMAGE_CASTS else None
+    if enemy is None and support is None and damage is None:
         return None
     ordered: list[str] = []
     for kind in ("self", "ally", "enemy"):
-        if kind in (enemy or ()) or kind in (support or ()):
+        if kind in (enemy or ()) or kind in (support or ()) or kind in (damage or ()):
             ordered.append(kind)
     return tuple(ordered)
 
 
 def combat_event_contract() -> dict[str, Any]:
     """Publish the same certified recipients that request validation accepts."""
-    champions: dict[str, dict[str, dict[str, list[str]]]] = {}
+    champions: dict[str, dict[str, dict[str, Any]]] = {}
     for champion, slot in sorted(
-        set(CERTIFIED_ENEMY_CASTS) | set(CERTIFIED_SUPPORT_CASTS),
+        set(CERTIFIED_ENEMY_CASTS)
+        | set(CERTIFIED_SUPPORT_CASTS)
+        | set(CERTIFIED_DAMAGE_CASTS),
         key=lambda pair: (pair[0], "QWER".index(pair[1])),
     ):
         recipients = certified_recipients(champion, slot)
         assert recipients is not None
-        champions.setdefault(champion, {})[slot] = {"recipients": list(recipients)}
+        entry: dict[str, Any] = {"recipients": list(recipients)}
+        reach = certified_reach(champion, slot)
+        if reach is not None:
+            entry["reach"] = reach
+        champions.setdefault(champion, {})[slot] = entry
     return {
         "schema_version": 1,
         "modes": ["overrides", "replace"],

@@ -9,7 +9,7 @@ export interface EventActor {
 }
 export type EventCapabilities = Record<
   string,
-  Record<string, { recipients: string[] }>
+  Record<string, { recipients: string[]; reach?: string }>
 >;
 export function EventEditor({
   enabled,
@@ -190,6 +190,10 @@ export function EventEditor({
                             <option key={slot} value={slot}>
                               {slot} ·{" "}
                               {actor?.champion?.abilities[slot]?.name ?? slot}
+                              {capabilities[actor?.champion?.name ?? ""]?.[slot]
+                                ?.reach === "every_enemy"
+                                ? " (every enemy)"
+                                : ""}
                               {!actor?.ranks[slot] ? " (unlearned)" : ""}
                             </option>
                           ))}

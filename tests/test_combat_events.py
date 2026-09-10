@@ -334,13 +334,15 @@ def test_certified_nasus_w_targets_the_selected_enemy():
 
 
 def test_uncertified_slots_fail_instead_of_ignoring_authored_time():
-    with pytest.raises(ValueError, match="certification"):
+    # Aatrox E is a dash: no damage, no control, no support packet, so no
+    # table certifies it.
+    with pytest.raises(ValueError, match="certification|cannot name"):
         calculate_payload(
             {
-                "champion": "Ashe",
+                "champion": "Aatrox",
                 "level": 18,
                 "items": [],
-                "combat_events": [event(slot="Q")],
+                "combat_events": [event(slot="E")],
             },
             deterministic=True,
         )
@@ -624,3 +626,113 @@ def test_a_self_only_shield_lands_on_the_caster_when_authored():
 def test_an_ally_only_cast_refuses_the_caster_as_recipient():
     with pytest.raises(ValueError):
         _roster("Thresh", [event(slot="W", time=1.0, recipient="main")])
+
+
+# ---------------------------------------------------------------------------
+# Every enemy-facing cast a registered module prices is certified, with a
+# reach the cached spellEffects stamp decides.
+# ---------------------------------------------------------------------------
+
+
+def test_the_certified_damage_table_is_what_the_modules_price():
+    import importlib.util
+    from pathlib import Path
+
+    spec = importlib.util.spec_from_file_location(
+        "certify_damage_casts",
+        Path(__file__).resolve().parent.parent / "scripts" / "certify_damage_casts.py",
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    from src.calculator.certified_casts import CERTIFIED_DAMAGE_CASTS
+
+    assert module.derive() == CERTIFIED_DAMAGE_CASTS
+
+
+def _enemy_targets(champion, slot, time=2.0, options=None):
+    result = calculate_payload(
+        {
+            "champion": champion,
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 10,
+            "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+            "champion_options": options or {},
+            "combat_events_mode": "overrides",
+            "combat_events": [event(slot=slot, time=time)],
+            "enemies": [
+                {"champion": "Garen", "level": 18, "items": []},
+                {"champion": "Malphite", "level": 18, "items": []},
+            ],
+        },
+        deterministic=True,
+    )
+    rows = [
+        row
+        for row in result["combat"]["events"]
+        if row["attacker"] == "main" and row.get("source") == slot
+    ]
+    return {row["target"] for row in rows}, rows
+
+
+# The pro picks read off this repo's own scoreboard corpus
+# (tests/fixtures/scoreboard/labels.json): the popularity order the campaign
+# verifies first, since no pick-rate feed is cached here.
+_CORPUS_PICKS = [
+    ("Ahri", "Q"),
+    ("Orianna", "Q"),
+    ("Orianna", "R"),
+    ("Caitlyn", "Q"),
+    ("Jhin", "W"),
+    ("Lee Sin", "Q"),
+    ("Rumble", "R"),
+    ("Lucian", "Q"),
+    ("Cassiopeia", "Q"),
+    ("K'Sante", "Q"),
+    ("Galio", "E"),
+    ("Jarvan IV", "Q"),
+    ("Shen", "E"),
+    ("Nami", "Q"),
+    ("Bard", "Q"),
+    ("Ambessa", "Q"),
+    ("Blitzcrank", "Q"),
+    ("Anivia", "Q"),
+    ("Gwen", "Q"),
+    ("Xayah", "Q"),
+    ("Rakan", "W"),
+    ("Aatrox", "Q"),
+    ("Darius", "R"),
+]
+
+
+@pytest.mark.parametrize(("champion", "slot"), _CORPUS_PICKS)
+def test_an_authored_damage_cast_reaches_what_its_certified_reach_says(champion, slot):
+    from src.calculator.combat_events import certified_reach
+
+    reach = certified_reach(champion, slot)
+    assert reach in {"one_enemy", "every_enemy"}, f"{champion} {slot} is not certified"
+    targets, rows = _enemy_targets(champion, slot)
+    assert rows, f"{champion} {slot} authored at 2.0 s priced nothing"
+    assert all(row["time"] >= 2.0 for row in rows)
+    expected = (
+        {"enemy:Malphite"}
+        if reach == "one_enemy"
+        else {"enemy:Garen", "enemy:Malphite"}
+    )
+    assert targets == expected
+
+
+def test_a_damage_cast_refuses_a_friendly_recipient():
+    with pytest.raises(ValueError, match="cannot name 'self'"):
+        calculate_payload(
+            {
+                "champion": "Darius",
+                "level": 18,
+                "items": [],
+                "combat_events_mode": "overrides",
+                "combat_events": [event(slot="R", recipient="main")],
+                "enemies": [{"champion": "Garen", "level": 18, "items": []}],
+            },
+            deterministic=True,
+        )
