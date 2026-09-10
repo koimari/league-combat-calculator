@@ -72,16 +72,28 @@ cannot name from the frame and `null` for an empty slot. The test holds
 champions exact and items to `ITEM_FLOOR` read with at most `EXTRA_CEILING`
 phantom, both ratcheted to what the tree reads.
 
+## Masked second opinion
+
+A grid slot the free search and the plain fill both left empty is classified
+once more with the top `MASK_TOP_ROWS` rows cut from the cell and from every
+reference at the 24x24 stage, each re-normalized over what is left, against the
+whole pool rather than the 8x8 shortlist (the label that hides the portrait also
+corrupts the shortlist). It is accepted at `MASK_SCORE` with a `MASK_GAP` margin
+and carries `masked: true`. This is what reads the two portraits a gold-difference
+label covers on the LEC frame `lec-g2-kc-g1-1450.jpg` (0.41 and 0.55 plain, 0.89
+and 0.91 masked); it costs about 4% of a read.
+
 ## Known gaps
 
 The corpus holds five 2026 LCK frames, one a 1361x399 crop with 55 px
-portraits whose bottom row runs past the frame, and one 2026 LEC frame. A dead
+portraits whose bottom row runs past the frame, and two 2026 LEC frames, one
+with gold-difference labels over two portraits. A dead
 player's greyed portrait is not read (the crop reads 9 of 10). LEC and LCS
 share Riot's broadcast package, whose portraits carry a level badge over art
 that is the square icon for some champions and a tight face crop for others;
 the `badge` style in `PORTRAIT_STYLES` reads them, and the icon-only style is
-tried first so LCK keeps its margins. A gold-difference label drawn over a
-portrait still hides it: the LEC frame at `youtube:qHAn7zWJE_Q@1450` reads 8
-of 10 and the LCS frame at `youtube:yDHo-UNcICo@1530` reads 8 of 10. The 2026
+tried first so LCK keeps its margins. The LEC frame at `youtube:qHAn7zWJE_Q@1450` now reads 10 of 10 through the
+masked pass; the LCS frame at `youtube:yDHo-UNcICo@1530` could not be fetched
+(yt-dlp reports no video formats) and stays unread. The 2026
 LPL panel (`youtube:dQpiSHdwgls@1290`) reads one portrait; its portraits are
 smaller and ringed, and need their own look before a third style is added.

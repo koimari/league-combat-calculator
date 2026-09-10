@@ -1,44 +1,910 @@
 {
- "lck-2026-crop.jpg": {"league": "LCK", "source": "user screenshot, T1 vs DK G1 2026 playoffs", "rows": [
-   [{"champion": "Gnar", "items": ["1057", "3111", "3143", "3071", "3078"]}, {"champion": "Rumble", "items": ["3157", "6653", "8010", "3009", "1052"]}],
-   [{"champion": "Vi", "items": ["2019", "3111", "1038", "3071", "6610"]}, {"champion": "Lee Sin", "items": ["6699", "3814", "6698", "6695", "2422", "2055"]}],
-   [{"champion": "Taliyah", "items": ["1082", "3170", "4630", "4646", "3040", "4645"]}, {"champion": "Cassiopeia", "items": ["3157", "6657", "3116", "4630", "3171", "1082"]}],
-   [{"champion": "Lucian", "items": ["3047", "1036", "1038", "6675", "3508", "3036", "3031"]}, {"champion": "Xayah", "items": ["3031", "3508", "3033", "6675", "1038", "1086", "3006"]}],
-   [{"champion": "Milio", "items": ["2422", "3870", "?", "6620", "3109"]}, {"champion": "Rakan", "items": ["3109", "3050", "3009", "3067", "3869", "1029", "2055"]}]
-  ]},
- "lck-t1-dk-g1-950.jpg": {"league": "LCK", "source": "youtube:MWpo5j22zAk@950", "rows": [
-   [{"champion": "Gnar", "items": ["2031", "1001", "1055", "3044", "3051"]}, {"champion": "Rumble", "items": ["3147", "3009", "2508", "1056"]}],
-   [{"champion": "Vi", "items": ["2422", "6610"]}, {"champion": "Lee Sin", "items": ["6698", "1037", "1101", "2422", "2055", null, null, "?"]}],
-   [{"champion": "Taliyah", "items": ["2031", "1056", null, "3108", "?", "3802"]}, {"champion": "Cassiopeia", "items": ["3803", "3158", "1056", "1082", "2031", null, null, "?"]}],
-   [{"champion": "Lucian", "items": ["1001", "2031", "1042", "1042", "1086", "3086", "3508"]}, {"champion": "Xayah", "items": ["3508", "1018", "1083", "1086", "1001", "2031"]}],
-   [{"champion": "Milio", "items": ["2055", null, null, "1004", "2422", "3870", "6620"]}, {"champion": "Rakan", "items": ["3050", "3866", "2422", null, null, null, "2055"]}]
-  ]},
- "lck-t1-dk-g1-1320.jpg": {"league": "LCK", "source": "youtube:MWpo5j22zAk@1320", "rows": [
-   [{"champion": "Gnar", "items": ["1036", "1055", "3111", "3078"]}, {"champion": "Rumble", "items": ["6653", "3147", "3009", "1056", null, null, null, "?"]}],
-   [{"champion": "Vi", "items": ["2055", "2422", "3067", "3044", "6610"]}, {"champion": "Lee Sin", "items": ["6699", "6698", "2422", "2055"]}],
-   [{"champion": "Taliyah", "items": ["2031", "1082", "1056", "?", "3145", "3040"]}, {"champion": "Cassiopeia", "items": ["6657", "3171", "1026", "1056", "1082", null, null, "?"]}],
-   [{"champion": "Lucian", "items": ["1001", null, "2031", "1086", "3035", "6675", "3508"]}, {"champion": "Xayah", "items": ["3508", "6675", "1037", "1083", "1086", "2031", "3006", "?"]}],
-   [{"champion": "Milio", "items": ["?", "2055", null, "2422", "1052", "3870", "4642", "6620"]}, {"champion": "Rakan", "items": ["3050", "1031", "?", "1028", "2422", null, "2055"]}]
-  ]},
- "lck-t1-dk-g1-1650.jpg": {"league": "LCK", "source": "youtube:MWpo5j22zAk@1650", "rows": [
-   [{"champion": "Gnar", "items": ["3363", null, null, "1055", "3067", "3044", "3111", "3078"]}, {"champion": "Rumble", "items": ["6653", "8010", "3009", "1056", "1052"]}],
-   [{"champion": "Vi", "items": ["3364", null, null, null, null, "3111", "3071", "6610"]}, {"champion": "Lee Sin", "items": ["6699", "6698", "?", "1037", "2422", "2055", null, "?"]}],
-   [{"champion": "Taliyah", "items": ["3363", null, "1082", "1052", "1056", "?", "4646", "3040"]}, {"champion": "Cassiopeia", "items": ["6657", "3116", "1058", "3171", "1056", "1082"]}],
-   [{"champion": "Lucian", "items": ["3363", "1001", "2055", "1029", "1086", "6675", "3508", "3036"]}, {"champion": "Xayah", "items": ["3031", "3508", "6675", "1086", null, null, "3006", "?"]}],
-   [{"champion": "Milio", "items": ["2055", null, null, "2422", "3870", "2065", "6620"]}, {"champion": "Rakan", "items": ["3050", "3869", "2422", null, null, "2055"]}]
-  ]},
- "lec-g2-kc-g1-690.jpg": {"league": "LEC", "source": "youtube:qHAn7zWJE_Q@690", "rows": [
-   [{"champion": "Shen", "items": ["?", null, null, null, null, "2010", "1054"]}, {"champion": "Ambessa", "items": ["1054", "2010", null, null, null, null, "?"]}],
-   [{"champion": "Aatrox", "items": ["?", null, null, null, "2055", "?", "2021"]}, {"champion": "Jarvan IV", "items": ["2021", "?", "2055", null, null, null, "?"]}],
-   [{"champion": "Orianna", "items": ["?", null, "?", "2055", "1027", "1056", "1052"]}, {"champion": "Galio", "items": ["1056", "1082", "2031", null, null, null, "?"]}],
-   [{"champion": "Caitlyn", "items": ["?", null, null, "2031", "1036", "1036", "1055"]}, {"champion": "Lucian", "items": ["1055", "1036", "1036", "2031", null, null, "?"]}],
-   [{"champion": "Bard", "items": ["?", null, null, null, "2031", "1028", "3865"]}, {"champion": "Nami", "items": ["3865", "1004", null, null, null, null, "?"]}]
-  ]},
- "lck-2026-crop-clipped.jpg": {"league": "LCK", "source": "user screenshot of a 2026 LCK broadcast, a 1361x399 crop with 55px portraits whose bottom row runs 4px past the frame; the row-4 opponent is dead and greyed, so only Jhin is labeled there; an item drawn dark under a cooldown sweep is ?", "rows": [
-   [{"champion": "Gwen", "items": ["3340", null, "2031", "1001", "1082", "1052", "1056", "4633"]}, {"champion": "K'Sante", "items": ["?", "3111", "1031", "1120", "2031"]}],
-   [{"champion": "Qiyana", "items": ["2055", "2422", "1036", "1036", "2020", "?"]}, {"champion": "Jarvan IV", "items": ["?", "3044", "2422"]}],
-   [{"champion": "Anivia", "items": ["1082", "1056", "1026", "3171", "3802", "6657"]}, {"champion": "Ahri", "items": ["3118", "3175", "1056", "1082", "2031"]}],
-   [{"champion": "Jhin", "items": ["3363", "3009", null, "2055", "2031", "1120", "3094"]}],
-   [{"champion": "Blitzcrank", "items": ["2055", null, null, null, null, "?", "3009", "?"]}, {"champion": "Lulu", "items": ["3504", "3158", "3870", null, null, null, "2055"]}]
-  ]}
+  "lck-2026-crop.jpg": {
+    "league": "LCK",
+    "source": "user screenshot, T1 vs DK G1 2026 playoffs",
+    "rows": [
+      [
+        {
+          "champion": "Gnar",
+          "items": [
+            "1057",
+            "3111",
+            "3143",
+            "3071",
+            "3078"
+          ]
+        },
+        {
+          "champion": "Rumble",
+          "items": [
+            "3157",
+            "6653",
+            "8010",
+            "3009",
+            "1052"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Vi",
+          "items": [
+            "2019",
+            "3111",
+            "1038",
+            "3071",
+            "6610"
+          ]
+        },
+        {
+          "champion": "Lee Sin",
+          "items": [
+            "6699",
+            "3814",
+            "6698",
+            "6695",
+            "2422",
+            "2055"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Taliyah",
+          "items": [
+            "1082",
+            "3170",
+            "4630",
+            "4646",
+            "3040",
+            "4645"
+          ]
+        },
+        {
+          "champion": "Cassiopeia",
+          "items": [
+            "3157",
+            "6657",
+            "3116",
+            "4630",
+            "3171",
+            "1082"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Lucian",
+          "items": [
+            "3047",
+            "1036",
+            "1038",
+            "6675",
+            "3508",
+            "3036",
+            "3031"
+          ]
+        },
+        {
+          "champion": "Xayah",
+          "items": [
+            "3031",
+            "3508",
+            "3033",
+            "6675",
+            "1038",
+            "1086",
+            "3006"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Milio",
+          "items": [
+            "2422",
+            "3870",
+            "?",
+            "6620",
+            "3109"
+          ]
+        },
+        {
+          "champion": "Rakan",
+          "items": [
+            "3109",
+            "3050",
+            "3009",
+            "3067",
+            "3869",
+            "1029",
+            "2055"
+          ]
+        }
+      ]
+    ]
+  },
+  "lck-t1-dk-g1-950.jpg": {
+    "league": "LCK",
+    "source": "youtube:MWpo5j22zAk@950",
+    "rows": [
+      [
+        {
+          "champion": "Gnar",
+          "items": [
+            "2031",
+            "1001",
+            "1055",
+            "3044",
+            "3051"
+          ]
+        },
+        {
+          "champion": "Rumble",
+          "items": [
+            "3147",
+            "3009",
+            "2508",
+            "1056"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Vi",
+          "items": [
+            "2422",
+            "6610"
+          ]
+        },
+        {
+          "champion": "Lee Sin",
+          "items": [
+            "6698",
+            "1037",
+            "1101",
+            "2422",
+            "2055",
+            null,
+            null,
+            "?"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Taliyah",
+          "items": [
+            "2031",
+            "1056",
+            null,
+            "3108",
+            "?",
+            "3802"
+          ]
+        },
+        {
+          "champion": "Cassiopeia",
+          "items": [
+            "3803",
+            "3158",
+            "1056",
+            "1082",
+            "2031",
+            null,
+            null,
+            "?"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Lucian",
+          "items": [
+            "1001",
+            "2031",
+            "1042",
+            "1042",
+            "1086",
+            "3086",
+            "3508"
+          ]
+        },
+        {
+          "champion": "Xayah",
+          "items": [
+            "3508",
+            "1018",
+            "1083",
+            "1086",
+            "1001",
+            "2031"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Milio",
+          "items": [
+            "2055",
+            null,
+            null,
+            "1004",
+            "2422",
+            "3870",
+            "6620"
+          ]
+        },
+        {
+          "champion": "Rakan",
+          "items": [
+            "3050",
+            "3866",
+            "2422",
+            null,
+            null,
+            null,
+            "2055"
+          ]
+        }
+      ]
+    ]
+  },
+  "lck-t1-dk-g1-1320.jpg": {
+    "league": "LCK",
+    "source": "youtube:MWpo5j22zAk@1320",
+    "rows": [
+      [
+        {
+          "champion": "Gnar",
+          "items": [
+            "1036",
+            "1055",
+            "3111",
+            "3078"
+          ]
+        },
+        {
+          "champion": "Rumble",
+          "items": [
+            "6653",
+            "3147",
+            "3009",
+            "1056",
+            null,
+            null,
+            null,
+            "?"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Vi",
+          "items": [
+            "2055",
+            "2422",
+            "3067",
+            "3044",
+            "6610"
+          ]
+        },
+        {
+          "champion": "Lee Sin",
+          "items": [
+            "6699",
+            "6698",
+            "2422",
+            "2055"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Taliyah",
+          "items": [
+            "2031",
+            "1082",
+            "1056",
+            "?",
+            "3145",
+            "3040"
+          ]
+        },
+        {
+          "champion": "Cassiopeia",
+          "items": [
+            "6657",
+            "3171",
+            "1026",
+            "1056",
+            "1082",
+            null,
+            null,
+            "?"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Lucian",
+          "items": [
+            "1001",
+            null,
+            "2031",
+            "1086",
+            "3035",
+            "6675",
+            "3508"
+          ]
+        },
+        {
+          "champion": "Xayah",
+          "items": [
+            "3508",
+            "6675",
+            "1037",
+            "1083",
+            "1086",
+            "2031",
+            "3006",
+            "?"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Milio",
+          "items": [
+            "?",
+            "2055",
+            null,
+            "2422",
+            "1052",
+            "3870",
+            "4642",
+            "6620"
+          ]
+        },
+        {
+          "champion": "Rakan",
+          "items": [
+            "3050",
+            "1031",
+            "?",
+            "1028",
+            "2422",
+            null,
+            "2055"
+          ]
+        }
+      ]
+    ]
+  },
+  "lck-t1-dk-g1-1650.jpg": {
+    "league": "LCK",
+    "source": "youtube:MWpo5j22zAk@1650",
+    "rows": [
+      [
+        {
+          "champion": "Gnar",
+          "items": [
+            "3363",
+            null,
+            null,
+            "1055",
+            "3067",
+            "3044",
+            "3111",
+            "3078"
+          ]
+        },
+        {
+          "champion": "Rumble",
+          "items": [
+            "6653",
+            "8010",
+            "3009",
+            "1056",
+            "1052"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Vi",
+          "items": [
+            "3364",
+            null,
+            null,
+            null,
+            null,
+            "3111",
+            "3071",
+            "6610"
+          ]
+        },
+        {
+          "champion": "Lee Sin",
+          "items": [
+            "6699",
+            "6698",
+            "?",
+            "1037",
+            "2422",
+            "2055",
+            null,
+            "?"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Taliyah",
+          "items": [
+            "3363",
+            null,
+            "1082",
+            "1052",
+            "1056",
+            "?",
+            "4646",
+            "3040"
+          ]
+        },
+        {
+          "champion": "Cassiopeia",
+          "items": [
+            "6657",
+            "3116",
+            "1058",
+            "3171",
+            "1056",
+            "1082"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Lucian",
+          "items": [
+            "3363",
+            "1001",
+            "2055",
+            "1029",
+            "1086",
+            "6675",
+            "3508",
+            "3036"
+          ]
+        },
+        {
+          "champion": "Xayah",
+          "items": [
+            "3031",
+            "3508",
+            "6675",
+            "1086",
+            null,
+            null,
+            "3006",
+            "?"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Milio",
+          "items": [
+            "2055",
+            null,
+            null,
+            "2422",
+            "3870",
+            "2065",
+            "6620"
+          ]
+        },
+        {
+          "champion": "Rakan",
+          "items": [
+            "3050",
+            "3869",
+            "2422",
+            null,
+            null,
+            "2055"
+          ]
+        }
+      ]
+    ]
+  },
+  "lec-g2-kc-g1-690.jpg": {
+    "league": "LEC",
+    "source": "youtube:qHAn7zWJE_Q@690",
+    "rows": [
+      [
+        {
+          "champion": "Shen",
+          "items": [
+            "?",
+            null,
+            null,
+            null,
+            null,
+            "2010",
+            "1054"
+          ]
+        },
+        {
+          "champion": "Ambessa",
+          "items": [
+            "1054",
+            "2010",
+            null,
+            null,
+            null,
+            null,
+            "?"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Aatrox",
+          "items": [
+            "?",
+            null,
+            null,
+            null,
+            "2055",
+            "?",
+            "2021"
+          ]
+        },
+        {
+          "champion": "Jarvan IV",
+          "items": [
+            "2021",
+            "?",
+            "2055",
+            null,
+            null,
+            null,
+            "?"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Orianna",
+          "items": [
+            "?",
+            null,
+            "?",
+            "2055",
+            "1027",
+            "1056",
+            "1052"
+          ]
+        },
+        {
+          "champion": "Galio",
+          "items": [
+            "1056",
+            "1082",
+            "2031",
+            null,
+            null,
+            null,
+            "?"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Caitlyn",
+          "items": [
+            "?",
+            null,
+            null,
+            "2031",
+            "1036",
+            "1036",
+            "1055"
+          ]
+        },
+        {
+          "champion": "Lucian",
+          "items": [
+            "1055",
+            "1036",
+            "1036",
+            "2031",
+            null,
+            null,
+            "?"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Bard",
+          "items": [
+            "?",
+            null,
+            null,
+            null,
+            "2031",
+            "1028",
+            "3865"
+          ]
+        },
+        {
+          "champion": "Nami",
+          "items": [
+            "3865",
+            "1004",
+            null,
+            null,
+            null,
+            null,
+            "?"
+          ]
+        }
+      ]
+    ]
+  },
+  "lck-2026-crop-clipped.jpg": {
+    "league": "LCK",
+    "source": "user screenshot of a 2026 LCK broadcast, a 1361x399 crop with 55px portraits whose bottom row runs 4px past the frame; the row-4 opponent is dead and greyed, so only Jhin is labeled there; an item drawn dark under a cooldown sweep is ?",
+    "rows": [
+      [
+        {
+          "champion": "Gwen",
+          "items": [
+            "3340",
+            null,
+            "2031",
+            "1001",
+            "1082",
+            "1052",
+            "1056",
+            "4633"
+          ]
+        },
+        {
+          "champion": "K'Sante",
+          "items": [
+            "?",
+            "3111",
+            "1031",
+            "1120",
+            "2031"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Qiyana",
+          "items": [
+            "2055",
+            "2422",
+            "1036",
+            "1036",
+            "2020",
+            "?"
+          ]
+        },
+        {
+          "champion": "Jarvan IV",
+          "items": [
+            "?",
+            "3044",
+            "2422"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Anivia",
+          "items": [
+            "1082",
+            "1056",
+            "1026",
+            "3171",
+            "3802",
+            "6657"
+          ]
+        },
+        {
+          "champion": "Ahri",
+          "items": [
+            "3118",
+            "3175",
+            "1056",
+            "1082",
+            "2031"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Jhin",
+          "items": [
+            "3363",
+            "3009",
+            null,
+            "2055",
+            "2031",
+            "1120",
+            "3094"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Blitzcrank",
+          "items": [
+            "2055",
+            null,
+            null,
+            null,
+            null,
+            "?",
+            "3009",
+            "?"
+          ]
+        },
+        {
+          "champion": "Lulu",
+          "items": [
+            "3504",
+            "3158",
+            "3870",
+            null,
+            null,
+            null,
+            "2055"
+          ]
+        }
+      ]
+    ]
+  },
+  "lec-g2-kc-g1-1450.jpg": {
+    "league": "LEC",
+    "source": "youtube:qHAn7zWJE_Q@1450",
+    "rows": [
+      [
+        {
+          "champion": "Shen",
+          "items": [
+            "3340",
+            null,
+            "2055",
+            "1054",
+            "3067",
+            "3047",
+            "3748"
+          ]
+        },
+        {
+          "champion": "Ambessa",
+          "items": [
+            "6692",
+            "3044",
+            "1037",
+            "1028",
+            "2422",
+            "2031",
+            "3363"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Aatrox",
+          "items": [
+            "3364",
+            null,
+            null,
+            null,
+            "2422",
+            "6610",
+            "3053"
+          ]
+        },
+        {
+          "champion": "Jarvan IV",
+          "items": [
+            "6610",
+            "1037",
+            "3067",
+            "2422",
+            null,
+            null,
+            "3364"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Orianna",
+          "items": [
+            "3363",
+            null,
+            null,
+            "1056",
+            "3171",
+            "2420",
+            "2503"
+          ]
+        },
+        {
+          "champion": "Galio",
+          "items": [
+            "6664",
+            "3147",
+            "?",
+            "1056",
+            "1082",
+            "2031",
+            "3364"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Caitlyn",
+          "items": [
+            "3363",
+            null,
+            "2031",
+            "1055",
+            "1018",
+            "1037",
+            "6676"
+          ]
+        },
+        {
+          "champion": "Lucian",
+          "items": [
+            "3508",
+            "3094",
+            "1055",
+            "1029",
+            "2031",
+            null,
+            "3363"
+          ]
+        }
+      ],
+      [
+        {
+          "champion": "Bard",
+          "items": [
+            "3364",
+            "2031",
+            "2422",
+            "1029",
+            "1028",
+            "?",
+            "3190"
+          ]
+        },
+        {
+          "champion": "Nami",
+          "items": [
+            "4005",
+            "3916",
+            "3870",
+            "2422",
+            "2022",
+            null,
+            "3364"
+          ]
+        }
+      ]
+    ]
+  }
 }

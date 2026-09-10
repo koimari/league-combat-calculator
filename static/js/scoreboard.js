@@ -72,6 +72,24 @@ const ScoreboardVision = (() => {
     badge: [...ICON_CROPS, { crop: 0.65, lift: 0.1 }, { crop: 0.5, lift: 0.15 }],
   };
   const MIN_PLAYERS = 8;
+  /* A broadcast draws a gold-difference label across the top of a portrait,
+   * which no crop of the icon models: the whole-cell correlation collapses
+   * under it. On the LEC frame at youtube:qHAn7zWJE_Q@1450 the two labelled
+   * portraits read 0.41 (Aatrox) and 0.55 (Orianna) against a 0.78 floor,
+   * while an unlabelled portrait on the same panel reads 0.93. A grid slot
+   * both the free search and the plain fill left empty is classified once
+   * more with this many of the FINE rows cut off the top of both sides of
+   * the correlation, which lifts those two to 0.89 and 0.92 and costs an
+   * unlabelled portrait 0.03. The label sits inside the top third on both
+   * Riot packages. */
+  const MASK_TOP_ROWS = 8;
+  /* The masked pass sees a third less of the cell and asks every reference
+   * rather than a shortlist, so it carries its own acceptance. Panel
+   * background, the game field and the row above the panel reach 0.77
+   * masked but never with a runner-up margin over 0.06; a labelled portrait
+   * clears 0.88 with 0.28. */
+  const MASK_SCORE = 0.82;
+  const MASK_GAP = 0.16;
   const SIZE_RATIO = 1.15;
   /* Coarse candidates verified per search: a few per size for the anchor,
    * every one to a cap inside the column, row and item bands. Real icons can
@@ -321,6 +339,57 @@ const ScoreboardVision = (() => {
       best.gap = best.score - second;
       best.unsure = best.gap < UNSURE_GAP;
     }
+    return best;
+  }
+
+  /**
+   * Second opinion for a grid slot the plain classification left empty: the
+   * same 24x24 correlation with the top MASK_TOP_ROWS rows of the cell and of
+   * every reference removed, each re-normalized over what is left, scored
+   * against the whole pool rather than a shortlist (the label that hides the
+   * portrait also corrupts the 8x8 shortlist). Accepted only at MASK_SCORE
+   * with a MASK_GAP margin; the hit carries `masked: true` for the review.
+   */
+  function classifyMasked(raster, x, y, size, refs, pool) {
+    const { indices } = refs.pools[pool];
+    const rowLen = FINE * 3;
+    const keep = (FINE - MASK_TOP_ROWS) * rowLen;
+    const offset = MASK_TOP_ROWS * rowLen;
+    if (!refs.masked) refs.masked = {};
+    if (!refs.masked[pool]) {
+      const table = new Float32Array(indices.length * keep);
+      indices.forEach((i, r) => {
+        const vec = table.subarray(r * keep, (r + 1) * keep);
+        vec.set(refs.fine.subarray(i * refs.fineLen + offset, (i + 1) * refs.fineLen));
+        normalize(vec);
+      });
+      refs.masked[pool] = table;
+    }
+    const table = refs.masked[pool];
+    const full = new Float32Array(refs.fineLen);
+    /* The blank-slot gate reads the whole cell's RMS: `full` is already unit
+     * length, so the slice's own norm says nothing about the pixels. */
+    const contrast = fingerprint(raster, x, y, size, FINE, full);
+    if (contrast < MIN_CONTRAST) return null;
+    const cell = new Float32Array(keep);
+    cell.set(full.subarray(offset));
+    normalize(cell);
+    let best = null;
+    let second = 0;
+    for (let r = 0; r < indices.length; r += 1) {
+      const score = dot(cell, 0, table, r * keep, keep);
+      const entry = refs.entries[indices[r]];
+      if (!best || score > best.score) {
+        if (best && best.key !== entry.key) second = Math.max(second, best.score);
+        best = { kind: entry.kind, key: entry.key, score, gap: 0, contrast, x, y, size, masked: true };
+      } else if (entry.key !== best.key) {
+        second = Math.max(second, score);
+      }
+    }
+    if (!best) return null;
+    best.gap = best.score - second;
+    if (best.score < MASK_SCORE || best.gap < MASK_GAP) return null;
+    best.unsure = false;
     return best;
   }
 
@@ -687,10 +756,11 @@ const ScoreboardVision = (() => {
         const filled = [];
         for (let k = known[0] - MAX_ROWS + 1; k <= known[known.length - 1] + MAX_ROWS - 1; k += 1) {
           const y = Math.round(ys[0] + k * pitch - size / 2);
-          const hit = slot.get(k) || verify(raster, { x, y, size }, refs, pool, true);
-          const kept = hit && hit.score >= MIN_SCORE.champion && hit.gap >= MIN_GAP.champion * GRID_GAP_SHARE;
-          if (kept) hit.column = index;
-          filled.push(kept ? hit : null);
+          const plain = slot.get(k) || verify(raster, { x, y, size }, refs, pool, true);
+          const kept = plain && plain.score >= MIN_SCORE.champion && plain.gap >= MIN_GAP.champion * GRID_GAP_SHARE;
+          const hit = kept ? plain : classifyMasked(raster, x, y, size, refs, pool);
+          if (hit) hit.column = index;
+          filled.push(hit);
         }
         all.push(...strongestWindow(filled, MAX_ROWS).filter(Boolean));
       });
