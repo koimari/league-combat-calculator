@@ -25,8 +25,10 @@ from dataclasses import replace
 import pytest
 
 from src.calculator.calculate import calculate_payload
+from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
+from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.fight_params import FightParams
 from src.calculator.healing_reduction import (
     GRIEVOUS_WOUNDS_DURATION,
     GRIEVOUS_WOUNDS_FACTOR,
@@ -41,10 +43,9 @@ from src.calculator.participant_timeline import (
     _simulate_survival,
     build_participant_timeline,
 )
-from src.calculator.pipeline import FightParams
 from src.calculator.program.build import roster_program as _roster_program
 from src.calculator.program.views.survival import survival as _survival_view
-from src.calculator.scenario import ChampionLoadout
+from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival import resolve_grievous
 

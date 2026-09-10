@@ -45,15 +45,17 @@ from typing import Any, NamedTuple
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
-from .engine import CC_PER_PART, DEBUFF, SlotCtx
+from ..stack_rules import StackRule
+from ..state_timeline import SourceReceipt
+from ..timed_stacks import TimedStackState
+from .engine import DEBUFF, SlotCtx
 from .inputs import bool_option, int_option
 from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
-    STEROID_ZERO,
+from .slot_cc import CC_PER_PART
+from .slot_entries import STEROID_ZERO, damage_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,

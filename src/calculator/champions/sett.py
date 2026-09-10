@@ -28,10 +28,9 @@ from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
+from .slot_entries import attach_self_shield, damage_entry
+from .slot_extract import (
     ability_name,
-    attach_self_shield,
-    damage_entry,
     extract_cooldown,
     extract_named,
     find_named_leveling,

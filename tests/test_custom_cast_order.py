@@ -36,15 +36,15 @@ from src.calculator.champions import (
     parse_champion_abilities,
     registered_champion_names,
 )
-from src.calculator.damage import _ridden_parent_slot
 from src.calculator.data_fetcher import get_champion
-from src.calculator.pipeline import (
+from src.calculator.fight.rotation.cast_schedule import _ridden_parent_slot
+from src.calculator.fight_params import FightParams
+from src.calculator.fight_request_bounds import (
     CAST_SLOT_SPELLING,
-    FightParams,
     cast_slot_surface,
-    run_fight,
     validate_cast_order_shape,
 )
+from src.calculator.pipeline import run_fight
 from src.calculator.scenario import (
     parse_scenario_request,
     resolve_scenario,
@@ -277,7 +277,7 @@ class TestOrderableSlotsAnswerTheChampionQuestion:
 
     def test_the_surface_tells_cast_slots_from_riders_by_spelling(self):
         """Reading ``recast_of`` here would answer the raise's own question."""
-        source = (SRC / "pipeline.py").read_text(encoding="utf-8")
+        source = (SRC / "fight_request_bounds.py").read_text(encoding="utf-8")
         surface = source.split("def cast_slot_surface(")[1].split("\ndef ")[0]
         assert 'entry.get("recast_of")' not in surface
         assert CAST_SLOT_SPELLING.pattern == "^[QWER][0-9]*$"

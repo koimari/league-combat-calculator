@@ -1,0 +1,2210 @@
+{
+ "source": "src/calculator/damage.py",
+ "decisions": [
+  "resource_admission vs cast_plan: cast_plan.py takes CastPlan, _resolve_cast_plan and the shared admission skeleton (_cast_admission_events, _resource_timeline, _CastAdmission); resource_admission.py keeps only the router _apply_resource_limits. Both walks read the skeleton and the router calls both walks, so any other split is a cycle.",
+  "event_ledger vs damage_ledger: fight/ledger/event_ledger.py, matching the plan's event_rows sibling.",
+  "RotationResult: fight/results.py, not cast_slots.py. AbilityItemApplication moves there too, because RotationResult names it and _damaging_cast_times in cast_slots.py names RotationResult (cycle otherwise).",
+  "_finite_numeric_receipt: fight/ledger/event_rows.py (35 in-file readers), imported by after/lethality_windows.py.",
+  "_ThresholdHealDrip: fight/ledger/pool_walk.py beside _simulate_ordered_damage, imported by after/shield_outcome.py.",
+  "_add_copied_stacking_on_hit_packets: fight/autos/copied_on_hit.py (its concept), imported by autos/single_proc_on_hits.py.",
+  "_periodic_damage_events: fight/rotation/dot_ticks.py (the tick splitter of a damage-over-time total), imported by items/burns.py.",
+  "DEFAULT_CAST_ORDER moves to fight/cast_slots.py despite the brief's residue list: setup/combat_state.py and ledger/pool_walk.py read it, and a moved module may not import the residue. Its three readers (rotation_resolver.py and two tests) repoint.",
+  "fight/autos/swing_profile.py is one module the roster does not name (map B section S10c): _find_auto_attack_override, _basic_attack_true_rider, _on_hit_effectiveness, _auto_swing_bonus_ad. Folded into simulation.py they would make a 637-line module holding symbols five other modules read, which is a new #27 finding.",
+  "_damaging_cast_times goes to fight/cast_slots.py and _item_proc_precision with _CERTIFIED_CAST_PRECISIONS to fight/ledger/event_rows.py: both are read from three or four subpackages, and both maps call them kernel symbols with no section of their own.",
+  "FerocityTimeline goes to fight/results.py, not stacks/rengar.py: FightState annotates it and stacks/rengar.py builds it.",
+  "fight/ledger/breakdown.py holds only _is_auto_stream_key, because the brief keeps split_auto_vs_ability and split_by_damage_type in the residue and two rune modules read the predicate. No external reader imports _is_auto_stream_key, so nothing repoints.",
+  "single_proc_on_hits: step 2 prices these items from catalog declarations, so the one function this file moved whole is two loops, first_auto_strikes.py and stacking_strikes.py, and the entry above names them."
+ ],
+ "string_annotations_that_stay_strings": {
+  "src/calculator/fight/state.py: FightState.stack_timeline: \"StackTimeline | None\"": "importing rotation/stack_timeline closes state -> stack_timeline -> autos/swing_schedule -> state",
+  "src/calculator/fight/rotation/cast_schedule.py: _apply_empowered_burst_autos and _resolve_scheduled_auto_rides take plan: \"CastPlan\"": "cast_plan.py already imports cast_schedule.py"
+ },
+ "string_annotation_imports_that_are_safe": [
+  "fight/mitigation.py, fight/rotation/cast_parts.py, fight/autos/decaying_health_walk.py, fight/autos/empower_windows.py and fight/rotation/cast_schedule.py name FightState only in string annotations; fight/autos/empower_windows.py and fight/rotation/cast_schedule.py name RotationResult the same way; fight/state.py names BurstSwingSchedule and FerocityTimeline. Each of these may become a real import without closing a cycle, and ruff F821 resolves forward references, so the run imports them."
+ ],
+ "packages": {
+  "src/calculator/fight": "The fight engine's steps, in the order the orchestrator runs them.",
+  "src/calculator/fight/ledger": "The reconstructed event ledger and what reads it.",
+  "src/calculator/fight/setup": "Resolving the request into a `FightState`.",
+  "src/calculator/fight/rotation": "Which abilities cast when, admitted against resources, and what each cast prices.",
+  "src/calculator/fight/autos": "The swing schedule and everything that rides a basic attack.",
+  "src/calculator/fight/items": "Item packets that are not on-hits.",
+  "src/calculator/fight/runes": "The rune page's procs, keystones and amplifiers.",
+  "src/calculator/fight/stacks": "Champion stack resources as receipt ledgers.",
+  "src/calculator/fight/after": "What runs over the finished ledger."
+ },
+ "pre_moved": [
+  {
+   "path": "src/calculator/survival/pricing.py",
+   "defs": [
+    "_restate_declaration"
+   ],
+   "how": "hand move before the tool runs; it takes and returns survival.pricing.AuthoredDeclaration and needs nothing from damage.py"
+  }
+ ],
+ "modules": [
+  {
+   "path": "src/calculator/fight/config.py",
+   "docstring": "What one fight is configured to be, and the specs a user's option selections resolve through.",
+   "defs": [
+    "BASE_CRIT_MULTIPLIER",
+    "_declared_options",
+    "_OPTION_SPECS",
+    "declared_option_spec",
+    "declared_option_default",
+    "_seeded_option_stacks",
+    "MINION_SOURCED_TARGET_FIELDS",
+    "sourced_minion_target",
+    "FightConfig"
+   ],
+   "body_lines": 263,
+   "reads": []
+  },
+  {
+   "path": "src/calculator/fight/resists.py",
+   "docstring": "The target's resistances against this attacker's penetration, and what spends them.",
+   "defs": [
+    "Resists",
+    "_mitigate",
+    "_apply_physical_damage_reduction"
+   ],
+   "body_lines": 244,
+   "reads": []
+  },
+  {
+   "path": "src/calculator/fight/state.py",
+   "docstring": "The mutable record every step function is threaded through, and the three projections of it.",
+   "defs": [
+    "FightState",
+    "_damage_inputs",
+    "_held_owners",
+    "_crit_profile"
+   ],
+   "body_lines": 182,
+   "reads": [
+    "src/calculator/fight/config.py",
+    "src/calculator/fight/resists.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/after/amp_chain.py",
+   "docstring": "Which declared amplifier occupies each chain slot, and how one amp's bonus is booked.",
+   "defs": [
+    "_amplifier_delta_events",
+    "_amp_slot",
+    "_amp_slot_for",
+    "_required_amp_slot",
+    "_record_amp_row"
+   ],
+   "body_lines": 102,
+   "reads": [
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/results.py",
+   "docstring": "The typed values the fight's steps hand each other.",
+   "defs": [
+    "AbilityItemApplication",
+    "RotationResult",
+    "CastPlan",
+    "StackApplication",
+    "CastPricing",
+    "StackTimeline",
+    "AutoAttackResult",
+    "OnHitResult",
+    "SpellbladeResult",
+    "FerocityTimeline"
+   ],
+   "body_lines": 112,
+   "reads": []
+  },
+  {
+   "path": "src/calculator/fight/cast_slots.py",
+   "docstring": "The cast-slot vocabulary: which slot a row belongs to, and which casts did damage.",
+   "defs": [
+    "DEFAULT_CAST_ORDER",
+    "_base_slot",
+    "_slot_is_cast",
+    "_damaging_cast_times"
+   ],
+   "body_lines": 39,
+   "reads": [
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/cast_control_marker.py",
+   "docstring": "The crowd-control marker a declared entry carries, read by the ordered ledger.",
+   "defs": [
+    "_declared_cc_kind",
+    "_entry_control_scope",
+    "_declared_cc_marker"
+   ],
+   "body_lines": 35,
+   "reads": []
+  },
+  {
+   "path": "src/calculator/fight/ledger/event_rows.py",
+   "docstring": "One row of the reconstructed ledger: its time key, typed parts, share and precision.",
+   "defs": [
+    "_row_time",
+    "_finite_numeric_receipt",
+    "_damage_type_fields",
+    "_ledger_total",
+    "_row_damage_parts",
+    "_row_declaration_share",
+    "_EVENT_PHASE_ORDER",
+    "_VAMP_SOURCE_PREFIXES",
+    "_CONTROL_TRIGGER_ONLY",
+    "_NO_EVENT_FIELDS",
+    "_AUTO_EVENT_FIELDS",
+    "_damage_event_row",
+    "_CAST_TIME_RESOLUTION",
+    "_CERTIFIED_CAST_PRECISIONS",
+    "_item_proc_precision"
+   ],
+   "body_lines": 213,
+   "reads": [
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/ledger/event_ledger.py",
+   "docstring": "The engine's certified damage order, reconstructed from its own rows.",
+   "defs": [
+    "_ordered_damage_events"
+   ],
+   "body_lines": 329,
+   "reads": [
+    "src/calculator/fight/cast_control_marker.py",
+    "src/calculator/fight/ledger/event_rows.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/autos/swing_schedule.py",
+   "docstring": "When auto attacks land.",
+   "defs": [
+    "_weave_around_bursts",
+    "_swings_at_rate",
+    "_base_auto_attack_timestamps",
+    "_install_swing_count",
+    "_HailStacks",
+    "_hail_attack_schedule",
+    "_prepare_hail_attack_schedule",
+    "_lethal_tempo_stacks_at",
+    "_lethal_tempo_attack_schedule",
+    "_prepare_lethal_tempo_attack_schedule",
+    "_auto_attack_timestamps",
+    "_restore_stream_attack_timestamps",
+    "_apply_spellblade_attack_speed"
+   ],
+   "body_lines": 399,
+   "reads": [
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/runes/streams.py",
+   "docstring": "The fight event stream a rune declares it watches.",
+   "defs": [
+    "_rune_instance_times",
+    "_record_rune_proc_row",
+    "_impaired_instance_times",
+    "_self_shield_times",
+    "_shield_armed_attack_times",
+    "_rune_trigger_times",
+    "_RuneEffectT",
+    "_page_effects"
+   ],
+   "body_lines": 130,
+   "reads": [
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/cast_control_marker.py",
+    "src/calculator/fight/cast_slots.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/runes/amplifiers.py",
+   "docstring": "The two selected-rune amplifier shapes, health-gated and flat.",
+   "defs": [
+    "_health_gated_events",
+    "_health_gate_disclosure",
+    "_add_rune_conditional_amp_damage",
+    "_rune_amp_context",
+    "_flat_amp_pool",
+    "_add_rune_flat_amp_damage"
+   ],
+   "body_lines": 153,
+   "reads": [
+    "src/calculator/fight/after/amp_chain.py",
+    "src/calculator/fight/ledger/event_ledger.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/runes/streams.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/after/amplifiers.py",
+   "docstring": "Fight-wide amplifiers applied after the ledger, whole-total to Expose Weakness.",
+   "defs": [
+    "_expose_weakness_pool",
+    "_add_expose_weakness",
+    "_hypershot_delta_events",
+    "_apply_general_amplifiers",
+    "_apply_damage_amplifiers",
+    "_apply_command_amp"
+   ],
+   "body_lines": 346,
+   "reads": [
+    "src/calculator/fight/after/amp_chain.py",
+    "src/calculator/fight/cast_slots.py",
+    "src/calculator/fight/ledger/event_ledger.py",
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/runes/amplifiers.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/empower_declaration.py",
+   "docstring": "What an `empowers_next_auto` payload declares, and where its swings landed.",
+   "defs": [
+    "_empower_hits",
+    "_empower_cooldown_delay",
+    "_empower_burst_attack_speed",
+    "_empower_rides_scheduled_auto",
+    "_empower_authored_timing",
+    "BurstSwingSchedule"
+   ],
+   "body_lines": 81,
+   "reads": []
+  },
+  {
+   "path": "src/calculator/fight/after/empowered_swings.py",
+   "docstring": "An ability that empowers the next auto, and the swings its casts consumed.",
+   "defs": [
+    "_EmpoweredSwings",
+    "_empowered_swing_consumers",
+    "_author_empowered_swing_events",
+    "_reattribute_empowered_swings",
+    "_recount_kept_crit_split"
+   ],
+   "body_lines": 212,
+   "reads": [
+    "src/calculator/fight/cast_control_marker.py",
+    "src/calculator/fight/empower_declaration.py",
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/after/lethality_windows.py",
+   "docstring": "Authored temporary lethality repricing later physical packets.",
+   "defs": [
+    "_apply_temporary_lethality_windows"
+   ],
+   "body_lines": 157,
+   "reads": [
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/state.py",
+    "src/calculator/survival/pricing.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/ledger/pool_walk.py",
+   "docstring": "The target's live pools, walked event by event.",
+   "defs": [
+    "_ThresholdHealDrip",
+    "_LIANDRY_BURN_KEY",
+    "_liandry_max_health_reprice",
+    "_simulate_ordered_damage"
+   ],
+   "body_lines": 232,
+   "reads": [
+    "src/calculator/fight/cast_slots.py",
+    "src/calculator/fight/ledger/event_ledger.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/after/reprice.py",
+   "docstring": "Re-pricing a landed packet after the fact, and the mechanics that read the re-priced ledger.",
+   "defs": [
+    "_apply_liandry_reprice",
+    "_carry_declarations_onto_repriced_ticks",
+    "_add_shadowflame_cinderbloom"
+   ],
+   "body_lines": 149,
+   "reads": [
+    "src/calculator/fight/after/amp_chain.py",
+    "src/calculator/fight/config.py",
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/ledger/pool_walk.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/state.py",
+    "src/calculator/survival/pricing.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/after/shield_outcome.py",
+   "docstring": "Splitting post-mitigation damage into shield absorption and health damage.",
+   "defs": [
+    "_walk_end_time",
+    "_resolve_starting_shield_outcome"
+   ],
+   "body_lines": 151,
+   "reads": [
+    "src/calculator/fight/config.py",
+    "src/calculator/fight/ledger/pool_walk.py",
+    "src/calculator/fight/state.py",
+    "src/calculator/survival/pricing.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/rotation/cast_schedule.py",
+   "docstring": "When each ability casts: haste, refunds, lockouts, the timeline and the burst re-timing.",
+   "defs": [
+    "_navori_effective_cd",
+    "_immobilize_ability_haste",
+    "_effective_timed_cooldown",
+    "_cooldown_ready_at",
+    "_CAST_SCHEDULE_EPS",
+    "_ridden_parent_slot",
+    "_self_cast_lockout",
+    "_schedule_shared_casts",
+    "_disclose_ultimate_cast_rule",
+    "_apply_empowered_burst_autos",
+    "_resolve_scheduled_auto_rides"
+   ],
+   "body_lines": 346,
+   "reads": [
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/cast_control_marker.py",
+    "src/calculator/fight/cast_slots.py",
+    "src/calculator/fight/empower_declaration.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/after/stored_damage.py",
+   "docstring": "Champion-owned stored damage resolved off the post-mitigation ledger.",
+   "defs": [
+    "_add_stored_damage"
+   ],
+   "body_lines": 102,
+   "reads": [
+    "src/calculator/fight/ledger/event_ledger.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/rotation/cast_schedule.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/autos/decaying_health_walk.py",
+   "docstring": "Pricing a proc formula that reads current health against a target that is losing it.",
+   "defs": [
+    "StackingProc",
+    "OnHitProc",
+    "DecayingTarget",
+    "AutoSwings",
+    "_simulate_stacking_on_hit_damage",
+    "_hp_scaled_on_hit_raw",
+    "_simulate_hp_scaled_on_hit_procs",
+    "_simulate_current_health_on_hit"
+   ],
+   "body_lines": 323,
+   "reads": [
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/resists.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/autos/copied_on_hit.py",
+   "docstring": "One on-hit application copied onto a second subject.",
+   "defs": [
+    "_bolt_declaration",
+    "_copied_on_hit_declaration",
+    "CopiedOnHitShare",
+    "_copied_on_hit_shares",
+    "_copied_packets_by_type",
+    "_copied_on_hit_packet",
+    "_add_copied_stacking_on_hit_packets"
+   ],
+   "body_lines": 297,
+   "reads": [
+    "src/calculator/fight/autos/decaying_health_walk.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/autos/empower_windows.py",
+   "docstring": "A passive a cast arms and a later action spends.",
+   "defs": [
+    "_on_hit_declaration",
+    "_EMPOWER_WINDOW_EPS",
+    "_empower_window_procs",
+    "_uniform_swing_schedule",
+    "_add_empower_window_on_hit",
+    "_declared_slot_stacks"
+   ],
+   "body_lines": 200,
+   "reads": [
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/resists.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/autos/on_hit_healing.py",
+   "docstring": "Item heals that ride a basic attack: authored on-hit receipts and the first attack.",
+   "defs": [
+    "_add_on_hit_healing",
+    "_add_first_auto_healing"
+   ],
+   "body_lines": 105,
+   "reads": [
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/autos/on_hit_stream.py",
+   "docstring": "What a swing pays back, and what schedules an on-hit application.",
+   "defs": [
+    "_active_lifesteal_amount",
+    "_add_lifesteal_events",
+    "_add_omnivamp_events",
+    "_ability_applied_on_hit_damage",
+    "_calculate_phantom_hits",
+    "_calculate_stacking_procs",
+    "_schedule_cooldown_procs"
+   ],
+   "body_lines": 338,
+   "reads": [
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/autos/swing_profile.py",
+   "docstring": "What one swing carries, as opposed to when it lands.",
+   "defs": [
+    "_find_auto_attack_override",
+    "_basic_attack_true_rider",
+    "_on_hit_effectiveness",
+    "_auto_swing_bonus_ad"
+   ],
+   "body_lines": 60,
+   "reads": [
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/rotation/shaped_charge.py",
+   "docstring": "Ability-triggered lethality procs.",
+   "defs": [
+    "_strike_declaration",
+    "_next_authored_event",
+    "_shaped_charge_proc_receipts",
+    "_add_shaped_charge_damage"
+   ],
+   "body_lines": 150,
+   "reads": [
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/items/energized_packets.py",
+   "docstring": "Packets authored before the event that triggered them.",
+   "defs": [
+    "_first_damaging_ability_event",
+    "_author_energized_ability_proc",
+    "_first_auto_damage_by_auto_for_health_walk"
+   ],
+   "body_lines": 195,
+   "reads": [
+    "src/calculator/fight/autos/decaying_health_walk.py",
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/rotation/shaped_charge.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/mitigation.py",
+   "docstring": "What the target's own defenses do to an instance that already met resistance.",
+   "defs": [
+    "_apply_basic_amp",
+    "_apply_target_basic_damage_reduction",
+    "_apply_target_champion_damage_reduction",
+    "_crit_scaled_raw",
+    "_mitigate_basic_attack_swing",
+    "_mitigate_hits"
+   ],
+   "body_lines": 142,
+   "reads": [
+    "src/calculator/fight/resists.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/autos/on_hit_layering.py",
+   "docstring": "The one on-hit authoring site.",
+   "defs": [
+    "_layer_on_hit_effects"
+   ],
+   "body_lines": 726,
+   "reads": [
+    "src/calculator/fight/autos/decaying_health_walk.py",
+    "src/calculator/fight/autos/empower_windows.py",
+    "src/calculator/fight/autos/on_hit_stream.py",
+    "src/calculator/fight/autos/swing_profile.py",
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/items/energized_packets.py",
+    "src/calculator/fight/ledger/event_ledger.py",
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/mitigation.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/autos/simulation.py",
+   "docstring": "Per-swing crit rolls with the overlapping riders.",
+   "defs": [
+    "_simulate_auto_attacks"
+   ],
+   "body_lines": 577,
+   "reads": [
+    "src/calculator/fight/autos/swing_profile.py",
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/mitigation.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/rotation/shaped_charge.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/items/proc_triggers.py",
+   "docstring": "When a cooldown proc is allowed to fire.",
+   "defs": [
+    "_unique_ledger_hits",
+    "_ability_damage_proc_triggers",
+    "_champion_damage_proc_triggers",
+    "_damage_threshold_trigger_time"
+   ],
+   "body_lines": 131,
+   "reads": [
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/ledger/event_ledger.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/items/cast_procs.py",
+   "docstring": "The row a cast-triggered item proc publishes.",
+   "defs": [
+    "_proc_declaration",
+    "_charged_proc_target_share",
+    "_add_item_proc_damage"
+   ],
+   "body_lines": 233,
+   "reads": [
+    "src/calculator/fight/items/proc_triggers.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/rotation/cast_schedule.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/items/eclipse_stack_gate.py",
+   "docstring": "Eclipse's two-stacks-in-a-window schedule and its withheld candidates.",
+   "defs": [
+    "_EclipseStackTrigger",
+    "_stacked_champion_proc_times"
+   ],
+   "body_lines": 382,
+   "reads": [
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/empower_declaration.py",
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/rotation/shaped_charge.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/items/muramana.py",
+   "docstring": "Muramana's per-cast packet identity and shock lockout.",
+   "defs": [
+    "_MuramanaCastReceipt",
+    "_muramana_cast_receipt",
+    "_muramana_identity_fields",
+    "_muramana_authored_events",
+    "_muramana_boundary_events",
+    "_apply_muramana_lockout",
+    "_muramana_proc_events"
+   ],
+   "body_lines": 216,
+   "reads": [
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/autos/first_auto_strikes.py",
+   "docstring": "Items whose packet is authored once, on the first swing of the fight.",
+   "defs": [
+    "_author_energized_ability_procs",
+    "_add_first_auto_strikes"
+   ],
+   "reads": [
+    "src/calculator/fight/autos/copied_on_hit.py",
+    "src/calculator/fight/autos/decaying_health_walk.py",
+    "src/calculator/fight/autos/on_hit_stream.py",
+    "src/calculator/fight/autos/swing_profile.py",
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/items/cast_procs.py",
+    "src/calculator/fight/items/eclipse_stack_gate.py",
+    "src/calculator/fight/items/energized_packets.py",
+    "src/calculator/fight/items/muramana.py",
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/mitigation.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/rotation/shaped_charge.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/autos/stacking_strikes.py",
+   "docstring": "Items whose packet is priced off a stack counter rather than per hit.",
+   "defs": [
+    "_add_stacking_strikes"
+   ],
+   "reads": [
+    "src/calculator/fight/autos/copied_on_hit.py",
+    "src/calculator/fight/autos/decaying_health_walk.py",
+    "src/calculator/fight/autos/on_hit_stream.py",
+    "src/calculator/fight/autos/swing_profile.py",
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/items/cast_procs.py",
+    "src/calculator/fight/items/eclipse_stack_gate.py",
+    "src/calculator/fight/items/energized_packets.py",
+    "src/calculator/fight/items/muramana.py",
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/mitigation.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/rotation/shaped_charge.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/autos/spellblade.py",
+   "docstring": "Spellblade arming, proc times, and the priced packet.",
+   "defs": [
+    "_spellblade_proc_times",
+    "_prepare_spellblade_attack_schedule",
+    "_add_spellblade_true_rider",
+    "_spellblade_declaration",
+    "_add_spellblade_damage"
+   ],
+   "body_lines": 401,
+   "reads": [
+    "src/calculator/fight/autos/swing_profile.py",
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/items/actives.py",
+   "docstring": "Active-item damage, skipped when actives are excluded.",
+   "defs": [
+    "_add_item_active_damage"
+   ],
+   "body_lines": 118,
+   "reads": [
+    "src/calculator/fight/autos/on_hit_stream.py",
+    "src/calculator/fight/cast_slots.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/setup/target_debuffs.py",
+   "docstring": "A `target_debuff`'s uptime, its resistance reduction, and the two shapes that gate it.",
+   "defs": [
+    "_ability_mr",
+    "_debuff_coverage",
+    "_apply_target_shred",
+    "_ShredRamp",
+    "_ThresholdShred",
+    "_make_shred_ramp"
+   ],
+   "body_lines": 183,
+   "reads": [
+    "src/calculator/fight/resists.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/rotation/cast_parts.py",
+   "docstring": "Pricing an ability's typed damage parts over its casts.",
+   "defs": [
+    "_evaluate_cast_parts",
+    "_apply_post_hit_proc",
+    "_NO_PRICING"
+   ],
+   "body_lines": 355,
+   "reads": [
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/mitigation.py",
+    "src/calculator/fight/setup/target_debuffs.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/rotation/cast_plan.py",
+   "docstring": "The plan every admitted cast lands in, its resolver, and the skeleton both walks share.",
+   "defs": [
+    "_resolve_cast_plan",
+    "_cast_admission_events",
+    "_resource_timeline",
+    "_CastAdmission"
+   ],
+   "body_lines": 238,
+   "reads": [
+    "src/calculator/fight/empower_declaration.py",
+    "src/calculator/fight/rotation/cast_schedule.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/rotation/stack_timeline.py",
+   "docstring": "When a stacking damage-over-time stack lands, and everything that gates it.",
+   "defs": [
+    "_find_stacking_dot",
+    "_stack_application_times",
+    "_build_stack_timeline"
+   ],
+   "body_lines": 224,
+   "reads": [
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/rotation/cast_parts.py",
+    "src/calculator/fight/rotation/cast_plan.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/rotation/dot_ticks.py",
+   "docstring": "Splitting a damage-over-time total into sourced ticks.",
+   "defs": [
+    "_ability_dot_tick_events",
+    "_author_ability_dot_events",
+    "_DotTickLedger",
+    "_integrate_stack_chains",
+    "_add_stacking_dot_damage",
+    "_periodic_damage_events"
+   ],
+   "body_lines": 313,
+   "reads": [
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/rotation/stack_timeline.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/items/burns.py",
+   "docstring": "Item damage on a clock: burns, auras, fixed-interval strikes.",
+   "defs": [
+    "_periodic_declaration",
+    "_declared_periodic_ticks",
+    "_add_burn_damage"
+   ],
+   "body_lines": 225,
+   "reads": [
+    "src/calculator/fight/cast_slots.py",
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/rotation/dot_ticks.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/ledger/breakdown.py",
+   "docstring": "Which breakdown keys belong to the auto-attack stream.",
+   "defs": [
+    "_is_auto_stream_key"
+   ],
+   "body_lines": 9,
+   "reads": []
+  },
+  {
+   "path": "src/calculator/fight/ledger/coverage.py",
+   "docstring": "Which rows the engine calls certified, and why the rest are coarse.",
+   "defs": [
+    "_event_timeline_coverage",
+    "_control_armed_holder_shields",
+    "_control_armed_event_coverage"
+   ],
+   "body_lines": 210,
+   "reads": []
+  },
+  {
+   "path": "src/calculator/fight/rotation/energy_walk.py",
+   "docstring": "The one non-mana account: a clamped pool with a temporary maximum.",
+   "defs": [
+    "_apply_energy_resource_limits"
+   ],
+   "body_lines": 108,
+   "reads": [
+    "src/calculator/fight/rotation/cast_plan.py",
+    "src/calculator/fight/rotation/cast_schedule.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/rotation/mana_declarations.py",
+   "docstring": "What a build declares about mana before anything is walked.",
+   "defs": [
+    "_manaflow_hit_identity",
+    "_manaflow_swing_rows",
+    "_manaflow_ledger_for",
+    "_enlighten_decl_for",
+    "_planned_burst_seconds",
+    "_return_denied_burst_budget",
+    "_auto_restore_decl",
+    "_auto_restore_schedule",
+    "_declared_mapping",
+    "_finite_non_negative",
+    "_non_empty_string",
+    "_atom_pairs",
+    "_kill_refund_decl",
+    "_mark_refund_decl",
+    "_sole_refund_slot",
+    "_kill_refund_decl_for_state",
+    "_mark_refund_decl_for_state"
+   ],
+   "body_lines": 422,
+   "reads": [
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/config.py",
+    "src/calculator/fight/empower_declaration.py",
+    "src/calculator/fight/rotation/cast_plan.py",
+    "src/calculator/fight/rotation/cast_schedule.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/rotation/mana_walk.py",
+   "docstring": "The one walk that owns every mana transition against a single `resource_ledger` account.",
+   "defs": [
+    "_apply_mana_resource_limits",
+    "_schedule_enlighten",
+    "_resource_ledger_public"
+   ],
+   "body_lines": 736,
+   "reads": [
+    "src/calculator/fight/config.py",
+    "src/calculator/fight/rotation/cast_plan.py",
+    "src/calculator/fight/rotation/cast_schedule.py",
+    "src/calculator/fight/rotation/mana_declarations.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/rotation/resource_admission.py",
+   "docstring": "Which resource walk admits this fight's casts.",
+   "defs": [
+    "_apply_resource_limits"
+   ],
+   "body_lines": 52,
+   "reads": [
+    "src/calculator/fight/rotation/cast_plan.py",
+    "src/calculator/fight/rotation/energy_walk.py",
+    "src/calculator/fight/rotation/mana_walk.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/stacks/rengar.py",
+   "docstring": "Rengar's Ferocity timeline.",
+   "defs": [
+    "_build_ferocity_timeline",
+    "_slot_ordinals",
+    "_add_rengar_ferocity"
+   ],
+   "body_lines": 214,
+   "reads": [
+    "src/calculator/fight/config.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/rotation/cast_plan.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/rotation/ability_rotation.py",
+   "docstring": "Resolving the cast schedule, admitting it against resources, then pricing every cast.",
+   "defs": [
+    "_compute_ability_rotation"
+   ],
+   "body_lines": 743,
+   "reads": [
+    "src/calculator/fight/autos/on_hit_stream.py",
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/cast_control_marker.py",
+    "src/calculator/fight/empower_declaration.py",
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/rotation/cast_parts.py",
+    "src/calculator/fight/rotation/cast_plan.py",
+    "src/calculator/fight/rotation/cast_schedule.py",
+    "src/calculator/fight/rotation/resource_admission.py",
+    "src/calculator/fight/rotation/stack_timeline.py",
+    "src/calculator/fight/setup/target_debuffs.py",
+    "src/calculator/fight/stacks/rengar.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/rotation/precomputed_procs.py",
+   "docstring": "Ability damage that fires a fixed number of times.",
+   "defs": [
+    "_add_precomputed_proc_damage"
+   ],
+   "body_lines": 331,
+   "reads": [
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/ledger/event_ledger.py",
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/mitigation.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/runes/keystone_attacks.py",
+   "docstring": "Grasp, Hail of Blades, Lethal Tempo and Fleet: keystones that own or ride the swing schedule.",
+   "defs": [
+    "_grasp_proc_events",
+    "_add_keystone_grasp_damage",
+    "_forced_basic_attack_times",
+    "_hail_active_for_forced_attacks",
+    "_add_keystone_hail_of_blades",
+    "_add_keystone_lethal_tempo",
+    "_add_keystone_fleet_footwork"
+   ],
+   "body_lines": 449,
+   "reads": [
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/config.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/runes/streams.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/runes/keystone_casts.py",
+   "docstring": "Aery and Aftershock: one proc per accepted cast of a declared shape.",
+   "defs": [
+    "_aery_trigger_times",
+    "_add_keystone_aery_damage",
+    "_aftershock_trigger_events",
+    "_add_keystone_aftershock_damage"
+   ],
+   "body_lines": 173,
+   "reads": [
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/cast_slots.py",
+    "src/calculator/fight/ledger/breakdown.py",
+    "src/calculator/fight/ledger/event_ledger.py",
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/runes/streams.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/runes/keystone_ledger_walk.py",
+   "docstring": "Dark Harvest and Deathfire: keystones replayed over the ordered event ledger.",
+   "defs": [
+    "_dark_harvest_trigger_event",
+    "_add_keystone_dark_harvest",
+    "_deathfire_trigger_events",
+    "_add_keystone_deathfire"
+   ],
+   "body_lines": 328,
+   "reads": [
+    "src/calculator/fight/ledger/event_ledger.py",
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/runes/keystone_stacks.py",
+   "docstring": "First Strike, Press the Attack and Conqueror: stacks that become an amplifier.",
+   "defs": [
+    "_certified_only_pool",
+    "_add_rune_window_amp_damage",
+    "_price_rune_window_amp",
+    "_refreshing_stack_proc_times",
+    "_conqueror_trigger_events",
+    "_add_keystone_conqueror",
+    "_add_rune_proc_amp_damage",
+    "_price_rune_proc_amp"
+   ],
+   "body_lines": 439,
+   "reads": [
+    "src/calculator/fight/after/amp_chain.py",
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/config.py",
+    "src/calculator/fight/ledger/breakdown.py",
+    "src/calculator/fight/ledger/coverage.py",
+    "src/calculator/fight/ledger/event_ledger.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/runes/streams.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/runes/page_damage.py",
+   "docstring": "What the compiled rune page prices, and what it discloses when it prices nothing.",
+   "defs": [
+    "_add_rune_proc_damage",
+    "_RUNE_TRIGGER_SHORTFALLS",
+    "_note_rune_never_procced",
+    "_add_rune_no_damage_receipts",
+    "_add_rune_receipts_applied_elsewhere",
+    "_add_dedicated_keystone_receipts",
+    "_add_rune_ability_proc_damage"
+   ],
+   "body_lines": 152,
+   "reads": [
+    "src/calculator/fight/cast_slots.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/runes/streams.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/setup/combat_state.py",
+   "docstring": "Fight setup: resolve resistances, amps and attack timing into a `FightState`.",
+   "defs": [
+    "_shred_slot",
+    "_part_amp",
+    "_DEDICATED_KEYSTONE_MODELS",
+    "_dedicated_keystone",
+    "_page_walk_runes",
+    "_resolve_combat_state"
+   ],
+   "body_lines": 433,
+   "reads": [
+    "src/calculator/fight/cast_slots.py",
+    "src/calculator/fight/config.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/setup/stat_buff_ultimates.py",
+   "docstring": "An ability's stat grant, and everything re-resolved from a buffed stat.",
+   "defs": [
+    "_apply_stat_buff_ultimates"
+   ],
+   "body_lines": 224,
+   "reads": [
+    "src/calculator/fight/cast_slots.py",
+    "src/calculator/fight/config.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/stacks/account.py",
+   "docstring": "One champion stack resource's receipts, in the shape every kind publishes.",
+   "defs": [
+    "StackEvent",
+    "_stack_receipt_row",
+    "_StackAccount",
+    "_resource_ledger"
+   ],
+   "body_lines": 107,
+   "reads": [
+    "src/calculator/fight/results.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/stacks/ashe.py",
+   "docstring": "Ashe's Focus stacks and the denial receipt.",
+   "defs": [
+    "_feed_ashe_focus_stack",
+    "_add_ashe_focus",
+    "_add_focus_denial"
+   ],
+   "body_lines": 265,
+   "reads": [
+    "src/calculator/fight/config.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/stacks/account.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/stacks/aurelion_sol.py",
+   "docstring": "Aurelion Sol's Stardust count.",
+   "defs": [
+    "_add_aurelion_sol_stardust"
+   ],
+   "body_lines": 159,
+   "reads": [
+    "src/calculator/fight/config.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/stacks/account.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/stacks/bard.py",
+   "docstring": "Bard's chime count.",
+   "defs": [
+    "_add_bard_travelers_call"
+   ],
+   "body_lines": 234,
+   "reads": [
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/stacks/account.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/stacks/heimerdinger.py",
+   "docstring": "Heimerdinger's W and E charge counters.",
+   "defs": [
+    "_add_heimerdinger_w_e"
+   ],
+   "body_lines": 145,
+   "reads": [
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/stacks/account.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/stacks/ksante.py",
+   "docstring": "K'Sante's Path Maker counter.",
+   "defs": [
+    "_add_ksante_path_maker"
+   ],
+   "body_lines": 149,
+   "reads": [
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/stacks/account.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/stacks/senna.py",
+   "docstring": "Senna's soul count as a receipt ledger.",
+   "defs": [
+    "_add_senna_souls"
+   ],
+   "body_lines": 134,
+   "reads": [
+    "src/calculator/fight/config.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/stacks/account.py",
+    "src/calculator/fight/state.py"
+   ]
+  }
+ ],
+ "residue": {
+  "path": "src/calculator/damage.py",
+  "docstring": "The fight orchestrator: one ordered list of step calls over the `fight/` package.",
+  "defs": [
+   "_add_execute_display",
+   "_collect_fight_notes",
+   "_apply_shield_reaver_venom",
+   "shield_outcome_inputs",
+   "_require_target_class_support",
+   "calculate_fight_damage",
+   "split_auto_vs_ability",
+   "split_by_damage_type"
+  ]
+ },
+ "external_readers": {
+  "AbilityItemApplication": {
+   "new_home": "src/calculator/fight/results.py",
+   "import": [
+    "tests/test_spellblade_weave_timing.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "AutoSwings": {
+   "new_home": "src/calculator/fight/autos/decaying_health_walk.py",
+   "import": [
+    "tests/test_damage.py",
+    "tests/test_item_damage.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "BASE_CRIT_MULTIPLIER": {
+   "new_home": "src/calculator/fight/config.py",
+   "import": [
+    "tests/test_p2_math_foundations.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "DEFAULT_CAST_ORDER": {
+   "new_home": "src/calculator/fight/cast_slots.py",
+   "import": [
+    "src/calculator/rotation_resolver.py",
+    "tests/test_f2_rotation.py",
+    "tests/test_rotation_resolver.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "DecayingTarget": {
+   "new_home": "src/calculator/fight/autos/decaying_health_walk.py",
+   "import": [
+    "tests/test_damage.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "FightConfig": {
+   "new_home": "src/calculator/fight/config.py",
+   "import": [
+    "src/calculator/__init__.py",
+    "src/calculator/pipeline.py",
+    "tests/conftest.py",
+    "tests/test_aatrox.py",
+    "tests/test_ahri.py",
+    "tests/test_akali.py",
+    "tests/test_akshan.py",
+    "tests/test_alistar.py",
+    "tests/test_ambessa.py",
+    "tests/test_amumu.py",
+    "tests/test_ashe.py",
+    "tests/test_ashe_focus_lifecycle.py",
+    "tests/test_ashe_q_active_window.py",
+    "tests/test_aurelion_sol_stardust.py",
+    "tests/test_aurelion_sol_stardust_ledger.py",
+    "tests/test_aurora.py",
+    "tests/test_azir.py",
+    "tests/test_bard.py",
+    "tests/test_bard_chimes_ledger.py",
+    "tests/test_bastionbreaker_packet.py",
+    "tests/test_behavior_declaration_acceptance.py",
+    "tests/test_belveth.py",
+    "tests/test_blitzcrank.py",
+    "tests/test_camille.py",
+    "tests/test_cast_scheduler.py",
+    "tests/test_champion_withholdings.py",
+    "tests/test_chogath.py",
+    "tests/test_corki.py",
+    "tests/test_cp20_items.py",
+    "tests/test_damage.py",
+    "tests/test_darius.py",
+    "tests/test_darius_w_kill_refund.py",
+    "tests/test_diana.py",
+    "tests/test_dorans_helm_minion_damage.py",
+    "tests/test_dr_mundo_passive.py",
+    "tests/test_eclipse_dot_cc_stack_sources.py",
+    "tests/test_eclipse_timeline.py",
+    "tests/test_eclipse_timing_packet.py",
+    "tests/test_ezreal.py",
+    "tests/test_ezreal_w_mark_refund.py",
+    "tests/test_fimbulwinter_cadence_burn.py",
+    "tests/test_fimbulwinter_cc_packet.py",
+    "tests/test_fimbulwinter_cc_review_status.py",
+    "tests/test_fimbulwinter_mana_gate_authority.py",
+    "tests/test_fimbulwinter_nearby_enemy_range.py",
+    "tests/test_galio.py",
+    "tests/test_gangplank_w_cleanse.py",
+    "tests/test_gnar.py",
+    "tests/test_gunmetal_greaves_riot_branch.py",
+    "tests/test_heimerdinger_multihit.py",
+    "tests/test_ionian_boots_summoner_haste.py",
+    "tests/test_item_damage.py",
+    "tests/test_jarvan_iv.py",
+    "tests/test_jayce.py",
+    "tests/test_jayce_form_transition.py",
+    "tests/test_jayce_w_mana_restore.py",
+    "tests/test_kaisa.py",
+    "tests/test_known_good.py",
+    "tests/test_kogmaw.py",
+    "tests/test_ksante_w_resistance.py",
+    "tests/test_mana_restore_refund.py",
+    "tests/test_mandate_control_haste.py",
+    "tests/test_mechanics_packets.py",
+    "tests/test_mel_searing_brilliance.py",
+    "tests/test_milio_r_cleanse.py",
+    "tests/test_minion_stats.py",
+    "tests/test_mundo_e_reset.py",
+    "tests/test_muramana_packet.py",
+    "tests/test_muramana_shock_lockout.py",
+    "tests/test_muramana_timeline.py",
+    "tests/test_olaf_r_cleanse.py",
+    "tests/test_orianna.py",
+    "tests/test_pair_preview.py",
+    "tests/test_rengar_ferocity_ledger.py",
+    "tests/test_rengar_w_cleanse.py",
+    "tests/test_resource_ledger_champion_consumers.py",
+    "tests/test_rune_flat_amp.py",
+    "tests/test_rune_page.py",
+    "tests/test_senna_relic_cannon.py",
+    "tests/test_senna_souls_ledger.py",
+    "tests/test_shen.py",
+    "tests/test_singed.py",
+    "tests/test_spellblade_weave_timing.py",
+    "tests/test_state_lifecycle_consumers.py",
+    "tests/test_sylas_petricite_burst.py",
+    "tests/test_syndra.py",
+    "tests/test_taric_bravado.py",
+    "tests/test_untriggered_item_mechanics.py",
+    "tests/test_vayne.py",
+    "tests/test_vayne_q_reset.py",
+    "tests/test_vi.py",
+    "tests/test_vladimir_e_charge_time.py",
+    "tests/test_yasuo_yone_q3_crit.py",
+    "tests/test_zeri_p_execute_range.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "MINION_SOURCED_TARGET_FIELDS": {
+   "new_home": "src/calculator/fight/config.py",
+   "import": [
+    "src/calculator/pipeline.py"
+   ],
+   "attribute": [
+    "tests/test_minion_stats.py"
+   ],
+   "string": []
+  },
+  "Resists": {
+   "new_home": "src/calculator/fight/resists.py",
+   "import": [
+    "tests/test_corki.py",
+    "tests/test_resistance.py"
+   ],
+   "attribute": [],
+   "string": [
+    "tests/test_resistance.py"
+   ]
+  },
+  "RotationResult": {
+   "new_home": "src/calculator/fight/results.py",
+   "import": [
+    "tests/test_bastionbreaker_packet.py",
+    "tests/test_bastionbreaker_timeline.py",
+    "tests/test_muramana_packet.py",
+    "tests/test_muramana_shock_lockout.py",
+    "tests/test_muramana_timeline.py",
+    "tests/test_spellblade_weave_timing.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_ability_mr": {
+   "new_home": "src/calculator/fight/setup/target_debuffs.py",
+   "import": [
+    "tests/test_corki.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_active_lifesteal_amount": {
+   "new_home": "src/calculator/fight/autos/on_hit_stream.py",
+   "import": [
+    "tests/test_ravenous_hydra_healing.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_auto_restore_decl": {
+   "new_home": "src/calculator/fight/rotation/mana_declarations.py",
+   "import": [
+    "tests/test_jayce_w_mana_restore.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_calculate_phantom_hits": {
+   "new_home": "src/calculator/fight/autos/on_hit_stream.py",
+   "import": [
+    "tests/test_damage.py",
+    "tests/test_item_damage.py",
+    "tests/test_p2_math_foundations.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_calculate_stacking_procs": {
+   "new_home": "src/calculator/fight/autos/on_hit_stream.py",
+   "import": [
+    "tests/test_item_damage.py",
+    "tests/test_p2_math_foundations.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_control_armed_event_coverage": {
+   "new_home": "src/calculator/fight/ledger/coverage.py",
+   "import": [
+    "tests/test_fimbulwinter_cc_review_status.py"
+   ],
+   "attribute": [
+    "tests/test_trigger_stream.py"
+   ],
+   "string": [
+    "tests/test_trigger_stream.py"
+   ]
+  },
+  "_cooldown_ready_at": {
+   "new_home": "src/calculator/fight/rotation/cast_schedule.py",
+   "import": [
+    "tests/test_pipeline.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_declared_cc_marker": {
+   "new_home": "src/calculator/fight/cast_control_marker.py",
+   "import": [
+    "tests/test_engine.py"
+   ],
+   "attribute": [],
+   "string": [
+    "src/calculator/champions/engine.py",
+    "tests/test_engine.py"
+   ]
+  },
+  "_empower_burst_attack_speed": {
+   "new_home": "src/calculator/fight/empower_declaration.py",
+   "import": [
+    "tests/test_mundo_e_reset.py",
+    "tests/test_vayne_q_reset.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_empower_hits": {
+   "new_home": "src/calculator/fight/empower_declaration.py",
+   "import": [
+    "tests/test_darius_w_kill_refund.py",
+    "tests/test_mundo_e_reset.py",
+    "tests/test_vayne_q_reset.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_empower_window_procs": {
+   "new_home": "src/calculator/fight/autos/empower_windows.py",
+   "import": [
+    "tests/test_mel_searing_brilliance.py",
+    "tests/test_milio_fired_up_blocker.py",
+    "tests/test_taric_bravado.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_enlighten_decl_for": {
+   "new_home": "src/calculator/fight/rotation/mana_declarations.py",
+   "import": [
+    "tests/test_resource_ledger_consumers.py"
+   ],
+   "attribute": [],
+   "string": [
+    "src/calculator/item_coverage.py",
+    "tests/test_resource_ledger_consumers.py"
+   ]
+  },
+  "_entry_control_scope": {
+   "new_home": "src/calculator/fight/cast_control_marker.py",
+   "import": [
+    "tests/test_control_event_scope.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_evaluate_cast_parts": {
+   "new_home": "src/calculator/fight/rotation/cast_parts.py",
+   "import": [
+    "tests/test_ability_spec.py"
+   ],
+   "attribute": [],
+   "string": [
+    "src/calculator/ability_spec.py",
+    "src/calculator/champions/engine.py",
+    "tests/test_ability_spec.py",
+    "tests/test_phase0_sentinels.py"
+   ]
+  },
+  "_event_timeline_coverage": {
+   "new_home": "src/calculator/fight/ledger/coverage.py",
+   "import": [
+    "tests/test_damage.py"
+   ],
+   "attribute": [],
+   "string": [
+    "tests/test_onhit_event_authoring.py"
+   ]
+  },
+  "_mitigate": {
+   "new_home": "src/calculator/fight/resists.py",
+   "import": [
+    "tests/test_damage.py"
+   ],
+   "attribute": [],
+   "string": [
+    "src/calculator/interpreters/delta_amp.py",
+    "src/calculator/item_behavior_catalog.py",
+    "src/calculator/survival/pricing.py",
+    "src/calculator/trigger_stream.py",
+    "tests/test_survival_kernel.py"
+   ]
+  },
+  "_mitigate_hits": {
+   "new_home": "src/calculator/fight/mitigation.py",
+   "import": [
+    "tests/test_damage.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_muramana_proc_events": {
+   "new_home": "src/calculator/fight/items/muramana.py",
+   "import": [
+    "tests/test_muramana_packet.py",
+    "tests/test_muramana_shock_lockout.py",
+    "tests/test_muramana_timeline.py"
+   ],
+   "attribute": [],
+   "string": [
+    "tests/test_muramana_packet.py"
+   ]
+  },
+  "_navori_effective_cd": {
+   "new_home": "src/calculator/fight/rotation/cast_schedule.py",
+   "import": [
+    "tests/test_damage.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_ordered_damage_events": {
+   "new_home": "src/calculator/fight/ledger/event_ledger.py",
+   "import": [
+    "tests/test_control_event_scope.py",
+    "tests/test_damage.py",
+    "tests/test_item_damage.py"
+   ],
+   "attribute": [],
+   "string": [
+    "src/calculator/ledger_projection.py"
+   ]
+  },
+  "_periodic_damage_events": {
+   "new_home": "src/calculator/fight/rotation/dot_ticks.py",
+   "import": [
+    "tests/test_p2_math_foundations.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_ridden_parent_slot": {
+   "new_home": "src/calculator/fight/rotation/cast_schedule.py",
+   "import": [
+    "tests/test_custom_cast_order.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_schedule_cooldown_procs": {
+   "new_home": "src/calculator/fight/autos/on_hit_stream.py",
+   "import": [
+    "tests/test_jarvan_iv.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_shaped_charge_proc_receipts": {
+   "new_home": "src/calculator/fight/rotation/shaped_charge.py",
+   "import": [
+    "tests/test_bastionbreaker_packet.py",
+    "tests/test_bastionbreaker_timeline.py"
+   ],
+   "attribute": [],
+   "string": [
+    "tests/test_bastionbreaker_packet.py"
+   ]
+  },
+  "_simulate_current_health_on_hit": {
+   "new_home": "src/calculator/fight/autos/decaying_health_walk.py",
+   "import": [
+    "tests/test_damage.py",
+    "tests/test_item_damage.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_simulate_ordered_damage": {
+   "new_home": "src/calculator/fight/ledger/pool_walk.py",
+   "import": [
+    "tests/test_item_damage.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_simulate_stacking_on_hit_damage": {
+   "new_home": "src/calculator/fight/autos/decaying_health_walk.py",
+   "import": [
+    "tests/test_item_damage.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_spellblade_proc_times": {
+   "new_home": "src/calculator/fight/autos/spellblade.py",
+   "import": [
+    "tests/test_spellblade_weave_timing.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_stacked_champion_proc_times": {
+   "new_home": "src/calculator/fight/items/eclipse_stack_gate.py",
+   "import": [
+    "tests/test_eclipse_dot_cc_stack_sources.py"
+   ],
+   "attribute": [],
+   "string": [
+    "tests/test_eclipse_timing_packet.py"
+   ]
+  },
+  "calculate_fight_damage": {
+   "new_home": "src/calculator/damage.py",
+   "import": [
+    "src/calculator/__init__.py",
+    "src/calculator/pipeline.py",
+    "tests/conftest.py",
+    "tests/test_aatrox.py",
+    "tests/test_ahri.py",
+    "tests/test_akali.py",
+    "tests/test_akshan.py",
+    "tests/test_alistar.py",
+    "tests/test_ambessa.py",
+    "tests/test_amumu.py",
+    "tests/test_ashe.py",
+    "tests/test_ashe_focus_lifecycle.py",
+    "tests/test_ashe_q_active_window.py",
+    "tests/test_aurelion_sol_stardust.py",
+    "tests/test_aurelion_sol_stardust_ledger.py",
+    "tests/test_aurora.py",
+    "tests/test_azir.py",
+    "tests/test_bard.py",
+    "tests/test_bard_chimes_ledger.py",
+    "tests/test_bastionbreaker_packet.py",
+    "tests/test_behavior_declaration_acceptance.py",
+    "tests/test_belveth.py",
+    "tests/test_blitzcrank.py",
+    "tests/test_camille.py",
+    "tests/test_cast_scheduler.py",
+    "tests/test_catalyst_resource_ledger.py",
+    "tests/test_champion_withholdings.py",
+    "tests/test_chogath.py",
+    "tests/test_corki.py",
+    "tests/test_cp20_items.py",
+    "tests/test_damage.py",
+    "tests/test_darius.py",
+    "tests/test_darius_w_kill_refund.py",
+    "tests/test_diana.py",
+    "tests/test_dorans_helm_minion_damage.py",
+    "tests/test_dr_mundo_passive.py",
+    "tests/test_eclipse_dot_cc_stack_sources.py",
+    "tests/test_eclipse_timeline.py",
+    "tests/test_eclipse_timing_packet.py",
+    "tests/test_ezreal.py",
+    "tests/test_ezreal_w_mark_refund.py",
+    "tests/test_fimbulwinter_cadence_burn.py",
+    "tests/test_fimbulwinter_cc_packet.py",
+    "tests/test_fimbulwinter_cc_review_status.py",
+    "tests/test_fimbulwinter_mana_gate_authority.py",
+    "tests/test_fimbulwinter_nearby_enemy_range.py",
+    "tests/test_galio.py",
+    "tests/test_gangplank_w_cleanse.py",
+    "tests/test_gnar.py",
+    "tests/test_gunmetal_greaves_riot_branch.py",
+    "tests/test_heimerdinger_multihit.py",
+    "tests/test_ionian_boots_summoner_haste.py",
+    "tests/test_item_damage.py",
+    "tests/test_item_sustain.py",
+    "tests/test_jarvan_iv.py",
+    "tests/test_jayce.py",
+    "tests/test_jayce_form_transition.py",
+    "tests/test_jayce_w_mana_restore.py",
+    "tests/test_kaisa.py",
+    "tests/test_known_good.py",
+    "tests/test_kogmaw.py",
+    "tests/test_ksante_w_resistance.py",
+    "tests/test_mana_restore_refund.py",
+    "tests/test_mandate_control_haste.py",
+    "tests/test_mechanics_packets.py",
+    "tests/test_mel_searing_brilliance.py",
+    "tests/test_milio_r_cleanse.py",
+    "tests/test_mundo_e_reset.py",
+    "tests/test_muramana_packet.py",
+    "tests/test_muramana_shock_lockout.py",
+    "tests/test_muramana_timeline.py",
+    "tests/test_olaf_r_cleanse.py",
+    "tests/test_orianna.py",
+    "tests/test_pair_preview.py",
+    "tests/test_rengar_ferocity_ledger.py",
+    "tests/test_rengar_w_cleanse.py",
+    "tests/test_resource_ledger_champion_consumers.py",
+    "tests/test_rune_flat_amp.py",
+    "tests/test_rune_page.py",
+    "tests/test_senna_relic_cannon.py",
+    "tests/test_senna_souls_ledger.py",
+    "tests/test_shen.py",
+    "tests/test_singed.py",
+    "tests/test_spellblade_weave_timing.py",
+    "tests/test_state_lifecycle_consumers.py",
+    "tests/test_sylas_petricite_burst.py",
+    "tests/test_syndra.py",
+    "tests/test_taric_bravado.py",
+    "tests/test_untriggered_item_mechanics.py",
+    "tests/test_vayne.py",
+    "tests/test_vayne_q_reset.py",
+    "tests/test_vi.py",
+    "tests/test_vladimir_e_charge_time.py",
+    "tests/test_yasuo_yone_q3_crit.py",
+    "tests/test_zeri_p_execute_range.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "sourced_minion_target": {
+   "new_home": "src/calculator/fight/config.py",
+   "import": [
+    "src/calculator/pipeline.py"
+   ],
+   "attribute": [
+    "tests/test_minion_stats.py"
+   ],
+   "string": []
+  },
+  "split_auto_vs_ability": {
+   "new_home": "src/calculator/damage.py",
+   "import": [
+    "src/calculator/pipeline.py",
+    "tests/test_damage.py",
+    "tests/test_diana.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "split_by_damage_type": {
+   "new_home": "src/calculator/damage.py",
+   "import": [
+    "src/calculator/pipeline.py",
+    "tests/test_damage.py"
+   ],
+   "attribute": [],
+   "string": []
+  },
+  "_add_burn_damage": {
+   "new_home": "src/calculator/fight/items/burns.py",
+   "import": [],
+   "attribute": [
+    "tests/test_survival_kernel.py"
+   ],
+   "string": [
+    "scripts/rename_evidence.py",
+    "src/calculator/item_coverage.py",
+    "src/calculator/trigger_stream.py",
+    "tests/test_rename_evidence.py"
+   ]
+  },
+  "_add_item_active_damage": {
+   "new_home": "src/calculator/fight/items/actives.py",
+   "import": [],
+   "attribute": [
+    "tests/test_survival_kernel.py"
+   ],
+   "string": [
+    "src/calculator/trigger_stream.py"
+   ]
+  },
+  "_apply_command_amp": {
+   "new_home": "src/calculator/fight/after/amplifiers.py",
+   "import": [],
+   "attribute": [
+    "tests/test_trigger_stream.py"
+   ],
+   "string": [
+    "src/calculator/trigger_stream.py",
+    "tests/coverage_resolver.py",
+    "tests/test_command_amp_roster.py",
+    "tests/test_coverage_claims.py",
+    "tests/test_coverage_evidence.py"
+   ]
+  },
+  "_auto_attack_timestamps": {
+   "new_home": "src/calculator/fight/autos/swing_schedule.py",
+   "import": [],
+   "attribute": [
+    "tests/test_onhit_event_authoring.py"
+   ],
+   "string": [
+    "src/calculator/trigger_stream.py"
+   ]
+  },
+  "_base_slot": {
+   "new_home": "src/calculator/fight/cast_slots.py",
+   "import": [],
+   "attribute": [
+    "tests/test_cast_scheduler.py"
+   ],
+   "string": []
+  },
+  "_carry_declarations_onto_repriced_ticks": {
+   "new_home": "src/calculator/fight/after/reprice.py",
+   "import": [],
+   "attribute": [
+    "tests/test_survival_kernel.py"
+   ],
+   "string": []
+  },
+  "_control_armed_holder_shields": {
+   "new_home": "src/calculator/fight/ledger/coverage.py",
+   "import": [],
+   "attribute": [
+    "tests/test_trigger_stream.py"
+   ],
+   "string": []
+  },
+  "_damage_event_row": {
+   "new_home": "src/calculator/fight/ledger/event_rows.py",
+   "import": [],
+   "attribute": [
+    "tests/test_trigger_stream.py"
+   ],
+   "string": [
+    "scripts/bench_optimize_build.py",
+    "src/calculator/survival/transitions.py"
+   ]
+  },
+  "_on_hit_effectiveness": {
+   "new_home": "src/calculator/fight/autos/swing_profile.py",
+   "import": [],
+   "attribute": [
+    "tests/test_survival_kernel.py"
+   ],
+   "string": []
+  },
+  "_seeded_option_stacks": {
+   "new_home": "src/calculator/fight/config.py",
+   "import": [],
+   "attribute": [
+    "tests/test_ability_payload_schema.py"
+   ],
+   "string": []
+  },
+  "declared_option_default": {
+   "new_home": "src/calculator/fight/config.py",
+   "import": [],
+   "attribute": [
+    "tests/test_ability_payload_schema.py"
+   ],
+   "string": []
+  },
+  "shield_outcome_inputs": {
+   "new_home": "src/calculator/damage.py",
+   "import": [],
+   "attribute": [
+    "tests/test_ledger_projection.py"
+   ],
+   "string": []
+  },
+  "_add_execute_display": {
+   "new_home": "src/calculator/damage.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/ledger_projection.py"
+   ]
+  },
+  "_add_expose_weakness": {
+   "new_home": "src/calculator/fight/after/amplifiers.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/trigger_stream.py"
+   ]
+  },
+  "_add_first_auto_healing": {
+   "new_home": "src/calculator/fight/autos/on_hit_healing.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/item_coverage.py"
+   ]
+  },
+  "_add_item_proc_damage": {
+   "new_home": "src/calculator/fight/items/cast_procs.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/trigger_stream.py"
+   ]
+  },
+  "_add_lifesteal_events": {
+   "new_home": "src/calculator/fight/autos/on_hit_stream.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/ledger_projection.py",
+    "tests/test_ledger_projection.py"
+   ]
+  },
+  "_add_omnivamp_events": {
+   "new_home": "src/calculator/fight/autos/on_hit_stream.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/ledger_projection.py"
+   ]
+  },
+  "_add_shadowflame_cinderbloom": {
+   "new_home": "src/calculator/fight/after/reprice.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/trigger_stream.py",
+    "tests/test_participant_timeline.py"
+   ]
+  },
+  "_add_shaped_charge_damage": {
+   "new_home": "src/calculator/fight/rotation/shaped_charge.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/trigger_stream.py"
+   ]
+  },
+  "_add_spellblade_damage": {
+   "new_home": "src/calculator/fight/autos/spellblade.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/item_coverage.py",
+    "src/calculator/trigger_stream.py"
+   ]
+  },
+  "_apply_damage_amplifiers": {
+   "new_home": "src/calculator/fight/after/amplifiers.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/trigger_stream.py"
+   ]
+  },
+  "_apply_liandry_reprice": {
+   "new_home": "src/calculator/fight/after/reprice.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/survival/pricing.py"
+   ]
+  },
+  "_apply_mana_resource_limits": {
+   "new_home": "src/calculator/fight/rotation/mana_walk.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "tests/test_darius_w_kill_refund.py",
+    "tests/test_mana_restore_refund.py",
+    "tests/test_resource_ledger_consumers.py"
+   ]
+  },
+  "_apply_resource_limits": {
+   "new_home": "src/calculator/fight/rotation/resource_admission.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/resource_ledger.py"
+   ]
+  },
+  "_apply_stat_buff_ultimates": {
+   "new_home": "src/calculator/fight/setup/stat_buff_ultimates.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/champions/sivir.py",
+    "src/calculator/champions/sona.py",
+    "src/calculator/champions/soraka.py",
+    "src/calculator/champions/yuumi.py"
+   ]
+  },
+  "_apply_target_basic_damage_reduction": {
+   "new_home": "src/calculator/fight/mitigation.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/survival/pricing.py"
+   ]
+  },
+  "_apply_temporary_lethality_windows": {
+   "new_home": "src/calculator/fight/after/lethality_windows.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/survival/pricing.py"
+   ]
+  },
+  "_author_energized_ability_proc": {
+   "new_home": "src/calculator/fight/items/energized_packets.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/trigger_stream.py"
+   ]
+  },
+  "_damage_type_fields": {
+   "new_home": "src/calculator/fight/ledger/event_rows.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/trigger_stream.py",
+    "tests/test_trigger_stream.py"
+   ]
+  },
+  "_layer_on_hit_effects": {
+   "new_home": "src/calculator/fight/autos/on_hit_layering.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/interpreters/on_hit_strike.py",
+    "src/calculator/trigger_stream.py",
+    "tests/test_senna_relic_cannon.py"
+   ]
+  },
+  "_mitigate_basic_attack_swing": {
+   "new_home": "src/calculator/fight/mitigation.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/survival/pricing.py",
+    "tests/test_golden_snapshot.py"
+   ]
+  },
+  "_part_amp": {
+   "new_home": "src/calculator/fight/setup/combat_state.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/interpreters/delta_amp.py"
+   ]
+  },
+  "_reattribute_empowered_swings": {
+   "new_home": "src/calculator/fight/after/empowered_swings.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/champions/engine.py",
+    "tests/test_engine.py"
+   ]
+  },
+  "_resolve_cast_plan": {
+   "new_home": "src/calculator/fight/rotation/cast_plan.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "tests/test_vayne_q_reset.py"
+   ]
+  },
+  "_resolve_combat_state": {
+   "new_home": "src/calculator/fight/setup/combat_state.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/interpreters/delta_amp.py",
+    "src/calculator/trigger_stream.py"
+   ]
+  },
+  "_resolve_starting_shield_outcome": {
+   "new_home": "src/calculator/fight/after/shield_outcome.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/ledger_projection.py"
+   ]
+  },
+  "_schedule_shared_casts": {
+   "new_home": "src/calculator/fight/rotation/cast_schedule.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/champions/vi.py"
+   ]
+  },
+  "_simulate_auto_attacks": {
+   "new_home": "src/calculator/fight/autos/simulation.py",
+   "import": [],
+   "attribute": [],
+   "string": [
+    "src/calculator/trigger_stream.py"
+   ]
+  },
+  "_add_first_auto_strikes": {
+   "new_home": "src/calculator/fight/autos/first_auto_strikes.py",
+   "import": [],
+   "attribute": [
+    "tests/test_survival_kernel.py"
+   ],
+   "string": [
+    "src/calculator/trigger_stream.py"
+   ]
+  },
+  "_add_stacking_strikes": {
+   "new_home": "src/calculator/fight/autos/stacking_strikes.py",
+   "import": [],
+   "attribute": [
+    "tests/test_survival_kernel.py"
+   ],
+   "string": [
+    "src/calculator/trigger_stream.py"
+   ]
+  }
+ }
+}

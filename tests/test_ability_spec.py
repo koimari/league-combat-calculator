@@ -1,6 +1,6 @@
 """Unit tests for the typed champion→engine damage contract.
 
-Exercises damage._evaluate_cast_parts directly with a stub FightState:
+Exercises fight.rotation.cast_parts._evaluate_cast_parts directly with a stub FightState:
 the evaluator owns HP-threading, per-part mitigation, and reduced-
 effectiveness crit — champion files own only the closures.  Also pins the
 four closed vocabularies the leaf declares, member for member.
@@ -19,7 +19,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.calculator import ability_spec
+from src.calculator import ability_spec, quantity
 from src.calculator.ability_spec import (
     AttackClass,
     Authority,
@@ -28,7 +28,7 @@ from src.calculator.ability_spec import (
     Disposition,
     part_damage_types,
 )
-from src.calculator.damage import _evaluate_cast_parts
+from src.calculator.fight.rotation.cast_parts import _evaluate_cast_parts
 from src.calculator.resistance import apply_resistance
 from tests import ability_math
 
@@ -208,7 +208,8 @@ class TestClosedVocabularies:
             spec.loader.exec_module(standalone)
         finally:
             del sys.modules[spec.name]
-        assert standalone.Measured(amount=2.0).read() == 2.0
+        policy = standalone.ZeroPolicy(standalone.Disposition.MEASURED, "probe")
+        assert policy.reason == "probe"
         assert [member.name for member in standalone.Disposition] == [
             member.name for member in Disposition
         ]
@@ -440,15 +441,13 @@ class TestEvaluateCastParts:
 # ---------------------------------------------------------------------------
 
 
-MEASURED = ability_spec.Measured(amount=3.0)
-MEASURED_OTHER = ability_spec.Measured(amount=4.0)
-STRUCTURAL = ability_spec.StructuralZero(reason="no immobilize in this rotation")
-STRUCTURAL_OTHER = ability_spec.StructuralZero(reason="holder is not on this team")
-WITHHELD = ability_spec.Withheld(receipts=("coverage: Bandlepipes is unmodelled",))
-WITHHELD_OTHER = ability_spec.Withheld(
-    receipts=("coverage: Dream Maker is unmodelled",)
-)
-STARVED = ability_spec.Starved(
+MEASURED = quantity.Measured(amount=3.0)
+MEASURED_OTHER = quantity.Measured(amount=4.0)
+STRUCTURAL = quantity.StructuralZero(reason="no immobilize in this rotation")
+STRUCTURAL_OTHER = quantity.StructuralZero(reason="holder is not on this team")
+WITHHELD = quantity.Withheld(receipts=("coverage: Bandlepipes is unmodelled",))
+WITHHELD_OTHER = quantity.Withheld(receipts=("coverage: Dream Maker is unmodelled",))
+STARVED = quantity.Starved(
     field="cc", producer="Imperial Mandate", reason="tuple ledger carries no cc stream"
 )
 
@@ -456,12 +455,12 @@ STARVED = ability_spec.Starved(
 def test_the_union_has_exactly_the_four_dispositions() -> None:
     """One member per ``Disposition``, and the tag projection is total."""
     members = (
-        ability_spec.Measured,
-        ability_spec.StructuralZero,
-        ability_spec.Withheld,
-        ability_spec.Starved,
+        quantity.Measured,
+        quantity.StructuralZero,
+        quantity.Withheld,
+        quantity.Starved,
     )
-    assert set(ability_spec.Quantity.__args__) == set(members)
+    assert set(quantity.Quantity.__args__) == set(members)
     assert {
         quantity.disposition for quantity in (MEASURED, STRUCTURAL, WITHHELD, STARVED)
     } == set(Disposition)
@@ -477,7 +476,7 @@ def test_disposition_survives_as_the_tag_projection() -> None:
 
 def test_reading_a_measured_quantity_returns_the_same_float() -> None:
     """The purity claim S3 rests on: ``Measured`` wraps, it does not transform."""
-    assert ability_spec.Measured(amount=1234.5678).read() == 1234.5678
+    assert quantity.Measured(amount=1234.5678).read() == 1234.5678
 
 
 def test_reading_a_structural_zero_returns_zero_with_its_reason_intact() -> None:
@@ -489,12 +488,12 @@ def test_reading_a_structural_zero_returns_zero_with_its_reason_intact() -> None
 def test_a_structural_zero_with_no_reason_cannot_be_constructed() -> None:
     """Without the receipt it is an ordinary zero with a nicer name."""
     with pytest.raises(ValueError):
-        ability_spec.StructuralZero(reason="  ")
+        quantity.StructuralZero(reason="  ")
 
 
 def test_reading_a_withheld_quantity_raises_naming_its_receipts() -> None:
     """A withheld leaf has receipts instead of a number, and says so."""
-    with pytest.raises(ability_spec.WithheldHasNoValue) as excinfo:
+    with pytest.raises(quantity.WithheldHasNoValue) as excinfo:
         WITHHELD.read()
     assert "Bandlepipes" in str(excinfo.value)
 
@@ -502,14 +501,14 @@ def test_reading_a_withheld_quantity_raises_naming_its_receipts() -> None:
 def test_a_withheld_quantity_with_no_receipt_cannot_be_constructed() -> None:
     """A refusal with no receipt is the blank this type exists to replace."""
     with pytest.raises(ValueError):
-        ability_spec.Withheld(receipts=())
+        quantity.Withheld(receipts=())
     with pytest.raises(ValueError):
-        ability_spec.Withheld(receipts=("",))
+        quantity.Withheld(receipts=("",))
 
 
 def test_reading_a_starved_quantity_raises_projection_starvation() -> None:
     """D-25: lazily, on first read, carrying field/producer/reason."""
-    with pytest.raises(ability_spec.ProjectionStarvation) as excinfo:
+    with pytest.raises(quantity.ProjectionStarvation) as excinfo:
         STARVED.read()
     message = str(excinfo.value)
     assert "cc" in message
@@ -519,7 +518,7 @@ def test_reading_a_starved_quantity_raises_projection_starvation() -> None:
 
 def test_constructing_a_starved_quantity_raises_nothing() -> None:
     """Lazy is the whole design: a projection may hold one it never reads."""
-    assert ability_spec.Starved(field="a", producer="b", reason="c").field == "a"
+    assert quantity.Starved(field="a", producer="b", reason="c").field == "a"
 
 
 def test_reading_a_starved_tag_is_not_reading_its_value() -> None:
@@ -533,13 +532,13 @@ def test_reading_a_starved_tag_is_not_reading_its_value() -> None:
 def test_measured_folds_with_measured() -> None:
     """Row 1 of the matrix: two computed numbers make a computed number."""
     total = MEASURED + MEASURED_OTHER
-    assert total == ability_spec.Measured(amount=7.0)
+    assert total == quantity.Measured(amount=7.0)
 
 
 def test_measured_folds_with_structural_zero_which_contributes_zero() -> None:
     """The invariant table's "``STRUCTURAL_ZERO`` contributes 0.0"."""
-    assert ability_spec.Measured(amount=3.0) == MEASURED + STRUCTURAL
-    assert ability_spec.Measured(amount=3.0) == STRUCTURAL + MEASURED
+    assert quantity.Measured(amount=3.0) == MEASURED + STRUCTURAL
+    assert quantity.Measured(amount=3.0) == STRUCTURAL + MEASURED
 
 
 def test_two_structural_zeros_fold_to_a_measured_zero() -> None:
@@ -549,7 +548,7 @@ def test_two_structural_zeros_fold_to_a_measured_zero() -> None:
     declarations are their own receipts and not the total's, and
     ``StructuralZero`` carries one reason with no way to merge two.
     """
-    assert ability_spec.Measured(amount=0.0) == STRUCTURAL + STRUCTURAL_OTHER
+    assert quantity.Measured(amount=0.0) == STRUCTURAL + STRUCTURAL_OTHER
 
 
 def test_a_withheld_member_makes_the_total_withheld_naming_it() -> None:
@@ -579,7 +578,7 @@ def test_a_starved_member_raises_from_every_side_of_a_fold() -> None:
         (STARVED, STRUCTURAL),
         (STARVED, STARVED),
     ):
-        with pytest.raises(ability_spec.ProjectionStarvation):
+        with pytest.raises(quantity.ProjectionStarvation):
             _ = left + right
 
 
@@ -589,9 +588,9 @@ def test_starved_beats_withheld_in_both_orders() -> None:
     A withheld total that quietly swallowed a programming error would be
     exactly the failure this campaign is named after, wearing a receipt.
     """
-    with pytest.raises(ability_spec.ProjectionStarvation):
+    with pytest.raises(quantity.ProjectionStarvation):
         _ = WITHHELD + STARVED
-    with pytest.raises(ability_spec.ProjectionStarvation):
+    with pytest.raises(quantity.ProjectionStarvation):
         _ = STARVED + WITHHELD
 
 
@@ -603,10 +602,10 @@ def test_the_matrix_is_covered_in_every_direction() -> None:
         for right in members:
             try:
                 total = left + right
-            except ability_spec.ProjectionStarvation:
-                assert ability_spec.Starved in (type(left), type(right))
+            except quantity.ProjectionStarvation:
+                assert quantity.Starved in (type(left), type(right))
             else:
-                assert isinstance(total, (ability_spec.Measured, ability_spec.Withheld))
+                assert isinstance(total, (quantity.Measured, quantity.Withheld))
             seen += 1
     assert seen == 16
 
@@ -619,9 +618,9 @@ def test_folding_with_a_non_quantity_is_not_implemented() -> None:
 
 def test_quantity_sum_folds_a_whole_set_through_the_algebra() -> None:
     """The aggregate helper is the fold, not a second implementation of it."""
-    assert ability_math.quantity_sum(()) == ability_spec.Measured(amount=0.0)
+    assert ability_math.quantity_sum(()) == quantity.Measured(amount=0.0)
     assert ability_math.quantity_sum((MEASURED, MEASURED_OTHER, STRUCTURAL)) == (
-        ability_spec.Measured(amount=7.0)
+        quantity.Measured(amount=7.0)
     )
     assert ability_math.quantity_sum((MEASURED, WITHHELD, MEASURED_OTHER)) == WITHHELD
 
@@ -631,7 +630,7 @@ def test_five_measured_components_and_one_withheld_do_not_make_a_measured_total(
 ):
     """Criterion 19's motivating case, as the unit the roster fixture backs."""
     components = [
-        ability_spec.Measured(amount=value) for value in (1.0, 2.0, 3.0, 4.0, 5.0)
+        quantity.Measured(amount=value) for value in (1.0, 2.0, 3.0, 4.0, 5.0)
     ]
     total = ability_math.quantity_sum([*components, WITHHELD])
     assert total.disposition is Disposition.WITHHELD
@@ -660,15 +659,15 @@ DECLARED_QUANTITY_READS: dict[str, int] = {
     # two summed reads.  This is the only module allowed to read two
     # quantities into one arithmetic expression, because that expression *is*
     # the propagation row.
-    "calculator/ability_spec.py": 3,
+    "calculator/quantity.py": 3,
     # The total, after the fold: ``ranked_total`` folds first and reads the
     # answer, so a withheld member has already made the total withheld and
     # the read is what turns that into the caller's named refusal.
-    "calculator/program/build.py": 1,
+    "calculator/program/tagged.py": 1,
     # One leaf, at the moment it is published.  ``serialize_leaf`` is the one
     # producer of a payload number and its entry, so this is where a quantity
     # legitimately becomes a float.
-    "calculator/program/views/__init__.py": 1,
+    "calculator/program/views/leaf.py": 1,
 }
 
 
@@ -684,7 +683,7 @@ def _quantity_read_sites() -> dict[str, list[int]]:
     found: dict[str, list[int]] = {}
     for path in sorted((root / "calculator").rglob("*.py")):
         source = path.read_text(encoding="utf-8")
-        if "ability_spec import" not in source and path.name != "ability_spec.py":
+        if "quantity import" not in source and path.name != "quantity.py":
             continue
         if not any(
             name in source for name in ("Quantity", "Measured", "Withheld", "Starved")
@@ -735,6 +734,4 @@ def test_only_the_algebra_folds_two_quantities_into_one_expression() -> None:
             ]
             if reads:
                 offenders.append((module, node.lineno))
-    assert [module for module, _ in offenders] == [
-        "calculator/ability_spec.py"
-    ], offenders
+    assert [module for module, _ in offenders] == ["calculator/quantity.py"], offenders

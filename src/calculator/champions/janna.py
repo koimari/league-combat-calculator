@@ -20,7 +20,8 @@ from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import float_option
 from .module_helpers import between_rows, named_damage, no_damage, ranked_slot
-from .slotlib import ability_name, damage_entry, extract_cooldown, on_hit_entry
+from .slot_entries import damage_entry, on_hit_entry
+from .slot_extract import ability_name, extract_cooldown
 from .source_receipts import load_champion_sources
 
 

@@ -35,18 +35,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from .engine import CC_PER_PART, ONHIT, SlotCtx
+from .engine import ONHIT, SlotCtx
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import at_level, no_damage
 from .packet_module import build_packet_module
 from .shared_mechanics import capped_option
-from .slotlib import (
-    PER_LEVEL_SCALING,
-    HitRider,
-    ability_name,
-    extract_value,
-    with_hit_rider,
-)
+from .slot_cc import CC_PER_PART
+from .slot_entries import HitRider, with_hit_rider
+from .slot_extract import PER_LEVEL_SCALING, ability_name, extract_value
 
 PACKET_SHA256 = "f6bfaf95646670e30bbc7d87d92690acdfb06e59894bcaee20172d25fba4fbf2"
 

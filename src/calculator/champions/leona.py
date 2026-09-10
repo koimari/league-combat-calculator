@@ -20,12 +20,8 @@ from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, delayed_damage
 from .shared_mechanics import empowered_auto_entry
-from .slotlib import (
-    extract_cooldown,
-    extract_named,
-    proc_damage,
-    simple_damage,
-)
+from .slot_extract import extract_cooldown, extract_named
+from .slotlib import proc_damage, simple_damage
 from .source_receipts import load_champion_sources
 
 

@@ -25,6 +25,7 @@ import pytest
 from src.calculator.ability_atoms import _ability_atoms
 from src.calculator.champions import teemo
 from src.calculator.data_fetcher import get_champion
+from tests.engine_source import step_source
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -101,7 +102,8 @@ class TestMoveQuickIsASourcedZeroDamageRow:
 
     @staticmethod
     def _fight_move_speed(seconds: float) -> float:
-        from src.calculator.pipeline import FightParams, run_fight
+        from src.calculator.fight_params import FightParams
+        from src.calculator.pipeline import run_fight
 
         return run_fight(
             get_champion("Teemo"),
@@ -232,17 +234,17 @@ class TestGuerrillaWarfareStaysReceiptedOpen:
         assert atoms[0]["values"] == [1.5]
 
     def test_the_windowed_attack_speed_kernel_is_q_slot_only(self):
-        """The structural blocker, asserted against the engine source.
+        """The structural blocker, asserted against the step that owns it.
 
-        ``damage.py`` resolves an ``auto_attack_override.active_duration``
-        window's START by walking ``cast_order`` and breaking on ``"Q"``.
-        A P-slot steroid has no window to ride, so it could only be
-        published unwindowed for the entire fight.
+        ``fight/setup/stat_buff_ultimates.py`` resolves an
+        ``auto_attack_override.active_duration`` window's START by walking
+        ``cast_order`` and breaking on ``"Q"``.  A P-slot steroid has no
+        window to ride, so it could only be published unwindowed for the
+        entire fight.
         """
-        source = Path("src/calculator/damage.py").read_text(encoding="utf-8")
-        anchor = source.index('if "bonus_attack_speed" in stat_buff:')
-        kernel = source[anchor : anchor + 2000]
+        kernel = step_source("fight/setup/stat_buff_ultimates.py")
 
+        assert 'if "bonus_attack_speed" in stat_buff:' in kernel
         assert "auto_attack_override" in kernel
         assert "for slot in state.cast_order:" in kernel
         assert 'if slot == "Q":' in kernel

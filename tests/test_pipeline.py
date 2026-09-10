@@ -5,11 +5,12 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.calculator.damage import _cooldown_ready_at
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.item_support_effects import require_event_view
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight.rotation.cast_schedule import _cooldown_ready_at
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats
+from src.calculator.support_event_view import require_event_view
 
 
 @pytest.mark.parametrize(

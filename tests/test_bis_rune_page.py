@@ -1,6 +1,6 @@
 """Focused BIS prices its swaps on the same rune page the fight uses."""
 
-from src.calculator.bis import bis_main_request
+from src.calculator.bis_candidates import bis_main_request
 from src.calculator.scenario import parse_scenario_request
 
 

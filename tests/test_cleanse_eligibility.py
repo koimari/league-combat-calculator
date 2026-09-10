@@ -180,24 +180,22 @@ from typing import Any
 import pytest
 
 from src.app import app
-from src.calculator import delivery_eligibility as de
+from src.calculator import cleanse_declarations, control_intervals, delivery_facts
 from src.calculator.crowd_control_eligibility import classify_control
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.interpreters import uncompilable_item_receipt
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     mercurial_quicksilver_movement,
 )
 from src.calculator.participant_timeline import Combatant, _WalkCompiler
-from src.calculator.state_lifecycle import SourceReceipt
-from src.calculator.survival.actions import (
-    TransitionRank,
-    support_transition_rank,
-)
+from src.calculator.starting_defenses import StartingDefenses
+from src.calculator.state_timeline import SourceReceipt
+from src.calculator.survival.classify import support_transition_rank
 from src.calculator.survival.compile import (
     UncompilableActionError,
     unrepresentable_template_receipt,
 )
+from src.calculator.survival.phases import TransitionRank
 from tests.survival_probe import simulate_survival, survival_of
 
 try:  # P2 Slice 4 planned kernel — not landed yet; rows fail with the marker.
@@ -650,8 +648,8 @@ def _interval(
 
 def _declaration(item: str):
     """One item's cleanse declaration from the contract registry."""
-    ce = _require_contract()
-    return ce.ITEM_CLEANSE_DECLARATIONS[item]
+    _require_contract()
+    return cleanse_declarations.ITEM_CLEANSE_DECLARATIONS[item]
 
 
 def _eligibility(item: str = "Quicksilver Sash"):
@@ -893,8 +891,8 @@ def test_r4_cleanse_declarations_three_sourced_items():
     committed fields — item name, active name, target scope, excluded kinds,
     cooldown (None = source gap), heal (Mikael's), movement (Mercurial),
     source receipts and atoms."""
-    ce = _require_contract()
-    decls = ce.ITEM_CLEANSE_DECLARATIONS
+    _require_contract()
+    decls = cleanse_declarations.ITEM_CLEANSE_DECLARATIONS
     assert set(decls) == {"Mikael's Blessing", "Quicksilver Sash", "Mercurial Scimitar"}
 
     mikaels = decls["Mikael's Blessing"]
@@ -951,16 +949,18 @@ def test_quicksilver_movement_atom_and_declaration_share_one_accessor():
     read, so neither can outlive the other; the record above is the
     independently transcribed catalog oracle.
     """
-    ce = _require_contract()
+    _require_contract()
     sourced = mercurial_quicksilver_movement()
-    movement = ce.ITEM_CLEANSE_DECLARATIONS["Mercurial Scimitar"]["movement"]
+    movement = cleanse_declarations.ITEM_CLEANSE_DECLARATIONS["Mercurial Scimitar"][
+        "movement"
+    ]
     assert movement["amount"] == sourced["move_speed_percent"]
     assert movement["duration"] == sourced["duration_seconds"]
-    assert ce.MERCURIAL_MOVEMENT_ATOM["values"] == [
+    assert cleanse_declarations.MERCURIAL_MOVEMENT_ATOM["values"] == [
         sourced["move_speed_percent"],
         sourced["duration_seconds"],
     ]
-    assert ce.MERCURIAL_MOVEMENT_ATOM == MERCURIAL_MOVEMENT_ATOM
+    assert cleanse_declarations.MERCURIAL_MOVEMENT_ATOM == MERCURIAL_MOVEMENT_ATOM
 
 
 def test_a_missing_quicksilver_key_raises_naming_the_item(monkeypatch):
@@ -983,8 +983,8 @@ def test_r5_mikaels_excluded_kinds_per_sourced_wording():
     """Kernel, NEW-CONTRACT: each of the five kinds the Purify branch names
     (Airborne, Blind, Disarm, Nearsight, Suppression) is excluded for
     Mikael's and only for Mikael's; the wording receipt cites the branch."""
-    ce = _require_contract()
-    mikaels = ce.ITEM_CLEANSE_DECLARATIONS["Mikael's Blessing"]
+    _require_contract()
+    mikaels = cleanse_declarations.ITEM_CLEANSE_DECLARATIONS["Mikael's Blessing"]
     assert mikaels["excluded_control_kinds"] == (
         "airborne",
         "blind",
@@ -994,24 +994,24 @@ def test_r5_mikaels_excluded_kinds_per_sourced_wording():
     )
     # Row-specific: QSS/Mercurial exclude ONLY airborne.
     for item in ("Quicksilver Sash", "Mercurial Scimitar"):
-        assert ce.ITEM_CLEANSE_DECLARATIONS[item]["excluded_control_kinds"] == (
-            "airborne",
-        )
+        assert cleanse_declarations.ITEM_CLEANSE_DECLARATIONS[item][
+            "excluded_control_kinds"
+        ] == ("airborne",)
     # The declaration's source receipt reproduces the cached branch wording.
     assert any(
         MIKAELS_WORDING in str(receipt) for receipt in mikaels["source_receipts"]
     )
     assert any(
         QUICKSILVER_WORDING in str(receipt)
-        for receipt in ce.ITEM_CLEANSE_DECLARATIONS["Quicksilver Sash"][
-            "source_receipts"
-        ]
+        for receipt in cleanse_declarations.ITEM_CLEANSE_DECLARATIONS[
+            "Quicksilver Sash"
+        ]["source_receipts"]
     )
     assert any(
         MERCURIAL_WORDING in str(receipt)
-        for receipt in ce.ITEM_CLEANSE_DECLARATIONS["Mercurial Scimitar"][
-            "source_receipts"
-        ]
+        for receipt in cleanse_declarations.ITEM_CLEANSE_DECLARATIONS[
+            "Mercurial Scimitar"
+        ]["source_receipts"]
     )
     # Blind/disarm are known SOFT kinds (never add downtime) and nearsight
     # is not even in the known set — the exclusion stays sourced per item.
@@ -1123,7 +1123,7 @@ def test_r7_qss_and_mercurial_self_cast_denied_while_suppressed(item, source):
     assert result["target"]["action_downtime"] == pytest.approx(2.0)
 
     # NEW-CONTRACT: the castability denial is the observable behavior.
-    ce = _require_contract()
+    _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["item"] == item
     assert receipt["decision"]["reason"] == "caster_control_blocks_cleanse"
@@ -1144,7 +1144,9 @@ def test_r7_qss_and_mercurial_self_cast_denied_while_suppressed(item, source):
     assert use["uses_before"] == 1
     assert use["uses_after"] == 1
     # The removal SET (per the item wording) stays pinned in the declaration.
-    assert ce.ITEM_CLEANSE_DECLARATIONS[item]["excluded_control_kinds"] == ("airborne",)
+    assert cleanse_declarations.ITEM_CLEANSE_DECLARATIONS[item][
+        "excluded_control_kinds"
+    ] == ("airborne",)
 
 
 # NOTE: the alternate suppression-removal variant (self-cast removes
@@ -1172,7 +1174,7 @@ def test_resolve_excluded_kinds_is_the_one_umbrella_reader():
     all four, stasis is protected whatever the declaration says, and a
     declaration that names neither still gets the stasis rule."""
     ce = _require_contract()
-    from src.calculator.ability_spec import DISPLACEMENT_CC_KINDS
+    from src.calculator.control_spec import DISPLACEMENT_CC_KINDS
 
     assert ce.resolve_excluded_kinds(()) == ce.NEVER_CLEANSABLE_CONTROL_KINDS
     for named in sorted(DISPLACEMENT_CC_KINDS):
@@ -1191,10 +1193,10 @@ def test_resolve_excluded_kinds_is_the_one_umbrella_reader():
 def test_a_stasis_is_refused_even_though_no_declaration_carves_it_out():
     """Stasis is a property of the KIND, not of an item's tooltip: Mikael's
     wording never mentions it, and Purify still cannot touch it."""
-    ce = _require_contract()
+    _require_contract()
     assert (
         "stasis"
-        not in ce.ITEM_CLEANSE_DECLARATIONS["Mikael's Blessing"][
+        not in cleanse_declarations.ITEM_CLEANSE_DECLARATIONS["Mikael's Blessing"][
             "excluded_control_kinds"
         ]
     )
@@ -1433,7 +1435,7 @@ def test_r9_soft_slow_never_creates_downtime_and_blocking_kinds_are_removed():
     assert result["target"]["action_downtime"] == pytest.approx(0.0)
 
     # NEW-CONTRACT: nothing to remove — the receipt names the rule.
-    ce = _require_contract()
+    _require_contract()
     receipt = result["target"]["cleanse"]
     assert receipt["decision"]["reason"] == "control_not_active"
     assert receipt["removed_controls"] == []
@@ -1446,13 +1448,18 @@ def test_r9_soft_slow_never_creates_downtime_and_blocking_kinds_are_removed():
         decision = _eligibility("Quicksilver Sash").decide(action)
         assert decision.eligible is True, kind
         assert decision.reason == "", kind
-        kept, removed = ce.truncate_intervals([_interval(kind, 1.0, 3.0)], 1.5, {kind})
+        kept, removed = control_intervals.truncate_intervals(
+            [_interval(kind, 1.0, 3.0)], 1.5, {kind}
+        )
         assert kept == [_interval(kind, 1.0, 1.5)]
         assert removed == [_interval(kind, 1.5, 3.0)]
     for item in ("Mikael's Blessing", "Quicksilver Sash", "Mercurial Scimitar"):
         for kind in ("root", "stun", "charm", "fear", "slow"):
             assert (
-                kind not in ce.ITEM_CLEANSE_DECLARATIONS[item]["excluded_control_kinds"]
+                kind
+                not in cleanse_declarations.ITEM_CLEANSE_DECLARATIONS[item][
+                    "excluded_control_kinds"
+                ]
             )
 
 
@@ -1825,7 +1832,7 @@ def test_r15_the_kernel_seam_classifies_an_unknown_kind_as_unknown():
     """``classify_control`` and the cleanse eligibility are pure classifiers
     with no engine in front: a kind handed straight to them is ``unknown``,
     and an unknown control is neither cleansable nor truncatable."""
-    ce = _require_contract()
+    _require_contract()
     profile = classify_control(SimpleNamespace(cc_kind="dance"))
     assert profile.unknown is True
     decision = _eligibility("Quicksilver Sash").decide(
@@ -1833,7 +1840,7 @@ def test_r15_the_kernel_seam_classifies_an_unknown_kind_as_unknown():
     )
     assert decision.eligible is False
     assert decision.reason == "unknown_control"
-    kept, removed = ce.truncate_intervals(
+    kept, removed = control_intervals.truncate_intervals(
         [_interval("dance", 1.0, 3.0)], 1.5, {"dance"}
     )
     assert kept == [_interval("dance", 1.0, 3.0)]
@@ -2016,10 +2023,10 @@ def test_r17_same_timestamp_control_and_cleanse_total_order():
 
     # Kernel: the decision identity is the stable event key and the control
     # phase precedes the cleanse phase (arming-priority baseline, R26).
-    control_key = de.stable_event_key(
+    control_key = delivery_facts.stable_event_key(
         SimpleNamespace(time=2.0, source_key="E", sequence=0)
     )
-    cleanse_key = de.stable_event_key(
+    cleanse_key = delivery_facts.stable_event_key(
         SimpleNamespace(time=2.0, source_key=QUICKSILVER_SOURCE, sequence=0)
     )
     assert control_key == "E:2.0:0"
@@ -2646,9 +2653,9 @@ def test_r26_cleanse_and_movement_arm_after_the_controls_at_their_time():
         assert rank > TransitionRank.DAMAGE
     # The stable identity used by both the cleanse and control decisions.
     action = SimpleNamespace(time=1.5, source_key=QUICKSILVER_SOURCE, sequence=2)
-    assert de.stable_event_key(action) == f"{QUICKSILVER_SOURCE}:1.5:2"
+    assert delivery_facts.stable_event_key(action) == f"{QUICKSILVER_SOURCE}:1.5:2"
     action = SimpleNamespace(time=1.5, source_key="E", sequence=0)
-    assert de.stable_event_key(action) == "E:1.5:0"
+    assert delivery_facts.stable_event_key(action) == "E:1.5:0"
 
 
 # ---------------------------------------------------------------------------

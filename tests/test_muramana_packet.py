@@ -81,18 +81,16 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator.ability_spec import DamagePart
-from src.calculator.bis import (
+from src.calculator.bis_objective import (
     BIS_UNMODELED_DEFENSIVE_EFFECTS,
     bis_defensive_effect_receipt,
 )
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.damage import (
-    FightConfig,
-    RotationResult,
-    _muramana_proc_events,
-    calculate_fight_damage,
-)
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.fight.config import FightConfig
+from src.calculator.fight.items.muramana import _muramana_proc_events
+from src.calculator.fight.results import RotationResult
 from src.calculator.interpreters import on_hit_strike
 from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import (
@@ -516,9 +514,8 @@ class TestAuthoredHitTiming:
         assert event["event_precision"] == "hit"
 
     def test_cast_boundary_fallback_is_marked_explicitly(self) -> None:
-        # A DoT cast has no authored sub-hit packet: the Shock rides the
-        # cast boundary at t=0 and is explicitly marked "cast_boundary",
-        # which the coverage classifier treats as coarse.
+        # A DoT cast has no authored sub-hit packet: the Shock rides
+        # the cast boundary at t=0, marked "cast_boundary" and coarse.
         fight = _fight(
             _stats(),
             {"Q": _ability("Q", dot_duration=3.0)},
@@ -536,6 +533,7 @@ class TestAuthoredHitTiming:
                 "cast_id": "Q:1",
                 "target_id": "target:0",
                 "damage_type": "physical",
+                "resistance_met": 100.0,
             }
         ]
         assert ABILITY_ROW in fight["timeline_coverage"]["coarse_sources"]
@@ -608,7 +606,7 @@ class TestMalformedLedgerWithholding:
         # damage_events; it is stamped with the NAMED withheld reason and
         # the coverage classifier marks it coarse.
         monkeypatch.setattr(
-            "src.calculator.damage._muramana_proc_events",
+            "src.calculator.fight.items.muramana._muramana_proc_events",
             lambda *args, **kwargs: None,
         )
         fight = _fight(
@@ -639,7 +637,7 @@ class TestMalformedLedgerWithholding:
         # proc count is the trusted cast receipt) but the events are
         # withheld with the named reason.
         monkeypatch.setattr(
-            "src.calculator.damage._muramana_proc_events",
+            "src.calculator.fight.items.muramana._muramana_proc_events",
             lambda *args, **kwargs: None,
         )
         fight = _fight(

@@ -177,29 +177,33 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
+from src.calculator.champion_cleanses import CHAMPION_CLEANSE_DECLARATIONS
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from src.calculator.champions.slotlib import extract_named
+from src.calculator.champions.slot_extract import extract_named
+from src.calculator.cleanse_declarations import (
+    ITEM_CLEANSE_DECLARATIONS,
+    resolve_cleanse_item,
+)
 from src.calculator.cleanse_eligibility import (
     CAST_BLOCKING_CONTROL_KINDS,
-    CHAMPION_CLEANSE_DECLARATIONS,
-    ITEM_CLEANSE_DECLARATIONS,
     CleanseEligibility,
-    resolve_cleanse_item,
-    truncate_intervals,
 )
+from src.calculator.control_intervals import truncate_intervals
 from src.calculator.crowd_control_eligibility import (
     KNOWN_CONTROL_KINDS,
     classify_control,
 )
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
-from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.fight.config import FightConfig
 from src.calculator.participant_timeline import Combatant, _WalkCompiler
-from src.calculator.survival.actions import SUPPORT_RANK_KEY, TransitionRank
+from src.calculator.starting_defenses import StartingDefenses
+from src.calculator.survival.classify import SUPPORT_RANK_KEY
 from src.calculator.survival.compile import unrepresentable_template_receipt
+from src.calculator.survival.phases import TransitionRank
 from tests.app_config import app_config
 from tests.survival_probe import simulate_survival, survival_of
 
@@ -1860,7 +1864,7 @@ class TestSameTimeOrdering:
         # intra-band order is the walk's total order (action_key: rank,
         # time, participant, sequence).  Read off the one rank ladder;
         # there is no parallel float table.
-        from src.calculator.survival.actions import support_transition_rank
+        from src.calculator.survival.classify import support_transition_rank
 
         shield_rank = support_transition_rank({"kind": "shield"})
         assert shield_rank is TransitionRank.BARRIER_GRANT

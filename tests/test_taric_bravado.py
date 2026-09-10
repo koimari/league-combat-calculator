@@ -37,11 +37,9 @@ from src.calculator.champions.taric import _bravado_window_terms
 # only restates it as ``MODULE_COVERAGE`` when it differs from what its
 # ``SLOTS`` derive, and Taric's does not.
 MODULE_COVERAGE = get_champion_module_contract("Taric").coverage
-from src.calculator.damage import (
-    FightConfig,
-    _empower_window_procs,
-    calculate_fight_damage,
-)
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.autos.empower_windows import _empower_window_procs
+from src.calculator.fight.config import FightConfig
 from src.calculator.stats import calculate_total_stats
 
 _DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))

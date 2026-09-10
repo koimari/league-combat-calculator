@@ -11,29 +11,31 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.calculator import damage
 from src.calculator.ability_spec import DamagePart, part_damage_types
 from src.calculator.champions import (
     parse_champion_abilities as parse_ahri_abilities,
 )
 from src.calculator.damage import (
-    AutoSwings,
-    DecayingTarget,
-    FightConfig,
-    _event_timeline_coverage,
-    _mitigate,
-    _mitigate_hits,
-    _navori_effective_cd,
-    _ordered_damage_events,
-    _simulate_current_health_on_hit,
     calculate_fight_damage,
     split_auto_vs_ability,
     split_by_damage_type,
 )
-from src.calculator.damage import (
+from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.fight.autos.decaying_health_walk import (
+    AutoSwings,
+    DecayingTarget,
+    _simulate_current_health_on_hit,
+)
+from src.calculator.fight.autos.on_hit_stream import (
     _calculate_phantom_hits as _calculate_phantom_hits_compiled,
 )
-from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.fight.config import FightConfig
+from src.calculator.fight.ledger import pool_walk
+from src.calculator.fight.ledger.coverage import _event_timeline_coverage
+from src.calculator.fight.ledger.event_ledger import _ordered_damage_events
+from src.calculator.fight.mitigation import _mitigate_hits
+from src.calculator.fight.resists import _mitigate
+from src.calculator.fight.rotation.cast_schedule import _navori_effective_cd
 from src.calculator.interpreters import on_hit_strike
 from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import DamageInputs, resolve_damage_effects
@@ -1263,7 +1265,7 @@ class TestTargetIncomingDamageModifiers:
         source comes back unchanged.
         """
         monkeypatch.setattr(
-            damage.threshold_defense, "threshold_health_tick_interval", lambda: 0.0
+            pool_walk.threshold_defense, "threshold_health_tick_interval", lambda: 0.0
         )
         result = fight(
             attacker_stats(),
@@ -3275,7 +3277,8 @@ class TestHealthComponentInvariant:
 
     @staticmethod
     def _stats(champion_data, level, items, options) -> dict[str, float]:
-        from src.calculator.pipeline import FightParams, run_fight
+        from src.calculator.fight_params import FightParams
+        from src.calculator.pipeline import run_fight
 
         params = FightParams.from_request({"champion_options": options})
         return run_fight(champion_data, level, list(items), params)["champion_stats"]
@@ -3332,7 +3335,8 @@ class TestEmpoweredSwingAttribution:
 
     @staticmethod
     def _fight(champion_data, level=18, items=(), **overrides):
-        from src.calculator.pipeline import FightParams, run_fight
+        from src.calculator.fight_params import FightParams
+        from src.calculator.pipeline import run_fight
 
         request = {
             "target_health": 1000,

@@ -52,20 +52,20 @@ from ..binary_roots import (
     data_value,
     spell_object,
 )
-from .engine import CC_PER_PART, ONHIT, SlotCtx
+from .contract_vocabulary import coverage
+from .engine import ONHIT, SlotCtx
 from .inputs import int_option
-from .module_contract import coverage
 from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry, on_hit_entry
+from .slot_extract import (
     PER_LEVEL_SCALING,
     ability_name,
-    damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
     find_named_leveling,
-    on_hit_entry,
 )
 
 PACKET_SHA256 = "4729cb0ee938dd410196bc3e6ea901bac4caf07fbe25859ce9532c9bf6648aea"

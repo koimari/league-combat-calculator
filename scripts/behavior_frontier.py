@@ -150,11 +150,11 @@ CLASS_D_NON_BEHAVIOURAL: Mapping[str, str] = {
         "an ability display-name default (Viego's R is named after the item he "
         "steals) that collides with an item name"
     ),
-    "calculator/shield_ledger.py": (
+    "calculator/shield_pools.py": (
         "the shield-source label `Lifeline`, which names a mechanic class and "
         "collides with an item name"
     ),
-    "calculator/rotation_resolver.py": (
+    "calculator/ability_dps_matrix.py": (
         "three sample builds in the rotation certification matrix; they name "
         "builds to certify orders over and dispatch no behaviour"
     ),
@@ -1352,8 +1352,8 @@ def zero_policy_block(frontier: ZeroPolicyFrontier) -> dict[str, Any]:
             "per module, so neither can widen without a decision"
         ),
         "declared_default": (
-            "champions/slotlib.MODULE_FORMULA_ZERO, supplied by damage_entry "
-            "and simple_damage and overridable per call (D-24)"
+            "champions/slot_entries.MODULE_FORMULA_ZERO, supplied by "
+            "damage_entry and simple_damage and overridable per call (D-24)"
         ),
         "input_vocabularies": (
             "src/calculator/champions/inputs.py — the declared defaults that "

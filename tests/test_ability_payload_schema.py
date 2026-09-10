@@ -2,7 +2,6 @@
 
 import pytest
 
-from src.calculator import damage
 from src.calculator.ability_atoms import (
     ABILITY_PAYLOAD_SCHEMA,
     EMPTY_PAYLOAD,
@@ -11,6 +10,7 @@ from src.calculator.ability_atoms import (
     ability_payload,
     ability_sub_payload,
 )
+from src.calculator.fight import config
 
 
 class TestAbilityField:
@@ -82,37 +82,37 @@ class TestDeclaredOptionSpec:
     """A user option's default and bounds come from its own OPTIONS spec."""
 
     def test_a_champion_option_reads_its_declared_default(self):
-        assert damage.declared_option_default("champion", "Ashe", "q_focus_stacks") == 4
+        assert config.declared_option_default("champion", "Ashe", "q_focus_stacks") == 4
         assert (
-            damage.declared_option_default("champion", "Senna", "senna_mist_stacks")
+            config.declared_option_default("champion", "Senna", "senna_mist_stacks")
             == 40
         )
 
     def test_an_item_and_a_keystone_option_read_theirs(self):
         assert (
-            damage.declared_option_default(
+            config.declared_option_default(
                 "item", "Tear of the Goddess", "manaflow_bonus_mana"
             )
             == 0
         )
         assert (
-            damage.declared_option_default("keystone", "Conqueror", "starting_stacks")
+            config.declared_option_default("keystone", "Conqueror", "starting_stacks")
             == 0
         )
 
     def test_an_undeclared_option_raises_naming_family_owner_and_key(self):
         with pytest.raises(KeyError) as excinfo:
-            damage.declared_option_default("champion", "Ashe", "not_an_option")
+            config.declared_option_default("champion", "Ashe", "not_an_option")
         assert "not_an_option" in str(excinfo.value)
 
     def test_a_seeded_stack_option_is_bounded_by_its_own_spec(self):
         """The cap lives beside the control, not beside the walk."""
-        seed = damage._seeded_option_stacks
+        seed = config._seeded_option_stacks
         assert seed({}, "champion", "Ashe", "q_focus_stacks") == 4
         assert seed({"q_focus_stacks": 2}, "champion", "Ashe", "q_focus_stacks") == 2
         assert seed({"q_focus_stacks": 99}, "champion", "Ashe", "q_focus_stacks") == 4
         assert seed({"q_focus_stacks": -5}, "champion", "Ashe", "q_focus_stacks") == 0
 
     def test_an_unparsable_selection_reads_as_the_unset_one(self):
-        seed = damage._seeded_option_stacks
+        seed = config._seeded_option_stacks
         assert seed({"p_ferocity": "x"}, "champion", "Rengar", "p_ferocity") == 0

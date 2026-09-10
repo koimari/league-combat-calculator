@@ -18,8 +18,9 @@ Hand-validated against https://wiki.leagueoflegends.com/en-us/Briar
 import pytest
 
 from src.calculator.champions import briar, parse_champion_abilities
-from src.calculator.champions.slotlib import extract_named, extract_value
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.champions.slot_extract import extract_named, extract_value
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
 

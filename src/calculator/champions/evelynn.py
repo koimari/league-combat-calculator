@@ -4,17 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..ability_spec import ControlEvent, ControlScope, DamagePart
-from .engine import CC_PER_PART, SlotCtx, build_parser
+from ..ability_spec import DamagePart
+from ..control_spec import ControlEvent, ControlScope
+from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import named_damage, no_damage, ranked_slot
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-)
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
 
 

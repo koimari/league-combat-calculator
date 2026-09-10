@@ -5,12 +5,10 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator.ability_spec import DamagePart
-from src.calculator.damage import (
-    FightConfig,
-    RotationResult,
-    _muramana_proc_events,
-    calculate_fight_damage,
-)
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.config import FightConfig
+from src.calculator.fight.items.muramana import _muramana_proc_events
+from src.calculator.fight.results import RotationResult
 
 
 def _stats() -> dict[str, float]:

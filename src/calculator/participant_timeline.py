@@ -20,11 +20,14 @@ from typing import Any, NamedTuple, TypeVar
 
 from . import rune_effects
 from .ability_spec import AttackClass, DamageClass
+from .ally_packet_recipient import RETARGETABLE_SCOPES, repriced_for_recipient
 from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
+from .champion_loadout import ResolvedLoadout
 from .champions.inputs import declared_option_defaults
 from .champions.skill_orders import get_ability_rank
-from .champions.slotlib import extract_cooldown, extract_named
-from .defensive_effects import StartingDefenses, armed_revive
+from .champions.slot_extract import extract_cooldown, extract_named
+from .defensive_effects import armed_revive
+from .fight_params import FightParams
 from .healing import GREY_HEALTH_RULE_CHAMPIONS
 from .healing_reduction import (
     champion_grievous_wound_sources,
@@ -40,10 +43,7 @@ from .interpreters.damage_routing import (
 from .interpreters.damage_routing import (
     walk_venom as _walk_venom,
 )
-from .interpreters.delta_amp import (
-    StaticHolderAmps,
-    resolve_static_holder_amps,
-)
+from .interpreters.part_amp import StaticHolderAmps, resolve_static_holder_amps
 from .interpreters.reactive import thorns_effects
 from .interpreters.stat_derivation import (
     declared_stat_derivations as _declared_stat_derivations,
@@ -64,14 +64,8 @@ from .item_effects import (
     ThornsEffect,
     actualizer_active_seconds,
 )
-from .item_support_effects import (
-    RETARGETABLE_SCOPES,
-    derive_item_support_effects,
-    repriced_for_recipient,
-    resolve_knights_vow_tether,
-    schedule_knights_vow,
-)
-from .pipeline import FightParams, run_fight
+from .item_support_effects import derive_item_support_effects, schedule_knights_vow
+from .pipeline import run_fight
 from .program import route as program_route
 
 # The one ``SurvivalAction`` constructor (Phase 4 S4).  Composition is above
@@ -91,12 +85,8 @@ from .program.amp import (
     LiveAmpRider,
     live_amp_riders,
 )
-from .program.build import (
-    ParamPatch,
-    arming_stacking,
-    dropped_pair_previews,
-    roster_program,
-)
+from .program.build import ParamPatch, roster_program
+from .program.capability import arming_stacking, dropped_pair_previews
 from .program.compile import (
     PairView,
     WalkCompiler,
@@ -129,12 +119,12 @@ from .program.rung import (
     counter_entry,
     gate_rung,
 )
-from .program.views import DISCARD as _DISCARD
-from .program.views import LeafWriter as _LeafWriter
 from .program.views import breakdown as _breakdown_view
 from .program.views import receipt as _receipt_view
 from .program.views import score as _score_view
 from .program.views import survival as _survival_view
+from .program.views.leaf import DISCARD as _DISCARD
+from .program.views.leaf import LeafWriter as _LeafWriter
 from .program.walk import AttackerOutcome, ObjectiveFold, WalkResult
 from .program.walk import walk as _walk
 from .resistance import apply_resistance
@@ -172,9 +162,10 @@ from .roster_composition import (
 from .roster_composition import (
     target_params as _target_params,
 )
-from .scenario import ResolvedLoadout
+from .starting_defenses import StartingDefenses
 from .state_lifecycle import TriggerGate
 from .support_effects import derive_ally_effects
+from .support_event_view import resolve_knights_vow_tether
 from .survival import (
     BARRIER_GRANT_KINDS,
     EVENT_SLOTS,
@@ -4722,7 +4713,7 @@ def _published_support_phase(event: Mapping[str, Any]) -> TransitionRank:
 
 # The named receipt for a self-shield rider that never found a carrier
 # (docs/receipts/self-shield-carrier-rebind-2026-08-21.md).  A rider is bound
-# to ONE carrier packet by ordinal, in ``damage._damage_event_row``, before
+# to ONE carrier packet by ordinal, in ``fight.ledger.event_rows._damage_event_row``, before
 # the ordered survival walk decides which packets land; a rider whose payload
 # declares ``rebind_on_ability_hit`` moves to the first ability packet that
 # does land (``survival.transitions._rebind_self_shields``).  A refusal that
@@ -5194,7 +5185,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                                     # This row is a *rider*: it was bound to
                                     # one already-chosen carrier packet (the
                                     # ordinal-aligned event
-                                    # ``damage._damage_event_row`` copied the
+                                    # ``fight.ledger.event_rows._damage_event_row`` copied the
                                     # payload onto), before the walk knew
                                     # which packets land.  The marker is what
                                     # ``_self_shield_carrier_denials`` reads

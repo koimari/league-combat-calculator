@@ -26,12 +26,8 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .inputs import int_option
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    find_named_leveling,
-    sum_modifiers,
-)
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, find_named_leveling, sum_modifiers
 
 PACKET_SHA256 = "2f20b99c3cd6919e7b81d1fb0cf912d9e02ea8ac475c4c4fa6381bc332407130"
 

@@ -114,7 +114,8 @@ from src.calculator.champions.gnar import (
     SOURCES,
 )
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats, growth_stat
 from tests.committed_bytes import sha256_as_committed
 

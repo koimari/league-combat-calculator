@@ -40,20 +40,15 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
-from .module_contract import coverage
 from .module_helpers import ranked_slot
 from .shared_mechanics import capped_option
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    stat_buff,
-)
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
+from .slotlib import stat_buff
 from .source_receipts import load_champion_sources
 
 # ROOTED IN THE BINARY (data/bin/characters/drmundo.bin.json): W's field

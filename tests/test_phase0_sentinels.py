@@ -30,23 +30,23 @@ from src.calculator.ability_spec import (
     AttackClass,
     DamageClass,
 )
+from src.calculator.ally_packet_shape import _declared_authorities
 from src.calculator.champions import registered_champion_names
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.interpreters import delta_amp
+from src.calculator.fight_params import FightParams
+from src.calculator.interpreters import amp_magnitude, delta_amp
 from src.calculator.item_behavior import AmpChainSlot, FightFacts
-from src.calculator.item_support_effects import (
-    _declared_authorities,
-)
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.pipeline import run_fight
 from src.calculator.survival.accumulate import accumulate_support_values
-from src.calculator.survival.actions import SurvivalAction, attack_class_of
+from src.calculator.survival.classify import attack_class_of
 from src.calculator.survival.transitions import (
     _apply_cross_participant_modifiers,
     _apply_damage_modifier,
     _modifier_applies,
 )
+from src.calculator.survival.typed_action import SurvivalAction
 from src.calculator.trigger_stream import is_immobilizing_event
-from tests.test_item_support_effects import (
+from tests.support_effect_fixtures import (
     declared_classes_by_producer,
     timed_cross_participant_producers,
 )
@@ -208,7 +208,7 @@ def command_sweep() -> _CommandSweep:
     """
     mandate = get_item_by_name("Imperial Mandate")
     slot = command_slot()
-    duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+    duration = slot.value(amp_magnitude.WINDOW_DURATION_FIELD)
     authors: dict[str, tuple] = {}
     amped: dict[str, tuple[str, ...]] = {}
     inside: dict[str, float] = {}
@@ -386,7 +386,7 @@ class TestCommandWindowsMergeByRefresh:
         assert sweep.authors, (
             "D-12: no registered champion authors an immobilize a Mandate "
             "holder can read, so every Command sentinel below is green over "
-            "nothing.  The emission gate in damage._evaluate_cast_parts or "
+            "nothing.  The emission gate in fight.rotation.cast_parts._evaluate_cast_parts or "
             "the cc_kind markers themselves have regressed."
         )
         assert len(sweep.authors) >= COMMAND_CC_AUTHORS, (
@@ -394,7 +394,7 @@ class TestCommandWindowsMergeByRefresh:
             f"{sorted(sweep.authors)}.  A champion that stops authoring an "
             "immobilize a Mandate holder can read has lost a reviewed "
             "cc_kind marker or stopped reaching the emission gate in "
-            "damage._evaluate_cast_parts; growth is decision 6 landing and "
+            "fight.rotation.cast_parts._evaluate_cast_parts; growth is decision 6 landing and "
             "raises this floor, a shrink is the regression."
         )
 
@@ -471,7 +471,7 @@ class TestCommandWindowsMergeByRefresh:
     def test_the_check_is_live_and_not_vacuous(self):
         """R-05: the same predicate, over a pair that does overlap."""
         slot = command_slot()
-        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        duration = slot.value(amp_magnitude.WINDOW_DURATION_FIELD)
         overlapping = slot.trigger_windows([0.0, duration / 2.0])
         assert len(overlapping) == 1
         assert overlapping == ((0.0, duration / 2.0 + duration),)
@@ -521,7 +521,7 @@ class TestCommandDoesNotAmpItsOwnTimestamp:
     def test_the_tie_is_outside_the_window_the_trigger_opened(self):
         """The predicate itself, at the instant the population lives on."""
         slot = command_slot()
-        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        duration = slot.value(amp_magnitude.WINDOW_DURATION_FIELD)
         windows = slot.trigger_windows([0.3])
         assert not slot.window_holds(windows, 0.3), (
             "the pair engine now amps a packet at its own trigger's "
@@ -565,7 +565,7 @@ class TestCommandExpiryBoundaryDiverges:
 
     def test_the_pair_engine_amps_the_closing_instant(self):
         slot = command_slot()
-        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        duration = slot.value(amp_magnitude.WINDOW_DURATION_FIELD)
         windows = slot.trigger_windows([0.0])
         assert not slot.window_holds(windows, 0.0), "the trigger itself is excluded"
         assert slot.window_holds(windows, duration - 0.001)
@@ -576,7 +576,7 @@ class TestCommandExpiryBoundaryDiverges:
         )
 
     def test_the_walk_drops_the_modifier_at_the_same_instant(self):
-        end = command_slot().value(delta_amp.WINDOW_DURATION_FIELD)
+        end = command_slot().value(amp_magnitude.WINDOW_DURATION_FIELD)
         inside = {"active_damage_modifiers": [_armed(until=end)]}
         closing = {"active_damage_modifiers": [_armed(until=end)]}
         packet = {"damage_type": "magic", "is_ability": True, "attacker": -1}

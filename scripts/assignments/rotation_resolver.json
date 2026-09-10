@@ -1,0 +1,108 @@
+{
+ "source": "src/calculator/rotation_resolver.py",
+ "decisions": [
+  "Blocked on extract_modules.py until one line changes. Plan._residue_reads feeds every non-movable top-level statement to free_names, which wraps it in a function body; this source's 'from __future__ import annotations' makes symtable raise SyntaxError, so the CLI traces back instead of printing a plan. Fix: build kept from statements that are not MOVABLE and not ast.Import or ast.ImportFrom. An import binds names and never reads any, and _unread_imports already handles the import block separately, so nothing else moves. damage.py has no future import, which is why step 1 never hit this. Verified clean with that one change applied.",
+  "Blocked on a second extract_modules.py line. module_units._annotation_names treats every string constant inside an annotation as a quoted forward reference, so _Edge's origin: Literal[\"declared\", \"inferred\"] yields two names bound nowhere and the CLI refuses cast_edge_markers.py. Fix: while walking an annotation, skip the slice of a Subscript whose value is named Literal. Verified clean with that change plus the __future__ one.",
+  "Six modules, not the map's four. derive_champion_rule (R6) reads resolved_edges (R4), _kahn_order and detect_aoe_cap (R5) and rank_ability_dps (R7), so the map's remainder of R4, R5 and R7 is a back-edge from champion_rotation_rule. The one honest direction is R4, R5 and the DPS ranking downstream of nothing and upstream of the rule, with the residue holding only resolve_cast_order and build_rotation_receipt, which read derive_champion_rule.",
+  "cast_edge_resolution.py is the new module for R4 plus _kahn_order: declarations merged over inferences, and the topological order that admits them. _kahn_order orders _Edge objects, so it belongs with the edges, not with the AoE cap it sat beside.",
+  "detect_aoe_cap goes to cast_edge_markers.py, whose docstring widens to say the slot corpus answers both questions. Its only dependency is _slot_corpus, so any other home imports the marker module for one call.",
+  "ability_dps_matrix.py splits R6 along the seam the map's own title names. The matrix (_MATRIX_SPECS, _MATRIX_DPS_CACHE, _matrix_dps_rows) plus rank_ability_dps is 87 lines and a leaf; the rule fitted from it is 392. Kept together with rank_ability_dps they render at about 520, over the ceiling, which is what forces the seam rather than taste.",
+  "cast_edge_inference.py renders at 477. detect_setup_consume_edges is 462 of that, so about 20 lines of margin: a later edit to that function reopens the finding on a module that holds nothing else.",
+  "Residue 280 lines. _validate_override_reasons() is called as a bare module-level statement, which is not a movable unit, so the residue imports it and CAST_ORDER_OVERRIDES back from cast_order_overrides.py and keeps running the check at import.",
+  "cast_edge_inference.py is 506 lines and keeps sightline #27's size arm, baselined with this reason: the module is one function, one pass over one champion's rows, and every edge kind reads the same closures (corpora, infos, texts, atexts, add, slot_from_name, has_consume_role). Cutting a kind out means handing that context to it as six parameters, which moves lines and helps no reader."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/cast_order_overrides.py",
+   "docstring": "The champions whose cast order is asserted by hand, and the reason each one is.",
+   "defs": [
+    "_DEFAULT_RATIONALE",
+    "ComboRule",
+    "ORDER_OVERRIDE_REASONS",
+    "CAST_ORDER_OVERRIDES",
+    "_validate_override_reasons"
+   ]
+  },
+  {
+   "path": "src/calculator/cast_edge_markers.py",
+   "docstring": "The parsed-text markers and slot corpus a cast edge or an AoE cap is read out of.",
+   "defs": [
+    "_DIRECT_EDGE_KIND",
+    "_DAMAGE_AMP_STAT_KEYS",
+    "_ATTR_PER_STACK",
+    "_ATTR_ENHANCED_DMG",
+    "_ATTR_DETONATION",
+    "_ATTR_MISSING",
+    "_ATTR_MARK_DMG",
+    "_ATTR_STORED_DMG",
+    "_P_APPLIES_STACK",
+    "_P_MARKS_TARGET",
+    "_P_ABILITY_CONSUMES_MARK",
+    "_P_TARGET_MISSING",
+    "_P_NAMED_APPLIER_STACK",
+    "_P_NAMED_APPLIER_COND",
+    "_P_NAMED_CONSUMER",
+    "_P_PASSIVE_ABILITIES_APPLY",
+    "_P_PASSIVE_ABILITIES_MARK",
+    "_P_COND_PHRASE",
+    "_P_SELF_RESOURCE",
+    "_CONDITIONS",
+    "_CAST_SLOTS",
+    "_Edge",
+    "_slot_corpus",
+    "_corpus_text",
+    "_corpus_attrs",
+    "_recast_parent",
+    "_is_damage_row",
+    "_castable",
+    "_PRE_CAMPAIGN_CC_ORDERING",
+    "_has_champion_module",
+    "_cc_orders_the_burst",
+    "detect_aoe_cap"
+   ]
+  },
+  {
+   "path": "src/calculator/cast_edge_inference.py",
+   "docstring": "The twelve edge kinds inferred from a champion's own rows.",
+   "defs": [
+    "detect_setup_consume_edges"
+   ]
+  },
+  {
+   "path": "src/calculator/cast_edge_resolution.py",
+   "docstring": "Declared edges merged over inferred ones, and the topological order they admit.",
+   "defs": [
+    "DependencyReceipt",
+    "_declaration_sentence",
+    "_matching_suppression",
+    "merge_declared_edges",
+    "_absent_endpoints",
+    "resolved_edges",
+    "_kahn_order"
+   ]
+  },
+  {
+   "path": "src/calculator/ability_dps_matrix.py",
+   "docstring": "The per-champion level-by-build DPS matrix, and the ability ranking read off it.",
+   "defs": [
+    "_MATRIX_SPECS",
+    "_MATRIX_DPS_CACHE",
+    "_matrix_dps_rows",
+    "rank_ability_dps"
+   ]
+  },
+  {
+   "path": "src/calculator/champion_rotation_rule.py",
+   "docstring": "The ComboRule fitted to one fight from a champion's DPS matrix.",
+   "defs": [
+    "_DERIVED_RULE_CACHE",
+    "_canonical_kit_parse",
+    "_freeze_option_value",
+    "_option_signature",
+    "_fit_rule_to_fight",
+    "derive_champion_rule"
+   ]
+  }
+ ]
+}

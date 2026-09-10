@@ -89,6 +89,12 @@ from src.calculator.cast_dependency import (
     expand_user_order,
     orderable_slots,
 )
+from src.calculator.cast_edge_resolution import resolved_edges
+from src.calculator.cast_order_overrides import (
+    CAST_ORDER_OVERRIDES,
+    ORDER_OVERRIDE_REASONS,
+)
+from src.calculator.champion_rotation_rule import derive_champion_rule
 from src.calculator.champions import (
     get_champion_cast_dependencies,
     get_champion_cast_order,
@@ -96,18 +102,13 @@ from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from src.calculator.champions.engine import EmittedSlot, _validate_cc_event_contract
+from src.calculator.champions.entry_shape import EmittedSlot
+from src.calculator.champions.slot_cc import _validate_cc_event_contract
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
-from src.calculator.pipeline import cast_slot_surface
-from src.calculator.rotation_resolver import (
-    CAST_ORDER_OVERRIDES,
-    ORDER_OVERRIDE_REASONS,
-    derive_champion_rule,
-    resolved_edges,
-)
+from src.calculator.fight_request_bounds import cast_slot_surface
 from src.calculator.stats import calculate_total_stats
 
-RESOLVER_SOURCE = ROOT / "src" / "calculator" / "rotation_resolver.py"
+RESOLVER_SOURCE = ROOT / "src" / "calculator" / "cast_edge_inference.py"
 NEGATIVE_TEST_SOURCE = ROOT / "tests" / "test_cast_dependency_audit.py"
 WIKI_AUDIT_PATH = ROOT / "docs" / "wiki-full-entry-audit.json"
 RECEIPT_PATH = ROOT / "docs" / "cast-dependency-audit.json"

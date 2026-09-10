@@ -26,13 +26,8 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .module_helpers import innate_on_hit, ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-)
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 
 # HARDCODED: verify on patch updates — Pain of Wrath's second instance
 # lands 1.25 seconds after the first (wiki W effect prose; the JSON

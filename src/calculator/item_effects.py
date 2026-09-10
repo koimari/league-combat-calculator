@@ -26,11 +26,8 @@ from typing import Any, Literal
 from . import data_fetcher, item_source
 from .data_fetcher import fetch_item_data
 from .passive_parser import parse_all_item_effects
-from .state_lifecycle import (
-    SourceReceipt,
-    WindowGateRule,
-    WindowStackGate,
-)
+from .state_timeline import SourceReceipt
+from .window_gates import WindowGateRule, WindowStackGate
 
 logger = logging.getLogger(__name__)
 
@@ -2666,6 +2663,10 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Runaan's Hurricane": {
         "type": "secondary_target",
         "counter_trigger": "on_attack",
+        # Which delivery the bolts ride, in the closed vocabulary
+        # ``item_behavior.SecondaryDelivery`` holds: it decides what the two
+        # rows this item authors are called.
+        "secondary_delivery": "winds_fury",
         "secondary_ad_ratio": 0.65,
         "max_secondary_targets": 2,
         "applies_on_hit": True,
@@ -3536,6 +3537,7 @@ _STRUCTURAL_EFFECT_KEYS = frozenset(
         "cleave_on_hit",
         "armor_penetration_bonus_only",
         "manaflow_on_hit_charge",
+        "secondary_delivery",
     }
 )
 
@@ -4878,10 +4880,14 @@ def eclipse_trigger_gate(effect: "CooldownProcEffect") -> WindowStackGate:
 # ---------------------------------------------------------------------------
 
 DamageType = Literal["physical", "magic", "true"]
+#: When a counter or cadence mechanic advances: the wiki's On-Attacking
+#: moment, or the hit landing.  The two the taxonomy admits, and the type
+#: every record carrying one is annotated with.
+CounterTrigger = Literal["on_attack", "on_hit"]
 RawDamageFormula = Callable[["DamageInputs"], float]
 
 
-def counter_trigger(item_name: str) -> str:
+def counter_trigger(item_name: str) -> CounterTrigger:
     """Trigger class of an item's counter/cadence mechanic.
 
     ``"on_attack"`` for the wiki's On-Attacking items, advanced by COMPLETING
@@ -4896,7 +4902,7 @@ def counter_trigger(item_name: str) -> str:
             f"ITEM_EFFECTS[{item_name!r}]['counter_trigger'] is {declared!r}; "
             "the taxonomy admits 'on_attack' and 'on_hit' only"
         )
-    return str(declared)
+    return declared  # type: ignore[return-value]
 
 
 @dataclass(frozen=True, slots=True)
@@ -4933,6 +4939,12 @@ class DamageSource:
     display_name: str
     damage_type: DamageType
     raw_damage: RawDamageFormula
+    # The declared mechanic this source compiles, which is what a row it
+    # authors previews.  ``None`` for a source compiled out of the number
+    # registry rather than out of a rule (Titanic Crescent, Muramana's Shock
+    # on abilities): those two declare no mechanic, so they preview nothing
+    # and ``previewed_mechanic`` refuses rather than inventing a slug.
+    mechanic_id: str | None
     is_ability_damage: bool = False
     multi_target_charges: int = 0
     repeated_target_multiplier: float = 1.0
@@ -4948,6 +4960,19 @@ class DamageSource:
     # Muramana Shock uses one same-target clock for each sourced cast ID.
     # Zero means this source has no per-cast target lockout.
     same_target_cast_lockout_seconds: float = 0.0
+
+    def previewed_mechanic(self) -> str:
+        """The mechanic a row this source authors is a preview of, or a stop.
+
+        A stop rather than a default: an unstamped preview row keeps the pair
+        engine's number in every roster total while the walk prices the
+        declaration, which is the double count."""
+        if self.mechanic_id is None:
+            raise ValueError(
+                f"{self.item_name!r} authors {self.breakdown_key!r} and declares "
+                "no mechanic, so that row has nothing to be a preview of"
+            )
+        return self.mechanic_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -5062,6 +5087,30 @@ class FirstAutoEffect:
     chain_targets_min: int = 0
     chain_targets_max: int = 0
 
+    def state_ready(
+        self,
+        items: Sequence[Mapping[str, Any]],
+        item_options: Mapping[str, Mapping[str, int | float]] | None,
+    ) -> bool:
+        """Whether this strike's explicit ready gate is armed by the request."""
+        return first_auto_state_ready(items, item_options, self.source.item_name)
+
+    def chain_target_count(self, level: int) -> int:
+        """How many subjects this arc reaches at *level*, off its own bounds."""
+        return chain_target_count(level, self.chain_targets_min, self.chain_targets_max)
+
+    def proc_indices(
+        self, num_attacks: int, *, initial_stacks: float
+    ) -> tuple[int, ...]:
+        """Which of *num_attacks* attacks spend a charge of this strike."""
+        return energized_proc_indices(
+            self.source.item_name, num_attacks, initial_stacks=initial_stacks
+        )
+
+    def schedule_receipt(self) -> dict[str, Any]:
+        """The sourced Energized cadence this strike's schedule was read from."""
+        return energized_schedule_receipt(self.source.item_name)
+
 
 @dataclass(frozen=True, slots=True)
 class AutoCooldownEffect:
@@ -5077,6 +5126,10 @@ class StackingOnHitEffect:
 
     source: DamageSource
     hits_required: int
+    # Which applications advance this counter: an on-attack-gated strike
+    # counts only attack-carrying applications, an on-hit-gated one counts
+    # every on-hit application.  Read off the declaration, never re-derived.
+    counter_trigger: CounterTrigger
     tracks_target_health: bool = False
 
 
@@ -5087,6 +5140,8 @@ class PhantomHitEffect:
     item_name: str
     stacking_autos: int
     interval: int
+    # Which applications advance the stack that grants the phantom hit.
+    counter_trigger: CounterTrigger
 
 
 @dataclass(frozen=True, slots=True)
@@ -5163,6 +5218,7 @@ def damage_source(
     damage_type: DamageType,
     raw_damage: RawDamageFormula,
     *,
+    mechanic_id: str | None,
     suffix: str = "on-hit",
     breakdown_key: str | None = None,
     lifesteal_effectiveness: float = 0.0,
@@ -5181,6 +5237,7 @@ def damage_source(
         display_name=f"{item_name} ({suffix})",
         damage_type=damage_type,
         raw_damage=raw_damage,
+        mechanic_id=mechanic_id,
         lifesteal_effectiveness=lifesteal_effectiveness,
         event_interval=event_interval,
         same_target_cast_lockout_seconds=same_target_cast_lockout_seconds,
@@ -5215,6 +5272,9 @@ def _compile_auto_cooldown(
         item_name,
         required.value("damage_type"),
         raw,
+        # Compiled out of the number registry and out of no rule, so it
+        # previews nothing (trigger_stream's on-hit retirement names it).
+        mechanic_id=None,
         suffix="Titanic Crescent",
         breakdown_key=f"active_{item_name}",
     )
@@ -5242,6 +5302,9 @@ def _compile_per_ability_hit(
         item_name,
         required.value("damage_type"),
         raw,
+        # Compiled out of the number registry and out of no rule, so it
+        # previews nothing (trigger_stream's on-hit retirement names it).
+        mechanic_id=None,
         suffix="Shock - abilities",
         breakdown_key="muramana_ability",
         same_target_cast_lockout_seconds=lockout_seconds,
@@ -5429,6 +5492,7 @@ def _resolve_damage_effects_uncached(
                 item_name,
                 int(required.number("stacking_autos")),
                 int(required.number("phantom_interval")),
+                counter_trigger(item_name),
             )
         if "dark_pen_per_stack" in values and "dark_max_stacks" in values:
             required = _RequiredValues(item_name, values)
@@ -5644,27 +5708,15 @@ def energized_schedule_receipt(item_name: str) -> dict[str, Any]:
     }
 
 
-def statikk_chain_target_bounds(*, item_name: str = "Statikk Shiv") -> tuple[int, int]:
-    """Return Electrospark's sourced minimum/maximum chain target bounds.
-
-    Energized generation and roster fan-out remain owned by the event ledger;
-    this helper only exposes the parser-backed level-scaled bounds.
-    """
-    minimum = int(required_effect_value(item_name, "chain_targets_min"))
-    maximum = int(required_effect_value(item_name, "chain_targets_max"))
-    if minimum < 1 or maximum < minimum:
-        raise ValueError(f"{item_name} has invalid chain target bounds")
-    return minimum, maximum
+# The holder levels at which a chain strike's arc reaches one subject
+# further, above the level its declared minimum already covers.
+_CHAIN_TARGET_BREAKPOINTS = (6, 10, 14, 20)
 
 
-def statikk_chain_target_count(level: int, *, item_name: str = "Statikk Shiv") -> int:
-    """Return Electrospark's level-scaled chain target count.
-
-    4 to 8 targets at levels 1/6/10/14/20; the caller applies the roster bound.
-    """
-    minimum, maximum = statikk_chain_target_bounds(item_name=item_name)
-    breakpoints = (1, 6, 10, 14, 20)
-    increments = sum(int(level >= threshold) for threshold in breakpoints[1:])
+def chain_target_count(level: int, minimum: int, maximum: int) -> int:
+    """Return a chain strike's level-scaled target count, between the bounds
+    the caller declares (Electrospark: 4 to 8 at levels 1/6/10/14/20)."""
+    increments = sum(int(level >= step) for step in _CHAIN_TARGET_BREAKPOINTS)
     return min(maximum, minimum + increments)
 
 
@@ -5672,8 +5724,8 @@ def hydra_secondary_target_damage(
     *,
     max_health: float,
     is_melee: bool,
+    item_name: str,
     empowered: bool = False,
-    item_name: str = "Titanic Hydra",
 ) -> float:
     """Return one Hydra Cleave cone packet for a secondary target.
 

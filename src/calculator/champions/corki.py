@@ -49,16 +49,16 @@ from ..stat_formulas import effective_cooldown
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import float_option, int_option
 from .module_helpers import ranked_slot
-from .slotlib import (
+from .slot_control import extract_recharge
+from .slot_entries import damage_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cast_time,
     extract_cooldown,
     extract_named,
-    extract_recharge,
     extract_value,
-    simple_damage,
 )
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki values with no JSON home.

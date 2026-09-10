@@ -36,7 +36,7 @@ from pathlib import Path
 
 from src.calculator.champions import get_champion_module_contract
 from src.calculator.champions.milio import ASSUMPTIONS
-from src.calculator.damage import _empower_window_procs
+from src.calculator.fight.autos.empower_windows import _empower_window_procs
 
 # Coverage has one home now: the validated module contract.
 MODULE_COVERAGE = get_champion_module_contract("Milio").coverage

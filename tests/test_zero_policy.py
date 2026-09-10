@@ -10,7 +10,7 @@ tree is deliberately not edited — a required-no-default field there would be
 a campaign-wide champion sweep smuggled in by an idiom.
 
 An exception is only as good as its guard, so three things are asserted
-here: the default exists at exactly one layer and nowhere else in
+here: the default exists at those two builders and nowhere else in
 ``champions/``, it is genuinely overridable (``stat_buff``'s steroid zero is
 a ``STRUCTURAL_ZERO`` and says so), and it reaches the leaf — the part, not
 just the entry — so Phase 4 has a disposition to serialize.
@@ -25,16 +25,15 @@ from pathlib import Path
 import pytest
 
 from src.calculator.ability_spec import DamagePart, Disposition, ZeroPolicy
-from src.calculator.champions.slotlib import (
+from src.calculator.champions.slot_entries import (
     MODULE_FORMULA_ZERO,
     STEROID_ZERO,
     damage_entry,
-    simple_damage,
 )
+from src.calculator.champions.slotlib import simple_damage
 
 ROOT = Path(__file__).resolve().parents[1]
 CHAMPIONS_ROOT = ROOT / "src" / "calculator" / "champions"
-SLOTLIB = CHAMPIONS_ROOT / "slotlib.py"
 
 
 def _defaulted_zero_policy_params(path: Path) -> list[tuple[str, int]]:
@@ -65,17 +64,15 @@ def _defaulted_zero_policy_params(path: Path) -> list[tuple[str, int]]:
 
 
 def test_the_declared_default_lives_at_exactly_one_layer() -> None:
-    """D-24's exception is one layer, named — not a habit spread by copying."""
+    """D-24's exception is two named builders, not a habit spread by copying."""
     layers = {
         path.relative_to(CHAMPIONS_ROOT).as_posix(): _defaulted_zero_policy_params(path)
         for path in sorted(CHAMPIONS_ROOT.rglob("*.py"))
         if _defaulted_zero_policy_params(path)
     }
-    assert set(layers) == {"slotlib.py"}
-    assert {name for name, _line in layers["slotlib.py"]} == {
-        "damage_entry",
-        "simple_damage",
-    }
+    assert set(layers) == {"slot_entries.py", "slotlib.py"}
+    assert {name for name, _line in layers["slot_entries.py"]} == {"damage_entry"}
+    assert {name for name, _line in layers["slotlib.py"]} == {"simple_damage"}
 
 
 def test_the_declared_default_is_keyword_only_at_both_builders() -> None:

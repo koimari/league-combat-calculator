@@ -79,8 +79,10 @@ from pathlib import Path
 import pytest
 
 from src.app import app
+from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
+from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.fight_params import FightParams
 from src.calculator.item_effects import (
     ALLY_ITEM_EFFECTS,
     ITEM_INPUT_OPTIONS,
@@ -90,16 +92,16 @@ from src.calculator.item_effects import (
     required_effect_value,
     validate_item_input_options,
 )
-from src.calculator.ledger_projection import SHARED_ROW_FIELDS, LightRow
-from src.calculator.optimizer import get_eligible_legendaries
+from src.calculator.ledger_inputs import SHARED_ROW_FIELDS, LightRow
+from src.calculator.optimizer_candidates import get_eligible_legendaries
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
     _WalkCompiler,
     build_participant_timeline,
 )
-from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.scenario import ChampionLoadout
+from src.calculator.pipeline import run_fight
+from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival.compile import unrepresentable_template_receipt
 from tests import item_probe
@@ -1088,7 +1090,7 @@ def test_source_revision_3984364_rides_the_receipt_chain():
     assert ALLY_ITEM_EFFECTS[MIKAELS]["source_revision_id"] == REVISION_ID
     assert ITEM_INPUT_OPTIONS[MIKAELS]["source_revision_id"] == REVISION_ID
 
-    from src.calculator.cleanse_eligibility import ITEM_CLEANSE_DECLARATIONS
+    from src.calculator.cleanse_declarations import ITEM_CLEANSE_DECLARATIONS
 
     declaration = ITEM_CLEANSE_DECLARATIONS[MIKAELS]
     receipts = declaration["source_receipts"]

@@ -23,12 +23,12 @@ from src import app as app_module
 from src.calculator.champions.zilean import starting_revive_defense
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import calculate_total_stats
-from src.calculator.support_effects import (
+from src.calculator.support_effects import derive_ally_effects
+from src.calculator.support_scan import (
     _ALLY_PROSE,
     _MODULE_AUTHORED_HEAL_SLOTS,
     _SCOPE_OVERRIDES,
     _row_target,
-    derive_ally_effects,
 )
 
 # The six casts whose ally packet was a fabrication, with the sentence that

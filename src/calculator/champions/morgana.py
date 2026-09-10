@@ -40,19 +40,15 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..healing_helpers import HealAnchor, heal_from_damage, payments
-from .engine import CC_PER_PART, SlotCtx
+from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .shared_mechanics import innate_zero_row
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    with_control,
-)
+from .slot_cc import CC_PER_PART
+from .slot_control import with_control
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 
 _MORGANA_W_SPELL = spell_object("Morgana", "MorganaW")
 _W_TICK_INTERVAL = data_value(_MORGANA_W_SPELL, "TickRate")

@@ -1,0 +1,30 @@
+{
+  "source": "src/calculator/champions/aphelios.py",
+  "decisions": [
+    "No new directory: the module lands beside its source in the existing src/calculator/champions package, so packages is empty.",
+    "_Q_ONSLAUGHT_SECONDS sits inside the weapon band's line range and stays in the residue: it is a Q timing, not a weapon fact, and only _q reads it.",
+    "The residue lands at 510 lines once black reflows the import block, ten over sightline #27's size arm, so aphelios keeps its baselined finding rather than clearing it."
+  ],
+  "packages": {},
+  "modules": [
+    {
+      "path": "src/calculator/champions/aphelios_weapons.py",
+      "docstring": "Which of the five weapons is in hand, what each adds on hit, and the Weapon Master points.",
+      "defs": [
+        "_WEAPON_INDEX",
+        "_WEAPON_LABELS",
+        "_Q_CC_BY_WEAPON",
+        "_R_CC_BY_WEAPON",
+        "_main_weapon",
+        "_CALIBRUM_MARK_FLAT",
+        "_APHELIOS_CALIBRUM_Q_SPELL",
+        "_CALIBRUM_MARK_BONUS_AD_RATIO",
+        "_INFERNUM_PRIMARY_AD_RATIO",
+        "_P_BRANCH_UNPRICED",
+        "_weapon_branch",
+        "_weapon_master_grant",
+        "_weapon_master"
+      ]
+    }
+  ]
+}

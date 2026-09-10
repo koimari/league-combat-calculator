@@ -157,12 +157,10 @@ acceptance observables.
 import pytest
 
 from src import app as app_module
+from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.defensive_effects import (
-    StartingDefenses,
-    defense_source,
-    resolve_starting_defenses,
-)
+from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.fight_params import FightParams
 from src.calculator.interaction_effects import resolve_spell_shield
 from src.calculator.interpreters import uncompilable_item_receipt
 from src.calculator.item_behavior import DefenseMechanic
@@ -184,8 +182,7 @@ from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.pipeline import FightParams
-from src.calculator.scenario import ChampionLoadout
+from src.calculator.starting_defenses import StartingDefenses, defense_source
 from src.calculator.stats import calculate_total_stats
 from tests.app_config import app_config
 from tests.survival_probe import simulate_survival

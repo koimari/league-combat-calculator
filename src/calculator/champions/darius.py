@@ -37,20 +37,21 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
-from .engine import BUFF, CC_PER_PART, SlotCtx, build_parser
+from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, int_option
 from .module_helpers import ranked_slot
-from .slotlib import (
+from .slot_cc import CC_PER_PART
+from .slot_control import with_control_event
+from .slot_entries import damage_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
-    stat_buff,
     sum_modifiers,
-    with_control_event,
 )
+from .slotlib import stat_buff
 from .source_receipts import load_champion_sources
 
 # The passive's bonus-AD ratio is the coefficient on the binary's

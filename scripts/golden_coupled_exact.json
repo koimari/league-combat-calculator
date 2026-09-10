@@ -46,6 +46,30 @@
       "fights/0:Aatrox": "1148.4",
       "fights/1:Malphite": "1170.0"
     },
+    "chain_lightning_carry_roster": {
+      "combat/0:main/incoming": "2727.2",
+      "combat/0:main/outgoing": "2234.3",
+      "combat/1:ally:Lulu/incoming": "2129.0",
+      "combat/1:ally:Lulu/outgoing": "968.9",
+      "combat/2:enemy:Aatrox/incoming": "1579.5",
+      "combat/2:enemy:Aatrox/outgoing": "2954.6",
+      "combat/3:enemy:Malphite/incoming": "1623.7",
+      "combat/3:enemy:Malphite/outgoing": "1901.6",
+      "fights/0:Aatrox": "3269.8",
+      "fights/1:Malphite": "3253.3"
+    },
+    "cleave_copied_on_hit_bruiser_roster": {
+      "combat/0:main/incoming": "2986.6",
+      "combat/0:main/outgoing": "6001.1",
+      "combat/1:ally:Lulu/incoming": "2129.0",
+      "combat/1:ally:Lulu/outgoing": "1414.6",
+      "combat/2:enemy:Aatrox/incoming": "4739.4",
+      "combat/2:enemy:Aatrox/outgoing": "4654.7",
+      "combat/3:enemy:Malphite/incoming": "2676.3",
+      "combat/3:enemy:Malphite/outgoing": "460.8",
+      "fights/0:Aatrox": "4553.4",
+      "fights/1:Malphite": "4801.7"
+    },
     "cleaver_bloodsong_roster": {
       "combat/0:main/incoming": "2701.0",
       "combat/0:main/outgoing": "3742.8",
@@ -241,6 +265,18 @@
       "fights/0:Alistar": "717.6",
       "fights/1:Dr. Mundo": "374.8"
     },
+    "titanic_cone_bruiser_roster": {
+      "combat/0:main/incoming": "3238.1",
+      "combat/0:main/outgoing": "5878.0",
+      "combat/1:ally:Lulu/incoming": "2129.0",
+      "combat/1:ally:Lulu/outgoing": "1414.6",
+      "combat/2:enemy:Aatrox/incoming": "4616.3",
+      "combat/2:enemy:Aatrox/outgoing": "4906.2",
+      "combat/3:enemy:Malphite/incoming": "2676.3",
+      "combat/3:enemy:Malphite/outgoing": "460.8",
+      "fights/0:Aatrox": "4429.2",
+      "fights/1:Malphite": "4768.2"
+    },
     "undaunted_armed_swing_roster": {
       "combat/0:main/incoming": "1588.2",
       "combat/0:main/outgoing": "2007.8",
@@ -253,16 +289,16 @@
     "champions_fetched_at": 1787268652.393148,
     "exact": true,
     "fingerprint": {
-      "entries": 27,
-      "leaves": 194,
+      "entries": 30,
+      "leaves": 224,
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "852f587df33ffcae4392baebf79491b14fb4c643",
+    "git_head": "5a4f9aeb69efa1ee9f112ae891fb69e43a980bba",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
-    "scenario_count": 27,
+    "scenario_count": 30,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "b2121584c041ba4a3bbdf07f3c2afc82abb74317"
+    "src_tree_sha": "509e6018c883679ae0957b6babd9b52296a0aaf0"
   }
 }

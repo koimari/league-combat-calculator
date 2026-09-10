@@ -68,13 +68,13 @@ from ..healing_helpers import (
     parsed_rank,
     payments,
 )
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
-from .module_contract import coverage
 from .packet_module import build_packet_module, first_plus_repeats_parser
 from .shared_mechanics import ranked_packet_slot
-from .slotlib import (
+from .slot_extract import (
     extract_cooldown,
     extract_named,
     extract_value,

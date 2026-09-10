@@ -83,15 +83,16 @@ from pathlib import Path
 import pytest
 
 from src import app as app_module
-from src.calculator import state_lifecycle as sl
+from src.calculator import state_timeline, timed_stacks
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
 from src.calculator.champions.ashe import ASHE_FOCUS_STACK_RULE
 from src.calculator.champions.rengar import RENGAR_FEROCITY_STACK_RULE
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.config import FightConfig
 from tests.parse_stats import parse_stats
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
@@ -407,9 +408,9 @@ class TestQGate:
         # The gate is the typed kernel state: the module seeds a
         # TimedStackState from the option and compares against the rule's
         # max_stacks.
-        state = sl.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=3)
+        state = timed_stacks.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=3)
         assert state.stacks < state.rule.max_stacks
-        state = sl.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=4)
+        state = timed_stacks.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=4)
         assert state.stacks == state.rule.max_stacks
 
 
@@ -511,13 +512,13 @@ class TestPerAttackGains:
 
 class TestExpiryWindow:
     def test_kernel_window_is_four_seconds_from_the_last_gain(self):
-        state = sl.TimedStackState(ASHE_FOCUS_STACK_RULE)
+        state = timed_stacks.TimedStackState(ASHE_FOCUS_STACK_RULE)
         state.apply_gain(
-            sl.EventStamp(0.0, 0), kind="auto_attack", packet="auto_attack"
+            state_timeline.EventStamp(0.0, 0), kind="auto_attack", packet="auto_attack"
         )
         assert state.public_receipt()["expires_at"] == pytest.approx(4.0)
         state.apply_gain(
-            sl.EventStamp(3.0, 1), kind="auto_attack", packet="auto_attack"
+            state_timeline.EventStamp(3.0, 1), kind="auto_attack", packet="auto_attack"
         )
         # A later auto refreshes the shared deadline to 3 + 4 = 7.
         assert state.public_receipt()["expires_at"] == pytest.approx(7.0)
@@ -528,10 +529,10 @@ class TestExpiryWindow:
         # At the exact deadline an auto first loses the expired stack,
         # then the gain is accepted and refreshes the window (the kernel
         # total order: expiry before gain at one timestamp).
-        state = sl.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=4)
+        state = timed_stacks.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=4)
         assert state.public_receipt()["expires_at"] == pytest.approx(4.0)
         transitions = state.apply_gain(
-            sl.EventStamp(4.0, 1), kind="auto_attack", packet="auto_attack"
+            state_timeline.EventStamp(4.0, 1), kind="auto_attack", packet="auto_attack"
         )
         kinds = [t.kind for t in transitions]
         assert kinds == ["expire", "refresh"]
@@ -543,10 +544,10 @@ class TestExpiryWindow:
     def test_kernel_capped_auto_does_not_refresh_the_window(self):
         # cap_behavior "noop": a gain at the cap is denied and the
         # deadline stays exactly where it was.
-        state = sl.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=4)
+        state = timed_stacks.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=4)
         deadline_before = state.public_receipt()["expires_at"]
         denied = state.apply_gain(
-            sl.EventStamp(2.0, 1), kind="auto_attack", packet="auto_attack"
+            state_timeline.EventStamp(2.0, 1), kind="auto_attack", packet="auto_attack"
         )
         assert state.stacks == 4
         assert denied[-1].kind == "gain_denied"
@@ -590,14 +591,16 @@ class TestStepDownDrain:
         # step_down: the first step lands AT the deadline, then one stack
         # every second (4 -> 3 -> 2 -> 1 -> 0 at 4/5/6/7s from a t=0
         # seed).
-        state = sl.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=4)
+        state = timed_stacks.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=4)
         for time, before, after in (
             (4.0, 4, 3),
             (5.0, 3, 2),
             (6.0, 2, 1),
             (7.0, 1, 0),
         ):
-            transitions = state._materialize_expiries(sl.EventStamp(time, 99))
+            transitions = state._materialize_expiries(
+                state_timeline.EventStamp(time, 99)
+            )
             assert transitions, f"expected an expiry at t={time}"
             assert transitions[-1].detail["stacks_before"] == before
             assert transitions[-1].detail["stacks_after"] == after
@@ -607,15 +610,15 @@ class TestStepDownDrain:
         assert kinds.count("expire") == 4
 
     def test_kernel_never_drains_before_the_deadline(self):
-        state = sl.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=4)
-        assert state._materialize_expiries(sl.EventStamp(3.999, 99)) == []
+        state = timed_stacks.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=4)
+        assert state._materialize_expiries(state_timeline.EventStamp(3.999, 99)) == []
         assert state.stacks == 4
 
     def test_kernel_seeded_receipt_names_the_option_seed(self):
         # The seeded state's gain transition is receipted with the
         # "option" trigger so the parse-time seed is never confused with
         # a live gain.
-        state = sl.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=2)
+        state = timed_stacks.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=2)
         seed = state.timeline.transitions()[0]
         assert seed.kind == "gain"
         assert seed.detail["trigger_kind"] == "option"
@@ -666,11 +669,14 @@ class TestCombatExtension:
     def test_kernel_note_activity_is_a_noop_for_the_module_rule(self):
         # combat_extension_seconds <= 0: damage activity never freezes
         # the expiry; note_activity returns None and records nothing.
-        state = sl.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=4)
-        assert state.note_activity(sl.EventStamp(1.0, 9), kind="damage_dealt") is None
+        state = timed_stacks.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=4)
+        assert (
+            state.note_activity(state_timeline.EventStamp(1.0, 9), kind="damage_dealt")
+            is None
+        )
         assert state.timeline.transitions()[-1].kind == "gain"  # only the seed
         # Expiry is NOT suppressed at the deadline by the damage event.
-        assert state._materialize_expiries(sl.EventStamp(4.0, 99))
+        assert state._materialize_expiries(state_timeline.EventStamp(4.0, 99))
         assert state.stacks == 3
 
     def test_no_combat_freeze_in_the_fight_today(self):

@@ -25,9 +25,7 @@ from typing import Any
 from .engine import BUFF, SlotCtx
 from .module_helpers import innate_on_hit, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
-from .slotlib import (
-    extract_value,
-)
+from .slot_extract import extract_value
 
 PACKET_SHA256 = "a88925854e27a0548631207e5f283df6a0a369c6249f4ded272801230c801852"
 

@@ -14,8 +14,8 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from .capabilities import FIGHT_EFFECTIVE_STATS
+from .champion_loadout import ChampionLoadout
 from .champions import engine_registration_kind
-from .scenario import ChampionLoadout
 from .timeline_coverage import (
     aggregate_timeline_coverage,
 )

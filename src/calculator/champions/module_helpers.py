@@ -16,18 +16,14 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..stat_formulas import effective_cooldown
 from .engine import AMP, DAMAGE, ONHIT, SlotCtx, SlotParser
-from .slotlib import (
-    MODULE_FORMULA_ZERO,
-    STEROID_ZERO,
-    ProcDamageResolver,
+from .slot_entries import MODULE_FORMULA_ZERO, STEROID_ZERO, damage_entry, on_hit_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cooldown,
     extract_named,
     find_named_leveling,
-    on_hit_entry,
-    simple_damage,
 )
+from .slotlib import ProcDamageResolver, simple_damage
 
 REVIEWED_MODULE_ASSUMPTIONS = (
     "Every passive/Q/W/E/R slot was reviewed against the complete parent Wiki "

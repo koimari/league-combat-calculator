@@ -1,0 +1,78 @@
+{
+ "source": "src/calculator/optimizer.py",
+ "decisions": [
+  "_plan_key and _plan_type move to purchase_plans.py, two defs past the map's list. purchase_plans reads _plan_key and purchase_search reads _plan_type, and the map left both in the optimize_build remainder, which is a back-edge from two modules. A purchase plan's identity and its type are the plan space's own vocabulary, so purchase_plans.py is the reader-named home.",
+  "Measured residue: 516 lines, sixteen over the ceiling, so optimize_build's size finding does not clear on this assignment alone. The cut the map says the plan must name: optimize_build's locked-item and pool resolution, from 'Resolve locked items' to the boots_pool assignment (currently lines 1877 to 1929, 53 lines), becomes a top-level _resolve_locked_fill that returns the resolved locked items, their names, the resolved locked boots, the boots_locked flag, slots_to_fill, fill_boots, pool and boots_pool. Its home is optimizer_candidates.py, whose name already promises 'which items a search may legally hold': add the def name there and re-run this assignment once the cut lands, taking the residue to about 463 and optimizer_candidates to about 160.",
+  "Not the runner-up sweep. It is the other candidate cut the map names, but it closes over remember_candidate and mutates total_evals, so extracting it means a twelve-parameter signature and a two-value return, against a locked-item block that is pure resolution with no closure capture.",
+  "The two local-search drivers go to purchase_plans.py, not to purchase_search.py as the map has them. Measured both ways: with them, purchase_search.py renders at 505 lines and reopens the finding it was extracted to close; without, purchase_plans lands at 482 and purchase_search at 433. _score_exhaustive_purchase_plans and _run_purchase_local_search are searches over the plan space rather than the public entry point, so the concept follows the measurement.",
+  "Published spelling, for every name a sibling now reads: build_evaluation's evaluate_build and build_timeline_coverage, build_receipts' public_search_timeline_coverage, and purchase_plans' PurchaseSearch, plan_type, run_purchase_local_search, score_exhaustive_purchase_plans and enumerate_affordable_shapes."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/optimizer_candidates.py",
+   "docstring": "Which items a search may legally hold, and what they cost.",
+   "defs": [
+    "_ordinary_sr_items",
+    "get_eligible_legendaries",
+    "get_selectable_items",
+    "get_eligible_boots",
+    "_get_occupied_groups",
+    "_conflicts_with_build",
+    "item_gold",
+    "_build_gold",
+    "_LEGAL_LOCKED_RANKS",
+    "_legal_locked_shop_item",
+    "get_purchase_items"
+   ]
+  },
+  {
+   "path": "src/calculator/build_evaluation.py",
+   "docstring": "Scoring one candidate build through the same run_fight the manual path uses.",
+   "defs": [
+    "_evaluate_build",
+    "_evaluate_build_uncached",
+    "_build_timeline_coverage",
+    "_build_receipt_key"
+   ]
+  },
+  {
+   "path": "src/calculator/build_receipts.py",
+   "docstring": "What an evaluated build publishes.",
+   "defs": [
+    "_public_build_receipt",
+    "_public_search_timeline_coverage"
+   ]
+  },
+  {
+   "path": "src/calculator/build_search.py",
+   "docstring": "Greedy fill and hill climbing over legendary slots.",
+   "defs": [
+    "_greedy_fill",
+    "_score_with_swap",
+    "_hill_climb"
+   ]
+  },
+  {
+   "path": "src/calculator/purchase_plans.py",
+   "docstring": "The gold-constrained plan space: what one plan is, how it is enumerated and priced, the two chain builders and the two searches over them.",
+   "defs": [
+    "_PurchaseSearch",
+    "_enumerate_affordable_shapes",
+    "_greedy_purchase_chain",
+    "_improve_purchase_chain",
+    "_plan_key",
+    "_plan_type",
+    "_score_exhaustive_purchase_plans",
+    "_run_purchase_local_search"
+   ]
+  },
+  {
+   "path": "src/calculator/purchase_search.py",
+   "docstring": "optimize_purchase, the one gold-budget search the API calls.",
+   "defs": [
+    "optimize_purchase"
+   ]
+  }
+ ]
+}

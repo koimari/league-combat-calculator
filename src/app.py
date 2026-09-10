@@ -42,14 +42,9 @@ from flask.typing import ResponseReturnValue
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
-# The sys.path bootstrap above forces every first-party import below it;
-# this one line carries the disable rather than the whole block, because
-# widening it is another lane's file to change.
-from src.calculator.ability_spec import (  # pylint: disable=wrong-import-position
-    StarvedSignal,
-)
 from src.calculator.application_errors import ApplicationError
-from src.calculator.bis import bis_batch_payload, bis_objective_contract, bis_payload
+from src.calculator.bis import bis_batch_payload, bis_payload
+from src.calculator.bis_objective import bis_objective_contract
 from src.calculator.calculate import calculate_payload, compare_payload
 from src.calculator.capabilities import public_capability_contract
 from src.calculator.cast_dependency import BASE_CAST_SLOTS
@@ -62,6 +57,11 @@ from src.calculator.certainty import (
 from src.calculator.certainty import (
     derive_certainty,
 )
+from src.calculator.champion_loadout import ChampionLoadout
+from src.calculator.champion_loadout import (
+    load_public_champion as _load_public_champion,
+)
+from src.calculator.champion_loadout import resolve_named_item as _resolve_named_item
 from src.calculator.champions import (
     champion_options_meta_map,
     engine_registration_kind,
@@ -69,6 +69,16 @@ from src.calculator.champions import (
     registered_champion_names,
 )
 from src.calculator.data_fetcher import fetch_champion_data
+from src.calculator.fight_request_bounds import (
+    DEFAULT_AUTO_ATTACK_UPTIME,
+    DEFAULT_AUTO_ATTACK_UPTIME_MODE,
+    DEFAULT_FIGHT_DURATION,
+    DEFAULT_FIGHT_MODE,
+    DEFAULT_TARGET,
+    ONE_ROTATION_DURATION,
+    PUBLIC_INPUT_LIMITS,
+    rank_allocation_contract,
+)
 from src.calculator.item_coverage import (
     ATTACKER_LANES,
     item_model_coverage,
@@ -79,27 +89,15 @@ from src.calculator.item_effects import (
     refresh_item_effects,
     stat_conversion_metadata,
 )
+from src.calculator.item_stat_block import get_item_stats
 from src.calculator.loadout_rules import exclusivity_groups, validate_resolved_loadout
-from src.calculator.optimizer import (
+from src.calculator.optimizer import optimize_build
+from src.calculator.optimizer_candidates import (
     get_eligible_boots,
     get_selectable_items,
     item_gold,
-    optimize_build,
-    optimize_purchase,
 )
-from src.calculator.pipeline import (
-    DEFAULT_AUTO_ATTACK_UPTIME,
-    DEFAULT_AUTO_ATTACK_UPTIME_MODE,
-    DEFAULT_FIGHT_DURATION,
-    DEFAULT_FIGHT_MODE,
-    DEFAULT_TARGET,
-    ONE_ROTATION_DURATION,
-    PUBLIC_INPUT_LIMITS,
-    rank_allocation_contract,
-)
-from src.calculator.program.views import (  # pylint: disable=wrong-import-position
-    UnrankableNumber,
-)
+from src.calculator.program.views.view_tag import UnrankableNumber
 from src.calculator.public_response import (
     ICON_HOSTS as _ICON_HOSTS,
 )
@@ -109,6 +107,12 @@ from src.calculator.public_response import (
 from src.calculator.public_response import (
     public_loadout_summary,
 )
+from src.calculator.purchase_search import optimize_purchase
+
+# The sys.path bootstrap above forces every first-party import below it;
+# this one line carries the disable rather than the whole block, because
+# widening it is another lane's file to change.
+from src.calculator.quantity import StarvedSignal
 from src.calculator.request_parsing import (
     request_bool as _request_bool,
 )
@@ -138,18 +142,8 @@ from src.calculator.rune_effects import (
     rune_catalog,
     shard_catalog,
 )
-from src.calculator.scenario import (
-    ChampionLoadout,
-    parse_scenario_request,
-    resolve_scenario,
-)
-from src.calculator.scenario import (
-    load_public_champion as _load_public_champion,
-)
-from src.calculator.scenario import (
-    resolve_named_item as _resolve_named_item,
-)
-from src.calculator.stats import MAX_LEVEL, get_item_stats
+from src.calculator.scenario import parse_scenario_request, resolve_scenario
+from src.calculator.stats import MAX_LEVEL
 from src.calculator.validation_receipts import (
     VALIDATION_SOURCES as _VALIDATION_SOURCES,
 )

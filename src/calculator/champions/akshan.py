@@ -49,22 +49,20 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import champion_stat, int_option
-from .module_contract import coverage
 from .module_helpers import no_damage_slot, ranked_slot
-from .slotlib import (
+from .slot_entries import attach_self_shield, damage_entry
+from .slot_extract import (
     ability_name,
-    attach_self_shield,
-    damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
     find_named_leveling,
-    proc_damage,
-    simple_damage,
     sum_modifiers,
 )
+from .slotlib import proc_damage, simple_damage
 from .source_receipts import load_champion_sources
 
 # R bullets can crit at 30% effectiveness (3% damage per 10% crit chance) and

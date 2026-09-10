@@ -12,13 +12,13 @@ file-length-ok: one acceptance matrix per slice, and this is Slice 4's.
 import pytest
 
 from src.app import app
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.participant_timeline import Combatant, _WalkCompiler
-from src.calculator.survival.actions import ActionKind
+from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.survival.compile import (
     UncompilableActionError,
     unrepresentable_template_receipt,
 )
+from src.calculator.survival.typed_action import ActionKind
 from tests.survival_probe import simulate_survival
 
 MIKAELS_SOURCE = "Mikael's Blessing — Purify"

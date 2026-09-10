@@ -14,15 +14,13 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from src.calculator import participant_timeline
+from src.calculator.build_evaluation import evaluate_build
+from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.data_fetcher import get_champion
-from src.calculator.optimizer import (
-    _evaluate_build,
-    optimize_build,
-    optimize_purchase,
-)
+from src.calculator.fight_params import FightParams
+from src.calculator.optimizer import optimize_build
 from src.calculator.participant_timeline import CoupledSearchContext
-from src.calculator.pipeline import FightParams
-from src.calculator.scenario import ChampionLoadout
+from src.calculator.purchase_search import optimize_purchase
 from src.calculator.work_counters import Rung, record_rung
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -137,8 +135,8 @@ class TestCountersRideTheSearch:
             "combat_context": combat_context,
             "work_counters": sink,
         }
-        first = _evaluate_build(**arguments)
-        second = _evaluate_build(**arguments)
+        first = evaluate_build(**arguments)
+        second = evaluate_build(**arguments)
 
         assert first == second
         assert sink.measured_proposals == 2

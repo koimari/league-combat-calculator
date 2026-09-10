@@ -3,16 +3,17 @@
 Every test is a runtime probe through the public ``calculate_payload``
 pipeline (timed mode, autos included, level 18) asserting that the named
 (champion, item) pair certifies a complete event timeline — the frozen
-classifier ``damage._event_timeline_coverage`` accepts a row only when its
-authored events sum-reconcile with the row's priced total.
+classifier ``ledger.coverage._event_timeline_coverage`` accepts a row only
+when its authored events sum-reconcile with the row's priced total.
 """
 
 import itertools
+import sys
 
 import pytest
 
-from src.calculator import damage
 from src.calculator.calculate import calculate_payload
+from src.calculator.fight.autos import swing_schedule
 from src.calculator.pipeline import run_fight
 from src.calculator.scenario import parse_scenario_request, resolve_scenario
 
@@ -531,20 +532,22 @@ def _swing_schedule(
 ) -> list[float]:
     """The whole authored swing schedule the fight priced against.
 
-    The published ``auto_attacks`` row is only the swings the stream KEPT —
-    ``_reattribute_empowered_swings`` hands the consumed ones to the
-    ability that forced them — so the invariant about where swings land is
-    read off the schedule itself, which every proc walker also reads.
+    The published ``auto_attacks`` row is only the swings the stream KEPT
+    (``_reattribute_empowered_swings`` hands the consumed ones to the ability
+    that forced them), so the invariant is read off the schedule itself.
     """
     captured: list[list[float]] = []
-    original = damage._auto_attack_timestamps
+    original = swing_schedule._auto_attack_timestamps
 
     def spy(state):
         times = original(state)
         captured.append(list(times))
         return times
 
-    monkeypatch.setattr(damage, "_auto_attack_timestamps", spy)
+    # Every walker binds the schedule at its own import.
+    for module in list(sys.modules.values()):
+        if getattr(module, "_auto_attack_timestamps", None) is original:
+            monkeypatch.setattr(module, "_auto_attack_timestamps", spy)
     request = parse_scenario_request(
         {
             "champion": champion,

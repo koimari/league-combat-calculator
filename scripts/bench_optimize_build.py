@@ -60,17 +60,16 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from src.calculator import (
-    damage,
     item_behavior_catalog,
     item_effects,
     pipeline,
 )
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.optimizer import (
-    get_selectable_items,
-    optimize_build,
-)
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight.ledger import event_ledger
+from src.calculator.fight_params import FightParams
+from src.calculator.optimizer import optimize_build
+from src.calculator.optimizer_candidates import get_selectable_items
+from src.calculator.pipeline import run_fight
 
 REPEATS = 7
 
@@ -191,7 +190,10 @@ class Term(NamedTuple):
     key: tuple[str, str]
 
 
-CAPTURED = ((pipeline, "parse_champion_abilities"), (damage, "_damage_event_row"))
+CAPTURED = (
+    (pipeline, "parse_champion_abilities"),
+    (event_ledger, "_damage_event_row"),
+)
 
 
 def _capture_calls(champion: dict, items: list[dict], params: FightParams) -> dict:
@@ -262,9 +264,9 @@ def _budget_terms(
             ("pipeline.py", "pre_combat_stats"),
         ),
         _captured_term(
-            "damage._damage_event_row",
+            "fight.ledger.event_rows._damage_event_row",
             captured["_damage_event_row"],
-            ("damage.py", "_damage_event_row"),
+            ("event_rows.py", "_damage_event_row"),
         ),
         Term(
             "item_behavior_catalog.behavior_rules",
@@ -306,7 +308,11 @@ def budget(repeats: int = REPEATS) -> dict[str, Any]:
     for term in _budget_terms(champion, params, items, captured):
         floor = _best_us(term.floor, repeats) if term.floor is not None else 0.0
         per_call = (_best_us(term.call, repeats) - floor) / term.calls
-        counted, cumulative = totals.get(term.key, (0, 0.0))
+        if term.key not in totals:
+            raise RuntimeError(
+                f"{term.label} profiles as {term.key}, which the search never called"
+            )
+        counted, cumulative = totals[term.key]
         per_evaluation = per_call * counted / evaluations
         rows.append(
             {

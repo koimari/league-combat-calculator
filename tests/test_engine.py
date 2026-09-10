@@ -12,32 +12,37 @@ from pathlib import Path
 
 import pytest
 
-from src.calculator.ability_spec import ControlEvent, DamagePart, Disposition
+from src.calculator.ability_spec import DamagePart, Disposition
 from src.calculator.champions import parse_abilities as dispatch_parse
 from src.calculator.champions.engine import (
     AMP,
     BUFF,
-    CC_PER_PART,
     DAMAGE,
     PHASE_ORDER,
     SlotCtx,
     build_parser,
 )
-from src.calculator.champions.slotlib import (
+from src.calculator.champions.slot_cc import CC_PER_PART
+from src.calculator.champions.slot_control import park_control_interval
+from src.calculator.champions.slot_entries import (
     STEROID_ZERO,
     ability_on_hit_entry,
-    by_option,
     damage_entry,
+)
+from src.calculator.champions.slot_extract import (
     extract_value,
     find_named_leveling,
-    park_control_interval,
     pct_health_per_hit,
+    sum_modifiers,
+)
+from src.calculator.champions.slotlib import (
+    by_option,
     proc_damage,
     simple_damage,
     stat_buff,
-    sum_modifiers,
 )
-from src.calculator.damage import _declared_cc_marker
+from src.calculator.control_spec import ControlEvent
+from src.calculator.fight.cast_control_marker import _declared_cc_marker
 
 # ---------------------------------------------------------------------------
 # Fixtures and helpers
@@ -464,7 +469,7 @@ class TestProcDamage:
 
     def _parse(self, options: dict | None = None, **params) -> dict:
         def resolve_per_proc(ctx, ability):
-            from src.calculator.champions.slotlib import extract_named
+            from src.calculator.champions.slot_extract import extract_named
 
             return extract_named(
                 ability,
@@ -1419,7 +1424,7 @@ class TestDeclarationOnAPartlessSlot:
 
     The empower shells (Leona Q, Fiora E, Jax W) emit no damage part: the
     row's damage is the swing ``damage._reattribute_empowered_swings``
-    moves onto it, and ``damage._declared_cc_marker`` reads the kind to
+    moves onto it, and ``fight.cast_control_marker._declared_cc_marker`` reads the kind to
     stamp on those swing events off the entry's parts.  Returning quietly
     on ``parts == ()`` therefore made the declaration a no-op that read as
     reviewed — the exact shape this campaign exists to end.

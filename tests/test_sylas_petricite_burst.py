@@ -79,8 +79,9 @@ from src.calculator.champions.sylas import (
     MODULE_COVERAGE,
     OPTIONS,
 )
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.config import FightConfig
 from src.calculator.stats import calculate_total_stats
 from tests import game_binary
 

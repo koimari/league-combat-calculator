@@ -32,14 +32,15 @@ import re
 from typing import Any
 
 from ..healing_helpers import ability_json, parsed_rank
-from .engine import CC_PER_PART, ONHIT, SlotCtx
+from .contract_vocabulary import coverage
+from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import int_option
-from .module_contract import coverage
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
 from .shared_mechanics import per_level_on_hit
-from .slotlib import extract_named
+from .slot_cc import CC_PER_PART
+from .slot_extract import extract_named
 
 PACKET_SHA256 = "c78392f6b8f667c85594d31be2e6a9c1b7c6504d5cd02e3c5b385271dafc6c06"
 

@@ -3,7 +3,8 @@
 import pytest
 
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 
 
 def test_omnivamp_follows_explicit_primary_attack_packets(attacker_stats, fight):

@@ -10,12 +10,12 @@ policy.
 import pytest
 
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.participant_timeline import Combatant
 from src.calculator.program.build import roster_program
 from src.calculator.program.compile import action_from_event
 from src.calculator.program.views.survival import survival
 from src.calculator.program.walk import walk as run_one_walk
+from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.survival import (
     EVENT_SLOTS,
     SUPPORT_RANK_KEY,

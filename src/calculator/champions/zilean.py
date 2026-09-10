@@ -23,20 +23,19 @@ they are ``no_damage`` rather than unmodelled mechanics:
 
 from dataclasses import replace
 
-from ..ability_spec import ControlScope
 from ..champions.skill_orders import get_ability_rank
+from ..control_spec import ControlScope
 from ..data_fetcher import get_champion
-from .engine import CC_PER_PART
+from .contract_vocabulary import coverage
 from .inputs import bool_option, champion_stat
-from .module_contract import coverage
 from .packet_module import build_packet_module
-from .slotlib import (
+from .slot_cc import CC_PER_PART
+from .slot_control import with_control, with_control_event
+from .slot_extract import (
     build_stats_context,
     extract_cooldown,
     extract_named,
     find_named_leveling,
-    with_control,
-    with_control_event,
 )
 
 PACKET_SHA256 = "9b4c1e8f16ad0424b82b068c7d55f47892f0345ff70020773135903cc8233776"

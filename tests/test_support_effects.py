@@ -4,9 +4,10 @@ import math
 
 import pytest
 
-from src.calculator import support_effects
+from src.calculator import support_scan
 from src.calculator.data_fetcher import get_champion
-from src.calculator.support_effects import _support_profile, derive_ally_effects
+from src.calculator.support_effects import derive_ally_effects
+from src.calculator.support_scan import _support_profile
 
 
 def _sona_effects(cast_timeline):
@@ -331,7 +332,7 @@ def test_sivir_spell_shield_heals_only_sivir():
     )
 
     assert effects == [], "the scanner defers Sivir E to the module"
-    assert ("Sivir", "E") in support_effects._STATE_AUTHORED_HEAL_SLOTS
+    assert ("Sivir", "E") in support_scan._STATE_AUTHORED_HEAL_SLOTS
 
     # The heal it defers to: the module's own spell-shield state, paid on
     # a block, scoped to Sivir and to nobody else.

@@ -21,20 +21,23 @@ cannot silently break the math without a test failing:
 import pytest
 
 from src.calculator.champions.veigar import _EXECUTE_MISSING_RATIO_CAP
-from src.calculator.damage import (
-    BASE_CRIT_MULTIPLIER,
+from src.calculator.fight.autos.on_hit_stream import (
     _calculate_phantom_hits,
     _calculate_stacking_procs,
-    _periodic_damage_events,
-    effective_cooldown,
 )
+from src.calculator.fight.config import BASE_CRIT_MULTIPLIER
+from src.calculator.fight.rotation.dot_ticks import _periodic_damage_events
 from src.calculator.resistance import (
     apply_armor_penetration,
     apply_magic_penetration,
     apply_resistance,
     reduce_resistance,
 )
-from src.calculator.stats import apply_movement_speed_soft_caps, growth_stat
+from src.calculator.stats import (
+    apply_movement_speed_soft_caps,
+    effective_cooldown,
+    growth_stat,
+)
 
 # ─────────────────────────────────────────────────────────────────────
 # 1. Resistance: the 100/(100+R) identity

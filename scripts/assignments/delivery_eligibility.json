@@ -1,0 +1,95 @@
+{
+ "source": "src/calculator/delivery_eligibility.py",
+ "decisions": [
+  "The residue is the top of the DAG, not the bottom. extract_modules refuses any new module that reads a residue unit, so the map's shape (delivery_eligibility keeps the facts and the four new files read them) is a back-edge five times over. Inverted: the shared vocabulary moves down into delivery_facts.py and delivery_classes.py, and delivery_eligibility.py keeps the decision the file is named for, SourceSelection, DeliveryAcceptance, DefenseEligibility and EligibilityDecision. That is the roster's defense_eligibility.py, living on under the existing file name; renaming the residue is not something this tool does.",
+  "The two decision paths do split, against the file-length-ok reason at L57. The spell shield half reads DefenseWindow, _attacker_name, UseBudget and FullBlockRule and reads none of DefenseEligibility, EligibilityDecision, SourceSelection or DeliveryAcceptance, so it is strictly below the residue and can move; keeping both halves in one file leaves 673 lines against sightline #27's 500.",
+  "DefenseWindow and _attacker_name go to delivery_facts.py rather than staying with the acceptance half: the spell shield reads both, and a 30-line module for the two of them would be a slice, not a concept.",
+  "SPELL_SHIELD_REARM_RULE moves with SpellShieldRearmClock. Left in spell_shield_eligibility.py it closes a cycle, because the clock reads the rule and the receipt reads the clock.",
+  "stable_event_key moves down with the facts it reads. Its 34 reference sites repoint to delivery_facts.",
+  "BLOCKED on a tool defect, not on this shape. extract_modules refuses defense_composition.py with 'unresolved: reads each_eligible / first_eligible / per_cast / none / first, bound nowhere': module_units._annotation_names parses every string constant in an annotation as a forward reference, so UseBudget's consume: Literal['first_eligible', 'each_eligible', 'per_cast'] and FullBlockRule's mode: Literal['none', 'first', 'all'] read as six names. The fix is to skip string constants under a Literal[...] subscript. With that patch this assignment checks clean: five modules, an acyclic graph, a 330-line residue and 92 reader sites. No arrangement of units avoids it, because the two units refuse wherever they land, and every clean-today variant leaves the residue over sightline #27's 500.",
+  "Run this assignment and cleanse_eligibility.json one after the other, never in parallel: cleanse_declarations.py reads PacketIdentity, which this move takes to delivery_facts.py.",
+  "Published spelling: delivery_classes' _action_flag is action_flag, read by the residue and by spell_shield_eligibility."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/delivery_facts.py",
+   "docstring": "What one packet and its combatants are, the window a defense is armed in, and the key an event is booked under.",
+   "defs": [
+    "_EPS",
+    "PacketIdentity",
+    "PacketFacts",
+    "RequestFacts",
+    "ChampionFacts",
+    "CombatantFacts",
+    "DefenseWindow",
+    "_attacker_name",
+    "stable_event_key"
+   ]
+  },
+  {
+   "path": "src/calculator/delivery_classes.py",
+   "docstring": "The six classes a delivery is declared as, and how one action is classified into them.",
+   "defs": [
+    "DELIVERY_PROJECTILE",
+    "DELIVERY_HITSCAN",
+    "DELIVERY_AREA",
+    "DELIVERY_TARGETED",
+    "DELIVERY_BASIC_ATTACK",
+    "DELIVERY_DAMAGE_OVER_TIME",
+    "DeliveryClass",
+    "DELIVERY_CLASSES",
+    "DeliveryDeclaration",
+    "DELIVERY_DECLARATIONS",
+    "delivery_declarations_receipt",
+    "DeliveryProfile",
+    "UnknownDeliveryError",
+    "_action_flag",
+    "classify_delivery",
+    "required_delivery_class"
+   ]
+  },
+  {
+   "path": "src/calculator/defense_composition.py",
+   "docstring": "What happens to an event a defense accepted.",
+   "defs": [
+    "UseBudget",
+    "FullBlockRule",
+    "DestructionRule",
+    "ReductionRule",
+    "DefenseComposition",
+    "initial_full_block_uses"
+   ]
+  },
+  {
+   "path": "src/calculator/spell_shield_rearm.py",
+   "docstring": "The spell shield's re-arm clock, and the sourced rule it runs on.",
+   "defs": [
+    "SPELL_SHIELD_REARM_RULE",
+    "SpellShieldRearmClock"
+   ]
+  },
+  {
+   "path": "src/calculator/spell_shield_eligibility.py",
+   "docstring": "Which cast a spell shield blocks, and what the block does.",
+   "defs": [
+    "SPELL_SHIELD_ONE_USE_RULE",
+    "SPELL_SHIELD_CONTROL_ONLY_RULE",
+    "SPELL_SHIELD_BASIC_ATTACK_RULE",
+    "SPELL_SHIELD_PRIOR_DISPOSAL_RULE",
+    "_SPELL_SHIELD_WIKI",
+    "SpellShieldRuleDeclaration",
+    "spell_shield_rules_receipt",
+    "_control_only_packet",
+    "SpellShieldAcceptance",
+    "resolve_cast_identity",
+    "SpellShieldEligibility",
+    "SpellShieldDecision",
+    "TriggeredHealRule",
+    "SpellShieldComposition",
+    "spell_shield_group_key",
+    "spell_shield_block_decision"
+   ]
+  }
+ ]
+}

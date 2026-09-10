@@ -37,18 +37,13 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
-from .module_contract import coverage
 from .module_helpers import ranked_slot
 from .shared_mechanics import with_self_shield
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_value,
-    simple_damage,
-    sum_modifiers,
-)
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_value, sum_modifiers
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.

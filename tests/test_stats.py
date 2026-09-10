@@ -3,20 +3,17 @@
 import pytest
 
 from src.calculator import stats as stats_module
+from src.calculator.champion_growth import get_champion_base_stats
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.item_effects import swiftmarch_adaptive_force
+from src.calculator.item_stat_block import get_item_stats, item_mana_reaches_pool
 from src.calculator.rune_effects import validate_rune_page
 from src.calculator.stat_formulas import (
     apply_movement_speed_soft_caps,
     calculate_attack_speed,
     growth_stat,
 )
-from src.calculator.stats import (
-    calculate_total_stats,
-    get_champion_base_stats,
-    get_item_stats,
-    item_mana_reaches_pool,
-)
+from src.calculator.stats import calculate_total_stats
 
 
 def test_stats_re_exports_the_formula_objects() -> None:

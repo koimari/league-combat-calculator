@@ -20,23 +20,16 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
-from .module_contract import coverage
 from .module_helpers import (
     REVIEWED_MODULE_ASSUMPTIONS,
     at_level,
     no_damage,
     ranked_slot,
 )
-from .slotlib import (
-    ability_name,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    proc_damage,
-    simple_damage,
-    with_item_on_hits,
-)
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
+from .slotlib import proc_damage, simple_damage, with_item_on_hits
 from .source_receipts import load_champion_sources
 
 _KATARINA_R_SPELL = spell_object("Katarina", "KatarinaR")

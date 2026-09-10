@@ -1,0 +1,15 @@
+{
+  "source": "src/calculator/champions/renata_glasc.py",
+  "decisions": [
+    "No new directory: every module lands beside its source in the existing src/calculator/champions package, so packages is empty. Naming src/calculator/champions here would overwrite the 172-module manifest __init__.py on --write.",
+    "BAILOUT_AUTHORITY is the only unit that moves. renata_glasc.py never reads it; support_effects.py and tests/test_renata_w_bailout.py reach it as renata_glasc.BAILOUT_AUTHORITY and retarget."
+  ],
+  "packages": {},
+  "modules": [
+    {
+      "path": "src/calculator/champions/renata_bailout_authority.py",
+      "docstring": "The field-by-field source adjudication that keeps Bailout's lethal half withheld.",
+      "defs": ["BAILOUT_AUTHORITY"]
+    }
+  ]
+}

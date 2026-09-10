@@ -2,7 +2,7 @@
 
 Imperial Mandate's Command is the incident this campaign is named after, and
 it is dual-sided: the pair engine prices the holder's own post-immobilize amp
-(``damage._apply_command_amp``) and the coupled walk prices every *other*
+(``fight.after.amplifiers._apply_command_amp``) and the coupled walk prices every *other*
 participant's through the ``Imperial Mandate — Command`` packet, with the
 holder carried as ``owner`` so the two halves can never both price him.
 
@@ -34,15 +34,15 @@ from src import app as app_module
 from src.calculator.ability_spec import AttackClass, DamageClass
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.data_fetcher import get_champion
-from src.calculator.interpreters import delta_amp
+from src.calculator.interpreters import amp_magnitude, delta_amp
 from src.calculator.item_behavior import AmpChainSlot, FightFacts
 from src.calculator.item_behavior_catalog import ACKNOWLEDGED_READING_DIVERGENCES
 from src.calculator.stats import calculate_total_stats
-from src.calculator.survival.actions import SurvivalAction
 from src.calculator.survival.transitions import (
     _apply_cross_participant_modifiers,
     _apply_damage_modifier,
 )
+from src.calculator.survival.typed_action import SurvivalAction
 
 # The roster.  Syndra's E is the authored stun (the incident's own marker);
 # Pantheon holds nothing, so nothing but Command can move his total between
@@ -134,7 +134,7 @@ def _command_effect() -> _CommandNumbers:
     assert slot is not None, "the roster fixture needs Command's declared rule"
     return _CommandNumbers(
         amp_fraction=slot.bonus_fraction,
-        duration=slot.value(delta_amp.WINDOW_DURATION_FIELD),
+        duration=slot.value(amp_magnitude.WINDOW_DURATION_FIELD),
     )
 
 
@@ -206,7 +206,7 @@ class TestTheRosterAuthorsTheMarkerCommandNeeds:
 
 
 class TestDeletingThePairSidePricerFailsOnANumber:
-    """``damage._apply_command_amp`` — the holder's own half."""
+    """``fight.after.amplifiers._apply_command_amp`` — the holder's own half."""
 
     def test_the_holder_total_is_pinned_and_differs_from_the_control(self):
         holder = _outgoing(with_command(), "main")

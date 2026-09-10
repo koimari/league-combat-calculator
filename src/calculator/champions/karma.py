@@ -6,17 +6,13 @@ from typing import Any
 
 from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
-from .engine import CC_PER_PART, SlotCtx, build_parser
+from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat
 from .module_helpers import no_damage
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-)
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
 
 

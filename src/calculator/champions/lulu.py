@@ -33,21 +33,15 @@ cache, so it stays named rather than authored.
 
 from typing import Any
 
-from ..ability_spec import ControlScope
 from ..binary_roots import data_value, spell_object
-from .engine import BUFF, CC_PER_PART, ONHIT, SlotCtx
+from ..control_spec import ControlScope
+from .engine import BUFF, ONHIT, SlotCtx
 from .module_helpers import buff_window_share, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
-from .slotlib import (
-    STEROID_ZERO,
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    on_hit_entry,
-    with_control_event,
-)
+from .slot_cc import CC_PER_PART
+from .slot_control import with_control_event
+from .slot_entries import STEROID_ZERO, damage_entry, on_hit_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 
 # HARDCODED: verify on patch updates — the 3-bolt barrage and each bolt's
 # 5% AP ratio are wiki P prose; the JSON carries the per-bolt and

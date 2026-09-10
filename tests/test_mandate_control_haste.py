@@ -16,7 +16,8 @@ import pytest
 from src.calculator import item_effects
 from src.calculator.ability_spec import DamagePart
 from src.calculator.calculate import calculate_payload
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.config import FightConfig
 
 _MANDATE = [{"name": "Imperial Mandate"}]
 

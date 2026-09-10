@@ -61,15 +61,13 @@ from pathlib import Path
 
 import pytest
 
+from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 
 # The retired per-item ``_X_SOURCE`` constant, read from the one home it
 # moved to: the declaration's own resolved citation.
-from src.calculator.defensive_effects import (
-    StartingDefenses,
-    defense_source,
-    resolve_starting_defenses,
-)
+from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.fight_params import FightParams
 from src.calculator.item_behavior import DefenseMechanic
 from src.calculator.item_coverage import target_item_model_coverage
 from src.calculator.item_effects import (
@@ -77,14 +75,14 @@ from src.calculator.item_effects import (
     ITEM_INPUT_OPTIONS,
     required_effect_value,
 )
-from src.calculator.optimizer import get_eligible_legendaries
+from src.calculator.optimizer_candidates import get_eligible_legendaries
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.scenario import ChampionLoadout
+from src.calculator.pipeline import run_fight
+from src.calculator.starting_defenses import StartingDefenses, defense_source
 from src.calculator.stats import calculate_total_stats
 from tests import item_probe
 from tests.survival_probe import simulate_survival, survival_of
@@ -798,7 +796,7 @@ def test_step_validation_rejects_non_multiple_values():
     """P3-3F: stasis_active_seconds is bounded, finite, AND a step multiple
     (0.5) at both the request layer and the resolver layer — a value like
     1.3 or 2.25 is rejected, not silently rounded."""
-    from src.calculator.pipeline import FightParams
+    from src.calculator.fight_params import FightParams
 
     for bad in (1.3, 2.25, 0.7):
         with pytest.raises(ValueError, match=re.escape("multiple of 0.5")):

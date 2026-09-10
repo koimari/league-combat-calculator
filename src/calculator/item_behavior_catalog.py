@@ -23,6 +23,11 @@ enumerations this package can read directly, so no closure depends on parsing
 another module's source text and this stays a light import.
 """
 
+# file-length-ok: the bulk is one compiler per family beside the three total
+# maps ``validate_catalog`` closes over, and a compiler in another file is a
+# family whose shape and whose totality check live apart.
+# docs/plans/2026-09-09-fight-navigability.md carves the interpreters that
+# read these declarations, not the compilers that build them.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
@@ -31,7 +36,7 @@ from functools import cache
 from typing import Any, NamedTuple
 from urllib.parse import quote
 
-from . import data_registry, item_effects, rune_effects
+from . import data_registry, item_effects, rune_effects, trigger_stream
 from .ability_spec import AttackClass, DamageClass, Disposition
 from .item_behavior import (
     DEFENSE_FIELD_COMBINE,
@@ -130,6 +135,7 @@ from .item_behavior import (
     RestrictedChannelRule,
     RuleFamily,
     Scaling,
+    SecondaryDelivery,
     SecondaryTargetRule,
     SelfShield,
     ShapedChargeRule,
@@ -167,18 +173,17 @@ from .item_behavior import (
     chain_rank,
     validate_rule,
 )
-from .survival.actions import ActionKind
+from .reference_vocabulary import LevelScale, ValueRegistry
+from .survival.typed_action import ActionKind
 from .value_ref import (
     Const,
     DerivedValueRef,
     LateLevelValueRef,
-    LevelScale,
     LevelValueRef,
-    SourceReceipt,
     ValueRef,
-    ValueRegistry,
     ValueSource,
 )
+from .value_source_receipt import SourceReceipt
 
 
 class BehaviorCatalogError(RuntimeError):
@@ -2076,7 +2081,7 @@ def _magic_part_amp_rule(source: ValueSource) -> BehaviorRule:
     """Abyssal Mask's Unmake: every magic part the cursed target takes.
 
     Not a chain slot and deliberately so — the curse multiplies each magic
-    packet where ``damage._mitigate`` prices it, which is what the two
+    packet where ``fight.resists._mitigate`` prices it, which is what the two
     attack-class part amps do for their own deliveries.  The mechanic id is
     the one ``trigger_stream`` already pairs the walk's aura against, so the
     pair half it names is now a declaration rather than a ladder field.
@@ -2795,6 +2800,10 @@ def _compile_on_hit_strike(
     return (rule,)
 
 
+#: The registry key naming which delivery a routing item's packets ride.
+DELIVERY_KEY = "secondary_delivery"
+
+
 def _compile_secondary_target(
     family: RuleFamily,
     source: ValueSource,
@@ -2807,6 +2816,11 @@ def _compile_secondary_target(
     share instead of a :class:`~.item_behavior.DamageFormula`.
     """
     del family
+    if DELIVERY_KEY not in entry:
+        raise BehaviorCatalogError(
+            f"{source.label} routes packets at a second subject and declares "
+            f"no {DELIVERY_KEY!r}, so its rows have nothing to be called"
+        )
     rule = BehaviorRule(
         family=RuleFamily.SECONDARY_TARGET,
         owner=source.owner,
@@ -2815,6 +2829,7 @@ def _compile_secondary_target(
             max_targets=source.ref("max_secondary_targets"),
             damage_share=source.ref("secondary_ad_ratio"),
             applies_on_hit=bool(entry.get("applies_on_hit", False)),
+            delivery=SecondaryDelivery.for_tag(str(entry[DELIVERY_KEY])),
         ),
         compilability=Compilable(),
         receipt=source.receipt(
@@ -5996,6 +6011,65 @@ def _live_registry_records(owner: str) -> tuple[Any, Any, Any]:
     )
 
 
+#: The families whose rules author a damage row in the pair fight, so each of
+#: them has a step that prices it and ``trigger_stream.CAPABILITIES`` is where
+#: that step is named.  Every rule in these families declares one today; the
+#: families outside them grant stats, defenses, sustain and ally packets,
+#: which author no row of the holder's own damage.
+PACKET_AUTHORING_FAMILIES: frozenset[RuleFamily] = frozenset(
+    {
+        RuleFamily.ACTIVE_CAST,
+        RuleFamily.CAST_PROC,
+        RuleFamily.CHARGED_STRIKE,
+        RuleFamily.ON_HIT_STRIKE,
+        RuleFamily.PERIODIC,
+        RuleFamily.SECONDARY_TARGET,
+        RuleFamily.SPELLBLADE,
+    }
+)
+
+
+def declared_pricing_home(owner: str) -> str | None:
+    """Where the owner's own declarations say its packets are priced.
+
+    The pair half's ``impl`` when one of its mechanics declares one, because
+    that is the step a reader opens; the walk half's otherwise.  ``None``
+    when the owner declares no mechanic at all, or when two of its mechanics
+    are priced in two places, which is a claim one string cannot make.
+    """
+    homes = set()
+    for rule in behavior_rules(owner):
+        capability = trigger_stream.CAPABILITIES.get(rule.mechanic_id)
+        if capability is None:
+            continue
+        pair = (
+            capability
+            if capability.engine is trigger_stream.Engine.PAIR
+            else trigger_stream.CAPABILITIES.get(capability.pair_of or "")
+        )
+        homes.add((pair or capability).impl)
+    return homes.pop() if len(homes) == 1 else None
+
+
+def _validate_declared_pricing_homes(rules: tuple[BehaviorRule, ...]) -> None:
+    """Refuse a priced rule that names no capability, and so no pricing home.
+
+    Every other omission an item can make fails closed with a named reason.
+    A missing capability is the one that would not: the rule still compiles
+    and still prices, while every projection of the trigger bus is blind to
+    it, so this is where it stops.
+    """
+    for rule in rules:
+        if rule.family not in PACKET_AUTHORING_FAMILIES:
+            continue
+        if rule.mechanic_id not in trigger_stream.CAPABILITIES:
+            raise BehaviorCatalogError(
+                f"{rule.owner!r} compiles {rule.mechanic_id!r} in the "
+                f"{rule.family.value} family and trigger_stream.CAPABILITIES "
+                "declares no capability for it, so no step owns its price"
+            )
+
+
 def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
     """Compile *owner*'s declarations from the live registries.
 
@@ -6031,6 +6105,7 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
         for claimed in entry_families(registry, family, entry, owner):
             rules.extend(_COMPILERS[claimed](claimed, source, entry))
     compiled = tuple(rules)
+    _validate_declared_pricing_homes(compiled)
     data_registry.store_for_generation(
         _BEHAVIOR_RULES_MEMO, key, (*_live_registry_records(owner), compiled)
     )

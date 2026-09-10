@@ -540,7 +540,7 @@ class TestOrderingAndUses:
 class TestKernelStateWiring:
     def test_state_builds_typed_kernel_contracts(self):
         from src.calculator.data_fetcher import get_champion
-        from src.calculator.defensive_effects import StartingDefenses
+        from src.calculator.starting_defenses import StartingDefenses
         from src.calculator.survival.receipt_state import build_state
 
         # The defence record is the real dataclass, not a shadow of it:

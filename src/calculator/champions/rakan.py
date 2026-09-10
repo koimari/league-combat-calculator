@@ -21,17 +21,14 @@ it).  The out-of-combat refresh cadence stays state.
 from typing import Any
 
 from .. import healing_helpers as _healing
+from .contract_vocabulary import coverage
 from .engine import build_parser
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
-from .module_contract import coverage
-from .slotlib import (
-    attach_self_shield,
-    extract_named,
-    simple_damage,
-    support_cast,
-    with_control,
-)
+from .slot_control import with_control
+from .slot_entries import attach_self_shield, support_cast
+from .slot_extract import extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 OPTIONS: list[dict[str, Any]] = []

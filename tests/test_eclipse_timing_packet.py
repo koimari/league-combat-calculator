@@ -69,9 +69,12 @@ import pytest
 from src.app import _load_public_champion
 from src.calculator import participant_timeline
 from src.calculator.ability_spec import DamagePart
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.champion_loadout import ChampionLoadout
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
+from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.fight.config import FightConfig
+from src.calculator.fight_params import FightParams
 from src.calculator.interpreters import (
     cast_proc,
     compilability_for,
@@ -83,10 +86,11 @@ from src.calculator.item_effects import (
     required_effect_value,
 )
 from src.calculator.participant_timeline import Combatant, build_participant_timeline
-from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.scenario import ChampionLoadout
+from src.calculator.pipeline import run_fight
+from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.stats import calculate_total_stats
-from src.calculator.survival.actions import SUPPORT_RANK_KEY, TransitionRank
+from src.calculator.survival.classify import SUPPORT_RANK_KEY
+from src.calculator.survival.phases import TransitionRank
 from src.calculator.timeline_coverage import (
     EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES,
     applicability_exclusion_sources,
@@ -390,9 +394,9 @@ class TestStackGain:
                 "damage_type": "physical",
                 "event_precision": "hit",
                 "target_id": "target:0",
-                # The retired family's declaration rides its own packet:
-                # (mechanic_id, pre-mitigation magnitude, attack class).
+                # The declaration (rule, magnitude, class) and the armor met.
                 "declared": ("eclipse.proc", 100.0, "other", None, None, None),
+                "resistance_met": 0.0,
             }
         ]
 
@@ -441,9 +445,9 @@ class TestStackGain:
                 "damage_type": "physical",
                 "event_precision": "hit",
                 "target_id": "target:0",
-                # The retired family's declaration rides its own packet:
-                # (mechanic_id, pre-mitigation magnitude, attack class).
+                # The declaration (rule, magnitude, class) and the armor met.
                 "declared": ("eclipse.proc", 100.0, "other", None, None, None),
+                "resistance_met": 0.0,
             }
         ]
 
@@ -886,7 +890,7 @@ class TestFailClosedMetadata:
         # exactly like the non-finite time branch; pin the caller's
         # withheld handling through that branch.
         monkeypatch.setattr(
-            "src.calculator.damage._stacked_champion_proc_times",
+            "src.calculator.fight.items.cast_procs._stacked_champion_proc_times",
             lambda *args, **kwargs: None,
         )
         fight = _fight(

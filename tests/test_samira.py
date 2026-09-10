@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.calculator.champions import get_champion_module_contract, samira, slotlib
+from src.calculator.champions import get_champion_module_contract, samira, slot_extract
 from tests import cc_review, coverage_truth, rider_probe, row_review
 
 
@@ -96,24 +96,28 @@ class TestBladeRider:
             (20, 21.0, 11.32),
         ):
             assert (
-                slotlib.extract_value(ability, "Bonus Magic Damage", level, level=level)
+                slot_extract.extract_value(
+                    ability, "Bonus Magic Damage", level, level=level
+                )
                 == flat
             )
             assert (
-                slotlib.extract_value(ability, "Per-Level Scaling", level, level=level)
+                slot_extract.extract_value(
+                    ability, "Per-Level Scaling", level, level=level
+                )
                 == ad_percent
             )
             # The wiki's "up to" maximum is exactly the doubling this
             # module prices as a missing-health amplification of 1.0.
             assert (
-                slotlib.extract_value(
+                slot_extract.extract_value(
                     ability, "Per-Level Scaling", level, level=level, occurrence=1
                 )
                 == 2 * flat
             )
             # abs=0.01: the wiki rounds each array to two decimals before
             # doubling, so level 20 reads 22.65 rather than 2 x 11.32.
-            assert slotlib.extract_value(
+            assert slot_extract.extract_value(
                 ability, "Per-Level Scaling", level, level=level, occurrence=2
             ) == pytest.approx(2 * ad_percent, abs=0.01)
 

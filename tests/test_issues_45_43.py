@@ -16,6 +16,7 @@ import pytest
 
 import src.app as app_module
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.fight_params import FightParams
 from src.calculator.interpreters import charged_strike
 from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import (
@@ -30,7 +31,7 @@ from src.calculator.item_effects import (
     required_effect_value,
     sustain_effect_value,
 )
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats
 from tests.app_config import app_config
 
@@ -368,10 +369,10 @@ def test_hydra_cleave_secondary_cone_typed_and_boundary_documented():
     # Titanic's Cleave is max-health based: 3% melee / 1.5% ranged of max HP
     # to secondary targets.
     assert hydra_secondary_target_damage(
-        max_health=3000, is_melee=True
+        max_health=3000, is_melee=True, item_name="Titanic Hydra"
     ) == pytest.approx(90.0)
     assert hydra_secondary_target_damage(
-        max_health=3000, is_melee=False
+        max_health=3000, is_melee=False, item_name="Titanic Hydra"
     ) == pytest.approx(45.0)
     # The selected target never receives the splash (wiki: 'other enemies').
     # Tiamat carries the explicit boundary note; the single-target fight

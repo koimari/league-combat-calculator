@@ -23,6 +23,7 @@ from src.calculator.binary_roots import (
     record_value,
     spell_object,
 )
+from src.calculator.champions import aphelios_weapons
 
 _CHAMPIONS = json.loads((Path("data/champions.json")).read_text(encoding="utf-8"))
 
@@ -101,7 +102,7 @@ def test_data_value_at_rank_is_one_based_and_fails_closed():
 
 def test_aurelion_sol_module_constants_come_from_the_binary():
     """The pilot: the module does not hand-copy its Stardust constants."""
-    from src.calculator.champions.aurelion_sol import (
+    from src.calculator.champions.aurelion_sol_stardust import (
         _E_EXECUTE_BASE_PCT,
         _E_EXECUTE_PCT_PER_100_STARDUST,
         _Q_BURST_MAXHP_PCT_PER_STARDUST,
@@ -780,7 +781,7 @@ class TestBatch18RootedConstants:
         assert data_value(
             spell_object("Aphelios", "ApheliosInfernumQ"),
             "InfernumDamageMultiplier",
-        ) == pytest.approx(aphelios._INFERNUM_PRIMARY_AD_RATIO)
+        ) == pytest.approx(aphelios_weapons._INFERNUM_PRIMARY_AD_RATIO)
         assert data_value(
             spell_object("Aphelios", "ApheliosR"), "CritDamageMod"
         ) == pytest.approx(aphelios._R_FOLLOWUP_CRIT_EXTRA)

@@ -24,20 +24,22 @@ from ..ability_atoms import (
     required_ranked_attribute_atom,
 )
 from ..ability_spec import AttackClass, DamageClass, DamagePart
-from ..survival.actions import TransitionRank
+from ..survival.phases import TransitionRank
 from .module_helpers import buff_window_share, no_damage, ranked_slot, steroid_entry
 from .slot_context import DAMAGE, SlotCtx, SlotParser
-from .slotlib import (
-    ability_name,
+from .slot_control import atom_receipt
+from .slot_entries import (
     ability_on_hit_entry,
-    atom_receipt,
     attach_self_shield,
     damage_entry,
+    on_hit_entry,
+)
+from .slot_extract import (
+    ability_name,
     extract_cooldown,
     extract_named,
     extract_value,
     find_named_leveling,
-    on_hit_entry,
     sum_modifiers,
 )
 

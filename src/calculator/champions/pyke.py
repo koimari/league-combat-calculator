@@ -42,12 +42,12 @@ from typing import Any
 
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from ..stat_conversion import BonusHealthConversion
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .module_contract import coverage
 from .packet_module import build_packet_module
-from .slotlib import (
+from .slot_entries import damage_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cooldown,
     find_named_leveling,
     sum_modifiers,

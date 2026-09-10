@@ -35,7 +35,6 @@ from ..item_behavior import (
     KernelField,
     RuleFamily,
     UltimateProcRule,
-    mechanic_id_reading,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..item_effects import (
@@ -139,6 +138,7 @@ def _row(
         display_name=name,
         damage_type=payload.formula.damage_type,
         raw_damage=damage_formula.compile_formula(payload.formula, ctx),
+        mechanic_id=rule.mechanic_id,
         **fields,  # type: ignore[arg-type]
     )
 
@@ -256,14 +256,6 @@ def cast_proc_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
     )
 
 
-proc_mechanic_id = mechanic_id_reading(
-    cast_proc_rules,
-    CastProcInterpretationError,
-    authors="a cast-triggered proc",
-    declares="cast_proc",
-)
-
-
 def self_shield_owners(owners: Sequence[str]) -> tuple[str, ...]:
     """Every held owner whose cast proc attaches a self shield to its event.
 
@@ -316,7 +308,6 @@ __all__ = [
     "cast_proc_rules",
     "cooldown_proc_effect",
     "proc_fields",
-    "proc_mechanic_id",
     "repeated_target_multiplier",
     "resolve_slots",
     "self_shield_owners",

@@ -24,6 +24,9 @@ Two properties are checked here and neither is a convention:
   lookup would pass a source scan and fail these.
 """
 
+# file-length-ok: the bulk is the memo matrix, one declared table and one
+# front door per memo. Splitting it separates a memo from the table that
+# governs it.
 from __future__ import annotations
 
 import ast
@@ -38,8 +41,8 @@ from src.calculator import (
     data_registry,
     economy,
     item_behavior_catalog,
-    stats,
-    support_effects,
+    item_stat_block,
+    support_scan,
 )
 
 SRC_ROOT = Path(__file__).resolve().parent.parent / "src"
@@ -47,7 +50,7 @@ SRC_ROOT = Path(__file__).resolve().parent.parent / "src"
 
 def _combatant_stub() -> SimpleNamespace:
     """The two attributes the survival prototype's key reads, and no more."""
-    from src.calculator.defensive_effects import StartingDefenses
+    from src.calculator.starting_defenses import StartingDefenses
 
     return SimpleNamespace(
         defenses=StartingDefenses(),
@@ -203,10 +206,10 @@ D49_SURVIVORS: frozenset[str] = frozenset(
     {
         "calculator.economy._ITEM_BY_ID_MEMO",
         "calculator.pipeline._CAST_ORDER_PARAMS_MEMO",
-        "calculator.stats._ITEM_STATS_MEMO",
-        "calculator.stats._ITEM_STATS_VALIDATION_MEMO",
-        "calculator.support_effects._SUPPORT_ATTRS_MEMO",
-        "calculator.support_effects._SUPPORT_PROFILE_MEMO",
+        "calculator.item_stat_block._ITEM_STATS_MEMO",
+        "calculator.item_stat_block._ITEM_STATS_VALIDATION_MEMO",
+        "calculator.support_scan._SUPPORT_ATTRS_MEMO",
+        "calculator.support_scan._SUPPORT_PROFILE_MEMO",
         "calculator.survival.receipt_state._STATE_PROTO_MEMO",
     }
 )
@@ -299,11 +302,10 @@ def test_the_keyed_tables_all_say_data_version_and_the_others_do_not() -> None:
 
 def test_rotation_memos_are_keyed_by_their_own_lane() -> None:
     """Phase 5's half of D-49 is asserted here, not assumed."""
-    source = (SRC_ROOT / "calculator" / "rotation_resolver.py").read_text(
-        encoding="utf-8"
-    )
-    assert "cache_key = (champion_name, data_version())" in source
-    assert "cache_key = (champion_name, signature, data_version())" in source
+    matrix = (SRC_ROOT / "calculator" / "ability_dps_matrix.py").read_text("utf-8")
+    rule = (SRC_ROOT / "calculator" / "champion_rotation_rule.py").read_text("utf-8")
+    assert "cache_key = (champion_name, data_version())" in matrix
+    assert "cache_key = (champion_name, signature, data_version())" in rule
 
 
 def test_refresh_cleared_memo_is_emptied_by_the_refresh_it_names() -> None:
@@ -332,11 +334,13 @@ def test_item_stats_memo_recomputes_after_a_version_bump(bumped_version) -> None
             }
         },
     }
-    assert stats.get_item_stats(item)["attack_damage"] == 40.0
+    assert item_stat_block.get_item_stats(item)["attack_damage"] == 40.0
     item["stats"]["attackDamage"]["flat"] = 70.0
-    assert stats.get_item_stats(item)["attack_damage"] == 40.0, "memo should hold"
+    assert (
+        item_stat_block.get_item_stats(item)["attack_damage"] == 40.0
+    ), "memo should hold"
     bumped_version()
-    assert stats.get_item_stats(item)["attack_damage"] == 70.0
+    assert item_stat_block.get_item_stats(item)["attack_damage"] == 70.0
 
 
 def test_item_by_id_memo_rebuilds_after_a_version_bump(bumped_version) -> None:
@@ -357,21 +361,21 @@ def test_support_attrs_memo_recomputes_after_a_version_bump(bumped_version) -> N
             "R": [],
         }
     }
-    assert support_effects._has_support_attributes(champion) is False
+    assert support_scan._has_support_attributes(champion) is False
     champion["abilities"]["Q"][0]["effects"][0]["leveling"][0]["attribute"] = "Heal"
-    assert support_effects._has_support_attributes(champion) is False, "memo holds"
+    assert support_scan._has_support_attributes(champion) is False, "memo holds"
     bumped_version()
-    assert support_effects._has_support_attributes(champion) is True
+    assert support_scan._has_support_attributes(champion) is True
 
 
 def test_support_profile_memo_recomputes_after_a_version_bump(bumped_version) -> None:
     """An ability's shield/heal profile follows its cache generation too."""
     ability = {"effects": [{"leveling": [{"attribute": "Damage"}]}]}
-    assert support_effects._support_profile(ability)[1] is None
+    assert support_scan._support_profile(ability)[1] is None
     ability["effects"][0]["leveling"][0]["attribute"] = "Heal"
-    assert support_effects._support_profile(ability)[1] is None, "memo holds"
+    assert support_scan._support_profile(ability)[1] is None, "memo holds"
     bumped_version()
-    assert support_effects._support_profile(ability)[1] == "Heal"
+    assert support_scan._support_profile(ability)[1] == "Heal"
 
 
 UNBOUNDED_KEYED_MEMOS = {
@@ -379,17 +383,20 @@ UNBOUNDED_KEYED_MEMOS = {
         item_behavior_catalog,
         "_BEHAVIOR_RULES_MEMO",
     ),
-    "calculator.stats._ITEM_STATS_MEMO": (stats, "_ITEM_STATS_MEMO"),
-    "calculator.stats._ITEM_STATS_VALIDATION_MEMO": (
-        stats,
+    "calculator.item_stat_block._ITEM_STATS_MEMO": (
+        item_stat_block,
+        "_ITEM_STATS_MEMO",
+    ),
+    "calculator.item_stat_block._ITEM_STATS_VALIDATION_MEMO": (
+        item_stat_block,
         "_ITEM_STATS_VALIDATION_MEMO",
     ),
-    "calculator.support_effects._SUPPORT_ATTRS_MEMO": (
-        support_effects,
+    "calculator.support_scan._SUPPORT_ATTRS_MEMO": (
+        support_scan,
         "_SUPPORT_ATTRS_MEMO",
     ),
-    "calculator.support_effects._SUPPORT_PROFILE_MEMO": (
-        support_effects,
+    "calculator.support_scan._SUPPORT_PROFILE_MEMO": (
+        support_scan,
         "_SUPPORT_PROFILE_MEMO",
     ),
 }
@@ -450,9 +457,9 @@ def test_a_superseded_generation_is_evicted_rather_than_retained(
 
     def touch_every_memo() -> None:
         item_behavior_catalog.behavior_rules("Recurve Bow")
-        stats.get_item_stats(item)
-        support_effects._has_support_attributes(champion)
-        support_effects._support_profile(ability)
+        item_stat_block.get_item_stats(item)
+        support_scan._has_support_attributes(champion)
+        support_scan._support_profile(ability)
 
     # Derived from the table above rather than listed again: a memo that
     # joins the unbounded set is isolated here by joining it, and one left

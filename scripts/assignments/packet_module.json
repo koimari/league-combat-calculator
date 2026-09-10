@@ -1,0 +1,35 @@
+{
+ "source": "src/calculator/champions/packet_module.py",
+ "decisions": [
+  "No new directory: the module lands beside its source in the existing src/calculator/champions package, so packages is empty.",
+  "_ROOT and _PACKET_PATH move with _packet_specs, the only reader of the asset. Leaving them behind is a back-edge and nothing outside packet_module.py reads either name.",
+  "SlotOverrides moves with the compile steps that take it as a parameter (_variant_parsers, _variant_slot, _compiled_slot). build_packet_module is the one place it is constructed, so the residue imports it back and no reader outside the file changes.",
+  "_apply_slot_overrides stays with build_packet_module, its only caller. Champion modules are untouched: build_packet_module and both repeat-shape parsers keep their home.",
+  "extract_modules.py cannot run this assignment yet. packet_module.py opens with `from __future__ import annotations`, and _residue_reads wraps every kept non-movable statement in a function before handing it to symtable, so the future import raises `SyntaxError: from __future__ imports must occur at the beginning of the file`. The graph itself resolves clean under a probe that gives that one node the name it binds.",
+  "The __future__ blocker is gone: extract_modules.py excludes the future import from _residue_reads and keeps it in the residue, and both are pinned by tests/test_extract_modules.py.",
+  "_compiled_slot stays in the residue: dispatch over a spec's kind belongs beside build_packet_module, the one caller, and with it out packet_parsers.py is 458 lines and packet_module.py 414, so neither carries sightline #27's size arm."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/champions/packet_parsers.py",
+   "docstring": "The reviewed-packet asset, and the slot parser one of its rows compiles to.",
+   "defs": [
+    "_ROOT",
+    "_PACKET_PATH",
+    "_packet_specs",
+    "_ranked",
+    "_packet_cooldown",
+    "_one_hit",
+    "_packet_parser",
+    "_override_packet_static",
+    "_apply_packet_tick_fix",
+    "_ticked_wiki_attribute_parser",
+    "_single_hit_row",
+    "SlotOverrides",
+    "_variant_parsers",
+    "_variant_slot"
+   ]
+  }
+ ]
+}

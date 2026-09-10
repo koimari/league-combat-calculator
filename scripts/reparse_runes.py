@@ -22,10 +22,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
-from src.calculator.data_updater import (
-    DEFAULT_DATA_DIR,
-    reparse_cached_rune_effects,
-)
+from src.calculator.data_updater import DEFAULT_DATA_DIR
+from src.calculator.rune_pull import reparse_cached_rune_effects
 
 _COMPARED = ("effects", "parse_warnings")
 

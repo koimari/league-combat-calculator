@@ -39,12 +39,12 @@ import pytest
 
 from src.calculator.data_registry import data_version
 from src.calculator.item_behavior import ReceiptOnly, ReceiptScope
-from src.calculator.program import build, caches
+from src.calculator.program import build, caches, capability
 from src.calculator.program import compile as program_compile
 from src.calculator.program.build import ParamPatch, Program, Projection
 from src.calculator.program.events import Damage, RoutedEvent
 from src.calculator.program.identity import EventId, PairOrigin
-from src.calculator.survival.actions import TransitionRank
+from src.calculator.survival.phases import TransitionRank
 from src.calculator.trigger_stream import HolderStacking
 
 # Which function keys each declared cache, and which function produces the
@@ -76,10 +76,10 @@ _ENGINE_RESULT = {
         }
     ]
 }
-_CAPS = build.CapabilityView(mechanics={})
-_RICH_CAPS = build.CapabilityView(
+_CAPS = capability.CapabilityView(mechanics={})
+_RICH_CAPS = capability.CapabilityView(
     mechanics={
-        "amp": build.MechanicView(
+        "amp": capability.MechanicView(
             ReceiptOnly("no timed amp", ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER),
             {"amp": "APPLIED"},
             HolderStacking.PER_HOLDER,

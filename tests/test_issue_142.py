@@ -13,18 +13,18 @@ import inspect
 
 import pytest
 
-from src.calculator import support_effects
+from src.calculator import support_effects, support_row_metadata, support_scan
 from src.calculator.capabilities import (
     PARTICIPANT_LEDGER_CONTRACT,
     SUPPORT_TARGET_RESOLUTION_SCOPES,
     SUPPORT_TARGET_SCOPES,
 )
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.participant_timeline import (
     Combatant,
     _support_target_ids,
 )
-from src.calculator.support_effects import _SCOPE_OVERRIDES, _support_profile
+from src.calculator.starting_defenses import StartingDefenses
+from src.calculator.support_scan import _SCOPE_OVERRIDES, _support_profile
 
 
 def _combatant(participant_id: str, team: str, name: str) -> Combatant:
@@ -228,11 +228,9 @@ def test_champion_emitter_validates_scope(monkeypatch):
         casts,
         ability_ranks={"W": 5},
     )
-    monkeypatch.setattr(
-        support_effects,
-        "_SCOPE_OVERRIDES",
-        {**support_effects._SCOPE_OVERRIDES, ("Lux", "W"): "typo_scope"},
-    )
+    poisoned = {**support_scan._SCOPE_OVERRIDES, ("Lux", "W"): "typo_scope"}
+    for module in (support_effects, support_row_metadata):
+        monkeypatch.setattr(module, "_SCOPE_OVERRIDES", poisoned)
     with pytest.raises(ValueError) as exc:
         derive_ally_effects(
             champion_data,

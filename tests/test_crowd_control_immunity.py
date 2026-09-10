@@ -110,14 +110,14 @@ from typing import Any
 import pytest
 
 from src.app import app
-from src.calculator import shield_ledger
-from src.calculator.defensive_effects import StartingDefenses
-from src.calculator.delivery_eligibility import DefenseWindow, stable_event_key
+from src.calculator import shield_ledger, shield_pools
+from src.calculator.delivery_facts import DefenseWindow, stable_event_key
 from src.calculator.participant_timeline import Combatant, _WalkCompiler
 from src.calculator.roster_composition import ActorRequest
-from src.calculator.state_lifecycle import SourceReceipt
-from src.calculator.survival.actions import ActionKind
+from src.calculator.starting_defenses import StartingDefenses
+from src.calculator.state_timeline import SourceReceipt
 from src.calculator.survival.compile import unrepresentable_template_receipt
+from src.calculator.survival.typed_action import ActionKind
 from tests.survival_probe import simulate_survival, survival_of
 
 _BY_TIME = itemgetter("time")
@@ -423,14 +423,12 @@ class _CcAction:
         self.skillshot = skillshot
 
 
-def _holder(
-    amount: float = 320.0, expires_at: float = 5.0
-) -> shield_ledger.TimedShield:
+def _holder(amount: float = 320.0, expires_at: float = 5.0) -> shield_pools.TimedShield:
     """One exact Black Shield ledger entry (the immunity holder)."""
-    return shield_ledger.TimedShield(
+    return shield_pools.TimedShield(
         amount=amount,
         expires_at=expires_at,
-        pool=shield_ledger.MAGIC,
+        pool=shield_pools.MAGIC,
         source="Black Shield",
     )
 
@@ -1001,14 +999,14 @@ def test_r8_another_shield_does_not_keep_immunity():
     # NEW-CONTRACT: the exact Black Shield ledger entry is the only
     # immunity holder — the general entry never matches.
     cce = _require_contract()
-    pools = shield_ledger.build_pools(health=2000.0)
-    shield_ledger.grant(
-        pools, 320.0, pool=shield_ledger.MAGIC, expires_at=5.0, source="Black Shield"
+    pools = shield_pools.build_pools(health=2000.0)
+    shield_pools.grant(
+        pools, 320.0, pool=shield_pools.MAGIC, expires_at=5.0, source="Black Shield"
     )
-    shield_ledger.grant(
+    shield_pools.grant(
         pools,
         500.0,
-        pool=shield_ledger.GENERAL,
+        pool=shield_pools.GENERAL,
         expires_at=4.5,
         source="Prismatic Barrier",
     )
@@ -1542,7 +1540,7 @@ def test_r14_timeline_non_control_damage_packet():
 def test_r15_physical_damage_never_consumes_the_magic_pool():
     """shield_ledger pool totals: a physical hit leaves the magic pool
     exactly untouched (no magic_absorbed, full pool, full health loss)."""
-    pools = shield_ledger.build_pools(health=2000.0, magic_shield=320.0)
+    pools = shield_pools.build_pools(health=2000.0, magic_shield=320.0)
     outcome = shield_ledger.absorb(pools, 200.0, "physical", 1.0)
     assert pools.magic_shield == pytest.approx(320.0)
     assert pools.magic_absorbed == pytest.approx(0.0)
@@ -1561,9 +1559,9 @@ def test_r15_physical_damage_never_consumes_the_magic_pool():
     # physical hit leaves the holder's amount untouched, a magic hit
     # drains it.
     cce = _require_contract()
-    timed = shield_ledger.build_pools(health=2000.0)
-    shield_ledger.grant(
-        timed, 320.0, pool=shield_ledger.MAGIC, expires_at=5.0, source="Black Shield"
+    timed = shield_pools.build_pools(health=2000.0)
+    shield_pools.grant(
+        timed, 320.0, pool=shield_pools.MAGIC, expires_at=5.0, source="Black Shield"
     )
     shield_ledger.absorb(timed, 200.0, "physical", 1.0)
     holder = cce.immunity_holder(timed, "Black Shield", event_time=1.0)
@@ -1691,14 +1689,14 @@ def test_r18_immunity_tied_to_the_exact_ledger_entry():
     is not a holder, a different-source shield is never a holder, and a
     fresh re-grant is a NEW holder."""
     cce = _require_contract()
-    pools = shield_ledger.build_pools(health=2000.0)
-    shield_ledger.grant(
-        pools, 320.0, pool=shield_ledger.MAGIC, expires_at=5.0, source="Black Shield"
+    pools = shield_pools.build_pools(health=2000.0)
+    shield_pools.grant(
+        pools, 320.0, pool=shield_pools.MAGIC, expires_at=5.0, source="Black Shield"
     )
-    shield_ledger.grant(
+    shield_pools.grant(
         pools,
         500.0,
-        pool=shield_ledger.GENERAL,
+        pool=shield_pools.GENERAL,
         expires_at=4.5,
         source="Prismatic Barrier",
     )
@@ -1722,8 +1720,8 @@ def test_r18_immunity_tied_to_the_exact_ledger_entry():
     assert cce.immunity_holder(pools, "Black Shield", event_time=2.0) is None
 
     # A fresh grant is a NEW holder with its own identity.
-    shield_ledger.grant(
-        pools, 100.0, pool=shield_ledger.MAGIC, expires_at=7.0, source="Black Shield"
+    shield_pools.grant(
+        pools, 100.0, pool=shield_pools.MAGIC, expires_at=7.0, source="Black Shield"
     )
     new_holder = cce.immunity_holder(pools, "Black Shield", event_time=2.0)
     assert new_holder is not None

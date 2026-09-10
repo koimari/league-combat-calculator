@@ -3,8 +3,9 @@
 import pytest
 
 from src.calculator.calculate import calculate_payload
+from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.data_fetcher import get_champion
-from src.calculator.scenario import ChampionLoadout, parse_roster
+from src.calculator.scenario import parse_roster
 
 
 def test_loadout_resolves_level_items_and_health_components():

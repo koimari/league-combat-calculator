@@ -30,18 +30,15 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import CC_PER_PART, SlotCtx, SlotParser
+from .engine import SlotCtx, SlotParser
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
 from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module, first_plus_repeats_parser
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    simple_damage,
-)
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slotlib import simple_damage
 
 PACKET_SHA256 = "29e792e87270f7bf57970661c6adc97beedb7fa72b05efebcbc3ac4e893107f3"
 

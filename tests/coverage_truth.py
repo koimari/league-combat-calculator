@@ -23,8 +23,8 @@ Blows) prices nothing at all in the first and everything in the second.
 This is a test helper, not a test module: it holds no assertions.
 """
 
+from src.calculator.champion_loadout import load_public_champion
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.scenario import load_public_champion
 from tests import row_review
 
 PRICED = "priced"

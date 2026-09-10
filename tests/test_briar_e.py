@@ -27,13 +27,12 @@ from src.calculator.ability_atoms import (
     required_ability_atom,
 )
 from src.calculator.ability_spec import AttackClass, DamageClass
+from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.briar import OPTIONS
 from src.calculator.data_fetcher import get_champion
-from src.calculator.defensive_effects import (
-    StartingDefenses,
-    resolve_starting_defenses,
-)
+from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.fight_params import FightParams
 from src.calculator.participant_timeline import (
     Combatant,
     CoupledSearchContext,
@@ -41,12 +40,12 @@ from src.calculator.participant_timeline import (
     _WalkCompiler,
     build_participant_timeline,
 )
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.pipeline import run_fight
 from src.calculator.program.build import roster_program
 from src.calculator.program.compile import action_from_event
 from src.calculator.program.views.survival import survival
 from src.calculator.program.walk import walk as run_one_walk
-from src.calculator.scenario import ChampionLoadout
+from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival import (
     ReceiptLedger,
@@ -54,12 +53,10 @@ from src.calculator.survival import (
     TransitionContext,
     build_states,
 )
-from src.calculator.survival.actions import (
-    EVENT_SLOTS,
-    SUPPORT_RANK_KEY,
-    ActionKind,
-    TransitionRank,
-)
+from src.calculator.survival.classify import SUPPORT_RANK_KEY
+from src.calculator.survival.event_slots import EVENT_SLOTS
+from src.calculator.survival.phases import TransitionRank
+from src.calculator.survival.typed_action import ActionKind
 from tests.survival_probe import survival_of
 
 # Rank pins for hand-math tests (independent of level/skill order).

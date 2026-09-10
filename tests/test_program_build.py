@@ -11,9 +11,9 @@ property of the two programs rather than as a comment.
 import pytest
 
 from src.calculator.item_behavior import Compilable, ReceiptOnly, ReceiptScope
-from src.calculator.program import build, events
+from src.calculator.program import build, capability, events
 from src.calculator.program.identity import PairOrigin
-from src.calculator.survival.actions import TransitionRank
+from src.calculator.survival.phases import TransitionRank
 
 ORIGIN = PairOrigin("main", "enemy:0")
 
@@ -34,11 +34,11 @@ def engine_result(rows: int = 3) -> dict:
     }
 
 
-def view(**mechanics: build.MechanicView) -> build.CapabilityView:
-    return build.CapabilityView(mechanics=dict(mechanics))
+def view(**mechanics: capability.MechanicView) -> capability.CapabilityView:
+    return capability.CapabilityView(mechanics=dict(mechanics))
 
 
-COMPILABLE = build.MechanicView(Compilable(), {}, None)
+COMPILABLE = capability.MechanicView(Compilable(), {}, None)
 
 
 class TestOnePairFightBecomesImmutableEvents:
@@ -113,7 +113,7 @@ class TestTheCapabilityViewIsAFrozenProjection:
     def test_a_receipt_only_mechanic_makes_the_view_uncompilable(self) -> None:
         caps = view(
             fine=COMPILABLE,
-            amp=build.MechanicView(
+            amp=capability.MechanicView(
                 ReceiptOnly(
                     "the compiled kernel cannot stage a timed amp",
                     ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER,

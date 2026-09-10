@@ -1,0 +1,40 @@
+{
+ "source": "src/calculator/bis.py",
+ "decisions": [
+  "Checks clean as the map's two extractions name them. Measured: bis_candidates 182 rendered, bis_objective 431, residue 437.",
+  "bis_candidates.py imports optimizer and scenario today; after optimizer.json and scenario.json land those become optimizer_candidates and champion_loadout, so run this assignment last in the group and re-check, or accept two import lines that a later split repoints again."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/bis_candidates.py",
+   "docstring": "Which items a BIS search ranks, for which subject, in which order.",
+   "defs": [
+    "bis_main_request",
+    "bis_replaced_loadout",
+    "role_scoped_bis_candidates",
+    "bis_candidate_pool",
+    "roster_target_coverage",
+    "enemy_bis_rank_key"
+   ]
+  },
+  {
+   "path": "src/calculator/bis_objective.py",
+   "docstring": "What BIS optimises for, and how one candidate folds into that number.",
+   "defs": [
+    "BIS_OBJECTIVES",
+    "BIS_UNMODELED_DEFENSIVE_EFFECTS",
+    "bis_defensive_effect_receipt",
+    "bis_objective_meta",
+    "bis_objective_contract",
+    "bis_time_to_target_defeat",
+    "BIS_SURFACE",
+    "_focus_survival_path",
+    "bis_objective_score",
+    "_withheld_candidate",
+    "_bis_coverage_receipt",
+    "_bis_dispositions"
+   ]
+  }
+ ]
+}

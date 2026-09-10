@@ -31,7 +31,7 @@ from src.calculator.item_effects import (
     SLAY_OMNIVAMP_KEY,
     known_effect_types,
 )
-from src.calculator.survival.actions import ActionKind
+from src.calculator.survival.typed_action import ActionKind
 
 MODULE_PATH = (
     Path(__file__).parents[1] / "src" / "calculator" / "item_behavior_catalog.py"

@@ -6,6 +6,7 @@ import re
 import pytest
 
 from src import app as app_module
+from src.calculator.build_evaluation import evaluate_build
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import (
     get_champion_cast_order,
@@ -14,10 +15,12 @@ from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.optimizer import _evaluate_build
-from src.calculator.pipeline import DEFAULT_AUTO_ATTACK_UPTIME, FightParams, run_fight
+from src.calculator.fight.config import FightConfig
+from src.calculator.fight_params import FightParams
+from src.calculator.fight_request_bounds import DEFAULT_AUTO_ATTACK_UPTIME
+from src.calculator.pipeline import run_fight
 from tests import cc_review, row_review
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
@@ -205,11 +208,11 @@ def test_optimizer_evaluator_resolves_evolution_per_candidate(kaisa_data):
     )
     item = get_item_by_name("Luden's Echo")
 
-    auto_score = _evaluate_build(kaisa_data, 12, [item], auto, objective="total_damage")
-    base_score = _evaluate_build(
+    auto_score = evaluate_build(kaisa_data, 12, [item], auto, objective="total_damage")
+    base_score = evaluate_build(
         kaisa_data, 12, [item], forced_base, objective="total_damage"
     )
-    evolved_score = _evaluate_build(
+    evolved_score = evaluate_build(
         kaisa_data, 12, [item], forced_evolved, objective="total_damage"
     )
 

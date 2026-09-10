@@ -12,21 +12,19 @@ import math
 import pytest
 
 from src.calculator import item_effects, rune_effects
+from src.calculator.reference_vocabulary import VALUE_REGISTRIES, ValueRefError
 from src.calculator.value_ref import (
-    VALUE_REGISTRIES,
     Const,
     DeclaredNumbers,
     DerivedValueRef,
     LateLevelValueRef,
     LevelValueRef,
-    SourceReceipt,
-    UnsourcedDeclarationError,
     ValueRef,
-    ValueRefError,
     receipt_for,
     resolve,
     resolve_flat,
 )
+from src.calculator.value_source_receipt import SourceReceipt, UnsourcedDeclarationError
 
 
 def test_the_registry_union_is_three_members() -> None:

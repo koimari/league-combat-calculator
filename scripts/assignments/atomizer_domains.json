@@ -1,0 +1,19 @@
+{
+ "source": "src/calculator/atomizer_domains.py",
+ "decisions": [
+  "_snake is read by all four domains (items, abilities, runes, stats), so leaving it in the residue is a back-edge from atomizer_abilities. It moves to atom_spelling.py with _stat_unit: both translate a cached data spelling into the atom contract's spelling, one an id fragment and one a unit, and that is the one home three domains read."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/atom_spelling.py",
+   "docstring": "How a cached name and stat field are spelled in the atom contract: id fragment and unit.",
+   "defs": ["_stat_unit", "_snake"]
+  },
+  {
+   "path": "src/calculator/atomizer_abilities.py",
+   "docstring": "The ability domain: champion slot to effect to leveling modifier, plus a row's prose values.",
+   "defs": ["_FOCUS_WINDOW_EFFECTS", "_FOCUS_WINDOW_ACTIVE_EFFECTS", "atomize_abilities"]
+  }
+ ]
+}

@@ -202,15 +202,16 @@ from src import app as app_module
 from src.calculator.atomizer import hash_domain_file
 from src.calculator.champions import get_champion_options_meta, parse_champion_abilities
 from src.calculator.champions.packet_module import packet_spec_sha256
-from src.calculator.champions.slotlib import extract_value
+from src.calculator.champions.slot_extract import extract_value
 from src.calculator.champions.vladimir import (
     _E_CHANNEL_SECONDS,
     _E_CHARGE_RAMP_SECONDS,
     MODULE_COVERAGE,
     PACKET_SHA256,
 )
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.config import FightConfig
 from tests.committed_bytes import sha256_as_committed
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))

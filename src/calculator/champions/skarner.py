@@ -26,14 +26,14 @@ from .engine import SlotCtx
 from .module_helpers import named_damage
 from .packet_module import build_packet_module, repeat_damage_parser
 from .shared_mechanics import with_self_shield
-from .slotlib import (
+from .slot_entries import damage_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cooldown,
     find_named_leveling,
-    simple_damage,
     sum_modifiers,
 )
+from .slotlib import simple_damage
 
 PACKET_SHA256 = "8cd0eacf4fa3f8ac9dc2353f0b6f6edb853a72c59b2dcf737d60980d28900c2c"
 

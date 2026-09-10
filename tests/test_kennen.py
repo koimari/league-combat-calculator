@@ -15,8 +15,8 @@ import copy
 
 import pytest
 
+from src.calculator.champion_loadout import load_public_champion
 from src.calculator.champions import kennen, parse_champion_abilities
-from src.calculator.scenario import load_public_champion
 from tests import cc_review, row_review
 
 # The mark walk reads cooldowns, so every walk test parses at zero haste

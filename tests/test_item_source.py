@@ -16,11 +16,11 @@ from src.calculator.item_source import (
     effect_text,
     is_ordinary_sr_item,
     item_source_audit,
-    merge_item_sources,
     riot_declared_effects,
     source_audit,
     sr_availability,
 )
+from src.calculator.item_source_merge import merge_item_sources
 
 
 def _wiki_entry(**overrides):

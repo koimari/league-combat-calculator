@@ -23,8 +23,10 @@ from typing import Any
 import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
-from src.calculator.champions.engine import part_reaches_event_ledger
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.champions.entry_shape import part_reaches_event_ledger
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.config import FightConfig
+from src.calculator.interpreters import amp_magnitude
 from src.calculator.item_behavior import FightFacts
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -379,10 +381,8 @@ class TestRotationOrder:
     point of retiring a seed rather than deleting one."""
 
     def test_cast_order_is_qe_combo(self, syndra_data) -> None:
-        from src.calculator.rotation_resolver import (
-            CAST_ORDER_OVERRIDES,
-            resolve_cast_order,
-        )
+        from src.calculator.cast_order_overrides import CAST_ORDER_OVERRIDES
+        from src.calculator.rotation_resolver import resolve_cast_order
 
         abilities = _parse(syndra_data)
         order, rule = resolve_cast_order("Syndra", abilities, champion_data=syndra_data)
@@ -834,19 +834,15 @@ class TestCommandWindows:
     window merging (extend, not stack) and the strictly-after boundary."""
 
     def test_overlapping_immobilizes_extend_one_window(self) -> None:
-        from src.calculator.interpreters import delta_amp
-
         slot = _command_slot()
-        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        duration = slot.value(amp_magnitude.WINDOW_DURATION_FIELD)
         assert slot.trigger_windows([0.0, duration / 2.0]) == (
             (0.0, duration / 2.0 + duration),
         )
 
     def test_separated_immobilizes_open_separate_windows(self) -> None:
-        from src.calculator.interpreters import delta_amp
-
         slot = _command_slot()
-        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        duration = slot.value(amp_magnitude.WINDOW_DURATION_FIELD)
         far = duration * 2.5
         assert slot.trigger_windows([0.0, far]) == (
             (0.0, duration),
@@ -854,10 +850,8 @@ class TestCommandWindows:
         )
 
     def test_boundary_is_strictly_after_start_inclusive_end(self) -> None:
-        from src.calculator.interpreters import delta_amp
-
         slot = _command_slot()
-        duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+        duration = slot.value(amp_magnitude.WINDOW_DURATION_FIELD)
         windows = slot.trigger_windows([1.0])
         assert not slot.window_holds(windows, 1.0)  # the trigger itself
         assert slot.window_holds(windows, 1.001)

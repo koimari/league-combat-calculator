@@ -73,15 +73,16 @@ from pathlib import Path
 
 import pytest
 
-from src.calculator import atomizer_domains
+from src.calculator import atomizer_abilities
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
 from src.calculator.champions.ashe import ASHE_FOCUS_STACK_RULE
 from src.calculator.champions.rengar import RENGAR_FEROCITY_STACK_RULE
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.config import FightConfig
 from tests.parse_stats import parse_stats
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
@@ -270,7 +271,7 @@ def _q_ability_atoms() -> list[dict]:
 
 
 def _q_live_atoms() -> list[dict]:
-    return atomizer_domains.atomize_abilities("Ashe", get_champion("Ashe"))["Q"]
+    return atomizer_abilities.atomize_abilities("Ashe", get_champion("Ashe"))["Q"]
 
 
 def _flurry_damage(stats: dict, abilities: dict, armor: float = 50.0) -> float:

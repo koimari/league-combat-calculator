@@ -14,7 +14,7 @@ import pytest
 
 from src.calculator import item_behavior_catalog
 from src.calculator.ability_spec import Disposition
-from src.calculator.interpreters import charged_strike
+from src.calculator.interpreters import charged_strike, rearmed_swings
 from src.calculator.item_behavior import (
     BehaviorRule,
     BehaviorRuleError,
@@ -298,7 +298,7 @@ def test_the_two_swing_mechanics_are_declared_shapes() -> None:
     ramp = _schedule(RAMP)
     assert ramp is not None
     assert ramp.window is None
-    assert ramp.ramp == charged_strike.DecayingStackRamp(
+    assert ramp.ramp == rearmed_swings.DecayingStackRamp(
         per_stack=float(ITEM_EFFECTS[RAMP]["seething_attack_speed_per_stack"]),
         max_stacks=int(ITEM_EFFECTS[RAMP]["seething_max_stacks"]),
         stack_duration=float(ITEM_EFFECTS[RAMP]["seething_duration"]),
@@ -306,7 +306,7 @@ def test_the_two_swing_mechanics_are_declared_shapes() -> None:
     window = _schedule(WINDOW)
     assert window is not None
     assert window.ramp is None
-    assert window.window == charged_strike.RearmedWindow(
+    assert window.window == rearmed_swings.RearmedWindow(
         bonus_percent=float(ITEM_EFFECTS[WINDOW]["bonus_attack_speed_percent"]),
         duration=float(ITEM_EFFECTS[WINDOW]["duration"]),
         cooldown=float(ITEM_EFFECTS[WINDOW]["cooldown"]),
@@ -340,7 +340,7 @@ def test_the_ramp_is_patch_sourced_and_capped() -> None:
 
 def test_the_ramp_accelerates_the_stream_after_stacks() -> None:
     """Later intervals are shorter than the first, which carries no bonus."""
-    times = charged_strike.swing_times(
+    times = rearmed_swings.swing_times(
         _schedule(RAMP),
         attack_speed=1.0,
         attack_speed_ratio=1.0,
@@ -354,7 +354,7 @@ def test_the_ramp_accelerates_the_stream_after_stacks() -> None:
 
 def test_the_ramp_does_not_accumulate_stale_stacks() -> None:
     """At this rate each stack expires before the next hit, so one stays live."""
-    times = charged_strike.swing_times(
+    times = rearmed_swings.swing_times(
         _schedule(RAMP),
         attack_speed=0.2,
         attack_speed_ratio=1.0,
@@ -365,7 +365,7 @@ def test_the_ramp_does_not_accumulate_stale_stacks() -> None:
 
 def test_the_window_starts_after_the_first_attack() -> None:
     """The fight opens at the bare rate; the window is live from swing two."""
-    times = charged_strike.swing_times(
+    times = rearmed_swings.swing_times(
         _schedule(WINDOW),
         attack_speed=1.0,
         attack_speed_ratio=1.0,
@@ -384,7 +384,7 @@ def test_the_window_reads_the_registrys_numbers_and_not_a_literal(
     patched["bonus_attack_speed_percent"] = 60.0
     patched["duration"] = 2.0
     monkeypatch.setitem(ITEM_EFFECTS, WINDOW, patched)
-    times = charged_strike.swing_times(
+    times = rearmed_swings.swing_times(
         _schedule(WINDOW),
         attack_speed=1.0,
         attack_speed_ratio=1.0,

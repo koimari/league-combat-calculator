@@ -31,17 +31,12 @@ from collections.abc import Callable
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
-from .module_contract import coverage
 from .module_helpers import delayed_damage, no_damage_parser, ranked_slot
-from .slotlib import (
-    ability_name,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    park_control_interval,
-    simple_damage,
-)
+from .slot_control import park_control_interval
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # Primordial Burst gains +100% at 66.66% missing health and remains capped

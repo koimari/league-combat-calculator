@@ -19,17 +19,12 @@ All numeric values are read from the champion JSON data.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import CC_PER_PART, SlotCtx, build_parser
+from .engine import SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import level_row, ranked_slot
-from .slotlib import (
-    ability_name,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    proc_damage,
-    simple_damage,
-)
+from .slot_cc import CC_PER_PART
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
+from .slotlib import proc_damage, simple_damage
 from .source_receipts import load_champion_sources
 
 

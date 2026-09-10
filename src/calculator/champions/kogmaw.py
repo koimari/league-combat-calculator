@@ -43,15 +43,15 @@ from .engine import DEBUFF, SlotCtx, build_parser
 from .inputs import bool_option
 from .module_helpers import ranked_slot
 from .shared_mechanics import unreachable_innate
-from .slotlib import (
+from .slot_entries import ability_on_hit_entry
+from .slot_extract import (
     ability_name,
-    ability_on_hit_entry,
     extract_cooldown,
     extract_named,
     extract_value,
     pct_health_per_hit,
-    simple_damage,
 )
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # Caustic Spittle's shred lasts 4s ("reduces their armor and magic

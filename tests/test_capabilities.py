@@ -13,15 +13,13 @@ from src.calculator.capabilities import (
     _ledger_phases,
     public_capability_contract,
 )
-from src.calculator.survival.actions import (
-    ActionKind,
-    TransitionRank,
-    public_phase,
-    support_transition_rank,
-)
+from src.calculator.survival import phases
+from src.calculator.survival.classify import support_transition_rank
+from src.calculator.survival.phases import TransitionRank, public_phase
+from src.calculator.survival.typed_action import ActionKind
 
 ROOT = Path(__file__).parents[1]
-ACTIONS = ROOT / "src" / "calculator" / "survival" / "actions.py"
+PHASES = ROOT / "src" / "calculator" / "survival" / "phases.py"
 
 # The names the API publishes, byte for byte, in ledger order.  The
 # derivation must reproduce this list; it does not get to define it.
@@ -147,7 +145,7 @@ def test_no_producer_emits_the_terminal_rank() -> None:
         for path in (ROOT / "src").rglob("*.py")
         if "TransitionRank.TERMINAL" in path.read_text(encoding="utf-8")
     )
-    assert namers == [ACTIONS.relative_to(ROOT).as_posix()]
+    assert namers == [PHASES.relative_to(ROOT).as_posix()]
 
     kinds = [kind.value for kind in ActionKind] + [
         "heal",
@@ -162,10 +160,8 @@ def test_no_producer_emits_the_terminal_rank() -> None:
 
 def test_a_rank_without_a_published_name_raises(monkeypatch) -> None:
     """A new rank must be published deliberately, not defaulted."""
-    from src.calculator.survival import actions as actions_module
-
-    published = dict(actions_module._PUBLIC_PHASES)
+    published = dict(phases._PUBLIC_PHASES)
     del published[TransitionRank.REACTIVE]
-    monkeypatch.setattr(actions_module, "_PUBLIC_PHASES", published)
+    monkeypatch.setattr(phases, "_PUBLIC_PHASES", published)
     with pytest.raises(KeyError, match="REACTIVE"):
         public_phase(TransitionRank.REACTIVE)

@@ -9,14 +9,14 @@ both sides of every assertion together.
 
 import pytest
 
-from src.calculator.champions.slotlib import (
+from src.calculator.champion_loadout import load_public_champion
+from src.calculator.champions.slot_extract import (
     _axis_index,
     extract_cooldown,
     extract_named,
     find_named_leveling,
     sum_modifiers,
 )
-from src.calculator.scenario import load_public_champion
 
 LEVEL = 18
 AP = 200.0

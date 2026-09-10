@@ -25,7 +25,7 @@ import pytest
 
 from src import app as app_module
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.champions.slotlib import extract_named, extract_value
+from src.calculator.champions.slot_extract import extract_named, extract_value
 from src.calculator.data_fetcher import get_champion
 
 _DATA = json.loads(

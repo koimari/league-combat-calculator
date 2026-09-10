@@ -37,9 +37,9 @@ from ..healing_helpers import (
     ranked_rows,
     trigger_fields,
 )
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
-from .module_contract import coverage
 from .packet_module import build_packet_module
 
 # "Up to a maximum of 4 / 6 / 8 / 10 (based on level) traps may be

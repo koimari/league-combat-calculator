@@ -34,13 +34,13 @@ ledger rather than resolved again here, because what the walk owes is the term
     effective armour and one effective magic resistance, and the pair engine
     prices past both when it re-prices packets it already authored:
     ``damage._apply_temporary_lethality_windows`` rescales later physical
-    packets inside a Firmament window, and ``damage._apply_liandry_reprice``
+    packets inside a Firmament window, and ``fight.after.reprice._apply_liandry_reprice``
     folds a raised maximum health back onto a burn's own ticks.  ``None``
     prices at the fight's published baseline, which is correct only for a
     packet no window touched.
 ``swing``
     The crit blend and the target's capped flat subtraction a packet delivered
-    as a basic-attack swing met in ``damage._mitigate_basic_attack_swing``.
+    as a basic-attack swing met in ``fight.mitigation._mitigate_basic_attack_swing``.
 
 **A routing family declares no magnitude.**  A packet may reach a subject
 because some *other* family's packet was re-delivered there: Wind's Fury's bolt
@@ -61,7 +61,8 @@ re-priced.
 
 from __future__ import annotations
 
-from typing import NamedTuple
+from collections.abc import Mapping
+from typing import Any, NamedTuple
 
 from ..ability_spec import DamageClass
 from ..resistance import apply_resistance
@@ -103,7 +104,7 @@ class BasicAttackSwing(NamedTuple):
     def less_flat_reduction(self, branch: float) -> float:
         """One mitigated branch, less the target's capped flat subtraction.
 
-        ``damage._apply_target_basic_damage_reduction``'s arithmetic on one branch.
+        ``fight.mitigation._apply_target_basic_damage_reduction``'s arithmetic on one branch.
         A non-positive branch is returned untouched, because a flat defensive proc
         cannot be consumed by a negative algebraic modifier, which is the pair
         engine's reading and the reason this is not a plain ``max``.
@@ -162,7 +163,7 @@ class AuthoredDeclaration(NamedTuple):
     ``effective_resistance`` is ``None`` for a packet whose ledger published no
     resistance for its class, which is a refusal at the pricing stage and never a
     zero.  ``swing`` is ``None`` for a declaration no basic-attack swing delivered,
-    priced through ``damage._mitigate`` alone.  ``routing`` is present exactly on a
+    priced through ``fight.resists._mitigate`` alone.  ``routing`` is present exactly on a
     packet a routing family re-delivered at a second subject; ``rule_id`` stays the
     **source** mechanic's, and :func:`route_declared_packet` is the one place a
     share is applied.
@@ -198,6 +199,33 @@ class AuthoredDeclaration(NamedTuple):
     def rescaled_by(self, factor: float) -> AuthoredDeclaration:
         """The same declaration, at a magnitude scaled by *factor*."""
         return self._replace(raw_amount=float(self.raw_amount) * float(factor))
+
+
+def restate_declaration(
+    event: Mapping[str, Any],
+    *,
+    resistance: float | None = None,
+    scale: float | None = None,
+    onto: dict[str, Any] | None = None,
+) -> None:
+    """Keep a re-priced packet's declaration in step with the re-pricing.
+
+    The walk prices a packet at the magnitude and resistance its declaration
+    states, so a site that changes what an authored packet is worth moves the
+    declaration with it: re-pricing at a different armour restates
+    ``resistance``, scaling the magnitude restates ``scale``.  ``onto`` is
+    where the restated declaration lands when the site rebuilds its packet
+    rather than editing it, and defaults to *event*.  A packet with no
+    declaration is left untouched."""
+    declared = event.get("declared")
+    if declared is None:
+        return
+    declaration = AuthoredDeclaration(*declared)
+    if resistance is not None:
+        declaration = declaration.repriced_at(resistance)
+    if scale is not None:
+        declaration = declaration.rescaled_by(scale)
+    (event if onto is None else onto)["declared"] = tuple(declaration)
 
 
 class DeclaredPacket(NamedTuple):

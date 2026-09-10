@@ -57,7 +57,7 @@ from src.calculator.item_behavior import (
     UltimateRefundRule,
     validate_rule,
 )
-from src.calculator.stats import get_item_stats
+from src.calculator.item_stat_block import get_item_stats
 from src.calculator.value_ref import LevelValueRef, ValueSource
 
 CONVERSION_HOLDER = "Muramana"

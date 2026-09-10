@@ -34,12 +34,8 @@ from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import buff_window_share, no_damage, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    ability_on_hit_entry,
-    extract_named,
-    extract_value,
-)
+from .slot_entries import ability_on_hit_entry
+from .slot_extract import ability_name, extract_named, extract_value
 
 PACKET_SHA256 = "a6d43d11733ede3c9a2f3daa2d2f6afb754fc83e580b27dff8e8ffeb76783164"
 

@@ -29,7 +29,6 @@ from ..item_behavior import (
     FightFacts,
     RuleFamily,
     SpellbladeRule,
-    mechanic_id_reading,
     typed_payload,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
@@ -83,14 +82,6 @@ def spellblade_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
     )
 
 
-spellblade_mechanic_id = mechanic_id_reading(
-    spellblade_rules,
-    SpellbladeInterpretationError,
-    authors="a spellblade row",
-    declares="spellblade",
-)
-
-
 def declares_self_heal(owners: Sequence[str]) -> bool:
     """Whether the spellblade this build arms heals its holder.
 
@@ -114,6 +105,7 @@ def spellblade_effect(rule: BehaviorRule, ctx: BuildContext) -> SpellbladeEffect
             rule.owner,
             payload.formula.damage_type,
             damage_formula.compile_formula(payload.formula, ctx),
+            mechanic_id=rule.mechanic_id,
             suffix=SPELLBLADE_SUFFIX,
             breakdown_key=f"{SPELLBLADE_BREAKDOWN_PREFIX}{rule.owner}",
         ),
@@ -163,6 +155,5 @@ __all__ = [
     "resolve_slot",
     "spellblade_effect",
     "spellblade_fields",
-    "spellblade_mechanic_id",
     "spellblade_rules",
 ]

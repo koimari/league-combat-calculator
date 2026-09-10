@@ -22,12 +22,9 @@ from .module_helpers import (
     with_item_on_hit_specs,
 )
 from .shared_mechanics import empowered_auto_entry
-from .slotlib import (
-    extract_cooldown,
-    extract_named,
-    on_hit_entry,
-    simple_damage,
-)
+from .slot_entries import on_hit_entry
+from .slot_extract import extract_cooldown, extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 

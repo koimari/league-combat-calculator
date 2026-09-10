@@ -24,7 +24,7 @@ import pytest
 
 from src import app as app_module
 from src.calculator.program.amp import ArmingLedger, arm_key
-from src.calculator.program.build import arming_stacking
+from src.calculator.program.capability import arming_stacking
 from src.calculator.trigger_stream import (
     CAPABILITIES,
     SELF_SCOPED_DELIVERIES,

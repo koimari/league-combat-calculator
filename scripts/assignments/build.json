@@ -1,0 +1,38 @@
+{
+ "source": "src/calculator/program/build.py",
+ "decisions": [
+  "extract_modules.py refuses any new module that reads a name left in the residue, so every assignment here is downward closed: the residue sits at the top of the dependency order and imports its children.",
+  "Projection stays in the residue with the frozen program, as the map rules: tagged.py is the tagged number and its fold, and nothing in it reads Projection."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/program/tagged.py",
+   "docstring": "A number and the view it was produced for, and the one way tagged numbers fold.",
+   "defs": [
+    "MixedViewFold",
+    "Tagged",
+    "fold_tagged",
+    "ranked_total",
+    "tag_for"
+   ]
+  },
+  {
+   "path": "src/calculator/program/capability.py",
+   "docstring": "What each declared mechanic's engine lanes say a view may show.",
+   "defs": [
+    "MechanicView",
+    "CapabilityView",
+    "_LANES_OF",
+    "declared_view_tags",
+    "pair_preview_mechanics",
+    "_rows_previewing",
+    "pair_preview_sources",
+    "walk_repriced_mechanics",
+    "dropped_preview_mechanics",
+    "dropped_pair_previews",
+    "arming_stacking"
+   ]
+  }
+ ]
+}

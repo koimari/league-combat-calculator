@@ -23,7 +23,8 @@ import src.app as app_module
 from src.calculator import item_behavior_catalog, rune_effects
 from src.calculator.ability_spec import DamagePart
 from src.calculator.calculate import calculate_payload
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.config import FightConfig
 from src.calculator.item_behavior import (
     AmpChainSlot,
     Comparison,

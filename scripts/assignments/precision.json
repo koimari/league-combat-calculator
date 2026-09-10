@@ -1,0 +1,20 @@
+{
+ "source": "src/calculator/program/precision.py",
+ "decisions": [
+  "extract_modules.py refuses any new module that reads a name left in the residue, so every assignment here is downward closed: the residue sits at the top of the dependency order and imports its children.",
+  "The map's split runs unchanged: sums.py reads no rounding table, so it is a leaf and the residue takes nothing back."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/program/sums.py",
+   "docstring": "Which panel rows a published total counts, and in what order.",
+   "defs": [
+    "SUM_PANELS",
+    "DuplicateSumMember",
+    "SumPlan",
+    "sum_plan"
+   ]
+  }
+ ]
+}

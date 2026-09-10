@@ -1,7 +1,7 @@
 # sightline baseline: `<rule>|<symbol> <count> [<shape>]`, one per line; `merge=union` is safe
+11|src.calculator.build_evaluation._build_receipt_key 1 f7569ea177ce4e6f
 11|src.calculator.champions.inputs.float_option 1 c7081570b1da3ea4
 11|src.calculator.champions.inputs.int_option 1 622ee095342eefc0
-11|src.calculator.optimizer._build_receipt_key 1 f7569ea177ce4e6f
 14|src.calculator.champions.aatrox._q_strike_parts 1 2e42e91ec5a9c64b
 14|src.calculator.champions.darius._ad_ratio 1 698961c32f749a31
 14|src.calculator.survival.outcome_state.OutcomeLedger.skip 1 3460f80924bf8d84
@@ -16,72 +16,45 @@
 27|scripts.patch_regression 1
 27|scripts.patch_update 1
 27|src.app 1
-27|src.calculator.ability_spec 1
-27|src.calculator.atomizer_domains 1
-27|src.calculator.bis 1
-27|src.calculator.capabilities 1
+27|src.calculator.ally_packet_shape 1
 27|src.calculator.cast_dependency 1
+27|src.calculator.cast_edge_inference 1
+27|src.calculator.champion_loadout 1
 27|src.calculator.champions 1
 27|src.calculator.champions.aphelios 1
-27|src.calculator.champions.aurelion_sol 1
+27|src.calculator.champions.ashe 1
+27|src.calculator.champions.bard 1
 27|src.calculator.champions.briar 1
 27|src.calculator.champions.darius 1
 27|src.calculator.champions.dr_mundo 1
-27|src.calculator.champions.engine 1
 27|src.calculator.champions.jayce 1
+27|src.calculator.champions.ksante 1
 27|src.calculator.champions.mel 1
-27|src.calculator.champions.module_contract 1
 27|src.calculator.champions.naafiri 1
-27|src.calculator.champions.packet_module 1
 27|src.calculator.champions.renata_glasc 1
+27|src.calculator.champions.rengar 1
 27|src.calculator.champions.rumble 1
-27|src.calculator.champions.slotlib 1
-27|src.calculator.cleanse_eligibility 1
+27|src.calculator.champions.senna 1
 27|src.calculator.coverage_evidence 1
 27|src.calculator.damage 2
-27|src.calculator.data_updater 1
-27|src.calculator.defensive_effects 2
-27|src.calculator.delivery_eligibility 1
-27|src.calculator.interaction_effects 1
+27|src.calculator.fight_params 1
 27|src.calculator.interpreters 1
-27|src.calculator.interpreters.charged_strike 1
-27|src.calculator.interpreters.damage_routing 1
-27|src.calculator.interpreters.delta_amp 1
 27|src.calculator.item_behavior 1
-27|src.calculator.item_behavior_catalog 1
+27|src.calculator.item_behavior_catalog 2
 27|src.calculator.item_coverage 1
 27|src.calculator.item_effects 1
-27|src.calculator.item_source 1
 27|src.calculator.item_support_effects 1
-27|src.calculator.ledger_projection 2
 27|src.calculator.optimizer 1
 27|src.calculator.participant_timeline 2
 27|src.calculator.passive_parser 1
-27|src.calculator.pipeline 2
-27|src.calculator.program.build 1
+27|src.calculator.pipeline 1
 27|src.calculator.program.compile 1
-27|src.calculator.program.precision 1
-27|src.calculator.program.views 1
-27|src.calculator.program.views.survival 1
-27|src.calculator.program.walk 1
-27|src.calculator.resource_ledger 1
-27|src.calculator.rotation_resolver 1
 27|src.calculator.rune_effects 1
 27|src.calculator.rune_parser 1
 27|src.calculator.rune_paths.keystones 1
-27|src.calculator.scenario 2
-27|src.calculator.shield_ledger 1
-27|src.calculator.state_lifecycle 1
-27|src.calculator.stats 1
-27|src.calculator.support_effects 1
-27|src.calculator.survival.actions 1
-27|src.calculator.survival.receipt_state 1
-27|src.calculator.survival.transitions 1
+27|src.calculator.scenario 1
+27|src.calculator.survival.transitions 2
 27|src.calculator.trigger_stream 1
-27|src.calculator.value_ref 1
 27|src.db 1
-27|src.metrics 1
 27|tests.coverage_resolver 1
 27|tests.test_behavior_frontier 1
-27|tests.test_item_support_effects 1
-27|tests.test_survival_kernel 1

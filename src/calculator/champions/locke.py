@@ -28,7 +28,8 @@ from .module_helpers import (
     typed_damage,
     with_item_on_hit_specs,
 )
-from .slotlib import ability_name, extract_cooldown, extract_named, on_hit_entry
+from .slot_entries import on_hit_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
 

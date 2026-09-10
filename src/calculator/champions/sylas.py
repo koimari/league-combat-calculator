@@ -103,12 +103,12 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..binary_roots import calculation_coefficients, spell_object
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import int_option
-from .module_contract import coverage
 from .packet_module import build_packet_module
-from .slotlib import ability_name
+from .slot_extract import ability_name
 
 PACKET_SHA256 = "2c402273f8fc3938c635dbebea26dc7e22901e8a0a07e00ef933ab0d12d77b98"
 

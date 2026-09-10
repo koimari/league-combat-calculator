@@ -46,20 +46,16 @@ from ..ability_atoms import (
     ranked_ability_atom_value,
     required_ability_atom,
 )
-from ..ability_spec import AttackClass, ControlEvent, DamageClass, DamagePart
+from ..ability_spec import AttackClass, DamageClass, DamagePart
 from ..binary_roots import data_value, spell_object
-from ..survival.actions import TransitionRank
+from ..control_spec import ControlEvent
+from ..survival.phases import TransitionRank
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option, target_stat
 from .module_helpers import missing_hp_fraction, ranked_slot
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-)
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
 
 # The P/Q/R effect records carry the duration, stack, and ratio values; the

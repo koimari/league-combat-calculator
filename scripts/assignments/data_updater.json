@@ -1,0 +1,45 @@
+{
+ "source": "src/calculator/data_updater.py",
+ "decisions": [
+  "_http_get and _download_page cannot stay in the residue: the rune pull's _wiki_api and _process_runes read them, which is a back-edge. They are not rune facts either, because the Windows download_soup monkeypatch calls _download_page as well, so they get their own leaf, wiki_fetch.py, and both readers import it.",
+  "All seven wiki endpoint and page-title constants move, not the four the map names: _WIKI_API_URL, _WIKI_PAGE_URL, _WIKI_RAW_URL, _RUNE_TEMPLATE_PREFIX, _RUNE_PAGE_TITLE, _ADAPTIVE_TEMPLATE_TITLE and _RUNES_REFORGED_URL are each read only by the rune pull.",
+  "rune_roster imports download_json at call time. The vendored checkout reaches sys.path through the residue's bootstrap, and data_updater is the pull's one caller, so the deferred import is what lets rune_pull.py import on its own.",
+  "pyproject.toml's per-file-ignores gains rune_pull.py = [BLE001]: the three broad catches that re-report an untrusted wiki parse as data travel with the pull.",
+  "Published spelling: wiki_fetch's whole surface crosses a module boundary, so _http_get is http_get and _download_page is download_page. The vendor sys.path bootstrap is its own leaf, vendor_path.py, which both data_updater and rune_pull import, so download_json is a module-level import in each."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/wiki_fetch.py",
+   "docstring": "One HTTP fetch of a wiki page: a finite wait and an explicit HTTP error.",
+   "defs": [
+    "_http_get",
+    "_download_page"
+   ]
+  },
+  {
+   "path": "src/calculator/rune_pull.py",
+   "docstring": "The wiki rune-template pull and the reparse of the cached rune effects.",
+   "defs": [
+    "_WIKI_API_URL",
+    "_WIKI_PAGE_URL",
+    "_WIKI_RAW_URL",
+    "_RUNE_TEMPLATE_PREFIX",
+    "_RUNE_PAGE_TITLE",
+    "_ADAPTIVE_TEMPLATE_TITLE",
+    "_RUNES_REFORGED_URL",
+    "_wiki_api",
+    "_wiki_page",
+    "rune_roster",
+    "_rune_template_titles",
+    "_process_runes",
+    "_rune_page_facts",
+    "_adaptive_force_facts",
+    "_ordered_roster",
+    "update_runes",
+    "_reparse_entry",
+    "reparse_cached_rune_effects"
+   ]
+  }
+ ]
+}

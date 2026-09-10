@@ -1,0 +1,70 @@
+{
+ "source": "src/calculator/survival/actions.py",
+ "decisions": [
+  "extract_modules.py refuses any new module that reads a name left in the residue, so every assignment here is downward closed: the residue sits at the top of the dependency order and imports its children.",
+  "SurvivalAction is the bottom of this module, not the top: the damage and attack classes, the ordering helpers, the compiled constructor and TriggerLinkage all read it. It cannot stay in the residue while they move, so it takes a named home with the vocabulary only it needs, typed_action.py.",
+  "ActionKind rides with it rather than with classify.py: SurvivalAction reads ActionKind and the class readers read SurvivalAction, so the map's classify.py holding both is a cycle. A 60-line module for one enum is a surface with no idea of its own, and the action's kind is the action's vocabulary.",
+  "SUPPORT_RANK_KEY and support_transition_rank go to classify.py, not phases.py: they read four of the kind sets, and phases.py holding them is the phases -> classify -> phases cycle the tool reports.",
+  "Residue: the map's action_key.py content, 299 lines. The tool cannot rename a residue, so survival/actions.py now means how a walk's action is built and ordered; its docstring already argues the sort key is part of the action's identity."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/survival/phases.py",
+   "docstring": "When a transition resolves, and what the public timeline calls that phase.",
+   "defs": [
+    "TransitionRank",
+    "_ORDERING_SLOTS",
+    "ordering_slot",
+    "_PUBLIC_PHASES",
+    "public_phase"
+   ]
+  },
+  {
+   "path": "src/calculator/survival/event_slots.py",
+   "docstring": "The kernel's four event references as integers.",
+   "defs": [
+    "NO_SLOT",
+    "EventSlots",
+    "EVENT_SLOTS"
+   ]
+  },
+  {
+   "path": "src/calculator/survival/typed_action.py",
+   "docstring": "The typed action the walk consumes: its kind, its live amplification, and its trigger linkage.",
+   "defs": [
+    "ActionKind",
+    "_DAMAGE_KINDS",
+    "LiveProbe",
+    "LiveAmp",
+    "SurvivalAction",
+    "TriggerLinkage"
+   ]
+  },
+  {
+   "path": "src/calculator/survival/classify.py",
+   "docstring": "What an event is: its damage and attack class, the modifier classes it declares, and its rank.",
+   "defs": [
+    "_DAMAGE_CLASS_BY_TYPE",
+    "damage_class_of",
+    "attack_class_of",
+    "declared_modifier_classes",
+    "_NO_CLASSES",
+    "_CLASS_SETS",
+    "declared_class_set",
+    "_HEAL_KINDS",
+    "UTILITY_KINDS",
+    "_STATE_GRANT_KINDS",
+    "BARRIER_GRANT_KINDS",
+    "_DEBUFF_ARM_KINDS",
+    "SUPPORT_RANK_KEY",
+    "support_transition_rank",
+    "_classify_heal",
+    "_STANDALONE_KINDS",
+    "_RECOVERY_CLASSIFIED_RANKS",
+    "classify_prefetched",
+    "classify_event_kind"
+   ]
+  }
+ ]
+}

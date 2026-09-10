@@ -363,7 +363,7 @@ class TestReviewedCrowdControl:
 
     def test_the_kit_has_no_single_per_slot_answer_to_declare(self):
         data = cc_review.kit("Taliyah")
-        from src.calculator.champions.engine import CC_PER_PART
+        from src.calculator.champions.slot_cc import CC_PER_PART
 
         assert taliyah.MODULE_CC == {
             "Q": CC_PER_PART,

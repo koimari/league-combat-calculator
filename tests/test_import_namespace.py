@@ -145,13 +145,13 @@ def test_growth_multiplier_enforces_level_bound():
 
 
 def test_cooldown_formula_is_imported_not_reimplemented():
-    """rotation_resolver takes effective_cooldown rather than writing it again."""
-    rr = _src_text("src/calculator/rotation_resolver.py")
+    """The DPS matrix takes effective_cooldown rather than writing it again."""
+    matrix = _src_text("src/calculator/ability_dps_matrix.py")
     import_line = next(
-        line for line in rr.splitlines() if line.startswith("from .stats import")
+        line for line in matrix.splitlines() if line.startswith("from .stats import")
     )
     assert "effective_cooldown" in import_line
-    for lineno, line in enumerate(_code_lines(rr), 1):
+    for lineno, line in enumerate(_code_lines(matrix), 1):
         assert (
             "100.0 / (100.0" not in line
-        ), f"rotation_resolver reimplements cooldown math at line {lineno}"
+        ), f"ability_dps_matrix reimplements cooldown math at line {lineno}"

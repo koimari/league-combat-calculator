@@ -13,7 +13,7 @@ import pytest
 from src.calculator.program import events
 from src.calculator.program.identity import PairOrigin
 from src.calculator.program.route import PairDefender
-from src.calculator.survival.actions import TransitionRank
+from src.calculator.survival.phases import TransitionRank
 
 ORIGIN = PairOrigin("main", "enemy:0")
 

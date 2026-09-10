@@ -27,13 +27,9 @@ from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .module_helpers import ranked_slot
 from .shared_mechanics import ticked_channel
-from .slotlib import (
-    PER_LEVEL_SCALING,
-    ability_name,
-    extract_named,
-    simple_damage,
-    with_control,
-)
+from .slot_control import with_control
+from .slot_extract import PER_LEVEL_SCALING, ability_name, extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 _VELKOZ_PASSIVE_SPELL = spell_object("Vel'Koz", "VelkozPassive")

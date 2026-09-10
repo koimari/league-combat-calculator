@@ -26,17 +26,21 @@ import pytest
 from src.calculator.program import compile as program_compile
 from src.calculator.program import events
 from src.calculator.program.build import (
-    CapabilityView,
     Program,
     Projection,
     build_program,
-    pair_preview_mechanics,
     pair_program,
+)
+from src.calculator.program.capability import (
+    CapabilityView,
+    pair_preview_mechanics,
     walk_repriced_mechanics,
 )
 from src.calculator.program.identity import EventId, PairOrigin, event_id_text
 from src.calculator.survival import compile as survival_compile
-from src.calculator.survival.actions import ActionKind, TransitionRank, action_key
+from src.calculator.survival.actions import action_key
+from src.calculator.survival.phases import TransitionRank
+from src.calculator.survival.typed_action import ActionKind
 
 ORIGIN = PairOrigin("main", "enemy:0")
 EMPTY_CAPS = CapabilityView(mechanics={})
@@ -311,7 +315,7 @@ class TestTheGreyHealthTickBuilder:
         assert action.amount == 40.0
 
     def test_its_event_id_is_the_published_grey_shape(self) -> None:
-        from src.calculator.survival.actions import EVENT_SLOTS
+        from src.calculator.survival.event_slots import EVENT_SLOTS
 
         action = program_compile.grey_health_heal_action(1.0, "Warmog", 10.0, 3, aidx=0)
         assert EVENT_SLOTS.text(action.event_slot) == "main:grey:Warmog:3"

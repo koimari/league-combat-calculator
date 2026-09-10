@@ -16,7 +16,8 @@ from .module_helpers import (
     no_damage,
     typed_damage,
 )
-from .slotlib import ability_name, extract_cooldown, extract_named, simple_damage
+from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 

@@ -21,7 +21,14 @@ derived in source, and a future hand-written member fails here.
 
 import pytest
 
-from src.calculator.ability_spec import (
+from src.calculator.champion_cleanses import CHAMPION_CLEANSE_DECLARATIONS
+from src.calculator.cleanse_declarations import ITEM_CLEANSE_DECLARATIONS
+from src.calculator.cleanse_eligibility import (
+    NEVER_CLEANSABLE_CONTROL_KINDS,
+    TOOLTIP_ONLY_CONTROL_KINDS,
+    resolve_excluded_kinds,
+)
+from src.calculator.control_spec import (
     ACTION_BLOCKING_CC_KINDS,
     CC_KIND_VOCABULARY,
     DISPLACEMENT_CC_KINDS,
@@ -30,13 +37,6 @@ from src.calculator.ability_spec import (
     NON_BLOCKING_CC_KINDS,
     NON_IMMOBILIZING_CC_KINDS,
     cc_kind_reviewed,
-)
-from src.calculator.cleanse_eligibility import (
-    CHAMPION_CLEANSE_DECLARATIONS,
-    ITEM_CLEANSE_DECLARATIONS,
-    NEVER_CLEANSABLE_CONTROL_KINDS,
-    TOOLTIP_ONLY_CONTROL_KINDS,
-    resolve_excluded_kinds,
 )
 from src.calculator.crowd_control_eligibility import (
     KNOWN_CONTROL_KINDS,

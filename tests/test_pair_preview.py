@@ -22,17 +22,18 @@ from functools import lru_cache
 
 from src import app as app_module
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.program.build import (
+from src.calculator.fight.config import FightConfig
+from src.calculator.program.capability import (
     dropped_preview_mechanics,
     pair_preview_mechanics,
     walk_repriced_mechanics,
 )
 from src.calculator.program.compile import WalkCompiler
-from src.calculator.program.views import ViewTag
+from src.calculator.program.views.view_tag import ViewTag
 from src.calculator.stats import calculate_total_stats
-from src.calculator.survival.actions import EVENT_SLOTS
+from src.calculator.survival.event_slots import EVENT_SLOTS
 from src.calculator.trigger_stream import CAPABILITIES, Authority, Engine
 
 HOLDER = "Jax"

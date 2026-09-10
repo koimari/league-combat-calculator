@@ -36,22 +36,19 @@ unpriced; its kind rides ``MODULE_CC``.
 from typing import Any
 
 from ..ability_atoms import ability_payload
-from ..ability_spec import ControlScope, DamagePart
+from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from ..control_spec import ControlScope
 from ..healing_helpers import HealAnchor, heal_from_damage, payments
+from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
-from .module_contract import coverage
 from .module_helpers import ranked_slot
 from .shared_mechanics import innate_zero_row, ticked_channel
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    with_control_event,
-)
+from .slot_control import with_control_event
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
 # E2-sourced tick cadences (data/worklists/e2-dot-ticks.json and the
