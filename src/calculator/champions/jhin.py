@@ -9,15 +9,10 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import at_level, no_damage, ranked_slot
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    simple_damage,
-    with_control,
-)
+from .slot_control import with_control
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.

@@ -103,12 +103,12 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..binary_roots import calculation_coefficients, spell_object
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import int_option
-from .module_contract import coverage
 from .packet_module import build_packet_module
-from .slotlib import ability_name, extract_named
+from .slot_extract import ability_name
 
 PACKET_SHA256 = "2c402273f8fc3938c635dbebea26dc7e22901e8a0a07e00ef933ab0d12d77b98"
 
@@ -315,10 +315,14 @@ def derive_self_healing(
 ) -> list[dict[str, Any]]:
     """Resolve Sylas self-healing events from its authored packet."""
     healing = []
-    w = _healing.ability_json(champion_data, "W")
-    w_rank = _healing.parsed_rank(ability_damages, "W")
-    min_heal = extract_named(w, "Minimum Heal", w_rank, champion_stats)
-    max_heal = extract_named(w, "Maximum Heal", w_rank, champion_stats)
+    min_heal, max_heal = _healing.ranked_rows(
+        champion_data,
+        ability_damages,
+        champion_stats,
+        "W",
+        "Minimum Heal",
+        "Maximum Heal",
+    )
     for payment in _healing.payments(
         _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
     ):

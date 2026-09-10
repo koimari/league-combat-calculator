@@ -3,8 +3,8 @@
 from pathlib import Path
 
 import src.app as app_module
-from src.calculator.bis import bis_objective_contract
-from src.calculator.pipeline import rank_allocation_contract
+from src.calculator.bis_objective import bis_objective_contract
+from src.calculator.fight_request_bounds import rank_allocation_contract
 from src.calculator.role_quests import role_quest_domain_contract
 
 APP_JS = Path("static/js/app.js").read_text(encoding="utf-8")

@@ -38,7 +38,7 @@ import pytest
 
 from src import app as app_module
 from src.calculator.champions import annie, malzahar
-from src.calculator.champions.slotlib import _modifier_value, find_named_leveling
+from src.calculator.champions.slot_extract import _modifier_value, find_named_leveling
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _CACHE_KEY_BY_DISPLAY = {

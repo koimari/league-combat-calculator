@@ -9,7 +9,7 @@ traces to a wiki/game source. Every attacker is a validated named module.
 
 This document states, for every modeling family, the mathematical identity the
 engine instantiates, the theorem that justifies it, the cases where the engine
-is exact versus approximate, and — where a formula deviates from the game — the
+is exact versus approximate, and, where a formula deviates from the game, the
 edge case and the recommended resolution, with arXiv literature anchors.
 
 ---
@@ -51,7 +51,7 @@ N(T) = ⌊AS · u · T⌋                  (damage.py: num_auto_attacks = floor(
 with swing timestamps `t_i = i·Δ, i = 0..N(T)−1` (the last swing is strictly
 inside the window). This is the **counting function of a renewal process with
 deterministic interarrival time Δ**: `N(t) = max{n ≥ 0 : S_n ≤ t}`, `S_n = nΔ`.
-The schedule is exact for the model's own convention — a swing whose impact
+The schedule is exact for the model's own convention, a swing whose impact
 would land *exactly* at the window boundary is excluded, a measure-zero
 boundary choice.
 
@@ -60,7 +60,7 @@ set of hands): each cast occupies its sourced cast time, an ability recasts
 when its effective cooldown has elapsed *and* no other cast is in progress, and
 a cast counts when it *starts* within the window
 (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`,
-the cast epochs of a solo ability are `0, c_i, 2c_i, …` — again a deterministic
+the cast epochs of a solo ability are `0, c_i, 2c_i, …`, again a deterministic
 renewal schedule; the shared-timeline version is the superposition with
 mutual-exclusion, resolved greedily by cast order. This replaced the legacy
 `1 + T/c` independent-timeline count, which overcounted short-cooldown
@@ -81,7 +81,7 @@ fight number in the engine is this finite-horizon renewal-reward functional.
   including rewards that grow with the interarrival time).
 - C. Duval, *Nonparametric estimation of a renewal reward process from discrete
   data*, arXiv:1207.1611 (renewal-reward processes have non-stationary,
-  dependent increments — motivating exact simulation rather than closed-form
+  dependent increments, motivating exact simulation rather than closed-form
   aggregation).
 
 **Exact vs approximate.** The *counting* is exact under the deterministic
@@ -94,9 +94,9 @@ model. Two modeling choices are approximations, both documented in code:
    expectation only if swings are uniformly spread (Wald-style rate scaling).
    The error is bounded by ±1 swing and vanishes as `T` grows.
 2. **Navori Flickerblade refunds** (`_navori_effective_cd`) simulate the
-   discrete event process exactly — natural decay of the remaining cooldown
+   discrete event process exactly, natural decay of the remaining cooldown
    between attack epochs, then `remaining ← (remaining − Δ)·(1 − r)` at each
-   attack — an Euler discretization of the continuous process `dR/dt = −1`
+   attack, an Euler discretization of the continuous process `dR/dt = −1`
    with multiplicative jumps at attack epochs. Exact for the discrete-event
    model; the only freedom is the in-game order of the natural tick vs. the
    refund, which the engine resolves as decay-then-refund.
@@ -109,10 +109,10 @@ model. Two modeling choices are approximations, both documented in code:
 1. **Multi-hit abilities.** A part with `h` identical hits is mitigated per hit
    and summed: `Σ_h m(R)·raw = h·m(R)·raw` (`_mitigate_hits`). This is exact
    because the mitigation operator `x ↦ x·100/(100+R)` is *linear in raw
-   damage* for a fixed resistance — splitting a 3×100 hit packet into three
+   damage* for a fixed resistance, splitting a 3×100 hit packet into three
    100-hit packets, or summing it into one 300 packet, gives the same
    post-mitigation total. (The operator is *not* linear in `R`, which is why
-   averaging resistances is only approximate — Section 2.3.)
+   averaging resistances is only approximate, Section 2.3.)
 2. **DoT ticks.** A DoT total is partitioned into ticks by a uniform partition
    of its window (`_periodic_damage_events`): `⌊duration/interval⌋` full ticks
    of `(total/duration)·interval` plus a remainder tick at `duration`.
@@ -124,7 +124,7 @@ model. Two modeling choices are approximations, both documented in code:
 3. **Proc chains.** A Bernoulli "chance on hit" proc over `n` attacks has
    expected count `E[#procs] = n·p` (binomial mean = linearity of
    expectation). Deterministic every-`N`th-hit procs (Kraken Slayer, Hullbreaker)
-   have exact count `⌊n/N⌋` — modular counting over the shared hit sequence
+   have exact count `⌊n/N⌋`, modular counting over the shared hit sequence
    (`_calculate_stacking_procs`). The engine models every-Nth cadences exactly
    and fixed-count chains exactly; no item in the current cache needs a
    *geometric* chain (Statikk Shiv's chain-lightning target count is a
@@ -154,7 +154,7 @@ and there the deterministic path is genuinely an approximation.)
 maximum health). In probabilistic terms, an execute is a **quantile event**:
 `P(target executed) = P(H(τ) ≤ θ) = F_H(θ)`, the CDF of target health at the
 damage event. The engine prices the threshold as a display row and does *not*
-add execute damage to totals (`_add_execute_display`) — the kill boundary is
+add execute damage to totals (`_add_execute_display`), the kill boundary is
 documented, not double-counted. This is the conservative choice: an execute is
 an absorbing event, not a damage instance.
 
@@ -177,7 +177,7 @@ d(m) = d_min · (1 + min(1, m/(2/3))),   m = missing-health ratio
 
 evaluated per cast against the target's live health (`_primordial_burst_scaled`,
 `_EXECUTE_MISSING_RATIO_START = 2/3`). The ramp is **concave** (slope
-`1.5·d_min` below `m = 2/3`, slope 0 above — the mirror image of the earlier
+`1.5·d_min` below `m = 2/3`, slope 0 above, the mirror image of the earlier
 convex ramp anchored at 2/3, which was rejected at pass 16 because it granted
 no bonus until the target dropped below 33% health and only reached +100% at
 0 health). Consequently **Jensen's inequality reverses
@@ -186,16 +186,16 @@ OVERstates the expected execute damage whenever the target's health
 distribution straddles the saturation point. The engine documents this; the
 error is first-order in the health-path variance and vanishes when the target
 is far from the saturation point or when the damage path is deterministic (as
-it is in deterministic mode — the residual bias is only from the
+it is in deterministic mode, the residual bias is only from the
 *champion-side* randomness that deterministic mode averages away).
 
 **Theorem (hitting time / first-passage).** "When does the target's health
 first cross θ?" is the first-passage time `τ = inf{t : H(t) ≤ θ}` of the
 damage process. For the deterministic model, `τ` is the index of the first
-cumulative-damage event exceeding `H₀ − θ` — an order statistic of the
+cumulative-damage event exceeding `H₀ − θ`, an order statistic of the
 cumulative damage sequence. The engine computes these exactly for threshold
 triggers (Stormsurge's rolling window: `_damage_threshold_trigger_time` scans
-the event ledger with a sliding-window sum — the exact crossing time of a
+the event ledger with a sliding-window sum, the exact crossing time of a
 discrete cumulative process).
 
 **Literature anchors.**
@@ -206,7 +206,7 @@ discrete cumulative process).
   arXiv:2502.13537 (quantile-function identities; the execute threshold is a
   quantile of the health distribution).
 - *Recurrence rates and hitting-time distributions for random walks on the
-  line*, arXiv:1003.5073 (first-passage/hitting-time distributions — the
+  line*, arXiv:1003.5073 (first-passage/hitting-time distributions, the
   crossing-time analogue for the damage process).
 
 ### 1.4 Geometric sums for proc chains
@@ -219,7 +219,8 @@ Where geometric structure genuinely appears:
   hits is `n·p`. Both identities are pinned by the engine's counting functions.
 - **Chain-lightning / bounce effects.** Statikk Shiv's Electrospark bounces to
   a deterministic level-scaled count; the single-target fight prices one
-  allocation across the roster (`statikk_chain_target_count`). No engine
+  allocation across the roster (`item_effects.FirstAutoEffect.chain_target_count`,
+  read off the item's own declared bounds). No engine
   formula needs an infinite geometric series; if a future item grants
   "chance to re-proc", the correct total is `E = base·p/(1−p)` (the geometric
   series `Σ_{k≥1} base·p^k`), which is the identity to reach for.
@@ -289,7 +290,7 @@ R_final = max(0, (R − r_flat)·(1 − r_pct/100)·(1 − p) − f)
 
 The engine's per-step composition reproduces this closed form exactly
 (verified numerically, Section 3 of the tests). Percent-then-flat is exact per
-the game's stated order — there is no commutativity, and the engine never
+the game's stated order, there is no commutativity, and the engine never
 reorders.
 
 **Floor.** Penetration cannot reduce resistance below 0; excess lethality/flat
@@ -305,7 +306,7 @@ because `m(R)` is convex in `R`:
 
 1. **Terminus stacking pen** (`StackingPenEffect.average_pen`): the engine
    replaces the per-swing pen ramp with its arithmetic mean `R̄` and mitigates
-   every swing at `m(R̄)`. Since `m` is convex, `(1/n)Σ m(R_i) ≥ m(R̄)` — the
+   every swing at `m(R̄)`. Since `m` is convex, `(1/n)Σ m(R_i) ≥ m(R̄)`, the
    average-pen model *understates* total damage relative to the true
    per-swing ramp. The error is second order in the ramp's spread and
    vanishes for ramps that are flat (all swings at max stacks).
@@ -317,7 +318,7 @@ because `m(R)` is convex in `R`:
    `C − C(C−1)/(2h)` for `h ≥ C`; the constant model equals the exact mean at
    ~10 autos and deviates by up to ±20% at the extremes. The stack *duration*
    (6 s) is always longer than the engine's inter-swing interval for any
-   realistic AS·u > 1/6, so expiry does not rescue the constant — this is a
+   realistic AS·u > 1/6, so expiry does not rescue the constant, this is a
    documented tuning constant, not a theorem. **Recommendation:** replace the
    constant with the closed-form Cesàro mean when a champion module needs
    exact BC numbers (a candidate P3 item; changing it re-tunes every BC fight
@@ -326,7 +327,7 @@ because `m(R)` is convex in `R`:
    applies percentage reduction only while `R > 0`. The League Wiki's *Armor
    penetration* article states: "Flat armor reduction can reduce armor values
    below 0, while **percentage armor reduction cannot**." The engine's guard
-   implements exactly that rule — percentage reduction acts on positive
+   implements exactly that rule, percentage reduction acts on positive
    armor; negative armor is the exclusive domain of flat reduction. The
    residual ambiguity (whether the game multiplies an already-negative value,
    which would move it toward 0 and *reduce* the amplifier) is a
@@ -351,13 +352,13 @@ subject to S ⊆ L,  |S| = k,  S respects exclusivity groups,
 where:
 
 - `L` = eligible legendary items (116 in the current cache; the public
-  coverage receipt reports the role-scoped subset — "~96" in the task
+  coverage receipt reports the role-scoped subset, "~96" in the task
   statement is the coverage-filtered pool),
 - `k` = `max_legendary_slots` (default 5),
 - `f(S)` = the **coupled participant-timeline score**: deterministic total
   damage dealt by the main participant before its own death, summed over the
   fight window, with an infinitesimal effective-health tiebreak
-  (`score + EHP·1e-9`, optimizer.py `_evaluate_build_uncached`),
+  (`score + EHP·1e-9`, `build_evaluation._evaluate_build_uncached`),
 - exclusivity groups: at most one item per group (Spellblade, Fatality,
   Blight, …), enforced by `loadout_rules`.
 
@@ -385,27 +386,27 @@ The search is a classic **local search / hill climbing** heuristic:
   `(1 − 1/e)` approximation guarantee (Nemhauser–Wolsey–Fisher). It is not:
   `f` couples every slot through the shared timeline (death time, shield
   thresholds, proc cadence), so marginal gains are not monotone, and the
-  engine never claims a guarantee — the public receipt labels full-build
+  engine never claims a guarantee, the public receipt labels full-build
   results `local_search` and explicitly *not* "certified best in slot".
 - The score memo (`score_memo`, `pair_result_cache`, `CoupledSearchContext`)
   reuses every evaluation a candidate swap cannot change, which is what makes
-  thousands of coupled evaluations tractable — a duality between
+  thousands of coupled evaluations tractable, a duality between
   "what changes when one slot changes" and the per-search cache key
   (see `architecture.md`, Optimization).
 
 **Published theory for item-recommendation problems:**
 - A. Dallmann, J. Kohlmann, D. Zoller, A. Hotho, *Sequential Item
-  Recommendation in the MOBA Game Dota 2*, arXiv:2201.08724 — the closest
+  Recommendation in the MOBA Game Dota 2*, arXiv:2201.08724, the closest
   published treatment of MOBA item recommendation (sequential purchase
   prediction); it is a learning task, whereas Scryglass ranks by *simulated
   deterministic outcome*, which is a different and stronger objective.
 - H. Zhang, W. Luo, *A unified continuous greedy algorithm for k-submodular
-  maximization under a down-monotone constraint*, arXiv:2311.18239 — the
+  maximization under a down-monotone constraint*, arXiv:2311.18239, the
   greedy-with-guarantee family the optimizer's greedy phase is a (non-
   guaranteed) instance of; the coupling of the score function is exactly what
   voids the guarantee.
 - Y. Bian, J. M. Buhmann, A. Krause, *Continuous Submodular Function
-  Maximization*, arXiv:2006.13474 — background on the submodularity
+  Maximization*, arXiv:2006.13474, background on the submodularity
   machinery and why the score's coupling breaks it.
 
 ---
@@ -418,7 +419,7 @@ It claims nothing about:
 
 - **Variance**: crit streaks, proc timing jitter, and target-health-path
   variance are averaged away. Two builds whose scores differ by less than the
-  unmodeled variance are statistically indistinguishable — the engine's
+  unmodeled variance are statistically indistinguishable, the engine's
   `1e-9` tiebreak is a *deterministic* total order, not a statistical claim.
 - **Model error**: unmodeled mechanics (champions without named modules,
   coarse event ordering, vision boundaries such as Pyke's out-of-vision
@@ -435,7 +436,7 @@ route from a corpus of `(model, observed)` pairs to a *calibrated* statement is
 **conformal prediction**: with `n` exchangeable validation points, the rank of
 a new point's error among the corpus errors gives a distribution-free
 coverage guarantee `P(|model − game| ≤ q_{⌈(1−α)(n+1)⌉}) ≥ 1 − α` for the
-empirical quantile `q` — no distributional assumptions. That is the exact
+empirical quantile `q`, no distributional assumptions. That is the exact
 machinery to attach honest "the model is within X of the game with 95%
 confidence" claims to the existing corpus, and it is the recommended next step
 (P3) when a full validation corpus exists.
@@ -476,9 +477,9 @@ exact). All game-rule claims were cross-checked against the League Wiki
 | Grievous Wounds (`healing_reduction.py`, survival walk) | multiplicative factor 0.60 (40% reduction); strongest-wins composition via `min` of factors; duration refresh via `max` | **EXACT** | Heal landing exactly at window expiry is un-reduced (boundary convention); sources do not stack (min is the game rule) |
 | Shield absorption (survival walk) | clipping identity `absorbed = min(shield, damage)`, `overkill = max(0, damage−absorbed)`; `absorbed+overkill = damage` | **EXACT** | Consumption order = earliest-expiring timed shields first, then untimed pools (FIFO proxy); venom cuts non-magic shields granted under the wound |
 | Grey health (`_grey_health_receipts`) | saturating accumulator `pool = min(cap, ratio·Σ post-mitigation incoming)` | **EXACT** | Out-of-vision consume (Pyke) is a vision boundary, documented not authored; cap = min(80 + 800% bAD, 55% max health) |
-| Revive (survival walk) | absorbing-state machine: earliest lethal packet triggers revive at `death_time + delay`; restore = min(max_health, amount) | **EXACT** | Candidate revive authored after every damage event, applied only when dead — exact earliest-trigger semantics; post-window revives visible but not applied |
+| Revive (survival walk) | absorbing-state machine: earliest lethal packet triggers revive at `death_time + delay`; restore = min(max_health, amount) | **EXACT** | Candidate revive authored after every damage event, applied only when dead, exact earliest-trigger semantics; post-window revives visible but not applied |
 | BIS score (`_evaluate_build_uncached`) | finite-horizon renewal-reward functional: cumulative damage until death; EHP·1e-9 lexicographic tiebreak | **EXACT*** | *the tiebreak is an infinitesimal regularizer (documented), never a material ordering; `effective_health` receipt is "total resources", not remaining health |
-| Stat rounding (`calculate_total_stats`) | display-level integer rounding of health/AD/AP/armor/MR before damage | **APPROX** | Riot computes with full precision; rounding drifts mitigation and scalings by <1 unit — corpus-wide convention, pinned by golden |
+| Stat rounding (`calculate_total_stats`) | display-level integer rounding of health/AD/AP/armor/MR before damage | **APPROX** | Riot computes with full precision; rounding drifts mitigation and scalings by <1 unit, corpus-wide convention, pinned by golden |
 | Terminus/BC ramps (`average_pen`, `average_reduction`) | Cesàro mean of the per-hit ramp | **APPROX** | m(R) convex ⇒ averaging understates ramp damage (Jensen); BC constant = exact mean at ~10 autos, ±20% at extremes (Section 2.3) |
 
 **Audit conclusion.** Every *core* formula family instantiates its stated
@@ -488,7 +489,7 @@ counting, crit expectation, clip identities, strongest-wins GW, saturating
 grey-health accumulator, earliest-trigger revive). The approximations found are
 all **documented in code** (burn GCD estimate, BC stack constant, Terminus pen
 average, R single-cast, DoT even-split, stat rounding, prefix double-on-hit
-attribution) — none is silently presented as exact. The one once-suspect
+attribution), none is silently presented as exact. The one once-suspect
 rule (percent reduction on negative armor) matches the League Wiki's stated
 boundary ("percentage armor reduction cannot [reduce below 0]"), with a
 game-file-verification footnote remaining. No combat formula was found

@@ -34,9 +34,10 @@ from src.calculator.champions.dr_mundo import (
     W_DURATION,
 )
 from src.calculator.champions.skill_orders import get_ability_rank
-from src.calculator.champions.slotlib import extract_named, extract_value
+from src.calculator.champions.slot_extract import extract_named, extract_value
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
 

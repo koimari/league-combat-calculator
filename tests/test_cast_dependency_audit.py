@@ -35,7 +35,7 @@ from scripts.cast_dependency_audit import (
 from scripts.gate_receipt import SCHEMA_VERSION, validate_receipt
 from src.calculator.ability_spec import DamagePart
 from src.calculator.cast_dependency import CastDependency
-from src.calculator.rotation_resolver import detect_setup_consume_edges
+from src.calculator.cast_edge_inference import detect_setup_consume_edges
 
 # Every marker the interpreter reads → the negative test that proves the
 # read is load-bearing.  The audit reads this mapping out of this file and
@@ -390,7 +390,7 @@ class TestDeclarations:
         would make a member's disappearance from the vocabulary invisible
         and leave "which reasons are dead" a fact nobody could read.
         """
-        from src.calculator.rotation_resolver import ORDER_OVERRIDE_REASONS
+        from src.calculator.cast_order_overrides import ORDER_OVERRIDE_REASONS
 
         frontier = receipt["order_override_frontier"]
         assert set(frontier["reasons"]) == set(ORDER_OVERRIDE_REASONS)
@@ -403,8 +403,8 @@ class TestDeclarations:
         head, hand-held DPS tail) from a seed held by hand end to end.
         This measures the split independently of the audit's own code.
         """
+        from src.calculator.cast_order_overrides import CAST_ORDER_OVERRIDES
         from src.calculator.champions import get_champion_cast_dependencies
-        from src.calculator.rotation_resolver import CAST_ORDER_OVERRIDES
 
         declaring = sorted(
             name

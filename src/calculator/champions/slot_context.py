@@ -130,3 +130,18 @@ class SlotCtx:
             return None
         rank = self.rank_for(slot)
         return None if rank < 1 else (ability, rank)
+
+    def ranked_sub(
+        self, slot: str | None = None, index: int = 1
+    ) -> tuple[dict, dict, int] | None:
+        """The parent entry, its sub-entry, and the rank both are priced at.
+
+        ``None`` is the answer :meth:`ranked` gives, for the same two
+        reasons plus a third: either entry absent.
+        """
+        parent = self.ability(slot, 0)
+        sub = self.ability(slot, index)
+        if parent is None or sub is None:
+            return None
+        rank = self.rank_for(slot)
+        return None if rank < 1 else (parent, sub, rank)

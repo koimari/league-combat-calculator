@@ -51,10 +51,15 @@ from operator import itemgetter
 import pytest
 
 from src.app import app
-from src.calculator import delivery_eligibility as de
+from src.calculator import (
+    defense_composition,
+    delivery_classes,
+    delivery_facts,
+    spell_shield_eligibility,
+)
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
+from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.interaction_effects import resolve_spell_shield
 from src.calculator.interpreters import uncompilable_item_receipt
 from src.calculator.item_effects import (
@@ -63,6 +68,7 @@ from src.calculator.item_effects import (
     spell_shield_cooldown_seconds,
 )
 from src.calculator.participant_timeline import Combatant
+from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival import unrepresentable_template_receipt
 from tests.survival_probe import simulate_survival, survival_of
@@ -203,11 +209,13 @@ def _dummy_combatant(
     )
 
 
-def _eligibility(start: float = 0.0, until: float = 1.5) -> de.SpellShieldEligibility:
-    return de.SpellShieldEligibility(
+def _eligibility(
+    start: float = 0.0, until: float = 1.5
+) -> spell_shield_eligibility.SpellShieldEligibility:
+    return spell_shield_eligibility.SpellShieldEligibility(
         name="spell_shield",
-        window=de.DefenseWindow(start=start, until=until),
-        acceptance=de.SpellShieldAcceptance(),
+        window=delivery_facts.DefenseWindow(start=start, until=until),
+        acceptance=spell_shield_eligibility.SpellShieldAcceptance(),
         block_rule="all",
         source=None,
     )
@@ -228,7 +236,9 @@ class _CastBudget:
         self.remaining = uses
         self.blocked_cast: str | None = None
 
-    def blocks(self, decision: de.SpellShieldDecision) -> tuple[bool, str]:
+    def blocks(
+        self, decision: spell_shield_eligibility.SpellShieldDecision
+    ) -> tuple[bool, str]:
         if not decision.eligible:
             return False, decision.reason
         if (
@@ -539,7 +549,7 @@ def test_r5_control_only_cast_consumes_the_shield_and_is_blocked():
 def test_r5_acceptance_blocks_control_only_packets():
     """Kernel acceptance: control-only ability packets are accepted by the
     spell-shield acceptance rule."""
-    acceptance = de.SpellShieldAcceptance()
+    acceptance = spell_shield_eligibility.SpellShieldAcceptance()
     action = _Action(
         time=0.5,
         source_key="E",
@@ -547,7 +557,9 @@ def test_r5_acceptance_blocks_control_only_packets():
         cc_kind="stun",
         skillshot=True,
     )
-    accepted, reason = acceptance.accepts(action, de.classify_delivery(action))
+    accepted, reason = acceptance.accepts(
+        action, delivery_classes.classify_delivery(action)
+    )
     assert accepted is True
     assert reason == ""
 
@@ -758,20 +770,26 @@ def test_r7_acceptance_reasons_not_an_ability_basic_attack_unknown():
     'basic_attack_not_blocked' for basic attacks, 'not_an_ability' for
     non-ability declared packets, 'unknown_delivery' for unclassifiable
     packets."""
-    acceptance = de.SpellShieldAcceptance()
+    acceptance = spell_shield_eligibility.SpellShieldAcceptance()
 
     basic = _Action(is_ability=False, basic_attack=True, source_key="auto_attacks")
-    accepted, reason = acceptance.accepts(basic, de.classify_delivery(basic))
+    accepted, reason = acceptance.accepts(
+        basic, delivery_classes.classify_delivery(basic)
+    )
     assert accepted is False
     assert reason == "basic_attack_not_blocked"
 
     dot_tick = _Action(is_ability=False, damage_over_time=True, source_key="burn")
-    accepted, reason = acceptance.accepts(dot_tick, de.classify_delivery(dot_tick))
+    accepted, reason = acceptance.accepts(
+        dot_tick, delivery_classes.classify_delivery(dot_tick)
+    )
     assert accepted is False
     assert reason == "not_an_ability"
 
     unknown = _Action(is_ability=False, source_key="item_proc")
-    accepted, reason = acceptance.accepts(unknown, de.classify_delivery(unknown))
+    accepted, reason = acceptance.accepts(
+        unknown, delivery_classes.classify_delivery(unknown)
+    )
     assert accepted is False
     assert reason == "unknown_delivery"
 
@@ -933,7 +951,7 @@ def test_r9_unknown_cast_identity_fails_closed_no_consumption():
     attacker = _Attacker()
     action = _Action(time=None, source_key=None, ability_instance=None)
 
-    identity, kind = de.resolve_cast_identity(action)
+    identity, kind = spell_shield_eligibility.resolve_cast_identity(action)
     assert identity == ""
     assert kind == "unknown"
 
@@ -1088,10 +1106,14 @@ def test_r12_spell_shield_eligibility_receipt_shape():
 
 
 def test_r12_spell_shield_composition_receipt_shape():
-    composition = de.SpellShieldComposition(
-        full_block=de.FullBlockRule(mode="all", blocks_true_damage=True),
-        uses=de.UseBudget(action_mode="spell_shield", uses=1, consume="per_cast"),
-        triggered_heal=de.TriggeredHealRule(
+    composition = spell_shield_eligibility.SpellShieldComposition(
+        full_block=defense_composition.FullBlockRule(
+            mode="all", blocks_true_damage=True
+        ),
+        uses=defense_composition.UseBudget(
+            action_mode="spell_shield", uses=1, consume="per_cast"
+        ),
+        triggered_heal=spell_shield_eligibility.TriggeredHealRule(
             amount=81.6,
             delay=0.25,
             source="Spell Shield · Heal",
@@ -1117,15 +1139,23 @@ def test_r12_use_budget_consume_modes():
     """'per_cast' is the new spell-shield consume mode; the existing
     'first_eligible'/'each_eligible' modes are unchanged."""
     for consume in ("per_cast", "first_eligible", "each_eligible"):
-        budget = de.UseBudget(action_mode="spell_shield", uses=1, consume=consume)
+        budget = defense_composition.UseBudget(
+            action_mode="spell_shield", uses=1, consume=consume
+        )
         assert budget.public_receipt()["consume"] == consume
     # The spell-shield declaration shape from the contract.
-    budget = de.UseBudget(action_mode="spell_shield", uses=1, consume="per_cast")
+    budget = defense_composition.UseBudget(
+        action_mode="spell_shield", uses=1, consume="per_cast"
+    )
     assert budget.initial_remaining() == 1
     with pytest.raises(ValueError):
-        de.UseBudget(action_mode="spell_shield", uses=0, consume="per_cast")
+        defense_composition.UseBudget(
+            action_mode="spell_shield", uses=0, consume="per_cast"
+        )
     with pytest.raises(ValueError):
-        de.UseBudget(action_mode="spell_shield", uses=1, consume="not_a_mode")
+        defense_composition.UseBudget(
+            action_mode="spell_shield", uses=1, consume="not_a_mode"
+        )
 
 
 def test_r12_decision_reasons_enumeration():
@@ -1188,28 +1218,31 @@ def test_r12_resolve_cast_identity_three_kinds():
     (source_key:time fallback — including when source_key is absent but the
     time is finite), unknown (neither nor a finite time)."""
     sourced = _Action(time=0.5, source_key="Q", ability_instance="Q:3")
-    assert de.resolve_cast_identity(sourced) == ("Q:3", "sourced")
+    assert spell_shield_eligibility.resolve_cast_identity(sourced) == ("Q:3", "sourced")
 
     derived = _Action(time=0.5, source_key="Q", ability_instance=None)
-    assert de.resolve_cast_identity(derived) == ("Q:0.5", "derived")
+    assert spell_shield_eligibility.resolve_cast_identity(derived) == (
+        "Q:0.5",
+        "derived",
+    )
 
     # Pinned: derived even without a source_key when the time is finite.
     derived_no_key = _Action(time=0.5, source_key=None, ability_instance=None)
-    identity, kind = de.resolve_cast_identity(derived_no_key)
+    identity, kind = spell_shield_eligibility.resolve_cast_identity(derived_no_key)
     assert kind == "derived"
     assert identity == ":0.5"
 
     unknown = _Action(time=None, source_key=None, ability_instance=None)
-    assert de.resolve_cast_identity(unknown) == ("", "unknown")
+    assert spell_shield_eligibility.resolve_cast_identity(unknown) == ("", "unknown")
 
 
 def test_r12_stable_event_key_reused_for_blocked_bookkeeping():
     """Blocked-packet bookkeeping reuses stable_event_key
     (source_key:time:sequence)."""
     action = _Action(time=0.5, source_key="Q", sequence=3)
-    assert de.stable_event_key(action) == "Q:0.5:3"
+    assert delivery_facts.stable_event_key(action) == "Q:0.5:3"
     decision = _eligibility().decide(action, _Attacker())
-    assert decision.event_key == de.stable_event_key(action)
+    assert decision.event_key == delivery_facts.stable_event_key(action)
 
 
 # ---------------------------------------------------------------------------

@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from src import app as app_module
-from src.calculator.champions.slotlib import (
+from src.calculator.champions.slot_extract import (
     extract_named,
     find_named_leveling,
     sum_modifiers,

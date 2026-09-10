@@ -21,7 +21,8 @@ from ..binary_roots import data_value, spell_object
 from .engine import DEBUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import clamp, ranked_slot
-from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
 _KARTHUS_W_SPELL = spell_object("Karthus", "KarthusWallOfPain")

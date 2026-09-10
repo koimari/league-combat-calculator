@@ -103,14 +103,12 @@ from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from src.calculator.champions.slotlib import extract_named
-from src.calculator.cleanse_eligibility import (
-    CleanseEligibility,
-    resolve_cleanse_item,
-)
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.champions.slot_extract import extract_named
+from src.calculator.cleanse_declarations import resolve_cleanse_item
+from src.calculator.cleanse_eligibility import CleanseEligibility
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
-from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.fight.config import FightConfig
 from src.calculator.healing import derive_self_healing
 
 # MERGE: the shared healing readers moved out of ``healing.py`` into
@@ -118,6 +116,7 @@ from src.calculator.healing import derive_self_healing
 # declarations and sorts receipts now.
 from src.calculator.healing_helpers import leveling_ratio
 from src.calculator.participant_timeline import Combatant
+from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.survival.compile import unrepresentable_template_receipt
 from tests.app_config import app_config
 from tests.survival_probe import simulate_survival
@@ -1142,7 +1141,7 @@ class TestIntervalTruncation:
         # activation removed entirely by the pure function (the walk
         # never passes a control landing later — a cleanse creates no
         # immunity), unknown kinds never truncated.
-        from src.calculator.cleanse_eligibility import truncate_intervals
+        from src.calculator.control_intervals import truncate_intervals
 
         intervals = [
             {"kind": "stun", "start": 0.0, "end": 1.0, "source": "A"},  # historical
@@ -1410,7 +1409,7 @@ class TestUnchangedBoundaries:
         # contract #10): the item declarations and the one-use latch
         # stay the three declared items; Gangplank's W adds a champion
         # source without disturbing them.
-        from src.calculator.cleanse_eligibility import ITEM_CLEANSE_DECLARATIONS
+        from src.calculator.cleanse_declarations import ITEM_CLEANSE_DECLARATIONS
 
         assert set(ITEM_CLEANSE_DECLARATIONS) == {
             "Mikael's Blessing",

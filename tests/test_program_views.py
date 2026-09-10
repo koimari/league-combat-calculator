@@ -24,28 +24,26 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator import ability_spec
-from src.calculator.ability_spec import (
+from src.calculator.program import capability, precision, tagged
+from src.calculator.program.build import roster_program
+from src.calculator.program.rung import CompiledFast
+from src.calculator.program.views import (
+    breakdown,
+    score,
+    survival,
+    tdd,  # noqa: F401 - the front door D-95 counts (tests/test_architecture.py)
+)
+from src.calculator.program.views.leaf import DISCARD, LeafWriter, serialize_leaf
+from src.calculator.program.views.view_tag import ViewTag
+from src.calculator.program.walk import AttackerOutcome, WalkResult, survival_folds
+from src.calculator.quantity import (
     Measured,
     ProjectionStarvation,
     Starved,
     StructuralZero,
     Withheld,
 )
-from src.calculator.defensive_effects import StartingDefenses
-from src.calculator.program import precision
-from src.calculator.program.build import roster_program
-from src.calculator.program.rung import CompiledFast
-from src.calculator.program.views import (
-    DISCARD,
-    LeafWriter,
-    ViewTag,
-    breakdown,
-    score,
-    serialize_leaf,
-    survival,
-    tdd,  # noqa: F401 - the front door D-95 counts (tests/test_architecture.py)
-)
-from src.calculator.program.walk import AttackerOutcome, WalkResult, survival_folds
+from src.calculator.starting_defenses import StartingDefenses
 
 VIEWS_ROOT = Path(survival.__file__).resolve().parent
 
@@ -302,23 +300,21 @@ def test_the_view_tag_vocabulary_is_closed_at_two_members() -> None:
 def test_the_tag_vocabulary_module_reaches_only_the_vocabulary_leaf() -> None:
     """It is a leaf, and ``trigger_stream``'s second import depends on it.
 
-    The bus may name ``ViewTag`` only because this module reaches no further;
-    an import added here would silently give the bus a transitive dependency
-    the acyclicity clause forbids.  ``ability_spec`` is the single permitted
-    reach, and permitting it costs the argument nothing: it is the campaign's
-    dependency-free vocabulary leaf, ``trigger_stream`` already imports it for
-    ``Authority``, and S9's ``serialize_leaf`` is defined over ``Quantity``,
-    which lives there.  The check below is therefore two clauses rather than
-    one -- what this module may import, and that the one thing it imports
-    imports nothing back.
+    The bus may name ``ViewTag`` only because ``view_tag`` reaches no further;
+    an import added there would silently give the bus a transitive dependency
+    the acyclicity clause forbids, so its intra-package reach is pinned empty.
+    Its siblings do reach one module, ``ability_spec`` -- the campaign's
+    dependency-free vocabulary leaf, which ``trigger_stream`` already imports
+    for ``Authority`` and which ``serialize_leaf`` is defined over -- so the
+    second clause is that the one thing they reach imports nothing back.
     """
-    source = (VIEWS_ROOT / "__init__.py").read_text(encoding="utf-8")
+    source = (VIEWS_ROOT / "view_tag.py").read_text(encoding="utf-8")
     relative = {
         node.module
         for node in ast.walk(ast.parse(source))
         if isinstance(node, ast.ImportFrom) and node.level
     }
-    assert relative == {"ability_spec"}
+    assert relative == set()
     vocabulary = Path(ability_spec.__file__).read_text(encoding="utf-8")
     assert {
         node.module
@@ -791,7 +787,7 @@ def test_a_block_states_what_its_numbers_mean_rather_than_defaulting() -> None:
     """
     import inspect
 
-    from src.calculator.program.views import LeafBlock
+    from src.calculator.program.views.leaf import LeafBlock
 
     for method in ("put", "measured", "optional_measured"):
         assert "tag" not in inspect.signature(getattr(LeafBlock, method)).parameters
@@ -810,7 +806,7 @@ def test_a_theoretical_block_tags_every_leaf_it_writes() -> None:
 
 
 def test_two_quantities_meaning_the_same_thing_fold() -> None:
-    from src.calculator.program.build import Tagged, fold_tagged
+    from src.calculator.program.tagged import Tagged, fold_tagged
 
     parts = [
         Tagged(Measured(amount=1.5), ViewTag.APPLIED),
@@ -821,7 +817,7 @@ def test_two_quantities_meaning_the_same_thing_fold() -> None:
 
 def test_folding_two_views_is_a_construction_error() -> None:
     """Criterion 4: unrepresentable rather than merely tested for."""
-    from src.calculator.program.build import MixedViewFold, Tagged
+    from src.calculator.program.tagged import MixedViewFold, Tagged
 
     applied = Tagged(Measured(amount=1.0), ViewTag.APPLIED)
     preview = Tagged(Measured(amount=1.0), ViewTag.THEORETICAL)
@@ -835,7 +831,7 @@ def test_folding_two_views_is_a_construction_error() -> None:
 
 def test_a_fold_carries_the_disposition_as_well_as_the_view() -> None:
     """Both properties survive a sum, because both can be lost in one."""
-    from src.calculator.program.build import Tagged, fold_tagged
+    from src.calculator.program.tagged import Tagged, fold_tagged
 
     total = fold_tagged(
         [
@@ -850,7 +846,7 @@ def test_a_fold_carries_the_disposition_as_well_as_the_view() -> None:
 
 def test_a_fold_over_nothing_is_not_a_measured_zero() -> None:
     """An empty total has no view to carry, and inventing one is the bug."""
-    from src.calculator.program.build import fold_tagged
+    from src.calculator.program.tagged import fold_tagged
 
     with pytest.raises(ValueError, match="not a measured zero"):
         fold_tagged([])
@@ -863,7 +859,8 @@ def test_a_fold_over_nothing_is_not_a_measured_zero() -> None:
 
 def test_a_ranking_payload_refuses_a_previewed_block() -> None:
     """The write half: a view that retags a block fails the surface at once."""
-    from src.calculator.program.views import RankingWriter, UnrankableNumber
+    from src.calculator.program.views.leaf import RankingWriter
+    from src.calculator.program.views.view_tag import UnrankableNumber
 
     with pytest.raises(UnrankableNumber) as raised:
         RankingWriter().block({}, "candidates[0]", ViewTag.THEORETICAL)
@@ -880,7 +877,7 @@ def test_the_optimizers_discarded_rows_are_a_ranking_payload_too() -> None:
     evaluation is what the allocation gate refuses -- so the block is the
     only moment a preview can be caught on that path.
     """
-    from src.calculator.program.views import UnrankableNumber
+    from src.calculator.program.views.view_tag import UnrankableNumber
 
     with pytest.raises(UnrankableNumber):
         DISCARD.block({}, "", ViewTag.THEORETICAL)
@@ -907,13 +904,14 @@ def test_a_tag_can_only_enter_a_payload_through_block() -> None:
             ):
                 tag = node.args[-1]
                 sites.append((path.name, ast.unparse(tag)))
-    assert {name for name, _ in sites} == {"__init__.py"}
+    assert {name for name, _ in sites} == {"leaf.py"}
     assert {spelling for _, spelling in sites} == {"self._tag", "tag"}
 
 
 def test_a_previewed_entry_makes_a_ranking_surface_refuse_the_payload() -> None:
     """The read half, over the map a published payload carries."""
-    from src.calculator.program.views import UnrankableNumber, refuse_previewed
+    from src.calculator.program.views.dispositions import refuse_previewed
+    from src.calculator.program.views.view_tag import UnrankableNumber
 
     applied = {"objective.focus_damage_before_death": {"view_tag": "applied"}}
     refuse_previewed(applied, surface="the BIS objective")
@@ -932,7 +930,8 @@ def test_a_previewed_entry_makes_a_ranking_surface_refuse_the_payload() -> None:
 
 def test_a_number_no_entry_names_may_not_be_ranked() -> None:
     """Defaulting to applied here would put the assumption back one layer."""
-    from src.calculator.program.views import UnrankableNumber, published_tag
+    from src.calculator.program.views.dispositions import published_tag
+    from src.calculator.program.views.view_tag import UnrankableNumber
 
     entries = {"duration": {"view_tag": "applied"}}
     assert published_tag(entries, "duration", surface="s") is ViewTag.APPLIED
@@ -942,8 +941,8 @@ def test_a_number_no_entry_names_may_not_be_ranked() -> None:
 
 def test_a_total_folded_from_previews_is_not_a_score() -> None:
     """``ranked_total`` is ``fold_tagged`` plus the half a ranking needs."""
-    from src.calculator.program.build import Tagged, ranked_total
-    from src.calculator.program.views import UnrankableNumber
+    from src.calculator.program.tagged import Tagged, ranked_total
+    from src.calculator.program.views.view_tag import UnrankableNumber
 
     assert (
         ranked_total(
@@ -973,10 +972,10 @@ def test_the_fold_algebra_has_production_callers() -> None:
     """
     import ast
 
-    from src.calculator import bis
+    from src.calculator import bis, bis_objective
 
     called: set[str] = set()
-    for path in (Path(bis.__file__),):
+    for path in (Path(bis.__file__), Path(bis_objective.__file__)):
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
@@ -994,34 +993,31 @@ def test_the_registry_answers_what_a_mechanics_number_means() -> None:
     be a second implementation rather than a second expression.
     """
     from src.calculator.item_behavior import EngineLane
-    from src.calculator.program import build
 
-    declared = build.declared_view_tags()
+    declared = capability.declared_view_tags()
     assert declared, "a registry projection with nothing in it proves nothing"
     previews = {
         mechanic
         for mechanic, tags in declared.items()
         if EngineLane.PAIR_ENGINE in tags
-        and build.tag_for(tags, EngineLane.PAIR_ENGINE) is ViewTag.THEORETICAL
+        and tagged.tag_for(tags, EngineLane.PAIR_ENGINE) is ViewTag.THEORETICAL
     }
-    assert previews <= build.pair_preview_mechanics()
+    assert previews <= capability.pair_preview_mechanics()
     assert previews
 
 
 def test_a_lane_nobody_declared_a_tag_for_raises() -> None:
     """Answering APPLIED there is how a preview joins a coupled total."""
     from src.calculator.item_behavior import EngineLane
-    from src.calculator.program import build
 
     with pytest.raises(KeyError, match="no view tag is declared"):
-        build.tag_for({}, EngineLane.PAIR_ENGINE)
+        tagged.tag_for({}, EngineLane.PAIR_ENGINE)
 
 
 def test_one_mechanic_may_not_declare_two_meanings_for_one_lane() -> None:
     """The merge raises rather than taking whichever row was iterated last."""
     from types import MappingProxyType
 
-    from src.calculator.program import build
     from src.calculator.trigger_stream import Engine
 
     halves = {
@@ -1034,12 +1030,12 @@ def test_one_mechanic_may_not_declare_two_meanings_for_one_lane() -> None:
             view_tags=MappingProxyType({Engine.PAIR: ViewTag.APPLIED}),
         ),
     }
-    original = build.CAPABILITIES
-    build.declared_view_tags.cache_clear()
+    original = capability.CAPABILITIES
+    capability.declared_view_tags.cache_clear()
     try:
-        build.CAPABILITIES = halves
+        capability.CAPABILITIES = halves
         with pytest.raises(ValueError, match="two declared meanings"):
-            build.declared_view_tags()
+            capability.declared_view_tags()
     finally:
-        build.CAPABILITIES = original
-        build.declared_view_tags.cache_clear()
+        capability.CAPABILITIES = original
+        capability.declared_view_tags.cache_clear()

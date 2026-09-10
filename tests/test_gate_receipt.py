@@ -12,6 +12,7 @@ from scripts import acceptance_matrix, champion_optimizer_matrix
 from scripts.gate_receipt import (
     SCHEMA_VERSION,
     build_receipt,
+    emit_receipt,
     validate_receipt,
 )
 from tests.app_config import app_config
@@ -271,3 +272,61 @@ def test_item_umbrella_audit_emits_boolean_envelope():
     assert receipt["schema_version"] == SCHEMA_VERSION
     validate_receipt(receipt)
     assert type(receipt["passed"]) is bool
+
+
+class TestEmitReceipt:
+    """The write, print and score tail every gate script's main ends with."""
+
+    @staticmethod
+    def _receipt(passed: bool = True):
+        failures = [] if passed else [{"case": "one"}]
+        return build_receipt(
+            matrix="probe",
+            passed=passed,
+            passed_count=1 if passed else 0,
+            failed_count=0 if passed else 1,
+            total_count=1,
+            failures=failures,
+        )
+
+    def test_a_passing_receipt_scores_zero_and_prints_its_summary(self, capsys):
+        status = emit_receipt(self._receipt(), output=None, as_json=False)
+        printed = json.loads(capsys.readouterr().out)
+        assert status == 0
+        assert printed == {"passed": True, "counts": self._receipt()["counts"]}
+
+    def test_a_failing_receipt_scores_one(self, capsys):
+        """The shell status is the gate's verdict, not the write's."""
+        assert (
+            emit_receipt(self._receipt(passed=False), output=None, as_json=False) == 1
+        )
+        capsys.readouterr()
+
+    def test_the_json_flag_prints_the_whole_envelope(self, capsys):
+        emit_receipt(self._receipt(), output=None, as_json=True)
+        printed = json.loads(capsys.readouterr().out)
+        validate_receipt(printed)
+        assert printed["matrix"] == "probe"
+
+    def test_the_written_file_is_the_sorted_envelope_with_one_trailing_newline(
+        self, tmp_path, capsys
+    ):
+        target = tmp_path / "receipt.json"
+        emit_receipt(self._receipt(), output=target, as_json=False)
+        capsys.readouterr()
+        text = target.read_text(encoding="utf-8")
+        assert text.endswith("\n")
+        assert not text.endswith("\n\n")
+        assert json.loads(text) == self._receipt()
+        assert text == json.dumps(self._receipt(), indent=2, sort_keys=True) + "\n"
+
+    def test_no_output_path_writes_nothing(self, tmp_path, capsys):
+        emit_receipt(self._receipt(), output=None, as_json=False)
+        capsys.readouterr()
+        assert list(tmp_path.iterdir()) == []
+
+    def test_an_envelope_missing_its_counts_is_not_papered_over(self, capsys):
+        """The tail reads the two keys the schema requires and nothing else."""
+        with pytest.raises(KeyError):
+            emit_receipt({"passed": True}, output=None, as_json=False)
+        capsys.readouterr()

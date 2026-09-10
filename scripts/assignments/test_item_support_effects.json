@@ -1,0 +1,26 @@
+{
+ "source": "tests/test_item_support_effects.py",
+ "decisions": [
+  "The name may not match test_*.py, as for tests/kernel_fixtures.py.",
+  "_damage_modifier_call_sites stays: TestCrossParticipantAuthorities is its only reader, and it is a scan the acceptance matrix runs rather than a fixture another suite reads."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "tests/support_effect_fixtures.py",
+   "docstring": "The actor, the grown registry and the packet vocabulary every item-support suite reads.",
+   "defs": [
+    "_capability",
+    "_grown_registry",
+    "_actor",
+    "_ABYSSAL_ROSTER",
+    "_is_packet_kind_node",
+    "_packet_keyword",
+    "declared_packet_keywords",
+    "_evaluate_declaration",
+    "declared_classes_by_producer",
+    "timed_cross_participant_producers"
+   ]
+  }
+ ]
+}

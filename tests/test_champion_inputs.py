@@ -44,7 +44,7 @@ from src.calculator.champions.inputs import (
     target_stat,
 )
 from src.calculator.data_fetcher import fetch_champion_data
-from src.calculator.pipeline import FightParams
+from src.calculator.fight_params import FightParams
 from src.calculator.stats import calculate_total_stats
 
 ROOT = Path(__file__).resolve().parents[1]

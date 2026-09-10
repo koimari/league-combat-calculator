@@ -7,7 +7,7 @@ rather than by a part, so this kit stays coarse.
 """
 
 from src.calculator.champions import parse_champion_abilities, yone
-from src.calculator.champions.engine import CC_PER_PART
+from src.calculator.champions.slot_cc import CC_PER_PART
 from tests import cc_review
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}

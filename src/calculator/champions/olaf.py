@@ -34,12 +34,12 @@ from typing import Any
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .inputs import int_option
-from .module_helpers import buff_window_share, ranked_slot, steroid_entry
+from .module_helpers import buff_window_share, ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
-    STEROID_ZERO,
+from .shared_mechanics import attack_speed_steroid
+from .slot_entries import STEROID_ZERO, damage_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
@@ -113,17 +113,12 @@ def _tough_it_out(
 ) -> dict[str, Any] | None:
     """W: the 40-80% attack speed beside the scanner-owned shield."""
 
-    granted = extract_value(ability, "Bonus Attack Speed", rank)
-    bonus_as = granted * buff_window_share(ctx, _W_DURATION_SECONDS)
-    return steroid_entry(
+    return attack_speed_steroid(
+        ctx,
         ability,
         rank,
-        {"bonus_attack_speed": bonus_as},
-        (
-            f"+{granted:g}% bonus attack speed for {_W_DURATION_SECONDS:g}s "
-            f"({bonus_as:g}% over the fight window); the cast's Shield "
-            "Strength row is emitted by the ally-support scanner"
-        ),
+        duration=_W_DURATION_SECONDS,
+        aside="the cast's Shield Strength row is emitted by the ally-support scanner",
     )
 
 

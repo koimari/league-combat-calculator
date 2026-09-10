@@ -6,6 +6,7 @@ entire roster; there is no generated or generic middle lane and no runtime
 archetype registration in the reviewed surface.
 """
 
+from collections.abc import Callable
 from types import ModuleType
 from typing import Any
 
@@ -186,8 +187,9 @@ from . import (
     zoe,
     zyra,
 )
+from .contract_vocabulary import ChampionModuleContract
 from .inputs import use_options_rows
-from .module_contract import ChampionModuleContract, contract_from_module
+from .module_contract import contract_from_module
 
 # Map display name -> module name within this package.  This is the single
 # explicit roster manifest: every cached champion has a reviewed module and
@@ -467,10 +469,8 @@ def parse_champion_abilities(
 
 
 def get_champion_cast_order(champion_name: str) -> list[str] | None:
-    """The module's ``CAST_ORDER`` where the engine's ``(Q, Q2, W, E, R)`` misrepresents
-    the kit (Jayce casts R before Q/W), or ``None`` for the default."""
-    declared = _module_declaration(champion_name, "CAST_ORDER")
-    return list(declared) if declared else None
+    """The module's ``CAST_ORDER`` where the engine's default misrepresents the kit."""
+    return _optional_declaration(champion_name, "CAST_ORDER", list)
 
 
 def _module_declaration(champion_name: str, attribute: str) -> Any:
@@ -481,6 +481,14 @@ def _module_declaration(champion_name: str, attribute: str) -> Any:
         )
     except KeyError:
         return None
+
+
+def _optional_declaration[Declaration](
+    champion_name: str, attribute: str, coerce: Callable[[Any], Declaration]
+) -> Declaration | None:
+    """A module's optional declaration read through *coerce*; None when it is empty."""
+    declared = _module_declaration(champion_name, attribute)
+    return coerce(declared) if declared else None
 
 
 # ``False`` — an unregistered name, or a module that stays silent — keeps the
@@ -1035,8 +1043,9 @@ def get_champion_module_meta(champion_name: str) -> dict[str, Any]:
 
 def get_custom_cast_order_unavailable_reason(champion_name: str) -> str | None:
     """Explain why a module's certified cast sequence cannot be reordered."""
-    reason = _module_declaration(champion_name, "CUSTOM_CAST_ORDER_UNAVAILABLE_REASON")
-    return str(reason) if reason else None
+    return _optional_declaration(
+        champion_name, "CUSTOM_CAST_ORDER_UNAVAILABLE_REASON", str
+    )
 
 
 def champion_options_meta_map() -> dict[str, dict[str, list]]:

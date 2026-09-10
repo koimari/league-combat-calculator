@@ -34,7 +34,7 @@ import json
 from pathlib import Path
 
 from src.calculator.ability_atoms import AbilityAtomQuery, required_ability_atom
-from src.calculator.atomizer_domains import atomize_abilities
+from src.calculator.atomizer_abilities import atomize_abilities
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.data_fetcher import get_champion
 

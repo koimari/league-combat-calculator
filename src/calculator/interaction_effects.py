@@ -7,66 +7,30 @@ the resolved atom to apply timing, selection, and one-use rules.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
 from .ability_atoms import (
-    AbilityAtomQuery,
     atom_receipt,
-    ranked_ability_atom_value,
     required_ability_atom,
     required_ranked_attribute_atom,
 )
-from .champions.skill_orders import get_ability_rank
-from .delivery_eligibility import (
-    ChampionFacts,
-    CombatantFacts,
-    DefenseComposition,
-    DefenseEligibility,
-    DefenseWindow,
-    DeliveryAcceptance,
-    DestructionRule,
-    FullBlockRule,
-    ReductionRule,
-    RequestFacts,
-    SourceReceipt,
-    SourceSelection,
-    SpellShieldComposition,
-    SpellShieldEligibility,
-    SpellShieldRearmClock,
-    UseBudget,
+from .delivery_facts import ChampionFacts, CombatantFacts, DefenseWindow
+from .interaction_atoms import (
+    AMUMU_REDUCTION_CAP_QUERY,
+    cached_ability,
+    combatant_level,
+    rank_for,
+    ranked_atom_value,
 )
 from .item_effects import (
     annul_spell_shield_cooldown_atom,
     annul_spell_shield_timer_restarts,
     spell_shield_cooldown_seconds,
 )
-
-
-@dataclass(frozen=True, slots=True)
-class ProjectileDefense:
-    """One selected window for a champion projectile defense."""
-
-    kind: str
-    source: str
-    start: float
-    duration: float
-    blocked_sources: tuple[str, ...] = ()
-    blocked_event_ids: tuple[str, ...] = ()
-    damage_reduction: float = 0.0
-    full_block_first: bool = False
-    full_block_all: bool = False
-    destroy_projectiles: bool = False
-    blocks_basic_attacks: bool = False
-    area_damage_reduction: float = 0.0
-    requires_skillshot: bool = True
-    source_atoms: tuple[dict[str, Any], ...] = ()
-
-    @property
-    def until(self) -> float:
-        """Return the exclusive end time of the active defense window."""
-        return self.start + self.duration
+from .spell_shield_eligibility import SpellShieldComposition, SpellShieldEligibility
+from .spell_shield_rearm import SpellShieldRearmClock
+from .state_timeline import SourceReceipt
 
 
 @dataclass(frozen=True, slots=True)
@@ -79,189 +43,6 @@ class TargetPhysicalDamageReduction:
     source_atoms: tuple[dict[str, Any], ...] = ()
 
 
-def _rank_for(
-    champion: str, level: int, request: RequestFacts | None, slot: str
-) -> int:
-    requested = getattr(request, "ability_ranks", None)
-    if isinstance(requested, Mapping) and slot in requested:
-        return int(requested[slot])
-    return int(get_ability_rank(slot, level, champion))
-
-
-def _ability(champion_data: Mapping[str, Any], slot: str) -> Mapping[str, Any] | None:
-    entries = champion_data.get("abilities", {}).get(slot, [])
-    if not isinstance(entries, list) or not entries:
-        return None
-    ability = entries[0]
-    return ability if isinstance(ability, Mapping) else None
-
-
-def _source_selection(options: Mapping[str, Any], key: str) -> tuple[str, ...]:
-    selected = options.get(key, [])
-    if not isinstance(selected, list):
-        return ()
-    return tuple(str(value).strip() for value in selected if str(value).strip())
-
-
-def _window(
-    options: Mapping[str, Any],
-    start_key: str,
-    duration_key: str,
-    source_duration: float,
-) -> tuple[float, float]:
-    start = max(0.0, float(options.get(start_key, 0.0) or 0.0))
-    requested = max(0.0, float(options.get(duration_key, 0.0) or 0.0))
-    duration = source_duration if requested <= 0.0 else min(source_duration, requested)
-    return start, duration
-
-
-_PROSE_DURATION_QUERIES: dict[tuple[str, str], AbilityAtomQuery] = {
-    ("Yasuo", "W"): AbilityAtomQuery(
-        source="Yasuo.W[0].effects[0].description",
-        behavior="timing",
-        evidence_prefix="active duration@",
-    ),
-    ("Samira", "W"): AbilityAtomQuery(
-        source="Samira.W[0].effects[0].description",
-        behavior="timing",
-        evidence_prefix="active duration@",
-    ),
-    ("Gwen", "W"): AbilityAtomQuery(
-        source="Gwen.W[0].effects[0].description",
-        behavior="timing",
-        evidence_prefix="active duration@",
-    ),
-    ("Fiora", "W"): AbilityAtomQuery(
-        source="Fiora.W[0].effects[0].description",
-        behavior="timing",
-        evidence_prefix="active duration@",
-    ),
-    ("Pantheon", "E"): AbilityAtomQuery(
-        source="Pantheon.E[0].effects[0].description",
-        behavior="timing",
-        evidence_prefix="active duration@",
-    ),
-    ("Jax", "E"): AbilityAtomQuery(
-        source="Jax.E[0].effects[0].description",
-        behavior="timing",
-        evidence_prefix="active duration@",
-    ),
-}
-
-# The prose-duration windows: slot, then the ProjectileDefense fields, where a
-# ``blocked_sources`` / ``blocked_event_ids`` entry names the option holding
-# the selection.
-_PROSE_DURATION_WINDOWS: dict[str, tuple[str, dict[str, Any]]] = {
-    "Yasuo": (
-        "W",
-        {
-            "kind": "yasuo_wind_wall",
-            "source": "Yasuo W · Wind Wall",
-            "blocked_sources": "w_blocked_skillshots",
-            "blocked_event_ids": "w_blocked_event_ids",
-            "destroy_projectiles": True,
-        },
-    ),
-    "Samira": (
-        "W",
-        {
-            "kind": "samira_blade_whirl",
-            "source": "Samira W · Blade Whirl",
-            "blocked_sources": "w_blocked_skillshots",
-            "destroy_projectiles": True,
-        },
-    ),
-    "Gwen": (
-        "W",
-        {
-            "kind": "gwen_hallowed_mist",
-            "source": "Gwen W · Hallowed Mist",
-            "blocked_sources": "w_blocked_skillshots",
-            "destroy_projectiles": True,
-        },
-    ),
-    "Fiora": (
-        "W",
-        {
-            "kind": "fiora_riposte",
-            "source": "Fiora W · Riposte",
-            "blocked_sources": "w_blocked_sources",
-            "full_block_all": True,
-            "requires_skillshot": False,
-        },
-    ),
-    "Pantheon": (
-        "E",
-        {
-            "kind": "pantheon_aegis_assault",
-            "source": "Pantheon E · Aegis Assault",
-            "blocked_sources": "e_blocked_skillshots",
-            "full_block_all": True,
-        },
-    ),
-    "Jax": (
-        "E",
-        {
-            "kind": "jax_counter_strike",
-            "source": "Jax E · Counter Strike",
-            "full_block_all": True,
-            "blocks_basic_attacks": True,
-            "area_damage_reduction": 0.25,
-            "requires_skillshot": False,
-        },
-    ),
-}
-
-_BRAUM_DURATION_QUERY = AbilityAtomQuery(
-    source="Braum.E[0].effects[0].leveling[1].modifiers[0]",
-    behavior="ability",
-    evidence_prefix="Barrier Duration@",
-)
-_BRAUM_REDUCTION_QUERY = AbilityAtomQuery(
-    source="Braum.E[0].effects[0].leveling[0].modifiers[0]",
-    behavior="ability",
-    evidence_prefix="Damage reduction@",
-)
-_AMUMU_REDUCTION_CAP_QUERY = AbilityAtomQuery(
-    source="Amumu.E[0].effects[0].description",
-    behavior="ability",
-    evidence_prefix="damage reduction cap@",
-)
-
-
-def _ranked_atom_value(
-    atom: Mapping[str, Any], rank: int, *, source: str, unit: str
-) -> float:
-    """Read one ranked atom value and validate its source unit."""
-    units = atom.get("units")
-    if not isinstance(units, list) or rank < 1 or rank > len(units):
-        raise ValueError(f"ability atom {source!r} has no unit for rank {rank}")
-    if str(units[rank - 1]).strip().lower() != unit:
-        raise ValueError(
-            f"ability atom {source!r} must use {unit!r}, got {units[rank - 1]!r}"
-        )
-    return ranked_ability_atom_value(atom, rank, source=source)
-
-
-def _combatant_level(combatant: ChampionFacts) -> int:
-    """Read a level from either a timeline combatant or resolved loadout."""
-    level = getattr(combatant, "level", None)
-    if level is None:
-        level = getattr(getattr(combatant, "request", None), "level", 0)
-    return int(level)
-
-
-def _prose_duration_atom(
-    champion: str, champion_data: Mapping[str, Any], slot: str
-) -> tuple[float, dict[str, Any]]:
-    """Return one validated prose duration atom for a defense window."""
-    query = _PROSE_DURATION_QUERIES[(champion, slot)]
-    atom = required_ability_atom(champion, champion_data, slot, query=query)
-    if atom.get("units") != ["s"]:
-        raise ValueError(f"{champion} {slot} defense duration atom must use seconds")
-    return ranked_ability_atom_value(atom, 1, source=query.source), atom_receipt(atom)
-
-
 def resolve_physical_damage_reduction(
     combatant: ChampionFacts,
 ) -> TargetPhysicalDamageReduction | None:
@@ -271,8 +52,8 @@ def resolve_physical_damage_reduction(
     if champion != "Amumu":
         return None
     request = getattr(combatant, "request", None)
-    rank = _rank_for(champion, _combatant_level(combatant), request, "E")
-    ability = _ability(champion_data, "E")
+    rank = rank_for(champion, combatant_level(combatant), request, "E")
+    ability = cached_ability(champion_data, "E")
     if rank < 1 or ability is None:
         return None
 
@@ -300,31 +81,31 @@ def resolve_physical_damage_reduction(
         rank,
         modifier_index=2,
     )
-    flat = _ranked_atom_value(
+    flat = ranked_atom_value(
         flat_atom,
         rank,
         source=flat_atom["source"],
         unit="",
     )
-    armor_percent = _ranked_atom_value(
+    armor_percent = ranked_atom_value(
         armor_atom,
         rank,
         source=armor_atom["source"],
         unit="% bonus armor",
     )
-    magic_resistance_percent = _ranked_atom_value(
+    magic_resistance_percent = ranked_atom_value(
         magic_resistance_atom,
         rank,
         source=magic_resistance_atom["source"],
         unit="% bonus magic resistance",
     )
     cap_atom = required_ability_atom(
-        champion, champion_data, "E", query=_AMUMU_REDUCTION_CAP_QUERY
+        champion, champion_data, "E", query=AMUMU_REDUCTION_CAP_QUERY
     )
-    cap_percent = _ranked_atom_value(
+    cap_percent = ranked_atom_value(
         cap_atom,
         1,
-        source=_AMUMU_REDUCTION_CAP_QUERY.source,
+        source=AMUMU_REDUCTION_CAP_QUERY.source,
         unit="%",
     )
     stats = getattr(combatant, "stats", {})
@@ -379,87 +160,6 @@ def public_physical_damage_reduction(
         "per_instance_cap": round(reduction.per_instance_cap, 6),
         "source_atoms": [dict(atom) for atom in reduction.source_atoms],
     }
-
-
-def resolve_projectile_defense(combatant: CombatantFacts) -> ProjectileDefense | None:
-    """Resolve one authored champion defensive window."""
-
-    champion_data = getattr(combatant, "champion_data", {})
-    champion = str(champion_data.get("name", ""))
-    request = getattr(combatant, "request", None)
-    options = getattr(request, "champion_options", None)
-    options = options if isinstance(options, Mapping) else {}
-
-    if champion == "Braum" and bool(options.get("e_active", False)):
-        rank = _rank_for(champion, int(combatant.level), request, "E")
-        ability = _ability(champion_data, "E")
-        if rank < 1 or ability is None:
-            return None
-        duration_atom = required_ability_atom(
-            champion, champion_data, "E", query=_BRAUM_DURATION_QUERY
-        )
-        reduction_atom = required_ability_atom(
-            champion, champion_data, "E", query=_BRAUM_REDUCTION_QUERY
-        )
-        source_duration = _ranked_atom_value(
-            duration_atom,
-            rank,
-            source=_BRAUM_DURATION_QUERY.source,
-            unit="seconds",
-        )
-        reduction = (
-            _ranked_atom_value(
-                reduction_atom,
-                rank,
-                source=_BRAUM_REDUCTION_QUERY.source,
-                unit="%",
-            )
-            / 100.0
-        )
-        start, duration = _window(
-            options, "e_active_from", "e_active_seconds", source_duration
-        )
-        return ProjectileDefense(
-            kind="braum_unbreakable",
-            source="Braum E · Unbreakable",
-            start=start,
-            duration=duration,
-            blocked_sources=_source_selection(options, "e_blocked_skillshots"),
-            blocked_event_ids=_source_selection(options, "e_blocked_event_ids"),
-            damage_reduction=reduction,
-            full_block_first=True,
-            source_atoms=(
-                atom_receipt(duration_atom),
-                atom_receipt(reduction_atom),
-            ),
-        )
-
-    window = _PROSE_DURATION_WINDOWS.get(champion)
-    if window is None:
-        return None
-    slot, fields = window
-    key = slot.lower()
-    if not bool(options.get(f"{key}_active", False)):
-        return None
-    rank = _rank_for(champion, int(combatant.level), request, slot)
-    ability = _ability(champion_data, slot)
-    if rank < 1 or ability is None:
-        return None
-    source_duration, duration_atom = _prose_duration_atom(champion, champion_data, slot)
-    start, duration = _window(
-        options, f"{key}_active_from", f"{key}_active_seconds", source_duration
-    )
-    selections = {
-        name: _source_selection(options, fields[name])
-        for name in ("blocked_sources", "blocked_event_ids")
-        if name in fields
-    }
-    return ProjectileDefense(
-        start=start,
-        duration=duration,
-        source_atoms=(duration_atom,),
-        **{**fields, **selections},
-    )
 
 
 _ANNUL_ITEM_NAMES = ("Banshee's Veil", "Edge of Night", "Verdant Barrier")
@@ -542,124 +242,10 @@ def resolve_spell_shield(combatant: CombatantFacts) -> SpellShieldContract | Non
     )
 
 
-def defense_eligibility(defense: ProjectileDefense | None) -> DefenseEligibility | None:
-    """Build the kernel eligibility contract from one defense atom.
-
-    The runtime ProjectileDefense keeps its sourced window/selection
-    parsing; the kernel owns the delivery classification and the
-    eligibility decision.  ``accepts_unknown`` declares that a defense
-    with no delivery filters (Fiora's full block) does not need a
-    delivery decision, so an unmarked packet is accepted.
-    """
-    if defense is None:
-        return None
-    return DefenseEligibility(
-        name=defense.kind,
-        window=DefenseWindow(
-            start=defense.start,
-            until=defense.until,
-            source_atoms=defense.source_atoms,
-        ),
-        selection=SourceSelection(
-            blocked_sources=defense.blocked_sources,
-            blocked_event_ids=defense.blocked_event_ids,
-        ),
-        acceptance=DeliveryAcceptance(
-            requires_skillshot=defense.requires_skillshot,
-            blocks_basic_attacks=defense.blocks_basic_attacks,
-            area_damage_reduction=defense.area_damage_reduction,
-            accepts_unknown=not (
-                defense.requires_skillshot
-                or defense.blocks_basic_attacks
-                or defense.area_damage_reduction > 0.0
-            ),
-        ),
-        source=SourceReceipt(
-            label=str(defense.source or defense.kind),
-            url="https://wiki.leagueoflegends.com",
-        ),
-    )
-
-
-def defense_composition(defense: ProjectileDefense | None) -> DefenseComposition | None:
-    """Build the kernel composition rules from one defense atom.
-
-    Braum E: ``full_block first`` with a one-use budget, later hits
-    reduced by the sourced rank value.  Yasuo W: unlimited destruction.
-    The other authored defenses (Samira, Gwen, Fiora, Pantheon, Jax)
-    keep their existing rules — they are later-P2 recomposition targets.
-    """
-    if defense is None:
-        return None
-    full_mode = (
-        "all"
-        if defense.full_block_all
-        else ("first" if defense.full_block_first else "none")
-    )
-    uses = (
-        UseBudget(
-            action_mode="full_block",
-            uses=1,
-            consume="first_eligible",
-        )
-        if defense.full_block_first
-        else None
-    )
-    return DefenseComposition(
-        full_block=FullBlockRule(
-            mode=full_mode,
-            blocks_true_damage=defense.full_block_all,
-        ),
-        full_block_uses=uses,
-        destroy=DestructionRule(enabled=defense.destroy_projectiles),
-        reduction=ReductionRule(
-            later_hit_reduction=defense.damage_reduction,
-            area_damage_reduction=defense.area_damage_reduction,
-            applies_to_true_damage=defense.full_block_all,
-        ),
-    )
-
-
-def public_defense(defense: ProjectileDefense | None) -> dict[str, Any] | None:
-    """Return a JSON-safe interaction atom for the survival receipt."""
-
-    if defense is None:
-        return None
-    eligibility = defense_eligibility(defense)
-    composition = defense_composition(defense)
-    return {
-        "kind": defense.kind,
-        "source": defense.source,
-        "start": round(defense.start, 3),
-        "until": round(defense.until, 3),
-        "blocked_sources": list(defense.blocked_sources),
-        "blocked_event_ids": list(defense.blocked_event_ids),
-        "damage_reduction": round(defense.damage_reduction, 6),
-        "full_block_first": defense.full_block_first,
-        "full_block_all": defense.full_block_all,
-        "destroy_projectiles": defense.destroy_projectiles,
-        "blocks_basic_attacks": defense.blocks_basic_attacks,
-        "area_damage_reduction": round(defense.area_damage_reduction, 6),
-        "requires_skillshot": defense.requires_skillshot,
-        "source_atoms": [dict(atom) for atom in defense.source_atoms],
-        "acceptance": (
-            eligibility.acceptance.public_receipt() if eligibility is not None else None
-        ),
-        "composition": (
-            composition.public_receipt() if composition is not None else None
-        ),
-    }
-
-
 __all__ = [
-    "ProjectileDefense",
     "TargetPhysicalDamageReduction",
-    "defense_composition",
-    "defense_eligibility",
-    "public_defense",
     "public_physical_damage_reduction",
     "resolve_physical_damage_reduction",
-    "resolve_projectile_defense",
     "resolve_spell_shield",
     "target_physical_damage_reduction_params",
 ]

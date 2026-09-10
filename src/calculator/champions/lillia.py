@@ -12,10 +12,12 @@ from .inputs import bool_option, int_option
 from .module_helpers import (
     REVIEWED_MODULE_ASSUMPTIONS,
     mixed_damage,
+    named_damage,
     no_damage,
     typed_damage,
 )
-from .slotlib import ability_name, extract_cooldown, extract_named, simple_damage
+from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 
@@ -68,17 +70,17 @@ def _blooming_blows(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _watch_out_eep(ctx: SlotCtx) -> dict[str, Any] | None:
-    attribute = (
+_watch_out_eep = named_damage(
+    lambda ctx: (
         "Increased Damage" if bool(ctx.option("w_epicenter")) else "Magic Damage"
-    )
-    result = typed_damage(ctx, attribute, "magic", time_offset=0.759)
-    if result:
-        result["detail"] = (
-            "Watch Out! Eep! epicenter branch is explicit; dash distance and "
-            "slow are utility state."
-        )
-    return result
+    ),
+    "magic",
+    time_offset=0.759,
+    detail=(
+        "Watch Out! Eep! epicenter branch is explicit; dash distance and "
+        "slow are utility state."
+    ),
+)
 
 
 def _lilting_lullaby(ctx: SlotCtx) -> dict[str, Any] | None:

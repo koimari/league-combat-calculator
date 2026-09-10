@@ -1,0 +1,43 @@
+{
+ "source": "src/calculator/program/views/__init__.py",
+ "decisions": [
+  "extract_modules.py refuses any new module that reads a name left in the residue, so every assignment here is downward closed: the residue sits at the top of the dependency order and imports its children.",
+  "The map keeps ViewTag and UnrankableNumber in __init__.py, which both children read, so that shape is refused. They take a named home, views/view_tag.py, and the package __init__ keeps only its docstring. That is not a re-export shim: every reader is repointed at the named module and __init__ exports nothing.",
+  "view_tag.py, not tags.py: program/tagged.py is the tagged number in the sibling package, and two modules called tags would read as the same idea.",
+  "BLOCKER: scripts/module_readers.py matches a reader against Source.dotted, which for a package __init__ is 'src.calculator.program.views.__init__' and never matches 'from ..views import ViewTag'. Check mode reports 0 reader sites and --write would leave every importer pointing at names that moved. Strip a trailing '__init__' from Source.dotted before running this file."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/program/views/view_tag.py",
+   "docstring": "Whether a published number was delivered or previewed, and the refusal of ranking a preview.",
+   "defs": [
+    "ViewTag",
+    "UnrankableNumber"
+   ]
+  },
+  {
+   "path": "src/calculator/program/views/dispositions.py",
+   "docstring": "What a serving surface may rank, read back off a published disposition map.",
+   "defs": [
+    "refuse_previewed",
+    "published_tag",
+    "published_quantity"
+   ]
+  },
+  {
+   "path": "src/calculator/program/views/leaf.py",
+   "docstring": "Where every leaf the five views publish is born, and the writers that collect them.",
+   "defs": [
+    "LeafOut",
+    "serialize_leaf",
+    "LeafBlock",
+    "LeafWriter",
+    "RankingWriter",
+    "_DiscardingWriter",
+    "DISCARD",
+    "name_every_number"
+   ]
+  }
+ ]
+}

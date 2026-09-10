@@ -43,7 +43,8 @@ import pytest
 
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.data_fetcher import fetch_champion_data
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats
 
 _CHAMPIONS = fetch_champion_data()

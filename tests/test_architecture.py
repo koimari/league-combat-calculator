@@ -1,4 +1,9 @@
-"""Static guards for high-value module boundaries."""
+"""Static guards for high-value module boundaries.
+
+file-length-ok: the bulk is the front-door frontier, one entry per module with
+the reason it has none. Splitting it separates an entry from the guard that
+holds the set to equality.
+"""
 
 import ast
 from collections.abc import Mapping
@@ -12,7 +17,16 @@ ROOT = Path(__file__).parents[1]
 SRC_ROOT = ROOT / "src" / "calculator"
 TEST_ROOT = ROOT / "tests"
 
-DAMAGE_PATH = ROOT / "src" / "calculator" / "damage.py"
+# The fight engine: the orchestrator and every step of the `fight/` package.
+# Both rules below are about the engine rather than about one file, so they
+# read the whole package.
+FIGHT_ENGINE_PATHS = (
+    SRC_ROOT / "damage.py",
+    *sorted((SRC_ROOT / "fight").rglob("*.py")),
+)
+
+#: The nodes a docstring may be the first statement of.
+DOCSTRING_SCOPES = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,6 +35,102 @@ class FrontierEntry:
 
     owning_phase: str
     reason: str
+
+
+# The steps of the `fight/` package whose whole contract is the numbers
+# `calculate_fight_damage` publishes.  A sibling step that also states
+# something no total can show -- a schedule, a vocabulary, a refusal -- has an
+# importing suite and is not here; these have nothing to assert except through
+# the fight, so an import written into a suite to satisfy this rule would be a
+# front door that backs nothing.  That is a property of the package rather
+# than a deferral, so no phase owes them one.  They are listed one by one, so
+# the set still cannot grow by accident.
+FIGHT_STEP = FrontierEntry(
+    owning_phase="none — a property of the fight package, not a deferral",
+    reason=(
+        "a step of the fight engine whose whole contract is the numbers "
+        "damage.calculate_fight_damage publishes, asserted there by every "
+        "suite that exercises it"
+    ),
+)
+
+#: The leaves a module split lifted out, and the module whose suite drives
+#: each one.  Listed one by one, for the reason the fight steps are: the set
+#: may not grow by accident.
+SPLIT_LEAVES = {
+    "atom_spelling": "atomizer_domains",
+    "capability_fields": "capabilities",
+    "ability_ranks": "scenario",
+    "champion_opening_defenses": "defensive_effects",
+    "fight_receipts": "pipeline",
+    "interaction_atoms": "interaction_effects",
+    "program.views.survival_blocks": "program.views.survival",
+    "rune_sustain_events": "pipeline",
+    "support_bailout": "support_effects",
+    "support_champion_packets": "support_effects",
+    "survival.defense_contracts": "survival.receipt_state",
+}
+
+
+def _split_leaf(source: str) -> FrontierEntry:
+    """A leaf whose readers are its siblings, still asserted through *source*."""
+    return FrontierEntry(
+        owning_phase="sightline #27, the split that gave the leaf its own file",
+        reason=(
+            f"a leaf of {source}, whose suite drives every line of it; it "
+            "gains a front door when a suite asserts its contract directly"
+        ),
+    )
+
+
+FIGHT_STEPS_WITHOUT_A_FRONT_DOOR = (
+    "fight.after.amp_chain",
+    "fight.after.empowered_swings",
+    "fight.after.execute_display",
+    "fight.after.fight_notes",
+    "fight.after.lethality_windows",
+    "fight.after.shield_outcome",
+    "fight.after.stored_damage",
+    "fight.autos.copied_on_hit",
+    "fight.autos.first_auto_strikes",
+    "fight.autos.on_hit_healing",
+    "fight.autos.on_hit_layering",
+    "fight.autos.simulation",
+    "fight.autos.stacking_strikes",
+    "fight.declarations",
+    "fight.items.cast_procs",
+    "fight.items.energized_packets",
+    "fight.items.proc_triggers",
+    "fight.items.ultimate_procs",
+    "fight.ledger.breakdown",
+    "fight.ledger.execute_stamps",
+    "fight.rotation.ability_rotation",
+    "fight.rotation.burst_autos",
+    "fight.rotation.cast_plan",
+    "fight.rotation.energy_walk",
+    "fight.rotation.mana_walk",
+    "fight.rotation.precomputed_procs",
+    "fight.rotation.stack_timeline",
+    "fight.runes.amplifiers",
+    "fight.runes.keystone_attacks",
+    "fight.runes.keystone_casts",
+    "fight.runes.keystone_ledger_walk",
+    "fight.runes.keystone_stacks",
+    "fight.runes.page_damage",
+    "fight.runes.streams",
+    "fight.setup.combat_state",
+    "fight.setup.shield_reaver",
+    "fight.setup.stat_buff_ultimates",
+    "fight.stacks.account",
+    "fight.stacks.ashe",
+    "fight.stacks.aurelion_sol",
+    "fight.stacks.bard",
+    "fight.stacks.heimerdinger",
+    "fight.stacks.ksante",
+    "fight.stacks.rengar",
+    "fight.stacks.senna",
+    "fight.state",
+)
 
 
 # The modules `front_door_report` finds today, each with the reason it has no
@@ -80,32 +190,111 @@ FRONT_DOOR_FRONTIER: Mapping[str, FrontierEntry] = {
     # note above gives: the set is the receipt, and a member that leaves
     # without a sentence saying why is indistinguishable from a member
     # somebody deleted to make a gate pass.
+    **dict.fromkeys(FIGHT_STEPS_WITHOUT_A_FRONT_DOOR, FIGHT_STEP),
+    **{name: _split_leaf(source) for name, source in SPLIT_LEAVES.items()},
 }
 
 
 def test_damage_engine_does_not_read_item_registry() -> None:
-    """Registry dictionaries belong to item_effects, never damage.py."""
-    source = DAMAGE_PATH.read_text(encoding="utf-8")
-    assert "ITEM_EFFECTS" not in source
+    """Registry dictionaries belong to item_effects, never the fight engine."""
+    for path in FIGHT_ENGINE_PATHS:
+        assert "ITEM_EFFECTS" not in path.read_text(encoding="utf-8"), path
 
 
 def test_damage_engine_does_not_dispatch_on_item_names() -> None:
     """Item identity compiles into typed effects before engine execution."""
-    tree = ast.parse(DAMAGE_PATH.read_text(encoding="utf-8"))
     item_names = frozenset(_REFERENCE_ITEM_EFFECTS)
-    offenders: list[tuple[int, str]] = []
+    offenders: list[tuple[str, int, str]] = []
 
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Compare):
-            continue
-        compared = [node.left, *node.comparators]
-        offenders.extend(
-            (node.lineno, value.value)
-            for value in compared
-            if isinstance(value, ast.Constant) and value.value in item_names
-        )
+    for path in FIGHT_ENGINE_PATHS:
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if not isinstance(node, ast.Compare):
+                continue
+            compared = [node.left, *node.comparators]
+            offenders.extend(
+                (path.name, node.lineno, value.value)
+                for value in compared
+                if isinstance(value, ast.Constant) and value.value in item_names
+            )
 
     assert offenders == []
+
+
+# The steps that still spell a cached item name in code, and what each is
+# waiting on.  Set equality, so a step that stops spelling one leaves in the
+# same commit and a step that starts spelling one cannot arrive quietly.  A
+# name inside a docstring is prose about the mechanic and is not a dispatch,
+# so the scan skips docstrings and reads every other literal.
+ITEM_NAME_LITERAL_FRONTIER: Mapping[str, tuple[str, frozenset[str]]] = {
+    "damage.py": (
+        "the published source label on each resource-restore event; it moves "
+        "with the restore rule the resource walk names below",
+        frozenset({"Catalyst of Aeons"}),
+    ),
+    "fight/items/eclipse_stack_gate.py": (
+        "the row title of the one windowed cooldown proc; it moves when the "
+        "cast-proc family reads its display name off the declaration",
+        frozenset({"Eclipse"}),
+    ),
+    "fight/ledger/pool_walk.py": (
+        "the one burn row the pool walk consumes by key; it moves with the "
+        "periodic family's row keys",
+        frozenset({"Liandry's Torment"}),
+    ),
+    "fight/rotation/mana_declarations.py": (
+        "the restore rule the resource walk names its refusals by; it moves "
+        "with the resource-ledger declarations",
+        frozenset({"Lost Chapter"}),
+    ),
+    "fight/rotation/mana_walk.py": (
+        "the same two restore rules, plus their receipt labels; one slice "
+        "with the module above",
+        frozenset({"Catalyst of Aeons", "Essence Reaver", "Lost Chapter"}),
+    ),
+}
+
+
+def _literal_item_names(path: Path, names: frozenset[str]) -> set[str]:
+    """Every cached item name this module spells outside a docstring."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    docstrings = {
+        id(node.body[0].value)
+        for node in ast.walk(tree)
+        if isinstance(node, DOCSTRING_SCOPES)
+        and node.body
+        and isinstance(node.body[0], ast.Expr)
+        and isinstance(node.body[0].value, ast.Constant)
+    }
+    return {
+        name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and id(node) not in docstrings
+        for name in names
+        if name in node.value
+    }
+
+
+def test_the_fight_steps_spell_no_item_name_outside_the_frontier() -> None:
+    """One item, one home: a step reads its row's words off the declaration."""
+    names = frozenset(_REFERENCE_ITEM_EFFECTS)
+    spelling = {
+        path.relative_to(SRC_ROOT).as_posix(): _literal_item_names(path, names)
+        for path in FIGHT_ENGINE_PATHS
+        if _literal_item_names(path, names)
+    }
+    assert spelling == {
+        module: set(spelled)
+        for module, (_, spelled) in ITEM_NAME_LITERAL_FRONTIER.items()
+    }
+
+
+def test_every_item_name_frontier_entry_carries_a_reason() -> None:
+    """A frontier entry is a receipt, not a suppression."""
+    for module, (reason, spelled) in ITEM_NAME_LITERAL_FRONTIER.items():
+        assert reason.strip(), module
+        assert spelled, module
 
 
 def test_every_module_outside_champions_has_a_front_door_or_a_frontier_entry() -> None:
@@ -159,7 +348,7 @@ def test_the_survey_covers_more_than_the_filename_convention_it_replaced() -> No
 # read off a request has one home; these two names are what the guards below
 # hold the tree to.
 PRE_COMBAT_RECIPE_HOME = "calculator.stats.resolve_pre_combat_stats"
-PRE_COMBAT_PARAMS_READ = "calculator.pipeline.FightParams.pre_combat_stats"
+PRE_COMBAT_PARAMS_READ = "calculator.fight_params.FightParams.pre_combat_stats"
 
 # The inputs that make a stat block a *build's* rather than a champion's.
 BUILD_CONTEXT_KEYWORDS = frozenset(
@@ -187,11 +376,11 @@ BUILD_CONTEXT_KEYWORDS = frozenset(
 # them: it would invalidate a cache key that never mentions a request, and
 # move the golden's champion-baseline section on a change about neither.
 NARROWER_STAT_SURFACES: Mapping[str, str] = {
-    "calculator.rotation_resolver._matrix_dps_rows": (
+    "calculator.ability_dps_matrix._matrix_dps_rows": (
         "the reference DPS matrix, cached on (champion, data version) and "
         "explicitly independent of the request's level and build"
     ),
-    "calculator.rotation_resolver._canonical_kit_parse": (
+    "calculator.champion_rotation_rule._canonical_kit_parse": (
         "the canonical full-kit parse the derived cast order is read off: "
         "level 11, no items, by construction"
     ),
@@ -211,9 +400,9 @@ NARROWER_STAT_SURFACES: Mapping[str, str] = {
 # helper it reaches the recipe through: the module function directly when it
 # holds no request, the FightParams read when it does.
 PRE_COMBAT_SURFACES: Mapping[str, str] = {
-    "calculator.scenario.ChampionLoadout.resolve": "resolve_pre_combat_stats",
+    "calculator.champion_loadout.ChampionLoadout.resolve": "resolve_pre_combat_stats",
     "calculator.calculate._combat_receipt": "pre_combat_stats",
-    "calculator.optimizer._evaluate_build_uncached": "pre_combat_stats",
+    "calculator.build_evaluation._evaluate_build_uncached": "pre_combat_stats",
     "calculator.pipeline.run_fight": "pre_combat_stats",
     "golden_snapshot._coupled_receipt": "pre_combat_stats",
 }

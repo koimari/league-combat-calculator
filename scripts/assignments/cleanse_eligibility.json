@@ -1,0 +1,55 @@
+{
+  "source": "src/calculator/cleanse_eligibility.py",
+  "decisions": [
+    "REMOVE_SCURVY_WORDING and REMOVE_SCURVY_HEAL_ATOMS move to champion_cleanses.py, not to cleanse_declarations.py where the map put them. Remove Scurvy is a champion ability and only CHAMPION_CLEANSE_DECLARATIONS reads the two; leaving them with the item wordings closes a cycle, because resolve_cleanse_item and item_declaration in cleanse_declarations.py look up the champion tables.",
+    "champion_cleanses.py is a leaf: nothing in it reads CleanseActivation, so the direction is cleanse_declarations -> champion_cleanses only.",
+    "_EPS moves with the interval primitives. It is the epsilon the span algebra compares with and nothing else reads it, so the module owns its own tolerance.",
+    "The excluded-kind vocabulary, _control_entries, CleanseEligibility and CleanseDecision stay: CleanseEligibility is the decision the file is named for, and it reads every moved module."
+  ],
+  "packages": {},
+  "modules": [
+    {
+      "path": "src/calculator/champion_cleanses.py",
+      "docstring": "The sourced champion abilities that remove control.",
+      "defs": [
+        "REMOVE_SCURVY_WORDING",
+        "REMOVE_SCURVY_HEAL_ATOMS",
+        "CHAMPION_CLEANSE_SOURCES",
+        "RENGAR_EMPOWERED_W_CLEANSE_DECLARATION",
+        "CHAMPION_CLEANSE_DECLARATIONS"
+      ]
+    },
+    {
+      "path": "src/calculator/cleanse_declarations.py",
+      "docstring": "The sourced item cleanse tooltips, one declaration per item, and the lookup over them.",
+      "defs": [
+        "CleanseActivation",
+        "CLEANSE_ACTIVE_SOURCES",
+        "MIKAELS_WORDING",
+        "QUICKSILVER_WORDING",
+        "MERCURIAL_WORDING",
+        "MIKAELS_HEAL_ATOM",
+        "MERCURIAL_MOVEMENT",
+        "MERCURIAL_MOVEMENT_ATOM",
+        "_cache_receipt",
+        "ITEM_CLEANSE_DECLARATIONS",
+        "resolve_cleanse_item",
+        "item_declaration"
+      ]
+    },
+    {
+      "path": "src/calculator/control_intervals.py",
+      "docstring": "Span algebra over control and downtime intervals.",
+      "defs": [
+        "_EPS",
+        "_interval_bounds",
+        "_interval_kind",
+        "interval_active",
+        "merged_spans",
+        "merged_interval_duration",
+        "movement_entry",
+        "truncate_intervals"
+      ]
+    }
+  ]
+}

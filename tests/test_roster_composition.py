@@ -10,10 +10,10 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator import item_effects, roster_composition
-from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.champion_loadout import ChampionLoadout
+from src.calculator.fight_params import FightParams
 from src.calculator.interpreters.stat_derivation import StatSlot
 from src.calculator.item_behavior import EngineLane, KernelField
-from src.calculator.pipeline import FightParams
 from src.calculator.roster_composition import (
     ActorRequest,
     Combatant,
@@ -24,7 +24,7 @@ from src.calculator.roster_composition import (
     mana_spent_heal_slot,
     target_overrides,
 )
-from src.calculator.scenario import ChampionLoadout
+from src.calculator.starting_defenses import StartingDefenses
 
 
 def test_a_roster_card_and_the_main_params_build_one_request_shape():

@@ -3,9 +3,11 @@
 import pytest
 
 from src.calculator.champions import akali
-from src.calculator.champions.slotlib import build_stats_context, extract_named
-from src.calculator.damage import FightConfig, calculate_fight_damage
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.champions.slot_extract import build_stats_context, extract_named
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.config import FightConfig
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 from tests import cc_review
 
 

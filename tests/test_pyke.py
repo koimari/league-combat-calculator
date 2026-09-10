@@ -8,10 +8,8 @@ from src.calculator.champions import (
     get_champion_stat_conversion,
     pyke,
 )
-from src.calculator.champions.module_contract import (
-    ChampionModuleContractError,
-    contract_from_module,
-)
+from src.calculator.champions.contract_vocabulary import ChampionModuleContractError
+from src.calculator.champions.module_contract import contract_from_module
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.stat_conversion import BonusHealthConversion
 from src.calculator.stats import calculate_total_stats

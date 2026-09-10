@@ -1,0 +1,69 @@
+{
+  "slice": "navigability-step2-secondary-delivery",
+  "what_landed": "COUPLED_SCENARIOS gains the three secondary-delivery shapes: a packet the holder aimed at one subject and the engine lands on another. The pair snapshot's item sweep is single-target, so a cone, a cleave splash and a chained strike all price exactly zero there, and a roster is the only place any of them is observable. Step 2 of the fight-navigability plan moves that whole band into src/calculator/fight/items/secondary_delivery.py, so the band had no oracle at all until these three scenarios existed.",
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "rule": "R-17: no committed leaf moves inside this commit; the coupled baseline gains three scenarios and moves none of the twenty-three it holds"
+  },
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": [
+      "/coupled_scenarios/chain_lightning_carry_roster",
+      "/coupled_scenarios/cleave_copied_on_hit_bruiser_roster",
+      "/coupled_scenarios/titanic_cone_bruiser_roster"
+    ],
+    "coupled_golden_shape_counters": [
+      "/metadata/fingerprint/entries",
+      "/metadata/fingerprint/leaves",
+      "/metadata/fingerprint/numeric_leaves",
+      "/metadata/scenario_count"
+    ],
+    "coupled_exact": {},
+    "coupled_exact_new_scenarios": [
+      "chain_lightning_carry_roster",
+      "cleave_copied_on_hit_bruiser_roster",
+      "titanic_cone_bruiser_roster"
+    ]
+  },
+  "arming_measurement": {
+    "why": "A covering scenario is evidence only if the mechanic it covers is armed in it. Each row below is worth zero against a single target, which is why two enemies and full auto uptime are on all three requests.",
+    "rows": {
+      "titanic_cone_bruiser_roster": {
+        "fight": "1:Malphite",
+        "secondary_Titanic Hydra": {
+          "total_damage": 384.1,
+          "count": 5
+        }
+      },
+      "cleave_copied_on_hit_bruiser_roster": {
+        "fight": "1:Malphite",
+        "secondary_Ravenous Hydra": {
+          "total_damage": 49.1,
+          "count": 1
+        },
+        "on_hit_secondary_Ravenous Hydra": {
+          "total_damage": 245.4,
+          "count": 5
+        }
+      },
+      "chain_lightning_carry_roster": {
+        "fight": "1:Malphite",
+        "on_hit_chain_Statikk Shiv": {
+          "total_damage": 67.4,
+          "count": 2
+        }
+      }
+    },
+    "reading": "Three distinct deliveries. Titanic's cone declares its own max-health magnitude and strikes one packet per authored swing. Ravenous splashes a share of the swing and carries a copied on-hit stream beside it, so it is the one scenario holding both rows. Statikk's chain allocates one packet across a level-scaled prefix of the roster, and Blade of the Ruined King rides beside it because a chain with no on-hit sibling to copy observes only the packet's own magnitude. The Hydras are one exclusivity group, so they cannot share a roster."
+  },
+  "what_did_not_move": {
+    "claim": "No number the engine computes moved. The three scenarios price the same on the pre-step-2 engine as on the refactored one.",
+    "evidence": [
+      "scripts/golden_baseline.json: `python scripts/golden_snapshot.py compare scripts/golden_baseline.json` reports 'snapshot identical'.",
+      "A `git archive HEAD` copy of the tree, with only scripts/golden_snapshot.py overlaid so the three scenarios exist there, produces `golden_snapshot.coupled_entry` output for all three that is byte-identical to the refactored tree's: sha256 a82c104644e7b043574be5b49bfafae12d14c3b49cb82ae099239ab29f6d40d4 on both sides.",
+      "scripts/golden_coupled_baseline.json: the standing difference set is exactly the seven paths declared above, three absent scenarios plus four shape counters (leaves 96070 -> 124224, numeric_leaves 31671 -> 40444, entries and scenario_count 23 -> 26). Every leaf of the twenty-three committed scenarios is unchanged."
+    ]
+  },
+  "why_the_baselines_are_declared_and_not_captured": "golden_snapshot.require_committed_src refuses a capture while src/ differs from HEAD, because snapshot_provenance stamps `git rev-parse HEAD:src` and a capture over a dirty tree names a tree it did not read. So the scenarios and this receipt land first and the capture is the integration commit that follows, which is the same order R-17 and Amendment L, Ruling 2 already require: adding a covering scenario is its own act. Until that capture, `compare scripts/golden_coupled_baseline.json` reports the seven paths above and tests/test_coupled_golden_allowlist.py is what reads them as claimed rather than as drift."
+}

@@ -47,9 +47,10 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
+from typing import Final, NamedTuple
 
 from ..ability_spec import AttackClass, DamageClass
-from ..interpreters import delta_amp
+from ..interpreters import amp_magnitude, delta_amp, part_amp
 from ..item_behavior import (
     AMP_CHAIN_ORDER,
     Comparison,
@@ -59,7 +60,7 @@ from ..item_behavior import (
     Probe,
     Subject,
 )
-from ..survival.actions import LiveAmp, LiveProbe
+from ..survival.typed_action import LiveAmp, LiveProbe
 from ..trigger_stream import HolderStacking
 from .identity import MechanicId, PIdx
 
@@ -258,6 +259,23 @@ class LiveAmpRider:
         return damage_type in self.damage_types
 
 
+class AmpRiders(NamedTuple):
+    """One attacker's amplifiers as a pair fight carries them.
+
+    :attr:`live` are the riders the kernel evaluates at the instant of a hit;
+    :attr:`holder` is the static, pair-local factor a re-priced preview's
+    declaration is composed with.
+    """
+
+    live: Sequence[LiveAmpRider] = ()
+    holder: part_amp.StaticHolderAmps | None = None
+
+
+#: An attacker who declared no amplifier, as one shared frozen value the
+#: signatures that default to it can name.
+NO_AMPS: Final = AmpRiders()
+
+
 def live_amp_riders(
     owners: Sequence[str],
     *,
@@ -330,8 +348,8 @@ def _rider_for(slot, rule, index: int, activation: LivePredicate) -> LiveAmpRide
     return LiveAmpRider(
         amp=LiveAmp(
             probe=probe,
-            threshold=slot.value(delta_amp.LIVE_THRESHOLD_FIELD, index),
-            fraction=slot.value(delta_amp.AMP_FRACTION_FIELD, index),
+            threshold=slot.value(amp_magnitude.LIVE_THRESHOLD_FIELD, index),
+            fraction=slot.value(amp_magnitude.AMP_FRACTION_FIELD, index),
             mechanic=rule.mechanic_id,
         ),
         damage_types=frozenset(
@@ -341,6 +359,8 @@ def _rider_for(slot, rule, index: int, activation: LivePredicate) -> LiveAmpRide
 
 
 __all__ = [
+    "NO_AMPS",
+    "AmpRiders",
     "AppliesTo",
     "ArmKey",
     "ArmingDrop",

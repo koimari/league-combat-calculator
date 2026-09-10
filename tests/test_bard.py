@@ -21,7 +21,8 @@ from src.calculator.champions import (
     parse_champion_abilities as parse_abilities,
 )
 from src.calculator.champions.skill_orders import get_ability_rank
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.config import FightConfig
 from tests import cc_review
 
 # ---------------------------------------------------------------------------

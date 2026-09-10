@@ -42,8 +42,8 @@ fallback text.
 
 from typing import Any
 
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .module_contract import coverage
 from .module_helpers import at_level, no_damage
 from .packet_module import build_packet_module
 

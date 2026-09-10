@@ -19,12 +19,13 @@ scope.
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .inputs import int_option
-from .module_contract import coverage
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
 
 PACKET_SHA256 = "3bd191171432197d87f1d33ec2ab9bf3f483d15f73f892c373a32c249fd764db"
 

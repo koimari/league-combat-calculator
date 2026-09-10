@@ -24,8 +24,9 @@ from pathlib import Path
 import pytest
 
 import src.app as app_module
-from src.calculator import damage, item_effects, minion_stats
-from src.calculator.damage import FightConfig
+from src.calculator import item_effects, minion_stats
+from src.calculator.fight import config
+from src.calculator.fight.config import FightConfig
 from tests.app_config import app_config
 
 BIN_DIR = Path(__file__).resolve().parent.parent / "data" / "bin" / "characters"
@@ -263,7 +264,7 @@ def test_for_minion_fills_the_melee_anchor_specifically():
 
 def test_for_minion_refuses_to_be_handed_a_field_it_sources():
     """Sourced and caller-supplied never both answer for one field."""
-    for field_name in sorted(damage.MINION_SOURCED_TARGET_FIELDS):
+    for field_name in sorted(config.MINION_SOURCED_TARGET_FIELDS):
         with pytest.raises(ValueError, match=field_name):
             FightConfig.for_minion(
                 "melee",
@@ -384,9 +385,9 @@ def test_a_minion_class_fight_without_a_type_stays_caller_shaped():
 
 def test_the_sourced_field_table_is_read_in_both_directions():
     """Fill and guard share one table, so neither can name a field alone."""
-    filled = damage.sourced_minion_target("melee")
-    assert set(filled) == set(damage.MINION_SOURCED_TARGET_FIELDS)
-    assert "target_magic_resistance" not in damage.MINION_SOURCED_TARGET_FIELDS
+    filled = config.sourced_minion_target("melee")
+    assert set(filled) == set(config.MINION_SOURCED_TARGET_FIELDS)
+    assert "target_magic_resistance" not in config.MINION_SOURCED_TARGET_FIELDS
     for field_name in filled:
         assert hasattr(FightConfig, "__dataclass_fields__")
         assert field_name in FightConfig.__dataclass_fields__
@@ -454,7 +455,7 @@ def test_the_api_prices_a_named_minion_with_its_own_armor(api_client, minion_typ
 
 def test_the_api_refuses_a_body_that_also_supplies_a_sourced_field(api_client):
     """A request cannot claim a sourced minion and hand it other numbers."""
-    for field_name in sorted(damage.MINION_SOURCED_TARGET_FIELDS):
+    for field_name in sorted(config.MINION_SOURCED_TARGET_FIELDS):
         response = _calculate(
             api_client,
             target_class="minion",

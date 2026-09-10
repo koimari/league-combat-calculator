@@ -4,7 +4,7 @@ import math
 
 import pytest
 
-from src.calculator.stats import get_item_stats
+from src.calculator.item_stat_block import get_item_stats
 
 
 def test_sparse_synthetic_item_stats_remain_zero_filled():

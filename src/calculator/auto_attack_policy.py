@@ -12,7 +12,7 @@ import math
 from collections.abc import Mapping
 from typing import Any
 
-from .champions.slotlib import extract_cast_time
+from .champions.slot_extract import extract_cast_time
 
 AUTO_ATTACK_UPTIME_MODE_LEGACY = "legacy"
 AUTO_ATTACK_UPTIME_MODE_EXPLICIT = "explicit"

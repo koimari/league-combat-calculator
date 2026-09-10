@@ -27,13 +27,16 @@ from ..ability_atoms import (
     ranked_ability_atom_value,
     required_ability_atom,
 )
-from ..ability_spec import ControlEvent, DamagePart
+from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import CC_PER_PART, SlotCtx
+from ..control_spec import ControlEvent
+from .engine import SlotCtx
 from .inputs import int_option
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module, repeat_damage_parser
-from .slotlib import ability_name, damage_entry, extract_cooldown
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown
 
 PACKET_SHA256 = "1aaff9137640dc9212a82420983ce8b4c7734417696e4529f59d8302d5fbc8e6"
 

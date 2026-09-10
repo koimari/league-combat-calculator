@@ -17,7 +17,7 @@ import pytest
 from src.calculator import interpreters
 from src.calculator import item_effects as item_effects_module
 from src.calculator.ability_spec import AttackClass
-from src.calculator.interpreters import delta_amp
+from src.calculator.interpreters import amp_magnitude, delta_amp, part_amp
 from src.calculator.item_behavior import (
     AMP_CHAIN_ORDER,
     AmpChainSlot,
@@ -126,7 +126,7 @@ def _fixed_slot(*fractions: float) -> "delta_amp.AmpSlot":
         fields=tuple(
             (
                 KernelField(
-                    delta_amp.AMP_FRACTION_FIELD,
+                    amp_magnitude.AMP_FRACTION_FIELD,
                     fraction,
                     EngineLane.PAIR_ENGINE,
                     "test",
@@ -153,7 +153,7 @@ def test_the_multiplier_is_one_plus_the_holders_sum() -> None:
 
 def test_asking_a_rule_for_a_field_it_does_not_compile_is_a_stop() -> None:
     """A window's end from a rule with no window is a bug, never a zero."""
-    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="window_start"):
+    with pytest.raises(amp_magnitude.DeltaAmpInterpretationError, match="window_start"):
         _fixed_slot(0.1).window()
 
 
@@ -161,7 +161,7 @@ def test_a_bonus_that_follows_its_source_has_no_aggregate_type() -> None:
     """An aggregate row needs one type; a source-following amp has none."""
     slot = _fixed_slot(0.1)
     assert slot.bonus_damage_type("magic") == "magic"
-    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="single"):
+    with pytest.raises(amp_magnitude.DeltaAmpInterpretationError, match="single"):
         slot.uniform_bonus_damage_type()
 
 
@@ -196,8 +196,8 @@ def test_the_pair_interpreter_emits_one_value_typed_field() -> None:
             holder_is_melee=True,
         ),
     )
-    (field,) = delta_amp.amp_fields(rule, ctx, EngineLane.PAIR_ENGINE)
-    assert field.name == delta_amp.AMP_FRACTION_FIELD
+    (field,) = amp_magnitude.amp_fields(rule, ctx, EngineLane.PAIR_ENGINE)
+    assert field.name == amp_magnitude.AMP_FRACTION_FIELD
     assert field.rule_id == "horizon_focus.hypershot"
     assert isinstance(field.value, float)
 
@@ -218,16 +218,17 @@ def _ctx(duration: float = 5.0, bonus_health: float = 0.0):
 def test_every_magnitude_shape_has_arithmetic() -> None:
     """Four shapes, four branches, each reproducing the schema it models."""
     assert (
-        delta_amp.magnitude_fraction(Fixed(Const(0.25, "unit_scale")), _ctx()) == 0.25
+        amp_magnitude.magnitude_fraction(Fixed(Const(0.25, "unit_scale")), _ctx())
+        == 0.25
     )
     ramp = RampPerSecond(Const(0.02, "unit_scale"), Const(0.06, "unit_scale"))
-    assert delta_amp.magnitude_fraction(ramp, _ctx(2.0)) == pytest.approx(0.02)
-    assert delta_amp.magnitude_fraction(ramp, _ctx(5.0)) == pytest.approx(0.03)
+    assert amp_magnitude.magnitude_fraction(ramp, _ctx(2.0)) == pytest.approx(0.02)
+    assert amp_magnitude.magnitude_fraction(ramp, _ctx(5.0)) == pytest.approx(0.03)
     scaled = TargetBonusHealthScaled(Const(0.15, "unit_scale"), Const(1500.0, "cap"))
-    assert delta_amp.magnitude_fraction(
+    assert amp_magnitude.magnitude_fraction(
         scaled, _ctx(bonus_health=750.0)
     ) == pytest.approx(0.075)
-    assert delta_amp.magnitude_fraction(
+    assert amp_magnitude.magnitude_fraction(
         scaled, _ctx(bonus_health=9000.0)
     ) == pytest.approx(0.15)
     stacked = RampPerStack(
@@ -236,8 +237,8 @@ def test_every_magnitude_shape_has_arithmetic() -> None:
         Const(2.0, "unit_scale"),
         RampModel.EXACT,
     )
-    assert delta_amp.magnitude_fraction(stacked, _ctx(1.0)) == pytest.approx(0.03)
-    assert delta_amp.magnitude_fraction(stacked, _ctx(100.0)) == pytest.approx(0.12)
+    assert amp_magnitude.magnitude_fraction(stacked, _ctx(1.0)) == pytest.approx(0.03)
+    assert amp_magnitude.magnitude_fraction(stacked, _ctx(100.0)) == pytest.approx(0.12)
 
 
 def test_a_magnitude_with_no_arithmetic_raises_rather_than_pricing_zero() -> None:
@@ -246,8 +247,10 @@ def test_a_magnitude_with_no_arithmetic_raises_rather_than_pricing_zero() -> Non
     class _NotInTheUnion:  # pylint: disable=too-few-public-methods
         """A magnitude shape somebody added and nobody interpreted."""
 
-    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="_NotInTheUnion"):
-        delta_amp.magnitude_fraction(_NotInTheUnion(), _ctx())
+    with pytest.raises(
+        amp_magnitude.DeltaAmpInterpretationError, match="_NotInTheUnion"
+    ):
+        amp_magnitude.magnitude_fraction(_NotInTheUnion(), _ctx())
 
 
 def test_a_ramp_model_no_declaration_uses_has_no_branch() -> None:
@@ -258,15 +261,17 @@ def test_a_ramp_model_no_declaration_uses_has_no_branch() -> None:
         Const(2.0, "unit_scale"),
         RampModel.CESARO_APPROX,
     )
-    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="cesaro_approx"):
-        delta_amp.magnitude_fraction(cesaro, _ctx())
+    with pytest.raises(
+        amp_magnitude.DeltaAmpInterpretationError, match="cesaro_approx"
+    ):
+        amp_magnitude.magnitude_fraction(cesaro, _ctx())
 
 
 def test_a_non_positive_bonus_health_cap_is_a_registry_defect() -> None:
     """A zero cap would divide, and a full-strength amp would be the silent answer."""
     broken = TargetBonusHealthScaled(Const(0.15, "unit_scale"), Const(0.0, "cap"))
-    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="positive"):
-        delta_amp.magnitude_fraction(broken, _ctx(bonus_health=750.0))
+    with pytest.raises(amp_magnitude.DeltaAmpInterpretationError, match="positive"):
+        amp_magnitude.magnitude_fraction(broken, _ctx(bonus_health=750.0))
 
 
 def test_the_whole_total_slot_holds_every_declared_general_amp() -> None:
@@ -331,7 +336,7 @@ def test_command_compiles_its_sourced_fraction_and_window() -> None:
     assert slot is not None
     assert slot.owner == "Imperial Mandate"
     assert slot.bonus_fraction == pytest.approx(0.07)
-    assert slot.value(delta_amp.WINDOW_DURATION_FIELD) == pytest.approx(4.0)
+    assert slot.value(amp_magnitude.WINDOW_DURATION_FIELD) == pytest.approx(4.0)
 
 
 def test_a_build_without_the_mandate_declares_no_command_slot() -> None:
@@ -369,7 +374,7 @@ def test_a_second_immobilize_refreshes_the_window_rather_than_stacking() -> None
     """
     slot = _command_slot("Imperial Mandate")
     assert slot is not None
-    duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+    duration = slot.value(amp_magnitude.WINDOW_DURATION_FIELD)
     assert slot.trigger_windows([0.0, duration / 2.0]) == (
         (0.0, duration / 2.0 + duration),
     )
@@ -428,7 +433,7 @@ def test_refresh_takes_the_last_trigger_and_not_the_running_total() -> None:
     """
     slot = _command_slot("Imperial Mandate")
     assert slot is not None
-    duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+    duration = slot.value(amp_magnitude.WINDOW_DURATION_FIELD)
     triggers = [0.0, duration / 4.0, duration / 2.0]
     assert slot.trigger_windows(triggers) == ((0.0, triggers[-1] + duration),)
 
@@ -437,7 +442,7 @@ def test_the_expiry_boundary_is_open_closed() -> None:
     """D-13: the trigger instant is outside the window and the expiry is in."""
     slot = _command_slot("Imperial Mandate")
     assert slot is not None
-    duration = slot.value(delta_amp.WINDOW_DURATION_FIELD)
+    duration = slot.value(amp_magnitude.WINDOW_DURATION_FIELD)
     windows = slot.trigger_windows([1.0])
     assert not slot.window_holds(windows, 1.0)
     assert slot.window_holds(windows, 1.0 + duration)
@@ -448,9 +453,13 @@ def test_a_rule_with_no_trigger_window_refuses_the_question() -> None:
     """Asking a windowless rule where its window is, is a programming error."""
     slot = _slot("Horizon Focus")
     assert slot is not None
-    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="trigger window"):
+    with pytest.raises(
+        amp_magnitude.DeltaAmpInterpretationError, match="trigger window"
+    ):
         slot.trigger_windows([0.0])
-    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="trigger window"):
+    with pytest.raises(
+        amp_magnitude.DeltaAmpInterpretationError, match="trigger window"
+    ):
         slot.window_holds(((0.0, 1.0),), 0.5)
 
 
@@ -472,12 +481,16 @@ def test_an_undeclared_merge_or_boundary_has_no_arithmetic() -> None:
         dataclasses.replace(declared, merge=WindowMerge.INDEPENDENT),
     ):
         mutated = _with_activation(slot, replacement)
-        with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="window merge"):
+        with pytest.raises(
+            amp_magnitude.DeltaAmpInterpretationError, match="window merge"
+        ):
             mutated.trigger_windows([0.0])
     closed = _with_activation(
         slot, dataclasses.replace(declared, boundary=WindowBoundary.CLOSED_CLOSED)
     )
-    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="expiry boundary"):
+    with pytest.raises(
+        amp_magnitude.DeltaAmpInterpretationError, match="expiry boundary"
+    ):
         closed.window_holds(((0.0, 4.0),), 2.0)
 
 
@@ -515,7 +528,7 @@ def test_cinderbloom_prices_the_multiplier_the_page_states_as_a_fraction() -> No
     assert slot is not None
     multiplier = ITEM_EFFECTS["Shadowflame"]["crit_multiplier"]
     assert slot.bonus_fraction == multiplier - 1.0
-    assert slot.value(delta_amp.LIVE_THRESHOLD_FIELD) == pytest.approx(
+    assert slot.value(amp_magnitude.LIVE_THRESHOLD_FIELD) == pytest.approx(
         ITEM_EFFECTS["Shadowflame"]["health_threshold"]
     )
 
@@ -537,7 +550,7 @@ def test_the_live_predicate_reads_a_pool_and_not_a_precomputed_ratio() -> None:
     """
     slot = _cinderbloom_slot("Shadowflame")
     assert slot is not None
-    threshold = slot.value(delta_amp.LIVE_THRESHOLD_FIELD)
+    threshold = slot.value(amp_magnitude.LIVE_THRESHOLD_FIELD)
     probe = Probe.TARGET_HEALTH_FRACTION
     assert not slot.live_predicate_holds(probe, 1000.0, 1000.0)
     assert not slot.live_predicate_holds(probe, 1000.0 * threshold, 1000.0)
@@ -549,7 +562,7 @@ def test_offering_the_wrong_pool_to_a_live_predicate_is_a_stop() -> None:
     slot = _cinderbloom_slot("Shadowflame")
     assert slot is not None
     with pytest.raises(
-        delta_amp.DeltaAmpInterpretationError, match="the engine offered"
+        amp_magnitude.DeltaAmpInterpretationError, match="the engine offered"
     ):
         slot.live_predicate_holds(Probe.HOLDER_HEALTH_FRACTION, 1.0, 1000.0)
 
@@ -567,7 +580,9 @@ def test_a_comparison_no_declaration_uses_has_no_branch() -> None:
     declared = slot.rules[0].payload.activation
     for cmp_member in (Comparison.LE, Comparison.GE):
         mutated = _with_activation(slot, dataclasses.replace(declared, cmp=cmp_member))
-        with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="comparison"):
+        with pytest.raises(
+            amp_magnitude.DeltaAmpInterpretationError, match="comparison"
+        ):
             mutated.live_predicate_holds(Probe.TARGET_HEALTH_FRACTION, 1.0, 1000.0)
 
 
@@ -606,11 +621,11 @@ def test_no_interpreter_precomputes_a_live_predicate_pool() -> None:
         )
         names = {
             field.name
-            for field in delta_amp.amp_fields(rule, ctx, EngineLane.PAIR_ENGINE)
+            for field in amp_magnitude.amp_fields(rule, ctx, EngineLane.PAIR_ENGINE)
         }
         assert names == {
-            delta_amp.AMP_FRACTION_FIELD,
-            delta_amp.LIVE_THRESHOLD_FIELD,
+            amp_magnitude.AMP_FRACTION_FIELD,
+            amp_magnitude.LIVE_THRESHOLD_FIELD,
         }
 
 
@@ -754,7 +769,7 @@ def test_the_compiled_lane_is_declared_served_rather_than_assumed() -> None:
 
 def _part_amp(*owners: str, melee: bool, attack_class: AttackClass):
     """Resolve one attack class's per-part amp for a build."""
-    return delta_amp.resolve_part_amp(
+    return part_amp.resolve_part_amp(
         owners,
         attack_class,
         facts=FightFacts(
@@ -803,7 +818,7 @@ def test_the_ability_amp_refuses_a_stat_reading_nobody_supplied() -> None:
     """
     amp = _part_amp("Actualizer", melee=True, attack_class=AttackClass.ABILITY)
     assert amp is not None
-    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="bonus_mana"):
+    with pytest.raises(amp_magnitude.DeltaAmpInterpretationError, match="bonus_mana"):
         amp.multiplier({})
 
 
@@ -819,14 +834,15 @@ def test_a_stat_scaled_magnitude_has_no_build_time_fraction() -> None:
             holder_is_melee=True,
         ),
     )
-    with pytest.raises(delta_amp.DeltaAmpInterpretationError, match="bonus_mana"):
-        delta_amp.magnitude_fraction(rule.payload.magnitude, ctx)
+    with pytest.raises(amp_magnitude.DeltaAmpInterpretationError, match="bonus_mana"):
+        amp_magnitude.magnitude_fraction(rule.payload.magnitude, ctx)
     names = {
-        field.name for field in delta_amp.amp_fields(rule, ctx, EngineLane.PAIR_ENGINE)
+        field.name
+        for field in amp_magnitude.amp_fields(rule, ctx, EngineLane.PAIR_ENGINE)
     }
-    assert delta_amp.AMP_BASE_FRACTION_FIELD in names
-    assert delta_amp.AMP_PER_HUNDRED_STAT_FIELD in names
-    assert delta_amp.AMP_FRACTION_FIELD not in names
+    assert amp_magnitude.AMP_BASE_FRACTION_FIELD in names
+    assert amp_magnitude.AMP_PER_HUNDRED_STAT_FIELD in names
+    assert amp_magnitude.AMP_FRACTION_FIELD not in names
 
 
 def test_the_basic_amp_declares_its_range_assumption_as_a_derivation() -> None:

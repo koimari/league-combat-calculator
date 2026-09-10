@@ -169,16 +169,31 @@ def _quest_role(role: str, role_quest_complete: bool) -> str:
     return parsed_role
 
 
+def _completed_quest_grant(
+    role: str,
+    role_quest_complete: bool,
+    *,
+    quest_role: str,
+    granted: int,
+    ordinary: int,
+) -> int:
+    """*granted* once *quest_role* has completed its own quest, else *ordinary*."""
+    owning = _quest_role(role, role_quest_complete) == quest_role
+    return granted if owning and role_quest_complete else ordinary
+
+
 def inventory_capacity(role: str, role_quest_complete: bool) -> int:
     """Return combat-item slots for the selected role state."""
-    bottom = _quest_role(role, role_quest_complete) == "bottom"
-    return 7 if bottom and role_quest_complete else 6
+    return _completed_quest_grant(
+        role, role_quest_complete, quest_role="bottom", granted=7, ordinary=6
+    )
 
 
 def required_boots_tier(role: str, role_quest_complete: bool) -> int:
     """Return the only boots tier legal for the selected role state."""
-    mid = _quest_role(role, role_quest_complete) == "mid"
-    return 3 if mid and role_quest_complete else 2
+    return _completed_quest_grant(
+        role, role_quest_complete, quest_role="mid", granted=3, ordinary=2
+    )
 
 
 def role_quest_domain_contract() -> dict[str, object]:

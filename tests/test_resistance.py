@@ -3,12 +3,12 @@
 Covers apply_resistance and apply_magic_penetration -- the mitigation math
 every damage path funnels through (Lethality needs no conversion since
 V14.1: it is 1:1 flat armor penetration, covered in test_stats.py) -- and the
-MR ``damage.Resists`` serves once the rotation is over.
+MR ``fight.resists.Resists`` serves once the rotation is over.
 """
 
 import pytest
 
-from src.calculator.damage import Resists
+from src.calculator.fight.resists import Resists
 from src.calculator.interpreters import resistance_shred
 from src.calculator.item_behavior import FightFacts, Resistance
 from src.calculator.resistance import (

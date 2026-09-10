@@ -11,17 +11,17 @@ import pytest
 
 from src.calculator.ability_spec import AttackClass, DamageClass
 from src.calculator.program.compile import action_from_event
-from src.calculator.survival.actions import (
-    SurvivalAction,
-    TransitionRank,
+from src.calculator.survival.classify import (
     attack_class_of,
     damage_class_of,
     declared_modifier_classes,
 )
+from src.calculator.survival.phases import TransitionRank
 from src.calculator.survival.transitions import (
     _apply_damage_modifier,
     _modifier_applies,
 )
+from src.calculator.survival.typed_action import SurvivalAction
 
 ALL_DAMAGE = frozenset(DamageClass)
 ALL_ATTACK = frozenset(AttackClass)

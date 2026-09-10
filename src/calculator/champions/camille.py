@@ -25,7 +25,7 @@ Why each slot is non-generic:
   the autos landing inside the window against decaying current health,
   and shows zero with no autos (one-rotation / autos off).
 - P (Adaptive Defenses) is a defensive shield with no cast of its own,
-  so it is absent from the slot map; ``_tactical_sweep_with_shield`` (W)
+  so it is absent from the slot map; W's ``with_self_shield`` wrapper
   hangs the sourced shield (20% max HP, 2s) on W's damage event as a
   ``self_shield_events`` payload the survival ledger grants pre-fight,
   live-tested end to end
@@ -42,20 +42,15 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option
-from .module_contract import coverage
 from .module_helpers import ranked_slot
-from .slotlib import (
-    ability_name,
-    attach_self_shield,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    with_control,
-)
+from .shared_mechanics import with_self_shield
+from .slot_control import with_control
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
 
 
@@ -176,13 +171,10 @@ def _tactical_sweep(
 
 def _hookshot(ctx: SlotCtx) -> dict[str, Any] | None:
     """E: Wall Dive damage + always-on bonus-AS steroid (cooldown on E[0])."""
-    hookshot = ctx.ability("E", 0)
-    wall_dive = ctx.ability("E", 1)
-    if hookshot is None or wall_dive is None:
+    ranked = ctx.ranked_sub("E")
+    if ranked is None:
         return None
-    rank = ctx.rank_for("E")
-    if rank < 1:
-        return None
+    hookshot, wall_dive, rank = ranked
 
     damage = extract_named(wall_dive, "Physical Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
@@ -251,38 +243,6 @@ ADAPTIVE_DEFENSES_MAX_HP_RATIO = 0.20  # 20% of maximum health
 ADAPTIVE_DEFENSES_DURATION_SECONDS = data_value(_CAMILLE_P_SPELL, "ShieldDuration")
 
 
-def _tactical_sweep_with_shield(ctx: SlotCtx) -> dict[str, Any] | None:
-    """W: Tactical Sweep carrying Adaptive Defenses' pre-fight shield.
-
-    Adaptive Defenses triggers on Camille's next auto against a champion
-    — a passive with no cast.  The shield (20% max HP for 2s) rides the
-    first W damage event as a ``self_shield_events`` payload so the
-    ledger grants it before incoming damage; the damage-type adaptation
-    (physical OR magic, by the last damage type dealt to Camille) is a
-    documented boundary — the ledger's payload grants a general shield
-    that absorbs both types.
-    """
-    # pylint: disable-next=no-value-for-parameter  # a compiled (ctx) parser
-    entry = _packet_w(ctx)
-    rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
-    if entry is None or rank < 1:
-        return entry
-    shield = ADAPTIVE_DEFENSES_MAX_HP_RATIO * ctx.stat("health")
-    entry["event_order_certified"] = "single_hit"
-    return attach_self_shield(
-        entry,
-        amount=shield,
-        duration=ADAPTIVE_DEFENSES_DURATION_SECONDS,
-        source="Adaptive Defenses",
-        detail=(
-            f"W carries Adaptive Defenses' pre-fight shield: {shield:g} "
-            f"({ADAPTIVE_DEFENSES_MAX_HP_RATIO * 100:g}% of max HP) for "
-            f"{ADAPTIVE_DEFENSES_DURATION_SECONDS:g}s; the physical/magic "
-            "adaptation boundary is documented in ASSUMPTIONS"
-        ),
-    )
-
-
 ASSUMPTIONS = [
     "Q2 is always the delayed recast: doubled bonus damage and the "
     "level-based true conversion (36% + 4% per level, 100% from level 16)",
@@ -310,13 +270,24 @@ SLOTS = {
     "E": _hookshot,
     "Q": _precision_protocol,
     "Q2": _precision_protocol_recast,
-    "W": _tactical_sweep,
+    # Adaptive Defenses triggers on Camille's next auto against a champion
+    # and has no cast, so its shield rides the first W damage event; the
+    # ledger's payload absorbs both damage types the passive adapts between.
+    "W": with_self_shield(
+        _tactical_sweep,
+        shield=lambda ctx: ADAPTIVE_DEFENSES_MAX_HP_RATIO * ctx.stat("health"),
+        window=ADAPTIVE_DEFENSES_DURATION_SECONDS,
+        source="Adaptive Defenses",
+        detail=lambda ctx, shield: (
+            f"W carries Adaptive Defenses' pre-fight shield: {shield:g} "
+            f"({ADAPTIVE_DEFENSES_MAX_HP_RATIO * 100:g}% of max HP) for "
+            f"{ADAPTIVE_DEFENSES_DURATION_SECONDS:g}s; the physical/magic "
+            "adaptation boundary is documented in ASSUMPTIONS"
+        ),
+    ),
     "R": _hextech_ultimatum,
 }
 
-SLOTS = dict(SLOTS)
-_packet_w = SLOTS["W"]
-SLOTS["W"] = _tactical_sweep_with_shield
 SLOTS["E"] = with_control(
     SLOTS["E"],
     # Two immobilizes land together and only one of them is given a number:

@@ -107,9 +107,10 @@ from src.calculator.champions import (
     parse_champion_abilities,
 )
 from src.calculator.champions.scaling import resolve_scaling
-from src.calculator.champions.slotlib import extract_cooldown
+from src.calculator.champions.slot_extract import extract_cooldown
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _ABILITIES_ATOMS = json.loads(

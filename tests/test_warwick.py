@@ -13,11 +13,12 @@ import copy
 import pytest
 
 from src.calculator.ability_spec import AttackClass, DamageClass
+from src.calculator.champion_loadout import load_public_champion
 from src.calculator.champions import (
     get_champion_module_contract,
+    shared_mechanics,
     warwick,
 )
-from src.calculator.scenario import load_public_champion
 from tests import cc_review, rider_probe, row_review
 
 
@@ -223,7 +224,7 @@ class TestPrimalHowl:
         which is exactly the shape a patch-day unit change would produce.
         """
         real = copy.deepcopy(
-            warwick.required_ranked_attribute_atom(
+            shared_mechanics.required_ranked_attribute_atom(
                 "Warwick",
                 {
                     "name": "Warwick",
@@ -236,7 +237,9 @@ class TestPrimalHowl:
         )
         real["units"] = ["s"] * 5
         monkeypatch.setattr(
-            warwick, "required_ranked_attribute_atom", lambda *a, **k: (55.0, real)
+            shared_mechanics,
+            "required_ranked_attribute_atom",
+            lambda *a, **k: (55.0, real),
         )
         with pytest.raises(ValueError, match="must use percent"):
             row_review.entry("Warwick", "E")

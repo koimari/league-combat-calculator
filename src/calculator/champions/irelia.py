@@ -6,17 +6,17 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
-from .engine import BUFF, CC_PER_PART, SlotCtx, build_parser
+from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import float_option, int_option
 from .module_helpers import between_rows, named_damage, ranked_slot
-from .slotlib import (
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry, on_hit_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cooldown,
     extract_named,
     find_named_leveling,
-    on_hit_entry,
     sum_modifiers,
 )
 from .source_receipts import load_champion_sources

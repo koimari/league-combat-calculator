@@ -5,16 +5,15 @@ import pytest
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.defensive_effects import StartingDefenses
+from src.calculator.fight_params import FightParams
+from src.calculator.item_stat_block import get_item_stats
+from src.calculator.item_sustain_events import _item_self_healing_events
 from src.calculator.participant_timeline import Combatant, _simulate_survival
-from src.calculator.pipeline import (
-    FightParams,
-    _item_self_healing_events,
-    run_fight,
-)
+from src.calculator.pipeline import run_fight
 from src.calculator.program.build import roster_program as _roster_program
 from src.calculator.program.views.survival import survival as _survival_view
-from src.calculator.stats import calculate_total_stats, get_item_stats
+from src.calculator.starting_defenses import StartingDefenses
+from src.calculator.stats import calculate_total_stats
 
 
 def _simulated_rows(combatants, *args, **kwargs):
@@ -92,12 +91,9 @@ def test_catalyst_heals_from_timestamped_mana_spent_with_sourced_caps():
     section the way the ledger does (accepted spends 100 at 0.1 / 0.2 / 1.1:
     the 0.2 cast shares the 0-second bucket, so its heal is fully clamped)."""
     from src.calculator.item_effects import catalyst_eternity_declaration
-    from src.calculator.resource_ledger import (
-        OP_SPEND,
-        ResourceEvent,
-        ResourceLedger,
-        catalyst_eternity_heal_schedule,
-    )
+    from src.calculator.mana_item_schedules import catalyst_eternity_heal_schedule
+    from src.calculator.resource_events import OP_SPEND, ResourceEvent
+    from src.calculator.resource_ledger import ResourceLedger
 
     item = get_item_by_name("Catalyst of Aeons")
     declaration = catalyst_eternity_declaration()

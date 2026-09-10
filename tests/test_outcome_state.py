@@ -11,10 +11,11 @@ from __future__ import annotations
 
 import pytest
 
-from src.calculator import ability_spec
+from src.calculator import quantity
 from src.calculator.ability_spec import Disposition
-from src.calculator.survival import outcome_state
-from src.calculator.survival.actions import NO_SLOT, ActionKind, SurvivalAction
+from src.calculator.survival import outcome_state, receipt_ledger
+from src.calculator.survival.event_slots import NO_SLOT
+from src.calculator.survival.typed_action import ActionKind, SurvivalAction
 from tests import ability_math
 
 
@@ -187,11 +188,11 @@ def test_a_field_with_no_write_and_no_refusal_reads_as_starved() -> None:
     uncomputed number that looks computed.
     """
     ledger = outcome_state.OutcomeLedger()
-    quantity = ledger.quantity(2, "applied")
-    assert quantity.disposition is Disposition.STARVED
-    assert quantity.field == "applied"
-    with pytest.raises(ability_spec.ProjectionStarvation):
-        quantity.read()
+    starved = ledger.quantity(2, "applied")
+    assert starved.disposition is Disposition.STARVED
+    assert starved.field == "applied"
+    with pytest.raises(quantity.ProjectionStarvation):
+        starved.read()
 
 
 def test_the_starved_read_is_lazy() -> None:
@@ -227,14 +228,14 @@ def test_a_total_over_a_refused_and_a_measured_member_is_measured() -> None:
     total = ability_math.quantity_sum(
         (ledger.quantity(0, "applied"), ledger.quantity(1, "applied"))
     )
-    assert total == ability_spec.Measured(amount=40.0)
+    assert total == quantity.Measured(amount=40.0)
 
 
 def test_a_total_over_a_starved_member_raises_rather_than_counting_it_as_zero() -> None:
     """The incident at the aggregate, refused by the algebra rather than by review."""
     ledger = outcome_state.OutcomeLedger()
     ledger.write(action(0), damage=40.0)
-    with pytest.raises(ability_spec.ProjectionStarvation):
+    with pytest.raises(quantity.ProjectionStarvation):
         ability_math.quantity_sum(
             (ledger.quantity(0, "applied"), ledger.quantity(9, "applied"))
         )
@@ -386,11 +387,10 @@ class TestTheReceiptWalkRunsIt:
         from pathlib import Path
 
         from src.calculator import participant_timeline
-        from src.calculator.survival import receipt_state
 
-        built: list[receipt_state.ReceiptLedger] = []
+        built: list[receipt_ledger.ReceiptLedger] = []
 
-        class Capturing(receipt_state.ReceiptLedger):
+        class Capturing(receipt_ledger.ReceiptLedger):
             """The production ledger, with a list of the ones a walk made."""
 
             def __init__(self, **kwargs):
@@ -415,9 +415,8 @@ class TestTheReceiptWalkRunsIt:
 
     def test_the_receipt_adapter_carries_one(self) -> None:
         """The construction site the escalation's reproducer looked for."""
-        from src.calculator.survival import receipt_state
 
-        ledger = receipt_state.ReceiptLedger(
+        ledger = receipt_ledger.ReceiptLedger(
             actions=[], index_of={}, compile_event=lambda *a, **k: None
         )
         assert isinstance(ledger.outcomes, outcome_state.OutcomeLedger)
@@ -442,9 +441,8 @@ class TestTheReceiptWalkRunsIt:
 
     def test_the_production_ledger_refuses_a_double_count(self) -> None:
         """R-05's seam: the live path's uniqueness fails on demand."""
-        from src.calculator.survival import receipt_state
 
-        ledger = receipt_state.ReceiptLedger(
+        ledger = receipt_ledger.ReceiptLedger(
             actions=[], index_of={}, compile_event=lambda *a, **k: None
         )
         first = SurvivalAction(
@@ -469,9 +467,8 @@ class TestTheReceiptWalkRunsIt:
 
     def test_the_production_ledger_refuses_a_second_answer(self) -> None:
         """The write-once half, on the object the walk actually drives."""
-        from src.calculator.survival import receipt_state
 
-        ledger = receipt_state.ReceiptLedger(
+        ledger = receipt_ledger.ReceiptLedger(
             actions=[], index_of={}, compile_event=lambda *a, **k: None
         )
         packet = SurvivalAction(kind=ActionKind.DAMAGE, aidx=0, event={})

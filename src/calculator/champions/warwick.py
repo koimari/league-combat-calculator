@@ -50,29 +50,18 @@ from functools import partial
 from typing import Any
 
 from .. import healing_helpers as _healing
-from ..ability_atoms import (
-    AbilityAtomQuery,
-    ability_payload,
-    ranked_ability_atom_value,
-    required_ability_atom,
-    required_ranked_attribute_atom,
-)
-from ..ability_spec import AttackClass, DamageClass
+from ..ability_atoms import ability_payload
+from ..ability_spec import DamageClass
 from ..binary_roots import data_value, spell_object
-from ..survival.actions import TransitionRank
-from .engine import BUFF, CC_PER_PART, ONHIT, SlotCtx
+from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import missing_hp_fraction, named_damage, ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    atom_receipt,
-    extract_cooldown,
-    extract_named,
-    on_hit_entry,
-    stat_buff,
-    with_item_on_hits,
-)
+from .shared_mechanics import damage_reduction_window
+from .slot_cc import CC_PER_PART
+from .slot_entries import on_hit_entry
+from .slot_extract import ability_name, extract_named
+from .slotlib import stat_buff, with_item_on_hits
 
 # Sourced channel (wiki R): "deal magic damage every 0.25 seconds" over
 # the up-to-1.5s suppress; "applies on-hit effects and triggers
@@ -206,72 +195,22 @@ def _primal_howl(
     any other type — out, so the un-narrowed declaration is the sourced one.
     """
 
-    champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
-    reduction_percent, reduction_atom = required_ranked_attribute_atom(
-        ctx.champion_name, champion_data, "E", "Damage Reduction", rank
-    )
-    # The wiki row carries one unit entry per rank (five '%'); require every
-    # entry to be percent (fail-closed on any non-percent unit) rather than
-    # pinning the list shape.
-    reduction_units = {str(unit).strip().lower() for unit in reduction_atom["units"]}
-    if not reduction_units or reduction_units != {"%"}:
-        raise ValueError("Warwick E damage-reduction atom must use percent")
-
-    duration_atom = required_ability_atom(
-        ctx.champion_name,
-        champion_data,
-        "E",
-        query=AbilityAtomQuery(
-            source=_E_REDUCTION_SOURCE,
-            behavior="timing",
-            evidence_prefix="active duration@",
-        ),
-    )
-    if [str(unit).strip().lower() for unit in duration_atom["units"]] != ["s"]:
-        raise ValueError("Warwick E active-duration atom must use seconds")
-    duration = ranked_ability_atom_value(duration_atom, 1, source=_E_REDUCTION_SOURCE)
-
-    name = ability_name(ability)
-    return {
-        "name": name,
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "magic",
-        "total_raw": 0.0,
-        "parts": (),
-        "self_state_events": [
-            {
-                "kind": "damage_modifier",
-                # 35..55% damage reduction -> take (1 - pct/100) of each
-                # incoming packet.
-                "multiplier": 1.0 - reduction_percent / 100.0,
-                "duration": duration,
-                "source": f"{name} · damage reduction",
-                "source_atoms": [
-                    atom_receipt(reduction_atom),
-                    atom_receipt(duration_atom),
-                ],
-                # The cached prose grants "damage reduction" with no
-                # attack/spell-only carve-out, so the modifier gates no
-                # source kind (the Briar-E / Glacial-Augment convention).
-                "all_sources": True,
-                # D-04: a modifier names its classes; this kit's cache names
-                # no excluded type, so the full enum IS the declaration —
-                # never an empty one, and never Alistar's narrowed pair,
-                # which his own cached note sources and this one does not.
-                "damage_classes": frozenset(DamageClass),
-                "attack_classes": frozenset(AttackClass),
-                # An amplification already in force at its own timestamp
-                # must price the hit landing at that timestamp.
-                "_rank": TransitionRank.AURA_ARM,
-            }
-        ],
-        "detail": (
-            f"Primal Howl reduces incoming damage by {reduction_percent:g}% for "
+    return damage_reduction_window(
+        ctx,
+        ability,
+        rank,
+        duration_source=_E_REDUCTION_SOURCE,
+        # D-04: a modifier names its classes; this kit's cache names no
+        # excluded type, so the full enum IS the declaration, never an
+        # empty one, and never Alistar's narrowed pair, which his own
+        # cached note sources and this one does not.
+        damage_classes=frozenset(DamageClass),
+        detail=lambda percent, duration: (
+            f"Primal Howl reduces incoming damage by {percent:g}% for "
             f"{duration:g}s (the automatic recast ends it at the duration; a "
             "manual recast — and its fear plus 90% slow — is not modeled)"
         ),
-    }
+    )
 
 
 PACKET_SHA256 = "2c91dcf27a641c6a177969744e204b672765d8fc7291214c069ecacc64511a19"

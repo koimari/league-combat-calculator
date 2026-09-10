@@ -493,7 +493,9 @@ def test_relevance_tokens_are_the_claims_own_strings() -> None:
         lane="attacker",
         status="modeled_effect",
         evidence=(
-            Symbol(path="damage._apply_command_amp", role="pair_engine"),
+            Symbol(
+                path="fight.after.amplifiers._apply_command_amp", role="pair_engine"
+            ),
             EffectKey(
                 registry="ITEM_EFFECTS",
                 item="Imperial Mandate",
@@ -506,7 +508,7 @@ def test_relevance_tokens_are_the_claims_own_strings() -> None:
     )
     tokens = relevance_tokens(claim)
     assert "Imperial Mandate" in tokens
-    assert "damage._apply_command_amp" in tokens
+    assert "fight.after.amplifiers._apply_command_amp" in tokens
     assert "_apply_command_amp" in tokens
     assert "command_amp_percent" in tokens
 
@@ -810,7 +812,7 @@ def test_an_unknown_evidence_kind_is_unresolved_rather_than_ignored() -> None:
 @pytest.mark.parametrize(
     "path",
     [
-        "damage._apply_command_amp",
+        "fight.after.amplifiers._apply_command_amp",
         "survival.transitions.trigger_defy",
         "item_effects.ITEM_INPUT_OPTIONS",
         "item_coverage._has_described_effect",
@@ -821,7 +823,7 @@ def test_a_live_symbol_resolves_to_its_module_and_object(path: str) -> None:
     """The split between module and attribute is found, not declared.
 
     ``survival.transitions.trigger_defy`` is a two-segment module and one
-    attribute and ``damage._apply_command_amp`` is one of each; the longest
+    attribute and ``healing.derive_self_healing`` is one of each; the longest
     importable prefix is what tells them apart.
     """
     module, found = coverage_resolver.import_symbol(path, _live())
@@ -959,7 +961,9 @@ def test_a_packet_source_with_no_builder_symbol_is_unresolved() -> None:
         lane="attacker",
         status="modeled_effect",
         evidence=(
-            Symbol(path="damage._apply_command_amp", role="pair_engine"),
+            Symbol(
+                path="fight.after.amplifiers._apply_command_amp", role="pair_engine"
+            ),
             TestRef(node_id=MANDATE_NODE),
         ),
         dimensions=(),
@@ -2219,7 +2223,7 @@ def _packet_call_without_owner(text: str, source: str) -> str:
 def test_M1_renaming_the_pair_engine_effect_accessor_is_noticed() -> None:
     """M1: the accessor Command's pair-engine half reads its number through.
 
-    The incident's first layer.  ``damage._apply_command_amp`` prices the
+    The incident's first layer.  ``fight.after.amplifiers._apply_command_amp`` prices the
     holder's own amp from the ``imperial_mandate.command`` declaration, whose
     ``ValueRef``s read the sourced fraction through
     ``item_effects.ally_item_effect_value``, and a rename there leaves every
@@ -2239,16 +2243,16 @@ def test_M1_renaming_the_pair_engine_effect_accessor_is_noticed() -> None:
 def test_M2_deleting_the_pair_side_pricer_is_noticed() -> None:
     """M2: the pair half's ``impl`` is gone and the walk half is intact.
 
-    Nothing on the claim spells ``damage._apply_command_amp``; the capability
-    registry does, and ``PairedSides`` resolves both halves through it.  That
-    is the point — a hand list agreeing with the surviving half is what the
-    incident shipped.
+    Nothing on the claim spells the pricer; the capability registry does, and
+    ``PairedSides`` resolves both halves through it.  That is the point: a
+    hand list agreeing with the surviving half is what the incident shipped.
     """
     sides = _only(MANDATE_SPLIT_CLAIM, PairedSides)
     coverage_resolver.resolve(sides, MANDATE_SPLIT_CLAIM, _live())
 
     deleted = dataclasses.replace(
-        _live(), importer=_importer_without("damage", "_apply_command_amp")
+        _live(),
+        importer=_importer_without("fight.after.amplifiers", "_apply_command_amp"),
     )
     with pytest.raises(
         EvidenceUnresolved,

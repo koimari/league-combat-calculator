@@ -21,11 +21,13 @@ hardcoded.
 from typing import Any
 
 from .. import healing_helpers as _healing
-from .engine import CC_PER_PART, build_parser
+from .contract_vocabulary import coverage
+from .engine import build_parser
 from .healing_contract import self_healing_rule
-from .module_contract import coverage
 from .module_helpers import no_damage_parser
-from .slotlib import extract_named, simple_damage
+from .slot_cc import CC_PER_PART
+from .slot_extract import extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 ASSUMPTIONS = [

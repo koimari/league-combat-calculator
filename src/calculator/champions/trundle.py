@@ -19,12 +19,14 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_atoms import ability_payload
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import float_option, int_option
-from .module_contract import coverage
 from .packet_module import build_packet_module, repeat_damage_parser
-from .slotlib import extract_value, stat_buff, with_control_event
+from .slot_control import with_control_event
+from .slot_extract import extract_value
+from .slotlib import stat_buff
 
 PACKET_SHA256 = "0346556b3577caf70cd1fadf59cbec2eb38d07d723625a473330e5c2618b0d4b"
 

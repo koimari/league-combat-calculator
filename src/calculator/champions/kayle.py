@@ -10,7 +10,6 @@ module declares W in SLOTS so the fight rotation casts it.
 
 from typing import Any
 
-from ..ability_spec import DamagePart
 from ..healing_helpers import ability_json, cast_slot_times, parsed_rank
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
@@ -22,14 +21,10 @@ from .module_helpers import (
     typed_damage,
     with_item_on_hit_specs,
 )
-from .slotlib import (
-    ability_name,
-    ability_on_hit_entry,
-    extract_cooldown,
-    extract_named,
-    on_hit_entry,
-    simple_damage,
-)
+from .shared_mechanics import empowered_auto_entry
+from .slot_entries import on_hit_entry
+from .slot_extract import extract_cooldown, extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 
@@ -60,22 +55,19 @@ def _kayle_passive(ctx: SlotCtx) -> dict[str, Any] | None:
 def _kayle_e(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     passive = extract_named(ability, "Passive Damage", rank, ctx.stats, ctx.target)
     active = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
-    result = ability_on_hit_entry(
-        ability_name(ability),
+    return empowered_auto_entry(
+        ability,
         rank,
         "magic",
         {"name": "Starfire passive", "damage_per_hit": passive, "damage_type": "magic"},
         cooldown=extract_cooldown(ability, rank),
+        empowered_damage=active,
+        target_max_health_sensitive=True,
+        detail=(
+            "Passive on-hit plus one empowered attack; the active rider scales "
+            "with target missing health and AP."
+        ),
     )
-    result["parts"] = (DamagePart("magic", active, basic_damage=True, time_offset=0.1),)
-    result["total_raw"] = active
-    result["empowers_next_auto"] = True
-    result["target_max_health_sensitive"] = True
-    result["detail"] = (
-        "Passive on-hit plus one empowered attack; the active rider scales "
-        "with target missing health and AP."
-    )
-    return result
 
 
 def _kayle_r(ctx: SlotCtx) -> dict[str, Any] | None:

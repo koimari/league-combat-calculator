@@ -16,10 +16,11 @@ from functools import partial
 from typing import Any
 
 from ..healing_helpers import ability_json, event_source, heal_from_damage, parsed_rank
+from .contract_vocabulary import coverage
 from .healing_contract import self_healing_rule
-from .module_contract import coverage
 from .packet_module import build_packet_module
-from .slotlib import extract_named, with_item_on_hits
+from .slot_extract import extract_named
+from .slotlib import with_item_on_hits
 
 PACKET_SHA256 = "d331bfbe1255392c5667aa32b6403badc5674e16c7196822d0a8bee5a94a4f3f"
 

@@ -1,0 +1,21 @@
+{
+ "source": "src/calculator/program/views/survival.py",
+ "decisions": [
+  "extract_modules.py refuses any new module that reads a name left in the residue, so every assignment here is downward closed: the residue sits at the top of the dependency order and imports its children.",
+  "The map's split runs unchanged. _optional_time goes with the blocks that read it and comes back as one residue import."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/program/views/survival_blocks.py",
+   "docstring": "The state blocks a survival row publishes only when the state has them.",
+   "defs": [
+    "_optional_time",
+    "_combat_state_blocks",
+    "_rune_state_blocks",
+    "_cleanse_receipt",
+    "_CONDITIONAL_STATE_BLOCKS"
+   ]
+  }
+ ]
+}

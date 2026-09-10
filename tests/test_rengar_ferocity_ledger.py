@@ -45,14 +45,15 @@ from pathlib import Path
 import pytest
 
 from src import app as app_module
-from src.calculator import state_lifecycle as sl
+from src.calculator import state_timeline, timed_stacks
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
 from src.calculator.champions.rengar import RENGAR_FEROCITY_STACK_RULE
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.config import FightConfig
 from src.calculator.stats import calculate_total_stats
 from tests.parse_stats import parse_stats
 
@@ -359,22 +360,26 @@ class TestCapBehavior:
         # Kernel-level pin with the MODULE rule: a gain at cap is a named
         # at_cap denial (noop keeps the deadline and count), and consume at
         # cap clears to 0 with empowered=True.
-        state = sl.TimedStackState(RENGAR_FEROCITY_STACK_RULE)
+        state = timed_stacks.TimedStackState(RENGAR_FEROCITY_STACK_RULE)
         for seq in range(4):
-            state.apply_gain(float(seq), kind="basic_ability_cast", sequence=seq)
+            state.apply_gain(
+                state_timeline.EventStamp(float(seq), seq), kind="basic_ability_cast"
+            )
         assert state.stacks == 4
-        denied = state.apply_gain(4.0, kind="basic_ability_cast", sequence=4)
+        denied = state.apply_gain(
+            state_timeline.EventStamp(4.0, 4), kind="basic_ability_cast"
+        )
         assert state.stacks == 4
         assert denied[-1].kind == "gain_denied"
         assert denied[-1].detail["reason"] == "at_cap"
-        consumed = state.consume(5.0, sequence=5)
+        consumed = state.consume(state_timeline.EventStamp(5.0, 5))
         assert consumed is not None
         assert consumed.kind == "consume"
         assert consumed.detail["empowered"] is True
         assert consumed.detail["stacks_before"] == 4
         assert state.stacks == 0
         # Below cap a consume is a named denial and never mutates.
-        assert state.consume(6.0, sequence=6) is None
+        assert state.consume(state_timeline.EventStamp(6.0, 6)) is None
         assert state.timeline.transitions()[-1].kind == "consume_denied"
 
     def test_fight_cap_noop_receipts(self):
@@ -404,15 +409,17 @@ class TestTimerAndCombatExtension:
         rule = dataclasses.replace(
             RENGAR_FEROCITY_STACK_RULE, combat_extension_seconds=0.0
         )
-        state = sl.TimedStackState(rule)
+        state = timed_stacks.TimedStackState(rule)
         for time, seq in ((0.0, 0), (0.4, 1), (0.8, 2)):
-            state.apply_gain(time, kind="basic_ability_cast", sequence=seq)
+            state.apply_gain(
+                state_timeline.EventStamp(time, seq), kind="basic_ability_cast"
+            )
         assert state.stacks == 3
-        state._materialize_expiries(1.0, sequence=99)
+        state._materialize_expiries(state_timeline.EventStamp(1.0, 99))
         assert state.stacks == 2
-        state._materialize_expiries(1.4, sequence=99)
+        state._materialize_expiries(state_timeline.EventStamp(1.4, 99))
         assert state.stacks == 1
-        state._materialize_expiries(1.8, sequence=99)
+        state._materialize_expiries(state_timeline.EventStamp(1.8, 99))
         assert state.stacks == 0
         kinds = [t.kind for t in state.timeline.transitions()]
         assert kinds.count("expire") == 3
@@ -421,14 +428,14 @@ class TestTimerAndCombatExtension:
         # A damage event (note_activity / a gain trigger) re-arms the expiry
         # freeze to time + 10s; expiry is suppressed while frozen and
         # materializes at the freeze boundary.
-        state = sl.TimedStackState(RENGAR_FEROCITY_STACK_RULE)
-        state.apply_gain(0.0, kind="basic_ability_cast", sequence=0)
-        state.note_activity(0.5, kind="damage_dealt", sequence=5)
-        state._materialize_expiries(1.0, sequence=99)
+        state = timed_stacks.TimedStackState(RENGAR_FEROCITY_STACK_RULE)
+        state.apply_gain(state_timeline.EventStamp(0.0, 0), kind="basic_ability_cast")
+        state.note_activity(state_timeline.EventStamp(0.5, 5), kind="damage_dealt")
+        state._materialize_expiries(state_timeline.EventStamp(1.0, 99))
         assert state.stacks == 1  # frozen at 1.0 (1s expiry suppressed)
-        state._materialize_expiries(10.4, sequence=99)
+        state._materialize_expiries(state_timeline.EventStamp(10.4, 99))
         assert state.stacks == 1  # freeze re-armed to 10.5
-        state._materialize_expiries(10.5, sequence=99)
+        state._materialize_expiries(state_timeline.EventStamp(10.5, 99))
         assert state.stacks == 0
         freeze = [t for t in state.timeline.transitions() if t.kind == "combat_freeze"]
         assert [f.detail["freeze_until"] for f in freeze] == [
@@ -455,8 +462,8 @@ class TestDotProcExclusion:
         # calls, so a DoT tick or item proc that never calls them neither
         # grants a stack nor extends.  The in-fight exclusion is the
         # wiring's job (xfailed below).
-        state = sl.TimedStackState(RENGAR_FEROCITY_STACK_RULE)
-        state.apply_gain(0.0, kind="basic_ability_cast", sequence=0)
+        state = timed_stacks.TimedStackState(RENGAR_FEROCITY_STACK_RULE)
+        state.apply_gain(state_timeline.EventStamp(0.0, 0), kind="basic_ability_cast")
         # A DoT tick at 5.0 has no kernel hook: there is no apply_damage /
         # note_dot method on the state at all.
         assert not hasattr(state, "apply_damage")
@@ -465,9 +472,9 @@ class TestDotProcExclusion:
         # expiry lands exactly at the original 10.0 boundary.  An explicit
         # note_activity WOULD have moved it to 15.0 (pinned in
         # test_kernel_combat_extension_freezes_ten_seconds).
-        state._materialize_expiries(9.9, sequence=99)
+        state._materialize_expiries(state_timeline.EventStamp(9.9, 99))
         assert state.stacks == 1  # still frozen
-        state._materialize_expiries(10.0, sequence=99)
+        state._materialize_expiries(state_timeline.EventStamp(10.0, 99))
         assert state.stacks == 0  # freeze boundary reached, no extension
         freeze = [t for t in state.timeline.transitions() if t.kind == "combat_freeze"]
         assert len(freeze) == 1

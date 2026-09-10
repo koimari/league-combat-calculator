@@ -11,27 +11,31 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.calculator import damage
-from src.calculator.ability_spec import DamagePart
+from src.calculator.ability_spec import DamagePart, part_damage_types
 from src.calculator.champions import (
     parse_champion_abilities as parse_ahri_abilities,
 )
 from src.calculator.damage import (
-    DecayingTarget,
-    FightConfig,
-    _event_timeline_coverage,
-    _mitigate,
-    _navori_effective_cd,
-    _ordered_damage_events,
-    _simulate_current_health_on_hit,
     calculate_fight_damage,
     split_auto_vs_ability,
     split_by_damage_type,
 )
-from src.calculator.damage import (
+from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.fight.autos.decaying_health_walk import (
+    AutoSwings,
+    DecayingTarget,
+    _simulate_current_health_on_hit,
+)
+from src.calculator.fight.autos.on_hit_stream import (
     _calculate_phantom_hits as _calculate_phantom_hits_compiled,
 )
-from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.fight.config import FightConfig
+from src.calculator.fight.ledger import pool_walk
+from src.calculator.fight.ledger.coverage import _event_timeline_coverage
+from src.calculator.fight.ledger.event_ledger import _ordered_damage_events
+from src.calculator.fight.mitigation import _mitigate_hits
+from src.calculator.fight.resists import _mitigate
+from src.calculator.fight.rotation.cast_schedule import _navori_effective_cd
 from src.calculator.interpreters import on_hit_strike
 from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import DamageInputs, resolve_damage_effects
@@ -62,17 +66,19 @@ def _simulate_bork_damage(
     total, hits, _per_hit_damages = _simulate_current_health_on_hit(
         strikes[0],
         DamageInputs({}, 1, is_melee, target_health, target_health),
-        target_health,
-        num_auto_attacks,
-        auto_damage_per_hit=auto_damage_per_hit,
-        other_on_hit_per_hit=other_on_hit_per_hit,
-        resists=SimpleNamespace(
-            effective_armor=effective_armor,
-            effective_mr=0.0,
-            physical_damage_flat_reduction=0.0,
-            physical_damage_flat_reduction_cap=0.0,
+        AutoSwings(
+            target_health=target_health,
+            num_auto_attacks=num_auto_attacks,
+            auto_damage_per_hit=auto_damage_per_hit,
+            other_on_hit_per_hit=other_on_hit_per_hit,
+            resists=SimpleNamespace(
+                effective_armor=effective_armor,
+                effective_mr=0.0,
+                physical_damage_flat_reduction=0.0,
+                physical_damage_flat_reduction_cap=0.0,
+            ),
+            magic_amp=1.0,
         ),
-        magic_amp=1.0,
         phantom_hit_autos=phantom_hit_autos,
         double_hit_all=double_hit_all,
     )
@@ -113,6 +119,40 @@ class TestMitigate:
 
     def test_true_damage_ignores_resists_and_magic_amp(self, resists) -> None:
         assert _mitigate(300.0, "true", resists, 1.2) == 300.0
+
+    def test_an_ability_mr_override_replaces_the_fights_resolved_mr(
+        self, resists
+    ) -> None:
+        override = _mitigate(300.0, "magic", resists, 1.2, ability_mr=200.0)
+        assert override == pytest.approx(120.0)
+        assert override != _mitigate(300.0, "magic", resists, 1.2)
+
+    def test_a_type_outside_the_vocabulary_is_paid_raw(self, resists) -> None:
+        assert "adaptive" not in part_damage_types()
+        assert _mitigate(300.0, "adaptive", resists, 1.2) == 300.0
+
+    @pytest.mark.parametrize("damage_type", sorted(part_damage_types()))
+    def test_three_hits_cost_three_times_one_mitigated_hit(self, damage_type) -> None:
+        """Every class prices three hits as three times one mitigated hit."""
+        state = SimpleNamespace(
+            resists=SimpleNamespace(
+                effective_armor=100.0,
+                effective_mr=50.0,
+                physical_damage_flat_reduction=15.0,
+                physical_damage_flat_reduction_cap=0.2,
+            ),
+            magic_amp=1.35,
+            basic_amp=1.0,
+            target_basic_damage_multiplier=1.0,
+            target_basic_damage_flat_reduction=0.0,
+            target_basic_damage_flat_reduction_cap=0.0,
+            target_champion_damage_flat_reduction=0.0,
+            target_champion_dot_damage_flat_reduction=0.0,
+        )
+        part = DamagePart(damage_type, 300.0)
+        # What three 300-raw hits cost at the state above, per class.
+        expected = {"magic": 405.0, "physical": 427.5, "true": 900.0}[damage_type]
+        assert _mitigate_hits(state, part, 300.0, 200.0, hits=3) == expected
 
 
 class TestTimelineCoverage:
@@ -1225,7 +1265,7 @@ class TestTargetIncomingDamageModifiers:
         source comes back unchanged.
         """
         monkeypatch.setattr(
-            damage.threshold_defense, "threshold_health_tick_interval", lambda: 0.0
+            pool_walk.threshold_defense, "threshold_health_tick_interval", lambda: 0.0
         )
         result = fight(
             attacker_stats(),
@@ -3237,7 +3277,8 @@ class TestHealthComponentInvariant:
 
     @staticmethod
     def _stats(champion_data, level, items, options) -> dict[str, float]:
-        from src.calculator.pipeline import FightParams, run_fight
+        from src.calculator.fight_params import FightParams
+        from src.calculator.pipeline import run_fight
 
         params = FightParams.from_request({"champion_options": options})
         return run_fight(champion_data, level, list(items), params)["champion_stats"]
@@ -3294,7 +3335,8 @@ class TestEmpoweredSwingAttribution:
 
     @staticmethod
     def _fight(champion_data, level=18, items=(), **overrides):
-        from src.calculator.pipeline import FightParams, run_fight
+        from src.calculator.fight_params import FightParams
+        from src.calculator.pipeline import run_fight
 
         request = {
             "target_health": 1000,

@@ -40,8 +40,8 @@ from dataclasses import dataclass
 
 import pytest
 
-from src.calculator.item_support_effects import _declared_authorities, producer_item
-from src.calculator.program.build import arming_stacking
+from src.calculator.ally_packet_shape import _declared_authorities, producer_item
+from src.calculator.program.capability import arming_stacking
 from src.calculator.program.compile import (
     WalkCompiler,
     action_from_event,
@@ -59,12 +59,8 @@ from src.calculator.survival.compile import (
     unrepresentable_template_receipt,
 )
 from src.calculator.trigger_stream import HolderStacking
-from tests.test_survival_kernel import (
-    Holder,
-    KernelFixture,
-    _differing_leaves,
-    _reached_keys,
-)
+from tests.kernel_coverage import _reached_keys
+from tests.kernel_fixtures import Holder, KernelFixture, _differing_leaves
 
 # ---------------------------------------------------------------------------
 # What the compiled path refuses, read from the declaration
@@ -437,7 +433,7 @@ def test_a_compiled_damage_row_says_how_it_was_delivered():
     walk with nothing saying so.
     """
     from src.calculator.ability_spec import AttackClass
-    from src.calculator.survival.actions import attack_class_of
+    from src.calculator.survival.classify import attack_class_of
 
     ability = SurvivalAction(is_ability=True, source_key="Q")
     basic = SurvivalAction(basic_attack=True, source_key="on_hit_Nashors")

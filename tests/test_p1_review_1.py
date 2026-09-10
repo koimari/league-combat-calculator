@@ -47,7 +47,7 @@ import pytest
 
 from src.app import app
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.champions.slotlib import extract_named
+from src.calculator.champions.slot_extract import extract_named
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import calculate_total_stats
 

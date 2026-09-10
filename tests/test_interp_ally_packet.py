@@ -36,7 +36,7 @@ from src.calculator.item_behavior import (
     Recipients,
     RuleFamily,
 )
-from src.calculator.state_lifecycle import SourceReceipt
+from src.calculator.state_timeline import SourceReceipt
 
 
 def _slot(producer: AllyProducer) -> AllyPacketSlot:
@@ -161,7 +161,7 @@ class TestASlotRefusesWhatItsDeclarationDoesNotCarry:
 
     def test_two_holders_of_one_producer_are_a_stop(self) -> None:
         """Two ledgers with nothing saying how they combine."""
-        from src.calculator.item_support_effects import _producer
+        from src.calculator.ally_packet_shape import _producer
 
         slots = resolve_slots(catalog.owners_for(AllyProducer.SHARED_RICHES))
         assert (

@@ -1,13 +1,13 @@
 # Benchmarks
 
-Canonical performance numbers — nothing else in the tree restates one.
+Canonical performance numbers: nothing else in the tree restates one.
 
 Two captures on the same machine (AMD Ryzen 7 7800X3D, Windows 11, CPython 3.14.2) with
 the same commands: `7bb9701e`, the engine-retirement campaign start (D8), and the
-campaign close. A `@7bb9701e` row is history and is not gated — `--compare` reads the
+campaign close. A `@7bb9701e` row is history and is not gated, and `--compare` reads the
 scenario-named rows, which are always the close numbers.
 
-## Request latency — `calculate_payload`
+## Request latency: `calculate_payload`
 
 ```bash
 python scripts/bench_request.py                           # table
@@ -28,7 +28,7 @@ name. Each close row is the median of three consecutive runs.
 | full_roster | 26.79 | 27.11 | 0.541 |
 
 `import src.calculator.calculate` in a fresh interpreter: 345 ms at `7bb9701e`, 334 ms at
-close (median of 3) — unchanged; no unit touched import-time work.
+close (median of 3), unchanged; no unit touched import-time work.
 
 Where the three deltas come from, both changes measured one per commit against three
 identical golden compares:
@@ -36,10 +36,10 @@ identical golden compares:
 - **−0.9 / −3.0 / −4.5 ms, `get_item_by_name` reads an index instead of scanning.** It
   compared every one of 324 cached records by lowered name on each of its 4–20 calls per
   request. The index is keyed on the same `(path, mtime)` version as the parse, so a
-  replaced cache file is a different key, and `setdefault` keeps the first spelling —
+  replaced cache file is a different key, and `setdefault` keeps the first spelling,
   which is the record the scan returned. Parity proven over all 324 names.
 - **Same commit: the cache path is canonicalized once.** `_read_cache` called
-  `Path.resolve()` on every read — 48 `realpath` syscalls per request. The freshness
+  `Path.resolve()` on every read, 48 `realpath` syscalls per request. The freshness
   `stat` is untouched, so a mid-process refresh still invalidates.
 - **−0.1 / −0.5 / −0.7 ms, concrete types lead four `isinstance` ladders.** A check
   against `collections.abc.Mapping` runs Python at 0.13 µs; one against a concrete type
@@ -57,7 +57,7 @@ leaf, by D-72's single-writer rule) and `program/compile.action_from_event` (10%
 `dict.get` calls per event). Both are the shape the design asks for, so moving either is
 a design change rather than a tuning pass.
 
-## Optimizer search — `/api/optimize`
+## Optimizer search: `/api/optimize`
 
 ```bash
 python scripts/bench_coupled_optimizer.py
@@ -83,14 +83,14 @@ returns the same answer, only faster.
 same scenario re-measured at the campaign base in the close session read 5671 ms, so
 −20% is code and the rest was load on the machine that took the `7bb9701e` capture.
 
-## Optimizer search — `optimize_build`, uncoupled
+## Optimizer search: `optimize_build`, uncoupled
 
 ```bash
 python scripts/bench_optimize_build.py            # table
 python scripts/bench_optimize_build.py --profile  # cProfile one warm search
 ```
 
-Ahri level 18, five legendary slots, target 2000 HP / 50 armor / 40 MR — the scenario
+Ahri level 18, five legendary slots, target 2000 HP / 50 armor / 40 MR: the scenario
 `tests/test_optimizer.py`'s smoke cap drives, and the one every figure in that cap's
 docstring was measured on. Warm process, `deterministic=True`, engine-reported
 `optimization_time_ms`, median of 7 after one warmup. `@2e5b3da6` is the retired
@@ -105,9 +105,9 @@ pre-merge engine replayed with this harness; both rows elect the same build and 
 The merged-vs-main gap was 1190 ms, wider than the 819 ms the merge-202 audit recorded
 (1584 → 2403 ms). That audit's own two trees replay here at 1627 and 2488 ms best-of-7,
 so the machine has not drifted. At that point the `lean` row shape did not reach this
-path: `optimizer._evaluate_build_uncached` called `run_fight` without `score_only`,
+path: `build_evaluation._evaluate_build_uncached` called `run_fight` without `score_only`,
 which only `participant_timeline._score_with_search_context` passed, and forcing it on
-measured −0.7% with the answer unchanged — a coupled-path win only.
+measured −0.7% with the answer unchanged, a coupled-path win only.
 
 Re-measured after the optimizer adopted the lean row via `score_only`
 (optimizer.py → participant_timeline.py:4246 → damage.py): the gap is gone. Same
@@ -134,14 +134,14 @@ python scripts/bench_optimize_build.py --by-build-size  # per-evaluation µs by 
 because it charges about a microsecond to every call and the merged engine's cost is
 spread across millions of one-line ones. `--budget` takes *call counts* from the
 profile, which it reports exactly, and *shares* from `timeit` best-of-7 against the
-whole evaluation. One evaluation is `run_fight` over the elected six-item build —
+whole evaluation. One evaluation is `run_fight` over the elected six-item build,
 800 µs, and 3601 of them are most of the search's wall time:
 
 | term | calls per search | real share of one evaluation | profile said |
 |---|---|---|---|
 | `champions.engine.parse_abilities` | 3,601 | 57 µs, 7.3% | 10% |
-| `FightParams.pre_combat_stats` | 3,601 | 50 µs, 6.4% | — |
-| `damage._damage_event_row` | 142,974 | 1.045 µs each, 39 µs, 4.9% | 6% |
+| `FightParams.pre_combat_stats` | 3,601 | 50 µs, 6.4% | n/a |
+| `fight.ledger.event_rows._damage_event_row` | 142,974 | 1.045 µs each, 39 µs, 4.9% | 6% |
 | `item_behavior_catalog.behavior_rules` folds | 561,783 | 49 µs, 6.1% | 8% |
 | `item_effects.resolved_item_name` + `_item_names` | 908,617 | 0.073 µs each, 30 µs, 3.8% | 4% |
 
@@ -154,7 +154,7 @@ it. `behavior_rules`' fold is the one that looked recoverable: a memoized per-bu
 was measured and does not pay, because a per-build cache re-verifies its owners'
 registry records on every read for about what the per-owner memo hits cost. It lives in
 `6dfef122`, reverted by `3c0d8df4`; `--by-build-size --against <checkout of 6dfef122>`
-reproduces the comparison — it wins at six items, loses at one, and the greedy search
+reproduces the comparison: it wins at six items, loses at one, and the greedy search
 evaluates far more partial builds than full ones. The only shape that could win hoists
 the fold to the fight, resolving a build's buckets once where `held_owners` is resolved,
 which changes thirteen selector signatures and is a design change, not a tuning pass.

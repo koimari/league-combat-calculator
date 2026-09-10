@@ -54,17 +54,15 @@ from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, NamedTuple, Protocol
 
-from .. import shield_ledger
+from .. import shield_ledger, shield_pools
+from ..ability_spec import DamageClass
+from ..cleanse_declarations import item_declaration, resolve_cleanse_item
 from ..cleanse_eligibility import (
     CAST_BLOCKING_CONTROL_KINDS,
     CleanseEligibility,
-    interval_active,
-    item_declaration,
-    movement_entry,
-    resolve_cleanse_item,
     resolve_excluded_kinds,
-    truncate_intervals,
 )
+from ..control_intervals import interval_active, movement_entry, truncate_intervals
 from ..crowd_control_eligibility import (
     KNOWN_CONTROL_KINDS,
     CrowdControlDecision,
@@ -72,37 +70,28 @@ from ..crowd_control_eligibility import (
     classify_control,
     immunity_holder,
 )
-from ..delivery_eligibility import (
-    SPELL_SHIELD_ONE_USE_RULE,
-    CombatantFacts,
-    DefenseWindow,
-    SourceReceipt,
-    SpellShieldComposition,
-    SpellShieldEligibility,
-    TriggeredHealRule,
-    spell_shield_block_decision,
-    spell_shield_group_key,
-    stable_event_key,
-)
+from ..delivery_facts import CombatantFacts, DefenseWindow, stable_event_key
 from ..healing_reduction import (
     GRIEVOUS_WOUNDS_FACTOR,
     heal_and_shield_power_factor,
     matching_healing_reduction,
 )
 from ..resistance import apply_resistance
-from . import pricing
-from .actions import (
-    EVENT_SLOTS,
-    NO_SLOT,
-    ActionKind,
-    LiveProbe,
-    SurvivalAction,
-    TransitionRank,
-    action_key,
-    attack_class_of,
-    damage_class_of,
-    declared_modifier_classes,
+from ..spell_shield_eligibility import (
+    SPELL_SHIELD_ONE_USE_RULE,
+    SpellShieldComposition,
+    SpellShieldEligibility,
+    TriggeredHealRule,
+    spell_shield_block_decision,
+    spell_shield_group_key,
 )
+from ..state_timeline import SourceReceipt
+from . import pricing
+from .actions import action_key
+from .classify import attack_class_of, damage_class_of, declared_modifier_classes
+from .event_slots import EVENT_SLOTS, NO_SLOT
+from .phases import TransitionRank
+from .typed_action import ActionKind, LiveProbe, SurvivalAction
 
 #: The revive label used when a participant's resolved defenses arm a revive
 #: without naming its own source.  Guardian Angel is the item-source carrier
@@ -191,7 +180,7 @@ def evaluate_live_raw_formula(
         return max(0.0, float(raw_formula(missing_ratio)))
 
 
-def participant_pools(combatant: CombatantFacts) -> shield_ledger.ShieldPools:
+def participant_pools(combatant: CombatantFacts) -> shield_pools.ShieldPools:
     """Stage one participant's starting health, shields, and Lifelines."""
     defenses = combatant.defenses
     # An authored starting health (roster ``current_health``) is the one way
@@ -202,7 +191,7 @@ def participant_pools(combatant: CombatantFacts) -> shield_ledger.ShieldPools:
     starting_health = getattr(
         getattr(combatant, "request", None), "current_health", None
     )
-    return shield_ledger.build_pools(
+    return shield_pools.build_pools(
         max(0.0, float(combatant.stats.get("health", 0.0))),
         starting_health=(
             None if starting_health is None else max(0.0, float(starting_health))
@@ -432,7 +421,7 @@ def expire_temporary_health(state: dict[str, Any], event_time: float) -> bool:
         or event_time < state["temporary_health_until"]
     ):
         return False
-    shield_ledger.expire_temporary_max_health(
+    shield_pools.expire_temporary_max_health(
         state["pools"], state["temporary_health_amount"]
     )
     state["temporary_health_amount"] = 0.0
@@ -661,16 +650,15 @@ def reprice_dynamic_resistance(
     the authoritative walk re-read the mutated event), or ``None`` when no
     reprice applied.
     """
-    if action.damage_type == "physical":
-        delta = float(state.get("dynamic_bonus_armor", 0.0) or 0.0)
-        label = "armor"
-        baseline = action.baseline_effective_armor
-    elif action.damage_type == "magic":
-        delta = float(state.get("dynamic_bonus_magic_resistance", 0.0) or 0.0)
-        label = "magic_resistance"
-        baseline = action.baseline_effective_mr
-    else:
+    damage_class = DamageClass.named(action.damage_type)
+    if damage_class is None or not damage_class.is_mitigable:
         return None
+    term, label = damage_class.resistance_term, damage_class.resistance_name
+    armed_armor = state.get("dynamic_bonus_armor", 0.0)
+    armed_mr = state.get("dynamic_bonus_magic_resistance", 0.0)
+    delta = float(term(armor=armed_armor, magic_resistance=armed_mr) or 0.0)
+    base_armor, base_mr = action.baseline_effective_armor, action.baseline_effective_mr
+    baseline = term(armor=base_armor, magic_resistance=base_mr)
     if delta <= 0.0:
         return None
     if baseline is None:
@@ -715,7 +703,7 @@ def apply_ichorshield(
     if converted <= 0.0:
         return 0.0
     state["ichorshield_current"] += converted
-    shield_ledger.grant(state["pools"], converted)
+    shield_pools.grant(state["pools"], converted)
     state["support_shield_received"] += converted
     ctx.ledger.write(
         action,
@@ -750,7 +738,7 @@ def apply_overheal_shield(
     converted = min(max(0.0, float(excess)), action.overheal_shield_cap)
     if converted <= 0.0:
         return 0.0
-    shield_ledger.grant(
+    shield_pools.grant(
         state["pools"],
         converted,
         expires_at=event_time + action.overheal_shield_duration,
@@ -1047,7 +1035,7 @@ def grant_reactive_shield(
         # was already applied above.
         shield_amount *= state["pools"].venom_factor
     expires_at = event_time + state["reactive_shield_duration"]
-    shield_ledger.grant(
+    shield_pools.grant(
         state["pools"],
         shield_amount,
         pool=reactive_type,
@@ -1571,7 +1559,7 @@ def _apply_guardian_shield(
         _guardian_skip(ctx, action, "guardian_shield_not_available")
         return False
     expires_at = action.time + max(0.0, action.duration)
-    shield_ledger.grant(state["pools"], amount, expires_at=expires_at)
+    shield_pools.grant(state["pools"], amount, expires_at=expires_at)
     state["support_shield_received"] += amount
     pending["applied_targets"].add(recipient_id)
     ctx.ledger.write(
@@ -1644,11 +1632,11 @@ def _apply_shield(
     if amount <= 0.0:
         ctx.ledger.skip(action, "shield_not_available")
         return
-    pool = action.shield_pool or shield_ledger.GENERAL
+    pool = action.shield_pool or shield_pools.GENERAL
     if pool not in {
-        shield_ledger.GENERAL,
-        shield_ledger.MAGIC,
-        shield_ledger.PHYSICAL,
+        shield_pools.GENERAL,
+        shield_pools.MAGIC,
+        shield_pools.PHYSICAL,
     }:
         ctx.ledger.skip(action, "unsupported_shield_pool")
         return
@@ -1660,7 +1648,7 @@ def _apply_shield(
         and action.crowd_control_immunity_source
         else source
     )
-    shield_ledger.grant(
+    shield_pools.grant(
         state["pools"],
         amount,
         pool=pool,
@@ -3473,7 +3461,7 @@ def _rebind_self_shields(
     """Move the holder's waiting self-shield riders onto the packet that landed.
 
     A rider declaring ``rebinds_on_ability_hit`` is bound to one carrier
-    packet by ordinal, in ``damage._damage_event_row``, before the walk
+    packet by ordinal, in ``fight.ledger.event_rows._damage_event_row``, before the walk
     knows which packets land.  The trigger gate parks it when that carrier
     is skipped and this arms it on the holder's next landing ability packet,
     at that packet's timestamp.  It is the same action and the same ledger
@@ -3547,7 +3535,7 @@ def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> 
             for snapshot_index, snapshot_state in enumerate(states):
                 snapshot_pools = snapshot_state["pools"]
                 if snapshot_pools.timed:
-                    shield_ledger.expire_timed(snapshot_pools, event_time)
+                    shield_pools.expire_timed(snapshot_pools, event_time)
                 ctx.shield_presence_at_time[(snapshot_index, snapshot_time)] = (
                     snapshot_pools.magic_shield
                     + snapshot_pools.physical_shield
@@ -3558,7 +3546,7 @@ def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> 
 
         pools = state["pools"]
         if pools.timed:
-            shield_ledger.expire_timed(pools, event_time)
+            shield_pools.expire_timed(pools, event_time)
         if (
             state["healing_reduction_until"] > 0.0
             and event_time >= state["healing_reduction_until"]
@@ -3574,7 +3562,7 @@ def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> 
         if state["temporary_health_amount"] > 0.0:
             expire_temporary_health(state, event_time)
         if pools.threshold_health is not None:
-            shield_ledger.expire_threshold_health(pools, event_time)
+            shield_pools.expire_threshold_health(pools, event_time)
 
         kind = action.kind
         # Revive is a state transition rather than healing: it is allowed to
@@ -4108,10 +4096,10 @@ def finalize_states(states: Sequence[dict[str, Any]], duration: float) -> None:
     temporary-health Lifeline at the window edge (the authoritative walk's
     final pass)."""
     for state in states:
-        shield_ledger.expire_timed(state["pools"], float(duration))
+        shield_pools.expire_timed(state["pools"], float(duration))
         _finalize_crowd_control_immunity(state, float(duration))
         expire_temporary_health(state, float(duration))
-        shield_ledger.expire_threshold_health(state["pools"], float(duration))
+        shield_pools.expire_threshold_health(state["pools"], float(duration))
 
 
 __all__ = [

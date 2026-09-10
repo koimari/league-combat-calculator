@@ -38,14 +38,9 @@ from ..binary_roots import calculation_coefficient, spell_object
 from .engine import BUFF, SlotCtx
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    attach_self_shield,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    with_control,
-)
+from .slot_control import with_control
+from .slot_entries import attach_self_shield, damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
 
 PACKET_SHA256 = "486c8deb9501df4c594a7d0e7c89daa625c864c627339407758da466dfc7c1e1"
 

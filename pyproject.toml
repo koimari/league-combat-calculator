@@ -106,17 +106,20 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 # E402: a sys.path bootstrap precedes the package import. S603/S607: argv lists of known
 # executables, no shell. S310: wiki and Community Dragon fetches open https URLs the
-# module builds. S106: "frontend_token" names a capability, not a secret. S311: crit rolls
-# are game randomness, not cryptography. Tests: stub classes hold mutable class attributes
-# and test names carry the claim id they pin.
+# module builds. S105/S106: a "cond_token" edge word and "frontend_token" name a parsed
+# condition and a capability, not secrets. S311: crit rolls are game randomness, not
+# cryptography. Tests: stub classes hold mutable class attributes and test names carry
+# the claim id they pin.
 "scripts/**" = ["E402", "S603", "S607", "S310"]
 "tests/**" = ["E402", "S603", "S607", "RUF012", "N802", "N806", "S105", "S107"]
 "src/calculator/capabilities.py" = ["S106"]
-"src/calculator/rotation_resolver.py" = ["S105", "S106"]
-"src/calculator/damage.py" = ["S311"]
+"src/calculator/capability_fields.py" = ["S106"]
+"src/calculator/cast_edge_inference.py" = ["S105"]
+"src/calculator/fight/autos/simulation.py" = ["S311"]
 # BLE001: broad catches wrap untrusted wiki parses and scenario evaluation and re-report
 # the error as data. PTH: the Windows download_soup mirrors lolstaticdata's os.path body.
 "src/calculator/data_updater.py" = ["E402", "S310", "BLE001", "PTH"]
+"src/calculator/rune_pull.py" = ["BLE001"]
 "scripts/golden_snapshot.py" = ["BLE001"]
 # E501: quoted wiki, JavaScript and contract-table fixtures keep their source width.
 "tests/test_rune_parser.py" = ["E501"]

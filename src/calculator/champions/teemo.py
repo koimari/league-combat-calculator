@@ -42,11 +42,12 @@ import dataclasses
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .module_contract import coverage
-from .module_helpers import buff_window_share, with_detail
+from .module_helpers import with_detail
 from .packet_module import build_packet_module, repeat_damage_parser
-from .slotlib import extract_value
+from .shared_mechanics import move_speed_grant, ranked_packet_slot
+from .slot_extract import extract_value
 
 # Sourced cadence for one Noxious Trap detonation (cache + wiki):
 # "the target takes magic damage every second over 4 seconds" — 4 ticks
@@ -124,37 +125,32 @@ def _move_quick(packet_w):
     ``move_speed_percent`` stat buff.
     """
 
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = packet_w(ctx)
-        if entry is None:
-            return None
-        ability = ctx.ability()
-        rank = ctx.rank_for()
-        if ability is None or rank < 1:
-            return entry
+    def body(
+        ctx: SlotCtx, entry: dict[str, Any], ability: dict[str, Any], rank: int
+    ) -> dict[str, Any]:
         passive_ms = extract_value(ability, "Bonus Movement Speed", rank)
-        active_ms = extract_value(ability, "Enhanced Bonus Movement Speed", rank)
         # The ACTIVE's row, because the passive's own condition ("after 5
         # seconds without taking damage from enemy champions") is one a
         # fight never satisfies.  It rides the cast like every other
         # steroid the engine prices, so a rotation that never casts W
         # earns none of it.
-        # The cast expires, and a stat_buff is one scalar for the whole
-        # fight, so the grant lands time-weighted by the share of the
-        # window it covers (module_helpers.buff_window_share).
-        published_ms = active_ms * buff_window_share(ctx, _W_ACTIVE_SECONDS)
-        entry["stat_buff"] = {"move_speed_percent": published_ms}
-        entry["detail"] = (
-            f"Movement only: {passive_ms:g}% bonus movement speed after 5s "
-            f"undamaged, doubled to {active_ms:g}% for "
-            f"{_W_ACTIVE_SECONDS:g}s on cast ({published_ms:g}% over the "
-            "fight window). The cast's grant is published as a "
-            "move_speed_percent stat buff, which is a term in the shared "
-            "movement-speed fold."
+        active_ms = extract_value(ability, "Enhanced Bonus Movement Speed", rank)
+        return move_speed_grant(
+            ctx,
+            entry,
+            granted=active_ms,
+            duration=_W_ACTIVE_SECONDS,
+            detail=lambda published_ms: (
+                f"Movement only: {passive_ms:g}% bonus movement speed after 5s "
+                f"undamaged, doubled to {active_ms:g}% for "
+                f"{_W_ACTIVE_SECONDS:g}s on cast ({published_ms:g}% over the "
+                "fight window). The cast's grant is published as a "
+                "move_speed_percent stat buff, which is a term in the shared "
+                "movement-speed fold."
+            ),
         )
-        return entry
 
-    return parse
+    return ranked_packet_slot(packet_w, body)
 
 
 # P: stealth + a real but unmodelable attack-speed steroid.  Kept

@@ -22,15 +22,16 @@ import math
 
 import pytest
 
-from src.calculator.champions.slotlib import (
+from src.calculator.champion_loadout import load_public_champion
+from src.calculator.champions.slot_extract import (
     extract_named,
     extract_value,
     find_named_leveling,
     sum_modifiers,
 )
 from src.calculator.data_fetcher import fetch_champion_data
-from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.scenario import load_public_champion
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats
 from tests import row_review
 

@@ -34,15 +34,10 @@ from .engine import SlotCtx, SlotParser, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
 from .module_helpers import delayed
-from .slotlib import (
-    attach_self_shield,
-    by_option,
-    find_named_leveling,
-    proc_damage,
-    simple_damage,
-    stat_buff,
-    sum_modifiers,
-)
+from .shared_mechanics import per_level_row
+from .slot_entries import attach_self_shield
+from .slot_extract import find_named_leveling, sum_modifiers
+from .slotlib import by_option, proc_damage, simple_damage, stat_buff
 from .source_receipts import load_champion_sources
 
 # Rooted in AmbessaW.Shield_Duration; the cached ability description
@@ -53,36 +48,22 @@ _REPUDIATION_SHIELD_DURATION_SECONDS = data_value(
 )
 
 
-def _repudiation_shield_amount(ctx: SlotCtx) -> float:
-    """W's shield: a per-LEVEL base (40 cached values, 50 at level 1 and
-    320 at level 18) plus 150% bonus AD; the long row reads at the level.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return 0.0
-    leveling = find_named_leveling(ability, "Shield")
-    if leveling is None:
-        raise ValueError("Ambessa W Shield leveling row is unavailable")
-    return sum_modifiers(
-        leveling, ctx.rank_for(), ctx.stats, ctx.target, level=ctx.level
-    )
-
-
 def _repudiation(ctx: SlotCtx) -> dict[str, Any] | None:
     """W: the empowered hit plus the sourced self-shield payload.
 
-    The shield is granted at the cast (the damage event timestamp); the
-    shared ledger converts the ``self_shield_events`` payload into a
-    timed 1.5-second self-shield.  The generic ally-support scanner
-    defers this slot (``support_effects._MODULE_AUTHORED_SHIELD_SLOTS``)
-    because its rank-based derivation cannot read the level-indexed
-    base.
+    The shield is a per-LEVEL base (40 cached values, 50 at level 1 and
+    320 at level 18) plus 150% bonus AD, granted at the cast (the damage
+    event timestamp); the shared ledger converts the
+    ``self_shield_events`` payload into a timed 1.5-second self-shield.
+    The generic ally-support scanner defers this slot
+    (``support_effects._MODULE_AUTHORED_SHIELD_SLOTS``) because its
+    rank-based derivation cannot read the level-indexed base.
     """
     entry = _packet_w(ctx)
     rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
     if entry is None or rank < 1:
         return entry
-    shield = _repudiation_shield_amount(ctx)
+    shield = per_level_row(ctx, "Shield", champion="Ambessa")
     entry["event_order_certified"] = "single_hit"
     return attach_self_shield(
         entry,
@@ -216,8 +197,9 @@ _q2_damage = _q_cast(1)
 def _sundering_slam(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q2: the Q recast entry, marked recast_of for the fight engine."""
     entry = _q2_damage(ctx)
-    if entry is not None:
-        entry["recast_of"] = "Q"
+    if entry is None:
+        return None
+    entry["recast_of"] = "Q"
     return entry
 
 

@@ -32,7 +32,7 @@ from pathlib import Path
 import pytest
 
 from src import app as app_module
-from src.calculator.champions import lucian, slotlib
+from src.calculator.champions import lucian, slot_extract
 from src.calculator.champions.module_helpers import at_level
 
 _DATA = json.loads(
@@ -133,7 +133,7 @@ def _resolve(
 ) -> float:
     """Resolve one leveling row against the fight's own stat context."""
     ability = _DATA[_CACHE_KEY_BY_DISPLAY[champion]]["abilities"][slot][0]
-    return slotlib.extract_named(
+    return slot_extract.extract_named(
         ability,
         attribute,
         rank,
@@ -210,7 +210,7 @@ class TestMissFortune:
             "Miss Fortune", "R", "Physical Damage per Wave", 3, stats, 2000.0
         )
         waves = int(
-            slotlib.extract_value(
+            slot_extract.extract_value(
                 _DATA[_CACHE_KEY_BY_DISPLAY["Miss Fortune"]]["abilities"]["R"][0],
                 "Total Waves",
                 3,

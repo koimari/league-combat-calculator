@@ -68,16 +68,17 @@ from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from src.calculator.champions.aurelion_sol import (
+from src.calculator.champions.aurelion_sol import _Q_CHANNEL_SECONDS
+from src.calculator.champions.aurelion_sol_stardust import (
     _E_EXECUTE_BASE_PCT,
     _E_EXECUTE_PCT_PER_100_STARDUST,
     _Q_BURST_MAXHP_PCT_PER_STARDUST,
     _Q_BURSTS_PER_CHANNEL,
-    _Q_CHANNEL_SECONDS,
 )
-from src.calculator.champions.slotlib import find_named_leveling
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.champions.slot_extract import find_named_leveling
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.config import FightConfig
 from tests.parse_stats import parse_stats
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))

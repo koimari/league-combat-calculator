@@ -37,20 +37,15 @@ absence of damage rather than an unmodeled gap.
 
 from typing import Any
 
-from ..ability_spec import ControlScope
+from ..control_spec import ControlScope
+from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option
-from .module_contract import coverage
 from .module_helpers import ranked_slot
-from .slotlib import (
-    ability_name,
-    ability_on_hit_entry,
-    by_option,
-    pct_health_per_hit,
-    simple_damage,
-    stat_buff,
-    with_control_event,
-)
+from .slot_control import with_control_event
+from .slot_entries import ability_on_hit_entry
+from .slot_extract import ability_name, pct_health_per_hit
+from .slotlib import by_option, simple_damage, stat_buff
 from .source_receipts import load_champion_sources
 
 # Silver Bolts procs on every 3rd basic attack (wiki prose, not JSON).

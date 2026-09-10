@@ -37,19 +37,17 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import missing_hp_fraction, ranked_slot
-from .slotlib import (
-    STEROID_ZERO,
+from .slot_control import with_control
+from .slot_entries import STEROID_ZERO, ability_on_hit_entry, damage_entry
+from .slot_extract import (
     ability_name,
-    ability_on_hit_entry,
-    damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
     find_named_leveling,
-    simple_damage,
     sum_modifiers,
-    with_control,
 )
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # Blight's stack cap is the binary VarusW.MaxStacks DataValue; the cached

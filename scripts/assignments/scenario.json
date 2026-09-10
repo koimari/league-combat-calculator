@@ -1,0 +1,26 @@
+{
+ "source": "src/calculator/scenario.py",
+ "decisions": [
+  "Checks clean as the roster names it: nine units move, five stay, no back-edge. Measured residue 295 lines, champion_loadout.py 481 rendered.",
+  "Land pipeline.json before this one. champion_loadout imports MAX_ALLIES and validate_cast_order_shape from pipeline today; after the pipeline split they come from fight_request_bounds, so running this second drops champion_loadout's edge to the composition root and takes it from 14 internal imports to 13.",
+  "champion_loadout.py keeps the fan-out finding the map predicts, with the composition-root reason. scenario.py's own fan-out finding clears: 16 internal imports to 9."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/champion_loadout.py",
+   "docstring": "One roster card: its champion, level, boots, items, item state, role and quest state, and what resolving it produces.",
+   "defs": [
+    "MAX_LOADOUT_ITEMS",
+    "_validate_champion_options",
+    "_requested_rune_page",
+    "ChampionLoadout",
+    "ResolvedLoadout",
+    "_ability_max_rank",
+    "_validate_ability_ranks",
+    "load_public_champion",
+    "resolve_named_item"
+   ]
+  }
+ ]
+}

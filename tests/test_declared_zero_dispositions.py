@@ -154,12 +154,12 @@ def test_the_outcome_ledger_is_the_receipt_walks_companion() -> None:
     second construction site would be a second ledger, and two ledgers
     observing one walk is the shape D-64 exists to refuse.
     """
-    assert _outcome_ledger_sites() == {"survival/receipt_state.py": 1}
+    assert _outcome_ledger_sites() == {"survival/receipt_ledger.py": 1}
 
 
 def test_a_live_walk_fills_the_ledger_the_site_builds() -> None:
     """A construction site nothing drives would be the same gap, relocated."""
-    from src.calculator.survival.receipt_state import ReceiptLedger
+    from src.calculator.survival.receipt_ledger import ReceiptLedger
 
     snapshot = _golden_snapshot()
     definition = next(
@@ -198,8 +198,10 @@ def test_the_serializer_can_nevertheless_express_all_four() -> None:
     Without this the entry would read as "the wire shape is broken", which
     is a different and false claim.
     """
-    from src.calculator.ability_spec import Disposition, StructuralZero, Withheld
-    from src.calculator.program.views import ViewTag, serialize_leaf
+    from src.calculator.ability_spec import Disposition
+    from src.calculator.program.views.leaf import serialize_leaf
+    from src.calculator.program.views.view_tag import ViewTag
+    from src.calculator.quantity import StructuralZero, Withheld
 
     withheld = serialize_leaf(
         "x", Withheld(receipts=("coverage refused",)), ViewTag.APPLIED

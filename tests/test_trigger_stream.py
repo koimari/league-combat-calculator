@@ -23,19 +23,15 @@ from types import MappingProxyType, SimpleNamespace
 
 import pytest
 
-from src.calculator import damage
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator import trigger_stream as ts
-from src.calculator.ability_spec import (
-    CC_KIND_VOCABULARY,
-    IMMOBILIZING_CC_KINDS,
-    Authority,
-    DamagePart,
-    Disposition,
-    ProjectionStarvation,
-    projection_starvation,
-)
-from src.calculator.champions.engine import _validate_cc_event_contract
+from src.calculator.ability_spec import Authority, DamagePart, Disposition
+from src.calculator.ally_packet_shape import _declared_authorities
+from src.calculator.champions.entry_shape import EmittedSlot
+from src.calculator.champions.slot_cc import _validate_cc_event_contract
+from src.calculator.control_spec import CC_KIND_VOCABULARY, IMMOBILIZING_CC_KINDS
+from src.calculator.fight.after import amplifiers
+from src.calculator.fight.ledger import coverage, event_rows
 from src.calculator.interpreters import INTERPRETERS
 from src.calculator.item_behavior import (
     AllyProducer,
@@ -44,19 +40,17 @@ from src.calculator.item_behavior import (
     RuleFamily,
 )
 from src.calculator.item_behavior_catalog import behavior_rules
-from src.calculator.item_support_effects import (
-    EventViewStarvationError,
-    _declared_authorities,
-    derive_item_support_effects,
-)
+from src.calculator.item_support_effects import derive_item_support_effects
 from src.calculator.program.compile import WalkCompiler, action_from_event
-from src.calculator.program.views import ViewTag
+from src.calculator.program.views.view_tag import ViewTag
+from src.calculator.quantity import ProjectionStarvation, projection_starvation
 from src.calculator.roster_composition import ActorRequest
-from src.calculator.survival.actions import TransitionRank
+from src.calculator.support_event_view import EventViewStarvationError
 from src.calculator.survival.compile import (
     UncompilableActionError,
     unrepresentable_template_receipt,
 )
+from src.calculator.survival.phases import TransitionRank
 
 ROOT = Path(__file__).parents[1]
 SRC = ROOT / "src"
@@ -414,7 +408,9 @@ def test_sequence_zero_is_a_sequence_and_not_an_absent_one():
     assert ts.event_triggers(_row(sequence=None))[0].sequence == -1
     assert ts.event_triggers(_row(sequence="third"))[0].sequence == -1
     assert ts.event_triggers(_row(sequence=float("inf")))[0].sequence == -1
-    ledger = (SRC / "calculator" / "damage.py").read_text(encoding="utf-8")
+    ledger = (SRC / "calculator" / "fight" / "ledger" / "event_ledger.py").read_text(
+        encoding="utf-8"
+    )
     assert "\n    sequence = 0\n" in ledger
 
 
@@ -781,22 +777,17 @@ def test_importing_the_bus_performs_no_filesystem_read():
     assert module.tuple_incapable_items() == TUPLE_INCAPABLE
 
 
-def test_the_bus_imports_exactly_two_intra_package_modules():
-    """``ability_spec`` and ``program.views`` — the acyclicity argument.
+def test_the_bus_imports_only_the_vocabulary_leaves_and_the_view_tag():
+    """The acyclicity argument, as the set of modules the bus may name.
 
-    Phase 2 shipped this as *exactly one*, and Phase 4 S7 amends it to
-    exactly two, in the criterion rather than in silence: ``view_tags`` is a
-    field of the declaration table, so ``ViewTag`` has to be nameable here,
-    and its home is ``program/views/__init__.py`` (umbrella, shared names).
-
-    The amendment is bounded by what the original clause was protecting, and
-    both halves are re-asserted rather than relaxed.  ``program.views``
-    imports nothing, so the package graph is still acyclic; and the
-    filesystem probe above still reports zero reads, which is the property
-    that rules ``EngineLane``'s home *out* — importing ``item_behavior``
-    opens ``data/items.json`` and ``data/runes.json`` at module scope, and a
-    bus that reads ``data/`` is neither a leaf nor inside the caching layer
-    (D-35, repo rule 2).  Anything beyond these two is still an error.
+    The vocabulary is three leaves (``quantity`` reads ``ability_spec`` and
+    nothing further), and ``view_tags`` is a field of the declaration table,
+    so ``ViewTag`` is nameable here out of ``program/views/view_tag.py``.
+    None of the four opens a file at import, which is the property that rules
+    ``EngineLane``'s home out: importing ``item_behavior`` opens
+    ``data/items.json`` and ``data/runes.json`` at module scope, and a bus
+    that reads ``data/`` is neither a leaf nor inside the caching layer
+    (D-35, repo rule 2).  Anything beyond these four is an error.
     """
     tree = ast.parse((SRC / "calculator/trigger_stream.py").read_text("utf-8"))
     relative = {
@@ -804,24 +795,29 @@ def test_the_bus_imports_exactly_two_intra_package_modules():
         for node in ast.walk(tree)
         if isinstance(node, ast.ImportFrom) and node.level
     }
-    assert relative == {"ability_spec", "program.views"}
+    assert relative == {
+        "ability_spec",
+        "control_spec",
+        "quantity",
+        "program.views.view_tag",
+    }
 
 
 def test_the_view_tag_vocabulary_costs_the_bus_no_data_read():
-    """The amendment's own red: ``program.views`` must stay import-free.
+    """The amendment's own red: ``program.views.view_tag`` stays import-free.
 
-    A future edit that gave the views package a module-scope import of the
+    A future edit that gave the tag's module a module-scope import of the
     behaviour registry would re-create exactly the condition the clause
     above forbids — silently, because the bus would keep importing one name
     from one module.  So the admissible import is pinned at its source.
 
-    S9's ``serialize_leaf`` is defined over ``Quantity`` and joins the list:
-    ``ability_spec`` is the campaign's dependency-free vocabulary leaf, which
-    the line above already admits as the bus's *own* first import, so
-    admitting it here reaches nothing the bus did not already reach.  The
-    stdlib members are the type annotations the serializer carries.
+    ``ability_spec`` is on the list because it is the campaign's
+    dependency-free vocabulary leaf, which the line above already admits as
+    the bus's *own* first import, so admitting it here reaches nothing the
+    bus did not already reach.  The stdlib members are the type annotations
+    the vocabulary carries.
     """
-    tree = ast.parse((SRC / "calculator/program/views/__init__.py").read_text("utf-8"))
+    tree = ast.parse((SRC / "calculator/program/views/view_tag.py").read_text("utf-8"))
     imported = {
         node.module
         for node in ast.walk(tree)
@@ -997,7 +993,7 @@ CC_KIND_READERS = {
     # ``_damage_event_row`` copies the token onto the ledger row; it is
     # the one reader that never classifies.  D-34's certification gate left
     # this map at P2b, when it moved onto the bus.
-    "src/calculator/damage.py": frozenset({"_damage_event_row"}),
+    "src/calculator/fight/ledger/event_rows.py": frozenset({"_damage_event_row"}),
     # The two compiler entries are copies too, and the distinction is the
     # whole of A1: each stamps the raw token onto ``SurvivalAction.cc_kind``
     # and neither branches on it.  Every "is this an immobilize?" question
@@ -1015,21 +1011,20 @@ CC_KIND_READERS = {
     # may not compute at all (criterion 3).
     "src/calculator/program/views/receipt.py": frozenset({"_damage_event_rows"}),
     "src/calculator/trigger_stream.py": frozenset({"_classify_cc"}),
-    # ``state_lifecycle`` asks main's *action-blocking* question (may the
+    # ``state_timeline`` asks main's *action-blocking* question (may the
     # holder act?), which D-08 rules is a different question from the bus's
     # immobilize one: the two vocabularies differ on polymorph and on
     # flee/pull/snare/stasis, and it receipts an out-of-vocabulary token as
     # ``unknown_cc_kind`` where the bus refuses it.  One classifier per
     # question; each declared here.
-    "src/calculator/state_lifecycle.py": frozenset(
+    "src/calculator/state_timeline.py": frozenset(
         {"denial_reason", "is_candidate", "match"}
     ),
     # Everlasting's own kernel rule filters the control stream (it admits
     # kinds the immobilize predicate drops) and names the denial; the
     # dedupe key copies the token without branching on it.
-    "src/calculator/item_support_effects.py": frozenset(
-        {"_cc_event_stream", "_denial"}
-    ),
+    "src/calculator/support_event_view.py": frozenset({"_cc_event_stream"}),
+    "src/calculator/item_support_effects.py": frozenset({"_denial"}),
 }
 
 
@@ -1465,7 +1460,7 @@ def immobilize_literal_sites(
 def test_a7_the_immobilize_vocabulary_lives_only_in_the_vocabulary_module():
     """A7 — the fourth re-typing of this set is what D-08 had to widen.
 
-    MERGE: ``ability_spec`` declares TWO such literals now, and they are two
+    MERGE: ``control_spec`` declares TWO such literals, and they are two
     questions rather than one fact typed twice.  ``IMMOBILIZING_CC_KINDS``
     is what counts as an immobilize (Imperial Mandate's Command,
     Fimbulwinter's non-melee Everlasting); ``ACTION_BLOCKING_CC_KINDS`` is
@@ -1478,7 +1473,7 @@ def test_a7_the_immobilize_vocabulary_lives_only_in_the_vocabulary_module():
     """
     sites = immobilize_literal_sites()
     assert sites, "the vocabulary literal disappeared"
-    assert all(site.startswith("src/calculator/ability_spec.py:") for site in sites)
+    assert all(site.startswith("src/calculator/control_spec.py:") for site in sites)
     assert {"stun", "root"} <= IMMOBILIZING_CC_KINDS
 
 
@@ -1491,7 +1486,7 @@ def test_a7_has_a_permanent_injection_seam():
     )
     sites = immobilize_literal_sites(injected)
     assert "src/calculator/economy.py:1" in sites
-    assert not all(site.startswith("src/calculator/ability_spec.py:") for site in sites)
+    assert not all(site.startswith("src/calculator/control_spec.py:") for site in sites)
 
 
 # ---------------------------------------------------------------------------
@@ -2040,8 +2035,8 @@ def test_every_registered_view_runs_inside_the_boundary():
 
 
 def _fimbulwinter_gate(rows):
-    """``damage._control_armed_event_coverage`` over one hand-built ledger."""
-    complete, source, _note, _armed = damage._control_armed_event_coverage(
+    """``fight.ledger.coverage._control_armed_event_coverage`` over one hand-built ledger."""
+    complete, source, _note, _armed = coverage._control_armed_event_coverage(
         [{"name": "Fimbulwinter"}], rows
     )
     return complete, source
@@ -2102,7 +2097,7 @@ def test_the_certification_gate_is_not_exactly_the_disjunction_it_replaced():
         {"cc_reviewed": True},
         {},
     ):
-        row = damage._damage_event_row(
+        row = event_rows._damage_event_row(
             False,
             False,
             "Q",
@@ -2136,7 +2131,7 @@ def test_the_certification_gate_selects_its_holder_from_a_declaration():
     the producer it came from.
     """
     unreviewed = [{"is_ability": True, "source_key": "Q"}]
-    complete, source, note, armed = damage._control_armed_event_coverage(
+    complete, source, note, armed = coverage._control_armed_event_coverage(
         [{"name": "Fimbulwinter"}], unreviewed
     )
     rule = next(
@@ -2151,14 +2146,16 @@ def test_the_certification_gate_selects_its_holder_from_a_declaration():
     )
     # Same trigger, different recipient and different kind: neither is owed.
     for other in ("Imperial Mandate", "Bandlepipes"):
-        assert damage._control_armed_event_coverage([{"name": other}], unreviewed) == (
+        assert coverage._control_armed_event_coverage(
+            [{"name": other}], unreviewed
+        ) == (
             True,
             "",
             "",
             "",
         )
-    assert damage._control_armed_holder_shields([{"name": "Fimbulwinter"}]) != ()
-    assert damage._control_armed_holder_shields([{"name": "Bandlepipes"}]) == ()
+    assert coverage._control_armed_holder_shields([{"name": "Fimbulwinter"}]) != ()
+    assert coverage._control_armed_holder_shields([{"name": "Bandlepipes"}]) == ()
 
 
 def test_the_certification_gate_reads_every_mapping_not_only_a_dict():
@@ -2191,7 +2188,9 @@ def test_the_certification_gate_propagates_the_damage_field_contract():
         _fimbulwinter_gate(
             [{"is_ability": True, "source_key": "Q", "damage_type": "mixed"}]
         )
-    ledger = (SRC / "calculator" / "damage.py").read_text(encoding="utf-8")
+    ledger = (SRC / "calculator" / "fight" / "ledger" / "event_ledger.py").read_text(
+        encoding="utf-8"
+    )
     assert (
         ledger.count('damage_type not in {"physical", "magic", "true"}') == 2
     ), "both ledger builders must keep the filter that makes 'mixed' unreachable"
@@ -2210,7 +2209,7 @@ def test_a_control_trigger_is_not_judged_by_the_damage_type_contract():
     scanner accepted, which a refactor may not do" — and the two fields now
     say the same thing.
 
-    ``damage._damage_type_fields`` really does emit ``"mixed"``, so the
+    ``fight.ledger.event_rows._damage_type_fields`` really does emit ``"mixed"``, so the
     reading matters even though the ledger filter keeps it off the engine's
     stream.  The controls: the type is still enforced on the damage stream,
     and it still reaches the control trigger as a verbatim receipt token.
@@ -2230,7 +2229,9 @@ def test_a_control_trigger_is_not_judged_by_the_damage_type_contract():
     assert control.damage_type == "mixed"
     with pytest.raises(ValueError, match="damage_type"):
         ts.event_triggers(row, kinds=frozenset({ts.TriggerKind.DAMAGE}))
-    assert "mixed" in (SRC / "calculator" / "damage.py").read_text(encoding="utf-8")
+    assert "mixed" in (
+        SRC / "calculator" / "fight" / "ledger" / "event_rows.py"
+    ).read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize(
@@ -2625,7 +2626,7 @@ def test_an_out_of_vocabulary_cc_kind_raises_on_every_path_p2b_repointed():
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
         ts.is_immobilizing_event(row)
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
-        damage._control_armed_event_coverage([{"name": "Fimbulwinter"}], [row])
+        coverage._control_armed_event_coverage([{"name": "Fimbulwinter"}], [row])
     with pytest.raises(ValueError, match="CC_KIND_VOCABULARY"):
         action_from_event(row, TransitionRank.DAMAGE, 0, {"enemy:Aatrox": 0})
     holder = _support_actor("ally:Lulu", "ally", ("Imperial Mandate",))
@@ -2634,17 +2635,16 @@ def test_an_out_of_vocabulary_cc_kind_raises_on_every_path_p2b_repointed():
         derive_item_support_effects(holder, {"damage_events": [row]}, [holder, enemy])
     # The fourth path is reached through a FightState the walk builds; the
     # control is that it reads the same predicate and no other.
-    command_amp = inspect.getsource(damage._apply_command_amp)
+    command_amp = inspect.getsource(amplifiers._apply_command_amp)
     assert "is_immobilizing_event(event)" in command_amp
-    assert "from .trigger_stream import" in (
-        SRC / "calculator" / "damage.py"
+    assert "from ...trigger_stream import" in (
+        SRC / "calculator" / "fight" / "after" / "amplifiers.py"
     ).read_text(encoding="utf-8")
     # ...and the control that this is a refusal, not a regression: the part
     # spelling of the same kind never gets near the walk.
     with pytest.raises(ValueError, match="unknown cc_kind"):
         _validate_cc_event_contract(
-            "Fakechamp",
-            "Q",
+            EmittedSlot("Fakechamp", "Q"),
             {"parts": (DamagePart("magic", 100.0, cc_kind="mesmerize"),)},
         )
 
@@ -2665,14 +2665,12 @@ class TestAnAuthoredCcKindIsUncheckedUntilTheWalk:
         assert self.UNKNOWN_KIND not in CC_KIND_VOCABULARY
         with pytest.raises(ValueError, match="unknown cc_kind"):
             _validate_cc_event_contract(
-                "Fakechamp",
-                "Q",
+                EmittedSlot("Fakechamp", "Q"),
                 {"parts": (DamagePart("magic", 1.0, cc_kind=self.UNKNOWN_KIND),)},
             )
         # The same kind, authored as a declared event, passes parse time...
         _validate_cc_event_contract(
-            "Fakechamp",
-            "Q",
+            EmittedSlot("Fakechamp", "Q"),
             {
                 "parts": (),
                 "damage_events": [{"time": 0.0, "cc_kind": self.UNKNOWN_KIND}],

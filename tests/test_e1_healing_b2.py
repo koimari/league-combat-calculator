@@ -25,7 +25,7 @@ evaluated at the replayed live health.
 import pytest
 
 from src import app as app_module
-from src.calculator.champions.slotlib import extract_named
+from src.calculator.champions.slot_extract import extract_named
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.stats import calculate_total_stats
 

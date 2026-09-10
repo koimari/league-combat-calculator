@@ -23,8 +23,8 @@ Why each slot is non-generic:
   modifier (robust to effect reordering on data re-pulls).
 - Q (Rocket Grab) is a clean generic read, kept explicit here.
 - P (Mana Barrier) is a defensive shield with no cast of its own, so it
-  is absent from the slot map; ``_rocket_grab`` (Q) hangs the sourced
-  shield (35% max mana, up to 10s) on Q's damage event as a
+  is absent from the slot map; Q's ``with_self_shield`` wrapper hangs the
+  sourced shield (35% max mana, up to 10s) on Q's damage event as a
   ``self_shield_events`` payload the survival ledger grants pre-fight,
   live-tested end to end
   (``tests/test_e8_shields.py::test_blitzcrank_mana_barrier_payload_is_sourced``,
@@ -37,18 +37,13 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
-from .module_contract import coverage
 from .module_helpers import ranked_slot
-from .slotlib import (
-    ability_name,
-    attach_self_shield,
-    damage_entry,
-    extract_cooldown,
-    extract_value,
-    simple_damage,
-    sum_modifiers,
-)
+from .shared_mechanics import with_self_shield
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_value, sum_modifiers
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
@@ -197,44 +192,25 @@ ASSUMPTIONS = [
 ]
 
 
-def _rocket_grab(ctx: SlotCtx) -> dict[str, Any] | None:
-    """Q: the clean magic hit carrying Mana Barrier's pre-fight shield.
-
-    Mana Barrier is a defensive passive, so it has no cast of its own;
-    the shield rides the first Q damage event (t=0 in one-rotation and
-    timed fights) as a ``self_shield_events`` payload, which the shared
-    ledger grants as a timed self-shield before incoming damage.
-    """
-    entry = _packet_q(ctx)
-    rank = int(entry.get("rank", 0) or 0) if entry is not None else 0
-    if entry is None or rank < 1:
-        return entry
-    shield = MANA_BARRIER_SHIELD_RATIO * ctx.stat("max_mana")
-    entry["event_order_certified"] = "single_hit"
-    return attach_self_shield(
-        entry,
-        amount=shield,
-        duration=MANA_BARRIER_DURATION_SECONDS,
+SLOTS = {
+    "W": _overdrive,
+    # Mana Barrier has no cast of its own, so its shield rides the first Q
+    # damage event (t=0 in one-rotation and timed fights).
+    "Q": with_self_shield(
+        simple_damage(attr="Magic Damage", dmg_type="magic"),
+        shield=lambda ctx: MANA_BARRIER_SHIELD_RATIO * ctx.stat("max_mana"),
+        window=MANA_BARRIER_DURATION_SECONDS,
         source="Mana Barrier",
-        detail=(
+        detail=lambda ctx, shield: (
             f"Q carries Mana Barrier's pre-fight shield: {shield:g} "
             f"({MANA_BARRIER_SHIELD_RATIO * 100:g}% of max mana) for up to "
             f"{MANA_BARRIER_DURATION_SECONDS:g}s; the 30%-health trigger "
             "boundary is documented in ASSUMPTIONS"
         ),
-    )
-
-
-SLOTS = {
-    "W": _overdrive,
-    "Q": simple_damage(attr="Magic Damage", dmg_type="magic"),
+    ),
     "E": _power_fist,
     "R": _static_field,
 }
-
-SLOTS = dict(SLOTS)
-_packet_q = SLOTS["Q"]
-SLOTS["Q"] = _rocket_grab
 
 # Cached kit review.  Q applies two immobilizes at once ("stunning them for
 # 0.65 seconds, and pulling them towards Blitzcrank"), which is what the

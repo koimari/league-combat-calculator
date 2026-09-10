@@ -43,10 +43,11 @@ fight ledger never invents an enemy hit for it.
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_contract import coverage
-from .slotlib import ability_name, extract_cooldown, extract_value, simple_damage
+from .slot_extract import ability_name, extract_cooldown, extract_value
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # HARDCODED: wiki-prose soldier mechanics with no JSON home — verify on

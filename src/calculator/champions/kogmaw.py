@@ -42,16 +42,16 @@ from ..binary_roots import data_value, spell_object
 from .engine import DEBUFF, SlotCtx, build_parser
 from .inputs import bool_option
 from .module_helpers import ranked_slot
-from .slotlib import (
+from .shared_mechanics import unreachable_innate
+from .slot_entries import ability_on_hit_entry
+from .slot_extract import (
     ability_name,
-    ability_on_hit_entry,
-    damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
     pct_health_per_hit,
-    simple_damage,
 )
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # Caustic Spittle's shred lasts 4s ("reduces their armor and magic
@@ -137,31 +137,10 @@ def _bio_arcane_barrage(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _icathian_surprise(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: zero-damage receipt — a death-only trigger outside the fight.
+def _icathian_surprise_detail(ctx: SlotCtx, would_be: float) -> str:
+    """The published boundary text, quoting the explosion this fight never sees."""
 
-    Icathian Surprise's explosion (cached "Bonus True Damage": 140 : 650
-    over levels 1-18) only fires after Kog'Maw takes FATAL damage and
-    rides out a 4-second zombie state. The deterministic single-target
-    fight has no death event for the main, so the passive contributes
-    zero damage here; this receipt documents the boundary — with the
-    sourced would-be magnitude — so the alive-state package is complete.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    entry = damage_entry(
-        ability_name(ability),
-        ctx.level,
-        0.0,
-        0.0,
-        "true",
-    )
-    entry["parts"] = ()
-    would_be = extract_named(
-        ability, "Bonus True Damage", ctx.level, ctx.stats, ctx.target
-    )
-    entry["detail"] = (
+    return (
         "Death-only trigger: after taking fatal damage, Kog'Maw enters a "
         "4-second zombie state then explodes for the sourced "
         f"{would_be:g} true damage (cached 'Bonus True Damage' at champion "
@@ -169,7 +148,17 @@ def _icathian_surprise(ctx: SlotCtx) -> dict[str, Any] | None:
         "alive-state fight cannot enter (the main never dies in the "
         "model); priced at zero damage as a documented boundary."
     )
-    return entry
+
+
+def _icathian_surprise(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the death-only explosion this fight never reaches (module docstring)."""
+
+    return unreachable_innate(
+        ctx,
+        row="Bonus True Damage",
+        dmg_type="true",
+        detail=_icathian_surprise_detail,
+    )
 
 
 _living_artillery_base = simple_damage(attr="Minimum Magic Damage", dmg_type="magic")

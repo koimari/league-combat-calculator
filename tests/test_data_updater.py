@@ -1,13 +1,28 @@
 """Patch-ingestion boundary tests for the vendored Wiki adapter."""
 
 import json
+import sys
 from unittest.mock import Mock
 
 import pytest
 import requests
 
 from scripts.reparse_runes import drifted_runes
-from src.calculator import data_updater
+from src.calculator import data_updater, rune_pull, vendor_path
+
+
+def test_importing_the_vendor_leaf_is_what_puts_the_checkout_on_the_path():
+    """The bootstrap is the import, so a caller states it instead of ordering it.
+
+    ``vendor/lolstaticdata`` is a checkout, not an installed package, so the
+    names ``data_updater`` and ``rune_pull`` call are only importable because
+    this module ran first.
+    """
+    assert vendor_path.LOLSTATICDATA_ROOT.is_dir()
+    assert str(vendor_path.LOLSTATICDATA_ROOT) in sys.path
+    assert vendor_path.download_json.__module__ == "lolstaticdata.common.utils"
+    assert rune_pull.download_json is vendor_path.download_json
+    assert data_updater.download_json is vendor_path.download_json
 
 
 def test_missing_auxiliary_ability_page_does_not_drop_champion(monkeypatch):
@@ -57,7 +72,7 @@ def test_reparse_cached_rune_effects_recomputes_without_network(tmp_path):
     }
     (tmp_path / "runes.json").write_text(json.dumps(cached), encoding="utf-8")
 
-    updated = data_updater.reparse_cached_rune_effects(tmp_path)
+    updated = rune_pull.reparse_cached_rune_effects(tmp_path)
 
     effects = updated["First Strike"]["effects"]
     assert effects["bonus_true_damage_ratio"] == 0.07

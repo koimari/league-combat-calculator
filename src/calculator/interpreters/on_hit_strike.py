@@ -31,7 +31,7 @@ from ..item_behavior import (
     RestrictedPacket,
     RuleFamily,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import behavior_rules, built_per_rule
 from ..item_effects import PerHitEffect, damage_source
 from ..value_ref import resolve
 from . import damage_formula
@@ -175,6 +175,9 @@ def class_restricted_per_hit_effects(
                     rule.owner,
                     packet.damage_class.value,
                     lambda _inputs, amount=amount: amount,
+                    mechanic_id=(
+                        f"{CLASS_RESTRICTED_MECHANIC_PREFIX}.{packet.target_class}"
+                    ),
                     suffix=CLASS_RESTRICTED_SUFFIX.format(
                         mechanic=packet.mechanic, target_class=packet.target_class
                     ),
@@ -190,37 +193,6 @@ def class_restricted_per_hit_effects(
     return tuple(effects)
 
 
-def strike_mechanic_id(owner: str) -> str:
-    """*owner*'s on-hit strike mechanic id, or a stop.
-
-    What the pair engine needs to stamp the row it authors with the mechanic
-    that row previews: ``damage._layer_on_hit_effects`` walks
-    :class:`~..item_effects.PerHitEffect` records, which carry an item name
-    and no rule id, and reading the id back off the declaration here is what
-    keeps the stamp from being a second spelling of the mechanic slug inside
-    the engine.
-
-    A stop rather than a default: an unstamped on-hit row would keep the pair
-    engine's number in every roster total *and* leave the walk pricing the
-    declaration, which is the double count this family's retirement exists to
-    make unrepresentable.
-    """
-    rules = strike_rules([owner])
-    if rules:
-        return rules[0].mechanic_id
-    restricted = class_restricted_packets([owner])
-    if restricted:
-        # A class-restricted branch is armed only by a fight whose own target
-        # class matches, never by the interpreter-owned strike stream, so it
-        # can never be the double count the stop below exists to prevent.  Its
-        # id is derived from the declaration rather than spelled here.
-        return f"{CLASS_RESTRICTED_MECHANIC_PREFIX}.{restricted[0][1].target_class}"
-    raise OnHitStrikeInterpretationError(
-        f"{owner} authors an on-hit row and declares no on_hit_strike "
-        "rule, so its pair row has no mechanic to be a preview of"
-    )
-
-
 def per_hit_effect(rule: BehaviorRule, ctx: BuildContext) -> PerHitEffect:
     """One declared strike as the record the fight engine consumes."""
     payload = rule.payload
@@ -233,6 +205,7 @@ def per_hit_effect(rule: BehaviorRule, ctx: BuildContext) -> PerHitEffect:
             rule.owner,
             payload.formula.damage_type,
             damage_formula.compile_formula(payload.formula, ctx),
+            mechanic_id=rule.mechanic_id,
             suffix=ON_HIT_SUFFIX,
             breakdown_key=f"{ON_HIT_BREAKDOWN_PREFIX}{rule.owner}",
         ),
@@ -258,14 +231,8 @@ def per_hit_effects(
     *,
     facts: FightFacts,
 ) -> tuple[PerHitEffect, ...]:
-    """Every on-hit strike this build declares, in build order (purchase order,
-    the registry's append order and the engine's breakdown-row order).  The
-    facts are threaded, not defaulted, though no on-hit coefficient reads one:
-    a placeholder would be the silent default the context refuses."""
-    return tuple(
-        per_hit_effect(rule, build_context(rule.owner, facts))
-        for rule in strike_rules(owners)
-    )
+    """Every on-hit strike this build declares, its facts threaded, not defaulted."""
+    return built_per_rule(strike_rules(owners), per_hit_effect, facts=facts)
 
 
 __all__ = [
@@ -283,6 +250,5 @@ __all__ = [
     "per_hit_effect",
     "per_hit_effects",
     "strike_fields",
-    "strike_mechanic_id",
     "strike_rules",
 ]

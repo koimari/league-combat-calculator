@@ -18,15 +18,15 @@ from typing import Any
 
 import pytest
 
+from src.calculator.champion_loadout import load_public_champion
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.engine import SlotCtx
 from src.calculator.champions.packet_module import (
-    _packet_parser,
     build_packet_module,
     packet_spec_sha256,
 )
-from src.calculator.champions.slotlib import extract_cooldown
-from src.calculator.scenario import load_public_champion
+from src.calculator.champions.packet_parsers import _packet_parser
+from src.calculator.champions.slot_extract import extract_cooldown
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from scripts.source_receipt import source_sha256

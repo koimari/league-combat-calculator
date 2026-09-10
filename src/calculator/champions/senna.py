@@ -27,6 +27,10 @@ speed) with no enemy-damage leveling. The pinned reviewed packet
 (``static/reviewed-packets.json``) declares E ``kind: "no_damage"``, and
 this module does not reassign E, so the slot is emitted as a sourced zero
 row rather than left unmodeled.
+
+Piercing Darkness heals once per cast whether or not its ray damaged
+anyone, so ``SELF_HEALING_RULE`` is the slot, the sourced row and the
+source name it is published under.
 """
 
 from functools import partial
@@ -34,19 +38,15 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..binary_roots import calculation_coefficient, data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import int_option
-from .module_contract import coverage
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    attach_self_shield,
-    extract_named,
-    extract_value,
-    with_control,
-    with_item_on_hits,
-)
+from .slot_control import with_control
+from .slot_entries import attach_self_shield
+from .slot_extract import ability_name, extract_named, extract_value
+from .slotlib import with_item_on_hits
 
 PACKET_SHA256 = "97538cf620050743705205ae884ef53611e35fbad8ed2808fd3617fb3bc3b7d5"
 
@@ -345,28 +345,13 @@ ASSUMPTIONS = [
 MODULE_COVERAGE = coverage(no_damage="E")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
-    """Resolve Senna self-healing events from its authored packet."""
-    healing = []
-    q = _healing.ability_json(champion_data, "Q")
-    q_rank = _healing.parsed_rank(ability_damages, "Q")
-    q_heal = extract_named(q, "Healing", q_rank, champion_stats)
-    for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
-    ):
-        event = payment.event
-        _healing.heal_from_damage(
-            healing, event, q_heal, "Piercing Darkness", link_to_damage=False
-        )
-    return healing
-
-
-SELF_HEALING_RULE = self_healing_rule("Senna")(derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Senna")(
+    lambda data, stats, damages, events, casts=None, *_: _healing.cast_heals(
+        "Q",
+        "Piercing Darkness",
+        events,
+        casts,
+        amount=_healing.ranked_rows(data, damages, stats, "Q", "Healing")[0],
+        link_to_damage=False,
+    )
+)

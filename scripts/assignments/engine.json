@@ -1,0 +1,39 @@
+{
+ "source": "src/calculator/champions/engine.py",
+ "decisions": [
+  "No new directory: both modules land beside their source in the existing src/calculator/champions package, so packages is empty.",
+  "engine.py keeps the cached-JSON stamps, _result_key and build_parser: the parser builder is the concept the name promises and every champion module reads it.",
+  "Published spelling: engine reads both entry_shape names across the boundary, so _certify_shared_instant is certify_shared_instant and _validate_entry_keys is validate_entry_keys."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/champions/entry_shape.py",
+   "docstring": "Every key an emitted entry may carry, and the refusal for one it may not.",
+   "defs": [
+    "_ALLOWED_ENTRY_KEYS",
+    "_ALLOWED_DEBUFF_KEYS",
+    "_ALLOWED_POST_HIT_PROC_KEYS",
+    "_VALIDATED_ENTRY_SHAPES",
+    "EmittedSlot",
+    "_validate_entry_keys",
+    "part_reaches_event_ledger",
+    "_SHARED_INSTANT",
+    "_certify_shared_instant"
+   ]
+  },
+  {
+   "path": "src/calculator/champions/slot_cc.py",
+   "docstring": "The module's crowd-control declaration, stamped onto the parts a slot emits.",
+   "defs": [
+    "_validate_cc_event_contract",
+    "_EMPOWER_MARKER_ZERO",
+    "_empower_marker_part",
+    "CC_PER_PART",
+    "_apply_module_cc",
+    "_refuse_undeclared_part_cc",
+    "_resolve_pending_control_events"
+   ]
+  }
+ ]
+}

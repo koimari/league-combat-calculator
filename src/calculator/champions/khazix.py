@@ -1,25 +1,39 @@
 """Kha'Zix — full-entry reviewed CP10.3 module.
 
 Option keys consumed by the shared parser: "p_ready", "q_isolated".
+
+Void Spike's heal pays once per cast whether or not the explosion damaged
+anyone, so ``SELF_HEALING_RULE`` is the slot, the sourced row and the source
+name it is published under.
 """
 
 from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option
-from .module_contract import coverage
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, ranked_slot
-from .slotlib import (
-    ability_name,
-    extract_cooldown,
-    extract_named,
-    on_hit_entry,
-    simple_damage,
+from .module_helpers import (
+    REVIEWED_MODULE_ASSUMPTIONS,
+    innate_on_hit,
+    no_damage,
+    ranked_slot,
 )
+from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
+
+_unseen_threat_hit = innate_on_hit(
+    "Bonus Magic Damage",
+    "magic",
+    name="Unseen Threat",
+    detail=(
+        "One empowered next basic attack after Kha'Zix leaves enemy vision; "
+        "isolation is a target-state option."
+    ),
+)
 
 
 def _unseen_threat(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -29,18 +43,7 @@ def _unseen_threat(ctx: SlotCtx) -> dict[str, Any] | None:
             name="Unseen Threat",
             reason="The isolated-stealth empowered attack is not armed in this scenario.",
         )
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    value = extract_named(
-        ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
-    )
-    result = on_hit_entry("Unseen Threat", value, "magic")
-    result["detail"] = (
-        "One empowered next basic attack after Kha'Zix leaves enemy vision; "
-        "isolation is a target-state option."
-    )
-    return result
+    return _unseen_threat_hit(ctx)
 
 
 @ranked_slot
@@ -104,28 +107,13 @@ parse_abilities = build_parser(SLOTS, "Kha'Zix", cc_kinds=MODULE_CC)
 MODULE_COVERAGE = coverage(no_damage="R")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
-    """Resolve Kha'Zix self-healing events from its authored packet."""
-    healing = []
-    w = _healing.ability_json(champion_data, "W")
-    w_rank = _healing.parsed_rank(ability_damages, "W")
-    w_heal = extract_named(w, "Heal", w_rank, champion_stats)
-    for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
-    ):
-        event = payment.event
-        _healing.heal_from_damage(
-            healing, event, w_heal, "Void Spike", link_to_damage=False
-        )
-    return healing
-
-
-SELF_HEALING_RULE = self_healing_rule("Kha'Zix")(derive_self_healing)
+SELF_HEALING_RULE = self_healing_rule("Kha'Zix")(
+    lambda data, stats, damages, events, casts=None, *_: _healing.cast_heals(
+        "W",
+        "Void Spike",
+        events,
+        casts,
+        amount=_healing.ranked_rows(data, damages, stats, "W", "Heal")[0],
+        link_to_damage=False,
+    )
+)

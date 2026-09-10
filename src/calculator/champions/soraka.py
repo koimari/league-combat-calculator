@@ -32,20 +32,15 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option
-from .module_contract import coverage
 from .module_helpers import ranked_slot
-from .slotlib import (
-    ability_name,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    park_control_interval,
-    simple_damage,
-    support_cast,
-)
+from .slot_control import park_control_interval
+from .slot_entries import support_cast
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 
@@ -198,10 +193,14 @@ def derive_self_healing(
 ) -> list[dict[str, Any]]:
     """Resolve Soraka self-healing events from its authored packet."""
     healing = []
-    ability = _healing.ability_json(champion_data, "Q")
-    rank = _healing.parsed_rank(ability_damages, "Q")
-    per_tick = extract_named(ability, "Heal per Tick", rank, champion_stats, {})
-    total = extract_named(ability, "Total Heal", rank, champion_stats, {})
+    per_tick, total = _healing.ranked_rows(
+        champion_data,
+        ability_damages,
+        champion_stats,
+        "Q",
+        "Heal per Tick",
+        "Total Heal",
+    )
     tick_count = (
         max(1, min(100, round(total / per_tick)))
         if per_tick > 0.0 and total > 0.0

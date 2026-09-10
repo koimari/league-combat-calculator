@@ -43,7 +43,7 @@ from pathlib import Path
 import pytest
 
 from src import app as app_module
-from src.calculator.champions.slotlib import extract_named
+from src.calculator.champions.slot_extract import extract_named
 
 _DATA = json.loads(
     Path(__file__)

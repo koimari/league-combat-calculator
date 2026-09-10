@@ -10,7 +10,8 @@ This is a test helper, not a test module: it holds no assertions.
 
 from collections.abc import Iterable
 
-from src.calculator.ability_spec import DamagePart, Measured, Quantity
+from src.calculator.ability_spec import DamagePart
+from src.calculator.quantity import Measured, Quantity
 
 
 def quantity_sum(quantities: Iterable[Quantity]) -> Quantity:

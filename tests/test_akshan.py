@@ -8,7 +8,8 @@ from src.calculator.champions.akshan import (
     _extract_e_per_shot,
     _parse_passive_proc_damage,
 )
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.config import FightConfig
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
 

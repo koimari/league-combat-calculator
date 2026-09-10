@@ -23,7 +23,7 @@ from __future__ import annotations
 import math
 from collections.abc import Iterable, Mapping
 
-from .delivery_eligibility import CombatantFacts
+from .delivery_facts import CombatantFacts
 
 # Floating-point tolerance shared with the damage/survival walks.
 _EPS = 1e-9

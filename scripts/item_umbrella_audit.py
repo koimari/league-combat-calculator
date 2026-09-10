@@ -30,9 +30,9 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 try:
-    from gate_receipt import build_receipt
+    from gate_receipt import build_receipt, emit_receipt
 except ImportError:  # imported as scripts.item_umbrella_audit in tests
-    from scripts.gate_receipt import build_receipt
+    from scripts.gate_receipt import build_receipt, emit_receipt
 
 from src.calculator.data_fetcher import fetch_item_data
 from src.calculator.item_coverage import (
@@ -41,7 +41,7 @@ from src.calculator.item_coverage import (
     target_item_model_coverage,
 )
 from src.calculator.item_source import is_ordinary_sr_item, source_audit
-from src.calculator.optimizer import (
+from src.calculator.optimizer_candidates import (
     get_eligible_boots,
     get_eligible_legendaries,
     get_selectable_items,
@@ -273,15 +273,7 @@ def main() -> int:
     args = parser.parse_args()
     if args.check:
         return check_committed_receipt()
-    receipt = run_audit()
-    encoded = json.dumps(receipt, indent=2, sort_keys=True) + "\n"
-    if args.output:
-        args.output.write_text(encoded, encoding="utf-8")
-    if args.json:
-        print(encoded, end="")
-    else:
-        print(json.dumps({"passed": receipt["passed"], "counts": receipt["counts"]}))
-    return 0 if receipt["passed"] else 1
+    return emit_receipt(run_audit(), output=args.output, as_json=args.json)
 
 
 if __name__ == "__main__":

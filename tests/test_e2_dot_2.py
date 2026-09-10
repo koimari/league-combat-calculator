@@ -36,7 +36,7 @@ from pathlib import Path
 import pytest
 
 from src import app as app_module
-from src.calculator.champions.slotlib import find_named_leveling
+from src.calculator.champions.slot_extract import find_named_leveling
 
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 # data/champions.json keys are the scraper slugs ("MissFortune", "Nunu");

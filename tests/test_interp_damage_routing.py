@@ -20,11 +20,11 @@ from src.calculator import item_behavior_catalog as catalog
 from src.calculator import item_effects
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.interpreters import INTERPRETERS, RESOLVERS
+from src.calculator.interpreters.damage_deferral import resolve_deferral
 from src.calculator.interpreters.damage_routing import (
     EXECUTE_THRESHOLD_FIELD,
     DamageRoutingInterpretationError,
     pair_fields,
-    resolve_deferral,
     resolve_execution,
     resolve_shield_bypass,
 )

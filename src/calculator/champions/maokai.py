@@ -33,13 +33,9 @@ from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    with_control,
-)
+from .slot_control import with_control
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
 
 PACKET_SHA256 = "13ed879eea3657a5f23e4b9905fb5df614fb6d4fe52fcababf018a51f6aed830"
 

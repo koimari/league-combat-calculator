@@ -23,47 +23,21 @@ not have, so nothing but the boundary receipt could be priced anyway.
 from typing import Any
 
 from .. import healing_helpers as _healing
-from .engine import CC_PER_PART, SlotCtx, build_parser
+from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_named,
-    simple_damage,
-    with_control,
-)
+from .shared_mechanics import unreachable_innate
+from .slot_cc import CC_PER_PART
+from .slot_control import with_control
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 OPTIONS: list[dict[str, Any]] = []
 
 
-def _iceborn_subjugation(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: zero-damage receipt — a kill-only trigger outside the fight.
+def _iceborn_subjugation_detail(ctx: SlotCtx, would_be: float) -> str:
+    """The published boundary text, quoting the thrall shatter this fight never sees."""
 
-    Iceborn Subjugation spawns a Frozen Thrall whenever a nearby ENEMY
-    CHAMPION dies; the thrall chases for 4 seconds then shatters for
-    the cached "Per-Level Scaling" magic damage (120 : 520 over levels
-    1-18) plus a prose-only "+50% AP" rider (not a structured
-    modifier, so not read here). The deterministic single-target fight
-    never kills its target, so the passive contributes zero damage
-    here; this receipt documents the boundary — with the sourced
-    would-be magnitude — so the alive-state package is complete.
-    """
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    entry = damage_entry(
-        ability_name(ability),
-        ctx.level,
-        0.0,
-        0.0,
-        "magic",
-    )
-    entry["parts"] = ()
-    would_be = extract_named(
-        ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target
-    )
-    entry["detail"] = (
+    return (
         "Kill-only trigger: whenever a nearby enemy champion dies, "
         "Lissandra spawns a Frozen Thrall that chases for 4 seconds "
         "then shatters for the sourced "
@@ -73,7 +47,17 @@ def _iceborn_subjugation(ctx: SlotCtx) -> dict[str, Any] | None:
         "target never dies in the model; priced at zero damage as a "
         "documented boundary."
     )
-    return entry
+
+
+def _iceborn_subjugation(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the kill-only thrall shatter this fight never reaches (module docstring)."""
+
+    return unreachable_innate(
+        ctx,
+        row="Per-Level Scaling",
+        dmg_type="magic",
+        detail=_iceborn_subjugation_detail,
+    )
 
 
 ASSUMPTIONS = [
@@ -136,10 +120,14 @@ def derive_self_healing(
 ) -> list[dict[str, Any]]:
     """Resolve Lissandra self-healing events from its authored packet."""
     healing = []
-    r = _healing.ability_json(champion_data, "R")
-    r_rank = _healing.parsed_rank(ability_damages, "R")
-    min_tick = extract_named(r, "Minimum Heal per Tick", r_rank, champion_stats)
-    max_tick = extract_named(r, "Maximum Heal per Tick", r_rank, champion_stats)
+    min_tick, max_tick = _healing.ranked_rows(
+        champion_data,
+        ability_damages,
+        champion_stats,
+        "R",
+        "Minimum Heal per Tick",
+        "Maximum Heal per Tick",
+    )
     for payment in _healing.payments(
         _healing.HealAnchor.CAST_SCHEDULE, "R", damage_events, cast_timeline
     ):

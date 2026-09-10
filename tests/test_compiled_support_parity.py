@@ -27,20 +27,21 @@ from dataclasses import dataclass, field
 
 import pytest
 
+from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.fight_params import FightParams
 from src.calculator.item_behavior import PacketKind
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
     _WalkCompiler,
     build_participant_timeline,
 )
-from src.calculator.pipeline import FightParams
-from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival import compile as survival_compile
-from src.calculator.survival.actions import UTILITY_KINDS, ActionKind
+from src.calculator.survival.classify import UTILITY_KINDS
 from src.calculator.survival.compile import unrepresentable_template_receipt
+from src.calculator.survival.typed_action import ActionKind
 
 MIKAELS = "Mikael's Blessing"
 QUICKSILVER = "Quicksilver Sash"

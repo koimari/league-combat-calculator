@@ -20,15 +20,11 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
-from .module_helpers import ranked_slot
+from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    with_item_on_hits,
-)
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slotlib import with_item_on_hits
 
 # HARDCODED: verify on patch updates — the linger cadence (4 ticks at
 # 0.25s over the 1-second linger) is wiki W prose, reconciled by
@@ -111,23 +107,18 @@ def _arc_of_judgment(
 
 @ranked_slot
 def _transcend_one_self(
-    _ctx: SlotCtx, ability: dict[str, Any], rank: int
+    ctx: SlotCtx, ability: dict[str, Any], _rank: int
 ) -> dict[str, Any] | None:
     """R: the Transcendent State buff shell (zero direct damage)."""
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        0.0,
-        "magic",
+    return no_damage(
+        ctx,
+        name=ability_name(ability),
+        reason=(
+            "Transcendent State (15s): a buff that empowers W into Arc of Ruin; "
+            "with r_transcendent=True the W row prices the empowered base "
+            "160/320/480 by R rank + 120% bonus AD + 75% AP"
+        ),
     )
-    entry["parts"] = ()
-    entry["detail"] = (
-        "Transcendent State (15s): a buff that empowers W into Arc of Ruin; "
-        "with r_transcendent=True the W row prices the empowered base "
-        "160/320/480 by R rank + 120% bonus AD + 75% AP"
-    )
-    return entry
 
 
 # Arc of Judgment's initial hit "deals magic damage and slows them by 99%

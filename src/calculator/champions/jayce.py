@@ -85,19 +85,14 @@ from ..binary_roots import (
     spell_object,
 )
 from ..stat_formulas import ATTACK_SPEED_CAP, calculate_attack_speed
-from .engine import CC_PER_PART, SlotCtx, build_parser
+from .contract_vocabulary import coverage
+from .engine import SlotCtx, build_parser
 from .inputs import bool_option
-from .module_contract import coverage
 from .module_helpers import no_damage
-from .slotlib import (
-    ability_name,
-    by_option,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    simple_damage,
-)
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
+from .slotlib import by_option, simple_damage
 from .source_receipts import load_champion_sources
 
 # The stance numbers are binary mSpellCalculations level-breakpoint nodes

@@ -36,7 +36,7 @@ import multiprocessing
 import sys
 from collections.abc import Collection, Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
@@ -205,21 +205,29 @@ def _catalog():
     }
 
 
-def _mode_cells(champ: str, cells: Mapping) -> set:
+class CensusSweep(NamedTuple):
+    """One champion's sweep: who it is, the catalog it reads, the cells it fills."""
+
+    champion: str
+    catalog: Mapping
+    cells: dict[str, dict[str, Any]]
+
+
+def _mode_cells(sweep: CensusSweep) -> set:
     """Champion x mode; returns the bare-kit timed baseline."""
     baseline = set()
     for mode in MODES:
-        r = _probe(calculate_payload, _timed_payload(champ, fight_mode=mode))
+        r = _probe(calculate_payload, _timed_payload(sweep.champion, fight_mode=mode))
         if not r["ok"]:
-            cells["mode_refusals"][f"{champ}|{mode}"] = r["error"]
+            sweep.cells["mode_refusals"][f"{sweep.champion}|{mode}"] = r["error"]
         elif mode == "timed":
             baseline = _coarse(r)
             if baseline:
-                cells["attacker_kit_coarse"][champ] = sorted(baseline)
+                sweep.cells["attacker_kit_coarse"][sweep.champion] = sorted(baseline)
     return baseline
 
 
-def _item_cells(champ: str, cat: Mapping, cells: Mapping) -> None:
+def _item_cells(sweep: CensusSweep) -> None:
     """Champion x legally-slotted item, across every window the interface can
     ask for.  A single mode with autos on is not "all modes with all items":
     an item can be coarse in one rotation and clean in a timed window, and
@@ -227,91 +235,94 @@ def _item_cells(champ: str, cat: Mapping, cells: Mapping) -> None:
     Each cell is compared against that champion's bare kit IN THE SAME
     WINDOW, so the entry is the item's contribution."""
     for mode, autos in ITEM_WINDOWS:
-        window = _timed_payload(champ, fight_mode=mode, include_auto_attacks=autos)
+        window = _timed_payload(
+            sweep.champion, fight_mode=mode, include_auto_attacks=autos
+        )
         base = _coarse(_probe(calculate_payload, window))
-        for record in cat["records"]:
+        for record in sweep.catalog["records"]:
             slotted = _slot_payload(record)
             if slotted is None:
                 continue
             r = _probe(calculate_payload, {**window, **slotted})
-            key = f"{champ}|{record.get('name')}|{mode}|autos={autos}"
+            key = f"{sweep.champion}|{record.get('name')}|{mode}|autos={autos}"
             if not r["ok"]:
-                cells["item_pair_failures"][key] = r["error"]
+                sweep.cells["item_pair_failures"][key] = r["error"]
             else:
                 extra = sorted(_coarse(r) - base)
                 if extra:
-                    cells["item_pair_coarse"][key] = extra
+                    sweep.cells["item_pair_coarse"][key] = extra
 
 
-def _keystone_cells(champ: str, cat: Mapping, cells: Mapping, baseline: set) -> None:
+def _keystone_cells(sweep: CensusSweep, baseline: set) -> None:
     """Champion x compiled keystone, against the bare-kit baseline."""
-    for keystone in cat["keystones"]:
-        r = _probe(calculate_payload, _timed_payload(champ, keystone=keystone))
-        key = f"{champ}|{keystone}"
+    for keystone in sweep.catalog["keystones"]:
+        r = _probe(calculate_payload, _timed_payload(sweep.champion, keystone=keystone))
+        key = f"{sweep.champion}|{keystone}"
         if not r["ok"]:
-            cells["keystone_failures"][key] = r["error"]
+            sweep.cells["keystone_failures"][key] = r["error"]
         else:
             extra = sorted(_coarse(r) - baseline)
             if extra:
-                cells["keystone_failures"][key] = f"coarse: {extra}"
+                sweep.cells["keystone_failures"][key] = f"coarse: {extra}"
 
 
-def _enemy_cells(champ: str, cat: Mapping, cells: Mapping) -> None:
+def _enemy_cells(sweep: CensusSweep) -> None:
     """Every certified-timeline item on this champion as the enemy."""
-    for item in cat["certified_items"]:
+    for item in sweep.catalog["certified_items"]:
         r = _probe(
             calculate_payload,
             _timed_payload(
                 "Ziggs",
-                enemies=[{"champion": champ, "level": LEVEL, "items": [item]}],
+                enemies=[{"champion": sweep.champion, "level": LEVEL, "items": [item]}],
             ),
         )
+        key = f"{sweep.champion}|{item}"
         if not r["ok"]:
-            cells["certified_enemy_withholds"][f"{champ}|{item}"] = r["error"]
+            sweep.cells["certified_enemy_withholds"][key] = r["error"]
 
 
-def _crossover_cells(champ: str, cells: Mapping) -> None:
+def _crossover_cells(sweep: CensusSweep) -> None:
     """The comparison curve."""
+    champion = sweep.champion
     r = _probe(
         calculate_payload,
-        {"champion": champ, "level": LEVEL, "items": [], "include_crossover": True},
+        {"champion": champion, "level": LEVEL, "items": [], "include_crossover": True},
     )
     if not r["ok"]:
-        cells["crossover_unavailable"][champ] = r["error"]
+        sweep.cells["crossover_unavailable"][champion] = r["error"]
     else:
         status = r["resp"].get("comparison_curve_status") or {}
         if not r["resp"].get("comparison_curve") and not status.get("available", True):
-            cells["crossover_unavailable"][champ] = str(
+            sweep.cells["crossover_unavailable"][champion] = str(
                 status.get("reason", "curve absent")
             )
 
 
-def _bis_cells(champ: str, cells: Mapping) -> None:
+def _bis_cells(sweep: CensusSweep) -> None:
     """The BIS sample, both windows."""
-    if champ not in BIS_SAMPLE:
+    if sweep.champion not in BIS_SAMPLE:
         return
     for mode in ("one_rotation", "timed"):
         r = _probe(
             bis_payload,
             _timed_payload(
-                champ, fight_mode=mode, include_auto_attacks=mode == "timed"
+                sweep.champion, fight_mode=mode, include_auto_attacks=mode == "timed"
             ),
         )
         if not r["ok"]:
-            cells["bis_errors"][f"{champ}|{mode}"] = r["error"]
+            sweep.cells["bis_errors"][f"{sweep.champion}|{mode}"] = r["error"]
 
 
 def _champion_cells(champ: str) -> dict:
     """Every frontier entry one champion can own."""
-    cat = _catalog()
-    cells = {bucket: {} for bucket in CHAMPION_BUCKETS}
-    baseline = _mode_cells(champ, cells)
-    _item_cells(champ, cat, cells)
-    _keystone_cells(champ, cat, cells, baseline)
-    _enemy_cells(champ, cat, cells)
-    _crossover_cells(champ, cells)
-    _bis_cells(champ, cells)
-    return cells
+    sweep = CensusSweep(champ, _catalog(), {bucket: {} for bucket in CHAMPION_BUCKETS})
+    baseline = _mode_cells(sweep)
+    _item_cells(sweep)
+    _keystone_cells(sweep, baseline)
+    _enemy_cells(sweep)
+    _crossover_cells(sweep)
+    _bis_cells(sweep)
+    return sweep.cells
 
 
 def _global_cells():

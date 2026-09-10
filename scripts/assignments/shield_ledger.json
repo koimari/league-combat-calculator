@@ -1,0 +1,34 @@
+{
+ "source": "src/calculator/shield_ledger.py",
+ "decisions": [
+  "extract_modules.py refuses any new module that reads a name left in the residue, so every assignment here is downward closed: the residue sits at the top of the dependency order and imports its children.",
+  "The split inverts the map's: absorb, _drain and _arm_thresholds read the pools, the constants and grant, so shield_absorption.py reading a residue is refused. The pools move instead and the absorption order stays. That keeps the module docstring's promise, changing absorption order is one edit here, and only the sentence about adding a shield mechanic needs the second file named.",
+  "_read_pool and _write_pool go with the pools: grant, expire_timed and _drain all read them, and they are the pool's own accessors."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/shield_pools.py",
+   "docstring": "The pools a participant carries, the shields granted into them, and when each expires.",
+   "defs": [
+    "PHYSICAL",
+    "MAGIC",
+    "GENERAL",
+    "LIFELINE",
+    "TimedShield",
+    "ThresholdShield",
+    "ThresholdHealth",
+    "ShieldPools",
+    "Absorption",
+    "_read_pool",
+    "_write_pool",
+    "build_pools",
+    "is_inert",
+    "grant",
+    "expire_timed",
+    "expire_temporary_max_health",
+    "expire_threshold_health"
+   ]
+  }
+ ]
+}

@@ -27,6 +27,7 @@ from src.calculator.rune_paths import (
     shards,
     sorcery,
 )
+from src.calculator.value_ref import ValueSource
 from src.calculator.value_ref import resolve as resolve_ref
 
 PATH_MODULES = (precision, domination, sorcery, resolve, inspiration)
@@ -121,10 +122,9 @@ class TestCoupDeGrace:
             "damage_amp_health_gate",
             "target_sideways",
         )
+        source = ValueSource("RUNE_EFFECTS", "Coup de Grace")
         with pytest.raises(BehaviorCatalogError, match="not one of"):
-            item_behavior_catalog._target_health_gate_rule(
-                "Coup de Grace", "RUNE_EFFECTS"
-            )
+            item_behavior_catalog._target_health_gate_rule(source)
 
     def test_a_description_naming_the_other_side_fails_closed(self, monkeypatch):
         """The two sources are checked against each other, neither one wins."""
@@ -133,10 +133,9 @@ class TestCoupDeGrace:
             "damage_amp_health_gate",
             "target_above",
         )
+        source = ValueSource("RUNE_EFFECTS", "Coup de Grace")
         with pytest.raises(BehaviorCatalogError, match="description reordered"):
-            item_behavior_catalog._target_health_gate_rule(
-                "Coup de Grace", "RUNE_EFFECTS"
-            )
+            item_behavior_catalog._target_health_gate_rule(source)
 
 
 class TestAbsoluteFocus:

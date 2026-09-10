@@ -22,14 +22,12 @@ from dataclasses import dataclass, field, fields, replace
 from types import MappingProxyType
 from typing import Any
 
-from ..cleanse_eligibility import merged_interval_duration
-from ..delivery_eligibility import (
-    delivery_declarations_receipt,
-    spell_shield_rules_receipt,
-)
-from ..interaction_effects import public_defense
-from ..survival.actions import SurvivalAction
+from ..control_intervals import merged_interval_duration
+from ..delivery_classes import delivery_declarations_receipt
+from ..projectile_defense import public_defense
+from ..spell_shield_eligibility import spell_shield_rules_receipt
 from ..survival.transitions import TransitionContext, finalize_states, run_survival_walk
+from ..survival.typed_action import SurvivalAction
 from ..work_counters import WorkCounterSink, record_walk
 from .precision import round_field
 from .rung import CompiledFast, Rung

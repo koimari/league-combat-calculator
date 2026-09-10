@@ -28,13 +28,13 @@ from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
+from .slot_entries import attach_self_shield, damage_entry
+from .slot_extract import (
     ability_name,
-    attach_self_shield,
-    damage_entry,
     extract_cooldown,
     extract_named,
     find_named_leveling,
+    sum_modifiers,
 )
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
@@ -114,31 +114,28 @@ def _knuckle_down(
     leveling = find_named_leveling(ability, _Q_TOTAL_ATTR)
     if leveling is None:
         raise ValueError("Sett Q Total Bonus Physical Damage row is unavailable")
-    total = 0.0
-    for modifier in leveling.get("modifiers", []):
-        values = modifier.get("values", [])
-        units = modifier.get("units", [])
-        if not values:
-            continue
-        index = min(max(rank - 1, 0), len(values) - 1)
-        value = float(values[index])
-        unit = units[index] if index < len(units) else ""
-        if not unit or not str(unit).strip():
-            total += value
-            continue
+
+    def target_max_health_term(unit: str, value: float) -> float | None:
         # "% (+ 2 / 3 / 4 / 5 / 6% per 100 AD) of target's maximum health":
         # the base percentage is the cached value; the per-100-AD
         # percentage is the rank-scaled value embedded in the unit string
         # ("2 / 3 / 4 / 5 / 6" precedes the "per 100 AD" literal, so the
         # rank-1 index picks the rank's percentage).
+        if not str(unit).strip():
+            return None
         per_100_ad = 0.0
         if "per 100 AD" in str(unit):
-            values_in_unit = re.findall(r"\d+(?:\.\d+)?", str(unit))
-            if len(values_in_unit) >= 5:
-                per_100_ad = float(values_in_unit[index])
-        total += (
+            in_unit = re.findall(r"\d+(?:\.\d+)?", str(unit))
+            # A unit that carries fewer than one number per rank plus the
+            # "100" literal is not the row this reads; it prices nothing
+            # rather than quoting whichever number is left.
+            if len(in_unit) >= 5:
+                per_100_ad = float(in_unit[min(max(rank - 1, 0), len(in_unit) - 1)])
+        return (
             value / 100.0 + per_100_ad / 100.0 * ctx.stat("attack_damage") / 100.0
         ) * float(ctx.target_stat("target_max_health"))
+
+    total = sum_modifiers(leveling, rank, ctx.stats, ctx.target, target_max_health_term)
     entry = damage_entry(
         ability_name(ability),
         rank,
@@ -173,26 +170,25 @@ def _haymaker(
     leveling = find_named_leveling(ability, "Damage")
     if leveling is None:
         raise ValueError("Sett W Damage leveling row is unavailable")
-    flat = 0.0
     grit_ratio = 0.0
-    for modifier in leveling.get("modifiers", []):
-        values = modifier.get("values", [])
-        units = modifier.get("units", [])
-        if not values:
-            continue
-        index = min(max(rank - 1, 0), len(values) - 1)
-        value = float(values[index])
-        unit = units[index] if index < len(units) else ""
-        if not unit or not str(unit).strip():
-            flat += value
-            continue
+
+    def expended_grit_term(unit: str, value: float) -> float | None:
         # "% (+ 25% per 100 bonus AD) of expended Grit" — the value IS the
         # base percentage (25), and the unit embeds the per-100-bonus-AD
-        # percentage (25).
-        if "of expended Grit" in str(unit):
-            grit_ratio = (
-                value / 100.0 + 0.25 * float(ctx.stat("bonus_attack_damage")) / 100.0
-            )
+        # percentage (25).  The term itself is priced against the expended
+        # Grit below, so the row contributes only its flat base here, and
+        # any other carried unit contributes nothing.
+        nonlocal grit_ratio
+        if not str(unit).strip():
+            return None
+        if "of expended Grit" not in str(unit):
+            return 0.0
+        grit_ratio = (
+            value / 100.0 + 0.25 * float(ctx.stat("bonus_attack_damage")) / 100.0
+        )
+        return 0.0
+
+    flat = sum_modifiers(leveling, rank, ctx.stats, ctx.target, expended_grit_term)
     grit = max(0.0, float(ctx.option(_W_GRIT_OPTION) or 0))
     entry = damage_entry(
         ability_name(ability),

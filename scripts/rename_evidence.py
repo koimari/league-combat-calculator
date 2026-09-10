@@ -7,7 +7,7 @@ turns those claims red.  That is the check working; this is the codemod that
 answers it, so a rename stays a rename instead of a hand-edit across a 2.3k
 line table.
 
-    python scripts/rename_evidence.py damage._add_burn_damage damage._add_burn
+    python scripts/rename_evidence.py fight.items.burns._add_burn_damage <new>
     python scripts/rename_evidence.py --check <old> <new>   # report, write nothing
 """
 
@@ -17,9 +17,18 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-#: Every file that authors a ``Symbol.path``.  One entry today; a second
-#: authoring home would be the drift this codemod exists to make cheap.
-EVIDENCE_HOMES = (Path("src") / "calculator" / "item_coverage.py",)
+#: Every file that authors a dotted implementing path: ``item_coverage``'s
+#: ``Symbol.path`` claims, ``trigger_stream``'s per-family pricing homes and
+#: ``ledger_declarations``'s reader constants.  A fourth authoring home is
+#: the drift this codemod exists to make cheap.
+EVIDENCE_HOMES = tuple(
+    Path("src") / "calculator" / name
+    for name in (
+        "item_coverage.py",
+        "ledger_declarations.py",
+        "trigger_stream.py",
+    )
+)
 
 
 def rewrite(text: str, old: str, new: str) -> tuple[str, int]:

@@ -34,10 +34,10 @@ from src.calculator.item_effects import (
 )
 from src.calculator.item_outcomes import UTILITY_OUTCOMES
 from src.calculator.item_source import is_ordinary_sr_item
-from src.calculator.optimizer import (
+from src.calculator.optimizer import optimize_build
+from src.calculator.optimizer_candidates import (
     get_eligible_boots,
     get_eligible_legendaries,
-    optimize_build,
 )
 from tests import item_probe
 

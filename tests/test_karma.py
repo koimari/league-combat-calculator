@@ -25,7 +25,7 @@ class TestReviewedCrowdControl:
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
         from src.calculator.champions import karma
-        from src.calculator.champions.engine import CC_PER_PART
+        from src.calculator.champions.slot_cc import CC_PER_PART
 
         assert karma.MODULE_CC == {
             "Q": "slow",

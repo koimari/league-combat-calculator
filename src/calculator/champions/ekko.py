@@ -5,18 +5,14 @@ from __future__ import annotations
 from typing import Any
 
 from .. import healing_helpers as _healing
-from ..ability_spec import DamagePart
-from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import level_row, named_damage, no_damage, ranked_slot
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    proc_damage,
-)
+from .shared_mechanics import multi_pass_damage
+from .slot_cc import CC_PER_PART
+from .slot_extract import ability_name, extract_named
+from .slotlib import proc_damage
 from .source_receipts import load_champion_sources
 
 # One Z-Drive Resonance detonation: the third stack consumes all three to
@@ -32,31 +28,11 @@ _resonance_proc = proc_damage(
 )
 
 
-@ranked_slot
-def _timewinder(
-    ctx: SlotCtx, ability: dict[str, Any], rank: int
-) -> dict[str, Any] | None:
-    initial = extract_named(
-        ability, "Initial Magic Damage", rank, ctx.stats, ctx.target
-    )
-    returned = extract_named(
-        ability, "Return Magic Damage", rank, ctx.stats, ctx.target
-    )
-    return_entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        initial + returned,
-        "magic",
-    )
-    return_entry["parts"] = (
-        DamagePart("magic", initial, time_offset=0.25),
-        DamagePart("magic", returned, time_offset=2.0),
-    )
-    return_entry["detail"] = (
-        "Initial grenade and authored return pass; each pass hits a target once."
-    )
-    return return_entry
+_timewinder = multi_pass_damage(
+    "magic",
+    passes=(("Initial Magic Damage", 0.25), ("Return Magic Damage", 2.0)),
+    detail="Initial grenade and authored return pass; each pass hits a target once.",
+)
 
 
 @ranked_slot

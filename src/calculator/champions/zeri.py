@@ -21,13 +21,8 @@ from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import ONHIT, SlotCtx
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module, repeat_damage_parser
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    on_hit_entry,
-)
+from .slot_entries import damage_entry, on_hit_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
 
 # P4: Living Battery (execute range) — the uncharged zap's flat damage
 # + the execute threshold.  The cached P effects[1] "Per-Level Scaling"

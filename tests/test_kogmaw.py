@@ -12,7 +12,8 @@ import pytest
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import get_champion_module_contract, kogmaw
 from src.calculator.champions import parse_champion_abilities as parse_abilities
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.config import FightConfig
 from tests import cc_review, coverage_truth
 
 # ---------------------------------------------------------------------------

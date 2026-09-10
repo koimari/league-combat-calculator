@@ -63,7 +63,8 @@ from src.calculator.champions.naafiri import (
     _packmate_count,
 )
 from src.calculator.data_fetcher import fetch_champion_data
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats, resolve_move_speed
 from tests import game_binary
 

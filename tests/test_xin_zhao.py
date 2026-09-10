@@ -9,12 +9,12 @@ stays coarse.
 
 import pytest
 
+from src.calculator.champion_loadout import load_public_champion
 from src.calculator.champions import (
     get_champion_module_contract,
     parse_champion_abilities,
     xin_zhao,
 )
-from src.calculator.scenario import load_public_champion
 from tests import cc_review, rider_probe, row_review
 
 

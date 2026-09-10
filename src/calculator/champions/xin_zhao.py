@@ -45,19 +45,15 @@ from .. import healing_helpers as _healing
 from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import CC_PER_PART, ONHIT, SlotCtx
+from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
 from .module_helpers import at_level
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    ability_on_hit_entry,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    simple_damage,
-)
+from .slot_cc import CC_PER_PART
+from .slot_entries import ability_on_hit_entry, damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slotlib import simple_damage
 
 PACKET_SHA256 = "c39efd0eac006d4b59799a0b3c5de44ef6ec31f9f9a23bea7ab8a25d2f4ccf64"
 

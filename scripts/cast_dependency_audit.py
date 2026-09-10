@@ -74,9 +74,9 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 try:
-    from gate_receipt import build_receipt
+    from gate_receipt import build_receipt, emit_receipt
 except ImportError:  # imported as scripts.cast_dependency_audit in tests
-    from scripts.gate_receipt import build_receipt
+    from scripts.gate_receipt import build_receipt, emit_receipt
 
 from src.calculator.cast_dependency import (
     INFERRED_EDGE_KINDS,
@@ -89,6 +89,12 @@ from src.calculator.cast_dependency import (
     expand_user_order,
     orderable_slots,
 )
+from src.calculator.cast_edge_resolution import resolved_edges
+from src.calculator.cast_order_overrides import (
+    CAST_ORDER_OVERRIDES,
+    ORDER_OVERRIDE_REASONS,
+)
+from src.calculator.champion_rotation_rule import derive_champion_rule
 from src.calculator.champions import (
     get_champion_cast_dependencies,
     get_champion_cast_order,
@@ -96,18 +102,13 @@ from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from src.calculator.champions.engine import _validate_cc_event_contract
+from src.calculator.champions.entry_shape import EmittedSlot
+from src.calculator.champions.slot_cc import _validate_cc_event_contract
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
-from src.calculator.pipeline import cast_slot_surface
-from src.calculator.rotation_resolver import (
-    CAST_ORDER_OVERRIDES,
-    ORDER_OVERRIDE_REASONS,
-    derive_champion_rule,
-    resolved_edges,
-)
+from src.calculator.fight_request_bounds import cast_slot_surface
 from src.calculator.stats import calculate_total_stats
 
-RESOLVER_SOURCE = ROOT / "src" / "calculator" / "rotation_resolver.py"
+RESOLVER_SOURCE = ROOT / "src" / "calculator" / "cast_edge_inference.py"
 NEGATIVE_TEST_SOURCE = ROOT / "tests" / "test_cast_dependency_audit.py"
 WIKI_AUDIT_PATH = ROOT / "docs" / "wiki-full-entry-audit.json"
 RECEIPT_PATH = ROOT / "docs" / "cast-dependency-audit.json"
@@ -573,7 +574,7 @@ def _record_markers(
             continue
         cc_markers.setdefault((name, slot), set()).update(kinds)
         try:
-            _validate_cc_event_contract(name, slot, dict(entry))
+            _validate_cc_event_contract(EmittedSlot(name, slot), dict(entry))
         except ValueError as error:  # pragma: no cover - a red gate
             cc_contract[(name, slot)] = str(error)
 
@@ -1286,15 +1287,7 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="emit the full receipt")
     parser.add_argument("--output", type=Path, help="write the full receipt to a file")
     args = parser.parse_args()
-    receipt = run_audit()
-    encoded = json.dumps(receipt, indent=2, sort_keys=True) + "\n"
-    if args.output:
-        args.output.write_text(encoded, encoding="utf-8")
-    if args.json:
-        print(encoded, end="")
-    else:
-        print(json.dumps({"passed": receipt["passed"], "counts": receipt["counts"]}))
-    return 0 if receipt["passed"] else 1
+    return emit_receipt(run_audit(), output=args.output, as_json=args.json)
 
 
 if __name__ == "__main__":

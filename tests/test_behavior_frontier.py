@@ -343,7 +343,7 @@ def test_the_zero_policy_populations_are_committed_and_reproduce() -> None:
     assert receipt["produced_fallbacks_by_receiver"] == measured.produced_fallbacks
     assert receipt["hand_built_entries_by_module"] == measured.hand_built_entries
     assert receipt["issue"].strip()
-    assert "slotlib" in receipt["declared_default"]
+    assert "slot_entries" in receipt["declared_default"]
     assert "inputs.py" in receipt["input_vocabularies"]
 
 

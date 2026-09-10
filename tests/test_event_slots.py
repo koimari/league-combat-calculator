@@ -16,13 +16,9 @@ import ast
 from pathlib import Path
 
 from src.calculator.program.compile import action_from_event
-from src.calculator.survival.actions import (
-    EVENT_SLOTS,
-    NO_SLOT,
-    EventSlots,
-    SurvivalAction,
-    TransitionRank,
-)
+from src.calculator.survival.event_slots import EVENT_SLOTS, NO_SLOT, EventSlots
+from src.calculator.survival.phases import TransitionRank
+from src.calculator.survival.typed_action import SurvivalAction
 
 ROOT = Path(__file__).parents[1]
 SRC_ROOT = ROOT / "src" / "calculator"
@@ -96,7 +92,7 @@ class TestThereIsOneRegistry:
                 and isinstance(node.func, ast.Name)
                 and node.func.id == "EventSlots"
             )
-        assert constructions == ["src/calculator/survival/actions.py"], (
+        assert constructions == ["src/calculator/survival/event_slots.py"], (
             "the one construction is the module singleton EVENT_SLOTS -- "
             f"found {constructions}"
         )
