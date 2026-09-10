@@ -45,6 +45,19 @@ class RearmedWindow:
 
 
 @dataclass(frozen=True, slots=True)
+class ActiveWindow:
+    """A champion's own attack-speed window on the stream: ``[start, end)``."""
+
+    start: float
+    end: float
+    bonus_percent: float
+
+    def bonus_at(self, time: float) -> float:
+        """The bonus attack speed a swing landing at *time* rates the next one at."""
+        return self.bonus_percent if self.start <= time < self.end else 0.0
+
+
+@dataclass(frozen=True, slots=True)
 class SwingSchedule:
     """Every re-rating of one build's own attack stream, resolved together.
 
@@ -128,6 +141,7 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
     duration_seconds: float,
     uptime: float = 1.0,
     critical_chance: float = 0.0,
+    active_window: ActiveWindow | None = None,
 ) -> tuple[float, ...]:
     """Walk *schedule*, one swing at a time, and return when each lands.
 
@@ -135,7 +149,9 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
     attack, holds it for its declared duration and re-rates every later swing;
     a re-armed window is live from the second attack until its duration runs
     out, and every attack after the first pays down the cooldown that reopens
-    it.  Nothing here reads a roster, a target or a damage number: the fight
+    it.  A champion's own *active_window* (Yunara Q, Tristana Q) adds its
+    bonus to every swing rated inside it, on top of the ramp's stacks.
+    Nothing here reads a roster, a target or a damage number: the fight
     ledger consumes the timestamps and prices them itself.
 
     The arguments are the authored timing inputs, passed explicitly, so no
@@ -159,6 +175,8 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
                 start for start in stack_times if current - start < ramp.stack_duration
             ]
         bonus = 0.0 if ramp is None else ramp.bonus_percent(len(stack_times))
+        if active_window is not None:
+            bonus += active_window.bonus_at(current)
         rate = calculate_attack_speed(attack_speed, attack_speed_ratio, bonus) * uptime
         if window is not None and not first_attack and current < active_until:
             rate += (

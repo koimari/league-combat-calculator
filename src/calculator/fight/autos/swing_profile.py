@@ -1,9 +1,10 @@
 """What one swing carries, as opposed to when it lands."""
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 from ...ability_atoms import ability_field
+from ..resists import _mitigate, _resistance_met_fields
 from ..state import FightState
 from .swing_schedule import _auto_attack_timestamps
 
@@ -21,19 +22,71 @@ def _find_auto_attack_override(
     return None
 
 
-def _basic_attack_true_rider(
-    ability_damages: Mapping[str, dict[str, Any]],
+def _basic_attack_rider(
+    ability_damages: Mapping[str, dict[str, Any]], key: str
 ) -> tuple[float, str]:
-    """A champion's bonus-true-damage share of every basic attack.
-    Corki's Hextech Munitions deals 20% of each attack's PRE-MITIGATION damage
-    again as true damage, declared as ``basic_attack_true_ratio``.  Riding the
-    raw damage makes the true instance crit-multiplied, exactly as the wiki
-    describes ("affected by critical strike modifiers")."""
+    """A champion's share of a swing's PRE-MITIGATION damage dealt again.
+    ``basic_attack_true_ratio`` rides every attack (Corki's Hextech Munitions:
+    20% again as true damage, crit-multiplied exactly as the wiki describes,
+    "affected by critical strike modifiers"); ``critical_strike_magic_ratio``
+    rides the critical strikes only (Yunara's Vow of the First Lands)."""
     for info in ability_damages.values():
-        ratio = ability_field(info, "basic_attack_true_ratio")
+        ratio = ability_field(info, key)
         if ratio > 0:
             return ratio, ability_field(info, "name")
     return 0.0, ""
+
+
+def _critical_share(
+    outcomes: Sequence[tuple[float, float, bool]] | None,
+    raw_phys: float,
+    *,
+    rolled_crit: bool,
+) -> float:
+    """The critical part of one swing's raw: expected over the outcomes, or the roll."""
+    if outcomes is not None:
+        return sum(weight * raw for weight, raw, critical in outcomes if critical)
+    return raw_phys if rolled_crit else 0.0
+
+
+class _CriticalStrikeRider:
+    """A share of each critical strike's raw, dealt again as magic (Yunara P)."""
+
+    def __init__(self, ability_damages: Mapping[str, dict[str, Any]]) -> None:
+        self.ratio, self.name = _basic_attack_rider(
+            ability_damages, "critical_strike_magic_ratio"
+        )
+        self.total = 0.0
+        self.events: list[dict[str, Any]] = []
+
+    def pay(self, crit_raw: float, time: float, state: FightState) -> None:
+        """Price one swing's critical share against the target's magic resist."""
+        if crit_raw <= 0.0 or self.ratio <= 0.0:
+            return
+        raw = crit_raw * self.ratio
+        damage = _mitigate(raw, "magic", state.resists, state.magic_amp)
+        self.total += damage
+        self.events.append(
+            {
+                "time": time,
+                "damage_type": "magic",
+                "damage": damage,
+                "raw_damage": raw,
+                **_resistance_met_fields("magic", state.resists),
+            }
+        )
+
+    def row(self) -> dict[str, Any]:
+        """The breakdown row, one event per critical strike paid."""
+        return {
+            "name": f"{self.name} (critical strike magic)",
+            "count": len(self.events),
+            "damage_per_hit": self.total / len(self.events),
+            "total_damage": self.total,
+            "damage_type": "magic",
+            "damage_events": self.events,
+            "event_phase": "auto",
+        }
 
 
 def _on_hit_effectiveness(state: FightState) -> float:

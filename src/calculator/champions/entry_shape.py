@@ -65,6 +65,9 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "applies_dot_stack",
         "applies_item_on_hits",
         "basic_attack_true_ratio",
+        # A share of each CRITICAL strike's pre-mitigation damage dealt again
+        # as magic (Yunara P); the auto simulation prices it on the crits.
+        "critical_strike_magic_ratio",
         "spellblade_true_ratio",
         "spellblade_bonus_true_ratio",
         "auto_attack_override",

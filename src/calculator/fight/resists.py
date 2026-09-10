@@ -18,22 +18,20 @@ class Resists:
 
     Owns the penetration math that fight setup resolves and that later
     steps re-resolve when something changes mid-fight: stat-buff ultimates
-    that grant pen (Ambessa R), target shreds (Kog'Maw Q), and the
-    ability→auto switch for Terminus' auto-only stacking pen.
+    that grant pen (Ambessa R), target shreds (Kog'Maw Q), and the swing
+    count Terminus' Juxtaposition ramps over.
 
-    Two penetration variants are tracked (the Terminus split):
-
-    - ``ability_*_pen_percent`` — pen for ability damage (Terminus'
-      max-stack pen stripped; it never applies to abilities).
-    - ``auto_*_pen_percent`` — pen for auto attacks, folding in Terminus'
-      weighted-average stacking pen across the fight's autos.
+    The stat sheet carries Terminus' pen at maximum stacks; the fight serves
+    ONE pen to every packet, ability and auto alike, with that max-stack
+    share replaced by the ramp's Cesàro mean over the fight's autos
+    (``effective_*_pen_percent``).  Juxtaposition's Dark stacks are a
+    champion stat, so a cast meets the same penetration a swing does.
 
     The ``effective_*`` fields hold the currently-resolved resistances
-    that damage math applies. During the ability rotation they reflect
-    ability pen; ``use_auto_pen`` switches them to auto pen once the
-    rotation is done. ``effective_mr`` follows ``ult_cast``: Malignance's
-    Hatefog MR reduction applies only once the rotation accepts an R cast,
-    so both the pre- and post-ult variants are kept and the outcome picks.
+    that damage math applies.  ``effective_mr`` follows ``ult_cast``:
+    Malignance's Hatefog MR reduction applies only once the rotation
+    accepts an R cast, so both the pre- and post-ult variants are kept and
+    the outcome picks.
     """
 
     # Attacker penetration
@@ -41,7 +39,8 @@ class Resists:
     magic_pen_percent: float
     armor_pen_percent: float
     flat_armor_pen: float
-    # Terminus Juxtaposition: auto-only stacking pen (weighted average)
+    # Terminus Juxtaposition: the stat sheet's max-stack pen and the
+    # fight's averaged ramp that replaces it
     has_terminus: bool
     terminus_stat_pen: float
     terminus_avg_pen: float
@@ -63,10 +62,8 @@ class Resists:
     physical_damage_flat_reduction: float = 0.0
     physical_damage_flat_reduction_cap: float = 0.0
     # Resolved values (recomputed by the resolve/shred methods below)
-    ability_armor_pen_percent: float = 0.0
-    ability_magic_pen_percent: float = 0.0
-    auto_armor_pen_percent: float = 0.0
-    auto_magic_pen_percent: float = 0.0
+    effective_armor_pen_percent: float = 0.0
+    effective_magic_pen_percent: float = 0.0
     reduced_armor: float = 0.0
     effective_armor: float = 0.0
     effective_mr_pre_ult: float = 0.0
@@ -98,9 +95,7 @@ class Resists:
         The one home for ``effective_mr``, so the order the outcome's two
         halves land in cannot change it: ``ult_cast`` picks Hatefog's
         reduction, ``shred_stacks`` deepens whichever it picked, and every
-        method that re-resolves a pen variant ends here.  The stacks are set
-        only after the rotation, which is also the only phase auto pen
-        applies to.
+        method that re-resolves the pen ends here.
         """
         if self.mr_shred is None or self.shred_stacks <= 0:
             self.effective_mr = (
@@ -115,41 +110,32 @@ class Resists:
             min(0.0, base),
         )
         self.effective_mr = apply_magic_penetration(
-            stacked, self.magic_pen_flat, self.auto_magic_pen_percent
+            stacked, self.magic_pen_flat, self.effective_magic_pen_percent
         )
 
+    def _served_pen(self, stat_pen: float) -> float:
+        """The stat sheet's pen with Terminus' max-stack share replaced by the ramp's mean."""
+        if not self.has_terminus:
+            return stat_pen
+        stripped = max(0.0, stat_pen - self.terminus_stat_pen)
+        if self.terminus_avg_pen <= 0:
+            return stripped
+        return 1.0 - (1.0 - stripped) * (1.0 - self.terminus_avg_pen)
+
     def resolve_magic(self) -> None:
-        """Recompute magic pen variants and effective MR (ability pen)."""
-        self.ability_magic_pen_percent = self.magic_pen_percent
-        self.auto_magic_pen_percent = self.magic_pen_percent
-        if self.has_terminus:
-            stripped = max(0.0, self.magic_pen_percent - self.terminus_stat_pen)
-            self.ability_magic_pen_percent = stripped
-            self.auto_magic_pen_percent = stripped
-            if self.terminus_avg_pen > 0:
-                self.auto_magic_pen_percent = 1.0 - (1.0 - stripped) * (
-                    1.0 - self.terminus_avg_pen
-                )
+        """Recompute the served magic pen and effective MR."""
+        self.effective_magic_pen_percent = self._served_pen(self.magic_pen_percent)
         self.effective_mr_pre_ult = apply_magic_penetration(
-            self.base_mr, self.magic_pen_flat, self.ability_magic_pen_percent
+            self.base_mr, self.magic_pen_flat, self.effective_magic_pen_percent
         )
         self.effective_mr_post_ult = apply_magic_penetration(
-            self.reduced_mr, self.magic_pen_flat, self.ability_magic_pen_percent
+            self.reduced_mr, self.magic_pen_flat, self.effective_magic_pen_percent
         )
         self._select_mr()
 
     def resolve_armor(self) -> None:
-        """Recompute armor pen variants and effective armor (ability pen)."""
-        self.ability_armor_pen_percent = self.armor_pen_percent
-        self.auto_armor_pen_percent = self.armor_pen_percent
-        if self.has_terminus:
-            stripped = max(0.0, self.armor_pen_percent - self.terminus_stat_pen)
-            self.ability_armor_pen_percent = stripped
-            self.auto_armor_pen_percent = stripped
-            if self.terminus_avg_pen > 0:
-                self.auto_armor_pen_percent = 1.0 - (1.0 - stripped) * (
-                    1.0 - self.terminus_avg_pen
-                )
+        """Recompute the served armor pen and effective armor."""
+        self.effective_armor_pen_percent = self._served_pen(self.armor_pen_percent)
         self._resolve_armor_from_target()
 
     def _resolve_armor_from_target(self) -> None:
@@ -160,7 +146,7 @@ class Resists:
         self.effective_armor = apply_armor_penetration(
             self.reduced_armor,
             self.flat_armor_pen,
-            self.ability_armor_pen_percent,
+            self.effective_armor_pen_percent,
             self.armor_pen_bonus_percent,
             bonus_armor=self.target_bonus_armor,
         )
@@ -177,10 +163,10 @@ class Resists:
             min(0.0, self.base_mr),
         )
         self.effective_mr_pre_ult = apply_magic_penetration(
-            self.base_mr, self.magic_pen_flat, self.ability_magic_pen_percent
+            self.base_mr, self.magic_pen_flat, self.effective_magic_pen_percent
         )
         self.effective_mr_post_ult = apply_magic_penetration(
-            self.reduced_mr, self.magic_pen_flat, self.ability_magic_pen_percent
+            self.reduced_mr, self.magic_pen_flat, self.effective_magic_pen_percent
         )
         self._select_mr()
 
@@ -206,27 +192,6 @@ class Resists:
             self.base_mr, reduction_percent, reduction_flat
         )
         self._resolve_mr_from_target()
-
-    def use_auto_pen(self) -> None:
-        """Switch effective resistances to auto-attack pen (Terminus avg).
-
-        Called once the ability rotation is done: remaining damage (autos,
-        on-hits, item procs) uses the auto-attack pen variants.
-        """
-        self.effective_armor = apply_armor_penetration(
-            self.reduced_armor,
-            self.flat_armor_pen,
-            self.auto_armor_pen_percent,
-            self.armor_pen_bonus_percent,
-            bonus_armor=self.target_bonus_armor,
-        )
-        self.effective_mr_pre_ult = apply_magic_penetration(
-            self.base_mr, self.magic_pen_flat, self.auto_magic_pen_percent
-        )
-        self.effective_mr_post_ult = apply_magic_penetration(
-            self.reduced_mr, self.magic_pen_flat, self.auto_magic_pen_percent
-        )
-        self._select_mr()
 
 
 def _mitigate(

@@ -101,9 +101,9 @@ class TestPenetrationOnNegativeResistance:
 class TestServedEffectiveMr:
     """``effective_mr`` is resolved from the whole rotation outcome, once.
 
-    Bloodletter's Curse leaves Vile Decay stacks on the target and Terminus
-    switches the remaining damage to auto pen.  Both land at the end of the
-    rotation, and the served MR must be the same whichever order they land in.
+    Bloodletter's Curse leaves Vile Decay stacks on the target at the end of
+    the rotation, and Terminus' averaged Juxtaposition pen is the one pen
+    every packet meets, a cast as much as a swing.
     """
 
     @staticmethod
@@ -135,27 +135,23 @@ class TestServedEffectiveMr:
         resists.resolve_magic()
         return resists
 
-    def test_the_auto_pen_switch_keeps_the_rotation_s_shred_stacks(self) -> None:
+    def test_the_shred_stacks_deepen_the_served_mr(self) -> None:
         unshredded = self._resists()
-        unshredded.use_auto_pen()
 
         stacked = self._resists()
         stacked.apply_shred_stacks(6)
-        stacked.use_auto_pen()
 
         assert stacked.effective_mr == pytest.approx(21.12)
         assert stacked.effective_mr < unshredded.effective_mr
 
-    def test_the_served_mr_does_not_depend_on_which_lands_first(self) -> None:
-        shred_first = self._resists()
-        shred_first.apply_shred_stacks(6)
-        shred_first.use_auto_pen()
+    def test_a_cast_meets_the_averaged_terminus_pen_a_swing_does(self) -> None:
+        """30% stat pen carries the 10% max-stack share; the fight serves the
+        20% average folded onto the other 20%: 1 - 0.8 x 0.8 = 36%."""
+        resists = self._resists()
 
-        pen_first = self._resists()
-        pen_first.use_auto_pen()
-        pen_first.apply_shred_stacks(6)
-
-        assert shred_first.effective_mr == pen_first.effective_mr
+        assert resists.effective_magic_pen_percent == pytest.approx(0.36)
+        assert resists.effective_mr_pre_ult == pytest.approx(60.0 * 0.64)
+        assert resists.effective_mr == resists.effective_mr_pre_ult
 
     def test_no_stacks_serves_the_plain_variant(self) -> None:
         resists = self._resists()
