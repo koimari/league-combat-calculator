@@ -51097,7 +51097,7 @@
           "auto_attacks",
           "on_hit_Terminus"
         ],
-        "total_damage": 1159.8
+        "total_damage": 1178.41
       },
       "vayne": {
         "breakdown_keys": [
@@ -51109,7 +51109,7 @@
           "on_hit_Terminus",
           "on_hit_ability_W"
         ],
-        "total_damage": 1239.66
+        "total_damage": 1251.05
       },
       "ziggs_12s": {
         "breakdown_keys": [
@@ -51121,7 +51121,7 @@
           "on_hit_Terminus",
           "passive"
         ],
-        "total_damage": 2497.36
+        "total_damage": 2573.23
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51133,7 +51133,7 @@
           "on_hit_Terminus",
           "passive"
         ],
-        "total_damage": 5003.06
+        "total_damage": 5141.11
       }
     },
     "The Brutalizer": {
@@ -53224,14 +53224,14 @@
       "numeric_leaves": 46211,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "6f5b35d0e40acc40b80c9a22953baec8c7047a27",
+    "git_head": "8bcbbebd363e94e1402def06be1514b03688701c",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "4ebe9f4260ce0aca8bf9938d5db7310ad7f2b570"
+    "src_tree_sha": "1c1334561de2c66131978a9a55c6c054d7c24c1b"
   },
   "registered_champion_fights": {
     "Aatrox": {
