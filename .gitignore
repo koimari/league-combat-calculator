@@ -67,3 +67,5 @@ src/calculator/champions/generated/
 
 # Icon downloads scripts/build_icon_sprite.py composites into static/icon-sprite.webp
 data/icons/
+# Local CI artifacts (make ci-*): matrix receipts and scan reports.
+build/
