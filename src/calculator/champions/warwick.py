@@ -53,18 +53,15 @@ from .. import healing_helpers as _healing
 from ..ability_atoms import ability_payload
 from ..ability_spec import DamageClass
 from ..binary_roots import data_value, spell_object
-from .engine import BUFF, CC_PER_PART, ONHIT, SlotCtx
+from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import missing_hp_fraction, named_damage, ranked_slot
 from .packet_module import build_packet_module
 from .shared_mechanics import damage_reduction_window
-from .slotlib import (
-    ability_name,
-    extract_named,
-    on_hit_entry,
-    stat_buff,
-    with_item_on_hits,
-)
+from .slot_cc import CC_PER_PART
+from .slot_entries import on_hit_entry
+from .slot_extract import ability_name, extract_named
+from .slotlib import stat_buff, with_item_on_hits
 
 # Sourced channel (wiki R): "deal magic damage every 0.25 seconds" over
 # the up-to-1.5s suppress; "applies on-hit effects and triggers

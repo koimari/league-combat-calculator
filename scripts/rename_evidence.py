@@ -19,11 +19,15 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 #: Every file that authors a dotted implementing path: ``item_coverage``'s
 #: ``Symbol.path`` claims, ``trigger_stream``'s per-family pricing homes and
-#: ``ledger_projection``'s reader constants.  A fourth authoring home is the
-#: drift this codemod exists to make cheap.
+#: ``ledger_declarations``'s reader constants.  A fourth authoring home is
+#: the drift this codemod exists to make cheap.
 EVIDENCE_HOMES = tuple(
     Path("src") / "calculator" / name
-    for name in ("item_coverage.py", "ledger_projection.py", "trigger_stream.py")
+    for name in (
+        "item_coverage.py",
+        "ledger_declarations.py",
+        "trigger_stream.py",
+    )
 )
 
 

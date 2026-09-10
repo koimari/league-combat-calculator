@@ -50,12 +50,13 @@ from pathlib import Path
 import pytest
 
 from src.calculator.ability_atoms import required_ranked_attribute_atom
-from src.calculator.atomizer_domains import atomize_abilities
+from src.calculator.atomizer_abilities import atomize_abilities
 from src.calculator.champions import get_champion_options_meta, parse_champion_abilities
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.fight.config import FightConfig
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG_PATH = ROOT / "data" / "atoms" / "abilities.json"

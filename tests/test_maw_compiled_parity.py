@@ -144,15 +144,13 @@ disjoint and pins only the Maw acceptance observables.
 import pytest
 
 from src import app as app_module
+from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 
 # The retired per-item ``_X_SOURCE`` constant, read from the one home it
 # moved to: the declaration's own resolved citation.
-from src.calculator.defensive_effects import (
-    StartingDefenses,
-    defense_source,
-    resolve_starting_defenses,
-)
+from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.fight_params import FightParams
 from src.calculator.item_behavior import DefenseMechanic
 from src.calculator.item_coverage import (
     ATTACKER_LANES,
@@ -172,14 +170,14 @@ from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.scenario import ChampionLoadout
-from src.calculator.state_lifecycle import SourceReceipt
-from src.calculator.stats import calculate_total_stats
+from src.calculator.pipeline import run_fight
 
 # Ours' declaration layer raises its own fail-closed error where main's
 # accessor raised KeyError; both refuse the corrupted value.
-from src.calculator.value_ref import ValueRefError
+from src.calculator.reference_vocabulary import ValueRefError
+from src.calculator.starting_defenses import StartingDefenses, defense_source
+from src.calculator.state_timeline import SourceReceipt
+from src.calculator.stats import calculate_total_stats
 from tests.app_config import app_config
 from tests.survival_probe import simulate_survival
 

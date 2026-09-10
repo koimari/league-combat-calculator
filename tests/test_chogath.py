@@ -15,7 +15,7 @@ import pytest
 
 from src.calculator.champions import chogath
 from src.calculator.champions import parse_champion_abilities as parse_abilities
-from src.calculator.champions.slotlib import extract_value
+from src.calculator.champions.slot_extract import extract_value
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.fight.config import FightConfig

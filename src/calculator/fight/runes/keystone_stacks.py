@@ -6,7 +6,8 @@ from typing import Any
 
 from ... import rune_effects
 from ...item_behavior import AmpChainSlot
-from ...state_lifecycle import EventStamp, TriggerGate
+from ...state_lifecycle import TriggerGate
+from ...state_timeline import EventStamp
 from ..after.amp_chain import _required_amp_slot
 from ..autos.swing_schedule import _auto_attack_timestamps
 from ..config import declared_option_default

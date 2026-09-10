@@ -9,11 +9,8 @@ from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option
 from .module_helpers import level_row, named_damage, no_damage, ranked_slot
-from .slotlib import (
-    ability_name,
-    extract_named,
-    proc_damage,
-)
+from .slot_extract import ability_name, extract_named
+from .slotlib import proc_damage
 from .source_receipts import load_champion_sources
 
 _vital_proc = proc_damage(

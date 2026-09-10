@@ -15,14 +15,14 @@ from pathlib import Path
 
 import pytest
 
+from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.fight_params import FightParams
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.pipeline import FightParams
-from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 
 SRC = Path(__file__).parents[1] / "src" / "calculator"
@@ -185,7 +185,8 @@ class TestReviewedSemantics:
 
     def test_a_lifeline_that_lands_exactly_on_the_threshold_does_not_arm(self):
         """ "damage that would reduce you *below*" — strict, in both walks."""
-        from src.calculator.shield_ledger import ThresholdShield, absorb, build_pools
+        from src.calculator.shield_ledger import absorb
+        from src.calculator.shield_pools import ThresholdShield, build_pools
 
         pools = build_pools(
             1000.0,

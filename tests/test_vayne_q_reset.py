@@ -96,7 +96,7 @@ from pathlib import Path
 import pytest
 
 from src import app as app_module
-from src.calculator.atomizer_domains import atomize_abilities
+from src.calculator.atomizer_abilities import atomize_abilities
 from src.calculator.champions import (
     get_champion_option_rotation,
     get_champion_options_meta,
@@ -111,7 +111,8 @@ from src.calculator.fight.empower_declaration import (
     _empower_burst_attack_speed,
     _empower_hits,
 )
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 
 _ROOT = Path(__file__).resolve().parents[1]
 _CATALOG_PATH = _ROOT / "data" / "atoms" / "abilities.json"

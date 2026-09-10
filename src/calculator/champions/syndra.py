@@ -47,16 +47,16 @@ from .engine import BUFF, SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import ranked_slot
 from .shared_mechanics import capped_option
-from .slotlib import (
+from .slot_entries import damage_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cast_time,
     extract_cooldown,
     extract_named,
     extract_resource_cost,
     extract_value,
-    simple_damage,
 )
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # Transcendent's full-splinter upgrade multiplies TOTAL ability power by
@@ -244,7 +244,7 @@ def _force_of_will(
     # One landing either way: the thrown target deals its damage "once
     # they land", which is the instant this row certifies.  Above 60
     # splinters that landing is split into a magic and a true part, which
-    # is still one landing (``engine._certify_shared_instant``).
+    # is still one landing (``engine.certify_shared_instant``).
     if _splinters(ctx) < SPLINTERS_W_TRUE_DAMAGE:
         return damage_entry(
             name,

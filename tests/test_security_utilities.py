@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from src.calculator import data_updater
+from src.calculator import data_updater, wiki_fetch
 from src.calculator.passive_parser import _eval_simple_expr
 
 
@@ -39,9 +39,9 @@ def test_simple_expression_parser_rejects_other_python_syntax(expression):
 def test_wiki_download_has_timeout_and_checks_http_status(monkeypatch):
     response = Mock(text="<html>ok</html>")
     get = Mock(return_value=response)
-    monkeypatch.setattr(data_updater, "_http_get", get, raising=False)
+    monkeypatch.setattr(wiki_fetch, "http_get", get)
 
-    assert data_updater._download_page("https://wiki.example/item") == response.text
+    assert wiki_fetch.download_page("https://wiki.example/item") == response.text
     get.assert_called_once_with("https://wiki.example/item", timeout=30)
     response.raise_for_status.assert_called_once_with()
 
@@ -51,13 +51,13 @@ def test_vendored_json_and_soup_downloads_are_also_bounded(monkeypatch, tmp_path
     json_response.json.return_value = {"ok": True}
     soup_response = Mock(text="<html>ok</html>")
     get = Mock(side_effect=[json_response, soup_response])
-    monkeypatch.setattr(data_updater._lsd_utils.requests, "get", get)
+    monkeypatch.setattr(data_updater.lsd_utils.requests, "get", get)
 
-    result = data_updater._lsd_utils.download_json(
+    result = data_updater.lsd_utils.download_json(
         "https://wiki.example/data.json", use_cache=False
     )
     original_soup_download = getattr(
-        data_updater, "_orig_download_soup", data_updater._lsd_utils.download_soup
+        data_updater, "_orig_download_soup", data_updater.lsd_utils.download_soup
     )
     original_soup_download(
         "https://wiki.example/page", use_cache=False, dir=str(tmp_path)

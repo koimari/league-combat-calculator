@@ -65,7 +65,7 @@ def test_non_revive_champion_fails_closed(champion_data):
 
 
 def test_guardian_angel_keeps_item_source(champion_data):
-    from src.calculator.scenario import get_item_by_name
+    from src.calculator.data_fetcher import get_item_by_name
 
     d = _resolve(
         "Ahri",

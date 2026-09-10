@@ -104,11 +104,8 @@ from .fight.stacks.rengar import _add_rengar_ferocity
 from .fight.stacks.senna import _add_senna_souls
 from .fight.state import FightState
 from .interpreters import on_hit_strike
-from .ledger_projection import (
-    ResultProjection,
-    ShieldOutcomeInputs,
-    shield_outcome_projection,
-)
+from .ledger_inputs import ResultProjection, ShieldOutcomeInputs
+from .ledger_projection import shield_outcome_projection
 
 
 def shield_outcome_inputs(

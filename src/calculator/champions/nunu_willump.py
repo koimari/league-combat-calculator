@@ -33,12 +33,8 @@ from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import named_damage
 from .packet_module import build_packet_module
-from .slotlib import (
-    STEROID_ZERO,
-    ability_name,
-    damage_entry,
-    extract_named,
-)
+from .slot_entries import STEROID_ZERO, damage_entry
+from .slot_extract import ability_name, extract_named
 
 # Call of the Freljord's grants are binary DataValues expressed as fractions;
 # the module's stat-buff/detail contract uses percentage points.

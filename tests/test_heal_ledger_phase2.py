@@ -23,21 +23,19 @@ from functools import partial
 
 import pytest
 
-from src.calculator.champions.slotlib import extract_named
+from src.calculator.champion_loadout import ChampionLoadout
+from src.calculator.champions.slot_extract import extract_named
 from src.calculator.data_fetcher import get_champion
 from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.fight_params import FightParams
 from src.calculator.healing import derive_self_healing
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.pipeline import FightParams
-from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
-from src.calculator.support_effects import (
-    _MODULE_AUTHORED_HEAL_SLOTS,
-    derive_ally_effects,
-)
+from src.calculator.support_effects import derive_ally_effects
+from src.calculator.support_scan import _MODULE_AUTHORED_HEAL_SLOTS
 from tests.survival_probe import survival_of
 
 # The 15 slots this phase adds to the registry (phase 1's three are locked

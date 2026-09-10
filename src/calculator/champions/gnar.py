@@ -36,24 +36,22 @@ Why each slot is non-generic:
 
 from typing import Any
 
-from ..ability_spec import ControlEvent
 from ..binary_roots import character_record_root, record_value
+from ..control_spec import ControlEvent
 from ..stat_formulas import growth_stat
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .shared_mechanics import reduced_secondary_hits
-from .slotlib import (
+from .slot_entries import ability_on_hit_entry, damage_entry
+from .slot_extract import (
     ability_name,
-    ability_on_hit_entry,
-    by_option,
-    damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
     find_named_leveling,
-    simple_damage,
     sum_modifiers,
 )
+from .slotlib import by_option, simple_damage
 from .source_receipts import load_champion_sources
 
 # ROOTED IN THE BINARIES: the five Mega deltas are computed at import as

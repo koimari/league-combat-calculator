@@ -14,7 +14,8 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import float_option, int_option
 from .module_helpers import named_damage, ranked_slot
-from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
 _Q_CAST_TIME = 0.25

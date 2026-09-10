@@ -41,7 +41,7 @@ from src.calculator.item_coverage import (
     target_item_model_coverage,
 )
 from src.calculator.item_source import is_ordinary_sr_item, source_audit
-from src.calculator.optimizer import (
+from src.calculator.optimizer_candidates import (
     get_eligible_boots,
     get_eligible_legendaries,
     get_selectable_items,

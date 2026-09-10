@@ -46,7 +46,7 @@ from ..item_behavior import (
 )
 from ..item_behavior_catalog import behavior_rules
 from ..item_effects import ITEM_INPUT_OPTIONS
-from ..state_lifecycle import CcTriggerRule, SourceReceipt
+from ..state_timeline import CcTriggerRule, SourceReceipt
 from ..value_ref import DeclaredNumbers, LevelValueRef, ValueRef
 
 

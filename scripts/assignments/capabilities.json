@@ -1,0 +1,18 @@
+{
+ "source": "src/calculator/capabilities.py",
+ "decisions": [
+  "BASE_CAST_SLOTS stays in capabilities.py: public_capability_contract is its only in-file reader, not _participant_fields, so capability_fields.py needs nothing back and lands a leaf."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/capability_fields.py",
+   "docstring": "One public field descriptor per loadout, scenario and feature control the browser mounts.",
+   "defs": [
+    "_field",
+    "_participant_fields",
+    "_feature_fields"
+   ]
+  }
+ ]
+}

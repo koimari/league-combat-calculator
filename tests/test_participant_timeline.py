@@ -6,14 +6,14 @@ import pytest
 
 import src.calculator.bis as bis_module
 from src.app import app
-from src.calculator.bis import enemy_bis_rank_key, role_scoped_bis_candidates
+from src.calculator import support_scan
+from src.calculator.bis_candidates import enemy_bis_rank_key, role_scoped_bis_candidates
+from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.defensive_effects import (
-    StartingDefenses,
-    resolve_starting_defenses,
-)
+from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.fight_params import FightParams
 from src.calculator.item_coverage import optimizer_supported_items
-from src.calculator.optimizer import get_eligible_legendaries
+from src.calculator.optimizer_candidates import get_eligible_legendaries
 from src.calculator.participant_timeline import (
     ActorRequest,
     Combatant,
@@ -27,18 +27,16 @@ from src.calculator.participant_timeline import (
     _simulate_survival,
     build_participant_timeline,
 )
-from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.program.build import dropped_preview_mechanics, roster_program
+from src.calculator.pipeline import run_fight
+from src.calculator.program.build import roster_program
 from src.calculator.program.build import roster_program as _roster_program
-from src.calculator.program.views import LeafWriter, name_every_number
+from src.calculator.program.capability import dropped_preview_mechanics
+from src.calculator.program.views.leaf import LeafWriter, name_every_number
 from src.calculator.program.views.survival import survival
 from src.calculator.program.views.survival import survival as _survival_view
 from src.calculator.program.walk import walk as run_one_walk
-from src.calculator.scenario import (
-    ChampionLoadout,
-    parse_scenario_request,
-    resolve_scenario,
-)
+from src.calculator.scenario import parse_scenario_request, resolve_scenario
+from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival import (
     EVENT_SLOTS,
@@ -777,8 +775,8 @@ def test_target_unending_despair_self_heal_is_wounded_in_receipt_order():
     four-second Anguish ticks; a missing phase/receipt link would silently
     apply either tick at full value.
     """
+    from src.calculator.champion_loadout import ChampionLoadout
     from src.calculator.defensive_effects import resolve_starting_defenses
-    from src.calculator.scenario import ChampionLoadout
     from src.calculator.stats import calculate_total_stats
 
     params = FightParams.from_request(
@@ -849,9 +847,9 @@ def test_target_unending_despair_self_heal_is_wounded_in_receipt_order():
 
 def test_compiled_walk_applies_spirit_visage_to_item_heals():
     """The optimized roster walk preserves received-heal amplification."""
+    from src.calculator.champion_loadout import ChampionLoadout
     from src.calculator.defensive_effects import resolve_starting_defenses
     from src.calculator.participant_timeline import CoupledSearchContext
-    from src.calculator.scenario import ChampionLoadout
     from src.calculator.stats import calculate_total_stats
 
     params = FightParams.from_request(
@@ -5063,8 +5061,8 @@ def test_bramble_vest_retaliates_against_forced_basic_attack_casts():
 
 def _coupled_fixture():
     """One small coupled roster shared by the cache-equivalence tests."""
+    from src.calculator.champion_loadout import ChampionLoadout
     from src.calculator.defensive_effects import resolve_starting_defenses
-    from src.calculator.scenario import ChampionLoadout
     from src.calculator.stats import calculate_total_stats
 
     params = FightParams.from_request(
@@ -5132,8 +5130,8 @@ def test_pair_cache_reuse_survives_redirect_expansion():
     """Knight's Vow rewrites incoming packets during the survival
     composition; a served pair view's receipts must stay byte-identical
     to a fresh no-cache computation across every rewrite."""
+    from src.calculator.champion_loadout import ChampionLoadout
     from src.calculator.defensive_effects import resolve_starting_defenses
-    from src.calculator.scenario import ChampionLoadout
     from src.calculator.stats import calculate_total_stats
 
     params = FightParams.from_request(
@@ -5421,9 +5419,9 @@ def test_search_context_keeps_item_heals_and_ignores_post_window_packets():
     proc is timestamped at 4.5s while the authored fight window ends at
     4s and must not affect the score-only survival walk.
     """
+    from src.calculator.champion_loadout import ChampionLoadout
     from src.calculator.defensive_effects import resolve_starting_defenses
     from src.calculator.participant_timeline import CoupledSearchContext
-    from src.calculator.scenario import ChampionLoadout
     from src.calculator.stats import calculate_total_stats
 
     params = FightParams.from_request(
@@ -5479,9 +5477,9 @@ def test_search_context_replays_the_rounded_death_cutoff():
     coincidence deterministically: main Aatrox (no items) dies to an
     itemized enemy Aatrox mid-window with a same-instant auto of his own.
     """
+    from src.calculator.champion_loadout import ChampionLoadout
     from src.calculator.defensive_effects import resolve_starting_defenses
     from src.calculator.participant_timeline import CoupledSearchContext
-    from src.calculator.scenario import ChampionLoadout
     from src.calculator.stats import calculate_total_stats
 
     params = FightParams.from_request(
@@ -5550,14 +5548,12 @@ def test_support_attributes_match_the_profile_lookup_source():
     import inspect
     import re as re_module
 
-    from src.calculator import support_effects
-
-    source = inspect.getsource(support_effects._support_profile)
+    source = inspect.getsource(support_scan._support_profile)
     lookups = re_module.findall(r"_first_attribute\(ability, (\w+)\)", source)
     assert sorted(lookups) == ["_HEAL_ATTRIBUTES", "_SHIELD_ATTRIBUTES"]
-    assert set(support_effects._SUPPORT_ATTRIBUTES) == set(
-        support_effects._SHIELD_ATTRIBUTES
-    ) | set(support_effects._HEAL_ATTRIBUTES)
+    assert set(support_scan._SUPPORT_ATTRIBUTES) == set(
+        support_scan._SHIELD_ATTRIBUTES
+    ) | set(support_scan._HEAL_ATTRIBUTES)
 
 
 def test_healing_rule_champions_matches_the_dispatch_source():
@@ -5587,9 +5583,9 @@ def test_search_context_walk_matches_receipts_with_thorns_support_and_heals():
     shield, target-current-health repricing (Dr. Mundo's own kit), and
     death cutoffs.  Fast and legacy score receipts must be deep-equal.
     """
+    from src.calculator.champion_loadout import ChampionLoadout
     from src.calculator.defensive_effects import resolve_starting_defenses
     from src.calculator.participant_timeline import CoupledSearchContext
-    from src.calculator.scenario import ChampionLoadout
     from src.calculator.stats import calculate_total_stats
 
     params = FightParams.from_request(
@@ -6124,8 +6120,8 @@ class TestThePublishedReceiptFieldsHaveOneProducer:
 
     def test_the_receipt_view_reads_overheal_rather_than_deriving_it(self) -> None:
         """A healing row with no annotated overheal is a composition bug."""
-        from src.calculator.program.views import LeafWriter
         from src.calculator.program.views import receipt as receipt_view
+        from src.calculator.program.views.leaf import LeafWriter
 
         with pytest.raises(KeyError):
             # pylint: disable-next=protected-access
@@ -6137,8 +6133,8 @@ class TestThePublishedReceiptFieldsHaveOneProducer:
         self,
     ) -> None:
         """A wounded damage row with no annotated window is a composition bug."""
-        from src.calculator.program.views import LeafWriter
         from src.calculator.program.views import receipt as receipt_view
+        from src.calculator.program.views.leaf import LeafWriter
 
         with pytest.raises(KeyError):
             # pylint: disable-next=protected-access

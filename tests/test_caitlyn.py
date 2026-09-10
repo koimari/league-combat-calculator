@@ -22,7 +22,8 @@ from src.calculator.champions import (
     parse_champion_abilities as parse_abilities,
 )
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 from tests import cc_review
 
 # ---------------------------------------------------------------------------

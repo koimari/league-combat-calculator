@@ -2,7 +2,7 @@
 
 import math
 
-from ...cleanse_eligibility import merged_spans
+from ...control_intervals import merged_spans
 from ..autos.swing_schedule import _auto_attack_timestamps
 from ..empower_declaration import (
     BurstSwingSchedule,

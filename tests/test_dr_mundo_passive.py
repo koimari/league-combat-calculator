@@ -154,31 +154,28 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
-from src.calculator.ability_spec import (
-    ACTION_BLOCKING_CC_KINDS,
-    NON_BLOCKING_CC_KINDS,
-)
+from src.calculator.champion_cleanses import CHAMPION_CLEANSE_DECLARATIONS
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from src.calculator.champions.slotlib import extract_named
-from src.calculator.cleanse_eligibility import (
-    CHAMPION_CLEANSE_DECLARATIONS,
+from src.calculator.champions.slot_extract import extract_named
+from src.calculator.cleanse_declarations import (
     ITEM_CLEANSE_DECLARATIONS,
     resolve_cleanse_item,
-    truncate_intervals,
 )
+from src.calculator.control_intervals import truncate_intervals
+from src.calculator.control_spec import ACTION_BLOCKING_CC_KINDS, NON_BLOCKING_CC_KINDS
 from src.calculator.crowd_control_eligibility import (
     KNOWN_CONTROL_KINDS,
     classify_control,
 )
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.fight.config import FightConfig
 from src.calculator.healing import derive_self_healing
 from src.calculator.participant_timeline import Combatant
+from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.survival.compile import unrepresentable_template_receipt
 from tests.app_config import app_config
 from tests.survival_probe import simulate_survival, survival_of

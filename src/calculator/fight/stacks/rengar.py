@@ -3,7 +3,8 @@
 from typing import Any
 
 from ...ability_atoms import ability_field
-from ...state_lifecycle import EventStamp, TimedStackState
+from ...state_timeline import EventStamp
+from ...timed_stacks import TimedStackState
 from ..config import _seeded_option_stacks
 from ..results import CastPlan, FerocityTimeline, RotationResult
 from ..state import FightState

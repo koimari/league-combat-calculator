@@ -40,7 +40,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 
 from ..data_registry import GOVERNED_MEMOS, Invalidator, data_version
-from ..delivery_eligibility import CombatantFacts
+from ..delivery_facts import CombatantFacts
 from .build import ParamPatch, RoutedEvent
 
 #: The value keys below, named so a cache declaration can spell what it holds.

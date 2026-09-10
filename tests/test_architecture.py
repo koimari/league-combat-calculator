@@ -1,4 +1,9 @@
-"""Static guards for high-value module boundaries."""
+"""Static guards for high-value module boundaries.
+
+file-length-ok: the bulk is the front-door frontier, one entry per module with
+the reason it has none. Splitting it separates an entry from the guard that
+holds the set to equality.
+"""
 
 import ast
 from collections.abc import Mapping
@@ -48,6 +53,35 @@ FIGHT_STEP = FrontierEntry(
         "suite that exercises it"
     ),
 )
+
+#: The leaves a module split lifted out, and the module whose suite drives
+#: each one.  Listed one by one, for the reason the fight steps are: the set
+#: may not grow by accident.
+SPLIT_LEAVES = {
+    "atom_spelling": "atomizer_domains",
+    "capability_fields": "capabilities",
+    "ability_ranks": "scenario",
+    "champion_opening_defenses": "defensive_effects",
+    "fight_receipts": "pipeline",
+    "interaction_atoms": "interaction_effects",
+    "program.views.survival_blocks": "program.views.survival",
+    "rune_sustain_events": "pipeline",
+    "support_bailout": "support_effects",
+    "support_champion_packets": "support_effects",
+    "survival.defense_contracts": "survival.receipt_state",
+}
+
+
+def _split_leaf(source: str) -> FrontierEntry:
+    """A leaf whose readers are its siblings, still asserted through *source*."""
+    return FrontierEntry(
+        owning_phase="sightline #27, the split that gave the leaf its own file",
+        reason=(
+            f"a leaf of {source}, whose suite drives every line of it; it "
+            "gains a front door when a suite asserts its contract directly"
+        ),
+    )
+
 
 FIGHT_STEPS_WITHOUT_A_FRONT_DOOR = (
     "fight.after.amp_chain",
@@ -157,6 +191,7 @@ FRONT_DOOR_FRONTIER: Mapping[str, FrontierEntry] = {
     # without a sentence saying why is indistinguishable from a member
     # somebody deleted to make a gate pass.
     **dict.fromkeys(FIGHT_STEPS_WITHOUT_A_FRONT_DOOR, FIGHT_STEP),
+    **{name: _split_leaf(source) for name, source in SPLIT_LEAVES.items()},
 }
 
 
@@ -313,7 +348,7 @@ def test_the_survey_covers_more_than_the_filename_convention_it_replaced() -> No
 # read off a request has one home; these two names are what the guards below
 # hold the tree to.
 PRE_COMBAT_RECIPE_HOME = "calculator.stats.resolve_pre_combat_stats"
-PRE_COMBAT_PARAMS_READ = "calculator.pipeline.FightParams.pre_combat_stats"
+PRE_COMBAT_PARAMS_READ = "calculator.fight_params.FightParams.pre_combat_stats"
 
 # The inputs that make a stat block a *build's* rather than a champion's.
 BUILD_CONTEXT_KEYWORDS = frozenset(
@@ -341,11 +376,11 @@ BUILD_CONTEXT_KEYWORDS = frozenset(
 # them: it would invalidate a cache key that never mentions a request, and
 # move the golden's champion-baseline section on a change about neither.
 NARROWER_STAT_SURFACES: Mapping[str, str] = {
-    "calculator.rotation_resolver._matrix_dps_rows": (
+    "calculator.ability_dps_matrix._matrix_dps_rows": (
         "the reference DPS matrix, cached on (champion, data version) and "
         "explicitly independent of the request's level and build"
     ),
-    "calculator.rotation_resolver._canonical_kit_parse": (
+    "calculator.champion_rotation_rule._canonical_kit_parse": (
         "the canonical full-kit parse the derived cast order is read off: "
         "level 11, no items, by construction"
     ),
@@ -365,9 +400,9 @@ NARROWER_STAT_SURFACES: Mapping[str, str] = {
 # helper it reaches the recipe through: the module function directly when it
 # holds no request, the FightParams read when it does.
 PRE_COMBAT_SURFACES: Mapping[str, str] = {
-    "calculator.scenario.ChampionLoadout.resolve": "resolve_pre_combat_stats",
+    "calculator.champion_loadout.ChampionLoadout.resolve": "resolve_pre_combat_stats",
     "calculator.calculate._combat_receipt": "pre_combat_stats",
-    "calculator.optimizer._evaluate_build_uncached": "pre_combat_stats",
+    "calculator.build_evaluation._evaluate_build_uncached": "pre_combat_stats",
     "calculator.pipeline.run_fight": "pre_combat_stats",
     "golden_snapshot._coupled_receipt": "pre_combat_stats",
 }

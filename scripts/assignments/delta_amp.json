@@ -1,0 +1,50 @@
+{
+  "source": "src/calculator/interpreters/delta_amp.py",
+  "decisions": [
+    "Two modules, exactly the map's cut: amp_magnitude is a leaf, part_amp reads it, and delta_amp keeps AmpSlot, slot_rules and resolve_slot.",
+    "slot_rules and resolve_slot stay module functions rather than becoming AmpSlot.rules_for and AmpSlot.resolve: the residue clears on size without it, and moving a call site is not this tool's job."
+  ],
+  "packages": {},
+  "modules": [
+    {
+      "path": "src/calculator/interpreters/amp_magnitude.py",
+      "docstring": "How a declared amp magnitude becomes a fraction, and the fields it compiles to.",
+      "defs": [
+        "AMP_FRACTION_FIELD",
+        "AMP_BASE_FRACTION_FIELD",
+        "AMP_PER_HUNDRED_STAT_FIELD",
+        "WINDOW_START_FIELD",
+        "WINDOW_END_FIELD",
+        "WINDOW_DURATION_FIELD",
+        "LIVE_THRESHOLD_FIELD",
+        "DeltaAmpInterpretationError",
+        "magnitude_fraction",
+        "_melee_ranged_split",
+        "_ramp_per_second",
+        "_target_bonus_health_scaled",
+        "_ramp_per_stack",
+        "_magnitude_fields",
+        "amp_fields",
+        "_declared_field"
+      ]
+    },
+    {
+      "path": "src/calculator/interpreters/part_amp.py",
+      "docstring": "The amps that multiply one damage part rather than a chain slot.",
+      "defs": [
+        "PartAmp",
+        "EVERY_DAMAGE_CLASS",
+        "EVERY_ATTACK_CLASS",
+        "_part_amps",
+        "part_amp_rules",
+        "damage_class_amp_rules",
+        "declared_magic_amp",
+        "_flat_fraction",
+        "resolve_part_amp",
+        "_armed_part_multiplier",
+        "StaticHolderAmps",
+        "resolve_static_holder_amps"
+      ]
+    }
+  ]
+}

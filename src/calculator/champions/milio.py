@@ -24,7 +24,7 @@ from .inputs import int_option
 from .module_helpers import rank_gated_no_damage_parser
 from .packet_module import build_packet_module
 from .shared_mechanics import per_level_on_hit
-from .slotlib import extract_named
+from .slot_extract import extract_named
 
 PACKET_SHA256 = "fce2851d13e50c61a320c2195e1618e540b56a81742d3e44cfaa4a0ffe2c163f"
 

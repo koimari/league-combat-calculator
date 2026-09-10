@@ -5,12 +5,14 @@ from __future__ import annotations
 from typing import Any
 
 from .. import healing_helpers as _healing
-from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import level_row, named_damage, no_damage, ranked_slot
 from .shared_mechanics import multi_pass_damage
-from .slotlib import ability_name, extract_named, proc_damage
+from .slot_cc import CC_PER_PART
+from .slot_extract import ability_name, extract_named
+from .slotlib import proc_damage
 from .source_receipts import load_champion_sources
 
 # One Z-Drive Resonance detonation: the third stack consumes all three to

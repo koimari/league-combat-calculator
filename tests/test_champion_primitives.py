@@ -39,7 +39,7 @@ from src.calculator.champions.shared_mechanics import (
 )
 from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.champions.slot_context import SlotCtx
-from src.calculator.champions.slotlib import extract_cast_time
+from src.calculator.champions.slot_extract import extract_cast_time
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import effective_cooldown
 

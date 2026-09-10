@@ -72,7 +72,8 @@ from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.fight.config import FightConfig
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 
 # The sourced atom behind Jayce's W-slot mana restore (verified against
 # data/atoms/abilities.json: Jayce.W[0].effects[0].leveling[0].modifiers[0],

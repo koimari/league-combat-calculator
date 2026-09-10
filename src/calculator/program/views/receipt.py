@@ -31,10 +31,11 @@ from typing import Any
 from ...capabilities import PRE_COMBAT_STATS
 from ...survival.outcome_state import outcome_quantity
 from ..build import Program
-from ..precision import round_field, sum_plan
+from ..precision import round_field
+from ..sums import sum_plan
 from ..walk import WalkResult
-from . import LeafBlock, LeafWriter
 from .breakdown import breakdown_leaves
+from .leaf import LeafBlock, LeafWriter
 from .survival import participant_paths, survival_leaves
 from .tdd import tdd_leaves
 

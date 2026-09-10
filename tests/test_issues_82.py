@@ -24,17 +24,16 @@ from pathlib import Path
 import pytest
 
 import src.app as app_module
+from src.calculator import build_evaluation
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight_params import FightParams
+from src.calculator.item_coverage import optimizer_supported_items
 from src.calculator.loadout_rules import role_quest_legal_items
-from src.calculator.optimizer import (
-    get_eligible_legendaries,
-    optimizer_supported_items,
-    role_scoped_shop_items,
-)
 from src.calculator.optimizer import (
     optimize_build as _optimize_build,
 )
-from src.calculator.pipeline import FightParams
+from src.calculator.optimizer import role_scoped_shop_items
+from src.calculator.optimizer_candidates import get_eligible_legendaries
 from src.calculator.role_quests import (
     BOOT_UPGRADES,
     SUPPORT_QUEST_ITEM_STAGES,
@@ -413,9 +412,7 @@ class TestSupportQuestStageOptimizer:
             evaluated.extend(item["name"] for item in items)
             return 1.0
 
-        monkeypatch.setattr(
-            "src.calculator.optimizer._evaluate_build", recording_evaluate
-        )
+        monkeypatch.setattr(build_evaluation, "evaluate_build", recording_evaluate)
         params = FightParams.from_request(
             {"role": "support", "role_quest_complete": False},
             deterministic=True,
@@ -442,9 +439,7 @@ class TestSupportQuestStageOptimizer:
             evaluated.extend(item["name"] for item in items)
             return 1.0
 
-        monkeypatch.setattr(
-            "src.calculator.optimizer._evaluate_build", recording_evaluate
-        )
+        monkeypatch.setattr(build_evaluation, "evaluate_build", recording_evaluate)
         params = FightParams.from_request(
             {"role": "support", "role_quest_complete": True},
             deterministic=True,

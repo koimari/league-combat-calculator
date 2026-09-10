@@ -122,7 +122,7 @@ from src.calculator.item_effects import (
     validate_item_input_options,
 )
 from src.calculator.item_source import item_source_audit, riot_declared_effects
-from src.calculator.optimizer import get_eligible_boots
+from src.calculator.optimizer_candidates import get_eligible_boots
 from src.calculator.stats import calculate_total_stats
 from tests import item_probe
 from tests.app_config import app_config

@@ -6,12 +6,17 @@ are closed and disjoint, that every import-time failure has a negative
 test which reaches it, and that the two order functions Phase 0B's C6
 consumes behave. The precedence table and the resolver merge belong to
 ``rotation_resolver`` and are tested with it.
+
+file-length-ok: one test file per module under test, and this one is a matrix
+over the leaf's vocabularies, its import-time refusals and the derivation
+modules that read them.
 """
 
 import ast
 import itertools
 import subprocess
 import sys
+from contextlib import suppress
 from dataclasses import FrozenInstanceError
 from pathlib import Path
 from types import ModuleType
@@ -45,26 +50,36 @@ from src.calculator.cast_dependency import (
     validate_cast_dependencies,
     validate_cast_order_declaration,
 )
+from src.calculator.cast_edge_markers import _DIRECT_EDGE_KIND
 from src.calculator.champions import (
     _CHAMPION_MODULES,
     get_champion_cast_dependencies,
     get_champion_module_contract,
     get_champion_option_rotation,
-    module_contract,
+    module_survey,
 )
-from src.calculator.champions.module_contract import (
-    ChampionModuleContractError,
-    contract_from_module,
-)
+from src.calculator.champions.contract_vocabulary import ChampionModuleContractError
+from src.calculator.champions.module_contract import contract_from_module
 from src.calculator.champions.packet_module import PacketSlotMap, build_packet_module
 from src.calculator.data_fetcher import get_champion
-from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.rotation_resolver import _DIRECT_EDGE_KIND
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 
 ROOT = Path(__file__).resolve().parent.parent
 LEAF = ROOT / "src" / "calculator" / "cast_dependency.py"
-RESOLVER = ROOT / "src" / "calculator" / "rotation_resolver.py"
-CONTRACT = ROOT / "src" / "calculator" / "champions" / "module_contract.py"
+#: The modules the cast-order derivation is spelled across: the entry point,
+#: the markers a row is read with, the inference, the merge and the fitted rule.
+RESOLVER_SOURCES = tuple(
+    ROOT / "src" / "calculator" / f"{stem}.py"
+    for stem in (
+        "rotation_resolver",
+        "cast_edge_markers",
+        "cast_edge_inference",
+        "cast_edge_resolution",
+        "champion_rotation_rule",
+    )
+)
+SURVEY = ROOT / "src" / "calculator" / "champions" / "module_survey.py"
 PACKET = ROOT / "src" / "calculator" / "champions" / "packet_module.py"
 PIPELINE = ROOT / "src" / "calculator" / "pipeline.py"
 
@@ -83,6 +98,19 @@ def _function(path: Path, name: str) -> ast.FunctionDef:
     raise AssertionError(f"{path.name} declares no {name}")
 
 
+def _resolver_function(name: str) -> ast.FunctionDef:
+    """The named function, from whichever derivation module declares it."""
+    for path in RESOLVER_SOURCES:
+        with suppress(AssertionError):
+            return _function(path, name)
+    raise AssertionError(f"no derivation module declares {name}")
+
+
+def _resolver_source() -> str:
+    """Every derivation module's text, so a retired spelling has nowhere to hide."""
+    return "\n".join(path.read_text(encoding="utf-8") for path in RESOLVER_SOURCES)
+
+
 def _detector_edge_kinds() -> tuple[set[str], int]:
     """Every edge kind ``detect_setup_consume_edges`` can emit, from source.
 
@@ -91,7 +119,7 @@ def _detector_edge_kinds() -> tuple[set[str], int]:
     vocabulary.  Returns the literal kinds and the number of call sites
     whose kind is computed rather than written down.
     """
-    detector = _function(RESOLVER, "detect_setup_consume_edges")
+    detector = _resolver_function("detect_setup_consume_edges")
     kinds: set[str] = set()
     dynamic = 0
     for node in ast.walk(detector):
@@ -530,19 +558,18 @@ class TestRecastParentageHasOneAuthority:
     """
 
     def test_the_hand_parent_table_is_gone_from_the_resolver(self) -> None:
-        source = RESOLVER.read_text(encoding="utf-8")
-        assert "_PARENT_SLOT" not in source
+        assert "_PARENT_SLOT" not in _resolver_source()
 
     def test_no_name_based_recast_edge_survives(self) -> None:
         """The Q→Q2 fallback masked every unstamped recast slot."""
-        source = RESOLVER.read_text(encoding="utf-8")
+        source = _resolver_source()
         assert 'add("Q", "Q2"' not in source
         assert "add('Q', 'Q2'" not in source
 
     def test_a_recast_slot_reads_its_parents_wiki_rows(self) -> None:
         """Syndra's Q2 has no row of its own and keeps Q's AoE cap."""
+        from src.calculator.cast_edge_markers import detect_aoe_cap
         from src.calculator.data_fetcher import fetch_champion_data
-        from src.calculator.rotation_resolver import detect_aoe_cap
 
         champion = {data.get("name"): data for data in fetch_champion_data().values()}[
             "Syndra"
@@ -557,8 +584,8 @@ class TestRecastParentageHasOneAuthority:
         zero-damage buff slot no wiki row describes; with the table gone
         the receipt says one, which is what the data supports.
         """
+        from src.calculator.cast_edge_markers import detect_aoe_cap
         from src.calculator.data_fetcher import fetch_champion_data
-        from src.calculator.rotation_resolver import detect_aoe_cap
 
         champions = {data.get("name"): data for data in fetch_champion_data().values()}
         assert detect_aoe_cap(champions["Riven"], "R_buff") == 1
@@ -735,7 +762,7 @@ class TestNonDeclaringChampionsReachNoNewCode:
             ("_declared_cast_dependencies", "declared"),
             ("_cast_dependencies", "dependencies"),
         ):
-            function = _function(CONTRACT, function_name)
+            function = _function(SURVEY, function_name)
             guard = _emptiness_guard_line(function, guarded)
             gated = [
                 node.lineno
@@ -757,7 +784,7 @@ class TestNonDeclaringChampionsReachNoNewCode:
         emptiness guard is the first statement, and nothing above it can
         raise.
         """
-        function = _function(RESOLVER, "merge_declared_edges")
+        function = _resolver_function("merge_declared_edges")
         guard = _emptiness_guard_line(function, "declarations")
         raises = [
             node.lineno for node in ast.walk(function) if isinstance(node, ast.Raise)
@@ -772,7 +799,7 @@ class TestNonDeclaringChampionsReachNoNewCode:
         the raise is reachable only from inside a branch that tested the
         declarations, which this reads out of the AST rather than trusting.
         """
-        function = _function(RESOLVER, "derive_champion_rule")
+        function = _resolver_function("derive_champion_rule")
         raises = [node for node in ast.walk(function) if isinstance(node, ast.Raise)]
         assert len(raises) == 1, "the derivation has exactly one failure"
         guarded = [
@@ -809,7 +836,7 @@ class TestNonDeclaringChampionsReachNoNewCode:
         assert id(calls[0]) in inside
 
     def test_the_guards_are_written_where_a_reader_finds_them(self) -> None:
-        contract_source = CONTRACT.read_text(encoding="utf-8")
+        contract_source = SURVEY.read_text(encoding="utf-8")
         assert "if not declared:\n        return ()" in contract_source
         assert "if not dependencies:\n        return ()" in contract_source
         packet_source = PACKET.read_text(encoding="utf-8")
@@ -830,7 +857,7 @@ class TestNonDeclaringChampionsReachNoNewCode:
         seen: list[tuple[str, str]] = []
 
         def spy(name):
-            original = getattr(module_contract, name)  # sightline-ok: 24 - spy table
+            original = getattr(module_survey, name)  # sightline-ok: 24 - spy table
 
             def record(*args, **kwargs):
                 seen.append((name, kwargs["module"]))
@@ -839,7 +866,7 @@ class TestNonDeclaringChampionsReachNoNewCode:
             return record
 
         for validator in _VALIDATORS:
-            monkeypatch.setattr(module_contract, validator, spy(validator))
+            monkeypatch.setattr(module_survey, validator, spy(validator))
 
         for champion, contract in registry:
             contract_from_module(champion, contract.module_name, contract.module)
@@ -1065,8 +1092,8 @@ class TestSyndraDeclaresHerStun:
         campaign exists to kill, so the claim is asserted against the
         detector rather than believed.
         """
+        from src.calculator.cast_edge_inference import detect_setup_consume_edges
         from src.calculator.data_fetcher import fetch_champion_data
-        from src.calculator.rotation_resolver import detect_setup_consume_edges
 
         champion = {data.get("name"): data for data in fetch_champion_data().values()}[
             "Syndra"

@@ -1,0 +1,69 @@
+{
+ "source": "src/calculator/ledger_projection.py",
+ "decisions": [
+  "extract_modules.py refuses any new module that reads a name left in the residue, so every assignment here is downward closed: the residue sits at the top of the dependency order and imports its children.",
+  "The map's two modules are a cycle: LedgerInputs.raw_stat reads DECLARATIONS, so the declaration table cannot sit above the typed facts. The table takes its own home, ledger_declarations.py, with the vocabulary it is stated in (AdequacyCondition, AdequacyDeclaration, LedgerDemand, UndeclaredStatRead and the eleven reader keys). That is one idea per module: what a condition demands, what a decision reads, which owner holds it.",
+  "The fan-out arm still relocates rather than clears: the ten interpreter and registry imports follow the owner probes into ledger_adequacy.py, and tests/test_ledger_projection.py reading DECLARATIONS gives ledger_declarations.py a second importer. Re-audit after the stage, as the plan says."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/ledger_inputs.py",
+   "docstring": "The narrowed result row and the typed facts a projection decision reads.",
+   "defs": [
+    "ResultProjection",
+    "LightRow",
+    "SHARED_ROW_FIELDS",
+    "_ThresholdHealFacts",
+    "_HeldItemFacts",
+    "ShieldOutcomeInputs",
+    "LedgerInputs"
+   ]
+  },
+  {
+   "path": "src/calculator/ledger_declarations.py",
+   "docstring": "What each adequacy condition demands of a build, and which reader serves it.",
+   "defs": [
+    "AdequacyCondition",
+    "AdequacyDeclaration",
+    "LedgerDemand",
+    "UndeclaredStatRead",
+    "_ITEM_HEAL_READER",
+    "_LIFESTEAL_READER",
+    "_OMNIVAMP_READER",
+    "_BASIC_ATTACK_READER",
+    "_SUPPORT_SCAN_READER",
+    "_EXECUTE_READER",
+    "_KEYSTONE_HEAL_READER",
+    "_INTERACTION_ROW_READER",
+    "_TAKEDOWN_READER",
+    "_HEALING_READER",
+    "_THRESHOLD_READER",
+    "_DECLARATIONS",
+    "DECLARATIONS"
+   ]
+  },
+  {
+   "path": "src/calculator/ledger_adequacy.py",
+   "docstring": "Which owner holds a mechanic: one probe per declared condition.",
+   "defs": [
+    "_threshold_heal_owners",
+    "_self_heal_rule_owners",
+    "_item_self_heal_owners",
+    "_item_health_regen_owners",
+    "_vamp_stat_owners",
+    "_lifesteal_owners",
+    "_omnivamp_owners",
+    "_saturating_omnivamp_owners",
+    "_keystone_self_heal_owners",
+    "_ordered_interaction_owners",
+    "_self_shield_proc_owners",
+    "_empowered_auto_owners",
+    "_raw_row_stream_owners",
+    "_execute_threshold_owners",
+    "_pair_outcome_owners",
+    "_held"
+   ]
+  }
+ ]
+}

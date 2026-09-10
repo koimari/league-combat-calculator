@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import pytest
 
-from src.calculator.ability_spec import ControlEvent, ControlScope, DamagePart
+from src.calculator.ability_spec import DamagePart
 from src.calculator.calculate import calculate_payload
+from src.calculator.control_spec import ControlEvent, ControlScope
 from src.calculator.data_fetcher import get_champion
 from src.calculator.fight.cast_control_marker import _entry_control_scope
 from src.calculator.fight.ledger.event_ledger import _ordered_damage_events

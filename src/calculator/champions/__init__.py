@@ -187,8 +187,9 @@ from . import (
     zoe,
     zyra,
 )
+from .contract_vocabulary import ChampionModuleContract
 from .inputs import use_options_rows
-from .module_contract import ChampionModuleContract, contract_from_module
+from .module_contract import contract_from_module
 
 # Map display name -> module name within this package.  This is the single
 # explicit roster manifest: every cached champion has a reviewed module and

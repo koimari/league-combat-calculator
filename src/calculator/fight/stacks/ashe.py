@@ -5,7 +5,8 @@ from typing import Any
 
 from ...ability_atoms import ability_field, ability_payload
 from ...champions.ashe import ASHE_FOCUS_STACK_RULE
-from ...state_lifecycle import EventStamp, TimedStackState
+from ...state_timeline import EventStamp
+from ...timed_stacks import TimedStackState
 from ..config import _seeded_option_stacks, declared_option_default
 from ..results import RotationResult
 from ..state import FightState

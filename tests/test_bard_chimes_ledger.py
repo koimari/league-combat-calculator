@@ -86,7 +86,7 @@ from src.calculator.champions.bard import (
     _MEEP_RECHARGE_TIERS,
     _MEEP_STOCK_TIERS,
 )
-from src.calculator.champions.slotlib import find_named_leveling
+from src.calculator.champions.slot_extract import find_named_leveling
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.fight.config import FightConfig

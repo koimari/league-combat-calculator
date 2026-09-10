@@ -6,26 +6,26 @@ from types import ModuleType
 
 import pytest
 
-from src.calculator.ability_spec import CC_KIND_VOCABULARY
 from src.calculator.champions import (
     _CHAMPION_MODULES,
     get_champion_module_contract,
     parse_abilities,
 )
-from src.calculator.champions.engine import CC_PER_PART
-from src.calculator.champions.module_contract import (
+from src.calculator.champions.contract_vocabulary import (
     REQUIRED_CHAMPION_SLOTS,
     VALID_COVERAGE,
     ChampionModuleContractError,
-    contract_from_module,
     coverage,
     default_coverage,
 )
+from src.calculator.champions.module_contract import contract_from_module
 from src.calculator.champions.packet_module import (
     _FULL_ENTRY_ASSUMPTIONS,
     build_packet_module,
     packet_spec_sha256,
 )
+from src.calculator.champions.slot_cc import CC_PER_PART
+from src.calculator.control_spec import CC_KIND_VOCABULARY
 
 REQUIRED_SLOTS = {"P", "Q", "W", "E", "R"}
 

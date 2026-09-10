@@ -60,6 +60,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.source_receipt import cache_patch
+from src.calculator.ally_packet_shape import producer_item
 from src.calculator.champions import (
     parse_champion_abilities,
     registered_champion_names,
@@ -67,6 +68,8 @@ from src.calculator.champions import (
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.fight import mitigation, resists
+from src.calculator.fight_params import FightParams
+from src.calculator.fight_request_bounds import ONE_ROTATION_DURATION
 from src.calculator.item_behavior import (
     Basis,
     DefenseField,
@@ -80,12 +83,11 @@ from src.calculator.item_behavior_catalog import (
     behavior_rules,
     rule_owners,
 )
-from src.calculator.item_support_effects import producer_item
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.pipeline import ONE_ROTATION_DURATION, FightParams, run_fight
+from src.calculator.pipeline import run_fight
 from src.calculator.public_response import serialize_fight_result
 from src.calculator.scenario import parse_scenario_request, resolve_scenario
 from src.calculator.stats import calculate_total_stats
@@ -229,7 +231,7 @@ def _run_fight(
     duration=ONE_ROTATION_DURATION,
     keystone="",
 ):
-    """Fight at fixed regression target stats, mirroring _evaluate_build.
+    """Fight at fixed regression target stats, mirroring evaluate_build.
 
     Default is a one-rotation burst with no autos and an empty rune page.
     Pass auto_attack_uptime=1.0 (and one_rotation=False for the sustained

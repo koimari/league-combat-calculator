@@ -38,19 +38,15 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..binary_roots import calculation_coefficient, data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import int_option
-from .module_contract import coverage
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    attach_self_shield,
-    extract_named,
-    extract_value,
-    with_control,
-    with_item_on_hits,
-)
+from .slot_control import with_control
+from .slot_entries import attach_self_shield
+from .slot_extract import ability_name, extract_named, extract_value
+from .slotlib import with_item_on_hits
 
 PACKET_SHA256 = "97538cf620050743705205ae884ef53611e35fbad8ed2808fd3617fb3bc3b7d5"
 

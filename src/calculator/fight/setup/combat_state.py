@@ -10,9 +10,10 @@ from ...interpreters import (
     active_cast,
     cast_proc,
     charged_strike,
-    delta_amp,
     on_hit_strike,
+    part_amp,
     periodic,
+    rearmed_swings,
     resistance_shred,
     secondary_target,
     stat_derivation,
@@ -79,7 +80,7 @@ def _part_amp(
     """
     if not armed:
         return 1.0, ""
-    amp = delta_amp.resolve_part_amp(
+    amp = part_amp.resolve_part_amp(
         owners,
         attack_class,
         facts=facts,
@@ -326,7 +327,7 @@ def _resolve_combat_state(
         one_rotation=config.one_rotation
     ):
         num_auto_attacks = len(
-            charged_strike.swing_times(
+            rearmed_swings.swing_times(
                 swing_schedule,
                 attack_speed=attack_speed,
                 attack_speed_ratio=as_ratio,
@@ -465,7 +466,7 @@ def _resolve_combat_state(
         roster_target_count=max(1, int(config.roster_target_count)),
         target_class=config.target_class,
         resists=resists,
-        magic_amp=delta_amp.declared_magic_amp(
+        magic_amp=part_amp.declared_magic_amp(
             [item_effects.resolved_item_name(item) for item in items]
         ),
         ability_amp=ability_part_amp[0],

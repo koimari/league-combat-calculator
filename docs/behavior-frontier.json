@@ -3,7 +3,10 @@
     "app.py": {
       "class_d": 1
     },
-    "calculator/cleanse_eligibility.py": {
+    "calculator/ability_dps_matrix.py": {
+      "class_d": 9
+    },
+    "calculator/cleanse_declarations.py": {
       "counter_1": 20
     },
     "calculator/fight/rotation/mana_declarations.py": {
@@ -20,7 +23,7 @@
       "counter_2": 18
     },
     "calculator/item_effects.py": {
-      "class_c": 506
+      "class_c": 505
     },
     "calculator/item_outcomes.py": {
       "class_c": 44
@@ -31,25 +34,22 @@
     "calculator/item_support_effects.py": {
       "counter_1": 9
     },
+    "calculator/item_sustain_events.py": {
+      "counter_1": 1
+    },
     "calculator/loadout_rules.py": {
       "class_c": 33
     },
     "calculator/passive_parser.py": {
       "class_c": 92
     },
-    "calculator/pipeline.py": {
-      "counter_1": 1
-    },
     "calculator/role_quests.py": {
       "class_c": 21
-    },
-    "calculator/rotation_resolver.py": {
-      "class_d": 9
     },
     "calculator/scenario.py": {
       "class_d": 1
     },
-    "calculator/shield_ledger.py": {
+    "calculator/shield_pools.py": {
       "class_d": 1
     },
     "calculator/trigger_stream.py": {
@@ -310,16 +310,16 @@
         "calculator/role_quests.py": "quest-item declarations keyed by the item that carries the quest",
         "calculator/trigger_stream.py": "Phase 2's capability registry: `ItemOwner(\"\u2026\")` declares who owns a mechanic, which is the same kind of home as the number registry. **Not in the prior**: the module did not exist when the prior counts were taken, and its 38 sites are the whole Class C divergence"
       },
-      "sites": 796
+      "sites": 795
     },
     "class_d_non_behavioural": {
       "modules": {
         "app.py": "one `kind=\"Boots\"` stat-category label that collides with the item literally named Boots \u2014 a name match, not a dispatch",
+        "calculator/ability_dps_matrix.py": "three sample builds in the rotation certification matrix; they name builds to certify orders over and dispatch no behaviour",
         "calculator/champions/janna.py": "an ability display-name default (`Zephyr` is Janna's W) that collides with an item name",
         "calculator/champions/viego.py": "an ability display-name default (Viego's R is named after the item he steals) that collides with an item name",
-        "calculator/rotation_resolver.py": "three sample builds in the rotation certification matrix; they name builds to certify orders over and dispatch no behaviour",
         "calculator/scenario.py": "the same `kind=\"Boots\"` stat-category label on the request-parsing side",
-        "calculator/shield_ledger.py": "the shield-source label `Lifeline`, which names a mechanic class and collides with an item name"
+        "calculator/shield_pools.py": "the shield-source label `Lifeline`, which names a mechanic class and collides with an item name"
       },
       "sites": 12
     }
@@ -488,7 +488,7 @@
     }
   },
   "zero_policy_frontier": {
-    "declared_default": "champions/slotlib.MODULE_FORMULA_ZERO, supplied by damage_entry and simple_damage and overridable per call (D-24)",
+    "declared_default": "champions/slot_entries.MODULE_FORMULA_ZERO, supplied by damage_entry and simple_damage and overridable per call (D-24)",
     "forbidden_input_fallbacks": [],
     "hand_built_entries_by_module": {
       "ahri.py": 4,
@@ -536,7 +536,9 @@
       "shyvana.py": 2,
       "sion.py": 2,
       "sivir.py": 1,
-      "slotlib.py": 5,
+      "slot_control.py": 1,
+      "slot_entries.py": 3,
+      "slotlib.py": 1,
       "smolder.py": 2,
       "soraka.py": 1,
       "syndra.py": 2,

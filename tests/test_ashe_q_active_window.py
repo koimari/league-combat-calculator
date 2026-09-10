@@ -73,7 +73,7 @@ from pathlib import Path
 
 import pytest
 
-from src.calculator import atomizer_domains
+from src.calculator import atomizer_abilities
 from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
@@ -271,7 +271,7 @@ def _q_ability_atoms() -> list[dict]:
 
 
 def _q_live_atoms() -> list[dict]:
-    return atomizer_domains.atomize_abilities("Ashe", get_champion("Ashe"))["Q"]
+    return atomizer_abilities.atomize_abilities("Ashe", get_champion("Ashe"))["Q"]
 
 
 def _flurry_damage(stats: dict, abilities: dict, armor: float = 50.0) -> float:

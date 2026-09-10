@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import ast
+import re
 from collections.abc import Collection, Iterator, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
 
 from scripts.module_units import (
+    DEFINITIONS,
     _piece,
     bound_alias,
     import_sort_key,
     import_statement,
+    merge_imports,
     read_lines,
     read_parts,
     relative_import,
@@ -22,6 +25,9 @@ if TYPE_CHECKING:
 
 READER_ROOTS = ("src", "tests", "scripts")
 
+#: ``from . import X`` names the source nowhere in its own text.
+BARE_RELATIVE = re.compile(r"^\s*from \.+ import", re.MULTILINE)
+
 
 class Edit(NamedTuple):
     """A replacement over one span, in line numbers and utf-8 column offsets."""
@@ -31,6 +37,13 @@ class Edit(NamedTuple):
     end_line: int
     end_col: int
     text: str
+
+
+class ImportScope(NamedTuple):
+    """One import statement and the definition whose body it binds names in."""
+
+    node: ast.stmt
+    scope: ast.AST
 
 
 class Reader(NamedTuple):
@@ -96,7 +109,7 @@ def source_aliases(
 def regroup_import(node: ast.ImportFrom, reader: Reader, line: str) -> Edit:
     """Split one ``from <source> import ...`` across the homes its names moved to."""
     plan = reader.plan
-    stay = plan.source.path.with_suffix("").parts
+    stay = plan.source.parts
     by_home: dict[tuple[str, ...], list[ast.alias]] = {}
     for alias in node.names:
         home = plan.home[alias.name].parts if alias.name in plan.moved else stay
@@ -139,6 +152,54 @@ def import_edits(reader: Reader) -> Iterator[Edit]:
             yield regroup_import(node, reader, reader.lines[end - 1])
 
 
+def quoted_attributes(
+    node: ast.Constant, aliases: Collection[str]
+) -> list[ast.Attribute]:
+    """Every ``<alias>.<name>`` the expression this string spells reads."""
+    if not any(alias in node.value for alias in aliases):
+        return []
+    try:
+        inner = ast.parse(node.value, mode="eval").body
+    except SyntaxError:
+        return []
+    return [
+        sub
+        for sub in ast.walk(inner)
+        if isinstance(sub, ast.Attribute)
+        and isinstance(sub.value, ast.Name)
+        and sub.value.id in aliases
+    ]
+
+
+def quoted_edits(reader: Reader) -> Iterator[tuple[Edit, tuple[str, ...]]]:
+    """Repoint each ``"damage.X"`` a quoted annotation spells, with its imports.
+
+    Python never evaluates one, so no ``ast.Name`` carries the read and the
+    plain alias pass cannot see it.
+    """
+    plan, pkg = reader.plan, reader.pkg
+    aliases, is_relative = source_aliases(reader.tree, pkg, plan.source.dotted)
+    for node in ast.walk(reader.tree):
+        if not (isinstance(node, ast.Constant) and isinstance(node.value, str)):
+            continue
+        moved = [a for a in quoted_attributes(node, aliases) if a.attr in plan.moved]
+        if not moved:
+            continue
+        span = Edit(
+            node.lineno, node.col_offset, node.end_lineno, node.end_col_offset, ""
+        )
+        text, needed = slice_span(reader.lines, span), []
+        for sub in moved:
+            home = plan.home[sub.attr]
+            text = text.replace(
+                f"{sub.value.id}.{sub.attr}", f"{home.path.stem}.{sub.attr}"
+            )
+            needed.append(
+                relative_import(home.pkg, pkg, home.path.stem, relative=is_relative)
+            )
+        yield span._replace(text=text), tuple(needed)
+
+
 def alias_edits(reader: Reader) -> Iterator[tuple[Edit, str]]:
     """Repoint each ``damage.X`` read, with the import its new module needs."""
     plan, pkg = reader.plan, reader.pkg
@@ -156,30 +217,62 @@ def alias_edits(reader: Reader) -> Iterator[tuple[Edit, str]]:
         )
 
 
+def scoped_imports(
+    scope: ast.AST, body: ast.AST | None = None
+) -> Iterator[ImportScope]:
+    """Each import with the definition whose body its names are bound in."""
+    for child in ast.iter_child_nodes(body if body is not None else scope):
+        if isinstance(child, (ast.Import, ast.ImportFrom)):
+            yield ImportScope(child, scope)
+        elif isinstance(child, DEFINITIONS):
+            yield from scoped_imports(child)
+        else:
+            yield from scoped_imports(scope, child)
+
+
+def _live_aliases(
+    scope: ast.AST,
+    aliases: set[str],
+    repointed: Collection[tuple[int, int]],
+    moved: Collection[str],
+) -> set[str]:
+    """The aliases still read inside one scope, a quoted annotation counted."""
+    read = {
+        node.id
+        for node in ast.walk(scope)
+        if isinstance(node, ast.Name)
+        and node.id in aliases
+        and (node.lineno, node.col_offset) not in repointed
+    }
+    return read | {
+        sub.value.id
+        for node in ast.walk(scope)
+        if isinstance(node, ast.Constant) and isinstance(node.value, str)
+        for sub in quoted_attributes(node, aliases)
+        if sub.attr not in moved
+    }
+
+
 def stale_alias_edits(
     reader: Reader, *, repointed: Collection[tuple[int, int]]
 ) -> Iterator[Edit]:
     """Drop an import of the source module no read is left for.
 
     A name is still read where the repointing did not take it, so an alias a
-    ``monkeypatch.setattr(damage, ...)`` names keeps its import.
+    ``monkeypatch.setattr(damage, ...)`` names keeps its import.  Liveness is
+    per scope, because a deferred import inside one function goes stale while
+    the module-level one a sibling function reads does not, and an import the
+    reader has already marked ``noqa`` is there for its side effect.
     """
     tree, lines = reader.tree, reader.lines
     aliases, _ = source_aliases(tree, reader.pkg, reader.plan.source.dotted)
-    live = {
-        node.id
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Name)
-        and node.id in aliases
-        and (node.lineno, node.col_offset) not in repointed
-    }
-    for node in ast.walk(tree):
-        if not isinstance(node, (ast.Import, ast.ImportFrom)):
-            continue
+    for node, scope in scoped_imports(tree):
+        live = _live_aliases(scope, aliases, repointed, reader.plan.moved)
         read = [a for a in node.names if bound_alias(a) not in aliases - live]
-        if len(read) == len(node.names):
-            continue
         end = node.end_lineno or node.lineno
+        suppressed = any("# noqa" in line for line in lines[node.lineno - 1 : end])
+        if len(read) == len(node.names) or suppressed:
+            continue
         width = len(lines[end - 1].encode("utf-8"))
         if read:
             statement = import_statement(node, read)
@@ -193,23 +286,32 @@ def rewrite_reader(relative: Path, plan: Plan, repo: Path) -> list[str]:
     """Repoint one file's reads of moved names, writing it under ``--write``."""
     lines, newline = read_lines(repo / relative)
     text = newline.join(lines)
-    if plan.source.path.stem not in text:
+    if plan.source.stem not in text and not BARE_RELATIVE.search(text):
         return []
     reader = Reader(plan, relative.parent.parts, ast.parse(text), lines)
     aliased = list(alias_edits(reader))
+    quoted = list(quoted_edits(reader))
     repointed = {(edit.line, edit.col) for edit, _ in aliased}
     edits = [
         *import_edits(reader),
         *(edit for edit, _ in aliased),
+        *(edit for edit, _ in quoted),
         *string_edits(reader),
         *stale_alias_edits(reader, repointed=repointed),
     ]
     needed = {statement for _, statement in aliased}
+    needed |= {statement for _, group in quoted for statement in group}
     if not edits:
         return []
-    anchor = _import_anchor(reader.tree)
+    merged = merge_imports(sorted(needed, key=lambda s: (*import_sort_key(s), s)))
+    by_anchor: dict[int, list[str]] = {}
+    for statement in sorted(merged, key=import_sort_key):
+        if statement not in text:
+            line = _import_anchor(reader.tree, statement)
+            by_anchor.setdefault(line, []).append(statement)
     edits += [
-        Edit(anchor, 0, anchor, 0, s + "\n") for s in sorted(needed) if s not in text
+        Edit(line, 0, line, 0, "".join(s + "\n" for s in group))
+        for line, group in by_anchor.items()
     ]
     report = [
         f"{e.line}  {slice_span(lines, e)!r} -> {e.text!r}"
@@ -222,11 +324,15 @@ def rewrite_reader(relative: Path, plan: Plan, repo: Path) -> list[str]:
     return report
 
 
-def _import_anchor(tree: ast.Module) -> int:
-    """The line a new top-level import goes on: after the last one already there."""
+def _import_anchor(tree: ast.Module, statement: str) -> int:
+    """The line a new top-level import goes on: the one isort sorts it in front of."""
+    key = import_sort_key(statement)
     line = 1
     for node in tree.body:
-        leading_docstring = isinstance(node, ast.Expr) and line == 1
-        if isinstance(node, (ast.Import, ast.ImportFrom)) or leading_docstring:
+        if isinstance(node, ast.Expr) and line == 1:
+            line = (node.end_lineno or node.lineno) + 1
+        elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            if import_sort_key(import_statement(node, node.names)) > key:
+                return node.lineno
             line = (node.end_lineno or node.lineno) + 1
     return line

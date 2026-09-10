@@ -25,16 +25,11 @@ import pytest
 
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator import trigger_stream as ts
-from src.calculator.ability_spec import (
-    CC_KIND_VOCABULARY,
-    IMMOBILIZING_CC_KINDS,
-    Authority,
-    DamagePart,
-    Disposition,
-    ProjectionStarvation,
-    projection_starvation,
-)
-from src.calculator.champions.engine import EmittedSlot, _validate_cc_event_contract
+from src.calculator.ability_spec import Authority, DamagePart, Disposition
+from src.calculator.ally_packet_shape import _declared_authorities
+from src.calculator.champions.entry_shape import EmittedSlot
+from src.calculator.champions.slot_cc import _validate_cc_event_contract
+from src.calculator.control_spec import CC_KIND_VOCABULARY, IMMOBILIZING_CC_KINDS
 from src.calculator.fight.after import amplifiers
 from src.calculator.fight.ledger import coverage, event_rows
 from src.calculator.interpreters import INTERPRETERS
@@ -45,19 +40,17 @@ from src.calculator.item_behavior import (
     RuleFamily,
 )
 from src.calculator.item_behavior_catalog import behavior_rules
-from src.calculator.item_support_effects import (
-    EventViewStarvationError,
-    _declared_authorities,
-    derive_item_support_effects,
-)
+from src.calculator.item_support_effects import derive_item_support_effects
 from src.calculator.program.compile import WalkCompiler, action_from_event
-from src.calculator.program.views import ViewTag
+from src.calculator.program.views.view_tag import ViewTag
+from src.calculator.quantity import ProjectionStarvation, projection_starvation
 from src.calculator.roster_composition import ActorRequest
-from src.calculator.survival.actions import TransitionRank
+from src.calculator.support_event_view import EventViewStarvationError
 from src.calculator.survival.compile import (
     UncompilableActionError,
     unrepresentable_template_receipt,
 )
+from src.calculator.survival.phases import TransitionRank
 
 ROOT = Path(__file__).parents[1]
 SRC = ROOT / "src"
@@ -784,22 +777,17 @@ def test_importing_the_bus_performs_no_filesystem_read():
     assert module.tuple_incapable_items() == TUPLE_INCAPABLE
 
 
-def test_the_bus_imports_exactly_two_intra_package_modules():
-    """``ability_spec`` and ``program.views`` — the acyclicity argument.
+def test_the_bus_imports_only_the_vocabulary_leaves_and_the_view_tag():
+    """The acyclicity argument, as the set of modules the bus may name.
 
-    Phase 2 shipped this as *exactly one*, and Phase 4 S7 amends it to
-    exactly two, in the criterion rather than in silence: ``view_tags`` is a
-    field of the declaration table, so ``ViewTag`` has to be nameable here,
-    and its home is ``program/views/__init__.py`` (umbrella, shared names).
-
-    The amendment is bounded by what the original clause was protecting, and
-    both halves are re-asserted rather than relaxed.  ``program.views``
-    imports nothing, so the package graph is still acyclic; and the
-    filesystem probe above still reports zero reads, which is the property
-    that rules ``EngineLane``'s home *out* — importing ``item_behavior``
-    opens ``data/items.json`` and ``data/runes.json`` at module scope, and a
-    bus that reads ``data/`` is neither a leaf nor inside the caching layer
-    (D-35, repo rule 2).  Anything beyond these two is still an error.
+    The vocabulary is three leaves (``quantity`` reads ``ability_spec`` and
+    nothing further), and ``view_tags`` is a field of the declaration table,
+    so ``ViewTag`` is nameable here out of ``program/views/view_tag.py``.
+    None of the four opens a file at import, which is the property that rules
+    ``EngineLane``'s home out: importing ``item_behavior`` opens
+    ``data/items.json`` and ``data/runes.json`` at module scope, and a bus
+    that reads ``data/`` is neither a leaf nor inside the caching layer
+    (D-35, repo rule 2).  Anything beyond these four is an error.
     """
     tree = ast.parse((SRC / "calculator/trigger_stream.py").read_text("utf-8"))
     relative = {
@@ -807,24 +795,29 @@ def test_the_bus_imports_exactly_two_intra_package_modules():
         for node in ast.walk(tree)
         if isinstance(node, ast.ImportFrom) and node.level
     }
-    assert relative == {"ability_spec", "program.views"}
+    assert relative == {
+        "ability_spec",
+        "control_spec",
+        "quantity",
+        "program.views.view_tag",
+    }
 
 
 def test_the_view_tag_vocabulary_costs_the_bus_no_data_read():
-    """The amendment's own red: ``program.views`` must stay import-free.
+    """The amendment's own red: ``program.views.view_tag`` stays import-free.
 
-    A future edit that gave the views package a module-scope import of the
+    A future edit that gave the tag's module a module-scope import of the
     behaviour registry would re-create exactly the condition the clause
     above forbids — silently, because the bus would keep importing one name
     from one module.  So the admissible import is pinned at its source.
 
-    S9's ``serialize_leaf`` is defined over ``Quantity`` and joins the list:
-    ``ability_spec`` is the campaign's dependency-free vocabulary leaf, which
-    the line above already admits as the bus's *own* first import, so
-    admitting it here reaches nothing the bus did not already reach.  The
-    stdlib members are the type annotations the serializer carries.
+    ``ability_spec`` is on the list because it is the campaign's
+    dependency-free vocabulary leaf, which the line above already admits as
+    the bus's *own* first import, so admitting it here reaches nothing the
+    bus did not already reach.  The stdlib members are the type annotations
+    the vocabulary carries.
     """
-    tree = ast.parse((SRC / "calculator/program/views/__init__.py").read_text("utf-8"))
+    tree = ast.parse((SRC / "calculator/program/views/view_tag.py").read_text("utf-8"))
     imported = {
         node.module
         for node in ast.walk(tree)
@@ -1018,21 +1011,20 @@ CC_KIND_READERS = {
     # may not compute at all (criterion 3).
     "src/calculator/program/views/receipt.py": frozenset({"_damage_event_rows"}),
     "src/calculator/trigger_stream.py": frozenset({"_classify_cc"}),
-    # ``state_lifecycle`` asks main's *action-blocking* question (may the
+    # ``state_timeline`` asks main's *action-blocking* question (may the
     # holder act?), which D-08 rules is a different question from the bus's
     # immobilize one: the two vocabularies differ on polymorph and on
     # flee/pull/snare/stasis, and it receipts an out-of-vocabulary token as
     # ``unknown_cc_kind`` where the bus refuses it.  One classifier per
     # question; each declared here.
-    "src/calculator/state_lifecycle.py": frozenset(
+    "src/calculator/state_timeline.py": frozenset(
         {"denial_reason", "is_candidate", "match"}
     ),
     # Everlasting's own kernel rule filters the control stream (it admits
     # kinds the immobilize predicate drops) and names the denial; the
     # dedupe key copies the token without branching on it.
-    "src/calculator/item_support_effects.py": frozenset(
-        {"_cc_event_stream", "_denial"}
-    ),
+    "src/calculator/support_event_view.py": frozenset({"_cc_event_stream"}),
+    "src/calculator/item_support_effects.py": frozenset({"_denial"}),
 }
 
 
@@ -1468,7 +1460,7 @@ def immobilize_literal_sites(
 def test_a7_the_immobilize_vocabulary_lives_only_in_the_vocabulary_module():
     """A7 — the fourth re-typing of this set is what D-08 had to widen.
 
-    MERGE: ``ability_spec`` declares TWO such literals now, and they are two
+    MERGE: ``control_spec`` declares TWO such literals, and they are two
     questions rather than one fact typed twice.  ``IMMOBILIZING_CC_KINDS``
     is what counts as an immobilize (Imperial Mandate's Command,
     Fimbulwinter's non-melee Everlasting); ``ACTION_BLOCKING_CC_KINDS`` is
@@ -1481,7 +1473,7 @@ def test_a7_the_immobilize_vocabulary_lives_only_in_the_vocabulary_module():
     """
     sites = immobilize_literal_sites()
     assert sites, "the vocabulary literal disappeared"
-    assert all(site.startswith("src/calculator/ability_spec.py:") for site in sites)
+    assert all(site.startswith("src/calculator/control_spec.py:") for site in sites)
     assert {"stun", "root"} <= IMMOBILIZING_CC_KINDS
 
 
@@ -1494,7 +1486,7 @@ def test_a7_has_a_permanent_injection_seam():
     )
     sites = immobilize_literal_sites(injected)
     assert "src/calculator/economy.py:1" in sites
-    assert not all(site.startswith("src/calculator/ability_spec.py:") for site in sites)
+    assert not all(site.startswith("src/calculator/control_spec.py:") for site in sites)
 
 
 # ---------------------------------------------------------------------------

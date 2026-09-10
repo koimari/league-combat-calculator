@@ -35,15 +35,9 @@ from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
 from .module_helpers import delayed
 from .shared_mechanics import per_level_row
-from .slotlib import (
-    attach_self_shield,
-    by_option,
-    find_named_leveling,
-    proc_damage,
-    simple_damage,
-    stat_buff,
-    sum_modifiers,
-)
+from .slot_entries import attach_self_shield
+from .slot_extract import find_named_leveling, sum_modifiers
+from .slotlib import by_option, proc_damage, simple_damage, stat_buff
 from .source_receipts import load_champion_sources
 
 # Rooted in AmbessaW.Shield_Duration; the cached ability description

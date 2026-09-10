@@ -1,0 +1,41 @@
+{
+ "source": "src/calculator/interaction_effects.py",
+ "decisions": [
+  "extract_modules.py refuses any new module that reads a name left in the residue, so every assignment here is downward closed: the residue sits at the top of the dependency order and imports its children.",
+  "The projectile defence prices from nine of the shared readers, so the map's single extraction is refused. The readers move to interaction_atoms.py, which gives the shape one home for all three interactions rather than a rename that publishes five private names across a module boundary.",
+  "The five names the map wanted public (_rank_for, _ability, _ranked_atom_value, _window, _source_selection) are still private and now read across modules. Publish them in the same commit; tests/test_champion_primitives.py reads _window.",
+  "Every name read outside interaction_atoms is published, not only the map's five: the four atom queries and _prose_duration_atom cross the same boundary. Two take a new spelling because the bare one is a local variable in both readers: _ability is cached_ability and _window is requested_window. _PROSE_DURATION_QUERIES stays private, read by its own module only."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/interaction_atoms.py",
+   "docstring": "The ranked atom and prose duration readers every champion to champion interaction prices from.",
+   "defs": [
+    "_rank_for",
+    "_ability",
+    "_source_selection",
+    "_window",
+    "_PROSE_DURATION_QUERIES",
+    "_PROSE_DURATION_WINDOWS",
+    "_BRAUM_DURATION_QUERY",
+    "_BRAUM_REDUCTION_QUERY",
+    "_AMUMU_REDUCTION_CAP_QUERY",
+    "_ranked_atom_value",
+    "_combatant_level",
+    "_prose_duration_atom"
+   ]
+  },
+  {
+   "path": "src/calculator/projectile_defense.py",
+   "docstring": "One champion to champion interaction with its own eligibility, composition and public shape.",
+   "defs": [
+    "ProjectileDefense",
+    "resolve_projectile_defense",
+    "defense_eligibility",
+    "defense_composition",
+    "public_defense"
+   ]
+  }
+ ]
+}

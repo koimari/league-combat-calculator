@@ -11,17 +11,18 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option
-from .module_contract import coverage
 from .module_helpers import (
     REVIEWED_MODULE_ASSUMPTIONS,
     innate_on_hit,
     no_damage,
     ranked_slot,
 )
-from .slotlib import ability_name, extract_cooldown, extract_named, simple_damage
+from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 _unseen_threat_hit = innate_on_hit(

@@ -12,8 +12,7 @@ import pytest
 
 pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
 
-from src.calculator import item_effects
-from src.calculator import state_lifecycle as sl
+from src.calculator import item_effects, state_timeline, timed_stacks
 from src.calculator.ability_spec import DamagePart
 from src.calculator.champions import parse_champion_abilities
 from src.calculator.champions.ashe import ASHE_FOCUS_STACK_RULE
@@ -292,7 +291,8 @@ class TestConquerorConsumer:
 
     def test_keystone_state_events_aggregation_preserved(self):
         from src.app import _load_public_champion
-        from src.calculator.pipeline import FightParams, run_fight
+        from src.calculator.fight_params import FightParams
+        from src.calculator.pipeline import run_fight
 
         params = FightParams.from_request(
             {
@@ -533,8 +533,8 @@ class TestFimbulwinterConsumer:
 
 class TestForceOfNatureConsumer:
     def test_steadfast_source_revision_is_the_reviewed_receipt(self):
-        from src.calculator.defensive_effects import defense_source
         from src.calculator.item_behavior import DefenseMechanic
+        from src.calculator.starting_defenses import defense_source
 
         source = defense_source("Force of Nature", DefenseMechanic.STEADFAST)
         assert source.revision_id == 4016272
@@ -611,15 +611,15 @@ class TestAsheFocusConsumer:
         assert any("typed kernel stack state" in text for text in meta["assumptions"])
 
     def test_kernel_state_drains_after_the_window(self):
-        state = sl.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=4)
+        state = timed_stacks.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=4)
         assert state.stacks == 4
-        state._materialize_expiries(sl.EventStamp(4.0, 0))
+        state._materialize_expiries(state_timeline.EventStamp(4.0, 0))
         assert state.stacks == 3
-        state._materialize_expiries(sl.EventStamp(5.0, 0))
+        state._materialize_expiries(state_timeline.EventStamp(5.0, 0))
         assert state.stacks == 2
-        state._materialize_expiries(sl.EventStamp(6.0, 0))
+        state._materialize_expiries(state_timeline.EventStamp(6.0, 0))
         assert state.stacks == 1
-        state._materialize_expiries(sl.EventStamp(7.0, 0))
+        state._materialize_expiries(state_timeline.EventStamp(7.0, 0))
         assert state.stacks == 0
 
 
@@ -665,8 +665,10 @@ class TestRengarFerocityConsumer:
         assert any("typed kernel stack state" in text for text in meta["assumptions"])
 
     def test_kernel_state_consume_empowers(self):
-        state = sl.TimedStackState(RENGAR_FEROCITY_STACK_RULE, starting_stacks=4)
-        consumed = state.consume(sl.EventStamp(0.0, 0))
+        state = timed_stacks.TimedStackState(
+            RENGAR_FEROCITY_STACK_RULE, starting_stacks=4
+        )
+        consumed = state.consume(state_timeline.EventStamp(0.0, 0))
         assert consumed is not None
         assert consumed.detail["empowered"] is True
         assert state.stacks == 0

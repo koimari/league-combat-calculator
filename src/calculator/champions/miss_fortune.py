@@ -40,15 +40,14 @@ from .engine import BUFF, ONHIT, SlotCtx
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .shared_mechanics import attack_speed_steroid
-from .slotlib import (
+from .slot_entries import damage_entry, on_hit_entry
+from .slot_extract import (
     PER_LEVEL_SCALING,
     ability_name,
-    damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
     find_named_leveling,
-    on_hit_entry,
 )
 
 # HARDCODED game-file rule declaration — verify on patch updates.

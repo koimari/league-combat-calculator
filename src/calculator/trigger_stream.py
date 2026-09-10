@@ -42,12 +42,8 @@ from functools import cache
 from types import MappingProxyType
 from typing import Any, NamedTuple
 
-from .ability_spec import (
-    CC_KIND_VOCABULARY,
-    IMMOBILIZING_CC_KINDS,
-    Authority,
-    projection_starvation,
-)
+from .ability_spec import Authority
+from .control_spec import CC_KIND_VOCABULARY, IMMOBILIZING_CC_KINDS
 
 # The module's second intra-package import, and Phase 4 S7's own amendment to
 # the "exactly one" clause Phase 2 shipped.  ``view_tags`` is a field of the
@@ -58,7 +54,8 @@ from .ability_spec import (
 # admissible while ``EngineLane``'s home is not — importing ``item_behavior``
 # opens ``data/items.json`` and ``data/runes.json`` at module scope, and a bus
 # that reads ``data/`` is neither a leaf nor inside the caching layer (D-35).
-from .program.views import ViewTag
+from .program.views.view_tag import ViewTag
+from .quantity import projection_starvation
 
 __all__ = [
     "CAPABILITIES",

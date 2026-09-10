@@ -20,7 +20,8 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 import golden_snapshot as gs
 
 from src.calculator import pipeline
-from src.calculator.interpreters.delta_amp import (
+from src.calculator.ally_packet_shape import producer_item
+from src.calculator.interpreters.part_amp import (
     EVERY_DAMAGE_CLASS,
     declared_magic_amp,
     resolve_part_amp,
@@ -42,7 +43,6 @@ from src.calculator.item_behavior_catalog import (
 from src.calculator.item_effects import (
     required_effect_value,
 )
-from src.calculator.item_support_effects import producer_item
 from src.calculator.pipeline import run_fight
 from src.calculator.roster_composition import (
     from_loadout,

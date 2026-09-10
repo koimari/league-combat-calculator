@@ -62,8 +62,9 @@ from src.calculator.champions.rammus import (
     MODULE_COVERAGE,
 )
 from src.calculator.data_fetcher import get_champion
+from src.calculator.fight_params import FightParams
 from src.calculator.item_effects import TARGET_CLASSES
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats
 from tests import game_binary
 

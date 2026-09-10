@@ -28,7 +28,7 @@ import pytest
 from src import app as app_module
 from src.calculator.ability_atoms import _ability_atoms
 from src.calculator.champions import tristana
-from src.calculator.champions.slotlib import STEROID_ZERO
+from src.calculator.champions.slot_entries import STEROID_ZERO
 from src.calculator.data_fetcher import get_champion
 from tests.engine_source import engine_source
 

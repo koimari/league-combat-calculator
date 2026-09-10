@@ -6,8 +6,8 @@ from src.calculator.champions import alistar
 from src.calculator.champions.alistar import (
     _extract_e_on_hit_damage,
 )
-from src.calculator.champions.engine import CC_PER_PART
-from src.calculator.champions.slotlib import extract_named
+from src.calculator.champions.slot_cc import CC_PER_PART
+from src.calculator.champions.slot_extract import extract_named
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.fight.config import FightConfig
 from tests import cc_review

@@ -8,19 +8,17 @@ import dataclasses
 
 import pytest
 
+from src.calculator import champion_rotation_rule
 from src.calculator import champions as champions_package
-from src.calculator import rotation_resolver
+from src.calculator.ability_dps_matrix import rank_ability_dps
+from src.calculator.cast_edge_inference import detect_setup_consume_edges
+from src.calculator.cast_edge_markers import _PRE_CAMPAIGN_CC_ORDERING
+from src.calculator.champion_rotation_rule import _DERIVED_RULE_CACHE
 from src.calculator.champions import get_champion_cast_order, parse_champion_abilities
-from src.calculator.champions.engine import _apply_module_cc
+from src.calculator.champions.slot_cc import _apply_module_cc
 from src.calculator.data_fetcher import fetch_champion_data
 from src.calculator.fight.cast_slots import DEFAULT_CAST_ORDER
-from src.calculator.rotation_resolver import (
-    _DERIVED_RULE_CACHE,
-    _PRE_CAMPAIGN_CC_ORDERING,
-    detect_setup_consume_edges,
-    rank_ability_dps,
-    resolve_cast_order,
-)
+from src.calculator.rotation_resolver import resolve_cast_order
 from src.calculator.stats import calculate_total_stats
 
 
@@ -229,7 +227,7 @@ class TestAModuleAuthoredKitFactDoesNotOrderTheRotation:
         the shipped code.
         """
         monkeypatch.setattr(
-            rotation_resolver, "_canonical_kit_parse", lambda *_a, **_k: parsed
+            champion_rotation_rule, "_canonical_kit_parse", lambda *_a, **_k: parsed
         )
         _DERIVED_RULE_CACHE.clear()
         try:

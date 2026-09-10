@@ -50,16 +50,16 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import ranked_slot
-from .slotlib import (
+from .slot_entries import damage_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
     find_named_leveling,
-    simple_damage,
     sum_modifiers,
 )
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # Crushing Blow's debuff lasts 3s ("inflict armor reduction for 3

@@ -1,0 +1,32 @@
+{
+ "source": "src/calculator/stats.py",
+ "decisions": [
+  "Both cuts are taken. item_stat_block alone leaves stats.py near 482 of 500, an 18-line margin any later feature in the fold would reopen; champion_growth takes get_champion_base_stats to the stat-formula layer it belongs to and lands the residue at 427.",
+  "data_registry.py's memo table keys the two item-stat memos by the string calculator.stats._ITEM_STATS_MEMO and calculator.stats._ITEM_STATS_VALIDATION_MEMO. The tool does not rewrite strings; repay both in the same commit."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/item_stat_block.py",
+   "docstring": "What a cached item row's stat block is, validated once per data generation.",
+   "defs": [
+    "_ONE_ITEM_STAT_TYPE",
+    "item_stat_type_count",
+    "_ITEM_STATS_MEMO",
+    "_ITEM_STATS_VALIDATION_MEMO",
+    "_record_key",
+    "_validate_cached_item_stats",
+    "get_item_stats",
+    "champion_stat_conversion",
+    "item_mana_reaches_pool"
+   ]
+  },
+  {
+   "path": "src/calculator/champion_growth.py",
+   "docstring": "A champion's base stat block at a level.",
+   "defs": [
+    "get_champion_base_stats"
+   ]
+  }
+ ]
+}

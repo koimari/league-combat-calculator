@@ -1,0 +1,58 @@
+{
+ "source": "src/calculator/state_lifecycle.py",
+ "decisions": [
+  "extract_modules.py refuses any new module that reads a name left in the residue, so every assignment here is downward closed: the residue sits at the top of the dependency order and imports its children.",
+  "The map leaves the receipt, the tiers, the stamp, the transition and the timeline in the residue and has all three new modules import them, which is refused. They move to state_timeline.py and the residue becomes the map's cooldowns.py content.",
+  "StackRule takes its own module: TimedStackState reads it, so it cannot stay behind, and folding it into timed_stacks.py makes a 610-line module that fires the same size arm.",
+  "The tool cannot rename a residue, so state_lifecycle.py now holds cooldowns, the trigger gate and the per-cast-instance cadence, 255 lines. Rename it cooldowns.py after the move, which is the map's own name for exactly this content, or keep a name that no longer says what is inside.",
+  "Not taken: leaving TimedStackState in the residue. Even with the vocabulary, the rules, the gates and the cooldowns moved out it measures 536 lines, so that shape clears no finding.",
+  "Aside, not this task: state_lifecycle.SourceReceipt and value_ref.SourceReceipt are two different classes of the same name, and stage 2 gives the second one src/calculator/value_source_receipt.py."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/state_timeline.py",
+   "docstring": "The kernel's transition record: the receipt a declaration cites, the stamp, and the timeline.",
+   "defs": [
+    "_EPS",
+    "SourceReceipt",
+    "TIER_EXPIRE",
+    "TIER_GAIN",
+    "TIER_CONSUME",
+    "TIER_COOLDOWN_START",
+    "TransitionKind",
+    "EventStamp",
+    "Transition",
+    "StateTimeline",
+    "CcTriggerRule"
+   ]
+  },
+  {
+   "path": "src/calculator/stack_rules.py",
+   "docstring": "How a stack is gained, refreshed, capped and expired, as one declaration.",
+   "defs": [
+    "RefreshPolicy",
+    "ExpiryPolicy",
+    "CapBehavior",
+    "StackRule"
+   ]
+  },
+  {
+   "path": "src/calculator/timed_stacks.py",
+   "docstring": "The timed stack state a stack rule drives.",
+   "defs": [
+    "_StackEntry",
+    "TimedStackState"
+   ]
+  },
+  {
+   "path": "src/calculator/window_gates.py",
+   "docstring": "The window stack gate, its two hit pair and its per-target cooldown.",
+   "defs": [
+    "WindowGateRule",
+    "WindowProc",
+    "WindowStackGate"
+   ]
+  }
+ ]
+}

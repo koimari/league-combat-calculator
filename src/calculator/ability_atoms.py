@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from types import MappingProxyType
 from typing import Any
 
-from .atomizer_domains import atomize_abilities
+from .atomizer_abilities import atomize_abilities
 from .data_registry import data_version, store_for_generation
 
 _ABILITY_ATOMS_MEMO: dict[tuple[int, str], dict[str, tuple[dict, ...]]] = {}

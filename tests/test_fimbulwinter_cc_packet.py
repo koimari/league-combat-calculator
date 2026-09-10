@@ -57,17 +57,17 @@ import pytest
 
 pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
 
-from src.calculator.ability_spec import IMMOBILIZING_CC_KINDS
+from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.champions import parse_champion_abilities
+from src.calculator.control_spec import IMMOBILIZING_CC_KINDS
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.fight.config import FightConfig
+from src.calculator.fight_params import FightParams
 from src.calculator.item_effects import ITEM_EFFECTS, required_effect_value
 from src.calculator.item_support_effects import derive_item_support_effects
 from src.calculator.participant_timeline import build_participant_timeline
-from src.calculator.pipeline import FightParams
-from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 
 FIMBULWINTER = "Fimbulwinter"

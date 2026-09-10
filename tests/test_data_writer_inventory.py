@@ -102,9 +102,15 @@ def test_no_cwd_relative_data_path_literals_in_writers():
 
 
 def test_runtime_cache_writes_only_via_registry():
-    """Write calls touching the three tracked caches appear only in
-    data_updater (registry API) and data_fetcher (deprecated wrapper)."""
-    allowed = {"data_updater.py", "data_registry.py", "data_fetcher.py"}
+    """Write calls touching the three tracked caches appear only in the
+    updater and its rune pull (registry API) and data_fetcher (deprecated
+    wrapper)."""
+    allowed = {
+        "data_updater.py",
+        "data_registry.py",
+        "data_fetcher.py",
+        "rune_pull.py",
+    }
     for path in _iter_python_files():
         rel = path.relative_to(ROOT).as_posix()
         if "tests/" in rel:

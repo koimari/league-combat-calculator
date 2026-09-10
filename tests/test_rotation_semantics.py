@@ -17,23 +17,25 @@ semantics the receipt must make visible:
 
 import pytest
 
-from src.calculator import rotation_resolver
+from src.calculator import (
+    ability_dps_matrix,
+    cast_edge_inference,
+    champion_rotation_rule,
+)
+from src.calculator.cast_edge_inference import detect_setup_consume_edges
 from src.calculator.champions import (
     get_champion_cast_order,
     get_champion_options_meta,
 )
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
-from src.calculator.rotation_resolver import (
-    detect_setup_consume_edges,
-    resolve_cast_order,
-)
+from src.calculator.rotation_resolver import resolve_cast_order
 
 
 @pytest.fixture(autouse=True)
 def _clear_resolver_cache():
     """The resolver cache is process-global; keep tests order-independent."""
     yield
-    rotation_resolver._DERIVED_RULE_CACHE.clear()
+    champion_rotation_rule._DERIVED_RULE_CACHE.clear()
 
 
 @pytest.fixture(scope="session")
@@ -224,7 +226,7 @@ class TestKalistaSoulMarkProc:
         parsed_on = _parse(
             data, 11, (), items_by_name, champion_options={"soul_mark_proc": True}
         )
-        rotation_resolver._DERIVED_RULE_CACHE.clear()  # cold
+        champion_rotation_rule._DERIVED_RULE_CACHE.clear()  # cold
         order_cold, rule_cold = _resolve(
             data, parsed_on, champion_options={"soul_mark_proc": True}
         )
@@ -248,7 +250,7 @@ class TestKalistaSoulMarkProc:
         parsed_on = _parse(
             data, 11, (), items_by_name, champion_options={"soul_mark_proc": True}
         )
-        rotation_resolver._DERIVED_RULE_CACHE.clear()
+        champion_rotation_rule._DERIVED_RULE_CACHE.clear()
         order_cold, _ = _resolve(data, parsed_on)
         order_warm, _ = _resolve(data, parsed_on)
         assert order_cold == order_warm
@@ -282,17 +284,16 @@ class TestNoSignalGuard:
         data = champion_by_name["Fiddlesticks"]
         parsed = _parse(data, 11, (), items_by_name)
 
-        real = rotation_resolver.get_champion_option_rotation
+        real = champion_rotation_rule.get_champion_option_rotation
 
         def unclassified(name):
             result = dict(real(name))
             result["q_target_already_feared"] = None
             return result
 
-        monkeypatch.setattr(
-            rotation_resolver, "get_champion_option_rotation", unclassified
-        )
-        rotation_resolver._DERIVED_RULE_CACHE.clear()
+        for module in (cast_edge_inference, champion_rotation_rule):
+            monkeypatch.setattr(module, "get_champion_option_rotation", unclassified)
+        champion_rotation_rule._DERIVED_RULE_CACHE.clear()
         _order, rule = _resolve(data, parsed)
         assert "unclassified" in rule.rationale
         assert "no detectable setup/consume signal" not in rule.rationale
@@ -307,8 +308,8 @@ class TestCacheBoundary:
         full = _parse(data, 11, (), items_by_name)
         partial = {"Q": full["Q"]}
 
-        rotation_resolver._DERIVED_RULE_CACHE.clear()
-        rotation_resolver._MATRIX_DPS_CACHE.clear()
+        champion_rotation_rule._DERIVED_RULE_CACHE.clear()
+        ability_dps_matrix._MATRIX_DPS_CACHE.clear()
         partial_order, _ = _resolve(data, partial)
         full_order, _ = _resolve(data, full)
 

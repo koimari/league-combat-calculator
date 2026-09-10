@@ -46,7 +46,7 @@ try:
 except ImportError:  # imported as scripts.full_entry_audit in tests
     from scripts.gate_receipt import build_receipt
 
-from src.calculator.champions.module_contract import REQUIRED_CHAMPION_SLOTS
+from src.calculator.champions.contract_vocabulary import REQUIRED_CHAMPION_SLOTS
 from src.calculator.item_source import audit_scope
 
 CHAMPIONS_PATH = ROOT / "data" / "champions.json"

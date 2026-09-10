@@ -81,7 +81,7 @@ from types import SimpleNamespace
 import pytest
 
 from src.calculator.ability_spec import DamagePart
-from src.calculator.bis import (
+from src.calculator.bis_objective import (
     BIS_UNMODELED_DEFENSIVE_EFFECTS,
     bis_defensive_effect_receipt,
 )

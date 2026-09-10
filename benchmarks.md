@@ -105,7 +105,7 @@ pre-merge engine replayed with this harness; both rows elect the same build and 
 The merged-vs-main gap was 1190 ms, wider than the 819 ms the merge-202 audit recorded
 (1584 → 2403 ms). That audit's own two trees replay here at 1627 and 2488 ms best-of-7,
 so the machine has not drifted. At that point the `lean` row shape did not reach this
-path: `optimizer._evaluate_build_uncached` called `run_fight` without `score_only`,
+path: `build_evaluation._evaluate_build_uncached` called `run_fight` without `score_only`,
 which only `participant_timeline._score_with_search_context` passed, and forcing it on
 measured −0.7% with the answer unchanged, a coupled-path win only.
 

@@ -1724,7 +1724,7 @@ _ATTACKER_STATE_HOMES: Mapping[str, tuple[str, str]] = {
         "option:enlighten_level_up_seconds",
     ),
     "Quicksilver Sash": (
-        "item_support_effects._active_seconds_for",
+        "ally_packet_shape._active_seconds_for",
         "option:active_seconds",
     ),
     "Endless Hunger": (
@@ -2443,7 +2443,7 @@ FRONTIER: Mapping[str, str] = {
     ),
     "packet:{} — {}": (
         "the cleanse actives compose their source from the item's own cleanse "
-        "declaration (``cleanse_eligibility.item_declaration``), so no literal "
+        "declaration (``cleanse_declarations.item_declaration``), so no literal "
         "exists in the builder for a claim to quote — the declaration is the "
         "home; #40 tracks giving the family its own AllyProducer member, "
         "which retires this entry with the composed source."

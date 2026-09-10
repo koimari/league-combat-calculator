@@ -4,7 +4,7 @@ import pytest
 
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import get_champion_module_contract, rumble
-from src.calculator.champions.slotlib import extract_named
+from src.calculator.champions.slot_extract import extract_named
 from tests import cc_review, coverage_truth, row_review
 
 

@@ -56,7 +56,8 @@ from src.calculator.item_behavior import (
 )
 from src.calculator.item_behavior_catalog import behavior_rules, rule_owners
 from src.calculator.trigger_stream import Stream
-from src.calculator.value_ref import Const, SourceReceipt
+from src.calculator.value_ref import Const
+from src.calculator.value_source_receipt import SourceReceipt
 
 MODULE_PATH = Path(__file__).parents[1] / "src" / "calculator" / "item_behavior.py"
 
@@ -116,7 +117,12 @@ def test_item_behavior_is_a_leaf() -> None:
         for node in ast.walk(tree)
         if isinstance(node, ast.ImportFrom) and node.level == 1 and node.module
     }
-    assert intra_package == {"ability_spec", "value_ref"}
+    assert intra_package == {
+        "ability_spec",
+        "reference_vocabulary",
+        "value_source_receipt",
+        "value_ref",
+    }
 
 
 def test_every_trigger_names_a_stream_the_bus_carries() -> None:

@@ -29,20 +29,14 @@ from .. import healing_helpers as _healing
 from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
-from .module_contract import coverage
 from .module_helpers import ranked_slot
-from .slotlib import (
-    STEROID_ZERO,
-    ability_name,
-    attach_self_shield,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    simple_damage,
-)
+from .slot_entries import STEROID_ZERO, attach_self_shield, damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # Rooted in ShyvanaW.Duration; the cached W description corroborates the

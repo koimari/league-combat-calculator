@@ -144,8 +144,10 @@ from types import SimpleNamespace
 
 import pytest
 
+from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
+from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.fight_params import FightParams
 from src.calculator.interpreters import uncompilable_item_receipt
 from src.calculator.item_coverage import (
     ATTACKER_LANES,
@@ -166,9 +168,9 @@ from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.pipeline import run_fight
 from src.calculator.program.compile import TargetMitigation, knights_vow_target_factor
-from src.calculator.scenario import ChampionLoadout
+from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.stats import calculate_total_stats
 from tests.survival_probe import simulate_survival
 

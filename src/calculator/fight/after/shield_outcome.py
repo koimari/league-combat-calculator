@@ -3,7 +3,7 @@
 from collections.abc import Iterable
 from typing import Any
 
-from ... import shield_ledger
+from ... import shield_ledger, shield_pools
 from ...survival.pricing import restate_declaration
 from ...survival.transitions import evaluate_live_raw_formula
 from ..config import FightConfig
@@ -41,7 +41,7 @@ def _resolve_starting_shield_outcome(
     (:func:`restate_declaration`, Ruling 1's *kept in step*).
     """
     repriced = False
-    pools = shield_ledger.build_pools(
+    pools = shield_pools.build_pools(
         state.target_health,
         magic_shield=config.target_magic_shield,
         physical_shield=config.target_physical_shield,
@@ -57,7 +57,7 @@ def _resolve_starting_shield_outcome(
     )
     heal_drip = _ThresholdHealDrip()
     threshold_health = pools.threshold_health
-    if shield_ledger.is_inert(pools):
+    if shield_pools.is_inert(pools):
         # No shield can absorb and no threshold state can arm: every
         # per-event absorption below is exactly ``- 0.0``, so the walk
         # reduces bit-for-bit to sequential floored health subtraction.

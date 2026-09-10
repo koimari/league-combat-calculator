@@ -358,7 +358,7 @@ where:
 - `f(S)` = the **coupled participant-timeline score**: deterministic total
   damage dealt by the main participant before its own death, summed over the
   fight window, with an infinitesimal effective-health tiebreak
-  (`score + EHP·1e-9`, optimizer.py `_evaluate_build_uncached`),
+  (`score + EHP·1e-9`, `build_evaluation._evaluate_build_uncached`),
 - exclusivity groups: at most one item per group (Spellblade, Fatality,
   Blight, …), enforced by `loadout_rules`.
 

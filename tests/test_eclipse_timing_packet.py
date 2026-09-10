@@ -69,10 +69,12 @@ import pytest
 from src.app import _load_public_champion
 from src.calculator import participant_timeline
 from src.calculator.ability_spec import DamagePart
+from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
+from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.fight.config import FightConfig
+from src.calculator.fight_params import FightParams
 from src.calculator.interpreters import (
     cast_proc,
     compilability_for,
@@ -84,10 +86,11 @@ from src.calculator.item_effects import (
     required_effect_value,
 )
 from src.calculator.participant_timeline import Combatant, build_participant_timeline
-from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.scenario import ChampionLoadout
+from src.calculator.pipeline import run_fight
+from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.stats import calculate_total_stats
-from src.calculator.survival.actions import SUPPORT_RANK_KEY, TransitionRank
+from src.calculator.survival.classify import SUPPORT_RANK_KEY
+from src.calculator.survival.phases import TransitionRank
 from src.calculator.timeline_coverage import (
     EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES,
     applicability_exclusion_sources,

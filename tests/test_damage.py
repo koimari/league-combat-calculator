@@ -3277,7 +3277,8 @@ class TestHealthComponentInvariant:
 
     @staticmethod
     def _stats(champion_data, level, items, options) -> dict[str, float]:
-        from src.calculator.pipeline import FightParams, run_fight
+        from src.calculator.fight_params import FightParams
+        from src.calculator.pipeline import run_fight
 
         params = FightParams.from_request({"champion_options": options})
         return run_fight(champion_data, level, list(items), params)["champion_stats"]
@@ -3334,7 +3335,8 @@ class TestEmpoweredSwingAttribution:
 
     @staticmethod
     def _fight(champion_data, level=18, items=(), **overrides):
-        from src.calculator.pipeline import FightParams, run_fight
+        from src.calculator.fight_params import FightParams
+        from src.calculator.pipeline import run_fight
 
         request = {
             "target_health": 1000,

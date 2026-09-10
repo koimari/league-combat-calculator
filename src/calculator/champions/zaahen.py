@@ -34,21 +34,21 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import BUFF, CC_PER_PART, SlotCtx
+from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import ranked_slot, typed_damage
 from .packet_module import build_packet_module
-from .slotlib import (
-    STEROID_ZERO,
+from .slot_cc import CC_PER_PART
+from .slot_entries import STEROID_ZERO, damage_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cooldown,
     extract_named,
     find_named_leveling,
     sum_modifiers,
-    with_item_on_hits,
 )
+from .slotlib import with_item_on_hits
 
 PACKET_SHA256 = "3f503513da5502ab7521ed9ad58c654c8729e4f4bc857719f6e74c8ed5cbabb8"
 

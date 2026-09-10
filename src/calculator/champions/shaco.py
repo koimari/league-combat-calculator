@@ -45,19 +45,15 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..ability_spec import ControlEvent, DamagePart
+from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import CC_PER_PART, ONHIT, SlotCtx
+from ..control_spec import ControlEvent
+from .engine import ONHIT, SlotCtx
 from .module_helpers import named_damage, ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    on_hit_entry,
-)
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry, on_hit_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 
 # Sourced box attack pattern (wiki Shaco W + "Champion summoned units"
 # page): the sprung box fires every 0.5 seconds for its 5-second

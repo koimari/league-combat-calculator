@@ -8,9 +8,10 @@ from pathlib import Path
 import pytest
 
 from scripts import build_reviewed_modules as builder
+from src.calculator.champion_loadout import load_public_champion
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.champions.packet_module import SlotOverrides, _compiled_slot
-from src.calculator.scenario import load_public_champion
+from src.calculator.champions.packet_module import _compiled_slot
+from src.calculator.champions.packet_parsers import SlotOverrides
 from tests import row_review
 
 ROOT = Path(__file__).resolve().parents[1]

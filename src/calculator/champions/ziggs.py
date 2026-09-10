@@ -29,16 +29,9 @@ from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import ranked_slot
-from .slotlib import (
-    ability_name,
-    by_option,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    proc_damage,
-    simple_damage,
-)
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
+from .slotlib import by_option, proc_damage, simple_damage
 from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — the wiki-scraped JSON stores

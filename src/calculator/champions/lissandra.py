@@ -23,10 +23,12 @@ not have, so nothing but the boundary receipt could be priced anyway.
 from typing import Any
 
 from .. import healing_helpers as _healing
-from .engine import CC_PER_PART, SlotCtx, build_parser
+from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .shared_mechanics import unreachable_innate
-from .slotlib import simple_damage, with_control
+from .slot_cc import CC_PER_PART
+from .slot_control import with_control
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 OPTIONS: list[dict[str, Any]] = []

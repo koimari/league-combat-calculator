@@ -8,9 +8,10 @@ the ledger sum-reconciles to the row total exactly.
 import pytest
 
 from src.calculator.calculate import calculate_payload
+from src.calculator.champion_loadout import load_public_champion
 from src.calculator.data_fetcher import get_champion
-from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.scenario import load_public_champion
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 from tests import cc_review
 
 _W_TICKS = 6
@@ -155,7 +156,7 @@ class TestReviewedCrowdControl:
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
         from src.calculator.champions import fizz
-        from src.calculator.champions.engine import CC_PER_PART
+        from src.calculator.champions.slot_cc import CC_PER_PART
 
         assert fizz.MODULE_CC == {
             "Q": "none",

@@ -66,11 +66,10 @@ from src.calculator import (
 )
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.fight.ledger import event_ledger
-from src.calculator.optimizer import (
-    get_selectable_items,
-    optimize_build,
-)
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight_params import FightParams
+from src.calculator.optimizer import optimize_build
+from src.calculator.optimizer_candidates import get_selectable_items
+from src.calculator.pipeline import run_fight
 
 REPEATS = 7
 

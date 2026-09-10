@@ -28,13 +28,11 @@ cached magnitude to put in it — see the ASSUMPTIONS entry.
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx
-from .module_contract import coverage
 from .module_helpers import buff_window_share, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
-from .slotlib import (
-    extract_value,
-)
+from .slot_extract import extract_value
 
 PACKET_SHA256 = "d6e04f1cd92d4f7ddd569c7ba4bb306cdd06c18e230c7ed2a57ef89ba45b3c9c"
 

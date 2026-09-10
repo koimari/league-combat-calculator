@@ -48,18 +48,18 @@ from typing import Any
 
 from ..binary_roots import data_value, spell_object
 from ..stat_formulas import growth_multiplier
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .inputs import champion_stat, int_option
-from .module_contract import coverage
 from .module_helpers import named_damage, ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
+from .slot_control import with_control
+from .slot_entries import fixed_count_pet_row
+from .slot_extract import (
     ability_name,
     extract_cooldown,
     extract_value,
     find_named_leveling,
-    fixed_count_pet_row,
-    with_control,
 )
 
 _MALZAHAR_E_SPELL = spell_object("Malzahar", "MalzaharE")

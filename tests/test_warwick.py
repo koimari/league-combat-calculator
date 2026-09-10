@@ -13,12 +13,12 @@ import copy
 import pytest
 
 from src.calculator.ability_spec import AttackClass, DamageClass
+from src.calculator.champion_loadout import load_public_champion
 from src.calculator.champions import (
     get_champion_module_contract,
     shared_mechanics,
     warwick,
 )
-from src.calculator.scenario import load_public_champion
 from tests import cc_review, rider_probe, row_review
 
 

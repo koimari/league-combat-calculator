@@ -1,7 +1,7 @@
 """The two selected-rune amplifier shapes, health-gated and flat."""
 
 from ... import rune_effects
-from ...interpreters import delta_amp
+from ...interpreters import amp_magnitude, delta_amp
 from ...item_behavior import AmpChainSlot, Comparison, Probe
 from ..after.amp_chain import _record_amp_row, _required_amp_slot
 from ..ledger.event_ledger import _ordered_damage_events
@@ -35,7 +35,7 @@ def _health_gate_disclosure(
 ) -> str:
     """What one health-gated rune amplified, in the declaration's own numbers."""
     side = "below" if slot.live_comparison() is Comparison.LT else "above"
-    share = slot.value(delta_amp.LIVE_THRESHOLD_FIELD) * 100
+    share = slot.value(amp_magnitude.LIVE_THRESHOLD_FIELD) * 100
     return (
         f"{effect.rune_name} amplifies exactly the instances that land while "
         f"the target is {side} {share:g}% of its maximum health, read off the "

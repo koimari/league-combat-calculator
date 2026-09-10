@@ -23,8 +23,8 @@ from src.calculator.champions import (
     get_champion_module_contract,
     parse_abilities,
 )
-from src.calculator.champions.engine import CC_PER_PART
-from src.calculator.champions.module_contract import REQUIRED_CHAMPION_SLOTS
+from src.calculator.champions.contract_vocabulary import REQUIRED_CHAMPION_SLOTS
+from src.calculator.champions.slot_cc import CC_PER_PART
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review

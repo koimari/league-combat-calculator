@@ -173,18 +173,17 @@ from .item_behavior import (
     chain_rank,
     validate_rule,
 )
-from .survival.actions import ActionKind
+from .reference_vocabulary import LevelScale, ValueRegistry
+from .survival.typed_action import ActionKind
 from .value_ref import (
     Const,
     DerivedValueRef,
     LateLevelValueRef,
-    LevelScale,
     LevelValueRef,
-    SourceReceipt,
     ValueRef,
-    ValueRegistry,
     ValueSource,
 )
+from .value_source_receipt import SourceReceipt
 
 
 class BehaviorCatalogError(RuntimeError):

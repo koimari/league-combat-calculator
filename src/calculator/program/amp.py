@@ -50,7 +50,7 @@ from enum import Enum
 from typing import Final, NamedTuple
 
 from ..ability_spec import AttackClass, DamageClass
-from ..interpreters import delta_amp
+from ..interpreters import amp_magnitude, delta_amp, part_amp
 from ..item_behavior import (
     AMP_CHAIN_ORDER,
     Comparison,
@@ -60,7 +60,7 @@ from ..item_behavior import (
     Probe,
     Subject,
 )
-from ..survival.actions import LiveAmp, LiveProbe
+from ..survival.typed_action import LiveAmp, LiveProbe
 from ..trigger_stream import HolderStacking
 from .identity import MechanicId, PIdx
 
@@ -268,7 +268,7 @@ class AmpRiders(NamedTuple):
     """
 
     live: Sequence[LiveAmpRider] = ()
-    holder: delta_amp.StaticHolderAmps | None = None
+    holder: part_amp.StaticHolderAmps | None = None
 
 
 #: An attacker who declared no amplifier, as one shared frozen value the
@@ -348,8 +348,8 @@ def _rider_for(slot, rule, index: int, activation: LivePredicate) -> LiveAmpRide
     return LiveAmpRider(
         amp=LiveAmp(
             probe=probe,
-            threshold=slot.value(delta_amp.LIVE_THRESHOLD_FIELD, index),
-            fraction=slot.value(delta_amp.AMP_FRACTION_FIELD, index),
+            threshold=slot.value(amp_magnitude.LIVE_THRESHOLD_FIELD, index),
+            fraction=slot.value(amp_magnitude.AMP_FRACTION_FIELD, index),
             mechanic=rule.mechanic_id,
         ),
         damage_types=frozenset(

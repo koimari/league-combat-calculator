@@ -87,6 +87,7 @@ def _swing_event_row(
     times: list[float],
     damages: list[float],
     damage_type: str,
+    *,
     declarations: list[tuple[Any, ...]] | None = None,
     raws: list[float] | None = None,
     resists: Resists | None = None,
@@ -379,7 +380,7 @@ def _layer_on_hit_effects(
                     application_times,
                     [per_hit] * hits,
                     source.damage_type,
-                    [declaration] * hits,
+                    declarations=[declaration] * hits,
                     resists=resists,
                 )
             )
@@ -784,7 +785,7 @@ def _layer_on_hit_effects(
                     application_times,
                     [proc.mitigated for proc in current_health_hit_damages],
                     source.damage_type,
-                    [
+                    declarations=[
                         _on_hit_declaration(mechanic, proc.raw)
                         for proc in current_health_hit_damages
                     ],

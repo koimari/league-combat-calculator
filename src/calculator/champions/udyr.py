@@ -32,23 +32,24 @@ scope; the stances' own damage is priced on Q/W/E/R.
 from typing import Any
 
 from .. import healing_helpers as _healing
-from ..ability_spec import ControlScope, DamagePart
+from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from ..control_spec import ControlScope
+from .contract_vocabulary import coverage
 from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import target_stat
-from .module_contract import coverage
 from .module_helpers import ranked_slot, with_detail
 from .packet_module import build_packet_module, repeat_damage_parser
 from .shared_mechanics import move_speed_grant, ranked_packet_slot
-from .slotlib import (
+from .slot_control import with_control_event
+from .slot_entries import ability_on_hit_entry
+from .slot_extract import (
     ability_name,
-    ability_on_hit_entry,
     extract_named,
     extract_value,
     find_named_leveling,
     sum_modifiers,
-    with_control_event,
 )
 
 # The Awaken lightning chain's strike COUNT is the binary UdyrQ.Bounces

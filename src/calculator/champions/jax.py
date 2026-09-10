@@ -9,17 +9,17 @@ from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import no_damage, ranked_slot
 from .shared_mechanics import empowered_auto_entry
-from .slotlib import (
+from .slot_control import with_control
+from .slot_entries import damage_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
     find_named_leveling,
-    simple_damage,
     sum_modifiers,
-    with_control,
 )
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 

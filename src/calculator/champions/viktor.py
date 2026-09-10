@@ -36,11 +36,13 @@ inventing both the fragment count and the effect.
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .module_contract import coverage
 from .packet_module import build_packet_module, first_plus_repeats_parser
 from .shared_mechanics import per_level_row
-from .slotlib import attach_self_shield, extract_named, with_control_event
+from .slot_control import with_control_event
+from .slot_entries import attach_self_shield
+from .slot_extract import extract_named
 
 # HARDCODED: verify on patch updates — the shield window (2.5s) and the
 # Discharge window (4s) are wiki Q prose; the shield base row and the

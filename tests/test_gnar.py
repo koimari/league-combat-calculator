@@ -38,7 +38,8 @@ from src.calculator.champions.gnar import (
 )
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.fight.config import FightConfig
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 from src.calculator.stats import growth_stat
 from tests import cc_review
 

@@ -31,20 +31,14 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..stat_formulas import effective_cooldown
+from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import float_option, int_option
-from .module_contract import coverage
 from .module_helpers import clamp, ranked_slot
 from .shared_mechanics import prose_numbers
-from .slotlib import (
-    ability_name,
-    attach_self_shield,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_recharge,
-    extract_value,
-)
+from .slot_control import extract_recharge
+from .slot_entries import attach_self_shield, damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
 
 _VI_Q_SPELL = spell_object("Vi", "ViQ")

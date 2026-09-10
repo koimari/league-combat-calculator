@@ -52,18 +52,15 @@ from typing import Any
 from ..ability_atoms import ability_payload
 from ..ability_spec import DamageClass, DamagePart
 from ..healing_helpers import HealAnchor, ability_json, payments, trigger_fields
-from .engine import CC_PER_PART, SlotCtx, build_parser
+from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import ranked_slot
 from .shared_mechanics import damage_reduction_window
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    simple_damage,
-)
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 

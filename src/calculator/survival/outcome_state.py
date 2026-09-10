@@ -20,8 +20,9 @@ from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from ..ability_spec import Measured, Quantity, Starved, StarvedSignal, StructuralZero
-from .actions import NO_SLOT, SurvivalAction, TriggerLinkage
+from ..quantity import Measured, Quantity, Starved, StarvedSignal, StructuralZero
+from .event_slots import NO_SLOT
+from .typed_action import SurvivalAction, TriggerLinkage
 
 __all__ = [
     "OUTCOME_FIELDS",

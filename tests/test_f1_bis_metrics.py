@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 import src.app as app_module
-from src.calculator.bis import bis_candidate_pool
+from src.calculator.bis_candidates import bis_candidate_pool
 from src.calculator.calculate import calculate_payload
 from tests.app_config import app_config
 

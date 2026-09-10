@@ -4,7 +4,8 @@ from collections.abc import Callable, Mapping
 from typing import Any
 
 from ...ability_atoms import ability_field
-from ...ability_spec import ControlScope, DamagePart, cc_kind_reviewed
+from ...ability_spec import DamagePart
+from ...control_spec import ControlScope, cc_kind_reviewed
 from ..ledger.event_rows import _damage_type_fields
 from ..mitigation import _crit_scaled_raw, _mitigate_hits
 from ..resists import _resistance_met_fields

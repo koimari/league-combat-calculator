@@ -36,18 +36,14 @@ from ..binary_roots import (
     data_value_at_rank,
     spell_object,
 )
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .module_contract import coverage
 from .module_helpers import named_damage
 from .packet_module import build_packet_module
 from .shared_mechanics import with_self_shield
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    with_control,
-)
+from .slot_control import with_control
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
 
 PACKET_SHA256 = "ff30f30c58b8eda283a6c9556bf529b98ad0e3b00ae545f8019356d6b7c75acb"
 

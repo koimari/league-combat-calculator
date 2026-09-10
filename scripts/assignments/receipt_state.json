@@ -1,0 +1,24 @@
+{
+ "source": "src/calculator/survival/receipt_state.py",
+ "decisions": [
+  "extract_modules.py refuses any new module that reads a name left in the residue, so every assignment here is downward closed: the residue sits at the top of the dependency order and imports its children.",
+  "The map's split runs unchanged: both new modules are leaves against this source and the residue takes back only _resolved_defence_contracts."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/survival/receipt_ledger.py",
+   "docstring": "The receipt ledger a walk writes its outcomes into.",
+   "defs": [
+    "ReceiptLedger"
+   ]
+  },
+  {
+   "path": "src/calculator/survival/defense_contracts.py",
+   "docstring": "The one place the four interaction resolvers are read into a participant state.",
+   "defs": [
+    "_resolved_defence_contracts"
+   ]
+  }
+ ]
+}

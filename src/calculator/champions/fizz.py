@@ -7,10 +7,12 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import CC_PER_PART, SlotCtx, build_parser
+from .engine import SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import no_damage, ranked_slot
-from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
 

@@ -4,7 +4,7 @@ from collections.abc import Iterable, Mapping
 from typing import Any
 
 from ..ability_atoms import ability_field
-from ..ability_spec import ControlEvent, ControlScope
+from ..control_spec import ControlEvent, ControlScope
 
 
 def _declared_cc_kind(parts: Iterable[Any]) -> str | None:

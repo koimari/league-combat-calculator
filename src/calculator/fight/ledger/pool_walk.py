@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from ... import shield_ledger
+from ... import shield_ledger, shield_pools
 from ...interpreters import delta_amp, threshold_defense
 from ...item_behavior import Probe
 from ..cast_slots import DEFAULT_CAST_ORDER
@@ -35,9 +35,9 @@ class _ThresholdHealDrip:
 
     def start(
         self,
-        pools: shield_ledger.ShieldPools,
+        pools: shield_pools.ShieldPools,
         event_time: float,
-        armed: shield_ledger.Absorption,
+        armed: shield_pools.Absorption,
     ) -> None:
         """Begin the heal on the instance whose damage armed the Lifeline.
 
@@ -62,7 +62,7 @@ class _ThresholdHealDrip:
         self.tick_amount = remainder / self.ticks if self.ticks else 0.0
         self.healing_received += armed.threshold_health_healed
 
-    def advance_to(self, pools: shield_ledger.ShieldPools, event_time: float) -> None:
+    def advance_to(self, pools: shield_pools.ShieldPools, event_time: float) -> None:
         """Land every authored tick due by ``event_time``, then the expiry.
 
         The final tick falls on the window's last instant, which is also the
@@ -82,7 +82,7 @@ class _ThresholdHealDrip:
             if received > 0.0 and pools.health > 0.0:
                 pools.health += received
                 self.healing_received += received
-        shield_ledger.expire_threshold_health(pools, event_time)
+        shield_pools.expire_threshold_health(pools, event_time)
 
     # A declaration subdividing the window into no ticks leaves the heal's
     # timing unsourced — the coverage downgrade the target-side Lifeline owes.
@@ -163,7 +163,7 @@ def _simulate_ordered_damage(
     if cast_order is None:
         cast_order = list(DEFAULT_CAST_ORDER)
     crit_bonus = cinderbloom.bonus_fraction if cinderbloom is not None else 0.0
-    pools = shield_ledger.build_pools(
+    pools = shield_pools.build_pools(
         target_health,
         magic_shield=target_magic_shield,
         physical_shield=target_physical_shield,

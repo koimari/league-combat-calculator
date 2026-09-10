@@ -3,10 +3,13 @@
 import pytest
 
 from src.app import app
+from src.calculator.champion_loadout import (
+    load_public_champion as _load_public_champion,
+)
 from src.calculator.champions import get_champion_options_meta
-from src.calculator.champions.slotlib import extract_cooldown
-from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.scenario import load_public_champion as _load_public_champion
+from src.calculator.champions.slot_extract import extract_cooldown
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 from tests.app_config import app_config
 
 

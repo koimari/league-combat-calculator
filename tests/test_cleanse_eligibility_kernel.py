@@ -11,10 +11,11 @@ from types import SimpleNamespace
 
 import pytest
 
+from src.calculator import cleanse_declarations, control_intervals
 from src.calculator import cleanse_eligibility as ce
 from src.calculator.crowd_control_eligibility import classify_control
-from src.calculator.delivery_eligibility import stable_event_key
-from src.calculator.state_lifecycle import SourceReceipt
+from src.calculator.delivery_facts import stable_event_key
+from src.calculator.state_timeline import SourceReceipt
 from src.calculator.survival.compile import unrepresentable_template_receipt
 
 
@@ -46,7 +47,7 @@ def _interval(kind: str, start: float, end: float, source: str = "E") -> dict:
 
 def _eligibility(item: str = "Quicksilver Sash") -> ce.CleanseEligibility:
     return ce.CleanseEligibility(
-        declaration=ce.item_declaration(item),
+        declaration=cleanse_declarations.item_declaration(item),
         source=SourceReceipt(
             label="Local League Wiki cache — " + item,
             url="https://wiki.leagueoflegends.com",
@@ -60,12 +61,12 @@ def _eligibility(item: str = "Quicksilver Sash") -> ce.CleanseEligibility:
 
 
 def test_declarations_are_sourced_and_fail_closed():
-    assert set(ce.ITEM_CLEANSE_DECLARATIONS) == {
+    assert set(cleanse_declarations.ITEM_CLEANSE_DECLARATIONS) == {
         "Mikael's Blessing",
         "Quicksilver Sash",
         "Mercurial Scimitar",
     }
-    for item, declaration in ce.ITEM_CLEANSE_DECLARATIONS.items():
+    for item, declaration in cleanse_declarations.ITEM_CLEANSE_DECLARATIONS.items():
         assert declaration["item"] == item
         assert declaration["cooldown_source_gap"] is True
         assert declaration["cooldown_seconds"] is None
@@ -73,25 +74,28 @@ def test_declarations_are_sourced_and_fail_closed():
         assert isinstance(declaration["excluded_control_kinds"], tuple)
     # Wording receipts reproduce the cached branch text.
     assert any(
-        ce.MIKAELS_WORDING in str(receipt)
-        for receipt in ce.ITEM_CLEANSE_DECLARATIONS["Mikael's Blessing"][
-            "source_receipts"
-        ]
+        cleanse_declarations.MIKAELS_WORDING in str(receipt)
+        for receipt in cleanse_declarations.ITEM_CLEANSE_DECLARATIONS[
+            "Mikael's Blessing"
+        ]["source_receipts"]
     )
 
 
 def test_resolve_cleanse_item_fails_closed_for_unknown_sources():
-    assert ce.resolve_cleanse_item("Quicksilver Sash — Quicksilver") == (
-        "Quicksilver Sash"
+    assert cleanse_declarations.resolve_cleanse_item(
+        "Quicksilver Sash — Quicksilver"
+    ) == ("Quicksilver Sash")
+    assert (
+        cleanse_declarations.resolve_cleanse_item("Mercurial Scimitar")
+        == "Mercurial Scimitar"
     )
-    assert ce.resolve_cleanse_item("Mercurial Scimitar") == "Mercurial Scimitar"
-    assert ce.resolve_cleanse_item("Mikael's Blessing — Purify") == (
+    assert cleanse_declarations.resolve_cleanse_item("Mikael's Blessing — Purify") == (
         "Mikael's Blessing"
     )
     with pytest.raises(KeyError, match="not a declared item"):
-        ce.resolve_cleanse_item("Silvermere Dawn")
+        cleanse_declarations.resolve_cleanse_item("Silvermere Dawn")
     with pytest.raises(KeyError, match="no cleanse declaration"):
-        ce.item_declaration("Not an Item")
+        cleanse_declarations.item_declaration("Not an Item")
 
 
 # ---------------------------------------------------------------------------
@@ -212,7 +216,7 @@ def test_unknown_control_kind_fails_closed():
     assert decision.reason == "unknown_control"
     assert decision.use_consumed is False
     assert decision.removed_controls == []
-    kept, removed = ce.truncate_intervals(
+    kept, removed = control_intervals.truncate_intervals(
         [_interval("dance", 1.0, 3.0)], 1.5, {"dance"}
     )
     assert kept == [_interval("dance", 1.0, 3.0)]
@@ -278,7 +282,9 @@ def test_mikaels_rejects_suppression_while_qss_denies_cast():
     for item in ("Quicksilver Sash", "Mercurial Scimitar"):
         assert (
             "suppression"
-            not in ce.ITEM_CLEANSE_DECLARATIONS[item]["excluded_control_kinds"]
+            not in cleanse_declarations.ITEM_CLEANSE_DECLARATIONS[item][
+                "excluded_control_kinds"
+            ]
         )
 
 
@@ -294,7 +300,7 @@ def test_truncate_intervals_historical_active_and_same_time():
         _interval("stun", 2.0, 4.0, source="C"),  # same-time -> removed
         _interval("stun", 3.0, 4.0, source="D"),  # future -> untouched
     ]
-    kept, removed = ce.truncate_intervals(intervals, 2.0, {"stun"})
+    kept, removed = control_intervals.truncate_intervals(intervals, 2.0, {"stun"})
     # The matrix commits the kernel rule: an interval starting at/after the
     # activation is removed entirely (same-timestamp controls resolve by the
     # walk total order; the walk never passes a control landing later, which
@@ -315,30 +321,32 @@ def test_truncate_intervals_never_touches_non_eligible_or_unknown_kinds():
         _interval("death", 0.0, 5.0, source="Death"),
         _interval("dance", 1.0, 3.0, source="?"),
     ]
-    kept, removed = ce.truncate_intervals(intervals, 2.0, {"stun"})
+    kept, removed = control_intervals.truncate_intervals(intervals, 2.0, {"stun"})
     assert kept == intervals
     assert removed == []
 
 
 def test_merged_interval_duration_union_semantics():
-    assert ce.merged_interval_duration(
+    assert control_intervals.merged_interval_duration(
         [_interval("stun", 1.0, 3.0), _interval("root", 2.0, 4.0)]
     ) == pytest.approx(3.0)
-    assert ce.merged_interval_duration([]) == pytest.approx(0.0)
+    assert control_intervals.merged_interval_duration([]) == pytest.approx(0.0)
 
 
 def test_merged_spans_is_the_fold_the_duration_measures():
-    assert ce.merged_spans([(3.0, 4.0), (1.0, 2.0), (2.0, 2.5)]) == (
+    assert control_intervals.merged_spans([(3.0, 4.0), (1.0, 2.0), (2.0, 2.5)]) == (
         (1.0, 2.5),
         (3.0, 4.0),
     )
-    assert ce.merged_spans([]) == ()
+    assert control_intervals.merged_spans([]) == ()
     # The engine's burst blocks and the walk's downtime are one fold: the
     # duration is the summed length of exactly these spans.
     spans = [(1.0, 3.0), (2.0, 4.0), (6.0, 6.5)]
-    assert ce.merged_interval_duration(
+    assert control_intervals.merged_interval_duration(
         [_interval("stun", start, end) for start, end in spans]
-    ) == pytest.approx(sum(end - start for start, end in ce.merged_spans(spans)))
+    ) == pytest.approx(
+        sum(end - start for start, end in control_intervals.merged_spans(spans))
+    )
 
 
 # ---------------------------------------------------------------------------

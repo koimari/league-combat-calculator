@@ -1,9 +1,24 @@
-"""Tests for the build optimizer."""
+"""Tests for the build optimizer.
+
+file-length-ok: one file per public entry point, and the two the optimizer has
+(``optimize_build`` and ``optimize_purchase``) are scored through synthetic
+item pools whose scaffolding is most of these lines.
+"""
 
 import pytest
 
-from src.calculator import economy
+from src.calculator import (
+    build_evaluation,
+    build_receipts,
+    economy,
+    item_coverage,
+    optimizer_candidates,
+    purchase_plans,
+)
+from src.calculator.build_evaluation import evaluate_build
+from src.calculator.build_search import _hill_climb
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.fight_params import FightParams
 from src.calculator.item_effects import manaflow_items
 from src.calculator.loadout_rules import (
     ITEM_EXCLUSIVITY_GROUPS,
@@ -11,20 +26,16 @@ from src.calculator.loadout_rules import (
     role_scoped_shop_items,
 )
 from src.calculator.optimizer import (
-    _evaluate_build,
-    _hill_climb,
+    optimize_build as _optimize_build,
+)
+from src.calculator.optimizer_candidates import (
     get_eligible_boots,
     get_eligible_legendaries,
     get_purchase_items,
     get_selectable_items,
     item_gold,
-    optimize_purchase,
-    optimizer_supported_items,
 )
-from src.calculator.optimizer import (
-    optimize_build as _optimize_build,
-)
-from src.calculator.pipeline import FightParams
+from src.calculator.purchase_search import optimize_purchase
 
 _FIGHT_PARAM_KEYS = {
     "target_health",
@@ -151,7 +162,7 @@ class TestItemPools:
             assert "Shurelya's Battlesong" not in {item["name"] for item in items}
             return 1.0
 
-        monkeypatch.setattr("src.calculator.optimizer._evaluate_build", fake_evaluate)
+        monkeypatch.setattr(build_evaluation, "evaluate_build", fake_evaluate)
         params = FightParams.from_request({"role": "top"}, deterministic=True)
         result = _optimize_build(
             get_champion("Aatrox"),
@@ -179,18 +190,19 @@ def test_evaluate_build_sums_objective_across_target_roster(monkeypatch):
             },
         }
 
-    monkeypatch.setattr("src.calculator.optimizer.run_fight", fake_run_fight)
+    monkeypatch.setattr(build_evaluation, "run_fight", fake_run_fight)
     first = FightParams.from_request({"target_health": 1000}, deterministic=True)
     second = FightParams.from_request({"target_health": 2500}, deterministic=True)
 
-    score = _evaluate_build({}, 1, [], (first, second), objective="magic_damage")
+    score = evaluate_build({}, 1, [], (first, second), objective="magic_damage")
 
     assert score == 350
 
 
 def test_hill_climb_reuses_greedy_score_without_duplicate_evaluation(monkeypatch):
     monkeypatch.setattr(
-        "src.calculator.optimizer._evaluate_build",
+        build_evaluation,
+        "evaluate_build",
         lambda *_args, **_kwargs: pytest.fail("duplicate initial evaluation"),
     )
     item = {"name": "Rabadon's Deathcap"}
@@ -220,7 +232,8 @@ def test_hill_climb_reuses_greedy_score_without_duplicate_evaluation(monkeypatch
 def test_coupled_total_damage_does_not_add_effective_health_twice(monkeypatch):
     """Survival-coupled output is already truncated at the main actor's death."""
     monkeypatch.setattr(
-        "src.calculator.optimizer.build_participant_timeline",
+        build_evaluation,
+        "build_participant_timeline",
         lambda *args, **kwargs: {
             "breakdown": [{"participant_id": "main", "total_damage": 125.0}],
             "participants": [
@@ -236,7 +249,7 @@ def test_coupled_total_damage_does_not_add_effective_health_twice(monkeypatch):
     )
     params = FightParams.from_request({}, deterministic=True)
 
-    score = _evaluate_build(
+    score = evaluate_build(
         get_champion("Aatrox"),
         18,
         [],
@@ -269,9 +282,7 @@ def test_coupled_equal_damage_uses_event_health_only_as_tie_break(monkeypatch):
             },
         }
 
-    monkeypatch.setattr(
-        "src.calculator.optimizer.build_participant_timeline", fake_timeline
-    )
+    monkeypatch.setattr(build_evaluation, "build_participant_timeline", fake_timeline)
     result = optimize_build(
         "Aatrox",
         get_champion("Aatrox"),
@@ -304,9 +315,7 @@ def test_coupled_optimizer_rejects_partial_candidates_before_ranking(monkeypatch
             },
         }
 
-    monkeypatch.setattr(
-        "src.calculator.optimizer.build_participant_timeline", fake_timeline
-    )
+    monkeypatch.setattr(build_evaluation, "build_participant_timeline", fake_timeline)
     result = optimize_build(
         "Aatrox",
         get_champion("Aatrox"),
@@ -351,9 +360,7 @@ def test_coupled_optimizer_excludes_audited_item_timing_before_ranking(monkeypat
             },
         }
 
-    monkeypatch.setattr(
-        "src.calculator.optimizer.build_participant_timeline", fake_timeline
-    )
+    monkeypatch.setattr(build_evaluation, "build_participant_timeline", fake_timeline)
     result = optimize_build(
         "Aatrox",
         get_champion("Aatrox"),
@@ -400,7 +407,7 @@ def test_uncoupled_optimizer_drops_partial_candidates_with_disclosed_rows(monkey
             },
         }
 
-    monkeypatch.setattr("src.calculator.optimizer.run_fight", fake_run_fight)
+    monkeypatch.setattr(build_evaluation, "run_fight", fake_run_fight)
     result = optimize_build(
         "Aatrox",
         get_champion("Aatrox"),
@@ -443,10 +450,11 @@ def test_coupled_ranked_build_uses_its_participant_timeline_receipt(monkeypatch)
         }
 
     monkeypatch.setattr(
-        "src.calculator.optimizer.build_participant_timeline", coupled_timeline
+        build_evaluation, "build_participant_timeline", coupled_timeline
     )
     monkeypatch.setattr(
-        "src.calculator.optimizer.run_fight",
+        build_evaluation,
+        "run_fight",
         lambda *_args, **_kwargs: {
             "timeline_coverage": {
                 "complete": False,
@@ -477,7 +485,8 @@ def test_coupled_ranked_build_uses_its_participant_timeline_receipt(monkeypatch)
 
 def test_coupled_evaluate_withholds_partial_timeline(monkeypatch):
     monkeypatch.setattr(
-        "src.calculator.optimizer.build_participant_timeline",
+        build_evaluation,
+        "build_participant_timeline",
         lambda *_args, **_kwargs: {
             "breakdown": [{"participant_id": "main", "total_damage": 125.0}],
             "participants": [],
@@ -490,7 +499,7 @@ def test_coupled_evaluate_withholds_partial_timeline(monkeypatch):
         },
     )
     params = FightParams.from_request({}, deterministic=True)
-    score = _evaluate_build(
+    score = evaluate_build(
         get_champion("Aatrox"),
         18,
         [],
@@ -513,7 +522,8 @@ def test_audit_less_memo_entry_cannot_mute_a_dropped_candidate(monkeypatch):
     the audit-less memo entry as a silent ``-inf``.
     """
     monkeypatch.setattr(
-        "src.calculator.optimizer.build_participant_timeline",
+        build_evaluation,
+        "build_participant_timeline",
         lambda *_args, **_kwargs: {
             "breakdown": [{"participant_id": "main", "total_damage": 125.0}],
             "participants": [],
@@ -533,7 +543,7 @@ def test_audit_less_memo_entry_cannot_mute_a_dropped_candidate(monkeypatch):
         "score_memo": {},
     }
     owned = [get_item_by_name("Unending Despair")]
-    baseline = _evaluate_build(
+    baseline = evaluate_build(
         get_champion("Aatrox"),
         18,
         owned,
@@ -555,7 +565,7 @@ def test_audit_less_memo_entry_cannot_mute_a_dropped_candidate(monkeypatch):
         "build_coverages": {},
         "withheld_builds": {},
     }
-    score = _evaluate_build(
+    score = evaluate_build(
         get_champion("Aatrox"),
         18,
         owned,
@@ -622,7 +632,8 @@ def test_candidate_coverage_alone_does_not_certify_a_coarse_search(
     as well.
     """
     monkeypatch.setattr(
-        "src.calculator.optimizer.optimizer_candidate_coverage",
+        item_coverage,
+        "optimizer_candidate_coverage",
         lambda items: {
             "eligible_candidates": len(items),
             "scored_candidates": len(items),
@@ -657,7 +668,8 @@ def test_one_open_slot_is_certified_when_candidates_and_timelines_are_complete(
     monkeypatch,
 ):
     monkeypatch.setattr(
-        "src.calculator.optimizer.optimizer_candidate_coverage",
+        item_coverage,
+        "optimizer_candidate_coverage",
         lambda items: {
             "eligible_candidates": len(items),
             "scored_candidates": len(items),
@@ -682,7 +694,7 @@ def test_one_open_slot_is_certified_when_candidates_and_timelines_are_complete(
             },
         }
 
-    monkeypatch.setattr("src.calculator.optimizer.run_fight", exact_fight)
+    monkeypatch.setattr(build_evaluation, "run_fight", exact_fight)
     result = optimize_build(
         "Ahri",
         get_champion("Ahri"),
@@ -1125,10 +1137,9 @@ class TestSixVsFiveSlots:
 def test_coupled_optimizer_caches_do_not_change_results(monkeypatch):
     """The score memo and pair caches are pure speed: force-disabling both
     must reproduce the identical coupled search result and receipts."""
-    from src.calculator import optimizer
-    from src.calculator.scenario import ChampionLoadout
+    from src.calculator.champion_loadout import ChampionLoadout
 
-    real_supported = optimizer.optimizer_supported_items
+    real_supported = item_coverage.optimizer_supported_items
     keep = {
         "Rabadon's Deathcap",
         "Void Staff",
@@ -1143,7 +1154,7 @@ def test_coupled_optimizer_caches_do_not_change_results(monkeypatch):
         narrowed = [item for item in supported if item["name"] in keep]
         return narrowed or supported
 
-    monkeypatch.setattr(optimizer, "optimizer_supported_items", small_pool)
+    monkeypatch.setattr(item_coverage, "optimizer_supported_items", small_pool)
 
     enemies = [
         ChampionLoadout(
@@ -1167,16 +1178,18 @@ def test_coupled_optimizer_caches_do_not_change_results(monkeypatch):
     baseline = _optimize_build(**common)
 
     monkeypatch.setattr(
-        optimizer, "_evaluate_build", optimizer._evaluate_build_uncached
+        build_evaluation, "evaluate_build", build_evaluation._evaluate_build_uncached
     )
-    real_timeline = optimizer.build_participant_timeline
+    real_timeline = build_evaluation.build_participant_timeline
 
     def no_cache_timeline(*args, **kwargs):
         kwargs["pair_result_cache"] = None
         kwargs["search_context"] = None
         return real_timeline(*args, **kwargs)
 
-    monkeypatch.setattr(optimizer, "build_participant_timeline", no_cache_timeline)
+    monkeypatch.setattr(
+        build_evaluation, "build_participant_timeline", no_cache_timeline
+    )
     uncached = _optimize_build(**common)
 
     baseline.pop("optimization_time_ms")
@@ -1228,23 +1241,25 @@ def test_purchase_optimizer_can_prefer_two_components_to_one_completed_item(
     tome = _purchase_item("Amplifying Tome", "BASIC", 500)
     _patch_purchase_prices(monkeypatch, [completed, wand, tome])
     monkeypatch.setattr(
-        "src.calculator.optimizer.get_purchase_items",
+        optimizer_candidates,
+        "get_purchase_items",
         lambda _role="": [completed, wand, tome],
     )
+    monkeypatch.setattr(optimizer_candidates, "get_eligible_boots", lambda tier=2: [])
+    monkeypatch.setattr(item_coverage, "optimizer_supported_items", list)
     monkeypatch.setattr(
-        "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
-    )
-    monkeypatch.setattr("src.calculator.optimizer.optimizer_supported_items", list)
-    monkeypatch.setattr(
-        "src.calculator.optimizer.optimizer_candidate_coverage",
+        item_coverage,
+        "optimizer_candidate_coverage",
         lambda _items: {"complete": True},
     )
     monkeypatch.setattr(
-        "src.calculator.optimizer._public_search_timeline_coverage",
+        build_receipts,
+        "public_search_timeline_coverage",
         lambda _audit: {"complete": True},
     )
     monkeypatch.setattr(
-        "src.calculator.optimizer._build_timeline_coverage",
+        build_evaluation,
+        "build_timeline_coverage",
         lambda *_args, **_kwargs: {"complete": True},
     )
 
@@ -1256,7 +1271,7 @@ def test_purchase_optimizer_can_prefer_two_components_to_one_completed_item(
             return 90.0
         return 50.0
 
-    monkeypatch.setattr("src.calculator.optimizer._evaluate_build", score)
+    monkeypatch.setattr(build_evaluation, "evaluate_build", score)
     result = optimize_purchase(
         {"name": "Test Champion"},
         18,
@@ -1275,25 +1290,28 @@ def _patch_purchase_world(monkeypatch, pool, score):
     """Point the purchase search at a synthetic pool with a scripted scorer."""
     _patch_purchase_prices(monkeypatch, pool)
     monkeypatch.setattr(
-        "src.calculator.optimizer.get_purchase_items", lambda _role="": list(pool)
+        optimizer_candidates,
+        "get_purchase_items",
+        lambda _role="": list(pool),
     )
+    monkeypatch.setattr(optimizer_candidates, "get_eligible_boots", lambda tier=2: [])
+    monkeypatch.setattr(item_coverage, "optimizer_supported_items", list)
     monkeypatch.setattr(
-        "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
-    )
-    monkeypatch.setattr("src.calculator.optimizer.optimizer_supported_items", list)
-    monkeypatch.setattr(
-        "src.calculator.optimizer.optimizer_candidate_coverage",
+        item_coverage,
+        "optimizer_candidate_coverage",
         lambda _items: {"complete": True},
     )
     monkeypatch.setattr(
-        "src.calculator.optimizer._public_search_timeline_coverage",
+        build_receipts,
+        "public_search_timeline_coverage",
         lambda _audit: {"complete": True},
     )
     monkeypatch.setattr(
-        "src.calculator.optimizer._build_timeline_coverage",
+        build_evaluation,
+        "build_timeline_coverage",
         lambda *_args, **_kwargs: {"complete": True},
     )
-    monkeypatch.setattr("src.calculator.optimizer._evaluate_build", score)
+    monkeypatch.setattr(build_evaluation, "evaluate_build", score)
 
 
 def test_purchase_optimizer_fills_more_than_two_slots_when_gold_allows(monkeypatch):
@@ -1376,18 +1394,15 @@ def test_purchase_search_returns_best_found_when_time_budget_expires_early(
         return 1.0 + 10.0 * len(items)
 
     _patch_purchase_world(monkeypatch, [wand, tome], score)
-    from src.calculator import optimizer as optimizer_module
 
-    original_enumerate = optimizer_module._enumerate_affordable_shapes
+    original_enumerate = purchase_plans.enumerate_affordable_shapes
 
     def slow_enumerate(*args, **kwargs):
         result = original_enumerate(*args, **kwargs)
         time_module.sleep(0.25)
         return result
 
-    monkeypatch.setattr(
-        "src.calculator.optimizer._enumerate_affordable_shapes", slow_enumerate
-    )
+    monkeypatch.setattr(purchase_plans, "enumerate_affordable_shapes", slow_enumerate)
     result = optimize_purchase(
         {"name": "Test Champion"},
         18,
@@ -1421,21 +1436,24 @@ def test_purchase_search_keeps_plans_affordable_only_through_component_credit(
     assert net_cost < item_total(rabadon)
 
     monkeypatch.setattr(
-        "src.calculator.optimizer.get_purchase_items", lambda _role="": [rabadon]
+        optimizer_candidates,
+        "get_purchase_items",
+        lambda _role="": [rabadon],
     )
+    monkeypatch.setattr(optimizer_candidates, "get_eligible_boots", lambda tier=2: [])
     monkeypatch.setattr(
-        "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
-    )
-    monkeypatch.setattr(
-        "src.calculator.optimizer.optimizer_candidate_coverage",
+        item_coverage,
+        "optimizer_candidate_coverage",
         lambda _items: {"complete": True},
     )
     monkeypatch.setattr(
-        "src.calculator.optimizer._public_search_timeline_coverage",
+        build_receipts,
+        "public_search_timeline_coverage",
         lambda _audit: {"complete": True},
     )
     monkeypatch.setattr(
-        "src.calculator.optimizer._build_timeline_coverage",
+        build_evaluation,
+        "build_timeline_coverage",
         lambda *_args, **_kwargs: {"complete": True},
     )
 
@@ -1443,7 +1461,7 @@ def test_purchase_search_keeps_plans_affordable_only_through_component_credit(
         names = {item["name"] for item in items}
         return 100.0 if "Rabadon's Deathcap" in names else 1.0
 
-    monkeypatch.setattr("src.calculator.optimizer._evaluate_build", score)
+    monkeypatch.setattr(build_evaluation, "evaluate_build", score)
     result = optimize_purchase(
         {"name": "Test Champion"},
         18,
@@ -1495,23 +1513,25 @@ def test_purchase_exhaustive_walk_can_hold_a_component_and_its_legendary(
     gold = item_total(vest) + item_total(thornmail)
 
     monkeypatch.setattr(
-        "src.calculator.optimizer.get_purchase_items",
+        optimizer_candidates,
+        "get_purchase_items",
         lambda _role="": [vest, thornmail],
     )
+    monkeypatch.setattr(optimizer_candidates, "get_eligible_boots", lambda tier=2: [])
+    monkeypatch.setattr(item_coverage, "optimizer_supported_items", list)
     monkeypatch.setattr(
-        "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
-    )
-    monkeypatch.setattr("src.calculator.optimizer.optimizer_supported_items", list)
-    monkeypatch.setattr(
-        "src.calculator.optimizer.optimizer_candidate_coverage",
+        item_coverage,
+        "optimizer_candidate_coverage",
         lambda _items: {"complete": True},
     )
     monkeypatch.setattr(
-        "src.calculator.optimizer._public_search_timeline_coverage",
+        build_receipts,
+        "public_search_timeline_coverage",
         lambda _audit: {"complete": True},
     )
     monkeypatch.setattr(
-        "src.calculator.optimizer._build_timeline_coverage",
+        build_evaluation,
+        "build_timeline_coverage",
         lambda *_args, **_kwargs: {"complete": True},
     )
 
@@ -1523,7 +1543,7 @@ def test_purchase_exhaustive_walk_can_hold_a_component_and_its_legendary(
             return 50.0
         return 10.0
 
-    monkeypatch.setattr("src.calculator.optimizer._evaluate_build", score)
+    monkeypatch.setattr(build_evaluation, "evaluate_build", score)
     result = optimize_purchase(
         {"name": "Test Champion"},
         18,
@@ -1624,7 +1644,7 @@ def test_coupled_scorer_prefers_faster_kill_over_bystander_tankiness():
             "score_memo": {},
             "search_context": CoupledSearchContext(),
         }
-        return _evaluate_build(
+        return evaluate_build(
             resolved.champion_data,
             16,
             items,
@@ -1663,7 +1683,7 @@ def test_purchase_greedy_first_slot_is_argmax_even_when_deadline_expired(
 
     _patch_purchase_world(monkeypatch, [weak, strong], score)
     monkeypatch.setattr(
-        "src.calculator.optimizer._PurchaseSearch.expired", lambda self: True
+        "src.calculator.purchase_plans.PurchaseSearch.expired", lambda self: True
     )
     result = optimize_purchase(
         {"name": "Test Champion"},
@@ -1684,21 +1704,24 @@ def test_purchase_winner_receipt_still_reports_incomplete_combine(monkeypatch):
 
     ruby = get_item_by_name("Ruby Crystal")
     monkeypatch.setattr(
-        "src.calculator.optimizer.get_purchase_items", lambda _role="": [ruby]
+        optimizer_candidates,
+        "get_purchase_items",
+        lambda _role="": [ruby],
     )
+    monkeypatch.setattr(optimizer_candidates, "get_eligible_boots", lambda tier=2: [])
     monkeypatch.setattr(
-        "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
-    )
-    monkeypatch.setattr(
-        "src.calculator.optimizer.optimizer_candidate_coverage",
+        item_coverage,
+        "optimizer_candidate_coverage",
         lambda _items: {"complete": True},
     )
     monkeypatch.setattr(
-        "src.calculator.optimizer._public_search_timeline_coverage",
+        build_receipts,
+        "public_search_timeline_coverage",
         lambda _audit: {"complete": True},
     )
     monkeypatch.setattr(
-        "src.calculator.optimizer._build_timeline_coverage",
+        build_evaluation,
+        "build_timeline_coverage",
         lambda *_args, **_kwargs: {"complete": True},
     )
 
@@ -1706,7 +1729,7 @@ def test_purchase_winner_receipt_still_reports_incomplete_combine(monkeypatch):
         names = [item["name"] for item in items]
         return 10.0 * names.count("Ruby Crystal") + 1.0
 
-    monkeypatch.setattr("src.calculator.optimizer._evaluate_build", score)
+    monkeypatch.setattr(build_evaluation, "evaluate_build", score)
     result = optimize_purchase(
         {"name": "Test Champion"},
         18,
@@ -1726,28 +1749,31 @@ def test_purchase_never_recommends_duplicate_items(monkeypatch):
     regression)."""
     kindlegem = get_item_by_name("Kindlegem")
     monkeypatch.setattr(
-        "src.calculator.optimizer.get_purchase_items", lambda _role="": [kindlegem]
+        optimizer_candidates,
+        "get_purchase_items",
+        lambda _role="": [kindlegem],
     )
+    monkeypatch.setattr(optimizer_candidates, "get_eligible_boots", lambda tier=2: [])
     monkeypatch.setattr(
-        "src.calculator.optimizer.get_eligible_boots", lambda tier=2: []
-    )
-    monkeypatch.setattr(
-        "src.calculator.optimizer.optimizer_candidate_coverage",
+        item_coverage,
+        "optimizer_candidate_coverage",
         lambda _items: {"complete": True},
     )
     monkeypatch.setattr(
-        "src.calculator.optimizer._public_search_timeline_coverage",
+        build_receipts,
+        "public_search_timeline_coverage",
         lambda _audit: {"complete": True},
     )
     monkeypatch.setattr(
-        "src.calculator.optimizer._build_timeline_coverage",
+        build_evaluation,
+        "build_timeline_coverage",
         lambda *_args, **_kwargs: {"complete": True},
     )
 
     def score(_champion, _level, items, **_kwargs):
         return 10.0 * len(items) + 1.0
 
-    monkeypatch.setattr("src.calculator.optimizer._evaluate_build", score)
+    monkeypatch.setattr(build_evaluation, "evaluate_build", score)
     result = optimize_purchase(
         {"name": "Test Champion"},
         18,
@@ -1800,8 +1826,8 @@ def test_purchase_pool_includes_components_but_not_starters(monkeypatch):
         _purchase_item("Aether Wisp", "EPIC", 900),
         _purchase_item("Doran's Ring", "STARTER", 400),
     ]
-    monkeypatch.setattr("src.calculator.optimizer._ordinary_sr_items", lambda: items)
-    monkeypatch.setattr("src.calculator.optimizer.optimizer_supported_items", list)
+    monkeypatch.setattr(optimizer_candidates, "_ordinary_sr_items", lambda: items)
+    monkeypatch.setattr(item_coverage, "optimizer_supported_items", list)
 
     assert [item["name"] for item in get_purchase_items("top")] == [
         "Ruby Crystal",
@@ -1825,7 +1851,7 @@ def test_role_scope_keeps_multiclass_lane_items_available():
     are TANK/MAGE+SUPPORT and legal for those lanes in the real shop)."""
     from src.calculator.loadout_rules import role_scoped_shop_items
 
-    pool = optimizer_supported_items(get_eligible_legendaries())
+    pool = item_coverage.optimizer_supported_items(get_eligible_legendaries())
     top = {item["name"] for item in role_scoped_shop_items(pool, "top")}
     mid = {item["name"] for item in role_scoped_shop_items(pool, "mid")}
     support = {item["name"] for item in role_scoped_shop_items(pool, "support")}

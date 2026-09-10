@@ -48,14 +48,9 @@ from .engine import SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import at_level, ranked_slot
 from .shared_mechanics import reduced_secondary_hits
-from .slotlib import (
-    ability_name,
-    extract_cooldown,
-    extract_named,
-    extract_recharge,
-    extract_value,
-    simple_damage,
-)
+from .slot_control import extract_recharge
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki values with no JSON home

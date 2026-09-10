@@ -24,10 +24,11 @@ imported, never the registry objects, because ``refresh_item_effects()``
 rebuilds a registry in place and a name bound at import would be the thing
 D-48's refresh proof cannot distinguish from a live reference.
 
-:class:`SourceReceipt` and :func:`receipt_for` live here too, beside the
-accessors they read: a receipt is a *citation of the registry entry a
-declaration was read from*, so it belongs with the registry reads and not
-with the rule union.
+:func:`receipt_for` lives here too, beside the accessors it reads: a receipt is
+a *citation of the registry entry a declaration was read from*, so it belongs
+with the registry reads and not with the rule union.  The record it returns and
+the registry read behind it are :mod:`value_source_receipt`, and the closed
+vocabularies a reference is spelled in are :mod:`reference_vocabulary`.
 """
 
 from __future__ import annotations
@@ -35,115 +36,30 @@ from __future__ import annotations
 import math
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal
 
 from . import item_effects, rune_effects
+from .reference_vocabulary import (
+    _LINEAR_RAMP_CAP,
+    DERIVED_OPS,
+    LEVEL_SCALES,
+    STRUCTURAL_REASONS,
+    VALUE_REGISTRIES,
+    DerivedOp,
+    LevelScale,
+    StructuralReason,
+    ValueRefError,
+    ValueRegistry,
+)
+from .value_source_receipt import (
+    SourceReceipt,
+    UnsourcedDeclarationError,
+    live_registry,
+)
 
 # ── the registry union ────────────────────────────────────────────────────
 
-ValueRegistry = Literal["ITEM_EFFECTS", "ALLY_ITEM_EFFECTS", "RUNE_EFFECTS"]
-
-VALUE_REGISTRIES: frozenset[str] = frozenset(
-    {"ITEM_EFFECTS", "ALLY_ITEM_EFFECTS", "RUNE_EFFECTS"}
-)
-
-# Why a raw number is allowed to sit inside a frozen declaration at all.
-# Closed: a reason outside this set means the number is a *quantity*, and a
-# quantity belongs in a registry behind a ValueRef.  ``origin`` is a
-# coordinate the model measures from — the start of the fight — rather than a
-# magnitude: no patch moves it, and spelling it ``count`` would say a
-# window's start is a tally of something.
-StructuralReason = Literal["count", "cap", "rank", "flag", "unit_scale", "origin"]
-
-STRUCTURAL_REASONS: frozenset[str] = frozenset(
-    {"count", "cap", "rank", "flag", "unit_scale", "origin"}
-)
-
-# How a two-key level ramp is interpolated.  ``registry_start`` delegates to
-# the ally registry's own ``level_scaling_start`` breakpoint; ``linear_1_18``
-# is the plain one-to-eighteen ramp; ``linear_1_20`` is the same ramp over the
-# top-lane level cap CLAUDE.md records, which is the span the item registry's
-# own active formulas interpolate across.  There is no "whatever the caller
-# meant" member on purpose.
-LevelScale = Literal["registry_start", "linear_1_18", "linear_1_20"]
-
-LEVEL_SCALES: frozenset[str] = frozenset(
-    {"registry_start", "linear_1_18", "linear_1_20"}
-)
-
-# The top level each linear ramp interpolates to.  A ramp reaches its maximum
-# key's value exactly at this level and is clamped there above it, so the two
-# spans differ in one number rather than in two code paths.
-_LINEAR_RAMP_CAP: Mapping[str, int] = {"linear_1_18": 18, "linear_1_20": 20}
-
-# The arithmetic a derived reference may perform over other references.
-# ``SUB`` exists because an amplifier's registry number is sometimes a
-# *multiplier* (Shadowflame's crit multiplier is 1.2) while the chain prices
-# a *fraction*, and the conversion is a subtraction of the multiplier axis'
-# origin.  Spelling it ADD against a negative constant would hide a
-# conversion inside a sign.
-DerivedOp = Literal["ADD", "SUB", "MUL", "MIN", "MAX", "RATIO"]
-
-DERIVED_OPS: frozenset[str] = frozenset({"ADD", "SUB", "MUL", "MIN", "MAX", "RATIO"})
-
-
-class ValueRefError(ValueError):
-    """A reference is malformed — a registry, scale or op outside its union."""
-
-
-class UnsourcedDeclarationError(ValueError):
-    """No citation could be resolved for a declaration's owner.
-
-    Raised by :func:`receipt_for`.  A declaration with no receipt is a number
-    whose provenance is a memory, which is what every audit in this
-    repository exists to make impossible.
-    """
-
 
 # ── receipts ──────────────────────────────────────────────────────────────
-
-
-@dataclass(frozen=True, slots=True)
-class SourceReceipt:
-    """The revision a declaration's numbers were read from.
-
-    ``revision_id`` is a MediaWiki revision id, or ``0`` — the explicit
-    marker for a value read from the patch-stamped cached item source, which
-    exposes no revision id.  Zero is spelled rather than omitted for the same
-    reason the campaign spells ``STRUCTURAL_ZERO``: an absent id and an id
-    that does not exist must not look alike.  ``revision_timestamp`` is the
-    human-checkable stamp for that revision; when the id is ``0`` it names
-    the cache instead (the precedent already in ``defensive_effects``).
-    """
-
-    url: str
-    revision_id: int
-    revision_timestamp: str
-
-    def __post_init__(self) -> None:
-        """Reject a receipt that cites nothing checkable."""
-        if not self.url.startswith("http"):
-            raise ValueRefError(f"SourceReceipt url must be a URL, got {self.url!r}")
-        if isinstance(self.revision_id, bool):
-            raise ValueRefError("SourceReceipt revision_id must be an int")
-        if self.revision_id < 0:
-            raise ValueRefError("SourceReceipt revision_id must not be negative")
-        if not self.revision_timestamp.strip():
-            raise ValueRefError("SourceReceipt revision_timestamp must not be empty")
-
-
-def _registry(registry: ValueRegistry) -> Mapping[str, Mapping[str, object]]:
-    """The live registry mapping for one member of the union."""
-    if registry == "ITEM_EFFECTS":
-        return item_effects.ITEM_EFFECTS
-    if registry == "ALLY_ITEM_EFFECTS":
-        return item_effects.ALLY_ITEM_EFFECTS
-    if registry == "RUNE_EFFECTS":
-        return rune_effects.RUNE_EFFECTS
-    raise ValueRefError(
-        f"{registry!r} is not one of {sorted(VALUE_REGISTRIES)} — a declaration "
-        "may only reference a registry that owns runtime numbers (D-46)"
-    )
 
 
 def _entry_receipt(source: ValueSource) -> SourceReceipt | None:
@@ -155,7 +71,7 @@ def _entry_receipt(source: ValueSource) -> SourceReceipt | None:
     silently filling in the missing third of a citation is how a receipt
     starts describing a revision nobody read.
     """
-    entry = _registry(source.registry).get(source.owner)
+    entry = live_registry(source.registry).get(source.owner)
     if not isinstance(entry, Mapping):
         return None
     url = entry.get("source_url")
@@ -555,25 +471,14 @@ class DeclaredNumbers:
 
 
 __all__ = [
-    "DERIVED_OPS",
-    "LEVEL_SCALES",
-    "STRUCTURAL_REASONS",
     "VALUE_REF_TYPES",
-    "VALUE_REGISTRIES",
     "AnyValueRef",
     "Const",
     "DeclaredNumbers",
-    "DerivedOp",
     "DerivedValueRef",
     "LateLevelValueRef",
-    "LevelScale",
     "LevelValueRef",
-    "SourceReceipt",
-    "StructuralReason",
-    "UnsourcedDeclarationError",
     "ValueRef",
-    "ValueRefError",
-    "ValueRegistry",
     "ValueSource",
     "declared_reference",
     "receipt_for",

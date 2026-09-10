@@ -16,6 +16,7 @@ import pytest
 
 import src.app as app_module
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.fight_params import FightParams
 from src.calculator.interpreters import charged_strike
 from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import (
@@ -30,7 +31,7 @@ from src.calculator.item_effects import (
     required_effect_value,
     sustain_effect_value,
 )
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats
 from tests.app_config import app_config
 

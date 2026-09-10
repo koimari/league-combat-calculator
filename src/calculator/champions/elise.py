@@ -4,16 +4,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..ability_spec import ControlScope
+from ..control_spec import ControlScope
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import named_damage, no_damage
-from .slotlib import (
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    with_control_event,
-)
+from .slot_control import with_control_event
+from .slot_entries import damage_entry
+from .slot_extract import extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
 _SPIDER_FORM_LEVELS = (1, 6, 11, 16)

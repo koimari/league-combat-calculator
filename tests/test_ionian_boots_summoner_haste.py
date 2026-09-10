@@ -102,7 +102,7 @@ from src.calculator.item_effects import (
     required_effect_value,
     sustain_effect_value,
 )
-from src.calculator.optimizer import get_eligible_boots
+from src.calculator.optimizer_candidates import get_eligible_boots
 from src.calculator.stats import calculate_total_stats, effective_cooldown
 from tests import item_probe
 from tests.app_config import app_config

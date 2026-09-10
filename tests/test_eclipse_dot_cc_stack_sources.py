@@ -18,7 +18,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.calculator.ability_spec import ControlEvent, DamagePart
+from src.calculator.ability_spec import DamagePart
+from src.calculator.control_spec import ControlEvent
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.fight.config import FightConfig
 from src.calculator.fight.items.eclipse_stack_gate import _stacked_champion_proc_times

@@ -4,7 +4,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from ... import rune_effects
-from ...interpreters import delta_amp
+from ...interpreters import amp_magnitude, delta_amp
 from ...item_behavior import AmpChainSlot, FightFacts
 from ..state import FightState, _held_owners
 
@@ -83,7 +83,7 @@ def _required_amp_slot(
     """
     resolved = _amp_slot(state, slot, effect.rune_name)
     if resolved is None:
-        raise delta_amp.DeltaAmpInterpretationError(
+        raise amp_magnitude.DeltaAmpInterpretationError(
             f"{effect.rune_name} resolved to a {type(effect).__name__} and "
             f"declares no rule in the {slot.value} chain slot; a keystone the "
             "engine prices needs a declaration to price it from"

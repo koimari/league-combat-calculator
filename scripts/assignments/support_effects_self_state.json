@@ -1,0 +1,19 @@
+{
+ "source": "src/calculator/support_effects.py",
+ "decisions": [
+  "Runs after support_effects.json, on the residue that assignment leaves. The four modules it names take the file from 1985 lines to 507 rendered, seven over the ceiling, so the size finding it was extracted to close survives.",
+  "The unit that leaves is the one the residue's own docstring excludes. support_effects.py is 'sourced ally-targeted shields/heals from champion ability packets', and derive_self_state_effects expands a champion's authored spell shield, stasis, invulnerability, untargetable, crowd-control and damage-reduction windows over its own accepted cast times. It targets the caster, shares no helper with derive_ally_effects, and has one reader (pipeline.run_fight).",
+  "Residue 344 rendered lines, self_state_effects.py 176, both under the ceiling."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/self_state_effects.py",
+   "docstring": "The self state windows a champion module authors, expanded over its accepted cast times.",
+   "defs": [
+    "_SELF_STATE_EVENT_KINDS",
+    "derive_self_state_effects"
+   ]
+  }
+ ]
+}

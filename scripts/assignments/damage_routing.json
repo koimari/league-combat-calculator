@@ -1,0 +1,25 @@
+{
+  "source": "src/calculator/interpreters/damage_routing.py",
+  "decisions": [
+    "walk_deferral stays in the residue. It reads the walk lane's two shared helpers, _walk_fields and _field, which walk_execution and walk_venom read too; moving it would either be a back-edge or would home a helper of three lanes inside the deferral module. The three walk readers stay together and read Deferral and the DEFER_* field names back from the new module.",
+    "The DEFER_* field names move even though only the residue's walk_deferral reads them: the deferral's own field names belong beside its schedule. The residue's comment block above VENOM_KEEP_FIELD then describes two constants instead of five and wants one word narrowed by hand.",
+    "The map's alternative cut (interpreters/execution.py) refuses for the same reason: walk_execution reads _walk_fields and _field."
+  ],
+  "packages": {},
+  "modules": [
+    {
+      "path": "src/calculator/interpreters/damage_deferral.py",
+      "docstring": "The post-mitigation damage a deferral stores and repays as ticks.",
+      "defs": [
+        "DEFER_FRACTION_FIELD",
+        "DEFER_DURATION_FIELD",
+        "DEFER_TICKS_FIELD",
+        "IGNORE_PAIN_NOTE",
+        "_DEFERRAL_SCHEDULE",
+        "_INTEGER_FIELDS",
+        "resolve_deferral",
+        "Deferral"
+      ]
+    }
+  ]
+}

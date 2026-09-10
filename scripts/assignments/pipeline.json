@@ -1,0 +1,72 @@
+{
+ "source": "src/calculator/pipeline.py",
+ "decisions": [
+  "fight_params.py is a fifth module the stage-11 roster does not name, and without it neither arm on pipeline.py clears. Measured: the roster's four modules move 746 body lines out of 1646, leaving a 732-line residue (P4 ledger_inputs 26, P7 FightParams 336, P8 run_fight 297, plus the 91-line header) against a 500-line ceiling. The map's '~470 remainder' omits the header and under-counts run_fight. With FightParams moved the residue is 353 lines and every new module is under 500.",
+  "The same move is what makes the assignment check at all. _keystone_self_healing_events and _attach_engine_receipts both annotate params: 'FightParams', and the tool reads a quoted annotation as a real read, so with FightParams in the residue rune_sustain_events.py and fight_receipts.py are back-edges. Moving FightParams turns both into forward edges and keeps each roster module's def list exactly as the roster names it.",
+  "Cost, stated rather than hidden: fight_params.py lands at 11 internal imports and about six src/calculator readers, so it inherits a fan-out finding. The map declined this trade on the premise that the size arm cleared without it; the measurement above retires that premise. pipeline.py's own fan-out finding survives either way at 15 internal imports, so the counter moves from two findings on one module to one on each of two, and a reader gets a 353-line entry point.",
+  "Two shaves are the only route to a zero on fight_params.py's fan-out arm: champions.skill_orders (one call, get_ability_rank) reached through champions, and stats (one call, resolve_pre_combat_stats). Neither is free and both are out of this assignment's scope."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/fight_request_bounds.py",
+   "docstring": "What a public fight request may say, and the readers that coerce it.",
+   "defs": [
+    "DEFAULT_TARGET",
+    "DEFAULT_FIGHT_DURATION",
+    "DEFAULT_AUTO_ATTACK_UPTIME",
+    "DEFAULT_AUTO_ATTACK_UPTIME_MODE",
+    "DEFAULT_FIGHT_MODE",
+    "ONE_ROTATION_DURATION",
+    "MAX_ROTATIONS",
+    "MAX_ENEMIES",
+    "MAX_ALLIES",
+    "PUBLIC_INPUT_LIMITS",
+    "_PUBLIC_FIGHT_MODES",
+    "_NONSTANDARD_RANK_CHAMPIONS",
+    "rank_allocation_contract",
+    "_bounded_request_float",
+    "validate_cast_order_shape",
+    "CAST_SLOT_SPELLING",
+    "cast_slot_surface",
+    "_request_target_class",
+    "_request_minion_type",
+    "_request_target_durability"
+   ]
+  },
+  {
+   "path": "src/calculator/item_sustain_events.py",
+   "docstring": "The healing an item did, read back off a finished fight result.",
+   "defs": [
+    "_item_self_healing_events",
+    "_timestamped_damage_events"
+   ]
+  },
+  {
+   "path": "src/calculator/rune_sustain_events.py",
+   "docstring": "The healing a rune page did, read back off a finished fight result.",
+   "defs": [
+    "_rune_heal_times",
+    "_rune_self_healing_events",
+    "_keystone_self_healing_events",
+    "_saturated_omnivamp_percent"
+   ]
+  },
+  {
+   "path": "src/calculator/fight_receipts.py",
+   "docstring": "The receipts and display splits attached to a finished fight.",
+   "defs": [
+    "_attach_engine_receipts",
+    "_attach_display_splits",
+    "_annotate_deathfire_categories"
+   ]
+  },
+  {
+   "path": "src/calculator/fight_params.py",
+   "docstring": "The parsed fight request: every field one fight is run with, and what a public request becomes.",
+   "defs": [
+    "FightParams"
+   ]
+  }
+ ]
+}

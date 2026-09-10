@@ -50,7 +50,8 @@ from ..item_behavior import (
     sole_declared,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
-from ..value_ref import ValueRefError, resolve, resolve_flat
+from ..reference_vocabulary import ValueRefError
+from ..value_ref import resolve, resolve_flat
 from .defense_state import DefenseInterpretationError, DefenseSlot
 
 

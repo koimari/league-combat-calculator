@@ -26,19 +26,19 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
-from .module_contract import coverage
 from .module_helpers import ranked_slot
-from .slotlib import (
+from .slot_extract import (
     ability_name,
     extract_auto,
     extract_cooldown,
     extract_named,
     extract_value,
-    simple_damage,
 )
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 
@@ -163,7 +163,7 @@ SLOTS = {
     "P": _essence_theft,
     # One pass out and one back is one landing per enemy ("enemies can be
     # hit only once per pass"), split magic outgoing / true returning —
-    # the mixed split ``engine._certify_shared_instant`` gives its shared
+    # the mixed split ``engine.certify_shared_instant`` gives its shared
     # instant to.
     "Q": simple_damage(
         attr="Damage Per Pass",

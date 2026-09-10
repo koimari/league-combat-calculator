@@ -87,14 +87,9 @@ from .engine import ONHIT, SlotCtx
 from .inputs import bool_option, int_option
 from .module_helpers import buff_window_share, ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    on_hit_entry,
-    with_control,
-)
+from .slot_control import with_control
+from .slot_entries import damage_entry, on_hit_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
 
 PACKET_SHA256 = "f0a371bec307e04499165e0b091f2917ee8127cd28815549bb69cb57cbfc7b43"
 

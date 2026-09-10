@@ -9,8 +9,8 @@ old item atomizer violated (issue #140).
 from pathlib import Path
 
 from src.calculator.atomizer import Atomizer, number_and_unit, split_effect_fragments
+from src.calculator.atomizer_abilities import atomize_abilities
 from src.calculator.atomizer_domains import (
-    atomize_abilities,
     atomize_item,
     atomize_item_catalogue,
     atomize_rune_catalogue,

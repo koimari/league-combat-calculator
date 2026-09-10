@@ -31,13 +31,14 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..stat_formulas import effective_cooldown
-from .engine import CC_PER_PART, SlotCtx, build_parser
+from .contract_vocabulary import coverage
+from .engine import SlotCtx, build_parser
 from .inputs import float_option, int_option
-from .module_contract import coverage
 from .module_helpers import clamp, no_damage, no_damage_slot, ranked_slot
-from .slotlib import (
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cooldown,
     extract_named,
     extract_resource_cost,

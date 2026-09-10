@@ -5,7 +5,7 @@ from collections.abc import Callable, Mapping
 from functools import partial
 from typing import Any
 
-from ... import item_effects, resource_ledger
+from ... import item_effects, mana_item_schedules, manaflow_ledger
 from ...ability_atoms import ability_field, ability_payload
 from ...interpreters import stat_derivation
 from ...item_behavior import ResourceRestoreRule
@@ -56,7 +56,7 @@ def _manaflow_hit_identity(
 def _manaflow_swing_rows(
     state: FightState,
     plan: CastPlan,
-    manaflow: resource_ledger.ManaflowLedger | None,
+    manaflow: manaflow_ledger.ManaflowLedger | None,
 ) -> list[dict[str, Any]]:
     """The basic attacks that spend a Manaflow charge, in swing order.
 
@@ -88,7 +88,7 @@ def _manaflow_swing_rows(
 
 def _manaflow_ledger_for(
     state: FightState, owner: str
-) -> resource_ledger.ManaflowLedger | None:
+) -> manaflow_ledger.ManaflowLedger | None:
     """Build the build's Manaflow state, or None when no holder is equipped.
 
     The holder comes from the build — whichever of the five registered
@@ -103,17 +103,17 @@ def _manaflow_ledger_for(
     authored = float(
         (options.get(holder) or {}).get("manaflow_bonus_mana", unset) or unset
     )
-    declaration = resource_ledger.ManaflowDeclaration(
+    declaration = manaflow_ledger.ManaflowDeclaration(
         **item_effects.manaflow_declaration(holder)
     )
-    return resource_ledger.ManaflowLedger(
+    return manaflow_ledger.ManaflowLedger(
         declaration, owner=owner, authored_bonus_mana=authored
     )
 
 
 def _enlighten_decl_for(
     state: FightState,
-) -> resource_ledger.EnlightenDeclaration | None:
+) -> mana_item_schedules.EnlightenDeclaration | None:
     """Return Lost Chapter's sourced Enlighten declaration, or None.
 
     The 20%-over-3-seconds restore is read off the holder's own
@@ -134,7 +134,7 @@ def _enlighten_decl_for(
             "Lost Chapter is equipped and declares no resource-restore rule, "
             "so Enlighten has no sourced schedule to run"
         )
-    return resource_ledger.EnlightenDeclaration(
+    return mana_item_schedules.EnlightenDeclaration(
         restore_percent=slot.value("share_of_maximum"),
         duration_seconds=slot.value("duration"),
         ticks=int(slot.value("ticks")),

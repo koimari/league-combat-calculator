@@ -177,9 +177,7 @@ def ranked_rows(
     """
     # Read at call time: champion modules read this leaf, so an import-time
     # edge into their package would invert that direction.
-    from .champions.slotlib import (  # pylint: disable=import-outside-toplevel
-        extract_named,
-    )
+    from .champions.slot_extract import extract_named
 
     ability = ability_json(champion_data, slot, 0)
     rank = parsed_rank(ability_damages, slot)

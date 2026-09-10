@@ -99,7 +99,7 @@ from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from src.calculator.champions.slotlib import (
+from src.calculator.champions.slot_extract import (
     extract_named,
     extract_value,
     find_named_leveling,

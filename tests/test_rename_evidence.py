@@ -16,7 +16,7 @@ LIVE_PATH_PER_HOME = {
     "src/calculator/item_coverage.py": (
         "fight.autos.on_hit_healing._add_first_auto_healing"
     ),
-    "src/calculator/ledger_projection.py": (
+    "src/calculator/ledger_declarations.py": (
         "fight.after.shield_outcome._resolve_starting_shield_outcome"
     ),
     "src/calculator/trigger_stream.py": (

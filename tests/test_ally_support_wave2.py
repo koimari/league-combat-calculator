@@ -346,11 +346,11 @@ def test_renata_e_shields_every_selected_teammate_and_self_once():
 
 def test_wave2_packets_compile_in_score_mode():
     """The score adapter compiles the same templates (shared kernel)."""
+    from src.calculator.champion_loadout import ChampionLoadout
     from src.calculator.data_fetcher import get_champion
     from src.calculator.defensive_effects import resolve_starting_defenses
+    from src.calculator.fight_params import FightParams
     from src.calculator.participant_timeline import build_participant_timeline
-    from src.calculator.pipeline import FightParams
-    from src.calculator.scenario import ChampionLoadout
     from src.calculator.stats import calculate_total_stats
 
     for champion in ("Nami", "Yuumi", "Renata Glasc"):

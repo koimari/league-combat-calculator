@@ -18,8 +18,8 @@ from typing import Any
 
 from ..build import Program
 from ..walk import WalkResult
-from . import LeafWriter
 from .breakdown import breakdown_leaves
+from .leaf import LeafWriter
 from .survival import participant_paths, survival_leaves
 
 __all__ = ["score", "score_leaves"]

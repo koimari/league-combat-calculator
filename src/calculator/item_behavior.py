@@ -9,8 +9,9 @@ receipt, and its legal-zero story declared rather than assumed.  What a
 declaration cannot say is as load-bearing as what it can — an undeclared
 behaviour is withheld with a named receipt, never priced as zero.
 
-**This module is a leaf.**  It imports ``value_ref`` and ``ability_spec`` and
-nothing else, so ``damage.py``, ``survival/*``, ``defensive_effects.py`` and
+**This module is a leaf.**  It imports ``ability_spec`` and the value-reference
+layer (``value_ref``, ``reference_vocabulary``, ``value_source_receipt``) and nothing
+else, so ``damage.py``, ``survival/*``, ``defensive_effects.py`` and
 ``item_support_effects.py`` may all depend on it without a cycle.  Two
 consequences are deliberate and worth stating, because both look like
 duplication until the constraint is remembered:
@@ -49,14 +50,9 @@ from .ability_spec import (
     DamageClass,
     ZeroPolicy,
 )
-from .value_ref import (
-    VALUE_REF_TYPES,
-    AnyValueRef,
-    LevelValueRef,
-    SourceReceipt,
-    ValueRefError,
-    resolve_flat,
-)
+from .reference_vocabulary import ValueRefError
+from .value_ref import VALUE_REF_TYPES, AnyValueRef, LevelValueRef, resolve_flat
+from .value_source_receipt import SourceReceipt
 
 
 class BehaviorRuleError(ValueError):

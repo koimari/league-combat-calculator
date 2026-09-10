@@ -26,11 +26,8 @@ from typing import Any, Literal
 from . import data_fetcher, item_source
 from .data_fetcher import fetch_item_data
 from .passive_parser import parse_all_item_effects
-from .state_lifecycle import (
-    SourceReceipt,
-    WindowGateRule,
-    WindowStackGate,
-)
+from .state_timeline import SourceReceipt
+from .window_gates import WindowGateRule, WindowStackGate
 
 logger = logging.getLogger(__name__)
 
@@ -5709,19 +5706,6 @@ def energized_schedule_receipt(item_name: str) -> dict[str, Any]:
         "distance_units_per_stack": distance,
         "movement_schedule": "explicit_per_attack; omitted_means_zero_distance",
     }
-
-
-def statikk_chain_target_bounds(*, item_name: str = "Statikk Shiv") -> tuple[int, int]:
-    """Return Electrospark's sourced minimum/maximum chain target bounds.
-
-    Energized generation and roster fan-out remain owned by the event ledger;
-    this helper only exposes the parser-backed level-scaled bounds.
-    """
-    minimum = int(required_effect_value(item_name, "chain_targets_min"))
-    maximum = int(required_effect_value(item_name, "chain_targets_max"))
-    if minimum < 1 or maximum < minimum:
-        raise ValueError(f"{item_name} has invalid chain target bounds")
-    return minimum, maximum
 
 
 # The holder levels at which a chain strike's arc reaches one subject

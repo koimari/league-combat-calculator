@@ -5,7 +5,7 @@ from typing import Any
 
 from ... import rune_effects
 from ...item_behavior import PacketKind
-from ...survival.actions import TransitionRank
+from ...survival.phases import TransitionRank
 from ..autos.swing_schedule import (
     _auto_attack_timestamps,
     _HailStacks,

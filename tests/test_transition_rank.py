@@ -25,18 +25,19 @@ from typing import NamedTuple
 import pytest
 
 from src.calculator.survival import actions as actions_module
+from src.calculator.survival import classify, phases
 from src.calculator.survival.actions import (
-    SUPPORT_RANK_KEY,
-    ActionKind,
-    SurvivalAction,
-    TransitionRank,
     action_key,
-    classify_event_kind,
     compiled_damage_action,
     event_timestamp,
-    ordering_slot,
+)
+from src.calculator.survival.classify import (
+    SUPPORT_RANK_KEY,
+    classify_event_kind,
     support_transition_rank,
 )
+from src.calculator.survival.phases import TransitionRank, ordering_slot
+from src.calculator.survival.typed_action import ActionKind, SurvivalAction
 
 ROOT = Path(__file__).parents[1]
 SURVIVAL = ROOT / "src" / "calculator" / "survival"
@@ -69,7 +70,7 @@ def test_the_ordering_fold_is_total_and_closed() -> None:
     slots = {rank: ordering_slot(rank) for rank in TransitionRank}
     assert set(slots) == set(TransitionRank)
     assert all(isinstance(slot, TransitionRank) for slot in slots.values())
-    assert set(actions_module._ORDERING_SLOTS) < set(TransitionRank)
+    assert set(phases._ORDERING_SLOTS) < set(TransitionRank)
 
 
 def test_one_collapsed_pair_survives_and_the_other_group_is_split() -> None:
@@ -793,7 +794,7 @@ def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:
         CAPABILITY_SCHEMA_VERSION,
         PARTICIPANT_LEDGER_CONTRACT,
     )
-    from src.calculator.survival.actions import public_phase
+    from src.calculator.survival.phases import public_phase
 
     assert public_phase(TransitionRank.DEBUFF_ARM) == "state_transition"
     assert public_phase(TransitionRank.UTILITY_ARM) == "state_transition"
@@ -829,7 +830,7 @@ def test_s6_moved_the_ordering_and_not_the_classification() -> None:
                 TransitionRank.UTILITY_ARM,
             }
         )
-        == actions_module._RECOVERY_CLASSIFIED_RANKS
+        == classify._RECOVERY_CLASSIFIED_RANKS
     )
     # ...and it is not expressible as the fold's output, which is what
     # makes naming it load-bearing rather than stylistic.

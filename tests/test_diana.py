@@ -11,7 +11,7 @@ bonus.
 import pytest
 
 from src.calculator.champions import diana, parse_champion_abilities
-from src.calculator.champions.slotlib import (
+from src.calculator.champions.slot_extract import (
     extract_named,
     find_named_leveling,
     sum_modifiers,
@@ -19,7 +19,8 @@ from src.calculator.champions.slotlib import (
 from src.calculator.damage import calculate_fight_damage, split_auto_vs_ability
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.fight.config import FightConfig
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
 

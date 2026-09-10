@@ -14,7 +14,7 @@ Sanity anchors (magic damage, pre-mitigation, 500 AP, all ranks maxed):
 import pytest
 
 from src.calculator.champions import ziggs
-from src.calculator.champions.slotlib import extract_named
+from src.calculator.champions.slot_extract import extract_named
 from tests import cc_review
 
 TARGET = {"target_max_health": 3000.0}

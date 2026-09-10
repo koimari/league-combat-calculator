@@ -135,14 +135,8 @@ from .inputs import bool_option
 from .module_helpers import buff_window_share, ranked_slot
 from .packet_module import build_packet_module
 from .shared_mechanics import multi_pass_damage
-from .slotlib import (
-    STEROID_ZERO,
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-)
+from .slot_entries import STEROID_ZERO, damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 
 PACKET_SHA256 = "422062ecdd781eb5a57f34b7b9c3221288b03f12811cb2d0788a6a877afe4896"
 

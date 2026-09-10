@@ -1,0 +1,46 @@
+{
+  "source": "src/calculator/champions/module_contract.py",
+  "decisions": [
+    "No new directory: both modules land beside their source in the existing src/calculator/champions package, so packages is empty.",
+    "Direction inverted against the roster, which moves the readers out and keeps the vocabulary as the residue leaf. extract_modules.py refuses that: module_survey.py reading COVERAGE_CHANNELS, ChampionModuleContract, DeclarationSites and six more names left in the residue is nine back-edges. Only the leaf can move, so the vocabulary is what moves.",
+    "Three modules, not two. Moving the vocabulary alone leaves a 501-line residue, which is still the size arm the split is meant to clear. Splitting the residue again along the line the roster already drew gives contract_vocabulary.py the words, module_survey.py the declaration readers, and module_contract.py the one constructor its six readers already import from, so contract_from_module retargets nowhere.",
+    "The champions-to-engine edge the roster wanted still dies: CC_PER_PART is read by _module_cc, which lands in module_survey.py, so contract_vocabulary.py imports nothing from the parser side and the 40 champion modules that want only the coverage words stop pulling it.",
+    "Run engine.json before this assignment. extract_modules.py copies the source's own import spelling, so module_contract.py's `from .engine import CC_PER_PART` needs to already read `from .slot_cc import CC_PER_PART` for module_survey.py to land on the leaf."
+  ],
+  "packages": {},
+  "modules": [
+    {
+      "path": "src/calculator/champions/contract_vocabulary.py",
+      "docstring": "The coverage words a champion module declares, and the contract they read into.",
+      "defs": [
+        "REQUIRED_CHAMPION_SLOTS",
+        "VALID_COVERAGE",
+        "REVIEW_STATUS",
+        "COVERAGE_CHANNELS",
+        "_RESTATED_FACTS",
+        "default_coverage",
+        "ChampionModuleContractError",
+        "coverage",
+        "ChampionModuleContract",
+        "DeclarationSites"
+      ]
+    },
+    {
+      "path": "src/calculator/champions/module_survey.py",
+      "docstring": "Reads each contract fact off a module's three declaration sites and refuses a malformed one.",
+      "defs": [
+        "_present",
+        "_stat_conversion",
+        "_agreeing",
+        "_declared_cast_dependencies",
+        "_packet_declaration",
+        "_cast_dependencies",
+        "_module_cc",
+        "_refuse_restatements",
+        "_coverage_channels",
+        "_ultimate_recasts",
+        "_require_list"
+      ]
+    }
+  ]
+}

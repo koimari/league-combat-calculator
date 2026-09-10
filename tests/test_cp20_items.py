@@ -19,8 +19,10 @@ from types import SimpleNamespace
 
 import pytest
 
+from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.fight_params import FightParams
 from src.calculator.item_behavior import FightFacts
 from src.calculator.item_coverage import require_calculation_item_coverage
 from src.calculator.item_effects import (
@@ -35,10 +37,8 @@ from src.calculator.item_effects import (
     resolve_damage_effects,
 )
 from src.calculator.item_support_effects import derive_item_support_effects
+from src.calculator.manaflow_ledger import ManaflowDeclaration, ManaflowLedger
 from src.calculator.participant_timeline import build_participant_timeline
-from src.calculator.pipeline import FightParams
-from src.calculator.resource_ledger import ManaflowDeclaration, ManaflowLedger
-from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 from tests import item_probe
 
@@ -512,7 +512,7 @@ def test_only_a_retargetable_scope_carries_the_recipient_ramp_stamp():
     at each recipient's own level, so stamping it promised a re-read that
     could never run.
     """
-    from src.calculator.item_support_effects import (
+    from src.calculator.ally_packet_recipient import (
         RECIPIENT_RAMP_KEY,
         RETARGETABLE_SCOPES,
     )

@@ -17,9 +17,9 @@ them is the reviewed fact.
 This is a test helper, not a test module: it holds no assertions.
 """
 
+from src.calculator.champion_loadout import load_public_champion
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.champions.slotlib import extract_named
-from src.calculator.scenario import load_public_champion
+from src.calculator.champions.slot_extract import extract_named
 
 # One fixed, explicit stat block, so every row that scales resolves and
 # both sides of a comparison see the same inputs.

@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from ...item_behavior import AmpChainSlot
-from ...program.build import dropped_preview_mechanics
+from ...program.capability import dropped_preview_mechanics
 from ...survival.pricing import restate_declaration
 from ..config import FightConfig
 from ..ledger.event_rows import _damage_type_fields

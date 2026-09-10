@@ -45,13 +45,14 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import int_option
-from .module_contract import coverage
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
-from .slotlib import ability_name, extract_named, with_item_on_hits
+from .slot_extract import ability_name, extract_named
+from .slotlib import with_item_on_hits
 
 PACKET_SHA256 = "25b414368fa8e3421c2471eff320f299ef82d9d07ce34f3a7af74a5db21b8d25"
 

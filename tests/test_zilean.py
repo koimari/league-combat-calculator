@@ -13,7 +13,7 @@ from src.calculator.champions import (
     parse_champion_abilities,
     zilean,
 )
-from src.calculator.champions.engine import CC_PER_PART
+from src.calculator.champions.slot_cc import CC_PER_PART
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review

@@ -20,7 +20,7 @@ from src.calculator.interpreters import (
 )
 from src.calculator.interpreters.crit_profile import declared_crit_profile
 from src.calculator.interpreters.damage_routing import declared_execution
-from src.calculator.interpreters.delta_amp import declared_magic_amp
+from src.calculator.interpreters.part_amp import declared_magic_amp
 from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
@@ -32,7 +32,6 @@ from src.calculator.item_effects import (
     basic_ability_haste,
     bloodmail_bonus_ad,
     bloodmail_retribution_bonus_ad,
-    chain_target_count,
     dawncore_bonus_ap,
     endless_hunger_input_omnivamp,
     energized_proc_indices,
@@ -59,7 +58,6 @@ from src.calculator.item_effects import (
     resolve_stat_effects,
     riftmaker_bonus_ap,
     saturated_grant,
-    statikk_chain_target_bounds,
     steraks_bonus_ad,
     terminus_max_stack_bonuses,
     validate_item_input_options,
@@ -553,12 +551,13 @@ class TestResolveDamageEffects:
             energized_proc_indices("Statikk Shiv", 3, initial_stacks=100)
 
     def test_statikk_chain_target_bounds_are_parser_owned(self) -> None:
-        assert statikk_chain_target_bounds() == (4, 8)
+        strike = _charged_strikes("Statikk Shiv").first_autos[0]
+        assert (strike.chain_targets_min, strike.chain_targets_max) == (4, 8)
 
     def test_a_chain_target_count_uses_sourced_level_breakpoints(self) -> None:
-        bounds = statikk_chain_target_bounds()
+        strike = _charged_strikes("Statikk Shiv").first_autos[0]
         levels = (1, 6, 10, 14, 20)
-        assert [chain_target_count(n, *bounds) for n in levels] == [4, 5, 6, 7, 8]
+        assert [strike.chain_target_count(n) for n in levels] == [4, 5, 6, 7, 8]
 
     def test_statikk_chain_target_bounds_fail_closed_when_missing(
         self, monkeypatch: pytest.MonkeyPatch
@@ -568,7 +567,7 @@ class TestResolveDamageEffects:
         monkeypatch.setitem(ITEM_EFFECTS, "Statikk Shiv", broken)
 
         with pytest.raises(KeyError, match="chain_targets_max"):
-            statikk_chain_target_bounds()
+            _charged_strikes("Statikk Shiv")
 
     def test_riftmaker_bonus_health_conversion_uses_sourced_ratio(self) -> None:
         assert riftmaker_bonus_ap(bonus_health=500) == pytest.approx(10)

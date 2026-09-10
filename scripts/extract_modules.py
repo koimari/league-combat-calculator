@@ -8,12 +8,17 @@ directory, and each new module's path, one-line docstring and defs in source
 order: ``{"source": <path>, "packages": {<dir>: <docstring>}, "modules":
 [{"path": <path>, "docstring": <line>, "defs": [<name>, ...]}]}``.  One file per
 source module, all of them under ``scripts/assignments/``, so a split is
-reviewable as its own mapping and replayable against the commit it names.
+reviewable as its own mapping: name, old home, new home.  A run may be followed
+by edits the mapping does not carry (a moved def published under a shorter
+name), and those live in the file's ``decisions``, so the record is reviewable
+rather than replayable.  ``tests/test_extract_modules.py`` holds every declared
+path to a file that exists.
 
 A top-level ``def``, ``class`` or assignment is one movable unit, cut by AST span
 with the contiguous ``#`` block above it; order inside a unit never changes and a
 unit the assignment does not name stays in the residue.  A new module reading a
-residue unit is a back-edge and refuses, as does a cycle.  Readers under ``src/``,
+residue unit imports it back from the source, and the refusal is a cycle over the
+whole graph, the residue counted as one node.  Readers under ``src/``,
 ``tests/`` and ``scripts/`` are repointed at the new home by
 ``scripts/module_readers.py``, and ``scripts/module_units.py`` holds the AST
 vocabulary both phases cut with.
@@ -25,6 +30,7 @@ import argparse
 import ast
 import json
 import sys
+import textwrap
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -61,7 +67,11 @@ class Source:
         self.path = path
         self.lines, self.newline = read_lines(REPO / path)
         self.tree = ast.parse(self.newline.join(self.lines))
-        self.pkg, self.dotted = path.parent.parts, ".".join(path.with_suffix("").parts)
+        named = path.with_suffix("").parts
+        # A package is read by its directory name; `__init__` names no module.
+        self.parts = named[:-1] if named[-1] == "__init__" else named
+        self.pkg, self.dotted = path.parent.parts, ".".join(self.parts)
+        self.stem = self.parts[-1]
         self.import_of: dict[str, tuple[ast.stmt, ast.alias]] = {}
         self.import_end = self.future = 0
         for node in self.tree.body:
@@ -110,6 +120,22 @@ class Source:
             lines[index] = lines[index].replace(old, new, 1)
         return "\n".join(lines)
 
+    def import_anchor(self, statement: str) -> int:
+        """The line one import sorts in front of, ``0`` past every import here."""
+        key = import_sort_key(statement)
+        previous_end = 0
+        for node in self.tree.body:
+            spelled = isinstance(node, (ast.Import, ast.ImportFrom))
+            sorts_later = (
+                spelled
+                and not is_future_import(node)
+                and (import_sort_key(import_statement(node, node.names)) > key)
+            )
+            if sorts_later:
+                return self._span_start(node, previous_end)
+            previous_end = node.end_lineno or node.lineno
+        return 0
+
     def render_import(self, name: str, pkg: tuple[str, ...]) -> str:
         """Copy the source's own import of ``name``, re-levelled for ``pkg``."""
         node, alias = self.import_of[name]
@@ -119,6 +145,13 @@ class Source:
         if node.level == 0:
             return f"from {node.module} import {piece}"
         return relative_import(read_parts(node, self.pkg), pkg, piece)
+
+
+def docstring_block(text: str, width: int = 88) -> str:
+    """One module docstring, wrapped when the line it would be is too wide."""
+    if len(text) + 6 <= width:
+        return f'"""{text}"""'
+    return '"""' + textwrap.fill(text, width=width - 3) + '"""'
 
 
 class NewModule:
@@ -141,7 +174,7 @@ class NewModule:
 
     def render(self) -> str:
         """The module's text: docstring, imports, then units in source order."""
-        blocks = [f'"""{self.docstring}"""']
+        blocks = [docstring_block(self.docstring)]
         statements = [*self.imports]
         if self.source.future:
             statements.append("from __future__ import annotations")
@@ -164,9 +197,10 @@ class Plan:
         stayed = (u for u in self.source.units if not set(u.names) & self.moved)
         self.residue_units = list(stayed)
         self._resolve_imports()
-        self._refuse_cycles()
+        self.kept_exports = self._kept_exports()
         self.residue_reads = self._residue_reads()
         self.residue_imports = self._residue_imports()
+        self._refuse_cycles()
         read = reader_files(self, REPO)
         found = ((p.as_posix(), rewrite_reader(p, self, REPO)) for p in read)
         self.rewrites = {path: sites for path, sites in found if sites}
@@ -205,9 +239,10 @@ class Plan:
                 elif name in self.source.import_of:
                     module.imports.append(self.source.render_import(name, module.pkg))
                 elif name in residue_bound:
-                    refusals.append(
-                        f"back-edge: {module.key} reads {name}, left in the residue"
+                    module.imports.append(
+                        relative_import(self.source.parts, module.pkg, name)
                     )
+                    module.deps.add(self.source.path.as_posix())
                 else:
                     refusals.append(
                         f"unresolved: {module.key} reads {name}, bound nowhere"
@@ -219,7 +254,10 @@ class Plan:
             module.imports[:] = merge_imports(ordered)
 
     def _refuse_cycles(self) -> None:
+        """Refuse an import loop; the residue is the node the source path names."""
         graph = {module.key: sorted(module.deps) for module in self.modules}
+        back = {self.home[name].key for name in self.residue_reads & self.moved}
+        graph[self.source.path.as_posix()] = sorted(back)
         state: dict[str, int] = {}
 
         def walk(node: str, trail: list[str]) -> None:
@@ -237,13 +275,25 @@ class Plan:
             if key not in state:
                 walk(key, [key])
 
+    def _kept_exports(self) -> tuple[str, ...]:
+        """The names the residue's ``__all__`` still publishes, in source order."""
+        exports = self.source.exports
+        elements = exports.node.value.elts if exports else []
+        return tuple(
+            element.value
+            for element in elements
+            if isinstance(element, ast.Constant) and element.value not in self.moved
+        )
+
     def _residue_reads(self) -> set[str]:
+        """Every name the residue still needs, a re-export through ``__all__`` included."""
         body = self.source.tree.body
         kept = [
             n for n in body if not isinstance(n, MOVABLE) and not is_future_import(n)
         ]
         kept += [unit.node for unit in self.residue_units]
-        return set().union(*(free_names(node) for node in kept)) if kept else set()
+        reads = set().union(*(free_names(node) for node in kept)) if kept else set()
+        return reads | set(self.kept_exports)
 
     def _residue_imports(self) -> list[str]:
         by_home: dict[str, list[str]] = {}
@@ -256,13 +306,7 @@ class Plan:
 
 def _exports_line(plan: Plan) -> str:
     """The residue's ``__all__``, with every moved name dropped from it."""
-    elements = plan.source.exports.node.value.elts
-    kept = [
-        e.value
-        for e in elements
-        if isinstance(e, ast.Constant) and e.value not in plan.moved
-    ]
-    return "__all__ = [" + ", ".join(f'"{name}"' for name in kept) + "]"
+    return "__all__ = [" + ", ".join(f'"{n}"' for n in plan.kept_exports) + "]"
 
 
 def _unread_imports(plan: Plan) -> tuple[set[int], dict[int, str]]:
@@ -308,15 +352,22 @@ def build_residue(plan: Plan) -> str:
     )
     replaced |= export_text
     kept: list[str] = []
+    at: dict[int, int] = {}
     anchor = 0
     for number, line in enumerate(source.lines, start=1):
+        at[number] = len(kept)
         if number in replaced:
             kept.append(replaced[number])
         elif number not in dropped and (line.strip() or kept[-2:] != ["", ""]):
             kept.append(line)
         if number == source.import_end:
             anchor = len(kept)
-    kept[anchor:anchor] = plan.residue_imports
+    placed = [
+        (at.get(source.import_anchor(statement), anchor), order, statement)
+        for order, statement in enumerate(plan.residue_imports)
+    ]
+    for index, _, statement in sorted(placed, reverse=True):
+        kept.insert(index, statement)
     return source.newline.join(kept)
 
 

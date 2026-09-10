@@ -15,9 +15,9 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.calculator.defensive_effects import StartingDefenses
 from src.calculator.program import rung
 from src.calculator.program import walk as walk_module
+from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.survival import (
     ScoreLedger,
     SurvivalAction,
@@ -25,7 +25,8 @@ from src.calculator.survival import (
     TransitionRank,
     build_states,
 )
-from src.calculator.survival.actions import EVENT_SLOTS, ActionKind
+from src.calculator.survival.event_slots import EVENT_SLOTS
+from src.calculator.survival.typed_action import ActionKind
 
 
 def one_participant_context() -> tuple[TransitionContext, ScoreLedger]:
@@ -249,13 +250,13 @@ class TestOneWalkPerPassAtRuntime:
         per pass.
         """
         from src.calculator import participant_timeline as timeline_module
+        from src.calculator.champion_loadout import ChampionLoadout
+        from src.calculator.fight_params import FightParams
         from src.calculator.participant_timeline import (
             CoupledSearchContext,
             build_participant_timeline,
         )
-        from src.calculator.pipeline import FightParams
         from src.calculator.program.dependency import pass_count
-        from src.calculator.scenario import ChampionLoadout
 
         main = ChampionLoadout(
             champion="Ahri", level=13, role="mid", items=("Catalyst of Aeons",)
@@ -312,14 +313,14 @@ class TestOneWalkPerPassAtRuntime:
         would satisfy ``walk_invocations == 1`` while measuring the routing
         this test does not name.
         """
+        from src.calculator.champion_loadout import ChampionLoadout
         from src.calculator.data_fetcher import get_champion, get_item_by_name
         from src.calculator.defensive_effects import resolve_starting_defenses
+        from src.calculator.fight_params import FightParams
         from src.calculator.participant_timeline import (
             CoupledSearchContext,
             build_participant_timeline,
         )
-        from src.calculator.pipeline import FightParams
-        from src.calculator.scenario import ChampionLoadout
         from src.calculator.stats import calculate_total_stats
         from src.calculator.work_counters import Rung
 
@@ -399,8 +400,8 @@ class TestEveryViewOfOneRequestProjectsOneWalk:
     def _one_request(monkeypatch) -> tuple[list, dict[str, list]]:
         """The walks one calculate request ran, and what each view was given."""
         from src.calculator import participant_timeline as timeline_module
-        from src.calculator.pipeline import FightParams
-        from src.calculator.scenario import ChampionLoadout
+        from src.calculator.champion_loadout import ChampionLoadout
+        from src.calculator.fight_params import FightParams
 
         walked: list = []
         seen: dict[str, list] = {"breakdown": [], "receipt": [], "survival": []}

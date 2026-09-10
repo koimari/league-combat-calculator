@@ -21,8 +21,8 @@ from src.calculator.champions import (
 from src.calculator.champions import (
     parse_champion_abilities as parse_abilities,
 )
-from src.calculator.champions.engine import CC_PER_PART
 from src.calculator.champions.skill_orders import get_ability_rank
+from src.calculator.champions.slot_cc import CC_PER_PART
 from tests import cc_review
 
 # ---------------------------------------------------------------------------

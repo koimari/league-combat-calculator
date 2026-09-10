@@ -8,7 +8,12 @@ from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import named_damage, no_damage, ranked_slot
 from .shared_mechanics import multi_pass_damage
-from .slotlib import ability_name, extract_named, find_named_leveling, sum_modifiers
+from .slot_extract import (
+    ability_name,
+    extract_named,
+    find_named_leveling,
+    sum_modifiers,
+)
 from .source_receipts import load_champion_sources
 
 

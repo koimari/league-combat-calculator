@@ -61,31 +61,27 @@ from typing import Any, NamedTuple
 
 from ..ability_spec import AttackClass, DamageClass
 from ..defensive_effects import armed_revive
-from ..delivery_eligibility import CombatantFacts
+from ..delivery_facts import CombatantFacts
 from ..healing_reduction import amplifies_recovery
-from ..interpreters.delta_amp import StaticHolderAmps
+from ..interpreters.part_amp import StaticHolderAmps
 from ..item_effects import ThornsEffect
-from ..ledger_projection import LightRow
+from ..ledger_inputs import LightRow
 from ..resistance import (
     apply_armor_penetration,
     apply_magic_penetration,
     apply_resistance,
 )
 from ..survival.actions import (
-    EVENT_SLOTS,
-    NO_SLOT,
-    UTILITY_KINDS,
-    ActionKind,
-    SurvivalAction,
-    TransitionRank,
     action_key,
+    compiled_damage_action,
+    event_sequence,
+    participant_order,
+)
+from ..survival.classify import (
+    UTILITY_KINDS,
     classify_event_kind,
     classify_prefetched,
-    compiled_damage_action,
     declared_class_set,
-    event_sequence,
-    ordering_slot,
-    participant_order,
     support_transition_rank,
 )
 from ..survival.compile import (
@@ -98,28 +94,26 @@ from ..survival.compile import (
     unrepresentable_heal_receipt,
     unrepresentable_template_receipt,
 )
+from ..survival.event_slots import EVENT_SLOTS, NO_SLOT
+from ..survival.phases import TransitionRank, ordering_slot
 from ..survival.pricing import (
     AuthoredDeclaration,
     DeclaredPacket,
     RoutingProvenance,
     route_declared_packet,
 )
+from ..survival.typed_action import ActionKind, SurvivalAction
 from ..trigger_stream import HolderStacking, is_immobilizing_event
 from . import events as ev
 from .amp import NO_AMPS, AmpRiders, live_amp_for
-from .build import (
-    Program,
-    Projection,
-    arming_stacking,
-    dropped_pair_previews,
-    pair_preview_sources,
-)
+from .build import Program, Projection
 from .caches import (
     ProgramFingerprint,
     RosterFingerprint,
     program_fingerprint,
     roster_fingerprint,
 )
+from .capability import arming_stacking, dropped_pair_previews, pair_preview_sources
 from .identity import event_id_text
 
 # Kinds a compiled damage action may carry; a revive candidate is authored

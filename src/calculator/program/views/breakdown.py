@@ -28,7 +28,7 @@ from typing import Any
 from ..build import Program
 from ..precision import round_field
 from ..walk import WalkResult
-from . import LeafWriter
+from .leaf import LeafWriter
 
 __all__ = ["breakdown", "breakdown_leaves"]
 

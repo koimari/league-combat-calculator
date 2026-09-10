@@ -4,7 +4,7 @@ import math
 from collections.abc import Iterable
 
 from ... import rune_effects
-from ...interpreters import charged_strike
+from ...interpreters import rearmed_swings
 from ...stats import calculate_attack_speed
 from ..state import FightState
 
@@ -101,7 +101,7 @@ def _base_auto_attack_timestamps(state: FightState) -> list[float]:
         schedule = state.declared.charged_strikes.swing_schedule
         if schedule is not None and schedule.schedules(one_rotation=state.one_rotation):
             times = list(
-                charged_strike.swing_times(
+                rearmed_swings.swing_times(
                     schedule,
                     attack_speed=state.attack_speed,
                     attack_speed_ratio=state.attack_speed_ratio,

@@ -15,15 +15,18 @@ from dataclasses import replace
 import pytest
 
 from src.calculator import damage as damage_module
+from src.calculator import ledger_declarations
 from src.calculator import ledger_projection as lp
 from src.calculator import pipeline as pipeline_module
 from src.calculator.data_fetcher import get_champion, get_item_by_name
+from src.calculator.fight_params import FightParams
 from src.calculator.healing import (
     HEALING_RULE_CHAMPIONS,
     SELF_HEAL_RULE_SLOT,
     self_heal_rule_owner,
 )
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.ledger_inputs import ResultProjection
+from src.calculator.pipeline import run_fight
 from src.calculator.trigger_stream import (
     ChampionSlotOwner,
     EngineOwner,
@@ -32,14 +35,22 @@ from src.calculator.trigger_stream import (
     tuple_incapable_items,
 )
 
-C = lp.AdequacyCondition
+C = ledger_declarations.AdequacyCondition
 
 # One fight per condition, plus the plain build that must stay on the light
 # tuple ledger.  ``fires`` is the conditions this row is *expected* to raise;
 # a row may raise more (a real item rarely does exactly one thing), which is
 # why the coverage assertion is over the union rather than per row.
 MATRIX: tuple[
-    tuple[str, str, tuple[str, ...], str, float, tuple[lp.AdequacyCondition, ...]], ...
+    tuple[
+        str,
+        str,
+        tuple[str, ...],
+        str,
+        float,
+        tuple[ledger_declarations.AdequacyCondition, ...],
+    ],
+    ...,
 ] = (
     ("plain", "Annie", ("Luden's Echo",), "", 0.0, ()),
     (
@@ -97,7 +108,7 @@ def _inputs(
     caller actually received.
     """
     captured: dict[str, object] = {}
-    real_ledger_inputs = pipeline_module.ledger_inputs
+    real_ledger_inputs = pipeline_module.resolve_ledger_inputs
     real_shield_inputs = damage_module.shield_outcome_inputs
 
     def spy_ledger(
@@ -117,7 +128,7 @@ def _inputs(
         captured["shield"] = real_shield_inputs(config, items)
         return captured["shield"]
 
-    pipeline_module.ledger_inputs = spy_ledger
+    pipeline_module.resolve_ledger_inputs = spy_ledger
     damage_module.shield_outcome_inputs = spy_shield
     try:
         captured["result"] = run_fight(
@@ -128,7 +139,7 @@ def _inputs(
             score_only=True,
         )
     finally:
-        pipeline_module.ledger_inputs = real_ledger_inputs
+        pipeline_module.resolve_ledger_inputs = real_ledger_inputs
         damage_module.shield_outcome_inputs = real_shield_inputs
     return captured
 
@@ -138,7 +149,7 @@ def _inputs(
 
 def test_every_condition_is_declared_and_probed_exactly_once():
     """The import-time validation's claim, restated as a test that can fail."""
-    assert set(lp.DECLARATIONS) == set(C)
+    assert set(ledger_declarations.DECLARATIONS) == set(C)
     probed = list(lp.LEDGER_CONDITIONS) + list(lp.SHIELD_OUTCOME_CONDITIONS)
     assert set(probed) == set(C)
     # Thirteen ledger clauses — D-38's ten plus the keystone self-heal, the
@@ -158,24 +169,23 @@ def test_the_two_gates_share_exactly_the_threshold_heal_clause():
 
 def test_each_projection_declares_what_it_cannot_serve():
     """Totality over the projection enum, with the wide members serving all."""
-    assert lp.unserved_conditions(lp.ResultProjection.DICT_ROW_LEDGER) == frozenset()
+    assert lp.unserved_conditions(ResultProjection.DICT_ROW_LEDGER) == frozenset()
     assert (
-        lp.unserved_conditions(lp.ResultProjection.RESOLVED_SHIELD_OUTCOME)
-        == frozenset()
+        lp.unserved_conditions(ResultProjection.RESOLVED_SHIELD_OUTCOME) == frozenset()
     )
-    assert lp.unserved_conditions(lp.ResultProjection.LIGHT_TUPLE_LEDGER) == frozenset(
+    assert lp.unserved_conditions(ResultProjection.LIGHT_TUPLE_LEDGER) == frozenset(
         lp.LEDGER_CONDITIONS
     )
-    assert lp.unserved_conditions(
-        lp.ResultProjection.SKIPPED_SHIELD_OUTCOME
-    ) == frozenset(lp.SHIELD_OUTCOME_CONDITIONS)
+    assert lp.unserved_conditions(ResultProjection.SKIPPED_SHIELD_OUTCOME) == frozenset(
+        lp.SHIELD_OUTCOME_CONDITIONS
+    )
 
 
 def test_requires_fields_names_exactly_the_stat_derived_conditions():
     """``requires_fields`` is the stat-derived half of criterion 15."""
     declared = {
         condition: declaration.requires_fields
-        for condition, declaration in lp.DECLARATIONS.items()
+        for condition, declaration in ledger_declarations.DECLARATIONS.items()
         if declaration.requires_fields
     }
     assert declared == {
@@ -191,7 +201,7 @@ def test_a_probe_cannot_read_a_stat_its_condition_did_not_declare():
     """``requires_fields`` is load-bearing, not a comment beside the probe."""
     inputs = _inputs("Annie", ("Luden's Echo",), 0.0)["ledger"]
     assert inputs.raw_stat(C.LIFESTEAL_STAT, "lifesteal_percent") == 0.0
-    with pytest.raises(lp.UndeclaredStatRead):
+    with pytest.raises(ledger_declarations.UndeclaredStatRead):
         inputs.raw_stat(C.LIFESTEAL_STAT, "omnivamp_percent")
 
 
@@ -233,7 +243,7 @@ def test_the_fight_returns_the_projection_the_conditions_chose(  # pylint: disab
     shield_inputs = captured["shield"]
 
     derived_light = (
-        lp.ledger_projection(ledger_inputs) is lp.ResultProjection.LIGHT_TUPLE_LEDGER
+        lp.ledger_projection(ledger_inputs) is ResultProjection.LIGHT_TUPLE_LEDGER
     )
     assert bool(captured["result"].get("damage_events_tuple")) == derived_light, label
     assert all(
@@ -249,7 +259,7 @@ def test_the_fight_returns_the_projection_the_conditions_chose(  # pylint: disab
 
 def test_the_matrix_raises_every_declared_condition():
     """The projection choice is not vacuous: each condition fires somewhere."""
-    raised: set[lp.AdequacyCondition] = set()
+    raised: set[ledger_declarations.AdequacyCondition] = set()
     for _label, champion, item_names, keystone, threshold_heal, _fires in MATRIX:
         captured = _inputs(champion, item_names, threshold_heal, keystone)
         raised |= {demand.condition for demand in lp.ledger_demands(captured["ledger"])}

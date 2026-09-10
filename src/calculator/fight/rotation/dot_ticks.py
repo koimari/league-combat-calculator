@@ -56,7 +56,11 @@ def _ability_dot_tick_events(
             events.extend(
                 {**tick, "time": cast_time + float(tick["time"])}
                 for tick in _periodic_damage_events(
-                    amount / casts, dtype, dot_duration, tick_interval, resists
+                    amount / casts,
+                    dtype,
+                    dot_duration,
+                    tick_interval,
+                    resists=resists,
                 )
             )
     events.sort(key=_row_time)
@@ -314,6 +318,7 @@ def _periodic_damage_events(
     damage_type: str,
     duration: float,
     interval: float,
+    *,
     resists: Resists | None = None,
 ) -> list[dict[str, float | str]]:
     """Split an aggregate periodic total into timestamped full/partial ticks.

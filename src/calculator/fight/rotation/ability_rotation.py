@@ -4,7 +4,8 @@ from dataclasses import replace
 from typing import Any
 
 from ...ability_atoms import ability_field
-from ...ability_spec import ControlEvent, DamagePart, cc_kind_reviewed
+from ...ability_spec import DamagePart
+from ...control_spec import ControlEvent, cc_kind_reviewed
 from ..autos.on_hit_stream import _ability_applied_on_hit_damage
 from ..autos.swing_schedule import (
     _prepare_hail_attack_schedule,

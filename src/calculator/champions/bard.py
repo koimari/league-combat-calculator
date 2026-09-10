@@ -39,18 +39,15 @@ than letting ``SLOTS`` derive ``modeled``.
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
-from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
+from .contract_vocabulary import coverage
+from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import int_option
-from .module_contract import coverage
 from .module_helpers import no_damage_slot
-from .slotlib import (
-    ability_name,
-    ability_on_hit_entry,
-    simple_damage,
-    support_cast,
-    with_control,
-    with_control_event,
-)
+from .slot_cc import CC_PER_PART
+from .slot_control import with_control, with_control_event
+from .slot_entries import ability_on_hit_entry, support_cast
+from .slot_extract import ability_name
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # Bard's P[0] remains degraded in the wiki JSON, but the tracked

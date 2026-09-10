@@ -19,15 +19,16 @@ from pathlib import Path
 import pytest
 
 from src.calculator import survival
-from src.calculator.ability_spec import CC_KIND_VOCABULARY, IMMOBILIZING_CC_KINDS
+from src.calculator.control_spec import CC_KIND_VOCABULARY, IMMOBILIZING_CC_KINDS
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
+from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.item_effects import required_effect_value
 from src.calculator.participant_timeline import Combatant, _simulate_survival
 from src.calculator.program.build import roster_program as _roster_program
 from src.calculator.program.compile import action_from_event
 from src.calculator.program.views.survival import survival as _survival_view
-from src.calculator.survival.actions import TransitionRank
+from src.calculator.starting_defenses import StartingDefenses
+from src.calculator.survival.phases import TransitionRank
 
 # The literal C5 retired: the five kinds the walk itself decided were
 # immobilizing.  Pinned here, not read from the tree, because it is the
@@ -260,7 +261,7 @@ class TestOneHome:
             "other than ability_spec.IMMOBILIZING_CC_KINDS"
         )
 
-    def test_actions_imports_the_shared_vocabulary(self):
+    def test_the_typed_action_imports_the_shared_vocabulary(self):
         """The import is the handshake the two assertions above police."""
-        body = Path(survival.actions.__file__).read_text(encoding="utf-8")
+        body = Path(survival.typed_action.__file__).read_text(encoding="utf-8")
         assert "IMMOBILIZING_CC_KINDS" in body

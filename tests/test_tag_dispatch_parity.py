@@ -30,7 +30,7 @@ import pytest
 
 from src.calculator.ability_spec import AttackClass, DamageClass
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.interpreters import crit_profile, damage_routing, delta_amp
+from src.calculator.interpreters import crit_profile, damage_routing, part_amp
 from src.calculator.interpreters.crit_profile import (
     CRIT_PAYLOAD_REFERENCES,
     CritProfileInterpretationError,
@@ -300,10 +300,10 @@ def test_magic_damage_amp_is_retired_from_the_ladder_and_owned_by_the_catalog():
         rule for rule in behavior_rules(owner) if rule.family is RuleFamily.DELTA_AMP
     ]
     assert rule.mechanic_id == "abyssal_mask.magic_amp"
-    assert delta_amp.declared_magic_amp([owner]) == pytest.approx(
+    assert part_amp.declared_magic_amp([owner]) == pytest.approx(
         1.0 + required_effect_value(owner, "magic_amp")
     )
-    assert delta_amp.declared_magic_amp([]) == 1.0
+    assert part_amp.declared_magic_amp([]) == 1.0
     assert not hasattr(_ladder(owner), "magic_amp")
 
 
@@ -316,19 +316,19 @@ def test_the_two_part_amp_selectors_are_disjoint_and_total():
     every = {
         rule.mechanic_id
         for owner in ITEM_EFFECTS
-        for rule in delta_amp._part_amps([owner])  # pylint: disable=protected-access
+        for rule in part_amp._part_amps([owner])  # pylint: disable=protected-access
     }
     by_attack = {
         rule.mechanic_id
         for owner in ITEM_EFFECTS
         for attack_class in AttackClass
-        for rule in delta_amp.part_amp_rules([owner], attack_class)
+        for rule in part_amp.part_amp_rules([owner], attack_class)
     }
     by_damage = {
         rule.mechanic_id
         for owner in ITEM_EFFECTS
         for damage_class in DamageClass
-        for rule in delta_amp.damage_class_amp_rules([owner], damage_class)
+        for rule in part_amp.damage_class_amp_rules([owner], damage_class)
     }
     assert by_attack
     assert by_damage

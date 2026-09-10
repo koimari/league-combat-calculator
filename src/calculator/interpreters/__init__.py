@@ -71,13 +71,14 @@ from ..trigger_stream import CAPABILITIES
 from . import (
     active_cast,
     ally_packet,
+    amp_magnitude,
     cast_proc,
     charged_strike,
     combat_state,
     crit_profile,
+    damage_deferral,
     damage_routing,
     defense_state,
-    delta_amp,
     on_hit_strike,
     opening_defense,
     periodic,
@@ -308,8 +309,8 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], FieldsFn] = {
     ): defense_state.compiled_shape,
     (RuleFamily.DAMAGE_ROUTING, EngineLane.PAIR_ENGINE): damage_routing.pair_fields,
     (RuleFamily.DAMAGE_ROUTING, EngineLane.RECEIPT_WALK): damage_routing.walk_fields,
-    (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): delta_amp.amp_fields,
-    (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): delta_amp.amp_fields,
+    (RuleFamily.DELTA_AMP, EngineLane.PAIR_ENGINE): amp_magnitude.amp_fields,
+    (RuleFamily.DELTA_AMP, EngineLane.RECEIPT_WALK): amp_magnitude.amp_fields,
     (RuleFamily.ON_HIT_STRIKE, EngineLane.PAIR_ENGINE): on_hit_strike.strike_fields,
     (RuleFamily.ON_HIT_STRIKE, EngineLane.RECEIPT_WALK): on_hit_strike.strike_fields,
     (
@@ -358,7 +359,7 @@ INTERPRETERS: Mapping[tuple[RuleFamily, EngineLane], FieldsFn] = {
 # subject is each family's own arithmetic, so it is keyed by family alone.
 RESOLVERS: Mapping[RuleFamily, ResolveFn] = {
     RuleFamily.COMBAT_STATE: combat_state.resolve_combat_state,
-    RuleFamily.DAMAGE_ROUTING: damage_routing.resolve_deferral,
+    RuleFamily.DAMAGE_ROUTING: damage_deferral.resolve_deferral,
     RuleFamily.OPENING_DEFENSE: opening_defense.resolve_opening_defense,
     RuleFamily.REACTIVE: reactive.resolve_reactive,
     RuleFamily.SUSTAIN: sustain.resolve_received_healing,

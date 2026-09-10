@@ -196,7 +196,7 @@ from src.calculator.champions import (
     parse_champion_abilities,
 )
 from src.calculator.champions.packet_module import packet_spec_sha256
-from src.calculator.champions.slotlib import extract_named, find_named_leveling
+from src.calculator.champions.slot_extract import extract_named, find_named_leveling
 from src.calculator.champions.zeri import PACKET_SHA256
 from tests.committed_bytes import sha256_as_committed
 

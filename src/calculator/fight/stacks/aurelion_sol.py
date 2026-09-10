@@ -25,7 +25,7 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
     """
     if "stardust_stacks" not in (state.champion_options):
         return
-    from ...champions.aurelion_sol import (
+    from ...champions.aurelion_sol_stardust import (
         _Q_BURSTS_PER_CHANNEL,
         _STARDUST_PER_Q_BURST,
         AURELION_SOL_STARDUST_RULE,

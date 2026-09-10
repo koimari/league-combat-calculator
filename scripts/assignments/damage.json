@@ -12,7 +12,8 @@
   "fight/autos/swing_profile.py is one module the roster does not name (map B section S10c): _find_auto_attack_override, _basic_attack_true_rider, _on_hit_effectiveness, _auto_swing_bonus_ad. Folded into simulation.py they would make a 637-line module holding symbols five other modules read, which is a new #27 finding.",
   "_damaging_cast_times goes to fight/cast_slots.py and _item_proc_precision with _CERTIFIED_CAST_PRECISIONS to fight/ledger/event_rows.py: both are read from three or four subpackages, and both maps call them kernel symbols with no section of their own.",
   "FerocityTimeline goes to fight/results.py, not stacks/rengar.py: FightState annotates it and stacks/rengar.py builds it.",
-  "fight/ledger/breakdown.py holds only _is_auto_stream_key, because the brief keeps split_auto_vs_ability and split_by_damage_type in the residue and two rune modules read the predicate. No external reader imports _is_auto_stream_key, so nothing repoints."
+  "fight/ledger/breakdown.py holds only _is_auto_stream_key, because the brief keeps split_auto_vs_ability and split_by_damage_type in the residue and two rune modules read the predicate. No external reader imports _is_auto_stream_key, so nothing repoints.",
+  "single_proc_on_hits: step 2 prices these items from catalog declarations, so the one function this file moved whole is two loops, first_auto_strikes.py and stacking_strikes.py, and the entry above names them."
  ],
  "string_annotations_that_stay_strings": {
   "src/calculator/fight/state.py: FightState.stack_timeline: \"StackTimeline | None\"": "importing rotation/stack_timeline closes state -> stack_timeline -> autos/swing_schedule -> state",
@@ -666,12 +667,36 @@
    ]
   },
   {
-   "path": "src/calculator/fight/autos/single_proc_on_hits.py",
-   "docstring": "Items that proc once or on a stack counter rather than per hit.",
+   "path": "src/calculator/fight/autos/first_auto_strikes.py",
+   "docstring": "Items whose packet is authored once, on the first swing of the fight.",
    "defs": [
-    "_add_single_proc_on_hits"
+    "_author_energized_ability_procs",
+    "_add_first_auto_strikes"
    ],
-   "body_lines": 963,
+   "reads": [
+    "src/calculator/fight/autos/copied_on_hit.py",
+    "src/calculator/fight/autos/decaying_health_walk.py",
+    "src/calculator/fight/autos/on_hit_stream.py",
+    "src/calculator/fight/autos/swing_profile.py",
+    "src/calculator/fight/autos/swing_schedule.py",
+    "src/calculator/fight/items/cast_procs.py",
+    "src/calculator/fight/items/eclipse_stack_gate.py",
+    "src/calculator/fight/items/energized_packets.py",
+    "src/calculator/fight/items/muramana.py",
+    "src/calculator/fight/ledger/event_rows.py",
+    "src/calculator/fight/mitigation.py",
+    "src/calculator/fight/resists.py",
+    "src/calculator/fight/results.py",
+    "src/calculator/fight/rotation/shaped_charge.py",
+    "src/calculator/fight/state.py"
+   ]
+  },
+  {
+   "path": "src/calculator/fight/autos/stacking_strikes.py",
+   "docstring": "Items whose packet is priced off a stack counter rather than per hit.",
+   "defs": [
+    "_add_stacking_strikes"
+   ],
    "reads": [
     "src/calculator/fight/autos/copied_on_hit.py",
     "src/calculator/fight/autos/decaying_health_walk.py",
@@ -1840,16 +1865,6 @@
     "src/calculator/trigger_stream.py"
    ]
   },
-  "_add_single_proc_on_hits": {
-   "new_home": "src/calculator/fight/autos/single_proc_on_hits.py",
-   "import": [],
-   "attribute": [
-    "tests/test_survival_kernel.py"
-   ],
-   "string": [
-    "src/calculator/trigger_stream.py"
-   ]
-  },
   "_apply_command_amp": {
    "new_home": "src/calculator/fight/after/amplifiers.py",
    "import": [],
@@ -2167,6 +2182,26 @@
    "new_home": "src/calculator/fight/autos/simulation.py",
    "import": [],
    "attribute": [],
+   "string": [
+    "src/calculator/trigger_stream.py"
+   ]
+  },
+  "_add_first_auto_strikes": {
+   "new_home": "src/calculator/fight/autos/first_auto_strikes.py",
+   "import": [],
+   "attribute": [
+    "tests/test_survival_kernel.py"
+   ],
+   "string": [
+    "src/calculator/trigger_stream.py"
+   ]
+  },
+  "_add_stacking_strikes": {
+   "new_home": "src/calculator/fight/autos/stacking_strikes.py",
+   "import": [],
+   "attribute": [
+    "tests/test_survival_kernel.py"
+   ],
    "string": [
     "src/calculator/trigger_stream.py"
    ]

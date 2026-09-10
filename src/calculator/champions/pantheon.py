@@ -29,18 +29,13 @@ from ..binary_roots import (
     data_value,
     spell_object,
 )
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .inputs import bool_option, float_option
-from .module_contract import coverage
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-)
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 
 PACKET_SHA256 = "604839aed7fc6d6741cf14f1a8d6d58554dce93cd8c14bea5ac73d82215e771a"
 

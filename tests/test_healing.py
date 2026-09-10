@@ -11,7 +11,7 @@ from src.calculator.champions.healing_contract import (
     heal_receipt_order,
     self_healing_rule,
 )
-from src.calculator.champions.slotlib import extract_named
+from src.calculator.champions.slot_extract import extract_named
 from src.calculator.data_fetcher import get_champion
 from src.calculator.healing import derive_self_healing
 

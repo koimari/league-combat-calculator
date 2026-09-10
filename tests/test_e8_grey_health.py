@@ -370,14 +370,14 @@ def test_kled_skaarl_pool_is_a_documented_revive_boundary():
 
 
 def test_grey_health_score_walk_matches_legacy_score_receipts():
+    from src.calculator.champion_loadout import ChampionLoadout
     from src.calculator.data_fetcher import get_champion
     from src.calculator.defensive_effects import resolve_starting_defenses
+    from src.calculator.fight_params import FightParams
     from src.calculator.participant_timeline import (
         CoupledSearchContext,
         build_participant_timeline,
     )
-    from src.calculator.pipeline import FightParams
-    from src.calculator.scenario import ChampionLoadout
     from src.calculator.stats import calculate_total_stats
 
     champion = get_champion("Rengar")

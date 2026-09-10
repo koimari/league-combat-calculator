@@ -247,7 +247,8 @@ class TestBlazingStampedeIsASourcedZeroDamageRow:
 
     @staticmethod
     def _fight_move_speed(seconds: float) -> float:
-        from src.calculator.pipeline import FightParams, run_fight
+        from src.calculator.fight_params import FightParams
+        from src.calculator.pipeline import run_fight
 
         return run_fight(
             get_champion("Udyr"),

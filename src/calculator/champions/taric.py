@@ -50,16 +50,16 @@ from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
 from .packet_module import build_packet_module
-from .slotlib import (
+from .slot_control import with_control
+from .slot_entries import on_hit_entry
+from .slot_extract import (
     PER_LEVEL_SCALING,
     ability_name,
     extract_named,
     find_named_leveling,
-    on_hit_entry,
-    simple_damage,
     sum_modifiers,
-    with_control,
 )
+from .slotlib import simple_damage
 
 PACKET_SHA256 = "c4661e1dfa5a63e1d512d64efc3bbb6cfb5e5d22f3c5d3e08c363f4d5c672cb4"
 

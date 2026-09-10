@@ -13,6 +13,9 @@ Covers the combo layer (src/calculator/rotation_resolver.py) end to end:
    between reapplications (and strictly more E casts than the fixed
    default order in a short window); Varus' Blight detonation rides the
    Q cast that follows the auto-applied stacks.
+
+file-length-ok: one case per combo champion and per cadence claim, and the
+override table is the denominator rather than a chosen sample.
 """
 
 import re
@@ -21,20 +24,21 @@ from pathlib import Path
 
 import pytest
 
+from src.calculator.ability_dps_matrix import rank_ability_dps
 from src.calculator.cast_dependency import CustomOrderViolatesDependencyError
-from src.calculator.champions import registered_champion_names
-from src.calculator.data_fetcher import fetch_champion_data
-from src.calculator.fight.cast_slots import DEFAULT_CAST_ORDER
-from src.calculator.pipeline import ONE_ROTATION_DURATION, FightParams, run_fight
-from src.calculator.rotation_resolver import (
+from src.calculator.cast_order_overrides import (
     CAST_ORDER_OVERRIDES,
     ORDER_OVERRIDE_REASONS,
     ComboRule,
     _validate_override_reasons,
-    build_rotation_receipt,
-    rank_ability_dps,
-    resolve_cast_order,
 )
+from src.calculator.champions import registered_champion_names
+from src.calculator.data_fetcher import fetch_champion_data
+from src.calculator.fight.cast_slots import DEFAULT_CAST_ORDER
+from src.calculator.fight_params import FightParams
+from src.calculator.fight_request_bounds import ONE_ROTATION_DURATION
+from src.calculator.pipeline import run_fight
+from src.calculator.rotation_resolver import build_rotation_receipt, resolve_cast_order
 
 _OVERRIDE_CHAMPIONS = [
     "Cassiopeia",
@@ -136,7 +140,7 @@ def _run(champion_data, level=11, one_rotation=True, duration=None, uptime=0.0):
 # ---------------------------------------------------------------------------
 
 _RESOLVER_PATH = (
-    Path(__file__).resolve().parents[1] / "src" / "calculator" / "rotation_resolver.py"
+    Path(__file__).resolve().parents[1] / "src/calculator/cast_order_overrides.py"
 )
 _OVERRIDES_LITERAL_OPEN = "CAST_ORDER_OVERRIDES: dict[str, ComboRule] = {"
 _ENTRY_LINE = re.compile(r'^ {4}"([^"]+)": ComboRule\($')
@@ -879,7 +883,8 @@ class TestTimedCadence:
     def test_receipt_defers_to_explicit_user_order(self, champion_by_name) -> None:
         """An explicit caller-supplied order wins and is labelled as such —
         the combo layer never overrides it."""
-        from src.calculator.pipeline import FightParams, run_fight
+        from src.calculator.fight_params import FightParams
+        from src.calculator.pipeline import run_fight
 
         data = champion_by_name["Cassiopeia"]
         params = FightParams(

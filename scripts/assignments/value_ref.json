@@ -1,0 +1,37 @@
+{
+ "source": "src/calculator/value_ref.py",
+ "decisions": [
+  "The map's single receipt-module cut is a back-edge: _entry_receipt is annotated with ValueSource and receipt_for constructs one, and ValueSource cannot follow them out because its ref() builds a ValueRef and its receipt() calls receipt_for, so it sits above both layers. _entry_receipt and receipt_for therefore stay in value_ref.py beside ValueSource, and only the receipt record and the registry read move.",
+  "SourceReceipt validates through ValueRefError, which is the whole file's refusal, so a receipt module holding it alone would be a back-edge too. The closed vocabularies a reference is spelled in become their own leaf, reference_vocabulary.py, which value_source_receipt.py and the residue both read. That is also what lands the residue at 456 lines: the receipt record on its own is 46.",
+  "_registry moves with SourceReceipt rather than becoming public as registry_mapping. It is read at exactly one site and the two are the only readers of the registry modules for citation purposes.",
+  "Published spelling: the receipt module is value_source_receipt.py, because state_timeline.SourceReceipt is a different class of the same name and a module named for the bare concept sends a grep to the wrong home. Its registry read is live_registry, which value_ref calls across the boundary."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/reference_vocabulary.py",
+   "docstring": "The closed vocabularies a value reference is spelled in, and the refusal any of them raises.",
+   "defs": [
+    "ValueRegistry",
+    "VALUE_REGISTRIES",
+    "StructuralReason",
+    "STRUCTURAL_REASONS",
+    "LevelScale",
+    "LEVEL_SCALES",
+    "_LINEAR_RAMP_CAP",
+    "DerivedOp",
+    "DERIVED_OPS",
+    "ValueRefError"
+   ]
+  },
+  {
+   "path": "src/calculator/value_source_receipt.py",
+   "docstring": "The revision a declaration's numbers were read from, and the registry entry it is cited from.",
+   "defs": [
+    "UnsourcedDeclarationError",
+    "SourceReceipt",
+    "_registry"
+   ]
+  }
+ ]
+}

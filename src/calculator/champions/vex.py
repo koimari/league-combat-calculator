@@ -42,13 +42,8 @@ from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
 from .inputs import int_option
 from .packet_module import build_packet_module
-from .slotlib import (
-    attach_self_shield,
-    extract_named,
-    find_named_leveling,
-    on_hit_entry,
-    sum_modifiers,
-)
+from .slot_entries import attach_self_shield, on_hit_entry
+from .slot_extract import extract_named, find_named_leveling, sum_modifiers
 
 PACKET_SHA256 = "02fdfcd1fd65f629f446626879f993ab3308ec7eefb4e974ab8f4a026f43dd15"
 
