@@ -38,7 +38,7 @@ def _certified_only_pool(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
-        roster_target_index=state.roster_target_index,
+        roster_target_index=state.ledger_target_index,
     )
     coverage = _event_timeline_coverage(
         state.breakdown,
@@ -180,7 +180,7 @@ def _conqueror_trigger_events(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
-        roster_target_index=state.roster_target_index,
+        roster_target_index=state.ledger_target_index,
     )
     detailed = [event for event in ordered if isinstance(event, Mapping)]
     ability_events = [

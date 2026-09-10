@@ -47,6 +47,7 @@ from src.calculator.bis import bis_batch_payload, bis_payload
 from src.calculator.bis_objective import bis_objective_contract
 from src.calculator.calculate import calculate_payload, compare_payload
 from src.calculator.capabilities import public_capability_contract
+from src.calculator.combat_events import combat_event_contract
 from src.calculator.cast_dependency import BASE_CAST_SLOTS
 from src.calculator.certainty import (
     CERTAINTY_BOUNDARY as _CERTAINTY_BOUNDARY,
@@ -68,7 +69,7 @@ from src.calculator.champions import (
     get_champion_module_meta,
     registered_champion_names,
 )
-from src.calculator.data_fetcher import fetch_champion_data
+from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.fight_request_bounds import (
     DEFAULT_AUTO_ATTACK_UPTIME,
     DEFAULT_AUTO_ATTACK_UPTIME_MODE,
@@ -89,6 +90,8 @@ from src.calculator.item_effects import (
     refresh_item_effects,
     stat_conversion_metadata,
 )
+from src.calculator.item_source import effect_entries, effect_text
+from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.item_stat_block import get_item_stats
 from src.calculator.loadout_rules import exclusivity_groups, validate_resolved_loadout
 from src.calculator.optimizer import optimize_build
@@ -173,6 +176,7 @@ from src.db import (
     validation_summary,
 )
 from src.rate_limit import TokenBucketStore
+from src.service_auth import authorize_service_request
 
 app = Flask(
     __name__,
@@ -505,6 +509,19 @@ def _enforce_authentication():
     validation API, and the public legal pages (privacy, terms, Riot
     disclaimer).
     """
+    service_access = authorize_service_request(
+        request.headers.get("Authorization", ""),
+        method=request.method,
+        path=request.path,
+        configured_token=os.environ.get("CALCULATOR_SERVICE_TOKEN", ""),
+    )
+    if service_access is not None:
+        if service_access:
+            return None
+        response = jsonify({"error": "Calculator service authentication failed"})
+        response.status_code = 401
+        response.headers["WWW-Authenticate"] = 'Bearer realm="calculator"'
+        return response
     if not _auth_enabled():
         return None
     if (
@@ -823,7 +840,19 @@ def riot_disclaimer() -> str:
 
 @app.route("/")
 def index() -> str:
-    """Serve the main calculator page."""
+    """Serve the shared Scryglass calculator interface."""
+    if request.args.get("share"):
+        return advanced_calculator()
+    session = _current_session()
+    return render_template(
+        "calculator.html",
+        auth_user=session.get("username") if session else None,
+    )
+
+
+@app.route("/advanced")
+def advanced_calculator() -> str:
+    """Serve the complete roster and event inspection workspace."""
     session = _current_session()
     return render_template(
         "index.html",
@@ -984,11 +1013,7 @@ def _cached_champion_field(champ_data: Mapping[str, Any], key: str) -> Any:
 
 
 def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
-    """Slot identity for /api/champions: name, icon, and whether it was ingested.
-
-    Descriptive text (blurb, damage type, targeting) is the static ability
-    catalogue's job (``static/ability-catalog.json``), not the API's.
-    """
+    """Serve cached slot identity and complete effect text for HUD tooltips."""
     entries = ability_list if isinstance(ability_list, list) else []
     first = entries[0] if entries and isinstance(entries[0], dict) else {}
     return {
@@ -996,6 +1021,47 @@ def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
         "name": first.get("name", slot),
         "icon": _https_icon(first.get("icon", "")),
         "ingested": bool(first),
+        "description": "\n\n".join(
+            effect["description"]
+            for entry in entries
+            for effect in entry.get("effects", [])
+            if effect.get("description")
+        ),
+        "rank_values": [
+            {
+                "label": leveling["attribute"],
+                "values": [
+                    f"{value}{unit}"
+                    for value, unit in zip(
+                        modifier.get("values", []),
+                        modifier.get("units", []),
+                        strict=True,
+                    )
+                ],
+            }
+            for entry in entries
+            for effect in entry.get("effects", [])
+            for leveling in effect.get("leveling", [])
+            for modifier in leveling.get("modifiers", [])
+            if leveling.get("attribute")
+        ]
+        + [
+            {
+                "label": label,
+                "values": [
+                    f"{value}{unit}"
+                    for value, unit in zip(
+                        modifier.get("values", []),
+                        modifier.get("units", []),
+                        strict=True,
+                    )
+                ],
+            }
+            for entry in entries
+            for key, label in (("cost", "Cost"), ("cooldown", "Cooldown (seconds)"))
+            if isinstance(entry.get(key), dict)
+            for modifier in entry[key].get("modifiers", [])
+        ],
     }
 
 
@@ -1027,6 +1093,14 @@ def api_champions() -> Response:
                     champ_data, "patchLastChanged"
                 ),
                 "abilities": ability_slots,
+                "resource": champ_data.get("resource"),
+                "rank_defaults_by_level": {
+                    str(level): {
+                        slot: get_ability_rank(slot, level, champ_data["name"])
+                        for slot in ("Q", "W", "E", "R")
+                    }
+                    for level in range(1, 21)
+                },
                 "ability_ingestion": {
                     "complete": all(
                         entry["ingested"] for entry in ability_slots.values()
@@ -1043,6 +1117,45 @@ def api_champions() -> Response:
         key=lambda c: (c["engine_registration"] is None, c["name"]),
     )
     return jsonify(result)
+
+
+def _item_shop_fields(
+    item: Mapping[str, Any],
+    sources: Mapping[str, Any],
+    catalog_ids: set[int],
+) -> dict[str, Any]:
+    """Expose source ranks and recipe edges without changing selection policy."""
+
+    def relations(key: str) -> list[dict[str, Any]]:
+        result = []
+        for item_id in item.get(key, []):
+            source = sources.get(str(item_id))
+            result.append(
+                {
+                    "id": item_id,
+                    "name": source["name"] if source else None,
+                    "icon": _https_icon(source["icon"]) if source else None,
+                    "price": item_gold(source) if source else None,
+                    "catalog_available": item_id in catalog_ids,
+                }
+            )
+        return result
+
+    return {
+        "rank": item.get("rank"),
+        "shop_tags": item.get("shop", {}).get("tags", []),
+        "effects": [
+            {
+                "kind": kind,
+                "name": entry.get("name"),
+                "text": effect_text(entry),
+                "text_format": "wikitext",
+            }
+            for kind, entry in effect_entries(item)
+        ],
+        "builds_from": relations("buildsFrom"),
+        "builds_into": relations("buildsInto"),
+    }
 
 
 def _item_picker_stat_fields(item: Mapping[str, Any]) -> dict[str, Any]:
@@ -1085,6 +1198,9 @@ def _item_picker_stat_fields(item: Mapping[str, Any]) -> dict[str, Any]:
 @app.route("/api/items")
 def api_items() -> Response:
     """Return ordinary build items for manual attacker/roster loadouts."""
+    selectable = get_selectable_items()
+    catalog_ids = {item["id"] for item in [*selectable, *get_eligible_boots(tier=None)]}
+    sources = fetch_item_data()
     result = sorted(
         [
             {
@@ -1092,6 +1208,7 @@ def api_items() -> Response:
                 "name": item["name"],
                 "icon": _https_icon(item.get("icon", "")),
                 **_item_picker_stat_fields(item),
+                **_item_shop_fields(item, sources, catalog_ids),
                 "tier": item["tier"],
                 "support_quest_stage": support_quest_item_stage(item.get("name")),
                 "model_coverage": item_model_coverage(
@@ -1099,7 +1216,7 @@ def api_items() -> Response:
                 ).as_payload(),
                 "target_model_coverage": target_item_model_coverage(item),
             }
-            for item in get_selectable_items()
+            for item in selectable
         ],
         key=lambda i: i["name"],
     )
@@ -1109,6 +1226,9 @@ def api_items() -> Response:
 @app.route("/api/boots")
 def api_boots() -> Response:
     """Return tier-2 and quest-only tier-3 boots for the role-aware picker."""
+    boots = get_eligible_boots(tier=None)
+    catalog_ids = {item["id"] for item in [*get_selectable_items(), *boots]}
+    sources = fetch_item_data()
     upgrade_pairs = boot_upgrade_contract()
     upgrade_from = {pair["upgraded"]: pair["base"] for pair in upgrade_pairs.values()}
     result = sorted(
@@ -1118,6 +1238,7 @@ def api_boots() -> Response:
                 "name": item["name"],
                 "icon": _https_icon(item.get("icon", "")),
                 **_item_picker_stat_fields(item),
+                **_item_shop_fields(item, sources, catalog_ids),
                 "tier": item["tier"],
                 "upgrade_from": upgrade_from.get(item.get("name")),
                 "upgrade_to": next(
@@ -1133,7 +1254,7 @@ def api_boots() -> Response:
                 ).as_payload(),
                 "target_model_coverage": target_item_model_coverage(item),
             }
-            for item in get_eligible_boots(tier=None)
+            for item in boots
         ],
         key=lambda i: i["name"],
     )
@@ -1188,6 +1309,7 @@ def api_config() -> Response:
                 "role_quest": role_quest_domain_contract(),
                 "rank_allocation": rank_allocation_contract(),
                 "bis_objectives": bis_objective_contract(),
+                "combat_events": combat_event_contract(),
             },
             "capabilities": public_capability_contract(
                 input_limits=PUBLIC_INPUT_LIMITS,

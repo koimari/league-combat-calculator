@@ -29,8 +29,8 @@ def _disable_rate_limits_between_route_tests():
         yield
 
 
-def test_index_uses_scryglass_editorial_shell_without_changing_calculator_contract():
-    response = app_module.app.test_client().get("/")
+def test_advanced_workspace_keeps_its_calculator_contract():
+    response = app_module.app.test_client().get("/advanced")
     page = response.get_data(as_text=True)
     soup = BeautifulSoup(page, "html.parser")
 
@@ -118,7 +118,7 @@ def test_password_auth_accepts_only_configured_accounts(monkeypatch):
     assert (
         client.get("/auth/status").get_json()["user"]["username"] == "LSAccessAccount"
     )
-    page = client.get("/")
+    page = client.get("/advanced")
     assert page.status_code == 200
     body = page.get_data(as_text=True)
     assert "Signed in as <strong>LSAccessAccount</strong>" in body
@@ -126,10 +126,8 @@ def test_password_auth_accepts_only_configured_accounts(monkeypatch):
     assert "Articles" not in body
     assert "Ratings" not in body
     assert "Matches" not in body
-    # Locked decision 3: one committed look (cream canvas + dark rail). The
-    # theme toggle and its data-theme plumbing are retired, so the served
-    # page must not carry a theme attribute at all.
-    assert "data-theme" not in body
+    assert 'data-theme="paper"' in body
+    assert 'aria-label="Theme"' in body
 
     client = app_module.app.test_client()
     koi = client.post(
@@ -2335,6 +2333,8 @@ class TestChampionRegistrationField:
             "patch_last_changed",
             "abilities",
             "ability_ingestion",
+            "resource",
+            "rank_defaults_by_level",
         }
 
     def test_registered_champions_sort_first(self):

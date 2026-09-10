@@ -1,0 +1,1031 @@
+.champion-hud {
+  --hud-gold: #ac8d48;
+  --hud-dark: #07110f;
+  color: #eee8d2;
+  min-width: 0;
+  font-family: inherit;
+}
+.champion-hud-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.champion-hud-heading h3 {
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
+}
+.champion-hud-heading h3 span {
+  color: #808c89;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-right: 10px;
+}
+.champion-hud button {
+  cursor: pointer;
+  font: inherit;
+}
+.champion-hud button:focus-visible,
+.champion-hud input:focus-visible {
+  outline: 2px solid #61d2db;
+  outline-offset: 3px;
+}
+.champion-hud-rank-mode {
+  color: #8ba5a3;
+  background: none;
+  border: 0;
+  padding: 4px;
+  font-size: 11px !important;
+}
+.champion-hud-frame {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 14px 12px 8px;
+  background: linear-gradient(
+    180deg,
+    #172b26,
+    #091510 12%,
+    #091510 85%,
+    #172c25
+  );
+  border: 2px solid #6c6038;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 0 0 2px #020805,
+    inset 0 0 0 3px #344137,
+    0 4px 16px #0005;
+}
+.champion-hud-identity {
+  position: relative;
+  flex: 0 0 104px;
+  width: 104px;
+  height: 104px;
+}
+.champion-hud-portrait {
+  display: block;
+  width: 104px;
+  height: 104px;
+  padding: 7px;
+  border: 3px solid #b59751;
+  background: #102522;
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 2px #091713,
+    inset 0 0 0 2px #514b31;
+  overflow: hidden;
+  color: #cab778;
+  font-size: 32px !important;
+}
+.champion-hud-portrait img {
+  height: 100%;
+  width: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.champion-hud-level {
+  position: absolute;
+  bottom: -1px;
+  right: 0;
+}
+.champion-hud-level input {
+  width: 42px;
+  height: 30px;
+  padding: 0 0 0 5px;
+  border: 2px solid #ac8d48;
+  border-radius: 12px;
+  background: #0b1512;
+  color: #f0d896;
+  text-align: center;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+}
+.champion-hud-center {
+  flex: 1 1 240px;
+  min-width: 205px;
+}
+.champion-hud-abilities {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 9px;
+}
+.champion-hud-ability {
+  flex: 1 1 40px;
+  max-width: 56px;
+  min-width: 0;
+}
+.champion-hud-ability-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 2px;
+  border: 1px solid #a58c4b;
+  background: #020909;
+  box-shadow: 0 0 0 1px #293f36;
+}
+.champion-hud-ability-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.champion-hud-ability-image > span {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: #7d8d83;
+}
+.champion-hud-ability kbd {
+  position: absolute;
+  right: 2px;
+  bottom: 1px;
+  color: #e6dfc7;
+  font-family: inherit;
+  font-size: 10px;
+  line-height: 1.2;
+  background: #020a08bc;
+  padding: 1px 3px;
+  text-shadow: 0 1px #000;
+}
+.champion-hud-passive {
+  max-width: 33px;
+  margin-top: 7px;
+}
+.champion-hud-rank {
+  height: 27px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  justify-content: center;
+  font-size: 9px;
+  color: #a9b7ac;
+}
+.champion-hud-rank input {
+  width: 43px;
+  height: 19px;
+  border: 1px solid #77693c;
+  background: #15241b;
+  color: #f1d074;
+  text-align: center;
+  padding: 0;
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1;
+}
+.champion-hud-pips {
+  display: flex;
+  gap: 3px;
+}
+.champion-hud-pips i {
+  width: 4px;
+  height: 4px;
+  border: 1px solid #645832;
+  border-radius: 50%;
+  background: #050b07;
+}
+.champion-hud-pips i.filled {
+  background: #e3c566;
+  border-color: #d2b45d;
+}
+.champion-hud-bars {
+  display: grid;
+  gap: 3px;
+}
+.champion-hud-bar {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 17px;
+  border: 1px solid #020c06;
+  box-shadow: 0 0 0 1px #355642;
+  font-size: 11px;
+  line-height: 1;
+  text-shadow: 0 1px 2px #000;
+}
+.champion-hud-bar > span {
+  position: absolute;
+  left: 5px;
+  font-size: 9px;
+  opacity: 0.85;
+}
+.champion-hud-bar strong {
+  font-weight: 600;
+}
+.champion-hud-health {
+  background: linear-gradient(#81aa00, #468000 40%, #146b00 50%, #218300);
+}
+.champion-hud-resource {
+  background: linear-gradient(#3aadd0, #1778a2 45%, #064d7e 50%, #167aab);
+}
+.champion-hud-inventory {
+  flex: 0 0 112px;
+  padding: 5px;
+  border: 1px solid #665b36;
+  background: #04100d;
+  box-shadow: inset 0 0 0 1px #243b2e;
+}
+.champion-hud-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+.champion-hud-slots button:not(.game-tooltip-info) {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid #24372d;
+  background: #020b09;
+  color: #3a4d41;
+  font-size: 10px;
+}
+.champion-hud-slots img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.champion-hud-gold {
+  display: block;
+  width: 100%;
+  margin-top: 5px;
+  padding: 2px 4px;
+  border: 1px solid #b39a58;
+  background: linear-gradient(#254942, #0c2925);
+  color: #f2d26e;
+  text-align: center;
+  font-size: 14px !important;
+  line-height: 1.15 !important;
+}
+.champion-hud-gold span {
+  font-size: 10px;
+  margin-right: 5px;
+}
+.champion-hud-runes {
+  align-self: center;
+  writing-mode: vertical-rl;
+  padding: 10px 5px;
+  color: #cfbd81;
+  background: #14241c;
+  border: 1px solid #6c6038;
+  font-size: 11px !important;
+}
+.champion-hud-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(58px, 1fr));
+  flex: 0 0 140px;
+  gap: 7px 11px;
+  margin: 0;
+  padding: 10px 0 10px 12px;
+  border-left: 1px solid #625733;
+}
+.champion-hud-stats > div {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.champion-hud-stats dt {
+  font-size: 9px;
+  width: 18px;
+  font-weight: 700;
+}
+.champion-hud-stats abbr {
+  text-decoration: none;
+  cursor: help;
+}
+.champion-hud-stats dd {
+  margin: 0;
+}
+.champion-hud-stat-physical {
+  color: #d49a48;
+}
+.champion-hud-stat-magic {
+  color: #a485ec;
+}
+.champion-hud-stat-armor {
+  color: #e6c35b;
+}
+.champion-hud-stat-resist {
+  color: #7ad7d6;
+}
+.champion-hud-stat-speed {
+  color: #e0d79c;
+}
+.champion-hud-stat-haste {
+  color: #bcbcc6;
+}
+.champion-hud-status {
+  margin: 8px 0 0;
+  color: #c8b781;
+  font-size: 12px;
+}
+.champion-hud-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 850px) {
+  .champion-hud-frame {
+    flex-wrap: wrap;
+  }
+  .champion-hud-stats {
+    flex: 1 1 100%;
+    grid-template-columns: repeat(4, 1fr);
+    border-left: 0;
+    border-top: 1px solid #625733;
+    padding: 9px 3px 0;
+  }
+}
+@media (max-width: 520px) {
+  .champion-hud-frame {
+    gap: 9px;
+    padding: 12px 8px;
+  }
+  .champion-hud-identity {
+    flex-basis: 80px;
+    width: 80px;
+    height: 80px;
+  }
+  .champion-hud-portrait {
+    width: 80px;
+    height: 80px;
+    padding: 5px;
+  }
+  .champion-hud-center {
+    min-width: 190px;
+  }
+  .champion-hud-abilities {
+    gap: 6px;
+  }
+  .champion-hud-inventory {
+    flex: 1 1 180px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .champion-hud-slots {
+    grid-template-columns: repeat(6, 1fr);
+    flex: 1;
+  }
+  .champion-hud-gold {
+    width: auto;
+    min-width: 60px;
+    margin: 0;
+  }
+  .champion-hud-heading {
+    flex-wrap: wrap;
+  }
+}
+
+/* Riot HUD atlas, pinned to the inspected 16.17 source layout. */
+.champion-hud-portrait {
+  position: relative;
+  border: 0;
+  padding: 12px;
+  box-shadow: none;
+  background: transparent;
+  overflow: visible;
+}
+.champion-hud-portrait::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("https://raw.communitydragon.org/16.17/game/assets/ux/lol/clarity_hudatlas.png");
+  background-size: 588.5057% 568.8889%;
+  background-position: 1.0588% 78.0806%;
+}
+.champion-hud-ability-image {
+  border: 0;
+  box-shadow: none;
+  padding: 3px;
+}
+.champion-hud-ability-image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: url("https://raw.communitydragon.org/16.17/game/assets/ux/lol/clarity_hudatlas.png");
+  background-size: 1462.8571%;
+  background-position: 57.1279% 27.8826%;
+}
+.champion-hud-health {
+  background-image: url("https://raw.communitydragon.org/16.17/game/assets/ux/lol/clarity_hudatlas.png");
+  background-size: 223.0937% 5688.8889%;
+  background-position: 0.354% 91.4513%;
+}
+.champion-hud-resource {
+  background-image: url("https://raw.communitydragon.org/16.17/game/assets/ux/lol/clarity_hudatlas.png");
+  background-size: 223.0937% 5688.8889%;
+  background-position: 0.354% 93.6382%;
+}
+.champion-hud-caption {
+  margin: 5px 0 0;
+  color: #7d8f86;
+  font-size: 10px;
+  text-align: right;
+}
+
+/* Source frame crops retain the aspect ratios in the Riot layout receipt. */
+.champion-hud-frame {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: none;
+  padding: 0;
+  gap: 0;
+  align-items: flex-end;
+}
+.champion-hud-identity {
+  margin-right: -18px;
+  z-index: 1;
+  margin-bottom: 7px;
+}
+.champion-hud-center {
+  position: relative;
+  flex: 1 1 360px;
+  min-width: 290px;
+  aspect-ratio: 580 / 186;
+  padding: 14px 16px 9px 27px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background-image: url("https://raw.communitydragon.org/16.17/game/assets/ux/lol/clarity_hudatlas.png");
+  background-size: 176.5517% 550.5376%;
+  background-position: 43.2432% 77.2076%;
+}
+.champion-hud-abilities {
+  gap: 7px;
+}
+.champion-hud-ability {
+  max-width: 44px;
+}
+.champion-hud-passive {
+  max-width: 30px;
+}
+.champion-hud-rank {
+  height: 23px;
+}
+.champion-hud-bar {
+  height: 14px;
+}
+.champion-hud-inventory {
+  flex: 0 0 146px;
+  aspect-ratio: 250 / 170;
+  padding: 8px 13px 7px;
+  margin: 0 0 2px -3px;
+  border: 0;
+  box-shadow: none;
+  background-image: url("https://raw.communitydragon.org/16.17/game/assets/ux/lol/clarity_hudatlasupdate.png");
+  background-size: 409.6% 602.3529%;
+  background-position: 1.1628% 48.7119%;
+}
+.champion-hud-slots {
+  gap: 2px;
+}
+.champion-hud-slots button:not(.game-tooltip-info) {
+  border-color: #14221c;
+}
+.champion-hud-gold {
+  margin-top: 4px;
+  padding: 1px 4px;
+}
+.champion-hud-runes {
+  margin: 0 10px 12px 4px;
+}
+.champion-hud-stats {
+  margin: 0 0 6px 12px;
+  padding: 12px;
+  border: 1px solid #746c38;
+  background: #071b10;
+}
+@media (max-width: 850px) {
+  .champion-hud-frame {
+    gap: 0;
+  }
+  .champion-hud-stats {
+    margin: 10px 0 0;
+  }
+}
+@media (max-width: 520px) {
+  .champion-hud-identity {
+    margin-right: 0;
+    margin-bottom: 0;
+  }
+  .champion-hud-center {
+    flex-basis: calc(100% - 80px);
+    min-width: 210px;
+    aspect-ratio: auto;
+    min-height: 112px;
+    padding: 12px 9px 9px;
+  }
+  .champion-hud-ability {
+    max-width: 38px;
+  }
+  .champion-hud-passive {
+    max-width: 25px;
+  }
+  .champion-hud-inventory {
+    display: block;
+    flex: 0 0 146px;
+    margin: 5px 0 0 80px;
+  }
+  .champion-hud-slots {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .champion-hud-gold {
+    width: 100%;
+    margin-top: 4px;
+  }
+}
+
+/* Stat icons: PlayerStats UIBase, 24 by 24 crops in its 512px atlas. */
+.champion-hud-stat-icon {
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-image: url("https://raw.communitydragon.org/16.17/game/assets/ux/lol/statspanel_atlas.png");
+  background-size: 2133.3333%;
+}
+.champion-hud-icon-attack_damage {
+  background-position: 58.401639% 83.811475%;
+}
+.champion-hud-icon-ability_power {
+  background-position: 63.934426% 83.811475%;
+}
+.champion-hud-icon-armor {
+  background-position: 58.401639% 89.139344%;
+}
+.champion-hud-icon-magic_resistance {
+  background-position: 63.934426% 89.139344%;
+}
+.champion-hud-icon-attack_speed {
+  background-position: 47.336066% 94.467213%;
+}
+.champion-hud-icon-ability_haste {
+  background-position: 63.934426% 94.467213%;
+}
+.champion-hud-icon-critical_strike_chance {
+  background-position: 47.336066% 99.795082%;
+}
+.champion-hud-icon-move_speed {
+  background-position: 58.401639% 99.795082%;
+}
+
+/* Absolute placements from PlayerFrame and PlayerInventory UIBase.
+   Source origin: portrait x312, frame x415/y1022. Scale the complete row. */
+.champion-hud {
+  container-type: inline-size;
+}
+.champion-hud-viewport {
+  --hud-scale: 1;
+  height: calc(186px * var(--hud-scale));
+}
+.champion-hud-frame {
+  position: relative;
+  display: block;
+  width: 1080px;
+  height: 186px;
+  padding: 0;
+  transform: scale(var(--hud-scale));
+  transform-origin: left top;
+}
+.champion-hud-identity {
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 174px;
+  height: 180px;
+  margin: 0;
+}
+.champion-hud-portrait {
+  width: 174px;
+  height: 180px;
+  padding: 18px 27px 38px 23px;
+}
+.champion-hud-level {
+  right: 13px;
+  bottom: 23px;
+}
+.champion-hud-center {
+  position: absolute;
+  left: 103px;
+  top: 0;
+  width: 580px;
+  height: 186px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  aspect-ratio: 580/186;
+  display: block;
+}
+.champion-hud-abilities {
+  display: block;
+  position: absolute;
+  inset: 0;
+}
+.champion-hud-ability {
+  position: absolute;
+  top: 31px;
+  width: 66px;
+  max-width: none;
+}
+.champion-hud-ability:nth-child(1) {
+  left: 73px;
+  width: 50px;
+  margin: 0;
+}
+.champion-hud-ability:nth-child(2) {
+  left: 129px;
+}
+.champion-hud-ability:nth-child(3) {
+  left: 203px;
+}
+.champion-hud-ability:nth-child(4) {
+  left: 277px;
+}
+.champion-hud-ability:nth-child(5) {
+  left: 351px;
+}
+.champion-hud-ability-image {
+  display: block;
+  width: 100%;
+  padding: 1px;
+}
+.champion-hud-ability-tooltip {
+  display: block !important;
+  width: 100%;
+}
+.champion-hud-rank {
+  height: 22px;
+  margin-top: 1px;
+}
+.champion-hud-bars {
+  position: absolute;
+  top: 122px;
+  left: 76px;
+  width: 461px;
+  gap: 4px;
+}
+.champion-hud-bar {
+  height: 18px;
+}
+.champion-hud-bar-tooltip {
+  display: block !important;
+}
+.champion-hud-inventory {
+  position: absolute;
+  left: 661px;
+  top: 8px;
+  width: 250px;
+  height: 170px;
+  display: block;
+  margin: 0;
+  padding: 13px 18px 12px;
+  aspect-ratio: 250/170;
+}
+.champion-hud-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+}
+.champion-hud-slots > .champion-hud-item-tooltip {
+  display: block;
+  min-width: 0;
+}
+.champion-hud-slots > .champion-hud-item-tooltip > button:first-child {
+  width: 100%;
+  height: 55px;
+  aspect-ratio: auto;
+}
+.champion-hud-gold {
+  display: block;
+  width: 100%;
+  margin: 7px 0 0;
+  height: 23px;
+}
+.champion-hud-runes {
+  position: absolute;
+  left: 920px;
+  bottom: 5px;
+  margin: 0;
+  writing-mode: horizontal-tb;
+  width: 150px;
+}
+.champion-hud-stats {
+  position: absolute;
+  left: 920px;
+  top: 0;
+  width: 150px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  padding: 12px 8px;
+  gap: 8px;
+}
+.champion-hud-stats dt {
+  width: 18px;
+}
+.champion-hud-stat-tooltip {
+  display: block !important;
+}
+@container (max-width:1079px) {
+  .champion-hud-viewport {
+    --hud-scale: 0.84;
+  }
+}
+@container (max-width:909px) {
+  .champion-hud-viewport {
+    --hud-scale: 0.69;
+  }
+}
+@container (max-width:749px) {
+  .champion-hud-viewport {
+    --hud-scale: 0.54;
+  }
+}
+@container (max-width:589px) {
+  .champion-hud-viewport {
+    --hud-scale: 0.4;
+  }
+}
+@container (max-width:435px) {
+  .champion-hud-viewport {
+    --hud-scale: 0.3;
+  }
+}
+@container (max-width:329px) {
+  .champion-hud-viewport {
+    --hud-scale: 0.27;
+  }
+}
+.champion-hud-heading h3 {
+  color: var(--calculator-ink, #182822);
+}
+.champion-hud-heading h3 span,
+.champion-hud-rank-mode {
+  color: var(--calculator-ink, #32483e);
+}
+.champion-hud-skill-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  color: var(--calculator-ink, #32483e);
+  font-size: 11px;
+}
+.champion-hud-portrait > span {
+  display: grid;
+  place-items: center;
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  background: #071410;
+  color: #e5cd85;
+}
+.champion-hud-upgrade-tooltip {
+  position: absolute !important;
+  top: -59px;
+  left: 3px;
+  width: 58px;
+  height: 56px;
+}
+.champion-hud-upgrade {
+  display: block;
+  width: 58px;
+  height: 56px;
+  border: 0;
+  padding: 0;
+  background-color: transparent;
+  background-image: url("https://raw.communitydragon.org/16.17/game/assets/ux/lol/clarity_hudatlas.png");
+  background-size: 1765.5172% 1828.5714%;
+  background-position: 49.8965% 20.3512%;
+}
+.champion-hud-upgrade:hover {
+  background-position: 56.0041% 20.3512%;
+}
+.champion-hud-upgrade:active {
+  background-position: 62.0083% 20.3512%;
+}
+.champion-hud-upgrade[aria-disabled="true"] {
+  background-position: 68.0124% 20.3512%;
+  cursor: default;
+}
+.champion-hud-viewport {
+  padding-top: 40px;
+  height: calc(186px * var(--hud-scale));
+  box-sizing: content-box;
+}
+@container (max-width:749px) {
+  .champion-hud-viewport {
+    --hud-scale: 0.8;
+    overflow-x: auto;
+    overflow-y: hidden;
+    height: 149px;
+    padding-top: 42px;
+  }
+  .champion-hud-frame {
+    width: 1080px;
+  }
+  .champion-hud-level input {
+    width: 56px;
+    height: 38px;
+    font-size: 18px;
+  }
+  .champion-hud-rank input {
+    height: 27px;
+    font-size: 15px;
+  }
+}
+.champion-hud-stat-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 10px;
+}
+.champion-hud-stat-tabs button {
+  border: 1px solid #867b4a;
+  background: transparent;
+  color: var(--calculator-ink, #283c32);
+  font-size: 12px;
+  padding: 6px 12px;
+}
+.champion-hud-stat-tabs button[aria-selected="true"] {
+  background: #10271c;
+  color: #e9d99e;
+}
+.champion-hud-expanded-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0 20px;
+  background: #071b10;
+  border: 1px solid #746c38;
+  color: #e8e2c8;
+  padding: 14px 16px;
+  margin-top: 8px;
+}
+.champion-hud-expanded-stat {
+  display: block !important;
+  min-width: 0;
+  border-bottom: 1px solid #304132;
+}
+.champion-hud-expanded-stat > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  font-size: 12px;
+}
+.champion-hud-expanded-stat strong {
+  color: #f4da86;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 650px) {
+  .champion-hud-expanded-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Include the arrow band in the border-box height used by the shared shell. */
+.calculator-root .champion-hud-viewport {
+  box-sizing: border-box;
+  height: calc(186px * var(--hud-scale) + 40px);
+}
+.calculator-root .champion-hud-stat-tabs button {
+  color: var(--calculator-ink, #182822);
+}
+.calculator-root .champion-hud-stat-tabs button[aria-selected="true"] {
+  color: #e9d99e;
+}
+@container (max-width:749px) {
+  .calculator-root .champion-hud-viewport {
+    height: 191px;
+  }
+}
+
+/* Source portrait rectangle: x335/y1050 relative to frame x312/y1032. */
+.calculator-root .champion-hud-portrait > img,
+.calculator-root .champion-hud-portrait > span {
+  position: absolute;
+  left: 23px;
+  top: 18px;
+  width: 124px;
+  height: 124px;
+  margin: 0;
+  object-fit: cover;
+  object-position: center;
+}
+.calculator-root .champion-hud-decrement {
+  display: grid;
+  place-items: center;
+  flex: 0 0 22px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #827047;
+  border-radius: 2px;
+  background: #101b1e;
+  color: #ead8a4;
+  cursor: pointer;
+}
+.champion-hud-decrement svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+.calculator-root .champion-hud-decrement:hover:enabled {
+  border-color: #e4c777;
+  background: #29372f;
+}
+.calculator-root .champion-hud-decrement:disabled {
+  color: #877d64;
+  border-color: #494738;
+  cursor: default;
+}
+.champion-hud-decrement:focus-visible {
+  outline: 2px solid #e4c777;
+  outline-offset: 2px;
+}
+.calculator-root .champion-hud-rank {
+  display: grid;
+  grid-template-columns: 18px 38px;
+  grid-template-rows: 18px 4px;
+  gap: 1px 3px;
+  justify-content: center;
+  align-items: center;
+  height: 23px;
+}
+.calculator-root .champion-hud-rank input {
+  width: 38px;
+  height: 18px;
+  font-size: 12px;
+}
+.calculator-root .champion-hud-rank .champion-hud-decrement {
+  width: 18px;
+  height: 18px;
+}
+.champion-hud-rank .champion-hud-pips {
+  grid-column: 1 / -1;
+  justify-content: center;
+}
+.champion-hud-mobile-skills {
+  display: none;
+}
+@media (max-width: 600px) {
+  .champion-hud-mobile-skills {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    margin: 14px 0;
+  }
+  .champion-hud-mobile-skills strong {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  .champion-hud-mobile-skills strong span {
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+  }
+  .champion-hud-mobile-skills > div > div {
+    display: grid;
+    gap: 4px;
+  }
+  .calculator-root .champion-hud-mobile-skills button {
+    min-height: 44px;
+    display: grid;
+    place-items: center;
+    background: var(--calculator-surface);
+    border: 1px solid var(--calculator-line);
+    color: var(--calculator-ink);
+  }
+  .champion-hud-mobile-skills svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+  }
+}

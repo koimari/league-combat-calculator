@@ -34,7 +34,7 @@ def _add_keystone_dark_harvest(state: FightState, rotation: RotationResult) -> N
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
-        roster_target_index=state.roster_target_index,
+        roster_target_index=state.ledger_target_index,
     )
     if not base_events:
         state.notes.append(
@@ -157,7 +157,7 @@ def _deathfire_trigger_events(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
-        roster_target_index=state.roster_target_index,
+        roster_target_index=state.ledger_target_index,
     )
     detailed = [
         event

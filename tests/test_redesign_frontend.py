@@ -50,7 +50,7 @@ def css() -> str:
 
 @pytest.fixture
 def soup() -> BeautifulSoup:
-    page = app_module.app.test_client().get("/").get_data(as_text=True)
+    page = app_module.app.test_client().get("/advanced").get_data(as_text=True)
     return BeautifulSoup(page, "html.parser")
 
 
@@ -549,36 +549,22 @@ def test_engine_ready_is_dispatched_by_render_not_a_monkey_patch(source: str):
 # ---------------------------------------------------------------------------
 
 
-def test_the_rift_illustration_is_the_page_background(soup: BeautifulSoup, css: str):
-    """The page sits on the Summoner's Rift illustration (as the pre-redesign
-    production page did), with an opaque dark base while the image loads."""
-    wash = soup.select_one(".map-wash")
-    assert wash is not None
-    assert wash.get("aria-hidden") == "true"
-    block = re.search(r"\.map-wash \{([^}]*)\}", css)
-    assert block is not None
-    assert "rift-background-user.webp" in block.group(1)
-    assert "position: fixed" in block.group(1)
-    assert re.search(r"background-color:\s*#[0-9a-f]{6}", block.group(1))
+def test_advanced_workspace_uses_the_shared_theme_adapter(soup: BeautifulSoup):
+    assert "calculator-advanced" in soup.body.get("class", [])
+    assert soup.body["data-theme"] == "paper"
+    assert soup.select_one('link[href="/static/css/scryglass-theme.css"]') is not None
+    adapter = Path("static/css/scryglass-theme.css").read_text()
+    assert ".calculator-advanced .map-wash { display: none; }" in adapter
+    assert "--paper-panel: var(--surface)" in adapter
+    assert "--rail-panel: var(--surface)" in adapter
 
 
-def test_panel_language_keeps_the_wash_visible_and_uses_system_sans(
-    soup: BeautifulSoup, css: str
-):
-    """Panels stay translucent and typography uses the Apple system stack."""
-    tokens = re.search(r":root\s*\{([^}]*)\}", css)
-    assert tokens is not None
-    assert re.search(r"--panel-alpha:\s*\.67", tokens.group(1))
-    assert "--paper-panel: rgba(246, 242, 223, var(--panel-alpha))" in tokens.group(1)
-    assert "--rail-panel: rgba(10, 23, 18, var(--panel-alpha))" in tokens.group(1)
-    assert re.search(r"--font:\s*-apple-system,\s*BlinkMacSystemFont", tokens.group(1))
-    assert "Godya Display" not in css
-    assert "Manrope" not in css
-    assert not soup.select(
-        'link[href*="fonts.googleapis.com"], link[href*="fonts.gstatic.com"]'
-    )
-    assert re.search(r"\.app-card\s*\{[^}]*background: var\(--paper-panel\)", css)
-    assert re.search(r"\.rail\s*\{[^}]*background: var\(--rail-panel\)", css)
+def test_advanced_workspace_loads_shared_fonts_and_theme_controls(soup: BeautifulSoup):
+    assert soup.select_one('link[href="/static/calculator/calculator.css"]') is not None
+    assert soup.select_one("#calculator-theme") is not None
+    assert soup.select_one('script[src="/static/calculator/calculator.js"]') is not None
+    fonts = soup.select('link[href*="fonts.googleapis.com/css"]')
+    assert fonts and "Atkinson" in fonts[0]["href"]
 
 
 def test_constraints_ride_the_canvas_as_a_banner(soup: BeautifulSoup, css: str):

@@ -1,7 +1,7 @@
 """What BIS optimises for, and how one candidate folds into that number."""
 
 import math
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 
 from .bis_candidates import enemy_bis_rank_key
 from .fight_request_bounds import DEFAULT_FIGHT_DURATION
@@ -20,6 +20,16 @@ from .public_response import https_icon
 # Keep the definitions in one place so the API receipt and the browser filter
 # cannot silently disagree about direction or units.
 BIS_OBJECTIVES: dict[str, dict[str, str]] = {
+    "team_outcome": {
+        "label": "Team damage advantage",
+        "direction": "higher",
+        "metric": "selected-side damage minus opposing-side damage before defeat",
+        "description": (
+            "Selected-side damage before defeat minus opposing-side damage before "
+            "defeat, from the coupled fight. This score measures damage advantage; "
+            "it is not a win probability."
+        ),
+    },
     "overall": {
         "label": "Overall",
         "direction": "higher",
@@ -93,7 +103,7 @@ def bis_objective_meta(key: str) -> dict[str, str]:
     meta = BIS_OBJECTIVES.get(key)
     if meta is None:
         raise ValueError(
-            "objective must be one of: overall, kill, survival, damage, utility"
+            "objective must be one of: team_outcome, overall, kill, survival, damage, utility"
         )
     return {"key": key, **meta}
 
@@ -101,6 +111,7 @@ def bis_objective_meta(key: str) -> dict[str, str]:
 def bis_objective_contract() -> dict[str, dict[str, str]]:
     """Return the complete objective map for public clients."""
     units = {
+        "team_outcome": "TDD",
         "overall": "TDD",
         "kill": "",
         "survival": "eHP",
@@ -180,6 +191,38 @@ def _focus_survival_path(
     )
 
 
+def _team_damage_advantage(
+    subject_team: str,
+    objective: Mapping[str, object],
+    part: Callable[[str, float], Tagged],
+) -> tuple[float, str, dict[str, float], None]:
+    """Subtract the opposing side's published damage from the selected side."""
+    damage = {
+        team: ranked_total(
+            [
+                part(
+                    f"objective.{team}_team_damage_before_death",
+                    float(objective[f"{team}_team_damage_before_death"]),
+                )
+            ],
+            surface=BIS_SURFACE,
+        )
+        for team in ("main", "enemy")
+    }
+    selected, opposing = (
+        ("enemy", "main") if subject_team == "enemy" else ("main", "enemy")
+    )
+    return (
+        damage[selected] - damage[opposing],
+        BIS_OBJECTIVES["team_outcome"]["metric"],
+        {
+            "selected_side_damage_before_death": damage[selected],
+            "opposing_side_damage_before_death": damage[opposing],
+        },
+        None,
+    )
+
+
 def bis_objective_score(
     objective_key: str,
     *,
@@ -218,8 +261,7 @@ def bis_objective_score(
         )
 
     focus_survival = focus.get("survival", {})
-    if not isinstance(focus_survival, Mapping):
-        focus_survival = {}
+    focus_survival = focus_survival if isinstance(focus_survival, Mapping) else {}
     duration = float(combat.get("duration", 0.0) or 0.0)
     if duration <= 0.0:
         duration = DEFAULT_FIGHT_DURATION
@@ -230,6 +272,8 @@ def bis_objective_score(
     support_value = float(objective.get("focus_support_value", 0.0) or 0.0)
     damage_part = part("objective.focus_damage_before_death", focus_damage)
     health_part = part(f"{survival_path}.effective_health", effective_health)
+    if objective_key == "team_outcome":
+        return _team_damage_advantage(subject_team, objective, part)
     if objective_key == "overall":
         if subject_team == "main":
             score = ranked_total([damage_part], surface=BIS_SURFACE)

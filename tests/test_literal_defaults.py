@@ -2050,6 +2050,9 @@ MODULE_DECLARATION = frozenset(
 #: The covered set: files and directories every `.py` under which is
 #: scanned.  The rest of `src/calculator` is the declared tail (ER5).
 ROOTS = (
+    "rank_allocation.py",
+    "attack_windows.py",
+    "combat_events.py",
     "damage.py",
     "fight",
     "item_effects.py",

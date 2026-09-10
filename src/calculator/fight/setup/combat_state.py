@@ -391,6 +391,11 @@ def _resolve_combat_state(
     keystone_effect = _dedicated_keystone(config.keystone)
 
     return FightState(
+        combat_events=config.combat_events,
+        event_actor_id=config.event_actor_id,
+        event_target_id=config.event_target_id,
+        event_attack_speed_windows=config.event_attack_speed_windows,
+        support_attack_times=None,
         champion_stats=champion_stats,
         ability_damages=ability_damages,
         items=items,

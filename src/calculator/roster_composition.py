@@ -43,11 +43,17 @@ class ActorRequest:
     # way a participant enters the fight already wounded, read by
     # ``survival.transitions.participant_pools``.
     current_health: float | None = None
+    include_auto_attacks: bool | None = None
+    auto_attack_uptime_mode: str | None = None
+    auto_attack_uptime: float | None = None
 
     @classmethod
     def of_params(cls, params: FightParams) -> ActorRequest:
         """The main champion's request, off the selected fight params."""
         return cls(
+            include_auto_attacks=params.include_auto_attacks,
+            auto_attack_uptime_mode=params.auto_attack_uptime_mode,
+            auto_attack_uptime=params.auto_attack_uptime,
             role=params.role,
             role_quest_complete=params.role_quest_complete,
             ability_ranks=params.ability_ranks,
@@ -130,6 +136,9 @@ def from_loadout(
             item_options=card.item_options,
             ally_effects_enabled=card.ally_effects_enabled,
             current_health=card.current_health,
+            include_auto_attacks=card.include_auto_attacks,
+            auto_attack_uptime_mode=card.auto_attack_uptime_mode,
+            auto_attack_uptime=card.auto_attack_uptime,
         ),
         is_practice_dummy=card.is_practice_dummy,
     )
@@ -162,7 +171,23 @@ def actor_params(base: FightParams, actor: Combatant) -> FightParams:
     request = actor.request
     return replace(
         base,
+        include_auto_attacks=(
+            base.include_auto_attacks
+            if request.include_auto_attacks is None
+            else request.include_auto_attacks
+        ),
+        auto_attack_uptime_mode=(
+            base.auto_attack_uptime_mode
+            if request.auto_attack_uptime_mode is None
+            else request.auto_attack_uptime_mode
+        ),
+        auto_attack_uptime=(
+            base.auto_attack_uptime
+            if request.auto_attack_uptime is None
+            else request.auto_attack_uptime
+        ),
         role=request.role,
+        event_actor_id=actor.participant_id,
         role_quest_complete=request.role_quest_complete,
         # An empty rank map is "no manual allocation", which is what
         # the engine reads ``None`` as; the two are one answer here.
@@ -253,7 +278,9 @@ def target_overrides(defender: Combatant) -> dict[str, float | str]:
 
 def target_params(base: FightParams, defender: Combatant) -> FightParams:
     """Apply one defender's typed fields to a pair fight."""
-    return replace(base, **target_overrides(defender))
+    return replace(
+        base, event_target_id=defender.participant_id, **target_overrides(defender)
+    )
 
 
 def defensive_signature(defender: Combatant) -> tuple[float | str, ...]:

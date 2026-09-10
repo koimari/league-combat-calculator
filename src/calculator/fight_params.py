@@ -16,7 +16,6 @@ from .champions import get_custom_cast_order_unavailable_reason
 from .champions.skill_orders import get_ability_rank
 from .fight.config import FightConfig
 from .fight_request_bounds import (
-    _NONSTANDARD_RANK_CHAMPIONS,
     _PUBLIC_FIGHT_MODES,
     DEFAULT_AUTO_ATTACK_UPTIME,
     DEFAULT_FIGHT_DURATION,
@@ -32,7 +31,9 @@ from .fight_request_bounds import (
     cast_slot_surface,
     validate_cast_order_shape,
 )
+from .combat_events import parse_combat_events, parse_combat_events_mode
 from .item_effects import validate_item_input_options
+from .rank_allocation import validate_manual_ranks
 from .request_parsing import request_bool as _request_bool
 from .request_parsing import request_index_map
 from .request_parsing import request_int as _request_int
@@ -49,6 +50,7 @@ class FightParams(FightConfig):
     passes a ``FightParams`` straight through because it IS one.
     """
 
+    include_auto_attacks: bool | None = None
     ability_ranks: dict[str, int] | None = None
     champion_options: dict[str, Any] | None = None
     item_options: dict[str, dict[str, int | float]] | None = None
@@ -206,12 +208,19 @@ class FightParams(FightConfig):
                 data, "target_mr", DEFAULT_TARGET["mr"]
             ),
             fight_duration_seconds=duration,
+            include_auto_attacks=(
+                _request_bool(data, "include_auto_attacks", False)
+                if "include_auto_attacks" in data
+                else None
+            ),
             auto_attack_uptime=uptime,
             auto_attack_uptime_mode=uptime_mode,
             rotation_count=rotation_count,
             one_rotation=one_rotation,
             include_actives=_request_bool(data, "include_actives", True),
             cast_order=data.get("cast_order"),
+            combat_events=parse_combat_events(data.get("combat_events")),
+            combat_events_mode=parse_combat_events_mode(data.get("combat_events_mode")),
             auto_attacks_only=auto_attacks_only,
             ability_ranks=dict(ability_ranks) if ability_ranks is not None else None,
             champion_options=(
@@ -229,7 +238,7 @@ class FightParams(FightConfig):
             role=role,
             role_quest_complete=role_quest_complete,
             enemies_attack=_request_bool(data, "enemies_attack", True),
-            deterministic=deterministic,
+            deterministic=deterministic or data.get("combat_events") is not None,
         )
         params._validate_request_values()
         return params
@@ -255,13 +264,13 @@ class FightParams(FightConfig):
             value = self.ability_ranks.get(key, 0)
             if isinstance(value, bool) or not isinstance(value, int):
                 raise ValueError(f"{key} rank must be an integer")
-            if value < 0 or value > 5:
-                raise ValueError(f"{key} rank must be 0-5")
+            if value < 0 or value > 6:
+                raise ValueError(f"{key} rank must be 0-6")
         ultimate_rank = self.ability_ranks.get("R", 0)
         if isinstance(ultimate_rank, bool) or not isinstance(ultimate_rank, int):
             raise ValueError("R rank must be an integer")
-        if ultimate_rank < 0 or ultimate_rank > 3:
-            raise ValueError("R rank must be 0-3")
+        if ultimate_rank < 0 or ultimate_rank > 6:
+            raise ValueError("R rank must be 0-6")
 
     def target_stats(self) -> dict[str, float]:
         """Build the champion-parser target context for a full-health target."""
@@ -283,9 +292,7 @@ class FightParams(FightConfig):
         """Reject a rank allocation or a cast order this champion cannot run.
 
         Rank-free requests use the champion's sourced default order. Manual
-        allocations are accepted only for the standard five-rank basic and
-        three-rank ultimate layout. Transformation and auto-levelled kits fail
-        closed until their individual allocation rules are represented.
+        allocations use the champion rank limits and free starting ranks.
 
         ``kit`` is the parsed ability package.  Which slots a request may
         name is a property of the parsed kit, not of the champion's name, so
@@ -306,36 +313,13 @@ class FightParams(FightConfig):
 
         if self.ability_ranks is None:
             return
-        if champion_name in _NONSTANDARD_RANK_CHAMPIONS:
-            raise ValueError(
-                f"Manual ability ranks are unavailable for {champion_name}; "
-                "use the level-derived ranks"
-            )
-
         effective = {
             key: self.ability_ranks.get(
                 key, get_ability_rank(key, level, champion_name)
             )
             for key in ("Q", "W", "E", "R")
         }
-        for key in ("Q", "W", "E"):
-            rank = effective[key]
-            minimum_level = max(1, 2 * rank - 1) if rank else 0
-            if rank and level < minimum_level:
-                raise ValueError(
-                    f"{key} rank {rank} requires champion level {minimum_level}"
-                )
-        ultimate_rank = effective["R"]
-        minimum_ultimate_level = (0, 6, 11, 16)[ultimate_rank]
-        if ultimate_rank and level < minimum_ultimate_level:
-            raise ValueError(
-                f"R rank {ultimate_rank} requires champion level "
-                f"{minimum_ultimate_level}"
-            )
-        if sum(effective.values()) > min(level, 18):
-            raise ValueError(
-                "Ability ranks spend more skill points than the champion level allows"
-            )
+        validate_manual_ranks(champion_name, level, effective)
 
     def validate_cast_order_for_kit(
         self, champion_name: str, kit: Mapping[str, Any]

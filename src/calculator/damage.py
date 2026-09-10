@@ -42,7 +42,10 @@ from .fight.autos.spellblade import (
 )
 from .fight.autos.stacking_strikes import _add_stacking_strikes
 from .fight.autos.swing_profile import _on_hit_effectiveness
-from .fight.autos.swing_schedule import _auto_attack_timestamps
+from .fight.autos.swing_schedule import (
+    _auto_attack_timestamps,
+    _prepare_support_attack_schedule,
+)
 from .fight.config import FightConfig
 from .fight.items.actives import _add_auto_cooldown_strikes, _add_item_active_damage
 from .fight.items.burns import _add_burn_damage
@@ -209,6 +212,7 @@ def calculate_fight_damage(
 
     # ── Stat buffs from abilities (e.g. Aatrox R bonus AD) ─────────────
     _apply_stat_buff_ultimates(state)
+    _prepare_support_attack_schedule(state)
 
     # ── Ability rotation, precomputed procs, DoTs, and Shaped Charge ────
     rotation = _compute_ability_rotation(state)
@@ -342,7 +346,7 @@ def calculate_fight_damage(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
-        roster_target_index=state.roster_target_index,
+        roster_target_index=state.ledger_target_index,
         light=tuple_ledger,
         lean=score_only,
     )

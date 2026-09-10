@@ -7,6 +7,8 @@ from types import MappingProxyType
 from typing import Any
 
 from .. import item_effects, minion_stats, rune_effects
+from ..attack_windows import AttackSpeedWindow
+from ..combat_events import CombatEvent
 from ..champions import get_champion_options_meta
 
 # Critical strikes deal 200% base damage (this changed once before, from
@@ -132,6 +134,11 @@ class FightConfig:
     one_rotation: bool = False
     include_actives: bool = True
     cast_order: list[str] | None = None
+    combat_events: tuple[CombatEvent, ...] | None = None
+    combat_events_mode: str = "replace"
+    event_actor_id: str = "main"
+    event_target_id: str = ""
+    event_attack_speed_windows: tuple[AttackSpeedWindow, ...] = ()
     auto_attacks_only: bool = False
     # Whether the timed scheduler may recast R on its (hasted) cooldown.
     # Set from the champion module's reviewed ``ULTIMATE_RECASTS``

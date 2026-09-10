@@ -7,7 +7,7 @@ import src.app as app_module
 
 
 def test_level_controls_use_level_delta_path_contract():
-    page = app_module.app.test_client().get("/").get_data(as_text=True)
+    page = app_module.app.test_client().get("/advanced").get_data(as_text=True)
     soup = BeautifulSoup(page, "html.parser")
     source = Path("static/js/app.js").read_text(encoding="utf-8")
 

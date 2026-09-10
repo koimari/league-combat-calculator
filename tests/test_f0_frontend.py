@@ -42,7 +42,7 @@ def _client():
 
 
 def _page():
-    return _client().get("/").get_data(as_text=True)
+    return _client().get("/advanced").get_data(as_text=True)
 
 
 def _soup():

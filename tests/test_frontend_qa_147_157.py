@@ -49,7 +49,7 @@ def css() -> str:
 
 @pytest.fixture
 def page() -> str:
-    return app_module.app.test_client().get("/").get_data(as_text=True)
+    return app_module.app.test_client().get("/advanced").get_data(as_text=True)
 
 
 @pytest.fixture
@@ -201,11 +201,17 @@ def test_brand_link_points_at_the_canonical_app_home(soup: BeautifulSoup):
     assert "scryglass.xyz" not in str(brand)
 
 
-def test_no_template_routes_users_to_the_retired_site():
-    for template in ROOT.joinpath("templates").glob("*.html"):
-        assert "scryglass.xyz" not in template.read_text(
-            encoding="utf-8"
-        ), f"{template.name} still links to the retired site"
+def test_calculator_shell_links_to_the_sister_research_site():
+    for name in ("index.html", "calculator.html"):
+        soup = BeautifulSoup(
+            ROOT.joinpath("templates", name).read_text(), "html.parser"
+        )
+        research = soup.select_one(
+            '.calculator-shell-nav a[href="https://scryglass.xyz"]'
+        )
+        assert research is not None
+        assert "Research" in research.get_text()
+        assert soup.select_one(".calculator-shell-brand")["href"] == "/"
 
 
 def test_brand_link_returns_home_from_a_shared_url():
@@ -394,7 +400,8 @@ def test_blocked_bis_offers_a_direct_path_to_add_enemy(source: str):
     )[0]
     assert "bisAddEnemy" in block or "addEnemy" in block
     soup = BeautifulSoup(
-        app_module.app.test_client().get("/").get_data(as_text=True), "html.parser"
+        app_module.app.test_client().get("/advanced").get_data(as_text=True),
+        "html.parser",
     )
     assert soup.select_one("#bisAddEnemy") is not None
 
@@ -431,13 +438,13 @@ def test_constraints_block_uses_shared_panel_transparency(css: str):
 
 
 def test_constraints_copy_uses_readable_ink(css: str):
-    """Cream on the dark rail, at declared alphas — never inherited ink."""
+    """Constraint labels inherit theme colors at declared alpha values."""
     name = rule_block(css, ".constraint-name")
     assert "var(--cream-70)" in name
     value = rule_block(css, ".constraint-value")
     assert "var(--cream)" in value
     note = rule_block(css, ".constraint-note")
-    assert "rgba(246, 242, 223" in note
+    assert "color-mix(in srgb, var(--cream)" in note
 
 
 def test_best_buy_controls_reflow_at_narrow_widths(css: str):

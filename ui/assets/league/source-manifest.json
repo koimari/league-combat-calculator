@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "assets": [
+    {
+      "file": "clarity_hudatlas.png",
+      "url": "https://raw.communitydragon.org/16.17/game/assets/ux/lol/clarity_hudatlas.png",
+      "patch": "16.17",
+      "sha256": "f5f930263d995f0c602eaf7dc4fc7eaf0e9416d9a742baa72c2a5cabe0c98ed9",
+      "bytes": 367427,
+      "width": 1024,
+      "height": 1024
+    },
+    {
+      "file": "rune-keystone-border.svg",
+      "url": "https://raw.communitydragon.org/16.17/plugins/rcp-fe-lol-collections/global/default/perks/images/primary-perk-selector/keystone-border.svg",
+      "patch": "16.17",
+      "sha256": "b0d0b6fbfcec4dc3f85722dd0bf35e9abf5440ae4419d23727f30d30c5bdbbed",
+      "bytes": 575
+    },
+    {
+      "file": "client-collections.css",
+      "url": "https://raw.communitydragon.org/16.17/plugins/rcp-fe-lol-collections/global/default/rcp-fe-lol-collections.css",
+      "patch": "16.17",
+      "sha256": "b45a3455209a378e957bc5fb8efbb2fc9d4b87a0e1b2e5062ead545bdda9de66",
+      "bytes": 446959
+    },
+    {
+      "file": "playerframe-layout.json",
+      "url": "https://raw.communitydragon.org/16.17/game/clientstates/gameplay/ux/lol/playerframe/uibase.cdtb.bin.json",
+      "patch": "16.17",
+      "sha256": "273470dcaf3c35df8613806900de6d61feec88db22fb46c3d79e88291b394af5",
+      "bytes": 383754
+    },
+    {
+      "file": "playerinventory-layout.json",
+      "url": "https://raw.communitydragon.org/16.17/game/clientstates/gameplay/ux/lol/playerinventory/uibase.cdtb.bin.json",
+      "patch": "16.17",
+      "sha256": "f31e6091ca99e91bad3c5b9d356cf918f10fee08ca8bd41af2610ce732660ec5",
+      "bytes": 182969
+    },
+    {
+      "file": "rune-environment-8000.jpg",
+      "url": "https://raw.communitydragon.org/16.17/plugins/rcp-fe-lol-collections/global/default/perks/images/construct/8000/environment.jpg",
+      "patch": "16.17",
+      "sha256": "389f37609d2dd29e80f19aad93a21af460a84ce01ba227c12113271384020794",
+      "bytes": 260248,
+      "width": 1162,
+      "height": 720
+    },
+    {
+      "file": "rune-environment-8100.jpg",
+      "url": "https://raw.communitydragon.org/16.17/plugins/rcp-fe-lol-collections/global/default/perks/images/construct/8100/environment.jpg",
+      "patch": "16.17",
+      "sha256": "69d414236a9af6ef76bbf65ddd0a6d815849ca3482280a2e30fd73fdbb2c2d1a",
+      "bytes": 108381,
+      "width": 1162,
+      "height": 720
+    },
+    {
+      "file": "rune-environment-8200.jpg",
+      "url": "https://raw.communitydragon.org/16.17/plugins/rcp-fe-lol-collections/global/default/perks/images/construct/8200/environment.jpg",
+      "patch": "16.17",
+      "sha256": "8b1e97f1311392ba974f8285f12349c72eb87f9cfae252f9881c8e5b50f6cf53",
+      "bytes": 86833,
+      "width": 1162,
+      "height": 720
+    },
+    {
+      "file": "rune-environment-8300.jpg",
+      "url": "https://raw.communitydragon.org/16.17/plugins/rcp-fe-lol-collections/global/default/perks/images/construct/8300/environment.jpg",
+      "patch": "16.17",
+      "sha256": "484f8cf99826c1f2e3d9b6f0cecab173ca4d48b911847f6a6818423d6917ad40",
+      "bytes": 389039,
+      "width": 1162,
+      "height": 720
+    },
+    {
+      "file": "rune-environment-8400.jpg",
+      "url": "https://raw.communitydragon.org/16.17/plugins/rcp-fe-lol-collections/global/default/perks/images/construct/8400/environment.jpg",
+      "patch": "16.17",
+      "sha256": "8b3d762ae7f75cdc12fc117772444c00cb43f18292f268eb44dd3ea03bdca4f2",
+      "bytes": 91502,
+      "width": 1162,
+      "height": 720
+    },
+    {
+      "file": "clarity_hudatlasupdate.png",
+      "url": "https://raw.communitydragon.org/16.17/game/assets/ux/lol/clarity_hudatlasupdate.png",
+      "patch": "16.17",
+      "sha256": "d6179c04a4c0633c7c505ac04970c646d4f584d6d68493a49e603a6a2bb843b0",
+      "bytes": 371495,
+      "width": 1024,
+      "height": 1024
+    }
+  ]
+}

@@ -11,6 +11,7 @@ from typing import Any
 
 from .auto_attack_policy import (
     AUTO_ATTACK_UPTIME_MODE_CALCULATED,
+    AUTO_ATTACK_UPTIME_MODE_EXPLICIT,
     resolve_auto_attack_policy,
 )
 from .cast_dependency import check_order_satisfies_dependencies, expand_user_order
@@ -21,6 +22,7 @@ from .champions import (
     get_champion_ultimate_recasts,
     parse_champion_abilities,
 )
+from .combat_events import combat_event_contract, event_receipt
 from .damage import calculate_fight_damage
 from .data_registry import data_version
 from .fight_params import FightParams
@@ -130,6 +132,50 @@ def run_fight(
     (``damage_events_tuple`` is set) — same events, same order, no dict
     per event; only the scoring fast path consumes that shape.
     """
+    if params.include_auto_attacks is False:
+        params = replace(
+            params,
+            auto_attack_uptime=0.0,
+            auto_attack_uptime_mode=AUTO_ATTACK_UPTIME_MODE_EXPLICIT,
+        )
+    if (
+        params.combat_events is not None
+        and params.combat_events_mode == "overrides"
+        and not any(
+            event.caster_id == params.event_actor_id for event in params.combat_events
+        )
+    ):
+        params = replace(params, combat_events=None)
+    if params.combat_events is not None:
+        actor_events = tuple(
+            event
+            for event in params.combat_events
+            if event.caster_id == params.event_actor_id
+        )
+        certified_slots = combat_event_contract()["champions"].get(
+            champion_data.get("name"), {}
+        )
+        if any(event.slot not in certified_slots for event in actor_events):
+            raise ValueError("This champion slot requires authored-event certification")
+        authored_slots = list(dict.fromkeys(event.slot for event in actor_events))
+        params = replace(
+            params,
+            cast_order=authored_slots or None,
+            auto_attacks_only=not authored_slots,
+            one_rotation=False,
+            deterministic=True,
+        )
+        if champion_data.get("name") == "Lulu":
+            # The event recipient selects E's damage/shield branch in the roster.
+            # W's buff branch requires an attack schedule that can change mid-fight.
+            params = replace(
+                params,
+                champion_options={
+                    **(params.champion_options or {}),
+                    "lulu_whimsy_target": "enemy",
+                    "lulu_wild_growth_target": "ally",
+                },
+            )
     if not validated:
         params.validate_for_champion(champion_data.get("name", ""), level)
     champion_stats = (
@@ -306,6 +352,29 @@ def run_fight(
         item_options=params.item_options,
         champion_options=params.champion_options,
     )
+    if params.combat_events is not None:
+        result["combat_events"] = [
+            event_receipt(event)
+            for event in params.combat_events
+            if event.caster_id == params.event_actor_id
+        ]
+        for cast in result.get("cast_timeline", ()):
+            authored = next(
+                (
+                    event
+                    for event in params.combat_events
+                    if event.caster_id == params.event_actor_id
+                    and event.slot == cast["slot"]
+                    and abs(event.time - cast["time"]) < 0.00051
+                ),
+                None,
+            )
+            if authored is not None:
+                cast.update(
+                    authored_event_id=authored.id,
+                    caster_id=authored.caster_id,
+                    recipient_id=authored.recipient_id,
+                )
     result["self_state_events"] = derive_self_state_effects(
         ability_damages,
         list(result.get("cast_timeline", [])),

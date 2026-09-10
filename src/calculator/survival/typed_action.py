@@ -244,6 +244,7 @@ class SurvivalAction(NamedTuple):
     on_block_heal_source: str = ""
     # Stat buff fields
     bonus_attack_speed_percent: float = 0.0
+    bonus_move_speed_percent: float = 0.0
     bonus_armor: float = 0.0
     bonus_magic_resistance: float = 0.0
     bonus_health: float = 0.0

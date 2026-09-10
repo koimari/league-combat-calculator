@@ -606,6 +606,7 @@ def action_from_event(
         on_block_heal_delay=max(0.0, float(get("on_block_heal_delay", 0.0) or 0.0)),
         on_block_heal_source=str(get("on_block_heal_source", "") or ""),
         bonus_attack_speed_percent=float(get("bonus_attack_speed_percent", 0.0) or 0.0),
+        bonus_move_speed_percent=float(get("bonus_move_speed_percent", 0.0) or 0.0),
         bonus_armor=float(get("bonus_armor", 0.0) or 0.0),
         bonus_magic_resistance=float(get("bonus_magic_resistance", 0.0) or 0.0),
         bonus_health=float(get("bonus_health", 0.0) or 0.0),

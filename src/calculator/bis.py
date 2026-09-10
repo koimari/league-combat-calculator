@@ -42,6 +42,7 @@ from .bis_objective import (
 from .champion_loadout import MAX_LOADOUT_ITEMS
 from .interpreters import survival_ledger_certifications
 from .item_effects import validate_item_input_options
+from .optimizer_candidates import item_gold
 from .participant_timeline import CoupledSearchContext, build_participant_timeline
 from .public_response import https_icon
 from .request_parsing import request_int, request_string
@@ -70,6 +71,11 @@ def bis_payload(
     subject_index = request_int(data, "subject_index", 0, minimum=0, maximum=4)
     objective_meta = bis_objective_meta(request_string(data, "objective", "overall"))
     objective_key = objective_meta["key"]
+    max_item_gold = (
+        request_int(data, "max_item_gold", 0, minimum=0, maximum=30_000)
+        if data.get("max_item_gold") not in (None, "")
+        else None
+    )
     if subject_team == "ally" and subject_index >= len(request.allies):
         raise ValueError("subject_index is outside the selected ally roster")
     if subject_team == "enemy" and subject_index >= len(request.enemies):
@@ -121,6 +127,12 @@ def bis_payload(
             for candidate in candidates
             if candidate.get("name") != equipped_slot_item
         ]
+
+    budget_excluded_count = 0
+    if max_item_gold is not None:
+        affordable = [item for item in candidates if item_gold(item) <= max_item_gold]
+        budget_excluded_count = len(candidates) - len(affordable)
+        candidates = affordable
 
     ranked: list[dict] = []
     withheld: list[dict[str, object]] = []
@@ -245,6 +257,7 @@ def bis_payload(
                 {
                     "name": candidate["name"],
                     "icon": https_icon(candidate.get("icon", "")),
+                    "price": item_gold(candidate),
                     "score": round(score, 1),
                     "objective_value": round(score, 3),
                     "metric": metric,
@@ -305,6 +318,8 @@ def bis_payload(
         "slot_index": slot_index,
         "slot_kind": slot_kind,
         "excluded_equipped_item": equipped_slot_item or None,
+        "max_item_gold": max_item_gold,
+        "budget_excluded_candidate_count": budget_excluded_count,
         "candidate_scope": (
             f"role-tagged:{role}" if role and slot_kind != "boots" else "all-supported"
         ),

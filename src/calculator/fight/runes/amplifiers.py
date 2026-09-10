@@ -63,7 +63,7 @@ def _add_rune_conditional_amp_damage(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
-        roster_target_index=state.roster_target_index,
+        roster_target_index=state.ledger_target_index,
         light=True,
     )
     max_health = max(0.0, state.target_health)
@@ -152,7 +152,7 @@ def _add_rune_flat_amp_damage(state: FightState, rotation: RotationResult) -> No
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
-        roster_target_index=state.roster_target_index,
+        roster_target_index=state.ledger_target_index,
         light=True,
     )
     for effect in effects:

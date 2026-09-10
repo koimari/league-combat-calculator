@@ -9,6 +9,7 @@ from . import item_effects, minion_stats
 from .auto_attack_policy import AUTO_ATTACK_UPTIME_MODE_CALCULATED
 from .cast_dependency import BASE_CAST_SLOTS
 from .fight.config import MINION_SOURCED_TARGET_FIELDS, sourced_minion_target
+from .rank_allocation import SPECIAL_CHAMPIONS, rank_rules
 from .request_parsing import request_string
 
 DEFAULT_TARGET: dict[str, float] = {
@@ -63,16 +64,13 @@ PUBLIC_INPUT_LIMITS: dict[str, tuple[float, float]] = {
 _PUBLIC_FIGHT_MODES = frozenset({"one_rotation", "time_based", "timed", "auto_only"})
 
 
-_NONSTANDARD_RANK_CHAMPIONS = frozenset({"Elise", "Jayce", "Karma", "Nidalee", "Udyr"})
-
-
 def rank_allocation_contract() -> dict[str, object]:
-    """Return the backend-owned rank allocation modes for public clients."""
+    """Return the backend-owned manual rank rules for public clients."""
     return {
         "default": "manual",
-        "by_champion": dict.fromkeys(
-            sorted(_NONSTANDARD_RANK_CHAMPIONS), "level_derived"
-        ),
+        "by_champion": dict.fromkeys(SPECIAL_CHAMPIONS, "manual"),
+        "default_rules": rank_rules(""),
+        "rules_by_champion": {name: rank_rules(name) for name in SPECIAL_CHAMPIONS},
     }
 
 

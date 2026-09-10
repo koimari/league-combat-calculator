@@ -129,7 +129,7 @@ def test_main_page_footer_links_all_three_legal_pages(invite_env):
     )
     assert login.status_code == 302
     body = client.get("/").get_data(as_text=True)
-    assert 'class="site-footer"' in body
+    assert "calculator-shell-footer" in body
     for href in ("/privacy", "/terms", "/riot-disclaimer"):
         assert f'href="{href}"' in body, href
     assert "Not endorsed by Riot Games" in body

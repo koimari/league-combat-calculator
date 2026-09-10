@@ -8,11 +8,16 @@ from dataclasses import field as dataclass_field
 from typing import Any
 
 from .ability_ranks import _validate_ability_ranks
+from .auto_attack_policy import AUTO_ATTACK_UPTIME_MODES
 from .capabilities import PRE_COMBAT_STATS
 from .champions import get_champion_options_meta
 from .data_fetcher import get_champion, get_item_by_name
 from .defensive_effects import resolve_starting_defenses
-from .fight_request_bounds import MAX_ALLIES, validate_cast_order_shape
+from .fight_request_bounds import (
+    MAX_ALLIES,
+    _bounded_request_float,
+    validate_cast_order_shape,
+)
 from .item_coverage import target_build_coverage
 from .item_effects import validate_item_input_options
 from .loadout_rules import validate_resolved_loadout
@@ -24,7 +29,7 @@ from .practice_dummy import (
     parse_stat_overrides,
     practice_dummy_data,
 )
-from .request_parsing import request_index_map, short_string
+from .request_parsing import request_bool, request_index_map, short_string
 from .role_quests import require_level_within_cap, validate_role
 from .rune_effects import RunePage, validate_rune_page
 from .starting_defenses import StartingDefenses
@@ -162,6 +167,9 @@ class ChampionLoadout:
     #: participant starts the fight at full health; a number starts them at
     #: exactly that many health, bounded by their resolved maximum health.
     current_health: float | None = None
+    include_auto_attacks: bool | None = None
+    auto_attack_uptime_mode: str | None = None
+    auto_attack_uptime: float | None = None
 
     @property
     def is_practice_dummy(self) -> bool:
@@ -256,7 +264,7 @@ class ChampionLoadout:
             for slot, rank in raw_ranks.items():
                 if isinstance(rank, bool) or not isinstance(rank, int):
                     raise ValueError(f"{field}.ability_ranks.{slot} must be an integer")
-                if not 0 <= rank <= (3 if slot == "R" else 6):
+                if not 0 <= rank <= 6:
                     raise ValueError(
                         f"{field}.ability_ranks.{slot} is outside the legal rank range"
                     )
@@ -300,6 +308,24 @@ class ChampionLoadout:
             if current_health <= 0.0:
                 raise ValueError(f"{field}.current_health must be greater than 0")
 
+        include_auto_attacks = (
+            request_bool(value, "include_auto_attacks", False)
+            if "include_auto_attacks" in value
+            else None
+        )
+        auto_attack_uptime_mode = value.get("auto_attack_uptime_mode")
+        if "auto_attack_uptime_mode" in value and (
+            not isinstance(auto_attack_uptime_mode, str)
+            or auto_attack_uptime_mode not in AUTO_ATTACK_UPTIME_MODES
+        ):
+            raise ValueError(
+                f"{field}.auto_attack_uptime_mode must be legacy, explicit, or calculated"
+            )
+        auto_attack_uptime = (
+            _bounded_request_float(value, "auto_attack_uptime", 0.0)
+            if "auto_attack_uptime" in value
+            else None
+        )
         equipped_names = (*items, *((boots,) if boots else ()))
         if len(set(equipped_names)) != len(equipped_names):
             raise ValueError(f"{field} must not contain duplicate items")
@@ -325,6 +351,9 @@ class ChampionLoadout:
             target_stats=target_stats,
             rune_page=rune_page,
             current_health=current_health,
+            include_auto_attacks=include_auto_attacks,
+            auto_attack_uptime_mode=auto_attack_uptime_mode,
+            auto_attack_uptime=auto_attack_uptime,
         )
 
     def resolve(self) -> "ResolvedLoadout":

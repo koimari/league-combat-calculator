@@ -42,7 +42,7 @@ def _expose_weakness_pool(state: FightState, rotation: RotationResult) -> list[A
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
-        roster_target_index=state.roster_target_index,
+        roster_target_index=state.ledger_target_index,
         light=True,
     )
     boundary = min((row[0] for row in ledger if row[3] in proc_keys), default=None)
@@ -132,7 +132,7 @@ def _hypershot_delta_events(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
-        roster_target_index=state.roster_target_index,
+        roster_target_index=state.ledger_target_index,
         light=True,
     )
     trigger_key = next(
@@ -218,7 +218,7 @@ def _apply_general_amplifiers(state: FightState, rotation: RotationResult) -> No
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
-        roster_target_index=state.roster_target_index,
+        roster_target_index=state.ledger_target_index,
         light=True,
     )
     # Create per-source breakdown entries
@@ -363,7 +363,7 @@ def _apply_command_amp(state: FightState, rotation: RotationResult) -> None:
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
-        roster_target_index=state.roster_target_index,
+        roster_target_index=state.ledger_target_index,
         light=True,
     )
     amped = [row for row in events if slot.window_holds(windows, row[0][0])]

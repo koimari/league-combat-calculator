@@ -31,7 +31,7 @@ def _aery_trigger_times(state: FightState, rotation: RotationResult) -> list[flo
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
-        roster_target_index=state.roster_target_index,
+        roster_target_index=state.ledger_target_index,
     ):
         if float(event["damage"]) <= 0.0:
             continue
@@ -135,7 +135,7 @@ def _aftershock_trigger_events(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
-        roster_target_index=state.roster_target_index,
+        roster_target_index=state.ledger_target_index,
     ):
         add(event)
     return sorted(triggers, key=lambda event: (event["time"], event["sequence"]))

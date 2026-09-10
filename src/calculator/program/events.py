@@ -128,6 +128,7 @@ class StatBuff:
     """Stats granted for a window — attack speed, ability power, haste."""
 
     bonus_attack_speed_percent: float = 0.0
+    bonus_move_speed_percent: float = 0.0
     ability_power: float = 0.0
     ability_haste: float = 0.0
     duration: float = 0.0
@@ -373,6 +374,7 @@ def payload_from_packet(  # pylint: disable=too-many-return-statements
     if kind == "stat_buff":
         return StatBuff(
             bonus_attack_speed_percent=_float(packet, "bonus_attack_speed_percent"),
+            bonus_move_speed_percent=_float(packet, "bonus_move_speed_percent"),
             ability_power=_float(packet, "ability_power"),
             ability_haste=_float(packet, "ability_haste"),
             duration=_float(packet, "duration"),

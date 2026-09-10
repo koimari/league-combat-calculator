@@ -245,7 +245,7 @@ def _ability_hit_ledger(
             state.ability_damages,
             state.cast_order,
             cast_events=rotation.cast_events,
-            roster_target_index=state.roster_target_index,
+            roster_target_index=state.ledger_target_index,
         )
         if event.get("phase") == "ability"
         and event.get("source_key") in state.ability_damages

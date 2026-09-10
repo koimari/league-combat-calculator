@@ -102,7 +102,9 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     # Timed mode: all abilities share one cast timeline (cast times lock
     # out other casts). One-rotation and autos-only modes never recast,
     # so they skip scheduling entirely.
-    timed_mode = not (state.one_rotation or state.auto_attacks_only)
+    timed_mode = state.combat_events is not None or not (
+        state.one_rotation or state.auto_attacks_only
+    )
     schedule = (
         _schedule_shared_casts(state, result, basic_ability_haste) if timed_mode else {}
     )
@@ -111,7 +113,10 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     # Resolve WHEN everything casts before pricing anything: the stack
     # timeline (Case 4/5) must exist before the first cast is priced, and
     # both it and the DoT integration afterwards read this one plan.
-    plan = _apply_resource_limits(state, _resolve_cast_plan(state, schedule))
+    requested_plan = _resolve_cast_plan(state, schedule)
+    plan = _apply_resource_limits(state, requested_plan)
+    if state.combat_events is not None and plan.counts != requested_plan.counts:
+        raise ValueError("combat_events contains a cast with insufficient resource")
     result.last_cast_time = plan.last_cast_time
     result.resource_spent = plan.resource_spent
     result.resource_remaining = plan.resource_remaining
@@ -332,6 +337,15 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # hits; an unramped one lands in full after it (below).
         shred_ramp = _make_shred_ramp(resists, ability_info, ability_stacks)
         cast_times = plan.times.get(ability_key, ())
+        if state.combat_events is not None:
+            selected_times = {
+                event.time
+                for event in state.combat_events
+                if event.caster_id == state.event_actor_id
+                and event.slot == ability_key
+                and event.recipient_id == state.event_target_id
+            }
+            cast_times = tuple(time for time in cast_times if time in selected_times)
         authored_controls = tuple(ability_field(ability_info, "control_events"))
         for control in authored_controls:
             if not isinstance(control, ControlEvent):
@@ -346,7 +360,8 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         control_specs = tuple(
             control
             for control in authored_controls
-            if control.scope.reaches(state.roster_target_index)
+            if state.combat_events is not None
+            or control.scope.reaches(state.roster_target_index)
         )
         if control_specs:
             serialized_controls: list[dict[str, Any]] = []
@@ -370,7 +385,12 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
                 for control in control_specs
             )
             for cast_index, cast_time in enumerate(cast_times):
-                cast_id = f"{ability_key}:{cast_index + 1}"
+                ordinal = (
+                    plan.times[ability_key].index(cast_time) + 1
+                    if state.combat_events is not None
+                    else cast_index + 1
+                )
+                cast_id = f"{ability_key}:{ordinal}"
                 target_id = f"target:{state.roster_target_index}"
                 for control in control_specs:
                     offset = (
@@ -434,7 +454,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         ) = _evaluate_cast_parts(
             state,
             parts,
-            num_casts,
+            len(cast_times) if state.combat_events is not None else num_casts,
             ability_mr,
             mitigated_damage_dealt,
             on_hit=shred_ramp.stage if shred_ramp is not None else None,

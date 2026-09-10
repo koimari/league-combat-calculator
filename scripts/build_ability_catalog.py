@@ -29,9 +29,9 @@ def _first_nonempty(values: Iterable[Any]) -> Any:
 def rank_count(ability: Mapping[str, Any], slot: str) -> int:
     """The catalogue's rank cardinality for one ability, clamped to the UI's five.
 
-    Distinct from ``scenario._ability_max_rank``, which reads the same cache to
-    bound a *manual* rank and so deliberately admits the level tables some
-    modifiers carry (18 and 40 entries).  A rank picker has five steps.
+    Distinct from ``rank_allocation.rank_rules``, which bounds a *manual* rank
+    from the sourced skill-point unlock levels rather than from the cache's
+    level tables (18 and 40 entries).  A rank picker has five steps.
     """
     if slot == "P":
         return 1

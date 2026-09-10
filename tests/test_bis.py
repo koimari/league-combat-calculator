@@ -10,7 +10,14 @@ def test_bis_objective_contract_has_stable_units() -> None:
 
     assert contract["overall"]["unit"] == "TDD"
     assert contract["survival"]["unit"] == "eHP"
-    assert set(contract) == {"overall", "kill", "survival", "damage", "utility"}
+    assert set(contract) == {
+        "team_outcome",
+        "overall",
+        "kill",
+        "survival",
+        "damage",
+        "utility",
+    }
 
 
 def test_unknown_bis_objective_fails_closed() -> None:

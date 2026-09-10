@@ -154,7 +154,7 @@ def _add_precomputed_proc_damage(
                 state.ability_damages,
                 state.cast_order,
                 cast_events=rotation.cast_events,
-                roster_target_index=state.roster_target_index,
+                roster_target_index=state.ledger_target_index,
             )
             stack_times = [
                 float(event["time"])

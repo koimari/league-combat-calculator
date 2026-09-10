@@ -78,6 +78,7 @@ def _effective_timed_cooldown(
     ability_info: dict,
     *,
     basic_ability_haste: float,
+    control_applies: bool = True,
 ) -> float:
     """Effective recast cooldown in timed mode: ability haste, Spear of
     Shojin basic-ability haste (Q/W/E), ultimate haste (R), the haste an
@@ -96,7 +97,8 @@ def _effective_timed_cooldown(
         total_haste += basic_ability_haste
     elif slot == "R":
         total_haste += float(state.champion_stats["ultimate_haste"])
-    total_haste += _immobilize_ability_haste(state, ability_info)
+    if control_applies:
+        total_haste += _immobilize_ability_haste(state, ability_info)
     cd = effective_cooldown(base_cd, total_haste)
     if result.navori_refund > 0 and cd > 0 and slot in ("Q", "W", "E"):
         cd = _navori_effective_cd(cd, result.autos_per_second, result.navori_refund)
@@ -153,6 +155,50 @@ def _self_cast_lockout(state: "FightState") -> float:
     )
 
 
+def _schedule_authored_casts(
+    state: "FightState", result: "RotationResult", basic_ability_haste: float
+) -> dict[str, list[float]]:
+    """Check requested times against the sourced cooldown rules."""
+    times: dict[str, list[float]] = {key: [] for key in state.cast_order}
+    ready: dict[str, float] = {}
+    hands_free = 0.0
+    for event in state.combat_events or ():
+        if event.caster_id != state.event_actor_id:
+            continue
+        key = event.slot
+        info = state.ability_damages.get(key)
+        if info is None or key not in times:
+            raise ValueError(f"Cast {event.id}: {key} is unavailable at this rank")
+        if event.time >= state.fight_duration_seconds:
+            raise ValueError(f"Cast {event.id}: time must precede the fight end")
+        if event.time + _CAST_SCHEDULE_EPS < max(hands_free, ready.get(key, 0.0)):
+            raise ValueError(f"Cast {event.id}: cast time or cooldown is still active")
+        if times[key] and key == "R" and not state.ultimate_recasts:
+            raise ValueError(f"Cast {event.id}: this ultimate supports one cast")
+        cast_time = ability_field(info, "cast_time")
+        cooldown = _effective_timed_cooldown(
+            state,
+            result,
+            key,
+            info,
+            basic_ability_haste=basic_ability_haste,
+            control_applies=event.caster_id.startswith("enemy:")
+            != event.recipient_id.startswith("enemy:"),
+        )
+        if times[key] and cooldown <= 0:
+            raise ValueError(
+                f"Cast {event.id}: this slot has no certified recast cooldown"
+            )
+        hands_free = event.time + cast_time
+        ready[key] = _cooldown_ready_at(
+            state,
+            hands_free + _empower_cooldown_delay(info.get("empowers_next_auto")),
+            cooldown,
+        )
+        times[key].append(event.time)
+    return times
+
+
 def _schedule_shared_casts(
     state: "FightState",
     result: "RotationResult",
@@ -179,6 +225,8 @@ def _schedule_shared_casts(
     much casting the lockout costs without claiming where the span sits —
     the module declaring it could not source the instant, only the length.
     """
+    if state.combat_events is not None:
+        return _schedule_authored_casts(state, result, basic_ability_haste)
     duration = max(0.0, state.fight_duration_seconds - _self_cast_lockout(state))
     # Mirror the rotation loop's recast pairing exactly: an entry rides
     # its parent's casts only when the parent appears EARLIER in the

@@ -5,6 +5,8 @@ import sqlite3
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
+import pytest
+
 from src.rate_limit import TokenBucketStore
 
 
@@ -107,3 +109,36 @@ def test_store_init_survives_a_sibling_worker_holding_the_write_lock(
             sibling.rollback()
         sibling.close()
     assert store.consume("calculate", capacity=1, refill_per_second=1, now=0)[0]
+
+
+def test_store_closes_connections_after_init_and_consume(tmp_path, monkeypatch) -> None:
+    """Each operation gives back its SQLite handle before the next request."""
+    opened = []
+    connect = sqlite3.connect
+
+    def track_connection(*args, **kwargs):
+        connection = connect(*args, **kwargs)
+        opened.append(connection)
+        return connection
+
+    monkeypatch.setattr(sqlite3, "connect", track_connection)
+    store = TokenBucketStore(tmp_path / "rate-limits.sqlite3")
+    assert store.consume("calculate", capacity=1, refill_per_second=1, now=0)[0]
+    assert len(opened) == 2
+    for connection in opened:
+        with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+            connection.execute("SELECT 1")
+
+
+def test_store_rolls_back_and_closes_when_a_transaction_fails(tmp_path) -> None:
+    """An interrupted write leaves no tokens or open handle behind."""
+    store = TokenBucketStore(tmp_path / "rate-limits.sqlite3")
+    with pytest.raises(RuntimeError, match="interrupted write"):
+        with store._connect() as connection:
+            connection.execute(
+                "INSERT INTO token_buckets VALUES (?, ?, ?)", ("failed", 0, 0)
+            )
+            raise RuntimeError("interrupted write")
+    with pytest.raises(sqlite3.ProgrammingError, match="closed database"):
+        connection.execute("SELECT 1")
+    assert store.consume("failed", capacity=1, refill_per_second=1, now=0)[0]

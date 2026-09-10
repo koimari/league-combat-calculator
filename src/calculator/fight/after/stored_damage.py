@@ -22,7 +22,7 @@ def _add_stored_damage(state: FightState, rotation: RotationResult) -> None:
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
-        roster_target_index=state.roster_target_index,
+        roster_target_index=state.ledger_target_index,
     )
     cast_positions = {slot: index for index, slot in enumerate(state.cast_order)}
     cast_times_by_slot: dict[str, list[float]] = {}

@@ -120,8 +120,8 @@ def test_request_defaults_have_one_canonical_home():
     ("request_data", "message"),
     [
         ({"cast_order": ["Q", "Q", "E", "R"]}, "Cast order must"),
-        ({"ability_ranks": {"Q": 6}}, "Q rank must be 0-5"),
-        ({"ability_ranks": {"R": 4}}, "R rank must be 0-3"),
+        ({"ability_ranks": {"Q": 7}}, "Q rank must be 0-6"),
+        ({"ability_ranks": {"R": 7}}, "R rank must be 0-6"),
         (
             {"item_options": {"Dark Seal": {"glory_stacks": 11}}},
             "glory_stacks must be between 0 and 10",
@@ -169,12 +169,12 @@ def test_rank_allocation_must_be_possible_at_champion_level(level, ranks, messag
         params.validate_for_champion("Ahri", level)
 
 
-def test_manual_ranks_fail_closed_for_nonstandard_rank_kit():
+def test_manual_ranks_preserve_the_free_jayce_transform():
     params = FightParams.from_request(
         {"ability_ranks": {"Q": 1, "W": 1, "E": 1, "R": 0}}
     )
 
-    with pytest.raises(ValueError, match="level-derived ranks"):
+    with pytest.raises(ValueError, match="R rank must be 1-1"):
         params.validate_for_champion("Jayce", 3)
 
 

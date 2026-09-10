@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="icon" href="{{ url_for('static', filename='calculator/favicon.svg') }}" type="image/svg+xml">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Compare League of Legends item builds in the same fight. Inspect damage, healing, and ability results from the combat calculator.">
+  <title>Combat calculator · Scryglass</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;500&family=Atkinson+Hyperlegible+Next:wght@400;500;600&family=Instrument+Serif&family=Space+Grotesk:wght@400;500&family=IBM+Plex+Mono:wght@400;500&family=Lora:wght@400;500&family=Syne:wght@400;500&family=Manrope:wght@400;500&family=DM+Sans:wght@400;500&family=Newsreader:wght@400;500&family=Sora:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='calculator/calculator.css') }}">
+</head>
+<body class="calculator-standalone" data-theme="paper">
+  <header class="calculator-shell-header">
+    <a class="calculator-shell-brand" href="/">Scryglass</a>
+    <nav class="calculator-shell-nav" aria-label="Calculator navigation"><a href="https://scryglass.xyz">Research ↗</a><a href="/advanced">Advanced controls</a><label><span class="calculator-sr-only">Theme</span><select id="calculator-theme" aria-label="Theme"><option value="paper">Paper</option><option value="midnight">Midnight</option><option value="terminal">Terminal</option><option value="amber">Amber</option><option value="groovebox">Groovebox</option><option value="cobalt">Cobalt</option><option value="rosewater">Rosewater</option><option value="moss">Moss</option><option value="ultraviolet">Ultraviolet</option><option value="monochrome">Monochrome</option></select></label></nav>
+  </header>
+  {% if auth_user %}<div class="calculator-shell-auth">Signed in as <strong>{{ auth_user }}</strong> · <a href="/auth/logout">Sign out</a></div>{% endif %}
+  <main id="calculator-app"></main>
+  <footer class="calculator-shell-footer site-footer"><span>Not endorsed by Riot Games</span><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/riot-disclaimer">Riot Games disclaimer</a></footer>
+  <noscript>This calculator needs JavaScript. Enable it, then reload this page.</noscript>
+  <script type="module" src="{{ url_for('static', filename='calculator/calculator.js') }}"></script>
+</body>
+</html>

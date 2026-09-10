@@ -18,6 +18,7 @@ from .champion_loadout import (
     load_public_champion,
     resolve_named_item,
 )
+from .combat_events import roster_ids
 from .fight_params import FightParams
 from .fight_request_bounds import MAX_ALLIES, MAX_ENEMIES
 from .interaction_effects import target_physical_damage_reduction_params
@@ -209,10 +210,14 @@ def resolve_scenario(request: ScenarioRequest) -> ResolvedScenario:
             ally_stat_bonuses=combine_ally_stat_effects(ally_effects),
         )
 
+    event_target_ids = roster_ids(
+        [enemy.champion_data["name"] for enemy in enemies], "enemy"
+    )
     target_fight_params = tuple(
         replace(
             fight_params,
             roster_target_index=target_index,
+            event_target_id=event_target_ids[target_index],
             roster_target_count=len(enemies),
             target_health=enemy.stats["health"],
             target_bonus_health=enemy.stats["bonus_health"],

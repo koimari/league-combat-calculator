@@ -24,7 +24,7 @@ def _unique_ledger_hits(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
-        roster_target_index=state.roster_target_index,
+        roster_target_index=state.ledger_target_index,
     )
     unique_hits: list[dict[str, Any]] = []
     seen: set[tuple[str, int, float]] = set()
@@ -132,7 +132,7 @@ def _damage_threshold_trigger_time(
         state.ability_damages,
         state.cast_order,
         cast_events=rotation.cast_events,
-        roster_target_index=state.roster_target_index,
+        roster_target_index=state.ledger_target_index,
         light=True,
     )
     window_sum = 0.0

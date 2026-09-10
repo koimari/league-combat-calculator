@@ -6,6 +6,8 @@ from types import MappingProxyType
 from typing import Any
 
 from .. import item_effects, rune_effects
+from ..attack_windows import AttackSpeedWindow
+from ..combat_events import CombatEvent
 from ..interpreters import crit_profile
 from . import authorship
 from .config import BASE_CRIT_MULTIPLIER
@@ -52,6 +54,11 @@ class FightState:
     # The one spellblade this build arms, resolved through its rule.
     item_spellblade: "item_effects.SpellbladeEffect | None"
     cast_order: list[str]
+    combat_events: tuple[CombatEvent, ...] | None
+    event_actor_id: str
+    event_target_id: str
+    event_attack_speed_windows: tuple[AttackSpeedWindow, ...]
+    support_attack_times: tuple[float, ...] | None
     target_health: float
     target_bonus_health: float
     fight_duration_seconds: float
@@ -165,6 +172,11 @@ class FightState:
     # Set by calculate_fight_damage: receipts-only outputs (per-cast
     # resource rows) may be skipped when True.
     score_only: bool = False
+
+    @property
+    def ledger_target_index(self) -> int:
+        """The slot control events scope to: 0 under authored casts, else the priced one."""
+        return 0 if self.combat_events is not None else self.roster_target_index
 
 
 def _damage_inputs(

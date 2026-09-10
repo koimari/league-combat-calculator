@@ -26,7 +26,12 @@ def _resolve_cast_plan(
             continue
 
         scheduled: list[float] = []
-        if state.auto_attacks_only:
+        if state.combat_events is not None:
+            scheduled = list(schedule.get(ability_key, ()))
+            num_casts = len(scheduled)
+            if scheduled:
+                last_cast_time = max(last_cast_time, scheduled[-1])
+        elif state.auto_attacks_only:
             num_casts = 0
         elif state.one_rotation:
             num_casts = 1

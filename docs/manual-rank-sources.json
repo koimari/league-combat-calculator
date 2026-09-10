@@ -1,0 +1,49 @@
+{
+  "sources": [
+    {
+      "path": "data/bin/characters/elise.bin.json",
+      "sha256": "b2fbfe6916dc7cf6d35976e8e4064a85265fcbee2ceb0557caeeb933466aa43e",
+      "evidence": "mSpell.mClientData.mTooltipData.mLists.LevelUp.levelCount establishes rank cardinality."
+    },
+    {
+      "path": "data/bin/characters/jayce.bin.json",
+      "sha256": "ab40e0af7dc0fd5503ef9fd6f392095e94dbf4fb3a5de4111584c25bb5fe2e6b",
+      "evidence": "mSpell.mClientData.mTooltipData.mLists.LevelUp.levelCount establishes rank cardinality."
+    },
+    {
+      "path": "data/bin/characters/karma.bin.json",
+      "sha256": "fb3af9be45fc54d271933dd8b157a4c1a9c46aeb607715a1d40ef9e7289b8118",
+      "evidence": "mSpell.mClientData.mTooltipData.mLists.LevelUp.levelCount establishes rank cardinality."
+    },
+    {
+      "path": "data/bin/characters/nidalee.bin.json",
+      "sha256": "60bddb6fce0f6825fb454e0556536e54412b7c6dec16fe738d394c655f52b54c",
+      "evidence": "mSpell.mClientData.mTooltipData.mLists.LevelUp.levelCount establishes rank cardinality."
+    },
+    {
+      "path": "data/bin/characters/udyr.bin.json",
+      "sha256": "5d7363ffcfaef12ca4fcc7f05b933affe4fcf761477a5e906a0bc326022ff47c",
+      "evidence": "mSpell.mClientData.mTooltipData.mLists.LevelUp.levelCount establishes rank cardinality."
+    },
+    {
+      "path": "data/champions.json",
+      "sha256": "777d9b85e2ed96d0f07d9e69daf63d18ad59a8bfef5a5322383b4ca664d6aecc",
+      "evidence": "R descriptions establish free rank1 for Elise, Jayce, Karma, Nidalee; Jayce R cannot gain ranks; Nidalee R upgrades at6/11/16."
+    }
+  ],
+  "wiki": [
+    {
+      "url": "https://wiki.leagueoflegends.com/en-us/Champion_ability",
+      "revision_id": 4046454,
+      "revision_timestamp": "2026-07-28T03:02:14Z",
+      "evidence": "Ranking order rules require odd champion levels for basic ranks; Ultimate abilities lists free R availability, four ranks for Elise/Karma/Nidalee, fixed one rank for Jayce."
+    },
+    {
+      "url": "https://wiki.leagueoflegends.com/en-us/Udyr/Patch_history",
+      "revision_id": 4020845,
+      "revision_timestamp": "2026-05-20T16:55:06Z",
+      "evidence": "Sixth stance rank requires champion level16."
+    }
+  ],
+  "scope": "Manual allocation. Legacy automatic skill orders remain separate."
+}
