@@ -82,19 +82,14 @@ def _landable_cast_times(
     ability_info: Mapping[str, Any],
     scheduled: list[float],
 ) -> list[float]:
-    """The scheduled casts of which something can still land in the fight.
+    """Drop a cast whose every hit is a single instant past the fight's end.
 
-    A cast whose every hit is a single instant the source times past the
-    fight's end never lands: Time Bomb thrown at 7.2 s in an 8 s fight is
-    still fused when the fight ends (#323). Dropping it here, before any
-    pricing, keeps the cast count, the cast timeline and every proc that
-    counts ability hits in agreement. A cast with any cast-boundary part,
-    a DoT tick train (a part with a hit interval) or a next-attack empower
-    lands something and is kept; the per-hit clip in cast_parts then
-    prices only the hits inside the window. Authored casts and one-rotation
-    fights never reach this branch.
+    Dropped before pricing so the cast count, the cast timeline and every
+    proc that counts ability hits agree (#323); a cast that lands anything
+    at the boundary, as a tick train or through a next attack is kept and
+    cast_parts clips its late hits one by one.
     """
-    parts = tuple(ability_info.get("parts") or ())
+    parts = ability_info.get("parts")
     if not parts or ability_info.get("empowers_next_auto"):
         return scheduled
     if any(part.time_offset is None or part.hit_interval is not None for part in parts):
