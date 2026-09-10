@@ -100,6 +100,9 @@ def test_eclipse_arms_on_two_distinct_ability_casts() -> None:
             # was delivered to.
             "declared": ("eclipse.proc", 100.0, "other", None, None, None),
             "target_id": "target:0",
+            # The declaration states no resistance; the event states the
+            # armor the proc's own mitigation applied.
+            "resistance_met": 0.0,
         }
     ]
     assert row["pair_preview_of"] == "eclipse.proc"
@@ -135,6 +138,9 @@ def test_eclipse_prefers_authored_ability_hit_time() -> None:
             # was delivered to.
             "declared": ("eclipse.proc", 100.0, "other", None, None, None),
             "target_id": "target:0",
+            # The declaration states no resistance; the event states the
+            # armor the proc's own mitigation applied.
+            "resistance_met": 0.0,
         }
     ]
     assert "proc_Eclipse" in fight["timeline_coverage"]["exact_sources"]

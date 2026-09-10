@@ -6396,9 +6396,7 @@ class TestSingleProcAndScheduledEventAuthoring(_FightHarness):
     ) -> None:
         """Hydra Crescent actives replay their typed secondary packet."""
         result = self._timed_fight(
-            [{"name": item_name}],
-            roster_target_index=1,
-            roster_target_count=2,
+            [{"name": item_name}], roster_target_index=1, roster_target_count=2
         )
 
         row = result["breakdown"][f"secondary_{item_name}"]
@@ -6408,6 +6406,7 @@ class TestSingleProcAndScheduledEventAuthoring(_FightHarness):
                 "time": 0.0,
                 "damage": row["total_damage"],
                 "damage_type": "physical",
+                "resistance_met": 0.0,
             }
         ]
         assert row["targeting"]["kind"] == "active_secondary"

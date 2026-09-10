@@ -6,7 +6,7 @@ at the effectiveness of the hit that landed the Nth stack, against the
 target's health at that moment.
 """
 
-from ..resists import _mitigate
+from ..resists import _mitigate, _resistance_met_fields
 from ..results import (
     AutoAttackResult,
     OnHitResult,
@@ -178,6 +178,7 @@ def _add_stacking_strikes(
                     "damage": damage,
                     "damage_type": source.damage_type,
                     "declared": _strike_declaration(mechanic, declared_raws[position]),
+                    **_resistance_met_fields(source.damage_type, resists),
                 }
                 for position, (time, damage) in enumerate(ability_proc_records)
             ] + [
@@ -189,6 +190,7 @@ def _add_stacking_strikes(
                         mechanic,
                         declared_raws[len(ability_proc_records) + position],
                     ),
+                    **_resistance_met_fields(source.damage_type, resists),
                 }
                 for position, (auto_index, damage) in enumerate(
                     zip(sorted(proc_autos), auto_proc_damages, strict=False)

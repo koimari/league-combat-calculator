@@ -12,7 +12,7 @@ from ..ledger.event_rows import (
     _finite_numeric_receipt,
     _item_proc_precision,
 )
-from ..resists import _mitigate
+from ..resists import _mitigate, _resistance_met_fields
 from ..results import RotationResult
 from ..state import FightState, _damage_inputs
 
@@ -294,6 +294,7 @@ def _add_per_ability_hit_damage(state: FightState, rotation: RotationResult) -> 
             for event in proc_events:
                 event["damage"] = per_proc
                 event["damage_type"] = source.damage_type
+                event.update(_resistance_met_fields(source.damage_type, resists))
             if proc_events:
                 breakdown[source.breakdown_key]["damage_events"] = proc_events
                 breakdown[source.breakdown_key]["event_phase"] = "ability"

@@ -7,7 +7,7 @@ from ...ability_spec import AttackClass
 from ...survival.pricing import AuthoredDeclaration
 from ..cast_slots import _damaging_cast_times
 from ..ledger.event_rows import _row_declaration_share
-from ..resists import _mitigate
+from ..resists import _mitigate, _resistance_met_fields
 from ..results import RotationResult
 from ..rotation.dot_ticks import _periodic_damage_events
 from ..state import FightState, _damage_inputs
@@ -143,6 +143,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
                     source.damage_type,
                     effective_burn_time,
                     effect.tick_interval,
+                    resists,
                 ),
                 declaration,
                 burn_mitigated,
@@ -179,6 +180,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
                         source.damage_type,
                         state.fight_duration_seconds,
                         source.event_interval,
+                        resists,
                     ),
                     declaration,
                     immolate_mitigated,
@@ -223,6 +225,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
                     "declared": _row_declaration_share(
                         declaration, damage_per_proc, periodic_mitigated
                     ),
+                    **_resistance_met_fields(source.damage_type, resists),
                 }
                 for index in range(procs)
             ]

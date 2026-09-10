@@ -5,7 +5,7 @@ from typing import Any
 from ... import item_effects
 from ...ability_spec import AttackClass
 from ...survival.pricing import AuthoredDeclaration
-from ..resists import _mitigate
+from ..resists import _mitigate, _resistance_met_fields
 from ..results import RotationResult
 from ..rotation.cast_schedule import _CAST_SCHEDULE_EPS
 from ..state import FightState, _damage_inputs
@@ -183,6 +183,7 @@ def _add_item_proc_damage(
                     "damage": event_damages[index],
                     "damage_type": source.damage_type,
                     "declared": _proc_declaration(source, declared_raw, amped[index]),
+                    **_resistance_met_fields(source.damage_type, resists),
                 }
                 for index, trigger in enumerate(proc_triggers)
             ]
@@ -195,6 +196,7 @@ def _add_item_proc_damage(
                     "declared": _proc_declaration(
                         source, declared_raw * procs, amped[0]
                     ),
+                    **_resistance_met_fields(source.damage_type, resists),
                 }
             ]
         if source.multi_target_charges:
@@ -302,6 +304,7 @@ def _add_late_phase_proc_damage(state: FightState, rotation: RotationResult) -> 
             for event in stack_events:
                 event["damage"] = total_damage / procs
                 event["declared"] = _proc_declaration(source, raw / procs, False)
+                event.update(_resistance_met_fields(source.damage_type, resists))
                 if effect.self_shield_duration > 0.0:
                     shield_base = (
                         effect.self_shield_melee_base

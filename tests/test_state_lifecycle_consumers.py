@@ -121,12 +121,11 @@ class TestEclipseConsumer:
         )
         row = fight["breakdown"]["proc_Eclipse"]
         assert row["count"] == 1
-        # The event now carries the ``AuthoredDeclaration`` the walk prices it
-        # from: the rule that authored the packet, its pre-mitigation
-        # magnitude and the attack class that decides which of the holder's
-        # amplifiers it earns.  The last three positions are the resistance,
-        # swing and routing umbrellas, all absent on a proc that reached its
-        # subject directly through no basic-attack swing.
+        # The event carries the ``AuthoredDeclaration`` the walk prices it
+        # from: the authoring rule, its pre-mitigation magnitude and the
+        # attack class deciding which holder amplifier it earns.  The last
+        # three positions are the resistance, swing and routing umbrellas,
+        # absent on a proc no swing delivered; the armor rides the event.
         assert row["damage_events"] == [
             {
                 "time": 0.0,
@@ -135,6 +134,7 @@ class TestEclipseConsumer:
                 "event_precision": "exact",
                 "target_id": "target:0",
                 "declared": ("eclipse.proc", 100.0, "other", None, None, None),
+                "resistance_met": 0.0,
             }
         ]
         receipt = row["state_transitions"]

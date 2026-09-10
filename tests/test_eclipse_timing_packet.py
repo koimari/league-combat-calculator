@@ -391,9 +391,9 @@ class TestStackGain:
                 "damage_type": "physical",
                 "event_precision": "hit",
                 "target_id": "target:0",
-                # The retired family's declaration rides its own packet:
-                # (mechanic_id, pre-mitigation magnitude, attack class).
+                # The declaration (rule, magnitude, class) and the armor met.
                 "declared": ("eclipse.proc", 100.0, "other", None, None, None),
+                "resistance_met": 0.0,
             }
         ]
 
@@ -442,9 +442,9 @@ class TestStackGain:
                 "damage_type": "physical",
                 "event_precision": "hit",
                 "target_id": "target:0",
-                # The retired family's declaration rides its own packet:
-                # (mechanic_id, pre-mitigation magnitude, attack class).
+                # The declaration (rule, magnitude, class) and the armor met.
                 "declared": ("eclipse.proc", 100.0, "other", None, None, None),
+                "resistance_met": 0.0,
             }
         ]
 

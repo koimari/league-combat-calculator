@@ -1,7 +1,7 @@
 """The damage zone an ultimate cast opens (Malignance, Zeke's Convergence)."""
 
 from ...ability_atoms import ability_field
-from ..resists import _mitigate
+from ..resists import _mitigate, _resistance_met_fields
 from ..results import RotationResult
 from ..state import FightState, _damage_inputs
 from .cast_procs import _proc_declaration
@@ -57,6 +57,9 @@ def _add_ultimate_proc_damage(
                 "damage": ult_proc_mitigated,
                 "damage_type": source.damage_type,
                 "declared": _proc_declaration(source, raw, False),
+                # The class ``_mitigate`` above was handed, not the row's:
+                # the zone is priced as magic whatever the source spells.
+                **_resistance_met_fields("magic", resists),
             }
         ]
         state.total_damage += ult_proc_mitigated

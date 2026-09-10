@@ -214,6 +214,14 @@ def _simulate_ordered_damage(
                     "time": event_time,
                     "damage_type": dtype,
                     "damage": damage,
+                    # A repriced tick is the same packet at a new magnitude,
+                    # so it met what the tick it replaces met.  Carried, not
+                    # re-read: this walk has no resistance of its own.
+                    **(
+                        {"resistance_met": event["resistance_met"]}
+                        if "resistance_met" in event
+                        else {}
+                    ),
                 }
             )
         event_damage = damage

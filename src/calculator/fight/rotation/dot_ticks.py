@@ -6,7 +6,7 @@ from typing import Any
 
 from ...ability_atoms import ability_field, ability_payload
 from ..ledger.event_rows import _finite_numeric_receipt, _row_damage_parts, _row_time
-from ..resists import _mitigate
+from ..resists import Resists, _mitigate, _resistance_met_fields
 from ..results import RotationResult, StackTimeline
 from ..state import FightState
 
@@ -15,6 +15,7 @@ def _ability_dot_tick_events(
     entry: dict[str, Any],
     info: dict[str, Any],
     cast_times: Sequence[float],
+    resists: Resists,
 ) -> list[dict[str, float | str]] | None:
     """One DoT ability row's per-tick events, or None to stay coarse.
 
@@ -55,7 +56,7 @@ def _ability_dot_tick_events(
             events.extend(
                 {**tick, "time": cast_time + float(tick["time"])}
                 for tick in _periodic_damage_events(
-                    amount / casts, dtype, dot_duration, tick_interval
+                    amount / casts, dtype, dot_duration, tick_interval, resists
                 )
             )
     events.sort(key=_row_time)
@@ -79,7 +80,9 @@ def _author_ability_dot_events(state: FightState, rotation: RotationResult) -> N
         info = ability_payload(state.ability_damages, key)
         if not entry or entry.get("damage_events") is not None:
             continue
-        events = _ability_dot_tick_events(entry, info, times_by_slot.get(key, []))
+        events = _ability_dot_tick_events(
+            entry, info, times_by_slot.get(key, []), state.resists
+        )
         if events is not None:
             entry["damage_events"] = events
             entry["event_phase"] = "ability"
@@ -146,18 +149,24 @@ class _DotTickLedger:
             self._pending_raw = 0.0
 
     def events(
-        self, damage_type: str, total: float, raw_total: float
+        self, damage_type: str, total: float, raw_total: float, resists: Resists
     ) -> list[dict[str, Any]] | None:
-        """The mitigated per-tick event list, or None when not authoring."""
+        """The mitigated per-tick event list, or None when not authoring.
+
+        ``resists`` is what the aggregate was mitigated against, so each
+        tick states the resistance the whole cadence met.
+        """
         if not (self.authoring and self._raw_ticks and raw_total > 0 and total > 0):
             return None
         scale = total / raw_total
+        met = _resistance_met_fields(damage_type, resists)
         events: list[dict[str, Any]] = [
             {
                 "time": time,
                 "damage_type": damage_type,
                 "damage": raw * scale,
                 "event_precision": "exact",
+                **met,
             }
             for time, raw in self._raw_ticks
         ]
@@ -292,7 +301,7 @@ def _add_stacking_dot_damage(state: FightState) -> None:
             f"the full {duration:g}s of ticks"
         ),
     }
-    events = ledger.events(damage_type, total, raw_total)
+    events = ledger.events(damage_type, total, raw_total, state.resists)
     if events is not None:
         row["damage_events"] = events
         row["event_phase"] = "effect"
@@ -305,10 +314,16 @@ def _periodic_damage_events(
     damage_type: str,
     duration: float,
     interval: float,
+    resists: Resists | None = None,
 ) -> list[dict[str, float | str]]:
-    """Split an aggregate periodic total into timestamped full/partial ticks."""
+    """Split an aggregate periodic total into timestamped full/partial ticks.
+
+    ``resists`` is what the caller mitigated the aggregate against; one
+    cadence is one damage class, so every tick met the same resistance.
+    """
     if total_damage <= 0 or duration <= 0 or interval <= 0:
         return []
+    met = {} if resists is None else _resistance_met_fields(damage_type, resists)
     events: list[dict[str, float | str]] = []
     full_ticks = int(duration / interval + 1e-9)
     damage_rate = total_damage / duration
@@ -317,6 +332,7 @@ def _periodic_damage_events(
             "time": (index + 1) * interval,
             "damage_type": damage_type,
             "damage": damage_rate * interval,
+            **met,
         }
         for index in range(full_ticks)
     )
@@ -327,6 +343,7 @@ def _periodic_damage_events(
                 "time": duration,
                 "damage_type": damage_type,
                 "damage": damage_rate * remainder,
+                **met,
             }
         )
     if events:

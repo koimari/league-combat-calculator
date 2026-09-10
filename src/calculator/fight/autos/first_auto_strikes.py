@@ -9,7 +9,7 @@ from collections.abc import Collection
 
 from ..items.energized_packets import _author_energized_ability_proc
 from ..items.secondary_delivery import _add_chain_copied_delivery
-from ..resists import _mitigate
+from ..resists import _mitigate, _resistance_met_fields
 from ..results import (
     OnHitResult,
     RotationResult,
@@ -189,6 +189,7 @@ def _add_first_auto_strikes(
                     "damage": proc_damages[position],
                     "damage_type": source.damage_type,
                     "declared": _strike_declaration(mechanic, declared_raws[position]),
+                    **_resistance_met_fields(source.damage_type, resists),
                 }
                 for position, proc_index in enumerate(proc_indices)
             ]

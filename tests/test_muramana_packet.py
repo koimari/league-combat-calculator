@@ -514,9 +514,8 @@ class TestAuthoredHitTiming:
         assert event["event_precision"] == "hit"
 
     def test_cast_boundary_fallback_is_marked_explicitly(self) -> None:
-        # A DoT cast has no authored sub-hit packet: the Shock rides the
-        # cast boundary at t=0 and is explicitly marked "cast_boundary",
-        # which the coverage classifier treats as coarse.
+        # A DoT cast has no authored sub-hit packet: the Shock rides
+        # the cast boundary at t=0, marked "cast_boundary" and coarse.
         fight = _fight(
             _stats(),
             {"Q": _ability("Q", dot_duration=3.0)},
@@ -534,6 +533,7 @@ class TestAuthoredHitTiming:
                 "cast_id": "Q:1",
                 "target_id": "target:0",
                 "damage_type": "physical",
+                "resistance_met": 100.0,
             }
         ]
         assert ABILITY_ROW in fight["timeline_coverage"]["coarse_sources"]

@@ -33,22 +33,17 @@
     "reading": "The fight publishes effective armor and MR of 75.3333, which is the post-shred figure. Kog'Maw Q is priced against the 100 magic resistance it goes on to shred, and BOTH of its casts meet 100, not only the one at t=0: `ability_rotation` binds `ability_mr` once per ability row, before `_apply_target_shred` runs, so the shred never boosts the ability that applied it at any cast. Measured, not assumed. `raw * 100 / (100 + resistance_met) == mitigated` holds on all 30 lines."
   },
   "what_still_refuses_a_resistance": {
-    "measured_over": "tests/test_fight_trace.py's twelve-build corpus, after the stamp",
+    "measured_over": "tests/test_fight_trace.py's twelve-build corpus",
     "by_step": {
-      "fight.after.reprice._add_shadowflame_cinderbloom": ["shadowflame_<item>"],
-      "fight.autos.first_auto_strikes._add_first_auto_strikes": ["on_hit_once_<item>"],
-      "fight.autos.stacking_strikes._add_stacking_strikes": ["on_hit_<item>"],
-      "fight.items.actives._add_auto_cooldown_strikes": ["active_Titanic Hydra"],
-      "fight.items.actives._add_item_active_damage": ["active_<item>"],
-      "fight.items.burns._add_burn_damage": ["burn_<item>", "immolate_<item>", "periodic_<item>"],
-      "fight.items.cast_procs._add_item_proc_damage": ["proc_<item>"],
-      "fight.items.cast_procs._add_late_phase_proc_damage": ["proc_Eclipse"],
-      "fight.items.muramana._add_per_ability_hit_damage": ["muramana_ability"],
-      "fight.items.ultimate_procs._add_ultimate_proc_damage": ["ult_proc_<item>"],
-      "fight.rotation.ability_rotation._compute_ability_rotation": ["a coarse ability row"],
-      "fight.rotation.dot_ticks._add_stacking_dot_damage": ["stacking_dot_passive"]
+      "fight.after.reprice._add_shadowflame_cinderbloom": [
+        "shadowflame_<item>"
+      ],
+      "fight.rotation.ability_rotation._compute_ability_rotation": [
+        "a coarse ability row"
+      ]
     },
-    "reading": "Eleven of the twelve are item and rune steps in files this slice was not assigned; each mitigates through the same `_mitigate` and needs the same one-line stamp. The twelfth is not a missing stamp: an ability whose row publishes no per-hit events (Ahri W and R) stays coarse, and the packet the ledger synthesizes for it has no mitigation site to read a resistance off at all. A deferred tick is the third shape: participant_timeline clones the parent packet with `{**event}` and re-types it as true damage, so it inherits a `resistance_met` its own class cannot have. `fight/ledger/trace._packet_line` refuses to print a resistance for a class that meets none, whatever the event states, which is where that rule has one home."
+    "reading": "Neither is a mitigation site that forgot to stamp. Cinderbloom takes a share of an already mitigated packet and passes through no mitigation of its own: fight/after/reprice.py imports no _mitigate at all, so there is no resistance it met, which is the shape an amplifier line already states nothing for. A coarse ability row (Ahri W and R) publishes no per-hit events, so the packet the ledger synthesizes for it never passed a mitigation site this trace can read one off. tests/test_fight_trace.py's TestABlankColumn pins both sets over the whole corpus, so a family that stops stating a fact names itself.",
+    "the_deferred_clone": "participant_timeline clones a packet with `{**event}` and re-types it as true damage, so the tick inherits a `resistance_met` its own class cannot have. Stripping it there costs a line in a file whose file-length baseline it already sits exactly on, and the only zero-growth form replaces the spread with an unexplained dict comprehension in a per-tick loop. So the rule has one home instead: fight/ledger/trace._packet_line reads a resistance only for a class that meets one, whatever the event states."
   },
   "what_did_not_move": {
     "claim": "No number the engine computes moved. Every stated resistance is the value its own mitigation was handed, carried onto the event rather than recomputed.",

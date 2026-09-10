@@ -5,7 +5,7 @@ from ...ability_spec import AttackClass
 from ...survival.pricing import AuthoredDeclaration
 from ..autos.on_hit_stream import _active_lifesteal_amount
 from ..cast_slots import _damaging_cast_times
-from ..resists import _mitigate
+from ..resists import _mitigate, _resistance_met_fields
 from ..results import RotationResult, SwingStream
 from ..state import FightState, _damage_inputs
 
@@ -56,6 +56,7 @@ def _add_item_active_damage(state: FightState, rotation: RotationResult) -> None
                         AttackClass.OTHER.value,
                     )
                 ),
+                **_resistance_met_fields(source.damage_type, resists),
             }
         ]
         state.breakdown[source.breakdown_key] = {
@@ -98,6 +99,7 @@ def _add_item_active_damage(state: FightState, rotation: RotationResult) -> None
                 "time": active_time,
                 "damage": secondary_mitigated,
                 "damage_type": source.damage_type,
+                **_resistance_met_fields(source.damage_type, resists),
             }
             state.breakdown[secondary_key] = {
                 "name": f"{source.display_name} (secondary)",
@@ -212,6 +214,7 @@ def _add_auto_cooldown_strikes(
                     "time": proc_time,
                     "damage": mitigated / procs,
                     "damage_type": source.damage_type,
+                    **_resistance_met_fields(source.damage_type, resists),
                 }
                 for proc_time in proc_times
             ]

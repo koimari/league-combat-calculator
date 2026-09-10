@@ -9,6 +9,7 @@ from src.calculator.fight.ledger.trace import (
     NO_RAW_PUBLISHED,
     NO_STEP_MEASURED,
     UNACCOUNTED_ROW_TOTAL,
+    TraceLine,
     fight_trace,
 )
 from src.calculator.fight.results import CHAMPION_PRODUCER_PREFIX
@@ -189,21 +190,52 @@ class TestABlankColumn:
         )
         return recorded(champion, items)
 
-    def test_a_refused_line_carries_a_reason_and_no_number(self, titanic):
-        """A row whose step aggregates its packets before authoring them."""
-        refused = [
+    @pytest.fixture(name="refusing", scope="class")
+    def _refusing(self) -> tuple[TraceLine, ...]:
+        """Every line the whole corpus refuses a raw or a resistance for."""
+        withheld = {NO_RAW_PUBLISHED, NO_RESISTANCE_PUBLISHED}
+        return tuple(
             line
-            for line in fight_trace(titanic).lines
-            if NO_RAW_PUBLISHED in line.refusals
-        ]
-        assert {line.source for line in refused} == {
+            for champion, items in CORPUS_BUILDS
+            for line in fight_trace(recorded(champion, items)).lines
+            if withheld & set(line.refusals)
+        )
+
+    def test_a_refused_line_carries_a_reason_and_no_number(self, refusing):
+        """A refusal is never a number: the column it names is blank."""
+        assert refusing
+        for line in refusing:
+            if NO_RAW_PUBLISHED in line.refusals:
+                assert line.raw is None, line.source
+            if NO_RESISTANCE_PUBLISHED in line.refusals:
+                assert line.resistance_met is None, line.source
+
+    def test_the_corpus_names_every_source_that_still_refuses_a_raw(self, refusing):
+        """Four families, each a row whose step aggregates its packets before
+        authoring them, so no per-instance magnitude is ever in hand."""
+        assert {
+            line.source for line in refusing if NO_RAW_PUBLISHED in line.refusals
+        } == {
             "active_Titanic Hydra",
+            "muramana_ability",
+            "shadowflame_Shadowflame",
             "stacking_dot_passive",
         }
-        for line in refused:
-            assert line.raw is None
-            assert line.resistance_met is None
-            assert NO_RESISTANCE_PUBLISHED in line.refusals
+
+    def test_the_corpus_names_every_source_that_still_refuses_a_resistance(
+        self, refusing
+    ):
+        """Two shapes, and neither is a mitigation site that forgot to stamp.
+
+        Ahri W and R publish no per-hit events, so the packet the ledger
+        synthesizes for their coarse rows passed through no mitigation this
+        trace can read one off.  Cinderbloom takes a share of an already
+        mitigated packet and meets nothing of its own, the way an amplifier
+        does.
+        """
+        assert {
+            line.source for line in refusing if NO_RESISTANCE_PUBLISHED in line.refusals
+        } == {"R", "W", "shadowflame_Shadowflame"}
 
     def test_true_damage_states_no_resistance_and_refuses_nothing(self, titanic):
         """It met none, so the blank is the fact rather than a withheld one."""
