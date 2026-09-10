@@ -1,5 +1,10 @@
 .calculator-timeline {
+  display: grid;
+  gap: 14px;
   margin: 0 0 28px;
+}
+.calculator-timeline > .calculator-section-heading {
+  margin: 0;
 }
 .calculator-timeline-grid {
   display: grid;
