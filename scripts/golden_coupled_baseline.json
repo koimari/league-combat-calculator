@@ -54392,9 +54392,9 @@
             "healing_output": 0.0,
             "healing_received": 0.0,
             "healing_reduced": 0.0,
-            "health_damage": 2196.2,
-            "incoming_damage": 2196.2,
-            "outgoing_damage_before_death": 3472.2,
+            "health_damage": 2146.2,
+            "incoming_damage": 2146.2,
+            "outgoing_damage_before_death": 3676.2,
             "participant_id": "main",
             "shield_absorbed": 0.0,
             "sources": [
@@ -54403,16 +54403,12 @@
                 "total_damage": 408.0
               },
               {
-                "name": "Auto Attacks",
-                "total_damage": 1054.4
-              },
-              {
-                "name": "Deadly Plumage",
-                "total_damage": 97.1
-              },
-              {
                 "name": "Bladecaller",
                 "total_damage": 1433.5
+              },
+              {
+                "name": "Auto Attacks",
+                "total_damage": 1355.6
               },
               {
                 "name": "Featherstorm",
@@ -54423,7 +54419,7 @@
             "support_value": 4.2,
             "survived_window": true,
             "team": "main",
-            "total_damage": 3472.2,
+            "total_damage": 3676.2,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -54480,9 +54476,9 @@
             "healing_output": 0.0,
             "healing_received": 0.0,
             "healing_reduced": 0.0,
-            "health_damage": 1869.5,
-            "incoming_damage": 1869.5,
-            "outgoing_damage_before_death": 2398.1,
+            "health_damage": 1825.7,
+            "incoming_damage": 1825.7,
+            "outgoing_damage_before_death": 2332.7,
             "participant_id": "ally:Pantheon",
             "shield_absorbed": 0.0,
             "sources": [
@@ -54500,18 +54496,18 @@
               },
               {
                 "name": "Auto Attacks",
-                "total_damage": 678.9
+                "total_damage": 620.6
               },
               {
                 "name": "Comet Spear",
-                "total_damage": 417.9
+                "total_damage": 410.8
               }
             ],
             "support_shield_received": 0.0,
             "support_value": 0.0,
             "survived_window": true,
             "team": "ally",
-            "total_damage": 2398.1,
+            "total_damage": 2332.7,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -54564,12 +54560,12 @@
           {
             "champion": "Aatrox",
             "death_time": null,
-            "effective_health": 5440.3,
+            "effective_health": 5493.2,
             "healing_output": 0.0,
-            "healing_received": 2852.3,
+            "healing_received": 2905.2,
             "healing_reduced": 0.0,
-            "health_damage": 3454.3,
-            "incoming_damage": 3454.3,
+            "health_damage": 3593.0,
+            "incoming_damage": 3593.0,
             "outgoing_damage_before_death": 3878.2,
             "participant_id": "enemy:Aatrox",
             "shield_absorbed": 0.0,
@@ -54649,27 +54645,27 @@
           },
           {
             "champion": "Veigar",
-            "death_time": 3.65,
+            "death_time": 3.0,
             "effective_health": 2416.0,
             "healing_output": 0.0,
             "healing_received": 0.0,
             "healing_reduced": 0.0,
             "health_damage": 2416.0,
             "incoming_damage": 2416.0,
-            "outgoing_damage_before_death": 187.5,
+            "outgoing_damage_before_death": 93.8,
             "participant_id": "enemy:Veigar",
             "shield_absorbed": 0.0,
             "sources": [
               {
                 "name": "Auto Attacks",
-                "total_damage": 187.5
+                "total_damage": 93.8
               }
             ],
             "support_shield_received": 0.0,
             "support_value": 0.0,
             "survived_window": false,
             "team": "enemy",
-            "total_damage": 187.5,
+            "total_damage": 93.8,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -54766,10 +54762,6 @@
             "view_tag": "applied"
           },
           "breakdown[0].sources[3].total_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "breakdown[0].sources[4].total_damage": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -54994,13 +54986,11 @@
             "view_tag": "applied"
           },
           "events[100].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[100].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[100].pair_damage": {
@@ -55011,18 +55001,26 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[100].support_resistance_reduction[0].factor": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[100].support_resistance_reduction[0].fraction": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[100].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[101].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[101].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[101].pair_damage": {
@@ -55050,14 +55048,6 @@
             "view_tag": "applied"
           },
           "events[102].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[102].support_resistance_reduction[0].factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[102].support_resistance_reduction[0].fraction": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -55108,13 +55098,11 @@
             "view_tag": "applied"
           },
           "events[105].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[105].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[105].pair_damage": {
@@ -55250,11 +55238,13 @@
             "view_tag": "applied"
           },
           "events[111].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[111].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[111].pair_damage": {
@@ -55614,11 +55604,13 @@
             "view_tag": "applied"
           },
           "events[16].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[16].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[16].pair_damage": {
@@ -55634,11 +55626,13 @@
             "view_tag": "applied"
           },
           "events[17].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[17].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[17].pair_damage": {
@@ -55654,13 +55648,11 @@
             "view_tag": "applied"
           },
           "events[18].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[18].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[18].pair_damage": {
@@ -55676,13 +55668,11 @@
             "view_tag": "applied"
           },
           "events[19].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[19].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[19].pair_damage": {
@@ -55733,6 +55723,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[20].support_resistance_reduction[0].factor": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[20].support_resistance_reduction[0].fraction": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[20].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -55758,11 +55756,13 @@
             "view_tag": "applied"
           },
           "events[22].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[22].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[22].pair_damage": {
@@ -55773,24 +55773,18 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[22].support_resistance_reduction[0].factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[22].support_resistance_reduction[0].fraction": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[22].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[23].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[23].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[23].pair_damage": {
@@ -55806,13 +55800,11 @@
             "view_tag": "applied"
           },
           "events[24].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[24].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[24].pair_damage": {
@@ -55828,13 +55820,11 @@
             "view_tag": "applied"
           },
           "events[25].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[25].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[25].pair_damage": {
@@ -55889,6 +55879,22 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[28].cc_duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[28].control_source_atoms[0].values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[28].crowd_control.duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[28].crowd_control.until": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[28].damage": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -55906,6 +55912,22 @@
             "view_tag": "applied"
           },
           "events[28].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[29].cc_duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[29].control_source_atoms[0].values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[29].crowd_control.duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[29].crowd_control.until": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -55961,28 +55983,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[30].cc_duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[30].control_source_atoms[0].values[0]": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[30].crowd_control.duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[30].crowd_control.until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[30].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[30].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[30].pair_damage": {
@@ -55997,28 +56005,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[31].cc_duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[31].control_source_atoms[0].values[0]": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[31].crowd_control.duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[31].crowd_control.until": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[31].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[31].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[31].pair_damage": {
@@ -56078,13 +56072,11 @@
             "view_tag": "applied"
           },
           "events[34].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[34].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[34].pair_damage": {
@@ -56100,13 +56092,11 @@
             "view_tag": "applied"
           },
           "events[35].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[35].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[35].pair_damage": {
@@ -56121,12 +56111,18 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[36].damage": {
+          "events[36].cc_duration": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[36].damage": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
+            "view_tag": "applied"
+          },
           "events[36].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[36].pair_damage": {
@@ -56141,12 +56137,18 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[37].damage": {
+          "events[37].cc_duration": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[37].damage": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
+            "view_tag": "applied"
+          },
           "events[37].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[37].pair_damage": {
@@ -56161,18 +56163,12 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[38].cc_duration": {
+          "events[38].damage": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[38].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
-            "view_tag": "applied"
-          },
           "events[38].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[38].pair_damage": {
@@ -56183,22 +56179,24 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[38].support_resistance_reduction[0].factor": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[38].support_resistance_reduction[0].fraction": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[38].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[39].cc_duration": {
+          "events[39].damage": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[39].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
-            "view_tag": "applied"
-          },
           "events[39].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[39].pair_damage": {
@@ -56246,11 +56244,13 @@
             "view_tag": "applied"
           },
           "events[40].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[40].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[40].pair_damage": {
@@ -56261,24 +56261,18 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[40].support_resistance_reduction[0].factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[40].support_resistance_reduction[0].fraction": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[40].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[41].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[41].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[41].pair_damage": {
@@ -56426,13 +56420,11 @@
             "view_tag": "applied"
           },
           "events[48].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[48].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[48].pair_damage": {
@@ -56448,13 +56440,11 @@
             "view_tag": "applied"
           },
           "events[49].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[49].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[49].pair_damage": {
@@ -56492,11 +56482,13 @@
             "view_tag": "applied"
           },
           "events[50].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[50].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[50].pair_damage": {
@@ -56512,11 +56504,13 @@
             "view_tag": "applied"
           },
           "events[51].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[51].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[51].pair_damage": {
@@ -56532,13 +56526,11 @@
             "view_tag": "applied"
           },
           "events[52].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[52].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[52].pair_damage": {
@@ -56554,13 +56546,11 @@
             "view_tag": "applied"
           },
           "events[53].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[53].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[53].pair_damage": {
@@ -56588,6 +56578,14 @@
             "view_tag": "applied"
           },
           "events[54].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[54].support_resistance_reduction[0].factor": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[54].support_resistance_reduction[0].fraction": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -56628,14 +56626,6 @@
             "view_tag": "applied"
           },
           "events[56].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[56].support_resistance_reduction[0].factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[56].support_resistance_reduction[0].fraction": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -56974,11 +56964,13 @@
             "view_tag": "applied"
           },
           "events[71].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[71].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[71].pair_damage": {
@@ -57074,11 +57066,13 @@
             "view_tag": "applied"
           },
           "events[76].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[76].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[76].pair_damage": {
@@ -57094,11 +57088,13 @@
             "view_tag": "applied"
           },
           "events[77].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[77].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[77].pair_damage": {
@@ -57129,16 +57125,26 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[78].support_resistance_reduction[0].factor": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[78].support_resistance_reduction[0].fraction": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[78].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[79].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[79].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[79].pair_damage": {
@@ -57174,11 +57180,13 @@
             "view_tag": "applied"
           },
           "events[80].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[80].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[80].pair_damage": {
@@ -57189,26 +57197,18 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[80].support_resistance_reduction[0].factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[80].support_resistance_reduction[0].fraction": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[80].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[81].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[81].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[81].pair_damage": {
@@ -57224,13 +57224,11 @@
             "view_tag": "applied"
           },
           "events[82].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[82].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[82].pair_damage": {
@@ -57247,12 +57245,12 @@
           },
           "events[83].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[83].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[83].pair_damage": {
@@ -57348,11 +57346,13 @@
             "view_tag": "applied"
           },
           "events[88].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[88].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[88].pair_damage": {
@@ -57369,12 +57369,12 @@
           },
           "events[89].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[89].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[89].pair_damage": {
@@ -57410,13 +57410,11 @@
             "view_tag": "applied"
           },
           "events[90].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[90].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[90].pair_damage": {
@@ -57427,18 +57425,26 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[90].support_resistance_reduction[0].factor": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[90].support_resistance_reduction[0].fraction": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[90].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[91].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[91].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[91].pair_damage": {
@@ -57466,14 +57472,6 @@
             "view_tag": "applied"
           },
           "events[92].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[92].support_resistance_reduction[0].factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[92].support_resistance_reduction[0].fraction": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -57584,11 +57582,13 @@
             "view_tag": "applied"
           },
           "events[98].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[98].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[98].pair_damage": {
@@ -57605,12 +57605,12 @@
           },
           "events[99].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[99].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[99].pair_damage": {
@@ -61699,34 +61699,6 @@
             "time": 0.0
           },
           {
-            "attacker": "main",
-            "damage": 85.8,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:1",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 85.8,
-            "raw_damage": 164.0,
-            "sequence": 8,
-            "source": "auto_attacks",
-            "target": "enemy:Aatrox",
-            "time": 0.0
-          },
-          {
-            "attacker": "main",
-            "damage": 90.8,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Veigar:1",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 90.8,
-            "raw_damage": 164.0,
-            "sequence": 8,
-            "source": "auto_attacks",
-            "target": "enemy:Veigar",
-            "time": 0.0
-          },
-          {
             "attacker": "enemy:Aatrox",
             "damage": 0.0,
             "damage_type": "magic",
@@ -61762,7 +61734,7 @@
             "cc_kind": "none",
             "damage": 66.7,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:2",
+            "event_id": "main:enemy:Aatrox:1",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 66.7,
@@ -61779,7 +61751,7 @@
             "cc_kind": "none",
             "damage": 70.6,
             "damage_type": "physical",
-            "event_id": "main:enemy:Veigar:2",
+            "event_id": "main:enemy:Veigar:1",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 70.6,
@@ -61794,20 +61766,20 @@
             "area_damage": true,
             "attacker": "ally:Pantheon",
             "cc_kind": "none",
-            "damage": 209.1,
+            "damage": 202.1,
             "damage_type": "physical",
             "event_id": "ally:Pantheon:enemy:Aatrox:4",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 209.1,
+            "pair_damage": 202.1,
             "raw_damage": 430.0,
             "sequence": 3,
             "skillshot": true,
             "source": "Q",
             "support_resistance_reduction": [
               {
-                "factor": 1.07,
-                "fraction": 0.12,
+                "factor": 1.03,
+                "fraction": 0.06,
                 "source": "Black Cleaver \u2014 Carve",
                 "type": "armor_reduction_percent"
               }
@@ -61867,48 +61839,16 @@
             "time": 0.25
           },
           {
-            "attacker": "main",
-            "cc_kind": "none",
-            "damage": 47.2,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:3",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 47.2,
-            "raw_damage": 90.2,
-            "sequence": 4,
-            "skillshot": true,
-            "source": "W",
-            "target": "enemy:Aatrox",
-            "time": 0.25
-          },
-          {
-            "attacker": "main",
-            "cc_kind": "none",
-            "damage": 50.0,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Veigar:3",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 50.0,
-            "raw_damage": 90.2,
-            "sequence": 4,
-            "skillshot": true,
-            "source": "W",
-            "target": "enemy:Veigar",
-            "time": 0.25
-          },
-          {
             "area_damage": true,
             "attacker": "main",
             "damage": 468.6,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:4",
+            "event_id": "main:enemy:Aatrox:2",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 468.6,
             "raw_damage": 448.0,
-            "sequence": 5,
+            "sequence": 4,
             "skillshot": true,
             "source": "E",
             "target": "enemy:Aatrox",
@@ -61919,14 +61859,42 @@
             "attacker": "main",
             "damage": 496.2,
             "damage_type": "physical",
-            "event_id": "main:enemy:Veigar:4",
+            "event_id": "main:enemy:Veigar:2",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 496.2,
             "raw_damage": 448.0,
-            "sequence": 5,
+            "sequence": 4,
             "skillshot": true,
             "source": "E",
+            "target": "enemy:Veigar",
+            "time": 0.25
+          },
+          {
+            "attacker": "main",
+            "damage": 107.2,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Aatrox:3",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 107.2,
+            "raw_damage": 205.0,
+            "sequence": 7,
+            "source": "auto_attacks",
+            "target": "enemy:Aatrox",
+            "time": 0.25
+          },
+          {
+            "attacker": "main",
+            "damage": 113.5,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Veigar:3",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 113.5,
+            "raw_damage": 205.0,
+            "sequence": 7,
+            "source": "auto_attacks",
             "target": "enemy:Veigar",
             "time": 0.25
           },
@@ -62080,31 +62048,31 @@
           },
           {
             "attacker": "main",
-            "damage": 85.8,
+            "damage": 107.2,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:5",
+            "event_id": "main:enemy:Aatrox:4",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 85.8,
-            "raw_damage": 164.0,
-            "sequence": 9,
+            "pair_damage": 107.2,
+            "raw_damage": 205.0,
+            "sequence": 8,
             "source": "auto_attacks",
             "target": "enemy:Aatrox",
-            "time": 0.91
+            "time": 0.94
           },
           {
             "attacker": "main",
-            "damage": 90.8,
+            "damage": 113.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Veigar:5",
+            "event_id": "main:enemy:Veigar:4",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 90.8,
-            "raw_damage": 164.0,
-            "sequence": 9,
+            "pair_damage": 113.5,
+            "raw_damage": 205.0,
+            "sequence": 8,
             "source": "auto_attacks",
             "target": "enemy:Veigar",
-            "time": 0.91
+            "time": 0.94
           },
           {
             "attacker": "enemy:Veigar",
@@ -62306,12 +62274,12 @@
             "cc_kind": "none",
             "damage": 232.7,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:6",
+            "event_id": "main:enemy:Aatrox:5",
             "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 232.7,
             "raw_damage": 445.0,
-            "sequence": 7,
+            "sequence": 6,
             "skillshot": true,
             "source": "R",
             "target": "enemy:Aatrox",
@@ -62323,12 +62291,12 @@
             "cc_kind": "none",
             "damage": 246.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Veigar:6",
+            "event_id": "main:enemy:Veigar:5",
             "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 246.5,
             "raw_damage": 445.0,
-            "sequence": 7,
+            "sequence": 6,
             "skillshot": true,
             "source": "R",
             "target": "enemy:Veigar",
@@ -62370,31 +62338,31 @@
           },
           {
             "attacker": "main",
-            "damage": 85.8,
+            "damage": 107.2,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:7",
+            "event_id": "main:enemy:Aatrox:6",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 85.8,
-            "raw_damage": 164.0,
-            "sequence": 10,
+            "pair_damage": 107.2,
+            "raw_damage": 205.0,
+            "sequence": 9,
             "source": "auto_attacks",
             "target": "enemy:Aatrox",
-            "time": 1.83
+            "time": 1.62
           },
           {
             "attacker": "main",
-            "damage": 90.8,
+            "damage": 113.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Veigar:7",
+            "event_id": "main:enemy:Veigar:6",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 90.8,
-            "raw_damage": 164.0,
-            "sequence": 10,
+            "pair_damage": 113.5,
+            "raw_damage": 205.0,
+            "sequence": 9,
             "source": "auto_attacks",
             "target": "enemy:Veigar",
-            "time": 1.83
+            "time": 1.62
           },
           {
             "attacker": "ally:Pantheon",
@@ -62521,6 +62489,34 @@
             "time": 2.25
           },
           {
+            "attacker": "main",
+            "damage": 107.2,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Aatrox:7",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 107.2,
+            "raw_damage": 205.0,
+            "sequence": 10,
+            "source": "auto_attacks",
+            "target": "enemy:Aatrox",
+            "time": 2.31
+          },
+          {
+            "attacker": "main",
+            "damage": 113.5,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Veigar:7",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 113.5,
+            "raw_damage": 205.0,
+            "sequence": 10,
+            "source": "auto_attacks",
+            "target": "enemy:Veigar",
+            "time": 2.31
+          },
+          {
             "attacker": "enemy:Veigar",
             "damage": 43.8,
             "damage_type": "physical",
@@ -62582,31 +62578,31 @@
           },
           {
             "attacker": "main",
-            "damage": 85.8,
+            "damage": 107.2,
             "damage_type": "physical",
             "event_id": "main:enemy:Aatrox:8",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 85.8,
-            "raw_damage": 164.0,
+            "pair_damage": 107.2,
+            "raw_damage": 205.0,
             "sequence": 11,
             "source": "auto_attacks",
             "target": "enemy:Aatrox",
-            "time": 2.74
+            "time": 3.0
           },
           {
             "attacker": "main",
-            "damage": 90.8,
+            "damage": 22.3,
             "damage_type": "physical",
             "event_id": "main:enemy:Veigar:8",
             "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 90.8,
-            "raw_damage": 164.0,
+            "overkill": 91.2,
+            "pair_damage": 113.5,
+            "raw_damage": 205.0,
             "sequence": 11,
             "source": "auto_attacks",
             "target": "enemy:Veigar",
-            "time": 2.74
+            "time": 3.0
           },
           {
             "attacker": "ally:Pantheon",
@@ -62632,7 +62628,7 @@
           },
           {
             "attacker": "ally:Pantheon",
-            "damage": 58.3,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "ally:Pantheon:enemy:Veigar:7",
             "event_precision": "exact",
@@ -62640,6 +62636,7 @@
             "pair_damage": 58.3,
             "raw_damage": 120.0,
             "sequence": 7,
+            "skipped_reason": "target_dead",
             "source": "auto_attacks",
             "target": "enemy:Veigar",
             "time": 3.04
@@ -62702,7 +62699,7 @@
           },
           {
             "attacker": "enemy:Veigar",
-            "damage": 43.8,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Veigar:ally:Pantheon:6",
             "event_precision": "exact",
@@ -62710,13 +62707,14 @@
             "pair_damage": 43.8,
             "raw_damage": 98.0,
             "sequence": 7,
+            "skipped_reason": "attacker_dead",
             "source": "auto_attacks",
             "target": "ally:Pantheon",
             "time": 3.48
           },
           {
             "attacker": "enemy:Veigar",
-            "damage": 50.0,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Veigar:main:6",
             "event_precision": "exact",
@@ -62724,37 +62722,10 @@
             "pair_damage": 50.0,
             "raw_damage": 98.0,
             "sequence": 7,
+            "skipped_reason": "attacker_dead",
             "source": "auto_attacks",
             "target": "main",
             "time": 3.48
-          },
-          {
-            "attacker": "main",
-            "damage": 85.8,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:9",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 85.8,
-            "raw_damage": 164.0,
-            "sequence": 12,
-            "source": "auto_attacks",
-            "target": "enemy:Aatrox",
-            "time": 3.65
-          },
-          {
-            "attacker": "main",
-            "damage": 4.9,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Veigar:9",
-            "event_precision": "exact",
-            "overkill": 85.9,
-            "pair_damage": 90.8,
-            "raw_damage": 164.0,
-            "sequence": 12,
-            "source": "auto_attacks",
-            "target": "enemy:Veigar",
-            "time": 3.65
           },
           {
             "attacker": "ally:Pantheon",
@@ -62830,6 +62801,35 @@
             "time": 4.25
           },
           {
+            "attacker": "main",
+            "damage": 85.8,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Aatrox:9",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 85.8,
+            "raw_damage": 164.0,
+            "sequence": 12,
+            "source": "auto_attacks",
+            "target": "enemy:Aatrox",
+            "time": 4.25
+          },
+          {
+            "attacker": "main",
+            "damage": 0.0,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Veigar:9",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 90.8,
+            "raw_damage": 164.0,
+            "sequence": 12,
+            "skipped_reason": "target_dead",
+            "source": "auto_attacks",
+            "target": "enemy:Veigar",
+            "time": 4.25
+          },
+          {
             "attacker": "enemy:Aatrox",
             "damage": 90.6,
             "damage_type": "physical",
@@ -62884,35 +62884,6 @@
             "source": "on_hit_ability_passive",
             "target": "main",
             "time": 4.31
-          },
-          {
-            "attacker": "main",
-            "damage": 85.8,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:10",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 85.8,
-            "raw_damage": 164.0,
-            "sequence": 13,
-            "source": "auto_attacks",
-            "target": "enemy:Aatrox",
-            "time": 4.57
-          },
-          {
-            "attacker": "main",
-            "damage": 0.0,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Veigar:10",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 90.8,
-            "raw_damage": 164.0,
-            "sequence": 13,
-            "skipped_reason": "target_dead",
-            "source": "auto_attacks",
-            "target": "enemy:Veigar",
-            "time": 4.57
           },
           {
             "attacker": "enemy:Veigar",
@@ -62982,6 +62953,35 @@
             "time": 5.06
           },
           {
+            "attacker": "main",
+            "damage": 85.8,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Aatrox:10",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 85.8,
+            "raw_damage": 164.0,
+            "sequence": 13,
+            "source": "auto_attacks",
+            "target": "enemy:Aatrox",
+            "time": 5.16
+          },
+          {
+            "attacker": "main",
+            "damage": 0.0,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Veigar:10",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 90.8,
+            "raw_damage": 164.0,
+            "sequence": 13,
+            "skipped_reason": "target_dead",
+            "source": "auto_attacks",
+            "target": "enemy:Veigar",
+            "time": 5.16
+          },
+          {
             "attacker": "enemy:Aatrox",
             "damage": 90.6,
             "damage_type": "physical",
@@ -63036,35 +63036,6 @@
             "source": "on_hit_ability_passive",
             "target": "main",
             "time": 5.39
-          },
-          {
-            "attacker": "main",
-            "damage": 85.8,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:11",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 85.8,
-            "raw_damage": 164.0,
-            "sequence": 14,
-            "source": "auto_attacks",
-            "target": "enemy:Aatrox",
-            "time": 5.48
-          },
-          {
-            "attacker": "main",
-            "damage": 0.0,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Veigar:11",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 90.8,
-            "raw_damage": 164.0,
-            "sequence": 14,
-            "skipped_reason": "target_dead",
-            "source": "auto_attacks",
-            "target": "enemy:Veigar",
-            "time": 5.48
           },
           {
             "attacker": "enemy:Veigar",
@@ -63137,30 +63108,30 @@
             "attacker": "main",
             "damage": 85.8,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:12",
+            "event_id": "main:enemy:Aatrox:11",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 85.8,
             "raw_damage": 164.0,
-            "sequence": 15,
+            "sequence": 14,
             "source": "auto_attacks",
             "target": "enemy:Aatrox",
-            "time": 6.4
+            "time": 6.08
           },
           {
             "attacker": "main",
             "damage": 0.0,
             "damage_type": "physical",
-            "event_id": "main:enemy:Veigar:12",
+            "event_id": "main:enemy:Veigar:11",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 90.8,
             "raw_damage": 164.0,
-            "sequence": 15,
+            "sequence": 14,
             "skipped_reason": "target_dead",
             "source": "auto_attacks",
             "target": "enemy:Veigar",
-            "time": 6.4
+            "time": 6.08
           },
           {
             "attacker": "enemy:Aatrox",
@@ -63256,7 +63227,7 @@
             "cc_kind": "none",
             "damage": 66.7,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:13",
+            "event_id": "main:enemy:Aatrox:12",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 66.7,
@@ -63273,7 +63244,7 @@
             "cc_kind": "none",
             "damage": 0.0,
             "damage_type": "physical",
-            "event_id": "main:enemy:Veigar:13",
+            "event_id": "main:enemy:Veigar:12",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 70.6,
@@ -63284,6 +63255,35 @@
             "source": "Q",
             "target": "enemy:Veigar",
             "time": 6.92
+          },
+          {
+            "attacker": "main",
+            "damage": 85.8,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Aatrox:13",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 85.8,
+            "raw_damage": 164.0,
+            "sequence": 15,
+            "source": "auto_attacks",
+            "target": "enemy:Aatrox",
+            "time": 6.99
+          },
+          {
+            "attacker": "main",
+            "damage": 0.0,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Veigar:13",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 90.8,
+            "raw_damage": 164.0,
+            "sequence": 15,
+            "skipped_reason": "target_dead",
+            "source": "auto_attacks",
+            "target": "enemy:Veigar",
+            "time": 6.99
           },
           {
             "area_damage": true,
@@ -63406,7 +63406,7 @@
             "overkill": 0.0,
             "pair_damage": 468.6,
             "raw_damage": 448.0,
-            "sequence": 6,
+            "sequence": 5,
             "skillshot": true,
             "source": "E",
             "target": "enemy:Aatrox",
@@ -63422,7 +63422,7 @@
             "overkill": 0.0,
             "pair_damage": 496.2,
             "raw_damage": 448.0,
-            "sequence": 6,
+            "sequence": 5,
             "skillshot": true,
             "skipped_reason": "target_dead",
             "source": "E",
@@ -64040,11 +64040,11 @@
           },
           {
             "amount": 374.9,
-            "applied_amount": 139.4,
+            "applied_amount": 278.2,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:17:main",
             "healing_reduction_factor": 1.0,
-            "overheal": 235.5,
+            "overheal": 96.7,
             "raw_amount": 374.9,
             "reduced_amount": 374.9,
             "source": "Deathbringer Stance",
@@ -64205,11 +64205,11 @@
           },
           {
             "amount": 307.1,
-            "applied_amount": 174.6,
+            "applied_amount": 88.8,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:23:ally:Pantheon",
             "healing_reduction_factor": 1.0,
-            "overheal": 132.5,
+            "overheal": 218.3,
             "raw_amount": 307.1,
             "reduced_amount": 307.1,
             "source": "Deathbringer Stance",
@@ -64328,9 +64328,9 @@
         ],
         "item_denial_receipts": [],
         "objective": {
-          "enemy_team_damage_before_death": 4065.7,
-          "enemy_team_effective_health": 7856.3,
-          "focus_damage_before_death": 3472.2,
+          "enemy_team_damage_before_death": 3972.0,
+          "enemy_team_effective_health": 7909.2,
+          "focus_damage_before_death": 3676.2,
           "focus_healing": 0.0,
           "focus_participant_id": "main",
           "focus_support_value": 4.2,
@@ -64350,14 +64350,14 @@
             "damage_deferral_cleared": 0.0,
             "damage_deferral_fraction": 0.0,
             "damage_deferral_pending": 0.0,
-            "damage_taken": 2196.2,
+            "damage_taken": 2146.2,
             "death_time": null,
             "defy_heal_received": 0.0,
             "defy_trigger_time": null,
             "defy_triggered": false,
             "effective_health": 2849.0,
-            "ending_health": 652.8,
-            "ending_health_ratio": 0.23,
+            "ending_health": 702.8,
+            "ending_health_ratio": 0.25,
             "execute_source": "",
             "execute_time": null,
             "first_death_time": null,
@@ -64376,7 +64376,7 @@
             "healing_reduction_events": [],
             "healing_reduction_until": 0.0,
             "healing_reduction_window_sources": [],
-            "health_damage": 2196.2,
+            "health_damage": 2146.2,
             "invulnerable_until": 0.0,
             "jaksho": {
               "dynamic_bonus_armor": 0.0,
@@ -64471,7 +64471,7 @@
               "ward_uses": 0
             }
           },
-          "main_team_damage_before_death": 5870.3,
+          "main_team_damage_before_death": 6008.9,
           "main_team_effective_health": 5352.0,
           "surviving_main_team": 2,
           "total_healing_reduced": 0.0,
@@ -64546,14 +64546,14 @@
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 2196.2,
+              "damage_taken": 2146.2,
               "death_time": null,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
               "effective_health": 2849.0,
-              "ending_health": 652.8,
-              "ending_health_ratio": 0.23,
+              "ending_health": 702.8,
+              "ending_health_ratio": 0.25,
               "execute_source": "",
               "execute_time": null,
               "first_death_time": null,
@@ -64572,7 +64572,7 @@
               "healing_reduction_events": [],
               "healing_reduction_until": 0.0,
               "healing_reduction_window_sources": [],
-              "health_damage": 2196.2,
+              "health_damage": 2146.2,
               "invulnerable_until": 0.0,
               "jaksho": {
                 "dynamic_bonus_armor": 0.0,
@@ -64685,14 +64685,14 @@
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 1869.5,
+              "damage_taken": 1825.7,
               "death_time": null,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
               "effective_health": 2503.0,
-              "ending_health": 633.5,
-              "ending_health_ratio": 0.25,
+              "ending_health": 677.3,
+              "ending_health_ratio": 0.27,
               "execute_source": "",
               "execute_time": null,
               "first_death_time": null,
@@ -64711,7 +64711,7 @@
               "healing_reduction_events": [],
               "healing_reduction_until": 0.0,
               "healing_reduction_window_sources": [],
-              "health_damage": 1869.5,
+              "health_damage": 1825.7,
               "invulnerable_until": 0.0,
               "jaksho": {
                 "dynamic_bonus_armor": 0.0,
@@ -64868,14 +64868,14 @@
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 3454.3,
+              "damage_taken": 3593.0,
               "death_time": null,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
-              "effective_health": 5440.3,
-              "ending_health": 1986.0,
-              "ending_health_ratio": 0.77,
+              "effective_health": 5493.2,
+              "ending_health": 1900.2,
+              "ending_health_ratio": 0.73,
               "execute_source": "",
               "execute_time": null,
               "first_death_time": null,
@@ -64889,12 +64889,12 @@
                 "cooldown_until": 0.0,
                 "trigger_events": []
               },
-              "healing_received": 2852.3,
+              "healing_received": 2905.2,
               "healing_reduced": 0.0,
               "healing_reduction_events": [],
               "healing_reduction_until": 0.0,
               "healing_reduction_window_sources": [],
-              "health_damage": 3454.3,
+              "health_damage": 3593.0,
               "invulnerable_until": 0.0,
               "jaksho": {
                 "dynamic_bonus_armor": 0.0,
@@ -64903,7 +64903,7 @@
                 "stacks": 0
               },
               "max_health": 2588.0,
-              "overhealing": 1798.7,
+              "overhealing": 1745.7,
               "overkill": 0.0,
               "permanent_bonus_health_events": [],
               "permanent_bonus_health_received": 0.0,
@@ -64992,7 +64992,7 @@
             },
             "stats_state": "pre_combat",
             "survival": {
-              "action_downtime": 5.84,
+              "action_downtime": 6.5,
               "action_downtime_intervals": [
                 {
                   "end": 1.0,
@@ -65013,7 +65013,7 @@
                   "kind": "death",
                   "recipient": "enemy:Veigar",
                   "source": "auto_attacks",
-                  "start": 3.66
+                  "start": 3.0
                 }
               ],
               "aftershock": {
@@ -65044,8 +65044,8 @@
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 2501.9,
-              "death_time": 3.65,
+              "damage_taken": 2507.2,
+              "death_time": 3.0,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
@@ -65054,7 +65054,7 @@
               "ending_health_ratio": 0.0,
               "execute_source": "",
               "execute_time": null,
-              "first_death_time": 3.65,
+              "first_death_time": 3.0,
               "force_of_nature": {
                 "dynamic_bonus_magic_resistance": 0.0,
                 "events": [],
@@ -65080,7 +65080,7 @@
               },
               "max_health": 2416.0,
               "overhealing": 0.0,
-              "overkill": 85.9,
+              "overkill": 91.2,
               "permanent_bonus_health_events": [],
               "permanent_bonus_health_received": 0.0,
               "projectile_defense": null,
@@ -65148,7 +65148,7 @@
             "attacker": "main",
             "duration": 6.0,
             "event_id": "enemy:Aatrox:support:1",
-            "expires_at": 6.0,
+            "expires_at": 6.1,
             "kind": "damage_modifier",
             "owner": "main",
             "raw_amount": 0.12,
@@ -65161,7 +65161,7 @@
             "target_policy": "explicit_selected_roster_target",
             "target_scope": "one_teammate",
             "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 0.0
+            "time": 0.1
           },
           {
             "amount": 0.18,
@@ -65170,7 +65170,7 @@
             "attacker": "main",
             "duration": 6.0,
             "event_id": "enemy:Aatrox:support:2",
-            "expires_at": 6.1,
+            "expires_at": 6.25,
             "kind": "damage_modifier",
             "owner": "main",
             "raw_amount": 0.18,
@@ -65183,7 +65183,7 @@
             "target_policy": "explicit_selected_roster_target",
             "target_scope": "one_teammate",
             "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 0.1
+            "time": 0.25
           },
           {
             "amount": 0.24,
@@ -65214,7 +65214,7 @@
             "attacker": "main",
             "duration": 6.0,
             "event_id": "enemy:Aatrox:support:4",
-            "expires_at": 6.25,
+            "expires_at": 6.94,
             "kind": "damage_modifier",
             "owner": "main",
             "raw_amount": 0.3,
@@ -65227,7 +65227,7 @@
             "target_policy": "explicit_selected_roster_target",
             "target_scope": "one_teammate",
             "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 0.25
+            "time": 0.94
           },
           {
             "amount": 0.3,
@@ -65236,28 +65236,6 @@
             "attacker": "main",
             "duration": 6.0,
             "event_id": "enemy:Aatrox:support:5",
-            "expires_at": 6.91,
-            "kind": "damage_modifier",
-            "owner": "main",
-            "raw_amount": 0.3,
-            "recipient": "enemy:Aatrox",
-            "reduced_amount": 0.3,
-            "resistance_type": "armor",
-            "source": "Black Cleaver \u2014 Carve",
-            "stack_count": 5.0,
-            "target": "enemy:Aatrox",
-            "target_policy": "explicit_selected_roster_target",
-            "target_scope": "one_teammate",
-            "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 0.91
-          },
-          {
-            "amount": 0.3,
-            "applied_amount": 0.3,
-            "armor_reduction_percent": 0.3,
-            "attacker": "main",
-            "duration": 6.0,
-            "event_id": "enemy:Aatrox:support:6",
             "expires_at": 7.25,
             "kind": "damage_modifier",
             "owner": "main",
@@ -65279,8 +65257,8 @@
             "armor_reduction_percent": 0.3,
             "attacker": "main",
             "duration": 6.0,
-            "event_id": "enemy:Aatrox:support:7",
-            "expires_at": 7.83,
+            "event_id": "enemy:Aatrox:support:6",
+            "expires_at": 7.62,
             "kind": "damage_modifier",
             "owner": "main",
             "raw_amount": 0.3,
@@ -65293,7 +65271,29 @@
             "target_policy": "explicit_selected_roster_target",
             "target_scope": "one_teammate",
             "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 1.83
+            "time": 1.62
+          },
+          {
+            "amount": 0.3,
+            "applied_amount": 0.3,
+            "armor_reduction_percent": 0.3,
+            "attacker": "main",
+            "duration": 6.0,
+            "event_id": "enemy:Aatrox:support:7",
+            "expires_at": 8.31,
+            "kind": "damage_modifier",
+            "owner": "main",
+            "raw_amount": 0.3,
+            "recipient": "enemy:Aatrox",
+            "reduced_amount": 0.3,
+            "resistance_type": "armor",
+            "source": "Black Cleaver \u2014 Carve",
+            "stack_count": 5.0,
+            "target": "enemy:Aatrox",
+            "target_policy": "explicit_selected_roster_target",
+            "target_scope": "one_teammate",
+            "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
+            "time": 2.31
           },
           {
             "amount": 0.3,
@@ -65302,7 +65302,7 @@
             "attacker": "main",
             "duration": 6.0,
             "event_id": "enemy:Aatrox:support:8",
-            "expires_at": 8.74,
+            "expires_at": 9.0,
             "kind": "damage_modifier",
             "owner": "main",
             "raw_amount": 0.3,
@@ -65315,7 +65315,7 @@
             "target_policy": "explicit_selected_roster_target",
             "target_scope": "one_teammate",
             "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 2.74
+            "time": 3.0
           },
           {
             "amount": 0.3,
@@ -65324,7 +65324,7 @@
             "attacker": "main",
             "duration": 6.0,
             "event_id": "enemy:Aatrox:support:9",
-            "expires_at": 9.65,
+            "expires_at": 10.25,
             "kind": "damage_modifier",
             "owner": "main",
             "raw_amount": 0.3,
@@ -65337,7 +65337,7 @@
             "target_policy": "explicit_selected_roster_target",
             "target_scope": "one_teammate",
             "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 3.65
+            "time": 4.25
           },
           {
             "amount": 0.3,
@@ -65346,7 +65346,7 @@
             "attacker": "main",
             "duration": 6.0,
             "event_id": "enemy:Aatrox:support:10",
-            "expires_at": 10.57,
+            "expires_at": 11.16,
             "kind": "damage_modifier",
             "owner": "main",
             "raw_amount": 0.3,
@@ -65359,7 +65359,7 @@
             "target_policy": "explicit_selected_roster_target",
             "target_scope": "one_teammate",
             "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 4.57
+            "time": 5.16
           },
           {
             "amount": 0.3,
@@ -65368,7 +65368,7 @@
             "attacker": "main",
             "duration": 6.0,
             "event_id": "enemy:Aatrox:support:11",
-            "expires_at": 11.48,
+            "expires_at": 12.08,
             "kind": "damage_modifier",
             "owner": "main",
             "raw_amount": 0.3,
@@ -65381,7 +65381,7 @@
             "target_policy": "explicit_selected_roster_target",
             "target_scope": "one_teammate",
             "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 5.48
+            "time": 6.08
           },
           {
             "amount": 0.3,
@@ -65390,28 +65390,6 @@
             "attacker": "main",
             "duration": 6.0,
             "event_id": "enemy:Aatrox:support:12",
-            "expires_at": 12.4,
-            "kind": "damage_modifier",
-            "owner": "main",
-            "raw_amount": 0.3,
-            "recipient": "enemy:Aatrox",
-            "reduced_amount": 0.3,
-            "resistance_type": "armor",
-            "source": "Black Cleaver \u2014 Carve",
-            "stack_count": 5.0,
-            "target": "enemy:Aatrox",
-            "target_policy": "explicit_selected_roster_target",
-            "target_scope": "one_teammate",
-            "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 6.4
-          },
-          {
-            "amount": 0.3,
-            "applied_amount": 0.3,
-            "armor_reduction_percent": 0.3,
-            "attacker": "main",
-            "duration": 6.0,
-            "event_id": "enemy:Aatrox:support:13",
             "expires_at": 12.92,
             "kind": "damage_modifier",
             "owner": "main",
@@ -65426,6 +65404,28 @@
             "target_scope": "one_teammate",
             "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
             "time": 6.92
+          },
+          {
+            "amount": 0.3,
+            "applied_amount": 0.3,
+            "armor_reduction_percent": 0.3,
+            "attacker": "main",
+            "duration": 6.0,
+            "event_id": "enemy:Aatrox:support:13",
+            "expires_at": 12.99,
+            "kind": "damage_modifier",
+            "owner": "main",
+            "raw_amount": 0.3,
+            "recipient": "enemy:Aatrox",
+            "reduced_amount": 0.3,
+            "resistance_type": "armor",
+            "source": "Black Cleaver \u2014 Carve",
+            "stack_count": 5.0,
+            "target": "enemy:Aatrox",
+            "target_policy": "explicit_selected_roster_target",
+            "target_scope": "one_teammate",
+            "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
+            "time": 6.99
           },
           {
             "amount": 0.3,
@@ -65748,8 +65748,8 @@
       },
       "fights": {
         "0:Aatrox": {
-          "ability_damage": 1483.9,
-          "auto_attack_damage": 686.2,
+          "ability_damage": 1436.7,
+          "auto_attack_damage": 879.2,
           "auto_attack_policy": {
             "assumptions": [
               "No inferred player uptime; caller supplied the numeric value."
@@ -65761,8 +65761,8 @@
             "window_seconds": 8.0
           },
           "auto_attack_schedule": {
-            "expected_autos_per_rotation": 8.0,
-            "expected_autos_total": 8,
+            "expected_autos_per_rotation": 9.0,
+            "expected_autos_total": 9,
             "rotation_count": 1,
             "semantics": "sequential timed window; cooldowns, resources, cast lockouts, and item events follow the engine ledger",
             "status": "known",
@@ -65814,25 +65814,26 @@
               "count": null,
               "crit_damage_per_hit": null,
               "damage_per_hit": null,
+              "detail": "Deadly Plumage: +55% bonus attack speed for 4s from the W cast, and every attack inside the window fires an extra feather for 25% of its damage (the swings are priced at 125% AD)",
               "name": "Deadly Plumage",
               "non_crit_damage_per_hit": null,
               "num_crits": null,
               "num_non_crits": null,
               "total_amount": null,
-              "total_damage": 47.2,
+              "total_damage": 0.0,
               "unit": null
             },
             "auto_attacks": {
               "casts": null,
-              "count": 8,
+              "count": 9,
               "crit_damage_per_hit": null,
-              "damage_per_hit": 85.8,
+              "damage_per_hit": 97.7,
               "name": "Auto Attacks",
               "non_crit_damage_per_hit": 85.8,
               "num_crits": 0,
-              "num_non_crits": 8,
+              "num_non_crits": 9,
               "total_amount": null,
-              "total_damage": 686.2,
+              "total_damage": 879.2,
               "unit": null
             }
           },
@@ -65917,7 +65918,7 @@
             "armor_penetration_bonus_percent": 0.0,
             "armor_penetration_percent": 0.0,
             "attack_damage": 164,
-            "attack_speed": 1.09,
+            "attack_speed": 1.46,
             "attack_speed_ratio": 0.66,
             "base_attack_damage": 120,
             "base_health": 2449,
@@ -65925,7 +65926,7 @@
             "basic_ability_haste": 0.0,
             "bonus_armor": 0,
             "bonus_attack_damage": 45,
-            "bonus_attack_speed": 66.3,
+            "bonus_attack_speed": 121.3,
             "bonus_health": 400,
             "bonus_magic_resistance": 0,
             "bonus_mana": 0,
@@ -65957,7 +65958,7 @@
           "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 0.0,
-            "physical": 2170.1,
+            "physical": 2315.9,
             "true": 0.0
           },
           "damage_events": [
@@ -65972,13 +65973,6 @@
               "time": 0.0
             },
             {
-              "damage": 85.8,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 0.0
-            },
-            {
               "cc_kind": "none",
               "damage": 66.7,
               "damage_type": "physical",
@@ -65989,16 +65983,6 @@
               "time": 0.1
             },
             {
-              "cc_kind": "none",
-              "damage": 47.2,
-              "damage_type": "physical",
-              "event_precision": "exact",
-              "phase": "ability",
-              "skillshot": true,
-              "source": "W",
-              "time": 0.25
-            },
-            {
               "damage": 468.6,
               "damage_type": "physical",
               "phase": "ability",
@@ -66007,11 +65991,18 @@
               "time": 0.25
             },
             {
-              "damage": 85.8,
+              "damage": 107.2,
               "damage_type": "physical",
               "phase": "auto",
               "source": "auto_attacks",
-              "time": 0.91
+              "time": 0.25
+            },
+            {
+              "damage": 107.2,
+              "damage_type": "physical",
+              "phase": "auto",
+              "source": "auto_attacks",
+              "time": 0.94
             },
             {
               "cc_kind": "none",
@@ -66024,46 +66015,46 @@
               "time": 1.25
             },
             {
-              "damage": 85.8,
+              "damage": 107.2,
               "damage_type": "physical",
               "phase": "auto",
               "source": "auto_attacks",
-              "time": 1.83
+              "time": 1.62
+            },
+            {
+              "damage": 107.2,
+              "damage_type": "physical",
+              "phase": "auto",
+              "source": "auto_attacks",
+              "time": 2.31
+            },
+            {
+              "damage": 107.2,
+              "damage_type": "physical",
+              "phase": "auto",
+              "source": "auto_attacks",
+              "time": 3.0
             },
             {
               "damage": 85.8,
               "damage_type": "physical",
               "phase": "auto",
               "source": "auto_attacks",
-              "time": 2.74
+              "time": 4.25
             },
             {
               "damage": 85.8,
               "damage_type": "physical",
               "phase": "auto",
               "source": "auto_attacks",
-              "time": 3.65
+              "time": 5.16
             },
             {
               "damage": 85.8,
               "damage_type": "physical",
               "phase": "auto",
               "source": "auto_attacks",
-              "time": 4.57
-            },
-            {
-              "damage": 85.8,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 5.48
-            },
-            {
-              "damage": 85.8,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 6.4
+              "time": 6.08
             },
             {
               "cc_kind": "none",
@@ -66074,6 +66065,13 @@
               "skillshot": true,
               "source": "Q",
               "time": 6.92
+            },
+            {
+              "damage": 85.8,
+              "damage_type": "physical",
+              "phase": "auto",
+              "source": "auto_attacks",
+              "time": 6.99
             },
             {
               "cc_kind": "none",
@@ -66097,7 +66095,7 @@
           "effective_armor": 91.2,
           "effective_mr": 67.0,
           "general_shield_absorbed": 0.0,
-          "health_damage": 2170.1,
+          "health_damage": 2315.9,
           "magic_shield_absorbed": 0.0,
           "notes": [],
           "overkill": 0.0,
@@ -66331,7 +66329,7 @@
           "shield_absorbed": 0.0,
           "target_effective_health": 2588.0,
           "target_effective_max_health": 2588,
-          "target_ending_health": 417.9,
+          "target_ending_health": 272.1,
           "target_healing_received": 0.0,
           "threshold_health_bonus_gained": 0.0,
           "threshold_health_triggered": false,
@@ -66344,16 +66342,15 @@
               "E",
               "Q",
               "R",
-              "W",
               "auto_attacks"
             ],
             "note": "Every active damage source has authored event or cast-boundary order."
           },
-          "total_damage": 2170.1
+          "total_damage": 2315.9
         },
         "1:Veigar": {
-          "ability_damage": 1571.3,
-          "auto_attack_damage": 726.6,
+          "ability_damage": 1521.4,
+          "auto_attack_damage": 931.0,
           "auto_attack_policy": {
             "assumptions": [
               "No inferred player uptime; caller supplied the numeric value."
@@ -66365,8 +66362,8 @@
             "window_seconds": 8.0
           },
           "auto_attack_schedule": {
-            "expected_autos_per_rotation": 8.0,
-            "expected_autos_total": 8,
+            "expected_autos_per_rotation": 9.0,
+            "expected_autos_total": 9,
             "rotation_count": 1,
             "semantics": "sequential timed window; cooldowns, resources, cast lockouts, and item events follow the engine ledger",
             "status": "known",
@@ -66418,25 +66415,26 @@
               "count": null,
               "crit_damage_per_hit": null,
               "damage_per_hit": null,
+              "detail": "Deadly Plumage: +55% bonus attack speed for 4s from the W cast, and every attack inside the window fires an extra feather for 25% of its damage (the swings are priced at 125% AD)",
               "name": "Deadly Plumage",
               "non_crit_damage_per_hit": null,
               "num_crits": null,
               "num_non_crits": null,
               "total_amount": null,
-              "total_damage": 50.0,
+              "total_damage": 0.0,
               "unit": null
             },
             "auto_attacks": {
               "casts": null,
-              "count": 8,
+              "count": 9,
               "crit_damage_per_hit": null,
-              "damage_per_hit": 90.8,
+              "damage_per_hit": 103.4,
               "name": "Auto Attacks",
               "non_crit_damage_per_hit": 90.8,
               "num_crits": 0,
-              "num_non_crits": 8,
+              "num_non_crits": 9,
               "total_amount": null,
-              "total_damage": 726.6,
+              "total_damage": 931.0,
               "unit": null
             }
           },
@@ -66521,7 +66519,7 @@
             "armor_penetration_bonus_percent": 0.0,
             "armor_penetration_percent": 0.0,
             "attack_damage": 164,
-            "attack_speed": 1.09,
+            "attack_speed": 1.46,
             "attack_speed_ratio": 0.66,
             "base_attack_damage": 120,
             "base_health": 2449,
@@ -66529,7 +66527,7 @@
             "basic_ability_haste": 0.0,
             "bonus_armor": 0,
             "bonus_attack_damage": 45,
-            "bonus_attack_speed": 66.3,
+            "bonus_attack_speed": 121.3,
             "bonus_health": 400,
             "bonus_magic_resistance": 0,
             "bonus_mana": 0,
@@ -66561,7 +66559,7 @@
           "champion_stats_state": "fight_effective",
           "damage_by_type": {
             "magic": 0.0,
-            "physical": 2298.0,
+            "physical": 2452.4,
             "true": 0.0
           },
           "damage_events": [
@@ -66576,13 +66574,6 @@
               "time": 0.0
             },
             {
-              "damage": 90.8,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 0.0
-            },
-            {
               "cc_kind": "none",
               "damage": 70.6,
               "damage_type": "physical",
@@ -66593,16 +66584,6 @@
               "time": 0.1
             },
             {
-              "cc_kind": "none",
-              "damage": 50.0,
-              "damage_type": "physical",
-              "event_precision": "exact",
-              "phase": "ability",
-              "skillshot": true,
-              "source": "W",
-              "time": 0.25
-            },
-            {
               "damage": 496.2,
               "damage_type": "physical",
               "phase": "ability",
@@ -66611,11 +66592,18 @@
               "time": 0.25
             },
             {
-              "damage": 90.8,
+              "damage": 113.5,
               "damage_type": "physical",
               "phase": "auto",
               "source": "auto_attacks",
-              "time": 0.91
+              "time": 0.25
+            },
+            {
+              "damage": 113.5,
+              "damage_type": "physical",
+              "phase": "auto",
+              "source": "auto_attacks",
+              "time": 0.94
             },
             {
               "cc_kind": "none",
@@ -66628,46 +66616,46 @@
               "time": 1.25
             },
             {
-              "damage": 90.8,
+              "damage": 113.5,
               "damage_type": "physical",
               "phase": "auto",
               "source": "auto_attacks",
-              "time": 1.83
+              "time": 1.62
+            },
+            {
+              "damage": 113.5,
+              "damage_type": "physical",
+              "phase": "auto",
+              "source": "auto_attacks",
+              "time": 2.31
+            },
+            {
+              "damage": 113.5,
+              "damage_type": "physical",
+              "phase": "auto",
+              "source": "auto_attacks",
+              "time": 3.0
             },
             {
               "damage": 90.8,
               "damage_type": "physical",
               "phase": "auto",
               "source": "auto_attacks",
-              "time": 2.74
+              "time": 4.25
             },
             {
               "damage": 90.8,
               "damage_type": "physical",
               "phase": "auto",
               "source": "auto_attacks",
-              "time": 3.65
+              "time": 5.16
             },
             {
               "damage": 90.8,
               "damage_type": "physical",
               "phase": "auto",
               "source": "auto_attacks",
-              "time": 4.57
-            },
-            {
-              "damage": 90.8,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 5.48
-            },
-            {
-              "damage": 90.8,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 6.4
+              "time": 6.08
             },
             {
               "cc_kind": "none",
@@ -66678,6 +66666,13 @@
               "skillshot": true,
               "source": "Q",
               "time": 6.92
+            },
+            {
+              "damage": 90.8,
+              "damage_type": "physical",
+              "phase": "auto",
+              "source": "auto_attacks",
+              "time": 6.99
             },
             {
               "cc_kind": "none",
@@ -66701,10 +66696,10 @@
           "effective_armor": 80.6,
           "effective_mr": 54.0,
           "general_shield_absorbed": 0.0,
-          "health_damage": 2298.0,
+          "health_damage": 2452.4,
           "magic_shield_absorbed": 0.0,
           "notes": [],
-          "overkill": 0.0,
+          "overkill": 36.4,
           "physical_shield_absorbed": 0.0,
           "resource_ledger": {
             "base_maximum": 1020.0,
@@ -66935,7 +66930,7 @@
           "shield_absorbed": 0.0,
           "target_effective_health": 2416.0,
           "target_effective_max_health": 2416,
-          "target_ending_health": 118.0,
+          "target_ending_health": 0.0,
           "target_healing_received": 0.0,
           "threshold_health_bonus_gained": 0.0,
           "threshold_health_triggered": false,
@@ -66948,12 +66943,11 @@
               "E",
               "Q",
               "R",
-              "W",
               "auto_attacks"
             ],
             "note": "Every active damage source has authored event or cast-boundary order."
           },
-          "total_damage": 2298.0
+          "total_damage": 2452.4
         }
       }
     },
@@ -187061,27 +187055,31 @@
             "healing_output": 0.0,
             "healing_received": 0.0,
             "healing_reduced": 0.0,
-            "health_damage": 1588.2,
-            "incoming_damage": 1588.2,
-            "outgoing_damage_before_death": 2007.8,
+            "health_damage": 1457.8,
+            "incoming_damage": 1457.8,
+            "outgoing_damage_before_death": 2687.0,
             "participant_id": "main",
             "shield_absorbed": 0.0,
             "sources": [
               {
                 "name": "Blinding Dart",
-                "total_damage": 540.2
+                "total_damage": 440.2
               },
               {
                 "name": "Auto Attacks",
-                "total_damage": 522.6
+                "total_damage": 475.1
               },
               {
                 "name": "Nashor's Tooth (on-hit)",
-                "total_damage": 368.5
+                "total_damage": 335.0
               },
               {
-                "name": "Toxic Shot",
-                "total_damage": 225.2
+                "name": "Toxic Shot (on-hit)",
+                "total_damage": 879.6
+              },
+              {
+                "name": "Toxic Shot (poison)",
+                "total_damage": 205.9
               },
               {
                 "name": "Noxious Trap",
@@ -187092,7 +187090,7 @@
             "support_value": 0.0,
             "survived_window": true,
             "team": "main",
-            "total_damage": 2007.8,
+            "total_damage": 2687.0,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -187144,20 +187142,20 @@
           },
           {
             "champion": "Ornn",
-            "death_time": null,
-            "effective_health": 2695.0,
+            "death_time": 6.34,
+            "effective_health": 2687.0,
             "healing_output": 0.0,
-            "healing_received": 32.0,
+            "healing_received": 24.0,
             "healing_reduced": 0.0,
-            "health_damage": 2007.8,
-            "incoming_damage": 2007.8,
-            "outgoing_damage_before_death": 1588.2,
+            "health_damage": 2687.0,
+            "incoming_damage": 2687.0,
+            "outgoing_damage_before_death": 1457.8,
             "participant_id": "enemy:Ornn",
             "shield_absorbed": 0.0,
             "sources": [
               {
                 "name": "Volcanic Rupture",
-                "total_damage": 260.8
+                "total_damage": 130.4
               },
               {
                 "name": "Auto Attacks",
@@ -187182,9 +187180,9 @@
             ],
             "support_shield_received": 0.0,
             "support_value": 0.0,
-            "survived_window": true,
+            "survived_window": false,
             "team": "enemy",
-            "total_damage": 1588.2,
+            "total_damage": 1457.8,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -187288,6 +187286,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "breakdown[0].sources[5].total_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "breakdown[0].support_shield_received": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -187297,6 +187299,10 @@
             "view_tag": "applied"
           },
           "breakdown[0].total_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "breakdown[1].death_time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -188272,6 +188278,210 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[50].damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[50].overkill": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[50].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[50].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[50].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[51].damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[51].overkill": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[51].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[51].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[51].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[52].damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[52].overkill": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[52].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[52].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[52].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[53].damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[53].overkill": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[53].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[53].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[53].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[54].damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[54].overkill": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[54].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[54].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[54].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[55].damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[55].overkill": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[55].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[55].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[55].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[56].damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[56].overkill": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[56].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[56].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[56].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[57].damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[57].overkill": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[57].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[57].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[57].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[58].damage": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
+            "view_tag": "applied"
+          },
+          "events[58].overkill": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
+            "view_tag": "applied"
+          },
+          "events[58].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[58].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[58].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[59].damage": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
+            "view_tag": "applied"
+          },
+          "events[59].overkill": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
+            "view_tag": "applied"
+          },
+          "events[59].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[59].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[59].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[5].damage": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -188289,6 +188499,160 @@
             "view_tag": "applied"
           },
           "events[5].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[60].damage": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
+            "view_tag": "applied"
+          },
+          "events[60].overkill": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
+            "view_tag": "applied"
+          },
+          "events[60].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[60].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[60].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[61].damage": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
+            "view_tag": "applied"
+          },
+          "events[61].overkill": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
+            "view_tag": "applied"
+          },
+          "events[61].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[61].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[61].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[62].damage": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
+            "view_tag": "applied"
+          },
+          "events[62].overkill": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
+            "view_tag": "applied"
+          },
+          "events[62].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[62].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[62].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[63].damage": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
+            "view_tag": "applied"
+          },
+          "events[63].overkill": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
+            "view_tag": "applied"
+          },
+          "events[63].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[63].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[63].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[64].damage": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "outside_window",
+            "view_tag": "applied"
+          },
+          "events[64].overkill": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "outside_window",
+            "view_tag": "applied"
+          },
+          "events[64].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[64].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[64].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[65].damage": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "outside_window",
+            "view_tag": "applied"
+          },
+          "events[65].overkill": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "outside_window",
+            "view_tag": "applied"
+          },
+          "events[65].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[65].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[65].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[66].damage": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "outside_window",
+            "view_tag": "applied"
+          },
+          "events[66].overkill": {
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "outside_window",
+            "view_tag": "applied"
+          },
+          "events[66].pair_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[66].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[66].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -188473,7 +188837,8 @@
             "view_tag": "applied"
           },
           "healing_events[12].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "healing_events[12].healing_reduction_factor": {
@@ -188505,7 +188870,8 @@
             "view_tag": "applied"
           },
           "healing_events[13].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "healing_events[13].healing_reduction_factor": {
@@ -188537,7 +188903,8 @@
             "view_tag": "applied"
           },
           "healing_events[14].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "healing_events[14].healing_reduction_factor": {
@@ -188569,7 +188936,8 @@
             "view_tag": "applied"
           },
           "healing_events[15].applied_amount": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "healing_events[15].healing_reduction_factor": {
@@ -189468,6 +189836,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].survival.action_downtime_intervals[0].end": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.action_downtime_intervals[0].start": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].survival.aftershock.bonus_armor": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -189504,6 +189880,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].survival.death_time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].survival.defy_heal_received": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -189517,6 +189897,10 @@
             "view_tag": "applied"
           },
           "participants[1].survival.ending_health_ratio": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].survival.first_death_time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -189665,6 +190049,20 @@
             "time": 0.0
           },
           {
+            "attacker": "main",
+            "damage": 47.5,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Ornn:1",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 47.5,
+            "raw_damage": 105.0,
+            "sequence": 6,
+            "source": "auto_attacks",
+            "target": "enemy:Ornn",
+            "time": 0.0
+          },
+          {
             "attacker": "enemy:Ornn",
             "damage": 64.0,
             "damage_type": "physical",
@@ -189680,20 +190078,6 @@
           },
           {
             "attacker": "main",
-            "damage": 47.5,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:1",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 47.5,
-            "raw_damage": 105.0,
-            "sequence": 11,
-            "source": "auto_attacks",
-            "target": "enemy:Ornn",
-            "time": 0.0
-          },
-          {
-            "attacker": "main",
             "damage": 33.5,
             "damage_type": "magic",
             "event_id": "main:enemy:Ornn:2",
@@ -189701,26 +190085,24 @@
             "overkill": 0.0,
             "pair_damage": 33.5,
             "raw_damage": 33.5,
-            "sequence": 22,
+            "sequence": 28,
             "source": "on_hit_Nashor's Tooth",
             "target": "enemy:Ornn",
             "time": 0.0
           },
           {
             "attacker": "main",
-            "cc_kind": "none",
             "damage": 88.0,
-            "damage_over_time": true,
             "damage_type": "magic",
             "event_id": "main:enemy:Ornn:3",
-            "event_precision": "hit",
+            "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 88.0,
             "raw_damage": 146.9,
-            "sequence": 2,
-            "source": "E",
+            "sequence": 39,
+            "source": "on_hit_ability_E",
             "target": "enemy:Ornn",
-            "time": 0.25
+            "time": 0.0
           },
           {
             "area_damage": true,
@@ -189815,7 +190197,7 @@
             "overkill": 0.0,
             "pair_damage": 47.5,
             "raw_damage": 105.0,
-            "sequence": 12,
+            "sequence": 7,
             "source": "auto_attacks",
             "target": "enemy:Ornn",
             "time": 0.7
@@ -189829,8 +190211,22 @@
             "overkill": 0.0,
             "pair_damage": 33.5,
             "raw_damage": 33.5,
-            "sequence": 23,
+            "sequence": 29,
             "source": "on_hit_Nashor's Tooth",
+            "target": "enemy:Ornn",
+            "time": 0.7
+          },
+          {
+            "attacker": "main",
+            "damage": 88.0,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:6",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 88.0,
+            "raw_damage": 146.9,
+            "sequence": 40,
+            "source": "on_hit_ability_E",
             "target": "enemy:Ornn",
             "time": 0.7
           },
@@ -189869,6 +190265,20 @@
             "time": 0.85
           },
           {
+            "attacker": "main",
+            "damage": 34.3,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:7",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 34.3,
+            "raw_damage": 34.3,
+            "sequence": 17,
+            "source": "stacking_dot_E",
+            "target": "enemy:Ornn",
+            "time": 1.0
+          },
+          {
             "attacker": "enemy:Ornn",
             "damage": 64.0,
             "damage_type": "physical",
@@ -189884,32 +190294,16 @@
           },
           {
             "attacker": "main",
-            "cc_kind": "none",
-            "damage": 34.3,
-            "damage_over_time": true,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:6",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 34.3,
-            "raw_damage": 57.3,
-            "sequence": 3,
-            "source": "E",
-            "target": "enemy:Ornn",
-            "time": 1.25
-          },
-          {
-            "attacker": "main",
             "cc_kind": "slow",
             "damage": 87.8,
             "damage_over_time": true,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:7",
+            "event_id": "main:enemy:Ornn:8",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 87.8,
             "raw_damage": 146.6,
-            "sequence": 7,
+            "sequence": 2,
             "skillshot": true,
             "source": "R",
             "target": "enemy:Ornn",
@@ -189919,12 +190313,12 @@
             "attacker": "main",
             "damage": 47.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:8",
+            "event_id": "main:enemy:Ornn:9",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 47.5,
             "raw_damage": 105.0,
-            "sequence": 13,
+            "sequence": 8,
             "source": "auto_attacks",
             "target": "enemy:Ornn",
             "time": 1.4
@@ -189933,13 +190327,27 @@
             "attacker": "main",
             "damage": 33.5,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:9",
+            "event_id": "main:enemy:Ornn:10",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 33.5,
             "raw_damage": 33.5,
-            "sequence": 24,
+            "sequence": 30,
             "source": "on_hit_Nashor's Tooth",
+            "target": "enemy:Ornn",
+            "time": 1.4
+          },
+          {
+            "attacker": "main",
+            "damage": 88.0,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:11",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 88.0,
+            "raw_damage": 146.9,
+            "sequence": 41,
+            "source": "on_hit_ability_E",
             "target": "enemy:Ornn",
             "time": 1.4
           },
@@ -189976,14 +190384,28 @@
           },
           {
             "attacker": "main",
+            "damage": 34.3,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:12",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 34.3,
+            "raw_damage": 34.3,
+            "sequence": 18,
+            "source": "stacking_dot_E",
+            "target": "enemy:Ornn",
+            "time": 2.0
+          },
+          {
+            "attacker": "main",
             "damage": 47.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:10",
+            "event_id": "main:enemy:Ornn:13",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 47.5,
             "raw_damage": 105.0,
-            "sequence": 14,
+            "sequence": 9,
             "source": "auto_attacks",
             "target": "enemy:Ornn",
             "time": 2.1
@@ -189992,31 +190414,29 @@
             "attacker": "main",
             "damage": 33.5,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:11",
+            "event_id": "main:enemy:Ornn:14",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 33.5,
             "raw_damage": 33.5,
-            "sequence": 25,
+            "sequence": 31,
             "source": "on_hit_Nashor's Tooth",
             "target": "enemy:Ornn",
             "time": 2.1
           },
           {
             "attacker": "main",
-            "cc_kind": "none",
-            "damage": 34.3,
-            "damage_over_time": true,
+            "damage": 88.0,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:12",
+            "event_id": "main:enemy:Ornn:15",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 34.3,
-            "raw_damage": 57.3,
-            "sequence": 4,
-            "source": "E",
+            "pair_damage": 88.0,
+            "raw_damage": 146.9,
+            "sequence": 42,
+            "source": "on_hit_ability_E",
             "target": "enemy:Ornn",
-            "time": 2.25
+            "time": 2.1
           },
           {
             "attacker": "main",
@@ -190024,12 +190444,12 @@
             "damage": 87.8,
             "damage_over_time": true,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:13",
+            "event_id": "main:enemy:Ornn:16",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 87.8,
             "raw_damage": 146.6,
-            "sequence": 8,
+            "sequence": 3,
             "skillshot": true,
             "source": "R",
             "target": "enemy:Ornn",
@@ -190053,12 +190473,12 @@
             "attacker": "main",
             "damage": 47.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:14",
+            "event_id": "main:enemy:Ornn:17",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 47.5,
             "raw_damage": 105.0,
-            "sequence": 15,
+            "sequence": 10,
             "source": "auto_attacks",
             "target": "enemy:Ornn",
             "time": 2.79
@@ -190067,31 +190487,43 @@
             "attacker": "main",
             "damage": 33.5,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:15",
+            "event_id": "main:enemy:Ornn:18",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 33.5,
             "raw_damage": 33.5,
-            "sequence": 26,
+            "sequence": 32,
             "source": "on_hit_Nashor's Tooth",
             "target": "enemy:Ornn",
             "time": 2.79
           },
           {
             "attacker": "main",
-            "cc_kind": "none",
-            "damage": 34.3,
-            "damage_over_time": true,
+            "damage": 88.0,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:16",
+            "event_id": "main:enemy:Ornn:19",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 88.0,
+            "raw_damage": 146.9,
+            "sequence": 43,
+            "source": "on_hit_ability_E",
+            "target": "enemy:Ornn",
+            "time": 2.79
+          },
+          {
+            "attacker": "main",
+            "damage": 34.3,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:20",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 34.3,
-            "raw_damage": 57.3,
-            "sequence": 5,
-            "source": "E",
+            "raw_damage": 34.3,
+            "sequence": 19,
+            "source": "stacking_dot_E",
             "target": "enemy:Ornn",
-            "time": 3.25
+            "time": 3.0
           },
           {
             "attacker": "main",
@@ -190099,12 +190531,12 @@
             "damage": 87.8,
             "damage_over_time": true,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:17",
+            "event_id": "main:enemy:Ornn:21",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 87.8,
             "raw_damage": 146.6,
-            "sequence": 9,
+            "sequence": 4,
             "skillshot": true,
             "source": "R",
             "target": "enemy:Ornn",
@@ -190114,12 +190546,12 @@
             "attacker": "main",
             "damage": 47.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:18",
+            "event_id": "main:enemy:Ornn:22",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 47.5,
             "raw_damage": 105.0,
-            "sequence": 16,
+            "sequence": 11,
             "source": "auto_attacks",
             "target": "enemy:Ornn",
             "time": 3.49
@@ -190128,13 +190560,27 @@
             "attacker": "main",
             "damage": 33.5,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:19",
+            "event_id": "main:enemy:Ornn:23",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 33.5,
             "raw_damage": 33.5,
-            "sequence": 27,
+            "sequence": 33,
             "source": "on_hit_Nashor's Tooth",
+            "target": "enemy:Ornn",
+            "time": 3.49
+          },
+          {
+            "attacker": "main",
+            "damage": 88.0,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:24",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 88.0,
+            "raw_damage": 146.9,
+            "sequence": 44,
+            "source": "on_hit_ability_E",
             "target": "enemy:Ornn",
             "time": 3.49
           },
@@ -190154,14 +190600,28 @@
           },
           {
             "attacker": "main",
+            "damage": 34.3,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:25",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 34.3,
+            "raw_damage": 34.3,
+            "sequence": 20,
+            "source": "stacking_dot_E",
+            "target": "enemy:Ornn",
+            "time": 4.0
+          },
+          {
+            "attacker": "main",
             "damage": 47.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:20",
+            "event_id": "main:enemy:Ornn:26",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 47.5,
             "raw_damage": 105.0,
-            "sequence": 17,
+            "sequence": 12,
             "source": "auto_attacks",
             "target": "enemy:Ornn",
             "time": 4.19
@@ -190170,31 +190630,29 @@
             "attacker": "main",
             "damage": 33.5,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:21",
+            "event_id": "main:enemy:Ornn:27",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 33.5,
             "raw_damage": 33.5,
-            "sequence": 28,
+            "sequence": 34,
             "source": "on_hit_Nashor's Tooth",
             "target": "enemy:Ornn",
             "time": 4.19
           },
           {
             "attacker": "main",
-            "cc_kind": "none",
-            "damage": 34.3,
-            "damage_over_time": true,
+            "damage": 88.0,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:22",
+            "event_id": "main:enemy:Ornn:28",
             "event_precision": "exact",
             "overkill": 0.0,
-            "pair_damage": 34.3,
-            "raw_damage": 57.3,
-            "sequence": 6,
-            "source": "E",
+            "pair_damage": 88.0,
+            "raw_damage": 146.9,
+            "sequence": 45,
+            "source": "on_hit_ability_E",
             "target": "enemy:Ornn",
-            "time": 4.25
+            "time": 4.19
           },
           {
             "attacker": "main",
@@ -190202,12 +190660,12 @@
             "damage": 87.8,
             "damage_over_time": true,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:23",
+            "event_id": "main:enemy:Ornn:29",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 87.8,
             "raw_damage": 146.6,
-            "sequence": 10,
+            "sequence": 5,
             "skillshot": true,
             "source": "R",
             "target": "enemy:Ornn",
@@ -190231,12 +190689,12 @@
             "attacker": "main",
             "damage": 47.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:24",
+            "event_id": "main:enemy:Ornn:30",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 47.5,
             "raw_damage": 105.0,
-            "sequence": 18,
+            "sequence": 13,
             "source": "auto_attacks",
             "target": "enemy:Ornn",
             "time": 4.89
@@ -190245,26 +190703,54 @@
             "attacker": "main",
             "damage": 33.5,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:25",
+            "event_id": "main:enemy:Ornn:31",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 33.5,
             "raw_damage": 33.5,
-            "sequence": 29,
+            "sequence": 35,
             "source": "on_hit_Nashor's Tooth",
             "target": "enemy:Ornn",
             "time": 4.89
           },
           {
             "attacker": "main",
+            "damage": 88.0,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:32",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 88.0,
+            "raw_damage": 146.9,
+            "sequence": 46,
+            "source": "on_hit_ability_E",
+            "target": "enemy:Ornn",
+            "time": 4.89
+          },
+          {
+            "attacker": "main",
+            "damage": 34.3,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:33",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 34.3,
+            "raw_damage": 34.3,
+            "sequence": 21,
+            "source": "stacking_dot_E",
+            "target": "enemy:Ornn",
+            "time": 5.0
+          },
+          {
+            "attacker": "main",
             "damage": 47.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:26",
+            "event_id": "main:enemy:Ornn:34",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 47.5,
             "raw_damage": 105.0,
-            "sequence": 19,
+            "sequence": 14,
             "source": "auto_attacks",
             "target": "enemy:Ornn",
             "time": 5.59
@@ -190273,13 +190759,27 @@
             "attacker": "main",
             "damage": 33.5,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:27",
+            "event_id": "main:enemy:Ornn:35",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 33.5,
             "raw_damage": 33.5,
-            "sequence": 30,
+            "sequence": 36,
             "source": "on_hit_Nashor's Tooth",
+            "target": "enemy:Ornn",
+            "time": 5.59
+          },
+          {
+            "attacker": "main",
+            "damage": 88.0,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:36",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 88.0,
+            "raw_damage": 146.9,
+            "sequence": 47,
+            "source": "on_hit_ability_E",
             "target": "enemy:Ornn",
             "time": 5.59
           },
@@ -190299,14 +190799,28 @@
           },
           {
             "attacker": "main",
+            "damage": 34.3,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:37",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 34.3,
+            "raw_damage": 34.3,
+            "sequence": 22,
+            "source": "stacking_dot_E",
+            "target": "enemy:Ornn",
+            "time": 6.0
+          },
+          {
+            "attacker": "main",
             "damage": 47.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:28",
+            "event_id": "main:enemy:Ornn:38",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 47.5,
             "raw_damage": 105.0,
-            "sequence": 20,
+            "sequence": 15,
             "source": "auto_attacks",
             "target": "enemy:Ornn",
             "time": 6.29
@@ -190315,24 +190829,38 @@
             "attacker": "main",
             "damage": 33.5,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:29",
+            "event_id": "main:enemy:Ornn:39",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 33.5,
             "raw_damage": 33.5,
-            "sequence": 31,
+            "sequence": 37,
             "source": "on_hit_Nashor's Tooth",
             "target": "enemy:Ornn",
             "time": 6.29
           },
           {
             "attacker": "main",
-            "cc_kind": "blind",
-            "damage": 270.1,
+            "damage": 88.0,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:30",
+            "event_id": "main:enemy:Ornn:40",
             "event_precision": "exact",
             "overkill": 0.0,
+            "pair_damage": 88.0,
+            "raw_damage": 146.9,
+            "sequence": 48,
+            "source": "on_hit_ability_E",
+            "target": "enemy:Ornn",
+            "time": 6.29
+          },
+          {
+            "attacker": "main",
+            "cc_kind": "blind",
+            "damage": 170.0,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:41",
+            "event_precision": "exact",
+            "overkill": 100.1,
             "pair_damage": 270.1,
             "raw_damage": 451.1,
             "sequence": 1,
@@ -190343,37 +190871,69 @@
           },
           {
             "attacker": "main",
-            "damage": 47.5,
+            "damage": 0.0,
             "damage_type": "physical",
-            "event_id": "main:enemy:Ornn:31",
+            "event_id": "main:enemy:Ornn:42",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 47.5,
             "raw_damage": 105.0,
-            "sequence": 21,
+            "sequence": 16,
+            "skipped_reason": "target_dead",
             "source": "auto_attacks",
             "target": "enemy:Ornn",
             "time": 6.99
           },
           {
             "attacker": "main",
-            "damage": 33.5,
+            "damage": 0.0,
             "damage_type": "magic",
-            "event_id": "main:enemy:Ornn:32",
+            "event_id": "main:enemy:Ornn:43",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 33.5,
-            "raw_damage": 33.5,
-            "sequence": 32,
+            "raw_damage": 0.0,
+            "sequence": 38,
+            "skipped_reason": "target_dead",
             "source": "on_hit_Nashor's Tooth",
             "target": "enemy:Ornn",
             "time": 6.99
           },
           {
+            "attacker": "main",
+            "damage": 0.0,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:44",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 88.0,
+            "raw_damage": 146.9,
+            "sequence": 49,
+            "skipped_reason": "target_dead",
+            "source": "on_hit_ability_E",
+            "target": "enemy:Ornn",
+            "time": 6.99
+          },
+          {
+            "attacker": "main",
+            "damage": 0.0,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:45",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 34.3,
+            "raw_damage": 0.0,
+            "sequence": 23,
+            "skipped_reason": "target_dead",
+            "source": "stacking_dot_E",
+            "target": "enemy:Ornn",
+            "time": 7.0
+          },
+          {
             "area_damage": true,
             "attacker": "enemy:Ornn",
             "cc_kind": "slow",
-            "damage": 130.4,
+            "damage": 0.0,
             "damage_type": "physical",
             "event_id": "enemy:Ornn:main:16",
             "event_precision": "exact",
@@ -190382,9 +190942,70 @@
             "raw_damage": 260.8,
             "sequence": 1,
             "skillshot": true,
+            "skipped_reason": "attacker_dead",
             "source": "Q",
             "target": "main",
             "time": 7.25
+          },
+          {
+            "attacker": "main",
+            "damage": 0.0,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:46",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 34.3,
+            "raw_damage": 0.0,
+            "sequence": 24,
+            "skipped_reason": "target_dead",
+            "source": "stacking_dot_E",
+            "target": "enemy:Ornn",
+            "time": 8.0
+          },
+          {
+            "attacker": "main",
+            "damage": 0.0,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:47",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 34.3,
+            "raw_damage": 0.0,
+            "sequence": 25,
+            "skipped_reason": "outside_window",
+            "source": "stacking_dot_E",
+            "target": "enemy:Ornn",
+            "time": 9.0
+          },
+          {
+            "attacker": "main",
+            "damage": 0.0,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:48",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 34.3,
+            "raw_damage": 0.0,
+            "sequence": 26,
+            "skipped_reason": "outside_window",
+            "source": "stacking_dot_E",
+            "target": "enemy:Ornn",
+            "time": 10.0
+          },
+          {
+            "attacker": "main",
+            "damage": 0.0,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Ornn:49",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 33.8,
+            "raw_damage": 0.0,
+            "sequence": 27,
+            "skipped_reason": "outside_window",
+            "source": "stacking_dot_E",
+            "target": "enemy:Ornn",
+            "time": 10.99
           }
         ],
         "healing_events": [
@@ -190546,52 +191167,56 @@
           },
           {
             "amount": 2.0,
-            "applied_amount": 2.0,
+            "applied_amount": 0.0,
             "attacker": "enemy:Ornn",
             "event_id": "enemy:Ornn:heal:12:main",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 2.0,
             "raw_amount": 2.0,
             "reduced_amount": 2.0,
+            "skipped_reason": "target_dead",
             "source": "Health regeneration",
             "temporary_health": 0.0,
             "time": 6.5
           },
           {
             "amount": 2.0,
-            "applied_amount": 2.0,
+            "applied_amount": 0.0,
             "attacker": "enemy:Ornn",
             "event_id": "enemy:Ornn:heal:13:main",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 2.0,
             "raw_amount": 2.0,
             "reduced_amount": 2.0,
+            "skipped_reason": "target_dead",
             "source": "Health regeneration",
             "temporary_health": 0.0,
             "time": 7.0
           },
           {
             "amount": 2.0,
-            "applied_amount": 2.0,
+            "applied_amount": 0.0,
             "attacker": "enemy:Ornn",
             "event_id": "enemy:Ornn:heal:14:main",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 2.0,
             "raw_amount": 2.0,
             "reduced_amount": 2.0,
+            "skipped_reason": "target_dead",
             "source": "Health regeneration",
             "temporary_health": 0.0,
             "time": 7.5
           },
           {
             "amount": 2.0,
-            "applied_amount": 2.0,
+            "applied_amount": 0.0,
             "attacker": "enemy:Ornn",
             "event_id": "enemy:Ornn:heal:15:main",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 2.0,
             "raw_amount": 2.0,
             "reduced_amount": 2.0,
+            "skipped_reason": "target_dead",
             "source": "Health regeneration",
             "temporary_health": 0.0,
             "time": 8.0
@@ -190599,9 +191224,9 @@
         ],
         "item_denial_receipts": [],
         "objective": {
-          "enemy_team_damage_before_death": 1588.2,
-          "enemy_team_effective_health": 2695.0,
-          "focus_damage_before_death": 2007.8,
+          "enemy_team_damage_before_death": 1457.8,
+          "enemy_team_effective_health": 2687.0,
+          "focus_damage_before_death": 2687.0,
           "focus_healing": 0.0,
           "focus_participant_id": "main",
           "focus_support_value": 0.0,
@@ -190621,14 +191246,14 @@
             "damage_deferral_cleared": 0.0,
             "damage_deferral_fraction": 0.0,
             "damage_deferral_pending": 0.0,
-            "damage_taken": 1588.2,
+            "damage_taken": 1457.8,
             "death_time": null,
             "defy_heal_received": 0.0,
             "defy_trigger_time": null,
             "defy_triggered": false,
             "effective_health": 2383.0,
-            "ending_health": 794.8,
-            "ending_health_ratio": 0.33,
+            "ending_health": 925.2,
+            "ending_health_ratio": 0.39,
             "execute_source": "",
             "execute_time": null,
             "first_death_time": null,
@@ -190647,7 +191272,7 @@
             "healing_reduction_events": [],
             "healing_reduction_until": 0.0,
             "healing_reduction_window_sources": [],
-            "health_damage": 1588.2,
+            "health_damage": 1457.8,
             "invulnerable_until": 0.0,
             "jaksho": {
               "dynamic_bonus_armor": 0.0,
@@ -190740,7 +191365,7 @@
               "ward_uses": 0
             }
           },
-          "main_team_damage_before_death": 2007.8,
+          "main_team_damage_before_death": 2687.0,
           "main_team_effective_health": 2383.0,
           "surviving_main_team": 1,
           "total_healing_reduced": 0.0,
@@ -190816,14 +191441,14 @@
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 1588.2,
+              "damage_taken": 1457.8,
               "death_time": null,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
               "effective_health": 2383.0,
-              "ending_health": 794.8,
-              "ending_health_ratio": 0.33,
+              "ending_health": 925.2,
+              "ending_health_ratio": 0.39,
               "execute_source": "",
               "execute_time": null,
               "first_death_time": null,
@@ -190842,7 +191467,7 @@
               "healing_reduction_events": [],
               "healing_reduction_until": 0.0,
               "healing_reduction_window_sources": [],
-              "health_damage": 1588.2,
+              "health_damage": 1457.8,
               "invulnerable_until": 0.0,
               "jaksho": {
                 "dynamic_bonus_armor": 0.0,
@@ -190942,8 +191567,16 @@
             },
             "stats_state": "pre_combat",
             "survival": {
-              "action_downtime": 0.0,
-              "action_downtime_intervals": [],
+              "action_downtime": 1.66,
+              "action_downtime_intervals": [
+                {
+                  "end": 8.0,
+                  "kind": "death",
+                  "recipient": "enemy:Ornn",
+                  "source": "Q",
+                  "start": 6.34
+                }
+              ],
               "aftershock": {
                 "bonus_armor": 0.0,
                 "bonus_magic_resistance": 0.0,
@@ -190957,17 +191590,17 @@
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 2007.8,
-              "death_time": null,
+              "damage_taken": 2787.1,
+              "death_time": 6.34,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
-              "effective_health": 2695.0,
-              "ending_health": 687.2,
-              "ending_health_ratio": 0.26,
+              "effective_health": 2687.0,
+              "ending_health": 0.0,
+              "ending_health_ratio": 0.0,
               "execute_source": "",
               "execute_time": null,
-              "first_death_time": null,
+              "first_death_time": 6.34,
               "force_of_nature": {
                 "dynamic_bonus_magic_resistance": 0.0,
                 "events": [],
@@ -190978,12 +191611,12 @@
                 "cooldown_until": 0.0,
                 "trigger_events": []
               },
-              "healing_received": 32.0,
+              "healing_received": 24.0,
               "healing_reduced": 0.0,
               "healing_reduction_events": [],
               "healing_reduction_until": 0.0,
               "healing_reduction_window_sources": [],
-              "health_damage": 2007.8,
+              "health_damage": 2687.0,
               "invulnerable_until": 0.0,
               "jaksho": {
                 "dynamic_bonus_armor": 0.0,
@@ -190993,7 +191626,7 @@
               },
               "max_health": 2663.0,
               "overhealing": 0.0,
-              "overkill": 0.0,
+              "overkill": 100.1,
               "permanent_bonus_health_events": [],
               "permanent_bonus_health_received": 0.0,
               "projectile_defense": null,
@@ -191014,12 +191647,12 @@
               "stasis_until": 0.0,
               "support_shield_expired": 0.0,
               "support_shield_received": 0.0,
-              "survived_window": true,
+              "survived_window": false,
               "temporary_health_expired_at": null,
               "temporary_health_received": 0.0,
               "temporary_health_source": "",
               "temporary_health_until": 0.0,
-              "terminal_phase": "alive",
+              "terminal_phase": "dead",
               "threshold_health_triggered": false,
               "threshold_shield_expired_at": null,
               "threshold_shield_triggered": false,
@@ -191052,7 +191685,9 @@
             "W",
             "auto_attacks",
             "on_hit_Nashor's Tooth",
-            "passive_temper_brittle"
+            "on_hit_ability_E",
+            "passive_temper_brittle",
+            "stacking_dot_E"
           ],
           "note": "Every active damage source is event-ordered across 2 selected targets."
         },
@@ -191209,8 +191844,8 @@
       },
       "fights": {
         "0:Ornn": {
-          "ability_damage": 1052.9,
-          "auto_attack_damage": 726.2,
+          "ability_damage": 1223.4,
+          "auto_attack_damage": 1693.8,
           "auto_attack_policy": {
             "assumptions": [
               "No inferred player uptime; caller supplied the numeric value."
@@ -191235,13 +191870,13 @@
               "count": null,
               "crit_damage_per_hit": null,
               "damage_per_hit": null,
-              "detail": "initial hit + 4 sourced 1.0s-interval ticks (Magic Damage per Tick x4 = Toxic Shot total)",
+              "detail": "146.9 bonus magic damage on-hit on every basic attack, each refreshing a 229.2 poison over 4s (1s ticks)",
               "name": "Toxic Shot",
               "non_crit_damage_per_hit": null,
               "num_crits": null,
               "num_non_crits": null,
               "total_amount": null,
-              "total_damage": 206.5,
+              "total_damage": 0.0,
               "unit": null
             },
             "Q": {
@@ -191310,6 +191945,33 @@
               "total_amount": null,
               "total_damage": 368.5,
               "unit": null
+            },
+            "on_hit_ability_E": {
+              "casts": null,
+              "count": 11,
+              "crit_damage_per_hit": null,
+              "damage_per_hit": 88.0,
+              "name": "Toxic Shot (on-hit)",
+              "non_crit_damage_per_hit": null,
+              "num_crits": null,
+              "num_non_crits": null,
+              "total_amount": null,
+              "total_damage": 967.6,
+              "unit": null
+            },
+            "stacking_dot_E": {
+              "casts": null,
+              "count": 11,
+              "crit_damage_per_hit": null,
+              "damage_per_hit": 34.3,
+              "detail": "11 stack application(s); each refresh commits the full 4s of ticks",
+              "name": "Toxic Shot (poison)",
+              "non_crit_damage_per_hit": null,
+              "num_crits": null,
+              "num_non_crits": null,
+              "total_amount": null,
+              "total_damage": 376.9,
+              "unit": "stacks"
             }
           },
           "cast_timeline": [
@@ -191420,7 +192082,7 @@
           },
           "champion_stats_state": "fight_effective",
           "damage_by_type": {
-            "magic": 1421.4,
+            "magic": 2559.5,
             "physical": 357.6,
             "true": 0.0
           },
@@ -191450,14 +192112,11 @@
               "time": 0.0
             },
             {
-              "cc_kind": "none",
-              "damage": 84.2,
-              "damage_over_time": true,
+              "damage": 88.0,
               "damage_type": "magic",
-              "event_precision": "hit",
-              "phase": "ability",
-              "source": "E",
-              "time": 0.25
+              "phase": "auto",
+              "source": "on_hit_ability_E",
+              "time": 0.0
             },
             {
               "damage": 32.5,
@@ -191474,14 +192133,19 @@
               "time": 0.7
             },
             {
-              "cc_kind": "none",
-              "damage": 30.6,
-              "damage_over_time": true,
+              "damage": 88.0,
+              "damage_type": "magic",
+              "phase": "auto",
+              "source": "on_hit_ability_E",
+              "time": 0.7
+            },
+            {
+              "damage": 34.3,
               "damage_type": "magic",
               "event_precision": "exact",
-              "phase": "ability",
-              "source": "E",
-              "time": 1.25
+              "phase": "effect",
+              "source": "stacking_dot_E",
+              "time": 1.0
             },
             {
               "cc_kind": "slow",
@@ -191509,6 +192173,21 @@
               "time": 1.4
             },
             {
+              "damage": 88.0,
+              "damage_type": "magic",
+              "phase": "auto",
+              "source": "on_hit_ability_E",
+              "time": 1.4
+            },
+            {
+              "damage": 34.3,
+              "damage_type": "magic",
+              "event_precision": "exact",
+              "phase": "effect",
+              "source": "stacking_dot_E",
+              "time": 2.0
+            },
+            {
               "damage": 32.5,
               "damage_type": "physical",
               "phase": "auto",
@@ -191523,14 +192202,11 @@
               "time": 2.1
             },
             {
-              "cc_kind": "none",
-              "damage": 30.6,
-              "damage_over_time": true,
+              "damage": 88.0,
               "damage_type": "magic",
-              "event_precision": "exact",
-              "phase": "ability",
-              "source": "E",
-              "time": 2.25
+              "phase": "auto",
+              "source": "on_hit_ability_E",
+              "time": 2.1
             },
             {
               "cc_kind": "slow",
@@ -191558,14 +192234,19 @@
               "time": 2.79
             },
             {
-              "cc_kind": "none",
-              "damage": 30.6,
-              "damage_over_time": true,
+              "damage": 88.0,
+              "damage_type": "magic",
+              "phase": "auto",
+              "source": "on_hit_ability_E",
+              "time": 2.79
+            },
+            {
+              "damage": 34.3,
               "damage_type": "magic",
               "event_precision": "exact",
-              "phase": "ability",
-              "source": "E",
-              "time": 3.25
+              "phase": "effect",
+              "source": "stacking_dot_E",
+              "time": 3.0
             },
             {
               "cc_kind": "slow",
@@ -191593,6 +192274,21 @@
               "time": 3.49
             },
             {
+              "damage": 88.0,
+              "damage_type": "magic",
+              "phase": "auto",
+              "source": "on_hit_ability_E",
+              "time": 3.49
+            },
+            {
+              "damage": 34.3,
+              "damage_type": "magic",
+              "event_precision": "exact",
+              "phase": "effect",
+              "source": "stacking_dot_E",
+              "time": 4.0
+            },
+            {
               "damage": 32.5,
               "damage_type": "physical",
               "phase": "auto",
@@ -191607,14 +192303,11 @@
               "time": 4.19
             },
             {
-              "cc_kind": "none",
-              "damage": 30.6,
-              "damage_over_time": true,
+              "damage": 88.0,
               "damage_type": "magic",
-              "event_precision": "exact",
-              "phase": "ability",
-              "source": "E",
-              "time": 4.25
+              "phase": "auto",
+              "source": "on_hit_ability_E",
+              "time": 4.19
             },
             {
               "cc_kind": "slow",
@@ -191642,6 +192335,21 @@
               "time": 4.89
             },
             {
+              "damage": 88.0,
+              "damage_type": "magic",
+              "phase": "auto",
+              "source": "on_hit_ability_E",
+              "time": 4.89
+            },
+            {
+              "damage": 34.3,
+              "damage_type": "magic",
+              "event_precision": "exact",
+              "phase": "effect",
+              "source": "stacking_dot_E",
+              "time": 5.0
+            },
+            {
               "damage": 32.5,
               "damage_type": "physical",
               "phase": "auto",
@@ -191654,6 +192362,21 @@
               "phase": "auto",
               "source": "on_hit_Nashor's Tooth",
               "time": 5.59
+            },
+            {
+              "damage": 88.0,
+              "damage_type": "magic",
+              "phase": "auto",
+              "source": "on_hit_ability_E",
+              "time": 5.59
+            },
+            {
+              "damage": 34.3,
+              "damage_type": "magic",
+              "event_precision": "exact",
+              "phase": "effect",
+              "source": "stacking_dot_E",
+              "time": 6.0
             },
             {
               "damage": 32.5,
@@ -191667,6 +192390,13 @@
               "damage_type": "magic",
               "phase": "auto",
               "source": "on_hit_Nashor's Tooth",
+              "time": 6.29
+            },
+            {
+              "damage": 88.0,
+              "damage_type": "magic",
+              "phase": "auto",
+              "source": "on_hit_ability_E",
               "time": 6.29
             },
             {
@@ -191692,17 +192422,64 @@
               "phase": "auto",
               "source": "on_hit_Nashor's Tooth",
               "time": 6.99
+            },
+            {
+              "damage": 88.0,
+              "damage_type": "magic",
+              "phase": "auto",
+              "source": "on_hit_ability_E",
+              "time": 6.99
+            },
+            {
+              "damage": 34.3,
+              "damage_type": "magic",
+              "event_precision": "exact",
+              "phase": "effect",
+              "source": "stacking_dot_E",
+              "time": 7.0
+            },
+            {
+              "damage": 34.3,
+              "damage_type": "magic",
+              "event_precision": "exact",
+              "phase": "effect",
+              "source": "stacking_dot_E",
+              "time": 8.0
+            },
+            {
+              "damage": 34.3,
+              "damage_type": "magic",
+              "event_precision": "exact",
+              "phase": "effect",
+              "source": "stacking_dot_E",
+              "time": 9.0
+            },
+            {
+              "damage": 34.3,
+              "damage_type": "magic",
+              "event_precision": "exact",
+              "phase": "effect",
+              "source": "stacking_dot_E",
+              "time": 10.0
+            },
+            {
+              "damage": 33.8,
+              "damage_type": "magic",
+              "event_precision": "exact",
+              "phase": "effect",
+              "source": "stacking_dot_E",
+              "time": 10.99
             }
           ],
           "effective_armor": 121.0,
           "effective_mr": 67.0,
           "general_shield_absorbed": 0.0,
-          "health_damage": 1779.1,
+          "health_damage": 2917.1,
           "magic_shield_absorbed": 0.0,
           "notes": [
             "Noxious Trap is cast once: the timed scheduler recasts an ultimate only for a module that certifies it (ULTIMATE_RECASTS), so ultimate haste does not change this fight even though the hasted cooldown is 0.2s."
           ],
-          "overkill": 0.0,
+          "overkill": 254.1,
           "physical_shield_absorbed": 0.0,
           "resource_ledger": {
             "base_maximum": 759.0,
@@ -191892,7 +192669,7 @@
           "shield_absorbed": 0.0,
           "target_effective_health": 2663.0,
           "target_effective_max_health": 2663,
-          "target_ending_health": 883.9,
+          "target_ending_health": 0.0,
           "target_healing_received": 0.0,
           "threshold_health_bonus_gained": 0.0,
           "threshold_health_triggered": false,
@@ -191902,15 +192679,16 @@
             "coarse_sources": [],
             "complete": true,
             "exact_sources": [
-              "E",
               "Q",
               "R",
               "auto_attacks",
-              "on_hit_Nashor's Tooth"
+              "on_hit_Nashor's Tooth",
+              "on_hit_ability_E",
+              "stacking_dot_E"
             ],
             "note": "Every active damage source has authored event or cast-boundary order."
           },
-          "total_damage": 1779.1
+          "total_damage": 2917.1
         }
       }
     }
@@ -191920,15 +192698,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 26,
-      "leaves": 122433,
-      "numeric_leaves": 40005,
+      "leaves": 122956,
+      "numeric_leaves": 40152,
       "sections": "coupled_scenarios"
     },
-    "git_head": "e9fa8c5f4bd6317d87b27f9eb0566dbe99ebe168",
+    "git_head": "8e93aac56e8300854799c2989a6b8794a2b7ddfa",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 26,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "62287f7677c3e5840578f57a376b197028785dbd"
+    "src_tree_sha": "8bca253a50b1e2f30754e51d7e046b8c851e6163"
   }
 }
