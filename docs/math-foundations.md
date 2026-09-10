@@ -306,10 +306,13 @@ because `m(R)` is convex in `R`:
 
 1. **Terminus stacking pen** (`StackingPenEffect.average_pen`): the engine
    replaces the per-swing pen ramp with its arithmetic mean `R̄` and mitigates
-   every swing at `m(R̄)`. Since `m` is convex, `(1/n)Σ m(R_i) ≥ m(R̄)`, the
-   average-pen model *understates* total damage relative to the true
-   per-swing ramp. The error is second order in the ramp's spread and
-   vanishes for ramps that are flat (all swings at max stacks).
+   every packet, swing and cast alike, at `m(R̄)`. Juxtaposition's Dark stacks
+   are a champion stat, so an ability meets the same penetration a swing
+   does. Since `m` is convex, `(1/n)Σ m(R_i) ≥ m(R̄)`, the average-pen model
+   *understates* total damage relative to the true per-swing ramp. The error
+   is second order in the ramp's spread and vanishes for ramps that are flat
+   (all swings at max stacks). A cast pays the mean wherever it lands in the
+   ramp.
 2. **Black Cleaver average stacks** (`ArmorReductionEffect.average_reduction`):
    the established model uses a fixed `0.8·max_stacks` constant (with a
    `hits/2` short-fight branch). Under the engine's own ordering convention

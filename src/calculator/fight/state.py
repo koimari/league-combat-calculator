@@ -58,6 +58,9 @@ class FightState:
     event_actor_id: str
     event_target_id: str
     event_attack_speed_windows: tuple[AttackSpeedWindow, ...]
+    # A swing schedule authored before the autos step, which then reads it
+    # as-is: accepted Whimsy windows, or the build's own ramp walked through
+    # a kit attack-speed grant (``_rate_attack_speed_grant``).
     support_attack_times: tuple[float, ...] | None
     target_health: float
     target_bonus_health: float

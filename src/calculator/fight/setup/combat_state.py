@@ -345,8 +345,8 @@ def _resolve_combat_state(
     # The pen is displayed in champion stats at max stacks, but the fight
     # engine computes a weighted average pen across all autos (like Black
     # Cleaver) since stacks ramp up: 0%, 10%, 10%, 20%, 20%, 30%, 30%...
-    # Terminus pen only applies to auto attacks, NOT abilities — see the
-    # Resists docstring for the ability/auto pen split.
+    # The Dark stacks are a champion stat, so the averaged pen is the one
+    # every packet meets, ability and auto alike (the Resists docstring).
     stacking_pen = damage_effects.stacking_pen
     has_terminus = stacking_pen is not None
     terminus_avg_pen = 0.0
