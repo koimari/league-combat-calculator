@@ -575,9 +575,9 @@ class TestBridgeBetweenStaysReceiptedOpen:
 
         ``fight/setup/stat_buff_ultimates.py`` resolves an
         ``auto_attack_override.active_duration`` window's START at the
-        first cast of whichever row grants it, so the slot is no longer
-        the blocker; the window is bounded in SECONDS only, and Monk
-        Training ends on its second attack.
+        first cast of whichever row grants it, so the slot is not the
+        blocker; the window is bounded in SECONDS only, and Monk Training
+        ends on its second attack.
         """
         kernel = step_source("fight/setup/stat_buff_ultimates.py")
 
