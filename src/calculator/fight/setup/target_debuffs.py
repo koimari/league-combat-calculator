@@ -26,7 +26,7 @@ def _ability_mr(resists: Resists, vile_decay_stacks: int) -> float:
     return apply_magic_penetration(
         max(reduced, min(0.0, base)),
         resists.magic_pen_flat,
-        resists.ability_magic_pen_percent,
+        resists.effective_magic_pen_percent,
     )
 
 

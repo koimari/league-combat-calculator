@@ -48,8 +48,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     Decay stacking, and target shreds applied AFTER the shredding
     ability's own damage.
 
-    On return the resists are switched to auto-attack penetration
-    (Terminus average) and Vile Decay stacks are folded into
+    On return the rotation's Vile Decay stacks are folded into
     ``effective_mr`` — remaining damage sources occur during/after the
     full rotation.
     """
@@ -789,12 +788,9 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             else:
                 _apply_target_shred(resists, target_debuff, coverage)
 
-    # The rotation's two outcomes for non-ability damage: the debuff it left
-    # on the target, and the pen variant the remaining damage (autos,
-    # on-hit, item procs) is mitigated by.  Either order serves the same MR —
-    # ``Resists._select_mr`` resolves it once from both.
+    # The rotation's outcome for non-ability damage: the debuff it left on
+    # the target, which the remaining damage (autos, on-hit, item procs)
+    # meets at full depth.  ``Resists._select_mr`` serves the MR once.
     resists.apply_shred_stacks(vile_decay_stacks)
-    if resists.has_terminus and resists.terminus_avg_pen > 0:
-        resists.use_auto_pen()
 
     return result

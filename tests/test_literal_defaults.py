@@ -193,7 +193,7 @@ ROW_READS = frozenset(
             "_apply_temporary_lethality_windows",
             "dict.get",
             '"event_phase"',
-            2,
+            1,
         ),
         (
             "fight/after/lethality_windows.py",

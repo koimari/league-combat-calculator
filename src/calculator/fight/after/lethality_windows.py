@@ -113,15 +113,10 @@ def _apply_temporary_lethality_windows(state: FightState) -> None:
                     active_windows.append(window)
             if extra_lethality <= 0.0:
                 continue
-            percent_pen = (
-                state.resists.auto_armor_pen_percent
-                if str(row.get("event_phase", "")) == "auto"
-                else state.resists.ability_armor_pen_percent
-            )
             new_armor = apply_armor_penetration(
                 state.resists.reduced_armor,
                 state.resists.flat_armor_pen + extra_lethality,
-                percent_pen,
+                state.resists.effective_armor_pen_percent,
                 state.resists.armor_pen_bonus_percent,
                 bonus_armor=state.resists.target_bonus_armor,
             )
