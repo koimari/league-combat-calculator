@@ -1,45 +1,35 @@
 # Sightline-zero campaign
 
-Goal: `.sightline-baseline` from 217 findings to 0, one rule per phase, each phase a pure refactor
-merged into `chore/sightline-zero`. Every phase runs the gates in `CLAUDE.md` plus
-`sightline gate . --full`, both golden compares print identical, and `sightline baseline .` shows
-the count fell. Each phase's PR body holds its gate outputs.
+Goal: `.sightline-baseline` from 217 findings toward 0, one rule per phase, each phase a pure
+refactor. Every phase runs the gates in `CLAUDE.md` plus `sightline gate . --full`, both golden
+compares print identical (or a receipt under `docs/receipts/expected-golden-diff-*` declares every
+moved leaf), and `sightline baseline .` regenerates the file. Each PR body holds its gate outputs.
 
 ## Findings per phase
 
 | Phase | Rule | Before | After | What moved |
 |---|---|---|---|---|
-| 1 | #35 import-topology | 217 | 216 | five deferred back edges cut: `use_options_rows` port, `stat_formulas.py`, `publish_rune_compilers()`, `champions/slot_context.py`, `ability_prose.py` |
-| 2 | #54 kind-switch | 216 | 214 | `DamageClass` owns `named`, `is_mitigable`, `resistance_name`, `resistance_term`; `_mitigate` is the one mitigation home |
-| 3 | #14 data-clump | 214 | 198 | sixteen clumps got a record (table below); three left with reason |
-| 4 | #11 structural-clones | 198 | 92 | 51 groups dissolved: 16 kit mechanics in `champions/shared_mechanics.py`, interpreter front doors in `item_behavior` and `value_ref`, `gate_receipt.emit_receipt`; the finished `migrate_single_hit_slots.py` codemod deleted; two left |
+| 1 | #35 import-topology | 217 | 216 | five deferred back edges cut: `use_options_rows`, `stat_formulas.py`, `publish_rune_compilers()`, `champions/slot_context.py`, `ability_prose.py` |
+| 2 | #54 kind-switch | 216 | 214 | `DamageClass` owns `named`, `is_mitigable`, `resistance_name`, `resistance_term` |
+| 3 | #14 data-clump | 214 | 198 | sixteen clumps got the record that carries their idea; three left |
+| 4 | #11 structural-clones | 198 | 92 | 51 groups dissolved into `champions/shared_mechanics.py` and the interpreter front doors; two left |
+| 5 | #27 purchase-price, reframed as navigability | 92 | 63 | `damage.py` into the `fight/` package, the per-fight trace, one home per item mechanic, 96 leaves through `scripts/extract_modules.py`; 53 #27 keys stay |
 
-## Residue by phase
+## Residue
 
-Phase 1: `SlotCtx` in a leaf made the `(ability, ctx, rank)` clump typed; its key replaced
-`slotlib.extract_named`.
+Phase 3: `(ability, ctx, rank)` is `module_helpers.ranked_slot`'s body convention and its readers
+take an axis index that is a rank or a level; `(ability, attribute, rank)` are those readers;
+`(damage_phase, preserve_reason, reason)` is the `SurvivalLedger.skip` Protocol.
 
-Phase 2: ten `damage_type in {...}` membership tests (#54 reads `if` comparisons only) and
-`participant_timeline._insert_receipt_clone`'s untyped twin of the Knight's Vow redirect switch
-stay for the phase that touches those files.
+Phase 4: `inputs.int_option`/`float_option` are two typed delegations to `_option`;
+`optimizer._build_receipt_key` pairs with a test helper that shares one comprehension.
 
-Phase 3 records:
-
-| Record | Home | Dissolves |
-|---|---|---|
-| `ValueSource(registry, owner)` with `ref`, `label`, `receipt` | `value_ref.py` | both catalog clumps, 73 signatures |
-| `EventStamp(time, sequence)` | `state_lifecycle.py` | `(kind, sequence, time)`, `(meta, sequence, time)` |
-| `StackEvent`, `AutoSwings` | `damage.py` | `(amount, detail, source)`, the six on-hit simulator inputs |
-| `TimelineScene` | `participant_timeline.py` | the three keystone scheduler clumps |
-| `EmittedSlot`, `DeclarationSites` | `champions/engine.py`, `module_contract.py` | validator prefix, contract carriers |
-| `AmpRiders`, `Window`, `PacketSources`, `CensusSweep`, `ClaimGuard` | one file each | the five single-file clumps |
-
-Phase 3 leaves: `(ability, ctx, rank)` is the calling convention `module_helpers.ranked_slot`
-types once on its `body`; its readers take an axis index that is a rank at 763 sites and a level
-at 64, so a record would misname one. `(ability, attribute, rank)` are those readers.
-`(damage_phase, preserve_reason, reason)` is `SurvivalLedger.skip`, a Protocol with three
-implementations; the interface is the type.
-
-Phase 4 leaves: `inputs.int_option`/`float_option` are two typed delegations to `_option`, and
-the typed signature is the reason two names exist. `optimizer._build_receipt_key` pairs with a
-test helper that shares one comprehension and no fact.
+Phase 5: the plan `docs/plans/2026-09-09-fight-navigability.md` names every #27 leave: the
+orchestrators whose fan-out is their own steps, `item_effects` under rule 5, the closed-union
+catalogs, the champion modules whose hot symbols are reviewed constants, the gate scripts and the
+test matrices. Four keys moved rather than cleared (`fight_params`, `champion_loadout`,
+`ally_packet_shape`, `cast_edge_inference`) and five champion modules crossed the fan-out ceiling
+when `slotlib` and `state_lifecycle` split (`ashe`, `rengar`, `bard`, `senna`, `ksante`). The
+counter is a proxy: the reader's questions are answered by `scripts/fight_trace.py` and the
+`fight/` layout, and a new on-hit item is one cached record, one parse line and one reference
+entry (`tests/test_synthetic_on_hit_item.py`).
