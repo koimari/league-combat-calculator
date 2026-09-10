@@ -202,27 +202,39 @@ def calculation_interpolation(
     return snapped
 
 
-def calculation_coefficient(spell_obj: dict[str, Any], calculation_name: str) -> float:
-    """A calculation's one finite scalar coefficient, or raise if ambiguous."""
+def _calculation_scalar(
+    spell_obj: dict[str, Any], calculation_name: str, field: str, label: str
+) -> float:
+    """The one finite *field* among a calculation's parts, or raise if ambiguous."""
     parts = _formula_parts(spell_obj, calculation_name)
-    matches = [
-        part for part in parts if isinstance(part, dict) and "mCoefficient" in part
-    ]
+    matches = [part for part in parts if isinstance(part, dict) and field in part]
     if len(matches) != 1:
         raise RuntimeError(
-            f"calculation {calculation_name!r}: expected one coefficient part, "
+            f"calculation {calculation_name!r}: expected one {label} part, "
             f"found {len(matches)}"
         )
     try:
-        value = float(matches[0]["mCoefficient"])
+        value = float(matches[0][field])
     except (TypeError, ValueError) as exc:
         raise RuntimeError(
-            f"calculation {calculation_name!r}: unusable coefficient"
+            f"calculation {calculation_name!r}: unusable {label}"
         ) from exc
     snapped = float(f"{value:.6g}")
     if not math.isfinite(snapped):
-        raise RuntimeError(f"calculation {calculation_name!r}: non-finite coefficient")
+        raise RuntimeError(f"calculation {calculation_name!r}: non-finite {label}")
     return snapped
+
+
+def calculation_coefficient(spell_obj: dict[str, Any], calculation_name: str) -> float:
+    """A calculation's one finite scalar coefficient, or raise if ambiguous."""
+    return _calculation_scalar(
+        spell_obj, calculation_name, "mCoefficient", "coefficient"
+    )
+
+
+def calculation_constant(spell_obj: dict[str, Any], calculation_name: str) -> float:
+    """A calculation's one finite ``mNumber`` formula part, or raise if ambiguous."""
+    return _calculation_scalar(spell_obj, calculation_name, "mNumber", "number")
 
 
 def calculation_stat_coefficient(

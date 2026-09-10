@@ -119,7 +119,14 @@ REVIEWED = {
             "note": "Infinite Duress unmodeled",
         },
     },
-    "Yunara": {"Q": {"status": "declared", "eff": 0.3}},
+    "Yunara": {
+        "Q": {
+            "status": "auto_stream",
+            "eff": 0.3,
+            "note": "Unleash swings are basic attacks; the 30% on-hit rides the "
+            "spread attacks, which hit other enemies, never the single target",
+        }
+    },
     "Zaahen": {"Q": {"status": "declared", "eff": 1.0}},
     "Zeri": {
         "E": {

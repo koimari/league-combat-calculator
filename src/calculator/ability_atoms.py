@@ -249,6 +249,7 @@ ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
                 "control_scope": None,
                 "control_source_atoms": (),
                 "cooldown": 0.0,
+                "critical_strike_magic_ratio": 0.0,
                 "deathfire_category": "",
                 "detail": "",
                 "dot_duration": 0.0,

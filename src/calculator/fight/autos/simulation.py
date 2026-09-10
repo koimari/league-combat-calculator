@@ -12,9 +12,12 @@ from ..resists import _mitigate, _resistance_met_fields
 from ..results import AutoAttackResult
 from ..rotation.shaped_charge import _strike_declaration
 from ..state import FightState, _crit_profile
+from .double_shot import _add_double_shot
 from .swing_profile import (
     _auto_swing_bonus_ad,
-    _basic_attack_true_rider,
+    _basic_attack_rider,
+    _critical_share,
+    _CriticalStrikeRider,
     _find_auto_attack_override,
 )
 from .swing_schedule import _auto_attack_timestamps
@@ -113,9 +116,10 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     override_replace_raw: float | None = None
     override_damage_type = "physical"
     damage_ratio = 1.0
-    passive_true_ratio, passive_true_name = _basic_attack_true_rider(
-        state.ability_damages
+    passive_true_ratio, passive_true_name = _basic_attack_rider(
+        state.ability_damages, "basic_attack_true_ratio"
     )
+    crit_magic = _CriticalStrikeRider(state.ability_damages)
     q_window_end = state.q_window_end
     if auto_attack_override:
         override_ad_ratio = ability_field(
@@ -381,6 +385,18 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                     "damage": raw_phys * passive_true_ratio * basic_amp,
                 }
             )
+        # Champion rider on the CRITICAL strikes only (Yunara P): a share
+        # of the crit's pre-mitigation damage again as magic.
+        crit_magic.pay(
+            _critical_share(
+                deterministic_outcomes,
+                raw_phys,
+                rolled_crit=not override_crit_as_bonus
+                and (natural_crit or is_empowered or is_sundered),
+            ),
+            attack_time,
+            state,
+        )
 
         # Track per-hit damage for crits vs non-crits (last value wins;
         # all crits deal the same and all non-crits deal the same)
@@ -514,6 +530,8 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             "damage_events": passive_true_events,
             "event_phase": "auto",
         }
+    if crit_magic.total > 0:
+        breakdown["auto_attacks_critical_magic"] = crit_magic.row()
 
     # Add basic damage amp breakdown entry (informational — already applied)
     if basic_amp > 1.0:
@@ -531,57 +549,18 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             "informational": True,
         }
 
-    # Double shot: second auto per attack at reduced AD (e.g. Akshan passive)
-    double_shot_total = 0.0
-    if double_shot_info and num_auto_attacks > 0:
-        ds_ratio = ability_field(double_shot_info, "ad_ratio", form="double_shot")
-        ds_crits = 0
-        double_shot_events: list[dict[str, Any]] = []
-        for i in range(num_auto_attacks):
-            ds_ad = attack_damage * ds_ratio
-            if deterministic:
-                event_damage = crit_chance * _mitigate_basic_attack_swing(
-                    state,
-                    ds_ad * crit_multiplier,
-                    critical_strike=True,
-                ) + (1.0 - crit_chance) * _mitigate_basic_attack_swing(state, ds_ad)
-            else:
-                ds_crit = random.random() < crit_chance
-                if ds_crit:
-                    ds_crits += 1
-                    raw_ds = ds_ad * crit_multiplier
-                else:
-                    raw_ds = ds_ad
-                event_damage = _mitigate_basic_attack_swing(
-                    state,
-                    raw_ds,
-                    critical_strike=ds_crit,
-                )
-            double_shot_total += event_damage
-            double_shot_events.append(
-                {
-                    "time": auto_times[i] if i < len(auto_times) else 0.0,
-                    "damage_type": "physical",
-                    "damage": event_damage,
-                    "event_precision": "exact",
-                    **_resistance_met_fields("physical", resists),
-                }
-            )
-
-        ds_non_crits = num_auto_attacks - ds_crits
-        breakdown["double_shot"] = {
-            "name": ability_field(double_shot_info, "name", form="double_shot"),
-            "count": num_auto_attacks,
-            "num_crits": ds_crits,
-            "num_non_crits": ds_non_crits,
-            "total_damage": double_shot_total,
-            "damage_type": "physical",
-            "damage_events": double_shot_events,
-            "event_phase": "auto",
-        }
+    double_shot_total = (
+        _add_double_shot(state, double_shot_info, attack_damage, auto_times)
+        if double_shot_info and num_auto_attacks > 0
+        else 0.0
+    )
 
     state.total_damage += (
-        auto_total + fiendhunter_true_total + passive_true_total + double_shot_total
+        auto_total
+        + fiendhunter_true_total
+        + passive_true_total
+        + crit_magic.total
+        + double_shot_total
     )
 
     return AutoAttackResult(
