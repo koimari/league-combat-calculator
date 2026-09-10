@@ -1838,6 +1838,11 @@ function CalculatorSession({
                 })
               }
               gold="Open item shop"
+              runesLabel={
+                selectedBuild.keystone
+                  ? `Runes · ${selectedBuild.keystone}`
+                  : "Runes"
+              }
               resourceLabel={selectedChampion?.resource}
             />
             <div className="calculator-participant-actions">
@@ -1847,19 +1852,6 @@ function CalculatorSession({
                 onClick={() => openShop(selected, 0, true)}
               >
                 {selectedBuild.boots ? "Change boots" : "Choose boots"}
-              </button>
-              <button
-                type="button"
-                className="calculator-secondary"
-                onClick={() =>
-                  setRuneOwner({
-                    id: selected.id,
-                    side: selected.id === "main" ? side : 0,
-                  })
-                }
-              >
-                Edit runes
-                {selectedBuild.keystone ? ` · ${selectedBuild.keystone}` : ""}
               </button>
               {selected.id === "main" && side === 1 && (
                 <button
@@ -2057,27 +2049,6 @@ function CalculatorSession({
                       </div>
                     ) : null;
                   })}
-                <details>
-                  <summary>Champion assumptions and sources</summary>
-                  {config?.champion_options[selected.champion]?.assumptions.map(
-                    (text, index) => (
-                      <p key={index}>{text}</p>
-                    ),
-                  )}
-                  {config?.champion_options[selected.champion]?.sources.map(
-                    (source, index) => (
-                      <p key={index}>
-                        {source.url ? (
-                          <a href={source.url} target="_blank" rel="noreferrer">
-                            {source.label}
-                          </a>
-                        ) : (
-                          source.label
-                        )}
-                      </p>
-                    ),
-                  )}
-                </details>
               </div>
             </details>
           </section>
