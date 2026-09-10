@@ -44,6 +44,7 @@ export interface Item {
   tier: number;
   rank?: string[] | null;
   shop_tags?: string[];
+  support_quest_stage?: "starter" | "intermediate" | "upgraded" | null;
   effects?: {
     kind: "passive" | "active";
     name: string | null;

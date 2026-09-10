@@ -397,11 +397,21 @@
     font-size: 12px;
     color: var(--calculator-muted);
   }
-  .calculator-event-table td:nth-child(1)::before { content: "Time"; }
-  .calculator-event-table td:nth-child(2)::before { content: "Caster"; }
-  .calculator-event-table td:nth-child(3)::before { content: "Spell"; }
-  .calculator-event-table td:nth-child(4)::before { content: "Recipient"; }
-  .calculator-event-table td:nth-child(5)::before { content: ""; }
+  .calculator-event-table td:nth-child(1)::before {
+    content: "Time";
+  }
+  .calculator-event-table td:nth-child(2)::before {
+    content: "Caster";
+  }
+  .calculator-event-table td:nth-child(3)::before {
+    content: "Spell";
+  }
+  .calculator-event-table td:nth-child(4)::before {
+    content: "Recipient";
+  }
+  .calculator-event-table td:nth-child(5)::before {
+    content: "";
+  }
   .calculator-event-table select {
     max-width: none;
     min-width: 0;

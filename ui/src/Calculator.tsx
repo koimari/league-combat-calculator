@@ -17,6 +17,7 @@ import { EventEditor } from "./EventEditor";
 import { PurchasePlanner } from "./PurchasePlanner";
 import { SlotSearch } from "./SlotSearch";
 import { CombatResults } from "./CombatResults";
+import { ScoreboardReader } from "./ScoreboardReader";
 import {
   newParticipant,
   newBuild,
@@ -38,6 +39,8 @@ import type { Build, Champion, Config, Item, Result } from "./types";
 
 export interface CalculatorProps {
   apiBase?: string;
+  /** Where the scoreboard sprite (`icon-sprite.json`, `.webp`) is served from. */
+  assetBase?: string;
   className?: string;
   advancedHref?: string;
 }
@@ -980,6 +983,7 @@ export function Calculator(props: CalculatorProps) {
 }
 function CalculatorSession({
   apiBase = "",
+  assetBase = "/static",
   className = "",
   advancedHref,
 }: CalculatorProps) {
@@ -1655,6 +1659,19 @@ function CalculatorSession({
             className="calculator-team-rosters"
             aria-label="Team rosters"
           >
+            <div className="calculator-scoreboard-trigger">
+              <ScoreboardReader
+                assetBase={assetBase}
+                catalog={catalog}
+                main={main}
+                onLoad={(result) => {
+                  setMain(result.main);
+                  setAllies(result.allies);
+                  setEnemies(result.enemies);
+                  setSelectedId("main");
+                }}
+              />
+            </div>
             <div className="calculator-team">
               <div className="calculator-section-heading">
                 <h2>

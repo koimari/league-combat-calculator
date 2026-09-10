@@ -7,6 +7,14 @@ allies through `loadSharedBuildIntoAnalyst`, the door a shared build comes in
 by. A scoreboard shows no runes, ability ranks or levels. The read keeps the
 current attacker level and resets the rest, as a shared build does.
 
+The shared React calculator (`/`, and the Scryglass tab) reads the same sprite
+through `ui/src/ScoreboardReader.tsx` and folds the read into participants in
+`ui/src/scoreboard-load.ts`. It bundles the matcher as `ui/src/scoreboard-vision.js`,
+which `ui/build.mjs` generates from the DOM-free half of `static/js/scoreboard.js`
+(everything above the page wiring marker) so there is one matcher, not two. The
+sprite location is the calculator's `assetBase` prop: `/static` on this site, a
+copied `public/` folder on Scryglass. The old page's wiring below stays as it is.
+
 ## Where each piece lives
 
 | piece | home |
