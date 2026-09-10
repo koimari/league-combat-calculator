@@ -138,8 +138,8 @@ ROW_READS = frozenset(
         ),
         ("fight/stacks/senna.py", "_add_senna_souls", "dict.get", '"target"', 1),
         (
-            "fight/autos/single_proc_on_hits.py",
-            "_add_single_proc_on_hits",
+            "fight/items/cast_procs.py",
+            "_add_late_phase_proc_damage",
             "dict.get",
             '"event_precision"',
             1,

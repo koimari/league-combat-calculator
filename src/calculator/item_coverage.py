@@ -14,6 +14,8 @@ open — pylint's line ceiling is a proxy for "more than one responsibility",
 and this is one.
 """
 
+# file-length-ok: the paragraph above is the argument, and it is the reason
+# pylint's own ceiling is waived on the next line.
 # pylint: disable=too-many-lines
 
 from collections.abc import Iterable, Mapping
@@ -59,6 +61,7 @@ from .item_behavior_catalog import (
     EVENT_CERTIFIED_MECHANICS,
     STAT_CHANNEL_TAGS,
     behavior_rules,
+    declared_pricing_home,
     declares_runtime_behaviour,
     registry_entries,
 )
@@ -1684,6 +1687,10 @@ _SOURCE_REFS: Mapping[str, tuple[str, int]] = {
     ),
 }
 
+# The attacker lane's state claims: the receipt an option's value is read
+# through, and the option that arms it.  A receipt home is not a pricing home,
+# so no entry here reads off a declared mechanic; the same holds for
+# ``_UTILITY_HOMES`` and ``_SUPPORT_PACKET_CLAIMS`` below.
 _ATTACKER_STATE_HOMES: Mapping[str, tuple[str, str]] = {
     "Actualizer": (
         "item_effects.item_state_receipts",
@@ -1756,12 +1763,23 @@ _ATTACKER_STATE_HOMES: Mapping[str, tuple[str, str]] = {
     "World Atlas": ("item_effects.item_state_receipts", "option:shared_riches_gold"),
 }
 
-# The claim population for the target lane's two modelled statuses, and the
-# symbol each item's durability is priced by.  Since 3.8's flip the *status*
-# is derived and this table is the evidence beside it: a resolution test
-# asserts the derived answer and the claim agree for every cached item, so an
-# entry that stopped being modelled fails rather than sitting here unread.
-_TARGET_MODELED_IMPLS: Mapping[str, str] = {
+#: What a target-lane entry says when the item declares the mechanic its
+#: price rides: the home is ``trigger_stream.CAPABILITIES``' own, so the claim
+#: cannot name a function that stopped pricing the item.
+DECLARED: str | None = None
+
+# The claim population for the target lane's two modelled statuses.  Since
+# 3.8's flip the *status* is derived and this table is the evidence beside it:
+# a resolution test asserts the derived answer and the claim agree for every
+# cached item, so an entry that stopped being modelled fails rather than
+# sitting here unread.
+#
+# One reason covers every string still in these two tables, so it is stated
+# here rather than 35 times: a string means the item declares no mechanic to
+# read a pricing home off, and ``_validate_target_pricing_homes`` refuses one
+# that starts to.  What is left is a defensive resolution, a sustain slot or
+# a receipt home, none of which any mechanic declares.
+_TARGET_MODELED_IMPLS: Mapping[str, str | None] = {
     "Armored Advance": "defensive_effects.resolve_starting_defenses",
     "Banshee's Veil": "defensive_effects.resolve_starting_defenses",
     "Bloodthirster": "defensive_effects.resolve_starting_defenses",
@@ -1769,16 +1787,16 @@ _TARGET_MODELED_IMPLS: Mapping[str, str] = {
     "Celestial Opposition": "defensive_effects.resolve_starting_defenses",
     "Chainlaced Crushers": "defensive_effects.resolve_starting_defenses",
     "Catalyst of Aeons": "interpreters.sustain.sustain_slot",
-    "Cryptbloom": "item_support_effects.derive_item_support_effects",
-    "Cull": "item_support_effects.derive_item_support_effects",
-    "Death's Dance": "interpreters.damage_routing.resolve_deferral",
-    "Diadem of Songs": "item_support_effects.derive_item_support_effects",
+    "Cryptbloom": DECLARED,
+    "Cull": DECLARED,
+    "Death's Dance": DECLARED,
+    "Diadem of Songs": DECLARED,
     "Doran's Blade": "interpreters.sustain.sustain_slot",
     "Doran's Ring": "interpreters.sustain.sustain_slot",
     "Doran's Shield": "survival.transitions.schedule_regeneration_recovery",
-    "Dusk and Dawn": "fight.autos.spellblade._add_spellblade_damage",
-    "Echoes of Helia": "item_support_effects.derive_item_support_effects",
-    "Eclipse": "interpreters.cast_proc.cooldown_proc_effect",
+    "Dusk and Dawn": DECLARED,
+    "Echoes of Helia": DECLARED,
+    "Eclipse": DECLARED,
     "Edge of Night": "defensive_effects.resolve_starting_defenses",
     "Frozen Heart": "roster_composition.target_overrides",
     "Rod of Ages": "item_effects.input_option_stat_bonuses",
@@ -1786,19 +1804,19 @@ _TARGET_MODELED_IMPLS: Mapping[str, str] = {
     "Guardian's Horn": "defensive_effects.resolve_starting_defenses",
     "Immortal Path": "survival.transitions.recovery_multiplier",
     "Kaenic Rookern": "defensive_effects.resolve_starting_defenses",
-    "Knight's Vow": "item_support_effects.schedule_knights_vow",
-    "Locket of the Iron Solari": "item_support_effects.derive_item_support_effects",
-    "Mikael's Blessing": "item_support_effects.derive_item_support_effects",
-    "Moonstone Renewer": "item_support_effects.derive_item_support_effects",
+    "Knight's Vow": DECLARED,
+    "Locket of the Iron Solari": DECLARED,
+    "Mikael's Blessing": DECLARED,
+    "Moonstone Renewer": DECLARED,
     "Plated Steelcaps": "defensive_effects.resolve_starting_defenses",
     "Randuin's Omen": "defensive_effects.resolve_starting_defenses",
-    "Redemption": "item_support_effects.derive_item_support_effects",
+    "Redemption": DECLARED,
     "Seeker's Armguard": "defensive_effects.resolve_starting_defenses",
-    "Solstice Sleigh": "item_support_effects.derive_item_support_effects",
+    "Solstice Sleigh": DECLARED,
     "Spirit Visage": "defensive_effects.resolve_starting_defenses",
     "Sundered Sky": "fight.autos.on_hit_healing._add_first_auto_healing",
     "Thornmail": "interpreters.reactive.thorns_effects",
-    "Unending Despair": "fight.items.burns._add_burn_damage",
+    "Unending Despair": DECLARED,
     "Verdant Barrier": "defensive_effects.resolve_starting_defenses",
     "Warden's Mail": "defensive_effects.resolve_starting_defenses",
     "Warmog's Armor": "participant_timeline._warmog_heart_tick_events",
@@ -1806,9 +1824,9 @@ _TARGET_MODELED_IMPLS: Mapping[str, str] = {
     "Zhonya's Hourglass": "defensive_effects.resolve_starting_defenses",
 }
 
-_TARGET_CERTIFIED_IMPLS: Mapping[str, str] = {
-    "Fimbulwinter": "item_support_effects.derive_item_support_effects",
-    "Force of Nature": "survival.transitions.update_combat_state",
+_TARGET_CERTIFIED_IMPLS: Mapping[str, str | None] = {
+    "Fimbulwinter": DECLARED,
+    "Force of Nature": DECLARED,
     "Hexdrinker": "interpreters.threshold_defense._lifeline_shield",
     "Immortal Shieldbow": "interpreters.threshold_defense._lifeline_shield",
     "Jak'Sho, The Protean": "survival.transitions.update_combat_state",
@@ -2197,6 +2215,35 @@ def _item_effects_claim(item: str) -> Claim:
     )
 
 
+def _target_pricing_home(item: str, listed: str | None) -> str:
+    """One target-lane claim's pricing symbol, declared or hand-listed."""
+    declared = declared_pricing_home(item)
+    if listed is None:
+        if declared is None:
+            raise ValueError(
+                f"{item!r} is claimed as priced by its own declaration and "
+                "declares no single mechanic to read a pricing home off"
+            )
+        return declared
+    return listed
+
+
+def _validate_target_pricing_homes() -> None:
+    """Neither table may hold a string an item's declaration already states."""
+    stale = sorted(
+        item
+        for table in (_TARGET_MODELED_IMPLS, _TARGET_CERTIFIED_IMPLS)
+        for item, listed in table.items()
+        if listed is not None and declared_pricing_home(item) is not None
+    )
+    if stale:
+        raise ValueError(
+            f"{stale} now declare a mechanic, so their target-lane claim must "
+            "read its pricing home off the declaration (DECLARED) rather than "
+            "hold a second copy of it"
+        )
+
+
 def _target_modeled_claim(item: str) -> Claim:
     """One derived target-modelled item and the code that admits it."""
     return Claim(
@@ -2205,7 +2252,10 @@ def _target_modeled_claim(item: str) -> Claim:
         lane="target",
         status="modeled",
         evidence=(
-            Symbol(path=_TARGET_MODELED_IMPLS[item], role="walk_packet_builder"),
+            Symbol(
+                path=_target_pricing_home(item, _TARGET_MODELED_IMPLS[item]),
+                role="walk_packet_builder",
+            ),
             _test_ref(
                 "test_a_target_modeled_item_is_admitted_by_the_target_model", item
             ),
@@ -2223,7 +2273,10 @@ def _target_certified_claim(item: str) -> Claim:
         lane="target",
         status="modeled_event_certified",
         evidence=(
-            Symbol(path=_TARGET_CERTIFIED_IMPLS[item], role="walk_packet_builder"),
+            Symbol(
+                path=_target_pricing_home(item, _TARGET_CERTIFIED_IMPLS[item]),
+                role="walk_packet_builder",
+            ),
             Symbol(
                 path="item_coverage.require_certified_target_timeline",
                 role="certification_guard",
@@ -2335,6 +2388,7 @@ def _corpus() -> dict[tuple[SubjectKind, str, ClaimLane], Claim]:
 
 
 COVERAGE_EVIDENCE: Mapping[tuple[SubjectKind, str, ClaimLane], Claim] = _corpus()
+_validate_target_pricing_homes()
 
 # Claim key -> why it is not backed yet.  It shrinks by edit and never grows:
 # a new member arrives only with the reason it cannot be a claim, and every

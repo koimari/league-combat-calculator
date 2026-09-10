@@ -13,7 +13,9 @@ ROOT = Path(__file__).resolve().parents[1]
 #: One path each home authors today.  A home that stops authoring any is a home
 #: the codemod would rewrite nothing in, which is the silence it exists to stop.
 LIVE_PATH_PER_HOME = {
-    "src/calculator/item_coverage.py": "fight.items.burns._add_burn_damage",
+    "src/calculator/item_coverage.py": (
+        "fight.autos.on_hit_healing._add_first_auto_healing"
+    ),
     "src/calculator/ledger_projection.py": (
         "fight.after.shield_outcome._resolve_starting_shield_outcome"
     ),

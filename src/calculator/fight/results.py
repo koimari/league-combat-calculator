@@ -1,7 +1,55 @@
 """The typed values the fight's steps hand each other."""
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, NamedTuple
+
+#: What a producer id says when the magnitude is a champion module's and no
+#: item rule declares it.  The slot follows the prefix, so one fight's
+#: ability-carried on-hits stay apart from each other and from every item.
+CHAMPION_PRODUCER_PREFIX = "champion:"
+
+
+class SwingStream(NamedTuple):
+    """The auto stream every strike step reads, resolved once per fight.
+
+    ``times`` is the schedule a row may stamp its events at, and is empty
+    when there is no stream or when it disagrees with the priced swing count:
+    a step reads that emptiness as "this row stays coarse" rather than
+    inventing a boundary.  ``effectiveness`` is what one item effect is worth
+    on those swings, which a replaced auto (an Azir soldier) scales down.
+    """
+
+    times: list[float]
+    effectiveness: float
+
+
+class OnHitShare(NamedTuple):
+    """One producer's share of one on-hit application.
+
+    An on-hit application is a *sum* over its producers, which is exactly the
+    shape a declaration cannot carry: a declaration is one producer's
+    magnitude (D-60).  So the producers are kept apart, each beside the
+    mechanic that declared it, and every pooled reading is derived from this
+    list rather than accumulated a second time.
+
+    ``producer_id`` is a declared item mechanic, or
+    :data:`CHAMPION_PRODUCER_PREFIX` and a slot where the magnitude is a
+    champion module's.  ``raw`` is the pre-mitigation magnitude a declaration
+    would state.
+    """
+
+    producer_id: str
+    damage_type: str
+    mitigated: float
+    raw: float
+
+    def declared_mechanic(self) -> str | None:
+        """The item mechanic that declared this share, ``None`` for a
+        champion's: a routed declaration fails closed there rather than
+        attributing it to whichever item shared its damage type."""
+        if self.producer_id.startswith(CHAMPION_PRODUCER_PREFIX):
+            return None
+        return self.producer_id
 
 
 @dataclass(frozen=True)
@@ -218,28 +266,32 @@ class OnHitResult:
     phantom_hit_count: int = 0  # auto-segment phantom hits only
     phantom_hit_autos: set[int] = field(default_factory=set)
     static_on_hit_per_hit: float = 0.0  # mitigated, for HP simulations
-    # Same per-hit damage keyed by damage type (physical/magic/true) —
-    # types the spellblade double-on-hit breakdown row exactly.
-    static_on_hit_by_type: dict[str, float] = field(default_factory=dict)
-    # The same per-hit damage kept per DECLARING ITEM rather than pooled by
-    # type, for the one consumer that needs a producer per number: a copied
-    # on-hit packet is re-delivered at a second subject, and a routed
-    # declaration names the family that declared its magnitude (umbrella
-    # Amendment R, Ruling 3).  The pooled dict above stays, because every
-    # other consumer wants the pool; what this adds is the attribution the
-    # pool threw away.  A champion's ability-carried on-hit lands in the pool
-    # and NOT here, which is deliberate and is how a copied row learns it
-    # holds a magnitude no item rule declares.
-    static_on_hit_items: list[tuple[str, str, float, float]] = field(
-        default_factory=list
-    )
+    # One entry per producer of one on-hit application, in the order the
+    # layering paid them: every item strike and every champion
+    # ability-carried on-hit.  The one home of the attribution, so a copied
+    # packet's routed declaration and the spellblade's typed pool are two
+    # readings of one list instead of two accumulations that could disagree.
+    static_on_hit_shares: list[OnHitShare] = field(default_factory=list)
     current_health_on_hit_avg: float = 0.0
     current_health_damage_type: str = "physical"
     has_current_health_on_hit: bool = False
     # Indices in the rotation's ON-HIT application sequence whose attack
     # fired a phantom hit — each grants one extra on-hit counter stack
-    # (consumed by _add_single_proc_on_hits).
+    # (consumed by _add_stacking_strikes).
     phantom_ability_stack_positions: set[int] = field(default_factory=set)
+
+    def static_on_hit_by_type(self) -> dict[str, float]:
+        """One on-hit application's mitigated damage, pooled by damage type.
+
+        Folded in the shares' own order, which is the order the layering paid
+        them, so the pool is the same sum a per-type accumulator would build.
+        """
+        pooled: dict[str, float] = {}
+        for share in self.static_on_hit_shares:
+            pooled[share.damage_type] = (
+                pooled.get(share.damage_type, 0.0) + share.mitigated
+            )
+        return pooled
 
 
 @dataclass

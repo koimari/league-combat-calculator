@@ -6,7 +6,6 @@ from typing import Any
 
 from ...ability_atoms import ability_field
 from ...ability_spec import AttackClass
-from ...interpreters import charged_strike
 from ...survival.pricing import AuthoredDeclaration
 from ..ledger.event_rows import (
     _CAST_TIME_RESOLUTION,
@@ -17,25 +16,20 @@ from ..results import RotationResult
 from ..state import FightState, _damage_inputs
 
 
+# ``mechanic_id`` is the rule the row this packet belongs to previews, handed
+# in by its author rather than looked up by owner here, so one row and its
+# packets cannot name the rule two ways.  ``AttackClass.OTHER`` is the default
+# because an item's own charged packet is priced by ``_mitigate`` alone; the
+# ultimate's empowered run states its class, because Fiendhunter's true
+# instance rides the swing and earns the basic part amp.  ``raw_amount``
+# carries the caller's pair-local factors, which allocate rather than amplify.
 def _strike_declaration(
-    item_name: str,
+    mechanic_id: str,
     raw_amount: float,
     attack_class: AttackClass = AttackClass.OTHER,
 ) -> tuple[Any, ...]:
-    """One charged-strike packet's declaration: rule, magnitude, attack class.
-
-    ``AttackClass.OTHER`` is the default because an item's own charged packet
-    is priced by ``_mitigate`` alone; the ultimate's empowered run states its
-    class, because Fiendhunter's true instance rides the swing and earns the
-    holder's basic part amp.  *raw_amount* already carries the caller's
-    pair-local factors, which allocate one application rather than amplify."""
-    return tuple(
-        AuthoredDeclaration(
-            charged_strike.strike_mechanic_id(item_name),
-            raw_amount,
-            attack_class.value,
-        )
-    )
+    """One charged-strike packet's declaration: rule, magnitude, attack class."""
+    return tuple(AuthoredDeclaration(mechanic_id, raw_amount, attack_class.value))
 
 
 def _next_authored_event(
@@ -148,6 +142,7 @@ def _add_shaped_charge_damage(state: FightState, rotation: RotationResult) -> No
         per_proc = source.raw_damage(_damage_inputs(state))
         procs = len(proc_receipts)
         total_damage = per_proc * procs
+        mechanic = source.previewed_mechanic()
         state.breakdown[source.breakdown_key] = {
             "name": source.display_name,
             "count": procs,
@@ -158,15 +153,15 @@ def _add_shaped_charge_damage(state: FightState, rotation: RotationResult) -> No
             # walk owns: the roster composition reads the stamp and takes the
             # figure below out of every total it composes, while the pair
             # fight's own receipt publishes it unchanged.
-            "pair_preview_of": charged_strike.strike_mechanic_id(source.item_name),
-            "declared": _strike_declaration(source.item_name, total_damage),
+            "pair_preview_of": mechanic,
+            "declared": _strike_declaration(mechanic, total_damage),
             "damage_events": [
                 {
                     "time": receipt["time"],
                     "damage": per_proc,
                     "damage_type": source.damage_type,
                     "event_precision": receipt["event_precision"],
-                    "declared": _strike_declaration(source.item_name, per_proc),
+                    "declared": _strike_declaration(mechanic, per_proc),
                 }
                 for receipt in proc_receipts
             ],

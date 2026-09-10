@@ -9,10 +9,9 @@ from ...ability_spec import AttackClass
 # The interpreter comes in by its one entry point rather than as a module: a
 # bare ``spellblade`` here would name the interpreter inside the step the
 # engine already calls spellblade.
-from ...interpreters.spellblade import spellblade_mechanic_id
 from ...survival.pricing import AuthoredDeclaration
 from ..ledger.event_rows import _damage_type_fields
-from ..resists import _mitigate
+from ..resists import _mitigate, _resistance_met_fields
 from ..results import AutoAttackResult, OnHitResult, RotationResult, SpellbladeResult
 from ..state import FightState, _damage_inputs
 from .swing_profile import _on_hit_effectiveness
@@ -140,7 +139,7 @@ def _add_spellblade_true_rider(
     state.total_damage += rider_total
 
 
-def _spellblade_declaration(item_name: str, raw_amount: float) -> tuple[Any, ...]:
+def _spellblade_declaration(mechanic_id: str, raw_amount: float) -> tuple[Any, ...]:
     """One spellblade packet's declaration: rule, magnitude, attack class.
 
     ``AttackClass.OTHER`` is measured, not defaulted: a spellblade proc reaches
@@ -150,7 +149,7 @@ def _spellblade_declaration(item_name: str, raw_amount: float) -> tuple[Any, ...
     consuming attack's on-hit effectiveness, which allocates rather than amps."""
     return tuple(
         AuthoredDeclaration(
-            spellblade_mechanic_id(item_name),
+            mechanic_id,
             raw_amount,
             AttackClass.OTHER.value,
         )
@@ -273,9 +272,9 @@ def _add_spellblade_damage(
                 # walk: one whose procs landed on no certifiable weave
                 # schedule, so it authors no event of its own and the
                 # reconstruction synthesizes one (``_row_declaration_share``).
-                plain_row["pair_preview_of"] = spellblade_mechanic_id(source.item_name)
+                plain_row["pair_preview_of"] = source.previewed_mechanic()
                 plain_row["declared"] = _spellblade_declaration(
-                    source.item_name, raw_sb * plain
+                    source.previewed_mechanic(), raw_sb * plain
                 )
             state.breakdown[source.breakdown_key] = plain_row
             if proc_times:
@@ -295,12 +294,13 @@ def _add_spellblade_damage(
                         **(
                             {
                                 "declared": _spellblade_declaration(
-                                    source.item_name, raw_sb
+                                    source.previewed_mechanic(), raw_sb
                                 )
                             }
                             if plain > 0
                             else {}
                         ),
+                        **_resistance_met_fields(source.damage_type, resists),
                     }
                     for proc_time in proc_times[converted:]
                 ]
@@ -327,6 +327,7 @@ def _add_spellblade_damage(
                         "time": proc_time,
                         "damage": amount,
                         "damage_type": dtype,
+                        **_resistance_met_fields(dtype, resists),
                     }
                     for proc_time in proc_times[:converted]
                     for dtype, amount in (
@@ -384,8 +385,29 @@ def _add_spellblade_damage(
         result.double_on_hit_procs = result.procs
         extra_by_type = {
             dtype: amount * result.double_on_hit_procs
-            for dtype, amount in on_hits.static_on_hit_by_type.items()
+            for dtype, amount in on_hits.static_on_hit_by_type().items()
         }
+        # What each producer of the doubled application contributed, for the
+        # reader that has to explain the row: the row's own damage is a sum
+        # over producers of one damage type, so the attribution cannot live
+        # on the typed events.  Receipt only; no allow list publishes it.
+        extra_shares = [
+            {
+                "producer": share.producer_id,
+                "damage_type": share.damage_type,
+                "damage": share.mitigated * result.double_on_hit_procs,
+                "raw_damage": share.raw * result.double_on_hit_procs,
+            }
+            for share in on_hits.static_on_hit_shares
+            if share.mitigated > 0.0
+        ]
+        # The same pool read pre-mitigation, so one doubled application can
+        # state the raw it was priced from rather than its mitigated amount.
+        raw_by_type: dict[str, float] = {}
+        for share in on_hits.static_on_hit_shares:
+            raw_by_type[share.damage_type] = (
+                raw_by_type.get(share.damage_type, 0.0) + share.raw
+            )
 
         # Current-health extra procs use the fight's average per-hit damage.
         if on_hits.has_current_health_on_hit and state.num_auto_attacks > 0:
@@ -393,6 +415,9 @@ def _add_spellblade_damage(
             extra_by_type[ch_type] = extra_by_type.get(ch_type, 0.0) + (
                 on_hits.current_health_on_hit_avg * result.double_on_hit_procs
             )
+            # That average is of mitigated procs and states no raw of its
+            # own, so the type it lands on states none either.
+            raw_by_type.pop(ch_type, None)
 
         extra_on_hit = sum(extra_by_type.values())
         if extra_on_hit > 0:
@@ -403,6 +428,7 @@ def _add_spellblade_damage(
                 "unit": "procs",
                 "total_damage": extra_on_hit,
                 **_damage_type_fields(extra_by_type),
+                "on_hit_shares": extra_shares,
             }
             # Each double application rides the attack that consumed the
             # charge, at the weave-timed proc boundary the spellblade
@@ -414,6 +440,12 @@ def _add_spellblade_damage(
                         "time": proc_time,
                         "damage": amount / result.double_on_hit_procs,
                         "damage_type": dtype,
+                        **(
+                            {"raw_damage": raw_by_type[dtype]}
+                            if dtype in raw_by_type
+                            else {}
+                        ),
+                        **_resistance_met_fields(dtype, resists),
                     }
                     for proc_time in proc_times
                     for dtype, amount in extra_by_type.items()

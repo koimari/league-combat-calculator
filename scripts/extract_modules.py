@@ -39,6 +39,7 @@ from scripts.module_units import (
     import_sections,
     import_sort_key,
     import_statement,
+    is_future_import,
     merge_imports,
     read_lines,
     read_parts,
@@ -66,7 +67,7 @@ class Source:
         for node in self.tree.body:
             if isinstance(node, (ast.Import, ast.ImportFrom)):
                 self.import_end = node.end_lineno or node.lineno
-                self.future |= getattr(node, "module", None) == "__future__"
+                self.future |= is_future_import(node)
                 for alias in node.names:
                     self.import_of[bound_alias(alias)] = (node, alias)
         self.units = self._cut_units()
@@ -237,7 +238,10 @@ class Plan:
                 walk(key, [key])
 
     def _residue_reads(self) -> set[str]:
-        kept = [n for n in self.source.tree.body if not isinstance(n, MOVABLE)]
+        body = self.source.tree.body
+        kept = [
+            n for n in body if not isinstance(n, MOVABLE) and not is_future_import(n)
+        ]
         kept += [unit.node for unit in self.residue_units]
         return set().union(*(free_names(node) for node in kept)) if kept else set()
 
@@ -264,12 +268,15 @@ def _exports_line(plan: Plan) -> str:
 def _unread_imports(plan: Plan) -> tuple[set[int], dict[int, str]]:
     """Import lines nothing in the residue reads, and the ones it half reads.
 
-    An import the residue keeps whole is left exactly as the source spells it.
+    An import the residue keeps whole is left exactly as the source spells it,
+    and a ``__future__`` import is kept whatever the residue reads.
     """
     dropped: set[int] = set()
     narrowed: dict[int, str] = {}
     for node in plan.source.tree.body:
         if not isinstance(node, (ast.Import, ast.ImportFrom)):
+            continue
+        if is_future_import(node):
             continue
         read = [a for a in node.names if bound_alias(a) in plan.residue_reads]
         if len(read) == len(node.names):

@@ -252,6 +252,33 @@ def _mitigate(
     return raw_damage
 
 
+def _resistance_met_fields(
+    damage_type: str,
+    resists: Resists,
+    *,
+    ability_mr: float | None = None,
+) -> dict[str, float]:
+    """The ``resistance_met`` an event states, off what :func:`_mitigate` reads.
+
+    The same class dispatch and the same two arguments, so the field cannot
+    name a resistance the mitigation did not apply.  Empty for a class no
+    resistance answers for: a packet that met none states no field rather
+    than a zero it did not meet.
+    """
+    damage_class = DamageClass.named(damage_type)
+    met = (
+        None
+        if damage_class is None
+        else damage_class.resistance_term(
+            armor=resists.effective_armor,
+            magic_resistance=(
+                resists.effective_mr if ability_mr is None else ability_mr
+            ),
+        )
+    )
+    return {} if met is None else {"resistance_met": float(met)}
+
+
 def _apply_physical_damage_reduction(raw_damage: float, resists: Resists) -> float:
     """Apply a target's capped flat reduction to one physical raw instance."""
     if raw_damage <= 0.0:

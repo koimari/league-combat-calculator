@@ -12,6 +12,9 @@ that reads it: stack acceleration and ``on_hit`` in
 ``stack_triggered_buff`` in ``fight/rotation/stack_timeline.py``.
 """
 
+# file-length-ok: the bulk is the import block naming every step and the one
+# ordered call list that is this module's whole job; a step lifted out is a
+# call whose place in the order lives in another file.
 import math
 from collections.abc import Iterable, Mapping
 from typing import Any
@@ -25,24 +28,37 @@ from .fight.after.lethality_windows import _apply_temporary_lethality_windows
 from .fight.after.reprice import _add_shadowflame_cinderbloom
 from .fight.after.shield_outcome import _resolve_starting_shield_outcome
 from .fight.after.stored_damage import _add_stored_damage
+from .fight.autos.first_auto_strikes import (
+    _add_first_auto_strikes,
+    _author_energized_ability_procs,
+)
 from .fight.autos.on_hit_healing import _add_first_auto_healing, _add_on_hit_healing
 from .fight.autos.on_hit_layering import _layer_on_hit_effects
 from .fight.autos.on_hit_stream import _add_lifesteal_events, _add_omnivamp_events
 from .fight.autos.simulation import _simulate_auto_attacks
-from .fight.autos.single_proc_on_hits import _add_single_proc_on_hits
 from .fight.autos.spellblade import (
     _add_spellblade_damage,
     _prepare_spellblade_attack_schedule,
 )
+from .fight.autos.stacking_strikes import _add_stacking_strikes
+from .fight.autos.swing_profile import _on_hit_effectiveness
+from .fight.autos.swing_schedule import _auto_attack_timestamps
 from .fight.config import FightConfig
-from .fight.items.actives import _add_item_active_damage
+from .fight.items.actives import _add_auto_cooldown_strikes, _add_item_active_damage
 from .fight.items.burns import _add_burn_damage
-from .fight.items.cast_procs import _add_item_proc_damage
+from .fight.items.cast_procs import _add_item_proc_damage, _add_late_phase_proc_damage
+from .fight.items.muramana import _add_per_ability_hit_damage
+from .fight.items.secondary_delivery import (
+    _add_bolt_delivery,
+    _add_cleave_delivery,
+    _add_cone_delivery,
+)
 from .fight.items.ultimate_procs import _add_ultimate_proc_damage
 from .fight.ledger.breakdown import _is_auto_stream_key
 from .fight.ledger.coverage import _resolve_timeline_coverage
 from .fight.ledger.event_ledger import _ordered_damage_events
 from .fight.ledger.execute_stamps import _stamp_execute_thresholds
+from .fight.results import SwingStream
 from .fight.rotation.ability_rotation import _compute_ability_rotation
 from .fight.rotation.dot_ticks import (
     _add_stacking_dot_damage,
@@ -86,6 +102,7 @@ from .fight.stacks.heimerdinger import _add_heimerdinger_w_e
 from .fight.stacks.ksante import _add_ksante_path_maker
 from .fight.stacks.rengar import _add_rengar_ferocity
 from .fight.stacks.senna import _add_senna_souls
+from .fight.state import FightState
 from .interpreters import on_hit_strike
 from .ledger_projection import (
     ResultProjection,
@@ -123,6 +140,19 @@ def _require_target_class_support(
             f"target_class={config.target_class!r} is not supported by this "
             "build: " + "; ".join(denials)
         )
+
+
+def _swing_stream(state: FightState) -> SwingStream:
+    """The auto stream every strike step reads, resolved once for all of them.
+
+    The schedule is empty when it disagrees with the priced swing count, which
+    is what keeps a row that cannot be timed coarse.
+    """
+    times = _auto_attack_timestamps(state)
+    return SwingStream(
+        times if len(times) == state.num_auto_attacks else [],
+        _on_hit_effectiveness(state),
+    )
 
 
 def calculate_fight_damage(
@@ -224,8 +254,31 @@ def calculate_fight_damage(
 
     _add_item_active_damage(state, rotation)
 
-    # ── Single-proc on-hits, Shadowflame, and Expose Weakness ───────────
-    _add_single_proc_on_hits(state, rotation, autos, on_hits, spellblade=spellblade)
+    # ── The strikes that proc once or on a counter, and what they deliver
+    #    at a second subject ─────────────────────────────────────────────
+    swings = _swing_stream(state)
+    energized_by_ability = _author_energized_ability_procs(
+        state, rotation, swings=swings
+    )
+    _add_bolt_delivery(state, on_hits, swings=swings)
+    _add_cleave_delivery(state, swings=swings)
+    _add_first_auto_strikes(
+        state,
+        rotation,
+        on_hits,
+        spellblade=spellblade,
+        ability_consumed_items=energized_by_ability,
+        swings=swings,
+    )
+    empowered_autos = _add_auto_cooldown_strikes(state, swings=swings)
+    _add_cone_delivery(state, empowered_autos=empowered_autos, swings=swings)
+    _add_stacking_strikes(
+        state, rotation, autos, on_hits, spellblade=spellblade, swings=swings
+    )
+    _add_late_phase_proc_damage(state, rotation)
+    _add_per_ability_hit_damage(state, rotation)
+
+    # ── Shadowflame and Expose Weakness ─────────────────────────────────
     _add_on_hit_healing(state, autos, on_hits)
     _add_first_auto_healing(state)
     _add_shadowflame_cinderbloom(state, config, rotation)

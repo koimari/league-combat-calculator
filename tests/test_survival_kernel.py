@@ -51,8 +51,8 @@ from src.calculator.ability_spec import AttackClass, DamageClass
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
 from src.calculator.fight.after import reprice
-from src.calculator.fight.autos import single_proc_on_hits, swing_profile
-from src.calculator.fight.items import actives, burns
+from src.calculator.fight.autos import swing_profile
+from src.calculator.fight.items import actives, burns, secondary_delivery
 from src.calculator.interpreters import (
     INTERPRETERS,
     active_cast,
@@ -3641,7 +3641,7 @@ def test_both_declared_spellblade_damage_classes_are_inside_the_fixture_set():
 #: The pair engine's own step for the bolt row, and the row it authors.  Named
 #: rather than searched for: the stamp has to land where the family's own
 #: retirement slice would put it.
-SWING_SEED_STEP = single_proc_on_hits._add_single_proc_on_hits
+SWING_SEED_STEP = secondary_delivery._add_bolt_delivery
 SWING_SEED_ROW = "secondary_Runaan's Hurricane"
 SWING_SEED_RULE = "runaans_hurricane.secondary_target"
 SWING_SEED_ITEMS = ("Runaan's Hurricane", "Blade of the Ruined King")

@@ -606,7 +606,7 @@ class TestMalformedLedgerWithholding:
         # damage_events; it is stamped with the NAMED withheld reason and
         # the coverage classifier marks it coarse.
         monkeypatch.setattr(
-            "src.calculator.fight.autos.single_proc_on_hits._muramana_proc_events",
+            "src.calculator.fight.items.muramana._muramana_proc_events",
             lambda *args, **kwargs: None,
         )
         fight = _fight(
@@ -637,7 +637,7 @@ class TestMalformedLedgerWithholding:
         # proc count is the trusted cast receipt) but the events are
         # withheld with the named reason.
         monkeypatch.setattr(
-            "src.calculator.fight.autos.single_proc_on_hits._muramana_proc_events",
+            "src.calculator.fight.items.muramana._muramana_proc_events",
             lambda *args, **kwargs: None,
         )
         fight = _fight(

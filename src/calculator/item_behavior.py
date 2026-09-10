@@ -29,6 +29,12 @@ Naming: the unit is a **rule**, never an "atom" (D-44).  ``atomizer.Atom``,
 live meanings of that word already.
 """
 
+# file-length-ok: the bulk is the closed union itself, one frozen payload per
+# family beside the enum naming it, and a payload lifted out is a union member
+# whose family lives in another file.  The leaf-import contract above is the
+# other half: every consumer depends on this module, so a split is a second
+# import edge for each of them.  docs/plans/2026-09-09-fight-navigability.md
+# carves the interpreters that read these payloads, not the vocabulary.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -894,6 +900,40 @@ class OnHitStrikeRule:
     superseded_by_ability_proc: bool
 
 
+class SecondaryDelivery(Enum):
+    """How one routing rule's packets reach a subject, and how a row says so.
+
+    Closed, because a delivery the engine cannot spell a row for is one it
+    must not price: each member carries the tag a registry entry names it by,
+    the words its row adds to the holder's name and the kind its targeting
+    receipt names, so an engine that reads a rule never spells any of the
+    three from an item name of its own.
+    """
+
+    WINDS_FURY = ("winds_fury", "Wind's Fury bolt", "runaan_bolt")
+
+    @property
+    def row_words(self) -> str:
+        """What the delivered row calls itself, after the holder's name."""
+        return self.value[1]
+
+    @property
+    def targeting_kind(self) -> str:
+        """The delivery its targeting receipt names."""
+        return self.value[2]
+
+    @classmethod
+    def for_tag(cls, tag: str) -> SecondaryDelivery:
+        """The delivery a registry entry names, or a stop naming the tag."""
+        for member in cls:
+            if member.value[0] == tag:
+                return member
+        raise BehaviorRuleError(
+            f"{tag!r} is not one of the declared secondary deliveries "
+            f"{sorted(member.value[0] for member in cls)}"
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class SecondaryTargetRule:
     """A strike that also lands on targets the attack was not aimed at.
@@ -902,11 +942,16 @@ class SecondaryTargetRule:
     their own: the number they carry is a share of *the attack that fired
     them*, which is why this family is separate from the strike families that
     own a formula.
+
+    ``delivery`` is the presentation half of the same declaration: the rule
+    owns what its rows are called, so a second routing item cannot inherit
+    this one's spelling from engine code.
     """
 
     max_targets: AnyValueRef
     damage_share: AnyValueRef
     applies_on_hit: bool
+    delivery: SecondaryDelivery
 
 
 @dataclass(frozen=True, slots=True)
@@ -3787,50 +3832,6 @@ def typed_payload[T](
     return payload
 
 
-def declared_mechanic_id(
-    owner: str,
-    rules: Sequence[BehaviorRule],
-    stop: type[Exception],
-    *,
-    authors: str,
-    declares: str,
-) -> str:
-    """The mechanic id of *owner*'s first rule, or *stop*.
-
-    A stop rather than a default: an unstamped pair row keeps the pair
-    engine's number in every roster total while the walk prices the same
-    declaration, and that is a double count.
-    """
-    if not rules:
-        raise stop(
-            f"{owner} authors {authors} and declares no {declares} rule, so its "
-            "pair row has no mechanic to be a preview of"
-        )
-    return rules[0].mechanic_id
-
-
-def mechanic_id_reading(
-    rules: Callable[[Sequence[str]], Sequence[BehaviorRule]],
-    stop: type[Exception],
-    *,
-    authors: str,
-    declares: str,
-) -> Callable[[str], str]:
-    """A family's front door onto :func:`declared_mechanic_id`, bound once.
-
-    Every family stamps its pair row with the mechanic that row previews,
-    and every one of them refuses the same way, so the family binds its own
-    rule reader and its own words here instead of re-spelling the call.
-    """
-
-    def read(owner: str) -> str:
-        return declared_mechanic_id(
-            owner, rules([owner]), stop, authors=authors, declares=declares
-        )
-
-    return read
-
-
 def compiled_value(
     fields: Iterable[KernelField], name: str, stop: type[Exception], missing: str
 ) -> float:
@@ -4100,12 +4101,10 @@ __all__ = [
     "ZeroPolicy",
     "chain_rank",
     "compiled_value",
-    "declared_mechanic_id",
     "flat_fields",
     "is_denial_receipt",
     "is_packet_kind",
     "is_value_reference",
-    "mechanic_id_reading",
     "policy_values",
     "policy_walk",
     "sole_declaration",

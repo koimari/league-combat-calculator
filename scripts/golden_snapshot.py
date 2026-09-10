@@ -37,6 +37,11 @@ Usage:
     python scripts/golden_snapshot.py fingerprint <snapshot.json>
 """
 
+# file-length-ok: the bulk is the two acceptance matrices themselves, one
+# entry per scenario with the reason it is captured beside it, and a matrix
+# split from the harness that runs it is a scenario whose reason lives in
+# another file.  docs/plans/2026-09-09-fight-navigability.md rules the
+# scripts carve out of scope for the same reason.
 import argparse
 import ast
 import copy
@@ -1404,6 +1409,56 @@ COUPLED_SCENARIOS = (
             enemy_cards={"Darius": {"items": ("Stridebreaker",)}},
             fight_mode="one_rotation",
             enemies_attack=True,
+        ),
+    ),
+    # The three secondary-delivery shapes: a packet the holder aimed at one
+    # subject and the engine lands on another.  The pair snapshot's item
+    # sweep is single-target, so every one of these rows is worth exactly
+    # zero there, and a roster is the only place they are observable at all.
+    # Each is a distinct delivery: Titanic's cone declares its own max-health
+    # magnitude, Ravenous's cleave is a share of the swing beside a copied
+    # on-hit stream, and Statikk's chain allocates one packet across a
+    # level-scaled prefix of the roster.
+    #
+    # Two enemies on every one of them, because a secondary subject is the
+    # mechanic: against one target the cone, the cleave and the chain all
+    # price nothing.  Autos at full uptime, because all three ride a swing.
+    #
+    # The Hydras are one exclusivity group, so they cannot share a roster.
+    CoupledScenario(
+        "titanic_cone_bruiser_roster",
+        _roster_request(
+            "Darius",
+            ("Titanic Hydra",),
+            enemies=("Aatrox", "Malphite"),
+            allies=("Lulu",),
+            include_auto_attacks=True,
+            auto_attack_uptime=1.0,
+        ),
+    ),
+    CoupledScenario(
+        "cleave_copied_on_hit_bruiser_roster",
+        _roster_request(
+            "Darius",
+            ("Ravenous Hydra",),
+            enemies=("Aatrox", "Malphite"),
+            allies=("Lulu",),
+            include_auto_attacks=True,
+            auto_attack_uptime=1.0,
+        ),
+    ),
+    # Blade of the Ruined King beside the chain because the copied stream is
+    # what a chained packet carries: a chain with no on-hit sibling to copy
+    # observes only the packet's own magnitude.
+    CoupledScenario(
+        "chain_lightning_carry_roster",
+        _roster_request(
+            "Caitlyn",
+            ("Statikk Shiv", "Blade of the Ruined King"),
+            enemies=("Aatrox", "Malphite"),
+            allies=("Lulu",),
+            include_auto_attacks=True,
+            auto_attack_uptime=1.0,
         ),
     ),
     *_syndra_pin_scenarios(),

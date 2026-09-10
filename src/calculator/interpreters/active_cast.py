@@ -29,7 +29,6 @@ from ..item_behavior import (
     BuildContext,
     FightFacts,
     RuleFamily,
-    mechanic_id_reading,
     typed_payload,
 )
 from ..item_behavior_catalog import behavior_rules, built_per_rule
@@ -79,6 +78,7 @@ def active_source(rule: BehaviorRule, ctx: BuildContext) -> DamageSource:
         rule.owner,
         payload.formula.damage_type,
         damage_formula.compile_formula(payload.formula, ctx),
+        mechanic_id=rule.mechanic_id,
         suffix=ACTIVE_SUFFIX,
         breakdown_key=f"{ACTIVE_BREAKDOWN_PREFIX}{rule.owner}",
         lifesteal_effectiveness=(
@@ -99,14 +99,6 @@ def active_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
     )
 
 
-active_mechanic_id = mechanic_id_reading(
-    active_rules,
-    ActiveCastInterpretationError,
-    authors="an item active",
-    declares="active_cast",
-)
-
-
 def active_sources(
     owners: Sequence[str],
     *,
@@ -123,7 +115,6 @@ __all__ = [
     "NO_INHERITED_LIFESTEAL",
     "ActiveCastInterpretationError",
     "active_fields",
-    "active_mechanic_id",
     "active_rules",
     "active_source",
     "active_sources",

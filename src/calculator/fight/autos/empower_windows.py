@@ -40,7 +40,6 @@ from typing import Any
 
 from ...ability_atoms import ability_field
 from ...ability_spec import AttackClass
-from ...interpreters import on_hit_strike
 from ...survival.pricing import AuthoredDeclaration
 from ..resists import _mitigate
 from ..results import RotationResult
@@ -48,7 +47,7 @@ from ..state import FightState
 from .swing_schedule import _swings_at_rate
 
 
-def _on_hit_declaration(item_name: str, raw_amount: float) -> tuple[Any, ...]:
+def _on_hit_declaration(mechanic_id: str, raw_amount: float) -> tuple[Any, ...]:
     """One on-hit packet's declaration: rule, magnitude, attack class.
 
     ``AttackClass.OTHER`` is measured, not defaulted: all eight declared
@@ -58,7 +57,7 @@ def _on_hit_declaration(item_name: str, raw_amount: float) -> tuple[Any, ...]:
     on-hit effectiveness, which allocates rather than amplifies."""
     return tuple(
         AuthoredDeclaration(
-            on_hit_strike.strike_mechanic_id(item_name),
+            mechanic_id,
             raw_amount,
             AttackClass.OTHER.value,
         )

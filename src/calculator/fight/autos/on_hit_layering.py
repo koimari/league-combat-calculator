@@ -39,17 +39,29 @@ applies the build's item on-hits is ``on_hit_stream``.
     ramp, with stacks assumed never to drop mid-fight.
 """
 
+# file-length-ok: the bulk is the champion-rider region, 24 modules'
+# on-hit contracts read through one dict dispatch.  Typing that contract
+# is stage 4 of docs/plans/2026-09-09-fight-navigability.md, and a
+# stampability predicate that flips there makes a row coarse, which moves
+# the coupled golden's leaf set with no number moving.
+from collections.abc import Sequence
 from typing import Any
 
 from ... import item_effects
 from ...ability_atoms import ability_field
-from ...interpreters import on_hit_strike
 from ..items.energized_packets import _first_auto_damage_by_auto_for_health_walk
 from ..ledger.event_ledger import _ordered_damage_events
 from ..ledger.event_rows import _damage_type_fields
 from ..mitigation import _crit_scaled_raw
-from ..resists import _mitigate
-from ..results import AutoAttackResult, OnHitResult, RotationResult
+from ..resists import Resists, _mitigate, _resistance_met_fields
+from ..results import (
+    CHAMPION_PRODUCER_PREFIX,
+    AbilityItemApplication,
+    AutoAttackResult,
+    OnHitResult,
+    OnHitShare,
+    RotationResult,
+)
 from ..state import FightState, _damage_inputs
 from .decaying_health_walk import (
     AutoSwings,
@@ -69,6 +81,174 @@ from .on_hit_stream import (
 )
 from .swing_profile import _on_hit_effectiveness
 from .swing_schedule import _auto_attack_timestamps
+
+
+def _swing_event_row(
+    times: list[float],
+    damages: list[float],
+    damage_type: str,
+    declarations: list[tuple[Any, ...]] | None = None,
+    raws: list[float] | None = None,
+    resists: Resists | None = None,
+) -> dict[str, Any]:
+    """Row fields authoring one typed event per (time, damage) pair.
+
+    ``declarations`` is one per event for a row the walk prices itself, and
+    ``None`` for a row delivered as the pair engine's own price.  ``raws`` is
+    one per event for a row whose caller priced each application from its own
+    pre-mitigation magnitude, and ``None`` where the caller states none, which
+    the receipt reads as a refusal rather than as a number.  Both ride through
+    the sort beside their own damage rather than being stamped afterwards: the
+    events are ordered by time, and an application's magnitude belongs to the
+    application, not to the position it lands in.  ``resists`` is what the
+    caller mitigated against; one row is one damage class, so its whole
+    schedule met one resistance.
+    """
+    declared = declarations or [None] * len(damages)
+    stated = raws or [None] * len(damages)
+    met = {} if resists is None else _resistance_met_fields(damage_type, resists)
+    ordered = sorted(
+        zip(times, damages, declared, stated, strict=False),
+        key=lambda packet: float(packet[0]),
+    )
+    return {
+        "event_phase": "auto",
+        "damage_events": [
+            {
+                "time": time,
+                "damage": damage,
+                "damage_type": damage_type,
+                **({} if declaration is None else {"declared": declaration}),
+                **({} if raw is None else {"raw_damage": raw}),
+                **met,
+            }
+            for time, damage, declaration, raw in ordered
+        ],
+    }
+
+
+def _pay_ability_phantom_on_hits(
+    state: FightState,
+    result: OnHitResult,
+    *,
+    apps: Sequence[AbilityItemApplication],
+    ability_phantoms: Sequence[int],
+    attack_app_indices: Sequence[int],
+    phantom_effect: item_effects.PhantomHitEffect | None,
+) -> float:
+    """Re-apply the build's per-hit effects on each ability-fired phantom hit.
+
+    A phantom fired by an ability attack lands at that attack's own
+    effectiveness (a Bel'Veth slash's 8 to 32%) and grants one extra stack on
+    the shared ON-HIT counters at that hit's position, which the stacking-proc
+    walk consumes off ``result``.  Returns what the phantoms are worth.
+    """
+    if not ability_phantoms:
+        return 0.0
+    assert phantom_effect is not None
+    on_hit_seq_index = {}
+    seq = 0
+    for i, app in enumerate(apps):
+        if app.on_hit:
+            on_hit_seq_index[i] = seq
+            seq += 1
+    phantom_ability_damage = 0.0
+    phantom_by_type: dict[str, float] = {}
+    phantom_events: list[dict[str, Any]] | None = []
+    for position in ability_phantoms:
+        app = apps[attack_app_indices[position]]
+        applied = _ability_applied_on_hit_damage(
+            state, app.effectiveness, app.target_hp
+        )
+        for dtype, amount in applied.items():
+            phantom_by_type[dtype] = phantom_by_type.get(dtype, 0.0) + amount
+        # A phantom re-application fires with its triggering attack, so it
+        # shares that hit's authored timestamp; one untimed carrier keeps the
+        # row coarse rather than inventing a boundary.
+        if phantom_events is not None:
+            if app.time is None:
+                phantom_events = None
+            else:
+                phantom_events.extend(
+                    {
+                        "time": float(app.time),
+                        "damage": amount,
+                        "damage_type": dtype,
+                    }
+                    for dtype, amount in applied.items()
+                    if amount > 0
+                )
+        phantom_ability_damage += sum(applied.values())
+        mapped = on_hit_seq_index.get(attack_app_indices[position])
+        if mapped is not None:
+            result.phantom_ability_stack_positions.add(mapped)
+    if phantom_ability_damage <= 0:
+        return 0.0
+    state.breakdown["on_hit_items_phantom"] = {
+        "name": f"{phantom_effect.item_name} phantom hits (ability attacks)",
+        "count": len(ability_phantoms),
+        "total_damage": phantom_ability_damage,
+        **_damage_type_fields(phantom_by_type),
+    }
+    if phantom_events:
+        state.breakdown["on_hit_items_phantom"].update(
+            {"damage_events": phantom_events, "event_phase": "ability"}
+        )
+    return phantom_ability_damage
+
+
+def _application_times(
+    state: FightState, result: OnHitResult, *, double_shot_extra: int
+) -> tuple[list[float], list[float]]:
+    """The fight's swing schedule, and one entry per on-hit application.
+
+    Every auto-segment on-hit application rides a timestamped swing, so the
+    rows built from these can author exact per-swing damage events.  The
+    applications come out in the shared counter's order: the swing itself, its
+    Rageblade phantom re-application, then a double-shot extra, all at that
+    swing's authored time.  An unresolvable schedule returns two empty lists,
+    which is what keeps the rows that read them coarse.
+    """
+    swing_times = _auto_attack_timestamps(state)
+    if len(swing_times) != state.num_auto_attacks:
+        return [], []
+    application_times: list[float] = []
+    for auto_index, swing_time in enumerate(swing_times):
+        application_times.append(swing_time)
+        if auto_index in result.phantom_hit_autos:
+            application_times.append(swing_time)
+        if double_shot_extra:
+            application_times.append(swing_time)
+    return list(swing_times), application_times
+
+
+def _ability_hit_ledger(
+    state: FightState, rotation: RotationResult
+) -> list[tuple[str, float]]:
+    """Each accepted ability hit's slot and time, for the on-hits they carry.
+
+    An ability-carried on-hit is timestamped from the same accepted ledger
+    that prices the cast, which is required for a stack counter such as
+    Aurora's Spirit Abjuration: a fractional per-hit average would invent
+    damage before the third stack exists.  A kit with no ability-carried
+    on-hit skips the reconstruction entirely.
+    """
+    if not any(
+        ability_info.get("on_hit") for ability_info in state.ability_damages.values()
+    ):
+        return []
+    return [
+        (str(event.get("source_key")), float(event["time"]))
+        for event in _ordered_damage_events(
+            state.breakdown,
+            state.ability_damages,
+            state.cast_order,
+            cast_events=rotation.cast_events,
+            roster_target_index=state.roster_target_index,
+        )
+        if event.get("phase") == "ability"
+        and event.get("source_key") in state.ability_damages
+    ]
 
 
 def _layer_on_hit_effects(
@@ -117,9 +297,7 @@ def _layer_on_hit_effects(
     apps = rotation.ability_item_applications
     attack_app_indices: list[int] = []
     if phantom_effect is not None and apps:
-        wants_on_attack = (
-            item_effects.counter_trigger(phantom_effect.item_name) == "on_attack"
-        )
+        wants_on_attack = phantom_effect.counter_trigger == "on_attack"
         attack_app_indices = [
             i
             for i, app in enumerate(apps)
@@ -130,113 +308,21 @@ def _layer_on_hit_effects(
     )
     result.phantom_hit_count = len(result.phantom_hit_autos)
 
-    # Ability-segment phantom hits: re-apply the per-hit item effects
-    # once at the firing attack's own effectiveness (a slash's 8-32%),
-    # and grant one extra stack on the shared ON-HIT counters at that
-    # hit's position (mapped below; consumed by the stacking-proc walk).
-    if ability_phantoms:
-        on_hit_seq_index = {}
-        seq = 0
-        for i, app in enumerate(apps):
-            if app.on_hit:
-                on_hit_seq_index[i] = seq
-                seq += 1
-        phantom_ability_damage = 0.0
-        phantom_by_type: dict[str, float] = {}
-        phantom_events: list[dict[str, Any]] | None = []
-        for position in ability_phantoms:
-            app = apps[attack_app_indices[position]]
-            applied = _ability_applied_on_hit_damage(
-                state, app.effectiveness, app.target_hp
-            )
-            for dtype, amount in applied.items():
-                phantom_by_type[dtype] = phantom_by_type.get(dtype, 0.0) + amount
-            # A phantom re-application fires with its triggering attack, so
-            # it shares that hit's authored timestamp; one untimed carrier
-            # keeps the row coarse rather than inventing a boundary.
-            if phantom_events is not None:
-                if app.time is None:
-                    phantom_events = None
-                else:
-                    phantom_events.extend(
-                        {
-                            "time": float(app.time),
-                            "damage": amount,
-                            "damage_type": dtype,
-                        }
-                        for dtype, amount in applied.items()
-                        if amount > 0
-                    )
-            phantom_ability_damage += sum(applied.values())
-            mapped = on_hit_seq_index.get(attack_app_indices[position])
-            if mapped is not None:
-                result.phantom_ability_stack_positions.add(mapped)
-        if phantom_ability_damage > 0:
-            assert phantom_effect is not None
-            breakdown["on_hit_items_phantom"] = {
-                "name": f"{phantom_effect.item_name} phantom hits (ability attacks)",
-                "count": len(ability_phantoms),
-                "total_damage": phantom_ability_damage,
-                **_damage_type_fields(phantom_by_type),
-            }
-            if phantom_events:
-                breakdown["on_hit_items_phantom"].update(
-                    {"damage_events": phantom_events, "event_phase": "ability"}
-                )
-            on_hit_total += phantom_ability_damage
+    on_hit_total += _pay_ability_phantom_on_hits(
+        state,
+        result,
+        apps=apps,
+        ability_phantoms=ability_phantoms,
+        attack_app_indices=attack_app_indices,
+        phantom_effect=phantom_effect,
+    )
 
     # Double shot applies on-hit effects an additional time per auto
     double_shot_extra = num_auto_attacks if autos.double_shot_info else 0
     on_hit_hits = num_auto_attacks + result.phantom_hit_count + double_shot_extra
-
-    # Every auto-segment on-hit application rides a timestamped swing, so
-    # the rows built below can author exact per-swing damage events. One
-    # entry per application, in the shared counter's order: the swing
-    # itself, its Rageblade phantom re-application, then a double-shot
-    # extra — all at that swing's authored time.
-    swing_times = _auto_attack_timestamps(state)
-    if len(swing_times) != num_auto_attacks:
-        swing_times = []  # unresolvable schedule: rows stay coarse
-    application_times: list[float] = []
-    for auto_index, swing_time in enumerate(swing_times):
-        application_times.append(swing_time)
-        if auto_index in result.phantom_hit_autos:
-            application_times.append(swing_time)
-        if double_shot_extra:
-            application_times.append(swing_time)
-
-    def swing_event_row(
-        times: list[float],
-        damages: list[float],
-        damage_type: str,
-        declarations: list[tuple[Any, ...]] | None = None,
-    ) -> dict[str, Any]:
-        """Row fields authoring one typed event per (time, damage) pair.
-
-        ``declarations`` is one per event for a row the walk prices itself,
-        and ``None`` for a row delivered as the pair engine's own price.  It
-        rides through the sort beside its own damage rather than being stamped
-        afterwards: the events are ordered by time, and an application's
-        declared magnitude belongs to the application, not to the position it
-        lands in.
-        """
-        declared = declarations or [None] * len(damages)
-        ordered = sorted(
-            zip(times, damages, declared, strict=False),
-            key=lambda triple: float(triple[0]),
-        )
-        return {
-            "event_phase": "auto",
-            "damage_events": [
-                {
-                    "time": time,
-                    "damage": damage,
-                    "damage_type": damage_type,
-                    **({} if declaration is None else {"declared": declaration}),
-                }
-                for time, damage, declaration in ordered
-            ],
-        }
+    swing_times, application_times = _application_times(
+        state, result, double_shot_extra=double_shot_extra
+    )
 
     # Process fixed-formula per-hit effects. Current-health effects are
     # simulated below because each application changes the next one's input.
@@ -253,6 +339,7 @@ def _layer_on_hit_effects(
             continue
 
         source = effect.source
+        mechanic = source.previewed_mechanic()
         raw_per_hit = source.raw_damage(damage_inputs) * on_hit_effectiveness
         if raw_per_hit <= 0:
             continue
@@ -264,14 +351,11 @@ def _layer_on_hit_effects(
         item_damage = per_hit * hits
         on_hit_total += item_damage
         result.static_on_hit_per_hit += per_hit
-        result.static_on_hit_by_type[source.damage_type] = (
-            result.static_on_hit_by_type.get(source.damage_type, 0.0) + per_hit
-        )
-        result.static_on_hit_items.append(
-            (source.item_name, source.damage_type, per_hit, raw_per_hit)
+        result.static_on_hit_shares.append(
+            OnHitShare(mechanic, source.damage_type, per_hit, raw_per_hit)
         )
 
-        declaration = _on_hit_declaration(source.item_name, raw_per_hit)
+        declaration = _on_hit_declaration(mechanic, raw_per_hit)
         breakdown[source.breakdown_key] = {
             "name": source.display_name,
             "count": hits,
@@ -286,44 +370,21 @@ def _layer_on_hit_effects(
             # applications landed on no resolvable swing schedule, so it
             # authors no event of its own and the reconstruction synthesizes
             # one (``_row_declaration_share``).
-            "pair_preview_of": on_hit_strike.strike_mechanic_id(source.item_name),
-            "declared": _on_hit_declaration(source.item_name, raw_per_hit * hits),
+            "pair_preview_of": mechanic,
+            "declared": _on_hit_declaration(mechanic, raw_per_hit * hits),
         }
         if application_times:
             breakdown[source.breakdown_key].update(
-                swing_event_row(
+                _swing_event_row(
                     application_times,
                     [per_hit] * hits,
                     source.damage_type,
                     [declaration] * hits,
+                    resists=resists,
                 )
             )
 
-    # Ability-carried on-hit effects can be timestamped from the same
-    # accepted ability ledger that prices the cast.  This is required for
-    # stack counters such as Aurora's Spirit Abjuration: a fractional
-    # per-hit average would invent damage before the third stack exists.
-    # Only the ability on-hit loop below reads these times, so a kit with
-    # no ability-carried on-hit skips the ledger reconstruction entirely.
-    ability_hit_ledger = (
-        [
-            (str(event.get("source_key")), float(event["time"]))
-            for event in _ordered_damage_events(
-                state.breakdown,
-                state.ability_damages,
-                state.cast_order,
-                cast_events=rotation.cast_events,
-                roster_target_index=state.roster_target_index,
-            )
-            if event.get("phase") == "ability"
-            and event.get("source_key") in state.ability_damages
-        ]
-        if any(
-            ability_info.get("on_hit")
-            for ability_info in state.ability_damages.values()
-        )
-        else []
-    )
+    ability_hit_ledger = _ability_hit_ledger(state, rotation)
     ability_hit_times = [time for _, time in ability_hit_ledger]
     combined_application_times = ability_hit_times + application_times
 
@@ -354,7 +415,7 @@ def _layer_on_hit_effects(
                 ),
                 ability_hit_times=ability_hit_times,
                 effectiveness=on_hit_effectiveness,
-                swing_event_row=swing_event_row,
+                swing_event_row=_swing_event_row,
             )
             continue  # cast-armed charges are scheduled, never per-auto
         counts_ability_hits = bool(on_hit_data.get("count_ability_hits"))
@@ -493,23 +554,24 @@ def _layer_on_hit_effects(
             stampable = True
         event_times: list[float] | None = None
         event_damages: list[float] | None = None
+        # The pre-mitigation magnitude each stamped application was priced
+        # from, in the same order, so the receipt states this rider's raw.
+        event_raws: list[float] | None = None
         if stack_ramp:
             # Stack-ramped on-hit (Orianna P): each hit lands at the
             # CURRENT stack count then adds a stack (capped), so hit k
             # deals per_hit + min(k, max_stacks) x per_stack. Stacks are
             # assumed never to drop mid-fight (sustained attacking).
-            per_stack = _mitigate(
+            raw_per_stack = (
                 _crit_scaled_raw(
                     state,
                     float(stack_ramp["damage_per_stack"]),
                     crit_effectiveness,
                     dmg_type,
                 )
-                * on_hit_effectiveness,
-                dmg_type,
-                resists,
-                magic_amp,
+                * on_hit_effectiveness
             )
+            per_stack = _mitigate(raw_per_stack, dmg_type, resists, magic_amp)
             max_stacks = int(stack_ramp["max_stacks"])
             stacked_hits = sum(min(k, max_stacks) for k in range(hits))
             ability_on_hit_damage = per_hit * hits + per_stack * stacked_hits
@@ -519,6 +581,10 @@ def _layer_on_hit_effects(
                 event_damages = [
                     per_hit + min(k, max_stacks) * per_stack for k in range(hits)
                 ]
+                event_raws = [
+                    raw_per_hit + min(k, max_stacks) * raw_per_stack
+                    for k in range(hits)
+                ]
         elif ramping:
             # Ramping proc k deals k x its base. When abilities can carry the
             # on-hit, each application has its own effectiveness; otherwise
@@ -526,13 +592,14 @@ def _layer_on_hit_effects(
             # remains supported for pre-26.15 every-Nth formulations.
             procs = hits // max(1, stacks_required)
             if carrier_effectiveness is not None and stacks_required <= 1:
-                carrier_damages = [
-                    _mitigate(
-                        raw_base * effectiveness * stack, dmg_type, resists, magic_amp
-                    )
+                carrier_raws = [
+                    raw_base * effectiveness * stack
                     for stack, effectiveness in enumerate(
                         carrier_effectiveness, start=1
                     )
+                ]
+                carrier_damages = [
+                    _mitigate(raw, dmg_type, resists, magic_amp) for raw in carrier_raws
                 ]
                 ability_on_hit_damage = sum(carrier_damages)
                 if stampable:
@@ -544,6 +611,7 @@ def _layer_on_hit_effects(
                         else application_times[:hits]
                     )
                     event_damages = carrier_damages
+                    event_raws = carrier_raws
             else:
                 ability_on_hit_damage = per_hit * procs * (procs + 1) / 2.0
                 if stampable:
@@ -553,6 +621,7 @@ def _layer_on_hit_effects(
                         application_times[j * interval - 1] for j in range(1, procs + 1)
                     ]
                     event_damages = [per_hit * j for j in range(1, procs + 1)]
+                    event_raws = [raw_per_hit * j for j in range(1, procs + 1)]
         elif stacks_required > 1 and counts_ability_hits:
             # Shared auto+ability stack counter (e.g. Aurora P): only
             # complete procs deal damage — partial stacks expire.
@@ -565,6 +634,7 @@ def _layer_on_hit_effects(
                     for j in range(1, hits // stacks_required + 1)
                 ]
                 event_damages = [per_hit * stacks_required] * (hits // stacks_required)
+                event_raws = [raw_per_hit * stacks_required] * (hits // stacks_required)
         else:
             # Autos-only on-hit (e.g. Vayne W): smooth per-hit average.
             # The total includes partial stacks, so events are the same
@@ -572,10 +642,11 @@ def _layer_on_hit_effects(
             ability_on_hit_damage = per_hit * hits
             if slot_stack_stampable:
                 event_times = slot_stack_application_times[:hits]
-                event_damages = [per_hit] * hits
             elif stampable:
                 event_times = application_times[:hits]
+            if event_times is not None:
                 event_damages = [per_hit] * hits
+                event_raws = [raw_per_hit] * hits
         on_hit_total += ability_on_hit_damage
         if max_procs is None and not ramping and not stack_ramp:
             static_share = per_hit
@@ -585,10 +656,19 @@ def _layer_on_hit_effects(
             static_share = ability_on_hit_damage / on_hit_hits
         else:
             static_share = 0.0
+        # What this rider is, in the one vocabulary a champion's on-hit
+        # magnitude has: the slot behind the champion prefix.  It is not an
+        # item mechanic, so it names no rule and prices nothing in the walk.
+        mechanic = f"{CHAMPION_PRODUCER_PREFIX}{ability_key}"
         if static_share > 0:
             result.static_on_hit_per_hit += static_share
-            result.static_on_hit_by_type[dmg_type] = (
-                result.static_on_hit_by_type.get(dmg_type, 0.0) + static_share
+            result.static_on_hit_shares.append(
+                OnHitShare(
+                    mechanic,
+                    dmg_type,
+                    static_share,
+                    static_share / per_hit * raw_per_hit if per_hit > 0 else 0.0,
+                )
             )
 
         ability_name = on_hit_data.get("name", f"{ability_key} (on-hit)")
@@ -608,6 +688,7 @@ def _layer_on_hit_effects(
                 "total_damage": ability_on_hit_damage,
                 "damage_type": dmg_type,
                 "unit": "procs",
+                "mechanic": mechanic,
             }
         else:
             # Stack-ramped hits escalate, so their per-hit figure is the
@@ -620,17 +701,24 @@ def _layer_on_hit_effects(
                 ),
                 "total_damage": ability_on_hit_damage,
                 "damage_type": dmg_type,
+                "mechanic": mechanic,
             }
         if event_times is not None and event_damages is not None:
             breakdown[f"on_hit_ability_{ability_key}"].update(
-                swing_event_row(event_times, event_damages, dmg_type)
+                _swing_event_row(
+                    event_times,
+                    event_damages,
+                    dmg_type,
+                    raws=event_raws,
+                    resists=resists,
+                )
             )
 
     # BoRK: simulate with decreasing target current HP per auto attack.
     # Phantom hit autos cause BoRK to proc twice (at different current HP).
     # Double shot (e.g. Akshan) also procs BoRK an extra time per auto.
     # First-auto packets are priced here as HP-only inputs; their damage row
-    # and fight total remain owned by _add_single_proc_on_hits below.
+    # and fight total remain owned by _add_first_auto_strikes.
     first_auto_damage_by_auto = _first_auto_damage_by_auto_for_health_walk(
         state,
         rotation,
@@ -668,6 +756,7 @@ def _layer_on_hit_effects(
         on_hit_total += current_health_total
 
         source = current_health_effect.source
+        mechanic = source.previewed_mechanic()
         breakdown[source.breakdown_key] = {
             "name": source.display_name,
             "count": current_health_hits,
@@ -679,9 +768,9 @@ def _layer_on_hit_effects(
             # declaration on each event below is that application's own raw
             # value, and the row's is their sum rather than an average
             # multiplied back up.
-            "pair_preview_of": on_hit_strike.strike_mechanic_id(source.item_name),
+            "pair_preview_of": mechanic,
             "declared": _on_hit_declaration(
-                source.item_name,
+                mechanic,
                 sum(proc.raw for proc in current_health_hit_damages),
             ),
         }
@@ -691,14 +780,15 @@ def _layer_on_hit_effects(
             application_times
         ):
             breakdown[source.breakdown_key].update(
-                swing_event_row(
+                _swing_event_row(
                     application_times,
                     [proc.mitigated for proc in current_health_hit_damages],
                     source.damage_type,
                     [
-                        _on_hit_declaration(source.item_name, proc.raw)
+                        _on_hit_declaration(mechanic, proc.raw)
                         for proc in current_health_hit_damages
                     ],
+                    resists=resists,
                 )
             )
 
@@ -788,10 +878,11 @@ def _layer_on_hit_effects(
             if swing_times:
                 # Each proc rides one specific swing — stamp its time.
                 breakdown[f"on_hit_ability_{ability_key}"].update(
-                    swing_event_row(
+                    _swing_event_row(
                         [swing_times[i] for i in proc_autos],
                         proc_damages,
                         proc_damage_type,
+                        resists=resists,
                     )
                 )
 

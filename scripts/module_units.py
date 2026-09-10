@@ -72,21 +72,51 @@ def bound_alias(alias: ast.alias) -> str:
     return alias.asname or alias.name.split(".")[0]
 
 
+def is_future_import(node: ast.stmt) -> bool:
+    """Whether one statement is a ``from __future__`` directive, never a read."""
+    return isinstance(node, ast.ImportFrom) and node.module == "__future__"
+
+
+def _annotation_parts(node: ast.AST) -> Iterable[ast.AST]:
+    """The parts of one annotation node that can name something.
+
+    A ``Literal``'s constant members are the values it admits, not names.
+    """
+    if not isinstance(node, ast.Subscript):
+        return ast.iter_child_nodes(node)
+    head = node.value
+    if (getattr(head, "attr", None) or getattr(head, "id", None)) != "Literal":
+        return ast.iter_child_nodes(node)
+    members = node.slice.elts if isinstance(node.slice, ast.Tuple) else [node.slice]
+    return [head, *(m for m in members if not isinstance(m, ast.Constant))]
+
+
+def _read_names(node: ast.AST) -> Iterator[str]:
+    """Names one annotation reads, a quoted part parsed as the expression it spells."""
+    if isinstance(node, ast.Name):
+        yield node.id
+    elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+        with suppress(SyntaxError):
+            yield from _read_names(ast.parse(node.value, mode="eval").body)
+    else:
+        for part in _annotation_parts(node):
+            yield from _read_names(part)
+
+
+def _type_parameters(node: ast.stmt) -> set[str]:
+    """The names a ``def`` or ``class`` binds by declaring them (PEP 695)."""
+    return {p.name for sub in ast.walk(node) for p in getattr(sub, "type_params", ())}
+
+
 def _annotation_names(node: ast.stmt) -> Iterator[str]:
     """Names an annotation reads, whether it is spelled or quoted.
 
-    A local variable's annotation is never evaluated, so the symbol table
-    below cannot see it, and a quoted forward reference is a string to it.
+    A local variable's annotation is never evaluated, so symtable cannot see it.
     """
     for sub in ast.walk(node):
         annotation = getattr(sub, "annotation", None) or getattr(sub, "returns", None)
-        for part in ast.walk(annotation) if annotation else ():
-            if isinstance(part, ast.Name):
-                yield part.id
-            elif isinstance(part, ast.Constant) and isinstance(part.value, str):
-                with suppress(SyntaxError):
-                    read = ast.walk(ast.parse(part.value, mode="eval"))
-                    yield from (n.id for n in read if isinstance(n, ast.Name))
+        if annotation:
+            yield from _read_names(annotation)
 
 
 def free_names(node: ast.stmt) -> set[str]:
@@ -105,7 +135,8 @@ def free_names(node: ast.stmt) -> set[str]:
         table = tables.pop()
         reads.update(s.get_name() for s in table.get_symbols() if s.is_global())
         tables.extend(table.get_children())
-    return (reads | set(_annotation_names(node))) - BUILTIN_NAMES
+    bound = BUILTIN_NAMES | _type_parameters(node)
+    return (reads | set(_annotation_names(node))) - bound
 
 
 def import_sort_key(statement: str) -> tuple[int, int, str]:

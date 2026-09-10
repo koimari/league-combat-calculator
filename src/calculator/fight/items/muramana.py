@@ -12,8 +12,9 @@ from ..ledger.event_rows import (
     _finite_numeric_receipt,
     _item_proc_precision,
 )
+from ..resists import _mitigate
 from ..results import RotationResult
-from ..state import FightState
+from ..state import FightState, _damage_inputs
 
 
 @dataclass(frozen=True, slots=True)
@@ -245,3 +246,55 @@ def _muramana_proc_events(
     if len(events) != rotation.total_muramana_procs:
         return None
     return _apply_muramana_lockout(events, lockout_seconds)
+
+
+def _add_per_ability_hit_damage(state: FightState, rotation: RotationResult) -> None:
+    """Price Shock once per damaging ability hit its cast ledger accepted."""
+    resists = state.resists
+    breakdown = state.breakdown
+    for source in state.damage_effects.per_ability_hits:
+        if rotation.total_muramana_procs <= 0:
+            # No damaging ability cast consumed Shock: the passive never
+            # fired, and no row is authored (P3 package 3E; the
+            # Shaped-Charge precedent — no aggregate substitute).
+            continue
+        raw = source.raw_damage(_damage_inputs(state))
+        per_proc = _mitigate(raw, source.damage_type, resists, state.magic_amp)
+        total_damage = per_proc * rotation.total_muramana_procs
+        breakdown[source.breakdown_key] = {
+            "name": source.display_name,
+            "total_damage": total_damage,
+            "damage_type": source.damage_type,
+        }
+        proc_events = _muramana_proc_events(
+            state,
+            rotation,
+            lockout_seconds=source.same_target_cast_lockout_seconds,
+        )
+        if proc_events is None:
+            # A malformed or count-mismatched cast ledger withholds the
+            # event list: the aggregate price is preserved (the proc count
+            # is the trusted cast receipt) but the row is stamped with a
+            # NAMED reason (P3 package 3E), and the coverage classifier
+            # keeps it coarse.
+            breakdown[source.breakdown_key]["event_phase"] = "coarse"
+            breakdown[source.breakdown_key][
+                "withheld_reason"
+            ] = "malformed_proc_receipt"
+        else:
+            total_damage = per_proc * len(proc_events)
+            breakdown[source.breakdown_key]["total_damage"] = total_damage
+            breakdown[source.breakdown_key]["lockout_receipt"] = {
+                "interval_seconds": source.same_target_cast_lockout_seconds,
+                "identity": "target_id|cast:cast_id",
+                "candidate_count": rotation.total_muramana_procs,
+                "accepted_count": len(proc_events),
+                "suppressed_count": rotation.total_muramana_procs - len(proc_events),
+            }
+            for event in proc_events:
+                event["damage"] = per_proc
+                event["damage_type"] = source.damage_type
+            if proc_events:
+                breakdown[source.breakdown_key]["damage_events"] = proc_events
+                breakdown[source.breakdown_key]["event_phase"] = "ability"
+        state.total_damage += total_damage

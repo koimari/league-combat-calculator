@@ -7,6 +7,7 @@ from ...ability_atoms import ability_field
 from ...ability_spec import ControlScope, DamagePart, cc_kind_reviewed
 from ..ledger.event_rows import _damage_type_fields
 from ..mitigation import _crit_scaled_raw, _mitigate_hits
+from ..resists import _resistance_met_fields
 from ..results import CastPricing
 from ..setup.target_debuffs import _apply_target_shred, _debuff_coverage
 from ..state import FightState
@@ -238,6 +239,16 @@ def _evaluate_cast_parts(
                             "raw_formula": part.hp_scaled_damage,
                             "source_missing_ratio": event_missing_ratio,
                             "event_precision": event_precision,
+                            # The resistance THIS hit met, read off the same
+                            # two arguments its own mitigation was handed:
+                            # a shred landing between an ability's ticks
+                            # moves it, and the fight's published figure is
+                            # the one after every shred.
+                            **_resistance_met_fields(
+                                part.damage_type,
+                                state.resists,
+                                ability_mr=ability_mr,
+                            ),
                             **({"damage_over_time": True} if damage_over_time else {}),
                             **(
                                 {

@@ -20,6 +20,9 @@ FIGHT_ENGINE_PATHS = (
     *sorted((SRC_ROOT / "fight").rglob("*.py")),
 )
 
+#: The nodes a docstring may be the first statement of.
+DOCSTRING_SCOPES = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
+
 
 @dataclass(frozen=True, slots=True)
 class FrontierEntry:
@@ -55,9 +58,11 @@ FIGHT_STEPS_WITHOUT_A_FRONT_DOOR = (
     "fight.after.shield_outcome",
     "fight.after.stored_damage",
     "fight.autos.copied_on_hit",
+    "fight.autos.first_auto_strikes",
     "fight.autos.on_hit_healing",
     "fight.autos.on_hit_layering",
     "fight.autos.simulation",
+    "fight.autos.stacking_strikes",
     "fight.declarations",
     "fight.items.cast_procs",
     "fight.items.energized_packets",
@@ -178,6 +183,83 @@ def test_damage_engine_does_not_dispatch_on_item_names() -> None:
             )
 
     assert offenders == []
+
+
+# The steps that still spell a cached item name in code, and what each is
+# waiting on.  Set equality, so a step that stops spelling one leaves in the
+# same commit and a step that starts spelling one cannot arrive quietly.  A
+# name inside a docstring is prose about the mechanic and is not a dispatch,
+# so the scan skips docstrings and reads every other literal.
+ITEM_NAME_LITERAL_FRONTIER: Mapping[str, tuple[str, frozenset[str]]] = {
+    "damage.py": (
+        "the published source label on each resource-restore event; it moves "
+        "with the restore rule the resource walk names below",
+        frozenset({"Catalyst of Aeons"}),
+    ),
+    "fight/items/eclipse_stack_gate.py": (
+        "the row title of the one windowed cooldown proc; it moves when the "
+        "cast-proc family reads its display name off the declaration",
+        frozenset({"Eclipse"}),
+    ),
+    "fight/ledger/pool_walk.py": (
+        "the one burn row the pool walk consumes by key; it moves with the "
+        "periodic family's row keys",
+        frozenset({"Liandry's Torment"}),
+    ),
+    "fight/rotation/mana_declarations.py": (
+        "the restore rule the resource walk names its refusals by; it moves "
+        "with the resource-ledger declarations",
+        frozenset({"Lost Chapter"}),
+    ),
+    "fight/rotation/mana_walk.py": (
+        "the same two restore rules, plus their receipt labels; one slice "
+        "with the module above",
+        frozenset({"Catalyst of Aeons", "Essence Reaver", "Lost Chapter"}),
+    ),
+}
+
+
+def _literal_item_names(path: Path, names: frozenset[str]) -> set[str]:
+    """Every cached item name this module spells outside a docstring."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    docstrings = {
+        id(node.body[0].value)
+        for node in ast.walk(tree)
+        if isinstance(node, DOCSTRING_SCOPES)
+        and node.body
+        and isinstance(node.body[0], ast.Expr)
+        and isinstance(node.body[0].value, ast.Constant)
+    }
+    return {
+        name
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Constant)
+        and isinstance(node.value, str)
+        and id(node) not in docstrings
+        for name in names
+        if name in node.value
+    }
+
+
+def test_the_fight_steps_spell_no_item_name_outside_the_frontier() -> None:
+    """One item, one home: a step reads its row's words off the declaration."""
+    names = frozenset(_REFERENCE_ITEM_EFFECTS)
+    spelling = {
+        path.relative_to(SRC_ROOT).as_posix(): _literal_item_names(path, names)
+        for path in FIGHT_ENGINE_PATHS
+        if _literal_item_names(path, names)
+    }
+    assert spelling == {
+        module: set(spelled)
+        for module, (_, spelled) in ITEM_NAME_LITERAL_FRONTIER.items()
+    }
+
+
+def test_every_item_name_frontier_entry_carries_a_reason() -> None:
+    """A frontier entry is a receipt, not a suppression."""
+    for module, (reason, spelled) in ITEM_NAME_LITERAL_FRONTIER.items():
+        assert reason.strip(), module
+        assert spelled, module
 
 
 def test_every_module_outside_champions_has_a_front_door_or_a_frontier_entry() -> None:

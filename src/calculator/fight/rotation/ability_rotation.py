@@ -628,7 +628,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # the application carries: "on_hit" (per-hit item damage +
         # on-hit counters) and/or "on_attack" (counts as an attack for
         # on-attack cadences like Guinsoo's phantom hit). Counter procs
-        # themselves fire in _add_single_proc_on_hits and
+        # themselves fire in _add_stacking_strikes and
         # _layer_on_hit_effects from the records kept here.
         on_hit_spec = ability_info.get("applies_item_on_hits")
         if on_hit_spec and num_casts > 0:

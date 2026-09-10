@@ -7,14 +7,17 @@ the stable JSON-safe payload returned to every in-process consumer.
 
 import re
 from collections.abc import Mapping
+from contextlib import nullcontext
 from dataclasses import replace
 from typing import Any
 
 from .champions import engine_registration_kind
 from .defensive_effects import resolve_starting_defenses
+from .fight import authorship
+from .fight.ledger.trace import fight_trace
 from .item_coverage import require_certified_target_timeline
 from .participant_timeline import build_participant_timeline
-from .pipeline import ONE_ROTATION_DURATION, run_fight
+from .pipeline import ONE_ROTATION_DURATION, FightParams, run_fight
 from .program.views import LeafWriter, name_every_number
 from .public_response import (
     aggregate_public_results,
@@ -195,7 +198,25 @@ def _role_quest_receipt(resolved: ResolvedScenario) -> dict | None:
     return role_quest_meta(params.role, params.role_quest_complete)
 
 
-def _calculate_resolved(request: ScenarioRequest, resolved: ResolvedScenario) -> dict:
+def _traced_fight(
+    champion_data: dict,
+    level: int,
+    items: list[dict[str, Any]],
+    params: FightParams,
+    *,
+    trace: bool,
+) -> tuple[dict, dict]:
+    """One fight, and the ``trace`` block a traced one publishes beside it.
+
+    Empty when nobody asked, so the key is absent by merging."""
+    with authorship.recording() if trace else nullcontext():
+        result = run_fight(champion_data, level, items, params)
+    return result, {"trace": fight_trace(result).published()} if trace else {}
+
+
+def _calculate_resolved(
+    request: ScenarioRequest, resolved: ResolvedScenario, *, trace: bool = False
+) -> dict:
     """Execute one already parsed and resolved scenario."""
     champion_data = resolved.champion_data
     items = list(resolved.items)
@@ -204,9 +225,10 @@ def _calculate_resolved(request: ScenarioRequest, resolved: ResolvedScenario) ->
     params = resolved.fight_params
 
     if not enemies:
-        response = serialize_fight_result(
-            run_fight(champion_data, request.level, items, params)
+        result, traced = _traced_fight(
+            champion_data, request.level, items, params, trace=trace
         )
+        response = serialize_fight_result(result) | traced
         if request.include_crossover:
             _add_comparison_curve(response, request, resolved)
         response["role_quest"] = _role_quest_receipt(resolved)
@@ -232,7 +254,9 @@ def _calculate_resolved(request: ScenarioRequest, resolved: ResolvedScenario) ->
     for enemy, target_params in zip(
         enemies, resolved.target_fight_params, strict=False
     ):
-        result = run_fight(champion_data, request.level, items, target_params)
+        result, traced = _traced_fight(
+            champion_data, request.level, items, target_params, trace=trace
+        )
         if not params.one_rotation:
             require_certified_target_timeline(
                 list(enemy.item_data), result.get("timeline_coverage", {})
@@ -241,6 +265,7 @@ def _calculate_resolved(request: ScenarioRequest, resolved: ResolvedScenario) ->
             {
                 "target": public_loadout_summary(enemy),
                 "result": serialize_fight_result(result),
+                **traced,
             }
         )
     response = aggregate_public_results([row["result"] for row in target_rows])
@@ -286,7 +311,7 @@ def _name_the_response(response: dict) -> None:
 
 
 def calculate_payload(
-    data: Mapping[str, object], *, deterministic: bool = False
+    data: Mapping[str, object], *, deterministic: bool = False, trace: bool = False
 ) -> dict[str, Any]:
     """Return the complete JSON-safe calculate payload without Flask state.
 
@@ -296,7 +321,7 @@ def calculate_payload(
     """
     request = parse_scenario_request(data, deterministic=deterministic)
     resolved = resolve_scenario(request)
-    response = _calculate_resolved(request, resolved)
+    response = _calculate_resolved(request, resolved, trace=trace)
     response["headline_total"] = displayed_prediction(response)[0]
     _name_the_response(response)
     return response

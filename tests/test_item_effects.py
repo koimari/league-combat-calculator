@@ -32,6 +32,7 @@ from src.calculator.item_effects import (
     basic_ability_haste,
     bloodmail_bonus_ad,
     bloodmail_retribution_bonus_ad,
+    chain_target_count,
     dawncore_bonus_ap,
     endless_hunger_input_omnivamp,
     energized_proc_indices,
@@ -59,7 +60,6 @@ from src.calculator.item_effects import (
     riftmaker_bonus_ap,
     saturated_grant,
     statikk_chain_target_bounds,
-    statikk_chain_target_count,
     steraks_bonus_ad,
     terminus_max_stack_bonuses,
     validate_item_input_options,
@@ -555,14 +555,10 @@ class TestResolveDamageEffects:
     def test_statikk_chain_target_bounds_are_parser_owned(self) -> None:
         assert statikk_chain_target_bounds() == (4, 8)
 
-    def test_statikk_chain_target_count_uses_sourced_level_breakpoints(self) -> None:
-        assert [statikk_chain_target_count(level) for level in (1, 6, 10, 14, 20)] == [
-            4,
-            5,
-            6,
-            7,
-            8,
-        ]
+    def test_a_chain_target_count_uses_sourced_level_breakpoints(self) -> None:
+        bounds = statikk_chain_target_bounds()
+        levels = (1, 6, 10, 14, 20)
+        assert [chain_target_count(n, *bounds) for n in levels] == [4, 5, 6, 7, 8]
 
     def test_statikk_chain_target_bounds_fail_closed_when_missing(
         self, monkeypatch: pytest.MonkeyPatch
@@ -714,10 +710,10 @@ class TestResolveDamageEffects:
 
     def test_titanic_secondary_packet_uses_melee_and_empowered_ratios(self) -> None:
         assert hydra_secondary_target_damage(
-            max_health=3000, is_melee=True
+            max_health=3000, is_melee=True, item_name="Titanic Hydra"
         ) == pytest.approx(90)
         assert hydra_secondary_target_damage(
-            max_health=3000, is_melee=False, empowered=True
+            max_health=3000, is_melee=False, empowered=True, item_name="Titanic Hydra"
         ) == pytest.approx(135)
 
     def test_hydra_cleave_secondary_packet_uses_ranged_ratio(self) -> None:

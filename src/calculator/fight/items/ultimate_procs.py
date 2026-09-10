@@ -1,7 +1,6 @@
 """The damage zone an ultimate cast opens (Malignance, Zeke's Convergence)."""
 
 from ...ability_atoms import ability_field
-from ...interpreters import cast_proc
 from ..resists import _mitigate
 from ..results import RotationResult
 from ..state import FightState, _damage_inputs
@@ -45,7 +44,7 @@ def _add_ultimate_proc_damage(
             "name": source.display_name,
             "total_damage": ult_proc_mitigated,
             "damage_type": source.damage_type,
-            "pair_preview_of": cast_proc.proc_mechanic_id(source.item_name),
+            "pair_preview_of": source.previewed_mechanic(),
             # The zone's duration scaling is already folded into ``raw``
             # above, so what the declaration states is this packet's own
             # pre-mitigation magnitude and not the item's base figure.

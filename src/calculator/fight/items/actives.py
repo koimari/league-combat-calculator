@@ -2,12 +2,11 @@
 
 from ... import item_effects
 from ...ability_spec import AttackClass
-from ...interpreters import active_cast
 from ...survival.pricing import AuthoredDeclaration
 from ..autos.on_hit_stream import _active_lifesteal_amount
 from ..cast_slots import _damaging_cast_times
 from ..resists import _mitigate
-from ..results import RotationResult
+from ..results import RotationResult, SwingStream
 from ..state import FightState, _damage_inputs
 
 
@@ -52,7 +51,7 @@ def _add_item_active_damage(state: FightState, rotation: RotationResult) -> None
                 "damage_type": source.damage_type,
                 "declared": tuple(
                     AuthoredDeclaration(
-                        active_cast.active_mechanic_id(source.item_name),
+                        source.previewed_mechanic(),
                         raw_active,
                         AttackClass.OTHER.value,
                     )
@@ -64,7 +63,7 @@ def _add_item_active_damage(state: FightState, rotation: RotationResult) -> None
             "total_damage": active_mitigated,
             "damage_type": source.damage_type,
             "damage_events": damage_events,
-            "pair_preview_of": active_cast.active_mechanic_id(source.item_name),
+            "pair_preview_of": source.previewed_mechanic(),
         }
         if source.lifesteal_effectiveness > 0.0:
             heal_amount = _active_lifesteal_amount(
@@ -129,3 +128,92 @@ def _add_item_active_damage(state: FightState, rotation: RotationResult) -> None
                     }
             state.total_damage += secondary_mitigated
         state.total_damage += active_mitigated
+
+
+def _add_auto_cooldown_strikes(
+    state: FightState, *, swings: SwingStream
+) -> tuple[int, ...]:
+    """Price the swing each item active empowers on its own cooldown.
+
+    Returns which swings the cone-carrying holder empowered, because that is
+    the fact the cone's larger ratio is read against.
+    """
+    num_auto_attacks = state.num_auto_attacks
+    if num_auto_attacks <= 0:
+        return ()
+    resists = state.resists
+    breakdown = state.breakdown
+    swing_times, effectiveness = swings
+    inputs = _damage_inputs(state)
+
+    secondary_item_name = item_effects.hydra_secondary_item_name(state.items)
+    secondary_active_indices: tuple[int, ...] = ()
+    for effect in state.damage_effects.auto_cooldowns:
+        source = effect.source
+        # Prefer the authored swing schedule over a duration quotient:
+        # a cooldown is consumed by an actual empowered attack, so an
+        # exact fight boundary with no swing must not invent another
+        # Titanic Crescent proc.
+        proc_indices: list[int] = []
+        if swing_times:
+            ready = 0.0
+            for index, swing_time in enumerate(swing_times):
+                if swing_time + 1e-9 >= ready:
+                    proc_indices.append(index)
+                    ready = swing_time + effect.cooldown
+        if swing_times:
+            procs = len(proc_indices)
+        else:
+            procs = (
+                1 + int(state.fight_duration_seconds / effect.cooldown)
+                if effect.cooldown > 0
+                else 1
+            )
+            procs = min(procs, num_auto_attacks)
+            proc_indices = list(range(procs))
+        if procs <= 0:
+            continue
+        raw_per_proc = source.raw_damage(inputs)
+        base_effect = next(
+            (
+                per_hit
+                for per_hit in state.per_hit_strikes
+                if per_hit.source.item_name == source.item_name
+            ),
+            None,
+        )
+        if base_effect is not None:
+            # The ordinary 1% max-health packet is already in the
+            # per-hit on-hit row.  Crescent is the replacement 4%
+            # packet, so this row carries only its additional 3% delta.
+            raw_per_proc -= base_effect.source.raw_damage(inputs)
+            if source.item_name == secondary_item_name:
+                secondary_active_indices = tuple(proc_indices)
+        raw_damage = raw_per_proc * procs * effectiveness
+        mitigated = _mitigate(raw_damage, source.damage_type, resists, state.magic_amp)
+        breakdown[source.breakdown_key] = {
+            "name": source.display_name,
+            "count": procs,
+            "damage_per_hit": mitigated / procs,
+            "unit": "procs",
+            "total_damage": mitigated,
+            "damage_type": source.damage_type,
+        }
+        # Each empowered swing is the first one at/after the effect's
+        # cooldown gate.  Authored only when the swing schedule
+        # reproduces the priced proc count exactly.
+        proc_times = [
+            swing_times[index] for index in proc_indices if index < len(swing_times)
+        ]
+        if len(proc_times) == procs:
+            breakdown[source.breakdown_key]["event_phase"] = "auto"
+            breakdown[source.breakdown_key]["damage_events"] = [
+                {
+                    "time": proc_time,
+                    "damage": mitigated / procs,
+                    "damage_type": source.damage_type,
+                }
+                for proc_time in proc_times
+            ]
+        state.total_damage += mitigated
+    return secondary_active_indices

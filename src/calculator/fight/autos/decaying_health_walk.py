@@ -341,10 +341,10 @@ def _simulate_current_health_on_hit(
         on_hit_this_auto = swings.other_on_hit_per_hit
         if i in phantom_hit_autos:
             on_hit_this_auto += swings.other_on_hit_per_hit  # phantom extra proc
-        # First-auto packets are authored by the single-proc pass, but they
-        # still land on this auto and must lower the HP used by later
+        # First-auto packets are authored by the charge-spending pass, but
+        # they still land on this auto and must lower the HP used by later
         # current-health procs. Keep this as an HP-only input: the packet is
-        # added to the breakdown exactly once by _add_single_proc_on_hits.
+        # added to the breakdown exactly once by _add_first_auto_strikes.
         if i < len(first_auto_damage_by_auto):
             on_hit_this_auto += max(0.0, float(first_auto_damage_by_auto[i]))
         target.settle_auto(swings.auto_damage_per_hit + on_hit_this_auto)

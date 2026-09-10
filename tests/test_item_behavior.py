@@ -49,7 +49,6 @@ from src.calculator.item_behavior import (
     UtilityDimension,
     ZeroPolicy,
     is_value_reference,
-    mechanic_id_reading,
     policy_values,
     policy_walk,
     sole_declared,
@@ -450,40 +449,6 @@ def test_no_utility_census_read_is_a_bare_string_literal() -> None:
 
 class _FamilyStop(ValueError):
     """One interpreter family's refusal type."""
-
-
-class TestMechanicIdReading:
-    """A family's front door onto ``declared_mechanic_id``, bound once."""
-
-    def test_the_bound_reader_answers_the_owners_first_rule(self) -> None:
-        read = mechanic_id_reading(
-            lambda owners: (_rule(owner=owners[0]),),
-            _FamilyStop,
-            authors="an item active",
-            declares="active_cast",
-        )
-        assert read("Test Item") == "test_item.amp"
-
-    def test_an_owner_with_no_rule_of_the_family_is_a_stop(self) -> None:
-        """A stop rather than a default: an unstamped row double counts."""
-        read = mechanic_id_reading(
-            lambda owners: (),
-            _FamilyStop,
-            authors="an item active",
-            declares="active_cast",
-        )
-        with pytest.raises(_FamilyStop, match="authors an item active"):
-            read("Test Item")
-
-    def test_the_reader_is_handed_only_the_owner_asked_for(self) -> None:
-        seen: list[object] = []
-
-        def rules(owners):
-            seen.append(list(owners))
-            return (_rule(),)
-
-        mechanic_id_reading(rules, _FamilyStop, authors="a", declares="b")("Sheen")
-        assert seen == [["Sheen"]]
 
 
 class TestSoleDeclared:

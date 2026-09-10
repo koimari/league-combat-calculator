@@ -887,7 +887,7 @@ class TestFailClosedMetadata:
         # exactly like the non-finite time branch; pin the caller's
         # withheld handling through that branch.
         monkeypatch.setattr(
-            "src.calculator.fight.autos.single_proc_on_hits._stacked_champion_proc_times",
+            "src.calculator.fight.items.cast_procs._stacked_champion_proc_times",
             lambda *args, **kwargs: None,
         )
         fight = _fight(

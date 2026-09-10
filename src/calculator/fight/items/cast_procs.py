@@ -4,12 +4,12 @@ from typing import Any
 
 from ... import item_effects
 from ...ability_spec import AttackClass
-from ...interpreters import cast_proc
 from ...survival.pricing import AuthoredDeclaration
 from ..resists import _mitigate
 from ..results import RotationResult
 from ..rotation.cast_schedule import _CAST_SCHEDULE_EPS
 from ..state import FightState, _damage_inputs
+from .eclipse_stack_gate import _stacked_champion_proc_times
 from .proc_triggers import (
     _ability_damage_proc_triggers,
     _champion_damage_proc_triggers,
@@ -28,7 +28,7 @@ def _proc_declaration(
     alone would claim the amp for a proc that fired after the window closed."""
     return tuple(
         AuthoredDeclaration(
-            cast_proc.proc_mechanic_id(source.item_name),
+            source.previewed_mechanic(),
             raw_amount,
             (AttackClass.ABILITY if ability_amped else AttackClass.OTHER).value,
         )
@@ -172,7 +172,7 @@ def _add_item_proc_damage(
             # ledger held no certifiable boundary, so it authors no event of
             # its own and the reconstruction synthesizes one
             # (``_row_declaration_share``).
-            "pair_preview_of": cast_proc.proc_mechanic_id(source.item_name),
+            "pair_preview_of": source.previewed_mechanic(),
             "declared": _proc_declaration(source, declared_raw * procs, any(amped)),
         }
         if proc_triggers:
@@ -205,3 +205,143 @@ def _add_item_proc_damage(
                 "single_target_multiplier": source.single_target_multiplier,
             }
         state.total_damage += proc_mitigated
+
+
+def _add_late_phase_proc_damage(state: FightState, rotation: RotationResult) -> None:
+    """Price the cooldown procs that read the finished attack ledger.
+
+    Eclipse's Ever Rising Moon needs two hits inside its window, so it is
+    priced here, after the strikes that author those hits, rather than beside
+    the procs a cast fires.
+    """
+    resists = state.resists
+    breakdown = state.breakdown
+    for effect in state.declared.cast_procs.cooldown_procs:
+        if not effect.late_phase:
+            continue
+        source = effect.source
+        stack_timing = _stacked_champion_proc_times(state, rotation, effect)
+        if stack_timing is None:
+            # A malformed ledger withholds event precision: no certifiable
+            # attack boundary exists, so the coarse fallback below prices a
+            # duration-scaled aggregate.  The row is stamped with NAMED
+            # fail-closed reasons, so callers can distinguish a malformed
+            # ledger from a passive that never fired and the self-shield
+            # loss is receipted, not silent.
+            stack_events = None
+            stack_gate = None
+            stack_source_denials: list[dict[str, Any]] = []
+            stack_withheld = "malformed_proc_receipt"
+        else:
+            stack_events, stack_gate, stack_source_denials = stack_timing
+            # A denial is never a withholding — see below — so a walk that
+            # ran at all leaves the row unwithheld whatever it denied.
+            stack_withheld = None
+        if stack_events is not None and not stack_events and not stack_source_denials:
+            # No completed stack pair means the passive never fired.  Do not
+            # substitute a guaranteed aggregate proc for a condition the
+            # authored cast/attack ledger proves did not occur.
+            continue
+        if stack_events:
+            procs = len(stack_events)
+        elif stack_source_denials:
+            # The source class is valid, but one required identity or timing
+            # input is unavailable.  Keep a named zero-damage row.  A denied
+            # candidate cannot become a duration-scaled aggregate proc.
+            procs = 0
+        else:
+            # Preserve a coarse price only when the ledger is malformed or
+            # explicitly lacks a certifiable attack boundary.
+            procs = (
+                1 + int(state.fight_duration_seconds / effect.cooldown)
+                if effect.repeat_on_cooldown
+                else 1
+            )
+        raw = source.raw_damage(_damage_inputs(state)) * procs
+        total_damage = _mitigate(raw, source.damage_type, resists, state.magic_amp)
+        breakdown[source.breakdown_key] = {
+            "name": source.display_name,
+            "total_damage": total_damage,
+            "damage_type": source.damage_type,
+            "count": procs,
+            # A ``cast_proc`` row like the ones ``_add_item_proc_damage``
+            # authors, and a preview for the same reason: this family's
+            # numbers are the coupled walk's.  The late
+            # phase is the one branch that really does fall through to a
+            # coarse row -- a ledger with no certifiable attack boundary
+            # authors no ``stack_events`` -- so the row-level declaration
+            # here is the one the reconstruction splits and hands over.
+            "pair_preview_of": source.previewed_mechanic(),
+            "declared": _proc_declaration(source, raw, False),
+        }
+        # A denied candidate is a DISCLOSURE, never a withholding, whether or
+        # not a pair completed: ``stack_source_denials`` says which candidates
+        # the walk could not date, and the priced pairs are the ones the
+        # authored ledger proved.  A window whose trigger never occurred is a
+        # measured zero with that disclosure beside it -- the passive really
+        # did not fire -- so it certifies rather than going coarse.  Only a
+        # malformed receipt is withheld: there the row keeps a coarse,
+        # duration-scaled price that no authored boundary supports.
+        if stack_withheld is not None:
+            breakdown[source.breakdown_key]["event_phase"] = "coarse"
+            breakdown[source.breakdown_key]["withheld_reason"] = stack_withheld
+            if stack_events is None:
+                breakdown[source.breakdown_key][
+                    "shield_withheld_reason"
+                ] = "self_shield_attached_only_to_certified_proc_events"
+        if stack_source_denials:
+            breakdown[source.breakdown_key][
+                "stack_source_denials"
+            ] = stack_source_denials
+            if stack_gate is not None:
+                breakdown[source.breakdown_key][
+                    "state_transitions"
+                ] = stack_gate.public_receipt()
+        if stack_events:
+            self_shield_events: list[dict[str, Any]] = []
+            for event in stack_events:
+                event["damage"] = total_damage / procs
+                event["declared"] = _proc_declaration(source, raw / procs, False)
+                if effect.self_shield_duration > 0.0:
+                    shield_base = (
+                        effect.self_shield_melee_base
+                        if state.is_melee
+                        else effect.self_shield_ranged_base
+                    )
+                    shield_ratio = (
+                        effect.self_shield_melee_bonus_ad_ratio
+                        if state.is_melee
+                        else effect.self_shield_ranged_bonus_ad_ratio
+                    )
+                    self_shield_events.append(
+                        {
+                            "amount": max(
+                                0.0,
+                                shield_base
+                                + shield_ratio
+                                * float(state.champion_stats["bonus_attack_damage"]),
+                            ),
+                            "duration": effect.self_shield_duration,
+                            "source": source.display_name,
+                            # The shield arms on the SAME proc event it
+                            # rides: its time and event precision are the
+                            # completed pair's (P3 package 3C).
+                            "time": float(event["time"]),
+                            "event_precision": str(
+                                event.get("event_precision", "exact")
+                            ),
+                        }
+                    )
+            breakdown[source.breakdown_key]["damage_events"] = stack_events
+            if self_shield_events:
+                breakdown[source.breakdown_key][
+                    "self_shield_events"
+                ] = self_shield_events
+            breakdown[source.breakdown_key]["event_phase"] = "effect"
+            # Public kernel receipt: every stack gain, window expiry, proc,
+            # and per-target cooldown start in walk order (state_lifecycle).
+            if stack_gate is not None:
+                breakdown[source.breakdown_key][
+                    "state_transitions"
+                ] = stack_gate.public_receipt()
+        state.total_damage += total_damage

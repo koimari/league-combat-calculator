@@ -227,7 +227,7 @@ def _ability_applied_on_hit_damage(
     including BoRK's current-health formula, evaluated at the rotation's
     modeled target HP. Counter-gated procs (Kraken/Hullbreaker) are NOT
     summed here — the application is recorded on the fight's shared hit
-    counter and its procs fire in ``_add_single_proc_on_hits``.
+    counter and its procs fire in ``_add_stacking_strikes``.
     On-ATTACK-only mechanics (energized procs, spellblade, phantom
     hits) are attack-triggered and never apply here. Per-hit components
     marked ``superseded_by_ability_proc`` (Muramana) are skipped too —

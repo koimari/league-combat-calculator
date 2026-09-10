@@ -1,11 +1,12 @@
 """`scripts/extract_modules.py` on a synthetic package: what moves, what refuses."""
 
+import ast
 import json
 from pathlib import Path
 
 import pytest
 
-from scripts import extract_modules
+from scripts import extract_modules, module_units
 
 WIDGET = '''"""Widget engine."""
 
@@ -73,6 +74,26 @@ def test_turn(monkeypatch):
     return note
 '''
 
+#: A second source, for the annotation forms the widget engine does not spell:
+#: a ``__future__`` import, a ``Literal`` whose members are values, and a type
+#: parameter the def itself binds.
+GADGET = '''"""Gadget engine."""
+
+from __future__ import annotations
+
+from typing import Literal
+
+MODE_COUNT = 2
+
+
+def pick[T](items: list[T], mode: Literal["first", "none"]) -> T:
+    return items[0] if mode == "first" else items[-1]
+
+
+def count() -> int:
+    return MODE_COUNT
+'''
+
 SIBLING = '''"""A reader inside the package."""
 
 from .widget import RATES, keep
@@ -108,6 +129,19 @@ ASSIGNMENT = {
 }
 
 
+GADGET_ASSIGNMENT = {
+    "source": "src/calculator/gadget.py",
+    "packages": {"src/calculator/gear": "the gadget's steps."},
+    "modules": [
+        {
+            "path": "src/calculator/gear/picking.py",
+            "docstring": "picking one item.",
+            "defs": ["pick"],
+        }
+    ],
+}
+
+
 def _write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(text.replace("\n", "\r\n").encode("utf-8"))
@@ -117,6 +151,7 @@ def _write(path: Path, text: str) -> None:
 def tree(tmp_path, monkeypatch):
     """A synthetic repo with the source, a sibling reader and an outside reader."""
     _write(tmp_path / "src/calculator/widget.py", WIDGET)
+    _write(tmp_path / "src/calculator/gadget.py", GADGET)
     _write(tmp_path / "src/calculator/helper.py", '"""Helper."""\n')
     _write(tmp_path / "src/calculator/sibling.py", SIBLING)
     _write(tmp_path / "tests/test_widget.py", READER)
@@ -132,6 +167,18 @@ def _plan(assignment=None, **kwargs):
 def _written(tree, relative):
     """One written file's text, newlines normalised; the raw bytes are pinned once."""
     return (tree / relative).read_bytes().decode("utf-8").replace("\r\n", "\n")
+
+
+class TestFreeNames:
+    """What one unit reads through an annotation Python never evaluates."""
+
+    def test_a_literal_member_is_not_a_read(self):
+        node = ast.parse('def p(m: Literal["first", "none"]) -> int:\n    return 0')
+        assert module_units.free_names(node.body[0]) == {"Literal"}
+
+    def test_a_type_parameter_is_not_a_read(self):
+        node = ast.parse("def p[T](item: T) -> T:\n    return item")
+        assert module_units.free_names(node.body[0]) == set()
 
 
 class TestPlanning:
@@ -163,6 +210,13 @@ class TestPlanning:
         """Python never evaluates one, so the symbol table cannot see it."""
         turning = next(m for m in _plan().modules if m.path.stem == "turning")
         assert "from decimal import Decimal" in turning.imports
+
+    def test_a_future_import_is_not_a_read(self, tree):
+        assert _plan(GADGET_ASSIGNMENT).residue_reads == {"MODE_COUNT"}
+
+    def test_an_annotation_resolves_to_the_one_import_it_needs(self, tree):
+        module = _plan(GADGET_ASSIGNMENT).modules[0]
+        assert module.imports == ["from typing import Literal"]
 
     def test_two_reads_of_one_module_become_one_import(self):
         statements = [
@@ -286,6 +340,12 @@ class TestWriting:
         residue = _written(tree, "src/calculator/widget.py")
         assert "import logging" not in residue
         assert "from .helper import boost" not in residue
+
+    def test_the_residue_keeps_its_future_import(self, tree):
+        extract_modules.write_plan(_plan(GADGET_ASSIGNMENT, write=True))
+        residue = _written(tree, "src/calculator/gadget.py")
+        assert "from __future__ import annotations" in residue
+        assert "from typing import Literal" not in residue
 
     def test_an_import_the_residue_half_reads_keeps_that_half(self, tree):
         extract_modules.write_plan(_plan(write=True))

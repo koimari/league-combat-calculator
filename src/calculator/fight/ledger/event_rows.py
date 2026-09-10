@@ -201,6 +201,12 @@ def _damage_event_row(  # pylint: disable=too-many-arguments,too-many-positional
         row["self_shield"] = dict(shield)
     if raw_damage is not None:
         row["raw_damage"] = float(raw_damage)
+    # The resistance the mitigation site applied to this packet.  Absent for
+    # a class that met none, and for a site that states none, which the
+    # trace reads as a blank and a refusal respectively.
+    resistance_met = fields.get("resistance_met")
+    if resistance_met is not None:
+        row["resistance_met"] = float(resistance_met)
     raw_formula = fields.get("raw_formula")
     if raw_formula is not None:
         row["raw_formula"] = raw_formula

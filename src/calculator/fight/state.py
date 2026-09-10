@@ -7,6 +7,7 @@ from typing import Any
 
 from .. import item_effects, rune_effects
 from ..interpreters import crit_profile
+from . import authorship
 from .config import BASE_CRIT_MULTIPLIER
 from .declarations import BuildDeclarations
 from .empower_declaration import BurstSwingSchedule
@@ -153,7 +154,7 @@ class FightState:
     # every champion whose module emits no ``ferocity_parts``.
     ferocity_timeline: "FerocityTimeline | None" = None
     # ── Accumulators ──────────────────────────────────────────────────────
-    breakdown: dict[str, Any] = field(default_factory=dict)
+    breakdown: dict[str, Any] = field(default_factory=authorship.new_breakdown)
     total_damage: float = 0.0
     notes: list[str] = field(default_factory=list)
     # Mitigated bonus from basic_damage ability parts (forced swings,

@@ -4,7 +4,6 @@ from typing import Any
 
 from ...ability_atoms import ability_field
 from ...ability_spec import AttackClass
-from ...interpreters import periodic
 from ...survival.pricing import AuthoredDeclaration
 from ..cast_slots import _damaging_cast_times
 from ..ledger.event_rows import _row_declaration_share
@@ -14,7 +13,7 @@ from ..rotation.dot_ticks import _periodic_damage_events
 from ..state import FightState, _damage_inputs
 
 
-def _periodic_declaration(item_name: str, raw_amount: float) -> tuple[Any, ...]:
+def _periodic_declaration(mechanic_id: str, raw_amount: float) -> tuple[Any, ...]:
     """One periodic packet's declaration: rule, magnitude, attack class.
 
     ``AttackClass.OTHER`` is measured, not defaulted: all three cadences reach
@@ -24,7 +23,7 @@ def _periodic_declaration(item_name: str, raw_amount: float) -> tuple[Any, ...]:
     a second producer.  *raw_amount* is the cadence's whole raw aggregate."""
     return tuple(
         AuthoredDeclaration(
-            periodic.periodic_mechanic_id(item_name),
+            mechanic_id,
             raw_amount,
             AttackClass.OTHER.value,
         )
@@ -127,7 +126,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
             raw_burn *= burn_multiplier
         burn_mitigated = _mitigate(raw_burn, "magic", resists, state.magic_amp)
 
-        declaration = _periodic_declaration(source.item_name, raw_burn)
+        declaration = _periodic_declaration(source.previewed_mechanic(), raw_burn)
         state.breakdown[source.breakdown_key] = {
             "name": source.display_name,
             "total_damage": burn_mitigated,
@@ -136,7 +135,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
             # walk owns: the roster composition reads the stamp and takes the
             # figure above out of every total it composes, while the pair
             # fight's own receipt publishes it unchanged.
-            "pair_preview_of": periodic.periodic_mechanic_id(source.item_name),
+            "pair_preview_of": source.previewed_mechanic(),
             "declared": declaration,
             "damage_events": _declared_periodic_ticks(
                 _periodic_damage_events(
@@ -159,7 +158,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
             raw_immolate, source.damage_type, resists, state.magic_amp
         )
 
-        declaration = _periodic_declaration(source.item_name, raw_immolate)
+        declaration = _periodic_declaration(source.previewed_mechanic(), raw_immolate)
         state.breakdown[source.breakdown_key] = {
             "name": source.display_name,
             "total_damage": immolate_mitigated,
@@ -169,7 +168,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
             # whose rule publishes no event interval authors no ticks of its
             # own, and the reconstruction synthesizes one
             # (``_row_declaration_share``).
-            "pair_preview_of": periodic.periodic_mechanic_id(source.item_name),
+            "pair_preview_of": source.previewed_mechanic(),
             "declared": declaration,
         }
         if source.event_interval is not None:
@@ -208,7 +207,9 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
                 default=0.0,
             )
             damage_per_proc = periodic_mitigated / procs if procs else 0.0
-            declaration = _periodic_declaration(source.item_name, raw_periodic)
+            declaration = _periodic_declaration(
+                source.previewed_mechanic(), raw_periodic
+            )
             damage_events = [
                 {
                     "time": combat_start + (index + 1) * effect.interval,
@@ -232,7 +233,7 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
                 # A preview like the other two cadences author: one packet per
                 # completed interval, each carrying its share of the row's own
                 # declaration.
-                "pair_preview_of": periodic.periodic_mechanic_id(source.item_name),
+                "pair_preview_of": source.previewed_mechanic(),
                 "declared": declaration,
                 "damage_events": damage_events,
                 "event_phase": "effect",

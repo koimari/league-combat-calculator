@@ -4,7 +4,6 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 from ... import item_effects
-from ...interpreters import charged_strike
 from ..autos.decaying_health_walk import DecayingTarget
 from ..ledger.event_rows import _finite_numeric_receipt, _row_time
 from ..resists import _mitigate
@@ -86,6 +85,7 @@ def _author_energized_ability_proc(
     if ability_mitigated <= 0.0:
         return False
     ability_key = f"{source.breakdown_key}_ability"
+    mechanic = source.previewed_mechanic()
     ability_row: dict[str, Any] = {
         "name": f"{source.display_name} (Galvanize)",
         "count": 1,
@@ -100,8 +100,8 @@ def _author_energized_ability_proc(
         # lethality applies to its own packet — so
         # ``_apply_temporary_lethality_windows`` restates the resistance on
         # this declaration afterwards (umbrella Amendment N, Ruling 1).
-        "pair_preview_of": charged_strike.strike_mechanic_id(source.item_name),
-        "declared": _strike_declaration(source.item_name, ability_raw),
+        "pair_preview_of": mechanic,
+        "declared": _strike_declaration(mechanic, ability_raw),
         "damage_events": [
             {
                 "time": ability_proc_time,
@@ -111,13 +111,11 @@ def _author_energized_ability_proc(
                 # before the triggering ability packet at the same time.
                 "timeline_order": -1.0,
                 "event_precision": ability_proc_precision,
-                "declared": _strike_declaration(source.item_name, ability_raw),
+                "declared": _strike_declaration(mechanic, ability_raw),
             }
         ],
     }
-    ability_row["energized_schedule"] = item_effects.energized_schedule_receipt(
-        source.item_name
-    )
+    ability_row["energized_schedule"] = effect.schedule_receipt()
     temporary_lethality = (
         effect.temporary_lethality_melee
         if state.is_melee
@@ -150,7 +148,7 @@ def _first_auto_damage_by_auto_for_health_walk(
 ) -> list[float]:
     """Price first-auto packets as HP inputs without authoring them twice.
 
-    ``_layer_on_hit_effects`` runs before ``_add_single_proc_on_hits``.  The
+    ``_layer_on_hit_effects`` runs before ``_add_first_auto_strikes``.  The
     latter owns the output rows/total, while this helper supplies only the
     packets' mitigated damage to the BoRK HP walk.  Keeping the two concerns
     separate prevents the first-auto packet from being added to fight damage
@@ -162,9 +160,7 @@ def _first_auto_damage_by_auto_for_health_walk(
     packets = [0.0] * num_auto_attacks
     for effect in state.declared.charged_strikes.first_autos:
         source = effect.source
-        if not item_effects.first_auto_state_ready(
-            state.items, state.item_options, source.item_name
-        ):
+        if not effect.state_ready(state.items, state.item_options):
             continue
         # Galvanize consumes an energized charge on the first damaging ability;
         # that packet is not also an auto packet.  The authoring pass handles
@@ -175,7 +171,7 @@ def _first_auto_damage_by_auto_for_health_walk(
             and _first_damaging_ability_event(state, rotation) is not None
         )
         if effect.chain_targets_max > 0:
-            chain_target_count = item_effects.statikk_chain_target_count(state.level)
+            chain_target_count = effect.chain_target_count(state.level)
             allocated_targets = min(
                 max(1, state.roster_target_count), chain_target_count
             )
@@ -183,10 +179,8 @@ def _first_auto_damage_by_auto_for_health_walk(
                 continue
         initial_stacks = 0.0 if ability_consumed else float(effect.energized_max_stacks)
         if effect.energized_max_stacks > 0:
-            proc_indices = item_effects.energized_proc_indices(
-                source.item_name,
-                num_auto_attacks,
-                initial_stacks=initial_stacks,
+            proc_indices = effect.proc_indices(
+                num_auto_attacks, initial_stacks=initial_stacks
             )
         else:
             proc_indices = tuple(range(min(effect.max_procs, num_auto_attacks)))

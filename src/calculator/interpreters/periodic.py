@@ -29,7 +29,6 @@ from ..item_behavior import (
     PeriodicCadence,
     PeriodicRule,
     RuleFamily,
-    mechanic_id_reading,
     typed_payload,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
@@ -92,6 +91,7 @@ def _row(
         rule.owner,
         payload.formula.damage_type,
         damage_formula.compile_formula(payload.formula, ctx),
+        mechanic_id=rule.mechanic_id,
         suffix=suffix,
         breakdown_key=f"{prefix}{rule.owner}",
         event_interval=event_interval,
@@ -128,14 +128,6 @@ def periodic_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
         for rule in behavior_rules(owner)
         if rule.family is RuleFamily.PERIODIC
     )
-
-
-periodic_mechanic_id = mechanic_id_reading(
-    periodic_rules,
-    PeriodicInterpretationError,
-    authors="a periodic row",
-    declares="periodic",
-)
 
 
 def declares_self_heal(owners: Sequence[str]) -> bool:
@@ -211,7 +203,6 @@ __all__ = [
     "PeriodicSlots",
     "cadence_fields",
     "declares_self_heal",
-    "periodic_mechanic_id",
     "periodic_rules",
     "resolve_slots",
 ]

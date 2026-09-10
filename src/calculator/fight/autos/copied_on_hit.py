@@ -1,14 +1,13 @@
 """One on-hit application copied onto a second subject."""
 
 from collections.abc import Sequence
-from typing import Any, NamedTuple
+from typing import Any
 
-from ... import item_effects
 from ...ability_spec import AttackClass
-from ...interpreters import on_hit_strike, secondary_target
+from ...interpreters import secondary_target
 from ...survival.pricing import AuthoredDeclaration, BasicAttackSwing, RoutingProvenance
 from ..resists import _mitigate
-from ..results import OnHitResult, RotationResult, SpellbladeResult
+from ..results import OnHitResult, OnHitShare, RotationResult, SpellbladeResult
 from ..state import FightState, _damage_inputs
 from .decaying_health_walk import DecayingTarget
 
@@ -71,7 +70,7 @@ def _bolt_declaration(
 
 
 def _copied_on_hit_declaration(
-    share: "CopiedOnHitShare", router_mechanic_id: str
+    share: OnHitShare, router_mechanic_id: str
 ) -> tuple[Any, ...] | None:
     """One copied on-hit packet's declaration, routed at the second subject.
 
@@ -82,37 +81,16 @@ def _copied_on_hit_declaration(
     Wind's Fury re-delivers the attack's on-hit packets whole.  ``None`` for a
     contributor no item rule declares, which makes the copied row's stamp
     all-or-nothing."""
-    if share.mechanic_id is None:
+    mechanic = share.declared_mechanic()
+    if mechanic is None:
         return None
     return tuple(
         AuthoredDeclaration(
-            share.mechanic_id,
+            mechanic,
             share.raw,
             AttackClass.OTHER.value,
         ).routed_by(RoutingProvenance(router_mechanic_id, 1.0))
     )
-
-
-class CopiedOnHitShare(NamedTuple):
-    """One contributor's share of a copied on-hit application.
-
-    A copied packet is the attack's own on-hit effects re-delivered at a
-    second subject, and it is a *sum* over every contributor of one damage
-    type — which is exactly the shape a declaration cannot carry, because a
-    declaration is one producer's magnitude (D-60).  So the contributors are
-    kept apart here, each with the mechanic that declared it.
-
-    ``mechanic_id`` is ``None`` for a contributor no item rule declares — a
-    champion's ability-carried on-hit — which is the case the copied row's
-    stamp fails closed on rather than the case it guesses at.  ``raw`` is the
-    pre-mitigation magnitude the declaration would state, and is ``0.0``
-    exactly when the mechanic is unknown.
-    """
-
-    mechanic_id: str | None
-    damage_type: str
-    mitigated: float
-    raw: float
 
 
 def _copied_on_hit_shares(
@@ -120,34 +98,18 @@ def _copied_on_hit_shares(
     on_hits: OnHitResult,
     effectiveness: float,
     target_current_health: float,
-) -> list[CopiedOnHitShare]:
-    """One copied on-hit application, split by the mechanic that declared it.
+) -> list[OnHitShare]:
+    """One copied on-hit application, split by the producer that paid it.
 
-    :func:`_copied_on_hit_packet`'s own arithmetic, kept per contributor.
-    The item strikes come from the record the on-hit layering already keeps
-    per declaring item, and the residue — the pool minus those items — is a
-    champion's ability-carried on-hit, which no item rule declares and which
-    therefore lands here with no mechanic rather than being attributed to
-    whichever item happened to share its damage type.
+    :func:`_copied_on_hit_packet`'s own arithmetic, kept per producer.  The
+    fixed-magnitude producers are the record the on-hit layering keeps as it
+    pays them, item strikes and champion ability-carried on-hits alike; the
+    current-health strike is re-read here against the second subject's own
+    health, which is why it is not on that record.
     """
-    shares: list[CopiedOnHitShare] = []
-    attributed: dict[str, float] = {}
-    for item_name, damage_type, per_hit, raw_per_hit in on_hits.static_on_hit_items:
-        if per_hit <= 0.0:
-            continue
-        shares.append(
-            CopiedOnHitShare(
-                on_hit_strike.strike_mechanic_id(item_name),
-                damage_type,
-                float(per_hit),
-                float(raw_per_hit),
-            )
-        )
-        attributed[damage_type] = attributed.get(damage_type, 0.0) + per_hit
-    for damage_type, pooled in on_hits.static_on_hit_by_type.items():
-        residue = float(pooled) - attributed.get(damage_type, 0.0)
-        if residue > 1e-9:
-            shares.append(CopiedOnHitShare(None, damage_type, residue, 0.0))
+    shares: list[OnHitShare] = [
+        share for share in on_hits.static_on_hit_shares if share.mitigated > 0.0
+    ]
     for effect in state.per_hit_strikes:
         if not effect.tracks_current_health:
             continue
@@ -160,8 +122,8 @@ def _copied_on_hit_shares(
         if raw <= 0.0:
             continue
         shares.append(
-            CopiedOnHitShare(
-                on_hit_strike.strike_mechanic_id(effect.source.item_name),
+            OnHitShare(
+                effect.source.previewed_mechanic(),
                 effect.source.damage_type,
                 _mitigate(
                     raw,
@@ -175,7 +137,7 @@ def _copied_on_hit_shares(
     return shares
 
 
-def _copied_packets_by_type(shares: Sequence[CopiedOnHitShare]) -> dict[str, float]:
+def _copied_packets_by_type(shares: Sequence[OnHitShare]) -> dict[str, float]:
     """The pooled per-type packet the two copied-row builders consume."""
     packets: dict[str, float] = {}
     for share in shares:
@@ -243,7 +205,7 @@ def _add_copied_stacking_on_hit_packets(
     apps = rotation.ability_item_applications
 
     for effect in state.declared.charged_strikes.stacking_on_hits:
-        if item_effects.counter_trigger(effect.source.item_name) == "on_attack":
+        if effect.counter_trigger == "on_attack":
             # Statikk's chain carries on-hit effects, not on-attack effects.
             continue
 

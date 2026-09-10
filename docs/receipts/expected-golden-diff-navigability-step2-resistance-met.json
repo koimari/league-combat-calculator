@@ -1,0 +1,61 @@
+{
+  "slice": "navigability-step2-resistance-met",
+  "what_landed": "Every damage event whose mitigation site knows the resistance it applied now states it as `resistance_met`, read through one home: `fight/resists._resistance_met_fields`, beside `_mitigate` and off the same class dispatch and the same two arguments, so the field cannot name a resistance the mitigation did not apply. The sites are the rotation's cast parts (the per-hit `ability_mr` its own `_mitigate_hits` was handed), the swing and converted-auto and double-shot rows in fight/autos/simulation.py, every `_swing_event_row` caller in fight/autos/on_hit_layering.py, and the spellblade, true-conversion and doubled on-hit rows in fight/autos/spellblade.py. `fight/ledger/event_rows._damage_event_row` plumbs the field the way it already plumbs `raw_damage`, and `fight/ledger/trace.py` reads it ahead of the declaration's `effective_resistance`. True damage states nothing, because it meets nothing, and the trace prints a blank there rather than a refusal.",
+  "landed_against": {
+    "golden": "scripts/golden_baseline.json",
+    "coupled_golden": "scripts/golden_coupled_baseline.json",
+    "rule": "R-17: this slice declares no diff paths because it moves none. The field is engine-internal: no allow list publishes it, so neither baseline can see it."
+  },
+  "expected_diff_paths": {
+    "golden": [],
+    "coupled_golden": [],
+    "coupled_golden_shape_counters": [],
+    "coupled_exact": {}
+  },
+  "why_no_leaf_moves": {
+    "pair": "public_response._public_damage_event enumerates the keys a published damage event carries and `resistance_met` is not among them, so the pair snapshot's serialized fights are byte-identical.",
+    "coupled": "program/views/receipt.py's `_damage_event_rows` publishes an enumerated leaf set (time, target, source, damage_type, damage, raw_damage, pair_damage, overkill, ...) and carries no `resistance_met` leaf, so the coupled receipt is unchanged. Measured: `compare scripts/golden_coupled_baseline.json` reports the same 543 paths after this slice as before it, all of them declared by the two sibling receipts.",
+    "consequence": "Publishing the column is a separate ruling. It would add one leaf per damage event to every coupled scenario, which moves the coupled golden's leaf count and its shape counters, and the step 2 design reserves any addition to a published allow list to the orchestrator."
+  },
+  "what_the_fixture_pins": {
+    "fixture": "tests/fixtures/kogmaw_dusk_and_dawn_trace.json",
+    "lines": 30,
+    "refusals": 0,
+    "resistance_per_source": {
+      "Q": 100.0,
+      "E": 75.33333333333334,
+      "R": 75.33333333333334,
+      "auto_attacks": 75.33333333333334,
+      "on_hit_ability_W": 75.33333333333334,
+      "spellblade_Dusk and Dawn": 75.33333333333334,
+      "double_on_hit_Dusk and Dawn": 75.33333333333334
+    },
+    "reading": "The fight publishes effective armor and MR of 75.3333, which is the post-shred figure. Kog'Maw Q is priced against the 100 magic resistance it goes on to shred, and BOTH of its casts meet 100, not only the one at t=0: `ability_rotation` binds `ability_mr` once per ability row, before `_apply_target_shred` runs, so the shred never boosts the ability that applied it at any cast. Measured, not assumed. `raw * 100 / (100 + resistance_met) == mitigated` holds on all 30 lines."
+  },
+  "what_still_refuses_a_resistance": {
+    "measured_over": "tests/test_fight_trace.py's twelve-build corpus, after the stamp",
+    "by_step": {
+      "fight.after.reprice._add_shadowflame_cinderbloom": ["shadowflame_<item>"],
+      "fight.autos.first_auto_strikes._add_first_auto_strikes": ["on_hit_once_<item>"],
+      "fight.autos.stacking_strikes._add_stacking_strikes": ["on_hit_<item>"],
+      "fight.items.actives._add_auto_cooldown_strikes": ["active_Titanic Hydra"],
+      "fight.items.actives._add_item_active_damage": ["active_<item>"],
+      "fight.items.burns._add_burn_damage": ["burn_<item>", "immolate_<item>", "periodic_<item>"],
+      "fight.items.cast_procs._add_item_proc_damage": ["proc_<item>"],
+      "fight.items.cast_procs._add_late_phase_proc_damage": ["proc_Eclipse"],
+      "fight.items.muramana._add_per_ability_hit_damage": ["muramana_ability"],
+      "fight.items.ultimate_procs._add_ultimate_proc_damage": ["ult_proc_<item>"],
+      "fight.rotation.ability_rotation._compute_ability_rotation": ["a coarse ability row"],
+      "fight.rotation.dot_ticks._add_stacking_dot_damage": ["stacking_dot_passive"]
+    },
+    "reading": "Eleven of the twelve are item and rune steps in files this slice was not assigned; each mitigates through the same `_mitigate` and needs the same one-line stamp. The twelfth is not a missing stamp: an ability whose row publishes no per-hit events (Ahri W and R) stays coarse, and the packet the ledger synthesizes for it has no mitigation site to read a resistance off at all. A deferred tick is the third shape: participant_timeline clones the parent packet with `{**event}` and re-types it as true damage, so it inherits a `resistance_met` its own class cannot have. `fight/ledger/trace._packet_line` refuses to print a resistance for a class that meets none, whatever the event states, which is where that rule has one home."
+  },
+  "what_did_not_move": {
+    "claim": "No number the engine computes moved. Every stated resistance is the value its own mitigation was handed, carried onto the event rather than recomputed.",
+    "evidence": [
+      "scripts/golden_baseline.json: `python scripts/golden_snapshot.py compare scripts/golden_baseline.json` reports 'snapshot identical'.",
+      "scripts/golden_coupled_baseline.json: `compare` reports 543 differences, every one of them declared by expected-golden-diff-navigability-step2-secondary-delivery.json or expected-golden-diff-navigability-step2-raw-damage.json, and zero extra.",
+      "tests/fixtures/kogmaw_dusk_and_dawn_trace.json, regenerated through `python scripts/fight_trace.py <request> --capture`: 30 lines, total 1934.3695, zero refusals of any kind."
+    ]
+  }
+}

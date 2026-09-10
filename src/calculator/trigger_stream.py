@@ -20,6 +20,8 @@ structural only and reads no file (D-35) — item-name resolution lives in the
 test that pins the projections.
 """
 
+# file-length-ok: the bulk is one declaration table, and the reason it stays
+# whole is the paragraph below.
 # The module is long because most of it is one declaration table; splitting
 # the registry out would make every projection a cross-module round trip and
 # duplicate the acyclicity proof, which is the trade this phase deliberately
@@ -831,6 +833,7 @@ _ACTIVE_CAST_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 
 
 _COOLDOWN_PROC_HOME = "fight.items.cast_procs._add_item_proc_damage"
+_LATE_PHASE_PROC_HOME = "fight.items.cast_procs._add_late_phase_proc_damage"
 _ULTIMATE_PROC_HOME = "fight.items.ultimate_procs._add_ultimate_proc_damage"
 
 
@@ -842,7 +845,7 @@ _ULTIMATE_PROC_HOME = "fight.items.ultimate_procs._add_ultimate_proc_damage"
 _CAST_PROC_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
     RetiredFamilyMechanic(mechanic, item, home)
     for mechanic, item, home in (
-        ("eclipse.proc", "Eclipse", _COOLDOWN_PROC_HOME),
+        ("eclipse.proc", "Eclipse", _LATE_PHASE_PROC_HOME),
         ("hextech_alternator.proc", "Hextech Alternator", _COOLDOWN_PROC_HOME),
         ("ludens_echo.proc", "Luden's Echo", _COOLDOWN_PROC_HOME),
         ("malignance.ultimate_proc", "Malignance", _ULTIMATE_PROC_HOME),
@@ -852,6 +855,10 @@ _CAST_PROC_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
         ("zekes_convergence.ultimate_proc", "Zeke's Convergence", _ULTIMATE_PROC_HOME),
     )
 )
+
+
+_FIRST_AUTO_STRIKE_HOME = "fight.autos.first_auto_strikes._add_first_auto_strikes"
+_STACKING_STRIKE_HOME = "fight.autos.stacking_strikes._add_stacking_strikes"
 
 
 # The eleven damaging charged strikes the coupled walk prices.
@@ -877,7 +884,7 @@ _CHARGED_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
         (
             "dead_mans_plate.empowered_hit",
             "Dead Man's Plate",
-            "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
+            _FIRST_AUTO_STRIKE_HOME,
         ),
         (
             "fiendhunter_bolts.empowered_autos",
@@ -887,37 +894,37 @@ _CHARGED_STRIKE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
         (
             "heartsteel.empowered_hit",
             "Heartsteel",
-            "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
+            _FIRST_AUTO_STRIKE_HOME,
         ),
         (
             "hullbreaker.repeating_strike",
             "Hullbreaker",
-            "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
+            _STACKING_STRIKE_HOME,
         ),
         (
             "kraken_slayer.repeating_strike",
             "Kraken Slayer",
-            "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
+            _STACKING_STRIKE_HOME,
         ),
         (
             "rapid_firecannon.empowered_hit",
             "Rapid Firecannon",
-            "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
+            _FIRST_AUTO_STRIKE_HOME,
         ),
         (
             "statikk_shiv.empowered_hit",
             "Statikk Shiv",
-            "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
+            _FIRST_AUTO_STRIKE_HOME,
         ),
         (
             "stormrazor.empowered_hit",
             "Stormrazor",
-            "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
+            _FIRST_AUTO_STRIKE_HOME,
         ),
         (
             "umbral_glaive.empowered_hit",
             "Umbral Glaive",
-            "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
+            _FIRST_AUTO_STRIKE_HOME,
         ),
         (
             "voltaic_cyclosword.empowered_hit",
@@ -1022,7 +1029,7 @@ _SPELLBLADE_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = tuple(
 # Wind's Fury, priced by the coupled walk.
 # One row, because one declared rule in
 # ``item_behavior_catalog``'s ``secondary_target`` family is the whole family,
-# and one authoring site: ``fight.autos.single_proc_on_hits._add_single_proc_on_hits``
+# and one authoring site: ``fight.items.secondary_delivery._add_bolt_delivery``
 # authors both the bolt and the copied on-hit row inside one block.
 #
 # ONE STAMP, TWO ROWS, TWO PRODUCERS.  The pair half this generates previews
@@ -1039,7 +1046,7 @@ _SECONDARY_TARGET_RETIREMENT: tuple[RetiredFamilyMechanic, ...] = (
     RetiredFamilyMechanic(
         "runaans_hurricane.secondary_target",
         "Runaan's Hurricane",
-        "fight.autos.single_proc_on_hits._add_single_proc_on_hits",
+        "fight.items.secondary_delivery._add_bolt_delivery",
     ),
 )
 

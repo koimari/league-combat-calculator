@@ -17,6 +17,11 @@ inherit somebody else's answer by omission.
 
 from __future__ import annotations
 
+# file-length-ok: one interpreter per family, and this family's four shapes
+# are one closed vocabulary that ``charged_strike_slots`` dispatches over in
+# one pass; a shape lifted out is a payload whose only reader lives in
+# another file.  docs/plans/2026-09-09-fight-navigability.md carves the
+# interpreters at stage 3, as one assignment file over the whole directory.
 from collections.abc import Sequence
 from dataclasses import dataclass
 
@@ -40,6 +45,7 @@ from ..item_effects import (
     FirstAutoEffect,
     StackingOnHitEffect,
     UltimateAutoBuffEffect,
+    counter_trigger,
     row_presentation,
 )
 from ..stat_formulas import calculate_attack_speed
@@ -190,6 +196,7 @@ def _row(
         display_name=name,
         damage_type=payload.formula.damage_type,
         raw_damage=damage_formula.compile_formula(payload.formula, ctx),
+        mechanic_id=rule.mechanic_id,
         basic_damage=basic_damage,
     )
 
@@ -236,6 +243,7 @@ def _stacking_effect(rule: BehaviorRule, ctx: BuildContext) -> StackingOnHitEffe
     return StackingOnHitEffect(
         source=_row(rule, ctx, basic_damage=payload.basic_damage),
         hits_required=int(resolve(payload.hits_required, ctx.level)),
+        counter_trigger=counter_trigger(rule.owner),
         tracks_target_health=damage_formula.reads_target_current_health(
             payload.formula
         ),

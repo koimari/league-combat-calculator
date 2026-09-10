@@ -368,10 +368,10 @@ def test_hydra_cleave_secondary_cone_typed_and_boundary_documented():
     # Titanic's Cleave is max-health based: 3% melee / 1.5% ranged of max HP
     # to secondary targets.
     assert hydra_secondary_target_damage(
-        max_health=3000, is_melee=True
+        max_health=3000, is_melee=True, item_name="Titanic Hydra"
     ) == pytest.approx(90.0)
     assert hydra_secondary_target_damage(
-        max_health=3000, is_melee=False
+        max_health=3000, is_melee=False, item_name="Titanic Hydra"
     ) == pytest.approx(45.0)
     # The selected target never receives the splash (wiki: 'other enemies').
     # Tiamat carries the explicit boundary note; the single-target fight

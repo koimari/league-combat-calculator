@@ -8,7 +8,7 @@ from ...ability_spec import AttackClass
 from ...interpreters import charged_strike
 from ..ledger.event_rows import _ledger_total
 from ..mitigation import _mitigate_basic_attack_swing
-from ..resists import _mitigate
+from ..resists import _mitigate, _resistance_met_fields
 from ..results import AutoAttackResult
 from ..rotation.shaped_charge import _strike_declaration
 from ..state import FightState, _crit_profile
@@ -72,6 +72,11 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             if conversion_info
             else 0
         ),
+    )
+    converted_damage_type = (
+        str(ability_field(conversion_info, "damage_type", form="conversion"))
+        if conversion_info
+        else ""
     )
 
     # Simulate each auto attack individually, rolling for crits.  The two
@@ -151,18 +156,29 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     converted_auto_events: list[dict[str, Any]] = []
     converted_natural_crits = 0
 
-    def converted_swing_damage(raw_ad: float, *, critical: bool) -> float:
-        """Price one modified attack, reducing only its AD crit component."""
+    def converted_swing_raw(raw_ad: float, *, critical: bool) -> float:
+        """One modified attack's pre-mitigation magnitude: the module's non-AD
+        bonus plus an AD component whose crit the target's reduction answers."""
         assert conversion_info is not None
         adjusted_ad = raw_ad
         if critical:
             adjusted_ad *= state.target_critical_strike_damage_multiplier
+        return (
+            float(ability_field(conversion_info, "bonus_raw", form="conversion"))
+            + adjusted_ad
+        )
+
+    def converted_swing_damage(raw_ad: float, *, critical: bool) -> float:
+        """Price one modified attack, reducing only its AD crit component."""
         return _mitigate_basic_attack_swing(
             state,
-            float(ability_field(conversion_info, "bonus_raw", form="conversion"))
-            + adjusted_ad,
-            str(ability_field(conversion_info, "damage_type", form="conversion")),
+            converted_swing_raw(raw_ad, critical=critical),
+            converted_damage_type,
         )
+
+    def ordinary_swing_damage(raw_ad: float, *, critical: bool) -> float:
+        """Price one unmodified swing against the target's armor."""
+        return _mitigate_basic_attack_swing(state, raw_ad, critical_strike=critical)
 
     for i in range(num_auto_attacks):
         attack_time = auto_times[i] if i < len(auto_times) else 0.0
@@ -182,6 +198,8 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                     "time": attack_time,
                     "damage_type": override_damage_type,
                     "damage": mitigated,
+                    "raw_damage": override_replace_raw,
+                    **_resistance_met_fields(override_damage_type, resists),
                 }
             )
             continue
@@ -266,74 +284,51 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                 raw_phys = swing_ad
             raw_true = 0.0
 
+        # While the conversion's count lasts this swing IS the modified
+        # attack, so one pricing answers for every reading of it below.
+        is_converted = i < converted_auto_limit
+        swing_damage = converted_swing_damage if is_converted else ordinary_swing_damage
+        converted_raw: float | None = None
         if deterministic_outcomes is not None:
-            if i < converted_auto_limit:
-                mitigated = sum(
-                    weight * converted_swing_damage(outcome_raw, critical=critical)
-                    for weight, outcome_raw, critical in deterministic_outcomes
-                )
-            else:
-                mitigated = sum(
-                    weight
-                    * _mitigate_basic_attack_swing(
-                        state, outcome_raw, critical_strike=critical
-                    )
+            mitigated = sum(
+                weight * swing_damage(outcome_raw, critical=critical)
+                for weight, outcome_raw, critical in deterministic_outcomes
+            )
+            if is_converted:
+                converted_raw = sum(
+                    weight * converted_swing_raw(outcome_raw, critical=critical)
                     for weight, outcome_raw, critical in deterministic_outcomes
                 )
         else:
             converted_critical = not override_crit_as_bonus and (
                 natural_crit or is_empowered or is_sundered
             )
-            if i < converted_auto_limit:
-                mitigated = converted_swing_damage(
-                    raw_phys,
-                    critical=converted_critical,
-                )
-            else:
-                mitigated = _mitigate_basic_attack_swing(
-                    state,
-                    raw_phys,
-                    critical_strike=converted_critical,
+            mitigated = swing_damage(raw_phys, critical=converted_critical)
+            if is_converted:
+                converted_raw = converted_swing_raw(
+                    raw_phys, critical=converted_critical
                 )
 
         if sundered_normal_raw is not None:
             if deterministic:
-                normal_mitigated = crit_chance * (
-                    converted_swing_damage(swing_ad * crit_multiplier, critical=True)
-                    if i < converted_auto_limit
-                    else _mitigate_basic_attack_swing(
-                        state,
-                        swing_ad * crit_multiplier,
-                        critical_strike=True,
-                    )
-                ) + (1.0 - crit_chance) * (
-                    converted_swing_damage(swing_ad, critical=False)
-                    if i < converted_auto_limit
-                    else _mitigate_basic_attack_swing(state, swing_ad)
-                )
+                normal_mitigated = crit_chance * swing_damage(
+                    swing_ad * crit_multiplier, critical=True
+                ) + (1.0 - crit_chance) * swing_damage(swing_ad, critical=False)
             else:
-                normal_mitigated = (
-                    converted_swing_damage(
-                        sundered_normal_raw,
-                        critical=natural_crit,
-                    )
-                    if i < converted_auto_limit
-                    else _mitigate_basic_attack_swing(
-                        state,
-                        sundered_normal_raw,
-                        critical_strike=natural_crit,
-                    )
+                normal_mitigated = swing_damage(
+                    sundered_normal_raw, critical=natural_crit
                 )
             sundered_sky_damage_diff = mitigated - normal_mitigated
-        if i < converted_auto_limit:
+        if is_converted:
+            assert converted_raw is not None
             converted_natural_crits += int(natural_crit)
             converted_auto_events.append(
                 {
                     "time": attack_time,
-                    "damage_type": str(
-                        ability_field(conversion_info, "damage_type", form="conversion")
-                    ),
+                    "damage_type": converted_damage_type,
                     "damage": mitigated,
+                    "raw_damage": converted_raw,
+                    **_resistance_met_fields(converted_damage_type, resists),
                 }
             )
         else:
@@ -342,6 +337,11 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                     "time": attack_time,
                     "damage_type": "physical",
                     "damage": mitigated,
+                    # This swing's own pre-mitigation magnitude, so the
+                    # receipt states the raw it was priced from rather than
+                    # falling back to the mitigated amount.
+                    "raw_damage": raw_phys,
+                    **_resistance_met_fields("physical", resists),
                     # The roll this swing actually made, carried on the
                     # swing itself: the row's crit split is a count of
                     # these, and a later site that removes swings has to
@@ -363,7 +363,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                     # its class rather than pre-multiplying the magnitude
                     # (umbrella Amendment M, Ruling 1's ordering).
                     "declared": _strike_declaration(
-                        ultimate_auto_buff.item_name,
+                        charged_strike.strike_mechanic_id(ultimate_auto_buff.item_name),
                         raw_true,
                         AttackClass.BASIC_ATTACK,
                     ),
@@ -496,7 +496,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
             # above is what earns the amp: ``fiendhunter_true_total`` has
             # already been multiplied by ``basic_amp`` for display.
             "declared": _strike_declaration(
-                ultimate_auto_buff.item_name,
+                charged_strike.strike_mechanic_id(ultimate_auto_buff.item_name),
                 fiendhunter_true_total / basic_amp,
                 AttackClass.BASIC_ATTACK,
             ),
@@ -540,33 +540,23 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         for i in range(num_auto_attacks):
             ds_ad = attack_damage * ds_ratio
             if deterministic:
-                ds_crit = False
                 event_damage = crit_chance * _mitigate_basic_attack_swing(
                     state,
                     ds_ad * crit_multiplier,
                     critical_strike=True,
                 ) + (1.0 - crit_chance) * _mitigate_basic_attack_swing(state, ds_ad)
-                double_shot_total += event_damage
-                double_shot_events.append(
-                    {
-                        "time": auto_times[i] if i < len(auto_times) else 0.0,
-                        "damage_type": "physical",
-                        "damage": event_damage,
-                        "event_precision": "exact",
-                    }
-                )
-                continue
-            ds_crit = random.random() < crit_chance
-            if ds_crit:
-                ds_crits += 1
-                raw_ds = ds_ad * crit_multiplier
             else:
-                raw_ds = ds_ad
-            event_damage = _mitigate_basic_attack_swing(
-                state,
-                raw_ds,
-                critical_strike=ds_crit,
-            )
+                ds_crit = random.random() < crit_chance
+                if ds_crit:
+                    ds_crits += 1
+                    raw_ds = ds_ad * crit_multiplier
+                else:
+                    raw_ds = ds_ad
+                event_damage = _mitigate_basic_attack_swing(
+                    state,
+                    raw_ds,
+                    critical_strike=ds_crit,
+                )
             double_shot_total += event_damage
             double_shot_events.append(
                 {
@@ -574,6 +564,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
                     "damage_type": "physical",
                     "damage": event_damage,
                     "event_precision": "exact",
+                    **_resistance_met_fields("physical", resists),
                 }
             )
 
