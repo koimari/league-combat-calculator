@@ -1,0 +1,23 @@
+{
+  "source": "src/calculator/interpreters/charged_strike.py",
+  "decisions": [
+    "Named rearmed_swings.py, not the roster's swing_schedule.py: step 1 landed src/calculator/fight/autos/swing_schedule.py (\"When auto attacks land\"), and a second swing_schedule.py would leave the fight step importing a module of its own name. This one holds the declared re-ratings of the holder's own attack stream, which is what a rearmed swing is.",
+    "DecayingStackRamp and RearmedWindow move with SwingSchedule. They are the two records it merges and its two fields, so leaving them behind is a back-edge; the residue's resolve_slots builds them and reads them back.",
+    "resolve_slots and ChargedStrikeSlots stay: ChargedStrikeSlots is the family's resolved shape and SwingSchedule is one of its five fields."
+  ],
+  "packages": {},
+  "modules": [
+    {
+      "path": "src/calculator/interpreters/rearmed_swings.py",
+      "docstring": "When a rearmed swing lands, and the two re-ratings one attack stream merges.",
+      "defs": [
+        "DecayingStackRamp",
+        "RearmedWindow",
+        "SwingSchedule",
+        "_merged_schedule",
+        "_SWING_EPSILON",
+        "swing_times"
+      ]
+    }
+  ]
+}

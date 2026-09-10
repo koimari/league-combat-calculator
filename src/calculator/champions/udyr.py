@@ -32,22 +32,24 @@ scope; the stances' own damage is priced on Q/W/E/R.
 from typing import Any
 
 from .. import healing_helpers as _healing
-from ..ability_spec import ControlScope, DamagePart
+from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from ..control_spec import ControlScope
+from .contract_vocabulary import coverage
 from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import target_stat
-from .module_contract import coverage
-from .module_helpers import buff_window_share, ranked_slot, with_detail
+from .module_helpers import ranked_slot, with_detail
 from .packet_module import build_packet_module, repeat_damage_parser
-from .slotlib import (
+from .shared_mechanics import move_speed_grant, ranked_packet_slot
+from .slot_control import with_control_event
+from .slot_entries import ability_on_hit_entry
+from .slot_extract import (
     ability_name,
-    ability_on_hit_entry,
     extract_named,
     extract_value,
     find_named_leveling,
-    resolve_scaling,
-    with_control_event,
+    sum_modifiers,
 )
 
 # The Awaken lightning chain's strike COUNT is the binary UdyrQ.Bounces
@@ -89,22 +91,15 @@ def _target_max_health_percent(
     leveling = find_named_leveling(ability, attribute, occurrence)
     if leveling is None:
         raise ValueError(f"Udyr Q {attribute!r} leveling row is unavailable")
-    total = 0.0
-    index = min(max(level - 1, 0), 19)
-    for modifier in leveling.get("modifiers", []):
-        values = modifier.get("values", [])
-        units = modifier.get("units", [])
-        if not values:
-            continue
-        idx = min(index, len(values) - 1)
-        value = float(values[idx])
-        unit = units[idx] if idx < len(units) else ""
-        stripped = unit.strip()
-        if stripped == "%":
-            total += value / 100.0 * float(target_stat(target, "target_max_health"))
-        else:
-            total += resolve_scaling(unit, value, stats, target)
-    return total
+
+    def bare_percent(unit: str, value: float) -> float | None:
+        if unit.strip() != "%":
+            return None
+        return value / 100.0 * float(target_stat(target, "target_max_health"))
+
+    return sum_modifiers(
+        leveling, level, stats, target, modifier_override=bare_percent, level=level
+    )
 
 
 @ranked_slot
@@ -201,14 +196,9 @@ def _blazing_stampede(packet_e):
     string.
     """
 
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        entry = packet_e(ctx)
-        if entry is None:
-            return None
-        ability = ctx.ability()
-        rank = ctx.rank_for()
-        if ability is None or rank < 1:
-            return entry
+    def body(
+        ctx: SlotCtx, entry: dict[str, Any], ability: dict[str, Any], rank: int
+    ) -> dict[str, Any]:
         burst_ms = extract_value(ability, "Bonus Movement Speed", rank)
         decayed_ms = extract_value(ability, "Decayed Bonus Movement Speed", rank)
         # The whole row, scaling included: the cached "Bonus Movement
@@ -217,28 +207,28 @@ def _blazing_stampede(packet_e):
         granted_ms = extract_named(
             ability, "Bonus Movement Speed", rank, ctx.stats, ctx.target
         )
-        # The stance expires, and a stat_buff is one scalar for the whole
-        # fight, so the grant lands time-weighted by the share of the
-        # window it covers (module_helpers.buff_window_share).
-        published_ms = granted_ms * buff_window_share(ctx, _E_MOVE_SPEED_SECONDS)
-        entry["stat_buff"] = {"move_speed_percent": published_ms}
-        entry["detail"] = (
-            "Stampede Stance: no damage row exists in the slot. Ghosting "
-            f"plus {burst_ms:g}% bonus movement speed (+5% per 100 bonus AD) "
-            f"for 4s, decaying to {decayed_ms:g}% (+1.5% per 100 bonus AD) "
-            "over 1.5s; the Awaken recast adds 75 bonus attack range, a "
-            "per-level 30% : 41.18% (+10% per 100 bonus AD) movement bonus "
-            "and 1.5s of crowd-control immunity. The empowered attack's "
-            "0.75s stun IS priced, as a sourced control event. The stance's "
-            f"own grant ({granted_ms:g}% at this build, {published_ms:g}% "
-            f"over the fight window) is published as a move_speed_percent "
-            "stat buff, which is a term in the shared movement-speed fold; "
-            "the decayed row and the Awaken recast's per-level bonus are "
-            "not published."
+        return move_speed_grant(
+            ctx,
+            entry,
+            granted=granted_ms,
+            duration=_E_MOVE_SPEED_SECONDS,
+            detail=lambda published_ms: (
+                "Stampede Stance: no damage row exists in the slot. Ghosting "
+                f"plus {burst_ms:g}% bonus movement speed (+5% per 100 bonus AD) "
+                f"for 4s, decaying to {decayed_ms:g}% (+1.5% per 100 bonus AD) "
+                "over 1.5s; the Awaken recast adds 75 bonus attack range, a "
+                "per-level 30% : 41.18% (+10% per 100 bonus AD) movement bonus "
+                "and 1.5s of crowd-control immunity. The empowered attack's "
+                "0.75s stun IS priced, as a sourced control event. The stance's "
+                f"own grant ({granted_ms:g}% at this build, {published_ms:g}% "
+                f"over the fight window) is published as a move_speed_percent "
+                "stat buff, which is a term in the shared movement-speed fold; "
+                "the decayed row and the Awaken recast's per-level bonus are "
+                "not published."
+            ),
         )
-        return entry
 
-    return parse
+    return ranked_packet_slot(packet_e, body)
 
 
 # P: stance/cooldown system plus an unmodelable attack-speed steroid.  Kept

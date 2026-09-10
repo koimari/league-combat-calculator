@@ -157,7 +157,8 @@ class TestSalvationIsNoDamageNotAnOpenReceipt:
         same if its condition were ever establishable.
         """
         from src.calculator.data_fetcher import get_champion, get_item_by_name
-        from src.calculator.pipeline import FightParams, run_fight
+        from src.calculator.fight_params import FightParams
+        from src.calculator.pipeline import run_fight
 
         def fight(w_rank):
             return run_fight(

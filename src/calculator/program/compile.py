@@ -61,31 +61,27 @@ from typing import Any, NamedTuple
 
 from ..ability_spec import AttackClass, DamageClass
 from ..defensive_effects import armed_revive
-from ..delivery_eligibility import CombatantFacts
+from ..delivery_facts import CombatantFacts
 from ..healing_reduction import amplifies_recovery
-from ..interpreters.delta_amp import StaticHolderAmps
+from ..interpreters.part_amp import StaticHolderAmps
 from ..item_effects import ThornsEffect
-from ..ledger_projection import LightRow
+from ..ledger_inputs import LightRow
 from ..resistance import (
     apply_armor_penetration,
     apply_magic_penetration,
     apply_resistance,
 )
 from ..survival.actions import (
-    EVENT_SLOTS,
-    NO_SLOT,
-    UTILITY_KINDS,
-    ActionKind,
-    SurvivalAction,
-    TransitionRank,
     action_key,
+    compiled_damage_action,
+    event_sequence,
+    participant_order,
+)
+from ..survival.classify import (
+    UTILITY_KINDS,
     classify_event_kind,
     classify_prefetched,
-    compiled_damage_action,
     declared_class_set,
-    event_sequence,
-    ordering_slot,
-    participant_order,
     support_transition_rank,
 )
 from ..survival.compile import (
@@ -98,28 +94,26 @@ from ..survival.compile import (
     unrepresentable_heal_receipt,
     unrepresentable_template_receipt,
 )
+from ..survival.event_slots import EVENT_SLOTS, NO_SLOT
+from ..survival.phases import TransitionRank, ordering_slot
 from ..survival.pricing import (
     AuthoredDeclaration,
     DeclaredPacket,
     RoutingProvenance,
     route_declared_packet,
 )
+from ..survival.typed_action import ActionKind, SurvivalAction
 from ..trigger_stream import HolderStacking, is_immobilizing_event
 from . import events as ev
-from .amp import LiveAmpRider, live_amp_for
-from .build import (
-    Program,
-    Projection,
-    arming_stacking,
-    dropped_pair_previews,
-    pair_preview_sources,
-)
+from .amp import NO_AMPS, AmpRiders, live_amp_for
+from .build import Program, Projection
 from .caches import (
     ProgramFingerprint,
     RosterFingerprint,
     program_fingerprint,
     roster_fingerprint,
 )
+from .capability import arming_stacking, dropped_pair_previews, pair_preview_sources
 from .identity import event_id_text
 
 # Kinds a compiled damage action may carry; a revive candidate is authored
@@ -154,13 +148,14 @@ class PairView:
     templates, memoized by the composition on first use; a cached fight
     serves them to every later evaluation.
 
-    ``live_amps`` and ``holder_amps`` travel with the fight because they are
-    facts about this pair, and resolving them is not free: a search that
-    re-compiles one cached fight into a panel per defensive signature would
-    otherwise pay for them once per signature instead of once per pair.
+    ``amps`` travels with the fight because its riders are facts about this
+    pair, and resolving them is not free: a search that re-compiles one
+    cached fight into a panel per defensive signature would otherwise pay
+    for them once per signature instead of once per pair.
     """
 
     __slots__ = (
+        "amps",
         # The engine's own result, unmodified: what the per-pair ``fights``
         # receipt publishes and what the score panels compile.
         "engine",
@@ -171,8 +166,6 @@ class PairView:
         "event_id_by_aidx",
         "events",
         "heals",
-        "holder_amps",
-        "live_amps",
         "result",
         "source_names",
         "support",
@@ -182,13 +175,11 @@ class PairView:
     def __init__(
         self,
         result: Mapping[str, Any],
-        live_amps: Sequence[LiveAmpRider] = (),
-        holder_amps: StaticHolderAmps | None = None,
+        amps: AmpRiders = NO_AMPS,
     ) -> None:
         self.engine: Mapping[str, Any] = result
         self.result: Mapping[str, Any] = result
-        self.live_amps = live_amps
-        self.holder_amps = holder_amps
+        self.amps = amps
         self.events: list[dict[str, Any]] = []
         self.heals: list[dict[str, Any]] = []
         self.source_names: dict[str, dict[str, Any]] = {}
@@ -292,8 +283,7 @@ def pair_view(
     defender_index: int = 0,
     *,
     champion_wounds: Mapping[str, Any] | None = None,
-    live_amps: Sequence[LiveAmpRider] = (),
-    holder_amps: StaticHolderAmps | None = None,
+    amps: AmpRiders = NO_AMPS,
 ) -> PairView:
     """One pair fight's receipt view, through the one packet compiler.
 
@@ -303,7 +293,7 @@ def pair_view(
     and no cross-fight heal dedup to replay.  The composition owns that
     dedup itself, over the copies this view publishes.
     """
-    view = PairView(result, live_amps, holder_amps)
+    view = PairView(result, amps)
     WalkCompiler(0).add_engine_result(
         result,
         attacker_id,
@@ -316,8 +306,7 @@ def pair_view(
         id_strings=[],
         defender_index=defender_index,
         champion_wounds=champion_wounds,
-        live_amps=live_amps,
-        holder_amps=holder_amps,
+        amps=amps,
         view=view,
     )
     return view
@@ -832,8 +821,7 @@ class WalkCompiler:
         id_strings: list[str],
         defender_index: int = 0,
         champion_wounds: Mapping[str, Any] | None = None,
-        live_amps: Sequence[LiveAmpRider] = (),
-        holder_amps: StaticHolderAmps | None = None,
+        amps: AmpRiders = NO_AMPS,
         suppress_actor_wide_heals: bool = False,
         view: PairView | None = None,
     ) -> None:
@@ -861,13 +849,12 @@ class WalkCompiler:
         * ``champion_wounds`` — the attacker's wound-declaring source keys
           (Katarina R, Varus E) mapped to their packets, so a champion wound
           rides its damage event as the same receipt an item wound does.
-        * ``live_amps`` — the attacker's declared live-predicate amplifiers.
-          They ride their own damage packets so the bonus dies with its host.
-          The default is empty because most holders declare none, never
-          because a caller may leave it out.
-        * ``holder_amps`` — the attacker's own static, pair-local
-          amplifiers, needed to compose a re-priced preview's declaration and
-          required, not defaulted, the moment this fight carries one.
+        * ``amps`` — the attacker's amplifiers. ``live`` riders ride their own
+          damage packets so the bonus dies with its host, and the default is
+          empty because most holders declare none, never because a caller may
+          leave it out. ``holder`` is the static, pair-local factor a
+          re-priced preview's declaration needs, required rather than
+          defaulted the moment this fight carries one.
 
         ``suppress_actor_wide_heals`` marks a fight whose actor-wide heal
         copies are never the kept copy: an enemy attacker's ordered pair list
@@ -895,7 +882,7 @@ class WalkCompiler:
         # declaration, so dropping it would delete the family's damage.
         dropped = dropped_pair_previews(result_breakdown)
         repriced = previewed - dropped
-        if repriced and holder_amps is None:
+        if repriced and amps.holder is None:
             raise ValueError(
                 f"{attacker_id} carries {len(repriced)} re-priced pair "
                 "preview(s) and no resolved static holder amps; pricing them "
@@ -1134,9 +1121,9 @@ class WalkCompiler:
                 if champion_wounds
                 else None
             )
-            live_amp = live_amp_for(live_amps, damage_type)
+            live_amp = live_amp_for(amps.live, damage_type)
             declared = (
-                declared_packet_of(declaration, damage_type, source_key, holder_amps)
+                declared_packet_of(declaration, damage_type, source_key, amps.holder)
                 if source_key in repriced
                 else None
             )
@@ -1802,7 +1789,12 @@ def knights_vow_target_factor(
     leaves the packet unsplit rather than splitting it at a guessed factor.
     Both lanes call this one function, so a split cannot be priced two ways.
     """
-    if damage_type == "physical":
+    damage_class = DamageClass.named(damage_type)
+    if damage_class is None:
+        return None
+    if not damage_class.is_mitigable:
+        return TargetMitigation(1.0, None)
+    if damage_class is DamageClass.PHYSICAL:
         effective = apply_armor_penetration(
             float(target.stats.get("armor", 0.0) or 0.0),
             float(source.stats.get("flat_armor_penetration", 0.0) or 0.0),
@@ -1811,16 +1803,12 @@ def knights_vow_target_factor(
             / 100.0,
             bonus_armor=float(target.stats.get("bonus_armor", 0.0) or 0.0),
         )
-    elif damage_type == "magic":
+    else:
         effective = apply_magic_penetration(
             float(target.stats.get("magic_resistance", 0.0) or 0.0),
             float(source.stats.get("magic_penetration_flat", 0.0) or 0.0),
             float(source.stats.get("magic_penetration_percent", 0.0) or 0.0) / 100.0,
         )
-    elif damage_type == "true":
-        return TargetMitigation(1.0, None)
-    else:
-        return None
     factor = apply_resistance(1.0, effective)
     if not math.isfinite(factor) or factor < 0.0:
         return None
@@ -1918,10 +1906,13 @@ def stage_knights_vow_redirect_actions(
             action.subject != target_i
             or action.kind not in _DAMAGE_ACTION_KINDS
             or action.amount <= 0.0
-            or str(action.damage_type) not in {"physical", "magic"}
             or action.deferred
             or action.redirected
         ):
+            rebuilt.append(action)
+            continue
+        damage_class = DamageClass.named(str(action.damage_type))
+        if damage_class is None or not damage_class.is_mitigable:
             rebuilt.append(action)
             continue
         source = (
@@ -1947,10 +1938,9 @@ def stage_knights_vow_redirect_actions(
         if candidate > 0.0 and math.isfinite(candidate):
             raw_amount = candidate
         else:
-            baseline = (
-                action.baseline_effective_armor
-                if str(action.damage_type) == "physical"
-                else action.baseline_effective_mr
+            baseline = damage_class.resistance_term(
+                armor=action.baseline_effective_armor,
+                magic_resistance=action.baseline_effective_mr,
             )
             if baseline is not None:
                 try:
@@ -2025,12 +2015,12 @@ def stage_knights_vow_redirect_actions(
             # direct share alone.
             baseline_effective_armor=(
                 holder_resistance
-                if str(action.damage_type) == "physical"
+                if damage_class is DamageClass.PHYSICAL
                 else action.baseline_effective_armor
             ),
             baseline_effective_mr=(
                 holder_resistance
-                if str(action.damage_type) == "magic"
+                if damage_class is DamageClass.MAGIC
                 else action.baseline_effective_mr
             ),
             declared=routed_declaration(action.declared, fraction),

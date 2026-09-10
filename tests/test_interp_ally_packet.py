@@ -36,6 +36,7 @@ from src.calculator.item_behavior import (
     Recipients,
     RuleFamily,
 )
+from src.calculator.state_timeline import SourceReceipt
 
 
 def _slot(producer: AllyProducer) -> AllyPacketSlot:
@@ -160,7 +161,7 @@ class TestASlotRefusesWhatItsDeclarationDoesNotCarry:
 
     def test_two_holders_of_one_producer_are_a_stop(self) -> None:
         """Two ledgers with nothing saying how they combine."""
-        from src.calculator.item_support_effects import _producer
+        from src.calculator.ally_packet_shape import _producer
 
         slots = resolve_slots(catalog.owners_for(AllyProducer.SHARED_RICHES))
         assert (
@@ -212,6 +213,23 @@ class TestTheEmissionShapeIsAskableWithoutNamingAnItem:
             and slot.emits(PacketKind.SHIELD, Recipients.SELF)
         )
         assert tuple(slot.producer for slot in armed) == (AllyProducer.EVERLASTING,)
+
+    def test_the_armed_producer_names_the_control_that_arms_it(self) -> None:
+        """Everlasting's own predicate, bound to the item that carries it."""
+        arming = _slot(AllyProducer.EVERLASTING).control_arming
+        assert arming.name == "Fimbulwinter — Everlasting crowd-control trigger"
+        assert arming.slow_melee_only is True
+        assert arming.match({"cc_kind": "stun"}, is_melee=False) == "immobilize"
+        assert arming.match({"cc_kind": "slow"}, is_melee=True) == "slow"
+        assert arming.match({"cc_kind": "slow"}, is_melee=False) == ""
+        assert arming.source == SourceReceipt.from_mapping(
+            catalog.item_effects.ITEM_INPUT_OPTIONS["Fimbulwinter"]
+        )
+
+    def test_a_producer_nothing_arms_is_a_stop(self) -> None:
+        """Fanfare rides the same trigger and no rule says which control."""
+        with pytest.raises(AllyPacketInterpretationError, match="names no"):
+            _ = _slot(AllyProducer.FANFARE).control_arming
 
 
 class TestDFiftysSecondTargetIsDeclaredNotInferred:

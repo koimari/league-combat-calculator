@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.calculator.bis import bis_objective_contract, bis_objective_meta
+from src.calculator.bis_objective import bis_objective_contract, bis_objective_meta
 
 
 def test_bis_objective_contract_has_stable_units() -> None:

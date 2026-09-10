@@ -23,6 +23,11 @@ enumerations this package can read directly, so no closure depends on parsing
 another module's source text and this stays a light import.
 """
 
+# file-length-ok: the bulk is one compiler per family beside the three total
+# maps ``validate_catalog`` closes over, and a compiler in another file is a
+# family whose shape and whose totality check live apart.
+# docs/plans/2026-09-09-fight-navigability.md carves the interpreters that
+# read these declarations, not the compilers that build them.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
@@ -31,7 +36,7 @@ from functools import cache
 from typing import Any, NamedTuple
 from urllib.parse import quote
 
-from . import data_registry, item_effects, rune_effects
+from . import data_registry, item_effects, rune_effects, trigger_stream
 from .ability_spec import AttackClass, DamageClass, Disposition
 from .item_behavior import (
     DEFENSE_FIELD_COMBINE,
@@ -130,6 +135,7 @@ from .item_behavior import (
     RestrictedChannelRule,
     RuleFamily,
     Scaling,
+    SecondaryDelivery,
     SecondaryTargetRule,
     SelfShield,
     ShapedChargeRule,
@@ -167,18 +173,17 @@ from .item_behavior import (
     chain_rank,
     validate_rule,
 )
-from .survival.actions import ActionKind
+from .reference_vocabulary import LevelScale, ValueRegistry
+from .survival.typed_action import ActionKind
 from .value_ref import (
     Const,
     DerivedValueRef,
     LateLevelValueRef,
-    LevelScale,
     LevelValueRef,
-    SourceReceipt,
     ValueRef,
-    ValueRegistry,
-    receipt_for,
+    ValueSource,
 )
+from .value_source_receipt import SourceReceipt
 
 
 class BehaviorCatalogError(RuntimeError):
@@ -1312,7 +1317,7 @@ AMP_COMPILABILITY: Compilability = COMPILED_KERNEL_CAN_AMP
 # ── compilers (D-52's ruled exception to "no callables in declarations") ──
 
 Compiler = Callable[
-    [RuleFamily, str, ValueRegistry, Mapping[str, Any]], tuple[BehaviorRule, ...]
+    [RuleFamily, ValueSource, Mapping[str, Any]], tuple[BehaviorRule, ...]
 ]
 
 # Which registry tags the delta-amp compiler below turns into declarations,
@@ -1971,7 +1976,7 @@ def _damage_class_amp_typing(damage_class: DamageClass) -> Typing:
     )
 
 
-def _ability_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+def _ability_part_amp_rule(source: ValueSource) -> BehaviorRule:
     """Actualizer's Mana Made Real: every ability, while the active is up.
 
     The magnitude is a sourced base plus a sourced rate per 100 bonus mana,
@@ -1982,18 +1987,18 @@ def _ability_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     """
     return BehaviorRule(
         family=RuleFamily.DELTA_AMP,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.ability_part_amp",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.ability_part_amp",
         payload=PartAmpRule(
             pool=Pool.ALL_EVENTS,
             activation=AbsoluteWindow(
                 start=Const(0.0, "count"),
-                end=ValueRef(registry, owner, "mana_made_real_duration"),
+                end=source.ref("mana_made_real_duration"),
             ),
             consumption=Persist(),
             magnitude=StatScaled(
-                base=ValueRef(registry, owner, "base_amp"),
-                per_hundred=ValueRef(registry, owner, "amp_per_100_bonus_mana"),
+                base=source.ref("base_amp"),
+                per_hundred=source.ref("amp_per_100_bonus_mana"),
                 stat=HolderStat.BONUS_MANA,
             ),
             typing=_part_amp_typing(AttackClass.ABILITY),
@@ -2001,8 +2006,8 @@ def _ability_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             subject=Subject.HOLDER,
         ),
         compilability=AMP_COMPILABILITY,
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -2013,7 +2018,7 @@ def _ability_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     )
 
 
-def _basic_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+def _basic_part_amp_rule(source: ValueSource) -> BehaviorRule:
     """Hexoptics C44's Magnification: every basic-damage part, all fight.
 
     The range split is the fight's one modelling assumption and it is
@@ -2023,12 +2028,12 @@ def _basic_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     of the two — a derivation over sourced numbers, so a patch that re-tunes
     either moves the fight without touching this declaration.
     """
-    max_amp = ValueRef(registry, owner, "max_amp")
-    max_distance = ValueRef(registry, owner, "max_distance")
+    max_amp = source.ref("max_amp")
+    max_distance = source.ref("max_distance")
     return BehaviorRule(
         family=RuleFamily.DELTA_AMP,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.basic_part_amp",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.basic_part_amp",
         payload=PartAmpRule(
             pool=Pool.ALL_EVENTS,
             activation=Always(),
@@ -2044,9 +2049,7 @@ def _basic_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
                                 DerivedValueRef(
                                     "MIN",
                                     (
-                                        ValueRef(
-                                            registry, owner, "melee_assumed_distance"
-                                        ),
+                                        source.ref("melee_assumed_distance"),
                                         max_distance,
                                     ),
                                 ),
@@ -2062,8 +2065,8 @@ def _basic_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             subject=Subject.HOLDER,
         ),
         compilability=AMP_COMPILABILITY,
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -2074,31 +2077,31 @@ def _basic_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     )
 
 
-def _magic_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+def _magic_part_amp_rule(source: ValueSource) -> BehaviorRule:
     """Abyssal Mask's Unmake: every magic part the cursed target takes.
 
     Not a chain slot and deliberately so — the curse multiplies each magic
-    packet where ``damage._mitigate`` prices it, which is what the two
+    packet where ``fight.resists._mitigate`` prices it, which is what the two
     attack-class part amps do for their own deliveries.  The mechanic id is
     the one ``trigger_stream`` already pairs the walk's aura against, so the
     pair half it names is now a declaration rather than a ladder field.
     """
     return BehaviorRule(
         family=RuleFamily.DELTA_AMP,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.magic_amp",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.magic_amp",
         payload=PartAmpRule(
             pool=Pool.ALL_EVENTS,
             activation=Always(),
             consumption=Persist(),
-            magnitude=Fixed(ValueRef(registry, owner, MAGIC_AMP_KEY)),
+            magnitude=Fixed(source.ref(MAGIC_AMP_KEY)),
             typing=_damage_class_amp_typing(DamageClass.MAGIC),
             bonus_typing=BonusTyping.SAME_AS_SOURCE,
             subject=Subject.TARGET,
         ),
         compilability=AMP_COMPILABILITY,
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -2109,7 +2112,7 @@ def _magic_part_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     )
 
 
-def _hypershot_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+def _hypershot_rule(source: ValueSource) -> BehaviorRule:
     """Horizon Focus's Hypershot: everything except the cast that armed it.
 
     The exclusion set is "the trigger ability's own damage" — a pair-local
@@ -2118,7 +2121,7 @@ def _hypershot_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     """
     return BehaviorRule(
         family=RuleFamily.DELTA_AMP,
-        owner=owner,
+        owner=source.owner,
         mechanic_id="horizon_focus.hypershot",
         payload=DeltaAmpRule(
             pool=Pool.ALL_EVENTS,
@@ -2127,15 +2130,15 @@ def _hypershot_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
                 isolation=Isolation.TRIGGER_EVENT_ONLY,
             ),
             consumption=Persist(),
-            magnitude=Fixed(ValueRef(registry, owner, "amp")),
+            magnitude=Fixed(source.ref("amp")),
             typing=_all_damage_typing(),
             bonus_typing=BonusTyping.SAME_AS_SOURCE,
             subject=Subject.HOLDER,
             lane_chain_rank=chain_rank(AmpChainSlot.HYPERSHOT),
         ),
         compilability=AMP_COMPILABILITY,
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -2145,9 +2148,7 @@ def _hypershot_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     )
 
 
-def _whole_total_magnitude(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
-) -> Magnitude:
+def _whole_total_magnitude(source: ValueSource, entry: Mapping[str, Any]) -> Magnitude:
     """Which magnitude shape one whole-total amp's value keys describe.
 
     The ladder is the registry's own schema ladder, in its order, because an
@@ -2159,38 +2160,36 @@ def _whole_total_magnitude(
         # The public scenario starts at full health; the below-half branch is
         # a healing rule the ordered survival ledger owns, so the amp's
         # above-half starting state is declared rather than guessed.
-        return Fixed(ValueRef(registry, owner, "health_state_damage_amp_above_half"))
+        return Fixed(source.ref("health_state_damage_amp_above_half"))
     for per_second, maximum in (
         ("damage_amp_per_second", "damage_amp_max"),
         ("amp_per_second", "amp_max"),
     ):
         if per_second in entry:
             return RampPerSecond(
-                per_second=ValueRef(registry, owner, per_second),
-                maximum=ValueRef(registry, owner, maximum),
+                per_second=source.ref(per_second),
+                maximum=source.ref(maximum),
             )
     if "bonus_hp_cap" in entry:
         return TargetBonusHealthScaled(
-            maximum=ValueRef(registry, owner, "max_amp"),
-            bonus_health_cap=ValueRef(registry, owner, "bonus_hp_cap"),
+            maximum=source.ref("max_amp"),
+            bonus_health_cap=source.ref("bonus_hp_cap"),
         )
     if "amp_per_stack" in entry:
         return RampPerStack(
-            per_stack=ValueRef(registry, owner, "amp_per_stack"),
-            max_stacks=ValueRef(registry, owner, "max_stacks"),
+            per_stack=source.ref("amp_per_stack"),
+            max_stacks=source.ref("max_stacks"),
             seconds_per_stack=ASSUMED_SECONDS_PER_AMP_STACK,
             model=RampModel.EXACT,
         )
     raise BehaviorCatalogError(
-        f"{registry}[{owner!r}] declares a whole-total amp in no shape the "
+        f"{source.label} declares a whole-total amp in no shape the "
         "magnitude union names; a new schema is a new member and a new "
         "interpreter branch, never a silent zero"
     )
 
 
-def _whole_total_rule(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
-) -> BehaviorRule:
+def _whole_total_rule(source: ValueSource, entry: Mapping[str, Any]) -> BehaviorRule:
     """One general amplifier: the whole running total, for the whole fight.
 
     The occupants of this slot are additive among themselves and multiply
@@ -2199,21 +2198,21 @@ def _whole_total_rule(
     """
     return BehaviorRule(
         family=RuleFamily.DELTA_AMP,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.whole_total_amp",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.whole_total_amp",
         payload=DeltaAmpRule(
             pool=Pool.ALL_EVENTS,
             activation=Always(),
             consumption=Persist(),
-            magnitude=_whole_total_magnitude(owner, registry, entry),
+            magnitude=_whole_total_magnitude(source, entry),
             typing=_all_damage_typing(),
             bonus_typing=BonusTyping.SAME_AS_SOURCE,
             subject=Subject.HOLDER,
             lane_chain_rank=chain_rank(AmpChainSlot.WHOLE_TOTAL),
         ),
         compilability=AMP_COMPILABILITY,
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -2224,7 +2223,7 @@ def _whole_total_rule(
     )
 
 
-def _opening_window_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+def _opening_window_rule(source: ValueSource) -> BehaviorRule:
     """A First Strike-class keystone: the opening seconds of the exchange.
 
     The window is absolute because the engine's is: a continuous fight
@@ -2235,24 +2234,24 @@ def _opening_window_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     """
     return BehaviorRule(
         family=RuleFamily.DELTA_AMP,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.opening_window_amp",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.opening_window_amp",
         payload=DeltaAmpRule(
             pool=Pool.CERTIFIED_ONLY,
             activation=AbsoluteWindow(
                 start=COMBAT_START,
-                end=ValueRef(registry, owner, "buff_duration_seconds"),
+                end=source.ref("buff_duration_seconds"),
             ),
             consumption=Persist(),
-            magnitude=Fixed(ValueRef(registry, owner, "bonus_true_damage_ratio")),
+            magnitude=Fixed(source.ref("bonus_true_damage_ratio")),
             typing=_all_damage_typing(),
             bonus_typing=BonusTyping.TRUE,
             subject=Subject.HOLDER,
             lane_chain_rank=chain_rank(AmpChainSlot.OPENING_WINDOW),
         ),
         compilability=AMP_COMPILABILITY,
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_RUNE_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_RUNE_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -2263,7 +2262,7 @@ def _opening_window_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     )
 
 
-def _post_immobilize_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+def _post_immobilize_rule(source: ValueSource) -> BehaviorRule:
     """Imperial Mandate's Command: the window an immobilize opens.
 
     **One declaration, both engines.**  An immobilize marks the target
@@ -2290,26 +2289,26 @@ def _post_immobilize_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     """
     return BehaviorRule(
         family=RuleFamily.DELTA_AMP,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.command",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.command",
         payload=DeltaAmpRule(
             pool=Pool.ALL_EVENTS,
             activation=TriggerWindow(
                 trigger=TriggerEvent.IMMOBILIZE,
-                duration=ValueRef(registry, owner, "command_duration"),
+                duration=source.ref("command_duration"),
                 merge=WindowMerge.REFRESH,
                 boundary=WindowBoundary.OPEN_CLOSED,
             ),
             consumption=Persist(),
-            magnitude=Fixed(ValueRef(registry, owner, "command_damage_amp")),
+            magnitude=Fixed(source.ref("command_damage_amp")),
             typing=_all_damage_typing(),
             bonus_typing=BonusTyping.SAME_AS_SOURCE,
             subject=Subject.ANY_ATTACKER,
             lane_chain_rank=chain_rank(AmpChainSlot.POST_IMMOBILIZE),
         ),
         compilability=AMP_COMPILABILITY,
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -2321,7 +2320,7 @@ def _post_immobilize_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     )
 
 
-def _expose_weakness_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+def _expose_weakness_rule(source: ValueSource) -> BehaviorRule:
     """Bloodsong's Expose Weakness — **the pair engine's reading of it**.
 
     This declaration is deliberately *not* the mechanic's whole truth, and
@@ -2342,8 +2341,8 @@ def _expose_weakness_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     """
     return BehaviorRule(
         family=RuleFamily.DELTA_AMP,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.expose_weakness",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.expose_weakness",
         payload=DeltaAmpRule(
             pool=Pool.COARSE_ROW,
             activation=ExcludeTrigger(
@@ -2352,8 +2351,8 @@ def _expose_weakness_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             ),
             consumption=Persist(),
             magnitude=MeleeRangedSplit(
-                melee=ValueRef(registry, owner, "expose_weakness_melee"),
-                ranged=ValueRef(registry, owner, "expose_weakness_ranged"),
+                melee=source.ref("expose_weakness_melee"),
+                ranged=source.ref("expose_weakness_ranged"),
             ),
             typing=_all_damage_typing(),
             bonus_typing=BonusTyping.SAME_AS_SOURCE,
@@ -2361,8 +2360,8 @@ def _expose_weakness_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             lane_chain_rank=chain_rank(AmpChainSlot.EXPOSE_WEAKNESS),
         ),
         compilability=AMP_COMPILABILITY,
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -2373,7 +2372,7 @@ def _expose_weakness_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     )
 
 
-def _cinderbloom_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+def _cinderbloom_rule(source: ValueSource) -> BehaviorRule:
     """Shadowflame's Cinderbloom: the one amp whose pool is not precomputable.
 
     Every other amp in the chain resolves to a number before the first event
@@ -2399,21 +2398,21 @@ def _cinderbloom_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     """
     return BehaviorRule(
         family=RuleFamily.DELTA_AMP,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.cinderbloom",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.cinderbloom",
         payload=DeltaAmpRule(
             pool=Pool.ALL_EVENTS,
             activation=LivePredicate(
                 probe=Probe.TARGET_HEALTH_FRACTION,
                 cmp=Comparison.LT,
-                threshold=ValueRef(registry, owner, "health_threshold"),
+                threshold=source.ref("health_threshold"),
             ),
             consumption=Persist(),
             magnitude=Fixed(
                 DerivedValueRef(
                     "SUB",
                     (
-                        ValueRef(registry, owner, "crit_multiplier"),
+                        source.ref("crit_multiplier"),
                         MULTIPLIER_ORIGIN,
                     ),
                 )
@@ -2424,8 +2423,8 @@ def _cinderbloom_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             lane_chain_rank=chain_rank(AmpChainSlot.CINDERBLOOM),
         ),
         compilability=AMP_COMPILABILITY,
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -2450,7 +2449,7 @@ def _magic_and_true_typing() -> Typing:
 
 
 def _compile_ally_delta_amp(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+    source: ValueSource, entry: Mapping[str, Any]
 ) -> tuple[BehaviorRule, ...]:
     """The amp-chain slots one ally-registry record declares.
 
@@ -2468,18 +2467,18 @@ def _compile_ally_delta_amp(
             continue
         if missing:
             raise BehaviorCatalogError(
-                f"ALLY_ITEM_EFFECTS[{owner!r}] declares the {slot.value} chain "
+                f"ALLY_ITEM_EFFECTS[{source.owner!r}] declares the {slot.value} chain "
                 f"slot and is missing {missing}; a partly-parsed amplifier is a "
                 "registry defect, not an item that quietly amplifies nothing"
             )
         if slot is AmpChainSlot.EXPOSE_WEAKNESS:
-            rules.append(_expose_weakness_rule(owner, registry))
+            rules.append(_expose_weakness_rule(source))
             continue
         if slot is AmpChainSlot.POST_IMMOBILIZE:
-            rules.append(_post_immobilize_rule(owner, registry))
+            rules.append(_post_immobilize_rule(source))
             continue
         raise BehaviorCatalogError(
-            f"ALLY_ITEM_EFFECTS[{owner!r}] is declared in the {slot.value} chain "
+            f"ALLY_ITEM_EFFECTS[{source.owner!r}] is declared in the {slot.value} chain "
             "slot and no compiler builds that slot's rule yet"
         )
     return tuple(rules)
@@ -2496,7 +2495,7 @@ def _non_true_typing() -> Typing:
     )
 
 
-def _lasting_proc_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+def _lasting_proc_amp_rule(source: ValueSource) -> BehaviorRule:
     """A Press the Attack-class keystone: everything after the proc lands.
 
     ``AfterTrigger(strict=True)`` is the wiki's triggering-attack rule: the
@@ -2506,21 +2505,21 @@ def _lasting_proc_amp_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     """
     return BehaviorRule(
         family=RuleFamily.DELTA_AMP,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.lasting_proc_amp",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.lasting_proc_amp",
         payload=DeltaAmpRule(
             pool=Pool.CERTIFIED_ONLY,
             activation=AfterTrigger(trigger=TriggerEvent.BASIC_ATTACK_HIT, strict=True),
             consumption=Persist(),
-            magnitude=Fixed(ValueRef(registry, owner, "damage_amp_ratio")),
+            magnitude=Fixed(source.ref("damage_amp_ratio")),
             typing=_non_true_typing(),
             bonus_typing=BonusTyping.SAME_AS_SOURCE,
             subject=Subject.HOLDER,
             lane_chain_rank=chain_rank(AmpChainSlot.LASTING_PROC_AMP),
         ),
         compilability=AMP_COMPILABILITY,
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_RUNE_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_RUNE_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -2557,7 +2556,7 @@ def _cached_health_gate(owner: str) -> Comparison:
     return declared
 
 
-def _target_health_gate_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+def _target_health_gate_rule(source: ValueSource) -> BehaviorRule:
     """A Coup de Grace-class rune: everything landing on one side of a gate.
 
     The second amp whose pool is not precomputable, and the same shape
@@ -2574,25 +2573,25 @@ def _target_health_gate_rule(owner: str, registry: ValueRegistry) -> BehaviorRul
     """
     return BehaviorRule(
         family=RuleFamily.DELTA_AMP,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.target_health_gate",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.target_health_gate",
         payload=DeltaAmpRule(
             pool=Pool.ALL_EVENTS,
             activation=LivePredicate(
                 probe=Probe.TARGET_HEALTH_FRACTION,
-                cmp=_cached_health_gate(owner),
-                threshold=ValueRef(registry, owner, "damage_amp_health_ratio"),
+                cmp=_cached_health_gate(source.owner),
+                threshold=source.ref("damage_amp_health_ratio"),
             ),
             consumption=Persist(),
-            magnitude=Fixed(ValueRef(registry, owner, "damage_amp_ratio")),
+            magnitude=Fixed(source.ref("damage_amp_ratio")),
             typing=_all_damage_typing(),
             bonus_typing=BonusTyping.SAME_AS_SOURCE,
             subject=Subject.HOLDER,
             lane_chain_rank=chain_rank(AmpChainSlot.TARGET_HEALTH_GATE),
         ),
         compilability=AMP_COMPILABILITY,
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_RUNE_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_RUNE_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -2603,7 +2602,7 @@ def _target_health_gate_rule(owner: str, registry: ValueRegistry) -> BehaviorRul
     )
 
 
-def _compile_rune_amp(owner: str) -> tuple[BehaviorRule, ...]:
+def _compile_rune_amp(source: ValueSource) -> tuple[BehaviorRule, ...]:
     """The amp-chain slots one compiled rune declares.
 
     Dispatch is on the rune's name because a rune record has no effect tag to
@@ -2611,23 +2610,22 @@ def _compile_rune_amp(owner: str) -> tuple[BehaviorRule, ...]:
     ``rune_effects._compilers()``' own idiom, and :data:`RUNE_AMP_SLOTS` is
     the closed key set that makes it total.
     """
-    slot = RUNE_AMP_SLOTS[owner]
+    slot = RUNE_AMP_SLOTS[source.owner]
     if slot is AmpChainSlot.OPENING_WINDOW:
-        return (_opening_window_rule(owner, "RUNE_EFFECTS"),)
+        return (_opening_window_rule(source),)
     if slot is AmpChainSlot.LASTING_PROC_AMP:
-        return (_lasting_proc_amp_rule(owner, "RUNE_EFFECTS"),)
+        return (_lasting_proc_amp_rule(source),)
     if slot is AmpChainSlot.TARGET_HEALTH_GATE:
-        return (_target_health_gate_rule(owner, "RUNE_EFFECTS"),)
+        return (_target_health_gate_rule(source),)
     raise BehaviorCatalogError(
-        f"RUNE_EFFECTS[{owner!r}] is declared in the {slot.value} chain slot "
+        f"{source.label} is declared in the {slot.value} chain slot "
         "and no compiler builds that slot's rule yet"
     )
 
 
 def _compile_delta_amp(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Compile the amp-chain slots one registry entry declares.
@@ -2640,46 +2638,46 @@ def _compile_delta_amp(
     """
     del family
     rules: list[BehaviorRule] = []
-    if registry == "RUNE_EFFECTS":
-        rules.extend(_compile_rune_amp(owner))
-    elif registry == "ALLY_ITEM_EFFECTS":
-        rules.extend(_compile_ally_delta_amp(owner, registry, entry))
+    if source.registry == "RUNE_EFFECTS":
+        rules.extend(_compile_rune_amp(source))
+    elif source.registry == "ALLY_ITEM_EFFECTS":
+        rules.extend(_compile_ally_delta_amp(source, entry))
     else:
         tag = str(entry.get("type"))
         if tag == "ability_damage_amp":
-            rules.append(_ability_part_amp_rule(owner, registry))
+            rules.append(_ability_part_amp_rule(source))
         if tag == "basic_damage_amp":
-            rules.append(_basic_part_amp_rule(owner, registry))
+            rules.append(_basic_part_amp_rule(source))
         if tag == "hypershot_amp":
-            rules.append(_hypershot_rule(owner, registry))
+            rules.append(_hypershot_rule(source))
         if tag == "magic_damage_amp":
-            rules.append(_magic_part_amp_rule(owner, registry))
+            rules.append(_magic_part_amp_rule(source))
         if tag == "magic_true_crit":
-            rules.append(_cinderbloom_rule(owner, registry))
+            rules.append(_cinderbloom_rule(source))
         if tag == "damage_amp" or _declares_secondary(
-            registry, entry, RuleFamily.DELTA_AMP
+            source.registry, entry, RuleFamily.DELTA_AMP
         ):
-            rules.append(_whole_total_rule(owner, registry, entry))
+            rules.append(_whole_total_rule(source, entry))
     for rule in rules:
         validate_rule(rule)
     return tuple(rules)
 
 
 def _rate_reference(
-    owner: str, registry: ValueRegistry, keys: str | tuple[str, str]
+    source: ValueSource, keys: str | tuple[str, str]
 ) -> ValueRef | MeleeRangedSplit:
     """One schema rate: a single sourced key, or a melee/ranged pair of them."""
     if isinstance(keys, tuple):
         melee_key, ranged_key = keys
         return MeleeRangedSplit(
-            melee=ValueRef(registry, owner, melee_key),
-            ranged=ValueRef(registry, owner, ranged_key),
+            melee=source.ref(melee_key),
+            ranged=source.ref(ranged_key),
         )
-    return ValueRef(registry, owner, keys)
+    return source.ref(keys)
 
 
 def _formula_terms(
-    owner: str, registry: ValueRegistry, schema: tuple[TermSchema, ...]
+    source: ValueSource, schema: tuple[TermSchema, ...]
 ) -> tuple[Term, ...]:
     """One registry schema's terms, in the order the schema names them.
 
@@ -2692,29 +2690,28 @@ def _formula_terms(
     for basis, keys in schema:
         if isinstance(keys, LevelSteppedKeys):
             coefficient = LevelSteppedRate(
-                base=_rate_reference(owner, registry, keys.base),
-                per_level=_rate_reference(owner, registry, keys.per_level),
-                from_level=ValueRef(registry, owner, keys.from_level_key),
+                base=_rate_reference(source, keys.base),
+                per_level=_rate_reference(source, keys.per_level),
+                from_level=source.ref(keys.from_level_key),
             )
         elif isinstance(keys, LevelRampKeys):
             coefficient = LevelValueRef(
-                registry, owner, keys.min_key, keys.max_key, keys.scale
+                source.registry, source.owner, keys.min_key, keys.max_key, keys.scale
             )
         elif isinstance(keys, tuple):
             melee_key, ranged_key = keys
             coefficient = MeleeRangedSplit(
-                melee=ValueRef(registry, owner, melee_key),
-                ranged=ValueRef(registry, owner, ranged_key),
+                melee=source.ref(melee_key),
+                ranged=source.ref(ranged_key),
             )
         else:
-            coefficient = ValueRef(registry, owner, keys)
+            coefficient = source.ref(keys)
         terms.append(Term(coefficient=coefficient, basis=basis))
     return tuple(terms)
 
 
 def _damage_formula(
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
     schemas: Mapping[str, tuple[TermSchema, ...]],
     floors: Mapping[str, str],
@@ -2740,19 +2737,15 @@ def _damage_formula(
     schema = schemas.get(name)
     if schema is None:
         raise BehaviorCatalogError(
-            f"{registry}[{owner!r}] declares formula {name!r}, which no term "
+            f"{source.label} declares formula {name!r}, which no term "
             "schema describes; a new registry schema is a new entry in the "
             "table, never a silent zero"
         )
     floor_key = floors.get(name)
     return DamageFormula(
-        terms=_formula_terms(owner, registry, schema),
+        terms=_formula_terms(source, schema),
         scaling=NoScaling() if scaling is None else scaling,
-        floor=(
-            AtLeast(ValueRef(registry, owner, floor_key))
-            if floor_key is not None
-            else NoFloor()
-        ),
+        floor=(AtLeast(source.ref(floor_key)) if floor_key is not None else NoFloor()),
         damage_class=(
             DamageClass(str(entry.get("damage_type")))
             if damage_class is None
@@ -2761,9 +2754,7 @@ def _damage_formula(
     )
 
 
-def _on_hit_strike_rule(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
-) -> BehaviorRule:
+def _on_hit_strike_rule(source: ValueSource, entry: Mapping[str, Any]) -> BehaviorRule:
     """One item's on-hit strike: the damage every basic attack carries.
 
     ``superseded_by_ability_proc`` is the Wiki's no-double-dip rule, declared
@@ -2774,19 +2765,19 @@ def _on_hit_strike_rule(
     """
     return BehaviorRule(
         family=RuleFamily.ON_HIT_STRIKE,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.on_hit",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.on_hit",
         payload=OnHitStrikeRule(
             formula=_damage_formula(
-                owner, registry, entry, ON_HIT_FORMULA_TERMS, ON_HIT_FORMULA_FLOORS
+                source, entry, ON_HIT_FORMULA_TERMS, ON_HIT_FORMULA_FLOORS
             ),
             superseded_by_ability_proc=(
                 entry.get("secondary_behavior") == PER_ABILITY_HIT_BEHAVIOR
             ),
         ),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -2799,21 +2790,23 @@ def _on_hit_strike_rule(
 
 def _compile_on_hit_strike(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Compile the on-hit strike one registry entry declares."""
     del family
-    rule = _on_hit_strike_rule(owner, registry, entry)
+    rule = _on_hit_strike_rule(source, entry)
     validate_rule(rule)
     return (rule,)
 
 
+#: The registry key naming which delivery a routing item's packets ride.
+DELIVERY_KEY = "secondary_delivery"
+
+
 def _compile_secondary_target(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Compile the secondary-target strike one registry entry declares.
@@ -2823,18 +2816,24 @@ def _compile_secondary_target(
     share instead of a :class:`~.item_behavior.DamageFormula`.
     """
     del family
+    if DELIVERY_KEY not in entry:
+        raise BehaviorCatalogError(
+            f"{source.label} routes packets at a second subject and declares "
+            f"no {DELIVERY_KEY!r}, so its rows have nothing to be called"
+        )
     rule = BehaviorRule(
         family=RuleFamily.SECONDARY_TARGET,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.secondary_target",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.secondary_target",
         payload=SecondaryTargetRule(
-            max_targets=ValueRef(registry, owner, "max_secondary_targets"),
-            damage_share=ValueRef(registry, owner, "secondary_ad_ratio"),
+            max_targets=source.ref("max_secondary_targets"),
+            damage_share=source.ref("secondary_ad_ratio"),
             applies_on_hit=bool(entry.get("applies_on_hit", False)),
+            delivery=SecondaryDelivery.for_tag(str(entry[DELIVERY_KEY])),
         ),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -2847,32 +2846,24 @@ def _compile_secondary_target(
     return (rule,)
 
 
-def _schema_keys(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
-) -> frozenset[str]:
-    """Which keys *owner*'s entry is expected to carry, not which it has."""
-    if registry == "ITEM_EFFECTS":
-        return item_effects.entry_schema_keys(owner)
+def _schema_keys(source: ValueSource, entry: Mapping[str, Any]) -> frozenset[str]:
+    """Which keys the source's entry is expected to carry, not which it has."""
+    if source.registry == "ITEM_EFFECTS":
+        return item_effects.entry_schema_keys(source.owner)
     return frozenset(entry)
 
 
+# Declared absence differs from a reference resolving to zero.  The schema is
+# the test, so a dropped parse raises rather than reading as absent.
 def _optional_ref(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any], key: str
+    source: ValueSource, entry: Mapping[str, Any], key: str
 ) -> ValueRef | None:
-    """A reference to *key*, or ``None`` where the schema does not carry it.
-
-    Declared absence differs from a reference resolving to zero.  The schema
-    is the test, so a dropped parse raises rather than reading as absent.
-    """
-    return (
-        ValueRef(registry, owner, key)
-        if key in _schema_keys(owner, registry, entry)
-        else None
-    )
+    """A reference to *key*, or ``None`` where the schema does not carry it."""
+    return source.ref(key) if key in _schema_keys(source, entry) else None
 
 
 def _sibling_refs(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+    source: ValueSource, entry: Mapping[str, Any]
 ) -> dict[str, ValueRef | None]:
     """One entry's spellblade siblings, each group declared whole or not at all.
 
@@ -2880,18 +2871,17 @@ def _sibling_refs(
     parse that dropped half of a sibling mechanic raises when the rule reads
     it rather than compiling a quietly weaker item.
     """
-    schema = _schema_keys(owner, registry, entry)
+    schema = _schema_keys(source, entry)
     refs: dict[str, ValueRef | None] = {}
     for group in SPELLBLADE_SIBLING_GROUPS:
         declared = any(key in schema for key in group)
         for key in group:
-            refs[key] = ValueRef(registry, owner, key) if declared else None
+            refs[key] = source.ref(key) if declared else None
     return refs
 
 
 def _group_refs(
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
     keys: Sequence[str],
 ) -> tuple[ValueRef, ...] | None:
@@ -2899,42 +2889,37 @@ def _group_refs(
 
     Any key present makes every key required, so a dropped parse raises.
     """
-    schema = _schema_keys(owner, registry, entry)
+    schema = _schema_keys(source, entry)
     if not any(key in schema for key in keys):
         return None
-    return tuple(ValueRef(registry, owner, key) for key in keys)
+    return tuple(source.ref(key) for key in keys)
 
 
-def _cooldown_proc_rule(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
-) -> BehaviorRule:
+def _cooldown_proc_rule(source: ValueSource, entry: Mapping[str, Any]) -> BehaviorRule:
     """One item's cooldown proc: what arms it, how much, and what rides along."""
     trigger = ProcTrigger(str(entry.get(PROC_TRIGGER_KEY, DEFAULT_PROC_TRIGGER.value)))
     charged = (
         ChargedSplash(
-            charges=ValueRef(registry, owner, CHARGE_COUNT_KEY),
-            single_target_multiplier=ValueRef(
-                registry, owner, SINGLE_TARGET_MULTIPLIER_KEY
-            ),
+            charges=source.ref(CHARGE_COUNT_KEY),
+            single_target_multiplier=source.ref(SINGLE_TARGET_MULTIPLIER_KEY),
         )
         if str(entry.get("formula")) == CHARGED_FORMULA
         else None
     )
     threshold_refs = (
-        tuple(ValueRef(registry, owner, key) for key in THRESHOLD_KEYS)
+        tuple(source.ref(key) for key in THRESHOLD_KEYS)
         if trigger is ProcTrigger.DAMAGE_THRESHOLD
         else None
     )
-    stack_refs = _group_refs(owner, registry, entry, STACK_GATE_KEYS)
-    shield_refs = _group_refs(owner, registry, entry, SELF_SHIELD_KEYS)
+    stack_refs = _group_refs(source, entry, STACK_GATE_KEYS)
+    shield_refs = _group_refs(source, entry, SELF_SHIELD_KEYS)
     return BehaviorRule(
         family=RuleFamily.CAST_PROC,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.proc",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.proc",
         payload=CooldownProcRule(
             formula=_damage_formula(
-                owner,
-                registry,
+                source,
                 entry,
                 CAST_PROC_FORMULA_TERMS,
                 {},
@@ -2944,7 +2929,7 @@ def _cooldown_proc_rule(
                     else None
                 ),
             ),
-            cooldown=ValueRef(registry, owner, COOLDOWN_KEY),
+            cooldown=source.ref(COOLDOWN_KEY),
             trigger=trigger,
             repeat_on_cooldown=bool(entry.get(REPEAT_ON_COOLDOWN_KEY, True)),
             is_ability_damage=bool(entry.get(IS_ABILITY_DAMAGE_KEY, False)),
@@ -2954,9 +2939,7 @@ def _cooldown_proc_rule(
                 DamageThreshold(*threshold_refs) if threshold_refs is not None else None
             ),
             attack_cooldown_refund=(
-                ValueRef(registry, owner, ATTACK_REFUND_KEY)
-                if entry.get(ATTACK_REFUND_FLAG)
-                else None
+                source.ref(ATTACK_REFUND_KEY) if entry.get(ATTACK_REFUND_FLAG) else None
             ),
             charged=charged,
             stacks=StackGate(*stack_refs) if stack_refs is not None else None,
@@ -2967,8 +2950,8 @@ def _cooldown_proc_rule(
             if shield_refs is not None
             else Compilable()
         ),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -2979,24 +2962,20 @@ def _cooldown_proc_rule(
     )
 
 
-def _ultimate_proc_rule(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
-) -> BehaviorRule:
+def _ultimate_proc_rule(source: ValueSource, entry: Mapping[str, Any]) -> BehaviorRule:
     """One item's ultimate proc: a window an R cast opens."""
     return BehaviorRule(
         family=RuleFamily.CAST_PROC,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.ultimate_proc",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.ultimate_proc",
         payload=UltimateProcRule(
-            formula=_damage_formula(
-                owner, registry, entry, CAST_PROC_FORMULA_TERMS, {}
-            ),
-            duration=ValueRef(registry, owner, DURATION_KEY),
-            mr_reduction=_optional_ref(owner, registry, entry, MR_REDUCTION_KEY),
+            formula=_damage_formula(source, entry, CAST_PROC_FORMULA_TERMS, {}),
+            duration=source.ref(DURATION_KEY),
+            mr_reduction=_optional_ref(source, entry, MR_REDUCTION_KEY),
         ),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -3007,23 +2986,19 @@ def _ultimate_proc_rule(
     )
 
 
-def _empowered_hit_rule(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
-) -> BehaviorRule:
+def _empowered_hit_rule(source: ValueSource, entry: Mapping[str, Any]) -> BehaviorRule:
     """One item's empowered hit: a charge spent on one attack, not every one."""
-    energized = _group_refs(owner, registry, entry, ENERGIZED_KEYS)
-    lethality = _group_refs(owner, registry, entry, TEMPORARY_LETHALITY_KEYS)
-    chain = _group_refs(owner, registry, entry, CHAIN_TARGET_KEYS)
+    energized = _group_refs(source, entry, ENERGIZED_KEYS)
+    lethality = _group_refs(source, entry, TEMPORARY_LETHALITY_KEYS)
+    chain = _group_refs(source, entry, CHAIN_TARGET_KEYS)
     return BehaviorRule(
         family=RuleFamily.CHARGED_STRIKE,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.empowered_hit",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.empowered_hit",
         payload=EmpoweredHitRule(
-            formula=_damage_formula(
-                owner, registry, entry, CHARGED_STRIKE_FORMULA_TERMS, {}
-            ),
+            formula=_damage_formula(source, entry, CHARGED_STRIKE_FORMULA_TERMS, {}),
             max_procs=(
-                ValueRef(registry, owner, EMPOWERED_AUTO_COUNT_KEY)
+                source.ref(EMPOWERED_AUTO_COUNT_KEY)
                 if entry.get(USES_EMPOWERED_AUTO_COUNT)
                 else FIRES_ONCE
             ),
@@ -3044,8 +3019,8 @@ def _empowered_hit_rule(
             chain_targets=ChainTargets(*chain) if chain is not None else None,
         ),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -3057,7 +3032,7 @@ def _empowered_hit_rule(
 
 
 def _repeating_strike_rule(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+    source: ValueSource, entry: Mapping[str, Any]
 ) -> BehaviorRule:
     """One item's every-Nth-hit strike.
 
@@ -3067,29 +3042,28 @@ def _repeating_strike_rule(
     the other a scaling instead of two more terms.
     """
     scaling = (
-        TimesMissingHealth(ValueRef(registry, owner, MISSING_HEALTH_BONUS_KEY))
-        if MISSING_HEALTH_BONUS_KEY in _schema_keys(owner, registry, entry)
+        TimesMissingHealth(source.ref(MISSING_HEALTH_BONUS_KEY))
+        if MISSING_HEALTH_BONUS_KEY in _schema_keys(source, entry)
         else None
     )
     return BehaviorRule(
         family=RuleFamily.CHARGED_STRIKE,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.repeating_strike",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.repeating_strike",
         payload=RepeatingStrikeRule(
             formula=_damage_formula(
-                owner,
-                registry,
+                source,
                 entry,
                 CHARGED_STRIKE_FORMULA_TERMS,
                 {},
                 scaling=scaling,
             ),
-            hits_required=ValueRef(registry, owner, HITS_REQUIRED_KEY),
+            hits_required=source.ref(HITS_REQUIRED_KEY),
             basic_damage=bool(entry.get(BASIC_DAMAGE_KEY, False)),
         ),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -3100,9 +3074,7 @@ def _repeating_strike_rule(
     )
 
 
-def _shaped_charge_rule(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
-) -> BehaviorRule:
+def _shaped_charge_rule(source: ValueSource, entry: Mapping[str, Any]) -> BehaviorRule:
     """One item's shaped charge: true damage an ability arms, on a cooldown.
 
     The registry entry names neither a formula nor a damage type, because both
@@ -3112,23 +3084,22 @@ def _shaped_charge_rule(
     """
     return BehaviorRule(
         family=RuleFamily.CHARGED_STRIKE,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.shaped_charge",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.shaped_charge",
         payload=ShapedChargeRule(
             formula=_damage_formula(
-                owner,
-                registry,
+                source,
                 entry,
                 CHARGED_STRIKE_FORMULA_TERMS,
                 {},
                 damage_class=DamageClass.TRUE,
                 formula_name=SHAPED_CHARGE_FORMULA,
             ),
-            cooldown=ValueRef(registry, owner, COOLDOWN_KEY),
+            cooldown=source.ref(COOLDOWN_KEY),
         ),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -3140,7 +3111,7 @@ def _shaped_charge_rule(
 
 
 def _empowered_auto_buff_rule(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+    source: ValueSource, entry: Mapping[str, Any]
 ) -> BehaviorRule:
     """One item's ultimate-triggered empowered-attack window.
 
@@ -3150,17 +3121,15 @@ def _empowered_auto_buff_rule(
     with no critical multiplier — is a mechanic with a hole in it.
     """
     del entry
-    references = tuple(
-        ValueRef(registry, owner, key) for key in EMPOWERED_AUTO_BUFF_KEYS
-    )
+    references = tuple(source.ref(key) for key in EMPOWERED_AUTO_BUFF_KEYS)
     return BehaviorRule(
         family=RuleFamily.CHARGED_STRIKE,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.empowered_autos",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.empowered_autos",
         payload=EmpoweredAutoBuffRule(*references),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.STRUCTURAL_ZERO,
@@ -3222,8 +3191,7 @@ SWING_SCHEDULES: Mapping[str, SwingScheduleSchema] = {
 
 
 def _swing_group_refs(
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     schema: frozenset[str],
     keys: Sequence[str] | None,
 ) -> tuple[ValueRef, ...] | None:
@@ -3233,16 +3201,16 @@ def _swing_group_refs(
     missing = sorted(key for key in keys if key not in schema)
     if missing:
         raise BehaviorCatalogError(
-            f"{registry}[{owner!r}] carries the swing-rate group {keys[0]!r} "
+            f"{source.label} carries the swing-rate group {keys[0]!r} "
             f"and is missing {missing}; a schedule is claimed whole or not at "
             "all, because half of one re-rates the attack stream with a "
             "number nobody sourced"
         )
-    return tuple(ValueRef(registry, owner, key) for key in keys)
+    return tuple(source.ref(key) for key in keys)
 
 
 def _swing_schedule_rules(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+    source: ValueSource, entry: Mapping[str, Any]
 ) -> list[BehaviorRule]:
     """Every re-rating of the holder's own attack stream one entry declares.
 
@@ -3250,18 +3218,18 @@ def _swing_schedule_rules(
     a ramp and a re-armed window would be one mechanic scheduling one stream,
     and the schedule the engine walks is the merge of every held rule anyway.
     """
-    keys = _schema_keys(owner, registry, entry)
+    keys = _schema_keys(source, entry)
     rules: list[BehaviorRule] = []
     for signature, spec in SWING_SCHEDULES.items():
         if signature not in keys:
             continue
-        stacks = _swing_group_refs(owner, registry, keys, spec.stack_keys)
-        window = _swing_group_refs(owner, registry, keys, spec.window_keys)
+        stacks = _swing_group_refs(source, keys, spec.stack_keys)
+        window = _swing_group_refs(source, keys, spec.window_keys)
         rules.append(
             BehaviorRule(
                 family=RuleFamily.CHARGED_STRIKE,
-                owner=owner,
-                mechanic_id=f"{_mechanic_slug(owner)}.swing_rate",
+                owner=source.owner,
+                mechanic_id=f"{_mechanic_slug(source.owner)}.swing_rate",
                 payload=SwingScheduleRule(
                     decaying_stacks=(
                         None if stacks is None else DecayingAttackStacks(*stacks)
@@ -3272,10 +3240,8 @@ def _swing_schedule_rules(
                     schedules_single_rotation=spec.schedules_single_rotation,
                 ),
                 compilability=Compilable(),
-                receipt=receipt_for(
-                    registry,
-                    owner,
-                    declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE),
+                receipt=source.receipt(
+                    declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
                 ),
                 zero_policy=ZeroPolicy(
                     Disposition.STRUCTURAL_ZERO,
@@ -3290,8 +3256,7 @@ def _swing_schedule_rules(
 
 def _compile_charged_strike(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Compile the charged strikes one registry entry declares.
@@ -3310,11 +3275,11 @@ def _compile_charged_strike(
     rules: list[BehaviorRule] = []
     shape = _CHARGED_STRIKE_RULES.get(str(entry.get("type")))
     if shape is not None:
-        rules.append(shape(owner, registry, entry))
-    rules.extend(_swing_schedule_rules(owner, registry, entry))
+        rules.append(shape(source, entry))
+    rules.extend(_swing_schedule_rules(source, entry))
     if not rules:
         raise BehaviorCatalogError(
-            f"{registry}[{owner!r}] is claimed by the charged-strike family and "
+            f"{source.label} is claimed by the charged-strike family and "
             "carries neither one of its tags nor a swing-rate key group; a "
             "charged strike that strikes nothing is a parse that failed"
         )
@@ -3325,8 +3290,7 @@ def _compile_charged_strike(
 
 def _compile_cast_proc(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Compile the cast-triggered proc one registry entry declares.
@@ -3338,17 +3302,16 @@ def _compile_cast_proc(
     del family
     tag = str(entry.get("type"))
     if tag == ULTIMATE_PROC_TAG:
-        rule = _ultimate_proc_rule(owner, registry, entry)
+        rule = _ultimate_proc_rule(source, entry)
     else:
-        rule = _cooldown_proc_rule(owner, registry, entry)
+        rule = _cooldown_proc_rule(source, entry)
     validate_rule(rule)
     return (rule,)
 
 
 def _compile_spellblade(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Compile the empowered attack one registry entry declares.
@@ -3359,17 +3322,15 @@ def _compile_spellblade(
     either.
     """
     del family
-    siblings = _sibling_refs(owner, registry, entry)
+    siblings = _sibling_refs(source, entry)
     rule = BehaviorRule(
         family=RuleFamily.SPELLBLADE,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.spellblade",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.spellblade",
         payload=SpellbladeRule(
-            formula=_damage_formula(
-                owner, registry, entry, SPELLBLADE_FORMULA_TERMS, {}
-            ),
-            cooldown=ValueRef(registry, owner, COOLDOWN_KEY),
-            weave_delay=ValueRef(registry, owner, WEAVE_DELAY_KEY),
+            formula=_damage_formula(source, entry, SPELLBLADE_FORMULA_TERMS, {}),
+            cooldown=source.ref(COOLDOWN_KEY),
+            weave_delay=source.ref(WEAVE_DELAY_KEY),
             double_on_hit=bool(entry.get(DOUBLE_ON_HIT_KEY, False)),
             bonus_attack_speed_percent=siblings["bonus_attack_speed_percent"],
             mana_restore_base_ad_ratio=siblings["mana_restore_base_ad_ratio"],
@@ -3378,8 +3339,8 @@ def _compile_spellblade(
             self_heal_bonus_health_ratio=siblings["self_heal_bonus_health_ratio"],
         ),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -3394,8 +3355,7 @@ def _compile_spellblade(
 
 def _compile_periodic(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Compile the on-a-clock strike one registry entry declares.
@@ -3410,23 +3370,23 @@ def _compile_periodic(
     cadence, interval_key = PERIODIC_CADENCE_TAGS[tag]
     rule = BehaviorRule(
         family=RuleFamily.PERIODIC,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.{cadence.value}",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.{cadence.value}",
         payload=PeriodicRule(
-            formula=_damage_formula(owner, registry, entry, PERIODIC_FORMULA_TERMS, {}),
+            formula=_damage_formula(source, entry, PERIODIC_FORMULA_TERMS, {}),
             cadence=cadence,
-            interval=ValueRef(registry, owner, interval_key),
+            interval=source.ref(interval_key),
             duration=(
-                ValueRef(registry, owner, BURN_DURATION_KEY)
+                source.ref(BURN_DURATION_KEY)
                 if cadence is PeriodicCadence.REFRESHED_BURN
                 else None
             ),
-            aoe_range_units=_optional_ref(owner, registry, entry, AOE_RANGE_KEY),
-            self_heal_share=_optional_ref(owner, registry, entry, SELF_HEAL_SHARE_KEY),
+            aoe_range_units=_optional_ref(source, entry, AOE_RANGE_KEY),
+            self_heal_share=_optional_ref(source, entry, SELF_HEAL_SHARE_KEY),
         ),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -3442,8 +3402,7 @@ def _compile_periodic(
 
 def _compile_active_cast(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Compile the once-per-fight active one registry entry declares.
@@ -3456,18 +3415,18 @@ def _compile_active_cast(
     del family
     rule = BehaviorRule(
         family=RuleFamily.ACTIVE_CAST,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.active",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.active",
         payload=ActiveCastRule(
-            formula=_damage_formula(owner, registry, entry, ACTIVE_FORMULA_TERMS, {}),
-            cooldown=ValueRef(registry, owner, COOLDOWN_KEY),
+            formula=_damage_formula(source, entry, ACTIVE_FORMULA_TERMS, {}),
+            cooldown=source.ref(COOLDOWN_KEY),
             lifesteal_effectiveness=_optional_ref(
-                owner, registry, entry, LIFESTEAL_EFFECTIVENESS_KEY
+                source, entry, LIFESTEAL_EFFECTIVENESS_KEY
             ),
         ),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -3480,7 +3439,7 @@ def _compile_active_cast(
     return (rule,)
 
 
-def _carve_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+def _carve_rule(source: ValueSource) -> BehaviorRule:
     """Black Cleaver's Carve — the pair engine's averaged reading of it.
 
     Carve applies a stack on dealing physical damage and the pair engine
@@ -3499,13 +3458,13 @@ def _carve_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     """
     return BehaviorRule(
         family=RuleFamily.RESISTANCE_SHRED,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.armor_reduction",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.armor_reduction",
         payload=ResistanceShredRule(
             resistance=Resistance.ARMOR,
             ramp=StackRamp(
-                per_stack=ValueRef(registry, owner, "reduction_per_stack"),
-                max_stacks=ValueRef(registry, owner, "max_stacks"),
+                per_stack=source.ref("reduction_per_stack"),
+                max_stacks=source.ref("max_stacks"),
                 accrual=TriggerEvent.BASIC_ATTACK_HIT,
                 leading_stacks=ASSUMED_CARVE_LEADING_ABILITY_HITS,
                 model=RampModel.CESARO_APPROX,
@@ -3517,8 +3476,8 @@ def _carve_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             subject=Subject.TARGET,
         ),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -3529,7 +3488,7 @@ def _carve_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     )
 
 
-def _vile_decay_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+def _vile_decay_rule(source: ValueSource) -> BehaviorRule:
     """Bloodletter's Curse's Vile Decay — one stack per magic ability hit.
 
     Counted exactly rather than averaged: the rotation walks its abilities in
@@ -3540,13 +3499,13 @@ def _vile_decay_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     """
     return BehaviorRule(
         family=RuleFamily.RESISTANCE_SHRED,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.mr_reduction",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.mr_reduction",
         payload=ResistanceShredRule(
             resistance=Resistance.MAGIC_RESIST,
             ramp=StackRamp(
-                per_stack=ValueRef(registry, owner, "mr_reduction_per_stack"),
-                max_stacks=ValueRef(registry, owner, "max_stacks"),
+                per_stack=source.ref("mr_reduction_per_stack"),
+                max_stacks=source.ref("max_stacks"),
                 accrual=TriggerEvent.ABILITY_HIT,
                 leading_stacks=NO_LEADING_STACKS,
                 model=RampModel.EXACT,
@@ -3558,8 +3517,8 @@ def _vile_decay_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
             subject=Subject.TARGET,
         ),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -3572,8 +3531,7 @@ def _vile_decay_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
 
 def _compile_resistance_shred(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Compile the stacking resistance reduction one registry entry declares.
@@ -3585,12 +3543,12 @@ def _compile_resistance_shred(
     tag = str(entry.get("type"))
     rules: list[BehaviorRule] = []
     if tag == "armor_reduction":
-        rules.append(_carve_rule(owner, registry))
+        rules.append(_carve_rule(source))
     if tag == "mr_reduction_stacking":
-        rules.append(_vile_decay_rule(owner, registry))
+        rules.append(_vile_decay_rule(source))
     if not rules:
         raise BehaviorCatalogError(
-            f"{registry}[{owner!r}] carries tag {tag!r} in the resistance-shred "
+            f"{source.label} carries tag {tag!r} in the resistance-shred "
             "family and no compiler builds a rule for it; a shred with no "
             "declaration is an item that quietly cuts nothing"
         )
@@ -3629,7 +3587,7 @@ CRIT_PROFILE_KEYS: frozenset[str] = frozenset(
 )
 
 
-def _crit_damage_bonus_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+def _crit_damage_bonus_rule(source: ValueSource) -> BehaviorRule:
     """Infinity Edge's shape: every critical strike pays a bigger multiplier.
 
     The base multiplier is the game's and belongs to the engine (CLAUDE.md
@@ -3640,16 +3598,16 @@ def _crit_damage_bonus_rule(owner: str, registry: ValueRegistry) -> BehaviorRule
     """
     return BehaviorRule(
         family=RuleFamily.CRIT_PROFILE,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.crit_damage_bonus",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.crit_damage_bonus",
         payload=CritDamageBonusRule(
-            bonus=ValueRef(registry, owner, CRIT_DAMAGE_BONUS_KEY),
+            bonus=source.ref(CRIT_DAMAGE_BONUS_KEY),
             typing=_all_damage_typing(),
             subject=Subject.HOLDER,
         ),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -3660,7 +3618,7 @@ def _crit_damage_bonus_rule(owner: str, registry: ValueRegistry) -> BehaviorRule
     )
 
 
-def _attack_cooldown_refund_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+def _attack_cooldown_refund_rule(source: ValueSource) -> BehaviorRule:
     """Navori Flickerblade's shape: attacks refund basic ability cooldowns.
 
     The trigger is the basic attack, declared rather than implied by an
@@ -3669,16 +3627,16 @@ def _attack_cooldown_refund_rule(owner: str, registry: ValueRegistry) -> Behavio
     """
     return BehaviorRule(
         family=RuleFamily.CRIT_PROFILE,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.cooldown_refund",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.cooldown_refund",
         payload=AttackCooldownRefundRule(
-            refund_fraction=ValueRef(registry, owner, COOLDOWN_REFUND_KEY),
+            refund_fraction=source.ref(COOLDOWN_REFUND_KEY),
             trigger=TriggerEvent.BASIC_ATTACK_HIT,
             subject=Subject.HOLDER,
         ),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -3689,31 +3647,25 @@ def _attack_cooldown_refund_rule(owner: str, registry: ValueRegistry) -> Behavio
     )
 
 
-def _forced_crit_heal(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
-) -> Any:
+def _forced_crit_heal(source: ValueSource, entry: Mapping[str, Any]) -> Any:
     """The heal a forced crit pays, or ``None`` where its entry declares none.
 
     All four keys or none: presence of any of them makes every one of them
     required, so a parse that dropped half the heal raises when the rule is
     read instead of compiling a quietly weaker item.
     """
-    schema = _schema_keys(owner, registry, entry)
+    schema = _schema_keys(source, entry)
     if not any(key in schema for key in FORCED_CRIT_HEAL_KEYS):
         return None
     return ForcedCritHeal(
-        base_ad_ratio=ValueRef(registry, owner, "heal_base_ad_ratio"),
-        base_ad_ratio_ranged=ValueRef(registry, owner, "heal_base_ad_ratio_ranged"),
-        missing_health_ratio=ValueRef(registry, owner, "heal_missing_health_ratio"),
-        temporary_health_duration=ValueRef(
-            registry, owner, "temporary_health_duration"
-        ),
+        base_ad_ratio=source.ref("heal_base_ad_ratio"),
+        base_ad_ratio_ranged=source.ref("heal_base_ad_ratio_ranged"),
+        missing_health_ratio=source.ref("heal_missing_health_ratio"),
+        temporary_health_duration=source.ref("temporary_health_duration"),
     )
 
 
-def _forced_crit_rule(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
-) -> BehaviorRule:
+def _forced_crit_rule(source: ValueSource, entry: Mapping[str, Any]) -> BehaviorRule:
     """Sundered Sky's shape: one strike is made to crit, at a reduced ratio.
 
     The ratio is a fraction of a *full* critical strike, and the forced crit
@@ -3724,13 +3676,13 @@ def _forced_crit_rule(
     """
     return BehaviorRule(
         family=RuleFamily.CRIT_PROFILE,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.forced_crit",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.forced_crit",
         payload=ForcedCritRule(
             occurrence=CritOccurrence.FIRST_ATTACK,
-            reduced_ratio=ValueRef(registry, owner, FORCED_CRIT_RATIO_KEY),
-            cooldown=ValueRef(registry, owner, COOLDOWN_KEY),
-            heal=_forced_crit_heal(owner, registry, entry),
+            reduced_ratio=source.ref(FORCED_CRIT_RATIO_KEY),
+            cooldown=source.ref(COOLDOWN_KEY),
+            heal=_forced_crit_heal(source, entry),
             typing=Typing(
                 damage_classes=frozenset(DamageClass),
                 attack_classes=frozenset({AttackClass.BASIC_ATTACK}),
@@ -3738,8 +3690,8 @@ def _forced_crit_rule(
             subject=Subject.HOLDER,
         ),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -3752,8 +3704,7 @@ def _forced_crit_rule(
 
 def _compile_crit_profile(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Compile every crit-profile mechanic one registry entry declares.
@@ -3764,17 +3715,17 @@ def _compile_crit_profile(
     stop: a crit modifier that modifies nothing is a parse that failed.
     """
     del family
-    schema = _schema_keys(owner, registry, entry)
+    schema = _schema_keys(source, entry)
     rules: list[BehaviorRule] = []
     if CRIT_DAMAGE_BONUS_KEY in schema:
-        rules.append(_crit_damage_bonus_rule(owner, registry))
+        rules.append(_crit_damage_bonus_rule(source))
     if COOLDOWN_REFUND_KEY in schema:
-        rules.append(_attack_cooldown_refund_rule(owner, registry))
+        rules.append(_attack_cooldown_refund_rule(source))
     if FORCED_CRIT_RATIO_KEY in schema:
-        rules.append(_forced_crit_rule(owner, registry, entry))
+        rules.append(_forced_crit_rule(source, entry))
     if not rules:
         raise BehaviorCatalogError(
-            f"{registry}[{owner!r}] is tagged into the crit-profile family and "
+            f"{source.label} is tagged into the crit-profile family and "
             f"carries none of {sorted(CRIT_PROFILE_KEYS)}; a crit modifier that "
             "modifies nothing is a parse that failed, not an item with no "
             "behaviour"
@@ -3797,7 +3748,7 @@ SHIELD_BYPASS_KEYS = ("shield_reduction_melee", "shield_reduction_ranged")
 VENOM_DURATION_KEY = "venom_duration"
 
 
-def _execute_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+def _execute_rule(source: ValueSource) -> BehaviorRule:
     """The Collector's shape: below a sourced share of health, the target dies.
 
     Nothing about the damage changes, which is why the threshold is a routing
@@ -3807,16 +3758,16 @@ def _execute_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     """
     return BehaviorRule(
         family=RuleFamily.DAMAGE_ROUTING,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.execute",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.execute",
         payload=ExecuteRule(
-            threshold=ValueRef(registry, owner, EXECUTE_THRESHOLD_KEY),
+            threshold=source.ref(EXECUTE_THRESHOLD_KEY),
             typing=_all_damage_typing(),
             subject=Subject.TARGET,
         ),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -3827,7 +3778,7 @@ def _execute_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     )
 
 
-def _shield_bypass_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
+def _shield_bypass_rule(source: ValueSource) -> BehaviorRule:
     """Serpent's Fang's shape: a share of the target's shielding is bypassed.
 
     Melee and ranged holders are paid different shares and both are declared
@@ -3838,21 +3789,21 @@ def _shield_bypass_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
     melee_key, ranged_key = SHIELD_BYPASS_KEYS
     return BehaviorRule(
         family=RuleFamily.DAMAGE_ROUTING,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.shield_bypass",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.shield_bypass",
         payload=ShieldBypassRule(
             fraction=MeleeRangedSplit(
-                melee=ValueRef(registry, owner, melee_key),
-                ranged=ValueRef(registry, owner, ranged_key),
+                melee=source.ref(melee_key),
+                ranged=source.ref(ranged_key),
             ),
-            duration=ValueRef(registry, owner, VENOM_DURATION_KEY),
+            duration=source.ref(VENOM_DURATION_KEY),
             trigger=TriggerEvent.CHAMPION_DAMAGE,
             typing=_all_damage_typing(),
             subject=Subject.TARGET,
         ),
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(
             Disposition.MEASURED,
@@ -3865,8 +3816,7 @@ def _shield_bypass_rule(owner: str, registry: ValueRegistry) -> BehaviorRule:
 
 def _compile_damage_routing(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Compile every routing mechanic one registry entry declares.
@@ -3880,13 +3830,13 @@ def _compile_damage_routing(
     tag = str(entry.get("type"))
     rules: list[BehaviorRule] = []
     if tag == "execute":
-        rules.append(_execute_rule(owner, registry))
+        rules.append(_execute_rule(source))
     if tag == "shield_reduction":
-        rules.append(_shield_bypass_rule(owner, registry))
-    rules.extend(_compile_defense(family, owner, registry, entry))
+        rules.append(_shield_bypass_rule(source))
+    rules.extend(_compile_defense(family, source, entry))
     if not rules:
         raise BehaviorCatalogError(
-            f"{registry}[{owner!r}] is offered to the damage-routing compiler "
+            f"{source.label} is offered to the damage-routing compiler "
             f"carrying tag {tag!r} and no routing signature key; a routing rule "
             "that routes nothing is a parse that failed"
         )
@@ -3988,37 +3938,35 @@ _SOURCED_HEAL_ZERO = ZeroPolicy(
 
 
 def _sustain_rule(
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     mechanic: str,
     payload: Any,
 ) -> BehaviorRule:
     """One sustain declaration, with the citation its entry resolves to."""
     return BehaviorRule(
         family=RuleFamily.SUSTAIN,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.{mechanic}",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.{mechanic}",
         payload=payload,
         compilability=LEDGER_UNSTAGEABLE_SUSTAIN.get(type(payload), Compilable()),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=_SOURCED_HEAL_ZERO,
     )
 
 
 def _sustain_stat_rules(
-    owner: str, registry: ValueRegistry, schema: frozenset[str]
+    source: ValueSource, schema: frozenset[str]
 ) -> list[BehaviorRule]:
     """Every vampirism stat one entry grants, in the order the table names them."""
     return [
         _sustain_rule(
-            owner,
-            registry,
+            source,
             f"{stat.value}_grant",
             SustainStatRule(
                 stat=stat,
-                percent=ValueRef(registry, owner, key),
+                percent=source.ref(key),
                 overrides_cached_stat=key.startswith(STAT_OVERRIDE_PREFIX),
                 arms_at=None,
                 subject=Subject.HOLDER,
@@ -4030,7 +3978,7 @@ def _sustain_stat_rules(
 
 
 def _saturating_stat_rules(
-    owner: str, registry: ValueRegistry, schema: frozenset[str]
+    source: ValueSource, schema: frozenset[str]
 ) -> list[BehaviorRule]:
     """Every vampirism grant one entry arms on a ramp, in table order."""
     rules: list[BehaviorRule] = []
@@ -4044,26 +3992,25 @@ def _saturating_stat_rules(
         )
         if missing:
             raise BehaviorCatalogError(
-                f"{registry}[{owner!r}] carries the saturating grant {key!r} and "
+                f"{source.label} carries the saturating grant {key!r} and "
                 f"is missing {missing}; the grant and the ramp that arms it are "
                 "claimed together, because a grant nothing arms would be paid "
                 "from the first tick"
             )
         rules.append(
             _sustain_rule(
-                owner,
-                registry,
+                source,
                 f"{spec.stat.value}_on_saturation",
                 SustainStatRule(
                     stat=spec.stat,
                     percent=MeleeRangedSplit(
-                        melee=ValueRef(registry, owner, key),
-                        ranged=ValueRef(registry, owner, spec.ranged_key),
+                        melee=source.ref(key),
+                        ranged=source.ref(spec.ranged_key),
                     ),
                     overrides_cached_stat=False,
                     arms_at=RampSaturation(
-                        per_second=ValueRef(registry, owner, spec.per_second_key),
-                        maximum=ValueRef(registry, owner, spec.maximum_key),
+                        per_second=source.ref(spec.per_second_key),
+                        maximum=source.ref(spec.maximum_key),
                     ),
                     subject=Subject.HOLDER,
                 ),
@@ -4089,8 +4036,7 @@ SUSTAIN_DECLARED_ELSEWHERE: Mapping[str, str] = {
 
 def _compile_sustain(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Compile every sustain mechanic one registry entry declares.
@@ -4100,12 +4046,12 @@ def _compile_sustain(
     declarations on one entry.  An entry tagged into the family carrying no
     signature key is a stop.
     """
-    schema = _schema_keys(owner, registry, entry)
-    rules = _sustain_rule_list(owner, registry, schema)
-    rules.extend(_compile_defense(family, owner, registry, entry))
+    schema = _schema_keys(source, entry)
+    rules = _sustain_rule_list(source, schema)
+    rules.extend(_compile_defense(family, source, entry))
     if not rules and not any(key in schema for key in SUSTAIN_DECLARED_ELSEWHERE):
         raise BehaviorCatalogError(
-            f"{registry}[{owner!r}] is tagged into the sustain family and "
+            f"{source.label} is tagged into the sustain family and "
             "carries none of its signature keys; sustain that restores nothing "
             "is a parse that failed, not an item with no behaviour"
         )
@@ -4115,32 +4061,28 @@ def _compile_sustain(
 
 
 def _sustain_rule_list(
-    owner: str, registry: ValueRegistry, schema: frozenset[str]
+    source: ValueSource, schema: frozenset[str]
 ) -> list[BehaviorRule]:
     """The four keyed sustain shapes one entry declares, in declaration order."""
-    rules = _sustain_stat_rules(owner, registry, schema)
-    rules.extend(_saturating_stat_rules(owner, registry, schema))
+    rules = _sustain_stat_rules(source, schema)
+    rules.extend(_saturating_stat_rules(source, schema))
     if ON_HIT_HEAL_KEY in schema:
         rules.append(
             _sustain_rule(
-                owner,
-                registry,
+                source,
                 "on_hit_heal",
                 OnHitHealRule(
-                    amount=ValueRef(registry, owner, ON_HIT_HEAL_KEY),
+                    amount=source.ref(ON_HIT_HEAL_KEY),
                     trigger=TriggerEvent.BASIC_ATTACK_HIT,
                     subject=Subject.HOLDER,
                 ),
             )
         )
     if POST_MITIGATION_HEAL_KEYS[0] in schema:
-        ratio, area = (
-            ValueRef(registry, owner, key) for key in POST_MITIGATION_HEAL_KEYS
-        )
+        ratio, area = (source.ref(key) for key in POST_MITIGATION_HEAL_KEYS)
         rules.append(
             _sustain_rule(
-                owner,
-                registry,
+                source,
                 "post_mitigation_heal",
                 PostMitigationHealRule(
                     ratio=ratio, area_effectiveness=area, subject=Subject.HOLDER
@@ -4149,12 +4091,11 @@ def _sustain_rule_list(
         )
     if RESOURCE_DRAIN_KEYS[0] in schema:
         rate, combat_rate, window, conversion, tick = (
-            ValueRef(registry, owner, key) for key in RESOURCE_DRAIN_KEYS
+            source.ref(key) for key in RESOURCE_DRAIN_KEYS
         )
         rules.append(
             _sustain_rule(
-                owner,
-                registry,
+                source,
                 "resource_drain",
                 ResourceDrainRule(
                     restoration_per_second=rate,
@@ -4168,12 +4109,11 @@ def _sustain_rule_list(
         )
     if MANA_SPENT_HEAL_KEYS[0] in schema:
         heal, per_cast, per_second, taken = (
-            ValueRef(registry, owner, key) for key in MANA_SPENT_HEAL_KEYS
+            source.ref(key) for key in MANA_SPENT_HEAL_KEYS
         )
         rules.append(
             _sustain_rule(
-                owner,
-                registry,
+                source,
                 "mana_spent_heal",
                 ManaSpentHealRule(
                     heal_ratio=heal,
@@ -4186,12 +4126,11 @@ def _sustain_rule_list(
         )
     if REGENERATION_KEYS[0] in schema:
         melee, reduced, duration, cap, tick = (
-            ValueRef(registry, owner, key) for key in REGENERATION_KEYS
+            source.ref(key) for key in REGENERATION_KEYS
         )
         rules.append(
             _sustain_rule(
-                owner,
-                registry,
+                source,
                 "regeneration_window",
                 RegenerationRule(
                     total_melee=melee,
@@ -4206,11 +4145,10 @@ def _sustain_rule_list(
     if BELOW_HALF_HEALING_KEY in schema:
         rules.append(
             _sustain_rule(
-                owner,
-                registry,
+                source,
                 "below_half_healing",
                 BelowHalfHealingRule(
-                    bonus=ValueRef(registry, owner, BELOW_HALF_HEALING_KEY),
+                    bonus=source.ref(BELOW_HALF_HEALING_KEY),
                     subject=Subject.HOLDER,
                 ),
             )
@@ -4996,27 +4934,29 @@ def _ally_compilability(declaration: AllyPacketDeclaration) -> Compilability:
     return Compilable()
 
 
-def _ally_packet_rule(
-    producer: AllyProducer, owner: str, registry: ValueRegistry
-) -> BehaviorRule:
+def _ally_packet_rule(producer: AllyProducer, source: ValueSource) -> BehaviorRule:
     """One producer's declaration, bound to the owner whose entry carries it."""
     declaration = ALLY_PACKET_DECLARATIONS[producer]
     ramps = tuple(
         LevelRamp(
             LevelValueRef(
-                registry, owner, ramp.min_key, ramp.max_key, "registry_start"
+                source.registry,
+                source.owner,
+                ramp.min_key,
+                ramp.max_key,
+                "registry_start",
             ),
             ramp.subject,
         )
         for ramp in declaration.ramps
     )
     values: tuple[Any, ...] = tuple(
-        ValueRef(registry, owner, key) for key in declaration.reads
+        source.ref(key) for key in declaration.reads
     ) + tuple(ramp.reference for ramp in ramps)
     return BehaviorRule(
         family=RuleFamily.ALLY_PACKET,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.{producer.value}",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.{producer.value}",
         payload=AllyPacketRule(
             producer=producer,
             trigger=declaration.trigger,
@@ -5028,8 +4968,8 @@ def _ally_packet_rule(
             ramps=ramps,
         ),
         compilability=_ally_compilability(declaration),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=ZeroPolicy(Disposition.MEASURED, declaration.zero_reason),
     )
@@ -5084,15 +5024,14 @@ def owners_for(producer: AllyProducer) -> frozenset[str]:
 
 def _compile_ally_packet(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Compile the cross-participant producers one registry entry declares."""
     del family
     rules = tuple(
-        _ally_packet_rule(producer, owner, registry)
-        for producer in producers_for(registry, entry)
+        _ally_packet_rule(producer, source)
+        for producer in producers_for(source.registry, entry)
         if producer in ALLY_PACKET_DECLARATIONS
     )
     for rule in rules:
@@ -5101,7 +5040,7 @@ def _compile_ally_packet(
 
 
 def _defense_values(
-    declaration: DefenseDeclaration, owner: str, registry: ValueRegistry
+    declaration: DefenseDeclaration, source: ValueSource
 ) -> tuple[Any, ...]:
     """Every number one defence may read, as references in declared order.
 
@@ -5112,13 +5051,13 @@ def _defense_values(
     position.
     """
     return (
-        tuple(ValueRef(registry, owner, key) for key in declaration.reads)
+        tuple(source.ref(key) for key in declaration.reads)
         + tuple(
-            LevelValueRef(registry, owner, low, high, "linear_1_18")
+            LevelValueRef(source.registry, source.owner, low, high, "linear_1_18")
             for low, high in declaration.ramps
         )
         + tuple(
-            LateLevelValueRef(registry, owner, low, high, start, end)
+            LateLevelValueRef(source.registry, source.owner, low, high, start, end)
             for low, high, start, end in declaration.late_ramps
         )
     )
@@ -5145,9 +5084,7 @@ def _defense_policy(owner: str, key: str | None, kind: type) -> Any:
         ) from error
 
 
-def _defense_rule(
-    mechanic: DefenseMechanic, owner: str, registry: ValueRegistry
-) -> BehaviorRule:
+def _defense_rule(mechanic: DefenseMechanic, source: ValueSource) -> BehaviorRule:
     """One defensive mechanic's declaration, bound to the owner that carries it.
 
     Every companion key is read through the registry's own accessor before
@@ -5157,10 +5094,10 @@ def _defense_rule(
     """
     declaration = DEFENSE_DECLARATIONS[mechanic]
     for key in declaration.shape.requires:
-        item_effects.required_effect_value(owner, key)
+        item_effects.required_effect_value(source.owner, key)
     family = DEFENSE_SOURCE_FAMILY[mechanic]
-    values = _defense_values(declaration, owner, registry)
-    absorbs = _defense_policy(owner, declaration.absorbs_key, ShieldAbsorbs)
+    values = _defense_values(declaration, source)
+    absorbs = _defense_policy(source.owner, declaration.absorbs_key, ShieldAbsorbs)
     payload: Any
     if family is RuleFamily.OPENING_DEFENSE:
         payload = OpeningDefenseRule(
@@ -5175,8 +5112,8 @@ def _defense_rule(
             mechanic=mechanic,
             writes=declaration.writes,
             exclusivity=declaration.exclusivity,
-            threshold=_optional_key_ref(registry, owner, declaration.threshold_key),
-            duration=_optional_key_ref(registry, owner, declaration.duration_key),
+            threshold=_optional_key_ref(source, declaration.threshold_key),
+            duration=_optional_key_ref(source, declaration.duration_key),
             absorbs=absorbs,
             values=values,
         )
@@ -5210,26 +5147,26 @@ def _defense_rule(
             trigger=declaration.trigger,
             absorbs=absorbs,
             damage_class=_defense_policy(
-                owner, declaration.damage_class_key, DamageClass
+                source.owner, declaration.damage_class_key, DamageClass
             ),
             values=values,
         )
     rule = BehaviorRule(
         family=family,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.{mechanic.value}",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.{mechanic.value}",
         payload=payload,
         compilability=COMPILED_KERNEL_CANNOT_STAGE.get(mechanic, Compilable()),
-        receipt=receipt_for(registry, owner, declared=DEFENSE_RECEIPTS.get(mechanic)),
+        receipt=source.receipt(declared=DEFENSE_RECEIPTS.get(mechanic)),
         zero_policy=declaration.zero_policy,
     )
     validate_rule(rule)
     return rule
 
 
-def _optional_key_ref(registry: ValueRegistry, owner: str, key: str | None) -> Any:
+def _optional_key_ref(source: ValueSource, key: str | None) -> Any:
     """A reference to *key*, or ``None`` where the mechanic declares none."""
-    return None if key is None else ValueRef(registry, owner, key)
+    return None if key is None else source.ref(key)
 
 
 def defense_mechanics_for(
@@ -5253,8 +5190,7 @@ def defense_mechanics_for(
 
 def _compile_defense(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Compile the defences of one family that a registry entry declares.
@@ -5263,7 +5199,7 @@ def _compile_defense(
     Angel's mechanic is a resurrection, so this compiler returns nothing.
     """
     return tuple(
-        _defense_rule(mechanic, owner, registry)
+        _defense_rule(mechanic, source)
         for mechanic in defense_mechanics_for(family, entry)
         if _defense_flag_holds(mechanic, entry)
     )
@@ -5278,42 +5214,38 @@ def _defense_flag_holds(mechanic: DefenseMechanic, entry: Mapping[str, Any]) -> 
 
 def _compile_opening_defense(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Defences already in force when the modeled exchange opens."""
-    return _compile_defense(family, owner, registry, entry)
+    return _compile_defense(family, source, entry)
 
 
 def _compile_threshold_defense(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Defences armed by the subject's health crossing a declared fraction."""
-    return _compile_defense(family, owner, registry, entry)
+    return _compile_defense(family, source, entry)
 
 
 def _compile_combat_state(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Defences that accrue, or are spent, while the fight is in progress."""
-    return _compile_defense(family, owner, registry, entry)
+    return _compile_defense(family, source, entry)
 
 
 def _compile_reactive(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Defences armed by an incoming event rather than by the clock."""
-    return _compile_defense(family, owner, registry, entry)
+    return _compile_defense(family, source, entry)
 
 
 # ── stat derivation (3.7 residual) ────────────────────────────────────────
@@ -5615,8 +5547,7 @@ _SOURCED_STAT_ZERO = ZeroPolicy(
 
 
 def _stat_rule(
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     mechanic: str,
     payload: Any,
 ) -> BehaviorRule:
@@ -5628,56 +5559,53 @@ def _stat_rule(
     """
     return BehaviorRule(
         family=RuleFamily.STAT_DERIVATION,
-        owner=owner,
-        mechanic_id=f"{_mechanic_slug(owner)}.{mechanic}",
+        owner=source.owner,
+        mechanic_id=f"{_mechanic_slug(source.owner)}.{mechanic}",
         payload=payload,
         compilability=Compilable(),
-        receipt=receipt_for(
-            registry, owner, declared=cached_source_receipt(owner, CACHED_ITEM_SOURCE)
+        receipt=source.receipt(
+            declared=cached_source_receipt(source.owner, CACHED_ITEM_SOURCE)
         ),
         zero_policy=_SOURCED_STAT_ZERO,
     )
 
 
 def _split_or_ref(
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     melee_key: str,
     ranged_key: str | None,
 ) -> ValueRef | MeleeRangedSplit:
     """One rate, as a melee/ranged pair where the registry states two."""
     if ranged_key is None:
-        return ValueRef(registry, owner, melee_key)
+        return source.ref(melee_key)
     return MeleeRangedSplit(
-        melee=ValueRef(registry, owner, melee_key),
-        ranged=ValueRef(registry, owner, ranged_key),
+        melee=source.ref(melee_key),
+        ranged=source.ref(ranged_key),
     )
 
 
 def _stat_conversion_rules(
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     schema: frozenset[str],
 ) -> list[BehaviorRule]:
     """Every stat one entry derives from another, in table order."""
     return [
         _stat_rule(
-            owner,
-            registry,
+            source,
             f"{spec.granted.value}_from_{spec.basis.value}",
             StatConversionRule(
                 basis=spec.basis,
                 granted=spec.granted,
-                ratio=_split_or_ref(owner, registry, key, spec.ranged_key),
+                ratio=_split_or_ref(source, key, spec.ranged_key),
                 basis_unit=(
                     None
                     if spec.basis_unit_key is None
-                    else ValueRef(registry, owner, spec.basis_unit_key)
+                    else source.ref(spec.basis_unit_key)
                 ),
                 flat_base=(
                     None
                     if spec.flat_base_key is None
-                    else ValueRef(registry, owner, spec.flat_base_key)
+                    else source.ref(spec.flat_base_key)
                 ),
                 availability=StatAvailability.ALWAYS,
                 subject=Subject.HOLDER,
@@ -5689,8 +5617,7 @@ def _stat_conversion_rules(
 
 
 def _stacked_stat_rules(
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
     schema: frozenset[str],
 ) -> list[BehaviorRule]:
@@ -5704,33 +5631,26 @@ def _stacked_stat_rules(
     """
     return [
         _stat_rule(
-            owner,
-            registry,
+            source,
             f"{spec.granted.value}_per_stack",
             StackedStatRule(
                 granted=spec.granted,
-                per_stack=_split_or_ref(owner, registry, key, spec.ranged_key),
+                per_stack=_split_or_ref(source, key, spec.ranged_key),
                 max_stacks=(
                     None
                     if spec.max_stacks_key is None
                     else _split_or_ref(
-                        owner, registry, spec.max_stacks_key, spec.max_stacks_ranged_key
+                        source, spec.max_stacks_key, spec.max_stacks_ranged_key
                     )
                 ),
-                cap=(
-                    None
-                    if spec.cap_key is None
-                    else ValueRef(registry, owner, spec.cap_key)
-                ),
+                cap=(None if spec.cap_key is None else source.ref(spec.cap_key)),
                 flat_base=(
                     None
                     if spec.flat_base_key is None
-                    else ValueRef(registry, owner, spec.flat_base_key)
+                    else source.ref(spec.flat_base_key)
                 ),
                 duration=(
-                    None
-                    if spec.duration_key is None
-                    else ValueRef(registry, owner, spec.duration_key)
+                    None if spec.duration_key is None else source.ref(spec.duration_key)
                 ),
                 grants_level_at_max=(
                     None
@@ -5749,34 +5669,30 @@ def _stacked_stat_rules(
 
 
 def _flat_stat_grant_rules(
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
     schema: frozenset[str],
 ) -> list[BehaviorRule]:
     """Every flat stat one entry grants, in table order."""
     return [
         _stat_rule(
-            owner,
-            registry,
+            source,
             f"{spec.granted.value}_grant",
             FlatStatGrantRule(
                 granted=spec.granted,
-                amount=_split_or_ref(owner, registry, key, spec.ranged_key),
+                amount=_split_or_ref(source, key, spec.ranged_key),
                 duration=(
                     None
                     if spec.duration_key is None
-                    else _optional_ref(owner, registry, entry, spec.duration_key)
+                    else _optional_ref(source, entry, spec.duration_key)
                 ),
                 cooldown=(
                     None
                     if spec.cooldown_key is None
-                    else _optional_ref(owner, registry, entry, spec.cooldown_key)
+                    else _optional_ref(source, entry, spec.cooldown_key)
                 ),
                 trigger_window=(
-                    None
-                    if spec.window_key is None
-                    else ValueRef(registry, owner, spec.window_key)
+                    None if spec.window_key is None else source.ref(spec.window_key)
                 ),
                 availability=spec.availability,
                 subject=Subject.HOLDER,
@@ -5787,38 +5703,29 @@ def _flat_stat_grant_rules(
     ]
 
 
-def _manaflow_rule(
-    owner: str, registry: ValueRegistry, schema: frozenset[str]
-) -> BehaviorRule:
+def _manaflow_rule(source: ValueSource, schema: frozenset[str]) -> BehaviorRule:
     """The charge ledger, with its transform pair declared whole or absent."""
     interval, per_trigger, per_champion, ceiling = MANAFLOW_KEYS
     missing = sorted(key for key in MANAFLOW_KEYS if key not in schema)
     if missing:
         raise BehaviorCatalogError(
-            f"{registry}[{owner!r}] carries a manaflow ledger missing {missing}; "
+            f"{source.label} carries a manaflow ledger missing {missing}; "
             "a charge ledger is claimed whole or not at all, because half of "
             "one is a parse that dropped a key rather than a weaker item"
         )
     charges_key, transform_key = MANAFLOW_TRANSFORM_KEYS
     return _stat_rule(
-        owner,
-        registry,
+        source,
         "mana_charge",
         ManaflowRule(
             granted=DerivedStat.MANA,
-            charge_interval=ValueRef(registry, owner, interval),
-            bonus_mana_per_trigger=ValueRef(registry, owner, per_trigger),
-            bonus_mana_per_champion=ValueRef(registry, owner, per_champion),
-            bonus_mana_max=ValueRef(registry, owner, ceiling),
-            max_charges=(
-                ValueRef(registry, owner, charges_key)
-                if charges_key in schema
-                else None
-            ),
+            charge_interval=source.ref(interval),
+            bonus_mana_per_trigger=source.ref(per_trigger),
+            bonus_mana_per_champion=source.ref(per_champion),
+            bonus_mana_max=source.ref(ceiling),
+            max_charges=(source.ref(charges_key) if charges_key in schema else None),
             transform_bonus_mana=(
-                ValueRef(registry, owner, transform_key)
-                if transform_key in schema
-                else None
+                source.ref(transform_key) if transform_key in schema else None
             ),
             availability=StatAvailability.BUILD_OPTION,
             subject=Subject.HOLDER,
@@ -5827,23 +5734,22 @@ def _manaflow_rule(
 
 
 def _keyed_stat_rules(
-    owner: str, registry: ValueRegistry, schema: frozenset[str]
+    source: ValueSource, schema: frozenset[str]
 ) -> list[BehaviorRule]:
     """The four single-carrier shapes, each claimed by its own key group."""
     rules: list[BehaviorRule] = []
     if MANAFLOW_KEYS[0] in schema:
-        rules.append(_manaflow_rule(owner, registry, schema))
+        rules.append(_manaflow_rule(source, schema))
     reduction_key, radius_key = STAT_AURA_KEYS
     if reduction_key in schema:
         rules.append(
             _stat_rule(
-                owner,
-                registry,
+                source,
                 f"{DerivedStat.ATTACK_SPEED_PERCENT.value}_aura",
                 StatAuraRule(
                     granted=DerivedStat.ATTACK_SPEED_PERCENT,
-                    reduction=ValueRef(registry, owner, reduction_key),
-                    radius=ValueRef(registry, owner, radius_key),
+                    reduction=source.ref(reduction_key),
+                    radius=source.ref(radius_key),
                     availability=StatAvailability.ALWAYS,
                     subject=Subject.TARGET,
                 ),
@@ -5853,20 +5759,15 @@ def _keyed_stat_rules(
         threshold, share, tick, champion_cooldown, other_cooldown = THRESHOLD_REGEN_KEYS
         rules.append(
             _stat_rule(
-                owner,
-                registry,
+                source,
                 "threshold_regeneration",
                 ThresholdRegenRule(
                     granted=DerivedStat.HEALTH_REGEN,
-                    bonus_health_threshold=ValueRef(registry, owner, threshold),
-                    share_of_max_health=ValueRef(registry, owner, share),
-                    tick_interval=ValueRef(registry, owner, tick),
-                    champion_damage_cooldown=ValueRef(
-                        registry, owner, champion_cooldown
-                    ),
-                    nonchampion_damage_cooldown=ValueRef(
-                        registry, owner, other_cooldown
-                    ),
+                    bonus_health_threshold=source.ref(threshold),
+                    share_of_max_health=source.ref(share),
+                    tick_interval=source.ref(tick),
+                    champion_damage_cooldown=source.ref(champion_cooldown),
+                    nonchampion_damage_cooldown=source.ref(other_cooldown),
                     availability=StatAvailability.ALWAYS,
                     subject=Subject.HOLDER,
                 ),
@@ -5876,13 +5777,12 @@ def _keyed_stat_rules(
         base, per_lethality, window = ULTIMATE_REFUND_KEYS
         rules.append(
             _stat_rule(
-                owner,
-                registry,
+                source,
                 "ultimate_refund",
                 UltimateRefundRule(
-                    base_ratio=ValueRef(registry, owner, base),
-                    per_lethality_ratio=ValueRef(registry, owner, per_lethality),
-                    trigger_window=ValueRef(registry, owner, window),
+                    base_ratio=source.ref(base),
+                    per_lethality_ratio=source.ref(per_lethality),
+                    trigger_window=source.ref(window),
                     availability=StatAvailability.ALWAYS,
                     subject=Subject.HOLDER,
                 ),
@@ -5892,14 +5792,13 @@ def _keyed_stat_rules(
         share, duration, ticks = RESOURCE_RESTORE_KEYS
         rules.append(
             _stat_rule(
-                owner,
-                registry,
+                source,
                 "resource_restore",
                 ResourceRestoreRule(
                     granted=DerivedStat.MANA,
-                    share_of_maximum=ValueRef(registry, owner, share),
-                    duration=ValueRef(registry, owner, duration),
-                    ticks=ValueRef(registry, owner, ticks),
+                    share_of_maximum=source.ref(share),
+                    duration=source.ref(duration),
+                    ticks=source.ref(ticks),
                     # The level-up the restore is paid on is a moment the
                     # fixed-level model cannot produce, so the request states
                     # it or nothing is restored at all.
@@ -5912,15 +5811,12 @@ def _keyed_stat_rules(
         cost, cooldown_progress, window = ACTIVE_WINDOW_CAST_ECONOMY_KEYS
         rules.append(
             _stat_rule(
-                owner,
-                registry,
+                source,
                 "active_window_cast_economy",
                 ActiveWindowCastEconomyRule(
-                    resource_cost_multiplier=ValueRef(registry, owner, cost),
-                    basic_cooldown_progress_multiplier=ValueRef(
-                        registry, owner, cooldown_progress
-                    ),
-                    window=ValueRef(registry, owner, window),
+                    resource_cost_multiplier=source.ref(cost),
+                    basic_cooldown_progress_multiplier=source.ref(cooldown_progress),
+                    window=source.ref(window),
                     # The window is opened by a bounded scenario control, not
                     # by anything the fight produces, which is exactly what
                     # this member means.
@@ -5933,17 +5829,16 @@ def _keyed_stat_rules(
 
 
 def _restricted_channel_rules(
-    owner: str, registry: ValueRegistry, schema: frozenset[str]
+    source: ValueSource, schema: frozenset[str]
 ) -> list[BehaviorRule]:
     """Every number one entry sends to a channel this model does not run."""
     return [
         _stat_rule(
-            owner,
-            registry,
+            source,
             f"{channel.value}_channel",
             RestrictedChannelRule(
                 channel=channel,
-                amount=ValueRef(registry, owner, key),
+                amount=source.ref(key),
                 availability=StatAvailability.ALWAYS,
                 subject=Subject.HOLDER,
             ),
@@ -5954,7 +5849,7 @@ def _restricted_channel_rules(
 
 
 def _penetration_channel_rule(
-    owner: str, registry: ValueRegistry, entry: Mapping[str, Any]
+    source: ValueSource, entry: Mapping[str, Any]
 ) -> BehaviorRule:
     """Where one entry says its cached percent armour penetration lands.
 
@@ -5966,8 +5861,7 @@ def _penetration_channel_rule(
     """
     bonus_only = bool(entry.get(ARMOR_PENETRATION_CHANNEL_KEY, False))
     return _stat_rule(
-        owner,
-        registry,
+        source,
         ARMOR_PENETRATION_CHANNEL_TAG,
         PenetrationChannelRule(
             granted=(
@@ -5983,8 +5877,7 @@ def _penetration_channel_rule(
 
 def _compile_stat_derivation(
     family: RuleFamily,
-    owner: str,
-    registry: ValueRegistry,
+    source: ValueSource,
     entry: Mapping[str, Any],
 ) -> tuple[BehaviorRule, ...]:
     """Compile every stat one registry entry derives, grants or reduces.
@@ -5998,16 +5891,15 @@ def _compile_stat_derivation(
     compiler concludes by silence.
     """
     del family
-    schema = _schema_keys(owner, registry, entry)
-    rules = _stat_conversion_rules(owner, registry, schema)
+    schema = _schema_keys(source, entry)
+    rules = _stat_conversion_rules(source, schema)
     rules.extend(
         _stat_rule(
-            owner,
-            registry,
+            source,
             f"{granted.value}_multiplier",
             StatMultiplierRule(
                 granted=granted,
-                share=ValueRef(registry, owner, key),
+                share=source.ref(key),
                 availability=StatAvailability.ALWAYS,
                 subject=Subject.HOLDER,
             ),
@@ -6015,12 +5907,12 @@ def _compile_stat_derivation(
         for key, granted in STAT_MULTIPLIERS.items()
         if key in schema
     )
-    rules.extend(_stacked_stat_rules(owner, registry, entry, schema))
-    rules.extend(_flat_stat_grant_rules(owner, registry, entry, schema))
-    rules.extend(_keyed_stat_rules(owner, registry, schema))
-    rules.extend(_restricted_channel_rules(owner, registry, schema))
+    rules.extend(_stacked_stat_rules(source, entry, schema))
+    rules.extend(_flat_stat_grant_rules(source, entry, schema))
+    rules.extend(_keyed_stat_rules(source, schema))
+    rules.extend(_restricted_channel_rules(source, schema))
     if ARMOR_PENETRATION_CHANNEL_KEY in schema:
-        rules.append(_penetration_channel_rule(owner, registry, entry))
+        rules.append(_penetration_channel_rule(source, entry))
     if not rules:
         elsewhere = sorted(
             reason
@@ -6029,7 +5921,7 @@ def _compile_stat_derivation(
         )
         if not elsewhere:
             raise BehaviorCatalogError(
-                f"{registry}[{owner!r}] is tagged into the stat-derivation "
+                f"{source.label} is tagged into the stat-derivation "
                 "family and carries none of its signature keys; a derivation "
                 "that derives nothing is a parse that failed, not an item with "
                 "no behaviour"
@@ -6119,6 +6011,65 @@ def _live_registry_records(owner: str) -> tuple[Any, Any, Any]:
     )
 
 
+#: The families whose rules author a damage row in the pair fight, so each of
+#: them has a step that prices it and ``trigger_stream.CAPABILITIES`` is where
+#: that step is named.  Every rule in these families declares one today; the
+#: families outside them grant stats, defenses, sustain and ally packets,
+#: which author no row of the holder's own damage.
+PACKET_AUTHORING_FAMILIES: frozenset[RuleFamily] = frozenset(
+    {
+        RuleFamily.ACTIVE_CAST,
+        RuleFamily.CAST_PROC,
+        RuleFamily.CHARGED_STRIKE,
+        RuleFamily.ON_HIT_STRIKE,
+        RuleFamily.PERIODIC,
+        RuleFamily.SECONDARY_TARGET,
+        RuleFamily.SPELLBLADE,
+    }
+)
+
+
+def declared_pricing_home(owner: str) -> str | None:
+    """Where the owner's own declarations say its packets are priced.
+
+    The pair half's ``impl`` when one of its mechanics declares one, because
+    that is the step a reader opens; the walk half's otherwise.  ``None``
+    when the owner declares no mechanic at all, or when two of its mechanics
+    are priced in two places, which is a claim one string cannot make.
+    """
+    homes = set()
+    for rule in behavior_rules(owner):
+        capability = trigger_stream.CAPABILITIES.get(rule.mechanic_id)
+        if capability is None:
+            continue
+        pair = (
+            capability
+            if capability.engine is trigger_stream.Engine.PAIR
+            else trigger_stream.CAPABILITIES.get(capability.pair_of or "")
+        )
+        homes.add((pair or capability).impl)
+    return homes.pop() if len(homes) == 1 else None
+
+
+def _validate_declared_pricing_homes(rules: tuple[BehaviorRule, ...]) -> None:
+    """Refuse a priced rule that names no capability, and so no pricing home.
+
+    Every other omission an item can make fails closed with a named reason.
+    A missing capability is the one that would not: the rule still compiles
+    and still prices, while every projection of the trigger bus is blind to
+    it, so this is where it stops.
+    """
+    for rule in rules:
+        if rule.family not in PACKET_AUTHORING_FAMILIES:
+            continue
+        if rule.mechanic_id not in trigger_stream.CAPABILITIES:
+            raise BehaviorCatalogError(
+                f"{rule.owner!r} compiles {rule.mechanic_id!r} in the "
+                f"{rule.family.value} family and trigger_stream.CAPABILITIES "
+                "declares no capability for it, so no step owns its price"
+            )
+
+
 def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
     """Compile *owner*'s declarations from the live registries.
 
@@ -6150,9 +6101,11 @@ def behavior_rules(owner: str) -> tuple[BehaviorRule, ...]:
     entries = registry_entries(owner) + rune_amp_entries(owner)
     rules: list[BehaviorRule] = []
     for registry, family, entry in entries:
+        source = ValueSource(registry, owner)
         for claimed in entry_families(registry, family, entry, owner):
-            rules.extend(_COMPILERS[claimed](claimed, owner, registry, entry))
+            rules.extend(_COMPILERS[claimed](claimed, source, entry))
     compiled = tuple(rules)
+    _validate_declared_pricing_homes(compiled)
     data_registry.store_for_generation(
         _BEHAVIOR_RULES_MEMO, key, (*_live_registry_records(owner), compiled)
     )
@@ -6205,7 +6158,7 @@ def entry_families(
     and never in what the parse produced: read live, a dropped key would
     silently un-declare the mechanic instead of raising with item and key.
     """
-    keys = _schema_keys(owner, registry, entry)
+    keys = _schema_keys(ValueSource(registry, owner), entry)
     extra = tuple(
         declared
         for key, declared in SECONDARY_KEY_FAMILY[registry].items()
@@ -6226,7 +6179,7 @@ def declared_tags() -> frozenset[str]:
         for owner in registry_owners()
         for registry, family, entry in registry_entries(owner)
         if registry == "ITEM_EFFECTS"
-        and _COMPILERS[family](family, owner, registry, entry)
+        and _COMPILERS[family](family, ValueSource(registry, owner), entry)
     )
 
 
@@ -6266,6 +6219,16 @@ def build_context(owner: str, facts: FightFacts) -> BuildContext:
         target_bonus_health=facts.target_bonus_health,
         holder_is_melee=facts.holder_is_melee,
     )
+
+
+def built_per_rule[T](
+    rules: Sequence[BehaviorRule],
+    build: Callable[[BehaviorRule, BuildContext], T],
+    *,
+    facts: FightFacts,
+) -> tuple[T, ...]:
+    """Every declared rule, built in its owner's context, in build order."""
+    return tuple(build(rule, build_context(rule.owner, facts)) for rule in rules)
 
 
 # ── closure ───────────────────────────────────────────────────────────────
@@ -6650,6 +6613,7 @@ __all__ = [
     "TermSchema",
     "behavior_rules",
     "build_context",
+    "built_per_rule",
     "cached_source_receipt",
     "declared_owners",
     "declared_tags",

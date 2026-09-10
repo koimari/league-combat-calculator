@@ -192,60 +192,67 @@ class CoverageClaimError(ValueError):
 # ── shared shape checks ───────────────────────────────────────────────────
 
 
-def _require_text(value: object, *, claim: str, field: str) -> str:
-    """A non-blank string, or a :class:`CoverageClaimError` naming *field*."""
-    if not isinstance(value, str) or not value.strip():
-        raise CoverageClaimError(
-            f"{claim}: {field} must be a non-blank string, got {value!r}"
-        )
-    return value
+@dataclass(frozen=True, slots=True)
+class ClaimGuard:
+    """The shape checks one claim's fields are held to, named for the message.
 
-
-def _require_no_whitespace(value: str, *, claim: str, field: str) -> None:
-    """Reject internal whitespace in a token that names a code location."""
-    if any(character.isspace() for character in value):
-        raise CoverageClaimError(
-            f"{claim}: {field} {value!r} carries whitespace; it names one "
-            "location, not a sentence"
-        )
-
-
-def _require_identifier(value: object, *, claim: str, field: str) -> None:
-    """A bare Python identifier that is not a keyword."""
-    text = _require_text(value, claim=claim, field=field)
-    if not text.isidentifier() or keyword.iskeyword(text):
-        raise CoverageClaimError(f"{claim}: {field} {text!r} is not a plain identifier")
-
-
-def _require_dotted_path(value: object, *, claim: str, field: str) -> None:
-    """A dotted path of at least two identifier segments.
-
-    Two is the floor because every path this module can carry names
-    something *inside* a module — ``module.function`` at the shortest — and a
-    single bare segment is a module name that no resolver can import a symbol
-    out of.
+    ``name`` is what every refusal here is reported against: a claim key
+    where the value belongs to a claim, and the guard's own name where it
+    does not.
     """
-    text = _require_text(value, claim=claim, field=field)
-    _require_no_whitespace(text, claim=claim, field=field)
-    segments = text.split(".")
-    if len(segments) < 2 or not all(
-        segment.isidentifier() and not keyword.iskeyword(segment)
-        for segment in segments
-    ):
-        raise CoverageClaimError(
-            f"{claim}: {field} {text!r} is not a dotted path of at least two "
-            "identifier segments"
-        )
 
+    name: str
 
-def _require_membership(
-    value: object, allowed: frozenset[str], *, claim: str, field: str
-) -> None:
-    """A member of a closed vocabulary, named in the message when it is not."""
-    if value not in allowed:
-        raise CoverageClaimError(
-            f"{claim}: {field} {value!r} is not one of {sorted(allowed)}"
-        )
+    def text(self, value: object, *, field: str) -> str:
+        """A non-blank string, or a :class:`CoverageClaimError` naming *field*."""
+        if not isinstance(value, str) or not value.strip():
+            raise CoverageClaimError(
+                f"{self.name}: {field} must be a non-blank string, got {value!r}"
+            )
+        return value
+
+    def no_whitespace(self, value: str, *, field: str) -> None:
+        """Reject internal whitespace in a token that names a code location."""
+        if any(character.isspace() for character in value):
+            raise CoverageClaimError(
+                f"{self.name}: {field} {value!r} carries whitespace; it names one "
+                "location, not a sentence"
+            )
+
+    def identifier(self, value: object, *, field: str) -> None:
+        """A bare Python identifier that is not a keyword."""
+        text = self.text(value, field=field)
+        if not text.isidentifier() or keyword.iskeyword(text):
+            raise CoverageClaimError(
+                f"{self.name}: {field} {text!r} is not a plain identifier"
+            )
+
+    def dotted_path(self, value: object, *, field: str) -> None:
+        """A dotted path of at least two identifier segments.
+
+        Two is the floor because every path this module can carry names
+        something *inside* a module, ``module.function`` at the shortest, and
+        a single bare segment is a module name that no resolver can import a
+        symbol out of.
+        """
+        text = self.text(value, field=field)
+        self.no_whitespace(text, field=field)
+        segments = text.split(".")
+        if len(segments) < 2 or not all(
+            segment.isidentifier() and not keyword.iskeyword(segment)
+            for segment in segments
+        ):
+            raise CoverageClaimError(
+                f"{self.name}: {field} {text!r} is not a dotted path of at least two "
+                "identifier segments"
+            )
+
+    def membership(self, value: object, allowed: frozenset[str], *, field: str) -> None:
+        """A member of a closed vocabulary, named in the message when it is not."""
+        if value not in allowed:
+            raise CoverageClaimError(
+                f"{self.name}: {field} {value!r} is not one of {sorted(allowed)}"
+            )
 
 
 def _looks_numeric(text: str) -> bool:
@@ -273,10 +280,10 @@ class Symbol:
     path: str
     role: SymbolRole
 
-    def validate(self, *, claim: str) -> None:
+    def validate(self, *, guard: ClaimGuard) -> None:
         """Dotted-path shape and a role from the closed set."""
-        _require_dotted_path(self.path, claim=claim, field="Symbol.path")
-        _require_membership(self.role, SYMBOL_ROLES, claim=claim, field="Symbol.role")
+        guard.dotted_path(self.path, field="Symbol.path")
+        guard.membership(self.role, SYMBOL_ROLES, field="Symbol.role")
 
 
 @dataclass(frozen=True, slots=True)
@@ -292,13 +299,13 @@ class PacketSource:
 
     source: str
 
-    def validate(self, *, claim: str) -> None:
+    def validate(self, *, guard: ClaimGuard) -> None:
         """Non-blank, and every brace is an empty ``{}`` slot."""
-        text = _require_text(self.source, claim=claim, field="PacketSource.source")
+        text = guard.text(self.source, field="PacketSource.source")
         residue = text.replace("{}", "")
         if "{" in residue or "}" in residue:
             raise CoverageClaimError(
-                f"{claim}: PacketSource.source {text!r} carries a named or "
+                f"{guard.name}: PacketSource.source {text!r} carries a named or "
                 "unbalanced brace; an f-string slot collapses to '{}'"
             )
 
@@ -317,22 +324,19 @@ class PairedSides:
     mechanic: str
     owner_policy: OwnerPolicy
 
-    def validate(self, *, claim: str) -> None:
+    def validate(self, *, guard: ClaimGuard) -> None:
         """``<owner_slug>.<effect_slug>`` plus a policy from the closed set."""
-        text = _require_text(self.mechanic, claim=claim, field="PairedSides.mechanic")
+        text = guard.text(self.mechanic, field="PairedSides.mechanic")
         owner, dot, effect = text.partition(".")
         if not dot or "." in effect:
             raise CoverageClaimError(
-                f"{claim}: PairedSides.mechanic {text!r} is not "
+                f"{guard.name}: PairedSides.mechanic {text!r} is not "
                 "'<owner_slug>.<effect_slug>'"
             )
-        _require_identifier(owner, claim=claim, field="PairedSides.mechanic owner")
-        _require_identifier(effect, claim=claim, field="PairedSides.mechanic effect")
-        _require_membership(
-            self.owner_policy,
-            OWNER_POLICIES,
-            claim=claim,
-            field="PairedSides.owner_policy",
+        guard.identifier(owner, field="PairedSides.mechanic owner")
+        guard.identifier(effect, field="PairedSides.mechanic effect")
+        guard.membership(
+            self.owner_policy, OWNER_POLICIES, field="PairedSides.owner_policy"
         )
 
 
@@ -350,20 +354,15 @@ class EffectKey:
     item: str
     key: str
 
-    def validate(self, *, claim: str) -> None:
+    def validate(self, *, guard: ClaimGuard) -> None:
         """A known registry, a named holder, and a key that is not a value."""
-        _require_membership(
-            self.registry,
-            EVIDENCE_REGISTRIES,
-            claim=claim,
-            field="EffectKey.registry",
-        )
-        _require_text(self.item, claim=claim, field="EffectKey.item")
-        key = _require_text(self.key, claim=claim, field="EffectKey.key")
-        _require_no_whitespace(key, claim=claim, field="EffectKey.key")
+        guard.membership(self.registry, EVIDENCE_REGISTRIES, field="EffectKey.registry")
+        guard.text(self.item, field="EffectKey.item")
+        key = guard.text(self.key, field="EffectKey.key")
+        guard.no_whitespace(key, field="EffectKey.key")
         if _looks_numeric(key):
             raise CoverageClaimError(
-                f"{claim}: EffectKey.key {key!r} is a number; evidence names "
+                f"{guard.name}: EffectKey.key {key!r} is a number; evidence names "
                 "the registry key, never its value (CLAUDE.md rule 5)"
             )
 
@@ -381,10 +380,10 @@ class EffectTag:
     tag: str
     handler: str
 
-    def validate(self, *, claim: str) -> None:
+    def validate(self, *, guard: ClaimGuard) -> None:
         """An identifier-shaped tag and a dotted handler qualname."""
-        _require_identifier(self.tag, claim=claim, field="EffectTag.tag")
-        _require_dotted_path(self.handler, claim=claim, field="EffectTag.handler")
+        guard.identifier(self.tag, field="EffectTag.tag")
+        guard.dotted_path(self.handler, field="EffectTag.handler")
 
 
 @dataclass(frozen=True, slots=True)
@@ -400,10 +399,10 @@ class OptionSchema:
     item: str
     option: str
 
-    def validate(self, *, claim: str) -> None:
+    def validate(self, *, guard: ClaimGuard) -> None:
         """A named holder and an identifier-shaped control."""
-        _require_text(self.item, claim=claim, field="OptionSchema.item")
-        _require_identifier(self.option, claim=claim, field="OptionSchema.option")
+        guard.text(self.item, field="OptionSchema.item")
+        guard.identifier(self.option, field="OptionSchema.option")
 
 
 @dataclass(frozen=True, slots=True)
@@ -425,7 +424,7 @@ class TestRef:
 
     node_id: str
 
-    def validate(self, *, claim: str) -> None:
+    def validate(self, *, guard: ClaimGuard) -> None:
         """``<path>.py::<node>``, whitespace only inside a parametrization id.
 
         The location part names one place and may not be a sentence.  The
@@ -436,23 +435,23 @@ class TestRef:
         by a per-item parametrized node unauthorable — which is precisely how
         the dynamic families are meant to be backed.
         """
-        text = _require_text(self.node_id, claim=claim, field="TestRef.node_id")
+        text = guard.text(self.node_id, field="TestRef.node_id")
         location, bracket, parametrization = text.partition("[")
-        _require_no_whitespace(location, claim=claim, field="TestRef.node_id")
+        guard.no_whitespace(location, field="TestRef.node_id")
         if bracket and not parametrization.endswith("]"):
             raise CoverageClaimError(
-                f"{claim}: TestRef.node_id {text!r} opens a parametrization id "
+                f"{guard.name}: TestRef.node_id {text!r} opens a parametrization id "
                 "and never closes it"
             )
         if any(character in text for character in "\r\n\t"):
             raise CoverageClaimError(
-                f"{claim}: TestRef.node_id {text!r} spans lines; a node id is "
+                f"{guard.name}: TestRef.node_id {text!r} spans lines; a node id is "
                 "one line"
             )
         path, separator, node = location.partition("::")
         if not separator or not node or not path.endswith(".py"):
             raise CoverageClaimError(
-                f"{claim}: TestRef.node_id {text!r} is not " "'<path>.py::<node>'"
+                f"{guard.name}: TestRef.node_id {text!r} is not " "'<path>.py::<node>'"
             )
 
 
@@ -468,22 +467,22 @@ class SourceRef:
     url: str
     revision_id: int
 
-    def validate(self, *, claim: str) -> None:
+    def validate(self, *, guard: ClaimGuard) -> None:
         """An https url and a positive revision id."""
-        url = _require_text(self.url, claim=claim, field="SourceRef.url")
-        _require_no_whitespace(url, claim=claim, field="SourceRef.url")
+        url = guard.text(self.url, field="SourceRef.url")
+        guard.no_whitespace(url, field="SourceRef.url")
         if not url.startswith("https://") or len(url) <= len("https://"):
             raise CoverageClaimError(
-                f"{claim}: SourceRef.url {url!r} is not an https url"
+                f"{guard.name}: SourceRef.url {url!r} is not an https url"
             )
         if isinstance(self.revision_id, bool):
             raise CoverageClaimError(
-                f"{claim}: SourceRef.revision_id {self.revision_id!r} is not "
+                f"{guard.name}: SourceRef.revision_id {self.revision_id!r} is not "
                 "an integer"
             )
         if self.revision_id <= 0:
             raise CoverageClaimError(
-                f"{claim}: SourceRef.revision_id {self.revision_id} is not a "
+                f"{guard.name}: SourceRef.revision_id {self.revision_id} is not a "
                 "positive revision"
             )
 
@@ -500,18 +499,18 @@ class Absence:
     reason: str
     issue_refs: tuple[int, ...]
 
-    def validate(self, *, claim: str) -> None:
+    def validate(self, *, guard: ClaimGuard) -> None:
         """A written reason and at least one tracked issue."""
-        _require_text(self.reason, claim=claim, field="Absence.reason")
+        guard.text(self.reason, field="Absence.reason")
         if not isinstance(self.issue_refs, tuple) or not self.issue_refs:
             raise CoverageClaimError(
-                f"{claim}: Absence.issue_refs is empty; a refusal names the "
+                f"{guard.name}: Absence.issue_refs is empty; a refusal names the "
                 "issue that tracks it"
             )
         for ref in self.issue_refs:
             if not isinstance(ref, int) or isinstance(ref, bool) or ref <= 0:
                 raise CoverageClaimError(
-                    f"{claim}: Absence.issue_refs holds {ref!r}, which is not "
+                    f"{guard.name}: Absence.issue_refs holds {ref!r}, which is not "
                     "a positive issue number"
                 )
 
@@ -704,8 +703,9 @@ def status_policy(lane: ClaimLane, status: ClaimStatus) -> EvidencePolicy:
     :func:`validate_claim` enforces them beside this cell rather than
     ``EvidencePolicy`` carrying them.
     """
-    _require_membership(lane, LANES, claim="status_policy", field="lane")
-    _require_membership(status, CLAIM_STATUSES, claim="status_policy", field="status")
+    guard = ClaimGuard("status_policy")
+    guard.membership(lane, LANES, field="lane")
+    guard.membership(status, CLAIM_STATUSES, field="status")
     if status not in LANE_STATUSES[lane]:
         raise CoverageClaimError(
             f"status_policy: status {status!r} is not claimable on the {lane!r} "
@@ -736,22 +736,20 @@ def validate_evidence(ev: Evidence, *, claim: str) -> None:
             f"{claim}: {ev!r} is not one of the {len(EVIDENCE_TYPES)} evidence "
             f"kinds {sorted(EVIDENCE_KINDS)}"
         )
-    ev.validate(claim=claim)
+    ev.validate(guard=ClaimGuard(claim))
 
 
 def _validate_vocabulary(claim: Claim, *, name: str) -> None:
     """Every closed vocabulary on the claim itself, named against the claim.
 
     ``status_policy`` repeats the lane and status checks as its own public
-    guard, because over hundreds of claims an error naming only the bad value
-    and not the claim carrying it is a grep.
+    guard, because an error naming the value and not the claim is a grep.
     """
-    _require_membership(
-        claim.subject_kind, SUBJECT_KINDS, claim=name, field="subject_kind"
-    )
-    _require_text(claim.subject, claim=name, field="subject")
-    _require_membership(claim.lane, LANES, claim=name, field="lane")
-    _require_membership(claim.status, CLAIM_STATUSES, claim=name, field="status")
+    guard = ClaimGuard(name)
+    guard.membership(claim.subject_kind, SUBJECT_KINDS, field="subject_kind")
+    guard.text(claim.subject, field="subject")
+    guard.membership(claim.lane, LANES, field="lane")
+    guard.membership(claim.status, CLAIM_STATUSES, field="status")
 
 
 def _validate_evidence_set(claim: Claim, policy: EvidencePolicy, *, name: str) -> None:
@@ -823,10 +821,9 @@ def _validate_dimensions(claim: Claim, *, name: str) -> None:
     """Closed dimensions, no repeats, and a utility claim that names one."""
     if not isinstance(claim.dimensions, tuple):
         raise CoverageClaimError(f"{name}: dimensions must be a tuple")
+    guard = ClaimGuard(name)
     for dimension in claim.dimensions:
-        _require_membership(
-            dimension, UTILITY_DIMENSIONS, claim=name, field="dimension"
-        )
+        guard.membership(dimension, UTILITY_DIMENSIONS, field="dimension")
     if len(set(claim.dimensions)) != len(claim.dimensions):
         raise CoverageClaimError(
             f"{name}: dimensions {list(claim.dimensions)} repeat a member"
@@ -908,6 +905,7 @@ __all__ = [
     "UTILITY_DIMENSIONS",
     "Absence",
     "Claim",
+    "ClaimGuard",
     "ClaimLane",
     "ClaimStatus",
     "CoverageClaimError",

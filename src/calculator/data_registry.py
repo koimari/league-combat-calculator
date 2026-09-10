@@ -213,17 +213,17 @@ DATA_VERSION_KEYED_MEMOS: dict[str, MemoGovernance] = {
         "champion mapping per request, so an identity key would re-atomize "
         "every champion per request and retain the rows forever"
     ),
-    "calculator.stats._ITEM_STATS_MEMO": _version_keyed(
+    "calculator.item_stat_block._ITEM_STATS_MEMO": _version_keyed(
         "one cached item's extracted stat block"
     ),
-    "calculator.stats._ITEM_STATS_VALIDATION_MEMO": _version_keyed(
+    "calculator.item_stat_block._ITEM_STATS_VALIDATION_MEMO": _version_keyed(
         "the schema verdict on one cached item's stat map"
     ),
-    "calculator.support_effects._SUPPORT_ATTRS_MEMO": _keyed_on_an_address_too(
+    "calculator.support_scan._SUPPORT_ATTRS_MEMO": _keyed_on_an_address_too(
         "whether a cached champion carries any support attribute; keyed "
         "(data_version(), id(champion_data)) with a strong-reference guard"
     ),
-    "calculator.support_effects._SUPPORT_PROFILE_MEMO": _keyed_on_an_address_too(
+    "calculator.support_scan._SUPPORT_PROFILE_MEMO": _keyed_on_an_address_too(
         "one cached ability's shield/heal attribute names and target scope; "
         "keyed (data_version(), id(ability)) with a strong-reference guard"
     ),
@@ -235,10 +235,10 @@ DATA_VERSION_KEYED_MEMOS: dict[str, MemoGovernance] = {
 # Keyed by their own lane rather than here: Phase 5 owns the two rotation
 # memos and keyed them with the cast-dependency work (D-49's split).
 ROTATION_MEMOS: dict[str, MemoGovernance] = {
-    "calculator.rotation_resolver._DERIVED_RULE_CACHE": _version_keyed(
+    "calculator.champion_rotation_rule._DERIVED_RULE_CACHE": _version_keyed(
         "a champion's derived rotation rule, keyed with the cast-dependency work"
     ),
-    "calculator.rotation_resolver._MATRIX_DPS_CACHE": _version_keyed(
+    "calculator.ability_dps_matrix._MATRIX_DPS_CACHE": _version_keyed(
         "the per-signature DPS matrix behind that rule, keyed the same way"
     ),
 }
@@ -258,7 +258,7 @@ UNGOVERNED_MEMOS: dict[str, MemoGovernance] = {
         "against the registered module name on every hit; a module object "
         "cannot change inside a process, so no data/ refresh reaches it"
     ),
-    "calculator.survival.actions._CLASS_SETS": _governed(Invalidator.IMPORTED_MODULE)(
+    "calculator.survival.classify._CLASS_SETS": _governed(Invalidator.IMPORTED_MODULE)(
         "an interning table, not a derivation: it maps a frozenset of enum "
         "members to itself so packets declaring the same classes share one "
         "object.  Both key and value are members of a module-level enum "
@@ -301,13 +301,13 @@ DEFERRED_MEMOS: dict[str, MemoGovernance] = {
     "calculator.champions.engine._RESOURCE_COST_MEMO": _deferred(
         _CHAMPION_MEMO_DEFERRAL
     ),
-    "calculator.champions.slotlib._MODIFIER_PAIRS_MEMO": _deferred(
+    "calculator.champions.slot_extract._MODIFIER_PAIRS_MEMO": _deferred(
         _CHAMPION_MEMO_DEFERRAL
     ),
-    "calculator.champions.slotlib._NAMED_LEVELING_MEMO": _deferred(
+    "calculator.champions.slot_extract._NAMED_LEVELING_MEMO": _deferred(
         _CHAMPION_MEMO_DEFERRAL
     ),
-    "calculator.champions.slotlib._PRIMARY_LEVELING_MEMO": _deferred(
+    "calculator.champions.slot_extract._PRIMARY_LEVELING_MEMO": _deferred(
         _CHAMPION_MEMO_DEFERRAL
     ),
 }

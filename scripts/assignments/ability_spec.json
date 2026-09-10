@@ -1,0 +1,44 @@
+{
+ "source": "src/calculator/ability_spec.py",
+ "decisions": [
+  "Disposition stays in ability_spec.py with the other three closed vocabularies, and quantity.py reads it from there. Moving it is what the check proposed, and the tests refuse it: TestClosedVocabularies pins the residue as a dependency-free leaf three ways (no module-scope sibling import, no deferred one, and the file executes with no package around it), and the chain that reaches Disposition from the contract is DamagePart's quoted 'ZeroPolicy | None' annotation, so ZeroPolicy and Disposition both have to stay for the residue to import nothing. quantity.py is the algebra over the tag, not the tag.",
+  "extract_modules.py refused that direction before this assignment: any read of a residue unit was a back-edge, whether or not the residue read back. It now spells the read as an import of the source and refuses a cycle instead, the residue counted as one node of the graph (tests/test_extract_modules.py::TestPlanning::test_a_read_of_a_unit_that_stays_is_imported_from_the_source and TestRefusals::test_a_cycle_through_the_residue_refuses).",
+  "ControlEvent references no name in A1: control_spec.py checks as a leaf with no dependency on quantity.py or the residue, confirming the map's open question.",
+  "control_spec.py is an internal-import-free leaf and quantity.py reads one module, so neither can fire the fan-out arm however many readers repoint."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/quantity.py",
+   "docstring": "What a published number is: measured, a structural zero, withheld, or starved.",
+   "defs": [
+    "WithheldHasNoValue",
+    "StarvedSignal",
+    "ProjectionStarvation",
+    "projection_starvation",
+    "_QuantityAlgebra",
+    "Measured",
+    "StructuralZero",
+    "Withheld",
+    "Starved",
+    "Quantity"
+   ]
+  },
+  {
+   "path": "src/calculator/control_spec.py",
+   "docstring": "The one crowd-control vocabulary, its three partitions, and the control event a cast carries.",
+   "defs": [
+    "IMMOBILIZING_CC_KINDS",
+    "NON_IMMOBILIZING_CC_KINDS",
+    "NO_CONTROL_KIND",
+    "CC_KIND_VOCABULARY",
+    "DISPLACEMENT_CC_KINDS",
+    "cc_kind_reviewed",
+    "ACTION_BLOCKING_CC_KINDS",
+    "NON_BLOCKING_CC_KINDS",
+    "ControlScope",
+    "ControlEvent"
+   ]
+  }
+ ]
+}

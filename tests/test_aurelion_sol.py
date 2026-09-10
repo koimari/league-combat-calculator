@@ -26,9 +26,10 @@ from src.calculator.champions import (
     get_champion_options_meta,
 )
 from src.calculator.champions.aurelion_sol import _Q_CHANNEL_SECONDS
-from src.calculator.champions.engine import CC_PER_PART
-from src.calculator.champions.slotlib import extract_value
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.champions.slot_cc import CC_PER_PART
+from src.calculator.champions.slot_extract import extract_value
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 from tests import cc_review, coverage_truth, row_review
 from tests.ability_math import parts_raw_total
 

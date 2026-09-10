@@ -18,23 +18,16 @@ import re
 import pytest
 
 from src import app as app_module
-from src.calculator import item_support_effects
+from src.calculator import ally_packet_shape
 from src.calculator.ability_spec import AttackClass, Authority, DamageClass
 from src.calculator.capabilities import (
     CAPABILITY_SCHEMA_VERSION,
     PARTICIPANT_LEDGER_CONTRACT,
 )
-from src.calculator.item_support_effects import (
-    SUPPORT_RANK_KEY,
-    derive_item_support_effects,
-)
-from src.calculator.survival.actions import (
-    TransitionRank,
-    ordering_slot,
-    public_phase,
-    support_transition_rank,
-)
-from tests.test_item_support_effects import _ABYSSAL_ROSTER, _actor
+from src.calculator.item_support_effects import derive_item_support_effects
+from src.calculator.survival.classify import SUPPORT_RANK_KEY, support_transition_rank
+from src.calculator.survival.phases import TransitionRank, ordering_slot, public_phase
+from tests.support_effect_fixtures import _ABYSSAL_ROSTER, _actor
 
 UNMAKE = "Abyssal Mask — Unmake"
 
@@ -113,7 +106,7 @@ class TestAPersistentModifierMustSayItIsAnAura:
             "rank": TransitionRank.AURA_ARM,
         }
         fields.update(overrides)
-        return item_support_effects._packet(**fields)
+        return ally_packet_shape._packet(**fields)
 
     def test_a_declared_persistent_modifier_builds(self):
         assert self._modifier()[SUPPORT_RANK_KEY] is TransitionRank.AURA_ARM
@@ -205,5 +198,5 @@ class TestThePublishedLedgerGainsItsSeventhPhase:
         # rune page's request fields and catalogs, 6 the survival row's
         # certification fields, 7 nulled the locators on unsupported
         # capability fields, 8 the stat-surface labels).
-        assert CAPABILITY_SCHEMA_VERSION == 8
+        assert CAPABILITY_SCHEMA_VERSION == 9
         assert len(PARTICIPANT_LEDGER_CONTRACT["phases"]) == 7

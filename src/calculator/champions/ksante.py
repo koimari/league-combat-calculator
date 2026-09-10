@@ -6,17 +6,13 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import no_damage, ranked_slot, require_named_leveling
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    simple_damage,
-)
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # Rooted in KSanteR.Omnivamp; the cached R prose corroborates the 20% value.

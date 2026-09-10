@@ -2,20 +2,24 @@
 
 import json
 import os
+import plistlib
+import selectors
+import sqlite3
 import subprocess
 import sys
-import time
-import sqlite3
-import plistlib
-from types import SimpleNamespace
 from datetime import date
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
-from scripts.wiki_refresh import refresh as refresh_source, scheduled_refresh
 from scripts.install_wiki_refresh import job
-from scripts.wiki_refresh import run_audit
+from scripts.wiki_refresh import refresh as refresh_source
+from scripts.wiki_refresh import run_audit, scheduled_refresh
+
+posix_lock = pytest.mark.skipif(
+    os.name != "posix", reason="launchd refresh uses POSIX locks"
+)
 
 
 def refresh(**kwargs):
@@ -26,7 +30,8 @@ def _database(path, vault):
     with sqlite3.connect(path) as connection:
         connection.executescript(
             "CREATE TABLE meta (key TEXT, value TEXT);"
-            "CREATE TABLE pages (namespace INT, has_text INT, revision_id INT, revision_timestamp TEXT);"
+            "CREATE TABLE pages (namespace INT, has_text INT, revision_id INT, "
+            "revision_timestamp TEXT);"
             "INSERT INTO pages VALUES (0, 1, 42, '2026-09-08');"
             "CREATE TABLE sections (body TEXT);"
             "INSERT INTO sections VALUES ('source text');"
@@ -60,6 +65,7 @@ def _runner(_root, module, args):
     return {}
 
 
+@posix_lock
 def test_review_drift_publishes_only_source_index(source, tmp_path):
     active = tmp_path / "active.sqlite3"
     active.write_bytes(b"legacy revision index")
@@ -76,6 +82,7 @@ def test_review_drift_publishes_only_source_index(source, tmp_path):
         assert connection.execute("SELECT revision_id FROM pages").fetchone()[0] == 42
 
 
+@posix_lock
 def test_template_changes_need_review_even_with_clean_packets(source, tmp_path):
     report = refresh(
         source_root=source,
@@ -87,6 +94,7 @@ def test_template_changes_need_review_even_with_clean_packets(source, tmp_path):
     assert report["review_required"] is True
 
 
+@posix_lock
 def test_missing_packet_inputs_preserve_active_index(source, tmp_path):
     active = tmp_path / "active.sqlite3"
     active.write_bytes(b"accepted")
@@ -103,6 +111,7 @@ def test_missing_packet_inputs_preserve_active_index(source, tmp_path):
     assert active.read_bytes() == b"accepted"
 
 
+@posix_lock
 @pytest.mark.parametrize("stage", ["snapshot", "build", "packets"])
 def test_failed_stage_keeps_active_index_and_seed(source, tmp_path, stage):
     seed = tmp_path / "seed"
@@ -136,6 +145,7 @@ def test_failed_stage_keeps_active_index_and_seed(source, tmp_path, stage):
     )
 
 
+@posix_lock
 def test_acquisition_errors_cannot_reuse_old_text_as_success(source, tmp_path):
     active = tmp_path / "active.sqlite3"
     active.write_bytes(b"active")
@@ -156,54 +166,53 @@ def test_acquisition_errors_cannot_reuse_old_text_as_success(source, tmp_path):
     assert active.read_bytes() == b"active"
 
 
-@pytest.mark.skipif(os.name != "posix", reason="launchd refresh uses POSIX locks")
+@posix_lock
 def test_killed_refresh_releases_lock_for_next_attempt(source, tmp_path):
     active = tmp_path / "active.sqlite3"
-    ready = tmp_path / "ready"
     script = """
 import sys
 import time
 from pathlib import Path
 from scripts.wiki_refresh import refresh
 
-def wait_for_termination(*args):
-    Path(sys.argv[3]).write_text("locked")
+def hold_the_lock(*args):
+    print("locked", flush=True)
     time.sleep(60)
 
 refresh(source_root=Path(sys.argv[1]), database=Path(sys.argv[2]),
-        runner=wait_for_termination, packet_report=lambda **_: {},
+        runner=hold_the_lock, packet_report=lambda **_: {},
         audit_report=lambda **_: {})
 """
-    child = subprocess.Popen(
-        [sys.executable, "-c", script, str(source), str(active), str(ready)],
+    with subprocess.Popen(
+        [sys.executable, "-c", script, str(source), str(active)],
         cwd=Path(__file__).resolve().parents[1],
-    )
-    try:
-        deadline = time.monotonic() + 10
-        while not ready.exists() and time.monotonic() < deadline:
-            assert child.poll() is None, "refresh exited before acquiring its lock"
-            time.sleep(0.01)
-        assert ready.exists(), "refresh did not acquire its lock"
-        with pytest.raises(BlockingIOError):
-            refresh(
+        stdout=subprocess.PIPE,
+        text=True,
+    ) as child:
+        try:
+            with selectors.DefaultSelector() as selector:
+                selector.register(child.stdout, selectors.EVENT_READ)
+                assert selector.select(timeout=10), "refresh never reported its lock"
+            line = child.stdout.readline().strip()
+            assert line == "locked", "refresh exited before acquiring its lock"
+            with pytest.raises(BlockingIOError):
+                refresh(
+                    source_root=source,
+                    database=active,
+                    runner=lambda *_: pytest.fail("concurrent download ran"),
+                    packet_report=lambda **_: {},
+                )
+            child.kill()
+            child.wait(timeout=10)
+            result = refresh(
                 source_root=source,
                 database=active,
-                runner=lambda *_: pytest.fail("concurrent download ran"),
-                packet_report=lambda **_: {},
+                runner=_runner,
+                packet_report=lambda **_: {"clean": True},
             )
-        child.kill()
-        child.wait(timeout=10)
-        result = refresh(
-            source_root=source,
-            database=active,
-            runner=_runner,
-            packet_report=lambda **_: {"clean": True},
-        )
-        assert result["database"] == str(active)
-    finally:
-        if child.poll() is None:
+            assert result["database"] == str(active)
+        finally:
             child.kill()
-        child.wait(timeout=10)
 
 
 @pytest.mark.parametrize("day", [date(2026, 9, 8), date(2026, 9, 2)])

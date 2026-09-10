@@ -71,8 +71,9 @@ def test_a_mana_refused_r_never_opens_hatefog():
     enough to refuse its own R at full mana; the pool is the fixture's knob.
     """
     from src.calculator.champions import parse_champion_abilities
-    from src.calculator.damage import FightConfig, calculate_fight_damage
+    from src.calculator.damage import calculate_fight_damage
     from src.calculator.data_fetcher import get_champion, get_item_by_name
+    from src.calculator.fight.config import FightConfig
     from src.calculator.stats import calculate_total_stats
 
     annie = get_champion("Annie")

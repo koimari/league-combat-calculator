@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from src.calculator.pipeline import FightParams
+from src.calculator.fight_params import FightParams
 
 ROOT = Path(__file__).parents[1]
 
@@ -29,7 +29,9 @@ def test_public_scalar_parsers_have_one_owner() -> None:
     for relative_path in (
         "src/app.py",
         "src/calculator/scenario.py",
-        "src/calculator/pipeline.py",
+        "src/calculator/champion_loadout.py",
+        "src/calculator/fight_params.py",
+        "src/calculator/fight_request_bounds.py",
     ):
         source = (ROOT / relative_path).read_text(encoding="utf-8")
         assert "from src.calculator.request_parsing import" in source or (

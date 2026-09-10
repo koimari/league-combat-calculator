@@ -31,7 +31,8 @@ from src.calculator.item_coverage import (
     stats_only_effect_fingerprint,
 )
 from src.calculator.item_source import is_ordinary_sr_item
-from src.calculator.stats import calculate_total_stats, get_item_stats
+from src.calculator.item_stat_block import get_item_stats
+from src.calculator.stats import calculate_total_stats
 from tests import item_probe
 
 # The 91-plus SR-admitted items whose current cached data classifies as

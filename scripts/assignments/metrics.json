@@ -1,0 +1,38 @@
+{
+ "source": "src/metrics.py",
+ "decisions": [
+  "PACKAGE_ROOT stays in metrics.py. It is a deployment path tests/coverage_resolver.py reads, and a path constant reads wrong in a gate module.",
+  "_staleness_report takes its path as an argument, so it moves without PACKAGE_ROOT."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/beta_gate.py",
+   "docstring": "The four weekly criteria the beta contract sets, and the windows they are measured over.",
+   "defs": [
+    "RETENTION_THRESHOLD",
+    "RECEIPTS_PER_WEEK",
+    "BIAS_FLAGGED_MAX",
+    "STALE_MAX_HOURS",
+    "RETENTION_WINDOW_DAYS",
+    "BETA_WINDOW_DAYS",
+    "BIAS_MIN_RECEIPTS",
+    "BIAS_MAX_PERCENT",
+    "_GATE_RULE",
+    "_naive_utc",
+    "Window",
+    "_week_windows",
+    "_activity_rows",
+    "_receipt_count",
+    "_bias_flagged_count",
+    "_staleness_report",
+    "_checked_at_naive",
+    "_stale_flag_count",
+    "_session_timeline",
+    "_retention_metrics",
+    "_staleness_week",
+    "_weekly_gate"
+   ]
+  }
+ ]
+}

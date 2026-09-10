@@ -39,18 +39,13 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import int_option
-from .module_contract import coverage
 from .module_helpers import no_damage_slot, ranked_slot
-from .slotlib import (
-    ability_name,
-    ability_on_hit_entry,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    simple_damage,
-)
+from .slot_entries import ability_on_hit_entry, damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — the wiki JSON only carries the

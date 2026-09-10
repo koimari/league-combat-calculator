@@ -30,22 +30,22 @@ Tibbers aura and auto-attack constants (wiki pets entry).
 import re
 from typing import Any
 
+from ..ability_prose import effect_description
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import BUFF, CC_PER_PART, SlotCtx, build_parser
+from .engine import BUFF, SlotCtx, build_parser
 from .inputs import float_option, int_option
 from .module_helpers import ability_cast_times, ranked_slot
-from .slotlib import (
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry, fixed_count_pet_row
+from .slot_extract import (
     ability_name,
-    damage_entry,
-    effect_description,
     extract_cooldown,
     extract_named,
     extract_value,
     find_named_leveling,
-    fixed_count_pet_row,
-    simple_damage,
 )
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — pet stats are not in the JSON.

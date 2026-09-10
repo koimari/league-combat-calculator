@@ -35,7 +35,6 @@ from ..item_behavior import (
     KernelField,
     RuleFamily,
     UltimateProcRule,
-    declared_mechanic_id,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..item_effects import (
@@ -113,22 +112,6 @@ def proc_fields(
     )
 
 
-def proc_mechanic_id(owner: str) -> str:
-    """*owner*'s cast-proc mechanic id, or a stop.
-
-    A stop rather than a default: an unstamped proc row keeps the pair
-    engine's number in every roster total while the walk prices the same
-    declaration, and that is a double count.
-    """
-    return declared_mechanic_id(
-        owner,
-        cast_proc_rules([owner]),
-        CastProcInterpretationError,
-        authors="a cast-triggered proc",
-        declares="cast_proc",
-    )
-
-
 def repeated_target_multiplier(charges: int, single_target: float) -> float:
     """A second target's share of one charge: what ``single_target`` leaves over."""
     return (single_target - UNSPLIT_MULTIPLIER) / max(1, charges - 1)
@@ -155,6 +138,7 @@ def _row(
         display_name=name,
         damage_type=payload.formula.damage_type,
         raw_damage=damage_formula.compile_formula(payload.formula, ctx),
+        mechanic_id=rule.mechanic_id,
         **fields,  # type: ignore[arg-type]
     )
 
@@ -324,7 +308,6 @@ __all__ = [
     "cast_proc_rules",
     "cooldown_proc_effect",
     "proc_fields",
-    "proc_mechanic_id",
     "repeated_target_multiplier",
     "resolve_slots",
     "self_shield_owners",

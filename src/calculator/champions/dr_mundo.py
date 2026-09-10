@@ -40,19 +40,15 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
-from .module_contract import coverage
 from .module_helpers import ranked_slot
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    stat_buff,
-)
+from .shared_mechanics import capped_option
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
+from .slotlib import stat_buff
 from .source_receipts import load_champion_sources
 
 # ROOTED IN THE BINARY (data/bin/characters/drmundo.bin.json): W's field
@@ -117,8 +113,7 @@ def _missing_health_fraction(ctx: SlotCtx) -> float:
 
 def _nearby_champions(ctx: SlotCtx) -> int:
     """Enemy champions inside R's 1200-unit radius when it is cast."""
-    count = int(ctx.options.get("r_nearby_champions", _DEFAULT_NEARBY_CHAMPIONS))
-    return min(max(count, 0), R_MAX_NEARBY_CHAMPIONS)
+    return capped_option(ctx, "r_nearby_champions", R_MAX_NEARBY_CHAMPIONS)
 
 
 @ranked_slot

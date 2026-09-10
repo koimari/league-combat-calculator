@@ -20,6 +20,7 @@ stringcase==1.2.0
 # Testing
 pytest==9.1.1
 pytest-xdist==3.8.0  # parallel test execution (CI runs `pytest -n auto`)
+Pillow==12.3.0  # scoreboard corpus: decodes frames and the icon sprite for tests/js and scripts/build_icon_sprite.py
 
 # Code quality
 black==26.5.1

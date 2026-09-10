@@ -11,7 +11,7 @@ import pytest
 
 from src.calculator import rune_effects
 from src.calculator.calculate import calculate_payload
-from src.calculator.stats import item_stat_type_count
+from src.calculator.item_stat_block import item_stat_type_count
 
 #: Every Inspiration rune, its disposition, and the words its receipt must
 #: carry. A structural zero is "nothing to price"; a withheld rune is a real

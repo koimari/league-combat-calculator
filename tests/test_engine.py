@@ -12,32 +12,37 @@ from pathlib import Path
 
 import pytest
 
-from src.calculator.ability_spec import ControlEvent, DamagePart, Disposition
+from src.calculator.ability_spec import DamagePart, Disposition
 from src.calculator.champions import parse_abilities as dispatch_parse
 from src.calculator.champions.engine import (
     AMP,
     BUFF,
-    CC_PER_PART,
     DAMAGE,
     PHASE_ORDER,
     SlotCtx,
     build_parser,
 )
-from src.calculator.champions.slotlib import (
+from src.calculator.champions.slot_cc import CC_PER_PART
+from src.calculator.champions.slot_control import park_control_interval
+from src.calculator.champions.slot_entries import (
     STEROID_ZERO,
     ability_on_hit_entry,
-    by_option,
     damage_entry,
+)
+from src.calculator.champions.slot_extract import (
     extract_value,
     find_named_leveling,
-    park_control_interval,
     pct_health_per_hit,
+    sum_modifiers,
+)
+from src.calculator.champions.slotlib import (
+    by_option,
     proc_damage,
     simple_damage,
     stat_buff,
-    sum_modifiers,
 )
-from src.calculator.damage import _declared_cc_marker
+from src.calculator.control_spec import ControlEvent
+from src.calculator.fight.cast_control_marker import _declared_cc_marker
 
 # ---------------------------------------------------------------------------
 # Fixtures and helpers
@@ -464,7 +469,7 @@ class TestProcDamage:
 
     def _parse(self, options: dict | None = None, **params) -> dict:
         def resolve_per_proc(ctx, ability):
-            from src.calculator.champions.slotlib import extract_named
+            from src.calculator.champions.slot_extract import extract_named
 
             return extract_named(
                 ability,
@@ -1419,7 +1424,7 @@ class TestDeclarationOnAPartlessSlot:
 
     The empower shells (Leona Q, Fiora E, Jax W) emit no damage part: the
     row's damage is the swing ``damage._reattribute_empowered_swings``
-    moves onto it, and ``damage._declared_cc_marker`` reads the kind to
+    moves onto it, and ``fight.cast_control_marker._declared_cc_marker`` reads the kind to
     stamp on those swing events off the entry's parts.  Returning quietly
     on ``parts == ()`` therefore made the declaration a no-op that read as
     reviewed — the exact shape this campaign exists to end.
@@ -1744,3 +1749,38 @@ class TestModuleCcNamesTheControlEvent:
         )
         with pytest.raises(ValueError, match="authors control_events"):
             parse(_champion(E=[_ability()]), 9, 0.0)
+
+
+class TestSlotCtxRankedSub:
+    """``SlotCtx.ranked_sub()`` — the prologue a two-entry slot opens with."""
+
+    @staticmethod
+    def _ctx(abilities: dict, **overrides) -> SlotCtx:
+        fields = {
+            "slot": "W",
+            "champion_name": "TestChamp",
+            "abilities": abilities,
+            "level": 9,
+            "ability_ranks": {"W": 2, "E": 4},
+            **overrides,
+        }
+        return SlotCtx(**fields)
+
+    def test_it_returns_the_parent_the_sub_entry_and_one_rank(self) -> None:
+        parent, sub = _ability(name="Frenzy"), _ability(name="Snack Attack")
+        ctx = self._ctx({"W": [parent, sub]})
+        assert ctx.ranked_sub() == (parent, sub, 2)
+
+    def test_the_slot_and_index_select_the_sub_entry(self) -> None:
+        parent, first, second = (_ability(name=n) for n in ("E", "E1", "E2"))
+        ctx = self._ctx({"E": [parent, first, second]})
+        assert ctx.ranked_sub("E", 2) == (parent, second, 4)
+
+    def test_a_missing_half_of_the_pair_is_none(self) -> None:
+        """Either entry absent answers the way ``ranked`` answers: nothing."""
+        assert self._ctx({"W": [_ability()]}).ranked_sub() is None
+        assert self._ctx({}).ranked_sub() is None
+
+    def test_an_unlearned_slot_is_none(self) -> None:
+        ctx = self._ctx({"W": [_ability(), _ability()]}, ability_ranks={"W": 0})
+        assert ctx.ranked_sub() is None

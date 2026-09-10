@@ -33,13 +33,10 @@ from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, float_option
 from .module_helpers import amp_slot, ranked_slot
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_named,
-    simple_damage,
-    with_control,
-)
+from .slot_control import with_control
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 _AMUMU_P_SPELL = spell_object("Amumu", "AmumuP")

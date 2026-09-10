@@ -225,7 +225,7 @@ class WorkCounters:
     ``public_evaluations`` is read back from the optimizer's own response
     rather than counted here: it is a published figure, and a second counting
     site for it could only ever disagree with the number the API returns.
-    The other four are incremented inside ``src/`` — ``_evaluate_build`` for
+    The other four are incremented inside ``src/`` — ``evaluate_build`` for
     the two proposal counters, ``participant_timeline._pair_run_fight`` for
     the pair fights, and the compiled/receipt gate for the rungs.
     """

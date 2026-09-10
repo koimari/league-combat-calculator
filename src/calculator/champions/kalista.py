@@ -41,17 +41,13 @@ rather than staying silently absent from the parse output.
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_contract import coverage
 from .module_helpers import named_damage, no_damage_slot, ranked_slot
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    with_control_event,
-)
+from .slot_control import with_control_event
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
 _pierce = named_damage("Physical Damage", "physical", time_offset=0.0)

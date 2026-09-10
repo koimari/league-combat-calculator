@@ -78,7 +78,8 @@ def test_the_survival_action_carries_a_read_utility_kind() -> None:
     A field with no reader is the D-09 defect; the cleanse self-cast is what
     makes this one not one, so the dispatch is driven rather than grepped.
     """
-    from src.calculator.survival.actions import UTILITY_KINDS, SurvivalAction
+    from src.calculator.survival.classify import UTILITY_KINDS
+    from src.calculator.survival.typed_action import SurvivalAction
 
     assert "utility_kind" in SurvivalAction._fields
     assert "cleanse" in UTILITY_KINDS
@@ -91,4 +92,4 @@ def test_the_utility_vocabulary_has_exactly_one_home() -> None:
         for path in sorted(SRC.rglob("*.py"))
         if "UTILITY_KINDS = " in path.read_text(encoding="utf-8")
     ]
-    assert [path.name for path in declarers] == ["actions.py"]
+    assert [path.name for path in declarers] == ["classify.py"]

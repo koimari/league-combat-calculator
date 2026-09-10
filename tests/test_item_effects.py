@@ -20,7 +20,7 @@ from src.calculator.interpreters import (
 )
 from src.calculator.interpreters.crit_profile import declared_crit_profile
 from src.calculator.interpreters.damage_routing import declared_execution
-from src.calculator.interpreters.delta_amp import declared_magic_amp
+from src.calculator.interpreters.part_amp import declared_magic_amp
 from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
@@ -58,8 +58,6 @@ from src.calculator.item_effects import (
     resolve_stat_effects,
     riftmaker_bonus_ap,
     saturated_grant,
-    statikk_chain_target_bounds,
-    statikk_chain_target_count,
     steraks_bonus_ad,
     terminus_max_stack_bonuses,
     validate_item_input_options,
@@ -281,6 +279,41 @@ def test_cp13_state_receipt_contains_all_conversion_and_timed_boundaries() -> No
     assert by_item["Hubris"]["bonus_ad"] == pytest.approx(24.0)
     assert by_item["Endless Hunger"]["omnivamp"] == pytest.approx(15.0)
     assert by_item["The Collector"]["feeds_takedown_state"] is True
+
+
+def test_a_manaflow_row_publishes_the_holders_numbers_then_the_pool() -> None:
+    """A manaflow row's published shape, in key order.
+
+    Every ``manaflow_*`` number is the holder's own; ``total_mana`` is the
+    champion pool the caller priced the row against, and it lands last.
+    """
+    [row] = item_state_receipts(
+        _build("Archangel's Staff"),
+        {"Archangel's Staff": {"manaflow_bonus_mana": 120}},
+        fight_duration_seconds=12.0,
+        is_melee=False,
+        bonus_mana=600.0,
+        max_mana=1200.0,
+    )
+    assert list(row) == [
+        "item",
+        "state",
+        "source_url",
+        "source_revision_id",
+        "manaflow_bonus_mana",
+        "manaflow_cap",
+        "manaflow_charge_interval",
+        "manaflow_max_charges",
+        "manaflow_bonus_mana_per_trigger",
+        "manaflow_bonus_mana_per_champion",
+        "manaflow_on_hit_charge",
+        "transformed",
+        "awe_conversion",
+        "total_mana",
+    ]
+    assert row["manaflow_bonus_mana"] == pytest.approx(120.0)
+    assert row["manaflow_bonus_mana_per_trigger"] == pytest.approx(5.0)
+    assert row["total_mana"] == pytest.approx(1200.0)
 
 
 def test_cp16_stasis_seconds_is_a_bounded_float_state() -> None:
@@ -518,16 +551,13 @@ class TestResolveDamageEffects:
             energized_proc_indices("Statikk Shiv", 3, initial_stacks=100)
 
     def test_statikk_chain_target_bounds_are_parser_owned(self) -> None:
-        assert statikk_chain_target_bounds() == (4, 8)
+        strike = _charged_strikes("Statikk Shiv").first_autos[0]
+        assert (strike.chain_targets_min, strike.chain_targets_max) == (4, 8)
 
-    def test_statikk_chain_target_count_uses_sourced_level_breakpoints(self) -> None:
-        assert [statikk_chain_target_count(level) for level in (1, 6, 10, 14, 20)] == [
-            4,
-            5,
-            6,
-            7,
-            8,
-        ]
+    def test_a_chain_target_count_uses_sourced_level_breakpoints(self) -> None:
+        strike = _charged_strikes("Statikk Shiv").first_autos[0]
+        levels = (1, 6, 10, 14, 20)
+        assert [strike.chain_target_count(n) for n in levels] == [4, 5, 6, 7, 8]
 
     def test_statikk_chain_target_bounds_fail_closed_when_missing(
         self, monkeypatch: pytest.MonkeyPatch
@@ -537,7 +567,7 @@ class TestResolveDamageEffects:
         monkeypatch.setitem(ITEM_EFFECTS, "Statikk Shiv", broken)
 
         with pytest.raises(KeyError, match="chain_targets_max"):
-            statikk_chain_target_bounds()
+            _charged_strikes("Statikk Shiv")
 
     def test_riftmaker_bonus_health_conversion_uses_sourced_ratio(self) -> None:
         assert riftmaker_bonus_ap(bonus_health=500) == pytest.approx(10)
@@ -679,10 +709,10 @@ class TestResolveDamageEffects:
 
     def test_titanic_secondary_packet_uses_melee_and_empowered_ratios(self) -> None:
         assert hydra_secondary_target_damage(
-            max_health=3000, is_melee=True
+            max_health=3000, is_melee=True, item_name="Titanic Hydra"
         ) == pytest.approx(90)
         assert hydra_secondary_target_damage(
-            max_health=3000, is_melee=False, empowered=True
+            max_health=3000, is_melee=False, empowered=True, item_name="Titanic Hydra"
         ) == pytest.approx(135)
 
     def test_hydra_cleave_secondary_packet_uses_ranged_ratio(self) -> None:

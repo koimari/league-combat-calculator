@@ -7,7 +7,8 @@ import pytest
 import src.calculator.bis as bis
 from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.optimizer import item_gold
-from src.calculator.program.views import LeafWriter, name_every_number
+from src.calculator.program.views.leaf import LeafWriter, name_every_number
+from src.calculator.program.views.view_tag import UnrankableNumber
 
 
 def _scenario(subject):
@@ -98,7 +99,7 @@ def test_team_advantage_requires_opponent_damage_receipt():
 def test_team_advantage_refuses_an_unnamed_opponent_value():
     combat = _combat()
     del combat["dispositions"]["objective.enemy_team_damage_before_death"]
-    with pytest.raises(bis.UnrankableNumber):
+    with pytest.raises(UnrankableNumber):
         bis.bis_objective_score(
             "team_outcome",
             subject_team="main",

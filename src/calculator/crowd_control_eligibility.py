@@ -63,20 +63,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .ability_spec import (
+from .control_spec import (
     ACTION_BLOCKING_CC_KINDS,
     CC_KIND_VOCABULARY,
     NO_CONTROL_KIND,
     NON_BLOCKING_CC_KINDS,
 )
-from .delivery_eligibility import (
-    CombatantFacts,
-    DefenseWindow,
-    PacketFacts,
-    stable_event_key,
-)
-from .shield_ledger import ShieldPools, TimedShield
-from .state_lifecycle import SourceReceipt
+from .delivery_facts import CombatantFacts, DefenseWindow, PacketFacts, stable_event_key
+from .shield_pools import ShieldPools, TimedShield
+from .state_timeline import SourceReceipt
 
 # Floating-point tolerance shared with the damage/survival walks.  All
 # kernel comparisons use the same 1e-9 convention as the engine receipts.

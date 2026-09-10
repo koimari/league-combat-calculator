@@ -28,6 +28,7 @@ from ..item_behavior import (
     KernelField,
     RuleFamily,
     SecondaryTargetRule,
+    typed_payload,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
 from ..value_ref import resolve
@@ -103,17 +104,37 @@ class SecondaryTargetSlot(CompiledSlot):
     @property
     def applies_on_hit(self) -> bool:
         """Whether a bolt carries the attack's on-hit effects with it."""
-        payload = self.rule.payload
-        if not isinstance(payload, SecondaryTargetRule):
-            raise SecondaryTargetInterpretationError(
-                f"{self.rule.mechanic_id} is not a secondary-target rule"
-            )
-        return payload.applies_on_hit
+        return self.declaration.applies_on_hit
 
     @property
     def owner(self) -> str:
         """The holder the bolts are filed under."""
         return self.rule.owner
+
+    @property
+    def declaration(self) -> SecondaryTargetRule:
+        """This rule's payload, in its own type."""
+        return typed_payload(
+            self.rule,
+            SecondaryTargetRule,
+            SecondaryTargetInterpretationError,
+            "a secondary-target rule",
+        )
+
+    @property
+    def row_key(self) -> str:
+        """The breakdown key the delivered packets are filed under."""
+        return f"secondary_{self.rule.owner}"
+
+    @property
+    def row_name(self) -> str:
+        """What that row calls itself: the holder, then the delivery's words."""
+        return f"{self.rule.owner} ({self.declaration.delivery.row_words})"
+
+    @property
+    def targeting_kind(self) -> str:
+        """The delivery its targeting receipt names."""
+        return self.declaration.delivery.targeting_kind
 
     @property
     def mechanic_id(self) -> str:

@@ -29,12 +29,12 @@ from src.calculator.ability_atoms import (
     required_ability_atom,
     required_ranked_attribute_atom,
 )
-from src.calculator.champions import renata_glasc
+from src.calculator.champion_loadout import ChampionLoadout
+from src.calculator.champions import renata_bailout_authority, renata_glasc
 from src.calculator.data_fetcher import get_champion
 from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.fight_params import FightParams
 from src.calculator.participant_timeline import build_participant_timeline
-from src.calculator.pipeline import FightParams
-from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
 from src.calculator.support_effects import derive_ally_effects
 
@@ -219,7 +219,7 @@ def test_w_duration_atom_has_exact_source_and_hash():
 
 
 def test_module_fails_closed_on_the_local_burn_authority_conflict():
-    authority = renata_glasc.BAILOUT_AUTHORITY
+    authority = renata_bailout_authority.BAILOUT_AUTHORITY
     assert authority["runtime_available"] is False
     assert authority["reason"] == "burn_authority_conflict"
     assert authority["wiki_burn_interval_seconds"] == pytest.approx(0.264)
@@ -252,13 +252,13 @@ def test_game_binary_pins_the_conflicting_four_ticks_per_second():
     present the digest in ``BAILOUT_AUTHORITY`` must match the file's raw
     bytes: a receipt that names a digest no local file has is not a receipt.
     """
-    path = ROOT / renata_glasc.BAILOUT_AUTHORITY["gamefile_path"]
+    path = ROOT / renata_bailout_authority.BAILOUT_AUTHORITY["gamefile_path"]
     if not path.exists():
         pytest.skip("local Renata game-file evidence is unavailable")
     raw = path.read_bytes()
     assert (
         hashlib.sha256(raw).hexdigest()
-        == renata_glasc.BAILOUT_AUTHORITY["gamefile_sha256"]
+        == renata_bailout_authority.BAILOUT_AUTHORITY["gamefile_sha256"]
     )
     payload = json.loads(raw.decode("utf-8"))
     spell = payload["Characters/Renata/Spells/RenataWAbility/RenataW"]["mSpell"]
@@ -274,7 +274,7 @@ def test_game_binary_pins_the_conflicting_four_ticks_per_second():
     binary_burn_seconds = values["TicksBeforeDeath"][0] / values["TicksPerSecond"][0]
     wiki_burn_seconds = (
         values["TicksBeforeDeath"][0]
-        * renata_glasc.BAILOUT_AUTHORITY["wiki_burn_interval_seconds"]
+        * renata_bailout_authority.BAILOUT_AUTHORITY["wiki_burn_interval_seconds"]
     )
     assert binary_burn_seconds == pytest.approx(2.5)
     assert wiki_burn_seconds == pytest.approx(2.64)
@@ -290,7 +290,7 @@ def test_game_binary_corroborates_every_published_active_half_number():
     per-100-AP ratio is ``APToPercentRatio`` (0.01 -> 1%), and the maximum
     is ``MaxStatMultiplier`` (2x -> the 2% per 100 AP ceiling row).
     """
-    path = ROOT / renata_glasc.BAILOUT_AUTHORITY["gamefile_path"]
+    path = ROOT / renata_bailout_authority.BAILOUT_AUTHORITY["gamefile_path"]
     if not path.exists():
         pytest.skip("local Renata game-file evidence is unavailable")
     payload = json.loads(path.read_text(encoding="utf-8"))
@@ -444,7 +444,7 @@ def test_no_burn_damage_is_published_while_the_cadence_conflict_stands():
     assert "10% of their maximum health every 0.264 seconds" in lethal
     assert "true damage burn" in lethal
     assert "self-damage taken is considered  raw damage" in ability["notes"]
-    authority = renata_glasc.BAILOUT_AUTHORITY
+    authority = renata_bailout_authority.BAILOUT_AUTHORITY
     assert authority["wiki_burn_interval_seconds"] != pytest.approx(
         1.0 / authority["gamefile_ticks_per_second"]
     )
@@ -488,11 +488,11 @@ def test_one_application_receipts_exactly_one_denial_set_per_cast():
     denials = _bailout_denials(combat)
     components = [row["denied_component"] for row in denials]
     assert sorted(components) == sorted(
-        renata_glasc.BAILOUT_AUTHORITY["denied_survival_components"]
+        renata_bailout_authority.BAILOUT_AUTHORITY["denied_survival_components"]
     )
     assert len(components) == len(set(components))
     assert effect["denied_survival_components"] == list(
-        renata_glasc.BAILOUT_AUTHORITY["denied_survival_components"]
+        renata_bailout_authority.BAILOUT_AUTHORITY["denied_survival_components"]
     )
 
 
@@ -714,7 +714,7 @@ def test_w_score_path_matches_receipt_path_on_bailout_survival_fields():
     # receipt sections at all, and neither path may apply a Bailout packet
     # as a survival gain.
     assert [row["denied_component"] for row in _bailout_denials(receipt)] == list(
-        renata_glasc.BAILOUT_AUTHORITY["denied_survival_components"]
+        renata_bailout_authority.BAILOUT_AUTHORITY["denied_survival_components"]
     )
     assert "item_denial_receipts" not in score
     assert not any(

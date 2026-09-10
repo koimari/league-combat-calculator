@@ -403,7 +403,7 @@ class TestARetaggedFieldFailsTheRankingSurfaces:
 
     def _scored(self, combat: Mapping):
         """One live combat receipt, scored the way ``bis_payload`` scores it."""
-        from src.calculator.bis import bis_objective_score
+        from src.calculator.bis_objective import bis_objective_score
 
         objective = combat["objective"]
         focus_id = objective["focus_participant_id"]
@@ -428,7 +428,7 @@ class TestARetaggedFieldFailsTheRankingSurfaces:
 
     def test_one_retagged_leaf_refuses_the_whole_ranking(self) -> None:
         """A preview in the map, and BIS declines to name a winner."""
-        from src.calculator.program.views import UnrankableNumber
+        from src.calculator.program.views.view_tag import UnrankableNumber
 
         combat = dict(_combat())
         leaf = "objective.focus_damage_before_death"
@@ -449,7 +449,7 @@ class TestARetaggedFieldFailsTheRankingSurfaces:
         ``candidate_loadout_unavailable`` would be this rule failing in the
         shape it exists to stop.
         """
-        from src.calculator.program.views import UnrankableNumber
+        from src.calculator.program.views.view_tag import UnrankableNumber
 
         assert issubclass(UnrankableNumber, TypeError)
         assert not issubclass(UnrankableNumber, (KeyError, ValueError))
@@ -603,7 +603,7 @@ class TestAWithheldComponentMakesEveryTotalReadingItWithheld:
         return combat, objective["focus_participant_id"]
 
     def _score(self, combat: Mapping, focus_id: str):
-        from src.calculator.bis import bis_objective_score
+        from src.calculator.bis_objective import bis_objective_score
 
         focus = next(
             row for row in combat["participants"] if row["participant_id"] == focus_id
@@ -618,7 +618,7 @@ class TestAWithheldComponentMakesEveryTotalReadingItWithheld:
         )
 
     def test_the_total_refuses_and_names_the_member_it_swallowed(self) -> None:
-        from src.calculator.ability_spec import WithheldHasNoValue
+        from src.calculator.quantity import WithheldHasNoValue
 
         combat, focus_id = self._withheld_receipt()
         with pytest.raises(WithheldHasNoValue) as raised:
@@ -627,9 +627,11 @@ class TestAWithheldComponentMakesEveryTotalReadingItWithheld:
 
     def test_a_total_over_a_withheld_member_is_itself_withheld(self) -> None:
         """The disposition, not just the raise: the propagation row, live."""
-        from src.calculator.ability_spec import Disposition, Measured
-        from src.calculator.program.build import Tagged, fold_tagged
-        from src.calculator.program.views import ViewTag, published_quantity
+        from src.calculator.ability_spec import Disposition
+        from src.calculator.program.tagged import Tagged, fold_tagged
+        from src.calculator.program.views.dispositions import published_quantity
+        from src.calculator.program.views.view_tag import ViewTag
+        from src.calculator.quantity import Measured
 
         combat, _ = self._withheld_receipt()
         withheld = published_quantity(
@@ -654,9 +656,10 @@ class TestAWithheldComponentMakesEveryTotalReadingItWithheld:
         nothing.  Asserting it here is what stops the check above from being
         satisfied by a payload that simply had no withheld member.
         """
-        from src.calculator.ability_spec import Disposition, Measured
-        from src.calculator.program.build import Tagged, fold_tagged
-        from src.calculator.program.views import ViewTag
+        from src.calculator.ability_spec import Disposition
+        from src.calculator.program.tagged import Tagged, fold_tagged
+        from src.calculator.program.views.view_tag import ViewTag
+        from src.calculator.quantity import Measured
 
         combat, _ = self._withheld_receipt()
         assert "focus_damage_before_death" not in combat["objective"]

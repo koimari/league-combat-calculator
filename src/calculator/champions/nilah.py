@@ -28,12 +28,13 @@ in ASSUMPTIONS.
 from typing import Any
 
 from .. import healing_helpers as _healing
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
-from .module_contract import coverage
 from .packet_module import build_packet_module
-from .slotlib import ability_name, damage_entry, extract_cooldown, extract_named
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
 
 PACKET_SHA256 = "95ce830b00c9c829930974899e20cda18a55eb0bb6ab1cc16360b57113671fe5"
 
@@ -61,12 +62,10 @@ _NILAH_EXCESS_SHIELD_DURATION_SECONDS = 6.0
 
 def _formless_blade(ctx: SlotCtx) -> dict[str, Any] | None:
     """Q: minimum-row physical damage, scaled linearly by crit chance."""
-    ability = ctx.ability("Q", 0)
-    if ability is None:
+    ranked = ctx.ranked("Q", 0)
+    if ranked is None:
         return None
-    rank = ctx.rank_for()
-    if rank < 1:
-        return None
+    ability, rank = ranked
     min_damage = extract_named(
         ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target
     )

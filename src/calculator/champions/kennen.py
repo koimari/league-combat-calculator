@@ -13,26 +13,25 @@ import math
 import re
 from typing import Any
 
+from ..ability_prose import (
+    effect_description,
+    extract_description_control_durations,
+    extract_description_duration,
+)
 from ..ability_spec import DamagePart
-from .engine import CC_PER_PART, SlotCtx, build_parser
+from .contract_vocabulary import coverage
+from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_contract import coverage
 from .module_helpers import (
     REVIEWED_MODULE_ASSUMPTIONS,
     ability_cast_times,
     no_damage,
     ranked_slot,
 )
-from .slotlib import (
-    ability_name,
-    ability_on_hit_entry,
-    effect_description,
-    extract_cooldown,
-    extract_description_control_durations,
-    extract_description_duration,
-    extract_named,
-    simple_damage,
-)
+from .slot_cc import CC_PER_PART
+from .slot_entries import ability_on_hit_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # Mark of the Storm is prose only — its cached effects carry no leveling

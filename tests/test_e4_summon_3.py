@@ -28,7 +28,7 @@ from pathlib import Path
 import pytest
 
 from src import app as app_module
-from src.calculator.champions.slotlib import find_named_leveling
+from src.calculator.champions.slot_extract import find_named_leveling
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import calculate_total_stats
 

@@ -22,7 +22,9 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from typing import Any
 
-from .actions import SurvivalAction, TransitionRank, action_key
+from .actions import action_key
+from .phases import TransitionRank
+from .typed_action import SurvivalAction
 
 
 class ScoreLedger:

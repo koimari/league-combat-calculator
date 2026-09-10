@@ -26,8 +26,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from src.calculator.atomizer import Atom, write_atoms, write_manifest
+from src.calculator.atomizer_abilities import atomize_abilities
 from src.calculator.atomizer_domains import (
-    atomize_abilities,
     atomize_economics,
     atomize_item_catalogue,
     atomize_rune_catalogue,

@@ -1,0 +1,60 @@
+# sightline baseline: `<rule>|<symbol> <count> [<shape>]`, one per line; `merge=union` is safe
+11|src.calculator.build_evaluation._build_receipt_key 1 f7569ea177ce4e6f
+11|src.calculator.champions.inputs.float_option 1 c7081570b1da3ea4
+11|src.calculator.champions.inputs.int_option 1 622ee095342eefc0
+14|src.calculator.champions.aatrox._q_strike_parts 1 2e42e91ec5a9c64b
+14|src.calculator.champions.darius._ad_ratio 1 698961c32f749a31
+14|src.calculator.survival.outcome_state.OutcomeLedger.skip 1 3460f80924bf8d84
+27|scripts.behavior_frontier 1
+27|scripts.bench_coupled_optimizer 1
+27|scripts.build_reviewed_modules 1
+27|scripts.cast_dependency_audit 1
+27|scripts.coverage_census 1
+27|scripts.full_entry_audit 1
+27|scripts.golden_snapshot 1
+27|scripts.patch_mechanics 1
+27|scripts.patch_regression 1
+27|scripts.patch_update 1
+27|src.app 1
+27|src.calculator.ally_packet_shape 1
+27|src.calculator.cast_dependency 1
+27|src.calculator.cast_edge_inference 1
+27|src.calculator.champion_loadout 1
+27|src.calculator.champions 1
+27|src.calculator.champions.aphelios 1
+27|src.calculator.champions.ashe 1
+27|src.calculator.champions.bard 1
+27|src.calculator.champions.briar 1
+27|src.calculator.champions.darius 1
+27|src.calculator.champions.dr_mundo 1
+27|src.calculator.champions.jayce 1
+27|src.calculator.champions.ksante 1
+27|src.calculator.champions.mel 1
+27|src.calculator.champions.naafiri 1
+27|src.calculator.champions.renata_glasc 1
+27|src.calculator.champions.rengar 1
+27|src.calculator.champions.rumble 1
+27|src.calculator.champions.senna 1
+27|src.calculator.coverage_evidence 1
+27|src.calculator.damage 2
+27|src.calculator.fight_params 1
+27|src.calculator.interpreters 1
+27|src.calculator.item_behavior 1
+27|src.calculator.item_behavior_catalog 2
+27|src.calculator.item_coverage 1
+27|src.calculator.item_effects 1
+27|src.calculator.item_support_effects 1
+27|src.calculator.optimizer 1
+27|src.calculator.participant_timeline 2
+27|src.calculator.passive_parser 1
+27|src.calculator.pipeline 1
+27|src.calculator.program.compile 1
+27|src.calculator.rune_effects 1
+27|src.calculator.rune_parser 1
+27|src.calculator.rune_paths.keystones 1
+27|src.calculator.scenario 1
+27|src.calculator.survival.transitions 2
+27|src.calculator.trigger_stream 1
+27|src.db 1
+27|tests.coverage_resolver 1
+27|tests.test_behavior_frontier 1

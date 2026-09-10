@@ -15,12 +15,13 @@ health total at every rank.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import CC_PER_PART, SlotCtx
+from .engine import SlotCtx
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cooldown,
     find_named_leveling,
     sum_modifiers,

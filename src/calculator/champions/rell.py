@@ -23,7 +23,8 @@ from typing import Any
 from ..binary_roots import calculation_coefficients, spell_object
 from .engine import ONHIT, SlotCtx
 from .packet_module import build_packet_module
-from .slotlib import ability_name, on_hit_entry
+from .slot_entries import on_hit_entry
+from .slot_extract import ability_name
 
 # Break the Mold's on-hit formula is the ordered armor/MR pair in the
 # binary's RellP.OnHitDamage calculation.

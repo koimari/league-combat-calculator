@@ -8,18 +8,18 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import no_damage, ranked_slot
-from .slotlib import (
+from .shared_mechanics import empowered_auto_entry
+from .slot_control import with_control
+from .slot_entries import damage_entry
+from .slot_extract import (
     ability_name,
-    ability_on_hit_entry,
-    damage_entry,
     extract_cooldown,
     extract_named,
     extract_value,
     find_named_leveling,
-    simple_damage,
     sum_modifiers,
-    with_control,
 )
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 
@@ -49,18 +49,14 @@ def _empower(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any]
     value = extract_named(
         ability, "Additional Magic Damage", rank, ctx.stats, ctx.target
     )
-    entry = ability_on_hit_entry(
-        ability_name(ability),
+    return empowered_auto_entry(
+        ability,
         rank,
         "magic",
         {"name": "Empower", "damage_per_hit": value, "damage_type": "magic"},
         cooldown=extract_cooldown(ability, rank),
+        detail="Empowers one basic attack or Leap Strike and resets the attack timer.",
     )
-    entry["empowers_next_auto"] = True
-    entry["detail"] = (
-        "Empowers one basic attack or Leap Strike and resets the attack timer."
-    )
-    return entry
 
 
 @ranked_slot

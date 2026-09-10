@@ -33,9 +33,11 @@ import pytest
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.champions import singed
 from src.calculator.champions.singed import ASSUMPTIONS, MODULE_COVERAGE
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight.config import FightConfig
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats, resolve_move_speed
 from tests import cc_review
 

@@ -1,0 +1,44 @@
+{
+ "source": "tests/test_survival_kernel.py",
+ "decisions": [
+  "The name may not match test_*.py or pytest collects the fixtures as a suite, following the tests/coverage_resolver.py precedent.",
+  "Both hot symbols, Holder and KernelFixture, leave with their one outside reader, tests/test_amp_kernel.py, so the 4400-line remainder holds nothing at fan-in three.",
+  "Two modules, not one: which keys the registry owes a fixture is a question about the registry, and holding both leaves kernel_fixtures.py at 522 lines under sightline #27's size arm. The coverage half reads the registry and nothing reads it back."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "tests/kernel_fixtures.py",
+   "docstring": "The holder, the fixture and the registry every kernel-equivalence suite is built from.",
+   "defs": [
+    "_timeline",
+    "_walk_both",
+    "_assert_rung",
+    "_assert_contract",
+    "_item",
+    "_roster",
+    "Holder",
+    "KernelFixture",
+    "_CC_TRIGGER_BUILD",
+    "_EVENT_SCAN_BUILD",
+    "_ENCHANTER_BUILD",
+    "_TAKEDOWN_BUILD",
+    "_LIVE_ENEMY",
+    "_DOOMED_ENEMY",
+    "REGISTRY_FIXTURES",
+    "_differing_leaves",
+    "_ally_survival"
+   ]
+  },
+  {
+   "path": "tests/kernel_coverage.py",
+   "docstring": "Which keys the fixture registry owes a fixture, and which it reaches.",
+   "defs": [
+    "required_coverage_keys",
+    "_reached_keys",
+    "_fixture_coverage",
+    "missing_fixtures"
+   ]
+  }
+ ]
+}

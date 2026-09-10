@@ -8,11 +8,14 @@ were whole-file cascades in files the diff never touched, green serially and
 green on rerun: the leak and its victim only ever meet under ``-n auto``.
 
 ``WATCHED_MODULES`` is the table; every attribute under a watched module is
-derived from ``vars()``, so a new global cannot be forgotten.  Two module
-singletons are deliberately outside it.  ``src.db``'s ``_engine`` is created
-by any route that touches the database, so a bound engine is the app working
-rather than a test leaking.  ``data_registry._DATA_VERSION`` is a monotonic
-counter whose bump is what ``write_runtime_cache`` promises.
+derived from ``vars()``, so a new global cannot be forgotten.  ``rune_effects``
+and ``champions.inputs`` are watched for the same reason as the app: the
+package arms their tables once at import and every test on the worker reads
+them.  Two module singletons are deliberately outside it.  ``src.db``'s
+``_engine`` is created by any route that touches the database, so a bound
+engine is the app working rather than a test leaking.
+``data_registry._DATA_VERSION`` is a monotonic counter whose bump is what
+``write_runtime_cache`` promises.
 
 A value counts as given back when it is equal, not only when it is the same
 object: ``db.reset()`` rebinds ``_redis_state`` to a fresh empty dict, and
@@ -24,7 +27,11 @@ This is a test helper, not a test module: it holds no assertions.
 import sys
 
 #: Module namespaces whose bindings a test must give back.
-WATCHED_MODULES = ("src.app",)
+WATCHED_MODULES = (
+    "src.app",
+    "src.calculator.champions.inputs",
+    "src.calculator.rune_effects",
+)
 
 
 class _Absent:

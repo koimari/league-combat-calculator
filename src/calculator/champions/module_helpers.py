@@ -14,20 +14,16 @@ from dataclasses import replace
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..stats import effective_cooldown
+from ..stat_formulas import effective_cooldown
 from .engine import AMP, DAMAGE, ONHIT, SlotCtx, SlotParser
-from .slotlib import (
-    MODULE_FORMULA_ZERO,
-    STEROID_ZERO,
-    ProcDamageResolver,
+from .slot_entries import MODULE_FORMULA_ZERO, STEROID_ZERO, damage_entry, on_hit_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cooldown,
     extract_named,
     find_named_leveling,
-    on_hit_entry,
-    simple_damage,
 )
+from .slotlib import ProcDamageResolver, simple_damage
 
 REVIEWED_MODULE_ASSUMPTIONS = (
     "Every passive/Q/W/E/R slot was reviewed against the complete parent Wiki "
@@ -46,7 +42,7 @@ def typed_damage(
     *,
     time_offset: float | None = None,
 ) -> dict[str, Any] | None:
-    """Build one explicitly named typed packet from cached champion data."""
+    """Build one explicitly named typed packet."""
 
     slot = ctx.slot
     ability = ctx.ability(slot)
@@ -133,7 +129,8 @@ def named_damage(  # pylint: disable=too-many-arguments
     keywords author the hit, and every other keyword lands on the entry
     as-is (``detail``, ``event_order_certified``, ``empowers_next_auto``,
     ...), in the order written; the engine's entry-key check refuses a
-    misspelling.
+    misspelling.  An entry-key value may be a callable, read with the
+    context the way ``attr`` is.
     """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -162,7 +159,12 @@ def named_damage(  # pylint: disable=too-many-arguments
                 zero_policy=MODULE_FORMULA_ZERO,
             ),
         )
-        entry.update(entry_keys)
+        entry.update(
+            {
+                key: value(ctx) if callable(value) else value
+                for key, value in entry_keys.items()
+            }
+        )
         return entry
 
     parse.phase = DAMAGE
@@ -307,28 +309,31 @@ def ability_cast_times(
     return [(time, slots[index]) for time, index in casts]
 
 
-def no_damage(
+def no_damage(  # pylint: disable=too-many-arguments
     ctx: SlotCtx,
     *,
     name: str,
     reason: str,
     slot: str | None = None,
+    dmg_type: str = "magic",
+    cooldown: float | None = None,
 ) -> dict[str, Any] | None:
-    """Emit an explicit, user-visible state/utility row."""
+    """Emit a state/utility row: the slot's cached cooldown unless one is stated."""
 
-    ability = ctx.ability(slot or ctx.slot)
+    key = slot or ctx.slot
+    ability = ctx.ability(key)
     if ability is None:
         return None
-    selected_rank = ctx.rank_for(slot or ctx.slot)
-    if (slot or ctx.slot) == "P":
-        selected_rank = ctx.level
+    selected_rank = ctx.level if key == "P" else ctx.rank_for(key)
     if selected_rank < 1:
         return None
     entry: dict[str, Any] = {
         "name": name,
         "rank": selected_rank,
-        "cooldown": extract_cooldown(ability, selected_rank),
-        "damage_type": "magic",
+        "cooldown": (
+            extract_cooldown(ability, selected_rank) if cooldown is None else cooldown
+        ),
+        "damage_type": dmg_type,
         "total_raw": 0.0,
         "parts": (),
         "detail": reason,
@@ -436,15 +441,20 @@ def between_rows(  # pylint: disable=too-many-arguments
     return floor + (ceiling - floor) * fraction
 
 
-def innate_on_hit(attr: str, dmg_type: str) -> SlotParser:
-    """P: an on-hit row priced from the innate's per-level *attr* at the champion's level."""
+def innate_on_hit(
+    attr: str, dmg_type: str, *, name: str | None = None, detail: str | None = None
+) -> SlotParser:
+    """P: an on-hit row from the innate's per-level *attr*, named as the kit names it."""
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
         ability = ctx.ability("P", 0)
         if ability is None:
             return None
         per_hit = extract_named(ability, attr, ctx.level, ctx.stats, ctx.target)
-        return on_hit_entry(ability_name(ability), per_hit, dmg_type)
+        entry = on_hit_entry(name or ability_name(ability), per_hit, dmg_type)
+        if detail is not None:
+            entry["detail"] = detail
+        return entry
 
     parse.phase = ONHIT
     return parse

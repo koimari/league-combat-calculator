@@ -8,7 +8,9 @@ champion_optimizer_matrix) serializes the same envelope: a strict boolean
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
 SCHEMA_VERSION = 1
@@ -72,3 +74,22 @@ def validate_receipt(receipt: Mapping[str, Any]) -> None:
         raise ValueError("passed must equal (failed == 0)")
     if not isinstance(receipt.get("failures"), list):
         raise ValueError("failures must be a list")
+
+
+def emit_receipt(
+    receipt: Mapping[str, Any], *, output: Path | None, as_json: bool
+) -> int:
+    """Write, print and score one gate receipt the way every gate script does.
+
+    The full envelope goes to *output* when a path is given; stdout carries
+    either that envelope or the one-line pass/counts summary, and the return
+    value is the shell status the gate exits with.
+    """
+    encoded = json.dumps(receipt, indent=2, sort_keys=True) + "\n"
+    if output:
+        output.write_text(encoded, encoding="utf-8")
+    if as_json:
+        print(encoded, end="")
+    else:
+        print(json.dumps({"passed": receipt["passed"], "counts": receipt["counts"]}))
+    return 0 if receipt["passed"] else 1

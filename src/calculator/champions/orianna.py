@@ -29,21 +29,20 @@ Why each slot is non-generic:
 
 from typing import Any
 
-from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import ranked_slot
-from .slotlib import (
+from .shared_mechanics import reduced_secondary_hits
+from .slot_control import with_control
+from .slot_entries import damage_entry, on_hit_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cooldown,
     extract_named,
     find_named_leveling,
-    on_hit_entry,
-    simple_damage,
     sum_modifiers,
-    with_control,
 )
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 
@@ -106,37 +105,20 @@ def _command_attack(
     selected via ``q_secondary_targets`` takes one reduced hit.
     """
 
-    primary = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
-    secondary = min(max(int(ctx.option("q_secondary_targets")), 0), 5)
-    total = primary + reduced * secondary
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        total,
-        "magic",
-    )
     # One arrival: the primary and every secondary target are struck at
-    # the cast boundary together, which is the instant each part authors
-    # (a zero interval between simultaneous hits).
-    parts = [DamagePart("magic", primary, time_offset=0.0)]
-    if secondary:
-        parts.append(
-            DamagePart(
-                "magic",
-                reduced,
-                count=secondary,
-                time_offset=0.0,
-                hit_interval=0.0,
-            )
-        )
-        entry["detail"] = (
-            f"primary target + {secondary} secondary target(s) at the "
-            f"sourced {reduced / primary * 100:g}% Reduced Damage row each"
-        )
-    entry["parts"] = tuple(parts)
-    return entry
+    # the cast boundary together, so the row makes no single-hit claim.
+    return reduced_secondary_hits(
+        ctx,
+        ability,
+        rank,
+        dmg_type="magic",
+        primary_row="Magic Damage",
+        reduced_row="Reduced Damage",
+        option="q_secondary_targets",
+        lead="primary target",
+        noun="secondary target(s)",
+        certify_single_hit=False,
+    )
 
 
 @ranked_slot

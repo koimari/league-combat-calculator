@@ -110,7 +110,7 @@ from pathlib import Path
 import pytest
 
 from src import app as app_module
-from src.calculator.atomizer_domains import atomize_abilities
+from src.calculator.atomizer_abilities import atomize_abilities
 from src.calculator.champions import dr_mundo as dr_mundo_module
 from src.calculator.champions import (
     get_champion_option_rotation,
@@ -118,14 +118,15 @@ from src.calculator.champions import (
     parse_champion_abilities,
     registered_champion_names,
 )
-from src.calculator.damage import (
-    FightConfig,
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.data_fetcher import get_champion
+from src.calculator.fight.config import FightConfig
+from src.calculator.fight.empower_declaration import (
     _empower_burst_attack_speed,
     _empower_hits,
-    calculate_fight_damage,
 )
-from src.calculator.data_fetcher import get_champion
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
 
 _ROOT = Path(__file__).resolve().parents[1]
 _CATALOG_PATH = _ROOT / "data" / "atoms" / "abilities.json"

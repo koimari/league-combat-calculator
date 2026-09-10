@@ -42,6 +42,7 @@ from collections.abc import Iterable
 from typing import Any
 
 from ..ability_atoms import ability_field, ability_payload
+from ..ability_prose import extract_description_duration
 from ..ability_spec import DamagePart
 from ..healing_helpers import (
     HealAnchor,
@@ -51,20 +52,19 @@ from ..healing_helpers import (
     payments,
     trigger_fields,
 )
-from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import no_damage_slot, ranked_slot
-from .slotlib import (
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry, on_hit_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cooldown,
-    extract_description_duration,
     extract_named,
-    on_hit_entry,
     pct_health_per_hit,
-    stat_buff,
 )
+from .slotlib import stat_buff
 from .source_receipts import load_champion_sources
 
 _Q_SWEETSPOT_ATTRS = [

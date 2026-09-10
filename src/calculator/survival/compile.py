@@ -33,11 +33,11 @@ import math
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from ..delivery_eligibility import CombatantFacts
+from ..delivery_facts import CombatantFacts
 from ..item_effects import ThornsEffect
 from ..resistance import apply_magic_penetration
-from .actions import ActionKind, SurvivalAction
 from .pricing import mitigate_declared
+from .typed_action import ActionKind, SurvivalAction
 
 
 class UncompilableActionError(ValueError):

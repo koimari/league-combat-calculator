@@ -1,0 +1,70 @@
+{
+ "source": "src/calculator/item_support_effects.py",
+ "decisions": [
+  "Blocked on extract_modules.py until one line changes. Plan._residue_reads feeds every non-movable top-level statement to free_names, which wraps it in a function body; this source's 'from __future__ import annotations' makes symtable raise SyntaxError, so the CLI traces back instead of printing a plan. Fix: build kept from statements that are not MOVABLE and not ast.Import or ast.ImportFrom. An import binds names and never reads any, and _unread_imports already handles the import block separately, so nothing else moves. damage.py has no future import, which is why step 1 never hit this. Verified clean with that one change applied.",
+  "The cross-participant authority audit (map section I14) moves into ally_packet_shape.py, five defs past the roster's eleven. It is upstream of the packet, not downstream: _packet calls _check_cross_participant_authority, _check_declared_classes and _check_aura_arming on every packet it builds, and repriced_for_recipient calls producer_item, so leaving I14 in the residue is a back-edge from two modules. Auditing a packet against its declared authority is part of what a packet is, so the module docstring covers it. ally_packet_shape.py lands at 317 body lines and 8 internal imports, clear of both arms.",
+  "The five per-item-family branch modules the roster names (item_support_quests, item_support_everlasting, item_support_shred, item_support_enchanter, item_support_actives) are NOT in this assignment and cannot be. They are branches inside derive_item_support_effects, and extract_modules.py moves top-level units only. They need the hand carve the map describes first: each branch becomes a top-level _x_packets(ctx) -> list[dict] and derive_item_support_effects extends packets with each in the same order. Only then can they be named as defs here. Ledger insertion order is the float-sum trap, so the carve must preserve branch order exactly.",
+  "Consequence of stopping at three modules: the residue is 1550 lines and its size finding does not move, because derive_item_support_effects is 1256 of them. The three modules are still worth landing first: they are what the branch carve needs to import.",
+  "I4's cleanse builders (_support_quest_packets, _cleanse_active_packet, _cleanse_movement_entry, _self_cleanse_items) stay in the residue for now and travel with item_support_actives.py in the carve step, which is what holds support_event_view.py at 9 internal imports.",
+  "Landing this makes the CLAUDE.md quirk 'item_support_effects loads 15 internal modules ... only its reader count keeps that arm quiet' stale. Update it in the same commit as the carve, not before: the three modules alone do not lower the residue's import count enough to retire the note."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/ally_packet_shape.py",
+   "docstring": "What one cross-participant item packet is, the producer it came from, and the authority it is audited against.",
+   "defs": [
+    "_DAMAGE_MODIFIER_KIND",
+    "_MISSING",
+    "_same_side",
+    "_teammates",
+    "_item_names",
+    "_option",
+    "_producer",
+    "_shred_ramp",
+    "_active_seconds",
+    "_active_seconds_for",
+    "_packet",
+    "_declared_authorities",
+    "_check_cross_participant_authority",
+    "_check_declared_classes",
+    "_check_aura_arming",
+    "producer_item"
+   ]
+  },
+  {
+   "path": "src/calculator/ally_packet_recipient.py",
+   "docstring": "Re-pricing a one-ally packet for the ally actually selected.",
+   "defs": [
+    "_CHAIN_KINDS",
+    "_CHAIN_FRACTION_KEYS",
+    "_ramp_value",
+    "RECIPIENT_RAMP_KEY",
+    "RETARGETABLE_SCOPES",
+    "_recipient_amount",
+    "reprice_slot",
+    "repriced_for_recipient"
+   ]
+  },
+  {
+   "path": "src/calculator/support_event_view.py",
+   "docstring": "The fight-result streams a support packet is priced from, and the refusal when the view is starved.",
+   "defs": [
+    "_support_triggers",
+    "_cc_event_stream",
+    "_mana_input",
+    "_stack_triggers",
+    "_current_mana_at",
+    "_target_by_id",
+    "_cc_ability_label",
+    "_cc_mark_subjects",
+    "_selected_teammate",
+    "resolve_knights_vow_tether",
+    "_starved_streams",
+    "EventViewStarvationError",
+    "require_event_view",
+    "_bus_streams"
+   ]
+  }
+ ]
+}

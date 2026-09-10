@@ -3,24 +3,23 @@
 import ast
 import re
 from collections import Counter, defaultdict
-from contextlib import contextmanager
 from pathlib import Path
-from types import MappingProxyType, SimpleNamespace
 from typing import get_args, get_type_hints
 
 import pytest
 
 from src.app import app
-from src.calculator import item_behavior_catalog as catalog
 from src.calculator import (
+    ally_packet_shape,
     item_support_effects,
-    ledger_projection,
+    ledger_adequacy,
     pipeline,
+    support_event_view,
     trigger_stream,
 )
 from src.calculator.ability_spec import AttackClass, Authority, DamageClass
+from src.calculator.ally_packet_shape import _declared_authorities, producer_item
 from src.calculator.data_fetcher import get_item_by_name
-from src.calculator.item_behavior import PacketKind, Persistence
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
     ally_item_effect_value,
@@ -28,76 +27,21 @@ from src.calculator.item_effects import (
 )
 from src.calculator.item_source import effect_entries, effect_text
 from src.calculator.item_support_effects import (
-    _declared_authorities,
     derive_item_support_effects,
-    producer_item,
     schedule_knights_vow,
 )
-from src.calculator.program.views import ViewTag
-from src.calculator.roster_composition import ActorRequest
-from src.calculator.trigger_stream import CAPABILITIES
+
+from .support_effect_fixtures import (
+    _ABYSSAL_ROSTER,
+    _actor,
+    _capability,
+    _grown_registry,
+    _is_packet_kind_node,
+    _packet_keyword,
+    declared_classes_by_producer,
+)
 
 pytestmark = pytest.mark.usefixtures("authorized_fimbulwinter_mana_gate")
-
-
-def _capability(mechanic: str, packet_source: str):
-    """A synthetic seventh cross-participant producer, declared."""
-    return trigger_stream.MechanicCapability(
-        mechanic=mechanic,
-        owner=trigger_stream.ItemOwner("Synthetic Seventh"),
-        engine=trigger_stream.Engine.WALK,
-        reads=frozenset(),
-        needs=frozenset(),
-        authority=Authority.COUPLED_ONLY,
-        pairing=trigger_stream.Pairing.SOLO,
-        pair_of=None,
-        divergence_ref=None,
-        impl="item_support_effects.derive_item_support_effects",
-        packet_source=packet_source,
-        view_tags=MappingProxyType({trigger_stream.Engine.WALK: ViewTag.APPLIED}),
-        holder_stacking=None,
-    )
-
-
-@contextmanager
-def _grown_registry(mechanic: str, capability):
-    """Read the producer table off a registry carrying one more capability.
-
-    P2c moved the table off this module's own ``_packet`` call sites and
-    onto ``trigger_stream.CAPABILITIES``, so a seventh producer is now
-    expressed as a declaration rather than as source text — which is the
-    only way to test that the table follows the registry.
-    """
-    grown = MappingProxyType({**CAPABILITIES, mechanic: capability})
-    item_support_effects.CAPABILITIES = grown
-    item_support_effects._declared_authorities.cache_clear()
-    try:
-        yield grown
-    finally:
-        item_support_effects.CAPABILITIES = CAPABILITIES
-        item_support_effects._declared_authorities.cache_clear()
-
-
-def _actor(
-    participant_id: str,
-    team: str,
-    item_names: tuple[str, ...],
-    *,
-    level: int = 18,
-    item_options: dict | None = None,
-    ally_effects_enabled: bool = True,
-):
-    return SimpleNamespace(
-        participant_id=participant_id,
-        team=team,
-        level=level,
-        items=tuple({"name": name} for name in item_names),
-        stats={"mana": 1000.0, "max_mana": 1000.0, "is_melee": False},
-        request=ActorRequest(
-            item_options=item_options or {},
-            ally_effects_enabled=ally_effects_enabled,
-        ),
-    )
 
 
 def test_ally_item_accessor_fails_loudly_for_missing_source_key():
@@ -784,7 +728,7 @@ class TestCrossParticipantAuthorities:
     def test_an_undeclared_producer_fails_on_its_first_packet(self):
         """The declaration is required, so a silent seventh cannot exist."""
         with pytest.raises(ValueError, match="Synthetic — Undeclared"):
-            item_support_effects._packet(
+            ally_packet_shape._packet(
                 attacker=_actor("main:Annie", "main", ()),
                 target=_actor("enemy:Aatrox", "enemy", ()),
                 time=0.0,
@@ -798,7 +742,7 @@ class TestCrossParticipantAuthorities:
     def test_a_call_site_may_not_disagree_with_the_declaration(self):
         """One mechanic has one owning engine, and the registry states it."""
         with pytest.raises(ValueError, match="declares SPLIT"):
-            item_support_effects._packet(
+            ally_packet_shape._packet(
                 attacker=_actor("main:Annie", "main", ()),
                 target=_actor("enemy:Aatrox", "enemy", ()),
                 time=0.0,
@@ -811,7 +755,7 @@ class TestCrossParticipantAuthorities:
 
     def test_no_hand_written_producer_list_exists(self):
         """A source assertion against the second home the derivation retires."""
-        body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
+        body = Path(ally_packet_shape.__file__).read_text(encoding="utf-8")
         derivation = body.split("def _declared_authorities")[1].split(
             "def _check_cross_participant_authority"
         )[0]
@@ -826,32 +770,6 @@ class TestCrossParticipantAuthorities:
         assert producer_item("Bloodletter's Curse — Vile Decay") == (
             "Bloodletter's Curse"
         )
-
-
-# One Abyssal holder, one ally to price and one cursed enemy — the shape the
-# coupled baseline's ``mandate_abyssal_curse_roster`` scenario uses, reduced to
-# the one item these slices move.  The ally is an Ahri rather than the
-# baseline's Pantheon because C3 types the curse: Pantheon's only damage into
-# the cursed enemy after the arming timestamp is physical, so with a magic-only
-# Unmake his rows carry no multiplier at all and the roster cannot show
-# an amped ally.  Ahri's Q lands magic *and* true damage into the same enemy at
-# the same instant, which is the whole of C3 in one packet pair.
-_ABYSSAL_ROSTER = {
-    "champion": "Ahri",
-    "level": 18,
-    "items": ["Abyssal Mask"],
-    "fight_mode": "time_based",
-    "fight_duration": 8,
-    "enemies": [{"champion": "Aatrox", "level": 18, "items": []}],
-    "allies": [
-        {
-            "champion": "Ahri",
-            "level": 18,
-            "items": [],
-            "ally_effects_enabled": True,
-        }
-    ],
-}
 
 
 class TestOwnerIsPresentIffSplit:
@@ -872,7 +790,7 @@ class TestOwnerIsPresentIffSplit:
             "attack_classes": frozenset(AttackClass),
         }
         fields.update(overrides)
-        return item_support_effects._packet(**fields)
+        return ally_packet_shape._packet(**fields)
 
     def test_a_split_packet_carries_its_owner(self):
         assert self._modifier()["owner"] == "main"
@@ -911,107 +829,6 @@ class TestOwnerIsPresentIffSplit:
         assert "authority" not in self._modifier()
 
 
-def _is_packet_kind_node(node, kind: str) -> bool:
-    """Whether a ``_packet(kind=...)`` node names ``PacketKind.<KIND>.value``.
-
-    ER1 put the kind on the enum rather than a bare string literal at every
-    site, so the three source walks below ask this one question instead of
-    each matching a spelling.
-    """
-    return (
-        isinstance(node, ast.Attribute)
-        and node.attr == "value"
-        and isinstance(node.value, ast.Attribute)
-        and node.value.attr == kind.upper()
-        and isinstance(node.value.value, ast.Name)
-        and node.value.value.id == "PacketKind"
-    )
-
-
-def _packet_keyword(call, name):
-    """The value node of one keyword argument of a ``_packet(...)`` call.
-
-    Moved out of ``item_support_effects`` at P2c.  ``CAPABILITIES`` is the
-    authority table, not a walk of the module's own source, so the walk
-    over its construction sites is purely a test-side source assertion and
-    lives with the assertions.
-    """
-    return next((k.value for k in call.keywords if k.arg == name), None)
-
-
-def declared_packet_keywords(*names):
-    """Each ``damage_modifier`` call site's declared keywords, by source.
-
-    Read from the construction sites and evaluated in the module's own
-    namespace, so the test sees the declaration a reader sees rather than a
-    packet a fixture happened to build.  A keyword the call site does not
-    pass comes back ``None`` — absent and defaulted are the same thing to
-    ``_packet`` and the caller decides what that means.
-
-    Public, and the one AST walk over those call sites: the Phase 0
-    sentinels in ``test_phase0_sentinels`` read the same declarations (their
-    class sets and their expiries), and a second walk would be a second home
-    for one fact.
-    """
-    module_source = Path(item_support_effects.__file__).read_text(encoding="utf-8")
-    declared = {}
-    for node in ast.walk(ast.parse(module_source)):
-        if not (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "_packet"
-        ):
-            continue
-        kind = _packet_keyword(node, "kind")
-        if not _is_packet_kind_node(kind, "damage_modifier"):
-            continue
-        source = _packet_keyword(node, "source").value
-        declared[source] = {
-            name: _evaluate_declaration(_packet_keyword(node, name)) for name in names
-        }
-    return declared
-
-
-def _evaluate_declaration(expression):
-    """One declared keyword's value, or ``None`` when the site omits it."""
-    if expression is None:
-        return None
-    return eval(  # noqa: S307 - evaluates the module's own declaration AST  # pylint: disable=eval-used
-        compile(ast.Expression(expression), "<declaration>", "eval"),
-        vars(item_support_effects),
-    )
-
-
-def declared_classes_by_producer():
-    """Each ``damage_modifier`` call site's declared class sets, by source."""
-    return declared_packet_keywords("damage_classes", "attack_classes")
-
-
-def timed_cross_participant_producers():
-    """Every ``damage_modifier`` producer whose declaration carries an expiry.
-
-    Read from the Phase 3 declarations rather than from the ``duration=``
-    expression at the call site: 3.6 moved the number behind the producer's
-    own reference, so "does this modifier close" is now a declared axis
-    (``Persistence``) instead of something a reader infers from whether one
-    keyword happens to be passed.  The source literal comes back through the
-    mechanic's capability, which is the one home for "which packet does this
-    producer emit".
-    """
-    sources = set()
-    for producer, declaration in catalog.ALLY_PACKET_DECLARATIONS.items():
-        if declaration.persistence is not Persistence.TIMED_WINDOW:
-            continue
-        if not any(
-            spec.kind is PacketKind.DAMAGE_MODIFIER for spec in declaration.packets
-        ):
-            continue
-        for owner in catalog.owners_for(producer):
-            mechanic = f"{catalog._mechanic_slug(owner)}.{producer.value}"
-            sources.add(trigger_stream.CAPABILITIES[mechanic].packet_source)
-    return sources
-
-
 class TestDeclaredDamageAndAttackClasses:
     """C3's half of the same construction site: what a modifier applies to (D-04)."""
 
@@ -1030,7 +847,7 @@ class TestDeclaredDamageAndAttackClasses:
             "attack_classes": frozenset(AttackClass),
         }
         fields.update(overrides)
-        return item_support_effects._packet(**fields)
+        return ally_packet_shape._packet(**fields)
 
     def test_the_declaration_reaches_the_packet(self):
         """Unlike ``authority``, the walk reads these per packet."""
@@ -1280,11 +1097,12 @@ class TestEventViewTupleGate:
 
         Phase 4's S5 moved the *site*, not the claim: the clause is now the
         ``RAW_ROW_STREAM_HOLDER`` adequacy condition, so ``pipeline`` holds no
-        clause of its own and the derivation is read from one probe.  The
+        clause of its own and the derivation is read from one probe in
+        ``ledger_adequacy``.  The
         pre-correction spelling stays forbidden in both files.
         """
         pipeline_body = Path(pipeline.__file__).read_text(encoding="utf-8")
-        projection_body = Path(ledger_projection.__file__).read_text(encoding="utf-8")
+        projection_body = Path(ledger_adequacy.__file__).read_text(encoding="utf-8")
 
         assert "holders_in" not in pipeline_body
         assert "tuple_incapable_items" not in pipeline_body
@@ -1362,7 +1180,7 @@ class TestEventViewTupleGate:
         it does.
         """
         holders = trigger_stream.tuple_incapable_items()
-        pairs = item_support_effects._starved_streams(holders)
+        pairs = support_event_view._starved_streams(holders)
         assert frozenset(item for item, _ in pairs) == holders
         counted = Counter(item for item, _ in pairs)
         assert max(counted.values()) == 1, f"reads more than one stream: {counted}"
@@ -1383,14 +1201,14 @@ class TestEventViewStarvation:
     # itself reads.  The parametrized ids are unchanged by the move.
     @pytest.mark.parametrize(
         ("item", "stream"),
-        item_support_effects._starved_streams(trigger_stream.tuple_incapable_items()),
+        support_event_view._starved_streams(trigger_stream.tuple_incapable_items()),
     )
     def test_every_declared_holder_starves_by_name(self, item, stream):
         """The raise names the item and the stream, never just the failure."""
         holder = _actor("main:Annie", "main", (item,))
         ally = _actor("ally:Pantheon", "ally", ())
         with pytest.raises(
-            item_support_effects.EventViewStarvationError,
+            support_event_view.EventViewStarvationError,
             match=f"{re.escape(item)} reads {stream}",
         ):
             derive_item_support_effects(holder, self.TUPLE_RESULT, [holder, ally])
@@ -1416,7 +1234,7 @@ class TestEventViewStarvation:
         """Echoes of Helia's missing guard was a latent ``AttributeError``."""
         holder = _actor("ally:Lulu", "ally", ("Echoes of Helia",))
         ally = _actor("main:Ahri", "main", ())
-        with pytest.raises(item_support_effects.EventViewStarvationError) as raised:
+        with pytest.raises(support_event_view.EventViewStarvationError) as raised:
             derive_item_support_effects(
                 holder,
                 self.TUPLE_RESULT,

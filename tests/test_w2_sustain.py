@@ -20,7 +20,7 @@ from src.calculator.champions import (
     get_champion_module_contract,
     parse_champion_abilities,
 )
-from src.calculator.champions.slotlib import extract_value
+from src.calculator.champions.slot_extract import extract_value
 from src.calculator.data_fetcher import get_champion
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}

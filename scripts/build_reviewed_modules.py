@@ -310,7 +310,8 @@ def _wiki_specs(entries: list[dict[str, Any]], slot: str) -> list[dict[str, Any]
                     "source": [slot, ability_index],
                     "owner": "src/calculator/champions/gwen.py",
                     "source_effect_index": 0,
-                    "reason": "The named module owns the AP-scaled target-health proc; parsed level rows describe healing and minion damage.",
+                    "reason": "The named module owns the AP-scaled target-health proc; "
+                    "parsed level rows describe healing and minion damage.",
                     "source_formula": ability["effects"][0]["description"],
                 }
             )

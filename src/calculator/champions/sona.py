@@ -32,13 +32,15 @@ import re
 from typing import Any
 
 from ..healing_helpers import ability_json, parsed_rank
-from .engine import CC_PER_PART, ONHIT, SlotCtx
+from .contract_vocabulary import coverage
+from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import int_option
-from .module_contract import coverage
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
-from .slotlib import ability_name, extract_named, on_hit_entry
+from .shared_mechanics import per_level_on_hit
+from .slot_cc import CC_PER_PART
+from .slot_extract import extract_named
 
 PACKET_SHA256 = "c78392f6b8f667c85594d31be2e6a9c1b7c6504d5cd02e3c5b385271dafc6c06"
 
@@ -46,31 +48,31 @@ PACKET_SHA256 = "c78392f6b8f667c85594d31be2e6a9c1b7c6504d5cd02e3c5b385271dafc6c0
 # three (Q, W, E), so one rotation is worth one chord — the default.
 _POWER_CHORDS_PER_ROTATION = 1
 
+# The chord's ability-power share, on top of the cached per-level row.  The
+# FIRST "Per-Level Scaling" row is the unmodified chord (20 : 270); the
+# second is Staccato, which only the Hymn of Valor tag applies.  The module's
+# rotation ends its basic abilities on Tempo (E), which modifies movement
+# speed rather than the chord's damage, so the base row is the one this cast
+# order fires.
+_POWER_CHORD_AP_RATIO = 0.20
 
-def _power_chord(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: the Power Chord bonus on the attack three basic abilities empower."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    # The FIRST "Per-Level Scaling" row is the unmodified chord (20 : 270);
-    # the second is Staccato, which only the Hymn of Valor tag applies.  The
-    # module's rotation ends its basic abilities on Tempo (E), which modifies
-    # movement speed rather than the chord's damage, so the base row is the
-    # one this cast order fires.
-    per_chord = extract_named(
-        ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target, level=ctx.level
-    ) + 0.20 * float(ctx.stat("ability_power") or 0.0)
-    if per_chord <= 0:
-        return None
-    chords = max(0, int(ctx.option("p_power_chords")))
-    entry = on_hit_entry(ability_name(ability), per_chord, "magic")
-    entry["on_hit"]["max_procs"] = chords
-    entry["detail"] = (
+
+def _power_chord_detail(per_chord: float, chords: int) -> str:
+    return (
         f"{chords} Power Chord(s) of {per_chord:.2f} bonus magic damage "
         "(20 : 270 based on level + 20% AP), one per three basic abilities; "
         "the Staccato / Diminuendo / Tempo tag riders are not applied"
     )
-    return entry
+
+
+def _power_chord(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: the Power Chord bonus on the attack three basic abilities empower."""
+    return per_level_on_hit(
+        ctx,
+        ap_ratio=_POWER_CHORD_AP_RATIO,
+        count_option="p_power_chords",
+        detail=_power_chord_detail,
+    )
 
 
 _power_chord.phase = ONHIT

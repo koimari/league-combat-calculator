@@ -47,19 +47,19 @@ from functools import partial
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
-from ..stats import growth_multiplier
+from ..stat_formulas import growth_multiplier
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .inputs import champion_stat, int_option
-from .module_contract import coverage
 from .module_helpers import named_damage, ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
+from .slot_control import with_control
+from .slot_entries import fixed_count_pet_row
+from .slot_extract import (
     ability_name,
     extract_cooldown,
     extract_value,
     find_named_leveling,
-    fixed_count_pet_row,
-    with_control,
 )
 
 _MALZAHAR_E_SPELL = spell_object("Malzahar", "MalzaharE")
@@ -94,8 +94,8 @@ _VOIDLING_ATTACK_ATTR = "Magic Damage"
 
 def _voidling_attack_speed(level: int) -> float:
     """One Voidling's attacks per second at champion level (wiki pets).
-    Relative growth reuses ``stats.growth_multiplier``, so one place holds
-    the level 1-20 contract."""
+    Relative growth reuses ``stat_formulas.growth_multiplier``, so one
+    place holds the level 1-20 contract."""
     return _VOIDLING_AS_BASE * (
         1.0 + _VOIDLING_AS_GROWTH * (level - 1) * growth_multiplier(level)
     )

@@ -30,13 +30,14 @@ from ..ability_atoms import (
 )
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, float_option
-from .module_contract import coverage
 from .module_helpers import amp_slot, ranked_slot
 from .packet_module import build_packet_module, repeat_damage_parser
-from .slotlib import ability_name, damage_entry, extract_named
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_named
 
 PACKET_SHA256 = "03e211424b005b94fe9d0df6d90a10efc1aa4d935e306143b14b0b254bd3532d"
 

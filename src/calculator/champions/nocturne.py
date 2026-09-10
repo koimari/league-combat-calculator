@@ -18,17 +18,15 @@ zero-damage row: this module replaces that slot.
 from functools import partial
 from typing import Any
 
-from ..ability_spec import ControlScope
 from ..binary_roots import data_value, spell_object
+from ..control_spec import ControlScope
 from .engine import BUFF, SlotCtx
 from .inputs import bool_option
 from .module_helpers import buff_window_share, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
-from .slotlib import (
-    extract_value,
-    with_control_event,
-    with_item_on_hits,
-)
+from .slot_control import with_control_event
+from .slot_extract import extract_value
+from .slotlib import with_item_on_hits
 
 PACKET_SHA256 = "0ce5c515d925ee81726b3430bfa9068b01a64a9901b67361a7f8da766fd561b8"
 

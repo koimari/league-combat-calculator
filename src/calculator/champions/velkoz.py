@@ -26,15 +26,10 @@ from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .module_helpers import ranked_slot
-from .slotlib import (
-    PER_LEVEL_SCALING,
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    simple_damage,
-    with_control,
-)
+from .shared_mechanics import ticked_channel
+from .slot_control import with_control
+from .slot_extract import PER_LEVEL_SCALING, ability_name, extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 _VELKOZ_PASSIVE_SPELL = spell_object("Vel'Koz", "VelkozPassive")
@@ -136,31 +131,22 @@ def _disintegration_ray(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
     """R: the full 13-tick channel (per-tick x 13 == the Maximum Damage row)."""
-    per_tick = extract_named(ability, "Damage Per Tick", rank, ctx.stats, ctx.target)
-    total = per_tick * _R_TICKS
-    entry = damage_entry(
-        ability_name(ability),
+
+    return ticked_channel(
+        ctx,
+        ability,
         rank,
-        extract_cooldown(ability, rank),
-        total,
-        "magic",
-    )
-    entry["parts"] = (
-        DamagePart(
-            "magic",
-            per_tick,
-            count=_R_TICKS,
-            time_offset=_R_TICK_INTERVAL_SECONDS,
-            hit_interval=_R_TICK_INTERVAL_SECONDS,
+        attr="Damage Per Tick",
+        dmg_type="magic",
+        ticks=_R_TICKS,
+        interval=_R_TICK_INTERVAL_SECONDS,
+        dot_duration=_R_CHANNEL_SECONDS,
+        detail=lambda per_tick, total: (
+            f"full {_R_TICKS}-tick channel ({_R_TICKS} x Damage Per Tick "
+            f"{per_tick:.2f} == Maximum Damage {total:.2f} at rank {rank}); "
+            "the Researched true-damage conversion is not modeled"
         ),
     )
-    entry["dot_duration"] = _R_CHANNEL_SECONDS
-    entry["detail"] = (
-        f"full {_R_TICKS}-tick channel ({_R_TICKS} x Damage Per Tick "
-        f"{per_tick:.2f} == Maximum Damage {total:.2f} at rank {rank}); "
-        "the Researched true-damage conversion is not modeled"
-    )
-    return entry
 
 
 SLOTS = {

@@ -1,0 +1,52 @@
+{
+ "source": "src/calculator/resource_ledger.py",
+ "decisions": [
+  "extract_modules.py refuses any new module that reads a name left in the residue, so every assignment here is downward closed: the residue sits at the top of the dependency order and imports its children.",
+  "Manaflow and the two item schedules read the operation keys, the tiers, ResourceEvent and ResourceReceipt, so the map's shape is refused. The event vocabulary moves to resource_events.py instead and the residue keeps the mana account and its ledger, which is what architecture.md's one MANA account per participant entry describes and what the module's name says.",
+  "mana_item_schedules.py takes both item schedules, as the plan rules over the map's optional pair of one-item modules."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/resource_events.py",
+   "docstring": "The mana event vocabulary: the operations a row states, their tiers, and each one's receipt.",
+   "defs": [
+    "_EPS",
+    "RESOURCE_KIND_MANA",
+    "OP_MAX_INCREASE",
+    "OP_GAIN",
+    "OP_SPEND",
+    "OP_REFUND",
+    "OP_REGEN",
+    "OP_CLAMP",
+    "_OPERATIONS",
+    "TIER_RESTORE",
+    "TIER_CAST",
+    "ResourceEvent",
+    "ResourceReceipt",
+    "_validate_event_shape"
+   ]
+  },
+  {
+   "path": "src/calculator/manaflow_ledger.py",
+   "docstring": "Manaflow: one named passive, two trigger streams, one charge pool.",
+   "defs": [
+    "TRIGGER_ABILITY_CAST",
+    "TRIGGER_BASIC_ATTACK",
+    "MANAFLOW_TRIGGERS",
+    "ManaflowDeclaration",
+    "ManaflowLedger"
+   ]
+  },
+  {
+   "path": "src/calculator/mana_item_schedules.py",
+   "docstring": "Item schedules on the account's receipts: Lost Chapter's Enlighten, Catalyst's Eternity.",
+   "defs": [
+    "EnlightenDeclaration",
+    "enlighten_schedule",
+    "CatalystHealRow",
+    "catalyst_eternity_heal_schedule"
+   ]
+  }
+ ]
+}

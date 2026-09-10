@@ -10,25 +10,12 @@ public timeline serializes and schedules walk-authored recovery packets.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping, MutableMapping, Sequence
+from collections.abc import Sequence
 from typing import Any
 
 from ..data_registry import data_version
-from ..delivery_eligibility import CombatantFacts, initial_full_block_uses
-from ..interaction_effects import (
-    defense_composition,
-    defense_eligibility,
-    resolve_physical_damage_reduction,
-    resolve_projectile_defense,
-    resolve_spell_shield,
-)
-from .actions import (
-    SurvivalAction,
-    TransitionRank,
-    TriggerLinkage,
-    action_key,
-)
-from .outcome_state import OutcomeLedger
+from ..delivery_facts import CombatantFacts
+from .defense_contracts import _resolved_defence_contracts
 from .transitions import participant_pools
 
 # The optimizer rebuilds every participant's state once per candidate
@@ -92,48 +79,6 @@ _PER_CALL_FIELDS = (
     "spell_shield_cooldown_atom",
     "spell_shield_rearm",
 )
-
-
-def _resolved_defence_contracts(combatant: Any) -> dict[str, Any]:
-    """The eleven :data:`_PER_CALL_FIELDS` a defence resolver decides.
-
-    One home for the resolution, so the prototype declares the slots and
-    this fills them.  ``None`` throughout is "this combatant holds no such
-    contract", which is what every reader of these fields already tests for.
-    """
-    projectile_defense = resolve_projectile_defense(combatant)
-    composition = defense_composition(projectile_defense)
-    spell_shield = resolve_spell_shield(combatant)
-    return {
-        "projectile_defense": projectile_defense,
-        "projectile_defense_eligibility": defense_eligibility(projectile_defense),
-        "projectile_defense_composition": composition,
-        "projectile_defense_uses_remaining": (
-            initial_full_block_uses(composition) if composition is not None else None
-        ),
-        "physical_damage_reduction": resolve_physical_damage_reduction(combatant),
-        "spell_shield_eligibility": (
-            spell_shield.eligibility if spell_shield is not None else None
-        ),
-        "spell_shield_composition": (
-            spell_shield.composition if spell_shield is not None else None
-        ),
-        "spell_shield_uses_remaining": (1 if spell_shield is not None else None),
-        "spell_shield_cooldown_seconds": (
-            spell_shield.cooldown_seconds if spell_shield is not None else None
-        ),
-        "spell_shield_cooldown_atom": (
-            dict(spell_shield.cooldown_atom)
-            if spell_shield is not None and spell_shield.cooldown_atom is not None
-            else None
-        ),
-        # The rearm clock rides the contract.  ``None`` is "this combatant
-        # holds no shield at all"; a shield whose cooldown is not sourced
-        # carries the default clock, which never rearms.
-        "spell_shield_rearm": (
-            spell_shield.rearm if spell_shield is not None else None
-        ),
-    }
 
 
 def _state_proto_key(
@@ -494,164 +439,4 @@ def build_states(
     ]
 
 
-class ReceiptLedger(TriggerLinkage):
-    """The annotating adapter: event-observation writes, trigger-linkage
-    status by event id, and walk-authored recovery scheduling."""
-
-    __slots__ = (
-        "actions",
-        "annotating",
-        "annotations_written",
-        "compile_event",
-        "current_index",
-        "expanded_healing",
-        "healing",
-        "index_of",
-        "next_aidx",
-        "outcomes",
-        "records_annotations",
-        "trigger_status",
-    )
-
-    # Event writes always persist on this adapter; annotations only when
-    # the receipt was requested (``records_annotations`` mirrors
-    # ``annotating`` so the kernel can skip building dropped kwargs).
-    records_event_fields = True
-
-    def __init__(
-        self,
-        *,
-        actions: list[SurvivalAction],
-        index_of: Mapping[str, int],
-        compile_event: Callable[..., SurvivalAction],
-        annotating: bool = True,
-        expanded_healing: MutableMapping[str, list[dict[str, Any]]] | None = None,
-        healing: MutableMapping[str, list[dict[str, Any]]] | None = None,
-    ) -> None:
-        """The ledger, plus the builder it may not reach for itself.
-
-        ``compile_event`` has no default because the one ``SurvivalAction``
-        constructor lives in ``program/compile.py``, which ``survival/`` may
-        not import.  A default would let a caller that forgot it schedule
-        nothing and look like a fight where no trigger authored a heal.
-
-        ``outcomes`` is the write-once companion.  An event dict takes the
-        last write, so a field two rules answer differently serializes as
-        whichever ran second; the companion refuses the second write, names
-        both values, and refuses a second ``applied`` contribution for one
-        ``(mechanic, subject, event_id)``.  It is built here because every
-        write already passes through this object, and a ledger a caller must
-        remember to attach would hold only over the walks somebody wired.
-        """
-        self.compile_event = compile_event
-        self.annotating = annotating
-        self.records_annotations = annotating
-        self.trigger_status: dict[int, str] = {}
-        self.actions = actions
-        self.current_index = -1
-        self.index_of = index_of
-        self.expanded_healing = expanded_healing
-        self.healing = healing
-        self.outcomes = OutcomeLedger(annotating=annotating)
-        # Walk-authored recovery is compiled after the composition allocated
-        # its slots, so the counter continues where the composition stopped.
-        # Derived rather than passed: a slot number handed in beside the list
-        # it indexes is two facts that can disagree.
-        self.next_aidx = len(actions)
-
-    # -- observation -------------------------------------------------------
-    def write(self, action: SurvivalAction, **fields: Any) -> None:
-        """Unconditional packet writes the authoritative walk always makes."""
-        self.outcomes.write(action, **fields)
-        if action.event is not None:
-            action.event.update(fields)
-
-    def restore(self, action: SurvivalAction, **fields: Any) -> None:
-        """Put an input back on a packet; an input is not an outcome, so no ledger."""
-        if action.event is not None:
-            action.event.update(fields)
-
-    def annotate(self, action: SurvivalAction, **fields: Any) -> None:
-        """Annotate-gated diagnostics only the serialized receipt reads."""
-        self.outcomes.annotate(action, **fields)
-        if action.event is not None and self.annotating:
-            action.event.update(fields)
-
-    def skip(
-        self,
-        action: SurvivalAction,
-        reason: str,
-        *,
-        damage_phase: bool = False,
-        preserve_reason: bool = False,
-    ) -> None:
-        """Skip one action with the authoritative receipt's annotations.
-
-        ``preserve_reason`` keeps an earlier ``skipped_reason`` (the
-        Knight's Vow gate stamps ``holder_health_gate`` on the cancelled
-        child before its own skip).
-
-        The refusal reaches the companion ledger before the early return,
-        because an action with no event dict is still an action the walk
-        refused: the receipt has nowhere to put that fact and the outcome
-        ledger does.
-        """
-        self.outcomes.skip(
-            action,
-            reason,
-            damage_phase=damage_phase,
-            preserve_reason=preserve_reason,
-        )
-        if action.event is None:
-            return
-        if damage_phase:
-            if self.annotating:
-                action.event.setdefault(
-                    "pair_damage", float(action.event.get("damage", 0.0) or 0.0)
-                )
-                action.event["live_damage"] = 0.0
-                action.event["overkill"] = 0.0
-            action.event["damage"] = 0.0
-        action.event["applied_amount"] = 0.0
-        if preserve_reason:
-            action.event.setdefault("skipped_reason", reason)
-        else:
-            action.event["skipped_reason"] = reason
-
-    # -- walk-authored scheduling -------------------------------------------
-    def schedule_heal(self, heal_event: dict[str, Any], recipient_id: str) -> None:
-        """Insert a recovery packet authored by a just-applied trigger
-        beside the current action (receipt adapter observation)."""
-        heal_event["_sk"] = action_key(
-            float(heal_event.get("time", 0.0)),
-            TransitionRank.RECOVERY,
-            recipient_id,
-            heal_event,
-        )
-        if self.expanded_healing is not None:
-            self.expanded_healing.setdefault(recipient_id, []).append(heal_event)
-            if self.healing is not None:
-                self.healing[recipient_id] = self.expanded_healing[recipient_id]
-        action = self.compile_event(
-            heal_event,
-            TransitionRank.RECOVERY,
-            self.index_of[recipient_id],
-            self.index_of,
-            subject_id=recipient_id,
-            aidx=self.next_aidx,
-        )
-        self.next_aidx += 1
-        insertion = max(self.current_index + 1, 0)
-        while (
-            insertion < len(self.actions)
-            and self.actions[insertion].sort_key <= action.sort_key
-        ):
-            insertion += 1
-        self.actions.insert(insertion, action)
-
-
-__all__ = [
-    "ReceiptLedger",
-    "build_state",
-    "build_states",
-]
+__all__ = ["build_state", "build_states"]

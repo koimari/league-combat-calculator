@@ -11,7 +11,7 @@ import pytest
 
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import lulu
-from src.calculator.champions.engine import CC_PER_PART
+from src.calculator.champions.slot_cc import CC_PER_PART
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review
 

@@ -4,9 +4,13 @@ import re
 
 import pytest
 
+from src.calculator.ability_prose import effect_description
 from src.calculator.calculate import calculate_payload
-from src.calculator.champions import aphelios, parse_champion_abilities
-from src.calculator.champions.slotlib import effect_description
+from src.calculator.champions import (
+    aphelios,
+    aphelios_weapons,
+    parse_champion_abilities,
+)
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
 
@@ -75,7 +79,7 @@ class TestReviewedCrowdControl:
     """
 
     def test_the_weapon_slots_name_themselves_per_part(self):
-        from src.calculator.champions.engine import CC_PER_PART
+        from src.calculator.champions.slot_cc import CC_PER_PART
 
         assert aphelios.MODULE_CC == {
             "Q": CC_PER_PART,
@@ -93,10 +97,10 @@ class TestReviewedCrowdControl:
             "dealing 50 : 140 (based on level) (+ 32% : 50% (based on level) "
             "bonus ad) (+ 70% ap) magic damage and rooting them for 1 second" in text
         )
-        assert aphelios._Q_CC_BY_WEAPON["gravitum"] == "root"
+        assert aphelios_weapons._Q_CC_BY_WEAPON["gravitum"] == "root"
         for weapon in SINGLE_HIT_WEAPONS:
             (part,) = _parse(weapon)["Q"]["parts"]
-            assert part.cc_kind == aphelios._Q_CC_BY_WEAPON[weapon]
+            assert part.cc_kind == aphelios_weapons._Q_CC_BY_WEAPON[weapon]
 
     def test_onslaught_spreads_its_attacks_over_the_cached_duration(self):
         """Six attacks over 1.75 seconds, at the rate that implies.
@@ -112,7 +116,7 @@ class TestReviewedCrowdControl:
             "performing up to 6 (+ 2 per 100% bonus attack speed) attacks "
             "over the duration" in text
         )
-        assert aphelios._Q_CC_BY_WEAPON["severum"] == "none"
+        assert aphelios_weapons._Q_CC_BY_WEAPON["severum"] == "none"
         (part,) = _parse("severum")["Q"]["parts"]
         assert part.count == 6
         assert part.time_offset == 0.0
@@ -233,15 +237,18 @@ class TestWeaponBranches:
     def test_every_weapon_names_its_branch_on_the_passive_row(self):
         for weapon in WEAPONS:
             entry = _parse(weapon)["passive"]
-            assert aphelios._WEAPON_LABELS[weapon] in entry["detail"], weapon
+            assert aphelios_weapons._WEAPON_LABELS[weapon] in entry["detail"], weapon
 
     def test_calibrums_mark_constants_equal_the_cached_sentence(self):
         """Both numbers, read back out of the sentence they were reviewed from."""
         entry, _ = _p_effects("Calibrum")
         stated = _CALIBRUM_MARK_RE.search(effect_description(entry, 1))
         assert stated, "the cached Calibrum effect no longer states the mark bonus"
-        assert float(stated["flat"]) == aphelios._CALIBRUM_MARK_FLAT
-        assert float(stated["ratio"]) / 100.0 == aphelios._CALIBRUM_MARK_BONUS_AD_RATIO
+        assert float(stated["flat"]) == aphelios_weapons._CALIBRUM_MARK_FLAT
+        assert (
+            float(stated["ratio"]) / 100.0
+            == aphelios_weapons._CALIBRUM_MARK_BONUS_AD_RATIO
+        )
 
     def test_calibrums_mark_bonus_prices_both_of_its_terms(self):
         assert _parse("calibrum").get("passive", {}).get("on_hit") is None
@@ -260,7 +267,10 @@ class TestWeaponBranches:
         entry, _ = _p_effects("Infernum")
         stated = _INFERNUM_BOLT_RE.search(effect_description(entry, 0))
         assert stated, "the cached Infernum effect no longer states the bolt's AD"
-        assert float(stated["ratio"]) / 100.0 == aphelios._INFERNUM_PRIMARY_AD_RATIO
+        assert (
+            float(stated["ratio"]) / 100.0
+            == aphelios_weapons._INFERNUM_PRIMARY_AD_RATIO
+        )
         stats = calculate_total_stats(cc_review.kit("Aphelios"), 18, [])
         on_hit = _parse("infernum")["passive"]["on_hit"]
         assert on_hit["damage_per_hit"] == pytest.approx(0.10 * stats["attack_damage"])

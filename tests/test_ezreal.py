@@ -13,8 +13,9 @@ import pytest
 
 from src.calculator import item_effects
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.fight.config import FightConfig
 from src.calculator.interpreters import on_hit_strike, spellblade
 from src.calculator.item_behavior import FightFacts
 from tests import cc_review

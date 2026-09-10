@@ -13,6 +13,13 @@ uses, first-valid-hit, destruction, later-hit reduction).
 
 import pytest
 
+from src.calculator import (
+    defense_composition,
+    delivery_classes,
+    delivery_facts,
+    spell_shield_eligibility,
+    spell_shield_rearm,
+)
 from src.calculator import delivery_eligibility as de
 
 
@@ -61,7 +68,7 @@ class _Attacker:
 
 class TestDeliveryDeclarations:
     def test_six_declared_classes_with_receipts(self) -> None:
-        assert de.DELIVERY_CLASSES == (
+        assert delivery_classes.DELIVERY_CLASSES == (
             "projectile",
             "hitscan",
             "area",
@@ -69,8 +76,10 @@ class TestDeliveryDeclarations:
             "basic_attack",
             "damage_over_time",
         )
-        receipt = de.delivery_declarations_receipt()
-        assert [row["delivery"] for row in receipt] == list(de.DELIVERY_CLASSES)
+        receipt = delivery_classes.delivery_declarations_receipt()
+        assert [row["delivery"] for row in receipt] == list(
+            delivery_classes.DELIVERY_CLASSES
+        )
         for row in receipt:
             assert row["description"]
             assert row["source"]["url"].startswith("https://")
@@ -84,7 +93,8 @@ class TestDeliveryDeclarations:
 
     def test_markers_are_the_engine_typed_stamps(self) -> None:
         by_delivery = {
-            row["delivery"]: row for row in de.delivery_declarations_receipt()
+            row["delivery"]: row
+            for row in delivery_classes.delivery_declarations_receipt()
         }
         assert by_delivery["projectile"]["marker"] == "skillshot"
         assert by_delivery["area"]["marker"] == "area_damage"
@@ -99,37 +109,41 @@ class TestDeliveryDeclarations:
 
 class TestClassifyDelivery:
     def test_projectile_from_skillshot_marker(self) -> None:
-        profile = de.classify_delivery(_Action(skillshot=True))
+        profile = delivery_classes.classify_delivery(_Action(skillshot=True))
         assert profile.classes == frozenset({"projectile"})
         assert not profile.unknown
         assert profile.has("projectile")
 
     def test_area_and_projectile_combine(self) -> None:
-        profile = de.classify_delivery(_Action(skillshot=True, area_damage=True))
+        profile = delivery_classes.classify_delivery(
+            _Action(skillshot=True, area_damage=True)
+        )
         assert profile.classes == frozenset({"projectile", "area"})
 
     def test_basic_attack_is_its_own_class(self) -> None:
-        profile = de.classify_delivery(_Action(basic_attack=True, is_ability=False))
+        profile = delivery_classes.classify_delivery(
+            _Action(basic_attack=True, is_ability=False)
+        )
         assert profile.classes == frozenset({"basic_attack"})
 
     def test_damage_over_time_is_its_own_class(self) -> None:
-        profile = de.classify_delivery(_Action(damage_over_time=True))
+        profile = delivery_classes.classify_delivery(_Action(damage_over_time=True))
         assert profile.classes == frozenset({"damage_over_time"})
 
     def test_ability_without_markers_is_targeted(self) -> None:
-        profile = de.classify_delivery(_Action(is_ability=True))
+        profile = delivery_classes.classify_delivery(_Action(is_ability=True))
         assert profile.classes == frozenset({"targeted"})
         assert not profile.unknown
 
     def test_non_ability_without_markers_is_unknown(self) -> None:
-        profile = de.classify_delivery(_Action(is_ability=False))
+        profile = delivery_classes.classify_delivery(_Action(is_ability=False))
         assert profile.classes == frozenset()
         assert profile.unknown
         assert profile.unknown_markers == ("no_declared_marker",)
         assert profile.public_receipt()["unknown"] is True
 
     def test_public_receipt_is_json_safe(self) -> None:
-        receipt = de.classify_delivery(
+        receipt = delivery_classes.classify_delivery(
             _Action(skillshot=True, area_damage=True)
         ).public_receipt()
         assert receipt == {
@@ -143,19 +157,23 @@ class TestRequiredDeliveryClass:
     def test_returns_the_accepted_class(self) -> None:
         action = _Action(skillshot=True, is_ability=True)
         assert (
-            de.required_delivery_class(action, frozenset({"projectile", "area"}))
+            delivery_classes.required_delivery_class(
+                action, frozenset({"projectile", "area"})
+            )
             == "projectile"
         )
 
     def test_fails_closed_on_unknown(self) -> None:
         action = _Action(is_ability=False)
-        with pytest.raises(de.UnknownDeliveryError, match="unknown delivery"):
-            de.required_delivery_class(action, frozenset({"projectile"}))
+        with pytest.raises(
+            delivery_classes.UnknownDeliveryError, match="unknown delivery"
+        ):
+            delivery_classes.required_delivery_class(action, frozenset({"projectile"}))
 
     def test_fails_closed_on_not_accepted(self) -> None:
         action = _Action(skillshot=True)
-        with pytest.raises(de.UnknownDeliveryError, match="not accepted"):
-            de.required_delivery_class(action, frozenset({"area"}))
+        with pytest.raises(delivery_classes.UnknownDeliveryError, match="not accepted"):
+            delivery_classes.required_delivery_class(action, frozenset({"area"}))
 
 
 # ---------------------------------------------------------------------------
@@ -165,7 +183,7 @@ class TestRequiredDeliveryClass:
 
 class TestDefenseWindow:
     def test_start_inclusive_end_exclusive(self) -> None:
-        window = de.DefenseWindow(start=0.25, until=4.0)
+        window = delivery_facts.DefenseWindow(start=0.25, until=4.0)
         assert window.active_at(0.25) is True
         assert window.active_at(1.0) is True
         assert window.active_at(3.999) is True
@@ -173,7 +191,7 @@ class TestDefenseWindow:
         assert window.active_at(0.249) is False
 
     def test_receipt_rounds_and_keeps_atoms(self) -> None:
-        window = de.DefenseWindow(
+        window = delivery_facts.DefenseWindow(
             start=0.0, until=4.0, source_atoms=({"atom_id": "x"},)
         )
         receipt = window.public_receipt()
@@ -251,11 +269,14 @@ class TestDeliveryAcceptance:
         rule = de.DeliveryAcceptance(requires_skillshot=True)
         assert rule.accepts_deliveries() == ("projectile",)
         assert rule.accepts(
-            _Action(skillshot=True), de.classify_delivery(_Action(skillshot=True))
+            _Action(skillshot=True),
+            delivery_classes.classify_delivery(_Action(skillshot=True)),
         ) == (True, "")
         denied, reason = rule.accepts(
             _Action(skillshot=False, is_ability=True),
-            de.classify_delivery(_Action(skillshot=False, is_ability=True)),
+            delivery_classes.classify_delivery(
+                _Action(skillshot=False, is_ability=True)
+            ),
         )
         assert (denied, reason) == (False, "delivery_not_accepted")
 
@@ -267,25 +288,38 @@ class TestDeliveryAcceptance:
         )
         assert rule.accepts_deliveries() == ("basic_attack", "area")
         basic = _Action(basic_attack=True, is_ability=False)
-        assert rule.accepts(basic, de.classify_delivery(basic)) == (True, "")
+        assert rule.accepts(basic, delivery_classes.classify_delivery(basic)) == (
+            True,
+            "",
+        )
         area = _Action(area_damage=True)
-        assert rule.accepts(area, de.classify_delivery(area)) == (True, "")
+        assert rule.accepts(area, delivery_classes.classify_delivery(area)) == (
+            True,
+            "",
+        )
         skillshot = _Action(skillshot=True)
-        assert rule.accepts(skillshot, de.classify_delivery(skillshot)) == (
+        assert rule.accepts(
+            skillshot, delivery_classes.classify_delivery(skillshot)
+        ) == (
             False,
             "delivery_not_accepted",
         )
 
     def test_fiora_full_block_accepts_unknown_by_declaration(self) -> None:
         rule = de.DeliveryAcceptance(requires_skillshot=False, accepts_unknown=True)
-        assert rule.accepts_deliveries() == de.DELIVERY_CLASSES
+        assert rule.accepts_deliveries() == delivery_classes.DELIVERY_CLASSES
         packet = _Action(is_ability=False)
-        assert rule.accepts(packet, de.classify_delivery(packet)) == (True, "")
+        assert rule.accepts(packet, delivery_classes.classify_delivery(packet)) == (
+            True,
+            "",
+        )
 
     def test_unknown_delivery_fails_closed_with_named_reason(self) -> None:
         rule = de.DeliveryAcceptance()
         packet = _Action(is_ability=False)
-        denied, reason = rule.accepts(packet, de.classify_delivery(packet))
+        denied, reason = rule.accepts(
+            packet, delivery_classes.classify_delivery(packet)
+        )
         assert (denied, reason) == (False, "unknown_delivery")
 
 
@@ -298,7 +332,7 @@ class TestEligibilityDecide:
     def _braum_like(self) -> de.DefenseEligibility:
         return de.DefenseEligibility(
             name="braum_unbreakable",
-            window=de.DefenseWindow(start=0.0, until=4.0),
+            window=delivery_facts.DefenseWindow(start=0.0, until=4.0),
             acceptance=de.DeliveryAcceptance(requires_skillshot=True),
         )
 
@@ -322,7 +356,7 @@ class TestEligibilityDecide:
     def test_source_not_selected_is_named_denial(self) -> None:
         eligibility = de.DefenseEligibility(
             name="braum_unbreakable",
-            window=de.DefenseWindow(start=0.0, until=4.0),
+            window=delivery_facts.DefenseWindow(start=0.0, until=4.0),
             selection=de.SourceSelection(blocked_sources=("Q",)),
             acceptance=de.DeliveryAcceptance(requires_skillshot=True),
         )
@@ -354,10 +388,14 @@ class TestEligibilityDecide:
     def test_event_key_is_stable_and_deterministic(self) -> None:
         first = _Action(time=0.25, sequence=2, source_key="Q")
         second = _Action(time=0.25, sequence=2, source_key="Q")
-        assert de.stable_event_key(first) == de.stable_event_key(second) == "Q:0.25:2"
-        assert de.stable_event_key(_Action(time=0.25, sequence=3, source_key="Q")) == (
-            "Q:0.25:3"
+        assert (
+            delivery_facts.stable_event_key(first)
+            == delivery_facts.stable_event_key(second)
+            == "Q:0.25:2"
         )
+        assert delivery_facts.stable_event_key(
+            _Action(time=0.25, sequence=3, source_key="Q")
+        ) == ("Q:0.25:3")
 
     def test_public_receipt_is_json_safe(self) -> None:
         decision = self._braum_like().decide(
@@ -382,29 +420,35 @@ class TestEligibilityDecide:
 
 class TestComposition:
     def test_braum_composition_first_block_one_use(self) -> None:
-        composition = de.DefenseComposition(
-            full_block=de.FullBlockRule(mode="first", blocks_true_damage=False),
-            full_block_uses=de.UseBudget(
+        composition = defense_composition.DefenseComposition(
+            full_block=defense_composition.FullBlockRule(
+                mode="first", blocks_true_damage=False
+            ),
+            full_block_uses=defense_composition.UseBudget(
                 action_mode="full_block", uses=1, consume="first_eligible"
             ),
-            reduction=de.ReductionRule(later_hit_reduction=0.55),
+            reduction=defense_composition.ReductionRule(later_hit_reduction=0.55),
         )
-        assert de.initial_full_block_uses(composition) == 1
+        assert defense_composition.initial_full_block_uses(composition) == 1
         assert composition.full_block.blocks_true_damage is False
         assert composition.reduction.reduction_for(_Action()) == 0.55
         # Braum has no area rule: area-marked skillshots use later-hit.
         assert composition.reduction.reduction_for(_Action(area_damage=True)) == 0.55
 
     def test_yasuo_composition_unlimited_destruction(self) -> None:
-        composition = de.DefenseComposition(destroy=de.DestructionRule(enabled=True))
-        assert de.initial_full_block_uses(composition) is None
+        composition = defense_composition.DefenseComposition(
+            destroy=defense_composition.DestructionRule(enabled=True)
+        )
+        assert defense_composition.initial_full_block_uses(composition) is None
         assert composition.destroy.enabled is True
         assert composition.full_block.mode == "none"
 
     def test_jax_area_reduction_uses_the_declared_area_rule(self) -> None:
-        composition = de.DefenseComposition(
-            full_block=de.FullBlockRule(mode="all", blocks_true_damage=True),
-            reduction=de.ReductionRule(
+        composition = defense_composition.DefenseComposition(
+            full_block=defense_composition.FullBlockRule(
+                mode="all", blocks_true_damage=True
+            ),
+            reduction=defense_composition.ReductionRule(
                 later_hit_reduction=0.0,
                 area_damage_reduction=0.25,
                 applies_to_true_damage=True,
@@ -414,13 +458,15 @@ class TestComposition:
         assert composition.reduction.reduction_for(_Action()) == 0.0
 
     def test_public_receipts_are_json_safe(self) -> None:
-        composition = de.DefenseComposition(
-            full_block=de.FullBlockRule(mode="first", blocks_true_damage=False),
-            full_block_uses=de.UseBudget(
+        composition = defense_composition.DefenseComposition(
+            full_block=defense_composition.FullBlockRule(
+                mode="first", blocks_true_damage=False
+            ),
+            full_block_uses=defense_composition.UseBudget(
                 action_mode="full_block", uses=1, consume="first_eligible"
             ),
-            destroy=de.DestructionRule(enabled=False),
-            reduction=de.ReductionRule(later_hit_reduction=0.55),
+            destroy=defense_composition.DestructionRule(enabled=False),
+            reduction=defense_composition.ReductionRule(later_hit_reduction=0.55),
         )
         receipt = composition.public_receipt()
         assert receipt["full_block"]["mode"] == "first"
@@ -430,7 +476,7 @@ class TestComposition:
 
     def test_declaration_validation_rejects_bad_use_budgets(self) -> None:
         with pytest.raises(ValueError, match="uses"):
-            de.UseBudget(action_mode="full_block", uses=0)
+            defense_composition.UseBudget(action_mode="full_block", uses=0)
 
 
 # ---------------------------------------------------------------------------
@@ -446,10 +492,12 @@ _BANSHEES_ATOM = {
 _VERDANT_ATOM = {"key": "timing.cooldown", "values": [60.0], "hash": "2a40799f92fb6749"}
 
 
-def _clock(cooldown: float, *, restarts: bool = True) -> de.SpellShieldRearmClock:
+def _clock(
+    cooldown: float, *, restarts: bool = True
+) -> spell_shield_rearm.SpellShieldRearmClock:
     """A clock at one of the two sourced cooldowns, with its atom."""
     atom = _BANSHEES_ATOM if cooldown == 40.0 else _VERDANT_ATOM
-    return de.SpellShieldRearmClock(
+    return spell_shield_rearm.SpellShieldRearmClock(
         cooldown=cooldown,
         restarts_on_champion_damage=restarts,
         source_atom=atom,
@@ -464,7 +512,7 @@ class TestSpellShieldRearmClock:
         authored packet and carries no item cooldown at all.  ``ready_at``
         is +inf rather than 0.0 so no comparison can accidentally admit it.
         """
-        clock = de.SpellShieldRearmClock()
+        clock = spell_shield_rearm.SpellShieldRearmClock()
         assert clock.sourced() is False
         assert clock.ready_at(0.0) == float("inf")
         assert clock.rearmed_at(1e9, 0.0) is False
@@ -476,9 +524,11 @@ class TestSpellShieldRearmClock:
         """Rule 5 at the kernel: a rearm number no source backs cannot be
         declared at all, so it can never reach a decision."""
         with pytest.raises(ValueError, match="catalog atom"):
-            de.SpellShieldRearmClock(cooldown=40.0)
+            spell_shield_rearm.SpellShieldRearmClock(cooldown=40.0)
         with pytest.raises(ValueError, match="cooldown"):
-            de.SpellShieldRearmClock(cooldown=-1.0, source_atom=_BANSHEES_ATOM)
+            spell_shield_rearm.SpellShieldRearmClock(
+                cooldown=-1.0, source_atom=_BANSHEES_ATOM
+            )
 
     def test_sourced_cooldowns_are_pinned_at_their_endpoints(self) -> None:
         """The two sourced cooldowns, each pinned start-inclusive.
@@ -549,26 +599,28 @@ class TestSpellShieldRearmClock:
         clock = _clock(40.0)
         spent = ("Q:1",)
         # Everything present and elapsed: rearmed.
-        assert de.spell_shield_block_decision(
+        assert spell_shield_eligibility.spell_shield_block_decision(
             True, spent, "Q:2", rearm=clock, event_time=50.0, consumed_at=1.0
         ) == (True, "rearmed")
         # No clock / no event time / no consumption instant: denied.
-        assert de.spell_shield_block_decision(True, spent, "Q:2") == (
+        assert spell_shield_eligibility.spell_shield_block_decision(
+            True, spent, "Q:2"
+        ) == (
             False,
             "use_consumed",
         )
-        assert de.spell_shield_block_decision(
+        assert spell_shield_eligibility.spell_shield_block_decision(
             True, spent, "Q:2", rearm=clock, consumed_at=1.0
         ) == (False, "use_consumed")
-        assert de.spell_shield_block_decision(
+        assert spell_shield_eligibility.spell_shield_block_decision(
             True, spent, "Q:2", rearm=clock, event_time=50.0
         ) == (False, "use_consumed")
         # Unsourced clock with both instants: still denied.
-        assert de.spell_shield_block_decision(
+        assert spell_shield_eligibility.spell_shield_block_decision(
             True,
             spent,
             "Q:2",
-            rearm=de.SpellShieldRearmClock(),
+            rearm=spell_shield_rearm.SpellShieldRearmClock(),
             event_time=1e9,
             consumed_at=1.0,
         ) == (False, "use_consumed")
@@ -577,15 +629,15 @@ class TestSpellShieldRearmClock:
         """An unspent shield and a same-cast packet answer before the clock
         is ever read, so a rearm never masks either."""
         clock = _clock(40.0)
-        assert de.spell_shield_block_decision(
+        assert spell_shield_eligibility.spell_shield_block_decision(
             False, None, "Q:1", rearm=clock, event_time=0.0, consumed_at=None
         ) == (True, "")
-        assert de.spell_shield_block_decision(
+        assert spell_shield_eligibility.spell_shield_block_decision(
             ("Q:1",), ("Q:1",), "Q:1", rearm=clock, event_time=2.0, consumed_at=1.0
         ) == (True, "same_cast")
         # Same cast LONG after the cooldown is still "same_cast", not a rearm:
         # it never spent a second use.
-        assert de.spell_shield_block_decision(
+        assert spell_shield_eligibility.spell_shield_block_decision(
             True, ("Q:1",), "Q:1", rearm=clock, event_time=99.0, consumed_at=1.0
         ) == (True, "same_cast")
 
@@ -596,7 +648,7 @@ class TestSpellShieldRearmClock:
         assert receipt["restarts_on_champion_damage"] is True
         assert receipt["source_atom"]["hash"] == "2a40799f92fb6749"
         assert "timer restarts upon taking damage from champions" in receipt["rule"]
-        assert receipt["rule"] == de.SPELL_SHIELD_REARM_RULE
+        assert receipt["rule"] == spell_shield_rearm.SPELL_SHIELD_REARM_RULE
 
 
 __all__ = []

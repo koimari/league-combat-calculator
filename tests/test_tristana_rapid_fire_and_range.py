@@ -28,8 +28,9 @@ import pytest
 from src import app as app_module
 from src.calculator.ability_atoms import _ability_atoms
 from src.calculator.champions import tristana
-from src.calculator.champions.slotlib import STEROID_ZERO
+from src.calculator.champions.slot_entries import STEROID_ZERO
 from src.calculator.data_fetcher import get_champion
+from tests.engine_source import engine_source
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -116,7 +117,7 @@ class TestRapidFireIsAModeledWindowedSteroid:
 
         ``ad_ratio`` defaults to 1.0 and the per-swing
         ``swing_window_ratio`` that consumes it is read only inside
-        ``damage.py``'s ``override_crit_as_bonus`` branch (Ashe's
+        ``fight/autos/simulation.py``'s ``override_crit_as_bonus`` branch (Ashe's
         flurry).  Publishing either key here would silently re-price
         every auto attack.
         """
@@ -249,7 +250,7 @@ class TestDrawABeadIsASourcedZeroDamageRow:
     def test_range_cannot_reach_damage_because_is_melee_is_a_static_stat(self):
         """Why range is ``no_damage`` and an attack-speed steroid is not.
 
-        ``damage.py`` reads the melee/ranged split from
+        ``fight/setup/combat_state.py`` reads the melee/ranged split from
         ``champion_stats["is_melee"]`` — a static champion stat, never
         derived from attack range.  The engine's ONLY mention of attack
         range at all is a documentary receipt field inside Senna's
@@ -257,7 +258,7 @@ class TestDrawABeadIsASourcedZeroDamageRow:
         parse_time_seeded``), which prices nothing.  A patch that wires
         range into a damage formula trips this test.
         """
-        source = Path("src/calculator/damage.py").read_text(encoding="utf-8")
+        source = engine_source()
 
         assert 'is_melee = champion_stats["is_melee"]' in source
         occurrences = [

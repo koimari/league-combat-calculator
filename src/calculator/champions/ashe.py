@@ -34,13 +34,16 @@ from collections.abc import Mapping
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
-from ..state_lifecycle import SourceReceipt, StackRule, TimedStackState
-from ..stats import calculate_attack_speed
+from ..stack_rules import StackRule
+from ..stat_formulas import calculate_attack_speed
+from ..state_timeline import SourceReceipt
+from ..timed_stacks import TimedStackState
+from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_contract import coverage
 from .module_helpers import no_damage_slot
-from .slotlib import ability_name, extract_cooldown, extract_value, simple_damage
+from .slot_extract import ability_name, extract_cooldown, extract_value
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # Focus is a typed kernel state (state_lifecycle.StackRule).  The numbers

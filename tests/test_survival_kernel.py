@@ -46,15 +46,19 @@ import bench_coupled_optimizer as bench
 import golden_snapshot as gs
 
 from src.calculator import damage as pair_engine
-from src.calculator import shield_ledger
-from src.calculator.ability_spec import AttackClass
-from src.calculator.data_fetcher import get_champion, get_item_by_name
-from src.calculator.defensive_effects import StartingDefenses, resolve_starting_defenses
+from src.calculator import shield_ledger, shield_pools
+from src.calculator.ability_spec import AttackClass, DamageClass
+from src.calculator.ally_packet_shape import _declared_authorities, producer_item
+from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.fight.after import reprice
+from src.calculator.fight.autos import swing_profile
+from src.calculator.fight.items import actives, burns, secondary_delivery
+from src.calculator.fight_params import FightParams
 from src.calculator.interpreters import (
     INTERPRETERS,
     active_cast,
     cast_proc,
-    delta_amp,
+    part_amp,
     secondary_target,
 )
 from src.calculator.interpreters.reactive import thorns_effects
@@ -69,27 +73,16 @@ from src.calculator.item_behavior import (
 )
 from src.calculator.item_behavior_catalog import behavior_rules, rule_owners
 from src.calculator.item_effects import DamageInputs, required_effect_value
-from src.calculator.item_support_effects import (
-    _declared_authorities,
-    producer_item,
-)
-from src.calculator.participant_timeline import (
-    Combatant,
-    CoupledSearchContext,
-    build_participant_timeline,
-)
-from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.program.build import (
+from src.calculator.participant_timeline import Combatant
+from src.calculator.pipeline import run_fight
+from src.calculator.program.capability import (
     pair_preview_mechanics,
     walk_repriced_mechanics,
 )
 from src.calculator.program.compile import action_from_event, declared_packet_of
 from src.calculator.resistance import apply_magic_penetration, apply_resistance
-from src.calculator.scenario import (
-    ChampionLoadout,
-    parse_scenario_request,
-    resolve_scenario,
-)
+from src.calculator.scenario import parse_scenario_request, resolve_scenario
+from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival import (
     EVENT_SLOTS,
@@ -104,7 +97,6 @@ from src.calculator.survival import (
 )
 from src.calculator.survival.compile import thorns_return_damage
 from src.calculator.survival.pricing import (
-    MITIGATED_DAMAGE_TYPES,
     NO_RESISTANCE_PUBLISHED,
     UNPRICEABLE_DAMAGE_TYPE,
     AuthoredDeclaration,
@@ -123,164 +115,21 @@ from src.calculator.trigger_stream import (
     tuple_incapable_items,
 )
 
-
-def _timeline(
-    champion_name,
-    level,
-    items,
-    params,
-    enemies,
-    allies=(),
-    *,
-    role="mid",
-    **kwargs,
-):
-    champion = get_champion(champion_name)
-    stats = calculate_total_stats(champion, level, items, role=role)
-    # The production seam wires item_options into the starting defenses
-    # (calculate.py:_combat_receipt); the parity harness must do the same
-    # or an explicit active input (Zhonya Time Stop) would be priced by
-    # neither walk and the comparison would be trivially equal (P3-3F).
-    defenses = resolve_starting_defenses(
-        champion_name,
-        level,
-        stats,
-        items,
-        item_options=params.item_options,
-    )
-    return build_participant_timeline(
-        champion,
-        level,
-        items,
-        params,
-        main_stats=stats,
-        main_defenses=defenses,
-        enemies=list(enemies),
-        allies=list(allies),
-        **kwargs,
-    )
-
-
-def _walk_both(champion_name, items, params, enemies, allies, *, level, role):
-    """The same fight down both walks: ``(receipt, score, search_context)``.
-
-    Both runs take the scoring subset (``include_receipt=False``) — the
-    receipt walk's is the authority the score adapter must reproduce — and
-    the context records which path the score adapter actually took."""
-    legacy = _timeline(
-        champion_name,
-        level,
-        items,
-        params,
-        enemies,
-        allies,
-        role=role,
-        include_receipt=False,
-    )
-    context = CoupledSearchContext()
-    fast = _timeline(
-        champion_name,
-        level,
-        items,
-        params,
-        enemies,
-        allies,
-        role=role,
-        include_receipt=False,
-        pair_result_cache={},
-        search_context=context,
-    )
-    return legacy, fast, context
-
-
-def _assert_rung(name, context, *, compiled, invariant):
-    """The score adapter took the documented rung — compiled, fallback or
-    poisoned.
-
-    Its own function because the rung is a property of every scenario,
-    including one whose two walks are pinned as *disagreeing*: a divergence
-    that moved to a different rung is a different divergence."""
-    assert (
-        context.uncompilable is invariant
-    ), f"{name}: expected invariant={invariant}, got {context.uncompilable}"
-    if invariant:
-        # The failure poisoned the context: no panel may be reused later.
-        assert not context.panels, f"{name}: expected no panels after poisoning"
-    elif compiled:
-        assert context.panels, f"{name}: expected the compiled path to be used"
-    else:
-        # Candidate-local fallback: the panel may exist (it is built before
-        # the fresh compile raises); the context must not be poisoned.
-        assert not context.uncompilable
-
-
-def _assert_contract(
-    name,
-    champion_name,
-    items,
-    params,
-    enemies,
-    allies=(),
-    *,
-    level=18,
-    role="mid",
-    compiled=True,
-    invariant=False,
-    _kv_total_delta=False,
-):
-    """The score path must deep-equal the receipt path on the whole scoring
-    receipt, and must have taken the documented path."""
-    legacy, fast, context = _walk_both(
-        champion_name, items, params, enemies, allies, level=level, role=role
-    )
-    if _kv_total_delta:
-        # P3 package 3S: the compiled total_damage is the applied-based
-        # sum; the legacy total is the outgoing event ledger sum (CC-
-        # blocked packets included at full event values).  The CC-blocked
-        # attacker's total is the named delta; everything else stays
-        # byte-equal.
-        for fast_row, legacy_row in zip(
-            fast["breakdown"], legacy["breakdown"], strict=False
-        ):
-            assert fast_row["participant_id"] == legacy_row["participant_id"], name
-            assert fast_row["health_damage"] == legacy_row["health_damage"], name
-            assert fast_row["healing_received"] == legacy_row["healing_received"], name
-            assert fast_row["death_time"] == legacy_row["death_time"], name
-            assert fast_row["survived_window"] == legacy_row["survived_window"], name
-        assert fast["participants"] == legacy["participants"], name
-        assert fast["duration"] == legacy["duration"], name
-    else:
-        assert fast == legacy, f"{name}: score path diverged from the receipt walk"
-    _assert_rung(name, context, compiled=compiled, invariant=invariant)
-
-
-@cache
-def _item(name):
-    """One cached item record by name.
-
-    Deliberately *not* a fixed vocabulary: the suite's required item set is
-    derived from the registries below, so a scenario reaching a new item may
-    not have to extend a hand list to name it (slice 0A.9)."""
-    return get_item_by_name(name)
-
-
-def _roster(champion, level=18, items=(), role="mid", quest=False, ally_effects=False):
-    """One roster participant's resolved loadout.
-
-    ``ally_effects`` is load-bearing, not cosmetic: ``derive_item_support_effects``
-    early-returns ``[]`` for a participant on the ally team whose request does
-    not enable them, so an ally fixture that leaves this False equips its items
-    and fires nothing at all.  Every ally-holder fixture below sets it, and it
-    is the sole reason any ally-side packet exists to be counted."""
-    return ChampionLoadout(
-        champion=champion,
-        level=level,
-        role=role,
-        items=items,
-        role_quest_complete=quest,
-        ally_effects_enabled=ally_effects,
-    ).resolve()
-
+from .kernel_coverage import (
+    _fixture_coverage,
+    _reached_keys,
+    missing_fixtures,
+    required_coverage_keys,
+)
+from .kernel_fixtures import (
+    REGISTRY_FIXTURES,
+    _ally_survival,
+    _assert_contract,
+    _assert_rung,
+    _differing_leaves,
+    _item,
+    _roster,
+)
 
 # ---------------------------------------------------------------------------
 # Compiled scenarios — the score adapter drives the shared kernel
@@ -945,8 +794,8 @@ def test_compiled_support_arms_at_the_rank_the_walk_reads():
         TransitionRank,
         support_transition_rank,
     )
-    from src.calculator.survival.actions import ordering_slot
     from src.calculator.survival.compile import unrepresentable_template_receipt
+    from src.calculator.survival.phases import ordering_slot
 
     declared = {
         "target": "main",
@@ -1004,342 +853,6 @@ def test_compiled_support_arms_at_the_rank_the_walk_reads():
 # therefore required by their ``source`` literal, and a fixture is credited for
 # both the source and its item on every row it fires.
 # ---------------------------------------------------------------------------
-
-
-@dataclass(frozen=True, slots=True)
-class Holder:
-    """One roster participant and the items it carries into the fight.
-
-    Two of these fields change the loadout rather than describing it, so both
-    are stated here rather than left to be discovered:
-
-    * a holder carrying items has completed its role quest (``quest`` is
-      ``bool(items)`` in :meth:`resolve`), because half the required set is
-      support-quest gear and an unfinished quest would change what the fixture
-      equips rather than what it reaches;
-    * ``ally_effects`` enables the ally-side packet path — see :func:`_roster`
-      — and without it an ally holder equips its build and fires nothing."""
-
-    champion: str
-    items: tuple[str, ...] = ()
-    role: str = "mid"
-    level: int = 18
-    ally_effects: bool = False
-
-    def resolve(self):
-        """The loadout the timeline builder consumes."""
-        return _roster(
-            self.champion,
-            level=self.level,
-            items=self.items,
-            role=self.role,
-            quest=bool(self.items),
-            ally_effects=self.ally_effects,
-        )
-
-
-@dataclass(frozen=True, slots=True)
-class KernelFixture:
-    """One compiled-vs-receipt scenario, and what it puts on the board.
-
-    ``pinned_divergence`` is a *characterization*: a named, reproduced
-    disagreement between the two walks that Phase 0A may not fix, because 0A
-    moves no number in ``src/``.  A pinned fixture asserts the walks still
-    disagree, so the commit that fixes the mechanic turns this suite red and
-    its author has to read the reason rather than inherit it.
-    """
-
-    name: str
-    champion: str
-    items: tuple[str, ...]
-    enemies: tuple[Holder, ...]
-    allies: tuple[Holder, ...] = ()
-    role: str = "mid"
-    level: int = 18
-    duration: float = 8.0
-    compiled: bool = True
-    invariant: bool = False
-    pinned_divergence: str = ""
-
-    def params(self):
-        """This fixture's deterministic time-based request."""
-        return FightParams.from_request(
-            {
-                "fight_mode": "time_based",
-                "fight_duration": self.duration,
-                "role": self.role,
-                "include_auto_attacks": True,
-                "auto_attack_uptime": 1.0,
-            },
-            deterministic=True,
-        )
-
-    def walk_both(self):
-        """``(receipt, score, search_context)`` for this fixture."""
-        return _walk_both(
-            self.champion,
-            [_item(name) for name in self.items],
-            self.params(),
-            [holder.resolve() for holder in self.enemies],
-            [holder.resolve() for holder in self.allies],
-            level=self.level,
-            role=self.role,
-        )
-
-    def receipt(self):
-        """The annotating receipt — the only mode carrying the support rows."""
-        return _timeline(
-            self.champion,
-            self.level,
-            [_item(name) for name in self.items],
-            self.params(),
-            [holder.resolve() for holder in self.enemies],
-            [holder.resolve() for holder in self.allies],
-            role=self.role,
-            include_receipt=True,
-        )
-
-
-# Four candidate-holder fixtures and their four ally-holder rung variants.
-# The candidate builds ride the compiled or the candidate-local fallback rung.
-# An ally build poisons the search context when its holder carries a
-# ``damage_modifier`` producer, which three of the four do — that is the rung
-# difference these variants exist to pin.  ``takedown_ally`` is the stated
-# exception: Cryptbloom is an event-view holder and not a producer, so its
-# ally roster stays compilable and what it pins is a dropped packet on an
-# un-poisoned context rather than a poisoning.
-_CC_TRIGGER_BUILD = (
-    "Imperial Mandate",
-    "Bandlepipes",
-    "Solstice Sleigh",
-    "Fimbulwinter",
-)
-_EVENT_SCAN_BUILD = (
-    "Black Cleaver",
-    "Bloodletter's Curse",
-    "Bloodsong",
-    "Phage",
-    "Abyssal Mask",
-)
-_ENCHANTER_BUILD = ("Dream Maker", "Echoes of Helia")
-_TAKEDOWN_BUILD = ("Cryptbloom",)
-
-# A level-1 enemy is what makes the takedown fixtures reach a takedown at
-# all: Cryptbloom's Life From Death fires on a kill, and a level-18 enemy
-# survives the window.
-_LIVE_ENEMY = (Holder("Aatrox", role="top"),)
-_DOOMED_ENEMY = (Holder("Aatrox", role="top", level=1),)
-
-REGISTRY_FIXTURES = (
-    KernelFixture(
-        name="cc_trigger_candidate",
-        champion="Ahri",
-        items=_CC_TRIGGER_BUILD,
-        enemies=_LIVE_ENEMY,
-        allies=(Holder("Pantheon", role="support"),),
-        compiled=False,
-    ),
-    KernelFixture(
-        name="event_scan_candidate",
-        champion="Ahri",
-        items=_EVENT_SCAN_BUILD,
-        enemies=_LIVE_ENEMY,
-        allies=(Holder("Pantheon", role="support"),),
-    ),
-    KernelFixture(
-        name="enchanter_trigger_candidate",
-        champion="Lulu",
-        items=_ENCHANTER_BUILD,
-        enemies=_LIVE_ENEMY,
-        allies=(Holder("Jax", role="top"),),
-        role="support",
-    ),
-    KernelFixture(
-        name="takedown_candidate",
-        champion="Ahri",
-        items=_TAKEDOWN_BUILD,
-        enemies=_DOOMED_ENEMY,
-        allies=(Holder("Pantheon", role="support"),),
-        duration=20.0,
-    ),
-    KernelFixture(
-        name="cc_trigger_ally",
-        champion="Ahri",
-        items=(),
-        enemies=_LIVE_ENEMY,
-        allies=(
-            Holder(
-                "Pantheon",
-                items=_CC_TRIGGER_BUILD,
-                role="support",
-                ally_effects=True,
-            ),
-        ),
-        compiled=False,
-        invariant=True,
-    ),
-    KernelFixture(
-        name="event_scan_ally",
-        champion="Ahri",
-        items=(),
-        enemies=_LIVE_ENEMY,
-        allies=(
-            Holder(
-                "Pantheon",
-                items=_EVENT_SCAN_BUILD,
-                role="support",
-                ally_effects=True,
-            ),
-        ),
-        compiled=False,
-        invariant=True,
-    ),
-    KernelFixture(
-        name="enchanter_trigger_ally",
-        champion="Ahri",
-        items=(),
-        enemies=_LIVE_ENEMY,
-        allies=(
-            Holder("Lulu", items=_ENCHANTER_BUILD, role="support", ally_effects=True),
-        ),
-        compiled=False,
-        invariant=True,
-    ),
-    KernelFixture(
-        name="takedown_ally",
-        champion="Ahri",
-        items=(),
-        enemies=_DOOMED_ENEMY,
-        allies=(
-            Holder(
-                "Pantheon",
-                items=_TAKEDOWN_BUILD,
-                role="support",
-                ally_effects=True,
-            ),
-        ),
-        duration=20.0,
-        pinned_divergence=(
-            "a roster ally's takedown-triggered support packets never reach "
-            "the compiled score path: the receipt composition passes "
-            "target_id=defender.participant_id into _support_effect_templates "
-            "while the base and signature panels pass no target_id at all, so "
-            "the takedown synthesis that reads it never fires and Cryptbloom's "
-            "Life From Death authors zero packets"
-        ),
-    ),
-)
-
-
-def required_coverage_keys() -> frozenset[str]:
-    """Every key this suite owes a fixture, read from the registries.
-
-    ``tuple_incapable_items()`` is the tuple-incapable set the pipeline's
-    tuple gate consults, and contributes item names;
-    ``_declared_authorities()`` is the ``damage_modifier`` producer
-    table, and contributes ``source`` literals — one key per packet, not per
-    item, so a second packet on an already-equipped item is its own
-    requirement.  Neither registry is restated here, so a new event-view
-    holder or a seventh producer becomes a required key on the commit that
-    adds it — and fails this suite until it has a fixture.
-
-    Both now project one declaration table.  The item half read the hand set
-    ``item_support_effects.EVENT_VIEW_SUPPORT_ITEMS`` until Phase 2's P2c
-    deleted it, and the producer half read that module's ``ast`` derivation
-    over its own call sites until the same commit; both are
-    ``trigger_stream.CAPABILITIES`` projections now.
-    """
-    return tuple_incapable_items() | frozenset(_declared_authorities())
-
-
-@cache
-def _reached_keys(fixture: KernelFixture) -> tuple[frozenset[str], frozenset[str]]:
-    """``(candidate-authored, ally-authored)`` keys this fixture really fires.
-
-    Read off the receipt's public ``support_events`` rows and attributed by
-    each packet's own ``attacker``, so a fixture that equips an item without
-    ever reaching its packet contributes no coverage.  Each row credits both
-    granularities the registries use: the packet's own ``source`` literal and
-    the item that source names.
-    """
-    candidate: set[str] = set()
-    ally: set[str] = set()
-    for event in fixture.receipt().get("support_events", ()):
-        source = str(event.get("source", ""))
-        keys = {source, producer_item(source)}
-        attacker = str(event.get("attacker", ""))
-        if attacker == "main":
-            candidate |= keys
-        elif attacker.startswith("ally:"):
-            ally |= keys
-    return frozenset(candidate), frozenset(ally)
-
-
-@cache
-def _fixture_coverage() -> tuple[frozenset[str], frozenset[str]]:
-    """``(candidate, ally)`` keys the whole fixture set reaches between them."""
-    candidate: frozenset[str] = frozenset()
-    ally: frozenset[str] = frozenset()
-    for fixture in REGISTRY_FIXTURES:
-        reached_candidate, reached_ally = _reached_keys(fixture)
-        candidate |= reached_candidate
-        ally |= reached_ally
-    return candidate, ally
-
-
-def missing_fixtures(
-    required: frozenset[str],
-    candidate_reached: frozenset[str],
-    ally_reached: frozenset[str],
-) -> tuple[tuple[str, str], ...]:
-    """Every ``(key, side)`` a required key is owed and does not have.
-
-    One pure function over three sets, so the check's own red is reproducible
-    on demand instead of being a claim about the past (R-05).
-    """
-    return tuple(
-        sorted(
-            (key, side)
-            for key in required
-            for side, reached in (
-                ("candidate", candidate_reached),
-                ("ally", ally_reached),
-            )
-            if key not in reached
-        )
-    )
-
-
-def _differing_leaves(left: Any, right: Any, path: str = "") -> tuple[str, ...]:
-    """Every leaf path at which two scoring receipts disagree."""
-    if isinstance(left, Mapping) and isinstance(right, Mapping):
-        return tuple(
-            leaf
-            for key in sorted(set(left) | set(right))
-            for leaf in _differing_leaves(
-                left.get(key), right.get(key), f"{path}.{key}"
-            )
-        )
-    if isinstance(left, list) and isinstance(right, list):
-        if len(left) != len(right):
-            return (f"{path}[]",)
-        return tuple(
-            leaf
-            for index, (one, other) in enumerate(zip(left, right, strict=False))
-            for leaf in _differing_leaves(one, other, f"{path}[{index}]")
-        )
-    return () if left == right else (path,)
-
-
-def _ally_survival(result: Mapping[str, Any]) -> Mapping[str, Any]:
-    """The one roster ally's survival row of a scoring receipt."""
-    allies = [
-        participant
-        for participant in result["participants"]
-        if participant["team"] == "ally"
-    ]
-    assert len(allies) == 1, "the pinned fixture carries exactly one roster ally"
-    return allies[0]["survival"]
 
 
 @pytest.mark.parametrize(
@@ -1536,7 +1049,7 @@ def test_a_second_producer_on_a_covered_item_fails_the_coverage_check(monkeypatc
     )
     declared = dict(_declared_authorities())
     monkeypatch.setattr(
-        "tests.test_survival_kernel._declared_authorities",
+        "tests.kernel_coverage._declared_authorities",
         lambda: {**declared, extra: None},
     )
     candidate_reached, ally_reached = _fixture_coverage()
@@ -1679,7 +1192,7 @@ class TestTheWalkPricesADeclarationAgainstWhatItMeets:
         )
         assert price.amount is None
         assert price.unavailable == UNPRICEABLE_DAMAGE_TYPE
-        assert "adaptive" not in MITIGATED_DAMAGE_TYPES
+        assert DamageClass.named("adaptive") is None
 
 
 def test_the_strike_back_prices_through_the_shared_arithmetic():
@@ -2309,7 +1822,7 @@ class TestTheFromDeclarationPriceReproducesThePairEngines:
 # the reading the walk itself makes.
 #
 # THE ORDERING, AND WHAT IT COSTS, MEASURED.  The pair engine applies these
-# amps *after* mitigation: `damage._mitigate` returns
+# amps *after* mitigation: `fight.resists._mitigate` returns
 # `apply_resistance(raw, mr) * magic_amp`, and `_add_item_proc_damage`
 # multiplies that by the ability amp.  Ruling 1 rules the walk's term
 # **pre-mitigation** instead, so the composed value is mitigated once rather
@@ -2400,7 +1913,7 @@ def _amp_armed_reading(seed):
             target_current_health=float(params.target_health),
         )
     )
-    amps = delta_amp.resolve_static_holder_amps(
+    amps = part_amp.resolve_static_holder_amps(
         list(resolved.items),
         holder_stats=stats,
         # The window is authored by the scenario's own item options, which is
@@ -2700,9 +2213,9 @@ def _window_readings(seed, request_key):
     parsed = parse_scenario_request(dict(request), deterministic=True)
     resolved = resolve_scenario(parsed)
     step = (
-        pair_engine._add_item_active_damage
+        actives._add_item_active_damage
         if seed.damage_type == "physical"
-        else pair_engine._add_burn_damage
+        else burns._add_burn_damage
     )
     readings = []
     with pytest.MonkeyPatch.context() as patch:
@@ -2885,7 +2398,7 @@ class TestTheLiandryRepriceKeepsTheDeclarationInStep:
         authored = [{"damage": 10.0, "declared": ("fixture.burn", 20.0, "other", 30.0)}]
         repriced = [{"time": 0.0, "damage_type": "magic", "damage": 12.0}]
         assert "declared" not in repriced[0]
-        pair_engine._carry_declarations_onto_repriced_ticks(authored, repriced)
+        reprice._carry_declarations_onto_repriced_ticks(authored, repriced)
         assert repriced[0]["declared"] == (
             "fixture.burn",
             24.0,
@@ -2907,14 +2420,14 @@ class TestTheLiandryRepriceKeepsTheDeclarationInStep:
         """
         undeclared = [{"damage": 10.0}, {"damage": 10.0}]
         one_tick = [{"time": 0.0, "damage_type": "magic", "damage": 12.0}]
-        pair_engine._carry_declarations_onto_repriced_ticks(undeclared, one_tick)
+        reprice._carry_declarations_onto_repriced_ticks(undeclared, one_tick)
 
         declared = [
             {"damage": 10.0, "declared": ("fixture.burn", 20.0, "other", 30.0)},
             {"damage": 10.0},
         ]
         with pytest.raises(RuntimeError, match="positional carry"):
-            pair_engine._carry_declarations_onto_repriced_ticks(declared, one_tick)
+            reprice._carry_declarations_onto_repriced_ticks(declared, one_tick)
 
 
 # ---------------------------------------------------------------------------
@@ -3252,7 +2765,7 @@ def _on_hit_probe(owner: str):
     level = 18
     result = run_fight(champion, level, list(items), params)
     stats = calculate_total_stats(champion, level, list(items))
-    amps = delta_amp.resolve_static_holder_amps(
+    amps = part_amp.resolve_static_holder_amps(
         list(items),
         holder_stats=stats,
         ability_amp_armed=False,
@@ -3372,7 +2885,7 @@ def _periodic_probe(owner: str):
     level = 18
     result = run_fight(champion, level, list(items), params)
     stats = calculate_total_stats(champion, level, list(items))
-    amps = delta_amp.resolve_static_holder_amps(
+    amps = part_amp.resolve_static_holder_amps(
         list(items),
         holder_stats=stats,
         ability_amp_armed=False,
@@ -3515,7 +3028,7 @@ def _spellblade_probe(owner: str):
     level = 18
     result = run_fight(champion, level, list(items), params)
     stats = calculate_total_stats(champion, level, list(items))
-    amps = delta_amp.resolve_static_holder_amps(
+    amps = part_amp.resolve_static_holder_amps(
         list(items),
         holder_stats=stats,
         ability_amp_armed=False,
@@ -3606,10 +3119,10 @@ def test_both_declared_spellblade_damage_classes_are_inside_the_fixture_set():
 # ---------------------------------------------------------------------------
 #
 # Umbrella Amendment R, Ruling 1.  Every family retired before this one reaches
-# its target through `damage._mitigate` and nothing else — a resistance and the
+# its target through `fight.resists._mitigate` and nothing else — a resistance and the
 # holder's own amps, which is exactly what `price_declared_packet` carried.  A
 # packet delivered as a BASIC-ATTACK SWING is priced by
-# `damage._mitigate_basic_attack_swing` instead: it meets the target's plating
+# `fight.mitigation._mitigate_basic_attack_swing` instead: it meets the target's plating
 # multiplier, its critical-strike damage multiplier and Warden's Mail's Rock
 # Solid, and the deterministic reading blends a crit branch against a non-crit
 # one with each branch having met the flat subtraction on its own.
@@ -3639,7 +3152,7 @@ def test_both_declared_spellblade_damage_classes_are_inside_the_fixture_set():
 #: The pair engine's own step for the bolt row, and the row it authors.  Named
 #: rather than searched for: the stamp has to land where the family's own
 #: retirement slice would put it.
-SWING_SEED_STEP = pair_engine._add_single_proc_on_hits
+SWING_SEED_STEP = secondary_delivery._add_bolt_delivery
 SWING_SEED_ROW = "secondary_Runaan's Hurricane"
 SWING_SEED_RULE = "runaans_hurricane.secondary_target"
 SWING_SEED_ITEMS = ("Runaan's Hurricane", "Blade of the Ruined King")
@@ -3707,12 +3220,12 @@ def _declare_swing_row(state):
     declaration as the swing composition.
     """
     row = state.breakdown.get(SWING_SEED_ROW)
-    bolts = state.secondary_target_bolts
+    bolts = state.declared.secondary_target_bolts
     if not isinstance(row, dict) or bolts is None:
         return
     raw = bolts.bolt_damage(
         state.champion_stats["attack_damage"]
-    ) * pair_engine._on_hit_effectiveness(state)
+    ) * swing_profile._on_hit_effectiveness(state)
     plating = float(state.target_basic_damage_multiplier)
     swing = BasicAttackSwing(
         crit_chance=float(state.crit_chance),
@@ -3770,7 +3283,7 @@ def _swing_seed_reading(case):
         )
         result = run_fight(champion, level, list(items), params)
     stats = calculate_total_stats(champion, level, list(items))
-    amps = delta_amp.resolve_static_holder_amps(
+    amps = part_amp.resolve_static_holder_amps(
         list(items),
         holder_stats=stats,
         ability_amp_armed=False,
@@ -4087,7 +3600,7 @@ def _routing_slot():
     captured = {}
 
     def capture(state):
-        bolts = state.secondary_target_bolts
+        bolts = state.declared.secondary_target_bolts
         if bolts is None:  # pragma: no cover - the seed always holds one
             return
         captured.setdefault(
@@ -4095,7 +3608,7 @@ def _routing_slot():
             (
                 bolts,
                 float(state.champion_stats["attack_damage"]),
-                pair_engine._on_hit_effectiveness(state),
+                swing_profile._on_hit_effectiveness(state),
                 tuple(state.per_hit_strikes),
                 float(state.target_health),
                 state.level,
@@ -4359,7 +3872,7 @@ class TestTheCopiedRowPricesFromItsRoutedDeclarations:
     def test_every_copied_event_prices_to_the_pair_engines_own_number(self):
         """Bit-exact per event, over the seed's own five target-side states.
 
-        The copied packets are priced by `damage._mitigate` and not by the
+        The copied packets are priced by `fight.resists._mitigate` and not by the
         swing composition — a copied on-hit effect is not itself a swing — so
         what varies across the five states is the SUBJECT's health rather than
         the packet's terms, and the equality has to hold in each of them
@@ -4490,7 +4003,7 @@ class TestTemporaryMaximumIsOneRule:
         }
 
     def test_an_overheal_grant_keeps_the_health_it_was_spent_into(self):
-        pools = shield_ledger.ShieldPools(health=700.0, max_health=1200.0)
+        pools = shield_pools.ShieldPools(health=700.0, max_health=1200.0)
         state = self._state(pools)
         state["temporary_health_amount"] = 200.0
         state["temporary_health_until"] = 5.0
@@ -4507,7 +4020,7 @@ class TestTemporaryMaximumIsOneRule:
         through the survival walk's own window edge.  One mechanic, one
         answer.
         """
-        pools = shield_ledger.build_pools(
+        pools = shield_pools.build_pools(
             1000.0,
             threshold_health_bonus=200.0,
             threshold_health_heal=300.0,
@@ -4524,7 +4037,7 @@ class TestTemporaryMaximumIsOneRule:
         assert (pools.health, pools.max_health) == (700.0, 1000.0)
 
     def test_a_lifeline_inside_its_window_is_left_alone(self):
-        pools = shield_ledger.build_pools(
+        pools = shield_pools.build_pools(
             1000.0,
             threshold_health_bonus=200.0,
             threshold_health_heal=300.0,

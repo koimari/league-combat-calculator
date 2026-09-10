@@ -52,14 +52,15 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
-from .module_contract import coverage
 from .module_helpers import no_damage, ranked_slot, typed_damage
-from .slotlib import (
+from .shared_mechanics import capped_option
+from .slot_entries import damage_entry
+from .slot_extract import (
     ability_name,
-    damage_entry,
     extract_cooldown,
     extract_named,
     find_named_leveling,
@@ -108,7 +109,7 @@ _E_POUNCE_CRIT_EFFECTIVENESS = data_value(
 
 
 def _marks(ctx: SlotCtx) -> int:
-    return min(max(int(ctx.option("marks")), 0), _MARK_MAX)
+    return capped_option(ctx, "marks", _MARK_MAX)
 
 
 def _mark_scaled_override(

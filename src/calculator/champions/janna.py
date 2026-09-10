@@ -15,18 +15,13 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..healing_helpers import ability_json, parsed_rank
+from ..healing_helpers import ranked_rows
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import float_option
 from .module_helpers import between_rows, named_damage, no_damage, ranked_slot
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    on_hit_entry,
-)
+from .slot_entries import damage_entry, on_hit_entry
+from .slot_extract import ability_name, extract_cooldown
 from .source_receipts import load_champion_sources
 
 
@@ -169,10 +164,14 @@ def derive_self_healing(
     own — never inferred from the damage ledger.
     """
     healing: list[dict] = []
-    r_rank = parsed_rank(ability_damages, "R")
-    ability = ability_json(champion_data, "R")
-    per_tick = extract_named(ability, "Heal Per Tick", r_rank, champion_stats)
-    total = extract_named(ability, "Total Heal", r_rank, champion_stats)
+    per_tick, total = ranked_rows(
+        champion_data,
+        ability_damages,
+        champion_stats,
+        "R",
+        "Heal Per Tick",
+        "Total Heal",
+    )
     tick_count = (
         max(1, min(100, round(total / per_tick)))
         if per_tick > 0.0 and total > 0.0

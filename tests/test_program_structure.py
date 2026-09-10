@@ -146,7 +146,7 @@ class TestOneDirection:
         """
         import inspect
 
-        from src.calculator.survival.receipt_state import ReceiptLedger
+        from src.calculator.survival.receipt_ledger import ReceiptLedger
 
         parameter = inspect.signature(ReceiptLedger).parameters["compile_event"]
         assert parameter.default is inspect.Parameter.empty
@@ -207,8 +207,8 @@ class TestViewPurity:
 
         reachable, _ = call_graph()
         assert {
-            ("program.views", "serialize_leaf"),
-            ("program.views", "measured"),
+            ("program.views.leaf", "serialize_leaf"),
+            ("program.views.leaf", "measured"),
             ("program.precision", "round_field"),
             ("program.views.score", "score"),
             ("program.views.breakdown", "breakdown"),

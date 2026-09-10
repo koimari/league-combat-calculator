@@ -7,14 +7,14 @@ from collections.abc import Iterable, Mapping, MutableMapping
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any
 
-from .defensive_effects import StartingDefenses
+from .fight_params import FightParams
 from .interpreters.stat_derivation import declared_stat_derivations
 from .interpreters.sustain import SustainSlot, declared_sustain
 from .item_behavior import DerivedStat, ManaSpentHealRule, StatAuraRule
-from .pipeline import FightParams
+from .starting_defenses import StartingDefenses
 
 if TYPE_CHECKING:
-    from .scenario import ResolvedLoadout
+    from .champion_loadout import ResolvedLoadout
 
 
 @dataclass(frozen=True, slots=True)

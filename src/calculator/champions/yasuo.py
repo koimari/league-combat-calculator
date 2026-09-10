@@ -32,19 +32,16 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..ability_prose import extract_description_duration
 from ..ability_spec import DamagePart
-from .engine import CC_PER_PART, SlotCtx
+from .contract_vocabulary import coverage
+from .engine import SlotCtx
 from .inputs import bool_option, float_option, int_option
-from .module_contract import coverage
 from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_description_duration,
-    extract_named,
-)
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
 from .yasuo_yone import (
     crit_conversion_certification,
     crit_conversion_payload,

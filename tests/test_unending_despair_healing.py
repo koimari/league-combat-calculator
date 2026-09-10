@@ -3,10 +3,12 @@
 import math
 
 from src.calculator.data_fetcher import fetch_item_data, get_champion, get_item_by_name
+from src.calculator.fight_params import FightParams
 from src.calculator.interpreters import periodic
 from src.calculator.item_behavior import FightFacts
+from src.calculator.item_sustain_events import _item_self_healing_events
 from src.calculator.passive_parser import parse_item_effect
-from src.calculator.pipeline import FightParams, _item_self_healing_events, run_fight
+from src.calculator.pipeline import run_fight
 
 
 def _periodic_slots(*owners: str) -> periodic.PeriodicSlots:

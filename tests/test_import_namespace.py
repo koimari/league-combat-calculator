@@ -120,38 +120,38 @@ def test_app_does_not_insert_src_dir_on_sys_path():
 # ---------------------------------------------------------------------------
 
 
-def test_growth_formula_lives_only_in_stats():
-    """The 0.7025/0.0175 growth term is owned by stats.growth_multiplier."""
+def test_growth_formula_lives_only_in_stat_formulas():
+    """The 0.7025/0.0175 growth term is owned by stat_formulas.growth_multiplier."""
     owners = []
     for path in sorted((ROOT / "src").rglob("*.py")):
-        if "__pycache__" in str(path) or path.name == "stats.py":
+        if "__pycache__" in str(path) or path.name == "stat_formulas.py":
             continue
         for lineno, line in enumerate(_code_lines(path.read_text()), 1):
             if "0.7025" in line or "0.0175" in line:
                 owners.append(f"{path.relative_to(ROOT)}:{lineno}: {line}")
     assert not owners, "duplicate growth formula:\n" + "\n".join(owners)
-    stats_src = _src_text("src/calculator/stats.py")
-    assert "def growth_multiplier" in stats_src
+    formulas_src = _src_text("src/calculator/stat_formulas.py")
+    assert "def growth_multiplier" in formulas_src
 
 
 def test_growth_multiplier_enforces_level_bound():
-    from src.calculator import stats
+    from src.calculator import stat_formulas
 
-    assert stats.growth_multiplier(1) == pytest.approx(0.7025)
-    assert stats.growth_multiplier(18) == pytest.approx(0.7025 + 0.0175 * 17)
+    assert stat_formulas.growth_multiplier(1) == pytest.approx(0.7025)
+    assert stat_formulas.growth_multiplier(18) == pytest.approx(0.7025 + 0.0175 * 17)
     for bad in (0, -1, 21):
         with pytest.raises(ValueError):
-            stats.growth_multiplier(bad)
+            stat_formulas.growth_multiplier(bad)
 
 
-def test_cooldown_formula_lives_only_in_stats():
-    """Ability-haste cooldown math is owned by stats.effective_cooldown."""
-    rr = _src_text("src/calculator/rotation_resolver.py")
+def test_cooldown_formula_is_imported_not_reimplemented():
+    """The DPS matrix takes effective_cooldown rather than writing it again."""
+    matrix = _src_text("src/calculator/ability_dps_matrix.py")
     import_line = next(
-        line for line in rr.splitlines() if line.startswith("from .stats import")
+        line for line in matrix.splitlines() if line.startswith("from .stats import")
     )
     assert "effective_cooldown" in import_line
-    for lineno, line in enumerate(_code_lines(rr), 1):
+    for lineno, line in enumerate(_code_lines(matrix), 1):
         assert (
             "100.0 / (100.0" not in line
-        ), f"rotation_resolver reimplements cooldown math at line {lineno}"
+        ), f"ability_dps_matrix reimplements cooldown math at line {lineno}"

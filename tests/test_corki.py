@@ -10,17 +10,16 @@ derived from.
 import pytest
 
 from src.calculator.champions import corki
-from src.calculator.champions.slotlib import extract_named, extract_value
-from src.calculator.damage import (
-    FightConfig,
-    Resists,
-    _ability_mr,
-    calculate_fight_damage,
-)
+from src.calculator.champions.slot_extract import extract_named, extract_value
+from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_item_by_name
+from src.calculator.fight.config import FightConfig
+from src.calculator.fight.resists import Resists
+from src.calculator.fight.setup.target_debuffs import _ability_mr
+from src.calculator.fight_params import FightParams
 from src.calculator.interpreters import resistance_shred
 from src.calculator.item_behavior import FightFacts, Resistance
-from src.calculator.pipeline import FightParams, run_fight
+from src.calculator.pipeline import run_fight
 from src.calculator.resistance import apply_resistance
 
 # Round stats so wiki arithmetic is checkable by eye.

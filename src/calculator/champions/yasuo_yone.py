@@ -14,16 +14,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from ..ability_prose import extract_description_control_duration
 from ..ability_spec import DamagePart
 from .engine import DAMAGE, SlotCtx, SlotParser
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_description_control_duration,
-    extract_named,
-    extract_value,
-)
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 
 CRIT_CHANCE_MULTIPLIER = 2.0
 CRIT_DAMAGE_MULTIPLIER_FACTOR = 0.9

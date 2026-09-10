@@ -43,19 +43,14 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from ..stats import effective_cooldown
+from ..stat_formulas import effective_cooldown
 from .engine import SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import at_level, ranked_slot
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_recharge,
-    extract_value,
-    simple_damage,
-)
+from .shared_mechanics import reduced_secondary_hits
+from .slot_control import extract_recharge
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki values with no JSON home
@@ -240,39 +235,17 @@ def _piltover_peacemaker(
     traps-revealed enemies (full damage) are not distinguished.
     """
 
-    primary = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    reduced = extract_named(ability, "Reduced Damage", rank, ctx.stats, ctx.target)
-    secondary = min(max(int(ctx.option("q_secondary_targets")), 0), 5)
-    total = primary + reduced * secondary
-    entry = damage_entry(
-        ability_name(ability),
+    return reduced_secondary_hits(
+        ctx,
+        ability,
         rank,
-        extract_cooldown(ability, rank),
-        total,
-        "physical",
+        dmg_type="physical",
+        primary_row="Physical Damage",
+        reduced_row="Reduced Damage",
+        option="q_secondary_targets",
+        lead="primary hit",
+        noun="secondary target(s)",
     )
-    if secondary:
-        # The widened bolt reaches its secondary targets in the same
-        # instant as the primary, so both parts are timed at the cast
-        # boundary — the timing that carries Q's reviewed no-control
-        # answer into the event ledger once the row is more than one hit.
-        parts = [
-            DamagePart("physical", primary, time_offset=0.0),
-            DamagePart(
-                "physical", reduced, count=secondary, time_offset=0.0, hit_interval=0.0
-            ),
-        ]
-        entry["detail"] = (
-            f"primary hit + {secondary} secondary target(s) at the sourced "
-            f"{reduced / primary * 100:g}% Reduced Damage row each"
-        )
-    else:
-        # One bolt on "the first enemy it passes through" — one part and
-        # one hit, the certification that carries the same answer.
-        parts = [DamagePart("physical", primary)]
-        entry["event_order_certified"] = "single_hit"
-    entry["parts"] = tuple(parts)
-    return entry
 
 
 _ace_base = simple_damage(attr="Physical damage", dmg_type="physical")

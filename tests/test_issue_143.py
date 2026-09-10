@@ -15,22 +15,22 @@ from functools import partial
 
 import pytest
 
-from src.calculator import support_effects
+from src.calculator import support_scan
+from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.champions.taric import _starlights_touch
 from src.calculator.data_fetcher import get_champion
 from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.fight_params import FightParams
 from src.calculator.healing import derive_self_healing
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.pipeline import FightParams
-from src.calculator.scenario import ChampionLoadout
 from src.calculator.stats import calculate_total_stats
-from src.calculator.support_effects import (
+from src.calculator.support_effects import derive_ally_effects
+from src.calculator.support_scan import (
     _MODULE_AUTHORED_HEAL_SLOTS,
     _MODULE_AUTHORED_SHIELD_SLOTS,
-    derive_ally_effects,
 )
 
 
@@ -70,7 +70,7 @@ def test_registry_membership_and_single_definition():
         )
         == _MODULE_AUTHORED_HEAL_SLOTS
     )
-    source = inspect.getsource(support_effects)
+    source = inspect.getsource(support_scan)
     assert source.count("_MODULE_AUTHORED_HEAL_SLOTS = frozenset(") == 1
     assert source.count("_MODULE_AUTHORED_HEAL_SLOTS = ") == 1
 
@@ -129,7 +129,7 @@ def test_shyvana_w_heal_set_alone_excludes_the_scanner(monkeypatch):
     the shield set by accident)."""
     original = _MODULE_AUTHORED_SHIELD_SLOTS
     monkeypatch.setattr(
-        support_effects,
+        support_scan,
         "_MODULE_AUTHORED_SHIELD_SLOTS",
         original - {("Shyvana", "W")},
     )

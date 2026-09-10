@@ -5,12 +5,12 @@ mutation.  These tests exercise it directly, independently of the walks that
 drive it, so a semantic change has to be made here first.
 """
 
-from src.calculator.shield_ledger import (
+from src.calculator.shield_ledger import absorb
+from src.calculator.shield_pools import (
     ShieldPools,
     ThresholdHealth,
     ThresholdShield,
     TimedShield,
-    absorb,
     expire_temporary_max_health,
     expire_threshold_health,
     expire_timed,

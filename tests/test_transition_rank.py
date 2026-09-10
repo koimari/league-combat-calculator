@@ -25,17 +25,19 @@ from typing import NamedTuple
 import pytest
 
 from src.calculator.survival import actions as actions_module
+from src.calculator.survival import classify, phases
 from src.calculator.survival.actions import (
-    SUPPORT_RANK_KEY,
-    ActionKind,
-    SurvivalAction,
-    TransitionRank,
     action_key,
-    classify_event_kind,
     compiled_damage_action,
-    ordering_slot,
+    event_timestamp,
+)
+from src.calculator.survival.classify import (
+    SUPPORT_RANK_KEY,
+    classify_event_kind,
     support_transition_rank,
 )
+from src.calculator.survival.phases import TransitionRank, ordering_slot
+from src.calculator.survival.typed_action import ActionKind, SurvivalAction
 
 ROOT = Path(__file__).parents[1]
 SURVIVAL = ROOT / "src" / "calculator" / "survival"
@@ -68,7 +70,7 @@ def test_the_ordering_fold_is_total_and_closed() -> None:
     slots = {rank: ordering_slot(rank) for rank in TransitionRank}
     assert set(slots) == set(TransitionRank)
     assert all(isinstance(slot, TransitionRank) for slot in slots.values())
-    assert set(actions_module._ORDERING_SLOTS) < set(TransitionRank)
+    assert set(phases._ORDERING_SLOTS) < set(TransitionRank)
 
 
 def test_one_collapsed_pair_survives_and_the_other_group_is_split() -> None:
@@ -792,7 +794,7 @@ def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:
         CAPABILITY_SCHEMA_VERSION,
         PARTICIPANT_LEDGER_CONTRACT,
     )
-    from src.calculator.survival.actions import public_phase
+    from src.calculator.survival.phases import public_phase
 
     assert public_phase(TransitionRank.DEBUFF_ARM) == "state_transition"
     assert public_phase(TransitionRank.UTILITY_ARM) == "state_transition"
@@ -806,8 +808,8 @@ def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:
         "healing_and_regeneration",
         "death_or_terminal_cutoff",
     ]
-    # 8 is the stat-surface labels, which touch no phase name.
-    assert CAPABILITY_SCHEMA_VERSION == 8
+    # 8 is the stat-surface labels, 9 the scoreboard control family; neither touches a phase name.
+    assert CAPABILITY_SCHEMA_VERSION == 9
 
 
 def test_s6_moved_the_ordering_and_not_the_classification() -> None:
@@ -828,7 +830,7 @@ def test_s6_moved_the_ordering_and_not_the_classification() -> None:
                 TransitionRank.UTILITY_ARM,
             }
         )
-        == actions_module._RECOVERY_CLASSIFIED_RANKS
+        == classify._RECOVERY_CLASSIFIED_RANKS
     )
     # ...and it is not expressible as the fold's output, which is what
     # makes naming it load-bearing rather than stylistic.
@@ -837,3 +839,24 @@ def test_s6_moved_the_ordering_and_not_the_classification() -> None:
         for rank in TransitionRank
         if ordering_slot(rank) is TransitionRank.DEBUFF_ARM
     } == {TransitionRank.DEBUFF_ARM}
+
+
+class TestOneRawRowsTimestamp:
+    """``event_timestamp`` is the ordering axis read off a raw event row.
+
+    A row that states no time is at the fight's origin, which is what
+    separates it from the engine's ``time``-keyed sorts; a row that states
+    an unusable one is a stop, because no total order can place it.
+    """
+
+    def test_a_row_that_states_no_time_is_at_the_origin(self) -> None:
+        assert event_timestamp({"cc_kind": "stun"}) == 0.0
+
+    @pytest.mark.parametrize("bad", [None, "not-a-time"])
+    def test_an_unusable_timestamp_is_a_stop(self, bad) -> None:
+        with pytest.raises(ValueError, match="must be numeric"):
+            event_timestamp({"time": bad})
+
+    def test_a_non_finite_timestamp_is_a_stop(self) -> None:
+        with pytest.raises(ValueError, match="must be finite"):
+            event_timestamp({"time": float("inf")})

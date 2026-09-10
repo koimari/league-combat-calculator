@@ -88,18 +88,13 @@ from typing import Any
 from ..ability_atoms import required_ranked_attribute_atom
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_contract import coverage
 from .module_helpers import ranked_slot
-from .slotlib import (
-    STEROID_ZERO,
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    stat_buff,
-)
+from .slot_entries import STEROID_ZERO, damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slotlib import stat_buff
 from .source_receipts import load_champion_sources
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.

@@ -5,13 +5,14 @@ These pin the three scheduler decisions the surface-area campaign found
 name a slot no cached champion emits today.
 """
 
-from src.calculator import damage
 from src.calculator.ability_spec import DamagePart
 from src.calculator.champions import (
     get_champion_ultimate_recasts,
     registered_champion_names,
 )
-from src.calculator.damage import FightConfig, calculate_fight_damage
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight import cast_slots
+from src.calculator.fight.config import FightConfig
 
 
 def _timed(stats, abilities, **overrides):
@@ -46,10 +47,10 @@ class TestVariantSlotHaste:
     """CF2: a variant slot key earns its BASE slot's haste."""
 
     def test_base_slot_resolves_variant_keys(self):
-        assert damage._base_slot("W_frenzy") == "W"
-        assert damage._base_slot("Q2") == "Q"
-        assert damage._base_slot("R_onhit") == "R"
-        assert damage._base_slot("passive") == "passive"
+        assert cast_slots._base_slot("W_frenzy") == "W"
+        assert cast_slots._base_slot("Q2") == "Q"
+        assert cast_slots._base_slot("R_onhit") == "R"
+        assert cast_slots._base_slot("passive") == "passive"
 
     def test_shojin_haste_reaches_a_variant_basic_slot(self, attacker_stats):
         """``W_frenzy`` is a W: Spear-of-Shojin haste shortens its cooldown."""

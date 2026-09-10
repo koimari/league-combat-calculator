@@ -30,8 +30,9 @@ from typing import Any
 from ..build import Program
 from ..precision import round_field
 from ..walk import WalkResult
-from . import DISCARD, LeafWriter, ViewTag
+from .leaf import DISCARD, LeafWriter
 from .survival import participant_paths, survival_leaves
+from .view_tag import ViewTag
 
 __all__ = ["tdd", "tdd_leaves"]
 

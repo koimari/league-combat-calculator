@@ -51,14 +51,16 @@ from ..binary_roots import (
     data_value_at_rank,
     spell_object,
 )
-from ..stats import growth_multiplier
-from .engine import CC_PER_PART, SlotCtx
+from ..stat_formulas import growth_multiplier
+from .contract_vocabulary import coverage
+from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
-from .module_contract import coverage
 from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import ability_name, damage_entry, extract_cooldown
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown
 
 PACKET_SHA256 = "906b7a57f67c65c1729d75e139e3608eaf8532c564638f0f008b2b1f7348c8f5"
 

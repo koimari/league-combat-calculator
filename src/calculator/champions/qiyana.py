@@ -3,18 +3,13 @@
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import CC_PER_PART, ONHIT, SlotCtx, build_parser
+from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import named_damage, ranked_slot
-from .slotlib import (
-    ability_name,
-    ability_on_hit_entry,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    on_hit_entry,
-    simple_damage,
-)
+from .slot_cc import CC_PER_PART
+from .slot_entries import ability_on_hit_entry, damage_entry, on_hit_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 

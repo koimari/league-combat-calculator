@@ -121,22 +121,21 @@ import math
 import re
 from typing import Any
 
+from ..ability_prose import effect_description, extract_description_duration
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
 from .inputs import int_option
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
-from .slotlib import (
+from .slot_entries import on_hit_entry
+from .slot_extract import (
     ability_name,
-    effect_description,
-    extract_description_duration,
     extract_named,
     extract_value,
     find_named_leveling,
-    on_hit_entry,
-    simple_damage,
 )
+from .slotlib import simple_damage
 
 PACKET_SHA256 = "c18c1e6e7005c17066acf180ec68a2013bb656c20a88655a536f0a2bc9a078f5"
 

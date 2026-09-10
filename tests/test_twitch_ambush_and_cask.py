@@ -30,7 +30,7 @@ import pytest
 from src import app as app_module
 from src.calculator.ability_atoms import _ability_atoms
 from src.calculator.champions import twitch
-from src.calculator.champions.slotlib import STEROID_ZERO
+from src.calculator.champions.slot_entries import STEROID_ZERO
 from src.calculator.data_fetcher import get_champion
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}

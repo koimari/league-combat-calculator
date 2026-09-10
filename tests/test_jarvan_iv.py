@@ -12,11 +12,9 @@ Reference damage (hand-derived from the wiki):
 import pytest
 
 from src.calculator.champions import parse_champion_abilities as parse_abilities
-from src.calculator.damage import (
-    FightConfig,
-    _schedule_cooldown_procs,
-    calculate_fight_damage,
-)
+from src.calculator.damage import calculate_fight_damage
+from src.calculator.fight.autos.on_hit_stream import _schedule_cooldown_procs
+from src.calculator.fight.config import FightConfig
 from tests import cc_review
 
 # ---------------------------------------------------------------------------

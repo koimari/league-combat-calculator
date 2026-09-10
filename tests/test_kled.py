@@ -8,7 +8,7 @@ says makes the whole timed fight fall back to coarse ordering.
 import pytest
 
 from src.calculator.champions import kled
-from src.calculator.champions.engine import CC_PER_PART
+from src.calculator.champions.slot_cc import CC_PER_PART
 from tests import cc_review, row_review
 
 

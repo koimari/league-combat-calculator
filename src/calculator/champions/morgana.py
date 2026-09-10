@@ -40,18 +40,15 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..healing_helpers import HealAnchor, heal_from_damage, payments
-from .engine import CC_PER_PART, SlotCtx
+from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    with_control,
-)
+from .shared_mechanics import innate_zero_row
+from .slot_cc import CC_PER_PART
+from .slot_control import with_control
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 
 _MORGANA_W_SPELL = spell_object("Morgana", "MorganaW")
 _W_TICK_INTERVAL = data_value(_MORGANA_W_SPELL, "TickRate")
@@ -139,24 +136,17 @@ def _soul_shackles(
 
 
 def _soul_siphon(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: self-heal passive — no enemy damage (this module authors it)."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
-    return {
-        "name": ability_name(ability),
-        "rank": ctx.level,
-        "cooldown": 0.0,
-        "damage_type": "magic",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": (
+    """P: self-heal passive with no enemy damage (this module authors it)."""
+
+    return innate_zero_row(
+        ctx,
+        detail=(
             "Soul Siphon heals Morgana for 18% of the post-mitigation "
             "damage dealt by her abilities (authored by this module's "
             "derive_self_healing rule); the passive "
             "itself deals no enemy damage."
         ),
-    }
+    )
 
 
 PACKET_SHA256 = "5cc8fcb312de2d1d31c8b63157dac32a85424fa0decca7a8f1ac4ac94d689a9d"

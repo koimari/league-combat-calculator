@@ -33,7 +33,7 @@ number's one home, stated once and with a reason.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -44,6 +44,7 @@ __all__ = [
     "TARGET_STATS",
     "ChampionInputError",
     "InputDefault",
+    "OptionsRows",
     "bool_option",
     "champion_stat",
     "declared_option_defaults",
@@ -51,6 +52,7 @@ __all__ = [
     "int_option",
     "scaling_input",
     "target_stat",
+    "use_options_rows",
 ]
 
 
@@ -263,6 +265,20 @@ def scaling_input(block: Mapping[str, Any], name: str, *, champion: str = "") ->
     )
 
 
+#: How this module reaches one champion module's ``OPTIONS`` rows.  The
+#: registry is what imports every champion module, so it hands the reader in
+#: and this vocabulary stays a leaf of the champion tree.
+OptionsRows = Callable[[str], Iterable[Mapping[str, Any]]]
+
+_OPTIONS_ROWS: OptionsRows | None = None
+
+
+def use_options_rows(source: OptionsRows) -> None:
+    """Wire the reader that yields one champion's declared OPTIONS rows."""
+    global _OPTIONS_ROWS  # pylint: disable=global-statement
+    _OPTIONS_ROWS = source
+
+
 def declared_option_defaults(champion: str) -> dict[str, Any]:
     """A champion's option keys mapped to the defaults its module declares.
 
@@ -271,11 +287,14 @@ def declared_option_defaults(champion: str) -> dict[str, Any]:
     default the user sees are one value.  The pipeline-owned reserved keys
     join it because no module declares them and every module may read them.
     """
-    # pylint: disable-next=import-outside-toplevel,cyclic-import
-    from . import get_champion_options_meta
-
+    if _OPTIONS_ROWS is None:
+        raise ChampionInputError(
+            f"no OPTIONS source is wired, so {champion!r} has no declared "
+            "defaults; src/calculator/champions/__init__.py wires it through "
+            "use_options_rows"
+        )
     defaults: dict[str, Any] = dict(RESERVED_OPTION_DEFAULTS)
-    for option in get_champion_options_meta(champion)["options"]:
+    for option in _OPTIONS_ROWS(champion):
         key = option.get("key")
         if isinstance(key, str):
             defaults[key] = option.get("default")

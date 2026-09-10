@@ -1,0 +1,29 @@
+{
+ "source": "src/calculator/item_source.py",
+ "decisions": [
+  "The ingestion section reads only _PASSIVE_KEY_MARKERS and _ACTIVE_KEY_PREFIX, so item_source_merge.py is a true leaf and item_source.py imports nothing back.",
+  "tests/test_literal_defaults.py's ER5_TAIL keys seven rows on the file name item_source.py for _champion_restriction, _merge_effect_branches, _merge_one_item and _effect_name. Those are strings the tool does not rewrite; repay them in the same commit."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/item_source_merge.py",
+   "docstring": "How patch ingestion folds the Wiki item table and Riot's description into one cached entry.",
+   "defs": [
+    "_PASSIVE_KEY_MARKERS",
+    "_ACTIVE_KEY_PREFIX",
+    "_resolve_inherited",
+    "_resolve_effect_entry",
+    "_wiki_effect_kind",
+    "_wiki_effects_by_kind",
+    "_branch_texts",
+    "_effect_name",
+    "_align_effects",
+    "_champion_restriction",
+    "_merge_effect_branches",
+    "_merge_one_item",
+    "merge_item_sources"
+   ]
+  }
+ ]
+}

@@ -9,14 +9,9 @@ from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import no_damage, ranked_slot
-from .slotlib import (
-    ability_name,
-    ability_on_hit_entry,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    simple_damage,
-)
+from .slot_entries import ability_on_hit_entry, damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 _KASSADIN_W_SPELL = spell_object("Kassadin", "NetherBlade")

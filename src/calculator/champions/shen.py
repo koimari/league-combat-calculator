@@ -41,7 +41,7 @@ W (Spirit's Refuge) is a pure attack-block zone: the cached ability carries
 no damage, heal or shield numeric attribute of any kind, only a rank-scaled
 cost and cooldown — so the slot emits an explicit ``no_damage`` state row
 rather than staying silently absent.  The engine does carry an attack-block
-convention (``interaction_effects.ProjectileDefense.blocks_basic_attacks``,
+convention (``projectile_defense.ProjectileDefense.blocks_basic_attacks``,
 used by Jax's Counter Strike and Fiora's Riposte), but it lives entirely on
 the DEFENDER side of a champion-vs-champion interaction, not in a champion's
 own outgoing ``SLOTS`` map.
@@ -53,20 +53,18 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from ..stats import calculate_attack_speed
+from ..stat_formulas import calculate_attack_speed
+from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
-from .module_contract import coverage
 from .module_helpers import no_damage_slot, ranked_slot
 from .scaling import is_flat_unit, resolve_scaling
-from .slotlib import (
+from .slot_entries import attach_self_shield, damage_entry, support_cast
+from .slot_extract import (
     ability_name,
-    attach_self_shield,
-    damage_entry,
     extract_cooldown,
     extract_named,
     find_named_leveling,
-    support_cast,
 )
 from .source_receipts import load_champion_sources
 

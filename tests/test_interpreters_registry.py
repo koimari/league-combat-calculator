@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from src.calculator import bis, interpreters, item_coverage, item_effects
+from src.calculator import bis_objective, interpreters, item_coverage, item_effects
 from src.calculator import item_behavior_catalog as catalog
 from src.calculator.ability_spec import Authority
 from src.calculator.interpreters import damage_routing, resistance_shred
@@ -710,14 +710,14 @@ def test_the_fold_is_what_bis_publishes() -> None:
     assert set(derived) == {"Eclipse", "Death's Dance", "Sundered Sky"}
     assert all(note.strip() for note in derived.values())
     for owner, note in derived.items():
-        receipt = bis.bis_defensive_effect_receipt(owner, {})
+        receipt = bis_objective.bis_defensive_effect_receipt(owner, {})
         assert receipt["status"] == "certified"
         assert receipt["note"] == note
     uncertified = sorted(set(catalog.rule_owners()) - set(derived))
     assert uncertified
     for owner in uncertified:
         assert (
-            bis.bis_defensive_effect_receipt(owner, {})["status"]
+            bis_objective.bis_defensive_effect_receipt(owner, {})["status"]
             == "no_special_defensive_effect"
         )
 

@@ -23,11 +23,13 @@ from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import (
     REVIEWED_MODULE_ASSUMPTIONS,
+    named_damage,
     no_damage,
     typed_damage,
     with_item_on_hit_specs,
 )
-from .slotlib import ability_name, extract_cooldown, extract_named, on_hit_entry
+from .slot_entries import on_hit_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
 
@@ -88,15 +90,15 @@ def _ritual_nails(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _ashen_pursuit(ctx: SlotCtx) -> dict[str, Any] | None:
-    """E: blink packet plus the optional empowered dash attack."""
-    attribute = (
+# E: blink packet plus the optional empowered dash attack.
+_ashen_pursuit = named_damage(
+    lambda ctx: (
         "Total Magic Damage" if bool(ctx.option("e_dash")) else "Blink Magic Damage"
-    )
-    result = typed_damage(ctx, attribute, "magic", time_offset=0.1)
-    if result:
-        result["detail"] = "Ashen Pursuit blink plus optional empowered dash attack."
-    return result
+    ),
+    "magic",
+    time_offset=0.1,
+    detail="Ashen Pursuit blink plus optional empowered dash attack.",
+)
 
 
 def _purgatory(ctx: SlotCtx) -> dict[str, Any] | None:

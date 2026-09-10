@@ -26,12 +26,9 @@ from functools import partial
 from ..item_behavior import (
     BehaviorRule,
     BuildContext,
-    EngineLane,
     FightFacts,
-    KernelField,
     RuleFamily,
     SpellbladeRule,
-    declared_mechanic_id,
     typed_payload,
 )
 from ..item_behavior_catalog import behavior_rules, build_context
@@ -70,29 +67,9 @@ def _sibling(reference: AnyValueRef | None, level: int) -> float:
     return NO_SIBLING if reference is None else resolve(reference, level)
 
 
-def spellblade_fields(
-    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
-) -> tuple[KernelField, ...]:
-    """One spellblade's compiled numbers, stamped with *lane*."""
-    return damage_formula.compiled_field(
-        _payload(rule), "cooldown", SPELLBLADE_COOLDOWN_FIELD, rule, ctx=ctx, lane=lane
-    )
-
-
-def spellblade_mechanic_id(owner: str) -> str:
-    """*owner*'s spellblade mechanic id, or a stop.
-
-    A stop rather than a default: an unstamped spellblade row keeps the pair
-    engine's number in every roster total while the walk prices the same
-    declaration, and that is a double count.
-    """
-    return declared_mechanic_id(
-        owner,
-        spellblade_rules([owner]),
-        SpellbladeInterpretationError,
-        authors="a spellblade row",
-        declares="spellblade",
-    )
+spellblade_fields = damage_formula.field_reading(
+    _payload, "cooldown", SPELLBLADE_COOLDOWN_FIELD
+)
 
 
 def spellblade_rules(owners: Sequence[str]) -> tuple[BehaviorRule, ...]:
@@ -128,6 +105,7 @@ def spellblade_effect(rule: BehaviorRule, ctx: BuildContext) -> SpellbladeEffect
             rule.owner,
             payload.formula.damage_type,
             damage_formula.compile_formula(payload.formula, ctx),
+            mechanic_id=rule.mechanic_id,
             suffix=SPELLBLADE_SUFFIX,
             breakdown_key=f"{SPELLBLADE_BREAKDOWN_PREFIX}{rule.owner}",
         ),
@@ -177,6 +155,5 @@ __all__ = [
     "resolve_slot",
     "spellblade_effect",
     "spellblade_fields",
-    "spellblade_mechanic_id",
     "spellblade_rules",
 ]

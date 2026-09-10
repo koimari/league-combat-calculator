@@ -37,6 +37,11 @@ Usage:
     python scripts/golden_snapshot.py fingerprint <snapshot.json>
 """
 
+# file-length-ok: the bulk is the two acceptance matrices themselves, one
+# entry per scenario with the reason it is captured beside it, and a matrix
+# split from the harness that runs it is a scenario whose reason lives in
+# another file.  docs/plans/2026-09-09-fight-navigability.md rules the
+# scripts carve out of scope for the same reason.
 import argparse
 import ast
 import copy
@@ -55,13 +60,16 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.source_receipt import cache_patch
-from src.calculator import damage
+from src.calculator.ally_packet_shape import producer_item
 from src.calculator.champions import (
     parse_champion_abilities,
     registered_champion_names,
 )
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.defensive_effects import resolve_starting_defenses
+from src.calculator.fight import mitigation, resists
+from src.calculator.fight_params import FightParams
+from src.calculator.fight_request_bounds import ONE_ROTATION_DURATION
 from src.calculator.item_behavior import (
     Basis,
     DefenseField,
@@ -75,12 +83,11 @@ from src.calculator.item_behavior_catalog import (
     behavior_rules,
     rule_owners,
 )
-from src.calculator.item_support_effects import producer_item
 from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.pipeline import ONE_ROTATION_DURATION, FightParams, run_fight
+from src.calculator.pipeline import run_fight
 from src.calculator.public_response import serialize_fight_result
 from src.calculator.scenario import parse_scenario_request, resolve_scenario
 from src.calculator.stats import calculate_total_stats
@@ -139,7 +146,7 @@ SPELLBLADE_BUILD = ["Trinity Force", "Infinity Edge", "Berserker's Greaves"]
 SWEEP_TIMED_CHAMPION = "Ziggs"
 SWEEP_TIMED_DURATIONS = (12.0, 30.0)
 # The keystone arm. Two runes own the auto-attack schedule itself — Hail of
-# Blades and Lethal Tempo are the only names ``damage._auto_attack_timestamps``
+# Blades and Lethal Tempo are the only names ``fight.autos.swing_schedule._auto_attack_timestamps``
 # reads a swing list from, and both rewrite ``num_auto_attacks`` before the
 # rotation is priced, so they move every auto, on-hit, crit and stacking-
 # penetration number in the fight at once. No other section arms a rune, so
@@ -224,7 +231,7 @@ def _run_fight(
     duration=ONE_ROTATION_DURATION,
     keystone="",
 ):
-    """Fight at fixed regression target stats, mirroring _evaluate_build.
+    """Fight at fixed regression target stats, mirroring evaluate_build.
 
     Default is a one-rotation burst with no autos and an empty rune page.
     Pass auto_attack_uptime=1.0 (and one_rotation=False for the sustained
@@ -1286,7 +1293,7 @@ COUPLED_SCENARIOS = (
     ),
     # A mage, arming the max-health reprice: Liandry's Torment burns for a
     # share of the target's maximum health, and a Protoplasm Harness lifeline
-    # raises that maximum mid-fight, so `damage._apply_liandry_reprice` folds
+    # raises that maximum mid-fight, so `fight.after.reprice._apply_liandry_reprice` folds
     # the difference back onto every tick after the lifeline.  It needs two
     # participants, which is why this is the one window the holder's own
     # items cannot cover.
@@ -1404,6 +1411,56 @@ COUPLED_SCENARIOS = (
             enemy_cards={"Darius": {"items": ("Stridebreaker",)}},
             fight_mode="one_rotation",
             enemies_attack=True,
+        ),
+    ),
+    # The three secondary-delivery shapes: a packet the holder aimed at one
+    # subject and the engine lands on another.  The pair snapshot's item
+    # sweep is single-target, so every one of these rows is worth exactly
+    # zero there, and a roster is the only place they are observable at all.
+    # Each is a distinct delivery: Titanic's cone declares its own max-health
+    # magnitude, Ravenous's cleave is a share of the swing beside a copied
+    # on-hit stream, and Statikk's chain allocates one packet across a
+    # level-scaled prefix of the roster.
+    #
+    # Two enemies on every one of them, because a secondary subject is the
+    # mechanic: against one target the cone, the cleave and the chain all
+    # price nothing.  Autos at full uptime, because all three ride a swing.
+    #
+    # The Hydras are one exclusivity group, so they cannot share a roster.
+    CoupledScenario(
+        "titanic_cone_bruiser_roster",
+        _roster_request(
+            "Darius",
+            ("Titanic Hydra",),
+            enemies=("Aatrox", "Malphite"),
+            allies=("Lulu",),
+            include_auto_attacks=True,
+            auto_attack_uptime=1.0,
+        ),
+    ),
+    CoupledScenario(
+        "cleave_copied_on_hit_bruiser_roster",
+        _roster_request(
+            "Darius",
+            ("Ravenous Hydra",),
+            enemies=("Aatrox", "Malphite"),
+            allies=("Lulu",),
+            include_auto_attacks=True,
+            auto_attack_uptime=1.0,
+        ),
+    ),
+    # Blade of the Ruined King beside the chain because the copied stream is
+    # what a chained packet carries: a chain with no on-hit sibling to copy
+    # observes only the packet's own magnitude.
+    CoupledScenario(
+        "chain_lightning_carry_roster",
+        _roster_request(
+            "Caitlyn",
+            ("Statikk Shiv", "Blade of the Ruined King"),
+            enemies=("Aatrox", "Malphite"),
+            allies=("Lulu",),
+            include_auto_attacks=True,
+            auto_attack_uptime=1.0,
         ),
     ),
     *_syndra_pin_scenarios(),
@@ -1615,26 +1672,59 @@ def _unarmed_repricing_windows(
 SWING_PRICING_ENTRY = "_mitigate_basic_attack_swing"
 
 
+def _fight_package_functions() -> dict[str, str]:
+    """Every top-level function under `fight/`, mapped to the module holding it."""
+    root = REPO_ROOT / "src" / "calculator"
+    home: dict[str, str] = {}
+    for path in sorted((root / "fight").rglob("*.py")):
+        dotted = ".".join(path.relative_to(root).with_suffix("").parts)
+        for node in ast.parse(path.read_text(encoding="utf-8")).body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                home.setdefault(node.name, dotted)
+    return home
+
+
+def _swing_pricing_definitions() -> dict[str, ast.AST]:
+    """The two fight modules' own functions, refusing a name they both bind."""
+    defined: dict[str, ast.AST] = {}
+    for module in (mitigation, resists):
+        for node in ast.parse(inspect.getsource(module)).body:
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            if node.name in defined:
+                raise RuntimeError(
+                    f"{node.name} is bound by both {mitigation.__name__} and "
+                    f"{resists.__name__}; the walk cannot say which a call reaches"
+                )
+            defined[node.name] = node
+    return defined
+
+
 def _swing_pricing_functions():
     """The swing pricing entry point and every module function it reaches.
 
-    Read from ``damage``'s own source, not listed: the terms a swing meets
-    are spread across the entry point and the helpers it calls, and a term
-    added to a fourth helper has to arrive at the guard on the commit that
-    adds it rather than on the commit somebody notices.
+    Read from the two fight modules that hold them, not listed: the terms a
+    swing meets are spread across the entry point and the helpers it calls,
+    and a term added to a fourth helper has to arrive at the guard on the
+    commit that adds it rather than on the commit somebody notices.  A helper
+    that moves to a third `fight/` module would shrink the term set instead,
+    so it raises here.
     """
-    module = ast.parse(inspect.getsource(damage))
-    defined = {
-        node.name: node
-        for node in module.body
-        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-    }
+    defined = _swing_pricing_definitions()
     if SWING_PRICING_ENTRY not in defined:
-        raise RuntimeError(f"damage.{SWING_PRICING_ENTRY} was renamed; move the entry")
+        raise RuntimeError(f"{SWING_PRICING_ENTRY} was renamed; move the entry")
+    elsewhere = _fight_package_functions()
     reached, pending = {}, [SWING_PRICING_ENTRY]
     while pending:
         name = pending.pop()
-        if name in reached or name not in defined:
+        if name in reached:
+            continue
+        if name not in defined:
+            if name in elsewhere:
+                raise RuntimeError(
+                    f"{name} is reached from {SWING_PRICING_ENTRY} but lives in "
+                    f"{elsewhere[name]}; add its module beside mitigation and resists"
+                )
             continue
         reached[name] = defined[name]
         pending.extend(

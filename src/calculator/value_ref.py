@@ -24,10 +24,11 @@ imported, never the registry objects, because ``refresh_item_effects()``
 rebuilds a registry in place and a name bound at import would be the thing
 D-48's refresh proof cannot distinguish from a live reference.
 
-:class:`SourceReceipt` and :func:`receipt_for` live here too, beside the
-accessors they read: a receipt is a *citation of the registry entry a
-declaration was read from*, so it belongs with the registry reads and not
-with the rule union.
+:func:`receipt_for` lives here too, beside the accessors it reads: a receipt is
+a *citation of the registry entry a declaration was read from*, so it belongs
+with the registry reads and not with the rule union.  The record it returns and
+the registry read behind it are :mod:`value_source_receipt`, and the closed
+vocabularies a reference is spelled in are :mod:`reference_vocabulary`.
 """
 
 from __future__ import annotations
@@ -35,118 +36,33 @@ from __future__ import annotations
 import math
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal
 
 from . import item_effects, rune_effects
+from .reference_vocabulary import (
+    _LINEAR_RAMP_CAP,
+    DERIVED_OPS,
+    LEVEL_SCALES,
+    STRUCTURAL_REASONS,
+    VALUE_REGISTRIES,
+    DerivedOp,
+    LevelScale,
+    StructuralReason,
+    ValueRefError,
+    ValueRegistry,
+)
+from .value_source_receipt import (
+    SourceReceipt,
+    UnsourcedDeclarationError,
+    live_registry,
+)
 
 # ── the registry union ────────────────────────────────────────────────────
-
-ValueRegistry = Literal["ITEM_EFFECTS", "ALLY_ITEM_EFFECTS", "RUNE_EFFECTS"]
-
-VALUE_REGISTRIES: frozenset[str] = frozenset(
-    {"ITEM_EFFECTS", "ALLY_ITEM_EFFECTS", "RUNE_EFFECTS"}
-)
-
-# Why a raw number is allowed to sit inside a frozen declaration at all.
-# Closed: a reason outside this set means the number is a *quantity*, and a
-# quantity belongs in a registry behind a ValueRef.  ``origin`` is a
-# coordinate the model measures from — the start of the fight — rather than a
-# magnitude: no patch moves it, and spelling it ``count`` would say a
-# window's start is a tally of something.
-StructuralReason = Literal["count", "cap", "rank", "flag", "unit_scale", "origin"]
-
-STRUCTURAL_REASONS: frozenset[str] = frozenset(
-    {"count", "cap", "rank", "flag", "unit_scale", "origin"}
-)
-
-# How a two-key level ramp is interpolated.  ``registry_start`` delegates to
-# the ally registry's own ``level_scaling_start`` breakpoint; ``linear_1_18``
-# is the plain one-to-eighteen ramp; ``linear_1_20`` is the same ramp over the
-# top-lane level cap CLAUDE.md records, which is the span the item registry's
-# own active formulas interpolate across.  There is no "whatever the caller
-# meant" member on purpose.
-LevelScale = Literal["registry_start", "linear_1_18", "linear_1_20"]
-
-LEVEL_SCALES: frozenset[str] = frozenset(
-    {"registry_start", "linear_1_18", "linear_1_20"}
-)
-
-# The top level each linear ramp interpolates to.  A ramp reaches its maximum
-# key's value exactly at this level and is clamped there above it, so the two
-# spans differ in one number rather than in two code paths.
-_LINEAR_RAMP_CAP: Mapping[str, int] = {"linear_1_18": 18, "linear_1_20": 20}
-
-# The arithmetic a derived reference may perform over other references.
-# ``SUB`` exists because an amplifier's registry number is sometimes a
-# *multiplier* (Shadowflame's crit multiplier is 1.2) while the chain prices
-# a *fraction*, and the conversion is a subtraction of the multiplier axis'
-# origin.  Spelling it ADD against a negative constant would hide a
-# conversion inside a sign.
-DerivedOp = Literal["ADD", "SUB", "MUL", "MIN", "MAX", "RATIO"]
-
-DERIVED_OPS: frozenset[str] = frozenset({"ADD", "SUB", "MUL", "MIN", "MAX", "RATIO"})
-
-
-class ValueRefError(ValueError):
-    """A reference is malformed — a registry, scale or op outside its union."""
-
-
-class UnsourcedDeclarationError(ValueError):
-    """No citation could be resolved for a declaration's owner.
-
-    Raised by :func:`receipt_for`.  A declaration with no receipt is a number
-    whose provenance is a memory, which is what every audit in this
-    repository exists to make impossible.
-    """
 
 
 # ── receipts ──────────────────────────────────────────────────────────────
 
 
-@dataclass(frozen=True, slots=True)
-class SourceReceipt:
-    """The revision a declaration's numbers were read from.
-
-    ``revision_id`` is a MediaWiki revision id, or ``0`` — the explicit
-    marker for a value read from the patch-stamped cached item source, which
-    exposes no revision id.  Zero is spelled rather than omitted for the same
-    reason the campaign spells ``STRUCTURAL_ZERO``: an absent id and an id
-    that does not exist must not look alike.  ``revision_timestamp`` is the
-    human-checkable stamp for that revision; when the id is ``0`` it names
-    the cache instead (the precedent already in ``defensive_effects``).
-    """
-
-    url: str
-    revision_id: int
-    revision_timestamp: str
-
-    def __post_init__(self) -> None:
-        """Reject a receipt that cites nothing checkable."""
-        if not self.url.startswith("http"):
-            raise ValueRefError(f"SourceReceipt url must be a URL, got {self.url!r}")
-        if isinstance(self.revision_id, bool):
-            raise ValueRefError("SourceReceipt revision_id must be an int")
-        if self.revision_id < 0:
-            raise ValueRefError("SourceReceipt revision_id must not be negative")
-        if not self.revision_timestamp.strip():
-            raise ValueRefError("SourceReceipt revision_timestamp must not be empty")
-
-
-def _registry(registry: ValueRegistry) -> Mapping[str, Mapping[str, object]]:
-    """The live registry mapping for one member of the union."""
-    if registry == "ITEM_EFFECTS":
-        return item_effects.ITEM_EFFECTS
-    if registry == "ALLY_ITEM_EFFECTS":
-        return item_effects.ALLY_ITEM_EFFECTS
-    if registry == "RUNE_EFFECTS":
-        return rune_effects.RUNE_EFFECTS
-    raise ValueRefError(
-        f"{registry!r} is not one of {sorted(VALUE_REGISTRIES)} — a declaration "
-        "may only reference a registry that owns runtime numbers (D-46)"
-    )
-
-
-def _entry_receipt(registry: ValueRegistry, owner: str) -> SourceReceipt | None:
+def _entry_receipt(source: ValueSource) -> SourceReceipt | None:
     """The receipt an owner's own registry entry carries, if it carries one.
 
     A *complete* citation is all three of ``source_url``,
@@ -155,7 +71,7 @@ def _entry_receipt(registry: ValueRegistry, owner: str) -> SourceReceipt | None:
     silently filling in the missing third of a citation is how a receipt
     starts describing a revision nobody read.
     """
-    entry = _registry(registry).get(owner)
+    entry = live_registry(source.registry).get(source.owner)
     if not isinstance(entry, Mapping):
         return None
     url = entry.get("source_url")
@@ -182,13 +98,14 @@ def receipt_for(
     families live in ``item_behavior`` — which imports this module — so a
     family-keyed fallback table in this file would invert the dependency.
     """
-    entry = _entry_receipt(registry, owner)
+    source = ValueSource(registry, owner)
+    entry = _entry_receipt(source)
     if entry is not None:
         return entry
     if declared is not None:
         return declared
     raise UnsourcedDeclarationError(
-        f"{registry}[{owner!r}] carries no complete citation "
+        f"{source.label} carries no complete citation "
         "(source_url + source_revision_id + source_revision_timestamp) and the "
         "family declared no constant receipt — a rule may not be declared "
         "against an unsourced number"
@@ -270,6 +187,27 @@ class ValueRef:
         if self.registry == "ALLY_ITEM_EFFECTS":
             return item_effects.ally_item_effect_value(self.owner, self.key)
         return rune_effects.rune_effect_value(self.owner, self.key)
+
+
+@dataclass(frozen=True, slots=True)
+class ValueSource:
+    """One owner's numbers in one registry: the pair every read names."""
+
+    registry: ValueRegistry
+    owner: str
+
+    @property
+    def label(self) -> str:
+        """How a refusal names the entry, owner spelling included."""
+        return f"{self.registry}[{self.owner!r}]"
+
+    def ref(self, key: str) -> ValueRef:
+        """The reference to one of this owner's keys."""
+        return ValueRef(self.registry, self.owner, key)
+
+    def receipt(self, *, declared: SourceReceipt | None = None) -> SourceReceipt:
+        """This source's citation, resolved by :func:`receipt_for`."""
+        return receipt_for(self.registry, self.owner, declared=declared)
 
 
 @dataclass(frozen=True, slots=True)
@@ -488,25 +426,60 @@ def declared_reference[T](
     raise stop(missing)
 
 
+@dataclass(frozen=True, slots=True)
+class DeclaredNumbers:
+    """The numbers one compiled rule declares, read by reference kind or refused.
+
+    An interpreter's slot holds one of these rather than re-spelling the
+    lookup once per accessor: a plain value, a one-to-eighteen ramp and a
+    late ramp are three reference kinds over one declaration, and each
+    refuses rather than defaulting, because the point of the declaration is
+    that the reader cannot reach past it.  ``noun`` is how the refusal
+    names the reader ("a producer", "a defence").
+    """
+
+    values: Sequence[object]
+    mechanic_id: str
+    stop: type[Exception]
+    noun: str
+
+    def _declared[T](self, kind: type[T], key: str, missing: str) -> T:
+        """The *kind* reference this declaration names *key* by, or the stop."""
+        return declared_reference(self.values, kind, key, self.stop, missing=missing)
+
+    def value(self, key: str) -> float:
+        """One declared number, read live from the registry that owns it."""
+        return self._declared(
+            ValueRef,
+            key,
+            f"{self.mechanic_id} declares no {key!r} value; {self.noun} reads "
+            "the numbers its declaration names and no others",
+        ).get()
+
+    def _ramp[T](self, kind: type[T], key: str, level: int, noun: str) -> float:
+        """One declared ramp of *kind*, read at *level* and named by its low key."""
+        missing = f"{self.mechanic_id} declares no {key!r} {noun}"
+        return self._declared(kind, key, missing).get(level)
+
+    def ramp(self, key: str, level: int) -> float:
+        """One declared one-to-eighteen ramp, read at *level*."""
+        return self._ramp(LevelValueRef, key, level, "level ramp")
+
+    def late_ramp(self, key: str, level: int) -> float:
+        """One declared late ramp, flat until the level the entry names."""
+        return self._ramp(LateLevelValueRef, key, level, "late level ramp")
+
+
 __all__ = [
-    "DERIVED_OPS",
-    "LEVEL_SCALES",
-    "STRUCTURAL_REASONS",
     "VALUE_REF_TYPES",
-    "VALUE_REGISTRIES",
     "AnyValueRef",
     "Const",
-    "DerivedOp",
+    "DeclaredNumbers",
     "DerivedValueRef",
     "LateLevelValueRef",
-    "LevelScale",
     "LevelValueRef",
-    "SourceReceipt",
-    "StructuralReason",
-    "UnsourcedDeclarationError",
     "ValueRef",
-    "ValueRefError",
-    "ValueRegistry",
+    "ValueSource",
     "declared_reference",
     "receipt_for",
     "resolve",

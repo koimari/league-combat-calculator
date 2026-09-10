@@ -1,0 +1,19 @@
+{
+ "source": "src/calculator/champion_loadout.py",
+ "decisions": [
+  "Runs after scenario.json, on the module scenario.json creates. The check predicted champion_loadout.py at 456 rendered lines; black re-wraps the tool's one-line imports and the file landed at 503, three over the ceiling, and sightline reported the size arm on a module that was extracted to clear it. A file-length marker is not available to a new module, so one more unit leaves.",
+  "The unit that leaves is the ability-rank pair. _ability_max_rank reads a kit's authored rank cardinality and _validate_ability_ranks accepts or refuses the ranks a roster card asks for at a level; that is a question about the request, not about the card, and it is the same question fight_request_bounds.rank_allocation_contract answers for allocation mode. Its own file is the honest home until the two can share one: extract_modules.py moves units out of one source, and those two live in different sources.",
+  "ability_ranks.py is a leaf on champions.skill_orders alone and champion_loadout drops to 453 rendered lines."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/ability_ranks.py",
+   "docstring": "How many ranks a kit authored, and the ranks a roster card may ask for at a level.",
+   "defs": [
+    "_ability_max_rank",
+    "_validate_ability_ranks"
+   ]
+  }
+ ]
+}

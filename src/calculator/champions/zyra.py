@@ -40,12 +40,13 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_interpolation, data_value, spell_object
-from .engine import CC_PER_PART, SlotCtx
+from .contract_vocabulary import coverage
+from .engine import SlotCtx
 from .inputs import int_option
-from .module_contract import coverage
 from .module_helpers import no_damage
 from .packet_module import build_packet_module
-from .slotlib import with_control
+from .slot_cc import CC_PER_PART
+from .slot_control import with_control
 
 PACKET_SHA256 = "e34a0a227a5432c3c99a6fc6850e3c3ea23f9b2148c3690c93907949b5874b5b"
 

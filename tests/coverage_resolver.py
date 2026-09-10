@@ -771,8 +771,8 @@ def resolve_test_ref(
 # ── the package, read through the seams ───────────────────────────────────
 
 # Every ``Symbol`` path, every registry and every handler qualname a claim
-# names is written relative to the package: ``damage._apply_command_amp``,
-# not ``src.calculator.damage._apply_command_amp``.  The prefix is spelled
+# names is written relative to the package: ``fight.after.amplifiers._apply_command_amp``,
+# not ``src.calculator.fight.after.amplifiers._apply_command_amp``.  The prefix is spelled
 # once here rather than in nine evidence members' worth of strings.
 PACKAGE = "src.calculator"
 PACKAGE_ROOT = "src/calculator"
@@ -813,7 +813,7 @@ def import_symbol(path: str, ctx: ResolverContext) -> tuple[str, object]:
 
     The split between module and attribute is not knowable from the string —
     ``survival.transitions.trigger_defy`` is a two-segment module and one
-    attribute, ``damage._apply_command_amp`` is one and one — so the longest
+    attribute, ``healing.derive_self_healing`` is one and one — so the longest
     importable prefix wins and the remainder is walked as attributes.
 
     Returns the module's package-relative name beside the object, because

@@ -36,7 +36,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..healing_reduction import amplifies_recovery
-from ..survival.actions import TransitionRank
+from ..survival.phases import TransitionRank
 from .identity import EventId, Origin, PIdx
 from .route import RoutePolicy
 

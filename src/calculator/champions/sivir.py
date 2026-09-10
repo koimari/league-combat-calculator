@@ -84,17 +84,13 @@ from ..ability_atoms import (
     required_ranked_attribute_atom,
 )
 from ..ability_spec import DamagePart
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .module_contract import coverage
 from .module_helpers import buff_window_share, ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    atom_receipt,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-)
+from .slot_control import atom_receipt
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
 
 PACKET_SHA256 = "ac50a4316c8ffc3f6f326c6be14ec20867f6301066621ff49ec26c1fad1b97a7"
 

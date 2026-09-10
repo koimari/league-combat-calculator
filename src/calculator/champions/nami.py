@@ -38,11 +38,11 @@ computation change. P is not a cast slot in this engine
 from typing import Any
 
 from .. import healing_helpers as _healing
+from .contract_vocabulary import coverage
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
-from .module_contract import coverage
 from .packet_module import build_packet_module
-from .slotlib import extract_named
+from .slot_extract import extract_named
 
 PACKET_SHA256 = "2590188ce529af2e9f91b00238597c2b85f6f388447f0e0f4f34f6e9c4b692f3"
 

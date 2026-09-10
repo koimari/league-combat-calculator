@@ -25,29 +25,17 @@ grow a fourth by accident.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from functools import cache
-from types import MappingProxyType
 from typing import Any
 
-from ..ability_spec import Quantity
-from ..delivery_eligibility import CombatantFacts
-from ..item_behavior import Compilability, Compilable, EngineLane
-from ..survival.actions import TransitionRank
-from ..trigger_stream import (
-    CAPABILITIES,
-    SELF_SCOPED_DELIVERIES,
-    Engine,
-    HolderPacket,
-    HolderStacking,
-    packet_source_literal,
-)
+from ..delivery_facts import CombatantFacts
+from ..survival.phases import TransitionRank
+from .capability import CapabilityView
 from .events import PairEvent, RoutedEvent, payload_from_packet, riders_from_packet
 from .identity import EventId, MechanicId, PairOrigin, PIdx
 from .route import PairDefender, RouteContext, resolve_route
-from .views import UnrankableNumber, ViewTag
 
 
 class Projection(Enum):
@@ -62,326 +50,6 @@ class Projection(Enum):
 
     SCORE = "score"
     RECEIPT = "receipt"
-
-
-class MixedViewFold(TypeError):
-    """Two numbers meaning different things were added together.
-
-    A ``TypeError`` and not a ``ValueError``, because the operands are not
-    the same *kind* of number: one is what the coupled walk delivered and the
-    other is what a single pair fight would have produced.  Their sum is not
-    a wrong total, it is not a total.
-    """
-
-    def __init__(self, left: ViewTag, right: ViewTag) -> None:
-        """Name both meanings, because the fix depends on which is wrong."""
-        super().__init__(
-            f"a {left.value} quantity may not be folded with a {right.value} "
-            "one; a sum may never mix views (D-62)"
-        )
-        self.left = left
-        self.right = right
-
-
-@dataclass(frozen=True, slots=True)
-class Tagged:
-    """A quantity and what it means — the only thing a fold may add.
-
-    ``Quantity.__add__`` (D-72) propagates *dispositions* through a sum: a
-    withheld member makes the total withheld, a structural zero folds as
-    zero.  It says nothing about views, because a disposition answers "did a
-    rule produce this" and a tag answers "which engine's answer is it".  Both
-    have to survive a sum, and the second is the one Imperial Mandate got
-    wrong: the pair engine's preview and the coupled walk's delivery are both
-    ``MEASURED``, both real, and adding them counts the mechanic twice.
-
-    So the tag rides the quantity through the algebra, and a fold of two
-    different tags raises rather than producing a number.  That is what
-    "folding differently-tagged sources is a construction error" means:
-    unrepresentable, not merely tested for.
-    """
-
-    quantity: Quantity
-    tag: ViewTag
-
-    def __add__(self, other: object) -> Tagged:
-        """Fold two quantities that mean the same thing, or refuse."""
-        if not isinstance(other, Tagged):
-            return NotImplemented
-        if other.tag is not self.tag:
-            raise MixedViewFold(self.tag, other.tag)
-        return Tagged(quantity=self.quantity + other.quantity, tag=self.tag)
-
-
-def fold_tagged(parts: Iterable[Tagged]) -> Tagged:
-    """Add every part, propagating both the disposition and the view.
-
-    Raises:
-        MixedViewFold: two parts carry different tags.
-        ValueError: there are no parts.  An empty fold has no view to carry,
-            and answering ``Measured(0.0)`` would invent one -- which is the
-            zero-versus-absent confusion the whole campaign is about, at the
-            aggregate.
-    """
-    total: Tagged | None = None
-    for part in parts:
-        total = part if total is None else total + part
-    if total is None:
-        raise ValueError(
-            "an empty fold has no view tag to carry; a total over nothing is "
-            "not a measured zero"
-        )
-    return total
-
-
-def ranked_total(parts: Iterable[Tagged], *, surface: str) -> float:
-    """Fold parts into the number a ranking reads, or refuse to produce one.
-
-    A total folded entirely from previews is well-typed and still not a score.
-    """
-    total = fold_tagged(parts)
-    if total.tag is not ViewTag.APPLIED:
-        raise UnrankableNumber(surface, f"a {total.tag.value} total", ["<fold>"])
-    return total.quantity.read()
-
-
-def tag_for(view_tags: Mapping[EngineLane, ViewTag], lane: EngineLane) -> ViewTag:
-    """What a declared mechanic's number means in *lane*, or a named refusal.
-
-    Raises rather than defaulting: a lane nobody declared a tag for has no
-    declared meaning, and answering ``APPLIED`` there is how a pair-authored
-    preview gets summed into a coupled total with no symptom.  Both readers go
-    through it, so "what does this number mean" has one implementation.
-    """
-    try:
-        return view_tags[lane]
-    except KeyError:
-        raise KeyError(
-            f"no view tag is declared for {lane.value}; a number with no "
-            "declared meaning may not be folded into a total"
-        ) from None
-
-
-@dataclass(frozen=True, slots=True)
-class MechanicView:
-    """The three facts ``program/`` may ask about one declared mechanic.
-
-    ``view_tags`` is keyed by :class:`~..item_behavior.EngineLane` here and
-    by ``trigger_stream.Engine`` on the declaration it projects.  The
-    widening is this class's job and not the declaration's: a walk half is
-    read by two lanes — the receipt walk and the compiled score walk — and
-    the bus cannot name ``EngineLane`` at all, because that enum's home
-    opens ``data/`` at import and the bus is a leaf that may not (D-35).
-    Widening here is what makes D-62's "exactly one tag per
-    ``(mechanic, EngineLane)``" a total function rather than a sentence.
-    """
-
-    compilability: Compilability
-    view_tags: Mapping[EngineLane, ViewTag]
-    holder_stacking: HolderStacking | None
-
-    def tag_for(self, lane: EngineLane) -> ViewTag:
-        """What this mechanic's number means in *lane*, or a named refusal."""
-        return tag_for(self.view_tags, lane)
-
-
-@dataclass(frozen=True, slots=True)
-class CapabilityView:
-    """A frozen projection of the capability registry — values, never callables.
-
-    Built once per request and read many times, so it is a mapping rather
-    than a scan.  A mechanic the registry does not declare is *absent*, and
-    :meth:`compilability_for` says so by raising: an undeclared mechanic that
-    defaulted to compilable is exactly the silent success this campaign
-    exists to remove.
-    """
-
-    mechanics: Mapping[MechanicId, MechanicView]
-
-    def compilability_for(self, mechanic: MechanicId) -> Compilability:
-        """One mechanic's compiled-kernel verdict, or a named refusal."""
-        try:
-            return self.mechanics[mechanic].compilability
-        except KeyError:
-            raise KeyError(
-                f"{mechanic!r} declares no capability; the compiled lane may "
-                "not assume a mechanic it has never heard of is representable"
-            ) from None
-
-    def compilable(self) -> bool:
-        """Whether every declared mechanic in this view can be compiled."""
-        return all(
-            isinstance(view.compilability, Compilable)
-            for view in self.mechanics.values()
-        )
-
-    def refusals(self) -> tuple[tuple[MechanicId, str], ...]:
-        """Every mechanic that cannot compile, with the reason it gives.
-
-        The reason is the fallback receipt's own sentence, so a rung can name the
-        declaration that forced it rather than reporting a slow path with no cause.
-        """
-        return tuple(
-            (mechanic, view.compilability.reason)
-            for mechanic, view in sorted(self.mechanics.items())
-            if not isinstance(view.compilability, Compilable)
-        )
-
-
-#: How one declared engine half widens into the lanes that read its numbers.
-#: A pair half is read by the pair engine; a walk half is read by both walks,
-#: which is the widening ``program/`` owns -- the bus may not name
-#: ``EngineLane`` at all, because that enum's home opens ``data/`` at import
-#: and the bus is a leaf that may not (D-35).
-_LANES_OF: Mapping[Engine, tuple[EngineLane, ...]] = MappingProxyType(
-    {
-        Engine.PAIR: (EngineLane.PAIR_ENGINE,),
-        Engine.WALK: (EngineLane.RECEIPT_WALK, EngineLane.COMPILED_SCORE_WALK),
-    }
-)
-
-
-@cache
-def declared_view_tags() -> Mapping[MechanicId, Mapping[EngineLane, ViewTag]]:
-    """The live registry's tags, per mechanic, widened to the reading lanes.
-
-    A mechanic's two engine halves are two capability rows and one answer:
-    the tags merge into a single ``(lane -> tag)`` mapping, which is what
-    makes :func:`tag_for` *total* over the lanes a mechanic is read by rather
-    than a lookup into whichever half a caller happened to hold.  Two rows
-    declaring the same ``(mechanic, lane)`` differently raise here, at the
-    first read, instead of resolving to whichever was iterated last.
-
-    Cached because the registry is frozen at import.
-    """
-    tags: dict[MechanicId, dict[EngineLane, ViewTag]] = {}
-    for capability in CAPABILITIES.values():
-        declared = tags.setdefault(MechanicId(capability.mechanic), {})
-        for engine, tag in capability.view_tags.items():
-            for lane in _LANES_OF[engine]:
-                if declared.setdefault(lane, tag) is not tag:
-                    raise ValueError(
-                        f"{capability.mechanic!r} declares two tags for "
-                        f"{lane.value}: {declared[lane].value} and "
-                        f"{tag.value}; a number with two declared meanings "
-                        "may not be folded into a total"
-                    )
-    return MappingProxyType(
-        {mechanic: MappingProxyType(declared) for mechanic, declared in tags.items()}
-    )
-
-
-@cache
-def pair_preview_mechanics() -> frozenset[str]:
-    """Mechanics whose pair-engine number is a preview, never a delivery.
-
-    A ``THEORETICAL`` pair half is what one attacker-versus-one-defender fight
-    *would* have produced.  The coupled walk owns the real number, so summing
-    the preview into a roster total is a double count with no symptom.
-
-    Both spellings of the mechanic are in the set: the pair half's own id and
-    the walk half that names it through ``pair_of``.  The pair engine stamps its
-    rows with whichever id its declared rule carries, and a join that knew only
-    one would silently stop excluding the day a rule was renamed to the other.
-    """
-    previewed: set[str] = set()
-    for mechanic, declared in declared_view_tags().items():
-        if EngineLane.PAIR_ENGINE not in declared:
-            continue
-        if tag_for(declared, EngineLane.PAIR_ENGINE) is not ViewTag.THEORETICAL:
-            continue
-        previewed.add(str(mechanic))
-        previewed.update(
-            walk.mechanic for walk in CAPABILITIES.values() if walk.pair_of == mechanic
-        )
-    return frozenset(previewed)
-
-
-def _rows_previewing(
-    result_breakdown: Mapping[str, Any], mechanics: frozenset[str]
-) -> frozenset[str]:
-    """The breakdown rows stamped as previews of one of *mechanics*."""
-    if not mechanics:
-        return frozenset()
-    return frozenset(
-        source
-        for source, entry in result_breakdown.items()
-        if isinstance(entry, Mapping) and entry.get("pair_preview_of") in mechanics
-    )
-
-
-def pair_preview_sources(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
-    """Which of one pair fight's breakdown rows are previews, not deliveries."""
-    return _rows_previewing(result_breakdown, pair_preview_mechanics())
-
-
-@cache
-def walk_repriced_mechanics() -> frozenset[str]:
-    """Previewed mechanics whose packet the walk re-prices instead of dropping.
-
-    A ``THEORETICAL`` pair row says the coupled walk owns the number, not *how*
-    the walk gets one, and the two answers need opposite treatment of the pair
-    engine's own event.  A **rider-delivered** walk half amplifies an event the
-    walk already carries, so the preview's event is a second copy and is dropped
-    (Shadowflame's Cinderbloom).  A :class:`~..trigger_stream.HolderPacket` half
-    prices *this* packet, so the engine's event survives as the packet being
-    re-priced and only its **number** leaves the roster total.
-
-    The delivery shape is the whole rule, read off the declaration.  Cached
-    because the registry is frozen at import.
-    """
-    previews = pair_preview_mechanics()
-    if not previews:
-        return frozenset()
-    repriced: set[str] = set()
-    for capability in CAPABILITIES.values():
-        if capability.engine is not Engine.WALK:
-            continue
-        if not isinstance(capability.packet_source, HolderPacket):
-            continue
-        repriced.add(capability.mechanic)
-        if capability.pair_of is not None:
-            repriced.add(capability.pair_of)
-    return frozenset(repriced) & previews
-
-
-@cache
-def dropped_preview_mechanics() -> frozenset[str]:
-    """Every previewed mechanic minus the ones the walk re-prices."""
-    return pair_preview_mechanics() - walk_repriced_mechanics()
-
-
-def dropped_pair_previews(result_breakdown: Mapping[str, Any]) -> frozenset[str]:
-    """The preview rows of one pair fight a roster composition leaves out."""
-    return _rows_previewing(result_breakdown, dropped_preview_mechanics())
-
-
-@cache
-def arming_stacking() -> Mapping[str, tuple[MechanicId, HolderStacking]]:
-    """Packet source -> the mechanic it arms, and how a second holder stacks.
-
-    Derived from the declaration rather than tabulated beside it: a walk half's
-    ``packet_source`` is the literal its packets carry, so a mechanic that
-    renames its packet stops resolving here instead of quietly arming under a
-    key nothing recognises.  Only dual-sided halves appear, because only they
-    declare a :class:`~..trigger_stream.HolderStacking`, and a packet whose
-    source is absent is admitted without a dedupe key ever being built.  A
-    **self-scoped** delivery stays out by the shape of its declaration: it arms
-    no modifier on a subject a second holder could collide with.  Cached because
-    the registry is frozen at import.
-    """
-    return MappingProxyType(
-        {
-            source: (
-                MechanicId(capability.mechanic),
-                capability.holder_stacking,
-            )
-            for capability in CAPABILITIES.values()
-            if capability.holder_stacking is not None
-            and not isinstance(capability.packet_source, SELF_SCOPED_DELIVERIES)
-            and (source := packet_source_literal(capability)) is not None
-        }
-    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -637,26 +305,13 @@ def build_program(
 
 
 __all__ = [
-    "CapabilityView",
     "DerivationCycle",
-    "MechanicView",
-    "MixedViewFold",
     "PairProgram",
     "ParamPatch",
     "Program",
     "Projection",
-    "Tagged",
     "build_program",
-    "declared_view_tags",
     "derivation_order",
-    "dropped_pair_previews",
-    "dropped_preview_mechanics",
-    "fold_tagged",
-    "pair_preview_mechanics",
-    "pair_preview_sources",
     "pair_program",
-    "ranked_total",
     "roster_program",
-    "tag_for",
-    "walk_repriced_mechanics",
 ]

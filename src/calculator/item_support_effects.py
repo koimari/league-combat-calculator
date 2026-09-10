@@ -9,10 +9,7 @@ assumes an active or a trigger that is absent from the authored event stream.
 from __future__ import annotations
 
 import math
-from collections.abc import Collection, Iterable, Iterator, Mapping
-from dataclasses import replace
-from functools import cache, lru_cache
-from types import MappingProxyType
+from collections.abc import Iterable, Mapping
 from typing import Any
 
 from .ability_spec import (
@@ -20,26 +17,36 @@ from .ability_spec import (
     Authority,
     DamageClass,
 )
+from .ally_packet_recipient import (
+    _CHAIN_FRACTION_KEYS,
+    _CHAIN_KINDS,
+    _ramp_value,
+    _recipient_amount,
+)
+from .ally_packet_shape import (
+    _MISSING,
+    _active_seconds,
+    _active_seconds_for,
+    _item_names,
+    _option,
+    _packet,
+    _producer,
+    _same_side,
+    _shred_ramp,
+    _teammates,
+)
 
 # The closed support-scope vocabulary and the kernel's typed trigger,
 # cooldown and cadence rules an item packet arms under.
-from .capabilities import SUPPORT_TARGET_SCOPES
+from .control_intervals import movement_entry
 from .interpreters.ally_packet import AllyPacketSlot, resolve_slots
-from .interpreters.resistance_shred import ShredSlot
-from .interpreters.resistance_shred import walk_slot as _shred_walk_slot
 
 # Phase 3's declarations, and the interpreter that resolves them.  A producer
 # is reached through the rule its registry entry declares — "does this holder
 # declare Everlasting?" — rather than by spelling the item that has it, and
 # every number comes back through the rule's own references, so a key no
 # declaration carries is a stop instead of a silent registry read.
-from .item_behavior import (
-    AllyProducer,
-    FightFacts,
-    LevelSubject,
-    PacketKind,
-    Resistance,
-)
+from .item_behavior import AllyProducer, PacketKind, Resistance
 from .item_effects import (
     AUTHORIZED_MANA_GATE_STATUSES,
     ITEM_INPUT_OPTIONS,
@@ -53,16 +60,22 @@ from .item_effects import (
 # ability's ``CcScope`` makes and ``resolve_route`` delivers, never the roster
 # position a pair scan happened to stamp.  ``program`` imports nothing from
 # here, so the edge is one-way.
-from .program import route as program_route
-from .program.identity import PIdx
-from .program.scope import Unreviewed, reviewed_scope, scope_policy
+from .program.scope import Unreviewed, reviewed_scope
 from .roster_composition import Combatant
-from .state_lifecycle import (
-    CcTriggerRule,
-    CooldownRule,
-    CooldownState,
-    InstanceCadence,
-    SourceReceipt,
+from .state_lifecycle import CooldownRule, CooldownState, InstanceCadence
+from .state_timeline import EventStamp, SourceReceipt
+from .support_event_view import (
+    _bus_streams,
+    _cc_ability_label,
+    _cc_event_stream,
+    _cc_mark_subjects,
+    _current_mana_at,
+    _mana_input,
+    _stack_triggers,
+    _support_triggers,
+    _target_by_id,
+    require_event_view,
+    resolve_knights_vow_tether,
 )
 
 # The item layer's one edge into the survival kernel: packet authors declare
@@ -71,698 +84,14 @@ from .state_lifecycle import (
 # ``.survival.actions`` executes ``survival/__init__.py``, so the whole
 # kernel package loads with this module.  Acyclic: nothing under
 # ``survival/`` imports ``item_support_effects``.
-from .survival.actions import SUPPORT_RANK_KEY, TransitionRank
+from .survival.actions import event_timestamp
+from .survival.phases import TransitionRank
 
 # The typed bus: one home for "what does this raw row mean?" and one for
 # "which streams does this holder read?".  A hand name set drifts from the
 # branch it gates.  ``trigger_stream``'s only intra-package import is
 # ``ability_spec``, so this edge adds no cycle.
-from .trigger_stream import (
-    CAPABILITIES,
-    RAW_STREAMS,
-    CcClass,
-    Trigger,
-    TriggerKind,
-    authored_triggers,
-    cross_participant_packet_source,
-    streams_for,
-    tuple_incapable_items,
-)
-
-# The one packet kind that changes how much damage some *other* participant
-# deals or takes, and therefore the kind ``_packet`` runs its authority and
-# damage-class checks on.  See *Cross-participant producers* below.
-_DAMAGE_MODIFIER_KIND = "damage_modifier"
-
-# The sentinel that separates "the caller supplied no value" from a real
-# zero; a mana read that is absent is a named denial, never a 0.0.
-_MISSING = object()
-
-
-def _same_side(attacker: Any, actor: Any) -> bool:
-    left = "main" if attacker.team in {"main", "ally"} else attacker.team
-    right = "main" if actor.team in {"main", "ally"} else actor.team
-    return left == right
-
-
-def _teammates(attacker: Combatant, all_actors: Iterable[Combatant]) -> list[Combatant]:
-    attacker_id = getattr(attacker, "participant_id", None)
-    return [
-        actor
-        for actor in all_actors
-        if getattr(actor, "participant_id", None) != attacker_id
-        and _same_side(attacker, actor)
-    ]
-
-
-def _item_names(attacker: Combatant) -> set[str]:
-    return {str(item.get("name", "")) for item in attacker.items}
-
-
-def _option(attacker: Any, item_name: str, key: str, default: float = 0.0) -> float:
-    request = getattr(attacker, "request", None)
-    item_options = getattr(request, "item_options", {}) or {}
-    options = item_options.get(item_name, {})
-    value = options.get(key, default) if isinstance(options, Mapping) else default
-    if isinstance(value, bool):
-        raise ValueError(f"{item_name}.{key} must be numeric")
-    try:
-        parsed = float(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError(f"{item_name}.{key} must be numeric") from exc
-    if not math.isfinite(parsed):
-        raise ValueError(f"{item_name}.{key} must be finite")
-    return parsed
-
-
-def _producer(
-    slots: Mapping[AllyProducer, tuple[AllyPacketSlot, ...]], producer: AllyProducer
-) -> AllyPacketSlot | None:
-    """This build's one holder of *producer*, or ``None``.
-
-    ``None`` is an answer, not a zero: the build declares the mechanic
-    nowhere, so no packet is owed.  Two holders is a stop — every producer but
-    the support quest is carried by exactly one registry record, and a second
-    one would be two ledgers nothing says how to combine.
-    """
-    found = slots.get(producer, ())
-    if len(found) > 1:
-        raise ValueError(
-            f"{[slot.owner for slot in found]} all declare the "
-            f"{producer.value} producer and no rule says how two of them "
-            "combine"
-        )
-    return found[0] if found else None
-
-
-def _shred_ramp(
-    attacker: Any, names: Collection[str], resistance: Resistance, producer: str
-) -> ShredSlot:
-    """This holder's declared shred of *resistance*, on the receipt-walk lane.
-
-    Both sides read the family's own declaration, through the interpreter
-    registered in the lane the family declares, so the shred is one mechanic
-    with one declaration and a score and a receipt cannot disagree.
-
-    A holder of the cross-participant half whose build declares no shred is a
-    **stop**: the packet would otherwise be emitted with no ramp behind it,
-    which is a modifier nobody declared rather than one measuring zero.
-
-    Two of the four :class:`~.item_behavior.BuildContext` facts are stated
-    rather than passed through: a shred is a per-stack fraction and a stack
-    cap, so no ``resistance_shred`` declaration reads a fight duration or a
-    target's bonus health.
-    """
-    slot = _shred_walk_slot(
-        sorted(frozenset(names)),
-        resistance,
-        facts=FightFacts(
-            level=int(attacker.stats.get("level", 1) or 1),
-            fight_duration_seconds=0.0,
-            target_bonus_health=0.0,
-            holder_is_melee=bool(attacker.stats.get("is_melee", False)),
-        ),
-    )
-    if slot is None:
-        raise ValueError(
-            f"{attacker.participant_id} declares the {producer} producer and no "
-            f"{resistance.value} resistance_shred rule; the walk would stage a "
-            "reduction packet whose ramp no declaration states"
-        )
-    return slot
-
-
-def _active_seconds(attacker: Any, slot: AllyPacketSlot | None) -> float:
-    """When the scenario cast *slot*'s active, or ``0.0`` if it never did."""
-    if slot is None:
-        return 0.0
-    return _active_seconds_for(attacker, slot.owner)
-
-
-def _active_seconds_for(attacker: Any, item_name: str) -> float:
-    """One validated active-seconds read for *item_name*.
-
-    Delegates to the typed ``input_option_float_value`` accessor so the
-    emission layer re-checks the schema bounds AND step multiple: a direct
-    timeline caller cannot author an out-of-domain activation even though
-    the request layer already validates.  Absent input reads 0.0 (no cast).
-    """
-    from .item_effects import input_option_float_value
-
-    request = getattr(attacker, "request", None)
-    item_options = getattr(request, "item_options", None) or {}
-    return input_option_float_value(
-        list(attacker.items), item_options, item_name, "active_seconds"
-    )
-
-
-def _event_time(event: Mapping[str, Any]) -> float:
-    value = event.get("time", 0.0)
-    try:
-        parsed = float(value)
-    except (TypeError, ValueError) as exc:
-        raise ValueError("item support event time must be numeric") from exc
-    if not math.isfinite(parsed):
-        raise ValueError("item support event time must be finite")
-    return parsed
-
-
-def _packet(  # pylint: disable=too-many-arguments
-    *,
-    attacker: Any,
-    target: Any,
-    time: float,
-    kind: str,
-    source: str,
-    amount: float = 0.0,
-    duration: float = 0.0,
-    target_scope: str = "one_teammate",
-    rank: TransitionRank | None = None,
-    authority: Authority | None = None,
-    damage_classes: frozenset[DamageClass] | None = None,
-    attack_classes: frozenset[AttackClass] | None = None,
-    **fields: Any,
-) -> dict[str, Any]:
-    """Build one sourced packet.
-
-    Keyword-only, and the argument-count check is disabled for the reason
-    ``trigger_stream``'s own builder disables it: every parameter is a
-    declared packet axis a call site names by keyword, and folding them into
-    one dict is the untyped bag the typed packet replaced.
-
-    ``rank`` is how a packet declares *when* it arms, for the packets whose
-    kind does not decide it (a barrier the triggering damage placed, say).
-    It is the only way to override the walk's ladder: an author names a
-    :class:`TransitionRank`, never a number.
-
-    ``authority`` is how a ``damage_modifier`` packet declares which engine
-    owns its mechanic.  It is required of those packets and meaningless on
-    the rest, it is checked here — the one construction site all six
-    cross-participant producers pass through — and it is deliberately *not*
-    written into the returned dict: the declaration's homes are this call
-    site and the mechanic's ``trigger_stream`` capability, and a packet
-    payload that grew a key would move receipts inside a semantic commit
-    (R-17).
-
-    ``damage_classes`` and ``attack_classes`` are how a ``damage_modifier``
-    packet says *what it applies to* — the two axes of D-04, both required
-    of those packets, both banned from being empty, and both checked here.
-    Unlike ``authority`` they are written into the returned dict, because
-    the walk reads them per packet; they reach no receipt, because the
-    published support-event payload is an explicit key list
-    (``participant_timeline``'s ``support_events`` block) and neither key is
-    on it.
-
-    ``rank`` also sits earlier in the returned dict than the open ordering
-    float it replaced did: that arrived through ``**fields``, after every
-    explicit key, and the rank is injected before them.  Inert — the
-    published receipt is assembled from an explicit key list, not from this
-    dict's order — but it is a payload-shape change beyond the key's name
-    and type, and a fixture comparing serialized packet order would see it.
-    """
-    if not math.isfinite(float(amount)) or float(amount) < 0.0:
-        raise ValueError(f"{source} packet amount must be finite and non-negative")
-    if not math.isfinite(float(duration)) or float(duration) < 0.0:
-        raise ValueError(f"{source} packet duration must be finite and non-negative")
-    if target_scope not in SUPPORT_TARGET_SCOPES:
-        raise ValueError(
-            f"{source} packet target_scope {target_scope!r} is outside the "
-            f"closed support scope vocabulary: {sorted(SUPPORT_TARGET_SCOPES)}"
-        )
-    attacker_id = getattr(attacker, "participant_id", None)
-    target_id = getattr(target, "participant_id", None)
-    if kind != "item_denial" and (
-        not isinstance(attacker_id, str)
-        or not attacker_id.strip()
-        or not isinstance(target_id, str)
-        or not target_id.strip()
-    ):
-        raise ValueError(f"{source} applied packet requires participant identity")
-    if kind == _DAMAGE_MODIFIER_KIND:
-        _check_cross_participant_authority(source, authority, fields.get("owner"))
-        _check_declared_classes(source, damage_classes, attack_classes)
-        _check_aura_arming(source, fields.get("persistent"), rank)
-        fields = {
-            "damage_classes": damage_classes,
-            "attack_classes": attack_classes,
-            **fields,
-        }
-    return {
-        "time": float(time),
-        "kind": kind,
-        "amount": float(amount),
-        "duration": float(duration),
-        "source": source,
-        "source_key": source,
-        "attacker": attacker_id,
-        "target": target_id,
-        "target_scope": target_scope,
-        "target_policy": "explicit_selected_roster_target",
-        "target_selection_key": fields.get("target_selection_key", f"{kind}:{source}"),
-        "_item_support": True,
-        **({SUPPORT_RANK_KEY: rank} if rank is not None else {}),
-        **fields,
-    }
-
-
-# Which declared packet a chained enchanter effect emits, keyed by the kind
-# of the packet that triggered it, and which sourced fraction that packet
-# carries.  Two tables rather than one runtime-computed kind (D-50): the kind
-# a producer emits has to be readable from the declaration, and the fraction
-# it uses has to be readable from the kind.
-_CHAIN_KINDS: Mapping[str, PacketKind] = MappingProxyType(
-    {"heal": PacketKind.HEAL, "shield": PacketKind.SHIELD}
-)
-
-_CHAIN_FRACTION_KEYS: Mapping[PacketKind, str] = MappingProxyType(
-    {
-        PacketKind.HEAL: "heal_chain_fraction",
-        PacketKind.SHIELD: "shield_chain_fraction",
-    }
-)
-
-
-def _ramp_value(
-    slot: AllyPacketSlot, key: str, *, holder: Any, recipient: Any
-) -> float:
-    """One declared level ramp, read at the level its declaration names."""
-    subject = slot.level_subject(key)
-    level = holder.level if subject is LevelSubject.HOLDER else recipient.level
-    return slot.level_value(key, level)
-
-
-#: Stamped on a packet whose amount was read at its RECIPIENT's own level,
-#: naming the producer and the ramp that priced it.  A one-ally packet's
-#: recipient is chosen downstream, so the price has to move with the choice.
-RECIPIENT_RAMP_KEY = "_recipient_level_ramp"
-
-#: The ``target_scope`` values whose recipient a request can still move after
-#: the packet was priced — the one condition under which
-#: :data:`RECIPIENT_RAMP_KEY` is ever read back.  Declared beside the stamp and
-#: consumed by ``participant_timeline._apply_item_support_selection``: a scope
-#: that lands on the whole team was already priced at each member's own level,
-#: so stamping it would promise a re-read that can never happen.
-RETARGETABLE_SCOPES: frozenset[str] = frozenset(
-    {
-        "one_teammate",
-        "explicit_selected_ally",
-        "healed_or_shielded_ally",
-        "most_wounded_ally",
-        "nearest_most_wounded_ally",
-        "other_nearest_wounded_ally",
-    }
-)
-
-
-def _recipient_amount(
-    slot: AllyPacketSlot, key: str, *, holder: Any, recipient: Any, scope: str
-) -> dict[str, Any]:
-    """The *key* ramp's amount, stamped when *scope* can still re-target it."""
-    fields: dict[str, Any] = {
-        "amount": _ramp_value(slot, key, holder=holder, recipient=recipient)
-    }
-    if (
-        slot.level_subject(key) is LevelSubject.RECIPIENT
-        and scope in RETARGETABLE_SCOPES
-    ):
-        fields[RECIPIENT_RAMP_KEY] = (slot.producer.value, key)
-    return fields
-
-
-@cache
-def reprice_slot(owner: str, producer_value: str) -> AllyPacketSlot | None:
-    """*owner*'s declared producer, compiled once per owner and producer."""
-    return _producer(resolve_slots({owner}), AllyProducer(producer_value))
-
-
-def repriced_for_recipient(
-    template: Mapping[str, Any], recipient: Combatant
-) -> dict[str, Any]:
-    """*template* with any recipient-scaled amount re-read at *recipient*.
-
-    The one re-read of :data:`RECIPIENT_RAMP_KEY`, for the one place a packet
-    can change hands after it was priced.  An unstamped template comes back
-    unchanged; a stamp naming a producer the holder's build does not declare
-    is a stop, never the default ally's amount.
-
-    The producer is compiled through :func:`reprice_slot`, whose cache holds
-    the DECLARATION and not a number — the slot's amounts stay live
-    ``ValueRef`` reads taken at ``level_value`` time — so only a registry
-    refresh moving an owner's producers can stale it.
-    """
-    stamp = template.get(RECIPIENT_RAMP_KEY)
-    if stamp is None:
-        return dict(template)
-    producer_value, key = stamp
-    source = str(template["source"])
-    owner = producer_item(source)
-    slot = reprice_slot(owner, producer_value)
-    if slot is None:
-        raise ValueError(
-            f"{source!r} is priced at its recipient's level, but {owner!r} "
-            f"declares no {producer_value!r} producer to re-read it through"
-        )
-    return {**template, "amount": slot.level_value(key, recipient.level)}
-
-
-def _support_triggers(
-    trigger_effects: Iterable[Mapping[str, Any]], attacker: Combatant
-) -> list[Mapping[str, Any]]:
-    """Return ally heal/shield packets that can trigger item passives."""
-    return [
-        event
-        for event in trigger_effects
-        if str(event.get("kind", "")) in {"heal", "shield"}
-        and str(event.get("target", "")) != attacker.participant_id
-    ]
-
-
-# Everlasting's crowd-control trigger predicate is kernel-owned
-# (state_lifecycle.CcTriggerRule): immobilize from the sourced
-# action-blocking vocabulary, or slow for a melee holder.  A bare
-# ``crowd_control`` flag does not distinguish the branches and stays
-# insufficient, exactly as the reviewed item coverage decided.
-_FIMBULWINTER_TRIGGER_RULE = CcTriggerRule(
-    name="Fimbulwinter — Everlasting crowd-control trigger",
-    slow_melee_only=True,
-    source=SourceReceipt.from_mapping(ITEM_INPUT_OPTIONS["Fimbulwinter"]),
-)
-
-# One rule per control-armed producer, and the shield is granted through
-# it. The pair engine's coverage certificate reads the same entry, so what
-# arms the shield and what the ledger says armed it cannot disagree.
-_CONTROL_TRIGGER_RULES: Mapping[AllyProducer, CcTriggerRule] = {
-    AllyProducer.EVERLASTING: _FIMBULWINTER_TRIGGER_RULE,
-}
-
-
-def control_trigger_rule(producer: AllyProducer) -> CcTriggerRule:
-    """The trigger rule one control-armed producer arms on.
-
-    Raises:
-        ValueError: The producer declares a crowd-control trigger and no
-            rule says which control arms it, so no reader can decide.
-    """
-    rule = _CONTROL_TRIGGER_RULES.get(producer)
-    if rule is None:
-        raise ValueError(
-            f"{producer.value} is armed by crowd control and names no "
-            "CcTriggerRule, so which control arms it is undeclared"
-        )
-    return rule
-
-
-def _cc_event_stream(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
-    """The deduplicated damage + control-only event stream.
-
-    Damage-attached control rides ``damage_events``; control-ONLY packets
-    (Darius E, Elise E, ...) ride ``control_events``.  The coupled pair
-    enrichment merges control-only rows INTO the per-event view, so a
-    ``(time, source_key, cc_kind)`` dedupe keeps exactly one copy of every
-    packet and never double-fires the same control packet.
-    """
-    seen: set[tuple[float, str, str]] = set()
-    out: list[Mapping[str, Any]] = []
-    for stream in (
-        result.get("damage_events", ()),
-        result.get("control_events", ()),
-    ):
-        for event in stream:
-            if not isinstance(event, Mapping):
-                continue
-            try:
-                event_time = float(event.get("time", 0.0) or 0.0)
-            except (TypeError, ValueError):
-                continue
-            key = (
-                round(event_time, 9),
-                str(event.get("source_key", "")),
-                str(event.get("cc_kind", "") or ""),
-            )
-            if key in seen:
-                continue
-            seen.add(key)
-            out.append(event)
-    return out
-
-
-def _mana_input(
-    raw: object,
-    *,
-    missing_reason: str,
-    invalid_reason: str,
-) -> tuple[float | None, str | None]:
-    """Validate one explicit mana value without inventing a fallback."""
-    if raw is _MISSING:
-        return None, missing_reason
-    if raw is None or isinstance(raw, bool):
-        return None, invalid_reason
-    try:
-        value = float(raw)
-    except (TypeError, ValueError):
-        return None, invalid_reason
-    if not math.isfinite(value) or value < 0.0:
-        return None, invalid_reason
-    return value, None
-
-
-def _stack_triggers(triggers: Iterable[Trigger]) -> Iterator[Trigger]:
-    """Non-reactive champion damage that landed on a named target.
-
-    The bus triggers on every authored row; this is the stack ledgers' side.
-    """
-    for trigger in triggers:
-        if trigger.damage <= 0.0 or trigger.reactive or not trigger.target_id:
-            continue
-        yield trigger
-
-
-def _current_mana_at(
-    result: Mapping[str, Any], event_time: float, initial_current_mana: object
-) -> tuple[float | None, str | None]:
-    """Resolve current mana from explicit state and ordered cast receipts."""
-    current, initial_reason = _mana_input(
-        initial_current_mana,
-        missing_reason="missing_current_mana",
-        invalid_reason="invalid_current_mana",
-    )
-    casts = result.get("cast_timeline", ())
-    if not isinstance(casts, Iterable):
-        return current, initial_reason
-    ordered = []
-    for cast in casts:
-        if not isinstance(cast, Mapping):
-            continue
-        try:
-            cast_time = float(cast.get("time", 0.0) or 0.0)
-        except (TypeError, ValueError):
-            continue
-        if not math.isfinite(cast_time) or cast_time > event_time + 1e-9:
-            continue
-        ordered.append((cast_time, cast))
-    for _, cast in sorted(ordered, key=lambda row: row[0]):
-        if "resource_after" not in cast:
-            continue
-        parsed, reason = _mana_input(
-            cast["resource_after"],
-            missing_reason="missing_current_mana",
-            invalid_reason="invalid_current_mana",
-        )
-        if reason is not None:
-            return None, reason
-        current = parsed
-        initial_reason = None
-    return current, initial_reason
-
-
-def _target_by_id(all_actors: Iterable[Any], participant_id: str) -> Any | None:
-    return next(
-        (actor for actor in all_actors if actor.participant_id == participant_id), None
-    )
-
-
-def _cc_ability_label(cc: Trigger, all_actors: Iterable[Any]) -> str:
-    """The ability an unreviewed crowd-control scope belongs to, named.
-
-    "Syndra E", not "E": the disclosure exists so a reader can go and take
-    the wiki reading H2 is waiting on, and a bare slot letter names no cast.
-    The caster is the control row's own ``attacker_id`` — never the packet
-    holder, who may be a different participant entirely.
-    """
-    caster = _target_by_id(all_actors, cc.attacker_id)
-    champion = str(
-        (getattr(caster, "champion_data", None) or {}).get("name", "")
-    ).strip()
-    slot = (
-        cc.source_key or cc.cc_kind or cc.ability_instance or "an unnamed cast"
-    ).strip()
-    return f"{champion} {slot}".strip() if champion else slot
-
-
-def _cc_mark_subjects(
-    attacker: Any, cc: Trigger, all_actors: list[Any], scope: Any
-) -> tuple[Any, ...]:
-    """Who a crowd-control mark reaches — routed, never scanned.
-
-    Two resolutions, in the order the decision is actually made.  The
-    ability's reviewed :mod:`program.scope` says how wide the control is and
-    therefore *who the trigger reached*; the mark then rides that trigger
-    through :class:`program.route.TriggerTarget`, which is what makes a mark
-    that hit one enemy route to one and a mark that hit two route to two,
-    instead of both routing to roster slot zero.
-
-    An empty tuple is the one data condition: the control row named a
-    participant this roster does not hold, so there is nobody to mark.
-    Everything else is a programming error and :func:`resolve_route` raises.
-    """
-    slots = {
-        actor.participant_id: PIdx(index) for index, actor in enumerate(all_actors)
-    }
-    defender = slots.get(cc.target_id)
-    author = slots.get(attacker.participant_id)
-    if defender is None or author is None:
-        return ()
-    context = program_route.RouteContext(
-        author=author,
-        holder=author,
-        pair_defender=defender,
-        opponents=tuple(
-            slots[actor.participant_id]
-            for actor in all_actors
-            if actor.team != attacker.team
-        ),
-    )
-    reached = program_route.resolve_route(
-        scope_policy(scope), context, roster_size=len(all_actors)
-    )
-    marked = program_route.resolve_route(
-        program_route.TriggerTarget(),
-        replace(context, trigger_subjects=reached),
-        roster_size=len(all_actors),
-    )
-    return tuple(all_actors[int(subject)] for subject in marked)
-
-
-def _selected_teammate(attacker: Any, teammates: list[Any], owner: str) -> Any | None:
-    """The teammate the holder's scenario tethered, under *owner*'s options."""
-    if not teammates:
-        return None
-    raw_index = _option(attacker, owner, "worthy_target_index", -1.0)
-    if float(raw_index) < 0.0:
-        # Pledge is unit-targeted: a MISSING authored index means no
-        # designation - fail closed instead of inventing the first
-        # teammate as Worthy (P3 package 3S).
-        return None
-    index = max(0, min(len(teammates) - 1, int(raw_index)))
-    return teammates[index]
-
-
-def resolve_knights_vow_tether(
-    holder: Any, all_actors: Iterable[Any]
-) -> dict[str, Any] | None:
-    """Resolve one Knight's Vow holder's Worthy tether.
-
-    Returns the authored target, the option gates, and the typed Sacrifice
-    values, or ``None`` when the holder declares no Sacrifice producer, has
-    no eligible teammate, or the authored Worthy index is the no-selection
-    sentinel.  Both the receipt scheduler and the compiled score staging
-    consume this one resolution so the walks cannot disagree about the
-    tether; every number comes back through the declaration's own
-    references, so the item is never spelled here.
-    """
-    sacrifice = _producer(resolve_slots(_item_names(holder)), AllyProducer.SACRIFICE)
-    if sacrifice is None:
-        return None
-    sacrifice.declared(PacketKind.HEAL)
-    target = _selected_teammate(
-        holder, _teammates(holder, list(all_actors)), sacrifice.owner
-    )
-    if target is None:
-        return None
-    return {
-        "holder": holder,
-        "target": target,
-        "redirect_fraction": sacrifice.value("redirect_fraction"),
-        "heal_fraction": sacrifice.value("holder_heal_fraction"),
-        "within_range": _option(holder, sacrifice.owner, "worthy_within_range", 1.0),
-        "holder_health_ready": _option(
-            holder, sacrifice.owner, "holder_above_30_percent", 1.0
-        ),
-        "range_units": sacrifice.value("worthy_range_units"),
-        "threshold": sacrifice.value("holder_health_threshold_ratio"),
-        "source_revision_id": int(sacrifice.value("source_revision_id")),
-    }
-
-
-def _starved_streams(names: Collection[str]) -> list[tuple[str, str]]:
-    """Each held holder that reads a raw stream, paired with that stream.
-
-    A projection of every mechanic's declared ``reads`` in
-    ``trigger_stream.CAPABILITIES``.  The label is the raw ledger key.
-    """
-    return sorted(
-        (item, f"{stream.value}_events")
-        for item in frozenset(names) & tuple_incapable_items()
-        for stream in streams_for(frozenset({item})) & RAW_STREAMS
-    )
-
-
-class EventViewStarvationError(ValueError):
-    """A declared event-view holder was handed the light tuple ledger.
-
-    The tuple rows are positional, so every scan below reads them as an
-    empty stream and prices the item at zero without failing.  That is a
-    projection a consumer cannot answer from — a programming error, not a
-    data condition — so it is raised rather than absorbed.
-    """
-
-
-def require_event_view(result: Mapping[str, Any], names: Collection[str]) -> None:
-    """Raise when a declared event-view holder is handed tuple rows.
-
-    The score-only tuple ledger (``damage_events_tuple``) carries positional
-    rows that no scan below can read.  After the pipeline's tuple gate
-    consults ``tuple_incapable_items()`` no public request can reach this
-    state, so the raise is a programming-error tripwire rather than a
-    user-facing outcome.
-    """
-    if not result.get("damage_events_tuple"):
-        return
-    starved = _starved_streams(names)
-    if not starved:
-        return
-    read = "; ".join(f"{item} reads {stream}" for item, stream in starved)
-    raise EventViewStarvationError(
-        "STARVED: the score-only tuple ledger cannot answer the item support "
-        f"scan — {read}.  The pipeline's tuple gate must keep dict rows for "
-        "every event-view holder."
-    )
-
-
-def _bus_streams(
-    result: Mapping[str, Any], names: Collection[str]
-) -> tuple[list[Trigger], list[Trigger], list[Trigger]]:
-    """One engine result as the control, damage and takedown views of it.
-
-    The compiler reads each stream once and the bus builds only the streams
-    the held holders declare, so a holder reading none pays nothing — that
-    laziness is the whole reason the migration is performance-neutral
-    (D-30).  ``tuple_incapable_items()`` is exactly the set of holders that
-    read a raw stream, so intersecting first also bounds the projection's
-    cache key to those names rather than to every build the optimizer
-    explores.
-    """
-    scanning = frozenset(names) & tuple_incapable_items()
-    by_kind: dict[TriggerKind, list[Trigger]] = {kind: [] for kind in TriggerKind}
-    for trigger in authored_triggers(
-        result, streams=streams_for(scanning), holder=", ".join(sorted(scanning))
-    ):
-        by_kind[trigger.kind].append(trigger)
-    return (
-        by_kind[TriggerKind.CC],
-        by_kind[TriggerKind.DAMAGE],
-        by_kind[TriggerKind.TAKEDOWN],
-    )
+from .trigger_stream import CcClass
 
 
 def _support_quest_packets(
@@ -840,7 +169,7 @@ def _cleanse_active_packet(
     attacker: Any, target: Any, time: float, item: str
 ) -> dict[str, Any]:
     """One self-cast cleanse-kind packet for a cleanse active item."""
-    from .cleanse_eligibility import item_declaration
+    from .cleanse_declarations import item_declaration
 
     declaration = item_declaration(item)
     return _packet(
@@ -859,7 +188,7 @@ def _cleanse_active_packet(
 
 def _cleanse_movement_entry(item: str) -> dict[str, Any] | None:
     """*item*'s atom-backed movement entry, or ``None`` when it grants none."""
-    from .cleanse_eligibility import item_declaration, movement_entry
+    from .cleanse_declarations import item_declaration
 
     return movement_entry(item_declaration(item))
 
@@ -871,7 +200,7 @@ def _self_cleanse_items(names: Iterable[str]) -> tuple[str, ...]:
     is a property of the registry every reader can see and not of whatever
     order a request happened to list its items in.
     """
-    from .cleanse_eligibility import ITEM_CLEANSE_DECLARATIONS
+    from .cleanse_declarations import ITEM_CLEANSE_DECLARATIONS
 
     held = frozenset(names)
     return tuple(
@@ -1142,6 +471,7 @@ def derive_item_support_effects(
     everlasting = _producer(slots, AllyProducer.EVERLASTING)
     if everlasting is not None:
         everlasting.declared(PacketKind.SHIELD)
+        arming = everlasting.control_arming
         # The kernel's trigger rule reads the raw event rows, not the bus's
         # typed ``Trigger`` view: a denial receipt names the row's own
         # ``_event_id``, ``cc_kind`` and cast instance, and the bus does not
@@ -1154,9 +484,7 @@ def derive_item_support_effects(
         # Filtering on the bus predicate would drop rows Everlasting's own
         # declaration accepts.
         everlasting_events = [
-            event
-            for event in _cc_event_stream(result)
-            if _FIMBULWINTER_TRIGGER_RULE.is_candidate(event)
+            event for event in _cc_event_stream(result) if arming.is_candidate(event)
         ]
         is_melee = bool(attacker.stats.get("is_melee", False))
         champion_stats = result.get("champion_stats", attacker.stats)
@@ -1188,14 +516,14 @@ def derive_item_support_effects(
             return _packet(
                 attacker=attacker,
                 target=attacker,
-                time=_event_time(event),
+                time=event_timestamp(event),
                 kind=PacketKind.ITEM_DENIAL.value,
                 source="Fimbulwinter — Everlasting",
                 target_scope="self",
                 reason=reason,
                 cc_kind=str(event.get("cc_kind", "") or ""),
                 event_id=event.get("_event_id"),
-                trigger_rule=_FIMBULWINTER_TRIGGER_RULE.public_receipt(),
+                trigger_rule=arming.public_receipt(),
                 mana_gate_status=mana_gate["status"],
                 nearby_enemy_range_units=range_authority["range_units"],
                 range_center=(
@@ -1214,7 +542,7 @@ def derive_item_support_effects(
             packets.extend(
                 _denial(event, "missing_holder_identity")
                 for event in everlasting_events
-                if _FIMBULWINTER_TRIGGER_RULE.match(event, is_melee=is_melee)
+                if arming.match(event, is_melee=is_melee)
             )
             everlasting_events = []
 
@@ -1223,7 +551,7 @@ def derive_item_support_effects(
         # is receipted once (an event with NO CC metadata is not a candidate
         # and produces nothing).
         for event in _cc_event_stream(result):
-            reason = _FIMBULWINTER_TRIGGER_RULE.denial_reason(event, is_melee=is_melee)
+            reason = arming.denial_reason(event, is_melee=is_melee)
             if reason:
                 packets.append(_denial(event, reason))
 
@@ -1238,13 +566,13 @@ def derive_item_support_effects(
         # several CC-marked events still arms Everlasting once.
         cast_cadence = InstanceCadence(once_only=True)
         for event in everlasting_events:
-            trigger_kind = _FIMBULWINTER_TRIGGER_RULE.match(event, is_melee=is_melee)
+            trigger_kind = arming.match(event, is_melee=is_melee)
             if not trigger_kind:
                 # The CC-adjacent scan above already receipted this event
                 # with its named reason (ranged_slow / untyped_cc /
                 # unknown_cc_kind); it is not an eligible branch.
                 continue
-            time = _event_time(event)
+            time = event_timestamp(event)
             raw_cast_identity = event.get("ability_instance")
             if not isinstance(raw_cast_identity, str) or not raw_cast_identity.strip():
                 packets.append(_denial(event, "missing_instance_identity"))
@@ -1353,7 +681,7 @@ def derive_item_support_effects(
                 everlasting.value("everlasting_base_shield")
                 + current_mana * everlasting.value("everlasting_current_mana_ratio")
             ) * multiplier
-            cooldown_state.start(time, sequence=0)
+            cooldown_state.start(EventStamp(time))
             packets.append(
                 _packet(
                     attacker=attacker,
@@ -1389,7 +717,7 @@ def derive_item_support_effects(
                     multi_target_multiplier=multiplier,
                     cooldown=cooldown_rule.cooldown_seconds,
                     cooldown_until=time + cooldown_rule.cooldown_seconds,
-                    trigger_rule=_FIMBULWINTER_TRIGGER_RULE.public_receipt(),
+                    trigger_rule=arming.public_receipt(),
                     source_url=source_meta["source_url"],
                     source_revision_id=source_meta["source_revision_id"],
                     rank=TransitionRank.LATE_BARRIER,
@@ -1615,7 +943,7 @@ def derive_item_support_effects(
         target = _target_by_id(all_actors, str(trigger.get("target", "")))
         if target is None:
             continue
-        time = _event_time(trigger)
+        time = event_timestamp(trigger)
         if sanctify is not None:
             packets.extend(
                 _packet(
@@ -1879,7 +1207,7 @@ def derive_item_support_effects(
                     damage_classes=frozenset(DamageClass),
                     attack_classes=frozenset(AttackClass),
                     # The holder's pair engine prices its own amp
-                    # (damage._apply_command_amp); the walk applies
+                    # (fight.after.amplifiers._apply_command_amp); the walk applies
                     # this packet to every other participant only.
                     # Command's authority move to
                     # coupled-authoritative-with-preview is what H2 still
@@ -2211,7 +1539,7 @@ def schedule_knights_vow(
                 _packet(
                     attacker=holder,
                     target=holder,
-                    time=_event_time(event),
+                    time=event_timestamp(event),
                     kind="heal",
                     source="Knight's Vow — Sacrifice",
                     amount=amount * heal_fraction,
@@ -2245,136 +1573,4 @@ def schedule_knights_vow(
 # reads to prove its scenario set covers every producer (runbook R-12).
 
 
-@lru_cache(maxsize=1)
-def _declared_authorities() -> Mapping[str, Authority]:
-    """Every declared cross-participant packet source and its owning engine.
-
-    The key is the walk packet's ``source`` literal and the value the
-    ``Authority`` that capability declares.  Which halves qualify is
-    ``trigger_stream.cross_participant_packet_source``'s answer.
-
-    Cached because ``_packet`` consults it on every cross-participant packet
-    it builds and the stack-ledger producers build one per damage event.
-    """
-    return MappingProxyType(
-        {
-            source: capability.authority
-            for capability in sorted(
-                CAPABILITIES.values(), key=lambda cap: cap.mechanic
-            )
-            if (source := cross_participant_packet_source(capability)) is not None
-        }
-    )
-
-
-def _check_cross_participant_authority(
-    source: str, authority: Authority | None, owner: Any
-) -> None:
-    """Every ``damage_modifier`` packet names its engine, and only ``SPLIT`` owns.
-
-    The rule keys on the declared :class:`Authority`, never on a flag: three
-    of the six producers set no ``all_sources``, so an ``all_sources``-keyed
-    check passes Dream Maker, Black Cleaver and Bloodletter's Curse by
-    construction (D-07).  ``owner`` is the walk's skip handshake — the
-    holder's own contribution is priced pair-side — so it is meaningful
-    exactly when the two halves are disjoint, which is what ``SPLIT`` says.
-
-    This is also where a call site is bound to the registry: the packet is
-    built with an ``authority=`` argument and it must be the one
-    ``CAPABILITIES`` declares for that ``packet_source``, so the declaration
-    and the construction cannot drift without a raise naming both.
-    """
-    declared = _declared_authorities().get(source)
-    if declared is None:
-        raise ValueError(
-            f"{source} modifies another participant's damage but names no "
-            "Authority; every damage_modifier packet declares one (D-07)"
-        )
-    if authority is not declared:
-        raise ValueError(
-            f"{source} was built with authority={authority} but its packet "
-            f"declares {declared.value}"
-        )
-    if owner is not None and declared is not Authority.SPLIT:
-        raise ValueError(
-            f"{source} declares {declared.value} and carries owner={owner!r}; "
-            "only SPLIT has a pair-side half for the walk to skip"
-        )
-    if owner is None and declared is Authority.SPLIT:
-        raise ValueError(
-            f"{source} declares SPLIT and carries no owner; the pair-local "
-            "half is unreachable to the walk's skip and the holder is priced "
-            "twice"
-        )
-
-
-def _check_declared_classes(
-    source: str,
-    damage_classes: frozenset[DamageClass] | None,
-    attack_classes: frozenset[AttackClass] | None,
-) -> None:
-    """Every ``damage_modifier`` packet says which damage it applies to (D-04).
-
-    Both axes are required with no default and neither may be empty:
-    "empty means all" is a silent default, and the walk that consumed these
-    packets untyped amplified a magic-only curse onto physical and true
-    damage alike.  ``attack_classes`` is the axis on which "from all
-    sources" becomes something a packet can *state* rather than something a
-    reader infers from a missing restriction.
-    """
-    for name, declared, vocabulary in (
-        ("damage_classes", damage_classes, DamageClass),
-        ("attack_classes", attack_classes, AttackClass),
-    ):
-        if not declared:
-            raise ValueError(
-                f"{source} modifies another participant's damage and declares "
-                f"no {name}; a non-empty frozenset of "
-                f"{vocabulary.__name__} is required and empty-means-all is "
-                "banned (D-04)"
-            )
-        if not all(isinstance(member, vocabulary) for member in declared):
-            raise ValueError(
-                f"{source} declares {name} holding something other than "
-                f"{vocabulary.__name__} members"
-            )
-
-
-def _check_aura_arming(
-    source: str, persistent: Any, rank: TransitionRank | None
-) -> None:
-    """A persistent cross-participant modifier is an aura, and arms as one.
-
-    A ``damage_modifier`` some trigger armed is a debuff, resolving after the
-    damage at its own timestamp.  A *persistent* one was in force when the
-    fight opened, so that ordering would make the opening exchange the one
-    exchange the aura does not price.  The kind cannot tell the two apart, so
-    the aura declares ``AURA_ARM`` and this refuses a persistent modifier that
-    does not.
-    """
-    if not persistent:
-        return
-    if rank is not TransitionRank.AURA_ARM:
-        raise ValueError(
-            f"{source} is a persistent damage_modifier and declares "
-            f"rank={rank}; a persistent modifier is an aura already in "
-            "force and must declare TransitionRank.AURA_ARM, or it prices "
-            "nothing at its own timestamp (C4)"
-        )
-
-
-def producer_item(source: str) -> str:
-    """The item name a producer's ``source`` literal names."""
-    return source.split(" — ", 1)[0].strip()
-
-
-__all__ = [
-    "RECIPIENT_RAMP_KEY",
-    "RETARGETABLE_SCOPES",
-    "derive_item_support_effects",
-    "producer_item",
-    "reprice_slot",
-    "repriced_for_recipient",
-    "require_event_view",
-    "schedule_knights_vow",
-]
+__all__ = ["derive_item_support_effects", "schedule_knights_vow"]

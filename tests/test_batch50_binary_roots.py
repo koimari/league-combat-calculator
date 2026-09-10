@@ -8,6 +8,7 @@ from src.calculator.binary_roots import (
     data_value,
     spell_object,
 )
+from src.calculator.champions import aphelios_weapons
 
 
 def test_taliyah_worked_ground_constants_come_from_the_binary():
@@ -54,11 +55,10 @@ def test_rell_break_the_mold_ratios_keep_binary_stat_order():
 
 
 def test_aphelios_calibrum_mark_ratio_comes_from_the_binary():
-    from src.calculator.champions import aphelios
 
     q = spell_object("Aphelios", "ApheliosCalibrumQ")
     assert calculation_coefficient(q, "BonusDamagePerMark") == pytest.approx(
-        aphelios._CALIBRUM_MARK_BONUS_AD_RATIO
+        aphelios_weapons._CALIBRUM_MARK_BONUS_AD_RATIO
     )
 
 

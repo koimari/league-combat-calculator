@@ -1,0 +1,24 @@
+{
+  "source": "src/calculator/champions/aurelion_sol.py",
+  "decisions": [
+    "No new directory: the module lands beside its source in the existing src/calculator/champions package, so packages is empty."
+  ],
+  "packages": {},
+  "modules": [
+    {
+      "path": "src/calculator/champions/aurelion_sol_stardust.py",
+      "docstring": "The Stardust stack pool, and what a Q burst and an E execute are worth per stack.",
+      "defs": [
+        "_Q_BURSTS_PER_CHANNEL",
+        "_Q_SPELL",
+        "_E_SPELL",
+        "_Q_BURST_MAXHP_PCT_PER_STARDUST",
+        "_E_EXECUTE_BASE_PCT",
+        "_E_EXECUTE_PCT_PER_100_STARDUST",
+        "_STARDUST_PER_Q_BURST",
+        "_StardustRule",
+        "AURELION_SOL_STARDUST_RULE"
+      ]
+    }
+  ]
+}

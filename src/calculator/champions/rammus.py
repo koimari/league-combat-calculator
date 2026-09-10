@@ -54,20 +54,18 @@ Roadmap session (2026-08-21): closes both of Rammus' out_of_scope slots
 
 from typing import Any
 
-from ..ability_spec import ControlScope, DamagePart
+from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import BUFF, CC_PER_PART, SlotCtx
+from ..control_spec import ControlScope
+from .contract_vocabulary import coverage
+from .engine import BUFF, SlotCtx
 from .inputs import int_option
-from .module_contract import coverage
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
-    STEROID_ZERO,
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    with_control_event,
-)
+from .slot_cc import CC_PER_PART
+from .slot_control import with_control_event
+from .slot_entries import STEROID_ZERO, damage_entry
+from .slot_extract import ability_name, extract_cooldown
 
 # The thorns flat damage and ratios are binary DataValues (DefensiveBallCurl
 # — W — FlatDamageReturn / DamageArmorRatio / DamageMRRatio); the cached W

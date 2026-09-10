@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Prose lint over ``src/`` and ``scripts/``: docstrings and comments hold current state.
 
-``tests/test_prose_lint.py`` pins three findings at zero: a function docstring
+``tests/test_prose_lint.py`` pins four findings at zero: a function docstring
 longer than the body it documents, a comment run longer than the function it
-belongs to, and prose about what the code was rather than what it is.  A fourth,
-``pointer``, names prose citing a campaign document where the reason itself
-belongs; it reports without failing.  Prose citing a wiki URL or a game file for
-a number is evidence, and is never reported.
+belongs to, prose about what the code was rather than what it is, and a section
+banner with no statement under it, which is what an extraction leaves when it
+cuts the bodies out and not the headers.  A fifth, ``pointer``, names prose
+citing a campaign document where the reason itself belongs; it reports without
+failing.  Prose citing a wiki URL or a game file for a number is evidence, and
+is never reported.
 
 A comment run belongs to the function holding it, or — when it touches a ``def``
 — to the definition it introduces.  Inside a body the bound is the body; above
@@ -24,12 +26,12 @@ import json
 import re
 import sys
 import tokenize
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TARGETS = ("src", "scripts")
-FAILING = ("long_docstring", "long_comment", "history")
+FAILING = ("long_docstring", "long_comment", "history", "dead_banner")
 SCOPES = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 FUNCS = (ast.FunctionDef, ast.AsyncFunctionDef)
 
@@ -47,6 +49,7 @@ POINTER = re.compile(
     r"\bAmendment\b|\bRuling\b|\bD-\d{2,3}\b|\bPhase \d|\bwave \d|\bslice\b|\bcampaign\b",
     re.IGNORECASE,
 )
+BANNER = re.compile(r"^# -{5,}$")
 
 
 def _span(nodes: list[ast.stmt]) -> int:
@@ -94,6 +97,32 @@ def _comment_bound(
     return heads.get(line + len(block))
 
 
+def _dead_banners(
+    blocks: Iterable[tuple[int, list[str]]], tree: ast.Module
+) -> list[int]:
+    """The first line of every section banner with no statement beneath it.
+
+    A banner runs to the next banner, so its section is empty when no top-level
+    statement starts in between.
+    """
+    starts = [node.lineno for node in tree.body]
+    banners = [
+        (line, line + len(block) - 1)
+        for line, block in blocks
+        if BANNER.match(block[0].strip()) and BANNER.match(block[-1].strip())
+    ]
+    return [
+        line
+        for index, (line, end) in enumerate(banners)
+        if not any(
+            end
+            < start
+            < (banners[index + 1][0] if index + 1 < len(banners) else 1 << 30)
+            for start in starts
+        )
+    ]
+
+
 def _cite(found: Mapping[str, list], where: str, line: int, text: str) -> None:
     for offset, raw in enumerate(text.splitlines()):
         if EVIDENCE.search(raw):
@@ -105,8 +134,8 @@ def _cite(found: Mapping[str, list], where: str, line: int, text: str) -> None:
 
 
 def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str]]:
-    """Report the four findings over every ``.py`` file under ``TARGETS``."""
-    found: dict[str, list[str]] = {k: [] for k in (*FAILING, "pointer")}
+    """Report the five findings over every ``.py`` file under ``TARGETS``."""
+    found: dict[str, list[str]] = {key: [] for key in (*FAILING, "pointer")}
     paths = (
         p for t in TARGETS for p in (root / t).rglob("*.py") if p.name not in exclude
     )
@@ -124,11 +153,14 @@ def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str
                 found["long_docstring"].append(f"{where}:{doc.lineno}: {node.name}")
         funcs = [n for n in ast.walk(tree) if isinstance(n, FUNCS)]
         heads = _definition_spans(funcs)
-        for line, block in _comment_blocks(source):
+        blocks = _comment_blocks(source)
+        for line, block in blocks:
             _cite(found, where, line, "\n".join(block))
             bound = _comment_bound(line, block, funcs, heads)
             if bound is not None and len(block) > bound:
                 found["long_comment"].append(f"{where}:{line}: {len(block)} lines")
+        for line in _dead_banners(blocks, tree):
+            found["dead_banner"].append(f"{where}:{line}: banner over nothing")
     return found
 
 

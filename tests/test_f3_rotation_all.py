@@ -20,6 +20,9 @@ This suite asserts the combo invariants for EVERY champion:
     same champion;
 (d) the order is a permutation of the certified/base slots (no invented
     slots, none dropped), and the verified seeds stay as overrides.
+
+file-length-ok: one case per invariant per registered champion, and the
+denominator is the registry rather than a chosen sample.
 """
 
 from dataclasses import replace
@@ -27,6 +30,7 @@ from dataclasses import replace
 import pytest
 
 from src.calculator import data_registry
+from src.calculator.ability_dps_matrix import _MATRIX_DPS_CACHE
 from src.calculator.cast_dependency import (
     DEPENDENCY_KINDS,
     INFERRED_EDGE_KINDS,
@@ -36,22 +40,22 @@ from src.calculator.cast_dependency import (
     ResolvedCycleError,
     SuppressedInference,
 )
+from src.calculator.cast_edge_inference import detect_setup_consume_edges
+from src.calculator.cast_edge_markers import _PRE_CAMPAIGN_CC_ORDERING, _Edge
+from src.calculator.cast_edge_resolution import (
+    DependencyReceipt,
+    merge_declared_edges,
+    resolved_edges,
+)
+from src.calculator.cast_order_overrides import CAST_ORDER_OVERRIDES
+from src.calculator.champion_rotation_rule import (
+    _DERIVED_RULE_CACHE,
+    derive_champion_rule,
+)
 from src.calculator.champions import get_champion_cast_order
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.data_registry import data_version
-from src.calculator.rotation_resolver import (
-    _DERIVED_RULE_CACHE,
-    _MATRIX_DPS_CACHE,
-    _PRE_CAMPAIGN_CC_ORDERING,
-    CAST_ORDER_OVERRIDES,
-    DependencyReceipt,
-    _Edge,
-    derive_champion_rule,
-    detect_setup_consume_edges,
-    merge_declared_edges,
-    resolve_cast_order,
-    resolved_edges,
-)
+from src.calculator.rotation_resolver import resolve_cast_order
 
 # Documented seed exceptions: the verified F2 seed deliberately deviates
 # from a data edge (the seed's judgment wins; each is justified in the
@@ -1129,7 +1133,7 @@ class TestTheDerivationReadsDeclarations:
         the module, and serving the base order would be exactly the
         silent fallback this phase exists to end.
         """
-        from src.calculator import champions as champions_module
+        from src.calculator import cast_edge_resolution, champion_rotation_rule
 
         cycle = (
             CastDependency(
@@ -1147,9 +1151,10 @@ class TestTheDerivationReadsDeclarations:
                 source="https://wiki.leagueoflegends.com/en-us/Ahri@4024662",
             ),
         )
-        monkeypatch.setattr(
-            champions_module, "get_champion_cast_dependencies", lambda name: cycle
-        )
+        for module in (cast_edge_resolution, champion_rotation_rule):
+            monkeypatch.setattr(
+                module, "get_champion_cast_dependencies", lambda name: cycle
+            )
         _DERIVED_RULE_CACHE.clear()
         data = champion_by_name["Ahri"]
         parsed = _parse(data, 11, (), {})

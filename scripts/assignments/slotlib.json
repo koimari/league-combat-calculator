@@ -1,0 +1,76 @@
+{
+ "source": "src/calculator/champions/slotlib.py",
+ "decisions": [
+  "No new directory: all three modules land beside their source in the existing src/calculator/champions package, so packages is empty.",
+  "The file's own three section banners are the concept lines, so the cut follows them: the modifier walk, the entry dicts, the control atoms. with_control, park_control_interval and with_control_event join the control atoms because a control archetype is what an atom is for.",
+  "slotlib.py keeps the remaining archetype factories and no re-export: about 150 champion modules import three names from three modules instead of one, which is the codemod scripts/module_readers.py runs.",
+  "Published spelling: slotlib reads both slot_control helpers across the boundary, so _resolve_casts is resolve_casts and _resolve_source is resolve_source."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/champions/slot_extract.py",
+   "docstring": "The one effects[].leveling[].modifiers[] walk.",
+   "defs": [
+    "ModifierOverride",
+    "PER_LEVEL_SCALING",
+    "_MODIFIER_PAIRS_MEMO",
+    "_NAMED_LEVELING_MEMO",
+    "_PRIMARY_LEVELING_MEMO",
+    "_PER_LEVEL_VALUES",
+    "_axis_index",
+    "sum_modifiers",
+    "extract_named",
+    "_find_primary_damage_leveling",
+    "extract_auto",
+    "find_named_leveling",
+    "_modifier_value",
+    "extract_value",
+    "pct_health_per_hit",
+    "ability_name",
+    "extract_cooldown",
+    "extract_resource_cost",
+    "_NUMBER",
+    "_PERCENT",
+    "extract_cast_time",
+    "build_stats_context"
+   ]
+  },
+  {
+   "path": "src/calculator/champions/slot_entries.py",
+   "docstring": "The entry dicts a slot parser hands the fight engine.",
+   "defs": [
+    "MODULE_FORMULA_ZERO",
+    "STEROID_ZERO",
+    "damage_entry",
+    "post_hit_proc_row",
+    "support_cast",
+    "attach_self_shield",
+    "on_hit_entry",
+    "HitRider",
+    "with_hit_rider",
+    "fixed_count_pet_row",
+    "ability_on_hit_entry"
+   ]
+  },
+  {
+   "path": "src/calculator/champions/slot_control.py",
+   "docstring": "A control atom, and the archetypes that attach one to a slot.",
+   "defs": [
+    "_resolve_source",
+    "_control_duration_atom",
+    "ATOM_RECEIPT_KEYS",
+    "atom_receipt",
+    "_PROSE_CONTROL_PREFIXES",
+    "_prose_control_atom",
+    "_control_magnitude_atom",
+    "_require_seconds",
+    "_resolve_casts",
+    "extract_recharge",
+    "with_control",
+    "park_control_interval",
+    "with_control_event"
+   ]
+  }
+ ]
+}

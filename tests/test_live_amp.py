@@ -23,18 +23,18 @@ from types import SimpleNamespace
 import pytest
 
 from src import app as app_module
-from src.calculator.defensive_effects import StartingDefenses
-from src.calculator.delivery_eligibility import (
-    SPELL_SHIELD_ONE_USE_RULE,
-    DefenseWindow,
-    SourceReceipt,
-    SpellShieldComposition,
-    SpellShieldEligibility,
-)
+from src.calculator.delivery_facts import DefenseWindow
 from src.calculator.item_behavior import FightFacts
 from src.calculator.participant_timeline import Combatant
 from src.calculator.program.amp import LiveAmpRider, live_amp_for, live_amp_riders
 from src.calculator.program.compile import action_from_event
+from src.calculator.spell_shield_eligibility import (
+    SPELL_SHIELD_ONE_USE_RULE,
+    SpellShieldComposition,
+    SpellShieldEligibility,
+)
+from src.calculator.starting_defenses import StartingDefenses
+from src.calculator.state_timeline import SourceReceipt
 from src.calculator.survival import (
     EVENT_SLOTS,
     ActionKind,
@@ -46,7 +46,7 @@ from src.calculator.survival import (
     finalize_states,
     run_survival_walk,
 )
-from src.calculator.survival.actions import LiveAmp, LiveProbe
+from src.calculator.survival.typed_action import LiveAmp, LiveProbe
 
 CINDERBLOOM = LiveAmp(
     probe=LiveProbe.HEALTH_BELOW_RATIO,

@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 
-from src.calculator.ability_spec import IMMOBILIZING_CC_KINDS
 from src.calculator.champions import parse_champion_abilities
+from src.calculator.control_spec import IMMOBILIZING_CC_KINDS
 from src.calculator.data_fetcher import get_champion
 from tests.app_config import app_config
 

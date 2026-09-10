@@ -22,7 +22,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .inputs import int_option
 from .packet_module import build_packet_module
-from .slotlib import ability_name
+from .slot_extract import ability_name
 
 PACKET_SHA256 = "73d6faf368aec7c57d302a065771b4a343b530aeb9da36b99913f298ad06c1be"
 

@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from src.calculator.program import precision
+from src.calculator.program import precision, sums
 
 PROGRAM_ROOT = Path(precision.__file__).resolve().parent
 
@@ -135,7 +135,7 @@ class TestTheSumPlanCountsEachEventOnce:
     """
 
     def test_the_declared_panels_are_the_receipts_three(self) -> None:
-        assert precision.SUM_PANELS == (
+        assert sums.SUM_PANELS == (
             "events",
             "healing_events",
             "support_events",
@@ -143,7 +143,7 @@ class TestTheSumPlanCountsEachEventOnce:
 
     def test_members_arrive_in_panel_order_then_walk_order(self) -> None:
         """The ordering is declared, because float addition is not associative."""
-        plan = precision.sum_plan(
+        plan = sums.sum_plan(
             {
                 "support_events": [{"event_id": "s0"}, {"event_id": "s1"}],
                 "events": [{"event_id": "d0"}, {"event_id": "d1"}],
@@ -154,7 +154,7 @@ class TestTheSumPlanCountsEachEventOnce:
 
     def test_an_id_on_two_panels_is_summed_once_by_the_first(self) -> None:
         """The double count, made unrepresentable rather than tested for."""
-        plan = precision.sum_plan(
+        plan = sums.sum_plan(
             {
                 "events": [{"event_id": "shared"}],
                 "support_events": [{"event_id": "shared"}, {"event_id": "s1"}],
@@ -164,14 +164,14 @@ class TestTheSumPlanCountsEachEventOnce:
         assert plan.shared == (("shared", ("events", "support_events")),)
 
     def test_a_fight_with_no_overlap_shares_nothing(self) -> None:
-        plan = precision.sum_plan(
+        plan = sums.sum_plan(
             {"events": [{"event_id": "d0"}], "healing_events": [{"event_id": "h0"}]}
         )
         assert plan.shared == ()
         assert plan.ids == ("d0", "h0")
 
     def test_one_panels_contribution_is_readable_on_its_own(self) -> None:
-        plan = precision.sum_plan(
+        plan = sums.sum_plan(
             {"events": [{"event_id": "d0"}], "healing_events": [{"event_id": "h0"}]}
         )
         assert plan.of("healing_events") == ("h0",)
@@ -184,21 +184,21 @@ class TestTheSumPlanCountsEachEventOnce:
         id makes that panel's own rows repeat -- so it raises where the
         cross-panel case is recorded.
         """
-        with pytest.raises(precision.DuplicateSumMember, match="twice"):
-            precision.sum_plan({"events": [{"event_id": "d0"}, {"event_id": "d0"}]})
+        with pytest.raises(sums.DuplicateSumMember, match="twice"):
+            sums.sum_plan({"events": [{"event_id": "d0"}, {"event_id": "d0"}]})
 
     def test_the_refusal_is_on_the_type_not_on_the_builder(self) -> None:
-        with pytest.raises(precision.DuplicateSumMember):
-            precision.SumPlan(members=(("events", "x"), ("events", "x")))
+        with pytest.raises(sums.DuplicateSumMember):
+            sums.SumPlan(members=(("events", "x"), ("events", "x")))
 
     def test_a_row_with_no_id_contributes_no_member(self) -> None:
         """An unidentified row is not something a union over ids can repeat."""
-        plan = precision.sum_plan({"events": [{"time": 0.0}, {"event_id": "d0"}]})
+        plan = sums.sum_plan({"events": [{"time": 0.0}, {"event_id": "d0"}]})
         assert plan.ids == ("d0",)
 
     def test_a_fourth_panel_fails_closed_rather_than_escaping_the_plan(self) -> None:
         with pytest.raises(KeyError, match="not a declared sum panel"):
-            precision.sum_plan({"objective": [{"event_id": "o0"}]})
+            sums.sum_plan({"objective": [{"event_id": "o0"}]})
 
 
 class TestTheReceiptBuildsItsPlan:
@@ -222,16 +222,16 @@ class TestTheReceiptBuildsItsPlan:
             for key in arg.keys
             if isinstance(key, ast.Constant)
         }
-        assert keys == set(precision.SUM_PANELS)
+        assert keys == set(sums.SUM_PANELS)
 
     @staticmethod
     def _combat(items, allies):
         """One roster receipt, through the composition every payload uses."""
+        from src.calculator.champion_loadout import ChampionLoadout
         from src.calculator.data_fetcher import get_champion, get_item_by_name
         from src.calculator.defensive_effects import resolve_starting_defenses
+        from src.calculator.fight_params import FightParams
         from src.calculator.participant_timeline import build_participant_timeline
-        from src.calculator.pipeline import FightParams
-        from src.calculator.scenario import ChampionLoadout
         from src.calculator.stats import calculate_total_stats
 
         champion = get_champion("Ahri")
@@ -255,14 +255,14 @@ class TestTheReceiptBuildsItsPlan:
 
     def test_an_ordinary_roster_receipt_publishes_each_event_once(self) -> None:
         """Measured, not assumed: the property holds on a real payload."""
-        from src.calculator.scenario import ChampionLoadout
+        from src.calculator.champion_loadout import ChampionLoadout
 
         combat = self._combat(
             ["Imperial Mandate"],
             [ChampionLoadout(champion="Pantheon", level=18, role="support").resolve()],
         )
-        plan = precision.sum_plan(
-            {panel: combat.get(panel, []) for panel in precision.SUM_PANELS}
+        plan = sums.sum_plan(
+            {panel: combat.get(panel, []) for panel in sums.SUM_PANELS}
         )
         assert plan.ids, "a fixture with no identified rows would pass vacuously"
         assert len(plan.ids) == len(set(plan.ids))
@@ -277,7 +277,7 @@ class TestTheReceiptBuildsItsPlan:
         and names it in ``shared`` so the repeat is visible rather than
         merely absent.
         """
-        from src.calculator.scenario import ChampionLoadout
+        from src.calculator.champion_loadout import ChampionLoadout
 
         combat = self._combat(
             [],
@@ -292,8 +292,8 @@ class TestTheReceiptBuildsItsPlan:
                 ).resolve()
             ],
         )
-        panels = {panel: combat.get(panel, []) for panel in precision.SUM_PANELS}
-        plan = precision.sum_plan(panels)
+        panels = {panel: combat.get(panel, []) for panel in sums.SUM_PANELS}
+        plan = sums.sum_plan(panels)
         assert plan.shared, "the fixture exists for the overlap; there is none"
         for event_id, on_panels in plan.shared:
             assert on_panels == ("events", "support_events"), event_id

@@ -24,18 +24,15 @@ hardcoded.
 from typing import Any
 
 from ..ability_spec import DamagePart
-from .engine import CC_PER_PART, SlotCtx, build_parser
+from .contract_vocabulary import coverage
+from .engine import SlotCtx, build_parser
 from .inputs import int_option
-from .module_contract import coverage
 from .module_helpers import no_damage_parser
-from .slotlib import (
-    damage_entry,
-    extract_cooldown,
-    find_named_leveling,
-    simple_damage,
-    sum_modifiers,
-    with_control,
-)
+from .slot_cc import CC_PER_PART
+from .slot_control import with_control
+from .slot_entries import damage_entry
+from .slot_extract import extract_cooldown, find_named_leveling, sum_modifiers
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # Pick a Card's three card branches, in the cycle order the game presents

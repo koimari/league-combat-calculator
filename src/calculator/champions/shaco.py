@@ -45,19 +45,15 @@ from __future__ import annotations
 
 from typing import Any
 
-from ..ability_spec import ControlEvent, DamagePart
+from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from .engine import CC_PER_PART, ONHIT, SlotCtx
-from .module_helpers import ranked_slot
+from ..control_spec import ControlEvent
+from .engine import ONHIT, SlotCtx
+from .module_helpers import named_damage, ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    on_hit_entry,
-)
+from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry, on_hit_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 
 # Sourced box attack pattern (wiki Shaco W + "Champion summoned units"
 # page): the sprung box fires every 0.5 seconds for its 5-second
@@ -160,33 +156,29 @@ def _jack_in_the_box(
     return entry
 
 
-@ranked_slot
-def _two_shiv_poison(
-    ctx: SlotCtx, ability: dict[str, Any], rank: int
-) -> dict[str, Any] | None:
-    """E: the base Magic Damage row, or the <30%-HP execute row."""
-    execute = bool(ctx.option("e_execute"))
-    attribute = "Increased Damage" if execute else "Magic Damage"
-    raw = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
-    entry = damage_entry(
-        ability_name(ability),
-        rank,
-        extract_cooldown(ability, rank),
-        raw,
-        "magic",
-    )
-    entry["parts"] = (DamagePart("magic", raw),)
-    # One thrown dagger, one hit ("Shaco throws a dagger at the target
-    # enemy that deals magic damage ... and slows them"), so the single
-    # part is a hit the ledger can time and the slow reaches its readers.
-    entry["event_order_certified"] = "single_hit"
-    entry["detail"] = (
+def _two_shiv_row(ctx: SlotCtx) -> str:
+    return "Increased Damage" if bool(ctx.option("e_execute")) else "Magic Damage"
+
+
+def _two_shiv_detail(ctx: SlotCtx) -> str:
+    return (
         "increased-by-50% damage against a target below 30% of its maximum "
         "health (sourced Increased Damage row)"
-        if execute
+        if bool(ctx.option("e_execute"))
         else "base Magic Damage row (target above 30% of its maximum health)"
     )
-    return entry
+
+
+# E: the base Magic Damage row, or the <30%-HP execute row.  One thrown
+# dagger, one hit ("Shaco throws a dagger at the target enemy that deals
+# magic damage ... and slows them"), so the single part is a hit the
+# ledger can time and the slow reaches its readers.
+_two_shiv_poison = named_damage(
+    _two_shiv_row,
+    "magic",
+    event_order_certified="single_hit",
+    detail=_two_shiv_detail,
+)
 
 
 @ranked_slot

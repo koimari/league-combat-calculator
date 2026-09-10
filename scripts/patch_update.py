@@ -83,7 +83,7 @@ import urllib.request
 from collections.abc import Callable, Iterable, Mapping
 from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
@@ -671,6 +671,9 @@ def rebuild_static_artifacts() -> int:
         # here so a patch that flips an ability's on-hit phrasing turns that
         # test red instead of being compared against the previous patch.
         "build_onhit_matrix.py",
+        # The icon sheet static/js/scoreboard.js matches screenshots against;
+        # tests/test_scoreboard_vision.py fails when it lags the caches.
+        "build_icon_sprite.py",
     ):
         result = subprocess.run(
             [sys.executable, f"scripts/{builder}"], cwd=REPO_ROOT, check=False
@@ -785,12 +788,15 @@ def run_bis(
 # ---------------------------------------------------------------------------
 
 
-def _receipt_problems(
-    asset_path: Path,
-    champions_source: Path,
-    axword_source: Path,
-    wiki_db: Path,
-) -> list[str]:
+class PacketSources(NamedTuple):
+    """The three tree sources a reviewed-packet build reads and receipts."""
+
+    champions: Path
+    axword: Path
+    wiki_db: Path
+
+
+def _receipt_problems(asset_path: Path, sources: PacketSources) -> list[str]:
     """Reasons the asset's source receipts do not match the tree's sources.
 
     Empty list means the asset proves it was built from the current sources:
@@ -809,7 +815,7 @@ def _receipt_problems(
             "reviewed-packets.json carries no source receipts — rebuild it with "
             "scripts/build_reviewed_modules.py so patch day can prove currency"
         )
-    expected_champions = source_receipt(champions_source, kind="tracked wiki cache")
+    expected_champions = source_receipt(sources.champions, kind="tracked wiki cache")
     actual = receipts.get("champions.json") or {}
     if actual.get("sha256") != expected_champions["sha256"]:
         problems.append(
@@ -817,14 +823,14 @@ def _receipt_problems(
             f"(asset sha256 {actual.get('sha256')!r} != current "
             f"{expected_champions['sha256']!r})"
         )
-    if not axword_source.is_file():
+    if not sources.axword.is_file():
         problems.append(
-            f"Axword Meraki kit source not found ({axword_source}) — supply "
+            f"Axword Meraki kit source not found ({sources.axword}) — supply "
             "--axword-source or LCC_AXWORD_SOURCE"
         )
     else:
         expected_axword = source_receipt(
-            axword_source, kind="Axword Meraki ability kits"
+            sources.axword, kind="Axword Meraki ability kits"
         )
         actual_axword = receipts.get("axword_source") or {}
         if actual_axword.get("sha256") != expected_axword["sha256"]:
@@ -838,7 +844,7 @@ def _receipt_problems(
         cached_names = {
             str(entry.get("name", "")).strip()
             for entry in json.loads(
-                champions_source.read_text(encoding="utf-8")
+                sources.champions.read_text(encoding="utf-8")
             ).values()
             if isinstance(entry, dict)
         }
@@ -857,7 +863,7 @@ def _receipt_problems(
     )
 
     try:
-        revisions = _wiki_revisions(wiki_db)
+        revisions = _wiki_revisions(sources.wiki_db)
     except RuntimeError as exc:
         problems.append(str(exc))
         return problems
@@ -989,11 +995,13 @@ def reviewed_packet_report(
     suspected drifts have to be re-checked by hand first.
     """
     asset_path = Path(asset_path or REVIEWED_PACKETS)
-    champions_source = Path(champions_source or DEFAULT_CHAMPIONS)
-    axword_source = Path(axword_source or resolve_axword_source())
-    wiki_db = Path(wiki_db or resolve_wiki_db())
+    sources = PacketSources(
+        Path(champions_source or DEFAULT_CHAMPIONS),
+        Path(axword_source or resolve_axword_source()),
+        Path(wiki_db or resolve_wiki_db()),
+    )
 
-    receipts = _receipt_problems(asset_path, champions_source, axword_source, wiki_db)
+    receipts = _receipt_problems(asset_path, sources)
     report: dict[str, Any] = {
         "asset": str(asset_path),
         "receipt_problems": receipts,
@@ -1008,11 +1016,7 @@ def reviewed_packet_report(
         try:
             checked_in = json.loads(asset_path.read_text(encoding="utf-8"))
             fresh = _build_fresh_packets(
-                champions_source,
-                axword_source,
-                wiki_db,
-                tmp_output=tmp_output,
-                packet_builder=packet_builder,
+                sources, tmp_output=tmp_output, packet_builder=packet_builder
             )
         except (OSError, ValueError, RuntimeError) as exc:
             # The sources the rebuild needs are the same ones the receipt check
@@ -1040,9 +1044,7 @@ def reviewed_packet_report(
 
 
 def _build_fresh_packets(
-    champions_source: Path,
-    axword_source: Path,
-    wiki_db: Path,
+    sources: PacketSources,
     *,
     tmp_output: Path | None = None,
     packet_builder: Callable[..., Any] | None = None,
@@ -1058,7 +1060,7 @@ def _build_fresh_packets(
     # build (build_reviewed_modules.build) is already fail closed: missing
     # source/axword, or zero wiki revision receipts, raises RuntimeError naming
     # the exact gap. Let it propagate.
-    build(Path(champions_source), axword_source, tmp_output, wiki_db=wiki_db)
+    build(Path(sources.champions), sources.axword, tmp_output, wiki_db=sources.wiki_db)
     return json.loads(tmp_output.read_text(encoding="utf-8"))
 
 
@@ -1423,6 +1425,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "wiki-refresh":
         from functools import partial
+
         from scripts.wiki_refresh import refresh, run_audit, scheduled_refresh
 
         if args.scryglass_root is None:

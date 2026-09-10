@@ -26,12 +26,12 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
-from .module_contract import coverage
 from .packet_module import build_packet_module
-from .slotlib import ability_name, find_named_leveling, sum_modifiers
+from .slot_extract import ability_name, find_named_leveling, sum_modifiers
 
 # Sourced bleed cadence (wiki P): "5 : 18.97 (based on level)
 # (+ 13.125% bonus AD) physical damage every 0.125 seconds" — 16 ticks

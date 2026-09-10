@@ -26,11 +26,11 @@ second answer to it.
 import pytest
 
 from src.calculator.ability_spec import AttackClass, DamageClass
-from src.calculator.survival.actions import SurvivalAction
 from src.calculator.survival.transitions import (
     _apply_cross_participant_modifiers,
     _apply_damage_modifier,
 )
+from src.calculator.survival.typed_action import SurvivalAction
 
 ALL_DAMAGE = frozenset(DamageClass)
 ALL_ATTACK = frozenset(AttackClass)

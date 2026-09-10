@@ -1,0 +1,103 @@
+{
+ "source": "src/calculator/support_effects.py",
+ "decisions": [
+  "Blocked on extract_modules.py until one line changes. Plan._residue_reads feeds every non-movable top-level statement to free_names, which wraps it in a function body; this source's 'from __future__ import annotations' makes symtable raise SyntaxError, so the CLI traces back instead of printing a plan. Fix: build kept from statements that are not MOVABLE and not ast.Import or ast.ImportFrom. An import binds names and never reads any, and _unread_imports already handles the import block separately, so nothing else moves. damage.py has no future import, which is why step 1 never hit this. Verified clean with that one change applied.",
+  "Checks clean exactly as the map's four extractions name them, with C7 in support_champion_packets.py. Measured: support_scan 452 rendered, support_row_metadata 435, support_bailout 285, support_champion_packets 348, residue 483. Every file under 500 with no unit moved off the map.",
+  "support_scan.py is a leaf on data_registry alone, so the fan-out arm cannot fire on it however many readers repoint. support_bailout.py does not import champions.renata_glasc; the map's claim that the remainder loses that import is wrong, nothing in this module reads it.",
+  "The two asides the map reports stay unfixed here, on purpose: _ability is a public cached-row accessor in private clothing whose right home is ability_atoms.py, and C6 to C8 are three champions' mechanics living outside their champion modules. Both are behavior-neutral moves that belong to their own change, not to a size split."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/support_scan.py",
+   "docstring": "Which champion slots the cached rows say heal or shield an ally, and the profile that answer folds into.",
+   "defs": [
+    "_ability",
+    "_first_attribute",
+    "_ALLY_PROSE",
+    "_CASTER_PROSE",
+    "_HEAL_PROSE",
+    "_row_prose",
+    "_row_target",
+    "_declares_a_heal",
+    "_SHIELD_ATTRIBUTES",
+    "_HEAL_ATTRIBUTES",
+    "_SUPPORT_ATTRIBUTES",
+    "_SUPPORT_SLOTS",
+    "_SUPPORT_ATTRS_MEMO",
+    "_CHAMPION_HEAL_ATTR",
+    "_CHAMPION_SHIELD_ATTR",
+    "_SCOPE_OVERRIDES",
+    "_SUPPORT_STATE_SLOTS",
+    "_SUPPORT_BUFF_SLOTS",
+    "_MODULE_AUTHORED_SHIELD_SLOTS",
+    "_MODULE_AUTHORED_HEAL_SLOTS",
+    "_STATE_AUTHORED_HEAL_SLOTS",
+    "_has_support_attributes",
+    "_SUPPORT_PROFILE_MEMO",
+    "_sourced_cast_time",
+    "_support_profile"
+   ]
+  },
+  {
+   "path": "src/calculator/support_row_metadata.py",
+   "docstring": "What one support row publishes: recipient scaling, rank, duration and timing.",
+   "defs": [
+    "_SHIELD_DURATION_ATOM_QUERIES",
+    "_INVULNERABILITY_ATOM_QUERIES",
+    "_scales_off_the_recipient",
+    "_caster_as_recipient",
+    "_recipient_max_health_row",
+    "recipient_max_health_ratio",
+    "_Row",
+    "_slot_rows",
+    "_slot_rank",
+    "_shield_duration_metadata",
+    "_invulnerability_timing_metadata"
+   ]
+  },
+  {
+   "path": "src/calculator/support_bailout.py",
+   "docstring": "Renata Glasc's Bailout: its ramp, its denial rows and the shape it withholds.",
+   "defs": [
+    "_BAILOUT_RAMP_ATTRIBUTES",
+    "_BAILOUT_DURATION_QUERY",
+    "_BAILOUT_TAKEDOWN_WINDOW_PATTERN",
+    "_BAILOUT_TAKEDOWN_HEALTH_PATTERN",
+    "_BAILOUT_BURN_STOP_MARKER",
+    "_BAILOUT_RESTORE_PATTERN",
+    "_BAILOUT_ONCE_PER_APPLICATION_MARKER",
+    "_BAILOUT_ACTIVATIONS_PER_APPLICATION",
+    "_BAILOUT_PRECEDENCE_MARKER",
+    "_BAILOUT_PRECEDENCE_TERMS",
+    "_BAILOUT_PRECEDENCE_VALUE",
+    "_BAILOUT_DENIAL_SOURCE",
+    "_BAILOUT_W_SOURCE_LABEL",
+    "_bailout_authority",
+    "_bailout_denied_components",
+    "_bailout_w_source",
+    "_bailout_ramp_metadata",
+    "_bailout_withheld_lethal_shape",
+    "_bailout_denial_rows"
+   ]
+  },
+  {
+   "path": "src/calculator/support_champion_packets.py",
+   "docstring": "The sourced per-champion metadata and follow-up packets an ally receives.",
+   "defs": [
+    "_morgana_black_shield_metadata",
+    "_target_max_health_shield_metadata",
+    "_target_missing_health_heal_metadata",
+    "_NAMI_BOUNCE_REDUCTION_PER_BOUNCE",
+    "_NAMI_BOUNCE_AP_RELIEF_PER_100",
+    "_YUUMI_R_BEST_FRIEND_QUERY",
+    "_YUUMI_R_SHIELD_DURATION_QUERY",
+    "_YUUMI_R_CHANNEL_QUERY",
+    "_clamped_per_level_fraction",
+    "_nami_return_bounce_packet",
+    "_yuumi_best_friend_packet",
+    "_yuumi_conversion_shield_packet"
+   ]
+  }
+ ]
+}

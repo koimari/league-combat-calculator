@@ -7,17 +7,41 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+from collections.abc import Callable
 from contextlib import contextmanager
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
-from typing import Callable
+from typing import Any, TypedDict
+
+
+class RefreshReport(TypedDict):
+    """What one refresh published, and whether a human has to read it."""
+
+    database: str
+    vault: str
+    inventory: dict[str, Any]
+    snapshot: dict[str, Any]
+    index: dict[str, Any]
+    packets: dict[str, Any]
+    full_entry_audit: dict[str, Any]
+    source_pages_written: int
+    review_required: bool
+    formula_authority: bool
 
 
 def scheduled_refresh(
-    *, anchor: date, state_dir: Path, action: Callable, today: date | None = None
-) -> dict:
-    """Attempt the most recent due period once, including delayed wakeups."""
-    today = today or date.today()
+    *,
+    anchor: date,
+    state_dir: Path,
+    action: Callable[[], dict[str, Any]],
+    today: date | None = None,
+) -> dict[str, Any]:
+    """Attempt the most recent due period once, including delayed wakeups.
+
+    The result is the report the action returned, or a record naming why
+    nothing ran.
+    """
+    today = today or date.today()  # noqa: DTZ011 - launchd fires on local calendar day
     if anchor.weekday() != 2:
         raise ValueError("The fortnight anchor must be a Wednesday")
     elapsed = (today - anchor).days
@@ -28,7 +52,7 @@ def scheduled_refresh(
     receipt = state_dir / f"{due.isoformat()}.json"
     record = {
         "due_date": due.isoformat(),
-        "attempted_at": datetime.now(timezone.utc).isoformat(),
+        "attempted_at": datetime.now(UTC).isoformat(),
         "status": "running",
     }
     try:
@@ -42,17 +66,17 @@ def scheduled_refresh(
             status="review_required" if report["review_required"] else "complete",
             report=report,
         )
-        return report
     except Exception as exc:
         record.update(status="failed", error=str(exc))
         raise
     finally:
         temporary = receipt.with_suffix(".tmp")
         temporary.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
-        os.replace(temporary, receipt)
+        temporary.replace(receipt)
+    return report
 
 
-def run_source(root: Path, module: str, arguments: list[str]) -> dict:
+def run_source(root: Path, module: str, arguments: list[str]) -> dict[str, Any]:
     """Run the source owner's CLI with explicit output paths."""
     result = subprocess.run(
         [sys.executable, "-m", f"lol_kills.knowledge.{module}", *arguments],
@@ -64,7 +88,7 @@ def run_source(root: Path, module: str, arguments: list[str]) -> dict:
     return json.loads(result.stdout)
 
 
-def inspect_database(database: Path) -> dict:
+def inspect_database(database: Path) -> dict[str, Any]:
     """Check index integrity and expose the source vault for the next refresh."""
     with sqlite3.connect(database.as_uri() + "?mode=ro", uri=True) as connection:
         if connection.execute("PRAGMA quick_check").fetchone()[0] != "ok":
@@ -85,7 +109,7 @@ def inspect_database(database: Path) -> dict:
         return meta
 
 
-def run_audit(*, wiki_db: Path, runner: Callable = subprocess.run) -> dict:
+def run_audit(*, wiki_db: Path, runner: Callable = subprocess.run) -> dict[str, Any]:
     """Run the full-entry audit against the candidate rich index."""
     repo = Path(__file__).resolve().parent.parent
     environment = {**os.environ, "SCRYGLASS_LEAGUE_WIKI_DB": str(wiki_db)}
@@ -134,11 +158,11 @@ def refresh(
     *,
     source_root: Path,
     database: Path,
-    packet_report: Callable,
-    audit_report: Callable,
+    packet_report: Callable[..., dict[str, Any]],
+    audit_report: Callable[..., dict[str, Any]],
     seed_vault: Path | None = None,
-    runner: Callable = run_source,
-) -> dict:
+    runner: Callable[[Path, str, list[str]], dict[str, Any]] = run_source,
+) -> RefreshReport:
     """Stage each refresh and replace the active index after all steps succeed."""
     source_root = source_root.expanduser().resolve()
     database = database.expanduser().absolute()
@@ -210,7 +234,7 @@ def refresh(
             audit = audit_report(wiki_db=candidate)
             index["database"] = str(database)
             changed_pages = snapshot["written_pages"]
-            report = {
+            report: RefreshReport = {
                 "database": str(database),
                 "vault": str(vault),
                 "inventory": inventory,
@@ -227,11 +251,11 @@ def refresh(
             (generation / "report.json").write_text(
                 json.dumps(report, indent=2) + "\n", encoding="utf-8"
             )
-            os.replace(candidate, database)
-            return report
+            candidate.replace(database)
         except Exception as exc:
             if generation is not None:
                 (generation / "failure.txt").write_text(
                     str(exc) + "\n", encoding="utf-8"
                 )
             raise
+        return report

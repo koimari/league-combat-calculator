@@ -20,17 +20,13 @@ pinned packet declares the slot ``kind: "no_damage"``), so R is
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .inputs import int_option
-from .module_contract import coverage
 from .packet_module import build_packet_module
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    simple_damage,
-)
+from .slot_entries import damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slotlib import simple_damage
 
 PACKET_SHA256 = "254423a49d0d309eafb437ffdb27709166a149f7ea2bc6aa1f21cf01f1b747a8"
 

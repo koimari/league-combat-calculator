@@ -36,15 +36,9 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, DEBUFF, ONHIT, SlotCtx, build_parser
 from .inputs import bool_option
 from .module_helpers import at_level, ranked_slot
-from .slotlib import (
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    simple_damage,
-    support_cast,
-)
+from .slot_entries import damage_entry, support_cast
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # Martial Cadence's dedicated binary record carries the current-health

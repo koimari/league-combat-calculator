@@ -1,0 +1,39 @@
+{
+ "source": "src/calculator/defensive_effects.py",
+ "decisions": [
+  "extract_modules.py refuses any new module that reads a name left in the residue, so every assignment here is downward closed: the residue sits at the top of the dependency order and imports its children.",
+  "The mid-resolution ledger (_DEFAULTS, the two coverage keys and _DefenseLedger) moves into starting_defenses.py rather than staying in the residue the map gives it: _apply_galio and _apply_champion_revive both write through _DefenseLedger, so leaving it behind is a back-edge. It is the same concept, the resolved state mid-fold, and it keeps the residue's import count where the map put it, because starting_defenses.py is already an import the residue takes.",
+  "Residue: the resolver and the two ledger-wide folds, 242 lines, 8 internal imports, so the fan-out arm clears with the size arm."
+ ],
+ "packages": {},
+ "modules": [
+  {
+   "path": "src/calculator/starting_defenses.py",
+   "docstring": "The defensive state a fight starts with, the citation each source publishes, and their ledger.",
+   "defs": [
+    "DEFENSE_SOURCE_LABEL",
+    "DefenseCitation",
+    "defense_source",
+    "StartingDefenses",
+    "_DEFAULTS",
+    "_COVERAGE_ITEM_DEFENSES",
+    "_COVERAGE_CHAMPION_PASSIVE",
+    "_DefenseLedger"
+   ]
+  },
+  {
+   "path": "src/calculator/champion_opening_defenses.py",
+   "docstring": "The defences a champion's kit has up before the first cast: Galio's shield and the revives.",
+   "defs": [
+    "_GALIO_SHIELD_MIN_PERCENT",
+    "_GALIO_SHIELD_MAX_PERCENT",
+    "_GALIO_NOTE",
+    "_CHAMPION_REVIVE_SOURCES",
+    "_GALIO",
+    "_apply_galio",
+    "_champion_starting_revive",
+    "_apply_champion_revive"
+   ]
+  }
+ ]
+}

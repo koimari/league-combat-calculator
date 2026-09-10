@@ -28,20 +28,14 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
+from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx
 from .inputs import int_option
-from .module_contract import coverage
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
-from .slotlib import (
-    STEROID_ZERO,
-    ability_name,
-    damage_entry,
-    extract_cooldown,
-    extract_named,
-    extract_value,
-    with_item_on_hits,
-)
+from .slot_entries import STEROID_ZERO, damage_entry
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
+from .slotlib import with_item_on_hits
 
 # The Q second-strike ratios and R base ratio are rooted in named binary
 # calculation fields; the cached descriptions corroborate their semantics.

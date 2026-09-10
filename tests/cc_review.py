@@ -16,15 +16,14 @@ This is a test helper, not a test module: it holds no assertions.
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from typing import Any
 
 from src.calculator.calculate import calculate_payload
+from src.calculator.champion_loadout import load_public_champion
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.pipeline import FightParams, run_fight
-from src.calculator.scenario import (
-    load_public_champion,
-    parse_scenario_request,
-    resolve_scenario,
-)
+from src.calculator.fight_params import FightParams
+from src.calculator.pipeline import run_fight
+from src.calculator.scenario import parse_scenario_request, resolve_scenario
 
 # Every control word the Wiki uses for the classes a control-armed item
 # passive can key on.  A reviewed "none" slot whose cached text contains
@@ -109,7 +108,7 @@ def declared_parts(parsed, slot):
     return entry.get("parts") or ()
 
 
-def fimbulwinter_coverage(champion, **window):
+def fimbulwinter_coverage(champion, **window) -> dict[str, Any]:
     """The campaign's control-token probe, through the public entry.
 
     ``window`` overrides the probe's timed, autos-on fight (``fight_mode``,

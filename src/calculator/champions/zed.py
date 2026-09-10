@@ -33,15 +33,11 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..cast_dependency import CastDependency
+from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
-from .module_contract import coverage
 from .module_helpers import no_damage_parser, ranked_slot
-from .slotlib import (
-    ability_name,
-    extract_cooldown,
-    extract_value,
-    simple_damage,
-)
+from .slot_extract import ability_name, extract_cooldown, extract_value
+from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 # Death Mark detonates at the binary RDeathMarkDuration; the wiki prose

@@ -37,10 +37,11 @@ from ..item_behavior import (
     PenetrationChannelRule,
     RuleFamily,
     StatAvailability,
-    sole_declaration,
+    sole_declared,
 )
 from ..item_behavior_catalog import behavior_rules
-from ..value_ref import ValueRefError, resolve, resolve_flat
+from ..reference_vocabulary import ValueRefError
+from ..value_ref import resolve, resolve_flat
 
 
 class StatDerivationInterpretationError(ValueError):
@@ -155,10 +156,9 @@ def sole_declared_derivation(
     owners: Sequence[str], payload_type: type
 ) -> StatSlot | None:
     """This build's one derivation of a shape that does not compose, or ``None``."""
-    slots = declared_stat_derivations(owners, payload_type)
-    return sole_declaration(
-        slots,
-        [slot.owner for slot in slots],
+    return sole_declared(
+        declared_stat_derivations,
+        owners,
         payload_type,
         StatDerivationInterpretationError,
     )

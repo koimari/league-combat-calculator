@@ -2,7 +2,8 @@
 
 import pytest
 
-from src.calculator.pipeline import FightParams, rank_allocation_contract
+from src.calculator.fight_params import FightParams
+from src.calculator.fight_request_bounds import rank_allocation_contract
 from src.calculator.scenario import ChampionLoadout
 from src.calculator.rank_allocation import rank_rules, validate_manual_ranks
 
