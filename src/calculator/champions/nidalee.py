@@ -30,6 +30,7 @@ from __future__ import annotations
 import dataclasses
 from typing import Any
 
+from ..binary_roots import data_value, spell_object
 from ..healing_helpers import (
     HealAnchor,
     missing_health_scaled_heal,
@@ -41,10 +42,17 @@ from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .packet_module import build_packet_module
+from .stat_grants import with_attack_speed_window
 
 # "Up to a maximum of 4 / 6 / 8 / 10 (based on level) traps may be
 # active at once" — 10 at level 18 (the test level).
 _W_TRAP_CAP = 10
+
+# Primal Surge's bonus attack speed lasts the binary PrimalSurge.ASDuration;
+# the cached E prose ("for 7 seconds") corroborates it.
+_E_ATTACK_SPEED_SECONDS = data_value(
+    spell_object("Nidalee", "PrimalSurge"), "ASDuration"
+)
 
 
 def _bushwhack_traps(packet_w):
@@ -105,11 +113,21 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"Q", "W", "E"}),
     slot_wrappers={
         "W": _bushwhack_traps,
+        "E": lambda packet_e: with_attack_speed_window(
+            packet_e,
+            duration=_E_ATTACK_SPEED_SECONDS,
+            aside="Primal Surge's self-cast grant on the same E cast that heals.",
+        ),
     },
     cc_kinds=MODULE_CC,
 )
 ASSUMPTIONS.extend(
     [
+        "E places Primal Surge's bonus attack speed (human form, the "
+        "self-cast) as a 7-second window at the first E cast, the cast the "
+        "self-heal rule already pays; the E row's damage stays the cougar "
+        "Swipe the packet prices, the same human/cougar blend the heal "
+        "rule uses. The ally-cast grant and a second window are not placed.",
         "W (Bushwhack) is a summoned trap: one sprung trap prices the "
         "full 4-second DoT (E2-3 ticks); w_traps prices additional "
         "pre-placed traps, each with its own full DoT (the source has no "

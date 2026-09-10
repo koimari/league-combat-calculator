@@ -50,18 +50,19 @@ class TestReviewedCrowdControl:
         assert part.time_offset == 1.087
         assert part.cc_kind == "none"
 
-    def test_wuju_style_prices_an_on_hit_rider_as_one_direct_hit(self):
-        """E's packet prices one direct hit for a 5-second attack buff, so
-        its reviewed "none" rides no instant the ledger can read."""
+    def test_wuju_style_is_an_on_hit_rider_with_no_part_of_its_own(self):
+        """E's damage lands on the swings inside its window, so the row has
+        no part; its reviewed "none" is the rider's."""
         data = cc_review.kit("Master Yi")
         assert master_yi.MODULE_CC["E"] == "none"
         assert "empowers his basic attacks within the next 5 seconds" in (
             cc_review.slot_text(data, "E")
         )
         entry = parse_champion_abilities(data, 18, 100.0, _RANKS)["E"]
-        (part,) = entry["parts"]
-        assert part.time_offset is None
-        assert entry.get("event_order_certified") is None
+        assert entry["parts"] == ()
+        assert entry["total_raw"] == 0.0
+        assert entry["on_hit"]["proc_window"] == 5.0
+        assert entry["on_hit"]["damage_type"] == "true"
 
     def test_the_reviewed_kit_certifies_the_whole_fight(self):
         """Every slot answers "none", so no ability event goes unreviewed."""

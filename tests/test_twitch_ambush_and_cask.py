@@ -3,8 +3,8 @@
 Roadmap session 5 batch L.  The pair is the point of the file.
 
 - Q (Ambush) carries Element of Surprise, a windowed attack-speed steroid
-  that sits in the ONE slot the engine can place exactly (the kernel
-  resolves the window start by breaking on ``"Q"`` in ``cast_order``).
+  the engine places exactly at the Q cast (the kernel resolves a window's
+  start at the first cast of the row that grants it).
   Unlike Tristana Q in this same batch, the buff does not fire on the
   cast — it fires on BREAKING the stealth the cast creates — so it is
   published only when the ``q_ambush_break`` option asserts that

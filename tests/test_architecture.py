@@ -121,7 +121,6 @@ FIGHT_STEPS_WITHOUT_A_FRONT_DOOR = (
     "fight.runes.streams",
     "fight.setup.combat_state",
     "fight.setup.shield_reaver",
-    "fight.setup.stat_buff_ultimates",
     "fight.stacks.account",
     "fight.stacks.ashe",
     "fight.stacks.aurelion_sol",
@@ -394,6 +393,9 @@ NARROWER_STAT_SURFACES: Mapping[str, str] = {
     ),
     "golden_snapshot.snapshot_champion_baselines": (
         "the golden's champion-baseline stats at levels 1/11/18 with no items"
+    ),
+    "swing_stream_audit.scan": (
+        "the swing-stream gate's fixed parse: level 18, full ranks, no items"
     ),
 }
 

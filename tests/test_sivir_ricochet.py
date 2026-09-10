@@ -19,6 +19,7 @@ the cached attack-timer reset.
 """
 
 import copy
+import math
 
 import pytest
 
@@ -134,15 +135,23 @@ class TestPerBounceStructure:
         (part,) = _parse()[1]["W"]["parts"]
         assert part.count == 1
 
-    @pytest.mark.parametrize(("uptime", "expected"), [(0.0, 1), (0.5, 1), (1.0, 3)])
-    def test_count_is_the_fight_auto_cadence_over_the_window(self, uptime, expected):
-        """0.795 attacks/s x uptime x the sourced 4s window, floored at 1."""
-        _, abilities = _parse(
+    @pytest.mark.parametrize(("uptime", "expected"), [(0.0, 1), (0.5, 2), (1.0, 4)])
+    def test_count_is_the_windows_own_cadence(self, uptime, expected):
+        """(0.795 + the window's +40%) attacks/s x uptime x 4s, floored at 1."""
+        stats, abilities = _parse(
             options={"fight_duration_seconds": 10.0, "auto_attack_uptime": uptime}
         )
+        buffed = stats["attack_speed"] + stats["attack_speed_ratio"] * 0.40
+        assert max(1, math.floor(buffed * uptime * 4.0)) == expected
         (part,) = abilities["W"]["parts"]
         assert part.count == expected
         assert abilities["W"]["total_raw"] == pytest.approx(51.0 * expected)
+
+    def test_the_window_is_placed_at_the_cast(self):
+        """W's own attack speed is a window the engine places, not a floor."""
+        _, abilities = _parse(options={"fight_duration_seconds": 10.0})
+        assert abilities["W"]["stat_buff"] == {"bonus_attack_speed": 40.0}
+        assert abilities["W"]["auto_attack_override"] == {"active_duration": 4.0}
 
     def test_the_window_is_the_cached_four_second_atom(self):
         entry = _SIVIR["abilities"]["W"][0]
@@ -162,9 +171,9 @@ class TestPerBounceStructure:
         assert part.time_offset is None
         assert part.hit_interval is None
 
-    def test_receipt_names_the_unmodeled_attack_speed_steroid(self):
+    def test_receipt_names_the_placed_attack_speed_window(self):
         assumption = next(a for a in ASSUMPTIONS if "W (Ricochet)" in a)
-        assert "the swing count is a floor" in assumption
+        assert "4-second window at the first W cast" in assumption
 
 
 class TestThroughTheRequestBoundary:
@@ -180,6 +189,8 @@ class TestThroughTheRequestBoundary:
         assert row["total_damage"] == pytest.approx(25.5)
 
     def test_a_ten_second_fight_prices_the_swing_stream(self):
+        """Four bounces: the window's own +40% earns one more swing than the
+        base cadence did."""
         row = _fight("time_based")["breakdown"]["W"]
-        assert row["total_damage"] == pytest.approx(76.5)
-        assert "3 bounce(s)" in row["detail"]
+        assert row["total_damage"] == pytest.approx(102.0)
+        assert "4 bounce(s)" in row["detail"]

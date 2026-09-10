@@ -61,6 +61,7 @@ from .slot_extract import (
 )
 from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
+from .stat_grants import with_attack_speed_window
 
 # Crushing Blow's debuff lasts 3s ("inflict armor reduction for 3
 # seconds", wiki prose below) — it is not permanent.
@@ -68,6 +69,12 @@ _WUKONG_Q_SPELL = spell_object("MonkeyKing", "MonkeyKingDoubleAttack")
 _WUKONG_R_SPELL = spell_object("MonkeyKing", "MonkeyKingSpinToWin")
 Q_SHRED_DURATION = data_value(_WUKONG_Q_SPELL, "ShredDuration")
 _R_TICK_INTERVAL = data_value(_WUKONG_R_SPELL, "SecondsPerTick")
+# Nimbus Strike's bonus attack speed lasts the binary
+# MonkeyKingNimbus.AttackSpeedDuration; the cached E prose ("for 5
+# seconds") corroborates it.
+_E_ATTACK_SPEED_SECONDS = data_value(
+    spell_object("MonkeyKing", "MonkeyKingNimbus"), "AttackSpeedDuration"
+)
 
 
 def _stone_skin(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -161,9 +168,14 @@ SLOTS = {
     # has no cached rate behind it (see the module docstring), so the slot
     # is intentionally omitted here rather than estimated.
     # One strike on the dash target (the two clone strikes land on *other*
-    # enemies), so the single-target row is one hit at the cast.
-    "E": simple_damage(
-        attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+    # enemies), so the single-target row is one hit at the cast; the
+    # arrival's attack speed rides the same row as a window.
+    "E": with_attack_speed_window(
+        simple_damage(
+            attr="Magic Damage", dmg_type="magic", event_order_certified="single_hit"
+        ),
+        duration=_E_ATTACK_SPEED_SECONDS,
+        aside="granted on arrival, placed at the cast.",
     ),
     "R": _cyclone,
 }
@@ -195,6 +207,9 @@ ASSUMPTIONS = [
     "Q's armor reduction (10-30% of target's armor by rank, 3s) applies "
     "to damage dealt after the empowered attack lands, not to the attack "
     "itself.",
+    "E (Nimbus Strike) places its arrival's bonus attack speed as a "
+    "5-second window at the first E cast; the second window a 7-second "
+    "cooldown earns in a longer fight is not placed.",
     "Warrior Trickster's clone is out_of_scope on its SWING COUNT, not on "
     "its output: the 'Clone Outgoing Damage' ratio (40/45/50/55/60%) is the "
     "slot's only cached leveling row, but no clone attack rate is stated "

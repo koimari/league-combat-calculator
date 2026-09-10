@@ -185,7 +185,7 @@ def _concussive_blows(ctx: SlotCtx) -> dict[str, Any] | None:
             DamagePart("magic", bonus_per_auto, count=bonus_autos),
         ),
         "proc_count": 1,
-        "timeline_event_model": "braum_concussive",
+        "timeline_event_model": "module_walk",
         "damage_events": damage_events,
         "event_phase": "effect",
         "detail": (

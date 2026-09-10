@@ -184,7 +184,7 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
         swings,
         q_casts,
         float(state.fight_duration_seconds),
-        q_window_end=float(state.q_window_end),
+        q_window_end=float(state.as_window_end),
     )
     closing = stack.stacks
 

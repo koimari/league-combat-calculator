@@ -3,6 +3,7 @@
 from collections.abc import Mapping
 from typing import Any
 
+from ..ability_atoms import ability_field, ability_payload
 from .results import RotationResult
 from .state import FightState
 
@@ -44,6 +45,23 @@ def _slot_is_cast(
     if info.get("off_rotation_grant") or cast_order is None:
         return True
     return key in cast_order or base in cast_order
+
+
+def slot_cast_start(state: FightState, key: str) -> float:
+    """When the row *key*'s first cast lands: the cast times of the slots ordered before it.
+
+    A row keyed to no slot in the cast order (a passive, an innate grant
+    hanging off an active) is live from the fight open, so its start is 0.
+    """
+    base = _base_slot(key)
+    cast_start = 0.0
+    for slot in state.cast_order:
+        if slot in (key, base):
+            return cast_start
+        cast_start += float(
+            ability_field(ability_payload(state.ability_damages, slot), "cast_time")
+        )
+    return 0.0
 
 
 def _damaging_cast_times(state: FightState, rotation: RotationResult) -> list[float]:

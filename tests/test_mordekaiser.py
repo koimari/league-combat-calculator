@@ -25,6 +25,7 @@ class TestReviewedCrowdControl:
             "Q": "none",
             "E": "pull",
             "P": "none",
+            "passive_darkness_rise": "none",
             "W": "none",
             "R": "slow",
         }

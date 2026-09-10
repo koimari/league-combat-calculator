@@ -209,7 +209,10 @@ def _add_precomputed_proc_damage(
                     state.breakdown[key]["damage_events"] = authored
                     state.breakdown[key]["event_phase"] = "effect"
         declared_events = info.get("damage_events")
-        if info.get("timeline_event_model") == "braum_concussive" and isinstance(
+        # A module that walked the fight's timeline itself (Braum's stack
+        # cycles, Mordekaiser's aura) authored the ledger's raw events;
+        # they are scaled onto the row's mitigated total.
+        if info.get("timeline_event_model") == "module_walk" and isinstance(
             declared_events, list
         ):
             raw_event_total = sum(

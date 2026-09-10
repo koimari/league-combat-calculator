@@ -49,6 +49,7 @@ from .module_helpers import (
 from .packet_module import build_packet_module
 from .slot_entries import damage_entry, on_hit_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
+from .stat_grants import ATTACK_SPEED_ROW
 
 # HARDCODED: verify on patch updates — the linger cadence (4 ticks at
 # 0.25s over the 1-second linger) is wiki W prose, reconciled by
@@ -70,7 +71,6 @@ _R_TRANSCENDENT_DURATION = data_value(_YUNARA_R_SPELL, "Buff_Duration")
 _Q_PASSIVE_ROW = "Passive Bonus Magic Damage"
 _Q_ACTIVE_ROW = "Active Bonus Magic Damage"
 _Q_COMBINED_ROW = "Combined Bonus Magic Damage"
-_Q_ATTACK_SPEED_ROW = "Bonus Attack Speed"
 
 PACKET_SHA256 = "5ad671471e6280db293bcad126fc07d1f6a41c6f5916861a4a3b59278ea133be"
 
@@ -109,7 +109,7 @@ def _cultivation_of_spirit(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
     """Q active: the Unleash attack-speed window and its second on-hit."""
-    bonus_as = _q_row(ctx, ability, _Q_ATTACK_SPEED_ROW, rank)
+    bonus_as = _q_row(ctx, ability, ATTACK_SPEED_ROW, rank)
     transcendent = bool(ctx.option("r_transcendent"))
     if transcendent:
         return steroid_entry(

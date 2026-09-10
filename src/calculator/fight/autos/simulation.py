@@ -111,7 +111,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
     # auto instead of random crit strikes.  ad_ratio replaces the normal 1.0.
     # Azir-style override: replace_raw substitutes the whole auto formula
     # with a flat module-computed amount (its own damage type, no crits).
-    override_ad_ratio = 0.0
+    override_ad_ratio = 1.0
     override_crit_as_bonus = False
     override_replace_raw: float | None = None
     override_damage_type = "physical"
@@ -120,7 +120,7 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         state.ability_damages, "basic_attack_true_ratio"
     )
     crit_magic = _CriticalStrikeRider(state.ability_damages)
-    q_window_end = state.q_window_end
+    window_end = state.as_window_end
     if auto_attack_override:
         override_ad_ratio = ability_field(
             auto_attack_override, "ad_ratio", form="auto_attack_override"
@@ -132,14 +132,6 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         override_damage_type = ability_field(
             auto_attack_override, "damage_type", form="auto_attack_override"
         )
-        if not override_replace_raw and q_window_end > 0.0:
-            # P1 Slice 11: the flurry ratio applies only inside the Q
-            # active window [0, q_window_end) — the post-window swings
-            # revert to the normal 1.0 ratio (Frost Shot's crit-as-bonus
-            # stays on for every swing).  The hoisted override_ad_ratio
-            # stays the flurry value; the per-swing swing_window_ratio
-            # below applies the window.
-            pass
         # Flat modifier on ALL basic-attack damage (Bel'Veth passive:
         # 75%): scaling the AD every auto branch reads covers normal,
         # crit, empowered, forced-crit, and double-shot attacks alike.
@@ -186,7 +178,17 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
 
     for i in range(num_auto_attacks):
         attack_time = auto_times[i] if i < len(auto_times) else 0.0
-        swing_ad = attack_damage + swing_bonus_ad(i)
+        # The override's AD ratio (Ashe's flurry, Xayah's extra feather)
+        # rides the swings inside the kit's attack-speed window when one is
+        # placed and every swing when none is; the swings outside a window
+        # keep the normal 1.0 ratio.  It scales the swing's AD, so every
+        # crit branch below multiplies it.
+        swing_window_ratio = (
+            override_ad_ratio
+            if window_end <= 0.0 or (state.as_window_start <= attack_time < window_end)
+            else 1.0
+        )
+        swing_ad = (attack_damage + swing_bonus_ad(i)) * swing_window_ratio
         if override_replace_raw is not None:
             # Full auto replacement (Azir W): flat raw per attack, the
             # override's damage type, cannot crit — crit items, the
@@ -217,25 +219,16 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         deterministic_outcomes: list[tuple[float, float, bool]] | None = None
         sundered_normal_raw: float | None = None
 
-        swing_window_ratio = (
-            override_ad_ratio
-            if q_window_end <= 0.0
-            or (state.q_window_start <= attack_time < q_window_end)
-            else 1.0
-        )
         if override_crit_as_bonus:
             # Crit chance converts to bonus damage on every auto (e.g. Ashe).
             # Passive: "bonus damage equal to X% of the attack's damage."
             # The bonus is multiplicative with the attack's base damage ratio,
             # because each Q arrow individually applies Frost Shot.
             # Formula: AD * ad_ratio * (1 + crit_chance * (crit_mult - 1))
-            # The per-swing ratio honors the Q active window.
             # Without IE: AD * ratio * (1 + crit_chance)
             # With IE:    AD * ratio * (1 + crit_chance * 1.30)
             bonus_crit_ratio = crit_multiplier - 1.0
-            raw_phys = (
-                swing_ad * swing_window_ratio * (1 + crit_chance * bonus_crit_ratio)
-            )
+            raw_phys = swing_ad * (1 + crit_chance * bonus_crit_ratio)
             raw_true = 0.0
         elif is_empowered:
             if deterministic:

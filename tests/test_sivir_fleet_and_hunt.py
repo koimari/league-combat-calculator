@@ -464,10 +464,10 @@ class TestHuntAttackSpeedIsAnUnusedSourceConflict:
 
     def test_no_attack_speed_buff_is_emitted(self):
         _, abilities = _parse()
-        for entry in abilities.values():
+        for slot, entry in abilities.items():
             buff = entry.get("stat_buff", {})
             assert "attack_speed" not in buff
-            assert "bonus_attack_speed" not in buff
+            assert ("bonus_attack_speed" in buff) == (slot == "W")  # W's own row
 
     def test_conflict_is_recorded_rather_than_used(self):
         assumption = next(a for a in ASSUMPTIONS if "R (On the Hunt)" in a)

@@ -23,13 +23,14 @@ from typing import Any
 
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
-from .module_helpers import named_damage
+from .module_helpers import ability_cast_times, named_damage
 from .packet_module import build_packet_module, repeat_damage_parser
 from .shared_mechanics import with_self_shield
 from .slot_entries import damage_entry
 from .slot_extract import (
     ability_name,
     extract_cooldown,
+    extract_value,
     find_named_leveling,
     sum_modifiers,
 )
@@ -43,6 +44,53 @@ PACKET_SHA256 = "8cd0eacf4fa3f8ac9dc2353f0b6f6edb853a72c59b2dcf737d60980d28900c2
 _SKARNER_W_SPELL = spell_object("Skarner", "SkarnerW")
 _W_SHIELD_MAX_HEALTH_RATIO = data_value(_SKARNER_W_SPELL, "InitialShieldRatio")
 _W_SHIELD_DURATION = data_value(_SKARNER_W_SPELL, "ShieldDuration")
+
+# Shattered Earth empowers "up to three of his next basic attacks" (cached
+# Q prose), the same three the packet's Bonus Physical Damage per Hit x 3
+# prices; the number of casts the walk mirrors is the rotation's.
+_Q_EMPOWERED_ATTACKS = 3
+
+
+def _shattered_earth_attack_speed(packet_q):
+    """Q: the empowered attacks' bonus attack speed, weighted by the casts' share.
+
+    Each Shattered Earth cast rates its three attacks at the row's bonus
+    attack speed, so the fight-wide grant is that bonus weighted by the
+    share of the window the mirrored casts' empowered swings cover: a
+    3-second cooldown re-arms it almost every swing.  Upheaval (variant 1)
+    throws the boulder instead and grants nothing.
+    """
+
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        entry = packet_q(ctx)
+        if entry is None or int(ctx.option("q_variant")) != 0:
+            return entry
+        ability = ctx.ability("Q")
+        rank = ctx.rank_for("Q")
+        if ability is None or rank < 1:
+            return entry
+        granted = extract_value(ability, "Bonus Attack Speed", rank)
+        duration = float(ctx.option("fight_duration_seconds"))
+        if duration <= 0.0:
+            share = 1.0
+        else:
+            buffed = float(ctx.stat("attack_speed")) + float(
+                ctx.stat("attack_speed_ratio")
+            ) * (granted / 100.0)
+            casts = len(ability_cast_times(ctx, duration, ("Q",)))
+            share = min(1.0, casts * _Q_EMPOWERED_ATTACKS / buffed / duration)
+        published = granted * share
+        entry["stat_buff"] = {"bonus_attack_speed": published}
+        inherited = str(entry["detail"]).strip() if "detail" in entry else ""
+        entry["detail"] = (
+            f"+{granted:g}% bonus attack speed on each cast's "
+            f"{_Q_EMPOWERED_ATTACKS} empowered attacks ({published:g}% over the "
+            "fight window, weighted by the mirrored casts' swings)."
+            + (f" {inherited}" if inherited else "")
+        )
+        return entry
+
+    return parse
 
 
 # W's shockwave carries the shield the cached description sources, so the
@@ -149,11 +197,18 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "W": _seismic_bastion,
         "E": _ixtals_impact,
     },
+    slot_wrappers={"Q": _shattered_earth_attack_speed},
     cc_kinds=MODULE_CC,
 )
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
+    "Q (Shattered Earth) grants its bonus attack speed on each cast's three "
+    "empowered attacks, published as one fight-wide stat buff weighted by "
+    "the share of the window those swings cover across the mirrored casts "
+    "(Braum-pattern schedule: each cast at t=0 and every hasted cooldown); "
+    "the 5-second hold between attacks and Upheaval's early throw are not "
+    "modeled, and the Upheaval variant grants nothing.",
     "W (Seismic Bastion) shields Skarner for 8% of his maximum health "
     "for 2.5 seconds (cached W prose) via the shared self_shield_events "
     "interface; the shockwave damage is unchanged.",

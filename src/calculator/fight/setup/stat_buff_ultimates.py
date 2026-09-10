@@ -3,38 +3,29 @@
 import math
 
 from ... import item_effects
-from ...ability_atoms import ability_field, ability_payload, ability_sub_payload
+from ...ability_atoms import ability_field, ability_sub_payload
 from ...interpreters import rearmed_swings
 from ...stats import calculate_attack_speed, resolve_move_speed
-from ..cast_slots import _slot_is_cast
+from ..cast_slots import _slot_is_cast, slot_cast_start
 from ..config import BASE_CRIT_MULTIPLIER
 from ..state import FightState, _crit_profile
 
 
-def _q_cast_start(state: FightState) -> float:
-    """When the Q cast lands: the cast times of every slot ordered before it."""
-    cast_start = 0.0
-    for slot in state.cast_order:
-        if slot == "Q":
-            break
-        cast_start += float(
-            ability_field(ability_payload(state.ability_damages, slot), "cast_time")
-        )
-    return cast_start
-
-
 def _rate_attack_speed_grant(
-    state: FightState, bonus_as_pct: float, window_seconds: float | None
+    state: FightState, key: str, bonus_as_pct: float, window_seconds: float | None
 ) -> None:
     """Rate the swing stream at a kit's bonus attack speed and recount it.
 
     A grant with no window covers the fight; one with a window (Tristana Q,
-    Yunara Q) is placed from the Q cast, and the autos ride the base rate
-    before it, the buffed rate inside ``[cast_start, cast_start + window)``
-    and the base rate again after (the end-exclusive boundary).  The
-    build's own ramp (Rageblade's stacks) keeps walking through either
-    grant: its swings are authored here for the autos step to read.  A flat
-    stream is counted per phase, the floor convention the fight end uses.
+    Kennen E, Xayah W) is placed from the first cast of the row *key* that
+    grants it, and the autos ride the base rate before it, the buffed rate
+    inside ``[cast_start, cast_start + window)`` and the base rate again
+    after (the end-exclusive boundary).  The state holds one window, so a
+    second windowed grant on the same kit raises rather than overwriting
+    the first.  The build's own ramp (Rageblade's stacks) keeps walking
+    through either grant: its swings are authored here for the autos step
+    to read.  A flat stream is counted per phase, the floor convention the
+    fight end uses.
     """
     base_as = state.attack_speed
     state.attack_speed = calculate_attack_speed(
@@ -42,12 +33,18 @@ def _rate_attack_speed_grant(
     )
     active_window = None
     if window_seconds is not None:
-        cast_start = _q_cast_start(state)
-        state.q_window_start = cast_start
-        state.q_window_end = cast_start + window_seconds
-        state.q_window_base_rate = base_as
+        if state.as_window_slot:
+            raise ValueError(
+                f"{key} places a second attack-speed window; the fight holds "
+                f"one, already placed by {state.as_window_slot}"
+            )
+        cast_start = slot_cast_start(state, key)
+        state.as_window_slot = key
+        state.as_window_start = cast_start
+        state.as_window_end = cast_start + window_seconds
+        state.as_window_base_rate = base_as
         active_window = rearmed_swings.ActiveWindow(
-            cast_start, state.q_window_end, bonus_as_pct
+            cast_start, state.as_window_end, bonus_as_pct
         )
     ramp = state.declared.charged_strikes.swing_schedule
     if ramp is not None and ramp.schedules(one_rotation=state.one_rotation):
@@ -63,8 +60,8 @@ def _rate_attack_speed_grant(
         state.support_attack_times = times
         state.num_auto_attacks = len(times)
         if active_window is not None:
-            state.q_window_pre_autos = sum(t < active_window.start for t in times)
-            state.q_window_autos = sum(
+            state.as_window_pre_autos = sum(t < active_window.start for t in times)
+            state.as_window_autos = sum(
                 active_window.start <= t < active_window.end for t in times
             )
         return
@@ -77,13 +74,13 @@ def _rate_attack_speed_grant(
     in_window = min(
         window_seconds, max(0.0, state.fight_duration_seconds - active_window.start)
     )
-    state.q_window_pre_autos = math.floor(active_window.start * base_as * uptime)
-    state.q_window_autos = math.floor(state.attack_speed * in_window * uptime)
+    state.as_window_pre_autos = math.floor(active_window.start * base_as * uptime)
+    state.as_window_autos = math.floor(state.attack_speed * in_window * uptime)
     post_autos = math.floor(
         base_as * max(0.0, state.fight_duration_seconds - active_window.end) * uptime
     )
     state.num_auto_attacks = (
-        state.q_window_pre_autos + state.q_window_autos + post_autos
+        state.as_window_pre_autos + state.as_window_autos + post_autos
     )
 
 
@@ -188,6 +185,7 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
             ).get("active_duration")
             _rate_attack_speed_grant(
                 state,
+                key,
                 bonus_as_pct,
                 float(active_duration) if active_duration else None,
             )

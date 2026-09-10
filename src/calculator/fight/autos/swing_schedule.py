@@ -72,29 +72,31 @@ def _base_auto_attack_timestamps(state: FightState) -> list[float]:
         )
         # Lich Bane's proc-timed speedup is applied once, by
         # ``_auto_attack_timestamps``, over whichever schedule this returns.
-    if state.q_window_end > 0.0:
-        # P1 Slice 11 (Ashe Q active window): the autos ride the base
-        # rate before the cast, the buffed rate inside [cast_start,
-        # q_window_end), then the base rate again from the window end
-        # (end-exclusive — a swing landing exactly at the boundary is
-        # normal).
+    if state.as_window_end > 0.0:
+        # The kit's attack-speed window (Ashe Q, Kennen E): the autos ride
+        # the base rate before the cast, the buffed rate inside
+        # [as_window_start, as_window_end), then the base rate again from
+        # the window end (end-exclusive — a swing landing exactly at the
+        # boundary is normal).
         buffed_rate = state.attack_speed * state.auto_attack_uptime
-        base_rate = state.q_window_base_rate * state.auto_attack_uptime
+        base_rate = state.as_window_base_rate * state.auto_attack_uptime
         times = []
         if base_rate > 0.0:
-            times.extend(_swings_at_rate(state.q_window_pre_autos, base_rate))
+            times.extend(_swings_at_rate(state.as_window_pre_autos, base_rate))
         if buffed_rate > 0.0:
             times.extend(
-                _swings_at_rate(state.q_window_autos, buffed_rate, state.q_window_start)
+                _swings_at_rate(
+                    state.as_window_autos, buffed_rate, state.as_window_start
+                )
             )
         if base_rate > 0.0:
             times.extend(
                 _swings_at_rate(
                     state.num_auto_attacks
-                    - state.q_window_pre_autos
-                    - state.q_window_autos,
+                    - state.as_window_pre_autos
+                    - state.as_window_autos,
                     base_rate,
-                    state.q_window_end,
+                    state.as_window_end,
                 )
             )
         return times
@@ -192,27 +194,27 @@ def _prepare_support_attack_schedule(state: FightState) -> None:
         )
     base_rate = state.attack_speed
     reset_at: tuple[float, ...] = ()
-    if state.q_window_end > 0:
+    if state.as_window_end > 0:
         # The champion parser supplied this active window and its rate.
-        # Keep Q's phase boundaries while Whimsy adds its separate grant.
-        base_rate = state.q_window_base_rate
+        # Keep its phase boundaries while Whimsy adds its separate grant.
+        base_rate = state.as_window_base_rate
         if state.attack_speed_ratio <= 0:
             raise ValueError(
                 "The champion attack-speed window requires a positive attack-speed ratio"
             )
         windows += (
             AttackSpeedWindow(
-                event_id=f"{state.event_actor_id}:Q:active",
+                event_id=f"{state.event_actor_id}:{state.as_window_slot}:active",
                 recipient_id=state.event_actor_id,
-                start=state.q_window_start,
-                end=state.q_window_end,
+                start=state.as_window_start,
+                end=state.as_window_end,
                 bonus_percent=(state.attack_speed - base_rate)
                 / state.attack_speed_ratio
                 * 100.0,
                 stack_group="champion_active",
             ),
         )
-        reset_at = (state.q_window_start, state.q_window_end)
+        reset_at = (state.as_window_start, state.as_window_end)
     state.support_attack_times = attack_times_for_windows(
         windows,
         attack_speed=base_rate,
@@ -221,12 +223,12 @@ def _prepare_support_attack_schedule(state: FightState) -> None:
         uptime=state.auto_attack_uptime,
         reset_at=reset_at,
     )
-    if state.q_window_end > 0:
-        state.q_window_pre_autos = sum(
-            time < state.q_window_start for time in state.support_attack_times
+    if state.as_window_end > 0:
+        state.as_window_pre_autos = sum(
+            time < state.as_window_start for time in state.support_attack_times
         )
-        state.q_window_autos = sum(
-            state.q_window_start <= time < state.q_window_end
+        state.as_window_autos = sum(
+            state.as_window_start <= time < state.as_window_end
             for time in state.support_attack_times
         )
     _install_swing_count(state, len(state.support_attack_times))

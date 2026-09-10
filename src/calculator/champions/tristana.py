@@ -34,14 +34,14 @@ instead of being averaged into the magnitude.
   Why a published window beats ``module_helpers.buff_window_share`` HERE:
   the share helper weights the MAGNITUDE by the fraction of the fight the
   buff covers, which is the only option when the engine cannot place the
-  window.  ``damage.py`` CAN place this one — it resolves the window
-  start by walking ``state.cast_order`` and breaking on ``"Q"`` — and
-  Rapid Fire IS the Q cast, so [0, 7) is its real window.  The engine
+  window.  The engine CAN place this one — it resolves a window's start
+  at the first cast of the row that grants it — and Rapid Fire IS the Q
+  cast, first in the order, so [0, 7) is its real window.  The engine
   then splits the fight into pre-window / in-window / post-window auto
   counts at the full magnitude, which is the exact answer rather than a
-  fight-averaged one.  (The Miss Fortune W / Teemo P boundary, from the
-  other side: a steroid stuck in a non-Q slot has no placeable window and
-  keeps the share helper.)
+  fight-averaged one.  (The Teemo P boundary, from the other side: a
+  steroid whose trigger the fight never reaches has no cast to place it
+  at and keeps the share helper.)
 
   The override carries ``active_duration`` and NOTHING else on purpose.
   ``ad_ratio`` defaults to 1.0 and the per-swing ``swing_window_ratio``

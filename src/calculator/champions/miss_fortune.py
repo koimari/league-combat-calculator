@@ -39,7 +39,6 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, ONHIT, SlotCtx
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
-from .shared_mechanics import attack_speed_steroid
 from .slot_entries import damage_entry, on_hit_entry
 from .slot_extract import (
     PER_LEVEL_SCALING,
@@ -49,6 +48,7 @@ from .slot_extract import (
     extract_value,
     find_named_leveling,
 )
+from .stat_grants import attack_speed_steroid
 
 # HARDCODED game-file rule declaration — verify on patch updates.
 # data/gamefiles/characters/missfortune.bin.json,

@@ -19,6 +19,13 @@ Maximum Heal Per Tick rows by the fighter's live missing health.  W's
 damage-reduction window is a defensive state the damage model does not
 stage.
 
+E (Wuju Style) rides the swing stream: the cached "Bonus True Damage"
+row is an on-hit on every basic attack inside the sourced 5-second window
+(binary ``WujuStyle.Duration``), placed once at the E cast; the reviewed
+packet had priced it as one direct hit per cast.  A schedule-gated rider
+is kept out of phantom-hit doubling by the engine, so Rageblade phantoms
+and Double Strike's second strike do not re-apply it.
+
 R (Highlander) is the attack-speed steroid: the cached "Bonus Attack
 Speed" row (25/45/65%) over the sourced 7-second window, emitted as a
 BUFF-phase ``stat_buff`` so the fight engine's auto count scales with
@@ -35,7 +42,7 @@ from .healing_contract import self_healing_rule
 from .module_helpers import buff_window_share, no_damage, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
 from .slot_entries import ability_on_hit_entry
-from .slot_extract import ability_name, extract_named, extract_value
+from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 
 PACKET_SHA256 = "a6d43d11733ede3c9a2f3daa2d2f6afb754fc83e580b27dff8e8ffeb76783164"
 
@@ -70,6 +77,9 @@ _SECOND_STRIKE_CRIT_EFFECTIVENESS = 1.0
 # cached R prose ("For the next 7 seconds ...") corroborates it.  The
 # percentage rides the JSON's "Bonus Attack Speed" row.
 _R_DURATION_SECONDS = data_value(spell_object("Master Yi", "Highlander"), "RDuration")
+# Wuju Style's window is the binary WujuStyle.Duration DataValue; the
+# cached E prose ("within the next 5 seconds") corroborates it.
+_E_DURATION_SECONDS = data_value(spell_object("Master Yi", "WujuStyle"), "Duration")
 
 
 def _double_strike(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -115,6 +125,32 @@ def _meditate(
 
 
 @ranked_slot
+def _wuju_style(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
+    """E: bonus true damage on every basic attack inside the 5-second window."""
+
+    per_hit = extract_named(ability, "Bonus True Damage", rank, ctx.stats, ctx.target)
+    entry = ability_on_hit_entry(
+        ability_name(ability),
+        rank,
+        "true",
+        {
+            "name": "Wuju Style (on-hit)",
+            "damage_per_hit": per_hit,
+            "damage_type": "true",
+            "proc_window": _E_DURATION_SECONDS,
+        },
+        cooldown=extract_cooldown(ability, rank),
+    )
+    entry["detail"] = (
+        f"{per_hit:g} bonus true damage on-hit on every basic attack for "
+        f"{_E_DURATION_SECONDS:g}s from the E cast (one window per fight)"
+    )
+    return entry
+
+
+@ranked_slot
 def _highlander(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
@@ -144,13 +180,9 @@ _highlander.phase = BUFF
 # controls the enemies it strikes (Master Yi is the one made unable to
 # act).  P is an on-hit rider, W a self-channel, R a self-buff.
 #
-# E reviews to no control, and the row it rides is not a cast: Wuju Style
-# "empowers his basic attacks
-# within the next 5 seconds to deal bonus true damage on-hit", but the
-# reviewed packet prices it as one direct hit on the E row.  Certifying
-# that hit at the cast boundary would state an instant the ability does
-# not have — the rider lands on a later basic attack — so the row needs
-# to move onto the on-hit stream before it can carry any marker.
+# E reviews to no control: Wuju Style "empowers his basic attacks within
+# the next 5 seconds to deal bonus true damage on-hit", a rider on the
+# swing stream with no part of its own.
 MODULE_CC = {"Q": "none", "P": "none", "W": "none", "E": "none", "R": "none"}
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
@@ -160,6 +192,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_parsers={
         "P": _double_strike,
         "W": _meditate,
+        "E": _wuju_style,
         "R": _highlander,
     },
     cc_kinds=MODULE_CC,
@@ -178,6 +211,11 @@ ASSUMPTIONS = [
     "The engine prices the proc spread across the 3 stacking hits "
     "(Vayne W convention); the 4-second stack window is assumed not to "
     "expire during sustained combat",
+    "E (Wuju Style) is an on-hit on every basic attack inside the sourced "
+    "5-second window from the E cast (one window per fight: the recast a "
+    "longer fight would earn is not placed), never a direct hit of the "
+    "cast; phantom hits and Double Strike's second strike do not re-apply "
+    "it (the engine's schedule-gated rider rule).",
     "W (Meditate) heals for 8 ticks at 0.5-second intervals over the "
     "4-second channel, interpolated between Minimum Heal Per Tick and "
     "Maximum Heal Per Tick by the fighter's live missing health "
