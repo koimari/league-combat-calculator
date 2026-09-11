@@ -34,7 +34,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "AlistarPassive",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 3.0,
    "cooldown_rank_max": 3.0,
@@ -50,7 +50,7 @@
    "binary": [
     "Characters/Alistar/Spells/AlistarPassiveAbility/AlistarPassive"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -58,7 +58,7 @@
   "family": "heal-shield",
   "behavior": "AlistarPassiveHealMis",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
@@ -81,7 +81,7 @@
    "binary": [
     "Characters/Alistar/Spells/AlistarPassiveAbility/AlistarPassiveHealMis"
    ],
-   "evidence": "name:heal"
+   "evidence": "name:heal+wiki-ally"
   }
  },
  {
@@ -89,7 +89,7 @@
   "family": "heal-shield",
   "behavior": "AlistarPassiveHeal",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
@@ -112,7 +112,7 @@
    "binary": [
     "Characters/Alistar/Spells/AlistarPassiveAbility/AlistarPassiveHeal"
    ],
-   "evidence": "name:heal"
+   "evidence": "name:heal+wiki-ally"
   }
  },
  {
@@ -120,7 +120,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "AlistarPassiveHeal",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
@@ -136,7 +136,7 @@
    "binary": [
     "Characters/Alistar/Spells/AlistarPassiveAbility/AlistarPassiveHeal"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {

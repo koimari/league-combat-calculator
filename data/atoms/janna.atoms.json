@@ -190,7 +190,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "EyeOfTheStorm",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 16.0,
    "cooldown_rank_max": 12.0,
@@ -206,7 +206,7 @@
    "binary": [
     "Characters/Janna/Spells/EyeOfTheStormAbility/EyeOfTheStorm"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {

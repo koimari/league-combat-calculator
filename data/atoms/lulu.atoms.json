@@ -88,7 +88,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "LuluWBuff",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -104,7 +104,7 @@
    "binary": [
     "Characters/Lulu/Spells/LuluWAbility/LuluWBuff"
    ],
-   "evidence": "name:buff"
+   "evidence": "name:buff+wiki-ally"
   }
  },
  {
@@ -138,7 +138,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "LuluW",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 18.0,
    "cooldown_rank_max": 18.0,
@@ -154,7 +154,7 @@
    "binary": [
     "Characters/Lulu/Spells/LuluWAbility/LuluW"
    ],
-   "evidence": "tag:Trait_AttackBuff_Duration"
+   "evidence": "tag:Trait_AttackBuff_Duration+wiki-ally"
   }
  },
  {

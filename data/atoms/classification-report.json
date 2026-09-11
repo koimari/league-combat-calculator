@@ -13682,6 +13682,27 @@
    "note": "Soul drops live under SennaPassive stacks; 'soul' itself is not a vocab keyword."
   },
   {
+   "mechanic": "Nami ally heal (Ebb and Flow) reads ally, not self",
+   "champion": "nami",
+   "atom_id": "heal-shield.heal",
+   "passed": true,
+   "evidence": [
+    "heal-shield.heal @ NamiW (on_effect)"
+   ],
+   "note": "wiki-ally bridge: the binaries carry no targeting data for it."
+  },
+  {
+   "mechanic": "Thresh ally shield (Dark Passage) reads ally",
+   "champion": "thresh",
+   "atom_id": "heal-shield.shield",
+   "passed": true,
+   "evidence": [
+    "heal-shield.shield @ ThreshWShield (on_effect)",
+    "heal-shield.shield @ ThreshW (on_cast)"
+   ],
+   "note": "wiki-ally bridge."
+  },
+  {
    "mechanic": "Neeko transform (Inherent Glamour)",
    "champion": "neeko",
    "atom_id": "stack-transform-summon-resource.transform",
@@ -13839,34 +13860,8 @@
   "Add a 'soul'/'stack currency' keyword family: Senna souls, Thresh souls and Nasus Q stacks appear as 'Soul*'/'Stacks' datavalues, and only 'stack' currently matches \u2014 soul-gated scaling is invisible, and objects like ThreshPassiveSouls / SennaBasicAttackSouls stay unclassified.",
   "Damage types are now bridged from the wiki champion cache (data/champions.json per-ability damageType) via script-name prefix (champion+slot letter) and ability-name token matching, with token inference as the fallback. Remaining damage_type=null atoms are: basic-attack objects (the cache types abilities, not autos), slots the wiki marks without a type, and multi-form slots whose entries disagree on the type (e.g. Gnar W Hyper vs Wallop, Rek'Sai Q Queen's Wrath vs Prey Seeker) when the object name cannot disambiguate the form.",
   "Curate ambiguous vocab keywords before scaling to all champions. The classifier already guards against champion-name keywords ('Aatrox', 'Aphelios'), generic words ('duration', 'ability damage', 'crit'), and substring traps ('miss' in missile, 'stance' in distance, 'wind' in window) \u2014 but residual noise remains: 'shield' in the flow/true-damage atoms fires on every shield, 'bonus health' in deep-ward fires on any bonus+health datavalue, 'TauntLength' (Thresh Q) misclassifies as a taunt, 'refund' fires on ManaRefund, and meta atoms (internal-resource-index, buff-duration-class) over-fire by design.",
-  "Add a targeting-data source for target_policy: mTargetingTypeData is nearly empty in these binaries, so heal/shield target_policy defaults to 'self' and misses ally-targeted heals (Senna Q, Kayle W, Thresh W lantern). mAffectsTypeFlags is also recorded raw (no decode table available for this data version).",
+  "Ally targeting is now bridged from the wiki champion cache: mTargetingTypeData is nearly empty in these binaries, so a benefit that reaches an ally was indistinguishable from one that only reaches its caster and defaulted to 'self' (Senna Q, Kayle W, Thresh W lantern). A heal, shield or buff atom whose slot has a cached wiki sentence granting a benefit *to* an ally now reads 'ally' and carries '+wiki-ally' in its evidence; an ally that is the source of the benefit ('healed or shielded by an ally', 'an allied source') does not count. The bridge resolves per ability slot, so an atom in a slot that benefits both its caster and an ally reads 'ally'. mAffectsTypeFlags is still recorded raw (no decode table available for this data version).",
   "Missiles and empowered-attack variants of an already-classified parent spell (e.g. JinxQAttack, ApheliosSeverumAttack, GnarQMissile) stay unclassified; inheriting the parent ability's atoms for '*Missile'/'*Attack'-suffixed clones would cut the unclassified-real count roughly in half.",
   "The wiki cache marks 25 abilities OTHER_DAMAGE (Ahri Q, Camille Q, Pyke R, Sett W, Urgot R, Vel'Koz R, Yone P/W/R, ...); these are recorded verbatim as damage_type='other'. Several are true damage in game (e.g. Pyke R, Camille Q2, Sett W, Urgot R) \u2014 verify against the game files if 'true' matters, and only then special-case them (ideally as data, not code)."
- ],
- "autoresearch": {
-  "round": "v4-no-overclassification",
-  "method": "autonomous experiment loop (modify -> measure -> keep/discard -> repeat)",
-  "definition": "over-classification = atom with only weak (datavalue-guessed) evidence",
-  "result": {
-   "weak_evidence_atoms": 0,
-   "total_atoms": 5345,
-   "evidence_breakdown": {
-    "name": 1611,
-    "tag": 2161,
-    "rule": 256,
-    "inherited": 1295,
-    "wiki-map": 22,
-    "weak": 0
-   },
-   "sanity_checks": "19/19",
-   "unclassified_real": 1274
-  },
-  "experiments_run": [
-   "E1 baseline (two-tier strong/weak, cap 2 weak) -> 444 objects with >4 atoms",
-   "E2 evidence-graded (tag/name-strong/datavalue-weak) -> weak atoms still leaked via tag-order bug",
-   "E3 tags-before-keywords (reorder) -> 117 objects with >4 atoms",
-   "E4 name-prefix matching restored (stack/stacks) -> 19/19 sanity",
-   "E5 no-weak policy + per-atom keyword search -> weak atoms = 0, 19/19 sanity"
-  ]
- }
+ ]
 }

@@ -146,7 +146,7 @@
   "family": "heal-shield",
   "behavior": "ThreshWShield",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -169,7 +169,7 @@
    "binary": [
     "Characters/Thresh/Spells/ThreshWAbility/ThreshWShield"
    ],
-   "evidence": "name:shield"
+   "evidence": "name:shield+wiki-ally"
   }
  },
  {
@@ -177,7 +177,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "ThreshWShield",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -193,7 +193,7 @@
    "binary": [
     "Characters/Thresh/Spells/ThreshWAbility/ThreshWShield"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -257,7 +257,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "ThreshW",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 21.0,
    "cooldown_rank_max": 16.0,
@@ -273,7 +273,7 @@
    "binary": [
     "Characters/Thresh/Spells/ThreshWAbility/ThreshW"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {

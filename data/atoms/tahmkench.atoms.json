@@ -289,7 +289,7 @@
   "family": "heal-shield",
   "behavior": "TahmKenchRShield",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -312,7 +312,7 @@
    "binary": [
     "Characters/TahmKench/Spells/TahmKenchRWrapperAbility/TahmKenchRShield"
    ],
-   "evidence": "name:shield"
+   "evidence": "name:shield+wiki-ally"
   }
  },
  {

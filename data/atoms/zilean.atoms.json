@@ -54,7 +54,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "ZileanPLevel",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -70,7 +70,7 @@
    "binary": [
     "Characters/Zilean/Spells/HeightenedLearningAbility/ZileanPLevel"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {

@@ -510,7 +510,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "ShenR",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 200.0,
    "cooldown_rank_max": 160.0,
@@ -526,7 +526,7 @@
    "binary": [
     "Characters/Shen/Spells/ShenRAbility/ShenR"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -559,7 +559,7 @@
   "family": "heal-shield",
   "behavior": "ShenRShield",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -582,7 +582,7 @@
    "binary": [
     "Characters/Shen/Spells/ShenRShield"
    ],
-   "evidence": "name:shield"
+   "evidence": "name:shield+wiki-ally"
   }
  },
  {

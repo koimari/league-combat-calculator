@@ -4,7 +4,7 @@
   "family": "heal-shield",
   "behavior": "SeraphineWShield",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -27,7 +27,7 @@
    "binary": [
     "Characters/Seraphine/Spells/SeraphineWShield"
    ],
-   "evidence": "name:shield"
+   "evidence": "name:shield+wiki-ally"
   }
  },
  {
@@ -89,7 +89,7 @@
   "family": "heal-shield",
   "behavior": "SeraphineW",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 22.0,
    "cooldown_rank_max": 22.0,
@@ -112,7 +112,7 @@
    "binary": [
     "Characters/Seraphine/Spells/SeraphineWAbility/SeraphineW"
    ],
-   "evidence": "tag:Trait_ActiveHeal"
+   "evidence": "tag:Trait_ActiveHeal+wiki-ally"
   }
  },
  {
@@ -151,7 +151,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "SeraphineW",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 22.0,
    "cooldown_rank_max": 22.0,
@@ -167,7 +167,7 @@
    "binary": [
     "Characters/Seraphine/Spells/SeraphineWAbility/SeraphineW"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -476,7 +476,7 @@
   "family": "heal-shield",
   "behavior": "SeraphineW2HealMissile",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
@@ -499,7 +499,7 @@
    "binary": [
     "Characters/Seraphine/Spells/SeraphineW2HealMissile"
    ],
-   "evidence": "name:heal"
+   "evidence": "name:heal+wiki-ally"
   }
  },
  {
@@ -659,7 +659,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "SeraphinePassiveNotesBuff",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -675,7 +675,7 @@
    "binary": [
     "Characters/Seraphine/Spells/SeraphinePassiveNotesBuff"
    ],
-   "evidence": "name:buff"
+   "evidence": "name:buff+wiki-ally"
   }
  },
  {

@@ -556,7 +556,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "JarvanIVDemacianStandard",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 12.0,
    "cooldown_rank_max": 10.0,
@@ -572,7 +572,7 @@
    "binary": [
     "Characters/JarvanIV/Spells/JarvanIVDemacianStandardAbility/JarvanIVDemacianStandard"
    ],
-   "evidence": "tag:Trait_AttackBuff_Duration"
+   "evidence": "tag:Trait_AttackBuff_Duration+wiki-ally"
   }
  }
 ]

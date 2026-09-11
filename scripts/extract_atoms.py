@@ -694,10 +694,10 @@ def _slot_damage_type(
     return None
 
 
-def wiki_damage_type(
+def wiki_object_slot(
     entries: list[WikiEntry], champ_norm: str, name: str, alt: str
-) -> str | None:
-    """Best wiki damage type for a SpellObject, or None (never a guess).
+) -> tuple[str | None, WikiEntry | None, set[str]]:
+    """Which ability slot a SpellObject belongs to, with the entry it matched.
 
     Matching order, all driven by data/champions.json (no champion names
     hardcoded):
@@ -707,7 +707,13 @@ def wiki_damage_type(
       2. a standalone slot-letter token in the object name ("GnarBigQ" -> Q);
       3. ability-name tokens in the object name ("VladimirHemoplague" -> R,
          "JayceShockBlast" -> Q, "Glory_in_Death" -> P).
+
+    The first two resolve a slot and no entry; the third resolves both. An
+    object none of them reach answers ``(None, None, tokens)`` rather than a
+    guess. One resolution, two readers: the damage-type bridge below and the
+    ally-target bridge.
     """
+    obj_toks = set(tokens(name)) | set(tokens(alt))
     stripped = strip_champ_prefix(name, champ_norm)
     if stripped != name and stripped:
         first, rest = stripped[0], stripped[1:]
@@ -717,21 +723,168 @@ def wiki_damage_type(
             or rest[0].isdigit()
             or stripped.startswith("Passive")
         ):
-            return _slot_damage_type(
-                entries, first, set(tokens(name)) | set(tokens(alt)), champ_norm
-            )
-    obj_toks = set(tokens(name)) | set(tokens(alt))
+            return first, None, obj_toks
     slot_toks = [t.upper() for t in obj_toks if t in "pqwer"]
     if len(slot_toks) == 1:
-        return _slot_damage_type(entries, slot_toks[0], obj_toks, champ_norm)
+        return slot_toks[0], None, obj_toks
     best = _best_entry_match(entries, obj_toks, champ_norm)
     if best is None:
+        return None, None, obj_toks
+    return best[0], best, obj_toks
+
+
+def wiki_damage_type(
+    entries: list[WikiEntry], champ_norm: str, name: str, alt: str
+) -> str | None:
+    """Best wiki damage type for a SpellObject, or None (never a guess).
+
+    The slot comes from :func:`wiki_object_slot`; a slot resolved by name
+    tokens carries its own entry, whose type wins when it has one.
+    """
+    slot, best, obj_toks = wiki_object_slot(entries, champ_norm, name, alt)
+    if slot is None:
         return None
-    if best[2] is not None:
+    if best is not None and best[2] is not None:
         return best[2]
     # The matched ability entry itself carries no type, but its slot may have
     # a single unambiguous type (e.g. Riven "Izuna Blade" -> R Wind Slash).
-    return _slot_damage_type(entries, best[0], obj_toks, champ_norm)
+    return _slot_damage_type(entries, slot, obj_toks, champ_norm)
+
+
+# --------------------------------------------------------------------------
+# Wiki ally-target bridge (data-driven; data/champions.json)
+# --------------------------------------------------------------------------
+#: Verbs and nouns that describe a benefit landing on somebody.
+_BENEFIT_TOKENS = {
+    "heal",
+    "heals",
+    "healed",
+    "healing",
+    "shield",
+    "shields",
+    "shielded",
+    "shielding",
+    "grant",
+    "grants",
+    "granting",
+    "granted",
+    "empower",
+    "empowers",
+    "empowering",
+    "empowered",
+    "bless",
+    "blesses",
+    "blessing",
+    "restore",
+    "restores",
+    "restoring",
+    "enchant",
+    "enchants",
+    "enchantment",
+    "buff",
+    "buffs",
+}
+#: Only a benefit that could already have landed on its caster is re-read as
+#: ally-targeted. A damage or control atom is never upgraded by this bridge.
+_ALLY_ELIGIBLE_ATOMS = {"stack-transform-summon-resource.buff"}
+_SENTENCE = re.compile(r"[^.;\n]+")
+
+
+#: Words that make the ally the source of an effect rather than its recipient
+#: ("healed or shielded *by* an ally", "damaged ... by him or an allied
+#: *source*"). Direction decides the target policy, so they are exclusions.
+_AGENT_MARKERS = {"by", "from"}
+_AGENT_NOUNS = {"source", "sources"}
+
+
+def _ally_sentence(text: str) -> bool:
+    """One sentence granting a benefit *to* an ally.
+
+    A sentence qualifies when it names both an ally and a benefit and at least
+    one mention of the ally is the one receiving it. An ally that is the source
+    of the benefit does not count: "whenever Lucian is healed or shielded by an
+    ally" and "damaged ... by him or an allied source" both describe a benefit
+    flowing the other way, and reading them as ally-targeted would put an
+    ally policy on the receiving champion's own buff.
+    """
+    for sentence in _SENTENCE.findall(text or ""):
+        words = tokens(sentence)
+        if not words:
+            continue
+        ally_at = [i for i, w in enumerate(words) if w in ALLY_TOKENS]
+        benefit_at = [i for i, w in enumerate(words) if w in _BENEFIT_TOKENS]
+        if not ally_at or not benefit_at:
+            continue
+        for position in ally_at:
+            # the ally as the agent of the benefit
+            preceding = [
+                i
+                for i, w in enumerate(words[:position])
+                if w in _AGENT_MARKERS
+                and not any(b in range(i, position) for b in benefit_at)
+            ]
+            if preceding:
+                continue
+            if position + 1 < len(words) and words[position + 1] in _AGENT_NOUNS:
+                continue
+            # the ally as the subject that does the granting
+            if position <= 1 and any(b > position for b in benefit_at):
+                continue
+            return True
+    return False
+
+
+def load_wiki_ally_slots() -> dict[str, set[str]]:
+    """champion_key -> the slots whose cached wiki text benefits an ally.
+
+    The CharacterRecord binaries carry almost no ``mTargetingTypeData``, so a
+    heal or shield that reaches an ally is indistinguishable there from one
+    that only reaches its caster, and the family default reads every such atom
+    as ``self``. The wiki cache does carry it, in the same per-ability rows the
+    damage-type bridge reads. A slot counts only when one sentence names an
+    ally and a benefit together; no champion or spell name appears here.
+    """
+    data = json.loads(CHAMPIONS_FILE.read_text())
+    out: dict[str, set[str]] = {}
+    for champ, info in data.items():
+        slots: set[str] = set()
+        for slot, abilities in (info.get("abilities") or {}).items():
+            if len(slot) != 1 or slot not in "PQWER":
+                continue
+            for ab in abilities:
+                for eff in ab.get("effects") or []:
+                    if _ally_sentence(eff.get("description") or ""):
+                        slots.add(slot)
+                        break
+        out[champion_key(champ)] = slots
+    return out
+
+
+def ally_targeted(
+    atom_id: str,
+    target: str,
+    entries: list[WikiEntry],
+    ally_slots: set[str],
+    champ_norm: str,
+    name: str,
+    alt: str,
+) -> bool:
+    """Whether a self-read benefit atom is really an ally-targeted one.
+
+    Only ``self`` is ever re-read, and only for a benefit atom: an explicit
+    binary tag, an ally or enemy token in the object name, and every damage or
+    control atom keep the target they already resolved.
+    """
+    if target != "self" or not ally_slots:
+        return False
+    family = atom_id.split(".", 1)[0]
+    eligible = (
+        family == "heal-shield" and atom_id not in ENEMY_HEAL_ATOMS
+    ) or atom_id in _ALLY_ELIGIBLE_ATOMS
+    if not eligible:
+        return False
+    slot, _best, _toks = wiki_object_slot(entries, champ_norm, name, alt)
+    return slot is not None and slot in ally_slots
 
 
 # --------------------------------------------------------------------------
@@ -821,6 +974,7 @@ def extract_champion(
     passive_map: Mapping[str, list[dict[str, Any]]] | None = None,
     tag_map: Mapping[str, list[str]] | None = None,
     wiki_types: None | dict[str, list[WikiEntry]] = None,
+    ally_slots: None | dict[str, set[str]] = None,
     atom_relations: None | dict[str, list[str]] = None,
 ) -> dict[str, Any]:
     ser = json.loads(bin_path.read_text())
@@ -876,6 +1030,25 @@ def extract_champion(
         }
         for atom_id, family in hits:
             ev = (feat.get("atom_evidence") or {}).get(atom_id, "")
+            # Wiki ally-target bridge: the binaries carry almost no targeting
+            # data, so a benefit that reaches an ally reads as ``self`` until
+            # the cached wiki text for its slot says otherwise.
+            target = infer_target(atom_id, feat)
+            ally_evidence = (
+                ally_slots is not None
+                and wiki_types is not None
+                and ally_targeted(
+                    atom_id,
+                    target,
+                    wiki_types.get(champ_norm, []),
+                    ally_slots.get(champ_norm, set()),
+                    champ_norm,
+                    feat["name"],
+                    feat["alt"],
+                )
+            )
+            if ally_evidence:
+                target = "ally"
             dedup_key = (atom_id, feat["name"])
             if dedup_key in atoms:
                 a = atoms[dedup_key]
@@ -890,13 +1063,17 @@ def extract_champion(
                 "family": family,
                 "behavior": feat["name"],
                 "trigger": trigger,
-                "target_policy": infer_target(atom_id, feat),
+                "target_policy": target,
                 "parameters": params,
                 "relations": (atom_relations or {}).get(atom_id, []),
                 "provenance": {
                     "wiki": list(vocab[atom_id].get("wiki_pages", [])),
                     "binary": [key],
-                    "evidence": ev or "unknown",
+                    "evidence": (
+                        f"{ev or 'unknown'}+wiki-ally"
+                        if ally_evidence
+                        else (ev or "unknown")
+                    ),
                 },
             }
 
@@ -1187,6 +1364,7 @@ def main(argv: list[str] | None = None) -> int:
     passive_map = load_passive_map()
     tag_map = load_tag_map()
     wiki_types = load_wiki_damage_types()
+    ally_slots = load_wiki_ally_slots()
     atom_relations = load_atom_relations()
 
     results = []
@@ -1201,6 +1379,7 @@ def main(argv: list[str] | None = None) -> int:
                 passive_map=passive_map,
                 tag_map=tag_map,
                 wiki_types=wiki_types,
+                ally_slots=ally_slots,
                 atom_relations=atom_relations,
             )
         )
@@ -1334,6 +1513,20 @@ def build_sanity_and_suggestions(
         extra="Soul drops live under SennaPassive stacks; 'soul' itself is not a vocab keyword.",
     )
     check(
+        "Nami ally heal (Ebb and Flow) reads ally, not self",
+        "nami",
+        "heal-shield.heal",
+        "NamiW",
+        extra="wiki-ally bridge: the binaries carry no targeting data for it.",
+    )
+    check(
+        "Thresh ally shield (Dark Passage) reads ally",
+        "thresh",
+        "heal-shield.shield",
+        "ThreshW",
+        extra="wiki-ally bridge.",
+    )
+    check(
         "Neeko transform (Inherent Glamour)",
         "neeko",
         "stack-transform-summon-resource.transform",
@@ -1464,12 +1657,17 @@ def build_sanity_and_suggestions(
         "bonus+health datavalue, 'TauntLength' (Thresh Q) misclassifies as a taunt, "
         "'refund' fires on ManaRefund, "
         "and meta atoms (internal-resource-index, buff-duration-class) over-fire by design.",
-        "Add a targeting-data source for target_policy: mTargetingTypeData is nearly "
-        "empty in these binaries, so "
-        "heal/shield target_policy defaults to 'self' and misses ally-targeted heals "
-        "(Senna Q, Kayle W, Thresh W "
-        "lantern). mAffectsTypeFlags is also recorded raw (no decode table available "
-        "for this data version).",
+        "Ally targeting is now bridged from the wiki champion cache: "
+        "mTargetingTypeData is nearly empty in these binaries, so a benefit that "
+        "reaches an ally was indistinguishable from one that only reaches its caster "
+        "and defaulted to 'self' (Senna Q, Kayle W, Thresh W lantern). A heal, shield "
+        "or buff atom whose slot has a cached wiki sentence granting a benefit *to* an "
+        "ally now reads 'ally' and carries '+wiki-ally' in its evidence; an ally that "
+        "is the source of the benefit ('healed or shielded by an ally', 'an allied "
+        "source') does not count. The bridge resolves per ability slot, so an atom in "
+        "a slot that benefits both its caster and an ally reads 'ally'. "
+        "mAffectsTypeFlags is still recorded raw (no decode table available for this "
+        "data version).",
         "Missiles and empowered-attack variants of an already-classified parent spell "
         "(e.g. JinxQAttack, "
         "ApheliosSeverumAttack, GnarQMissile) stay unclassified; inheriting the "

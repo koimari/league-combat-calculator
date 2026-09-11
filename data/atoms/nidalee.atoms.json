@@ -61,7 +61,7 @@
   "family": "heal-shield",
   "behavior": "PrimalSurge",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 12.0,
    "cooldown_rank_max": 12.0,
@@ -84,7 +84,7 @@
    "binary": [
     "Characters/Nidalee/Spells/PrimalSurgeAbility/PrimalSurge"
    ],
-   "evidence": "tag:Trait_ActiveHeal"
+   "evidence": "tag:Trait_ActiveHeal+wiki-ally"
   }
  },
  {
@@ -92,7 +92,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "PrimalSurge",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 12.0,
    "cooldown_rank_max": 12.0,
@@ -108,7 +108,7 @@
    "binary": [
     "Characters/Nidalee/Spells/PrimalSurgeAbility/PrimalSurge"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {

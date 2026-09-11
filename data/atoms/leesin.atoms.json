@@ -348,7 +348,7 @@
   "family": "heal-shield",
   "behavior": "LeeSinWOneShield",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -371,7 +371,7 @@
    "binary": [
     "{70804247}"
    ],
-   "evidence": "name:shield"
+   "evidence": "name:shield+wiki-ally"
   }
  },
  {
@@ -440,7 +440,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "LeeSinWOne",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 7.0,
    "cooldown_rank_max": 7.0,
@@ -456,7 +456,7 @@
    "binary": [
     "Characters/LeeSin/Spells/LeeSinWOneAbility/LeeSinWOne"
    ],
-   "evidence": "tag:Trait_AttackBuff_Duration"
+   "evidence": "tag:Trait_AttackBuff_Duration+wiki-ally"
   }
  },
  {

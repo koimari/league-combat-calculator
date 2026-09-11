@@ -37,6 +37,13 @@ Thresh, Vladimir); `atom-summary.json`, `classification-report.json`, and
 - **5,372 atoms, 0 weak-evidence atoms** (over-classification = atoms guessed from datavalues only; none emitted). Evidence is tag/name/rule/inherited/wiki-map only. 19/19 sanity checks.
 - **19/19 sanity checks** across all 6 families (heals, shields, stealth,
   summons, clones, executes, resets, DoT, slows, dashes, transforms).
+- Ally targeting is bridged from the wiki cache: the bins carry almost no
+  `mTargetingTypeData`, so a heal, shield or buff that reaches an ally read as
+  `self`. An atom whose slot has a cached sentence granting a benefit *to* an
+  ally now reads `ally` and carries `+wiki-ally` in its evidence; an ally that
+  is the *source* ("healed or shielded by an ally") does not count. The bridge
+  resolves per slot, so an atom in a slot that benefits both its caster and an
+  ally reads `ally`.
 - Known limitation: the CharacterRecord bins do not carry damage types; a
   bridge from `data/champions.json` per-ability damageType now types ~53% of
   damage atoms — the rest keep damage_type null.

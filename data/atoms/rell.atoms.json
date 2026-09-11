@@ -411,7 +411,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "RellE",
   "trigger": "threshold",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 14.0,
    "cooldown_rank_max": 10.0,
@@ -427,7 +427,7 @@
    "binary": [
     "Characters/Rell/Spells/RellEAbility/RellE"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -435,7 +435,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "RellE_BuffSelf",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 2.0,
    "cooldown_rank_max": 2.0,
@@ -451,7 +451,7 @@
    "binary": [
     "{38ee07f5}"
    ],
-   "evidence": "name:buff"
+   "evidence": "name:buff+wiki-ally"
   }
  },
  {
