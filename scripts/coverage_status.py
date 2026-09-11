@@ -89,6 +89,21 @@ _PRE_FIGHT_PHRASES = (
     "before q",
 )
 
+# A count of events inside the fight that nonetheless nobody's engine can
+# derive, because the number is a fact about the ENEMY or about where the
+# champion stood: how many attacks an evasion dodged, how many swings
+# landed from behind, how many distinct enemies a mark tagged. Each is
+# reviewed here with the fact it depends on, and each is reported as
+# player state rather than as engine debt.
+_ENEMY_OR_POSITIONAL = {
+    "e_dodged_attacks": "how many attacks the enemy threw into the evasion",
+    "w_thorns_autos": "how many basic attacks the enemy spent on the curl",
+    "p_procs:Shaco": "whether each swing landed from behind the target",
+    "p_procs:Miss Fortune": "how many distinct enemies the Love Taps tagged",
+    "p_leverage_procs": "how many distinct enemies the mark moved between",
+}
+
+
 # Options whose count is genuinely in-fight but whose label carries no
 # phrase either way: each is listed with the reading a reader would apply,
 # so the split is reviewed rather than inferred from wording.
@@ -177,6 +192,9 @@ def _options() -> dict:
             if not any(word in key for word in _COUNT_WORDS):
                 continue
             lowered = label.lower()
+            if key in _ENEMY_OR_POSITIONAL or f"{key}:{name}" in _ENEMY_OR_POSITIONAL:
+                buckets["pre_fight"].append((name, key, label))
+                continue
             default = option.get("default")
             maximum = option.get("max")
             minimum = option.get("min")
@@ -359,9 +377,10 @@ def render(data: dict) -> str:
         "a channel's every tick, a clip's every shot — so the option only removes",
         f"from a complete reading, and {len(axes['derived_default'])} derive their",
         "default outright and take an override.",
-        f"{len(axes['pre_fight'])} count state the champion arrived WITH —",
-        "stacks farmed over a game, souls collected, a mark already on the target.",
-        "No engine derives those and asking is correct.",
+        f"{len(axes['pre_fight'])} are facts no engine holds: state the champion",
+        "arrived with (stacks farmed over a game, souls collected) and facts about",
+        "the ENEMY or about where the champion stood (how many attacks an evasion",
+        "dodged, how many swings landed from behind). Asking for those is correct.",
         f"{len(axes['to_review'])} carry a label that says neither and need a reading.",
         "",
         "| Bucket | Options | Who can answer |",

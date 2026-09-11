@@ -52,6 +52,7 @@ from ..binary_roots import (
     spell_object,
 )
 from ..stat_formulas import growth_multiplier
+from .pet_window import derived_attack_count
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
@@ -83,7 +84,32 @@ PACKET_SHA256 = "906b7a57f67c65c1729d75e139e3608eaf8532c564638f0f008b2b1f7348c8f
 # Maiden attack: YorickBigGhoulDamage = RBigGhoulBonusAD
 # (50/75/100 at R rank 1/2/3, the 13.21 rank bases) (+ 30% bonus AD,
 # MaidenADRatio), magic.  Attack speed 1.0 -> 5 attacks in the 5s window.
+# The two pets' attack speeds, from the same reviewed block above: the
+# Mist Walker's ramps 0.5 to 1.18 by level and the Maiden's is flat 1.0.
+# They are the cadences the fight walks to count each pet's attacks
+# (champions/pet_window.py), so they are named here rather than left in a
+# comment beside a frozen five-second reading.
+_MIST_WALKER_AS_START = 0.5
+_MIST_WALKER_AS_END = 1.18
+_MAIDEN_AS = 1.0
+# Neither pet has a cached lifetime: the Maiden and her walkers "remain on
+# the battlefield until she or Yorick dies", so the fight window is the
+# bound, and these rails cap what a long one may price.
+_MIST_WALKER_MAX_ATTACKS = 12
+_MAIDEN_MAX_ATTACKS = 10
+# A clockless parse reads the five-second window the declared counts were
+# written against, so such a parse prices what it always did.
+_PET_FALLBACK_WINDOW = 5.0
+
 _YORICK_PASSIVE_SPELL = spell_object("Yorick", "YorickPassive")
+
+
+def _mist_walker_attack_speed(level: int) -> float:
+    """The walker's rate at this level, on the reviewed 0.5 to 1.18 ramp."""
+    span = _MIST_WALKER_AS_END - _MIST_WALKER_AS_START
+    return _MIST_WALKER_AS_START + span * (level - 1) / 17.0
+
+
 _MIST_WALKER_DAMAGE_START, _MIST_WALKER_DAMAGE_END = calculation_interpolation(
     _YORICK_PASSIVE_SPELL, "YorickPassiveGhoulDamage"
 )
@@ -119,7 +145,13 @@ def _mist_walkers(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     walkers = min(max(int(ctx.options.get("mist_walkers", _MIST_WALKER_MAX)), 0), 4)
-    attacks = min(max(int(ctx.option("mist_walker_attacks")), 0), 12)
+    attacks = derived_attack_count(
+        ctx,
+        "mist_walker_attacks",
+        attack_speed=_mist_walker_attack_speed(ctx.level),
+        fallback_window=_PET_FALLBACK_WINDOW,
+        maximum=_MIST_WALKER_MAX_ATTACKS,
+    )
     count = walkers * attacks
     if count <= 0:
         return no_damage(
@@ -160,7 +192,13 @@ def _mist_walkers(ctx: SlotCtx) -> dict[str, Any] | None:
 @ranked_slot
 def _maiden(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """R: Eulogy of the Isles — Maiden basic attacks over the window."""
-    attacks = min(max(int(ctx.option("maiden_attacks")), 0), 10)
+    attacks = derived_attack_count(
+        ctx,
+        "maiden_attacks",
+        attack_speed=_MAIDEN_AS,
+        fallback_window=_PET_FALLBACK_WINDOW,
+        maximum=_MAIDEN_MAX_ATTACKS,
+    )
     if attacks <= 0:
         return no_damage(
             ctx,
@@ -237,15 +275,21 @@ OPTIONS = [
         "mist_walker_attacks",
         5,
         minimum=0,
-        maximum=12,
-        label="Mist Walker attacks per walker (5s window)",
+        maximum=_MIST_WALKER_MAX_ATTACKS,
+        label=(
+            "Mist Walker attacks per walker; unset derives them from the "
+            "walker's cadence over the fight window"
+        ),
     ),
     int_option(
         "maiden_attacks",
         5,
         minimum=0,
-        maximum=10,
-        label="Maiden of the Mist attacks (5s window)",
+        maximum=_MAIDEN_MAX_ATTACKS,
+        label=(
+            "Maiden attacks; unset derives them from her cadence over the "
+            "fight window"
+        ),
     ),
 ]
 
