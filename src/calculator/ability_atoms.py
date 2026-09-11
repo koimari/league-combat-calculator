@@ -280,6 +280,9 @@ ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
                 # The sourced rule for a kit's self-silencing resource
                 # (Rumble's Heat); the fight's cast plan walks it.
                 "cast_resource_lockout": None,
+                # The sourced rule for an empowered basic attack a kit
+                # arms; the fight walks it (champions/armed_procs.py).
+                "armed_procs": None,
                 "short_fuse_cooldown": 0.0,
                 "short_fuse_refund": 0.0,
                 "spellblade_bonus_true_ratio": 0.0,

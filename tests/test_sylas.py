@@ -101,14 +101,25 @@ class TestPetriciteBurst:
         assert result["auto_attack_damage"] > plain["auto_attack_damage"]
         assert result["total_damage"] > plain["total_damage"]
 
-    def test_spending_no_stack_prices_nothing(self):
-        """The default: Unshackled stacks are caster state, so 0 by default."""
+    def test_the_default_derives_the_stacks_the_fight_banked(self):
+        """The casts bank the stacks and the swings spend them.
+
+        An explicit zero still prices nothing, which is the reader saying
+        the empowered swings never reached the target; leaving the option
+        alone hands the count to the walk over the two schedules
+        (``champions/armed_procs.py``).
+        """
         default = rider_probe.fight("Sylas")
         explicit = rider_probe.fight("Sylas", champion_options={"passive_procs": 0})
-        assert default["total_damage"] == pytest.approx(explicit["total_damage"])
+        assert default["total_damage"] > explicit["total_damage"]
+        # The slot itself declares no count: it states the rule and prices
+        # one empowered swing, and the fight decides how many there are.
         entry = row_review.entry("Sylas", "passive")
         assert entry["auto_attack_conversion"]["count"] == 0
         assert entry["auto_attack_conversion"]["bonus_raw"] > 0.0
+        assert entry["armed_procs"]["per_cast"] == 1
+        assert entry["armed_procs"]["max_stacks"] == 3
+        assert entry["armed_procs"]["stack_seconds"] == pytest.approx(4.0)
 
 
 class TestTheSlotThatStaysOutOfScope:

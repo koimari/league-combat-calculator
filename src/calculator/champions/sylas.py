@@ -99,6 +99,7 @@ out_of_scope slots.  P closes as ``modeled``; R stays open.
 """
 
 from dataclasses import replace
+import re
 from typing import Any
 
 from .. import healing_helpers as _healing
@@ -125,6 +126,28 @@ _SECONDARY_AP_RATIO = _SECONDARY_COEFFICIENTS[1]
 # (cached P effect 0). The binary's ``PassiveCharges=2`` is not the gameplay
 # cap itself, so it remains a documented non-rooted boundary.
 _MAX_UNSHACKLED_STACKS = 3
+# The same sentence's other half: "generates a stack of Unshackled for 4
+# seconds, refreshing on subsequent casts". The stack's own clock, which
+# the walk needs to know when a banked stack is gone.
+_UNSHACKLED_STACK_RE = re.compile(
+    r"generates a stack of Unshackled for (?P<value>\d+(?:\.\d+)?) seconds"
+)
+
+
+def _unshackled_stack_seconds(ability: dict[str, Any]) -> float:
+    """How long one Unshackled stack lasts, read from the cached innate."""
+    effects = ability.get("effects")
+    for effect in effects if effects else ():
+        description = effect.get("description")
+        if description is None:
+            continue
+        match = _UNSHACKLED_STACK_RE.search(str(description))
+        if match is not None:
+            return float(match.group("value"))
+    raise ValueError(
+        "Sylas P: the cached innate no longer states the Unshackled stack "
+        "duration ('generates a stack of Unshackled for N seconds')"
+    )
 
 
 def _chain_lash(packet_q):
@@ -188,6 +211,14 @@ def _petricite_burst(packet_passive):
         )
         entry = dict(entry)
         entry["name"] = name
+        entry["armed_procs"] = {
+            "arming_slots": ("Q", "W", "E", "R"),
+            "max_stacks": _MAX_UNSHACKLED_STACKS,
+            "per_cast": 1,
+            "stack_seconds": _unshackled_stack_seconds(ability),
+            "armed_at_start": False,
+            "requested": ctx.options.get("passive_procs") is not None,
+        }
         entry["auto_attack_conversion"] = {
             "name": name,
             "count": attacks,
@@ -242,7 +273,10 @@ OPTIONS = [
         0,
         minimum=0,
         maximum=_MAX_UNSHACKLED_STACKS,
-        label="Unshackled attacks spent (each replaces one swing)",
+        label=(
+            "Unshackled attacks spent; unset derives them from the casts "
+            "that bank a stack and the swings that spend one"
+        ),
         rotation={"role": "self_state", "slot": "P"},
     ),
 ]
