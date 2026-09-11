@@ -542,7 +542,10 @@ class TestAbsentOption:
             "default": 0,
             "min": 0,
             "max": 10,
-            "label": "Trial by Fire procs",
+            "label": (
+                "Trial by Fire procs; unset derives them from the cached "
+                "cooldown, which a Powder Keg explosion would reset"
+            ),
         }
         assert by_key["r_fire_at_will"] == {
             "key": "r_fire_at_will",

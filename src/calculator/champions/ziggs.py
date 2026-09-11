@@ -89,9 +89,14 @@ def _short_fuse(ctx: SlotCtx) -> dict[str, Any] | None:
         raise ValueError(
             "Ziggs P: Short Fuse cooldown is missing from the cached source"
         )
-    entry["timeline_event_model"] = "ziggs_short_fuse"
-    entry["short_fuse_cooldown"] = float(cooldown_values[0])
-    entry["short_fuse_refund"] = _short_fuse_refund_seconds(ability, ctx.level)
+    entry["armed_procs"] = {
+        "arming_slots": ("Q", "W", "E", "R"),
+        "max_stacks": 1,
+        "cooldown": float(cooldown_values[0]),
+        "cooldown_reduction_per_cast": _short_fuse_refund_seconds(ability, ctx.level),
+        "armed_at_start": True,
+        "requested": ctx.options.get("passive_procs") is not None,
+    }
     return entry
 
 
@@ -122,7 +127,16 @@ def _hexplosive_minefield(
 
 
 OPTIONS = [
-    int_option("passive_procs", 2, minimum=0, maximum=10, label="Short Fuse procs"),
+    int_option(
+        "passive_procs",
+        2,
+        minimum=0,
+        maximum=10,
+        label=(
+            "Short Fuse procs; unset derives them from the cached 12s timer "
+            "and the level refund each cast takes off it"
+        ),
+    ),
     int_option("mines_hit", 4, minimum=1, maximum=11, label="E mines hit"),
     bool_option("r_sweet_spot", True, label="R hits epicenter (sweet spot)"),
 ]

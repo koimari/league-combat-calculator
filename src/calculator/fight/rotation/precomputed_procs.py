@@ -4,6 +4,7 @@ import math
 from typing import Any
 
 from ...ability_atoms import ability_field
+from ...champions.armed_procs import armed_swing_times, declared_rule
 from ..autos.swing_schedule import _auto_attack_timestamps
 from ..ledger.event_ledger import _ordered_damage_events
 from ..ledger.event_rows import _row_time
@@ -26,53 +27,43 @@ def _add_precomputed_proc_damage(
         if key in state.cast_order or "on_hit" in info or "stat_buff" in info:
             continue
         proc_count = ability_field(info, "proc_count")
+        authored_proc_times: list[float] | None = None
+        armed = declared_rule({key: info})
+        # A kit that states WHEN its empowered attack is armed has the count
+        # walked from the fight's own schedules (champions/armed_procs.py),
+        # and the walk runs before the zero gate below: a row the module
+        # left at zero is a row whose count nobody has answered yet, not a
+        # row with nothing to price. A clockless fight has no schedule to
+        # walk, and a request that named the count keeps the count it named.
+        # Only a row that prices PARTS is a proc row; a kit whose armed
+        # swing is a conversion of the ordinary swing (Galio, Sylas) is
+        # counted in the autos step and has no parts to price here.
+        walkable = (
+            armed is not None
+            and "parts" in info
+            and rotation is not None
+            and state.num_auto_attacks > 0
+        )
+        if walkable and armed is not None:
+            if state.one_rotation:
+                # No clock to walk, so the count stays the module's and only
+                # its timing is authored, on the swings that carried it.
+                authored_proc_times = _auto_attack_timestamps(state)[: int(proc_count)]
+            else:
+                times = armed_swing_times(
+                    armed[1],
+                    state.ability_cast_times,
+                    _auto_attack_timestamps(state),
+                )
+                if armed[1].requested:
+                    # The request owns the count; the walk still says WHICH
+                    # swings could have carried it.
+                    times = times[: int(proc_count)]
+                else:
+                    proc_count = len(times)
+                authored_proc_times = list(times)
         if proc_count <= 0:
             continue
-        authored_proc_times: list[float] | None = None
-        if (
-            info.get("timeline_event_model") == "ziggs_short_fuse"
-            and not state.one_rotation
-            and state.num_auto_attacks > 0
-            and rotation is not None
-        ):
-            # Short Fuse starts ready, then enters its 12s cooldown after the
-            # empowered swing.  Every ability cast reduces the remaining
-            # cooldown at cast start by the sourced level refund.
-            cooldown = float(ability_field(info, "short_fuse_cooldown"))
-            refund = float(ability_field(info, "short_fuse_refund"))
-            auto_times = _auto_attack_timestamps(state)
-            cast_times = sorted(float(event["time"]) for event in rotation.cast_events)
-            ready_at = 0.0
-            cast_index = 0
-            authored_proc_times = []
-            for auto_time in auto_times:
-                while (
-                    cast_index < len(cast_times) and cast_times[cast_index] <= auto_time
-                ):
-                    if ready_at > cast_times[cast_index]:
-                        ready_at = max(cast_times[cast_index], ready_at - refund)
-                    cast_index += 1
-                if auto_time + 1e-9 < ready_at:
-                    continue
-                authored_proc_times.append(auto_time)
-                ready_at = auto_time + cooldown
-                if len(authored_proc_times) >= int(proc_count):
-                    break
-            proc_count = len(authored_proc_times)
-            if proc_count <= 0:
-                continue
-        elif (
-            info.get("timeline_event_model") == "ziggs_short_fuse"
-            and state.one_rotation
-            and rotation is not None
-            and state.num_auto_attacks >= int(proc_count)
-        ):
-            # A one-rotation request supplies a fixed Short Fuse proc count.
-            # When the authored auto stream contains at least that many
-            # swings, attach each proc to its corresponding swing so the
-            # candidate timeline is ordered rather than leaving every build
-            # partial merely because the passive row was aggregated.
-            authored_proc_times = _auto_attack_timestamps(state)[: int(proc_count)]
         if (
             info.get("event_order_certified") == "auto_stack_proc"
             and not state.one_rotation

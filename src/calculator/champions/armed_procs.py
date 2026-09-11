@@ -108,23 +108,27 @@ def declared_rule(
     )
 
 
-def armed_swing_count(
+def armed_swing_times(
     rule: ArmedProcRule,
     cast_times: Sequence[tuple[str, float]],
     swing_times: Sequence[float],
-) -> int:
-    """How many swings land empowered, walking the two schedules together.
+) -> tuple[float, ...]:
+    """WHICH swings land empowered, walking the two schedules together.
 
     The walk is the game's order of events: a cast arms (or brings the timer
     forward) at the instant it lands, and a swing spends whatever is armed at
     the instant it swings. A tie goes to the cast, because a swing that
     lands with a cast is the swing the cast empowered.
+
+    The timestamps are the answer, not their count: a row that authors an
+    event per proc needs to know which swing carried it, and a row that only
+    counts takes the length.
     """
     casts = sorted(((time, slot) for slot, time in cast_times), key=lambda row: row[0])
     stacks: deque[float] = deque()  # expiry times of banked charges
     ready_at = 0.0 if rule.armed_at_start else rule.cooldown
     cast_index = 0
-    empowered = 0
+    empowered: list[float] = []
 
     for swing in sorted(swing_times):
         while cast_index < len(casts) and casts[cast_index][0] <= swing:
@@ -147,10 +151,19 @@ def armed_swing_count(
         while stacks and stacks[0] < swing:
             stacks.popleft()
         if rule.cooldown > 0.0 and swing >= ready_at:
-            empowered += 1
+            empowered.append(swing)
             ready_at = swing + rule.cooldown
             continue
         if stacks:
             stacks.popleft()
-            empowered += 1
-    return empowered
+            empowered.append(swing)
+    return tuple(empowered)
+
+
+def armed_swing_count(
+    rule: ArmedProcRule,
+    cast_times: Sequence[tuple[str, float]],
+    swing_times: Sequence[float],
+) -> int:
+    """How many swings land empowered; the length of the walk's answer."""
+    return len(armed_swing_times(rule, cast_times, swing_times))
