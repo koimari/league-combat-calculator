@@ -2268,30 +2268,33 @@ function CalculatorSession({
                     selectedId={selectedEventId}
                     onSelect={setSelectedEventId}
                   />
-                  <EventEditor
-                    enabled={useSequence}
-                    onEnabled={(enabled) => {
-                      setUseSequence(enabled);
-                      if (enabled) setAutosOnly(false);
-                    }}
-                    events={events}
-                    onChange={setEvents}
-                    duration={duration}
-                    capabilities={
-                      config?.domain_contract.combat_events?.champions ?? {}
-                    }
-                    actors={participants
-                      .filter((actor) => actor.champion)
-                      .map((actor) => ({
-                        id: actor.id,
-                        label: `${actor.champion} · ${participantLabel(actor)}`,
-                        team: enemies.some((enemy) => enemy.id === actor.id)
-                          ? "enemy"
-                          : "ally",
-                        champion: championFor(actor),
-                        ranks: actor.ranks,
-                      }))}
-                  />
+                  <details className="calculator-event-list">
+                    <summary>Event list</summary>
+                    <EventEditor
+                      enabled={useSequence}
+                      onEnabled={(enabled) => {
+                        setUseSequence(enabled);
+                        if (enabled) setAutosOnly(false);
+                      }}
+                      events={events}
+                      onChange={setEvents}
+                      duration={duration}
+                      capabilities={
+                        config?.domain_contract.combat_events?.champions ?? {}
+                      }
+                      actors={participants
+                        .filter((actor) => actor.champion)
+                        .map((actor) => ({
+                          id: actor.id,
+                          label: `${actor.champion} · ${participantLabel(actor)}`,
+                          team: enemies.some((enemy) => enemy.id === actor.id)
+                            ? "enemy"
+                            : "ally",
+                          champion: championFor(actor),
+                          ranks: actor.ranks,
+                        }))}
+                    />
+                  </details>
                   {results.length > 0 && (
                     <div className="calculator-result-details">
                       {results.map((result, index) => (
