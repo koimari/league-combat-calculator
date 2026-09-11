@@ -6,6 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value_at_rank, spell_object
+from .pet_window import derived_attack_count
 from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
@@ -75,6 +76,17 @@ _DAISY_AS_BONUS_BY_RANK = tuple(
     data_value_at_rank(_IVERN_R_SPELL, "DaisyAS", rank) / 100.0 for rank in range(1, 4)
 )
 _DAISY_BASE_AS = 0.75
+# A clockless parse (a direct parse_abilities call, a one-rotation fight)
+# carries no fight duration, and this is the window such a reading uses: the
+# five seconds the declared count was written against, so a parse with no
+# clock prices exactly what it always did.
+_DAISY_FALLBACK_WINDOW = 5.0
+# Daisy's lifetime is in neither the cache nor the spell object, so the
+# derived count is bounded by this declared rail rather than by her own
+# clock: at her rank-1 cadence it is about seventeen seconds of attacking.
+# A fight longer than that prices the rail and says so, instead of pricing
+# a pet that would have expired.
+_DAISY_MAX_ATTACKS = 20
 _DAISY_SMASH_BY_RANK = tuple(
     data_value_at_rank(_IVERN_R_SPELL, "ShockwaveBaseDamage", rank)
     for rank in range(1, 4)
@@ -85,14 +97,25 @@ _DAISY_SMASH_AP_RATIO = calculation_coefficient(_IVERN_R_SPELL, "TotalShockwaveD
 @ranked_slot
 def _daisy(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """R: Daisy! — basic attacks plus the 3-hit Daisy Smash knockup."""
-    attacks = min(max(int(ctx.option("daisy_attacks")), 0), 20)
+    index = min(rank - 1, len(_DAISY_AD_BY_RANK) - 1)
+    daisy_attack_speed = _DAISY_BASE_AS * (1.0 + _DAISY_AS_BONUS_BY_RANK[index])
+    attacks = derived_attack_count(
+        ctx,
+        "daisy_attacks",
+        attack_speed=daisy_attack_speed,
+        fallback_window=_DAISY_FALLBACK_WINDOW,
+        maximum=_DAISY_MAX_ATTACKS,
+    )
     if attacks <= 0:
         return no_damage(
             ctx,
             name="Daisy!",
-            reason="daisy_attacks is 0 — set it to price Daisy's attacks.",
+            reason=(
+                "daisy_attacks is 0: the request asked for none. Leave it "
+                "unset and the count is derived from Daisy's cadence over "
+                "the fight window."
+            ),
         )
-    index = min(rank - 1, len(_DAISY_AD_BY_RANK) - 1)
     ap = ctx.stat("ability_power")
     per_attack = _DAISY_AD_BY_RANK[index] + _DAISY_AD_AP_RATIO * ap
     per_smash = _DAISY_SMASH_BY_RANK[index] + _DAISY_SMASH_AP_RATIO * ap
@@ -187,7 +210,14 @@ parse_abilities = build_parser(
 OPTIONS = [
     bool_option("w_in_brush", True, label="Ivern is in brush"),
     int_option(
-        "daisy_attacks", 6, minimum=0, maximum=20, label="Daisy attacks (5s window)"
+        "daisy_attacks",
+        6,
+        minimum=0,
+        maximum=_DAISY_MAX_ATTACKS,
+        label=(
+            "Daisy attacks; unset derives them from her cadence over the "
+            "fight window"
+        ),
     ),
 ]
 ASSUMPTIONS = [
@@ -197,10 +227,16 @@ ASSUMPTIONS = [
     "Daisy's basic attacks (70/100/130 by R rank + 15% AP physical) and the "
     "third-hit Daisy Smash (90/140/190 by R rank + 50% AP magic) are "
     "game-file constants; verify on patch updates against Community Dragon",
-    "Daisy attacks at 0.75 (+ 30/45/60% by R rank) attack speed; the default "
-    "6 attacks fill the 5-second one-rotation window and the sourced 3-hit "
-    "smash cadence prices one smash per 3 attacks (the smash replaces the "
-    "ordinary swing)",
+    "Daisy attacks at 0.75 (+ 30/45/60% by R rank) attack speed, and her "
+    "attack count is DERIVED from that cadence over the fight window "
+    "(champions/pet_window.py): six attacks in a five-second fight, twelve "
+    "in a ten-second one. The sourced 3-hit smash cadence prices one smash "
+    "per 3 attacks (the smash replaces the ordinary swing). A request may "
+    "name the count instead, for the positioning and leash the clock cannot "
+    "know. Neither the cache nor the spell object states how long Daisy "
+    "lives, so the derivation is bounded at 20 attacks, about seventeen "
+    "seconds of her rank-1 cadence, and a longer fight prices that bound "
+    "rather than a pet that would have expired.",
     "Daisy Smash!'s 3-second lockout, knockup/stun CC, spawn damage "
     "reduction and leash range are state, not modeled",
     "E (Triggerseed) shields the target allied champion, Daisy, or Ivern "

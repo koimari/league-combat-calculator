@@ -192,7 +192,7 @@ def _options() -> dict:
                 # removes from it (an interrupted channel). A default below
                 # that prices less than the cache states until someone
                 # answers, which is the shape that silently under-counts.
-                if "default" in lowered:
+                if any(word in lowered for word in ("default", "derive", "unset")):
                     bucket = "derived_default"
                 elif whole:
                     bucket = "full_by_default"
