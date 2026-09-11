@@ -77,7 +77,7 @@
       "combat/1:ally:Lulu/outgoing": "1132.0",
       "combat/2:enemy:Aatrox/incoming": "4874.7",
       "combat/2:enemy:Aatrox/outgoing": "4830.0",
-      "fights/0:Aatrox": "3750.5"
+      "fights/0:Aatrox": "3921.0"
     },
     "control_event_roster": {
       "combat/0:main/incoming": "2146.2",
@@ -294,11 +294,11 @@
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "8e93aac56e8300854799c2989a6b8794a2b7ddfa",
+    "git_head": "e433b1ecb1c06fb7e7c1b97b08b38dd3aa4019c7",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 30,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "8bca253a50b1e2f30754e51d7e046b8c851e6163"
+    "src_tree_sha": "f95909f48983287d3979d14db124cf0598215840"
   }
 }
