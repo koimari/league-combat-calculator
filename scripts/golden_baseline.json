@@ -8318,21 +8318,15 @@
           "total_raw": 0.0
         },
         "passive": {
-          "armed_procs": {
-            "armed_at_start": true,
-            "arming_slots": [],
-            "cooldown": 15.0,
-            "max_stacks": 1,
-            "requested": false
-          },
           "cc_reviewed": true,
-          "damage_type": "true",
-          "detail": "Empowered attacks burning for 2.5 seconds each, armed on the cached cooldown. A Powder Keg explosion resets that cooldown, which this model does not price: the keg field is not modelled, so the derived count is the timer alone and is a floor.",
+          "cooldown": 15.0,
+          "damage_type": "magic",
+          "detail": "Passive burn is ready only when an empowered attack is selected.",
           "name": "Trial by Fire",
-          "parts": [
-            "DamagePart(true, amount=16.765, count=10, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0, hit_interval=0.25, cc_kind='none')"
-          ],
-          "proc_count": 10,
+          "parts": [],
+          "rank": 11,
+          "resource_cost": 0.0,
+          "resource_type": "MANA",
           "total_raw": 0.0
         }
       },
@@ -37367,19 +37361,6 @@
           "total_raw": 140.0
         },
         "passive": {
-          "armed_procs": {
-            "armed_at_start": true,
-            "arming_slots": [
-              "Q",
-              "W",
-              "E",
-              "R"
-            ],
-            "cooldown": 12.0,
-            "cooldown_reduction_per_cast": 5.0,
-            "max_stacks": 1,
-            "requested": false
-          },
           "cc_reviewed": true,
           "damage_events": [
             {
@@ -37402,6 +37383,9 @@
             "DamagePart(magic, amount=80.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "proc_count": 2,
+          "short_fuse_cooldown": 12.0,
+          "short_fuse_refund": 5.0,
+          "timeline_event_model": "ziggs_short_fuse",
           "total_raw": 160.0
         }
       },
@@ -38240,7 +38224,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2144.8
+        "total_damage": 2080.8
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38251,7 +38235,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3426.93
+        "total_damage": 3234.93
       }
     },
     "Actualizer": {
@@ -38288,7 +38272,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2631.05
+        "total_damage": 2541.77
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38300,7 +38284,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3826.39
+        "total_damage": 3558.53
       }
     },
     "Aether Wisp": {
@@ -38334,7 +38318,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1895.21
+        "total_damage": 1827.36
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38345,7 +38329,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3400.19
+        "total_damage": 3196.62
       }
     },
     "Amplifying Tome": {
@@ -38379,7 +38363,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1852.71
+        "total_damage": 1788.43
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38390,7 +38374,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3331.62
+        "total_damage": 3138.76
       }
     },
     "Anathema's Chains": {
@@ -38424,7 +38408,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38435,7 +38419,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Anti-Tower Socks": {
@@ -38469,7 +38453,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38480,7 +38464,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Arcane Sweeper (Trinket)": {
@@ -38514,7 +38498,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38525,7 +38509,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Archangel's Staff": {
@@ -38559,7 +38543,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2334.14
+        "total_damage": 2249.86
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38570,7 +38554,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4977.76
+        "total_damage": 4640.62
       }
     },
     "Ardent Censer": {
@@ -38604,7 +38588,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1958.96
+        "total_damage": 1885.75
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38615,7 +38599,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3728.76
+        "total_damage": 3509.12
       }
     },
     "Armored Advance": {
@@ -38649,7 +38633,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38660,7 +38644,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Atma's Reckoning": {
@@ -38694,7 +38678,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1866.11
+        "total_damage": 1808.97
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38705,7 +38689,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3445.94
+        "total_damage": 3274.51
       }
     },
     "Axiom Arc": {
@@ -38739,7 +38723,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2409.81
+        "total_damage": 2352.66
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38750,7 +38734,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4324.26
+        "total_damage": 4152.84
       }
     },
     "B. F. Sword": {
@@ -38784,7 +38768,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2007.71
+        "total_damage": 1950.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38795,7 +38779,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3807.81
+        "total_damage": 3636.38
       }
     },
     "Bami's Cinder": {
@@ -38832,7 +38816,7 @@
           "immolate_Bami's Cinder",
           "passive"
         ],
-        "total_damage": 1896.29
+        "total_damage": 1839.14
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38844,7 +38828,7 @@
           "immolate_Bami's Cinder",
           "passive"
         ],
-        "total_damage": 3515.9
+        "total_damage": 3344.48
       }
     },
     "Bandleglass Mirror": {
@@ -38878,7 +38862,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2064.14
+        "total_damage": 1999.86
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38889,7 +38873,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3543.05
+        "total_damage": 3350.19
       }
     },
     "Bandlepipes": {
@@ -38923,7 +38907,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2022.38
+        "total_damage": 1965.24
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38934,7 +38918,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3413.14
+        "total_damage": 3241.71
       }
     },
     "Banshee's Veil": {
@@ -38968,7 +38952,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2213.96
+        "total_damage": 2119.32
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -38979,7 +38963,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3914.48
+        "total_damage": 3630.55
       }
     },
     "Base Turret Reinforced Armor (Turret Item)": {
@@ -39013,7 +38997,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39024,7 +39008,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Bastionbreaker": {
@@ -39061,7 +39045,7 @@
           "passive",
           "shaped_charge_Bastionbreaker"
         ],
-        "total_damage": 2480.5
+        "total_damage": 2423.35
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39073,7 +39057,7 @@
           "passive",
           "shaped_charge_Bastionbreaker"
         ],
-        "total_damage": 4481.86
+        "total_damage": 4310.43
       }
     },
     "Berserker's Greaves": {
@@ -39107,7 +39091,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1877.05
+        "total_damage": 1819.9
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39118,7 +39102,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3579.62
+        "total_damage": 3351.05
       }
     },
     "Black Cleaver": {
@@ -39152,7 +39136,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2303.98
+        "total_damage": 2246.83
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39163,7 +39147,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4053.81
+        "total_damage": 3882.38
       }
     },
     "Black Hole Gauntlet": {
@@ -39197,7 +39181,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39208,7 +39192,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Black Spear": {
@@ -39242,7 +39226,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39253,7 +39237,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Blackfire Torch": {
@@ -39290,7 +39274,7 @@
           "burn_Blackfire Torch",
           "passive"
         ],
-        "total_damage": 2580.62
+        "total_damage": 2493.84
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39302,7 +39286,7 @@
           "burn_Blackfire Torch",
           "passive"
         ],
-        "total_damage": 5626.23
+        "total_damage": 5192.3
       }
     },
     "Blade of the Ruined King": {
@@ -39342,7 +39326,7 @@
           "on_hit_Blade of the Ruined King",
           "passive"
         ],
-        "total_damage": 2734.82
+        "total_damage": 2677.67
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39355,7 +39339,7 @@
           "on_hit_Blade of the Ruined King",
           "passive"
         ],
-        "total_damage": 4944.66
+        "total_damage": 4716.09
       }
     },
     "Blasting Wand": {
@@ -39389,7 +39373,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1958.96
+        "total_damage": 1885.75
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39400,7 +39384,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3503.05
+        "total_damage": 3283.4
       }
     },
     "Blighting Jewel": {
@@ -39434,7 +39418,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1927.27
+        "total_damage": 1858.65
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39445,7 +39429,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3447.24
+        "total_damage": 3241.38
       }
     },
     "Bloodletter's Curse": {
@@ -39479,7 +39463,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2372.82
+        "total_damage": 2284.93
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39490,7 +39474,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3762.68
+        "total_damage": 3499.01
       }
     },
     "Bloodsong": {
@@ -39530,7 +39514,7 @@
           "passive",
           "spellblade_Bloodsong"
         ],
-        "total_damage": 2093.97
+        "total_damage": 2033.97
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39543,7 +39527,7 @@
           "passive",
           "spellblade_Bloodsong"
         ],
-        "total_damage": 4146.47
+        "total_damage": 3966.47
       }
     },
     "Bloodthirster": {
@@ -39580,7 +39564,7 @@
           "heal_lifesteal",
           "passive"
         ],
-        "total_damage": 2247.71
+        "total_damage": 2190.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39592,7 +39576,7 @@
           "heal_lifesteal",
           "passive"
         ],
-        "total_damage": 4421.14
+        "total_damage": 4249.71
       }
     },
     "Boots": {
@@ -39626,7 +39610,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39637,7 +39621,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Boots of Swiftness": {
@@ -39671,7 +39655,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39682,7 +39666,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Bounty of Worlds": {
@@ -39716,7 +39700,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39727,7 +39711,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3394.48
+        "total_damage": 3223.05
       }
     },
     "Bramble Vest": {
@@ -39761,7 +39745,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39772,7 +39756,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Cappa Juice": {
@@ -39806,7 +39790,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39817,7 +39801,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Catalyst of Aeons": {
@@ -39851,7 +39835,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39862,7 +39846,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3794.48
+        "total_damage": 3623.05
       }
     },
     "Caulfield's Warhammer": {
@@ -39896,7 +39880,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2087.71
+        "total_damage": 2030.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39907,7 +39891,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3501.14
+        "total_damage": 3329.71
       }
     },
     "Celestial Opposition": {
@@ -39941,7 +39925,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39952,7 +39936,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3394.48
+        "total_damage": 3223.05
       }
     },
     "Chain Vest": {
@@ -39986,7 +39970,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -39997,7 +39981,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Chainlaced Crushers": {
@@ -40031,7 +40015,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40042,7 +40026,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Chempunk Chainsword": {
@@ -40076,7 +40060,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2237.71
+        "total_damage": 2180.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40087,7 +40071,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3884.48
+        "total_damage": 3713.05
       }
     },
     "Cloak of Agility": {
@@ -40121,7 +40105,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1841.51
+        "total_damage": 1784.37
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40132,7 +40116,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3383.08
+        "total_damage": 3211.65
       }
     },
     "Cloak of Starry Night": {
@@ -40166,7 +40150,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40177,7 +40161,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Cloth Armor": {
@@ -40211,7 +40195,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40222,7 +40206,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Control Ward": {
@@ -40256,7 +40240,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40267,7 +40251,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Cosmic Drive": {
@@ -40301,7 +40285,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2305.21
+        "total_damage": 2223.07
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40312,7 +40296,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3674.48
+        "total_damage": 3428.05
       }
     },
     "Crimson Lucidity": {
@@ -40346,7 +40330,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40357,7 +40341,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Crown of the Shattered Queen": {
@@ -40391,7 +40375,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2377.54
+        "total_damage": 2290.04
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40402,7 +40386,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 5070.01
+        "total_damage": 4720.01
       }
     },
     "Cruelty": {
@@ -40436,7 +40420,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2107.71
+        "total_damage": 2022.0
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40447,7 +40431,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3743.05
+        "total_damage": 3485.9
       }
     },
     "Cryptbloom": {
@@ -40481,7 +40465,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2501.57
+        "total_damage": 2409.77
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40492,7 +40476,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3938.58
+        "total_damage": 3663.19
       }
     },
     "Crystalline Bracer": {
@@ -40526,7 +40510,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40537,7 +40521,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Crystalline Overgrowth": {
@@ -40571,7 +40555,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40582,7 +40566,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Cull": {
@@ -40619,7 +40603,7 @@
           "heal_Cull",
           "passive"
         ],
-        "total_damage": 1809.71
+        "total_damage": 1752.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40631,7 +40615,7 @@
           "heal_Cull",
           "passive"
         ],
-        "total_damage": 3301.81
+        "total_damage": 3130.38
       }
     },
     "Dagger": {
@@ -40665,7 +40649,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1822.38
+        "total_damage": 1765.24
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40676,7 +40660,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3360.95
+        "total_damage": 3132.38
       }
     },
     "Dark Seal": {
@@ -40710,7 +40694,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1831.46
+        "total_damage": 1768.96
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40721,7 +40705,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3297.33
+        "total_damage": 3109.83
       }
     },
     "Darksteel Talons": {
@@ -40755,7 +40739,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1986.38
+        "total_damage": 1929.24
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40766,7 +40750,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3743.62
+        "total_damage": 3515.05
       }
     },
     "Dawncore": {
@@ -40800,7 +40784,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2001.46
+        "total_damage": 1924.68
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40811,7 +40795,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3803.05
+        "total_damage": 3572.69
       }
     },
     "Dead Man's Plate": {
@@ -40848,7 +40832,7 @@
           "on_hit_once_Dead Man's Plate",
           "passive"
         ],
-        "total_damage": 1849.05
+        "total_damage": 1791.9
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40860,7 +40844,7 @@
           "on_hit_once_Dead Man's Plate",
           "passive"
         ],
-        "total_damage": 3275.81
+        "total_damage": 3104.38
       }
     },
     "Death's Dance": {
@@ -40894,7 +40878,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2327.71
+        "total_damage": 2270.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40905,7 +40889,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4114.48
+        "total_damage": 3943.05
       }
     },
     "Death's Daughter": {
@@ -40939,7 +40923,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40950,7 +40934,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Decapitator": {
@@ -40984,7 +40968,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1986.38
+        "total_damage": 1929.24
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -40995,7 +40979,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3743.62
+        "total_damage": 3515.05
       }
     },
     "Demon King's Crown": {
@@ -41029,7 +41013,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41040,7 +41024,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Demonic Embrace": {
@@ -41074,7 +41058,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2107.71
+        "total_damage": 2022.0
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41085,7 +41069,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3743.05
+        "total_damage": 3485.9
       }
     },
     "Detonation Orb": {
@@ -41119,7 +41103,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2580.67
+        "total_damage": 2483.02
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41130,7 +41114,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 5581.16
+        "total_damage": 5092.88
       }
     },
     "Diadem of Songs": {
@@ -41164,7 +41148,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41175,7 +41159,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3794.48
+        "total_damage": 3623.05
       }
     },
     "Diamond-Tipped Spear": {
@@ -41209,7 +41193,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1877.05
+        "total_damage": 1819.9
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41220,7 +41204,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3579.62
+        "total_damage": 3351.05
       }
     },
     "Divine Sunderer": {
@@ -41254,7 +41238,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2297.71
+        "total_damage": 2240.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41265,7 +41249,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4037.81
+        "total_damage": 3866.38
       }
     },
     "Doran's Blade": {
@@ -41299,7 +41283,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1827.71
+        "total_damage": 1770.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41310,7 +41294,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3347.81
+        "total_damage": 3176.38
       }
     },
     "Doran's Bow": {
@@ -41347,7 +41331,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 1875.71
+        "total_damage": 1818.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41359,7 +41343,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 3497.14
+        "total_damage": 3325.71
       }
     },
     "Doran's Helm": {
@@ -41393,7 +41377,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41404,7 +41388,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Doran's Ring": {
@@ -41438,7 +41422,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1844.21
+        "total_damage": 1780.64
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41449,7 +41433,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3317.9
+        "total_damage": 3127.19
       }
     },
     "Doran's Shield": {
@@ -41483,7 +41467,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41494,7 +41478,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Dragonheart": {
@@ -41528,7 +41512,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41539,7 +41523,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Dream Maker": {
@@ -41573,7 +41557,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41584,7 +41568,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3394.48
+        "total_damage": 3223.05
       }
     },
     "Dusk and Dawn": {
@@ -41625,7 +41609,7 @@
           "passive",
           "spellblade_Dusk and Dawn"
         ],
-        "total_damage": 2552.74
+        "total_damage": 2474.17
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41638,7 +41622,7 @@
           "passive",
           "spellblade_Dusk and Dawn"
         ],
-        "total_damage": 4306.71
+        "total_damage": 4071.0
       }
     },
     "Duskblade of Draktharr": {
@@ -41672,7 +41656,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2389.56
+        "total_damage": 2332.42
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41683,7 +41667,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4272.53
+        "total_damage": 4101.1
       }
     },
     "Echoes of Helia": {
@@ -41717,7 +41701,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2136.46
+        "total_damage": 2066.82
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41728,7 +41712,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3654.48
+        "total_damage": 3445.55
       }
     },
     "Eclipse": {
@@ -41765,7 +41749,7 @@
           "passive",
           "proc_Eclipse"
         ],
-        "total_damage": 2461.05
+        "total_damage": 2403.9
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41777,7 +41761,7 @@
           "passive",
           "proc_Eclipse"
         ],
-        "total_damage": 4381.14
+        "total_damage": 4209.71
       }
     },
     "Edge of Night": {
@@ -41811,7 +41795,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2155.71
+        "total_damage": 2098.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41822,7 +41806,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4186.03
+        "total_damage": 4014.6
       }
     },
     "Eleisa's Miracle": {
@@ -41856,7 +41840,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41867,7 +41851,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Elixir of Avarice": {
@@ -41901,7 +41885,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41912,7 +41896,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Elixir of Force": {
@@ -41946,7 +41930,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -41957,7 +41941,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Elixir of Iron": {
@@ -41991,7 +41975,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42002,7 +41986,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Elixir of Skill": {
@@ -42036,7 +42020,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42047,7 +42031,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Elixir of Sorcery": {
@@ -42081,7 +42065,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42092,7 +42076,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Elixir of Wrath": {
@@ -42126,7 +42110,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42137,7 +42121,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Empyrean Promise": {
@@ -42171,7 +42155,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2305.21
+        "total_damage": 2223.07
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42182,7 +42166,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3996.62
+        "total_damage": 3668.05
       }
     },
     "Endless Hunger": {
@@ -42219,7 +42203,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 2357.71
+        "total_damage": 2300.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42231,7 +42215,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 4191.14
+        "total_damage": 4019.71
       }
     },
     "Enhanced Lucky Dice": {
@@ -42265,7 +42249,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42276,7 +42260,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Essence Reaver": {
@@ -42316,7 +42300,7 @@
           "passive",
           "spellblade_Essence Reaver"
         ],
-        "total_damage": 2849.05
+        "total_damage": 2791.9
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42329,7 +42313,7 @@
           "passive",
           "spellblade_Essence Reaver"
         ],
-        "total_damage": 6371.9
+        "total_damage": 6086.19
       }
     },
     "Everfrost": {
@@ -42363,7 +42347,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2449.86
+        "total_damage": 2357.0
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42374,7 +42358,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 5223.76
+        "total_damage": 4852.33
       }
     },
     "Executioner's Calling": {
@@ -42408,7 +42392,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1857.71
+        "total_damage": 1800.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42419,7 +42403,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3424.48
+        "total_damage": 3253.05
       }
     },
     "Experimental Hexplate": {
@@ -42453,7 +42437,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2333.05
+        "total_damage": 2275.9
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42464,7 +42448,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4678.29
+        "total_damage": 4449.71
       }
     },
     "Eye of the Herald": {
@@ -42498,7 +42482,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42509,7 +42493,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Faerie Charm": {
@@ -42543,7 +42527,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42554,7 +42538,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3394.48
+        "total_damage": 3223.05
       }
     },
     "Farsight Alteration": {
@@ -42588,7 +42572,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42599,7 +42583,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Fated Ashes": {
@@ -42636,7 +42620,7 @@
           "burn_Fated Ashes",
           "passive"
         ],
-        "total_damage": 1936.29
+        "total_damage": 1868.43
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42648,7 +42632,7 @@
           "burn_Fated Ashes",
           "passive"
         ],
-        "total_damage": 3501.98
+        "total_damage": 3298.4
       }
     },
     "Fiendhunter Bolts": {
@@ -42685,7 +42669,7 @@
           "fiendhunter_true_damage",
           "passive"
         ],
-        "total_damage": 2256.3
+        "total_damage": 2199.15
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42697,7 +42681,7 @@
           "fiendhunter_true_damage",
           "passive"
         ],
-        "total_damage": 4273.2
+        "total_damage": 4044.63
       }
     },
     "Fiendish Codex": {
@@ -42731,7 +42715,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2088.25
+        "total_damage": 2022.18
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42742,7 +42726,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3365.9
+        "total_damage": 3167.69
       }
     },
     "Fimbulwinter": {
@@ -42776,7 +42760,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42787,7 +42771,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4141.62
+        "total_damage": 3970.19
       }
     },
     "Fire at Will": {
@@ -42821,7 +42805,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42832,7 +42816,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Flesheater": {
@@ -42866,7 +42850,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42877,7 +42861,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Forbidden Idol": {
@@ -42911,7 +42895,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42922,7 +42906,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3394.48
+        "total_damage": 3223.05
       }
     },
     "Force of Entropy": {
@@ -42956,7 +42940,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2090.71
+        "total_damage": 2033.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -42967,7 +42951,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3565.95
+        "total_damage": 3337.38
       }
     },
     "Force of Nature": {
@@ -43001,7 +42985,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43012,7 +42996,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Frozen Heart": {
@@ -43046,7 +43030,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43057,7 +43041,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4055.9
+        "total_damage": 3770.19
       }
     },
     "Fulmination": {
@@ -43091,7 +43075,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2371.71
+        "total_damage": 2314.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43102,7 +43086,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4825.62
+        "total_damage": 4597.05
       }
     },
     "Galeforce": {
@@ -43136,7 +43120,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2623.21
+        "total_damage": 2566.07
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43147,7 +43131,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 5546.79
+        "total_damage": 5318.21
       }
     },
     "Gambler's Blade": {
@@ -43181,7 +43165,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2341.05
+        "total_damage": 2283.9
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43192,7 +43176,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3905.14
+        "total_damage": 3733.71
       }
     },
     "Gargoyle Stoneplate": {
@@ -43226,7 +43210,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43237,7 +43221,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Ghostcrawlers": {
@@ -43271,7 +43255,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43282,7 +43266,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Giant's Belt": {
@@ -43316,7 +43300,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43327,7 +43311,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Glacial Buckler": {
@@ -43361,7 +43345,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43372,7 +43356,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3894.48
+        "total_damage": 3723.05
       }
     },
     "Glowing Mote": {
@@ -43406,7 +43390,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43417,7 +43401,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Gluttonous Greaves": {
@@ -43454,7 +43438,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43466,7 +43450,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Goredrinker": {
@@ -43503,7 +43487,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 2297.71
+        "total_damage": 2240.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43515,7 +43499,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 4037.81
+        "total_damage": 3866.38
       }
     },
     "Guardian Angel": {
@@ -43549,7 +43533,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2097.71
+        "total_damage": 2040.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43560,7 +43544,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4037.81
+        "total_damage": 3866.38
       }
     },
     "Guardian's Amulet": {
@@ -43594,7 +43578,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2064.14
+        "total_damage": 1999.86
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43605,7 +43589,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3331.62
+        "total_damage": 3138.76
       }
     },
     "Guardian's Blade": {
@@ -43639,7 +43623,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2147.71
+        "total_damage": 2090.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43650,7 +43634,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3654.48
+        "total_damage": 3483.05
       }
     },
     "Guardian's Dirk": {
@@ -43684,7 +43668,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2168.52
+        "total_damage": 2111.38
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43695,7 +43679,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3707.65
+        "total_damage": 3536.22
       }
     },
     "Guardian's Hammer": {
@@ -43732,7 +43716,7 @@
           "heal_lifesteal",
           "passive"
         ],
-        "total_damage": 1917.71
+        "total_damage": 1860.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43744,7 +43728,7 @@
           "heal_lifesteal",
           "passive"
         ],
-        "total_damage": 3577.81
+        "total_damage": 3406.38
       }
     },
     "Guardian's Horn": {
@@ -43778,7 +43762,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43789,7 +43773,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Guardian's Orb": {
@@ -43823,7 +43807,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1980.21
+        "total_damage": 1905.21
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43834,7 +43818,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3537.33
+        "total_damage": 3312.33
       }
     },
     "Guardian's Shroud": {
@@ -43868,7 +43852,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2136.46
+        "total_damage": 2066.82
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43879,7 +43863,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3434.48
+        "total_damage": 3225.55
       }
     },
     "Guinsoo's Rageblade": {
@@ -43916,7 +43900,7 @@
           "on_hit_Guinsoo's Rageblade",
           "passive"
         ],
-        "total_damage": 2812.83
+        "total_damage": 2744.98
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43928,7 +43912,7 @@
           "on_hit_Guinsoo's Rageblade",
           "passive"
         ],
-        "total_damage": 5788.33
+        "total_damage": 5516.9
       }
     },
     "Gunmetal Greaves": {
@@ -43965,7 +43949,7 @@
           "heal_lifesteal",
           "passive"
         ],
-        "total_damage": 1931.71
+        "total_damage": 1874.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -43977,7 +43961,7 @@
           "heal_lifesteal",
           "passive"
         ],
-        "total_damage": 3688.95
+        "total_damage": 3460.38
       }
     },
     "Gusto": {
@@ -44011,7 +43995,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44022,7 +44006,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Gustwalker Hatchling": {
@@ -44056,7 +44040,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44067,7 +44051,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Hamstringer": {
@@ -44101,7 +44085,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2545.71
+        "total_damage": 2488.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44112,7 +44096,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 5275.12
+        "total_damage": 5046.55
       }
     },
     "Haunting Guise": {
@@ -44149,7 +44133,7 @@
           "damage_amp_Haunting Guise",
           "passive"
         ],
-        "total_damage": 1952.07
+        "total_damage": 1882.18
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44161,7 +44145,7 @@
           "damage_amp_Haunting Guise",
           "passive"
         ],
-        "total_damage": 3502.2
+        "total_damage": 3292.52
       }
     },
     "Health Potion": {
@@ -44195,7 +44179,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44206,7 +44190,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Hearthbound Axe": {
@@ -44240,7 +44224,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1955.71
+        "total_damage": 1898.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44251,7 +44235,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3773.14
+        "total_damage": 3601.71
       }
     },
     "Heartsteel": {
@@ -44288,7 +44272,7 @@
           "on_hit_once_Heartsteel",
           "passive"
         ],
-        "total_damage": 1911.82
+        "total_damage": 1854.68
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44300,7 +44284,7 @@
           "on_hit_once_Heartsteel",
           "passive"
         ],
-        "total_damage": 3338.58
+        "total_damage": 3167.15
       }
     },
     "Hellfire Hatchet": {
@@ -44334,7 +44318,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2038.76
+        "total_damage": 1981.61
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44345,7 +44329,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3887.14
+        "total_damage": 3715.71
       }
     },
     "Hemomancer's Helm": {
@@ -44382,7 +44366,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 2387.71
+        "total_damage": 2330.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44394,7 +44378,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 4324.95
+        "total_damage": 4096.38
       }
     },
     "Hexbolt Companion": {
@@ -44428,7 +44412,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2095.71
+        "total_damage": 2038.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44439,7 +44423,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4016.95
+        "total_damage": 3788.38
       }
     },
     "Hexdrinker": {
@@ -44473,7 +44457,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1917.71
+        "total_damage": 1860.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44484,7 +44468,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3577.81
+        "total_damage": 3406.38
       }
     },
     "Hexoptics C44": {
@@ -44521,7 +44505,7 @@
           "basic_amp_Hexoptics C44",
           "passive"
         ],
-        "total_damage": 2405.96
+        "total_damage": 2348.82
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44533,7 +44517,7 @@
           "basic_amp_Hexoptics C44",
           "passive"
         ],
-        "total_damage": 4825.56
+        "total_damage": 4654.13
       }
     },
     "Hextech Alternator": {
@@ -44570,7 +44554,7 @@
           "passive",
           "proc_Hextech Alternator"
         ],
-        "total_damage": 2005.39
+        "total_damage": 1932.18
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44582,7 +44566,7 @@
           "passive",
           "proc_Hextech Alternator"
         ],
-        "total_damage": 3549.48
+        "total_damage": 3329.83
       }
     },
     "Hextech Gunblade": {
@@ -44622,7 +44606,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 2522.56
+        "total_damage": 2436.85
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44635,7 +44619,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 4531.23
+        "total_damage": 4274.09
       }
     },
     "Hextech Rocketbelt": {
@@ -44672,7 +44656,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2332.71
+        "total_damage": 2254.14
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44684,7 +44668,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3681.62
+        "total_damage": 3445.9
       }
     },
     "Hollow Radiance": {
@@ -44721,7 +44705,7 @@
           "immolate_Hollow Radiance",
           "passive"
         ],
-        "total_damage": 2130.57
+        "total_damage": 2073.43
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44733,7 +44717,7 @@
           "immolate_Hollow Radiance",
           "passive"
         ],
-        "total_damage": 3601.62
+        "total_damage": 3430.19
       }
     },
     "Horizon Focus": {
@@ -44770,7 +44754,7 @@
           "damage_amp_Horizon Focus",
           "passive"
         ],
-        "total_damage": 2537.97
+        "total_damage": 2445.65
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44782,7 +44766,7 @@
           "damage_amp_Horizon Focus",
           "passive"
         ],
-        "total_damage": 4055.35
+        "total_damage": 3778.39
       }
     },
     "Hubris": {
@@ -44816,7 +44800,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2409.81
+        "total_damage": 2352.66
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44827,7 +44811,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4324.26
+        "total_damage": 4152.84
       }
     },
     "Hullbreaker": {
@@ -44862,7 +44846,7 @@
           "on_hit_Hullbreaker",
           "passive"
         ],
-        "total_damage": 2101.14
+        "total_damage": 2044.0
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44874,7 +44858,7 @@
           "on_hit_Hullbreaker",
           "passive"
         ],
-        "total_damage": 4181.52
+        "total_damage": 4010.09
       }
     },
     "Iceborn Gauntlet": {
@@ -44911,7 +44895,7 @@
           "passive",
           "spellblade_Iceborn Gauntlet"
         ],
-        "total_damage": 2377.71
+        "total_damage": 2320.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44923,7 +44907,7 @@
           "passive",
           "spellblade_Iceborn Gauntlet"
         ],
-        "total_damage": 4014.48
+        "total_damage": 3843.05
       }
     },
     "Immortal Path": {
@@ -44963,7 +44947,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 1838.42
+        "total_damage": 1778.99
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -44976,7 +44960,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 3322.26
+        "total_damage": 3143.97
       }
     },
     "Immortal Shieldbow": {
@@ -45010,7 +44994,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2303.21
+        "total_damage": 2246.07
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45021,7 +45005,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4562.98
+        "total_damage": 4391.55
       }
     },
     "Imperial Mandate": {
@@ -45058,7 +45042,7 @@
           "damage_amp_Imperial Mandate",
           "passive"
         ],
-        "total_damage": 2323.33
+        "total_damage": 2244.76
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45070,7 +45054,7 @@
           "damage_amp_Imperial Mandate",
           "passive"
         ],
-        "total_damage": 4099.64
+        "total_damage": 3774.35
       }
     },
     "Infinity Edge": {
@@ -45104,7 +45088,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2523.86
+        "total_damage": 2466.72
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45115,7 +45099,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 5126.86
+        "total_damage": 4955.43
       }
     },
     "Innervating Locket": {
@@ -45149,7 +45133,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2305.21
+        "total_damage": 2223.07
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45160,7 +45144,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3674.48
+        "total_damage": 3428.05
       }
     },
     "Ionian Boots of Lucidity": {
@@ -45194,7 +45178,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45205,7 +45189,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Jak'Sho, The Protean": {
@@ -45239,7 +45223,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45250,7 +45234,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Jarvan I's": {
@@ -45284,7 +45268,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2215.4
+        "total_damage": 2152.9
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45295,7 +45279,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3649.42
+        "total_damage": 3461.92
       }
     },
     "Juice of Haste": {
@@ -45329,7 +45313,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45340,7 +45324,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Juice of Power": {
@@ -45374,7 +45358,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45385,7 +45369,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Juice of Vitality": {
@@ -45419,7 +45403,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45430,7 +45414,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Kaenic Rookern": {
@@ -45464,7 +45448,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45475,7 +45459,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Kindlegem": {
@@ -45509,7 +45493,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45520,7 +45504,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Kinkou Jitte": {
@@ -45554,7 +45538,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45565,7 +45549,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3251.62
+        "total_damage": 3023.05
       }
     },
     "Knight's Vow": {
@@ -45599,7 +45583,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45610,7 +45594,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Kraken Slayer": {
@@ -45647,7 +45631,7 @@
           "on_hit_Kraken Slayer",
           "passive"
         ],
-        "total_damage": 2736.42
+        "total_damage": 2679.27
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45659,7 +45643,7 @@
           "on_hit_Kraken Slayer",
           "passive"
         ],
-        "total_damage": 5975.44
+        "total_damage": 5746.87
       }
     },
     "Last Whisper": {
@@ -45693,7 +45677,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1887.71
+        "total_damage": 1830.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45704,7 +45688,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3501.14
+        "total_damage": 3329.71
       }
     },
     "Legendary Assassin Item": {
@@ -45738,7 +45722,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45749,7 +45733,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Legendary Fighter Item": {
@@ -45783,7 +45767,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45794,7 +45778,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Legendary Mage Item": {
@@ -45828,7 +45812,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45839,7 +45823,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Legendary Marksman Item": {
@@ -45873,7 +45857,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45884,7 +45868,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Legendary Support Item": {
@@ -45918,7 +45902,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45929,7 +45913,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Legendary Tank Item": {
@@ -45963,7 +45947,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -45974,7 +45958,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Liandry's Torment": {
@@ -46014,7 +45998,7 @@
           "damage_amp_Liandry's Torment",
           "passive"
         ],
-        "total_damage": 2421.82
+        "total_damage": 2340.9
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46027,7 +46011,7 @@
           "damage_amp_Liandry's Torment",
           "passive"
         ],
-        "total_damage": 4552.8
+        "total_damage": 4310.01
       }
     },
     "Lich Bane": {
@@ -46064,7 +46048,7 @@
           "passive",
           "spellblade_Lich Bane"
         ],
-        "total_damage": 2830.21
+        "total_damage": 2737.36
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46076,7 +46060,7 @@
           "passive",
           "spellblade_Lich Bane"
         ],
-        "total_damage": 4640.9
+        "total_damage": 4362.33
       }
     },
     "Lifeline": {
@@ -46110,7 +46094,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1939.85
+        "total_damage": 1882.71
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46121,7 +46105,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3634.38
+        "total_damage": 3462.96
       }
     },
     "Lightning Rod": {
@@ -46155,7 +46139,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46166,7 +46150,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Locket of the Iron Solari": {
@@ -46200,7 +46184,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46211,7 +46195,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Long Sword": {
@@ -46245,7 +46229,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1827.71
+        "total_damage": 1770.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46256,7 +46240,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3347.81
+        "total_damage": 3176.38
       }
     },
     "Lord Dominik's Regards": {
@@ -46290,7 +46274,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2153.21
+        "total_damage": 2096.07
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46301,7 +46285,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4179.64
+        "total_damage": 4008.21
       }
     },
     "Lost Chapter": {
@@ -46335,7 +46319,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2160.57
+        "total_damage": 2089.14
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46346,7 +46330,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4251.62
+        "total_damage": 4037.33
       }
     },
     "Lucky Dice": {
@@ -46380,7 +46364,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46391,7 +46375,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Luden's Echo": {
@@ -46428,7 +46412,7 @@
           "passive",
           "proc_Luden's Echo"
         ],
-        "total_damage": 2564.14
+        "total_damage": 2471.29
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46440,7 +46424,7 @@
           "passive",
           "proc_Luden's Echo"
         ],
-        "total_damage": 5130.19
+        "total_damage": 4851.62
       }
     },
     "Malignance": {
@@ -46477,7 +46461,7 @@
           "passive",
           "ult_proc_Malignance"
         ],
-        "total_damage": 2603.51
+        "total_damage": 2507.36
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46489,7 +46473,7 @@
           "passive",
           "ult_proc_Malignance"
         ],
-        "total_damage": 5247.58
+        "total_damage": 4959.12
       }
     },
     "Manamune": {
@@ -46523,7 +46507,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2177.71
+        "total_damage": 2120.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46534,7 +46518,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4678.29
+        "total_damage": 4506.86
       }
     },
     "Maw of Malmortius": {
@@ -46568,7 +46552,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2327.71
+        "total_damage": 2270.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46579,7 +46563,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4114.48
+        "total_damage": 3943.05
       }
     },
     "Mejai's Soulstealer": {
@@ -46613,7 +46597,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1852.71
+        "total_damage": 1788.43
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46624,7 +46608,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3331.62
+        "total_damage": 3138.76
       }
     },
     "Mercurial Scimitar": {
@@ -46661,7 +46645,7 @@
           "heal_lifesteal",
           "passive"
         ],
-        "total_damage": 2067.71
+        "total_damage": 2010.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46673,7 +46657,7 @@
           "heal_lifesteal",
           "passive"
         ],
-        "total_damage": 3961.14
+        "total_damage": 3789.71
       }
     },
     "Mercury's Treads": {
@@ -46707,7 +46691,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46718,7 +46702,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Mikael's Blessing": {
@@ -46752,7 +46736,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46763,7 +46747,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3394.48
+        "total_damage": 3223.05
       }
     },
     "Mirage Blade": {
@@ -46797,7 +46781,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1986.38
+        "total_damage": 1929.24
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46808,7 +46792,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3852.95
+        "total_damage": 3624.38
       }
     },
     "Moonflair Spellblade": {
@@ -46842,7 +46826,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2128.96
+        "total_damage": 2041.46
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46853,7 +46837,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3777.33
+        "total_damage": 3514.83
       }
     },
     "Moonstone Renewer": {
@@ -46887,7 +46871,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2088.25
+        "total_damage": 2022.18
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46898,7 +46882,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3580.19
+        "total_damage": 3381.98
       }
     },
     "Morellonomicon": {
@@ -46932,7 +46916,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2329.32
+        "total_damage": 2245.39
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46943,7 +46927,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3708.76
+        "total_damage": 3456.98
       }
     },
     "Mortal Reminder": {
@@ -46977,7 +46961,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2153.21
+        "total_damage": 2096.07
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -46988,7 +46972,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4179.64
+        "total_damage": 4008.21
       }
     },
     "Mosstomper Seedling": {
@@ -47022,7 +47006,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47033,7 +47017,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Multitool": {
@@ -47067,7 +47051,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47078,7 +47062,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Muramana": {
@@ -47118,7 +47102,7 @@
           "on_hit_Muramana",
           "passive"
         ],
-        "total_damage": 2739.15
+        "total_damage": 2682.0
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47131,7 +47115,7 @@
           "on_hit_Muramana",
           "passive"
         ],
-        "total_damage": 6049.36
+        "total_damage": 5877.93
       }
     },
     "Nashor's Tooth": {
@@ -47168,7 +47152,7 @@
           "on_hit_Nashor's Tooth",
           "passive"
         ],
-        "total_damage": 2822.81
+        "total_damage": 2737.1
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47180,7 +47164,7 @@
           "on_hit_Nashor's Tooth",
           "passive"
         ],
-        "total_damage": 4852.19
+        "total_damage": 4595.05
       }
     },
     "Navori Flickerblade": {
@@ -47214,7 +47198,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2500.0
+        "total_damage": 2385.71
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47225,7 +47209,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4055.48
+        "total_damage": 3884.05
       }
     },
     "Needlessly Large Rod": {
@@ -47259,7 +47243,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2043.96
+        "total_damage": 1963.61
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47270,7 +47254,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3640.19
+        "total_damage": 3399.12
       }
     },
     "Negatron Cloak": {
@@ -47304,7 +47288,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47315,7 +47299,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Night Harvester": {
@@ -47349,7 +47333,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2401.64
+        "total_damage": 2312.36
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47360,7 +47344,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3811.62
+        "total_damage": 3543.76
       }
     },
     "Noonquiver": {
@@ -47394,7 +47378,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1974.11
+        "total_damage": 1916.97
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47405,7 +47389,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3721.94
+        "total_damage": 3550.51
       }
     },
     "Null-Magic Mantle": {
@@ -47439,7 +47423,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47450,7 +47434,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Oblivion Orb": {
@@ -47484,7 +47468,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1873.96
+        "total_damage": 1807.89
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47495,7 +47479,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3365.9
+        "total_damage": 3167.69
       }
     },
     "Ohmwrecker (Turret Item)": {
@@ -47529,7 +47513,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1822.38
+        "total_damage": 1765.24
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47540,7 +47524,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3334.18
+        "total_damage": 3162.75
       }
     },
     "Oracle Lens": {
@@ -47574,7 +47558,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47585,7 +47569,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Overcharged": {
@@ -47619,7 +47603,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47630,7 +47614,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Overlord's Bloodmail": {
@@ -47664,7 +47648,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2031.71
+        "total_damage": 1974.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47675,7 +47659,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3869.14
+        "total_damage": 3697.71
       }
     },
     "Perplexity": {
@@ -47709,7 +47693,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2205.15
+        "total_damage": 2119.22
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47720,7 +47704,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3925.58
+        "total_damage": 3667.77
       }
     },
     "Phage": {
@@ -47754,7 +47738,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1857.71
+        "total_damage": 1800.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47765,7 +47749,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3424.48
+        "total_damage": 3253.05
       }
     },
     "Phantom Dancer": {
@@ -47799,7 +47783,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2232.38
+        "total_damage": 2175.24
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47810,7 +47794,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4385.95
+        "total_damage": 4157.38
       }
     },
     "Phreakish Gusto": {
@@ -47844,7 +47828,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47855,7 +47839,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Pickaxe": {
@@ -47889,7 +47873,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1917.71
+        "total_damage": 1860.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47900,7 +47884,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3577.81
+        "total_damage": 3406.38
       }
     },
     "Plated Steelcaps": {
@@ -47934,7 +47918,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47945,7 +47929,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Poro-Snax": {
@@ -47979,7 +47963,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -47990,7 +47974,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Prismatic Item": {
@@ -48024,7 +48008,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48035,7 +48019,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Profane Hydra": {
@@ -48072,7 +48056,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2492.84
+        "total_damage": 2435.69
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48084,7 +48068,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4407.29
+        "total_damage": 4235.87
       }
     },
     "Protoplasm Harness": {
@@ -48118,7 +48102,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48129,7 +48113,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Prowler's Claw": {
@@ -48163,7 +48147,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2439.0
+        "total_damage": 2381.85
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48174,7 +48158,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4398.86
+        "total_damage": 4227.43
       }
     },
     "Puppeteer": {
@@ -48208,7 +48192,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2177.05
+        "total_damage": 2119.9
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48219,7 +48203,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3979.62
+        "total_damage": 3751.05
       }
     },
     "Pyromancer's Cloak": {
@@ -48253,7 +48237,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48264,7 +48248,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Quicksilver Sash": {
@@ -48298,7 +48282,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48309,7 +48293,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Rabadon's Deathcap": {
@@ -48343,7 +48327,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2485.96
+        "total_damage": 2368.46
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48354,7 +48338,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4353.33
+        "total_damage": 4000.83
       }
     },
     "Radiant Virtue": {
@@ -48388,7 +48372,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48399,7 +48383,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Raise Morale": {
@@ -48433,7 +48417,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48444,7 +48428,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Randuin's Omen": {
@@ -48478,7 +48462,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48489,7 +48473,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Rapid Firecannon": {
@@ -48526,7 +48510,7 @@
           "on_hit_once_Rapid Firecannon",
           "passive"
         ],
-        "total_damage": 2124.29
+        "total_damage": 2067.14
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48538,7 +48522,7 @@
           "on_hit_once_Rapid Firecannon",
           "passive"
         ],
-        "total_damage": 4044.29
+        "total_damage": 3872.86
       }
     },
     "Ravenous Hydra": {
@@ -48581,7 +48565,7 @@
           "heal_lifesteal",
           "passive"
         ],
-        "total_damage": 2436.11
+        "total_damage": 2378.97
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48595,7 +48579,7 @@
           "heal_lifesteal",
           "passive"
         ],
-        "total_damage": 4269.54
+        "total_damage": 4098.11
       }
     },
     "Reality Fracture": {
@@ -48629,7 +48613,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2271.71
+        "total_damage": 2186.0
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48640,7 +48624,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4266.1
+        "total_damage": 3923.24
       }
     },
     "Reaper's Toll": {
@@ -48674,7 +48658,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1986.38
+        "total_damage": 1929.24
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48685,7 +48669,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3743.62
+        "total_damage": 3515.05
       }
     },
     "Rectrix": {
@@ -48719,7 +48703,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1857.71
+        "total_damage": 1800.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48730,7 +48714,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3424.48
+        "total_damage": 3253.05
       }
     },
     "Recurve Bow": {
@@ -48767,7 +48751,7 @@
           "on_hit_Recurve Bow",
           "passive"
         ],
-        "total_damage": 1922.38
+        "total_damage": 1865.24
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48779,7 +48763,7 @@
           "on_hit_Recurve Bow",
           "passive"
         ],
-        "total_damage": 3618.48
+        "total_damage": 3447.05
       }
     },
     "Redemption": {
@@ -48813,7 +48797,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2112.36
+        "total_damage": 2044.5
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48824,7 +48808,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3617.33
+        "total_damage": 3413.76
       }
     },
     "Refillable Potion": {
@@ -48858,7 +48842,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48869,7 +48853,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Regicide": {
@@ -48903,7 +48887,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2222.38
+        "total_damage": 2165.24
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48914,7 +48898,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4356.4
+        "total_damage": 4184.97
       }
     },
     "Reinforced Armor (Turret Item)": {
@@ -48948,7 +48932,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -48959,7 +48943,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Rejuvenation Bead": {
@@ -48993,7 +48977,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49004,7 +48988,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Reverberation": {
@@ -49038,7 +49022,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1931.71
+        "total_damage": 1874.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49049,7 +49033,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3688.95
+        "total_damage": 3460.38
       }
     },
     "Riftmaker": {
@@ -49089,7 +49073,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 2432.52
+        "total_damage": 2344.49
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49102,7 +49086,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 3871.38
+        "total_damage": 3607.29
       }
     },
     "Rite of Ruin": {
@@ -49136,7 +49120,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2331.79
+        "total_damage": 2256.79
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49147,7 +49131,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3851.67
+        "total_damage": 3626.67
       }
     },
     "Rod of Ages": {
@@ -49181,7 +49165,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1958.96
+        "total_damage": 1885.75
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49192,7 +49176,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4180.19
+        "total_damage": 3960.55
       }
     },
     "Ruby Crystal": {
@@ -49226,7 +49210,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49237,7 +49221,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Runaan's Hurricane": {
@@ -49271,7 +49255,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2095.71
+        "total_damage": 2038.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49282,7 +49266,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4112.62
+        "total_damage": 3884.05
       }
     },
     "Runecarver": {
@@ -49316,7 +49300,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2353.43
+        "total_damage": 2267.71
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49327,7 +49311,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3743.05
+        "total_damage": 3485.9
       }
     },
     "Runic Compass": {
@@ -49361,7 +49345,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49372,7 +49356,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3394.48
+        "total_damage": 3223.05
       }
     },
     "Rylai's Crystal Scepter": {
@@ -49406,7 +49390,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2043.96
+        "total_damage": 1963.61
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49417,7 +49401,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3640.19
+        "total_damage": 3399.12
       }
     },
     "Sanguine Gift": {
@@ -49451,7 +49435,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2353.43
+        "total_damage": 2267.71
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49462,7 +49446,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3743.05
+        "total_damage": 3485.9
       }
     },
     "Sapphire Crystal": {
@@ -49496,7 +49480,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49507,7 +49491,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3794.48
+        "total_damage": 3623.05
       }
     },
     "Scarecrow Effigy": {
@@ -49541,7 +49525,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49552,7 +49536,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Scorchclaw Pup": {
@@ -49586,7 +49570,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49597,7 +49581,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Scout's Slingshot": {
@@ -49634,7 +49618,7 @@
           "passive",
           "proc_Scout's Slingshot"
         ],
-        "total_damage": 1850.95
+        "total_damage": 1793.81
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49646,7 +49630,7 @@
           "passive",
           "proc_Scout's Slingshot"
         ],
-        "total_damage": 3470.29
+        "total_damage": 3298.86
       }
     },
     "Seeker's Armguard": {
@@ -49680,7 +49664,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1937.71
+        "total_damage": 1866.29
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49691,7 +49675,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3468.76
+        "total_damage": 3254.48
       }
     },
     "Seraph's Embrace": {
@@ -49725,7 +49709,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2401.64
+        "total_damage": 2312.36
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49736,7 +49720,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 5121.26
+        "total_damage": 4764.12
       }
     },
     "Serpent's Fang": {
@@ -49770,7 +49754,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2189.05
+        "total_damage": 2131.9
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49781,7 +49765,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4271.22
+        "total_damage": 4099.79
       }
     },
     "Serrated Dirk": {
@@ -49815,7 +49799,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1931.43
+        "total_damage": 1874.29
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49826,7 +49810,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3612.86
+        "total_damage": 3441.43
       }
     },
     "Serylda's Grudge": {
@@ -49860,7 +49844,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2338.36
+        "total_damage": 2281.21
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49871,7 +49855,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4141.67
+        "total_damage": 3970.24
       }
     },
     "Shadowflame": {
@@ -49906,7 +49890,7 @@
           "passive",
           "shadowflame_Shadowflame"
         ],
-        "total_damage": 2605.36
+        "total_damage": 2475.76
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49918,7 +49902,7 @@
           "passive",
           "shadowflame_Shadowflame"
         ],
-        "total_damage": 4645.09
+        "total_damage": 4256.29
       }
     },
     "Shattered Armguard": {
@@ -49952,7 +49936,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1937.71
+        "total_damage": 1866.29
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -49963,7 +49947,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3468.76
+        "total_damage": 3254.48
       }
     },
     "Sheen": {
@@ -50000,7 +49984,7 @@
           "passive",
           "spellblade_Sheen"
         ],
-        "total_damage": 2241.05
+        "total_damage": 2183.9
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50012,7 +49996,7 @@
           "passive",
           "spellblade_Sheen"
         ],
-        "total_damage": 3741.14
+        "total_damage": 3569.71
       }
     },
     "Shield of Molten Stone": {
@@ -50046,7 +50030,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50057,7 +50041,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Shurelya's Battlesong": {
@@ -50091,7 +50075,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2208.79
+        "total_damage": 2133.79
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50102,7 +50086,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3765.9
+        "total_damage": 3540.9
       }
     },
     "Slightly Magical Boots": {
@@ -50136,7 +50120,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50147,7 +50131,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Solstice Sleigh": {
@@ -50181,7 +50165,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50192,7 +50176,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3394.48
+        "total_damage": 3223.05
       }
     },
     "Sorcerer's Shoes": {
@@ -50226,7 +50210,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1887.31
+        "total_damage": 1824.81
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50237,7 +50221,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3376.08
+        "total_damage": 3188.58
       }
     },
     "Spear of Shojin": {
@@ -50274,7 +50258,7 @@
           "damage_amp_Spear of Shojin",
           "passive"
         ],
-        "total_damage": 2506.24
+        "total_damage": 2442.24
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50286,7 +50270,7 @@
           "damage_amp_Spear of Shojin",
           "passive"
         ],
-        "total_damage": 4350.61
+        "total_damage": 4158.61
       }
     },
     "Spectral Cutlass": {
@@ -50320,7 +50304,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2155.71
+        "total_damage": 2098.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50331,7 +50315,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4186.03
+        "total_damage": 4014.6
       }
     },
     "Spectre's Cowl": {
@@ -50365,7 +50349,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50376,7 +50360,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Spellslinger's Shoes": {
@@ -50410,7 +50394,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2021.11
+        "total_damage": 1952.62
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50421,7 +50405,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3579.25
+        "total_damage": 3373.77
       }
     },
     "Spirit Visage": {
@@ -50455,7 +50439,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50466,7 +50450,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Staff of Flowing Water": {
@@ -50500,7 +50484,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2329.32
+        "total_damage": 2245.39
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50511,7 +50495,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3951.62
+        "total_damage": 3699.83
       }
     },
     "Stat Bonus (ARAM: Mayhem)": {
@@ -50545,7 +50529,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50556,7 +50540,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Statikk Shiv": {
@@ -50593,7 +50577,7 @@
           "on_hit_once_Statikk Shiv",
           "passive"
         ],
-        "total_damage": 2484.01
+        "total_damage": 2410.8
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50605,7 +50589,7 @@
           "on_hit_once_Statikk Shiv",
           "passive"
         ],
-        "total_damage": 4988.55
+        "total_damage": 4695.69
       }
     },
     "Stealth Ward": {
@@ -50639,7 +50623,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50650,7 +50634,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Steel Sigil": {
@@ -50684,7 +50668,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1857.71
+        "total_damage": 1800.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50695,7 +50679,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3424.48
+        "total_damage": 3253.05
       }
     },
     "Sterak's Gage": {
@@ -50729,7 +50713,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2013.71
+        "total_damage": 1956.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50740,7 +50724,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3823.14
+        "total_damage": 3651.71
       }
     },
     "Stormrazor": {
@@ -50777,7 +50761,7 @@
           "on_hit_once_Stormrazor",
           "passive"
         ],
-        "total_damage": 2447.14
+        "total_damage": 2390.0
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50789,7 +50773,7 @@
           "on_hit_once_Stormrazor",
           "passive"
         ],
-        "total_damage": 5050.0
+        "total_damage": 4878.57
       }
     },
     "Stormsurge": {
@@ -50826,7 +50810,7 @@
           "passive",
           "proc_Stormsurge"
         ],
-        "total_damage": 2456.4
+        "total_damage": 2356.4
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50838,7 +50822,7 @@
           "passive",
           "proc_Stormsurge"
         ],
-        "total_damage": 4225.33
+        "total_damage": 3925.33
       }
     },
     "Stridebreaker": {
@@ -50875,7 +50859,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2235.45
+        "total_damage": 2178.3
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50887,7 +50871,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4336.69
+        "total_damage": 4108.11
       }
     },
     "Sundered Sky": {
@@ -50927,7 +50911,7 @@
           "passive",
           "sundered_sky"
         ],
-        "total_damage": 2288.51
+        "total_damage": 2231.37
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50940,7 +50924,7 @@
           "passive",
           "sundered_sky"
         ],
-        "total_damage": 3935.28
+        "total_damage": 3763.85
       }
     },
     "Sunfire Aegis": {
@@ -50977,7 +50961,7 @@
           "immolate_Sunfire Aegis",
           "passive"
         ],
-        "total_damage": 2184.14
+        "total_damage": 2127.0
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -50989,7 +50973,7 @@
           "immolate_Sunfire Aegis",
           "passive"
         ],
-        "total_damage": 3735.55
+        "total_damage": 3564.12
       }
     },
     "Super Mech Armor": {
@@ -51023,7 +51007,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51034,7 +51018,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Super Mech Power Field": {
@@ -51068,7 +51052,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51079,7 +51063,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Swiftmarch": {
@@ -51113,7 +51097,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1852.71
+        "total_damage": 1788.43
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51124,7 +51108,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3331.62
+        "total_damage": 3138.76
       }
     },
     "Sword of Blossoming Dawn": {
@@ -51158,7 +51142,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2184.68
+        "total_damage": 2111.46
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51169,7 +51153,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3503.05
+        "total_damage": 3283.4
       }
     },
     "Sword of the Divine": {
@@ -51203,7 +51187,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2013.71
+        "total_damage": 1956.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51214,7 +51198,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3823.14
+        "total_damage": 3651.71
       }
     },
     "Talisman of Ascension": {
@@ -51248,7 +51232,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51259,7 +51243,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Tear of the Goddess": {
@@ -51293,7 +51277,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51304,7 +51288,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3794.48
+        "total_damage": 3623.05
       }
     },
     "Terminus": {
@@ -51341,7 +51325,7 @@
           "on_hit_Terminus",
           "passive"
         ],
-        "total_damage": 2634.3
+        "total_damage": 2573.23
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51353,7 +51337,7 @@
           "on_hit_Terminus",
           "passive"
         ],
-        "total_damage": 5326.86
+        "total_damage": 5141.11
       }
     },
     "The Brutalizer": {
@@ -51387,7 +51371,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2139.85
+        "total_damage": 2082.71
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51398,7 +51382,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3634.38
+        "total_damage": 3462.96
       }
     },
     "The Collector": {
@@ -51435,7 +51419,7 @@
           "execute",
           "passive"
         ],
-        "total_damage": 2336.43
+        "total_damage": 2279.29
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51447,7 +51431,7 @@
           "execute",
           "passive"
         ],
-        "total_damage": 4647.86
+        "total_damage": 4476.43
       }
     },
     "The Golden Spatula": {
@@ -51484,7 +51468,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 3941.73
+        "total_damage": 3839.94
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51496,7 +51480,7 @@
           "heal_omnivamp",
           "passive"
         ],
-        "total_damage": 9096.01
+        "total_damage": 8688.87
       }
     },
     "Thornmail": {
@@ -51530,7 +51514,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51541,7 +51525,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Tiamat": {
@@ -51578,7 +51562,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1971.21
+        "total_damage": 1914.07
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51590,7 +51574,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3631.31
+        "total_damage": 3459.88
       }
     },
     "Titanic Hydra": {
@@ -51630,7 +51614,7 @@
           "on_hit_Titanic Hydra",
           "passive"
         ],
-        "total_damage": 2114.51
+        "total_damage": 2057.37
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51643,7 +51627,7 @@
           "on_hit_Titanic Hydra",
           "passive"
         ],
-        "total_damage": 4035.65
+        "total_damage": 3864.22
       }
     },
     "Total Biscuit of Everlasting Will": {
@@ -51677,7 +51661,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51688,7 +51672,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Trinity Force": {
@@ -51725,7 +51709,7 @@
           "passive",
           "spellblade_Trinity Force"
         ],
-        "total_damage": 2887.71
+        "total_damage": 2830.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51737,7 +51721,7 @@
           "passive",
           "spellblade_Trinity Force"
         ],
-        "total_damage": 5368.95
+        "total_damage": 5140.38
       }
     },
     "Tunneler": {
@@ -51771,7 +51755,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1857.71
+        "total_damage": 1800.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51782,7 +51766,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3424.48
+        "total_damage": 3253.05
       }
     },
     "Turbo Chemtank": {
@@ -51816,7 +51800,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51827,7 +51811,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Turret Plating": {
@@ -51861,7 +51845,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51872,7 +51856,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Twilight's Edge": {
@@ -51906,7 +51890,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2612.71
+        "total_damage": 2519.86
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51917,7 +51901,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4953.52
+        "total_damage": 4674.95
       }
     },
     "Twin Mask": {
@@ -51951,7 +51935,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -51962,7 +51946,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Umbral Glaive": {
@@ -51996,7 +51980,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2443.9
+        "total_damage": 2386.75
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52007,7 +51991,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4411.39
+        "total_damage": 4239.96
       }
     },
     "Unending Despair": {
@@ -52044,7 +52028,7 @@
           "passive",
           "periodic_Unending Despair"
         ],
-        "total_damage": 1993.43
+        "total_damage": 1936.29
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52056,7 +52040,7 @@
           "passive",
           "periodic_Unending Despair"
         ],
-        "total_damage": 3254.48
+        "total_damage": 3083.05
       }
     },
     "Vampiric Scepter": {
@@ -52093,7 +52077,7 @@
           "heal_lifesteal",
           "passive"
         ],
-        "total_damage": 1857.71
+        "total_damage": 1800.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52105,7 +52089,7 @@
           "heal_lifesteal",
           "passive"
         ],
-        "total_damage": 3424.48
+        "total_damage": 3253.05
       }
     },
     "Verdant Barrier": {
@@ -52139,7 +52123,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1937.71
+        "total_damage": 1866.29
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52150,7 +52134,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3468.76
+        "total_damage": 3254.48
       }
     },
     "Void Immolation": {
@@ -52184,7 +52168,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52195,7 +52179,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Void Staff": {
@@ -52229,7 +52213,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2388.17
+        "total_damage": 2285.35
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52240,7 +52224,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4179.91
+        "total_damage": 3871.45
       }
     },
     "Voltaic Cyclosword": {
@@ -52277,7 +52261,7 @@
           "on_hit_once_Voltaic Cyclosword_ability",
           "passive"
         ],
-        "total_damage": 2502.5
+        "total_damage": 2445.36
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52290,7 +52274,7 @@
           "on_hit_once_Voltaic Cyclosword_ability",
           "passive"
         ],
-        "total_damage": 4370.62
+        "total_damage": 4199.2
       }
     },
     "Warden's Eye": {
@@ -52324,7 +52308,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52335,7 +52319,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Warden's Mail": {
@@ -52369,7 +52353,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52380,7 +52364,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Warmog's Armor": {
@@ -52414,7 +52398,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52425,7 +52409,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Whispering Circlet": {
@@ -52459,7 +52443,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52470,7 +52454,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3794.48
+        "total_damage": 3623.05
       }
     },
     "Winged Moonplate": {
@@ -52504,7 +52488,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52515,7 +52499,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Winter's Approach": {
@@ -52549,7 +52533,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1967.71
+        "total_damage": 1910.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52560,7 +52544,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4141.62
+        "total_damage": 3970.19
       }
     },
     "Wit's End": {
@@ -52597,7 +52581,7 @@
           "on_hit_Wit's End",
           "passive"
         ],
-        "total_damage": 2404.24
+        "total_damage": 2347.1
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52609,7 +52593,7 @@
           "on_hit_Wit's End",
           "passive"
         ],
-        "total_damage": 4772.19
+        "total_damage": 4543.62
       }
     },
     "Wooglet's Witchcap": {
@@ -52643,7 +52627,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3414.14
+        "total_damage": 3249.86
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52654,7 +52638,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 5251.62
+        "total_damage": 4758.76
       }
     },
     "Wordless Promise": {
@@ -52688,7 +52672,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2208.79
+        "total_damage": 2133.79
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52699,7 +52683,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3537.33
+        "total_damage": 3312.33
       }
     },
     "World Atlas": {
@@ -52733,7 +52717,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52744,7 +52728,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Youmuu's Ghostblade": {
@@ -52778,7 +52762,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2209.81
+        "total_damage": 2152.66
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52789,7 +52773,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 4324.26
+        "total_damage": 4152.84
       }
     },
     "Your Cut": {
@@ -52823,7 +52807,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1767.71
+        "total_damage": 1710.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52834,7 +52818,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3194.48
+        "total_damage": 3023.05
       }
     },
     "Yun Tal Wildarrows": {
@@ -52868,7 +52852,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2507.71
+        "total_damage": 2450.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52879,7 +52863,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 5074.29
+        "total_damage": 4845.71
       }
     },
     "Zaz'Zak's Realmspike": {
@@ -52916,7 +52900,7 @@
           "passive",
           "proc_Zaz'Zak's Realmspike"
         ],
-        "total_damage": 1817.71
+        "total_damage": 1760.57
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52928,7 +52912,7 @@
           "passive",
           "proc_Zaz'Zak's Realmspike"
         ],
-        "total_damage": 3544.48
+        "total_damage": 3373.05
       }
     },
     "Zeal": {
@@ -52962,7 +52946,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 1904.38
+        "total_damage": 1847.24
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -52973,7 +52957,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3571.68
+        "total_damage": 3400.25
       }
     },
     "Zeke's Convergence": {
@@ -53010,7 +52994,7 @@
           "passive",
           "ult_proc_Zeke's Convergence"
         ],
-        "total_damage": 2074.86
+        "total_damage": 2017.71
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -53022,7 +53006,7 @@
           "passive",
           "ult_proc_Zeke's Convergence"
         ],
-        "total_damage": 3301.62
+        "total_damage": 3130.19
       }
     },
     "Zephyr": {
@@ -53056,7 +53040,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2186.38
+        "total_damage": 2129.24
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -53067,7 +53051,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3686.48
+        "total_damage": 3515.05
       }
     },
     "Zhonya's Hourglass": {
@@ -53101,7 +53085,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 2213.96
+        "total_damage": 2119.32
       },
       "ziggs_30s": {
         "breakdown_keys": [
@@ -53112,7 +53096,7 @@
           "auto_attacks",
           "passive"
         ],
-        "total_damage": 3914.48
+        "total_damage": 3630.55
       }
     }
   },
@@ -53452,18 +53436,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60553,
-      "numeric_leaves": 46406,
+      "leaves": 60529,
+      "numeric_leaves": 46389,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "0096d5733648eb17d0372a011785e40355f9415a",
+    "git_head": "f4c49120298dccec8bfadfd453c2cc912459e094",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "19d03795b9907b09061ebce37cb22e6494d6d3bc"
+    "src_tree_sha": "01e0a3dcce8ffd6bbb7fc61968d35130b77bede5"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -60480,11 +60464,10 @@
             "R": 1096.32,
             "W": 0.0,
             "auto_attacks": 0.0,
-            "passive": 1676.5,
             "proc_Luden's Echo": 155.36,
-            "shadowflame_Shadowflame": 200.99
+            "shadowflame_Shadowflame": 36.54
           },
-          "total_damage": 3333.17
+          "total_damage": 1492.22
         },
         "no_items": {
           "breakdown_totals": {
@@ -60492,10 +60475,9 @@
             "Q": 154.0,
             "R": 600.0,
             "W": 0.0,
-            "auto_attacks": 0.0,
-            "passive": 1676.5
+            "auto_attacks": 0.0
           },
-          "total_damage": 2480.5
+          "total_damage": 804.0
         },
         "physical_build": {
           "breakdown_totals": {
@@ -60503,10 +60485,9 @@
             "Q": 424.6,
             "R": 600.0,
             "W": 0.0,
-            "auto_attacks": 0.0,
-            "passive": 3226.5
+            "auto_attacks": 0.0
           },
-          "total_damage": 4301.1
+          "total_damage": 1074.6
         },
         "spellblade_build": {
           "breakdown_totals": {
@@ -60515,10 +60496,9 @@
             "R": 600.0,
             "W": 0.0,
             "auto_attacks": 0.0,
-            "passive": 2786.5,
             "spellblade_Trinity Force": 134.67
           },
-          "total_damage": 3873.27
+          "total_damage": 1086.77
         },
         "sustained": {
           "magic_build": {
@@ -60528,11 +60508,10 @@
               "R": 1096.32,
               "W": 0.0,
               "auto_attacks": 269.33,
-              "passive": 167.65,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 127.9
+              "shadowflame_Shadowflame": 109.63
             },
-            "total_damage": 2174.57
+            "total_damage": 1988.65
           },
           "no_items": {
             "breakdown_totals": {
@@ -60540,10 +60519,9 @@
               "Q": 308.0,
               "R": 600.0,
               "W": 0.0,
-              "auto_attacks": 269.33,
-              "passive": 167.65
+              "auto_attacks": 269.33
             },
-            "total_damage": 1394.98
+            "total_damage": 1227.33
           },
           "physical_build": {
             "breakdown_totals": {
@@ -60552,10 +60530,9 @@
               "R": 600.0,
               "W": 0.0,
               "auto_attacks": 1408.0,
-              "on_hit_Kraken Slayer": 259.39,
-              "passive": 322.65
+              "on_hit_Kraken Slayer": 259.39
             },
-            "total_damage": 3489.24
+            "total_damage": 3166.59
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -60564,10 +60541,9 @@
               "R": 600.0,
               "W": 0.0,
               "auto_attacks": 1123.6,
-              "passive": 278.65,
               "spellblade_Trinity Force": 269.33
             },
-            "total_damage": 2925.78
+            "total_damage": 2647.13
           }
         }
       },
@@ -60579,11 +60555,10 @@
             "R": 1384.32,
             "W": 0.0,
             "auto_attacks": 0.0,
-            "passive": 2500.0,
             "proc_Luden's Echo": 155.36,
-            "shadowflame_Shadowflame": 253.79
+            "shadowflame_Shadowflame": 115.36
           },
-          "total_damage": 4573.47
+          "total_damage": 1935.04
         },
         "no_items": {
           "breakdown_totals": {
@@ -60591,10 +60566,9 @@
             "Q": 176.67,
             "R": 857.14,
             "W": 0.0,
-            "auto_attacks": 0.0,
-            "passive": 2500.0
+            "auto_attacks": 0.0
           },
-          "total_damage": 3637.14
+          "total_damage": 1137.14
         },
         "physical_build": {
           "breakdown_totals": {
@@ -60602,10 +60576,9 @@
             "Q": 462.0,
             "R": 857.14,
             "W": 0.0,
-            "auto_attacks": 0.0,
-            "passive": 4050.0
+            "auto_attacks": 0.0
           },
-          "total_damage": 5472.48
+          "total_damage": 1422.48
         },
         "spellblade_build": {
           "breakdown_totals": {
@@ -60614,10 +60587,9 @@
             "R": 857.14,
             "W": 0.0,
             "auto_attacks": 0.0,
-            "passive": 3610.0,
             "spellblade_Trinity Force": 180.0
           },
-          "total_damage": 5082.61
+          "total_damage": 1472.61
         },
         "sustained": {
           "magic_build": {
@@ -60627,11 +60599,10 @@
               "R": 1384.32,
               "W": 0.0,
               "auto_attacks": 450.0,
-              "passive": 250.0,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 207.65
+              "shadowflame_Shadowflame": 184.58
             },
-            "total_damage": 2903.99
+            "total_damage": 2630.92
           },
           "no_items": {
             "breakdown_totals": {
@@ -60639,10 +60610,9 @@
               "Q": 353.33,
               "R": 857.14,
               "W": 0.0,
-              "auto_attacks": 450.0,
-              "passive": 250.0
+              "auto_attacks": 450.0
             },
-            "total_damage": 2013.81
+            "total_damage": 1763.81
           },
           "physical_build": {
             "breakdown_totals": {
@@ -60651,10 +60621,9 @@
               "R": 857.14,
               "W": 0.0,
               "auto_attacks": 1914.0,
-              "on_hit_Kraken Slayer": 321.18,
-              "passive": 405.0
+              "on_hit_Kraken Slayer": 321.18
             },
-            "total_damage": 4524.66
+            "total_damage": 4119.66
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -60663,10 +60632,9 @@
               "R": 857.14,
               "W": 0.0,
               "auto_attacks": 1521.1,
-              "passive": 361.0,
               "spellblade_Trinity Force": 360.0
             },
-            "total_damage": 3866.84
+            "total_damage": 3505.84
           }
         }
       }

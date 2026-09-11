@@ -51,7 +51,7 @@ def _trial_proc(ctx: SlotCtx) -> dict[str, Any] | None:
         "parts": (
             DamagePart("true", per_tick, count=10, time_offset=0.0, hit_interval=0.25),
         ),
-        "proc_count": max(procs, _P_MAX_PROCS),
+        "proc_count": procs,
         "armed_procs": {
             "arming_slots": (),
             "max_stacks": 1,

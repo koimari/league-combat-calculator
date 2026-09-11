@@ -27,28 +27,43 @@ def _add_precomputed_proc_damage(
         if key in state.cast_order or "on_hit" in info or "stat_buff" in info:
             continue
         proc_count = ability_field(info, "proc_count")
-        if proc_count <= 0:
-            continue
         authored_proc_times: list[float] | None = None
         armed = declared_rule({key: info})
-        if armed is not None and rotation is not None and state.num_auto_attacks > 0:
-            # The kit states when its empowered attack is armed and the fight
-            # walks it (champions/armed_procs.py): the swings the walk names
-            # ARE the procs, so the row's count and its event times come from
-            # the same answer. A request that named the count keeps it, and
-            # the module's packet count stays the ceiling either way.
-            rule = armed[1]
-            times = armed_swing_times(
-                rule,
-                state.ability_cast_times,
-                _auto_attack_timestamps(state),
-            )
-            if rule.requested or state.one_rotation:
-                times = times[: int(proc_count)]
-            authored_proc_times = list(times)
-            proc_count = len(authored_proc_times)
-            if proc_count <= 0:
-                continue
+        # A kit that states WHEN its empowered attack is armed has the count
+        # walked from the fight's own schedules (champions/armed_procs.py),
+        # and the walk runs before the zero gate below: a row the module
+        # left at zero is a row whose count nobody has answered yet, not a
+        # row with nothing to price. A clockless fight has no schedule to
+        # walk, and a request that named the count keeps the count it named.
+        # Only a row that prices PARTS is a proc row; a kit whose armed
+        # swing is a conversion of the ordinary swing (Galio, Sylas) is
+        # counted in the autos step and has no parts to price here.
+        walkable = (
+            armed is not None
+            and "parts" in info
+            and rotation is not None
+            and state.num_auto_attacks > 0
+        )
+        if walkable and armed is not None:
+            if state.one_rotation:
+                # No clock to walk, so the count stays the module's and only
+                # its timing is authored, on the swings that carried it.
+                authored_proc_times = _auto_attack_timestamps(state)[: int(proc_count)]
+            else:
+                times = armed_swing_times(
+                    armed[1],
+                    state.ability_cast_times,
+                    _auto_attack_timestamps(state),
+                )
+                if armed[1].requested:
+                    # The request owns the count; the walk still says WHICH
+                    # swings could have carried it.
+                    times = times[: int(proc_count)]
+                else:
+                    proc_count = len(times)
+                authored_proc_times = list(times)
+        if proc_count <= 0:
+            continue
         if (
             info.get("event_order_certified") == "auto_stack_proc"
             and not state.one_rotation
