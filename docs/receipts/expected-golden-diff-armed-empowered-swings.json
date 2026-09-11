@@ -1,0 +1,109 @@
+{
+ "slice": "armed-empowered-swings",
+ "issue": "docs/coverage-status.md depth frontier (backlog SR7)",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures all three baselines in the same commit."
+ },
+ "what_landed": "How many basic attacks a kit's innate empowers is walked over the fight's own cast and swing schedules (champions/armed_procs.py) instead of being asked for. Galio's Colossal Smash and Sylas' Petricite Burst land first; each module's option stays an override.",
+ "why": [
+  "Galio's declared default was one Colossal Smash whatever the fight. The cached rule is a 5 second timer that every ability hit brings 3 seconds forward, which is two smashes in a five-second fight and seven in a twenty-second one.",
+  "Sylas' declared default was ZERO, so his innate priced nothing at all unless a reader knew to set the option. The cached rule banks a stack per ability cast, holds three, and expires each after four seconds: four empowered swings in a five-second fight.",
+  "Both rows REPLACE their ordinary swing rather than adding to it, so the auto-attack row falls as the empowered row rises, and every on-hit item riding those swings re-prices against the converted damage type. That is why Kraken Slayer and the swing totals move beside the passive row.",
+  "The two champion_baselines leaves are the rule itself, which each slot now publishes."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "Only the two kits that declare an armed_procs rule qualify: Galio, Sylas. The moved sections are: champion_baselines, registered_champion_fights."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "each slot publishes its rule, and Sylas' empowered row appears where it priced nothing"
+  },
+  "/metadata/fingerprint/numeric_leaves": {
+   "cause": "the same"
+  }
+ },
+ "summary": {
+  "direction": "up for both kits' empowered rows and down for the ordinary swings they replace; the on-hit items riding those swings move with them",
+  "counts": {
+   "golden": 60,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Galio/abilities_level_11/passive/armed_procs",
+   "/champion_baselines/Sylas/abilities_level_11/passive/armed_procs",
+   "/registered_champion_fights/Galio/11/sustained/magic_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Galio/11/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Galio/11/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+   "/registered_champion_fights/Galio/11/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Galio/11/sustained/no_items/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Galio/11/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Galio/11/sustained/no_items/total_damage",
+   "/registered_champion_fights/Galio/11/sustained/physical_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Galio/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+   "/registered_champion_fights/Galio/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Galio/11/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Galio/11/sustained/spellblade_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Galio/11/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Galio/11/sustained/spellblade_build/total_damage",
+   "/registered_champion_fights/Galio/18/sustained/magic_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Galio/18/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Galio/18/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+   "/registered_champion_fights/Galio/18/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Galio/18/sustained/no_items/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Galio/18/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Galio/18/sustained/no_items/total_damage",
+   "/registered_champion_fights/Galio/18/sustained/physical_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Galio/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+   "/registered_champion_fights/Galio/18/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Galio/18/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Galio/18/sustained/spellblade_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Galio/18/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Galio/18/sustained/spellblade_build/total_damage",
+   "/registered_champion_fights/Sylas/11/sustained/magic_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Sylas/11/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Sylas/11/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+   "/registered_champion_fights/Sylas/11/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Sylas/11/sustained/no_items/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Sylas/11/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Sylas/11/sustained/no_items/total_damage",
+   "/registered_champion_fights/Sylas/11/sustained/physical_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Sylas/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+   "/registered_champion_fights/Sylas/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Sylas/11/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Sylas/11/sustained/spellblade_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Sylas/11/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Sylas/11/sustained/spellblade_build/total_damage",
+   "/registered_champion_fights/Sylas/18/sustained/magic_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Sylas/18/sustained/magic_build/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Sylas/18/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+   "/registered_champion_fights/Sylas/18/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Sylas/18/sustained/no_items/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Sylas/18/sustained/no_items/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Sylas/18/sustained/no_items/total_damage",
+   "/registered_champion_fights/Sylas/18/sustained/physical_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Sylas/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+   "/registered_champion_fights/Sylas/18/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Sylas/18/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Sylas/18/sustained/spellblade_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Sylas/18/sustained/spellblade_build/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Sylas/18/sustained/spellblade_build/total_damage"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}
