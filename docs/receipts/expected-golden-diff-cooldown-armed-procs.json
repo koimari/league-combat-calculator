@@ -10,12 +10,13 @@
  "what_landed": "Ziggs' Short Fuse and Gangplank's Trial by Fire arm on the shared walk (champions/armed_procs.py). The engine's champion-named walk, timeline_event_model 'ziggs_short_fuse' and its two entry keys, is retired into it, and the walk returns the swing TIMES so a row that authors an event per proc keeps doing so.",
  "why": [
   "Short Fuse already walked its cooldown in the engine, but stopped at the module's declared two procs, so a thirty-second fight priced the same two as a five-second one. The walk now runs to the fight's end: 2 procs at five seconds, 6 at thirty.",
-  "That is why the item sweep moves: its timed arm is ziggs_30s, the dense-cast scenario built to catch exactly a mechanic whose answer depends on the window. Every one of the 648 item_sweep leaves is that scenario's total rising by the four Short Fuses the cap was hiding, and each rises by a different amount because Short Fuse scales with the ability power the item gives.",
-  "Gangplank's Trial by Fire defaulted to zero procs, so his burn priced nothing at all and his passive row was withheld entirely. It now arms on the cached 15s timer, which is why his baseline rows appear where they were absent. The Powder Keg explosion that resets that timer is not modelled, because the keg field is not, so the derived count is a floor and the module says so."
+  "That is why the item sweep moves: its timed arm is ziggs_30s, the dense-cast scenario built to catch exactly a mechanic whose answer depends on the window. All 648 item_sweep leaves are that scenario's total rising by the four Short Fuses the cap was hiding, and each rises by a different amount because Short Fuse scales with the ability power the item gives.",
+  "Gangplank's Trial by Fire defaulted to zero procs, so his burn priced nothing at all and his passive row was withheld entirely. It now arms on the cached 15s timer, which is why his baseline rows appear where they were absent. The Powder Keg explosion that resets that timer is not modelled, because the keg field is not, so the derived count is a floor and the module says so.",
+  "Gangplank's parse-time proc count stays the declared one and the walk raises it inside the fight, which is why his optimizer search still orders a complete candidate timeline: a row that claimed ten procs before any fight walked it had none the search could place."
  ],
  "qualifying_population": {
   "enumerated_before_first_src_edit": false,
-  "rule": "The two kits that declare the rule, plus the item sweep's timed arm, which is Ziggs. Moved sections: champion_baselines (13), item_sweep (648), registered_champion_fights (36)."
+  "rule": "The two kits that declare the rule, plus the item sweep's timed arm, which is Ziggs. Moved sections: champion_baselines (13), item_sweep (648), registered_champion_fights (18)."
  },
  "moved_values": {
   "/metadata/fingerprint/leaves": {
@@ -28,7 +29,7 @@
  "summary": {
   "direction": "up throughout: both kits priced fewer procs than their own cached timers allow",
   "counts": {
-   "golden": 699,
+   "golden": 681,
    "coupled_golden": 0
   }
  },
@@ -699,15 +700,6 @@
    "/item_sweep/Zephyr/ziggs_30s/total_damage",
    "/item_sweep/Zhonya's Hourglass/ziggs_12s/total_damage",
    "/item_sweep/Zhonya's Hourglass/ziggs_30s/total_damage",
-   "/registered_champion_fights/Gangplank/11/magic_build/breakdown_totals/passive",
-   "/registered_champion_fights/Gangplank/11/magic_build/breakdown_totals/shadowflame_Shadowflame",
-   "/registered_champion_fights/Gangplank/11/magic_build/total_damage",
-   "/registered_champion_fights/Gangplank/11/no_items/breakdown_totals/passive",
-   "/registered_champion_fights/Gangplank/11/no_items/total_damage",
-   "/registered_champion_fights/Gangplank/11/physical_build/breakdown_totals/passive",
-   "/registered_champion_fights/Gangplank/11/physical_build/total_damage",
-   "/registered_champion_fights/Gangplank/11/spellblade_build/breakdown_totals/passive",
-   "/registered_champion_fights/Gangplank/11/spellblade_build/total_damage",
    "/registered_champion_fights/Gangplank/11/sustained/magic_build/breakdown_totals/passive",
    "/registered_champion_fights/Gangplank/11/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
    "/registered_champion_fights/Gangplank/11/sustained/magic_build/total_damage",
@@ -717,15 +709,6 @@
    "/registered_champion_fights/Gangplank/11/sustained/physical_build/total_damage",
    "/registered_champion_fights/Gangplank/11/sustained/spellblade_build/breakdown_totals/passive",
    "/registered_champion_fights/Gangplank/11/sustained/spellblade_build/total_damage",
-   "/registered_champion_fights/Gangplank/18/magic_build/breakdown_totals/passive",
-   "/registered_champion_fights/Gangplank/18/magic_build/breakdown_totals/shadowflame_Shadowflame",
-   "/registered_champion_fights/Gangplank/18/magic_build/total_damage",
-   "/registered_champion_fights/Gangplank/18/no_items/breakdown_totals/passive",
-   "/registered_champion_fights/Gangplank/18/no_items/total_damage",
-   "/registered_champion_fights/Gangplank/18/physical_build/breakdown_totals/passive",
-   "/registered_champion_fights/Gangplank/18/physical_build/total_damage",
-   "/registered_champion_fights/Gangplank/18/spellblade_build/breakdown_totals/passive",
-   "/registered_champion_fights/Gangplank/18/spellblade_build/total_damage",
    "/registered_champion_fights/Gangplank/18/sustained/magic_build/breakdown_totals/passive",
    "/registered_champion_fights/Gangplank/18/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
    "/registered_champion_fights/Gangplank/18/sustained/magic_build/total_damage",
