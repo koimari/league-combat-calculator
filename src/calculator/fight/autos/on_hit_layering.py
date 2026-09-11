@@ -528,6 +528,12 @@ def _layer_on_hit_effects(
                     else tuple(_uniform_swing_schedule(state, num_auto_attacks))
                 ),
             )
+            if max_procs == 0:
+                # No window held a swing, so the rider applied to nothing.
+                # A zero row reads as a priced slot to coverage_truth, which
+                # is the phantom-proc rule this engine applies wherever a
+                # count can come out zero.
+                continue
         if max_procs is not None:
             hits = min(hits, int(max_procs))
 
