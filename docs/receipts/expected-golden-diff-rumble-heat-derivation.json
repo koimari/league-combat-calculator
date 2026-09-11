@@ -1,0 +1,54 @@
+{
+ "slice": "rumble-heat-derivation",
+ "issue": "surface-area-backlog SR4 (second half)",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures all three baselines in the same commit."
+ },
+ "what_landed": "Rumble's Heat is walked over the fight's own cast plan (fight/rotation/cast_resource_lockout.py) instead of being asked for. The P slot states the cached rule and the shared timeline fills the bar cast by cast; reaching the ceiling empties it and silences every slot where that happens. The two scenario options (overheat_windows, overheat_autos) are retired, and so is self_cast_lockout_seconds, which took the lockout off the end of the horizon.",
+ "why": [
+  "No fight NUMBER moves. Every diff is on Rumble's own declaration surface: the P row gains cast_resource_lockout, on_hit and stat_buff, and its detail string is rewritten. A golden sustained fight is ten seconds, and a ten-second Rumble reaches about 120 of the cached 150 Heat, so it Overheats zero times \u2014 which is what the retired option declared by default too.",
+  "The P row now carries on_hit and stat_buff unconditionally, because the count and the share they are worth are the fight's to decide. A fight that holds no window publishes no rider row at all, so a zero never reads as a priced slot.",
+  "The behaviour this buys is outside the golden's ten-second window: a no-item Rumble Overheats once in thirty seconds (four empowered swings) and twice with 65 ability haste (eight), and each lockout removes the casts it covers."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "Rumble is the only kit that declares a cast_resource_lockout, so only Rumble's leaves qualify, and only the four on his level-11 passive row move."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "the P row gains three declaration leaves and loses none"
+  },
+  "/metadata/fingerprint/numeric_leaves": {
+   "cause": "the same, counting only the numeric ones"
+  }
+ },
+ "summary": {
+  "direction": "no damage leaf moves in either direction; the diffs are declaration shape and one detail string",
+  "counts": {
+   "golden": 6,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Rumble/abilities_level_11/passive/cast_resource_lockout",
+   "/champion_baselines/Rumble/abilities_level_11/passive/detail",
+   "/champion_baselines/Rumble/abilities_level_11/passive/on_hit",
+   "/champion_baselines/Rumble/abilities_level_11/passive/stat_buff"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}

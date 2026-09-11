@@ -137,6 +137,10 @@ class FightState:
     # prepared after the cast timeline exists and before autos are priced.
     spellblade_proc_times: tuple[float, ...] = ()
     spellblade_attack_speed_percent: float = 0.0
+    # The self-silencing windows the cast plan EARNED, start and end, as
+    # the shared timeline walked it (fight/rotation/cast_resource_lockout.py).
+    # Empty for a kit with no such bar, and for a fight with no clock.
+    lockout_windows: tuple[tuple[float, float], ...] = ()
     # ── The compiled rune page, keystone first (empty when none selected) ──
     runes: "tuple[rune_effects.RuneEffect, ...]" = ()
     # The page's declared options, by rune. A rune formula reads them when it

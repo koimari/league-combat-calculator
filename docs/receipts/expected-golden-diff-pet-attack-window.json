@@ -1,0 +1,68 @@
+{
+ "slice": "pet-attack-window",
+ "issue": "docs/coverage-status.md depth frontier",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures all three baselines in the same commit."
+ },
+ "what_landed": "A summoned unit's attack count is derived from its own cadence over the fight window (champions/pet_window.py) instead of being frozen at one window's declared reading. Ivern's Daisy and Zyra's plants land first; the option stays as an override for what the clock cannot know.",
+ "why": [
+  "Daisy's declared 6 attacks was her RANK 3 cadence applied at every rank: 0.75 base attack speed plus 30/45/60% by R rank gives 4, 5 and 6 attacks in a five-second window. The golden fights at level 11 hold R rank 2, so they price 5 and every Ivern total falls by one Daisy attack.",
+  "Zyra's plant count is now bounded by the plant's own sourced life, read from Q's cached sentence rather than from a comment: 0.8 attack speed over 8 seconds is 6 attacks, and a five-second fight still prices the 4 it always did.",
+  "Neither count moved for the right reason before: a thirty-second fight bought the same six Daisy swings as a five-second one."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "Only the two kits whose pet rows this slice derives qualify, and the champions that moved are: Ivern."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "no leaf is added or removed; the counters move only if a row's shape did"
+  },
+  "/metadata/fingerprint/numeric_leaves": {
+   "cause": "the same"
+  }
+ },
+ "summary": {
+  "direction": "down for Ivern, whose Daisy priced a rank-3 cadence at every rank; unchanged for Zyra inside a five-second fight",
+  "counts": {
+   "golden": 21,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Ivern/abilities_level_11/R/detail",
+   "/champion_baselines/Ivern/abilities_level_11/R/parts[1]",
+   "/champion_baselines/Ivern/abilities_level_11/R/total_raw",
+   "/registered_champion_fights/Ivern/11/magic_build/breakdown_totals/R",
+   "/registered_champion_fights/Ivern/11/magic_build/breakdown_totals/shadowflame_Shadowflame",
+   "/registered_champion_fights/Ivern/11/magic_build/total_damage",
+   "/registered_champion_fights/Ivern/11/no_items/breakdown_totals/R",
+   "/registered_champion_fights/Ivern/11/no_items/total_damage",
+   "/registered_champion_fights/Ivern/11/physical_build/breakdown_totals/R",
+   "/registered_champion_fights/Ivern/11/physical_build/total_damage",
+   "/registered_champion_fights/Ivern/11/spellblade_build/breakdown_totals/R",
+   "/registered_champion_fights/Ivern/11/spellblade_build/total_damage",
+   "/registered_champion_fights/Ivern/11/sustained/magic_build/breakdown_totals/R",
+   "/registered_champion_fights/Ivern/11/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+   "/registered_champion_fights/Ivern/11/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Ivern/11/sustained/no_items/breakdown_totals/R",
+   "/registered_champion_fights/Ivern/11/sustained/no_items/total_damage",
+   "/registered_champion_fights/Ivern/11/sustained/physical_build/breakdown_totals/R",
+   "/registered_champion_fights/Ivern/11/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Ivern/11/sustained/spellblade_build/breakdown_totals/R",
+   "/registered_champion_fights/Ivern/11/sustained/spellblade_build/total_damage"
+  ],
+  "golden_shape_counters": [],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}

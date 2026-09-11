@@ -140,7 +140,10 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # had.  WHERE in the fight the span sits is deliberately not
         # declared: a module that cannot source the instant prices how much
         # casting the window costs, never which casts it eats.
-        "self_cast_lockout_seconds",
+        # The self-silencing resource a kit's own casts build, walked by
+        # fight/rotation/cast_resource_lockout.py over the cast plan. It
+        # replaced self_cast_lockout_seconds, which asked for the answer.
+        "cast_resource_lockout",
         # Champion-owned critical-strike conversion (Yasuo/Yone P): total
         # crit chance doubled, crit damage scaled by a factor, and excess
         # crit chance converted to bonus AD.  The fight engine resolves it

@@ -74,9 +74,8 @@ from src.calculator.champions import (
     parse_champion_abilities,
 )
 from src.calculator.champions.rumble import (
-    _MAX_OVERHEAT_AUTOS,
-    _MAX_OVERHEAT_WINDOWS,
     ASSUMPTIONS,
+    _heat_decay,
     _heat_mechanics,
 )
 from src.calculator.champions.scaling import (
@@ -177,29 +176,18 @@ def _parse(
     return champion_stats, abilities
 
 
-def _rider(level: int, autos: int, **kwargs):
-    """The Overheated on-hit payload, and what the declared swings cost.
+def _rider(level: int, **kwargs):
+    """The Overheated on-hit payload: its per-swing damage.
 
-    Batch K priced P as a ``parts`` row on the ``passive`` slot. That row
-    can never reach a fight: ``passive`` is not an orderable cast
-    (``pipeline.validate_cast_order_for_kit`` refuses it), so the merged
-    module carries the same fail-closed count on the on-hit channel the
-    game actually uses, bounded by ``max_procs``. The per-swing number and
-    the count are unchanged; only where they live moved.
+    The count is not here and cannot be: how many swings are empowered is
+    the fight's question, answered by walking the cast plan
+    (``fight/rotation/cast_resource_lockout.py``).  This slot prices one
+    empowered swing and states the cached rule that decides how many
+    there are.
     """
-    # One window is declared throughout: empowered swings with nowhere to
-    # land are a refused contradiction, so the damage half is only ever
-    # asked about inside a window (``TestImpossibleHeatStatesAreRefused``).
-    _, abilities = _parse(
-        level,
-        options={"overheat_autos": autos, "overheat_windows": 1},
-        **kwargs,
-    )
-    entry = abilities["passive"]
-    on_hit = entry.get("on_hit")
-    if on_hit is None:
-        return 0.0, 0
-    return float(on_hit["damage_per_hit"]), int(on_hit["max_procs"])
+    _, abilities = _parse(level, **kwargs)
+    on_hit = abilities["passive"].get("on_hit")
+    return 0.0 if on_hit is None else float(on_hit["damage_per_hit"])
 
 
 # ---------------------------------------------------------------------------
@@ -208,6 +196,7 @@ def _rider(level: int, autos: int, **kwargs):
 
 
 class TestOverheatIsBinaryCorroborated:
+
     def test_cached_row_carries_all_three_terms(self):
         row = _leveling_row(_P_EFFECT, "Bonus Magic Damage")
         units = [modifier["units"][0] for modifier in row["modifiers"]]
@@ -257,15 +246,15 @@ class TestOverheatDamage:
         [(1, 5.0), (11, 25.59), (18, 40.0), (20, 44.12)],
     )
     def test_per_auto_damage_is_the_sum_of_the_three_terms(self, level, flat):
-        per_swing, procs = _rider(level, 1, stats_override={"ability_power": 200.0})
+        per_swing = _rider(level, stats_override={"ability_power": 200.0})
         expected = flat + 0.25 * 200.0 + 0.04 * _TARGET_MAX_HEALTH
-        assert procs == 1
         assert per_swing == pytest.approx(expected)
 
     def test_level_twenty_value_is_hand_derived(self):
-        per_swing, _ = _rider(20, 1, stats_override={"ability_power": 200.0})
         # 44.12 + 50.00 (25% of 200 AP) + 100.00 (4% of 2500 max HP)
-        assert per_swing == pytest.approx(194.12)
+        assert _rider(20, stats_override={"ability_power": 200.0}) == pytest.approx(
+            194.12
+        )
 
     def test_target_max_health_term_is_actually_present(self):
         """The term the alias bug class silently drops; measured directly.
@@ -274,7 +263,7 @@ class TestOverheatDamage:
         is "% of THE target's maximum health"), a different code path from
         the ``_SIMPLE_UNITS`` alias repaired for W — so both need pinning.
         """
-        low_per_swing, _ = _rider(20, 1)
+        low_per_swing = _rider(20)
         data = copy.deepcopy(_RUMBLE)
         stats = calculate_total_stats(data, 20, [])
         doubled = parse_champion_abilities(
@@ -287,57 +276,33 @@ class TestOverheatDamage:
                 "target_current_health": _TARGET_MAX_HEALTH * 2,
                 "target_missing_health": 0.0,
             },
-            champion_options={"overheat_autos": 1, "overheat_windows": 1},
         )
         gain = doubled["passive"]["on_hit"]["damage_per_hit"] - low_per_swing
         assert gain == pytest.approx(0.04 * _TARGET_MAX_HEALTH)
 
-    @pytest.mark.parametrize("autos", [1, 2, 5, 12])
-    def test_total_scales_linearly_in_the_auto_count(self, autos):
-        one_per_swing, _ = _rider(20, 1)
-        many_per_swing, procs = _rider(20, autos)
-        assert procs == autos
-        assert many_per_swing * procs == pytest.approx(one_per_swing * autos)
-
-    def test_auto_count_is_clamped_to_the_rail(self):
-        capped = _rider(20, 10_000)
-        rail = _rider(20, _MAX_OVERHEAT_AUTOS)
-        assert capped == rail
-        assert capped[1] == _MAX_OVERHEAT_AUTOS
-
-    def test_negative_auto_counts_floor_at_zero(self):
-        assert _rider(20, -5) == (0.0, 0)
-
-
-class TestZeroAutosCostZero:
-    """No empowered auto must cost nothing — the Rammus-W phantom pin."""
-
-    def test_default_option_prices_no_overheat_damage(self):
+    def test_the_slot_caps_no_swings_of_its_own(self):
+        """A cap here would be a declaration; the plan owns the count."""
         _, abilities = _parse(20)
-        assert abilities["passive"]["total_raw"] == pytest.approx(0.0)
-        assert sum(
-            part.amount * part.count for part in abilities["passive"]["parts"]
-        ) == pytest.approx(0.0)
-
-    def test_zero_and_one_auto_are_not_identical(self):
-        assert _rider(20, 0) == (0.0, 0)
-        per_swing, procs = _rider(20, 1)
-        assert per_swing > 0.0
-        assert procs == 1
-
-    def test_option_is_registered_with_a_zero_default(self):
-        meta = get_champion_options_meta("Rumble")
-        option = next(
-            entry for entry in meta["options"] if entry["key"] == "overheat_autos"
-        )
-        assert option["default"] == 0
-        assert option["min"] == 0
-        assert option["max"] == _MAX_OVERHEAT_AUTOS
+        assert "max_procs" not in abilities["passive"]["on_hit"]
 
 
-# ---------------------------------------------------------------------------
-# The two deliberate withholdings
-# ---------------------------------------------------------------------------
+class TestNoHeatNumberIsAnOption:
+    """Every heat question is answered by the plan, so none is asked."""
+
+    def test_no_overheat_option_is_registered(self):
+        keys = {
+            entry["key"] for entry in get_champion_options_meta("Rumble")["options"]
+        }
+        assert not {key for key in keys if "overheat" in key}
+
+    def test_the_slot_publishes_the_cached_rule_instead(self):
+        _, abilities = _parse(20)
+        rule = abilities["passive"]["cast_resource_lockout"]
+        assert rule["ceiling"] == 150.0
+        assert rule["per_cast"] == 20.0
+        assert rule["seconds"] == 4.0
+        assert rule["decay_per_second"] == 10.0
+        assert rule["slots"] == ("Q", "W", "E")
 
 
 class TestBonusDamageRowIsAMonsterCap:
@@ -350,7 +315,7 @@ class TestBonusDamageRowIsAMonsterCap:
         row = _leveling_row(_P_EFFECT, "Bonus Damage")
         level_twenty_cap = row["modifiers"][0]["values"][19]
         assert level_twenty_cap == pytest.approx(163.32)
-        per_swing, _ = _rider(20, 1, stats_override={"ability_power": 200.0})
+        per_swing = _rider(20, stats_override={"ability_power": 200.0})
         # 194.12 is the three sourced terms; the cap must not be a fourth.
         assert per_swing == pytest.approx(194.12)
         assert per_swing != pytest.approx(194.12 + level_twenty_cap)
@@ -385,7 +350,7 @@ class TestHeatAxisReadsTheCache:
         """8 casts is arithmetic on two cached numbers, never a constant."""
         ceiling, per_cast, _ = _heat_mechanics(_heat_ctx())
         assert math.ceil(ceiling / per_cast) == 8
-        _, abilities = _parse(20, options={"overheat_windows": 1})
+        _, abilities = _parse(20)
         assert "= 8 casts each" in abilities["passive"]["detail"]
 
     def test_a_cache_that_stops_stating_the_ceiling_raises(self):
@@ -403,181 +368,6 @@ class TestHeatAxisReadsTheCache:
         )
         with pytest.raises(ValueError, match="disagree on Heat per cast"):
             _heat_mechanics(_heat_ctx(broken))
-
-
-class TestOverheatWindowPricesBothHalves:
-    """The AS bonus and the self-silence are one purchase, never one alone.
-
-    CF17's blocker was never the lockout mechanism — it was that Overheat
-    has no sourced start INSTANT.  The axis answers the question the model
-    can actually source (how much of the fight is spent Overheated) and
-    declines the one it cannot (where the span sits), so the upside can
-    never arrive without its cost.
-    """
-
-    def test_cached_row_exists(self):
-        row = _leveling_row(_P_EFFECT, "Per-Level Scaling")
-        assert row["modifiers"][0]["values"][0] == pytest.approx(50.0)
-        assert row["modifiers"][0]["values"][19] == pytest.approx(142.54)
-
-    def test_zero_windows_emit_neither_half(self):
-        """A payload present at magnitude zero still reads as priced."""
-        _, abilities = _parse(20)
-        passive = abilities["passive"]
-        assert "stat_buff" not in passive
-        assert "self_cast_lockout_seconds" not in passive
-        assert "on_hit" not in passive
-
-    def test_one_window_emits_both_halves_together(self):
-        _, abilities = _parse(20, options={"overheat_windows": 1})
-        passive = abilities["passive"]
-        # Level 20 is the last entry of the cached per-level array.
-        assert passive["stat_buff"] == {"bonus_attack_speed": pytest.approx(142.54)}
-        assert passive["self_cast_lockout_seconds"] == pytest.approx(4.0)
-
-    def test_the_lockout_scales_with_the_declared_window_count(self):
-        for windows in (1, 2, 3):
-            _, abilities = _parse(20, options={"overheat_windows": windows})
-            assert abilities["passive"]["self_cast_lockout_seconds"] == pytest.approx(
-                4.0 * windows
-            )
-
-    def test_the_declared_count_is_railed(self):
-        _, abilities = _parse(20, options={"overheat_windows": 99})
-        assert abilities["passive"]["self_cast_lockout_seconds"] == pytest.approx(
-            4.0 * _MAX_OVERHEAT_WINDOWS
-        )
-        _, floored = _parse(20, options={"overheat_windows": -3})
-        assert "self_cast_lockout_seconds" not in floored["passive"]
-
-    def test_the_option_is_registered_with_a_zero_default(self):
-        meta = get_champion_options_meta("Rumble")
-        row = next(o for o in meta["options"] if o["key"] == "overheat_windows")
-        assert row["default"] == 0
-        assert row["min"] == 0
-        assert row["max"] == _MAX_OVERHEAT_WINDOWS
-
-    def test_a_shortened_attack_speed_row_raises_instead_of_pricing_the_max(self):
-        """``extract_value`` falls through to the LAST value past its axis.
-
-        A truncated per-level row would otherwise price level 20's 142.54%
-        at every level, silently — the documented Weapon Master trap.
-        """
-        broken = copy.deepcopy(_RUMBLE)
-        row = _leveling_row(
-            broken["abilities"]["P"][0]["effects"][2], "Per-Level Scaling"
-        )
-        row["modifiers"][0]["values"] = row["modifiers"][0]["values"][:5]
-        with pytest.raises(ValueError, match="does not carry the Overheated bonus"):
-            parse_champion_abilities(
-                broken,
-                20,
-                0.0,
-                champion_stats=dict(calculate_total_stats(broken, 20, [])),
-                target_stats=dict(_TARGET),
-                champion_options={"overheat_windows": 1},
-            )
-
-    def test_the_declared_windows_must_fit_the_declared_fight(self):
-        """Saturation is the failure a clamp hides.
-
-        Clamped, windows 3, 4 and 5 all returned one 10-second fight's
-        answer: ``buff_window_share`` capped the attack speed at 1.0 while
-        ``self_cast_lockout_seconds`` kept growing past a horizon that had
-        already hit zero, so three distinct declarations priced alike.
-        """
-        for windows in (3, 4, 5):
-            with pytest.raises(ValueError, match="does not fit in the declared"):
-                _parse(
-                    20,
-                    options={
-                        "overheat_windows": windows,
-                        "fight_duration_seconds": 10.0,
-                    },
-                )
-
-    def test_the_refusal_names_the_numbers_and_the_fitting_count(self):
-        with pytest.raises(ValueError) as excinfo:
-            _parse(
-                20,
-                options={"overheat_windows": 3, "fight_duration_seconds": 10.0},
-            )
-        message = str(excinfo.value)
-        assert "3 x 4s = 12s" in message
-        assert "10s fight" in message
-        assert "declare at most 2 window(s)" in message
-
-    def test_the_windows_that_do_fit_are_untouched(self):
-        for windows in (1, 2):
-            _, abilities = _parse(
-                20,
-                options={
-                    "overheat_windows": windows,
-                    "fight_duration_seconds": 10.0,
-                },
-            )
-            assert abilities["passive"]["self_cast_lockout_seconds"] == pytest.approx(
-                4.0 * windows
-            )
-
-    def test_a_clockless_parse_has_no_horizon_to_contradict(self):
-        """One-rotation mode and direct parses carry no fight duration."""
-        _, abilities = _parse(20, options={"overheat_windows": 5})
-        assert abilities["passive"]["self_cast_lockout_seconds"] == pytest.approx(20.0)
-
-    def test_empowered_autos_derive_the_window_that_holds_them(self):
-        """A swing is evidence of the window it landed in.
-
-        Priced alone, ``overheat_autos`` bought empowered damage during
-        zero declared windows — upside with nothing paying for it. The
-        window is derived rather than refused because the shared option
-        sweeps (``cast_dependency_audit.option_states``) arm one option at
-        a time and can never satisfy a cross-option rule.
-        """
-        _, abilities = _parse(20, options={"overheat_autos": 3})
-        passive = abilities["passive"]
-        assert passive["on_hit"]["max_procs"] == 3
-        assert passive["self_cast_lockout_seconds"] == pytest.approx(4.0)
-        assert passive["stat_buff"] == {"bonus_attack_speed": pytest.approx(142.54)}
-        assert "derived from the declared swings" in passive["detail"]
-
-    def test_a_declared_window_is_not_overridden_by_the_derivation(self):
-        _, abilities = _parse(20, options={"overheat_autos": 3, "overheat_windows": 2})
-        passive = abilities["passive"]
-        assert passive["self_cast_lockout_seconds"] == pytest.approx(8.0)
-        assert "2 Overheat window(s) of 4s declared" in passive["detail"]
-
-    def test_an_autos_only_fight_drops_the_window_and_the_swings(self):
-        """No cast, no Heat — and no empowered swing without the window."""
-        _, abilities = _parse(
-            20,
-            options={
-                "overheat_autos": 3,
-                "overheat_windows": 2,
-                "auto_attacks_only": True,
-            },
-        )
-        passive = abilities["passive"]
-        assert "on_hit" not in passive
-        assert "stat_buff" not in passive
-        assert "self_cast_lockout_seconds" not in passive
-        assert "builds no Heat and never Overheats" in passive["detail"]
-
-    def test_autos_inside_a_declared_window_are_priced(self):
-        _, abilities = _parse(20, options={"overheat_autos": 3, "overheat_windows": 1})
-        assert abilities["passive"]["on_hit"]["max_procs"] == 3
-
-    def test_the_assumption_states_the_axis_and_its_refusal(self):
-        assumption = next(a for a in ASSUMPTIONS if "heat axis" in a)
-        assert "142.54" in assumption
-        assert "overheat_windows" in assumption
-        # The one thing the model still declines to claim.
-        assert "not which casts it eats" in assumption
-
-
-# ---------------------------------------------------------------------------
-# W — the shield and the kernel repair it required
-# ---------------------------------------------------------------------------
 
 
 def _shield(champion: str, slot: str, level: int, stats: dict, rank: int = 5):

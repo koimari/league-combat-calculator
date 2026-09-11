@@ -277,7 +277,9 @@ ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
                 "resource_restore": 0.0,
                 "resource_restore_per_proc": 0.0,
                 "resource_type": "NONE",
-                "self_cast_lockout_seconds": 0.0,
+                # The sourced rule for a kit's self-silencing resource
+                # (Rumble's Heat); the fight's cast plan walks it.
+                "cast_resource_lockout": None,
                 "short_fuse_cooldown": 0.0,
                 "short_fuse_refund": 0.0,
                 "spellblade_bonus_true_ratio": 0.0,

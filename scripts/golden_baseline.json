@@ -10634,16 +10634,16 @@
           "cast_time": 0.5,
           "cooldown": 130.0,
           "damage_type": "physical",
-          "detail": "Daisy: 6 attacks (4 basic of 100.00 physical + 2 Daisy Smash of 140.00 magic) at 1.09 attack speed; the 3s smash lockout and knockup CC are state",
+          "detail": "Daisy: 5 attacks (4 basic of 100.00 physical + 1 Daisy Smash of 140.00 magic) at 1.09 attack speed; the 3s smash lockout and knockup CC are state",
           "name": "Daisy!",
           "parts": [
             "DamagePart(physical, amount=100.0, count=4, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0, hit_interval=0.9195402298850576, cc_kind='none')",
-            "DamagePart(magic, amount=140.0, count=2, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.8390804597701151, hit_interval=2.7586206896551726, cc_kind='knockup')"
+            "DamagePart(magic, amount=140.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=1.8390804597701151, hit_interval=2.7586206896551726, cc_kind='knockup')"
           ],
           "rank": 2,
           "resource_cost": 100.0,
           "resource_type": "MANA",
-          "total_raw": 680.0
+          "total_raw": 540.0
         },
         "W": {
           "cc_reviewed": true,
@@ -24779,11 +24779,33 @@
           "total_raw": 0.0
         },
         "passive": {
+          "cast_resource_lockout": {
+            "ceiling": 150.0,
+            "decay_delay_seconds": 4.0,
+            "decay_per_second": 10.0,
+            "per_cast": 20.0,
+            "seconds": 4.0,
+            "slots": [
+              "Q",
+              "W",
+              "E"
+            ],
+            "ultimate_delay_seconds": 2.0,
+            "ultimate_slot": "R"
+          },
           "cc_reviewed": true,
           "damage_type": "magic",
-          "detail": "Overheated: 105.59 bonus magic damage on-hit (level-11 flat + 25% AP + 4% target maximum health) x 0 empowered auto(s); no Overheat window is declared (overheat_windows = 0) and no empowered swing implies one, so neither the bonus attack speed nor the ability lockout applies; the 'Bonus Damage' row is the monster-only cap on the %max-health term, not a damage source",
+          "detail": "Overheated: 105.59 bonus magic damage on-hit (level-11 flat + 25% AP + 4% target maximum health) on every swing inside an Overheat window; the windows are derived from the fight's own cast plan (150 Heat at 20 per basic ability cast = 8 casts each, decaying 10 Heat per second once the mech has gone 4s without a basic ability and 2s without The Equalizer). Each window is 4s of ability lockout, taken where it happens, and the same seconds of bonus attack speed; the 'Bonus Damage' row is the monster-only cap on the %max-health term, not a damage source",
           "name": "Junkyard Titan",
+          "on_hit": {
+            "damage_per_hit": 105.59,
+            "damage_type": "magic",
+            "name": "Junkyard Titan (on-hit)"
+          },
           "parts": [],
+          "stat_buff": {
+            "bonus_attack_speed": 91.29
+          },
           "target_max_health_sensitive": true,
           "total_raw": 0.0
         }
@@ -53388,18 +53410,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60489,
-      "numeric_leaves": 46367,
+      "leaves": 60503,
+      "numeric_leaves": 46375,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "ab3a35b92da755d0fe3a7dc7f9e511d3db510acc",
+    "git_head": "d67d9bdf55c196d4754a34c342ababcc193250f5",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "3f05f5a8788677a3fe0a074bfeeb68b05207fbed"
+    "src_tree_sha": "c9d019df63080eb4f87882cbbfe89c4d42b522f9"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -62455,92 +62477,92 @@
           "breakdown_totals": {
             "E": 338.88,
             "Q": 455.52,
-            "R": 1021.07,
+            "R": 732.27,
             "W": 0.0,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 155.36,
-            "shadowflame_Shadowflame": 125.54
+            "shadowflame_Shadowflame": 67.78
           },
-          "total_damage": 2096.36
+          "total_damage": 1749.8
         },
         "no_items": {
           "breakdown_totals": {
             "E": 50.0,
             "Q": 185.71,
-            "R": 466.67,
+            "R": 366.67,
             "W": 0.0,
             "auto_attacks": 0.0
           },
-          "total_damage": 702.38
+          "total_damage": 602.38
         },
         "physical_build": {
           "breakdown_totals": {
             "E": 50.0,
             "Q": 185.71,
-            "R": 466.67,
+            "R": 366.67,
             "W": 0.0,
             "auto_attacks": 0.0
           },
-          "total_damage": 702.38
+          "total_damage": 602.38
         },
         "spellblade_build": {
           "breakdown_totals": {
             "E": 50.0,
             "Q": 185.71,
-            "R": 466.67,
+            "R": 366.67,
             "W": 0.0,
             "auto_attacks": 0.0
           },
-          "total_damage": 702.38
+          "total_damage": 602.38
         },
         "sustained": {
           "magic_build": {
             "breakdown_totals": {
               "E": 338.88,
               "Q": 455.52,
-              "R": 1021.07,
+              "R": 732.27,
               "W": 0.0,
               "auto_attacks": 202.67,
               "on_hit_ability_W": 394.88,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 222.78
+              "shadowflame_Shadowflame": 165.02
             },
-            "total_damage": 2791.16
+            "total_damage": 2444.6
           },
           "no_items": {
             "breakdown_totals": {
               "E": 50.0,
               "Q": 185.71,
-              "R": 466.67,
+              "R": 366.67,
               "W": 0.0,
               "auto_attacks": 202.67,
               "on_hit_ability_W": 100.0
             },
-            "total_damage": 1005.05
+            "total_damage": 905.05
           },
           "physical_build": {
             "breakdown_totals": {
               "E": 50.0,
               "Q": 185.71,
-              "R": 466.67,
+              "R": 366.67,
               "W": 0.0,
               "auto_attacks": 1270.5,
               "on_hit_Kraken Slayer": 106.42,
               "on_hit_ability_W": 125.0
             },
-            "total_damage": 2204.3
+            "total_damage": 2104.3
           },
           "spellblade_build": {
             "breakdown_totals": {
               "E": 50.0,
               "Q": 185.71,
-              "R": 466.67,
+              "R": 366.67,
               "W": 0.0,
               "auto_attacks": 991.1,
               "on_hit_ability_W": 150.0,
               "spellblade_Trinity Force": 202.67
             },
-            "total_damage": 2046.15
+            "total_damage": 1946.15
           }
         }
       },

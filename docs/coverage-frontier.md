@@ -1,5 +1,7 @@
 # Coverage frontier
 
+**The live numbers are in [`coverage-status.md`](coverage-status.md)**, which `scripts/coverage_status.py` writes from the tree and a gate keeps current. This page is the coverage-frontier campaign's reading at its own merge head, kept for the axis analysis below: the slot COUNTS here are that snapshot's, and the labels have moved since (a slot whose axis the engine still lacks is now `no_damage` where the module has nothing left to price, so the live `out_of_scope` count is far smaller than the 65 this page groups).
+
 What the calculator does not model yet, measured at the coverage-frontier campaign's merge
 head from the repo's own receipts (`docs/coverage-census.json`, the champion module
 contracts, `item_effects.ITEM_EFFECTS`, `data/runes.json`). Machine truth stays in those

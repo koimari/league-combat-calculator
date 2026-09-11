@@ -96,10 +96,6 @@ FRONTIER: dict[tuple[str, str], str] = {
         "All Out's attack speed rides the all_out option (default off): the state also "
         "cuts his resistances, so it is the user's call."
     ),
-    ("Rumble", "P"): (
-        "Junkyard Titan's overheated on-hit needs an Overheat window, the "
-        "overheat_windows option (default 0)."
-    ),
     (
         "Sion",
         "P",
