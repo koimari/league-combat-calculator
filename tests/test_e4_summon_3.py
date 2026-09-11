@@ -398,7 +398,12 @@ class TestJhinCaptiveAudience:
         )
         row = data["breakdown"]["E"]
         casts = max(1, int(row.get("casts", 1)))
-        assert row["total_damage"] == pytest.approx((full + reduced) * casts)
+        # The published row is rounded to one decimal, and with the charge
+        # stock now spent by the module rather than the scheduler this is a
+        # single cast, so that rounding is the whole difference.
+        assert row["total_damage"] == pytest.approx(
+            (full + reduced) * casts, abs=0.05 * casts
+        )
         events = _slot_events(data, "E")
         assert len(events) == 2 * casts
 

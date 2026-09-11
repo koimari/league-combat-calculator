@@ -40,6 +40,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_interpolation, data_value, spell_object
+from .charge_cadence import ChargeRule
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .inputs import int_option
@@ -156,6 +157,20 @@ def _plants(ctx: SlotCtx) -> dict[str, Any] | None:
 # apart, so no one kind is true of the row.
 MODULE_CC = {"Q": "none", "E": "root", "R": "knockup", "P": "none", "W": CC_PER_PART}
 
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "W": ChargeRule(
+        why=(
+            "W (Rampant Growth) banks seeds on its cached rechargeRate "
+            "(10s at rank 5); the cached cooldown is zero because "
+            "placing two seeds has no gap at all. The cached stock of 2 "
+            "is not spent here: a later cast grows the seed, so placing "
+            "one is not damage of its own."
+        ),
+        charges=1,
+    )
+}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zyra",
     PACKET_SHA256,
@@ -192,6 +207,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     },
     slot_order=("P", "Q", "W", "E", "R"),
     cc_kinds=MODULE_CC,
+    charge_rules=CHARGE_RULES,
 )
 
 OPTIONS = [

@@ -1828,8 +1828,10 @@ class TestUnchangedBoundaries:
             and e.get("source") == "Warm Hugs · Shield Strength"
             and e.get("kind") == "shield"
         ]
-        assert len(e_shields) == 1
-        (e_shield,) = e_shields
+        # Two, not one: E is a charge slot that banks two casts
+        # (champions/charge_cadence.py), so both shields land.
+        assert len(e_shields) == 2
+        e_shield = e_shields[0]
         assert e_shield["time"] == pytest.approx(0.25)
         assert e_shield["target"] == "ally:Jinx"
         assert e_shield["amount"] == pytest.approx(165.0)

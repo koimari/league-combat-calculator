@@ -269,6 +269,21 @@ def _schedule_shared_casts(
         if cooldowns[key] <= 0 or (once_only_ultimate and _base_slot(key) == "R")
     }
 
+    # A charge slot banks casts in advance (champions/charge_cadence.py):
+    # ``cooldown`` above is its recharge, the time to bank ONE cast, and the
+    # fight opens with the stock full, the way a champion walks into a fight.
+    # Between two banked casts the game still enforces the short cached gap.
+    pools = {
+        key: float(ability_field(state.ability_damages[key], "charge_pool"))
+        for key in keys
+    }
+    between_casts = {
+        key: float(ability_field(state.ability_damages[key], "charge_between_casts"))
+        for key in keys
+    }
+    stock = dict(pools)
+    stock_time = dict.fromkeys(keys, 0.0)
+
     times: dict[str, list[float]] = {key: [] for key in keys}
     next_ready = dict.fromkeys(keys, 0.0)
     pending = set(keys)
@@ -295,8 +310,63 @@ def _schedule_shared_casts(
                 cooldown_start,
                 cooldowns[key],
             )
+            # Only a slot that banks more than one cast can ever be held
+            # by the short inter-cast gap; with one charge the recharge is
+            # always the longer wait, so the ordinary path is exact.
+            if pools[key] > 1.0:
+                next_ready[key] = _charge_ready_at(
+                    state,
+                    stock,
+                    stock_time,
+                    key,
+                    now=now,
+                    cooldown_start=cooldown_start,
+                    recharge=cooldowns[key],
+                    pool=pools[key],
+                    gap=between_casts[key],
+                )
         now += cast_times[key]
     return times
+
+
+def _charge_ready_at(
+    state: "FightState",
+    stock: dict[str, float],
+    stock_time: dict[str, float],
+    key: str,
+    *,
+    now: float,
+    cooldown_start: float,
+    recharge: float,
+    pool: float,
+    gap: float,
+) -> float:
+    """Spend one banked cast and return when the next one may be cast.
+
+    The stock accrues continuously at one cast per ``recharge`` seconds and
+    stops at ``pool``, which is how the game's charge timer behaves, partial
+    progress included: a slot that waited on the champion's hands banked that
+    time too. Two casts of stock already banked are still held apart by
+    ``gap``, the short cached cooldown a charge slot carries beside its
+    recharge.
+    """
+    banked = min(pool, stock[key] + _accrued(stock_time[key], now, recharge)) - 1.0
+    stock[key] = banked
+    stock_time[key] = now
+    if banked >= 1.0:
+        # Another cast is already banked, so only the short gap holds it.
+        return now + gap
+    if recharge <= 0.0:
+        return now + gap
+    ready = _cooldown_ready_at(state, cooldown_start, recharge * (1.0 - banked))
+    return max(ready, now + gap)
+
+
+def _accrued(start: float, end: float, recharge: float) -> float:
+    """Charges banked between two times, at one per ``recharge`` seconds."""
+    if recharge <= 0.0 or end <= start:
+        return 0.0
+    return (end - start) / recharge
 
 
 def _disclose_ultimate_cast_rule(state: "FightState", timed_mode: bool) -> None:

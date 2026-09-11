@@ -245,6 +245,15 @@ ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
                 "basic_attack_true_ratio": 0.0,
                 "cast_instances": 1,
                 "cast_time": 0.0,
+                # A charge slot's two cached timers (charge_cadence.py):
+                # ``cooldown`` is the recharge, the time to bank one cast,
+                # and this is the shorter gap the game enforces between two
+                # casts already banked. Zero for an ordinary ability.
+                "charge_between_casts": 0.0,
+                # How many casts a charge slot banks; 1 is every ability
+                # that is not a charge ability, and no cached field states
+                # a count, so only a module's reviewed ChargeRule raises it.
+                "charge_pool": 1,
                 "control_events": (),
                 "control_scope": None,
                 "control_source_atoms": (),

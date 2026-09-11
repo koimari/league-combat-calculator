@@ -8,6 +8,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, data_value_at_rank, spell_object
+from .charge_cadence import ChargeRule
 from .engine import SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, int_option
@@ -238,7 +239,24 @@ SLOTS = {
 # seconds".  W is the self-cleanse and authors no damage part.
 MODULE_CC = {"P": "none", "Q": "none", "E": "slow", "R": "slow", "W": "none"}
 
-parse_abilities = build_parser(SLOTS, "Gangplank", cc_kinds=MODULE_CC)
+
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "E": ChargeRule(
+        why=(
+            "E (Powder Keg) banks kegs on its cached rechargeRate (13s "
+            "at rank 5); the 0.5s cached cooldown only spaces two "
+            "placements. The cached Maximum charges row (3/3/4/4/5) is "
+            "not spent here: an attack detonates a keg, so a cast is "
+            "not a hit, and spending the stock would price kegs no "
+            "attack reached."
+        ),
+        charges=1,
+    )
+}
+parse_abilities = build_parser(
+    SLOTS, "Gangplank", cc_kinds=MODULE_CC, charge_rules=CHARGE_RULES
+)
 
 OPTIONS = [
     int_option("p_procs", 0, minimum=0, maximum=10, label="Trial by Fire procs"),

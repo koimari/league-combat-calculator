@@ -14,6 +14,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..cast_dependency import CastDependency, validate_cast_dependencies
+from .charge_cadence import ChargeRule
 from .engine import SlotCtx, SlotParser, build_parser
 from .module_helpers import no_damage_parser
 from .packet_parsers import (
@@ -228,6 +229,7 @@ def build_packet_module(
     packet_part_timings: dict[str, dict[str, Any]] | None = None,
     cast_dependencies: tuple[CastDependency, ...] = (),
     cc_kinds: dict[str, str] | None = None,
+    charge_rules: dict[str, ChargeRule] | None = None,
 ) -> tuple[
     Callable[..., dict[str, dict[str, Any]]],
     PacketSlotMap,
@@ -271,6 +273,12 @@ def build_packet_module(
     ``contract_from_module`` can prove the declaration and the wiring are
     one dict; a module that declares ``MODULE_CC`` and forgets to pass it
     here fails registration rather than reviewing nothing.
+
+    ``charge_rules`` is ``{slot: ChargeRule}``, the module's reviewed answer
+    for each of its charge slots (``champions/charge_cadence.py``): a slot
+    whose cached ability carries a ``rechargeRate`` prices that recharge as
+    its cadence, and its compiled packet cannot, because the packet carries
+    the short inter-cast timer the cache calls ``cooldown``.
 
     ``cast_dependencies`` are the module's declared ordering prerequisites
     (``src/calculator/cast_dependency.py``).  They are deliberately **not**
@@ -336,7 +344,9 @@ def build_packet_module(
             cast_dependencies, slot_surface=set(slots), module=champion_name
         )
 
-    parser = build_parser(slots, champion_name, cc_kinds=cc_kinds)
+    parser = build_parser(
+        slots, champion_name, cc_kinds=cc_kinds, charge_rules=charge_rules
+    )
 
     def parse_abilities(*args, **kwargs):
         result = parser(*args, **kwargs)

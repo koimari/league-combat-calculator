@@ -43,6 +43,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..cast_dependency import CastDependency, SuppressedInference
+from .charge_cadence import ChargeRule
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import ranked_slot
@@ -460,7 +461,24 @@ CAST_DEPENDENCIES = (  # sightline-ok: 32 - module_contract reads it by name
     ),
 )
 
-parse_abilities = build_parser(SLOTS, "Syndra", cc_kinds=MODULE_CC)
+
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "Q": ChargeRule(
+        why=(
+            "Q (Dark Sphere) is a charge ability only under the "
+            "Transcendent bonus, which this module does not model: base "
+            "Q's cached cooldown and rechargeRate are both 7s, and this "
+            "module prices that timer with R's Q-only ability haste "
+            "folded in, so it owns the cadence and banks one cast."
+        ),
+        charges=1,
+        authored_cadence=True,
+    )
+}
+parse_abilities = build_parser(
+    SLOTS, "Syndra", cc_kinds=MODULE_CC, charge_rules=CHARGE_RULES
+)
 
 
 SOURCES = load_champion_sources("Syndra")

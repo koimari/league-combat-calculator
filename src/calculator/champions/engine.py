@@ -25,6 +25,7 @@ vanish). Dropping a non-damaging slot is the parser's decision.
 from collections.abc import Callable, Mapping
 from typing import Any
 
+from .charge_cadence import ChargeRule, stamp_charge_cadence
 from .entry_shape import EmittedSlot, certify_shared_instant, validate_entry_keys
 from .inputs import declared_option_defaults
 from .slot_cc import (
@@ -143,6 +144,7 @@ def _stamp_slot_facts(
     *,
     level: int,
     resource_type: str,
+    charge_rule: ChargeRule | None = None,
 ) -> None:
     """Stamp the facts a slot's own cached ability entry carries.
 
@@ -168,6 +170,15 @@ def _stamp_slot_facts(
         level=level,
         resource_type=resource_type,
     )
+    stamp_charge_cadence(
+        entry,
+        ability_json,
+        charge_rule,
+        champion_name=ctx.champion_name,
+        slot=ctx.slot,
+        rank=ctx.rank_for(),
+        level=level,
+    )
 
 
 def _result_key(slot: str) -> str:
@@ -180,6 +191,7 @@ def build_parser(
     champion_name: str,
     *,
     cc_kinds: Mapping[str, str] | None = None,
+    charge_rules: Mapping[str, ChargeRule] | None = None,
 ) -> Callable[..., dict[str, dict[str, Any]]]:
     """Build a ``parse_abilities``-signature function from a slot map.
 
@@ -220,6 +232,12 @@ def build_parser(
     # source, so one resolution per champion per process is the whole cost.
     declared_options: dict[str, Any] | None = None
     declared_cc_kinds: Mapping[str, str] = dict(cc_kinds) if cc_kinds else {}
+    # ``{slot: ChargeRule}``: what this module says about its charge slots.
+    # A slot with no rule still gets the cadence check — the cache decides
+    # which slots are charge slots, not the declaration.
+    declared_charge_rules: Mapping[str, ChargeRule] = (
+        dict(charge_rules) if charge_rules else {}
+    )
     declared_result_keys = frozenset(_result_key(slot) for slot in declared_cc_kinds)
 
     def parse_abilities(
@@ -256,7 +274,13 @@ def build_parser(
             )
             entry = parser(ctx)
             if entry is not None:
-                _stamp_slot_facts(entry, ctx, level=level, resource_type=resource_type)
+                _stamp_slot_facts(
+                    entry,
+                    ctx,
+                    level=level,
+                    resource_type=resource_type,
+                    charge_rule=declared_charge_rules.get(slot),
+                )
                 results[_result_key(slot)] = entry
 
         # Stamp and validate AFTER all phases: AMP parsers mutate earlier
@@ -280,4 +304,6 @@ def build_parser(
 
     if cc_kinds is not None:
         parse_abilities.cc_kinds = declared_cc_kinds
+    if charge_rules is not None:
+        parse_abilities.charge_rules = declared_charge_rules
     return parse_abilities

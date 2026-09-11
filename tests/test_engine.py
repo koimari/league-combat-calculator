@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from src.calculator.ability_spec import DamagePart, Disposition
+from src.calculator.champions.charge_cadence import ChargeRule
 from src.calculator.champions import parse_abilities as dispatch_parse
 from src.calculator.champions.engine import (
     AMP,
@@ -363,9 +364,11 @@ class TestSimpleDamageParams:
         parse = build_parser(
             {"Q": simple_damage(cooldown="recharge")},
             "TestChamp",
+            charge_rules={"Q": ChargeRule(why="a charge slot under test", charges=1)},
         )
         results = parse(champ, 9, 0.0)  # Q rank 5
         assert results["Q"]["cooldown"] == 12.0
+        assert results["Q"]["charge_between_casts"] == 3.0
 
     def test_cooldown_recharge_falls_back_to_cooldown(self) -> None:
         """Without rechargeRate data, recharge mode uses the cooldown."""

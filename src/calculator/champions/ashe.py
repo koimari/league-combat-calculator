@@ -38,6 +38,7 @@ from ..stack_rules import StackRule
 from ..stat_formulas import calculate_attack_speed
 from ..state_timeline import SourceReceipt
 from ..timed_stacks import TimedStackState
+from .charge_cadence import ChargeRule
 from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
@@ -249,7 +250,20 @@ SLOTS = {
 # read as ability control.  E is vision only.
 MODULE_CC = {"W": "slow", "R": "stun", "E": "none", "P": "slow", "Q": "none"}
 
-parse_abilities = build_parser(SLOTS, "Ashe", cc_kinds=MODULE_CC)
+
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "E": ChargeRule(
+        why=(
+            "E (Hawkshot) banks shots on its cached rechargeRate (50s "
+            "at rank 5), not on the 5s gap between two banked casts, "
+            "and its cached stock is 2."
+        ),
+    )
+}
+parse_abilities = build_parser(
+    SLOTS, "Ashe", cc_kinds=MODULE_CC, charge_rules=CHARGE_RULES
+)
 
 
 SOURCES = load_champion_sources("Ashe")

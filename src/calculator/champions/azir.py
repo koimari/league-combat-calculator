@@ -43,6 +43,7 @@ fight ledger never invents an enemy hit for it.
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
+from .charge_cadence import ChargeRule
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
@@ -174,7 +175,24 @@ SLOTS = {
 # front of Azir".  W summons a soldier and emits no damage row of its own.
 MODULE_CC = {"Q": "slow", "E": "none", "R": "knockback", "W": "none"}
 
-parse_abilities = build_parser(SLOTS, "Azir", cc_kinds=MODULE_CC)
+
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "W": ChargeRule(
+        why=(
+            "W (Arise!) banks soldiers on its cached rechargeRate (6s "
+            "at rank 5), which this slot already prices. The cached "
+            "stock of 2 is not spent here: a soldier stays on the field "
+            "and attacks, and no cached field states how many may stand "
+            "at once, so spending the stock would summon soldiers the "
+            "field cannot hold."
+        ),
+        charges=1,
+    )
+}
+parse_abilities = build_parser(
+    SLOTS, "Azir", cc_kinds=MODULE_CC, charge_rules=CHARGE_RULES
+)
 
 
 SOURCES = load_champion_sources("Azir")

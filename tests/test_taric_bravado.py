@@ -422,11 +422,16 @@ class TestBravadoFight:
         assert data["breakdown"]["auto_attacks"]["count"] == 6
 
     def test_a_second_arming_cast_round_grants_a_second_pair(self) -> None:
-        """Procs track ARMING CASTS, not swings: 13 swings, 4 procs."""
+        """Procs track ARMING CASTS, not swings: 13 swings, 6 procs.
+
+        Three arming rounds, not two: Q is a charge slot, so its cadence
+        is the cached 15s recharge and it casts again inside a 20-second
+        fight (champions/charge_cadence.py).
+        """
         data = _fight(mode="timed", duration=20.0)
         row = data["breakdown"]["on_hit_ability_passive"]
-        assert row["count"] == 4
-        assert row["total_damage"] == pytest.approx(372.0)
+        assert row["count"] == 6
+        assert row["total_damage"] == pytest.approx(558.0)
         assert data["breakdown"]["auto_attacks"]["count"] == 13
         # E casts twice over 20s (250 raw per cast) — the second cast is
         # what re-arms the window.

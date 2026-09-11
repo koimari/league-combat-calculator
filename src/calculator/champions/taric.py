@@ -46,6 +46,7 @@ from functools import partial
 from typing import Any
 
 from ..healing_helpers import ability_json, parsed_rank
+from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat
@@ -178,6 +179,21 @@ _bravado.phase = ONHIT
 # E is the whole of this kit's reviewable control.
 MODULE_CC = {"E": "stun", "P": "none", "Q": "none", "W": "none", "R": "none"}
 
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "Q": ChargeRule(
+        why=(
+            "Q (Starlight's Touch) banks charges on its cached 15s "
+            "rechargeRate; the 3s cached cooldown is the gap between "
+            "two banked heals. The cached Maximum Charges row "
+            "(1/2/3/4/5) is NOT a pool of casts: one cast spends the "
+            "whole stock and heals per charge, which is what this "
+            "module already prices, so the slot banks one cast."
+        ),
+        charges=1,
+    )
+}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Taric",
     PACKET_SHA256,
@@ -198,6 +214,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "E": partial(with_control, duration_attr="Stun Duration"),
     },
     cc_kinds=MODULE_CC,
+    charge_rules=CHARGE_RULES,
 )
 
 ASSUMPTIONS = [
