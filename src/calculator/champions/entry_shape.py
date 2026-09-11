@@ -17,6 +17,10 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         "rank",
         "cooldown",
         "cast_time",
+        # charge_cadence.py: the cached inter-cast gap and the reviewed
+        # stock of a charge slot, whose ``cooldown`` is its recharge.
+        "charge_between_casts",
+        "charge_pool",
         "resource_cost",
         "resource_type",
         "resource_restore",

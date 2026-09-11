@@ -6,6 +6,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value_at_rank, spell_object
+from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import named_damage, no_damage, ranked_slot
@@ -168,7 +169,21 @@ SLOTS = {
 # P and W author no damage part (W is the on-hit bolt).
 MODULE_CC = {"Q": "root", "E": "slow", "R": CC_PER_PART, "P": "none", "W": "none"}
 
-parse_abilities = build_parser(SLOTS, "Ivern", cc_kinds=MODULE_CC)
+
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "W": ChargeRule(
+        why=(
+            "W (Brushmaker) banks brush on its cached 20s rechargeRate, "
+            "not on the 0.5s gap between two banked casts. The cached "
+            "stock of 3 is not spent here: the brush stays."
+        ),
+        charges=1,
+    )
+}
+parse_abilities = build_parser(
+    SLOTS, "Ivern", cc_kinds=MODULE_CC, charge_rules=CHARGE_RULES
+)
 OPTIONS = [
     bool_option("w_in_brush", True, label="Ivern is in brush"),
     int_option(

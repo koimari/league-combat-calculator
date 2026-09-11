@@ -30,6 +30,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .charge_cadence import ChargeRule
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, float_option
 from .module_helpers import amp_slot, ranked_slot
@@ -174,7 +175,21 @@ SLOTS = {
 # nothing, so it carries no declaration.
 MODULE_CC = {"Q": "stun", "W": "none", "E": "none", "R": "stun", "P": "none"}
 
-parse_abilities = build_parser(SLOTS, "Amumu", cc_kinds=MODULE_CC)
+
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "Q": ChargeRule(
+        why=(
+            "Q (Bandage Toss) banks tosses on its cached rechargeRate "
+            "(12s at rank 5), which this slot already prices, and its "
+            "cached stock is 2. The 3s cached cooldown is only the gap "
+            "between two banked tosses."
+        ),
+    )
+}
+parse_abilities = build_parser(
+    SLOTS, "Amumu", cc_kinds=MODULE_CC, charge_rules=CHARGE_RULES
+)
 
 
 SOURCES = load_champion_sources("Amumu")

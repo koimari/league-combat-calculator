@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .charge_cadence import ChargeRule
 from .engine import SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import no_damage, ranked_slot, require_named_leveling
@@ -277,7 +278,24 @@ SLOTS = {
 # unconditional slow is the reviewed kind.  P and R author no damage part.
 MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "P": "none", "R": "none"}
 
-parse_abilities = build_parser(SLOTS, "Heimerdinger", cc_kinds=MODULE_CC)
+
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "Q": ChargeRule(
+        why=(
+            "Q (H-28G Evolution Turret) banks turrets on its cached 20s "
+            "rechargeRate, which this slot already prices; pricing the "
+            "1s inter-deploy cooldown instead scheduled 9 deploys in a "
+            "10s fight. The cached stock of 3 is not spent here: a "
+            "turret stays and attacks, and no cached field states how "
+            "many may stand at once."
+        ),
+        charges=1,
+    )
+}
+parse_abilities = build_parser(
+    SLOTS, "Heimerdinger", cc_kinds=MODULE_CC, charge_rules=CHARGE_RULES
+)
 OPTIONS = [
     int_option(
         "q_variant", 0, minimum=0, maximum=1, label="Turret variant (Evolution/Apex)"

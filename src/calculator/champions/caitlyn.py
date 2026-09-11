@@ -44,6 +44,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..stat_formulas import effective_cooldown
+from .charge_cadence import ChargeRule
 from .engine import SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import at_level, ranked_slot
@@ -380,7 +381,23 @@ SLOTS = {
 # cast of Caitlyn's own, and P is that passive.
 MODULE_CC = {"Q": "none", "E": "slow", "R": "none", "P": "none", "W": "root"}
 
-parse_abilities = build_parser(SLOTS, "Caitlyn", cc_kinds=MODULE_CC)
+
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "W": ChargeRule(
+        why=(
+            "W (Yordle Snap Trap) banks traps on its cached "
+            "rechargeRate (10s at rank 5), which this slot already "
+            "prices. The cache states no stock for it, neither a "
+            "Maximum charges row nor a stocking sentence, so one banked "
+            "cast is the floor until the count is sourced."
+        ),
+        charges=1,
+    )
+}
+parse_abilities = build_parser(
+    SLOTS, "Caitlyn", cc_kinds=MODULE_CC, charge_rules=CHARGE_RULES
+)
 
 
 SOURCES = load_champion_sources("Caitlyn")

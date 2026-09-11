@@ -39,6 +39,7 @@ than letting ``SLOTS`` derive ``modeled``.
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
+from .charge_cadence import ChargeRule
 from .contract_vocabulary import coverage
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import int_option
@@ -256,7 +257,23 @@ SLOTS = {
 # damage, and P's Meep slow rides basic attacks rather than an ability.
 MODULE_CC = {"Q": "slow", "R": "stasis", "P": CC_PER_PART, "W": "none", "E": "none"}
 
-parse_abilities = build_parser(SLOTS, "Bard", cc_kinds=MODULE_CC)
+
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "W": ChargeRule(
+        why=(
+            "W (Caretaker's Shrine) banks shrines on its cached 18s "
+            "rechargeRate; the cached cooldown is the gap between "
+            "placing two. The cached stock of 2 is not spent here: a "
+            "shrine stands and waits to be picked up, and no cached "
+            "field states how many may stand at once."
+        ),
+        charges=1,
+    )
+}
+parse_abilities = build_parser(
+    SLOTS, "Bard", cc_kinds=MODULE_CC, charge_rules=CHARGE_RULES
+)
 
 
 SOURCES = load_champion_sources("Bard")

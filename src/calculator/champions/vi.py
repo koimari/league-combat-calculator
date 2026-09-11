@@ -31,6 +31,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..stat_formulas import effective_cooldown
+from .charge_cadence import ChargeRule
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import float_option, int_option
@@ -611,7 +612,24 @@ SLOTS = {
 # is not crowd control, and it is the auto-stack row besides.
 MODULE_CC = {"Q": "knockback", "E": "none", "R": "knockup", "W": "none"}
 
-parse_abilities = build_parser(SLOTS, "Vi", cc_kinds=MODULE_CC)
+
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "E": ChargeRule(
+        why=(
+            "E (Excessive Force) banks charges on its cached "
+            "rechargeRate (8s at rank 5), which this slot already "
+            "prices. The cached stock of 2 is not spent here because "
+            "this module keeps its own cast sequence and schedules E "
+            "itself, where a pool in the shared scheduler reaches "
+            "nothing."
+        ),
+        charges=1,
+    )
+}
+parse_abilities = build_parser(
+    SLOTS, "Vi", cc_kinds=MODULE_CC, charge_rules=CHARGE_RULES
+)
 
 # P emits no row of its own — Blast Shield has no cast and no damage — so
 # the map names the channel that pays it instead.

@@ -41,6 +41,7 @@ rather than staying silently absent from the parse output.
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .charge_cadence import ChargeRule
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
@@ -146,7 +147,22 @@ SLOTS = {
 # reviewed-no-CC.
 MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "airborne", "P": "none"}
 
-parse_abilities = build_parser(SLOTS, "Kalista", cc_kinds=MODULE_CC)
+
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "W": ChargeRule(
+        why=(
+            "W (Sentinel) banks sentinels on its cached rechargeRate "
+            "(50s at rank 5), not on the 30s gap between two banked "
+            "casts. The cached stock of 2 is not spent here: a sentinel "
+            "stays posted."
+        ),
+        charges=1,
+    )
+}
+parse_abilities = build_parser(
+    SLOTS, "Kalista", cc_kinds=MODULE_CC, charge_rules=CHARGE_RULES
+)
 
 OPTIONS = [
     int_option("rend_stacks", 1, minimum=1, maximum=254, label="Rend stacks"),

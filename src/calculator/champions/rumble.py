@@ -124,6 +124,7 @@ from typing import Any
 from ..ability_prose import effect_description, extract_description_duration
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx
 from .inputs import int_option
 from .module_helpers import buff_window_share
@@ -447,6 +448,19 @@ _junkyard_titan.phase = ONHIT
 # nothing sources the arrival times a multi-auto row aggregates.
 MODULE_CC = {"E": "slow", "Q": "none", "R": "slow", "P": "none", "W": "none"}
 
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "E": ChargeRule(
+        why=(
+            "E (Electro Harpoon) banks harpoons on its cached 6s "
+            "rechargeRate and its cached stock is 2. Pricing the 0.5s "
+            "inter-charge cooldown as the cadence is what put 16 basic "
+            "ability casts in a ten-second fight, and it is the stated "
+            "blocker for deriving Heat from the cast plan."
+        ),
+    )
+}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Rumble",
     PACKET_SHA256,
@@ -464,6 +478,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"E"}),
     slot_parsers={"Q": _flamespitter_full_channel, "P": _junkyard_titan},
     cc_kinds=MODULE_CC,
+    charge_rules=CHARGE_RULES,
 )
 OPTIONS = [
     *list(OPTIONS),

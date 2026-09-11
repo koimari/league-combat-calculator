@@ -176,15 +176,17 @@ def test_mikaels_purify_on_participant_two_compiles_and_matches_the_walk():
     assert recipient["healing_received"] == pytest.approx(280.0, abs=0.05)
     assert recipient["cleanse"]["item"] == MIKAELS
     assert recipient["cleanse"]["target"] == "ally:Ashe"
-    # Amumu's ultimate stuns until 2.0s; Purify at 1.0 ends that interval.
-    assert recipient["action_downtime"] == pytest.approx(1.0)
+    # Amumu's ultimate stuns until 2.0s and Purify at 1.0 ends that
+    # interval, but his Q banks two casts (champions/charge_cadence.py), so
+    # the second Bandage Toss stuns this recipient again after the cleanse.
+    assert recipient["action_downtime"] == pytest.approx(2.0)
     assert [
         row["control_kind"] for row in recipient["cleanse"]["removed_controls"]
     ] == ["stun"]
     unselected = _survival(compiled, "ally:Jinx")
     assert unselected["healing_received"] == pytest.approx(0.0)
     assert "cleanse" not in unselected
-    assert unselected["action_downtime"] == pytest.approx(2.0)
+    assert unselected["action_downtime"] == pytest.approx(3.0)
     # The caster's own use receipts are on the holder's row, one per item.
     caster = _survival(compiled, "main")
     assert caster["cleanse"]["item"] == QUICKSILVER
@@ -203,8 +205,9 @@ def test_a_self_cast_cleanse_held_by_participant_two_compiles():
     )
     holder = _survival(compiled, "ally:Ashe")
     assert holder["cleanse"]["item"] == QUICKSILVER
-    assert holder["action_downtime"] == pytest.approx(1.0)
-    assert _survival(compiled, "ally:Jinx")["action_downtime"] == pytest.approx(2.0)
+    # Amumu's Q banks two casts, so a second stun follows the cleanse.
+    assert holder["action_downtime"] == pytest.approx(2.0)
+    assert _survival(compiled, "ally:Jinx")["action_downtime"] == pytest.approx(3.0)
 
 
 def test_a_fan_out_cleanse_reaches_every_participant_on_the_compiled_path():
@@ -261,7 +264,9 @@ def test_the_canister_receipt_reaches_participant_two_on_the_compiled_path():
     assert holder["canister"]["lifetime"] == pytest.approx(7.0)
     assert holder["pickup"]["supported"] is False
     assert holder["pickup"]["heal_amount"] == pytest.approx(95.64)
-    assert holder["healing_received"] == pytest.approx(1002.2)
+    # Lower than before Amumu's Q banked its second cast: the extra enemy
+    # cast shortens the window this ally heals through.
+    assert holder["healing_received"] == pytest.approx(836.1)
     # The passive actually fired: the holder eats less control than the ally
     # beside him, who has no immunity to spend.
     assert (

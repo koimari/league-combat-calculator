@@ -6,6 +6,7 @@ import math
 from typing import Any
 
 from ..ability_spec import DamagePart
+from .charge_cadence import ChargeRule
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import at_level, no_damage, ranked_slot
@@ -274,7 +275,22 @@ SLOTS = {
 # ability event.
 MODULE_CC = {"Q": "none", "W": "root", "E": "slow", "R": "slow", "P": "none"}
 
-parse_abilities = build_parser(SLOTS, "Jhin", cc_kinds=MODULE_CC)
+
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "E": ChargeRule(
+        why=(
+            "E (Captive Audience) banks traps on its cached "
+            "rechargeRate (14s at rank 5), not on the 2s gap between "
+            "placing two. The cached stock of 2 is not spent here: a "
+            "trap waits to be triggered, so a cast is not a hit."
+        ),
+        charges=1,
+    )
+}
+parse_abilities = build_parser(
+    SLOTS, "Jhin", cc_kinds=MODULE_CC, charge_rules=CHARGE_RULES
+)
 OPTIONS = [
     bool_option("p_final_shot", False, label="Whisper fourth shot"),
     int_option(

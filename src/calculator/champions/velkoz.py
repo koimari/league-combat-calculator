@@ -24,6 +24,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
+from .charge_cadence import ChargeRule
 from .engine import SlotCtx, build_parser
 from .module_helpers import ranked_slot
 from .shared_mechanics import ticked_channel
@@ -177,7 +178,20 @@ SLOTS = {
 # reviewable marker.
 MODULE_CC = {"Q": "slow", "W": "none", "E": "knockup", "R": "slow", "P": "none"}
 
-parse_abilities = build_parser(SLOTS, "Vel'Koz", cc_kinds=MODULE_CC)
+
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "W": ChargeRule(
+        why=(
+            "W (Void Rift) banks rifts on its cached rechargeRate (15s "
+            "at rank 5), not on the 1.5s gap between two banked casts, "
+            "and its cached stock is 2."
+        ),
+    )
+}
+parse_abilities = build_parser(
+    SLOTS, "Vel'Koz", cc_kinds=MODULE_CC, charge_rules=CHARGE_RULES
+)
 
 
 SOURCES = load_champion_sources("Vel'Koz")

@@ -28,6 +28,7 @@ in ASSUMPTIONS.
 from typing import Any
 
 from .. import healing_helpers as _healing
+from .charge_cadence import ChargeRule
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
@@ -99,6 +100,17 @@ def _formless_blade(ctx: SlotCtx) -> dict[str, Any] | None:
 # heal/shield innate and the mist damage nothing.
 MODULE_CC = {"Q": "none", "E": "none", "R": "slow", "P": "none", "W": "none"}
 
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "E": ChargeRule(
+        why=(
+            "E (Slipstream) banks dashes on its cached rechargeRate "
+            "(12s at rank 5), not on the 0.5s gap between two banked "
+            "dashes, and its cached stock is 2."
+        ),
+    )
+}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Nilah",
     PACKET_SHA256,
@@ -119,6 +131,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Q": _formless_blade,
     },
     cc_kinds=MODULE_CC,
+    charge_rules=CHARGE_RULES,
 )
 
 ASSUMPTIONS = [

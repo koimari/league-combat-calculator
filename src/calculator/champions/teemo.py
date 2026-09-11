@@ -42,6 +42,7 @@ import dataclasses
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
+from .charge_cadence import ChargeRule
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .module_helpers import ranked_slot, with_detail
@@ -235,6 +236,20 @@ _guerrilla_warfare = with_detail(
 # W (Move Quick) is Teemo's own movement speed and authors no damage.
 MODULE_CC = {"Q": "blind", "E": "none", "R": "slow", "P": "none", "W": "none"}
 
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "R": ChargeRule(
+        why=(
+            "R (Noxious Trap) banks mushrooms on its cached "
+            "rechargeRate (25s at rank 3); the 0.25s cached cooldown "
+            "only spaces two throws. The cached Maximum Charges row "
+            "(3/4/5) is not spent here: a mushroom waits to be "
+            "triggered, so a cast is not a hit."
+        ),
+        charges=1,
+    )
+}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Teemo",
     PACKET_SHA256,
@@ -262,6 +277,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "P": _guerrilla_warfare,
     },
     cc_kinds=MODULE_CC,
+    charge_rules=CHARGE_RULES,
 )
 ASSUMPTIONS.extend(
     [

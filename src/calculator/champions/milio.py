@@ -18,6 +18,7 @@ so the scanner defers).
 from typing import Any
 
 from .. import healing_helpers as _healing
+from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import int_option
@@ -77,6 +78,17 @@ _RANK_GATED_R = rank_gated_no_damage_parser(
 # enchantment on allies, so no other slot emits an enemy damage event.
 MODULE_CC = {"Q": "stun", "P": "none", "W": "none", "E": "none", "R": "none"}
 
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "E": ChargeRule(
+        why=(
+            "E (Warm Hugs) banks casts on its cached rechargeRate (13s "
+            "at rank 5); the cached cooldown is the gap between two "
+            "banked casts, and the cached stock is 2."
+        ),
+    )
+}
+
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Milio",
     PACKET_SHA256,
@@ -86,6 +98,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"Q"}),
     slot_parsers={"P": _fired_up, "R": _RANK_GATED_R},
     cc_kinds=MODULE_CC,
+    charge_rules=CHARGE_RULES,
 )
 
 OPTIONS = [

@@ -46,6 +46,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..stat_formulas import effective_cooldown
+from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import float_option, int_option
 from .module_helpers import ranked_slot
@@ -413,7 +414,25 @@ SLOTS = {
 # of its own for a marker to sit on.
 MODULE_CC = dict.fromkeys(SLOTS, "none")
 
-parse_abilities = build_parser(SLOTS, "Corki", cc_kinds=MODULE_CC)
+
+# What this module says about its charge slot (charge_cadence.py).
+CHARGE_RULES = {
+    "R": ChargeRule(
+        why=(
+            "R (Missile Barrage) banks missiles on its cached 20s "
+            "rechargeRate, which this slot already prices. The stock is "
+            "not declared here because this module spends it itself: "
+            "the R walk fires the stored charges and the ones that "
+            "recharge inside the window, accelerated by basic attacks, "
+            "so a second pool in the shared scheduler would fire every "
+            "missile twice."
+        ),
+        charges=1,
+    )
+}
+parse_abilities = build_parser(
+    SLOTS, "Corki", cc_kinds=MODULE_CC, charge_rules=CHARGE_RULES
+)
 
 
 SOURCES = load_champion_sources("Corki")
