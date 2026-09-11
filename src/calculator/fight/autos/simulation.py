@@ -20,6 +20,8 @@ from .swing_profile import (
     _CriticalStrikeRider,
     _find_auto_attack_override,
 )
+from ...champions.armed_procs import armed_swing_count, declared_rule
+from .empower_windows import _uniform_swing_schedule
 from .swing_schedule import _auto_attack_timestamps
 
 
@@ -68,14 +70,26 @@ def _simulate_auto_attacks(state: FightState) -> AutoAttackResult:
         if "auto_attack_conversion" in _conversion_entry:
             conversion_info = _conversion_entry["auto_attack_conversion"]
             break
-    converted_auto_limit = min(
-        num_auto_attacks,
-        (
-            max(0, int(ability_field(conversion_info, "count", form="conversion")))
-            if conversion_info
-            else 0
-        ),
+    # A kit that arms the empowered swing by a rule (Galio's timer, Sylas'
+    # cast stacks) has its count WALKED from the fight's own two schedules
+    # rather than declared; the module's option stays an override for the
+    # thing neither schedule knows, whether the swing reached its target.
+    declared_count = (
+        max(0, int(ability_field(conversion_info, "count", form="conversion")))
+        if conversion_info
+        else 0
     )
+    armed = declared_rule(state.ability_damages)
+    if armed is not None and conversion_info is not None:
+        rule = armed[1]
+        if not rule.requested:
+            declared_count = armed_swing_count(
+                rule,
+                state.ability_cast_times,
+                _auto_attack_timestamps(state)
+                or _uniform_swing_schedule(state, num_auto_attacks),
+            )
+    converted_auto_limit = min(num_auto_attacks, declared_count)
     converted_damage_type = (
         str(ability_field(conversion_info, "damage_type", form="conversion"))
         if conversion_info

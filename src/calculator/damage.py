@@ -221,6 +221,9 @@ def calculate_fight_damage(
     # grant those windows buy is rated here, once the plan exists and before
     # the swing stream is counted.
     apply_lockout_attack_speed(state)
+    state.ability_cast_times = tuple(
+        (str(event["slot"]), float(event["time"])) for event in rotation.cast_events
+    )
     _add_rengar_ferocity(state, rotation)
     _author_ability_dot_events(state, rotation)
     _add_precomputed_proc_damage(state, rotation)

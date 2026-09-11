@@ -8,6 +8,7 @@ after its channel. This module authors those states and their hit times.
 """
 
 import math
+import re
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -31,8 +32,41 @@ _E_DASH_SPEED = 2300.0
 _R_LANDING_TIME = 2.75
 
 
+_SMASH_REDUCTION_RE = re.compile(
+    r"cooldown is reduced by (?P<value>\d+(?:\.\d+)?) seconds"
+)
+
+
+def _smash_cooldown_reduction(ability: dict[str, Any]) -> float:
+    """The seconds an ability hit takes off Colossal Smash, from the cache.
+
+    "Whenever Galio hits at least one enemy champion or epic monster with
+    an ability, Colossal Smash's current cooldown is reduced by 3
+    seconds" — the sentence the walk needs, so a reworded cache raises
+    here rather than pricing a stale three.
+    """
+    effects = ability.get("effects")
+    for effect in effects if effects else ():
+        description = effect.get("description")
+        if description is None:
+            continue
+        match = _SMASH_REDUCTION_RE.search(str(description))
+        if match is not None:
+            return float(match.group("value"))
+    raise ValueError(
+        "Galio P: the cached innate no longer states Colossal Smash's "
+        "cooldown reduction ('cooldown is reduced by N seconds')"
+    )
+
+
 def _colossal_smash(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: replace the first N ordinary swings with modified magic attacks."""
+    """P: replace the ordinary swings Colossal Smash arms with magic ones.
+
+    How many it arms is the fight's question, not the reader's: the timer
+    is the cached 5 seconds and every ability that hits a champion takes
+    the cached 3 off it, so the walk over the cast and swing schedules
+    answers it (``champions/armed_procs.py``).
+    """
     ability = ctx.ability()
     if ability is None:
         return None
@@ -47,6 +81,14 @@ def _colossal_smash(ctx: SlotCtx) -> dict[str, Any] | None:
     total_ad = float(ctx.stat("attack_damage"))
     return {
         "name": ability_name(ability),
+        "armed_procs": {
+            "arming_slots": ("Q", "W", "E", "R"),
+            "max_stacks": 1,
+            "cooldown": extract_cooldown(ability, ctx.rank_for()),
+            "cooldown_reduction_per_cast": _smash_cooldown_reduction(ability),
+            "armed_at_start": True,
+            "requested": ctx.options.get("passive_procs") is not None,
+        },
         "auto_attack_conversion": {
             "name": ability_name(ability),
             "count": conversions,
@@ -179,7 +221,10 @@ OPTIONS: list[dict[str, Any]] = [
         1,
         minimum=0,
         maximum=10,
-        label="Colossal Smash attacks available",
+        label=(
+            "Colossal Smash attacks; unset derives them from the cached 5s "
+            "timer and the 3s an ability hit takes off it"
+        ),
     ),
     float_option(
         "w_charge_seconds",

@@ -141,6 +141,10 @@ class FightState:
     # the shared timeline walked it (fight/rotation/cast_resource_lockout.py).
     # Empty for a kit with no such bar, and for a fight with no clock.
     lockout_windows: tuple[tuple[float, float], ...] = ()
+    # ``(slot, time)`` for every accepted cast, published once the rotation
+    # resolved its plan. The autos step reads it to walk a kit's armed
+    # empowered swings (champions/armed_procs.py).
+    ability_cast_times: tuple[tuple[str, float], ...] = ()
     # ── The compiled rune page, keystone first (empty when none selected) ──
     runes: "tuple[rune_effects.RuneEffect, ...]" = ()
     # The page's declared options, by rune. A rune formula reads them when it

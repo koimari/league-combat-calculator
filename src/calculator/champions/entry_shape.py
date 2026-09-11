@@ -144,6 +144,9 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # fight/rotation/cast_resource_lockout.py over the cast plan. It
         # replaced self_cast_lockout_seconds, which asked for the answer.
         "cast_resource_lockout",
+        # champions/armed_procs.py: the rule that arms a kit's empowered
+        # basic attack, walked over the cast and swing schedules.
+        "armed_procs",
         # Champion-owned critical-strike conversion (Yasuo/Yone P): total
         # crit chance doubled, crit damage scaled by a factor, and excess
         # crit chance converted to bonus AD.  The fight engine resolves it
