@@ -4,7 +4,7 @@
   "family": "heal-shield",
   "behavior": "GalioRShield",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -27,7 +27,7 @@
    "binary": [
     "Characters/Galio/Spells/GalioRAbility/GalioRShield"
    ],
-   "evidence": "name:shield"
+   "evidence": "name:shield+wiki-ally"
   }
  },
  {
@@ -91,7 +91,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "GalioRSpellPassive",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 200.0,
    "cooldown_rank_max": 120.0,
@@ -107,7 +107,7 @@
    "binary": [
     "Characters/Galio/Spells/GalioRAbility/GalioRSpellPassive"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -282,7 +282,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "GalioR",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 180.0,
    "cooldown_rank_max": 140.0,
@@ -298,7 +298,7 @@
    "binary": [
     "Characters/Galio/Spells/GalioRAbility/GalioR"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {

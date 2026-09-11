@@ -34,7 +34,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "BraumW",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 13.0,
    "cooldown_rank_max": 7.0,
@@ -50,7 +50,7 @@
    "binary": [
     "Characters/Braum/Spells/BraumWAbility/BraumW"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {

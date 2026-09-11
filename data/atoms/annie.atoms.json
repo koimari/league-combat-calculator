@@ -52,7 +52,7 @@
   "family": "heal-shield",
   "behavior": "MoltenShieldTibbersBuff",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -75,7 +75,7 @@
    "binary": [
     "Characters/Annie/Spells/MoltenShieldTibbersBuff"
    ],
-   "evidence": "name:shield"
+   "evidence": "name:shield+wiki-ally"
   }
  },
  {
@@ -83,7 +83,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "MoltenShieldTibbersBuff",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -99,7 +99,7 @@
    "binary": [
     "Characters/Annie/Spells/MoltenShieldTibbersBuff"
    ],
-   "evidence": "name:buff"
+   "evidence": "name:buff+wiki-ally"
   }
  },
  {
@@ -107,7 +107,7 @@
   "family": "heal-shield",
   "behavior": "Molten_Shield",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -130,7 +130,7 @@
    "binary": [
     "Characters/Annie/Spells/Molten_Shield"
    ],
-   "evidence": "name:shield"
+   "evidence": "name:shield+wiki-ally"
   }
  },
  {
@@ -333,7 +333,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "AnnieESpeedBuff",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -349,7 +349,7 @@
    "binary": [
     "Characters/Annie/Spells/AnnieEAbility/AnnieESpeedBuff"
    ],
-   "evidence": "name:buff"
+   "evidence": "name:buff+wiki-ally"
   }
  },
  {
@@ -442,7 +442,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "AnnieE",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -458,7 +458,7 @@
    "binary": [
     "Characters/Annie/Spells/AnnieEAbility/AnnieE"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {

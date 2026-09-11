@@ -4,7 +4,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "YuumiQRelease",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.5,
    "cooldown_rank_max": 0.5,
@@ -20,7 +20,7 @@
    "binary": [
     "Characters/Yuumi/Spells/YuumiQAbility/YuumiQRelease"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -219,7 +219,7 @@
   "family": "heal-shield",
   "behavior": "YuumiPHealMis",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
@@ -242,7 +242,7 @@
    "binary": [
     "Characters/Yuumi/Spells/YuumiPAbility/YuumiPHealMis"
    ],
-   "evidence": "name:heal"
+   "evidence": "name:heal+wiki-ally"
   }
  },
  {
@@ -250,7 +250,7 @@
   "family": "heal-shield",
   "behavior": "YuumiPShieldBuff",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
@@ -273,7 +273,7 @@
    "binary": [
     "Characters/Yuumi/Spells/YuumiPAbility/YuumiPShieldBuff"
    ],
-   "evidence": "name:shield"
+   "evidence": "name:shield+wiki-ally"
   }
  },
  {
@@ -281,7 +281,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "YuumiPShieldBuff",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
@@ -297,7 +297,7 @@
    "binary": [
     "Characters/Yuumi/Spells/YuumiPAbility/YuumiPShieldBuff"
    ],
-   "evidence": "name:buff"
+   "evidence": "name:buff+wiki-ally"
   }
  },
  {
@@ -305,7 +305,7 @@
   "family": "heal-shield",
   "behavior": "YuumiPHealMark",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -328,7 +328,7 @@
    "binary": [
     "{4a0434de}"
    ],
-   "evidence": "name:heal"
+   "evidence": "name:heal+wiki-ally"
   }
  },
  {
@@ -360,7 +360,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "YuumiPCompanionshipBuff",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -376,7 +376,7 @@
    "binary": [
     "{6e292322}"
    ],
-   "evidence": "name:buff"
+   "evidence": "name:buff+wiki-ally"
   }
  },
  {
@@ -409,7 +409,7 @@
   "family": "heal-shield",
   "behavior": "YuumiPShield",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
@@ -432,7 +432,7 @@
    "binary": [
     "Characters/Yuumi/Spells/YuumiPAbility/YuumiPShield"
    ],
-   "evidence": "name:shield"
+   "evidence": "name:shield+wiki-ally"
   }
  },
  {
@@ -440,7 +440,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "YuumiP",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -456,7 +456,7 @@
    "binary": [
     "Characters/Yuumi/Spells/YuumiPAbility/YuumiP"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -544,7 +544,7 @@
   "family": "heal-shield",
   "behavior": "YuumiR",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 120.0,
    "cooldown_rank_max": 100.0,
@@ -567,7 +567,7 @@
    "binary": [
     "Characters/Yuumi/Spells/YuumiRAbility/YuumiR"
    ],
-   "evidence": "tag:Trait_ActiveHeal"
+   "evidence": "tag:Trait_ActiveHeal+wiki-ally"
   }
  },
  {
@@ -606,7 +606,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "YuumiR",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 120.0,
    "cooldown_rank_max": 100.0,
@@ -622,7 +622,7 @@
    "binary": [
     "Characters/Yuumi/Spells/YuumiRAbility/YuumiR"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -660,7 +660,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "YuumiRSpellPassive",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
@@ -676,7 +676,7 @@
    "binary": [
     "{1d7bd936}"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -684,7 +684,7 @@
   "family": "heal-shield",
   "behavior": "YuumiRShield",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -707,7 +707,7 @@
    "binary": [
     "{26fdc33c}"
    ],
-   "evidence": "name:shield"
+   "evidence": "name:shield+wiki-ally"
   }
  },
  {
@@ -901,7 +901,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "YuumiPAttack",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -1000,7 +1000,7 @@
   "family": "heal-shield",
   "behavior": "YuumiRMissile",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 120.0,
    "cooldown_rank_max": 100.0,
@@ -1053,7 +1053,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "YuumiRMissile",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 120.0,
    "cooldown_rank_max": 100.0,

@@ -58,7 +58,7 @@
   "family": "heal-shield",
   "behavior": "NamiW",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -81,7 +81,7 @@
    "binary": [
     "Characters/Nami/Spells/NamiWAbility/NamiW"
    ],
-   "evidence": "tag:Trait_ActiveHeal"
+   "evidence": "tag:Trait_ActiveHeal+wiki-ally"
   }
  },
  {
@@ -89,7 +89,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "NamiW",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -105,7 +105,7 @@
    "binary": [
     "Characters/Nami/Spells/NamiWAbility/NamiW"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -276,7 +276,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "NamiE",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 11.0,
    "cooldown_rank_max": 11.0,
@@ -292,7 +292,7 @@
    "binary": [
     "Characters/Nami/Spells/NamiEAbility/NamiE"
    ],
-   "evidence": "tag:Trait_AttackBuff_Duration"
+   "evidence": "tag:Trait_AttackBuff_Duration+wiki-ally"
   }
  },
  {

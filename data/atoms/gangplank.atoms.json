@@ -4,7 +4,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "GangplankRWithRaiseMorale",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 160.0,
    "cooldown_rank_max": 120.0,
@@ -20,7 +20,7 @@
    "binary": [
     "Characters/Gangplank/Spells/GangplankRAbility/GangplankRWithRaiseMorale"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {

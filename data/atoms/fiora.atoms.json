@@ -117,7 +117,7 @@
   "family": "heal-shield",
   "behavior": "FioraRHeal",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -140,7 +140,7 @@
    "binary": [
     "Characters/Fiora/Spells/FioraRAbility/FioraRHeal"
    ],
-   "evidence": "name:heal"
+   "evidence": "name:heal+wiki-ally"
   }
  },
  {
@@ -148,7 +148,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "FioraRBuff",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -164,7 +164,7 @@
    "binary": [
     "Characters/Fiora/Spells/FioraRAbility/FioraRBuff"
    ],
-   "evidence": "name:buff"
+   "evidence": "name:buff+wiki-ally"
   }
  },
  {
@@ -225,7 +225,7 @@
   "family": "heal-shield",
   "behavior": "FioraR",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 10.0,
    "cooldown_rank_max": 10.0,
@@ -248,7 +248,7 @@
    "binary": [
     "Characters/Fiora/Spells/FioraRAbility/FioraR"
    ],
-   "evidence": "tag:Trait_ActiveHeal"
+   "evidence": "tag:Trait_ActiveHeal+wiki-ally"
   }
  },
  {

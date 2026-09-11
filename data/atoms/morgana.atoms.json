@@ -378,7 +378,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "MorganaE",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 26.0,
    "cooldown_rank_max": 16.0,
@@ -394,7 +394,7 @@
    "binary": [
     "Characters/Morgana/Spells/MorganaEAbility/MorganaE"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {

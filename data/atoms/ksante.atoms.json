@@ -414,7 +414,7 @@
   "family": "heal-shield",
   "behavior": "KsanteEShield",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -437,7 +437,7 @@
    "binary": [
     "{9cb913bd}"
    ],
-   "evidence": "name:shield"
+   "evidence": "name:shield+wiki-ally"
   }
  },
  {

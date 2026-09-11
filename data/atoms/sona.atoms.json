@@ -28,7 +28,7 @@
   "family": "heal-shield",
   "behavior": "SonaWShield",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -51,7 +51,7 @@
    "binary": [
     "Characters/Sona/Spells/SonaWAbility/SonaWShield"
    ],
-   "evidence": "name:shield"
+   "evidence": "name:shield+wiki-ally"
   }
  },
  {
@@ -84,7 +84,7 @@
   "family": "heal-shield",
   "behavior": "SonaW",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -107,7 +107,7 @@
    "binary": [
     "Characters/Sona/Spells/SonaWAbility/SonaW"
    ],
-   "evidence": "tag:Trait_ActiveHeal"
+   "evidence": "tag:Trait_ActiveHeal+wiki-ally"
   }
  },
  {
@@ -115,7 +115,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "SonaW",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -131,7 +131,7 @@
    "binary": [
     "Characters/Sona/Spells/SonaWAbility/SonaW"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -552,7 +552,7 @@
   "family": "heal-shield",
   "behavior": "SonaWMissile",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -578,7 +578,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "SonaWMissile",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,

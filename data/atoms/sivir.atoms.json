@@ -139,7 +139,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "SivirR",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 10.0,
    "cooldown_rank_max": 10.0,
@@ -155,7 +155,7 @@
    "binary": [
     "Characters/Sivir/Spells/SivirRAbility/SivirR"
    ],
-   "evidence": "tag:Trait_AttackBuff_Duration"
+   "evidence": "tag:Trait_AttackBuff_Duration+wiki-ally"
   }
  },
  {
@@ -163,7 +163,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "SivirRASBuff",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -179,7 +179,7 @@
    "binary": [
     "{8f485316}"
    ],
-   "evidence": "name:buff"
+   "evidence": "name:buff+wiki-ally"
   }
  },
  {
@@ -532,7 +532,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "SivirRPassiveBuff",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -548,7 +548,7 @@
    "binary": [
     "Characters/Sivir/Spells/SivirRPassiveBuff"
    ],
-   "evidence": "name:buff"
+   "evidence": "name:buff+wiki-ally"
   }
  },
  {
@@ -803,7 +803,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "SivirRMissile",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 10.0,
    "cooldown_rank_max": 10.0,

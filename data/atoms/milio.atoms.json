@@ -163,7 +163,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "MilioPassive",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
@@ -179,7 +179,7 @@
    "binary": [
     "{3e27cfac}"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -187,7 +187,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "MilioPBuff",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -203,7 +203,7 @@
    "binary": [
     "{f08b37b8}"
    ],
-   "evidence": "name:buff"
+   "evidence": "name:buff+wiki-ally"
   }
  },
  {
@@ -236,7 +236,7 @@
   "family": "heal-shield",
   "behavior": "MilioR",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 160.0,
    "cooldown_rank_max": 10.0,
@@ -259,7 +259,7 @@
    "binary": [
     "Characters/Milio/Spells/MilioRAbility/MilioR"
    ],
-   "evidence": "tag:Trait_ActiveHeal"
+   "evidence": "tag:Trait_ActiveHeal+wiki-ally"
   }
  },
  {
@@ -267,7 +267,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "MilioR",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 160.0,
    "cooldown_rank_max": 10.0,
@@ -283,7 +283,7 @@
    "binary": [
     "Characters/Milio/Spells/MilioRAbility/MilioR"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -346,7 +346,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "MilioE",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.5,
    "cooldown_rank_max": 0.5,
@@ -362,7 +362,7 @@
    "binary": [
     "Characters/Milio/Spells/MilioEAbility/MilioE"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -471,7 +471,7 @@
   "family": "heal-shield",
   "behavior": "MilioW",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 29.0,
    "cooldown_rank_max": 19.0,
@@ -494,7 +494,7 @@
    "binary": [
     "Characters/Milio/Spells/MilioWAbility/MilioW"
    ],
-   "evidence": "tag:Trait_ActiveHeal"
+   "evidence": "tag:Trait_ActiveHeal+wiki-ally"
   }
  },
  {
@@ -502,7 +502,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "MilioW",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 29.0,
    "cooldown_rank_max": 19.0,
@@ -518,7 +518,7 @@
    "binary": [
     "Characters/Milio/Spells/MilioWAbility/MilioW"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {

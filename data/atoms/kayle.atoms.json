@@ -349,7 +349,7 @@
   "family": "heal-shield",
   "behavior": "KayleWHeal",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
@@ -372,7 +372,7 @@
    "binary": [
     "Characters/Kayle/Spells/KayleWAbility/KayleWHeal"
    ],
-   "evidence": "name:heal"
+   "evidence": "name:heal+wiki-ally"
   }
  },
  {
@@ -380,7 +380,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "KayleWHeal",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
@@ -396,7 +396,7 @@
    "binary": [
     "Characters/Kayle/Spells/KayleWAbility/KayleWHeal"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -404,7 +404,7 @@
   "family": "heal-shield",
   "behavior": "KayleW",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 15.0,
    "cooldown_rank_max": 15.0,
@@ -427,7 +427,7 @@
    "binary": [
     "Characters/Kayle/Spells/KayleWAbility/KayleW"
    ],
-   "evidence": "tag:Trait_ActiveHeal"
+   "evidence": "tag:Trait_ActiveHeal+wiki-ally"
   }
  },
  {
@@ -435,7 +435,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "KayleW",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 15.0,
    "cooldown_rank_max": 15.0,
@@ -451,7 +451,7 @@
    "binary": [
     "Characters/Kayle/Spells/KayleWAbility/KayleW"
    ],
-   "evidence": "tag:Trait_AttackBuff_Duration"
+   "evidence": "tag:Trait_AttackBuff_Duration+wiki-ally"
   }
  },
  {
@@ -848,7 +848,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "KayleR",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 160.0,
    "cooldown_rank_max": 80.0,
@@ -864,7 +864,7 @@
    "binary": [
     "Characters/Kayle/Spells/KayleRAbility/KayleR"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {

@@ -59,7 +59,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "TaricW",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 15.0,
    "cooldown_rank_max": 15.0,
@@ -75,7 +75,7 @@
    "binary": [
     "Characters/Taric/Spells/TaricWAbility/TaricW"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -107,7 +107,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "TaricWSelfBuff",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -123,7 +123,7 @@
    "binary": [
     "Characters/Taric/Spells/TaricWAbility/TaricWSelfBuff"
    ],
-   "evidence": "name:buff"
+   "evidence": "name:buff+wiki-ally"
   }
  },
  {
@@ -180,7 +180,7 @@
   "family": "heal-shield",
   "behavior": "TaricQ",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 3.0,
    "cooldown_rank_max": 3.0,
@@ -203,7 +203,7 @@
    "binary": [
     "Characters/Taric/Spells/TaricQAbility/TaricQ"
    ],
-   "evidence": "tag:Trait_ActiveHeal"
+   "evidence": "tag:Trait_ActiveHeal+wiki-ally"
   }
  },
  {
@@ -235,7 +235,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "TaricQ",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 3.0,
    "cooldown_rank_max": 3.0,
@@ -251,7 +251,7 @@
    "binary": [
     "Characters/Taric/Spells/TaricQAbility/TaricQ"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {

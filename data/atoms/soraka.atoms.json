@@ -249,7 +249,7 @@
   "family": "heal-shield",
   "behavior": "SorakaR",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 150.0,
    "cooldown_rank_max": 10.0,
@@ -272,7 +272,7 @@
    "binary": [
     "Characters/Soraka/Spells/SorakaRAbility/SorakaR"
    ],
-   "evidence": "tag:Trait_ActiveHeal"
+   "evidence": "tag:Trait_ActiveHeal+wiki-ally"
   }
  },
  {
@@ -280,7 +280,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "SorakaR",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 150.0,
    "cooldown_rank_max": 10.0,
@@ -296,7 +296,7 @@
    "binary": [
     "Characters/Soraka/Spells/SorakaRAbility/SorakaR"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -355,7 +355,7 @@
   "family": "heal-shield",
   "behavior": "SorakaW",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 6.0,
    "cooldown_rank_max": 2.0,
@@ -378,7 +378,7 @@
    "binary": [
     "Characters/Soraka/Spells/SorakaWAbility/SorakaW"
    ],
-   "evidence": "tag:Trait_ActiveHeal"
+   "evidence": "tag:Trait_ActiveHeal+wiki-ally"
   }
  },
  {
@@ -386,7 +386,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "SorakaW",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 6.0,
    "cooldown_rank_max": 2.0,
@@ -402,7 +402,7 @@
    "binary": [
     "Characters/Soraka/Spells/SorakaWAbility/SorakaW"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {

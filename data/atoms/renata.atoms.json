@@ -164,7 +164,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "RenataE",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 14.0,
    "cooldown_rank_max": 10.0,
@@ -180,7 +180,7 @@
    "binary": [
     "Characters/Renata/Spells/RenataEAbility/RenataE"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -365,7 +365,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "RenataW",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 24.0,
    "cooldown_rank_max": 10.0,
@@ -381,7 +381,7 @@
    "binary": [
     "Characters/Renata/Spells/RenataWAbility/RenataW"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {

@@ -294,7 +294,7 @@
   "family": "heal-shield",
   "behavior": "BardW",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
@@ -317,7 +317,7 @@
    "binary": [
     "Characters/Bard/Spells/BardWAbility/BardW"
    ],
-   "evidence": "tag:Trait_ActiveHeal"
+   "evidence": "tag:Trait_ActiveHeal+wiki-ally"
   }
  },
  {
@@ -349,7 +349,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "BardW",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
@@ -365,7 +365,7 @@
    "binary": [
     "Characters/Bard/Spells/BardWAbility/BardW"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -373,7 +373,7 @@
   "family": "heal-shield",
   "behavior": "BardWActualHealing",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -396,7 +396,7 @@
    "binary": [
     "Characters/Bard/Spells/BardWAbility/BardWActualHealing"
    ],
-   "evidence": "name:heal"
+   "evidence": "name:heal+wiki-ally"
   }
  },
  {
@@ -404,7 +404,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "BardWActualHealing",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -420,7 +420,7 @@
    "binary": [
     "Characters/Bard/Spells/BardWAbility/BardWActualHealing"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -428,7 +428,7 @@
   "family": "heal-shield",
   "behavior": "BardWHealthPack",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -451,7 +451,7 @@
    "binary": [
     "Characters/Bard/Spells/BardWAbility/BardWHealthPack"
    ],
-   "evidence": "name:heal"
+   "evidence": "name:heal+wiki-ally"
   }
  },
  {
@@ -459,7 +459,7 @@
   "family": "heal-shield",
   "behavior": "BardWDirectHeal",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -482,7 +482,7 @@
    "binary": [
     "Characters/Bard/Spells/BardWAbility/BardWDirectHeal"
    ],
-   "evidence": "name:heal"
+   "evidence": "name:heal+wiki-ally"
   }
  },
  {
@@ -490,7 +490,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "BardWDirectHeal",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": null,
    "cooldown_rank_max": null,
@@ -506,7 +506,7 @@
    "binary": [
     "Characters/Bard/Spells/BardWAbility/BardWDirectHeal"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {

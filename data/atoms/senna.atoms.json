@@ -114,7 +114,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "SennaR",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 140.0,
    "cooldown_rank_max": 100.0,
@@ -130,7 +130,7 @@
    "binary": [
     "Characters/Senna/Spells/SennaRAbility/SennaR"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -316,7 +316,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "SennaQCast",
   "trigger": "on_effect",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 0.0,
    "cooldown_rank_max": 0.0,
@@ -332,7 +332,7 @@
    "binary": [
     "Characters/Senna/Spells/SennaQCast"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
@@ -499,7 +499,7 @@
   "family": "heal-shield",
   "behavior": "SennaQ",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 15.0,
    "cooldown_rank_max": 15.0,
@@ -522,7 +522,7 @@
    "binary": [
     "Characters/Senna/Spells/SennaQAbility/SennaQ"
    ],
-   "evidence": "tag:Trait_ActiveHeal"
+   "evidence": "tag:Trait_ActiveHeal+wiki-ally"
   }
  },
  {
@@ -530,7 +530,7 @@
   "family": "stack-transform-summon-resource",
   "behavior": "SennaQ",
   "trigger": "on_cast",
-  "target_policy": "self",
+  "target_policy": "ally",
   "parameters": {
    "cooldown_rank1": 15.0,
    "cooldown_rank_max": 15.0,
@@ -546,7 +546,7 @@
    "binary": [
     "Characters/Senna/Spells/SennaQAbility/SennaQ"
    ],
-   "evidence": "tag:PositiveEffect_Boon"
+   "evidence": "tag:PositiveEffect_Boon+wiki-ally"
   }
  },
  {
