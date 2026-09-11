@@ -195414,11 +195414,11 @@
       "numeric_leaves": 40591,
       "sections": "coupled_scenarios"
     },
-    "git_head": "f4c49120298dccec8bfadfd453c2cc912459e094",
+    "git_head": "0096d5733648eb17d0372a011785e40355f9415a",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 26,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "01e0a3dcce8ffd6bbb7fc61968d35130b77bede5"
+    "src_tree_sha": "19d03795b9907b09061ebce37cb22e6494d6d3bc"
   }
 }
