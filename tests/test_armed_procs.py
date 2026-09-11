@@ -10,8 +10,11 @@ from src.calculator.calculate import calculate_payload
 from src.calculator.champions.armed_procs import (
     ArmedProcRule,
     armed_swing_count,
+    cached_stack_terms,
+    counted_hit_times,
     declared_rule,
 )
+from src.calculator.data_fetcher import get_champion
 
 # Galio's shape: a timer, brought forward by every arming cast.
 _TIMER = ArmedProcRule(
@@ -70,6 +73,85 @@ class TestTheStackShape:
         casts = (("Q", 0.0),)
         assert armed_swing_count(_STACKS, casts, (3.9,)) == 1
         assert armed_swing_count(_STACKS, casts, (4.1,)) == 0
+
+
+#: Akshan's and Ekko's shape: both streams stack, the third application procs.
+_BOTH_STREAMS = ArmedProcRule(
+    arming_slots=frozenset(),
+    max_stacks=3,
+    hits_required=3,
+    stacks_from_swings=True,
+    stacks_from_ability_hits=True,
+    stack_seconds=4.0,
+)
+#: Talon's shape: abilities stack, a basic attack spends three.
+_ABILITY_STACKS = ArmedProcRule(
+    arming_slots=frozenset(),
+    max_stacks=3,
+    hits_required=3,
+    stacks_from_ability_hits=True,
+    consumed_by_swing=True,
+    stack_seconds=6.0,
+)
+
+
+class TestTheHitCounterShape:
+    def test_every_third_hit_across_both_streams_procs(self) -> None:
+        swings = (0.0, 1.0, 2.0, 3.0, 4.0, 5.0)
+        assert counted_hit_times(_BOTH_STREAMS, swings, (0.5,)) == (1.0, 4.0)
+
+    def test_a_cycle_that_never_completes_procs_nothing(self) -> None:
+        assert counted_hit_times(_BOTH_STREAMS, (0.0, 1.0), ()) == ()
+
+    def test_a_stack_expires_on_its_own_clock(self) -> None:
+        """Two hits, then a gap longer than the stack's life, then a third:
+        the counter is back at one, not at three."""
+        assert counted_hit_times(_BOTH_STREAMS, (0.0, 1.0, 9.0), ()) == ()
+
+    def test_abilities_stack_and_a_swing_spends_them(self) -> None:
+        assert counted_hit_times(_ABILITY_STACKS, (0.4,), (0.0, 0.1, 0.2)) == (0.4,)
+
+    def test_a_swing_with_too_few_stacks_spends_nothing(self) -> None:
+        assert counted_hit_times(_ABILITY_STACKS, (0.4,), (0.0, 0.1)) == ()
+
+    def test_a_swing_refreshes_what_is_banked_without_adding_to_it(self) -> None:
+        """Talon's basic attacks refresh Wound; if they also stacked it, two
+        abilities and two swings would proc, and they must not."""
+        assert counted_hit_times(_ABILITY_STACKS, (0.3, 0.4), (0.0, 0.1)) == ()
+
+    def test_a_counter_that_names_no_stream_is_refused(self) -> None:
+        with pytest.raises(ValueError, match="names no stream"):
+            ArmedProcRule(arming_slots=frozenset(), max_stacks=3, hits_required=3)
+
+    def test_a_counter_that_can_never_reach_its_threshold_is_refused(self) -> None:
+        with pytest.raises(ValueError, match="never procs"):
+            ArmedProcRule(
+                arming_slots=frozenset(),
+                max_stacks=2,
+                hits_required=3,
+                stacks_from_swings=True,
+            )
+
+
+class TestTheStackTermsComeFromTheCache:
+    """One cached sentence shape, read for every kit that writes it."""
+
+    @pytest.mark.parametrize(
+        ("champion", "expected"),
+        [("Akshan", (5.0, 3)), ("Ekko", (4.0, 3)), ("Talon", (6.0, 3))],
+    )
+    def test_the_cached_sentence_states_the_life_and_the_cap(
+        self, champion: str, expected: tuple[float, int]
+    ) -> None:
+        ability = get_champion(champion)["abilities"]["P"][0]
+        assert cached_stack_terms(ability, owner=f"{champion} P") == expected
+
+    def test_a_cache_that_stops_saying_it_raises(self) -> None:
+        with pytest.raises(ValueError, match="stack life and cap"):
+            cached_stack_terms(
+                {"effects": [{"description": "Innate: nothing."}]},
+                owner="a kit under test",
+            )
 
 
 class TestTheDeclaration:
@@ -155,6 +237,21 @@ class TestTheKitsThatDeclareIt:
         """His keg reset is not modelled, so the derived count is a floor."""
         assert self._procs(self._fight("Gangplank", 5.0)) == 1
         assert self._procs(self._fight("Gangplank", 20.0)) == 2
+
+    @pytest.mark.parametrize(
+        ("champion", "short", "long"),
+        [
+            ("Ambessa", 4, 8),
+            ("Akshan", 1, 6),
+            ("Ekko", 3, 10),
+            ("Talon", 1, 2),
+        ],
+    )
+    def test_each_counting_kit_scales_with_the_fight(
+        self, champion: str, short: int, long: int
+    ) -> None:
+        assert self._procs(self._fight(champion, 5.0)) == short
+        assert self._procs(self._fight(champion, 20.0)) == long
 
     def test_a_request_that_names_the_count_keeps_it(self) -> None:
         """The override: the reader saw the swing miss, and says so."""

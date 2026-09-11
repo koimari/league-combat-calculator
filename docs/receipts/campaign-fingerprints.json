@@ -51,7 +51,8 @@
   "Rumble's Heat derivation (docs/receipts/expected-golden-diff-rumble-heat-derivation.json) moves the three golden blocks onto the tree that walks the cast plan for a kit's self-silencing resource. golden.leaves rises 60489 to 60503 and numeric_leaves 46367 to 46375: Rumble's passive row gains cast_resource_lockout, on_hit and stat_buff, which the fight now rates for itself, and its detail string is rewritten; entries stay 672. No damage leaf moves, because a ten-second golden fight reaches about 120 of the cached 150 Heat and Overheats zero times. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured on this tip.",
   "The pet attack window (docs/receipts/expected-golden-diff-pet-attack-window.json) moves the three golden blocks onto the tree that derives a summon's attack count from its own cadence over the fight. Every count stays where it was: no leaf is added or removed, and 21 Ivern damage leaves fall by one Daisy attack because her declared 6 was a rank-3 cadence priced at every rank. coupled_golden and coupled_golden_exact move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here.",
   "Armed empowered swings (docs/receipts/expected-golden-diff-armed-empowered-swings.json) move the three golden blocks onto the tree that walks them. golden.leaves rises 60503 to 60529: Galio's and Sylas' passive rows each publish their cached arming rule, and Sylas' empowered row appears in fights where it priced nothing before. 58 pair leaves move, all of them those two kits' passive, swing and on-hit rows, because an empowered swing REPLACES an ordinary one rather than adding to it. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here.",
-  "Cooldown-armed procs (docs/receipts/expected-golden-diff-cooldown-armed-procs.json) move the three golden blocks. golden.leaves rises 60553 to 60545: both slots publish their arming rule. 679 pair leaves move and all of them rise, 648 in the item sweep, whose timed arm is ziggs_30s, because Short Fuse's engine walk stopped at the module's declared two procs and the shared walk runs to the fight's end for six. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here."
+  "Cooldown-armed procs (docs/receipts/expected-golden-diff-cooldown-armed-procs.json) move the three golden blocks. golden.leaves rises 60553 to 60545: both slots publish their arming rule. 679 pair leaves move and all of them rise, 648 in the item sweep, whose timed arm is ziggs_30s, because Short Fuse's engine walk stopped at the module's declared two procs and the shared walk runs to the fight's end for six. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here.",
+  "Hit-counter procs (docs/receipts/expected-golden-diff-hit-counter-procs.json) move the three golden blocks. golden.leaves rises 60545 to 60591: Ekko's Z-Drive row is emitted where a zero default withheld it entirely, and four slots publish their arming rule. Only Ekko's fight numbers move; Akshan, Ambessa and Talon each move one declaration leaf, because in the golden's five-second window the walk agrees with the count each module declared. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here."
  ],
  "provenance": {
   "golden": "VERIFIED",
@@ -66,23 +67,23 @@
  "golden": {
   "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights",
   "entries": 672,
-  "leaves": 60545,
-  "numeric_leaves": 46398,
-  "src_tree_sha": "77c240396a9b3030c6c2d3dcf3327f748f01d45e"
+  "leaves": 60591,
+  "numeric_leaves": 46420,
+  "src_tree_sha": "94a8c60235bca63f35e7fa3108e0148c747da24c"
  },
  "coupled_golden": {
   "sections": "coupled_scenarios",
   "entries": 26,
   "leaves": 124746,
   "numeric_leaves": 40591,
-  "src_tree_sha": "77c240396a9b3030c6c2d3dcf3327f748f01d45e"
+  "src_tree_sha": "94a8c60235bca63f35e7fa3108e0148c747da24c"
  },
  "coupled_golden_exact": {
   "sections": "coupled_scenarios",
   "entries": 30,
   "leaves": 224,
   "numeric_leaves": 0,
-  "src_tree_sha": "77c240396a9b3030c6c2d3dcf3327f748f01d45e"
+  "src_tree_sha": "94a8c60235bca63f35e7fa3108e0148c747da24c"
  },
  "bench": {
   "cassiopeia_3champ": {

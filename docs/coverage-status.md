@@ -53,7 +53,7 @@ The 6 slots with no engine axis at all:
 
 A calculator is only as deep as the questions it answers for itself, so
 this is the number to steer by. Of
-354 champion options, 22 ask for a count of
+354 champion options, 19 ask for a count of
 something that happens INSIDE the modelled fight: how many procs landed,
 how many ticks a channel took, how many attacks a pet made. Each of those
 is a derivation the engine could do from the cast plan and the swing
@@ -63,7 +63,7 @@ a way to get a wrong answer by leaving a default alone.
 
 A further 15 default to the whole sourced thing —
 a channel's every tick, a clip's every shot — so the option only removes
-from a complete reading, and 8 derive their
+from a complete reading, and 11 derive their
 default outright and take an override.
 12 count state the champion arrived WITH —
 stacks farmed over a game, souls collected, a mark already on the target.
@@ -72,9 +72,9 @@ No engine derives those and asking is correct.
 
 | Bucket | Options | Who can answer |
 |---|---|---|
-| In-fight counts, still asked | 22 | the engine, once each is derived |
+| In-fight counts, still asked | 19 | the engine, once each is derived |
 | In-fight counts, full by default | 15 | already complete; the option removes |
-| In-fight counts, derived default | 8 | the engine; the option is an override |
+| In-fight counts, derived default | 11 | the engine; the option is an override |
 | Pre-fight state | 12 | the player, permanently |
 | Unreviewed | 32 | undecided; read the label |
 | Not a count at all | 265 | the player: a variant, a target, a cone's reach |
@@ -87,9 +87,7 @@ answers them, which are the work:
 | Akali | `passive_procs` | Passive procs |
 | Akshan | `passive_procs` | Passive procs (3-stack) |
 | Akshan | `e_shots` | E shots fired |
-| Ambessa | `passive_procs` | Passive procs |
 | Azir | `soldier_autos` | Replace basic attacks with Sand Soldier attacks |
-| Ekko | `p_procs` | Z-Drive Resonance detonations (3 stacks each) |
 | Heimerdinger | `q_turret_attacks` | Turret attacks |
 | Jax | `e_dodged_attacks` | Counter Strike attacks dodged |
 | Karthus | `e_ticks` | Defile damage ticks (one rotation) |
@@ -102,7 +100,6 @@ answers them, which are the work:
 | Shaco | `p_procs` | Backstab attacks (basic attacks landing from behind) |
 | Shaco | `r_clone_attacks` | R clone basic attacks commanded |
 | Shyvana | `q_casts` | Emberstrike casts |
-| Talon | `passive_procs` | Blade's End 3-stack consumes |
 | Wukong | `r_casts` | Cyclone casts |
 | Yorick | `mist_walker_attacks` | Mist Walker attacks per walker (5s window) |
 | Yorick | `maiden_attacks` | Maiden of the Mist attacks (5s window) |

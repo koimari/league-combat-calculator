@@ -4,7 +4,11 @@ import math
 from typing import Any
 
 from ...ability_atoms import ability_field
-from ...champions.armed_procs import armed_swing_times, declared_rule
+from ...champions.armed_procs import (
+    armed_swing_times,
+    counted_hit_times,
+    declared_rule,
+)
 from ..autos.swing_schedule import _auto_attack_timestamps
 from ..ledger.event_ledger import _ordered_damage_events
 from ..ledger.event_rows import _row_time
@@ -12,6 +16,26 @@ from ..mitigation import _apply_basic_amp
 from ..resists import _mitigate
 from ..results import RotationResult
 from ..state import FightState
+
+
+def _ability_hit_times(state: "FightState", rotation: Any) -> tuple[float, ...]:
+    """When each accepted ability hit landed, for a kit that counts them.
+
+    The same accepted ledger that prices the casts, so a counter cannot
+    reach its threshold on a hit the fight never admitted.
+    """
+    return tuple(
+        float(event["time"])
+        for event in _ordered_damage_events(
+            state.breakdown,
+            state.ability_damages,
+            state.cast_order,
+            cast_events=rotation.cast_events,
+            roster_target_index=state.ledger_target_index,
+        )
+        if event.get("phase") == "ability"
+        and event.get("source_key") in state.ability_damages
+    )
 
 
 def _add_precomputed_proc_damage(
@@ -45,23 +69,30 @@ def _add_precomputed_proc_damage(
             and state.num_auto_attacks > 0
         )
         if walkable and armed is not None:
+            rule = armed[1]
             if state.one_rotation:
                 # No clock to walk, so the count stays the module's and only
                 # its timing is authored, on the swings that carried it.
-                authored_proc_times = _auto_attack_timestamps(state)[: int(proc_count)]
+                times = tuple(_auto_attack_timestamps(state)[: int(proc_count)])
+            elif rule.hits_required > 0:
+                times = counted_hit_times(
+                    rule,
+                    _auto_attack_timestamps(state),
+                    _ability_hit_times(state, rotation),
+                )
             else:
                 times = armed_swing_times(
-                    armed[1],
+                    rule,
                     state.ability_cast_times,
                     _auto_attack_timestamps(state),
                 )
-                if armed[1].requested:
-                    # The request owns the count; the walk still says WHICH
-                    # swings could have carried it.
-                    times = times[: int(proc_count)]
-                else:
-                    proc_count = len(times)
-                authored_proc_times = list(times)
+            if rule.requested or state.one_rotation:
+                # The request owns the count; the walk still says WHICH
+                # moments could have carried it.
+                times = times[: int(proc_count)]
+            else:
+                proc_count = len(times)
+            authored_proc_times = list(times)
         if proc_count <= 0:
             continue
         if (
