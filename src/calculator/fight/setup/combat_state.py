@@ -445,6 +445,9 @@ def _resolve_combat_state(
         ability_haste=champion_stats["ability_haste"],
         one_rotation=config.one_rotation,
         include_actives=config.include_actives,
+        clip_to_window=(
+            not config.count_damage_after_fight_end and not config.one_rotation
+        ),
         auto_attacks_only=config.auto_attacks_only,
         ultimate_recasts=config.ultimate_recasts,
         deterministic=config.deterministic,

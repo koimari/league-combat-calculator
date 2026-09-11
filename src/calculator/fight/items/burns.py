@@ -121,6 +121,10 @@ def _add_burn_damage(state: FightState, rotation: RotationResult) -> None:
         # (user-measured: Cassiopeia + Blackfire over 3s did ~90
         # in-game, the capped model said ~30).
         effective_burn_time = dot_refresh_end + burn_duration
+        if state.clip_to_window:
+            # The request clips to the window: the burn ticks only until
+            # the fight ends, however long its last refresh would run.
+            effective_burn_time = min(effective_burn_time, state.fight_duration_seconds)
         if effective_burn_time > burn_duration:
             burn_multiplier = effective_burn_time / burn_duration
             raw_burn *= burn_multiplier

@@ -377,15 +377,11 @@ class TestViBlastShield:
             "reason": "self_shield_carrier_skipped",
             "attacker": "main",
             "target": "main",
-            # Ahri:1 is E's forced swing at the 1.25 cast: with E's rider
-            # timed past the 3 s window no longer authored (#323), the row
-            # publishes its swing as one cast-boundary event, so Q is the
-            # second packet and W the third.
-            "event_id": "main:enemy:Ahri:2:shield",
-            "carrier_event_id": "main:enemy:Ahri:2",
+            "event_id": "main:enemy:Ahri:1:shield",
+            "carrier_event_id": "main:enemy:Ahri:1",
             "carrier_skipped_reason": "attacker_state_blocked",
             # W at 1.721, the last in-window ability packet Vi authored.
-            "last_candidate_event_id": "main:enemy:Ahri:3",
+            "last_candidate_event_id": "main:enemy:Ahri:2",
             "last_candidate_skipped_reason": "attacker_state_blocked",
             "withheld_amount": pytest.approx(292.8),
         }

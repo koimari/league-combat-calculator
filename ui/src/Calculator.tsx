@@ -1017,6 +1017,7 @@ function CalculatorSession({
   const setupFile = useRef<HTMLInputElement>(null);
   const [includeActives, setIncludeActives] = useState(true);
   const [enemiesAttack, setEnemiesAttack] = useState(true);
+  const [countAfterEnd, setCountAfterEnd] = useState(true);
   const [dummyStats, setDummyStats] = useState<Record<string, number>>({});
   const [useSequence, setUseSequence] = useState(false);
   const [events, setEvents] = useState<AuthoredEvent[]>([]);
@@ -1228,6 +1229,7 @@ function CalculatorSession({
       fight_duration: duration,
       include_actives: includeActives,
       enemies_attack: enemiesAttack,
+      count_damage_after_fight_end: countAfterEnd,
       deterministic: true,
       allies: allies
         .filter((actor) => actor.champion)
@@ -1318,6 +1320,7 @@ function CalculatorSession({
     autosOnly,
     includeActives,
     enemiesAttack,
+    countAfterEnd,
     dummyStats,
     useSequence,
     events,
@@ -1347,6 +1350,7 @@ function CalculatorSession({
       autosOnly,
       includeActives,
       enemiesAttack,
+      countAfterEnd,
       dummyStats,
       useSequence,
       events,
@@ -1365,6 +1369,7 @@ function CalculatorSession({
     setAutosOnly(value.autosOnly);
     setIncludeActives(value.includeActives);
     setEnemiesAttack(value.enemiesAttack);
+    setCountAfterEnd(value.countAfterEnd ?? true);
     setDummyStats(value.dummyStats);
     setUseSequence(value.useSequence);
     setEvents(value.events);
@@ -2367,6 +2372,17 @@ function CalculatorSession({
                     onChange={(e) => setEnemiesAttack(e.target.checked)}
                   />
                   Enemies attack
+                </label>
+                <label
+                  className="calculator-check"
+                  title="On: a hit lit inside the fight still lands after it (a fused bomb, a channel, a DoT's remaining ticks, a burn's tail). Off: every landing is clipped at the fight's end."
+                >
+                  <input
+                    type="checkbox"
+                    checked={countAfterEnd}
+                    onChange={(e) => setCountAfterEnd(e.target.checked)}
+                  />
+                  Count damage after the fight ends
                 </label>
                 <button
                   type="button"

@@ -325,8 +325,9 @@ def test_payload_q_casts_grow_with_duration_on_the_worked_cooldown():
     twenty = [e for e in _timed_payload(20.0)["damage_events"] if e["source"] == "Q"]
 
     assert len(ten) == 5 + 4
-    # The tenth boulder would land at 20.125 s, past a 20 s window (#323).
-    assert len(twenty) == 5 + 9
+    # The tenth boulder lands at 20.125 s, past the 20 s window, and counts
+    # under the default count_damage_after_fight_end reading.
+    assert len(twenty) == 5 + 10
     boulder_times = [event["time"] for event in ten[5:]]
     # Q is scheduled at 0.5 (after E and W casts); boulders land at
     # 0.5 + start + 0.25 cast + 0.375 travel on the worked cadence.
