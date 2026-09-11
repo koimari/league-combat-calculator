@@ -103,8 +103,6 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # the cast boundary; this is never inferred from part count alone.
         "event_order_certified",
         "auto_stack_every",
-        "short_fuse_cooldown",
-        "short_fuse_refund",
         "timeline_event_model",
         "dot_stack_count",
         # Module-authored self-shield payloads (E8c).  A list aligned to the

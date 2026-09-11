@@ -113,7 +113,7 @@ class TestTheDeclaration:
             )
 
 
-class TestTheTwoKitsThatDeclareIt:
+class TestTheKitsThatDeclareIt:
     @staticmethod
     def _fight(champion: str, duration: float, options: dict | None = None) -> dict:
         return calculate_payload(
@@ -131,7 +131,10 @@ class TestTheTwoKitsThatDeclareIt:
 
     @staticmethod
     def _procs(payload: dict) -> int:
-        row = payload["breakdown"].get("on_hit_ability_passive")
+        """The empowered-swing count, whichever row this kit publishes it on."""
+        row = payload["breakdown"].get("on_hit_ability_passive") or payload[
+            "breakdown"
+        ].get("passive")
         return 0 if row is None else int(row["count"])
 
     def test_galio_smashes_more_often_in_a_longer_fight(self) -> None:
@@ -141,6 +144,17 @@ class TestTheTwoKitsThatDeclareIt:
     def test_sylas_spends_the_stacks_his_casts_banked(self) -> None:
         assert self._procs(self._fight("Sylas", 5.0)) == 4
         assert self._procs(self._fight("Sylas", 20.0)) == 8
+
+    def test_ziggs_short_fuse_is_no_longer_capped_at_its_packet_count(self) -> None:
+        """The engine held a champion-named walk of its own, capped by the
+        declared two; the shared walk runs to the fight's end instead."""
+        assert self._procs(self._fight("Ziggs", 5.0)) == 2
+        assert self._procs(self._fight("Ziggs", 30.0)) == 6
+
+    def test_gangplank_arms_on_the_timer_alone(self) -> None:
+        """His keg reset is not modelled, so the derived count is a floor."""
+        assert self._procs(self._fight("Gangplank", 5.0)) == 1
+        assert self._procs(self._fight("Gangplank", 20.0)) == 2
 
     def test_a_request_that_names_the_count_keeps_it(self) -> None:
         """The override: the reader saw the swing miss, and says so."""

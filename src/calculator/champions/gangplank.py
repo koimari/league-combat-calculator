@@ -21,16 +21,23 @@ _GANGPLANK_W_SPELL = spell_object("Gangplank", "GangplankW")
 _GANGPLANK_R_SPELL = spell_object("Gangplank", "GangplankR")
 
 
+# The ceiling on the derived count: the packet count a proc row publishes
+# is what the walk may fill, and ten empowered attacks is longer than any
+# fight this engine prices.
+_P_MAX_PROCS = 10
+
+
 def _trial_proc(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
     procs = min(max(int(ctx.option("p_procs")), 0), 10)
-    if procs <= 0:
+    requested = ctx.options.get("p_procs") is not None
+    if procs <= 0 and requested:
         return no_damage(
             ctx,
             name="Trial by Fire",
-            reason="Passive burn is ready only when an empowered attack is selected.",
+            reason="The request asked for no empowered attack.",
             slot="P",
         )
     per_tick = (
@@ -44,8 +51,20 @@ def _trial_proc(ctx: SlotCtx) -> dict[str, Any] | None:
         "parts": (
             DamagePart("true", per_tick, count=10, time_offset=0.0, hit_interval=0.25),
         ),
-        "proc_count": procs,
-        "detail": f"{procs} empowered attacks, each burning for 2.5 seconds.",
+        "proc_count": max(procs, _P_MAX_PROCS),
+        "armed_procs": {
+            "arming_slots": (),
+            "max_stacks": 1,
+            "cooldown": extract_cooldown(ability, ctx.rank_for()),
+            "armed_at_start": True,
+            "requested": requested,
+        },
+        "detail": (
+            "Empowered attacks burning for 2.5 seconds each, armed on the "
+            "cached cooldown. A Powder Keg explosion resets that cooldown, "
+            "which this model does not price: the keg field is not modelled, "
+            "so the derived count is the timer alone and is a floor."
+        ),
     }
 
 
@@ -259,7 +278,16 @@ parse_abilities = build_parser(
 )
 
 OPTIONS = [
-    int_option("p_procs", 0, minimum=0, maximum=10, label="Trial by Fire procs"),
+    int_option(
+        "p_procs",
+        0,
+        minimum=0,
+        maximum=_P_MAX_PROCS,
+        label=(
+            "Trial by Fire procs; unset derives them from the cached "
+            "cooldown, which a Powder Keg explosion would reset"
+        ),
+    ),
     bool_option("r_fire_at_will", False, label="Cannon Barrage Fire at Will upgrade"),
     bool_option(
         "r_deaths_daughter", False, label="Cannon Barrage Death's Daughter upgrade"

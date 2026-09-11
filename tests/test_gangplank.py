@@ -44,10 +44,18 @@ class TestReviewedCrowdControl:
             assert _CC.control_hits(slot) == list(expected), slot
 
     def test_every_reviewed_part_carries_its_kind(self):
-        assert _CC.kinds() == {"Q": ["none"], "E": ["slow"], "R": ["slow"]}
+        """The burn row is always emitted now: the fight decides its count
+        (``champions/armed_procs.py``), so the slot no longer withholds
+        itself when nobody has declared a proc."""
+        assert _CC.kinds() == {
+            "passive": ["none"],
+            "Q": ["none"],
+            "E": ["slow"],
+            "R": ["slow"],
+        }
 
     def test_reviewed_kinds_follow_the_other_branch(self):
-        """The burn row carries the review once it prices any proc."""
+        """A request that names the count reads the same review."""
         assert _CC.kinds(p_procs=2) == {
             "passive": ["none"],
             "Q": ["none"],
