@@ -1,0 +1,71 @@
+{
+ "slice": "hit-counter-procs",
+ "issue": "docs/coverage-status.md depth frontier (backlog SR7)",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures all three baselines in the same commit."
+ },
+ "what_landed": "A stacking innate's proc count is walked over the hits the fight landed (champions/armed_procs.py gains a hit-counter arm). Akshan, Ekko and Talon declare which streams stack; Ambessa uses the cast-stack arm Sylas already had. Every stack life and cap is read from the one cached sentence shape all four write.",
+ "why": [
+  "Only Ekko's fight numbers move. His row was option-gated: proc_damage returns nothing at a zero count, and his default was zero, so Z-Drive Resonance priced nothing at all until a reader set p_procs. It is why he sat in the coverage sweep's OPTION_GATED table, and that row is now gone.",
+  "Akshan, Ambessa and Talon move one leaf each, the arming rule their slot now publishes: in the golden's five-second window the walk agrees with the count each module declared, which is the evidence that the declared defaults were reasonable readings of a short fight and wrong only as the fight grew."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "The four kits that declare a counting rule. Moved sections: champion_baselines (4), registered_champion_fights (18)."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "Ekko's row is emitted where the zero default withheld it, and four slots publish their rule"
+  },
+  "/metadata/fingerprint/numeric_leaves": {
+   "cause": "the same"
+  }
+ },
+ "summary": {
+  "direction": "up: Ekko's detonations were priced at zero and are now walked",
+  "counts": {
+   "golden": 24,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Akshan/abilities_level_11/passive/armed_procs",
+   "/champion_baselines/Ambessa/abilities_level_11/passive/armed_procs",
+   "/champion_baselines/Ekko/abilities_level_11/passive",
+   "/champion_baselines/Talon/abilities_level_11/passive/armed_procs",
+   "/registered_champion_fights/Ekko/11/sustained/magic_build/breakdown_totals/passive",
+   "/registered_champion_fights/Ekko/11/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+   "/registered_champion_fights/Ekko/11/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Ekko/11/sustained/no_items/breakdown_totals/passive",
+   "/registered_champion_fights/Ekko/11/sustained/no_items/total_damage",
+   "/registered_champion_fights/Ekko/11/sustained/physical_build/breakdown_totals/passive",
+   "/registered_champion_fights/Ekko/11/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Ekko/11/sustained/spellblade_build/breakdown_totals/passive",
+   "/registered_champion_fights/Ekko/11/sustained/spellblade_build/total_damage",
+   "/registered_champion_fights/Ekko/18/sustained/magic_build/breakdown_totals/passive",
+   "/registered_champion_fights/Ekko/18/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+   "/registered_champion_fights/Ekko/18/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Ekko/18/sustained/no_items/breakdown_totals/passive",
+   "/registered_champion_fights/Ekko/18/sustained/no_items/total_damage",
+   "/registered_champion_fights/Ekko/18/sustained/physical_build/breakdown_totals/passive",
+   "/registered_champion_fights/Ekko/18/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Ekko/18/sustained/spellblade_build/breakdown_totals/passive",
+   "/registered_champion_fights/Ekko/18/sustained/spellblade_build/total_damage"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}

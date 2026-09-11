@@ -718,6 +718,16 @@
           "total_raw": 0.0
         },
         "passive": {
+          "armed_procs": {
+            "armed_at_start": false,
+            "arming_slots": [],
+            "hits_required": 3,
+            "max_stacks": 3,
+            "requested": false,
+            "stack_seconds": 5.0,
+            "stacks_from_ability_hits": true,
+            "stacks_from_swings": true
+          },
           "auto_stack_every": 3,
           "cc_reviewed": true,
           "damage_events": [
@@ -1239,6 +1249,20 @@
           "total_raw": 150.0
         },
         "passive": {
+          "armed_procs": {
+            "armed_at_start": false,
+            "arming_slots": [
+              "Q",
+              "Q2",
+              "W",
+              "E",
+              "R"
+            ],
+            "max_stacks": 3,
+            "per_cast": 1,
+            "requested": false,
+            "stack_seconds": 4.0
+          },
           "auto_stack_every": 1,
           "cc_reviewed": true,
           "damage_type": "physical",
@@ -6537,6 +6561,28 @@
           "resource_cost": 40.0,
           "resource_type": "MANA",
           "skillshot": true,
+          "total_raw": 0.0
+        },
+        "passive": {
+          "armed_procs": {
+            "armed_at_start": false,
+            "arming_slots": [],
+            "hits_required": 3,
+            "max_stacks": 3,
+            "requested": false,
+            "stack_seconds": 4.0,
+            "stacks_from_ability_hits": true,
+            "stacks_from_swings": true
+          },
+          "cc_reviewed": true,
+          "damage_events": [],
+          "damage_type": "magic",
+          "event_phase": "effect",
+          "name": "Z-Drive Resonance",
+          "parts": [
+            "DamagePart(magic, amount=105.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
+          ],
+          "proc_count": 0,
           "total_raw": 0.0
         }
       },
@@ -29639,6 +29685,16 @@
           "total_raw": 190.0
         },
         "passive": {
+          "armed_procs": {
+            "armed_at_start": false,
+            "arming_slots": [],
+            "consumed_by_swing": true,
+            "hits_required": 3,
+            "max_stacks": 3,
+            "requested": false,
+            "stack_seconds": 6.0,
+            "stacks_from_ability_hits": true
+          },
           "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_events": [
@@ -53452,18 +53508,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60545,
-      "numeric_leaves": 46398,
+      "leaves": 60591,
+      "numeric_leaves": 46420,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "f5579749806fc8e7902ff9ca31b884c578b5f1a2",
+    "git_head": "1006a3c19d828a2bde167d3c31bf398b3ac9a0c0",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "77c240396a9b3030c6c2d3dcf3327f748f01d45e"
+    "src_tree_sha": "94a8c60235bca63f35e7fa3108e0148c747da24c"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -59034,10 +59090,11 @@
               "R": 898.8,
               "W": 0.0,
               "auto_attacks": 168.0,
+              "passive": 733.76,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 64.83
+              "shadowflame_Shadowflame": 138.21
             },
-            "total_damage": 2066.67
+            "total_damage": 2873.81
           },
           "no_items": {
             "breakdown_totals": {
@@ -59045,9 +59102,10 @@
               "Q": 200.0,
               "R": 250.0,
               "W": 0.0,
-              "auto_attacks": 168.0
+              "auto_attacks": 168.0,
+              "passive": 150.0
             },
-            "total_damage": 709.71
+            "total_damage": 859.71
           },
           "physical_build": {
             "breakdown_totals": {
@@ -59056,9 +59114,10 @@
               "R": 250.0,
               "W": 0.0,
               "auto_attacks": 1051.6,
-              "on_hit_Kraken Slayer": 131.69
+              "on_hit_Kraken Slayer": 131.69,
+              "passive": 225.0
             },
-            "total_damage": 1931.9
+            "total_damage": 2156.9
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -59067,9 +59126,10 @@
               "R": 250.0,
               "W": 0.0,
               "auto_attacks": 861.25,
+              "passive": 225.0,
               "spellblade_Trinity Force": 224.0
             },
-            "total_damage": 1743.21
+            "total_damage": 1968.21
           }
         }
       },
@@ -59125,10 +59185,11 @@
               "R": 1018.8,
               "W": 0.0,
               "auto_attacks": 290.67,
+              "passive": 1184.64,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 64.83
+              "shadowflame_Shadowflame": 222.78
             },
-            "total_damage": 2406.01
+            "total_damage": 3748.6
           },
           "no_items": {
             "breakdown_totals": {
@@ -59136,9 +59197,10 @@
               "Q": 200.0,
               "R": 357.14,
               "W": 0.0,
-              "auto_attacks": 290.67
+              "auto_attacks": 290.67,
+              "passive": 300.0
             },
-            "total_damage": 1027.62
+            "total_damage": 1327.62
           },
           "physical_build": {
             "breakdown_totals": {
@@ -59147,9 +59209,10 @@
               "R": 357.14,
               "W": 0.0,
               "auto_attacks": 1452.0,
-              "on_hit_Kraken Slayer": 376.43
+              "on_hit_Kraken Slayer": 376.43,
+              "passive": 300.0
             },
-            "total_damage": 2783.11
+            "total_damage": 3083.11
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -59158,9 +59221,10 @@
               "R": 357.14,
               "W": 0.0,
               "auto_attacks": 1166.0,
+              "passive": 300.0,
               "spellblade_Trinity Force": 290.67
             },
-            "total_damage": 2315.29
+            "total_damage": 2615.29
           }
         }
       }
