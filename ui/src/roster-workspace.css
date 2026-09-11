@@ -676,3 +676,15 @@
     display: none;
   }
 }
+
+.calculator-event-list {
+  margin: 0 0 24px;
+}
+.calculator-event-list > summary {
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--calculator-muted);
+}
+.calculator-event-list[open] > summary {
+  margin-bottom: 12px;
+}
