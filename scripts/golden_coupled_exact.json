@@ -294,11 +294,11 @@
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "ab3a35b92da755d0fe3a7dc7f9e511d3db510acc",
+    "git_head": "5c31d839327be8768c3427a7d01dd5dcaacc676b",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 30,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "3f05f5a8788677a3fe0a074bfeeb68b05207fbed"
+    "src_tree_sha": "e0cef30cf9c50d9fe01b186f37f6cf95019f6f56"
   }
 }
