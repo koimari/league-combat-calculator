@@ -18,18 +18,54 @@ target it was aimed at.
 
 from __future__ import annotations
 
+import re
 from collections import deque
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
+
+#: The sentence every stacking innate in this cache writes the same way:
+#: "... apply a stack of <name> to <whom> for N seconds, refreshing ...
+#: and stacking up to N times". The life and the cap are read from it, so
+#: a module states which STREAMS stack and the cache states the rest.
+_STACK_SENTENCE = re.compile(
+    r"apply a stack of [^.]*?for (?P<seconds>\d+(?:\.\d+)?) seconds"
+    r"[^.]*?stacking up to (?P<stacks>\d+) times",
+    re.IGNORECASE,
+)
+
+
+def cached_stack_terms(ability: Mapping[str, Any], *, owner: str) -> tuple[float, int]:
+    """One stacking innate's cached stack life and cap.
+
+    Raises rather than answering a default: a cache that stops stating
+    either number cannot be stood in for, and a counter with a guessed
+    threshold prices a mechanic nobody reviewed.
+    """
+    effects = ability.get("effects")
+    parts: list[str] = []
+    for effect in effects if effects else ():
+        description = effect.get("description")
+        if description is not None:
+            parts.append(str(description))
+    description = " ".join(parts)
+    match = _STACK_SENTENCE.search(description)
+    if match is None:
+        raise ValueError(
+            f"{owner}: the cached innate no longer states its stack life and cap "
+            "('apply a stack of ... for N seconds ... stacking up to N times')"
+        )
+    return float(match.group("seconds")), int(match.group("stacks"))
 
 
 @dataclass(frozen=True)
 class ArmedProcRule:
     """One kit's rule for arming an empowered basic attack.
 
-    ``cooldown`` arms one charge every so many seconds and ``per_cast``
-    banks one on each arming cast; a rule carries at least one of the two.
+    Three arms, and a rule carries at least one. ``cooldown`` arms one
+    charge every so many seconds; ``per_cast`` banks one on each arming
+    cast; ``hits_required`` counts HITS, from the swing stream or the
+    ability stream or both, and procs on every Nth.
     ``cooldown_reduction_per_cast`` is Galio's shape, where a cast brings
     the timer forward rather than banking anything. ``stack_seconds``
     expires a banked charge, and ``max_stacks`` caps what may be held.
@@ -46,17 +82,37 @@ class ArmedProcRule:
     per_cast: int = 0
     stack_seconds: float = 0.0
     armed_at_start: bool = True
+    # The hit-counter arm: how many stacks a proc costs, which streams
+    # apply one, and whether the application that completes the count
+    # procs on the spot (Akshan, Ekko) or waits for a basic attack to
+    # spend it (Talon).
+    hits_required: int = 0
+    stacks_from_swings: bool = False
+    stacks_from_ability_hits: bool = False
+    consumed_by_swing: bool = False
 
     def __post_init__(self) -> None:
         if self.max_stacks < 1:
             raise ValueError(
                 f"ArmedProcRule max_stacks must be at least 1, got {self.max_stacks}"
             )
-        if self.cooldown <= 0.0 and self.per_cast <= 0:
+        if self.cooldown <= 0.0 and self.per_cast <= 0 and self.hits_required <= 0:
             raise ValueError(
-                "ArmedProcRule states neither a cooldown nor a per_cast gain, so "
-                "nothing would ever arm the swing; a rule that arms nothing is a "
-                "rule with no referent"
+                "ArmedProcRule states no cooldown, no per_cast gain and no "
+                "hits_required, so nothing would ever arm the swing; a rule that "
+                "arms nothing is a rule with no referent"
+            )
+        if self.hits_required > 0 and not (
+            self.stacks_from_swings or self.stacks_from_ability_hits
+        ):
+            raise ValueError(
+                "ArmedProcRule counts hits but names no stream to count them "
+                "from; a counter with no input never reaches its threshold"
+            )
+        if self.hits_required > self.max_stacks:
+            raise ValueError(
+                f"ArmedProcRule needs {self.hits_required} stacks to proc but "
+                f"holds at most {self.max_stacks}, so it never procs"
             )
 
 
@@ -100,12 +156,60 @@ def declared_rule(
         arming_slots=frozenset(_required(payload, "arming_slots", owner)),
         max_stacks=int(_required(payload, "max_stacks", owner)),
         requested=bool(_required(payload, "requested", owner)),
+        hits_required=int(_optional(payload, "hits_required")),
+        stacks_from_swings=bool(payload.get("stacks_from_swings")),
+        stacks_from_ability_hits=bool(payload.get("stacks_from_ability_hits")),
+        consumed_by_swing=bool(payload.get("consumed_by_swing")),
         cooldown=_optional(payload, "cooldown"),
         cooldown_reduction_per_cast=_optional(payload, "cooldown_reduction_per_cast"),
         per_cast=int(_optional(payload, "per_cast")),
         stack_seconds=_optional(payload, "stack_seconds"),
         armed_at_start=bool(_required(payload, "armed_at_start", owner)),
     )
+
+
+def counted_hit_times(
+    rule: ArmedProcRule,
+    swing_times: Sequence[float],
+    ability_hit_times: Sequence[float],
+) -> tuple[float, ...]:
+    """WHEN the hit counter completes a cycle, over the streams it counts.
+
+    A stack lands on each hit from a counted stream and expires on its own
+    clock. The application that completes the count either procs where it
+    lands, which is what "the third stack consumes them all" says, or waits
+    for the next basic attack to spend it, which is what "the next basic
+    attack against an enemy with 3 stacks" says. A stream a rule does not
+    count still REFRESHES what is banked, the way a basic attack refreshes
+    Talon's Wound without applying one.
+    """
+    events: list[tuple[float, bool]] = []
+    if rule.stacks_from_swings:
+        events += [(time, True) for time in swing_times]
+    elif rule.consumed_by_swing:
+        # Counted for the spending, and for the refresh, but not for a stack.
+        events += [(time, False) for time in swing_times]
+    if rule.stacks_from_ability_hits:
+        events += [(time, True) for time in ability_hit_times]
+    stacks: deque[float] = deque()
+    procs: list[float] = []
+    for time, applies in sorted(events, key=lambda row: row[0]):
+        while stacks and stacks[0] < time:
+            stacks.popleft()
+        if applies:
+            if len(stacks) >= rule.max_stacks:
+                stacks.popleft()
+            stacks.append(
+                time + rule.stack_seconds if rule.stack_seconds > 0.0 else float("inf")
+            )
+        elif stacks and rule.stack_seconds > 0.0:
+            # A refreshing hit renews what is banked without adding to it.
+            stacks = deque(time + rule.stack_seconds for _ in stacks)
+        spends = (not rule.consumed_by_swing) or (not applies)
+        if spends and len(stacks) >= rule.hits_required:
+            procs.append(time)
+            stacks.clear()
+    return tuple(procs)
 
 
 def armed_swing_times(

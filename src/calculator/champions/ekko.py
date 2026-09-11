@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from .. import healing_helpers as _healing
+from .armed_procs import cached_stack_terms
 from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, float_option, int_option
@@ -18,14 +19,41 @@ from .source_receipts import load_champion_sources
 # One Z-Drive Resonance detonation: the third stack consumes all three to
 # deal the sourced bonus magic damage (30 : 150 by level, + 80% AP).  The
 # detonation is priced per completed 3-stack cycle.
-_resonance_proc = proc_damage(
+_resonance_packet = proc_damage(
     level_row("Bonus Magic Damage"),
     "magic",
     count_option="p_procs",
     default_count=0,
+    emit_at_zero=True,
     name="Z-Drive Resonance",
     phase_order_events=True,
 )
+
+
+def _resonance_proc(ctx: SlotCtx) -> dict[str, Any] | None:
+    """P: one detonation per completed 3-stack cycle the fight affords.
+
+    The cache says basic attacks on-hit AND damaging abilities each apply a
+    stack and the third consumes them all, so the counter walks both
+    streams (``champions/armed_procs.py``) instead of asking how many
+    detonations happened.
+    """
+    entry = _resonance_packet(ctx)
+    passive = ctx.ability("P")
+    if entry is None or passive is None:
+        return entry
+    stack_seconds, max_stacks = cached_stack_terms(passive, owner="Ekko P")
+    entry["armed_procs"] = {
+        "arming_slots": (),
+        "max_stacks": max_stacks,
+        "hits_required": max_stacks,
+        "stacks_from_swings": True,
+        "stacks_from_ability_hits": True,
+        "stack_seconds": stack_seconds,
+        "armed_at_start": False,
+        "requested": ctx.options.get("p_procs") is not None,
+    }
+    return entry
 
 
 _timewinder = multi_pass_damage(
@@ -113,7 +141,10 @@ OPTIONS = [
         0,
         minimum=0,
         maximum=10,
-        label="Z-Drive Resonance detonations (3 stacks each)",
+        label=(
+            "Z-Drive Resonance detonations; unset derives them from the "
+            "swings and ability hits that stack Resonance"
+        ),
     ),
     bool_option("w_passive_ready", False, label="Parallel Convergence passive ready"),
     float_option(

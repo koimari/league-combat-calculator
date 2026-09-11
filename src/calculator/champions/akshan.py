@@ -49,6 +49,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .armed_procs import cached_stack_terms
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import champion_stat, int_option
@@ -334,6 +335,22 @@ def _dirty_fighting(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["event_order_certified"] = "auto_stack_proc"
     entry["auto_stack_every"] = 3
     passive = ctx.ability("P")
+    if passive is not None:
+        # How many detonations a fight affords is the fight's question: the
+        # cache says basic attacks on-hit AND ability hits each apply a
+        # stack and the third consumes them all, so the counter walks both
+        # streams (champions/armed_procs.py).
+        stack_seconds, max_stacks = cached_stack_terms(passive, owner="Akshan P")
+        entry["armed_procs"] = {
+            "arming_slots": (),
+            "max_stacks": max_stacks,
+            "hits_required": max_stacks,
+            "stacks_from_swings": True,
+            "stacks_from_ability_hits": True,
+            "stack_seconds": stack_seconds,
+            "armed_at_start": False,
+            "requested": ctx.options.get("passive_procs") is not None,
+        }
     if passive is not None:
         attach_self_shield(
             entry,

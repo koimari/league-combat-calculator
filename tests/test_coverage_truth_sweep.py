@@ -37,7 +37,6 @@ from tests import coverage_truth
 OPTION_GATED: dict[tuple[str, str], tuple[str, object]] = {
     ("Alistar", "P"): ("p_triumph_stacks", 6),
     ("Cho'Gath", "P"): ("p_carnivore_kills", 10),
-    ("Ekko", "P"): ("p_procs", 3),
     ("Elise", "P"): ("spider_form", True),
     ("Fiora", "P"): ("p_vitals", 4),
     ("Gnar", "P"): ("mega", True),

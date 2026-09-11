@@ -131,6 +131,29 @@ def _drakehounds_step_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     )
 
 
+_MAXIM_STACK_RE = re.compile(
+    r"generates a stack of Medarda Maxim[^.]*?for (?P<seconds>\d+(?:\.\d+)?) seconds"
+    r"[^.]*?stacking up to (?P<stacks>\d+) times"
+)
+
+
+def _maxim_stack_terms(ability: dict[str, Any] | None) -> tuple[float, int]:
+    """The cached life and cap of a Medarda Maxim stack."""
+    effects = (ability if ability else {}).get("effects")
+    parts: list[str] = []
+    for effect in effects if effects else ():
+        description = effect.get("description")
+        if description is not None:
+            parts.append(str(description))
+    match = _MAXIM_STACK_RE.search(" ".join(parts))
+    if match is None:
+        raise ValueError(
+            "Ambessa P: the cached innate no longer states the Medarda Maxim "
+            "stack life and cap ('for N seconds ... stacking up to N times')"
+        )
+    return float(match.group("seconds")), int(match.group("stacks"))
+
+
 def _drakehounds_step(ctx: SlotCtx) -> dict[str, Any] | None:
     """P: damage plus the energy restored by each selected empowered attack."""
     entry = proc_damage(_drakehounds_step_damage, "physical")(ctx)
@@ -147,6 +170,19 @@ def _drakehounds_step(ctx: SlotCtx) -> dict[str, Any] | None:
     entry["requires_auto_timeline_coupling"] = True
     entry["event_order_certified"] = "auto_stack_proc"
     entry["auto_stack_every"] = 1
+    # How many empowered attacks the fight affords is the fight's question:
+    # a cast banks a stack, the bank holds the cached maximum, each stack
+    # lasts its cached seconds and a basic attack spends one
+    # (champions/armed_procs.py).
+    stack_seconds, max_stacks = _maxim_stack_terms(ctx.ability())
+    entry["armed_procs"] = {
+        "arming_slots": ("Q", "Q2", "W", "E", "R"),
+        "max_stacks": max_stacks,
+        "per_cast": 1,
+        "stack_seconds": stack_seconds,
+        "armed_at_start": False,
+        "requested": ctx.options.get("passive_procs") is not None,
+    }
     # Wiki revision 4038211 supplies the 1/7/13 thresholds. The locally
     # ingested champion JSON carries the three values in the passive prose.
     description = " ".join(
@@ -205,7 +241,16 @@ def _sundering_slam(ctx: SlotCtx) -> dict[str, Any] | None:
 
 OPTIONS = [
     bool_option("sweetspot", True, label="Q/Q2 Sweetspot (doubled damage)"),
-    int_option("passive_procs", 4, minimum=0, maximum=20, label="Passive procs"),
+    int_option(
+        "passive_procs",
+        4,
+        minimum=0,
+        maximum=20,
+        label=(
+            "Empowered attacks; unset derives them from the casts that bank "
+            "a Medarda Maxim stack and the swings that spend one"
+        ),
+    ),
 ]
 
 ASSUMPTIONS = [

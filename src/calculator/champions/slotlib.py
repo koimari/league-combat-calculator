@@ -322,6 +322,7 @@ def proc_damage(
     *,
     count_option: str = "passive_procs",
     default_count: int = 4,
+    emit_at_zero: bool = False,
     name: str | None = None,
     phase_order_events: bool = False,
 ) -> SlotParser:
@@ -338,6 +339,10 @@ def proc_damage(
         dmg_type: "magic"/"physical"/"true" — picks the per-proc key.
         count_option: Champion option holding the proc count.
         default_count: Proc count when the option is absent.
+        emit_at_zero: Emit the row even at a zero count, for a slot whose
+            count the FIGHT derives (an ``armed_procs`` rule): the row has
+            to exist for the walk to fill, and a walk that finds nothing
+            leaves it priced at zero exactly as before.
         name: Optional emitted label override.
 
     Returns:
@@ -351,7 +356,7 @@ def proc_damage(
             return None
 
         count = int(ctx.options.get(count_option, default_count))
-        if count <= 0:
+        if count <= 0 and not emit_at_zero:
             return None
 
         per_proc_damage = per_proc(ctx, ability)

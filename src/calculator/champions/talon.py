@@ -26,6 +26,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from .armed_procs import cached_stack_terms
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
@@ -59,9 +60,15 @@ def _blades_end(ctx: SlotCtx) -> dict[str, Any] | None:
     if ctx.option("auto_attacks_only"):
         return None
     count = max(0, int(ctx.option("passive_procs")))
-    if count <= 0:
+    requested = ctx.options.get("passive_procs") is not None
+    if count <= 0 and requested:
         return None
 
+    # The cache says abilities apply a Wound stack, basic attacks refresh
+    # it, and the next basic attack at three stacks consumes them: one
+    # stream stacks and the other spends, which the shared counter walks
+    # (champions/armed_procs.py).
+    stack_seconds, max_stacks = cached_stack_terms(ability, owner="Talon P")
     total_leveling = find_named_leveling(ability, "Per-Level Scaling", 0)
     tick_leveling = find_named_leveling(ability, "Per-Level Scaling", 1)
     if total_leveling is None or tick_leveling is None:
@@ -80,6 +87,16 @@ def _blades_end(ctx: SlotCtx) -> dict[str, Any] | None:
         "total_raw": total * count,
         "parts": (DamagePart("physical", per_tick, count=_P_BLEED_TICKS),),
         "proc_count": count,
+        "armed_procs": {
+            "arming_slots": (),
+            "max_stacks": max_stacks,
+            "hits_required": max_stacks,
+            "stacks_from_ability_hits": True,
+            "consumed_by_swing": True,
+            "stack_seconds": stack_seconds,
+            "armed_at_start": False,
+            "requested": requested,
+        },
         "dot_duration": _P_BLEED_DURATION,
         "dot_tick_interval": _P_BLEED_TICK_INTERVAL,
         # One sourced event per 3-stack consume: the consuming basic
@@ -137,7 +154,14 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 OPTIONS = [
     *list(OPTIONS),
     int_option(
-        "passive_procs", 1, minimum=0, maximum=10, label="Blade's End 3-stack consumes"
+        "passive_procs",
+        1,
+        minimum=0,
+        maximum=10,
+        label=(
+            "Blade's End consumes; unset derives them from the ability hits "
+            "that stack Wound and the swings that spend three"
+        ),
     ),
 ]
 
