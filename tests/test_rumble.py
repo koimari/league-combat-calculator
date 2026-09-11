@@ -82,22 +82,41 @@ class TestPricedRows:
         assert row_review.priced("Rumble", "Q") == pytest.approx(maximum)
 
 
+#: Rumble's own bonus attack speed at level 18 with no items and no
+#: Overheat window: the growth the stat sheet already carries, which every
+#: derived grant below is measured against.
+_UNHEATED_BONUS_ATTACK_SPEED = 31.45
+
+
 class TestOverheatedOnHit:
-    """P (Junkyard Titan): the Overheated rider, and what it deliberately omits.
+    """P (Junkyard Titan): the Overheated rider, derived from the cast plan.
 
     At 150 Heat the cached entry says Rumble "empowers his basic attacks
     to deal 5 : 44.12 (based on level) (+ 25% AP) (+ 4% of the target's
-    maximum health) bonus magic damage on-hit" — a complete sourced row.
-    Overheat is a 4-second heat-state window the fight engine does not
-    simulate, so ``overheat_autos`` is the explicit count of empowered
-    swings, 0 by default — a default request is the number it always was.
+    maximum health) bonus magic damage on-hit".  How often the mech
+    reaches 150 is the fight's own question, and
+    ``fight/rotation/cast_resource_lockout.py`` answers it by walking the
+    casts the plan actually made.
     """
 
-    def test_the_default_request_prices_no_rider(self):
+    def test_the_slot_states_the_cached_heat_rule_and_declares_no_number(self):
         entry = row_review.entry("Rumble", "passive")
-        assert entry["total_raw"] == 0.0
-        assert "on_hit" not in entry
-        assert coverage_truth.emitted("Rumble")["P"] == coverage_truth.ZERO
+        assert entry["cast_resource_lockout"] == {
+            "slots": ("Q", "W", "E"),
+            "per_cast": 20.0,
+            "ceiling": 150.0,
+            "seconds": 4.0,
+            "decay_per_second": 10.0,
+            "decay_delay_seconds": 4.0,
+            "ultimate_slot": "R",
+            "ultimate_delay_seconds": 2.0,
+        }
+        # No scenario option speaks for the heat state any more.
+        assert not [
+            option
+            for option in get_champion_module_contract("Rumble").options
+            if "overheat" in str(option.get("name", ""))
+        ]
 
     def test_the_rider_is_the_cached_bonus_magic_damage_row(self):
         ability = cc_review.kit("Rumble")["abilities"]["P"][0]
@@ -110,124 +129,94 @@ class TestOverheatedOnHit:
         )
         # 40 (level 18) + 25% of 200 AP + 4% of a 2500 HP target.
         assert expected == pytest.approx(40.0 + 50.0 + 100.0)
-        entry = row_review.entry(
-            "Rumble", "passive", overheat_autos=3, overheat_windows=1
-        )
+        entry = row_review.entry("Rumble", "passive")
         assert entry["on_hit"] == {
             "name": "Junkyard Titan (on-hit)",
             "damage_per_hit": pytest.approx(expected),
             "damage_type": "magic",
-            "max_procs": 3,
         }
         assert entry["total_raw"] == 0.0
 
-    def test_the_rider_reaches_the_fight_on_the_basic_attack_stream(self):
-        probe = {
-            "champion": "Rumble",
-            "level": 18,
-            "items": ["Rabadon's Deathcap"],
-            "fight_mode": "timed",
-            "include_auto_attacks": True,
-        }
-        # The window is held constant across both arms so the comparison
-        # isolates the rider: moving it too would move the lockout as well.
-        off = calculate_payload({**probe, "champion_options": {"overheat_windows": 1}})
-        on = calculate_payload(
+    def test_a_fight_that_never_fills_the_bar_prices_neither_half(self):
+        """Ten seconds of Rumble is about 120 Heat, so nothing Overheats."""
+        payload = calculate_payload(
             {
-                **probe,
-                "champion_options": {"overheat_autos": 3, "overheat_windows": 1},
+                "champion": "Rumble",
+                "level": 18,
+                "items": [],
+                "fight_mode": "timed",
+                "fight_duration": 10.0,
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 1.0,
             }
         )
+        assert "on_hit_ability_passive" not in payload["breakdown"]
+        assert payload["champion_stats"]["bonus_attack_speed"] == pytest.approx(
+            _UNHEATED_BONUS_ATTACK_SPEED
+        )
 
-        assert "on_hit_ability_passive" not in off["breakdown"]
-        row = on["breakdown"]["on_hit_ability_passive"]
+    def test_a_fight_that_fills_the_bar_buys_the_swings_and_the_attack_speed(self):
+        """The two halves are one purchase, and the plan decides its size."""
+        payload = calculate_payload(
+            {
+                "champion": "Rumble",
+                "level": 18,
+                "items": [],
+                "fight_mode": "timed",
+                "fight_duration": 30.0,
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 1.0,
+            }
+        )
+        row = payload["breakdown"]["on_hit_ability_passive"]
         assert row["name"] == "Junkyard Titan (on-hit)"
+        assert row["count"] == 4
         assert row["total_damage"] == pytest.approx(
             row["damage_per_hit"] * row["count"], rel=1e-2
         )
-        # Only the auto stream moves: no ability row is repriced.
-        assert on["ability_damage"] == pytest.approx(off["ability_damage"])
-        assert on["auto_attack_damage"] > off["auto_attack_damage"]
+        # One 4-second window in a 30-second fight: 130% at level 18 over
+        # the share of the fight it covers.
+        assert payload["champion_stats"][
+            "bonus_attack_speed"
+        ] - _UNHEATED_BONUS_ATTACK_SPEED == pytest.approx(130.0 * 4.0 / 30.0)
 
-    def test_the_empowered_swing_count_is_bounded_by_the_option(self):
-        """Overheat is a 4-second window, so the count cannot be inferred.
-
-        Batch K's fail-closed reading (``overheat_autos``, 0 by default)
-        is carried on the on-hit channel rather than as a ``parts``-priced
-        passive row: ``passive`` is not an orderable cast
-        (``pipeline.validate_cast_order_for_kit`` refuses it), so a
-        parts-priced passive row never reaches the fight at all.
-        ``max_procs`` is what stops the rider from charging every swing of
-        a long fight as Overheated.
-        """
-        probe = {
-            "champion": "Rumble",
-            "level": 18,
-            "items": ["Rabadon's Deathcap"],
-            "fight_mode": "timed",
-            "include_auto_attacks": True,
-        }
-        one = calculate_payload(
-            {**probe, "champion_options": {"overheat_autos": 1, "overheat_windows": 1}}
+    def test_the_lockout_silences_the_casts_it_eats(self):
+        """The window sits where it happens, not off the end of the fight."""
+        payload = calculate_payload(
+            {
+                "champion": "Rumble",
+                "level": 18,
+                "items": ["Malignance", "Cosmic Drive", "Horizon Focus"],
+                "fight_mode": "timed",
+                "fight_duration": 30.0,
+                "include_auto_attacks": True,
+            }
         )
-        three = calculate_payload(
-            {**probe, "champion_options": {"overheat_autos": 3, "overheat_windows": 1}}
-        )
-        autos = one["breakdown"]["auto_attacks"]["count"]
-        assert autos > 3, "the probe must outlast the empowered swings"
-        assert one["breakdown"]["on_hit_ability_passive"]["count"] == 1
-        assert three["breakdown"]["on_hit_ability_passive"]["count"] == 3
-
-    def test_the_attack_speed_half_needs_a_declared_heat_window(self):
-        """Granting it without the ability lockout would be a free upgrade.
-
-        The heat axis is what makes the pair declarable at all, so the
-        default request — which declares no window — still emits neither.
-        """
-        assert "bonus attack speed" in cc_review.slot_text(cc_review.kit("Rumble"), "P")
-        entry = row_review.entry("Rumble", "passive")
-        assert "stat_buff" not in entry
-        assert "self_cast_lockout_seconds" not in entry
-        assert "no Overheat window is declared" in entry["detail"]
-
-    def test_a_declared_heat_window_buys_the_attack_speed_and_its_cost(self):
-        """The two halves are one purchase: the fight pays for the steroid.
-
-        A timed probe through the real pipeline — the AS goes up, and the
-        casts the lockout costs come off the same fight.
-        """
-        probe = {
-            "champion": "Rumble",
-            "level": 18,
-            "items": ["Rabadon's Deathcap"],
-            "fight_mode": "timed",
-            "fight_duration": 10.0,
-            "include_auto_attacks": True,
-        }
-        cold = calculate_payload({**probe, "champion_options": {}})
-        hot = calculate_payload(
-            {**probe, "champion_options": {"overheat_windows": 1}},
-        )
-        cold_as = cold["champion_stats"]["bonus_attack_speed"]
-        hot_as = hot["champion_stats"]["bonus_attack_speed"]
-        # 130% at level 18, over the 4s of a 10s fight the window covers.
-        assert hot_as - cold_as == pytest.approx(130.0 * 0.4)
-        assert (
-            hot["champion_stats"]["attack_speed"]
-            > cold["champion_stats"]["attack_speed"]
-        )
-        assert hot["auto_attack_damage"] > cold["auto_attack_damage"]
-        # ...and the cost: four seconds off the shared cast schedule.
-        assert len(hot["cast_timeline"]) < len(cold["cast_timeline"])
-        assert hot["ability_damage"] < cold["ability_damage"]
+        times = sorted(event["time"] for event in payload["cast_timeline"])
+        # The bar fills at 7.77 and again at 22.68; each buys four seconds
+        # in which nothing casts at all.
+        for start in (7.772727, 22.681818):
+            assert not [
+                time for time in times if start + 1e-3 < time < start + 4.0
+            ], f"a cast landed inside the {start:.2f}s lockout"
 
     def test_an_autos_only_fight_never_overheats(self):
-        """No cast, no Heat — the axis cannot conjure a window."""
-        entry = row_review.entry(
-            "Rumble", "passive", overheat_windows=2, auto_attacks_only=True
+        """No cast, no Heat, and nothing to derive a window from."""
+        payload = calculate_payload(
+            {
+                "champion": "Rumble",
+                "level": 18,
+                "items": [],
+                "fight_mode": "auto_only",
+                "fight_duration": 30.0,
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 1.0,
+            }
         )
-        assert "stat_buff" not in entry
-        assert "self_cast_lockout_seconds" not in entry
+        assert "on_hit_ability_passive" not in payload["breakdown"]
+        assert payload["champion_stats"]["bonus_attack_speed"] == pytest.approx(
+            _UNHEATED_BONUS_ATTACK_SPEED
+        )
 
 
 class TestCoverageMap:
@@ -249,9 +238,7 @@ class TestCoverageMap:
             "R": "modeled",
         }
         # W's shield is not damage, so the damage ledger still reads zero.
-        assert coverage_truth.emitted(
-            "Rumble", overheat_autos=1, overheat_windows=1
-        ) == {
+        assert coverage_truth.emitted("Rumble") == {
             "P": coverage_truth.PRICED,
             "Q": coverage_truth.PRICED,
             "W": coverage_truth.ZERO,

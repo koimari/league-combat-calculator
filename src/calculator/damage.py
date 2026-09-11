@@ -97,6 +97,7 @@ from .fight.runes.page_damage import (
 )
 from .fight.setup.combat_state import _resolve_combat_state
 from .fight.setup.shield_reaver import _apply_shield_reaver_venom
+from .fight.rotation.cast_resource_lockout import apply_lockout_attack_speed
 from .fight.setup.stat_buff_ultimates import _apply_stat_buff_ultimates
 from .fight.stacks.ashe import _add_ashe_focus
 from .fight.stacks.aurelion_sol import _add_aurelion_sol_stardust
@@ -216,6 +217,10 @@ def calculate_fight_damage(
 
     # ── Ability rotation, precomputed procs, DoTs, and Shaped Charge ────
     rotation = _compute_ability_rotation(state)
+    # The plan is what decides how often a self-silencing bar filled, so the
+    # grant those windows buy is rated here, once the plan exists and before
+    # the swing stream is counted.
+    apply_lockout_attack_speed(state)
     _add_rengar_ferocity(state, rotation)
     _author_ability_dot_events(state, rotation)
     _add_precomputed_proc_damage(state, rotation)

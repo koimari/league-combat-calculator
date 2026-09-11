@@ -103,6 +103,12 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
         stat_buff = ability_info.get("stat_buff")
         if not stat_buff:
             continue
+        if ability_info.get("cast_resource_lockout"):
+            # This grant is worth its percent only inside the windows the
+            # cast plan earns, and the plan does not exist yet.
+            # ``cast_resource_lockout.apply_lockout_attack_speed`` rates it
+            # once the rotation has run.
+            continue
         if not _slot_is_cast(
             key, ability_info, state.cast_order, state.auto_attacks_only
         ):

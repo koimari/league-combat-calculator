@@ -81,6 +81,7 @@ from .on_hit_stream import (
     _schedule_cooldown_procs,
 )
 from .swing_profile import _on_hit_effectiveness
+from ..rotation.cast_resource_lockout import lockout_empowered_swings
 from .swing_schedule import _auto_attack_timestamps
 
 
@@ -514,6 +515,19 @@ def _layer_on_hit_effects(
         # Availability-limited on-hits (Bard meeps: stock + recharge)
         # apply at most max_procs times; autos beyond the cap are plain.
         max_procs = ability_field(on_hit_data, "max_procs", form="on_hit")
+        # A row that lives only inside its kit's self-silencing windows
+        # (Rumble's Overheated swings) is limited by the plan, not by a
+        # declaration: the empowered swings are the ones the derived
+        # windows hold (fight/rotation/cast_resource_lockout.py).
+        if max_procs is None and ability_info.get("cast_resource_lockout"):
+            max_procs = lockout_empowered_swings(
+                state,
+                (
+                    tuple(application_times)
+                    if application_times
+                    else tuple(_uniform_swing_schedule(state, num_auto_attacks))
+                ),
+            )
         if max_procs is not None:
             hits = min(hits, int(max_procs))
 

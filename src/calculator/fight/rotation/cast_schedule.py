@@ -10,6 +10,7 @@ from ...trigger_stream import is_immobilizing_event
 from ..cast_control_marker import _declared_cc_marker
 from ..cast_slots import _base_slot, _slot_is_cast
 from ..empower_declaration import _empower_cooldown_delay
+from .cast_resource_lockout import LockoutWalk, declared_rule
 from ..results import RotationResult
 from ..state import FightState
 
@@ -146,13 +147,12 @@ def _ridden_parent_slot(info: Mapping[str, Any]) -> str | None:
     return parent if float(ability_field(info, "cooldown")) > 0 else None
 
 
-def _self_cast_lockout(state: "FightState") -> float:
-    """Seconds this kit spends silencing itself, over every declaring slot."""
-    return sum(
-        float(ability_field(info, "self_cast_lockout_seconds"))
-        for info in state.ability_damages.values()
-        if isinstance(info, Mapping)
-    )
+def _lockout_walk(state: "FightState") -> LockoutWalk | None:
+    """The kit's self-silencing bar, or ``None`` when the fight has no clock."""
+    if state.one_rotation or state.auto_attacks_only:
+        return None
+    rule = declared_rule(state.ability_damages)
+    return LockoutWalk(rule) if rule is not None else None
 
 
 def _schedule_authored_casts(
@@ -162,6 +162,10 @@ def _schedule_authored_casts(
     times: dict[str, list[float]] = {key: [] for key in state.cast_order}
     ready: dict[str, float] = {}
     hands_free = 0.0
+    # An authored timeline is checked against the same bar the shared
+    # timeline walks: a cast placed inside a lockout the earlier casts
+    # earned is refused, naming the window, rather than silently landing.
+    walk = _lockout_walk(state)
     for event in state.combat_events or ():
         if event.caster_id != state.event_actor_id:
             continue
@@ -190,6 +194,10 @@ def _schedule_authored_casts(
                 f"Cast {event.id}: this slot has no certified recast cooldown"
             )
         hands_free = event.time + cast_time
+        if walk is not None:
+            locked = walk.cast(key, event.time, hands_free)
+            if locked > 0.0:
+                hands_free = max(hands_free, locked)
         ready[key] = _cooldown_ready_at(
             state,
             hands_free + _empower_cooldown_delay(info.get("empowers_next_auto")),
@@ -227,7 +235,8 @@ def _schedule_shared_casts(
     """
     if state.combat_events is not None:
         return _schedule_authored_casts(state, result, basic_ability_haste)
-    duration = max(0.0, state.fight_duration_seconds - _self_cast_lockout(state))
+    duration = state.fight_duration_seconds
+    walk = _lockout_walk(state)
     # Mirror the rotation loop's recast pairing exactly: an entry rides
     # its parent's casts only when the parent appears EARLIER in the
     # cast order; otherwise it schedules independently.
@@ -289,6 +298,11 @@ def _schedule_shared_casts(
     pending = set(keys)
     now = 0.0
     while pending and now <= duration + _CAST_SCHEDULE_EPS:
+        if walk is not None and walk.blocked_until() > now + _CAST_SCHEDULE_EPS:
+            # Silenced by the bar this plan filled: nothing casts, and the
+            # clock moves to the moment the hands are free again.
+            now = walk.blocked_until()
+            continue
         ready = [
             key
             for key in keys
@@ -301,6 +315,8 @@ def _schedule_shared_casts(
             continue
         key = ready[0]
         times[key].append(now)
+        if walk is not None:
+            walk.cast(key, now, now + cast_times[key])
         if key in single_cast:
             pending.remove(key)
         else:
@@ -326,6 +342,8 @@ def _schedule_shared_casts(
                     gap=between_casts[key],
                 )
         now += cast_times[key]
+    if walk is not None:
+        state.lockout_windows = tuple(walk.windows)
     return times
 
 
