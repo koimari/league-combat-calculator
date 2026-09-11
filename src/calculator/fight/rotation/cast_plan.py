@@ -90,7 +90,7 @@ def _landable_cast_times(
     cast_parts clips its late hits one by one.
     """
     parts = ability_info.get("parts")
-    if not parts or ability_info.get("empowers_next_auto"):
+    if not state.clip_to_window or not parts or ability_info.get("empowers_next_auto"):
         return scheduled
     if any(part.time_offset is None or part.hit_interval is not None for part in parts):
         return scheduled

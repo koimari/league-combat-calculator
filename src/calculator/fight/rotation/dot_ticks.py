@@ -16,6 +16,7 @@ def _ability_dot_tick_events(
     info: dict[str, Any],
     cast_times: Sequence[float],
     resists: Resists,
+    cutoff: float | None = None,
 ) -> list[dict[str, float | str]] | None:
     """One DoT ability row's per-tick events, or None to stay coarse.
 
@@ -53,7 +54,7 @@ def _ability_dot_tick_events(
     for cast_index in range(casts):
         cast_time = cast_times[cast_index] if cast_index < len(cast_times) else 0.0
         for dtype, amount in parts:
-            events.extend(
+            ticks = [
                 {**tick, "time": cast_time + float(tick["time"])}
                 for tick in _periodic_damage_events(
                     amount / casts,
@@ -62,7 +63,22 @@ def _ability_dot_tick_events(
                     tick_interval,
                     resists=resists,
                 )
-            )
+            ]
+            if cutoff is not None:
+                # The row's total already holds only the ticks inside the
+                # window (cast_parts priced them); the ticks kept here carry
+                # that total between them so the events still sum to the row.
+                kept = [tick for tick in ticks if float(tick["time"]) <= cutoff + 1e-9]
+                kept_sum = sum(float(tick["damage"]) for tick in kept)
+                if kept and kept_sum > 0:
+                    scale = (amount / casts) / kept_sum
+                    ticks = [
+                        {**tick, "damage": float(tick["damage"]) * scale}
+                        for tick in kept
+                    ]
+                else:
+                    ticks = []
+            events.extend(ticks)
     events.sort(key=_row_time)
     return events or None
 
@@ -85,7 +101,11 @@ def _author_ability_dot_events(state: FightState, rotation: RotationResult) -> N
         if not entry or entry.get("damage_events") is not None:
             continue
         events = _ability_dot_tick_events(
-            entry, info, times_by_slot.get(key, []), state.resists
+            entry,
+            info,
+            times_by_slot.get(key, []),
+            state.resists,
+            cutoff=state.fight_duration_seconds if state.clip_to_window else None,
         )
         if events is not None:
             entry["damage_events"] = events
@@ -183,6 +203,7 @@ def _integrate_stack_chains(
     timeline: StackTimeline,
     duration: float,
     ledger: _DotTickLedger,
+    cutoff: float | None = None,
 ) -> float:
     """Walk the stack applications, integrating every chain's raw damage.
 
@@ -198,6 +219,8 @@ def _integrate_stack_chains(
     if stacks > 0:
         ledger.open_chain(0.0)  # the pre-fight chain is already running
     for application in timeline.applications:
+        if cutoff is not None and application.time > cutoff:
+            break
         if stacks > 0:
             chain_end = min(application.time, previous_hit + duration)
             raw_total += ledger.accumulate(previous_hit, chain_end, stacks)
@@ -210,9 +233,13 @@ def _integrate_stack_chains(
         ledger.open_chain(application.time)
         stacks = application.stacks_after
         previous_hit = application.time
-    # Committed tail: the last application's full window of ticks.
-    raw_total += ledger.accumulate(previous_hit, previous_hit + duration, stacks)
-    ledger.close_chain(previous_hit + duration)
+    # Committed tail: the last application's full window of ticks, or only
+    # what ticks before the fight's end when the request clips to the window.
+    tail_end = previous_hit + duration
+    if cutoff is not None:
+        tail_end = max(previous_hit, min(tail_end, cutoff))
+    raw_total += ledger.accumulate(previous_hit, tail_end, stacks)
+    ledger.close_chain(tail_end)
     return raw_total
 
 
@@ -286,7 +313,12 @@ def _add_stacking_dot_damage(state: FightState) -> None:
     ledger = _DotTickLedger(
         float(ability_field(spec, "tick_interval", form="stacking_dot")), integrate
     )
-    raw_total = _integrate_stack_chains(timeline, duration, ledger)
+    raw_total = _integrate_stack_chains(
+        timeline,
+        duration,
+        ledger,
+        cutoff=state.fight_duration_seconds if state.clip_to_window else None,
+    )
 
     damage_type = ability_field(spec, "damage_type", form="stacking_dot")
     total = _mitigate(raw_total, damage_type, state.resists, state.magic_amp)

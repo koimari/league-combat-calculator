@@ -13,6 +13,8 @@ export interface SavedScenario {
   objective: string;
   includeActives: boolean;
   enemiesAttack: boolean;
+  /** Absent in setups saved before the switch existed: read as true. */
+  countAfterEnd?: boolean;
   dummyStats: Record<string, number>;
   useSequence: boolean;
   events: AuthoredEvent[];
@@ -113,6 +115,8 @@ export function parseScenario(text: string): SavedScenario {
     !string(value.objective) ||
     typeof value.includeActives !== "boolean" ||
     typeof value.enemiesAttack !== "boolean" ||
+    (value.countAfterEnd !== undefined &&
+      typeof value.countAfterEnd !== "boolean") ||
     typeof value.useSequence !== "boolean" ||
     !object(value.dummyStats) ||
     !["health", "bonus_health", "armor", "mr"].every((key) =>

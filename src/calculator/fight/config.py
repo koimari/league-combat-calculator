@@ -133,6 +133,11 @@ class FightConfig:
     rotation_count: int = 1
     one_rotation: bool = False
     include_actives: bool = True
+    # Whether damage a cast lights inside the window but lands after it
+    # counts: a fused bomb, a channel's payload, a DoT's remaining ticks, a
+    # burn's tail. True is the action-window reading (the fight is when you
+    # act; what you lit finishes); False clips every landing at the end.
+    count_damage_after_fight_end: bool = True
     cast_order: list[str] | None = None
     combat_events: tuple[CombatEvent, ...] | None = None
     combat_events_mode: str = "replace"

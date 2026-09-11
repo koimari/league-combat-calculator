@@ -445,9 +445,7 @@ def test_timed_rotation_omits_casts_after_mana_is_exhausted():
 
     result = run_fight(get_champion("Karthus"), 18, [], params)
 
-    # The Lay Waste cast at the window's last instant is dropped: its
-    # detonation lands after the fight ends (#323), so 8 casts land.
-    assert result["breakdown"]["Q"]["casts"] == 8
+    assert result["breakdown"]["Q"]["casts"] == 9
     assert result["breakdown"]["E"]["casts"] == 7
     assert any("insufficient resource" in note for note in result["notes"])
     timeline = result["cast_timeline"]

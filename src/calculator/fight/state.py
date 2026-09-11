@@ -77,6 +77,11 @@ class FightState:
     ability_haste: float
     one_rotation: bool
     include_actives: bool
+    # True when a landing timed past the fight's end is dropped: the
+    # request asked not to count damage after the fight end, and the fight
+    # is timed (a one-rotation fight is "cast everything once and let it
+    # land", so it never clips).
+    clip_to_window: bool
     auto_attacks_only: bool
     ultimate_recasts: bool
     deterministic: bool

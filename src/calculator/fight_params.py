@@ -218,6 +218,9 @@ class FightParams(FightConfig):
             rotation_count=rotation_count,
             one_rotation=one_rotation,
             include_actives=_request_bool(data, "include_actives", True),
+            count_damage_after_fight_end=_request_bool(
+                data, "count_damage_after_fight_end", True
+            ),
             cast_order=data.get("cast_order"),
             combat_events=parse_combat_events(data.get("combat_events")),
             combat_events_mode=parse_combat_events_mode(data.get("combat_events_mode")),

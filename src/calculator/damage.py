@@ -389,6 +389,11 @@ def calculate_fight_damage(
         threshold_health_heal=config.target_threshold_health_heal,
         score_only=score_only,
     )
+    if state.clip_to_window:
+        state.notes.append(
+            "Damage timed past the fight's end is not counted "
+            "(count_damage_after_fight_end is off)."
+        )
     return {
         "breakdown": state.breakdown,
         "total_damage": state.total_damage,
