@@ -164,6 +164,8 @@ def _options() -> dict:
     total = 0
     buckets: dict[str, list[tuple[str, str, str]]] = {
         "in_fight": [],
+        "full_by_default": [],
+        "derived_default": [],
         "pre_fight": [],
         "to_review": [],
     }
@@ -175,8 +177,27 @@ def _options() -> dict:
             if not any(word in key for word in _COUNT_WORDS):
                 continue
             lowered = label.lower()
+            default = option.get("default")
+            maximum = option.get("max")
+            minimum = option.get("min")
+            whole = (
+                isinstance(default, (int, float))
+                and default == maximum
+                and maximum != minimum
+            )
             if key in _IN_FIGHT_KEYS:
-                bucket = "in_fight"
+                # Three readings, and only the last is debt. A default that
+                # already derives is an OVERRIDE. A default at the top of the
+                # range prices the whole sourced thing and the option only
+                # removes from it (an interrupted channel). A default below
+                # that prices less than the cache states until someone
+                # answers, which is the shape that silently under-counts.
+                if "default" in lowered:
+                    bucket = "derived_default"
+                elif whole:
+                    bucket = "full_by_default"
+                else:
+                    bucket = "in_fight"
             elif any(phrase in lowered for phrase in _PRE_FIGHT_PHRASES):
                 bucket = "pre_fight"
             else:
@@ -334,19 +355,26 @@ def render(data: dict) -> str:
         "(`fight/rotation/cast_resource_lockout.py`), and each retired one removes",
         "a way to get a wrong answer by leaving a default alone.",
         "",
-        f"A further {len(axes['pre_fight'])} count state the champion arrived WITH —",
+        f"A further {len(axes['full_by_default'])} default to the whole sourced thing —",
+        "a channel's every tick, a clip's every shot — so the option only removes",
+        f"from a complete reading, and {len(axes['derived_default'])} derive their",
+        "default outright and take an override.",
+        f"{len(axes['pre_fight'])} count state the champion arrived WITH —",
         "stacks farmed over a game, souls collected, a mark already on the target.",
         "No engine derives those and asking is correct.",
         f"{len(axes['to_review'])} carry a label that says neither and need a reading.",
         "",
         "| Bucket | Options | Who can answer |",
         "|---|---|---|",
-        f"| In-fight counts | {len(axes['in_fight'])} | the engine, once each is derived |",
+        f"| In-fight counts, still asked | {len(axes['in_fight'])} | the engine, once each is derived |",
+        f"| In-fight counts, full by default | {len(axes['full_by_default'])} | already complete; the option removes |",
+        f"| In-fight counts, derived default | {len(axes['derived_default'])} | the engine; the option is an override |",
         f"| Pre-fight state | {len(axes['pre_fight'])} | the player, permanently |",
         f"| Unreviewed | {len(axes['to_review'])} | undecided; read the label |",
-        f"| Not a count at all | {axes['total'] - len(axes['in_fight']) - len(axes['pre_fight']) - len(axes['to_review'])} | the player: a variant, a target, a cone's reach |",
+        f"| Not a count at all | {axes['total'] - sum(len(axes[bucket]) for bucket in ('in_fight', 'full_by_default', 'derived_default', 'pre_fight', 'to_review'))} | the player: a variant, a target, a cone's reach |",
         "",
-        "The in-fight counts, which are the work:",
+        "The in-fight counts that price less than the cache states until someone",
+        "answers them, which are the work:",
         "",
         "| Champion | Option | Asks for |",
         "|---|---|---|",

@@ -53,7 +53,7 @@ The 6 slots with no engine axis at all:
 
 A calculator is only as deep as the questions it answers for itself, so
 this is the number to steer by. Of
-354 champion options, 45 ask for a count of
+354 champion options, 28 ask for a count of
 something that happens INSIDE the modelled fight: how many procs landed,
 how many ticks a channel took, how many attacks a pet made. Each of those
 is a derivation the engine could do from the cast plan and the swing
@@ -61,19 +61,26 @@ schedule, the way Rumble's Heat now is
 (`fight/rotation/cast_resource_lockout.py`), and each retired one removes
 a way to get a wrong answer by leaving a default alone.
 
-A further 12 count state the champion arrived WITH —
+A further 15 default to the whole sourced thing —
+a channel's every tick, a clip's every shot — so the option only removes
+from a complete reading, and 2 derive their
+default outright and take an override.
+12 count state the champion arrived WITH —
 stacks farmed over a game, souls collected, a mark already on the target.
 No engine derives those and asking is correct.
 32 carry a label that says neither and need a reading.
 
 | Bucket | Options | Who can answer |
 |---|---|---|
-| In-fight counts | 45 | the engine, once each is derived |
+| In-fight counts, still asked | 28 | the engine, once each is derived |
+| In-fight counts, full by default | 15 | already complete; the option removes |
+| In-fight counts, derived default | 2 | the engine; the option is an override |
 | Pre-fight state | 12 | the player, permanently |
 | Unreviewed | 32 | undecided; read the label |
 | Not a count at all | 265 | the player: a variant, a target, a cone's reach |
 
-The in-fight counts, which are the work:
+The in-fight counts that price less than the cache states until someone
+answers them, which are the work:
 
 | Champion | Option | Asks for |
 |---|---|---|
@@ -81,42 +88,25 @@ The in-fight counts, which are the work:
 | Akshan | `passive_procs` | Passive procs (3-stack) |
 | Akshan | `e_shots` | E shots fired |
 | Ambessa | `passive_procs` | Passive procs |
-| Annie | `tibbers_attacks` | Tibbers auto attacks (0 = none; defaults to the fight window at the sourced enrage + 0.625 AS cadence) |
 | Azir | `soldier_autos` | Replace basic attacks with Sand Soldier attacks |
-| Bel'Veth | `q_casts` | Q casts (directional charges used) |
 | Ekko | `p_procs` | Z-Drive Resonance detonations (3 stacks each) |
-| Evelynn | `q_recasts` | Hate Spike recasts |
-| Fiddlesticks | `w_ticks` | Bountiful Harvest ticks |
-| Fiddlesticks | `r_ticks` | Crowstorm ticks |
-| Fiora | `e_attacks` | Bladework attacks |
 | Galio | `passive_procs` | Colossal Smash attacks available |
 | Gangplank | `p_procs` | Trial by Fire procs |
-| Gwen | `q_snippy_stacks` | Snippy stacks consumed by Q |
-| Gwen | `r_casts` | Needlework casts |
-| Hecarim | `w_ticks` | Spirit of Dread ticks |
 | Heimerdinger | `q_turret_attacks` | Turret attacks |
-| Hwei | `we_hits` | Stirring Lights hits |
 | Ivern | `daisy_attacks` | Daisy attacks (5s window) |
 | Jax | `e_dodged_attacks` | Counter Strike attacks dodged |
-| Jhin | `r_shots` | Curtain Call bullets |
 | Karthus | `e_ticks` | Defile damage ticks (one rotation) |
 | Kindred | `w_attacks` | Wolf attacks (W) |
-| Lillia | `p_ticks` | Dream Dust ticks |
-| Locke | `q_casts` | Ritual Nails casts |
 | Lux | `p_illumination_procs` | Illumination procs in the fight (each post-ability auto / Final Spark consumes one mark) |
-| Malzahar | `voidling_attacks` | Attacks per Voidling (0 = none; defaults to the sourced attack-speed cadence over the fight window) |
 | Milio | `p_procs` | Fired Up! hits landed |
 | Miss Fortune | `p_procs` | Love Taps (attacks that tag a new enemy) |
 | Rammus | `w_thorns_autos` | Enemy basic attacks during Defensive Ball Curl |
 | Renata Glasc | `p_leverage_procs` | Leverage on-hit procs (unmarked first-hits; the mark lasts 6s and refreshes, so a 1v1 prices one per target) |
 | Shaco | `p_procs` | Backstab attacks (basic attacks landing from behind) |
-| Shaco | `w_box_attacks` | Jack in the Box attacks |
 | Shaco | `r_clone_attacks` | R clone basic attacks commanded |
-| Shen | `q_attacks_landed` | Q empowered attacks landed |
 | Shyvana | `q_casts` | Emberstrike casts |
 | Sylas | `passive_procs` | Unshackled attacks spent (each replaces one swing) |
 | Talon | `passive_procs` | Blade's End 3-stack consumes |
-| Udyr | `q_empowered_attacks` | Q empowered basic attacks |
 | Wukong | `r_casts` | Cyclone casts |
 | Yorick | `mist_walker_attacks` | Mist Walker attacks per walker (5s window) |
 | Yorick | `maiden_attacks` | Maiden of the Mist attacks (5s window) |
