@@ -65,17 +65,20 @@ class TestFiredUpRider:
     """Milio P prices the burn the enchanted hit applies (census slice 6)."""
 
     def test_the_burn_reaches_the_total(self):
-        """Level 18, no items, one enchanted hit: 50.0 raw magic.
+        """Level 18, no items: the enchanted hits the fight affords.
 
         Cached P "Per-Level Scaling" 10 : 50 (based on level) + 20% of
-        Milio's AP; the probe target halves magic damage, so 25.0 lands.
+        Milio's AP; the probe target halves magic damage, so each enchanted
+        hit lands 25.0.
         """
         result = rider_probe.fight("Milio")
         row = result["breakdown"][rider_probe.RIDER_ROW]
 
         assert row["name"] == "Fired Up! (on-hit)"
-        assert row["count"] == 1
-        assert row["total_damage"] == pytest.approx(25.0, abs=0.05)
+        # Two, not one: the casts enchant and the attacks and ability hits
+        # spend it, which the fight walks (champions/armed_procs.py).
+        assert row["count"] == 2
+        assert row["total_damage"] == pytest.approx(25.0 * row["count"], abs=0.05)
         assert row["total_damage"] < result["total_damage"]
 
     def test_no_enchanted_hit_prices_nothing(self):

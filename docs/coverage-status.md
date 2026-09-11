@@ -53,7 +53,7 @@ The 6 slots with no engine axis at all:
 
 A calculator is only as deep as the questions it answers for itself, so
 this is the number to steer by. Of
-354 champion options, 19 ask for a count of
+354 champion options, 0 ask for a count of
 something that happens INSIDE the modelled fight: how many procs landed,
 how many ticks a channel took, how many attacks a pet made. Each of those
 is a derivation the engine could do from the cast plan and the swing
@@ -63,46 +63,35 @@ a way to get a wrong answer by leaving a default alone.
 
 A further 15 default to the whole sourced thing —
 a channel's every tick, a clip's every shot — so the option only removes
-from a complete reading, and 11 derive their
+from a complete reading, and 18 derive their
 default outright and take an override.
-12 count state the champion arrived WITH —
-stacks farmed over a game, souls collected, a mark already on the target.
-No engine derives those and asking is correct.
+22 are facts no engine holds: state the champion
+arrived with (stacks farmed over a game, souls collected) and facts about
+the ENEMY or about where the champion stood (how many attacks an evasion
+dodged, how many swings landed from behind). Asking for those is correct.
 32 carry a label that says neither and need a reading.
 
 | Bucket | Options | Who can answer |
 |---|---|---|
-| In-fight counts, still asked | 19 | the engine, once each is derived |
+| In-fight counts, still asked | 0 | the engine, once each is derived |
+| In-fight counts, blocked on data | 2 | nobody, until the missing number is sourced |
 | In-fight counts, full by default | 15 | already complete; the option removes |
-| In-fight counts, derived default | 11 | the engine; the option is an override |
-| Pre-fight state | 12 | the player, permanently |
+| In-fight counts, derived default | 18 | the engine; the option is an override |
+| Pre-fight state | 22 | the player, permanently |
 | Unreviewed | 32 | undecided; read the label |
 | Not a count at all | 265 | the player: a variant, a target, a cone's reach |
 
-The in-fight counts that price less than the cache states until someone
-answers them, which are the work:
+That first row is at zero. Every count of something inside the
+modelled fight is answered by the fight, and what remains below it
+is either blocked on a number no source here states, or a fact the
+engine has no standing to invent.
 
-| Champion | Option | Asks for |
+Counts the fight could walk if one missing number were sourced:
+
+| Champion | Option | Missing |
 |---|---|---|
-| Akali | `passive_procs` | Passive procs |
-| Akshan | `passive_procs` | Passive procs (3-stack) |
-| Akshan | `e_shots` | E shots fired |
-| Azir | `soldier_autos` | Replace basic attacks with Sand Soldier attacks |
-| Heimerdinger | `q_turret_attacks` | Turret attacks |
-| Jax | `e_dodged_attacks` | Counter Strike attacks dodged |
-| Karthus | `e_ticks` | Defile damage ticks (one rotation) |
-| Kindred | `w_attacks` | Wolf attacks (W) |
-| Lux | `p_illumination_procs` | Illumination procs in the fight (each post-ability auto / Final Spark consumes one mark) |
-| Milio | `p_procs` | Fired Up! hits landed |
-| Miss Fortune | `p_procs` | Love Taps (attacks that tag a new enemy) |
-| Rammus | `w_thorns_autos` | Enemy basic attacks during Defensive Ball Curl |
-| Renata Glasc | `p_leverage_procs` | Leverage on-hit procs (unmarked first-hits; the mark lasts 6s and refreshes, so a 1v1 prices one per target) |
-| Shaco | `p_procs` | Backstab attacks (basic attacks landing from behind) |
-| Shaco | `r_clone_attacks` | R clone basic attacks commanded |
-| Shyvana | `q_casts` | Emberstrike casts |
-| Wukong | `r_casts` | Cyclone casts |
-| Yorick | `mist_walker_attacks` | Mist Walker attacks per walker (5s window) |
-| Yorick | `maiden_attacks` | Maiden of the Mist attacks (5s window) |
+| Heimerdinger | `q_turret_attacks` | the turret's attack speed, which is in no cached field and in no spell object this repo tracks |
+| Kindred | `w_attacks` | Wolf's base attack rate; the cache states only that it scales with 25% of Kindred's bonus attack speed |
 
 Counting options whose label states neither reading:
 

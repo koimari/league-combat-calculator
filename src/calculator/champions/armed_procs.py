@@ -90,6 +90,10 @@ class ArmedProcRule:
     stacks_from_swings: bool = False
     stacks_from_ability_hits: bool = False
     consumed_by_swing: bool = False
+    # An ability hit spends a banked charge as well as a basic attack does
+    # ("the next basic attack OR ability hit against enemies"), so the
+    # spending stream is both.
+    spent_by_ability_hits: bool = False
 
     def __post_init__(self) -> None:
         if self.max_stacks < 1:
@@ -160,6 +164,7 @@ def declared_rule(
         stacks_from_swings=bool(payload.get("stacks_from_swings")),
         stacks_from_ability_hits=bool(payload.get("stacks_from_ability_hits")),
         consumed_by_swing=bool(payload.get("consumed_by_swing")),
+        spent_by_ability_hits=bool(payload.get("spent_by_ability_hits")),
         cooldown=_optional(payload, "cooldown"),
         cooldown_reduction_per_cast=_optional(payload, "cooldown_reduction_per_cast"),
         per_cast=int(_optional(payload, "per_cast")),
@@ -216,6 +221,7 @@ def armed_swing_times(
     rule: ArmedProcRule,
     cast_times: Sequence[tuple[str, float]],
     swing_times: Sequence[float],
+    ability_hit_times: Sequence[float] = (),
 ) -> tuple[float, ...]:
     """WHICH swings land empowered, walking the two schedules together.
 
@@ -234,7 +240,10 @@ def armed_swing_times(
     cast_index = 0
     empowered: list[float] = []
 
-    for swing in sorted(swing_times):
+    spends = list(swing_times)
+    if rule.spent_by_ability_hits:
+        spends += list(ability_hit_times)
+    for swing in sorted(spends):
         while cast_index < len(casts) and casts[cast_index][0] <= swing:
             time, slot = casts[cast_index]
             cast_index += 1
@@ -268,6 +277,7 @@ def armed_swing_count(
     rule: ArmedProcRule,
     cast_times: Sequence[tuple[str, float]],
     swing_times: Sequence[float],
+    ability_hit_times: Sequence[float] = (),
 ) -> int:
     """How many swings land empowered; the length of the walk's answer."""
-    return len(armed_swing_times(rule, cast_times, swing_times))
+    return len(armed_swing_times(rule, cast_times, swing_times, ability_hit_times))

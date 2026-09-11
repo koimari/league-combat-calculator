@@ -81,6 +81,7 @@ from .on_hit_stream import (
     _schedule_cooldown_procs,
 )
 from .swing_profile import _on_hit_effectiveness
+from ...champions.armed_procs import armed_swing_times, declared_rule
 from ..rotation.cast_resource_lockout import lockout_empowered_swings
 from .swing_schedule import _auto_attack_timestamps
 
@@ -519,6 +520,29 @@ def _layer_on_hit_effects(
         # (Rumble's Overheated swings) is limited by the plan, not by a
         # declaration: the empowered swings are the ones the derived
         # windows hold (fight/rotation/cast_resource_lockout.py).
+        armed = (
+            declared_rule({ability_key: ability_info})
+            if ability_info.get("armed_procs")
+            else None
+        )
+        if armed is not None and not armed[1].requested:
+            # The kit states when its enchanted hit is armed and the fight
+            # walks it: the casts bank one and the hits spend it
+            # (champions/armed_procs.py).
+            max_procs = len(
+                armed_swing_times(
+                    armed[1],
+                    state.ability_cast_times,
+                    (
+                        tuple(application_times)
+                        if application_times
+                        else tuple(_uniform_swing_schedule(state, num_auto_attacks))
+                    ),
+                    tuple(ability_hit_times),
+                )
+            )
+            if max_procs == 0:
+                continue
         if max_procs is None and ability_info.get("cast_resource_lockout"):
             max_procs = lockout_empowered_swings(
                 state,

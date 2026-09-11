@@ -20,6 +20,7 @@ P1-3 closures:
   self scope override (no teammate roster in the 1v1).
 """
 
+import re
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -35,6 +36,27 @@ PACKET_SHA256 = "2f20b99c3cd6919e7b81d1fb0cf912d9e02ea8ac475c4c4fa6381bc33240713
 # Default Illumination procs in a one-rotation combo: Q, E and R each
 # mark the target, and the following auto/Final Spark consumes the mark.
 _P_ILLUMINATION_DEFAULT_PROCS = 3
+
+
+_ILLUMINATION_MARK_RE = re.compile(
+    r"apply a mark to enemies hit for (?P<value>\d+(?:\.\d+)?) seconds"
+)
+
+
+def _illumination_mark_seconds(ability: dict[str, Any]) -> float:
+    """How long an Illumination mark waits, from the cached innate."""
+    effects = ability.get("effects")
+    for effect in effects if effects else ():
+        description = effect.get("description")
+        if description is None:
+            continue
+        match = _ILLUMINATION_MARK_RE.search(str(description))
+        if match is not None:
+            return float(match.group("value"))
+    raise ValueError(
+        "Lux P: the cached innate no longer states the Illumination mark's "
+        "life ('apply a mark to enemies hit for N seconds')"
+    )
 
 
 def _illumination(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -69,6 +91,18 @@ def _illumination(ctx: SlotCtx) -> dict[str, Any] | None:
     # coarse, withholding the champion from optimizer certification.
     entry["parts"] = (DamagePart("magic", per_proc),)
     entry["proc_count"] = count
+    # A cast marks and the next basic attack consumes it, so how many procs
+    # a fight affords is the fight's question: the casts bank a mark and the
+    # swings spend it (champions/armed_procs.py). The mark's cached life is
+    # what expires one nobody reached.
+    entry["armed_procs"] = {
+        "arming_slots": ("Q", "E", "R"),
+        "max_stacks": 1,
+        "per_cast": 1,
+        "stack_seconds": _illumination_mark_seconds(ability),
+        "armed_at_start": False,
+        "requested": ctx.options.get("p_illumination_procs") is not None,
+    }
     # Each proc is consumed by the next post-ability auto / Final Spark.
     # Declare the fixed-count ledger (Diana passive precedent) so the row is
     # event-ordered instead of phase-order coarse: one exact event per proc,
@@ -120,8 +154,10 @@ OPTIONS = [
         _P_ILLUMINATION_DEFAULT_PROCS,
         minimum=0,
         maximum=12,
-        label="Illumination procs in the fight (each post-ability auto / "
-        "Final Spark consumes one mark)",
+        label=(
+            "Illumination procs; unset derives them from the casts that mark "
+            "and the swings or Final Spark that consume the mark"
+        ),
     ),
 ]
 

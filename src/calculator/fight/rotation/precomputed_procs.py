@@ -85,6 +85,7 @@ def _add_precomputed_proc_damage(
                     rule,
                     state.ability_cast_times,
                     _auto_attack_timestamps(state),
+                    _ability_hit_times(state, rotation),
                 )
             if rule.requested or state.one_rotation:
                 # The request owns the count; the walk still says WHICH

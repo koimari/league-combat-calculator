@@ -391,7 +391,14 @@ _going_rogue = no_damage_slot(
 
 OPTIONS = [
     int_option(
-        "passive_procs", 3, minimum=0, maximum=20, label="Passive procs (3-stack)"
+        "passive_procs",
+        3,
+        minimum=0,
+        maximum=20,
+        label=(
+            "Dirty Fighting detonations; unset derives them from the swings "
+            "and ability hits that stack it"
+        ),
     ),
     int_option("e_shots", 5, minimum=0, maximum=20, label="E shots fired"),
 ]
