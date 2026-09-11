@@ -95,12 +95,44 @@ _PRE_FIGHT_PHRASES = (
 # landed from behind, how many distinct enemies a mark tagged. Each is
 # reviewed here with the fact it depends on, and each is reported as
 # player state rather than as engine debt.
+# Counts the fight COULD walk, if any source the repo holds stated the one
+# number the walk needs. Each names the missing datum, because "not yet
+# derived" and "cannot be derived from anything here" are different
+# frontiers and only the second is blocked on data.
+_BLOCKED_ON_DATA = {
+    "q_turret_attacks:Heimerdinger": (
+        "the turret's attack speed, which is in no cached field and in no "
+        "spell object this repo tracks"
+    ),
+    "w_attacks:Kindred": (
+        "Wolf's base attack rate; the cache states only that it scales with "
+        "25% of Kindred's bonus attack speed"
+    ),
+}
+
+# An option the engine ALREADY answers whenever the fight has a clock, and
+# that only speaks for the clockless reading (a one-rotation request, a
+# direct parse). Nothing is owed here: a fight with a duration never asks.
+_CLOCKLESS_ONLY = {
+    "e_ticks:Karthus": (
+        "a timed Karthus fight derives the Defile ticks from the window and "
+        "the mana pool; this option speaks only for one rotation"
+    ),
+}
+
 _ENEMY_OR_POSITIONAL = {
     "e_dodged_attacks": "how many attacks the enemy threw into the evasion",
     "w_thorns_autos": "how many basic attacks the enemy spent on the curl",
     "p_procs:Shaco": "whether each swing landed from behind the target",
     "p_procs:Miss Fortune": "how many distinct enemies the Love Taps tagged",
     "p_leverage_procs": "how many distinct enemies the mark moved between",
+    "passive_procs:Akali": "whether the champion walked back through her ring",
+    "e_shots:Akshan": "how long the hook held while he swung around the anchor",
+    "soldier_autos:Azir": "whether the attacks were taken through a soldier",
+    "q_casts:Shyvana": "how many strikes of the chain one cast spent",
+    "r_casts:Wukong": (
+        "whether the ultimate was recast, which the module does not certify"
+    ),
 }
 
 
@@ -179,6 +211,7 @@ def _options() -> dict:
     total = 0
     buckets: dict[str, list[tuple[str, str, str]]] = {
         "in_fight": [],
+        "blocked": [],
         "full_by_default": [],
         "derived_default": [],
         "pre_fight": [],
@@ -194,6 +227,13 @@ def _options() -> dict:
             lowered = label.lower()
             if key in _ENEMY_OR_POSITIONAL or f"{key}:{name}" in _ENEMY_OR_POSITIONAL:
                 buckets["pre_fight"].append((name, key, label))
+                continue
+            if f"{key}:{name}" in _CLOCKLESS_ONLY:
+                buckets["derived_default"].append((name, key, label))
+                continue
+            blocked = _BLOCKED_ON_DATA.get(f"{key}:{name}")
+            if blocked is not None:
+                buckets["blocked"].append((name, key, blocked))
                 continue
             default = option.get("default")
             maximum = option.get("max")
@@ -386,20 +426,42 @@ def render(data: dict) -> str:
         "| Bucket | Options | Who can answer |",
         "|---|---|---|",
         f"| In-fight counts, still asked | {len(axes['in_fight'])} | the engine, once each is derived |",
+        f"| In-fight counts, blocked on data | {len(axes['blocked'])} | nobody, until the missing number is sourced |",
         f"| In-fight counts, full by default | {len(axes['full_by_default'])} | already complete; the option removes |",
         f"| In-fight counts, derived default | {len(axes['derived_default'])} | the engine; the option is an override |",
         f"| Pre-fight state | {len(axes['pre_fight'])} | the player, permanently |",
         f"| Unreviewed | {len(axes['to_review'])} | undecided; read the label |",
-        f"| Not a count at all | {axes['total'] - sum(len(axes[bucket]) for bucket in ('in_fight', 'full_by_default', 'derived_default', 'pre_fight', 'to_review'))} | the player: a variant, a target, a cone's reach |",
+        f"| Not a count at all | {axes['total'] - sum(len(axes[bucket]) for bucket in ('in_fight', 'blocked', 'full_by_default', 'derived_default', 'pre_fight', 'to_review'))} | the player: a variant, a target, a cone's reach |",
         "",
-        "The in-fight counts that price less than the cache states until someone",
-        "answers them, which are the work:",
-        "",
-        "| Champion | Option | Asks for |",
-        "|---|---|---|",
     ]
-    for name, key, label in axes["in_fight"]:
-        lines.append(f"| {name} | `{key}` | {label} |")
+    if axes["in_fight"]:
+        lines += [
+            "The in-fight counts that price less than the cache states until",
+            "someone answers them, which are the work:",
+            "",
+            "| Champion | Option | Asks for |",
+            "|---|---|---|",
+        ]
+        for name, key, label in axes["in_fight"]:
+            lines.append(f"| {name} | `{key}` | {label} |")
+    else:
+        lines += [
+            "That first row is at zero. Every count of something inside the",
+            "modelled fight is answered by the fight, and what remains below it",
+            "is either blocked on a number no source here states, or a fact the",
+            "engine has no standing to invent.",
+        ]
+
+    if axes["blocked"]:
+        lines += [
+            "",
+            "Counts the fight could walk if one missing number were sourced:",
+            "",
+            "| Champion | Option | Missing |",
+            "|---|---|---|",
+        ]
+        for name, key, missing in axes["blocked"]:
+            lines.append(f"| {name} | `{key}` | {missing} |")
 
     if axes["to_review"]:
         lines += [

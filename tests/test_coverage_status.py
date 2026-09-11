@@ -38,14 +38,35 @@ def test_the_counting_options_are_split_and_nothing_is_counted_twice() -> None:
     axes = coverage_status.measure()["axes"]
     keys = [
         (name, key)
-        for bucket in ("in_fight", "pre_fight", "to_review")
+        for bucket in (
+            "in_fight",
+            "blocked",
+            "full_by_default",
+            "derived_default",
+            "pre_fight",
+            "to_review",
+        )
         for name, key, _ in axes[bucket]
     ]
     assert len(keys) == len(set(keys))
     assert len(keys) <= axes["total"]
 
 
-@pytest.mark.parametrize("bucket", ["in_fight", "pre_fight"])
+@pytest.mark.parametrize("bucket", ["pre_fight", "derived_default"])
 def test_each_split_bucket_holds_something(bucket: str) -> None:
-    """An empty bucket would make the page's headline claim vacuous."""
+    """An empty bucket would make the page's headline claim vacuous.
+
+    ``in_fight`` is deliberately not here: it is the debt, and the page
+    says so when it reaches zero.
+    """
     assert coverage_status.measure()["axes"][bucket]
+
+
+def test_the_page_states_the_debt_when_there_is_none_left() -> None:
+    """A zero that prints an empty table would read as a missing table."""
+    axes = coverage_status.measure()["axes"]
+    page = coverage_status.render(coverage_status.measure())
+    if axes["in_fight"]:
+        assert "| Champion | Option | Asks for |" in page
+    else:
+        assert "That first row is at zero." in page
