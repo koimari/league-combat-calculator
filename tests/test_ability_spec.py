@@ -47,8 +47,10 @@ def _stub_state(
         crit_chance=crit_chance,
         crit_multiplier=crit_multiplier,
         target_critical_strike_damage_multiplier=1.0,
-        # The fight-window landing rule reads these; a stub fight never ends.
+        # The fight-window landing rule reads these; a stub fight never
+        # clips (count_damage_after_fight_end is the default).
         one_rotation=False,
+        clip_to_window=False,
         fight_duration_seconds=float("inf"),
         # Declared on FightState and read as attributes, so a stub owes them.
         target_champion_damage_flat_reduction=0.0,
