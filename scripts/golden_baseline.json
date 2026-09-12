@@ -35322,13 +35322,24 @@
           "cc_reviewed": true,
           "cooldown": 10.0,
           "damage_type": "magic",
-          "detail": "Ride the Wind 0/4 stacks: base 70.00 + 0 x per-stack bonus 17.50 = 70.00; at 4 stacks this equals the wiki Total Combined Damage (25% per stack, +100% at maximum stacks).  Single-target cast rate: one dash per 10s per-target lockout.",
+          "detail": "Ride the Wind: base 70.00 + 17.50 per stack, up to 4; each dash that lands stacks the next one, and the fight counts them. Single-target cast rate: one dash per 10s per-target lockout.",
           "event_order_certified": "single_hit",
           "name": "Sweeping Blade",
           "parts": [
             "DamagePart(magic, amount=70.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
           ],
           "rank": 1,
+          "stack_window": {
+            "armed_at_start": false,
+            "arming_slots": [
+              "E"
+            ],
+            "hits_required": 4,
+            "max_stacks": 4,
+            "requested": false,
+            "stack_seconds": 5.0,
+            "stacks_from_ability_hits": true
+          },
           "total_raw": 70.0
         },
         "Q": {
@@ -53520,18 +53531,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60600,
-      "numeric_leaves": 46421,
+      "leaves": 60607,
+      "numeric_leaves": 46424,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "b7430b421f4c856148f739525f61450c254f6b4c",
+    "git_head": "69e3ac22be1b13e0066a797818470a753f86aa70",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "180bca62cdb75d87d8db399944b0ee3f38ae3bf0"
+    "src_tree_sha": "59edc3f8328a856989c4e6f0a0c2b329ca0b0246"
   },
   "registered_champion_fights": {
     "Aatrox": {

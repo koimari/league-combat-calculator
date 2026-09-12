@@ -1,0 +1,51 @@
+{
+ "slice": "yasuo-ride-the-wind-level",
+ "issue": "docs/surface-area-backlog.md SR8",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures all three baselines in the same commit."
+ },
+ "what_landed": "Yasuo's Sweeping Blade reads the Ride the Wind level its own dashes stacked. A slot that stacks ITSELF needs the hit stream filtered to its own slot, which the Case 6 walk now takes: an empty set counts every slot's hits, a named set counts only its own.",
+ "why": [
+  "No damage number moves, and that is the result worth having. The per-target lockout is 6 seconds at rank 5 and a Ride the Wind stack lasts 5, so a duel never restacks it, and the derived level agrees with the zero the option declared.",
+  "The two moved leaves are the slot's declaration surface: the window the level is walked in, and a detail string that no longer claims a stack count it does not know."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "Yasuo's E is the only slot this slice touches."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "the E row publishes its stack window"
+  },
+  "/metadata/fingerprint/numeric_leaves": {
+   "cause": "the same"
+  }
+ },
+ "summary": {
+  "direction": "no damage leaf moves; the derived level agrees with the declared one in a duel",
+  "counts": {
+   "golden": 4,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Yasuo/abilities_level_11/E/detail",
+   "/champion_baselines/Yasuo/abilities_level_11/E/stack_window"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}
