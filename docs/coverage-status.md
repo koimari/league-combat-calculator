@@ -99,8 +99,8 @@ way each errs is the half a reader needs:
 
 | Champion | Option | Asks for |
 |---|---|---|
-| Hecarim | `q_stacks` | Rampage stacks [full] |
-| Kindred | `w_hunters_vigor_stacks` | Hunter's Vigor stacks (100 = the next basic attack heals) [floor] |
+| Hecarim | `q_stacks` | Rampage stacks [floor] |
+| Kindred | `w_hunters_vigor_stacks` | Hunter's Vigor stacks (100 = the next basic attack heals) [full] |
 
 Counts the fight could walk if one missing number were sourced:
 
