@@ -1,0 +1,52 @@
+{
+ "slice": "kalista-rend-level",
+ "issue": "docs/surface-area-backlog.md SR8",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures all three baselines in the same commit."
+ },
+ "what_landed": "Kalista's Rend consumes the spears her basic attacks and Pierce lodged, counted before the cast, with the module's own floor of one standing.",
+ "why": [
+  "Two leaves move and both are her E row's declaration: the window its level is walked in, and a detail that no longer claims a stack count.",
+  "No fight number moves, because the golden's scenarios sit at the floor the option already declared. A longer fight with a real swing stream now prices the spears it lodged: 407.8 against the 194.8 a fight with no swings prices.",
+  "That floor is what keeps the row exact. Kindred's pounce hit the opposite wall, where a fight that stacks too little prices a zero-damage cast and the item procs riding it lose their home; Kalista's module had already reviewed the answer and written it as a rail."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "Kalista is the only kit this slice touches."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "the E row publishes its stack window"
+  },
+  "/metadata/fingerprint/numeric_leaves": {
+   "cause": "the same"
+  }
+ },
+ "summary": {
+  "direction": "no damage leaf moves; the derived level matches the declared floor in the golden's scenarios",
+  "counts": {
+   "golden": 4,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Kalista/abilities_level_11/E/detail",
+   "/champion_baselines/Kalista/abilities_level_11/E/stack_window"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}
