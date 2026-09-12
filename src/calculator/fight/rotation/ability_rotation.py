@@ -33,6 +33,7 @@ from .cast_plan import _resolve_cast_plan
 from .cast_schedule import (
     _CAST_SCHEDULE_EPS,
     _disclose_ultimate_cast_rule,
+    CooldownRefunds,
     _schedule_shared_casts,
 )
 from .resource_admission import _apply_resource_limits
@@ -177,7 +178,9 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         state.one_rotation or state.auto_attacks_only
     )
     schedule = (
-        _schedule_shared_casts(state, result, basic_ability_haste) if timed_mode else {}
+        _schedule_shared_casts(state, CooldownRefunds.of(result), basic_ability_haste)
+        if timed_mode
+        else {}
     )
     _disclose_ultimate_cast_rule(state, timed_mode)
 
