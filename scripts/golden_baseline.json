@@ -34255,9 +34255,20 @@
           "total_raw": 240.9
         },
         "passive": {
+          "armed_procs": {
+            "armed_at_start": false,
+            "arming_slots": [],
+            "hits_required": 5,
+            "max_stacks": 5,
+            "requested": false,
+            "retained_at_threshold": true,
+            "stack_seconds": 6.0,
+            "stacks_from_ability_hits": true,
+            "stacks_from_swings": true
+          },
           "cc_reviewed": true,
           "damage_type": "magic",
-          "detail": "5/5 stack(s); 25% bonus attack speed (5% per stack)",
+          "detail": "5% bonus attack speed per stack, up to 5 held for 6s each; the fight walks the attacks and casts that stack them, and Lightning Claws is live for as long as the last stack is",
           "name": "The Relentless Storm",
           "on_hit": {
             "damage_per_hit": 34.0,
@@ -34267,8 +34278,12 @@
           "parts": [],
           "rank": 11,
           "skillshot": true,
-          "stat_buff": {
-            "bonus_attack_speed": 25.0
+          "swing_ramp": {
+            "max_stacks": 5,
+            "per_stack": 0.05,
+            "stack_duration": 6.0,
+            "stacks_from_ability_casts": true,
+            "stacks_from_swings": true
           },
           "total_raw": 0.0
         }
@@ -53570,18 +53585,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60635,
-      "numeric_leaves": 46438,
+      "leaves": 60647,
+      "numeric_leaves": 46443,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "9e6ef7aca2218c37fac29746798eac611687ca65",
+    "git_head": "375c03d7389ec6d9ce1b8eaf3b44a7da66612c2f",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "cc8a1c1ee675774abebd6f6b98213ee58c7253de"
+    "src_tree_sha": "1d05e400027ca874fe95d3d119e89309cf6d1cf6"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -82341,12 +82356,12 @@
               "Q": 33.33,
               "R": 701.67,
               "W": 321.2,
-              "auto_attacks": 384.0,
+              "auto_attacks": 448.0,
               "on_hit_ability_passive": 1117.92,
               "proc_Luden's Echo": 155.36,
               "shadowflame_Shadowflame": 149.06
             },
-            "total_damage": 3350.06
+            "total_damage": 3414.06
           },
           "no_items": {
             "breakdown_totals": {
@@ -82354,10 +82369,10 @@
               "Q": 33.33,
               "R": 333.33,
               "W": 160.6,
-              "auto_attacks": 256.0,
+              "auto_attacks": 320.0,
               "on_hit_ability_passive": 97.14
             },
-            "total_damage": 1094.7
+            "total_damage": 1158.7
           },
           "physical_build": {
             "breakdown_totals": {
@@ -82366,10 +82381,10 @@
               "R": 591.67,
               "W": 416.63,
               "auto_attacks": 1656.6,
-              "on_hit_Kraken Slayer": 312.3,
-              "on_hit_ability_passive": 145.71
+              "on_hit_Kraken Slayer": 311.11,
+              "on_hit_ability_passive": 121.43
             },
-            "total_damage": 3535.86
+            "total_damage": 3510.4
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -82377,11 +82392,11 @@
               "Q": 151.73,
               "R": 518.33,
               "W": 670.0,
-              "auto_attacks": 1097.1,
+              "auto_attacks": 1279.95,
               "on_hit_ability_passive": 145.71,
               "spellblade_Trinity Force": 256.0
             },
-            "total_damage": 3053.17
+            "total_damage": 3236.02
           }
         }
       },
@@ -82434,12 +82449,12 @@
               "Q": 33.33,
               "R": 835.0,
               "W": 482.8,
-              "auto_attacks": 578.67,
+              "auto_attacks": 661.33,
               "on_hit_ability_passive": 1449.84,
               "proc_Luden's Echo": 155.36,
               "shadowflame_Shadowflame": 248.54
             },
-            "total_damage": 4431.06
+            "total_damage": 4513.73
           },
           "no_items": {
             "breakdown_totals": {
@@ -82447,10 +82462,10 @@
               "Q": 33.33,
               "R": 466.67,
               "W": 241.4,
-              "auto_attacks": 413.33,
+              "auto_attacks": 496.0,
               "on_hit_ability_passive": 214.29
             },
-            "total_damage": 1726.16
+            "total_damage": 1808.83
           },
           "physical_build": {
             "breakdown_totals": {
@@ -82458,11 +82473,11 @@
               "Q": 198.67,
               "R": 725.0,
               "W": 519.69,
-              "auto_attacks": 1848.0,
-              "on_hit_Kraken Slayer": 397.89,
+              "auto_attacks": 2156.0,
+              "on_hit_Kraken Slayer": 395.71,
               "on_hit_ability_passive": 257.14
             },
-            "total_damage": 4303.53
+            "total_damage": 4609.36
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -82470,11 +82485,11 @@
               "Q": 151.73,
               "R": 651.67,
               "W": 864.1,
-              "auto_attacks": 1459.27,
+              "auto_attacks": 1667.73,
               "on_hit_ability_passive": 300.0,
               "spellblade_Trinity Force": 330.67
             },
-            "total_damage": 4114.58
+            "total_damage": 4323.04
           }
         }
       }
