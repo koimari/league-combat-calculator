@@ -30,6 +30,7 @@ this fixes.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from ..ability_prose import extract_description_duration
@@ -126,6 +127,28 @@ def _per_target_lockout(ability: dict[str, Any], rank: int) -> float:
     return float(extract_cooldown(ability, rank) or 0.5)
 
 
+_RIDE_THE_WIND_RE = re.compile(
+    r"generates a stack of Ride the Wind for (?P<seconds>\d+(?:\.\d+)?) seconds"
+    r"[^.]*?stacks up to (?P<stacks>\d+) times"
+)
+
+
+def cached_stack_terms_for(ability: dict[str, Any]) -> tuple[float, int]:
+    """Ride the Wind's cached stack life and cap."""
+    effects = ability.get("effects")
+    for effect in effects if effects else ():
+        description = effect.get("description")
+        if description is None:
+            continue
+        match = _RIDE_THE_WIND_RE.search(str(description))
+        if match is not None:
+            return float(match.group("seconds")), int(match.group("stacks"))
+    raise ValueError(
+        "Yasuo E: the cached entry no longer states Ride the Wind's stack "
+        "life and cap ('for N seconds ... stacks up to N times')"
+    )
+
+
 @ranked_slot
 def _sweeping_blade(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
@@ -137,7 +160,12 @@ def _sweeping_blade(
     once per its per-target lockout (``onTargetCdStatic``, 10/9/8/7/6 by
     rank); that lockout is the cast-rate limiter here.
     """
-    stacks = min(max(int(ctx.option("e_stacks")), 0), 4)
+    requested = ctx.options.get("e_stacks")
+    stack_seconds, max_stacks = cached_stack_terms_for(ability)
+    # A clockless parse reads the unstacked row, which is the declared
+    # default and the honest reading for one target: the per-target lockout
+    # outlasts the stack, so a duel never restacks it.
+    stacks = min(max(int(requested), 0), max_stacks) if requested is not None else 0
     base = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     per_stack = extract_named(
         ability, "Bonus Damage per Stack", rank, ctx.stats, ctx.target
@@ -151,16 +179,46 @@ def _sweeping_blade(
         total,
         "magic",
     )
-    entry["parts"] = (DamagePart("magic", total),)
+    if requested is None:
+        # Each dash that lands stacks Ride the Wind and the NEXT one is
+        # worth more, so the level a cast reads is what its own window
+        # collected from this slot's earlier hits (champions/armed_procs.py).
+        entry["parts"] = (
+            DamagePart(
+                "magic",
+                total,
+                stack_scaled_damage=lambda level: base + level * per_stack,
+            ),
+        )
+        entry["stack_window"] = {
+            "arming_slots": ("E",),
+            "max_stacks": max_stacks,
+            "hits_required": max_stacks,
+            "stacks_from_ability_hits": True,
+            "stack_seconds": stack_seconds,
+            "armed_at_start": False,
+            "requested": False,
+        }
+    else:
+        entry["parts"] = (DamagePart("magic", total),)
     # One impact at the end of the dash — the cached packet has no separate
     # travel or tick phase to place.
     entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
-        f"Ride the Wind {stacks}/4 stacks: base {base:.2f} + {stacks} x "
-        f"per-stack bonus {per_stack:.2f} = {total:.2f}; at 4 stacks this "
-        "equals the wiki Total Combined Damage (25% per stack, +100% at "
-        f"maximum stacks).  Single-target cast rate: one dash per "
-        f"{lockout:g}s per-target lockout."
+        (
+            f"Ride the Wind: base {base:.2f} + {per_stack:.2f} per stack, up "
+            f"to {max_stacks}; each dash that lands stacks the next one, and "
+            "the fight counts them. Single-target cast rate: one dash per "
+            f"{lockout:g}s per-target lockout."
+        )
+        if requested is None
+        else (
+            f"Ride the Wind {stacks}/{max_stacks} stacks: base {base:.2f} + "
+            f"{stacks} x per-stack bonus {per_stack:.2f} = {total:.2f}; at "
+            f"{max_stacks} stacks this equals the wiki Total Combined Damage. "
+            f"Single-target cast rate: one dash per {lockout:g}s per-target "
+            "lockout."
+        )
     )
     return entry
 
@@ -216,7 +274,16 @@ OPTIONS = [
         maximum=2,
         label="Gathering Storm stacks (2 = Q3 ready)",
     ),
-    int_option("e_stacks", 0, minimum=0, maximum=4, label="Ride the Wind stacks"),
+    int_option(
+        "e_stacks",
+        0,
+        minimum=0,
+        maximum=4,
+        label=(
+            "Ride the Wind stacks; unset derives the level each dash reads "
+            "from the dashes before it"
+        ),
+    ),
     bool_option(
         "w_active", False, label="W (Wind Wall) active against selected skillshots"
     ),

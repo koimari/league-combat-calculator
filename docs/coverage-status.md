@@ -118,7 +118,7 @@ way each errs is the half a reader needs:
 | Volibear | `relentless_storm_stacks` | The Relentless Storm stacks [floor] |
 | Wukong | `stone_skin_stacks` | Strength of Stone stacks [floor] |
 | Xayah | `clean_cuts_stacks` | Clean Cuts stacks [floor] |
-| Yasuo | `e_stacks` | Ride the Wind stacks [floor] |
+| Yasuo | `e_stacks` | Ride the Wind stacks; unset derives the level each dash reads from the dashes before it [floor] |
 | Zaahen | `p_determination_stacks` | Determination stacks (12 = filled, which doubles the bonus) [floor] |
 
 Counts the fight could walk if one missing number were sourced:
