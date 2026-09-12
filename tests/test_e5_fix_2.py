@@ -269,13 +269,25 @@ def test_mel_w_no_longer_prices_the_reflection_modifier_as_flat_damage():
 
 
 def test_mel_r_prices_the_per_overwhelm_stack_term():
-    """Rank 3, 0 AP, default 3 Overwhelm stacks: R = 275 + 10 x 3 =
-    305 magic (the old packet read only the flat 275)."""
-    data = _fight("Mel")
+    """Rank 3, 0 AP, 3 Overwhelm stacks: R = 275 + 10 x 3 = 305 magic.
+
+    The count is asked for, because the identity being pinned is the
+    per-stack term itself; a default request derives the level Mel's own
+    damage instances applied.
+    """
+    data = _fight("Mel", options={"r_overwhelm_stacks": 3})
     r = data["breakdown"]["R"]
     assert r["total_damage"] == pytest.approx(275.0 + 10.0 * 3, abs=0.06)
     assert _parse("Mel", data)["R"]["damage_type"] == "magic"
     assert "per Overwhelm stack" in r["detail"]
+
+
+def test_mel_r_derives_the_overwhelm_level_her_damage_applied():
+    """Every damage instance applies a stack, so the blast is worth more
+    in a fight that landed more of them."""
+    with_autos = _fight("Mel")
+    assert "per Overwhelm stack" in with_autos["breakdown"]["R"]["detail"]
+    assert with_autos["breakdown"]["R"]["total_damage"] >= 275.0
 
 
 def test_mel_r_overwhelm_stacks_option_scales_the_detonation():

@@ -43,6 +43,7 @@ Roadmap slot session (2026-08-21) closes this module's last two
     on any of the three cached sources — see ``_rebuttal``.
 """
 
+import re
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -270,6 +271,40 @@ def _rebuttal(
     )
 
 
+_OVERWHELM_RE = re.compile(
+    r"apply a stack of Overwhelm[^.]*?for (?P<seconds>\d+(?:\.\d+)?) seconds"
+)
+# "stacking infinitely" — the cache states no cap, so the rail the option
+# already declared is the bound, and it is a declared one, not a sourced.
+_R_MAX_OVERWHELM_STACKS = 50
+
+
+def _overwhelm_window(ctx: SlotCtx) -> dict[str, Any]:
+    """The cached life of an Overwhelm stack, and what applies one."""
+    ability = ctx.ability("P")
+    effects = (ability if ability else {}).get("effects")
+    for effect in effects if effects else ():
+        description = effect.get("description")
+        if description is None:
+            continue
+        match = _OVERWHELM_RE.search(str(description))
+        if match is not None:
+            return {
+                "arming_slots": (),
+                "max_stacks": _R_MAX_OVERWHELM_STACKS,
+                "hits_required": _R_MAX_OVERWHELM_STACKS,
+                "stacks_from_swings": True,
+                "stacks_from_ability_hits": True,
+                "stack_seconds": float(match.group("seconds")),
+                "armed_at_start": False,
+                "requested": False,
+            }
+    raise ValueError(
+        "Mel P: the cached innate no longer states Overwhelm's stack life "
+        "('apply a stack of Overwhelm ... for N seconds')"
+    )
+
+
 @ranked_slot
 def _golden_eclipse(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
@@ -282,8 +317,9 @@ def _golden_eclipse(
     flat_share = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     per_stack = extract_value(ability, "Magic Damage", rank, modifier_index=2)
     per_stack += _R_PER_STACK_AP_RATIO * float(ctx.stat("ability_power") or 0.0)
-    stacks = int(ctx.options.get("r_overwhelm_stacks", _R_DEFAULT_OVERWHELM_STACKS))
-    stacks = max(0, min(stacks, 50))
+    requested = ctx.options.get("r_overwhelm_stacks")
+    stacks = int(requested if requested is not None else _R_DEFAULT_OVERWHELM_STACKS)
+    stacks = max(0, min(stacks, _R_MAX_OVERWHELM_STACKS))
     total = flat_share + per_stack * stacks
     entry = damage_entry(
         ability_name(ability),
@@ -296,10 +332,29 @@ def _golden_eclipse(
         # event ledger.
         event_order_certified="single_hit",
     )
-    entry["detail"] = (
-        f"{flat_share:g} flat + {per_stack:g} per Overwhelm stack x "
-        f"{stacks} stack(s)"
-    )
+    if requested is None:
+        # Every damage instance Mel lands applies a stack, so the level the
+        # blast reads is what her swings and ability hits put on the target
+        # inside the cached window (champions/armed_procs.py).
+        window = _overwhelm_window(ctx)
+        entry["parts"] = (
+            DamagePart(
+                "magic",
+                total,
+                stack_scaled_damage=lambda level: flat_share + per_stack * level,
+            ),
+        )
+        entry["stack_window"] = window
+        entry["detail"] = (
+            f"{flat_share:g} flat + {per_stack:g} per Overwhelm stack; the "
+            "fight counts the damage instances that applied them inside "
+            f"their {window['stack_seconds']:g}s window"
+        )
+    else:
+        entry["detail"] = (
+            f"{flat_share:g} flat + {per_stack:g} per Overwhelm stack x "
+            f"{stacks} stack(s)"
+        )
     return entry
 
 
@@ -431,7 +486,10 @@ OPTIONS = [
         _R_DEFAULT_OVERWHELM_STACKS,
         minimum=0,
         maximum=50,
-        label="Overwhelm stacks on the target when Golden Eclipse detonates",
+        label=(
+            "Overwhelm stacks at detonation; unset derives them from the "
+            "damage instances that applied them inside their window"
+        ),
     ),
     int_option(
         "p_searing_brilliance_missiles",
