@@ -1,0 +1,97 @@
+{
+ "slice": "kindred-mounting-dread-pounce",
+ "issue": "docs/surface-area-backlog.md SR8, the pounce that lands on a marked attack rather than at the cast",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures the baselines it moved in the same commit."
+ },
+ "what_landed": "Kindred's E stops pricing the pounce at the cast. The E row is the shot, which marks and slows; E_pounce is the pounce, walked over the attacks that stack the mark.",
+ "why": [
+  "The pounce lands on the third marked attack, so pricing it at the cast put damage where the game does not. The fight walks it now: over twenty seconds with Muramana and Eclipse it answers three pounces at 2.01s, 9.03s and 15.05s against the declared reading's one per cast, and every probe stays event_order_certified.",
+  "The CROWD CONTROL is what made this hard and it is why two earlier attempts were reverted. E's slow rode its damage event, and a zero-damage cast authors none, so moving the packet silently dropped both slow applications. Veigar's cage has the same problem and already solved it: park the interval as a typed control_events row, which the rotation replays per cast whatever the row prices. Both readings now apply the slow twice over ten seconds. The blocker this campaign attributed to Muramana was never Muramana, which stayed certified in every probe.",
+  "The burst fights lose E entirely (E 133.33 -> 0.0 with no E_pounce beside it) and that is the reading, not a loss: a one-rotation burst lands no basic attack, so no mark ever reaches three stacks and no pounce happens. The sustained fights, which do swing, carry the pounce on E_pounce at a value close to what E used to hold.",
+  "A fail-open was fixed beside it: a proc row whose counter only basic attacks feed used to keep the module's own count in a fight with no basic attacks, so an autos-off Kindred pounced without ever swinging.",
+  "The E row's damage_type reads magic rather than physical now, because it prices nothing and no_damage() stamps the shared default. It is a zero row either way.",
+  "All 44 pair leaves are hers. No coupled leaf moves: no coupled roster holds Kindred."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "Kindred is the only kit declaring an arming-slot-gated hit counter, and no coupled roster holds her."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "the E row trades its damage keys for a control_events row, and E_pounce is a whole new entry"
+  },
+  "/metadata/fingerprint/numeric_leaves": {
+   "cause": "the numbers among those keys"
+  }
+ },
+ "summary": {
+  "direction": "down: the pounce now has to be earned by three marked attacks, and a fight that lands none does not pounce",
+  "counts": {
+   "golden": 44,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Kindred/abilities_level_11/E/control_events",
+   "/champion_baselines/Kindred/abilities_level_11/E/damage_type",
+   "/champion_baselines/Kindred/abilities_level_11/E/detail",
+   "/champion_baselines/Kindred/abilities_level_11/E/event_order_certified",
+   "/champion_baselines/Kindred/abilities_level_11/E/parts[0]",
+   "/champion_baselines/Kindred/abilities_level_11/E/target_max_health_sensitive",
+   "/champion_baselines/Kindred/abilities_level_11/E/total_raw",
+   "/champion_baselines/Kindred/abilities_level_11/E_pounce",
+   "/registered_champion_fights/Kindred/11/magic_build/breakdown_totals/E",
+   "/registered_champion_fights/Kindred/11/magic_build/total_damage",
+   "/registered_champion_fights/Kindred/11/no_items/breakdown_totals/E",
+   "/registered_champion_fights/Kindred/11/no_items/total_damage",
+   "/registered_champion_fights/Kindred/11/physical_build/breakdown_totals/E",
+   "/registered_champion_fights/Kindred/11/physical_build/total_damage",
+   "/registered_champion_fights/Kindred/11/spellblade_build/breakdown_totals/E",
+   "/registered_champion_fights/Kindred/11/spellblade_build/total_damage",
+   "/registered_champion_fights/Kindred/11/sustained/magic_build/breakdown_totals/E",
+   "/registered_champion_fights/Kindred/11/sustained/magic_build/breakdown_totals/E_pounce",
+   "/registered_champion_fights/Kindred/11/sustained/no_items/breakdown_totals/E",
+   "/registered_champion_fights/Kindred/11/sustained/no_items/breakdown_totals/E_pounce",
+   "/registered_champion_fights/Kindred/11/sustained/physical_build/breakdown_totals/E",
+   "/registered_champion_fights/Kindred/11/sustained/physical_build/breakdown_totals/E_pounce",
+   "/registered_champion_fights/Kindred/11/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Kindred/11/sustained/spellblade_build/breakdown_totals/E",
+   "/registered_champion_fights/Kindred/11/sustained/spellblade_build/breakdown_totals/E_pounce",
+   "/registered_champion_fights/Kindred/11/sustained/spellblade_build/total_damage",
+   "/registered_champion_fights/Kindred/18/magic_build/breakdown_totals/E",
+   "/registered_champion_fights/Kindred/18/magic_build/total_damage",
+   "/registered_champion_fights/Kindred/18/no_items/breakdown_totals/E",
+   "/registered_champion_fights/Kindred/18/no_items/total_damage",
+   "/registered_champion_fights/Kindred/18/physical_build/breakdown_totals/E",
+   "/registered_champion_fights/Kindred/18/physical_build/total_damage",
+   "/registered_champion_fights/Kindred/18/spellblade_build/breakdown_totals/E",
+   "/registered_champion_fights/Kindred/18/spellblade_build/total_damage",
+   "/registered_champion_fights/Kindred/18/sustained/magic_build/breakdown_totals/E",
+   "/registered_champion_fights/Kindred/18/sustained/magic_build/breakdown_totals/E_pounce",
+   "/registered_champion_fights/Kindred/18/sustained/no_items/breakdown_totals/E",
+   "/registered_champion_fights/Kindred/18/sustained/no_items/breakdown_totals/E_pounce",
+   "/registered_champion_fights/Kindred/18/sustained/physical_build/breakdown_totals/E",
+   "/registered_champion_fights/Kindred/18/sustained/physical_build/breakdown_totals/E_pounce",
+   "/registered_champion_fights/Kindred/18/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Kindred/18/sustained/spellblade_build/breakdown_totals/E",
+   "/registered_champion_fights/Kindred/18/sustained/spellblade_build/breakdown_totals/E_pounce",
+   "/registered_champion_fights/Kindred/18/sustained/spellblade_build/total_damage"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}

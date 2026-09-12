@@ -58,6 +58,7 @@ from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import no_damage, ranked_slot, typed_damage
 from .shared_mechanics import capped_option
+from .slot_control import park_control_interval
 from .slot_entries import damage_entry
 from .slot_extract import (
     ability_name,
@@ -95,6 +96,17 @@ _BASE_SLOTS = {
 }
 _MARK_MAX = 25
 _E_STACK_MAX = 3
+
+# ROOTED IN THE BINARY (KindredEWrapper): how long Mounting Dread's mark
+# stands, which every marked attack refreshes, and the slow the shot itself
+# applies.  The sibling StacksToProc reads 4 against the cached prose's
+# "stacking up to 3 times", because the binary counts the mark itself as
+# the first stack; the module keeps the prose's three ATTACKS.
+_E_MARK_SECONDS = data_value(
+    spell_object("Kindred", "KindredEWrapper"), "TotalDuration"
+)
+_E_SLOW_SECONDS = data_value(spell_object("Kindred", "KindredEWrapper"), "SlowDuration")
+_E_SLOW_PERCENT = data_value(spell_object("Kindred", "KindredEWrapper"), "SlowAmount")
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # Mounting Dread's third-stack pounce "increased by 0% : 50% (+ 0% :
@@ -144,12 +156,67 @@ def _mark_of_the_kindred(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
+def _pounce_damage(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> float | None:
+    """The sourced pounce packet, or ``None`` when its row is missing."""
+    leveling = find_named_leveling(ability, "Additional Physical Damage")
+    if leveling is None:
+        return None
+    # E's missing-health modifier: 5% (+ 0.5% per Mark).
+    return sum_modifiers(
+        leveling,
+        rank,
+        ctx.stats,
+        ctx.target,
+        modifier_override=_mark_scaled_override(
+            ctx,
+            _marks(ctx),
+            "of target's missing health",
+            0.5,
+            target_stat="target_missing_health",
+        ),
+    )
+
+
+def _pounce_part(damage: float) -> DamagePart:
+    """The pounce's one part, crit-scaled by the binary's CritMod."""
+    return DamagePart(
+        "physical",
+        damage,
+        crit_effectiveness=_E_POUNCE_CRIT_EFFECTIVENESS,
+    )
+
+
 @ranked_slot
 def _mounting_dread(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
-    """E: Mounting Dread — third-stack Wolf pounce."""
-    stacks = min(max(int(ctx.option("e_stacks")), 1), _E_STACK_MAX)
+    """E: Mounting Dread — the shot, and the pounce a STATED level prices.
+
+    Unset, the shot only marks and slows: the pounce is its own row
+    (``E_pounce``), because it lands on the third marked attack rather than
+    at the cast. The slow then has no damage event to ride, so the row parks
+    it as a typed control interval (Veigar E's cage precedent), which the
+    rotation replays per cast whatever the row prices.
+    """
+    requested = ctx.options.get("e_stacks")
+    if requested is None:
+        entry = no_damage(
+            ctx,
+            name=ability_name(ability),
+            reason=(
+                f"The shot slows by {_E_SLOW_PERCENT:g}% for "
+                f"{_E_SLOW_SECONDS:g}s and marks the target for "
+                f"{_E_MARK_SECONDS:g}s; every marked basic attack applies a "
+                "stack and refreshes it, and the third directs Wolf to "
+                "pounce, which E_pounce prices at the attack that lands it."
+            ),
+        )
+        if entry is not None:
+            park_control_interval(
+                entry, _E_SLOW_SECONDS, magnitude=_E_SLOW_PERCENT / 100.0
+            )
+        return entry
+    stacks = min(max(int(requested), 1), _E_STACK_MAX)
     if stacks < _E_STACK_MAX:
         return no_damage(
             ctx,
@@ -161,25 +228,9 @@ def _mounting_dread(
             ),
         )
 
-    marks = _marks(ctx)
-    leveling = find_named_leveling(ability, "Additional Physical Damage")
-    if leveling is None:
+    damage = _pounce_damage(ctx, ability, rank)
+    if damage is None:
         return None
-
-    # E's missing-health modifier: 5% (+ 0.5% per Mark).
-    damage = sum_modifiers(
-        leveling,
-        rank,
-        ctx.stats,
-        ctx.target,
-        modifier_override=_mark_scaled_override(
-            ctx,
-            marks,
-            "of target's missing health",
-            0.5,
-            target_stat="target_missing_health",
-        ),
-    )
     entry = damage_entry(
         ability_name(ability),
         rank,
@@ -187,20 +238,63 @@ def _mounting_dread(
         damage,
         "physical",
     )
-    entry["parts"] = (
-        DamagePart(
-            "physical",
-            damage,
-            crit_effectiveness=_E_POUNCE_CRIT_EFFECTIVENESS,
-        ),
-    )
+    entry["parts"] = (_pounce_part(damage),)
     entry["target_max_health_sensitive"] = True
     entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
         f"Third-stack Wolf pounce at {stacks}/3 stacks: {damage:.2f} "
         "physical (80 : 200 by rank + 100% bonus AD + 5% (+0.5% per "
-        f"Mark) of missing health at {marks} mark(s)); the pounce "
+        f"Mark) of missing health at {_marks(ctx)} mark(s)); the pounce "
         "consumes all stacks."
+    )
+    return entry
+
+
+def _wolf_pounce(ctx: SlotCtx) -> dict[str, Any] | None:
+    """E_pounce: the pounce itself, on the attack that completes the count.
+
+    Only the DERIVED reading emits it. A stated level prices the pounce at
+    the cast, on the E row, which is where it has always been.  The row
+    reads E's own ability and rank: it is E's damage, landing later.
+    """
+    if ctx.options.get("e_stacks") is not None:
+        return None
+    ranked = ctx.ranked("E")
+    if ranked is None:
+        return None
+    ability, rank = ranked
+    damage = _pounce_damage(ctx, ability, rank)
+    if damage is None:
+        return None
+    entry = damage_entry(
+        "Mounting Dread (Wolf pounce)",
+        rank,
+        0.0,
+        damage,
+        "physical",
+    )
+    entry["parts"] = (_pounce_part(damage),)
+    entry["target_max_health_sensitive"] = True
+    entry["proc_count"] = 1
+    # "Her basic attacks against the marked target each apply a stack,
+    # refreshing the duration and stacking up to 3 times. The third stack
+    # directs Wolf to pounce, consuming all stacks." The cast marks and the
+    # attacks count, so the fight walks how many pounces the marks afford
+    # and a fight that lands no third marked attack affords none.
+    entry["armed_procs"] = {
+        "arming_slots": ("E",),
+        "max_stacks": _E_STACK_MAX,
+        "hits_required": _E_STACK_MAX,
+        "stacks_from_swings": True,
+        "stack_seconds": _E_MARK_SECONDS,
+        "armed_at_start": False,
+        "requested": False,
+    }
+    entry["detail"] = (
+        f"{damage:.2f} physical on the third marked attack (80 : 200 by rank "
+        f"+ 100% bonus AD + 5% (+0.5% per Mark) of missing health at "
+        f"{_marks(ctx)} mark(s)), consuming all stacks; the mark stands "
+        f"{_E_MARK_SECONDS:g}s and every marked attack refreshes it."
     )
     return entry
 
@@ -304,6 +398,7 @@ SLOTS = {
     "W": _wolfs_frenzy,
     "W_vigor": _hunters_vigor,
     "E": _mounting_dread,
+    "E_pounce": _wolf_pounce,
     "R": _BASE_SLOTS["R"],
 }
 
@@ -326,7 +421,14 @@ OPTIONS = [
         label="Hunter's Vigor stacks (100 = the next basic attack heals)",
     ),
     int_option(
-        "e_stacks", 3, minimum=1, maximum=3, label="Mounting Dread stacks (3 = pounce)"
+        "e_stacks",
+        3,
+        minimum=1,
+        maximum=3,
+        label=(
+            "Mounting Dread stacks (3 = pounce); unset walks the marked "
+            "attacks and pounces wherever the third one lands"
+        ),
     ),
 ]
 
