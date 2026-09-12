@@ -136,6 +136,71 @@ class TestTheWalkerMergesTwoRamps:
         assert merged > item_only
 
 
+class TestAnAbilityStackedRamp:
+    """A ramp whose stacks come from casts, not from the swings it rates."""
+
+    RAMP = rs.DecayingStackRamp(per_stack=0.10, max_stacks=5, stack_duration=6.0)
+    SCHEDULE = rs.SwingSchedule(ramp=None, window=None, schedules_single_rotation=False)
+    RATE = {"attack_speed": 0.625, "attack_speed_ratio": 0.668}
+
+    def _times(self, **kwargs) -> tuple[float, ...]:
+        return rs.swing_times(
+            self.SCHEDULE, duration_seconds=10.0, **self.RATE, **kwargs
+        )
+
+    def test_with_no_ability_stream_it_never_stacks(self):
+        """The swings do not stack it, so an empty cast stream leaves it flat."""
+        assert (
+            self._times(kit_ramp=self.RAMP, kit_ramp_stacks_swings=False)
+            == self._times()
+        )
+
+    def test_each_cast_admitted_at_its_instant_speeds_the_swings_after_it(self):
+        ramped = self._times(
+            kit_ramp=self.RAMP,
+            kit_ramp_stacks_swings=False,
+            kit_ability_stack_times=(0.0, 1.0, 2.0, 3.0, 4.0),
+        )
+        assert len(ramped) > len(self._times())
+
+    def test_a_stack_expires_on_its_own_clock(self):
+        """Five casts in the first second, then nothing: the ramp decays."""
+        early = self._times(
+            kit_ramp=self.RAMP,
+            kit_ramp_stacks_swings=False,
+            kit_ability_stack_times=(0.0, 0.2, 0.4, 0.6, 0.8),
+        )
+        spread = self._times(
+            kit_ramp=self.RAMP,
+            kit_ramp_stacks_swings=False,
+            kit_ability_stack_times=(0.0, 2.0, 4.0, 6.0, 8.0),
+        )
+        gaps = [after - before for before, after in zip(early, early[1:])]
+        # The last gap is wider than the first: by then the early stacks
+        # have run out their six seconds and nothing replaced them.
+        assert gaps[-1] > gaps[0]
+        assert len(spread) != len(early)
+
+
+class TestEzrealRisingSpellForce:
+    """Ability casts stack it; the swings it rates never do."""
+
+    def test_unset_publishes_a_cast_stacked_ramp(self):
+        passive = _parse("Ezreal")["passive"]
+        ramp = passive["swing_ramp"]
+        assert ramp["stacks_from_swings"] is False
+        assert ramp["stacks_from_ability_casts"] is True
+        assert ramp["max_stacks"] == 5
+        assert ramp["stack_duration"] == pytest.approx(6.0)
+        assert "stat_buff" not in passive
+
+    def test_the_ramp_sits_between_no_stacks_and_a_full_level(self):
+        full = _fight("Ezreal", {"passive_stacks": 5}, 20.0, [RAGEBLADE])
+        ramped = _fight("Ezreal", {}, 20.0, [RAGEBLADE])
+        none = _fight("Ezreal", {"passive_stacks": 0}, 20.0, [RAGEBLADE])
+        assert _autos(none) < _autos(ramped) < _autos(full)
+
+
 class TestTheReaderFailsClosed:
     """Every number of a kit ramp is the module's; nothing is filled in."""
 
@@ -149,12 +214,35 @@ class TestTheReaderFailsClosed:
         return _State()
 
     def test_a_slot_declaring_a_complete_ramp_resolves_it(self):
-        ramp = stat_buff_ultimates._kit_swing_ramp(
+        kit = stat_buff_ultimates._kit_swing_ramp(
             self._state({"P": {"name": "Some Passive", "swing_ramp": dict(self.RAMP)}})
         )
-        assert ramp == rs.DecayingStackRamp(
+        assert kit.ramp == rs.DecayingStackRamp(
             per_stack=0.05, max_stacks=3, stack_duration=2.0
         )
+        # Silence means the swings the ramp re-rates, the shape that existed
+        # before an ability stream reached here.
+        assert kit.stacks_from_swings is True
+        assert kit.stacks_from_ability_casts is False
+
+    def test_a_ramp_that_stacks_on_neither_stream_raises(self):
+        payload = {**self.RAMP, "stacks_from_swings": False}
+        with pytest.raises(ValueError, match="stacks on neither"):
+            stat_buff_ultimates._kit_swing_ramp(
+                self._state({"P": {"name": "Some Passive", "swing_ramp": payload}})
+            )
+
+    def test_an_ability_stacked_ramp_says_so(self):
+        payload = {
+            **self.RAMP,
+            "stacks_from_swings": False,
+            "stacks_from_ability_casts": True,
+        }
+        kit = stat_buff_ultimates._kit_swing_ramp(
+            self._state({"P": {"name": "Some Passive", "swing_ramp": payload}})
+        )
+        assert kit.stacks_from_swings is False
+        assert kit.stacks_from_ability_casts is True
 
     @pytest.mark.parametrize("field", ["per_stack", "max_stacks", "stack_duration"])
     def test_a_missing_number_raises_and_names_the_slot(self, field):

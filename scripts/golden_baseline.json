@@ -7260,7 +7260,7 @@
           "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "physical",
-          "detail": "+50% bonus attack speed (5 stacks)",
+          "detail": "+10% bonus attack speed per stack, up to 5 held for 6s each; the fight walks the casts that stack them",
           "name": "Rising Spell Force",
           "parts": [
             "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
@@ -7268,8 +7268,12 @@
           "rank": 11,
           "resource_cost": 0.0,
           "resource_type": "MANA",
-          "stat_buff": {
-            "bonus_attack_speed": 50.0
+          "swing_ramp": {
+            "max_stacks": 5,
+            "per_stack": 0.1,
+            "stack_duration": 6.0,
+            "stacks_from_ability_casts": true,
+            "stacks_from_swings": false
           },
           "total_raw": 0.0
         }
@@ -53566,18 +53570,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60631,
-      "numeric_leaves": 46436,
+      "leaves": 60635,
+      "numeric_leaves": 46438,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "b7cc7b3905dd0c50848404280285dd61252cd24d",
+    "git_head": "9e6ef7aca2218c37fac29746798eac611687ca65",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "0c787c6b004fd283fb8f1b2a69d91f1f95949118"
+    "src_tree_sha": "cc8a1c1ee675774abebd6f6b98213ee58c7253de"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -59723,10 +59727,10 @@
               "Q": 589.87,
               "R": 503.57,
               "W": 246.43,
-              "auto_attacks": 1636.8,
-              "on_hit_Kraken Slayer": 205.91
+              "auto_attacks": 1909.6,
+              "on_hit_Kraken Slayer": 354.72
             },
-            "total_damage": 3306.15
+            "total_damage": 3727.76
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -59825,10 +59829,10 @@
               "Q": 567.33,
               "R": 615.0,
               "W": 587.14,
-              "auto_attacks": 1453.08,
+              "auto_attacks": 1660.67,
               "spellblade_Trinity Force": 330.67
             },
-            "total_damage": 3800.8
+            "total_damage": 4008.38
           }
         }
       }

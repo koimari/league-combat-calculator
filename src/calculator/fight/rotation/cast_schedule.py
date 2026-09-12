@@ -1,6 +1,7 @@
 """When each ability casts: haste, refunds, lockouts and the shared cast timeline."""
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
 from ... import item_effects
@@ -13,6 +14,33 @@ from ..empower_declaration import _empower_cooldown_delay
 from .cast_resource_lockout import LockoutWalk, declared_rule
 from ..results import RotationResult
 from ..state import FightState
+
+
+@dataclass(frozen=True, slots=True)
+class CooldownRefunds:
+    """The only two numbers a cast schedule reads off the swing stream.
+
+    Navori Flickerblade pays a cooldown down per landed attack, so the cast
+    schedule depends on how fast the champion swings. Naming that dependency
+    as a two-field record is what lets a caller who does not have a walked
+    swing stream yet ask for a schedule anyway: ``NO_REFUNDS`` says the
+    attacks pay nothing down, which places every recast at or later than the
+    fight will, so a count taken from it is a floor.
+    """
+
+    navori_refund: float = 0.0
+    autos_per_second: float = 0.0
+
+    @classmethod
+    def of(cls, result: "RotationResult") -> "CooldownRefunds":
+        """What a walked rotation already measured."""
+        return cls(
+            navori_refund=result.navori_refund,
+            autos_per_second=result.autos_per_second,
+        )
+
+
+NO_REFUNDS = CooldownRefunds()
 
 
 def _navori_effective_cd(
@@ -74,7 +102,7 @@ def _immobilize_ability_haste(
 
 def _effective_timed_cooldown(
     state: "FightState",
-    result: "RotationResult",
+    refunds: "CooldownRefunds",
     ability_key: str,
     ability_info: dict,
     *,
@@ -101,8 +129,8 @@ def _effective_timed_cooldown(
     if control_applies:
         total_haste += _immobilize_ability_haste(state, ability_info)
     cd = effective_cooldown(base_cd, total_haste)
-    if result.navori_refund > 0 and cd > 0 and slot in ("Q", "W", "E"):
-        cd = _navori_effective_cd(cd, result.autos_per_second, result.navori_refund)
+    if refunds.navori_refund > 0 and cd > 0 and slot in ("Q", "W", "E"):
+        cd = _navori_effective_cd(cd, refunds.autos_per_second, refunds.navori_refund)
     return cd
 
 
@@ -156,7 +184,7 @@ def _lockout_walk(state: "FightState") -> LockoutWalk | None:
 
 
 def _schedule_authored_casts(
-    state: "FightState", result: "RotationResult", basic_ability_haste: float
+    state: "FightState", refunds: "CooldownRefunds", basic_ability_haste: float
 ) -> dict[str, list[float]]:
     """Check requested times against the sourced cooldown rules."""
     times: dict[str, list[float]] = {key: [] for key in state.cast_order}
@@ -182,7 +210,7 @@ def _schedule_authored_casts(
         cast_time = ability_field(info, "cast_time")
         cooldown = _effective_timed_cooldown(
             state,
-            result,
+            refunds,
             key,
             info,
             basic_ability_haste=basic_ability_haste,
@@ -209,7 +237,7 @@ def _schedule_authored_casts(
 
 def _schedule_shared_casts(
     state: "FightState",
-    result: "RotationResult",
+    refunds: "CooldownRefunds",
     basic_ability_haste: float,
 ) -> dict[str, list[float]]:
     """Timed-mode cast start times on ONE shared timeline.
@@ -234,7 +262,7 @@ def _schedule_shared_casts(
     the module declaring it could not source the instant, only the length.
     """
     if state.combat_events is not None:
-        return _schedule_authored_casts(state, result, basic_ability_haste)
+        return _schedule_authored_casts(state, refunds, basic_ability_haste)
     duration = state.fight_duration_seconds
     walk = _lockout_walk(state)
     # Mirror the rotation loop's recast pairing exactly: an entry rides
@@ -253,7 +281,7 @@ def _schedule_shared_casts(
     cooldowns = {
         key: _effective_timed_cooldown(
             state,
-            result,
+            refunds,
             key,
             state.ability_damages[key],
             basic_ability_haste=basic_ability_haste,

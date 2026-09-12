@@ -43,6 +43,7 @@ _EZ_Q_SPELL = spell_object("Ezreal", "EzrealQ")
 _EZ_W_SPELL = spell_object("Ezreal", "EzrealW")
 PASSIVE_AS_PER_STACK = data_value(_EZ_P_SPELL, "AttackSpeedPerStack") * 100.0
 PASSIVE_MAX_STACKS = int(data_value(_EZ_P_SPELL, "MaxStacks"))
+PASSIVE_STACK_SECONDS = data_value(_EZ_P_SPELL, "StackDuration")
 Q_REFUND_SECONDS = data_value(_EZ_Q_SPELL, "CDRefund")
 Q_MIN_PERIOD = 1.0  # sanity floor on Q's post-refund cast period (model choice)
 
@@ -127,9 +128,28 @@ def _rising_spell_force(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    stacks = min(max(int(ctx.option("passive_stacks")), 0), PASSIVE_MAX_STACKS)
-    bonus_as = PASSIVE_AS_PER_STACK * stacks
     entry = damage_entry(ability_name(ability), ctx.level, 0.0, 0.0, "physical")
+    requested = ctx.options.get("passive_stacks")
+    if requested is None:
+        # "a stack ... for each enemy hit by his abilities, lasting for 6
+        # seconds": the ramp an item ramp already is, stacked by the CASTS
+        # rather than by the swings it re-rates, which is the one shape
+        # Ezreal's passive has and Jax's does not.
+        entry["swing_ramp"] = {
+            "per_stack": PASSIVE_AS_PER_STACK / 100.0,
+            "max_stacks": PASSIVE_MAX_STACKS,
+            "stack_duration": PASSIVE_STACK_SECONDS,
+            "stacks_from_swings": False,
+            "stacks_from_ability_casts": True,
+        }
+        entry["detail"] = (
+            f"+{PASSIVE_AS_PER_STACK:.0f}% bonus attack speed per stack, up to "
+            f"{PASSIVE_MAX_STACKS} held for {PASSIVE_STACK_SECONDS:g}s each; the "
+            "fight walks the casts that stack them"
+        )
+        return entry
+    stacks = min(max(int(requested), 0), PASSIVE_MAX_STACKS)
+    bonus_as = PASSIVE_AS_PER_STACK * stacks
     entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
     entry["detail"] = f"+{bonus_as:.0f}% bonus attack speed ({stacks} stacks)"
     return entry
@@ -227,7 +247,10 @@ OPTIONS: list[dict[str, Any]] = [
         5,
         minimum=0,
         maximum=5,
-        label="Passive stacks (Rising Spell Force)",
+        label=(
+            "Passive stacks (Rising Spell Force); unset walks the ramp, one "
+            "stack per ability cast, so the swings speed up as the casts land"
+        ),
     ),
 ]
 
