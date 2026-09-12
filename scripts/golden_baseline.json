@@ -12553,7 +12553,7 @@
           "cast_time": 0.25,
           "cooldown": 10.0,
           "damage_type": "physical",
-          "detail": "1 Rend stack(s)",
+          "detail": "Rend consumes the spears her hits lodged: 74.30 for the first and 26.80 for each additional, over the 4s a stack holds",
           "name": "Rend",
           "parts": [
             "DamagePart(physical, amount=74.3, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0, cc_kind='slow')"
@@ -12561,6 +12561,16 @@
           "rank": 1,
           "resource_cost": 30.0,
           "resource_type": "MANA",
+          "stack_window": {
+            "armed_at_start": false,
+            "arming_slots": [],
+            "hits_required": 254,
+            "max_stacks": 254,
+            "requested": false,
+            "stack_seconds": 4.0,
+            "stacks_from_ability_hits": true,
+            "stacks_from_swings": true
+          },
           "total_raw": 74.3
         },
         "Q": {
@@ -53551,18 +53561,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60619,
-      "numeric_leaves": 46428,
+      "leaves": 60626,
+      "numeric_leaves": 46431,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "6821da27668f235055809932d35ddf8ea7740794",
+    "git_head": "8999a737955a5cc2a67744a39fb8706371268a0f",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "5acce10810da5cb3ee1c666b00d6b4cf336419bb"
+    "src_tree_sha": "3ab9d4352f582dc43bae2ec6df506abdf357bb23"
   },
   "registered_champion_fights": {
     "Aatrox": {
