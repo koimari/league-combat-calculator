@@ -64,7 +64,8 @@
   "The jax-relentless-assault-ramp slice re-captures the three golden blocks (R-17, receipt docs/receipts/expected-golden-diff-jax-relentless-assault-ramp.json). Jax's Relentless Assault rides the build's swing ramp instead of a declared full stack level, so he opens every fight at zero stacks. Pair block: leaves 60626 -> 60628 and numeric_leaves 46431 -> 46433, the two leaves his passive row publishes now that it carries a ramp rather than a stat buff; entries unchanged. Coupled block: leaves 124746 -> 124544 and numeric_leaves 40591 -> 40535, the four events cleaver_bloodsong_roster no longer authors net of the two it gains, with 541 standing leaves absorbed, all enumerated in the receipt. Exact block: shape unchanged at 224 leaves; the three moved totals are cleaver_bloodsong_roster's combat/0:main/outgoing 3742.8 -> 3304.9, combat/2:enemy:Aatrox/incoming 4874.7 -> 4436.8 and fights/0:Aatrox 3921.0 -> 3483.1. coupled_golden_exact_values.sha256 is left as it stands: SR6 records that its stated rule does not reproduce the committed digest, so re-deriving it belongs to SR6 and not to this slice.",
   "The jinx-revd-up-ramp slice re-captures the PAIR golden block only (R-17, receipt docs/receipts/expected-golden-diff-jinx-revd-up-ramp.json). Jinx's Pow-Pow Rev'd up rides the swing ramp instead of a declared stack level, so her Q row publishes a four-number swing_ramp in place of a one-number stat_buff: leaves 60628 -> 60631 and numeric_leaves 46433 -> 46436, entries unchanged, over 15 leaves all hers. The coupled and exact captures moved no value, only their own provenance stamps, so both files are left as they stand and their blocks below keep the tree they were measured on: a stamp is not a re-capture.",
   "The ezreal-rising-spell-force-ramp slice re-captures the PAIR golden block only (R-17, receipt docs/receipts/expected-golden-diff-ezreal-rising-spell-force-ramp.json). Rising Spell Force rides a ramp the CASTS stack, so his passive row publishes a five-key swing_ramp in place of a one-key stat_buff: leaves 60631 -> 60635 and numeric_leaves 46436 -> 46438, entries unchanged, over 8 leaves all his. The coupled and exact captures moved no value, so both files are left as they stand and their blocks keep the tree they were measured on. The CooldownRefunds refactor in the same branch moved nothing: both golden compares were identical on it.",
-  "The volibear-relentless-storm-ramp slice re-captures the PAIR golden block only (R-17, receipt docs/receipts/expected-golden-diff-volibear-relentless-storm-ramp.json). His passive row publishes a swing_ramp and a retained-threshold armed_procs rule in place of a one-key stat_buff: leaves 60635 -> 60647 and numeric_leaves 46438 -> 46443, entries unchanged, over 22 leaves all his. The coupled and exact captures moved no value, so both files are left as they stand and their blocks keep the tree they were measured on."
+  "The volibear-relentless-storm-ramp slice re-captures the PAIR golden block only (R-17, receipt docs/receipts/expected-golden-diff-volibear-relentless-storm-ramp.json). His passive row publishes a swing_ramp and a retained-threshold armed_procs rule in place of a one-key stat_buff: leaves 60635 -> 60647 and numeric_leaves 46438 -> 46443, entries unchanged, over 22 leaves all his. The coupled and exact captures moved no value, so both files are left as they stand and their blocks keep the tree they were measured on.",
+  "The irelia-ionian-fervor-ramp slice re-captures the PAIR golden block only (R-17, receipt docs/receipts/expected-golden-diff-irelia-ionian-fervor-ramp.json). Her passive row publishes a swing_ramp and a retained-threshold armed_procs rule in place of a one-key stat_buff: leaves 60647 -> 60659 and numeric_leaves 46443 -> 46448, entries unchanged, over 22 leaves all hers. The coupled and exact captures moved no value, so both files are left as they stand and their blocks keep the tree they were measured on."
  ],
  "provenance": {
   "golden": "VERIFIED",
@@ -79,9 +80,9 @@
  "golden": {
   "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights",
   "entries": 672,
-  "leaves": 60647,
-  "numeric_leaves": 46443,
-  "src_tree_sha": "1d05e400027ca874fe95d3d119e89309cf6d1cf6"
+  "leaves": 60659,
+  "numeric_leaves": 46448,
+  "src_tree_sha": "370e6b6cfffdffb96e476f356f9eb0484b91e116"
  },
  "coupled_golden": {
   "sections": "coupled_scenarios",

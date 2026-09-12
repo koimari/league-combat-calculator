@@ -201,6 +201,72 @@ class TestEzrealRisingSpellForce:
         assert _autos(none) < _autos(ramped) < _autos(full)
 
 
+class TestAStackLevelThatFeedsTwoMechanics:
+    """One count re-rates the swings AND gates a rider (Volibear, Irelia).
+
+    The ramp and the threshold read different streams by necessity: the
+    ramp is resolved in setup and takes the CASTS the schedule places, the
+    threshold is resolved after the rotation and takes its ability-hit
+    ledger. Each is the best stream where it sits, and both are floors.
+    """
+
+    @pytest.mark.parametrize(
+        ("champion", "slot", "stacks", "option"),
+        [
+            ("Volibear", "passive", 5, "relentless_storm_stacks"),
+            ("Irelia", "passive", 4, "p_stacks"),
+        ],
+    )
+    def test_unset_declares_a_ramp_and_a_retained_threshold(
+        self, champion, slot, stacks, option
+    ):
+        row = _parse(champion)[slot]
+        assert row["swing_ramp"]["max_stacks"] == stacks
+        assert row["swing_ramp"]["stacks_from_swings"] is True
+        assert row["swing_ramp"]["stacks_from_ability_casts"] is True
+        assert row["armed_procs"]["hits_required"] == stacks
+        assert row["armed_procs"]["retained_at_threshold"] is True
+        # The rider is published whatever the count: which swings carry it
+        # is the fight's answer now, not the parser's.
+        assert row["on_hit"]["damage_per_hit"] > 0.0
+        assert "stat_buff" not in row
+
+    @pytest.mark.parametrize(
+        ("champion", "stacks", "option"),
+        [
+            ("Volibear", 5, "relentless_storm_stacks"),
+            ("Irelia", 4, "p_stacks"),
+        ],
+    )
+    def test_a_stated_level_keeps_the_flat_grant_and_the_all_or_nothing_rider(
+        self, champion, stacks, option
+    ):
+        full = _parse(champion, {option: stacks})["passive"]
+        assert full["stat_buff"]["bonus_attack_speed"] > 0.0
+        assert "swing_ramp" not in full
+        assert "armed_procs" not in full
+        assert full["on_hit"]["damage_per_hit"] > 0.0
+        # One stack short, the rider is worth nothing: Volibear publishes no
+        # on_hit at all and Irelia's row carries one priced at zero.
+        one_short = _parse(champion, {option: stacks - 1})["passive"]
+        assert one_short.get("on_hit", {}).get("damage_per_hit", 0.0) == 0.0
+
+    @pytest.mark.parametrize(
+        ("champion", "stacks", "option"),
+        [
+            ("Volibear", 5, "relentless_storm_stacks"),
+            ("Irelia", 4, "p_stacks"),
+        ],
+    )
+    def test_the_ramp_is_worth_less_than_a_declared_full_level(
+        self, champion, stacks, option
+    ):
+        full = _fight(champion, {option: stacks}, 20.0, [RAGEBLADE])
+        ramped = _fight(champion, {}, 20.0, [RAGEBLADE])
+        none = _fight(champion, {option: 0}, 20.0, [RAGEBLADE])
+        assert none["total_damage"] < ramped["total_damage"] < full["total_damage"]
+
+
 class TestTheReaderFailsClosed:
     """Every number of a kit ramp is the module's; nothing is filled in."""
 

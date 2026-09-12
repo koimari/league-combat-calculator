@@ -6,6 +6,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import self_healing_rule
 from .inputs import float_option, int_option
@@ -21,6 +22,13 @@ from .slot_extract import (
 )
 from .source_receipts import load_champion_sources
 
+# ROOTED IN THE BINARY (data/bin/characters/irelia.bin.json): Ionian
+# Fervor's stack cap and the seconds one stack lives are IreliaPassive's
+# MaxStacks and BuffDuration.  A patch that moves a root moves the module.
+_IRELIA_P_SPELL = spell_object("Irelia", "IreliaPassive")
+_FERVOR_MAX_STACKS = int(data_value(_IRELIA_P_SPELL, "MaxStacks"))
+_FERVOR_STACK_SECONDS = data_value(_IRELIA_P_SPELL, "BuffDuration")
+
 
 def _p_row(ability: dict[str, Any], occurrence: int, ctx: SlotCtx) -> float:
     row = find_named_leveling(ability, "Per-Level Scaling", occurrence=occurrence)
@@ -31,18 +39,51 @@ def _fervor(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    stacks = min(max(int(ctx.option("p_stacks")), 0), 4)
     as_per_stack = _p_row(ability, 0, ctx)
-    bonus_as = as_per_stack * stacks
     entry = on_hit_entry(ability_name(ability), 0.0, "magic")
-    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
-    if stacks >= 4:
-        damage = _p_row(ability, 2, ctx) + 0.20 * ctx.stat("bonus_attack_damage")
-        entry["on_hit"] = {
-            "name": "Ionian Fervor max-stack hit",
-            "damage_per_hit": damage,
-            "damage_type": "magic",
+    max_hit = {
+        "name": "Ionian Fervor max-stack hit",
+        "damage_per_hit": _p_row(ability, 2, ctx)
+        + 0.20 * ctx.stat("bonus_attack_damage"),
+        "damage_type": "magic",
+    }
+    requested = ctx.options.get("p_stacks")
+    if requested is None:
+        # A stack per ability hit, refreshed by basic attacks and ability
+        # hits alike, so both streams stack it. The per-stack attack speed
+        # re-rates the swings and the full count turns the max-stack on-hit
+        # on, which is Volibear's pair of declarations.
+        entry["swing_ramp"] = {
+            "per_stack": as_per_stack / 100.0,
+            "max_stacks": _FERVOR_MAX_STACKS,
+            "stack_duration": _FERVOR_STACK_SECONDS,
+            "stacks_from_swings": True,
+            "stacks_from_ability_casts": True,
         }
+        entry["armed_procs"] = {
+            "arming_slots": (),
+            "max_stacks": _FERVOR_MAX_STACKS,
+            "hits_required": _FERVOR_MAX_STACKS,
+            "stacks_from_swings": True,
+            "stacks_from_ability_hits": True,
+            "stack_seconds": _FERVOR_STACK_SECONDS,
+            "retained_at_threshold": True,
+            "armed_at_start": False,
+            "requested": False,
+        }
+        entry["on_hit"] = max_hit
+        entry["detail"] = (
+            f"+{as_per_stack:g}% bonus attack speed per Ionian Fervor stack, up "
+            f"to {_FERVOR_MAX_STACKS} held for {_FERVOR_STACK_SECONDS:g}s each; "
+            "the fight walks the attacks and casts that stack them, and the "
+            "max-stack on-hit is live for as long as the last stack is"
+        )
+        return entry
+    stacks = min(max(int(requested), 0), _FERVOR_MAX_STACKS)
+    bonus_as = as_per_stack * stacks
+    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+    if stacks >= _FERVOR_MAX_STACKS:
+        entry["on_hit"] = max_hit
     entry["detail"] = (
         f"{stacks} Ionian Fervor stack(s), +{bonus_as:g}% bonus attack speed; "
         f"max-stack on-hit is explicit."
@@ -143,7 +184,16 @@ MODULE_CC = {"Q": "none", "W": "none", "E": "stun", "R": CC_PER_PART, "P": "none
 
 parse_abilities = build_parser(SLOTS, "Irelia", cc_kinds=MODULE_CC)
 OPTIONS = [
-    int_option("p_stacks", 4, minimum=0, maximum=4, label="Ionian Fervor stacks"),
+    int_option(
+        "p_stacks",
+        _FERVOR_MAX_STACKS,
+        minimum=0,
+        maximum=_FERVOR_MAX_STACKS,
+        label=(
+            "Ionian Fervor stacks; unset walks the ramp, one stack per attack "
+            "or ability hit, and arms the max-stack on-hit where it fills"
+        ),
+    ),
     float_option(
         "w_charge",
         1.0,
