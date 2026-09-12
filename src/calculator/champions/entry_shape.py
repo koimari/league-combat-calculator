@@ -157,6 +157,9 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # champions/cast_arming.py: a counter the fight must fill before this
         # slot's FIRST cast is available at all (Ashe's Ranger's Focus).
         "cast_requires_stacks",
+        # The sourced counter a row's HEAL waits on, read by the module's own
+        # derive_self_healing (Kindred's Hunter's Vigor).
+        "heal_requires_stacks",
         # Champion-owned critical-strike conversion (Yasuo/Yone P): total
         # crit chance doubled, crit damage scaled by a factor, and excess
         # crit chance converted to bonus AD.  The fight engine resolves it
