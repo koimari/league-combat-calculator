@@ -1,0 +1,40 @@
+{
+ "slice": "xayah-clean-cuts-feathers",
+ "issue": "docs/surface-area-backlog.md SR8",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures all three baselines in the same commit."
+ },
+ "what_landed": "Xayah's secondary-feather on-hit is capped by the Clean Cuts stacks her casts banked and her swings spent, because the cache says a feather comes from an EMPOWERED attack.",
+ "why": [
+  "One leaf moves, and it is her passive row's detail string: the row no longer claims a stack count, because the fight counts them.",
+  "No number moves in the golden because its scenarios leave clean_cuts_secondary_targets at zero, and that option is what emits the on-hit the cap applies to. A request that sets it prices five feathers in a five-second fight where it used to price one per auto."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "Xayah is the only kit this slice touches."
+ },
+ "moved_values": {},
+ "summary": {
+  "direction": "no damage leaf moves in the golden; the cap binds only when the secondary-target option is set",
+  "counts": {
+   "golden": 1,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Xayah/abilities_level_11/passive/detail"
+  ],
+  "golden_shape_counters": [],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}

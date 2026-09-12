@@ -34760,7 +34760,7 @@
         "passive": {
           "cc_reviewed": true,
           "damage_type": "physical",
-          "detail": "5/5 stack(s); each empowered auto plants one Feather (primary target takes the triggering attack's damage \u2014 no single-target delta); E detonates planted Feathers",
+          "detail": "Each empowered auto spends a stack and plants one Feather (primary target takes the triggering attack's damage \u2014 no single-target delta); the casts bank the stacks and the swings spend them; E detonates planted Feathers",
           "name": "Clean Cuts",
           "parts": [],
           "rank": 11,
@@ -53554,14 +53554,14 @@
       "numeric_leaves": 46428,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "2a9317f256ea075e9531813bb49252ae1d2ba46a",
+    "git_head": "aee18cd5fd2ee42ec53cdfa76573d8f756652ea6",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "24938f7e89772d3e5bea5bd872e01b852109d8b2"
+    "src_tree_sha": "2d3b979d0847f0f948b4dccc9f72ce40c74cf457"
   },
   "registered_champion_fights": {
     "Aatrox": {
