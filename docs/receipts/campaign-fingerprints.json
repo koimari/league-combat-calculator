@@ -58,7 +58,8 @@
   "Yasuo's Ride the Wind level (docs/receipts/expected-golden-diff-yasuo-ride-the-wind-level.json) moves the three golden blocks. golden.leaves rises 60600 to 60607: the E row publishes the window its level is walked in and its detail no longer claims a count it does not know. No damage leaf moves, because the 6s per-target lockout outlasts the 5s stack and a duel never restacks it. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here.",
   "Varus' Blight level (docs/receipts/expected-golden-diff-varus-blight-level.json) moves the three golden blocks. golden.leaves rises 60607 to 60611: the Q row publishes the window its detonation level is walked in. 20 pair leaves move, all his and all downward, because blight_stacks defaulted to the sourced maximum and his own swings are what apply Blight. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here.",
   "Mel's Overwhelm level (docs/receipts/expected-golden-diff-mel-overwhelm-level.json) moves the three golden blocks. golden.leaves rises 60611 to 60618: the R row publishes the window its level is walked in. 31 pair leaves move, all hers, because her blast read a declared three stacks and now reads the damage instances she landed. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here.",
-  "Xayah's Clean Cuts feathers (docs/receipts/expected-golden-diff-xayah-clean-cuts-feathers.json) move the three golden blocks. golden.leaves stays 60618 and one leaf moves, her passive row's detail string: the row no longer claims a stack count. No number moves because the golden's scenarios leave clean_cuts_secondary_targets at zero, and that option is what emits the on-hit the cap applies to. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here."
+  "Xayah's Clean Cuts feathers (docs/receipts/expected-golden-diff-xayah-clean-cuts-feathers.json) move the three golden blocks. golden.leaves stays 60618 and one leaf moves, her passive row's detail string: the row no longer claims a stack count. No number moves because the golden's scenarios leave clean_cuts_secondary_targets at zero, and that option is what emits the on-hit the cap applies to. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here.",
+  "The stack window's direction (docs/receipts/expected-golden-diff-stack-window-direction.json) corrects two earlier slices and moves the three golden blocks. golden.leaves rises 60618 to 60619: Tristana's window publishes which side of the cast it sits on. 34 pair leaves move and all fall, because Varus' and Mel's detonations were crediting hits that had not landed yet. Varus falls by the whole detonation: his Q opens the rotation. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here."
  ],
  "provenance": {
   "golden": "VERIFIED",
@@ -73,23 +74,23 @@
  "golden": {
   "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights",
   "entries": 672,
-  "leaves": 60618,
+  "leaves": 60619,
   "numeric_leaves": 46428,
-  "src_tree_sha": "2d3b979d0847f0f948b4dccc9f72ce40c74cf457"
+  "src_tree_sha": "5acce10810da5cb3ee1c666b00d6b4cf336419bb"
  },
  "coupled_golden": {
   "sections": "coupled_scenarios",
   "entries": 26,
   "leaves": 124746,
   "numeric_leaves": 40591,
-  "src_tree_sha": "2d3b979d0847f0f948b4dccc9f72ce40c74cf457"
+  "src_tree_sha": "5acce10810da5cb3ee1c666b00d6b4cf336419bb"
  },
  "coupled_golden_exact": {
   "sections": "coupled_scenarios",
   "entries": 30,
   "leaves": 224,
   "numeric_leaves": 0,
-  "src_tree_sha": "2d3b979d0847f0f948b4dccc9f72ce40c74cf457"
+  "src_tree_sha": "5acce10810da5cb3ee1c666b00d6b4cf336419bb"
  },
  "bench": {
   "cassiopeia_3champ": {

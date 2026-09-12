@@ -1,0 +1,80 @@
+{
+ "slice": "stack-window-direction",
+ "issue": "docs/surface-area-backlog.md SR8, correcting two slices of it",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures all three baselines in the same commit."
+ },
+ "what_landed": "A Case 6 rule now states which side of the cast its window sits on. A charge the cast ATTACHES collects the hits after it; a level the cast CONSUMES reads the hits before it. The hit stream also reads a cast time for any ability row that prices damage and authors no per-hit event.",
+ "why": [
+  "Varus and Mel shipped crediting hits that had not landed yet: their detonations consume what is already on the target, and the walk counted the window after the cast. A Blight detonation at t=0 was priced off autos landing later in the fight.",
+  "Varus falls hardest, by the whole detonation: his Q opens the rotation, so nothing has stacked when it lands. That is what the modelled cast order says, and the order is what to fix next rather than the count. Mel's blast falls to the instances that preceded it.",
+  "Tristana moves one leaf, her declaration: her charge attaches on the cast and keeps the after-the-cast reading, which the cache states in its own sentence."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "The three kits that declare a stack window: Mel, Tristana, Varus."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "Tristana's window publishes its direction"
+  }
+ },
+ "summary": {
+  "direction": "down: neither detonation may credit a hit that lands after it",
+  "counts": {
+   "golden": 35,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Tristana/abilities_level_11/E/stack_window/collects_after_cast",
+   "/registered_champion_fights/Mel/11/sustained/magic_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/11/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Mel/11/sustained/no_items/breakdown_totals/R",
+   "/registered_champion_fights/Mel/11/sustained/no_items/total_damage",
+   "/registered_champion_fights/Mel/11/sustained/physical_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/11/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Mel/11/sustained/spellblade_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/11/sustained/spellblade_build/total_damage",
+   "/registered_champion_fights/Mel/18/sustained/magic_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/18/sustained/magic_build/breakdown_totals/shadowflame_Shadowflame",
+   "/registered_champion_fights/Mel/18/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Mel/18/sustained/no_items/breakdown_totals/R",
+   "/registered_champion_fights/Mel/18/sustained/no_items/total_damage",
+   "/registered_champion_fights/Mel/18/sustained/physical_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/18/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Mel/18/sustained/spellblade_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/18/sustained/spellblade_build/total_damage",
+   "/registered_champion_fights/Varus/11/sustained/magic_build/breakdown_totals/blight_detonation",
+   "/registered_champion_fights/Varus/11/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Varus/11/sustained/no_items/breakdown_totals/blight_detonation",
+   "/registered_champion_fights/Varus/11/sustained/no_items/total_damage",
+   "/registered_champion_fights/Varus/11/sustained/physical_build/breakdown_totals/blight_detonation",
+   "/registered_champion_fights/Varus/11/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Varus/11/sustained/spellblade_build/breakdown_totals/blight_detonation",
+   "/registered_champion_fights/Varus/11/sustained/spellblade_build/total_damage",
+   "/registered_champion_fights/Varus/18/sustained/magic_build/breakdown_totals/blight_detonation",
+   "/registered_champion_fights/Varus/18/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Varus/18/sustained/no_items/breakdown_totals/blight_detonation",
+   "/registered_champion_fights/Varus/18/sustained/no_items/total_damage",
+   "/registered_champion_fights/Varus/18/sustained/physical_build/breakdown_totals/blight_detonation",
+   "/registered_champion_fights/Varus/18/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Varus/18/sustained/spellblade_build/breakdown_totals/blight_detonation",
+   "/registered_champion_fights/Varus/18/sustained/spellblade_build/total_damage"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}
