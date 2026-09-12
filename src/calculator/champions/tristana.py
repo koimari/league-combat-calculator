@@ -159,6 +159,7 @@ def _explosive_charge(
             "stacks_from_swings": True,
             "stacks_from_ability_hits": True,
             "stack_seconds": _charge_seconds(ability),
+            "collects_after_cast": True,
             "armed_at_start": False,
             "requested": False,
         }

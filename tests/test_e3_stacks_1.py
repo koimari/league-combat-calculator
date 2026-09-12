@@ -188,7 +188,11 @@ class TestVarusBlight:
         # P1-3: the W-active empowered-shot rider is disabled here so this
         # suite pins the detonation-only math (3 x per-stack %maxHP); the
         # empower is priced by tests/test_p1_review_3.py.
-        data = _fight("Varus", include_autos=True, options={"w_active_empower": False})
+        data = _fight(
+            "Varus",
+            include_autos=True,
+            options={"w_active_empower": False, "blight_stacks": 3},
+        )
         stats = data["champion_stats"]
         per_stack = _resolve(
             "Varus",

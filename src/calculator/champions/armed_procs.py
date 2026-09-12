@@ -90,6 +90,12 @@ class ArmedProcRule:
     stacks_from_swings: bool = False
     stacks_from_ability_hits: bool = False
     consumed_by_swing: bool = False
+    # Which side of the cast its window sits on. A charge the cast ATTACHES
+    # collects the hits after it (Tristana, Kindred's mark); a level the
+    # cast CONSUMES reads the hits before it (Varus' Blight, Kalista's
+    # spears, Mel's Overwhelm). Getting this backwards prices a detonation
+    # off stacks that had not landed yet.
+    collects_after_cast: bool = False
     # An ability hit spends a banked charge as well as a basic attack does
     # ("the next basic attack OR ability hit against enemies"), so the
     # spending stream is both.
@@ -163,6 +169,7 @@ def declared_rule(
         hits_required=int(_optional(payload, "hits_required")),
         stacks_from_swings=bool(payload.get("stacks_from_swings")),
         stacks_from_ability_hits=bool(payload.get("stacks_from_ability_hits")),
+        collects_after_cast=bool(payload.get("collects_after_cast")),
         consumed_by_swing=bool(payload.get("consumed_by_swing")),
         spent_by_ability_hits=bool(payload.get("spent_by_ability_hits")),
         cooldown=_optional(payload, "cooldown"),
@@ -225,11 +232,12 @@ def stack_levels_for_casts(
 ) -> tuple[int, ...]:
     """The stack level each cast's own window collects, in cast order.
 
-    A charge that attaches on the cast counts the hits that land on the
-    target while it holds: every stream the rule stacks from, inside
-    ``stack_seconds`` of the cast, capped at ``max_stacks``. The cast that
-    places the charge does not stack it; the hits after it do, which is the
-    cached reading ("attacks against the target increase its damage").
+    Which hits count is the rule's ``collects_after_cast``. A charge the
+    cast ATTACHES collects the hits that land while it holds, after it; a
+    level the cast CONSUMES reads the hits that landed before it, inside
+    the window a stack survives. Either way the count is capped at
+    ``max_stacks`` and the cast's own instant is excluded, because a cast
+    does not stack the thing it is about to spend.
     """
     hits: list[float] = []
     if rule.stacks_from_swings:
@@ -239,8 +247,16 @@ def stack_levels_for_casts(
     hits.sort()
     levels: list[int] = []
     for cast in cast_times:
-        end = cast + rule.stack_seconds if rule.stack_seconds > 0.0 else float("inf")
-        landed = sum(1 for hit in hits if cast < hit <= end)
+        if rule.collects_after_cast:
+            end = (
+                cast + rule.stack_seconds if rule.stack_seconds > 0.0 else float("inf")
+            )
+            landed = sum(1 for hit in hits if cast < hit <= end)
+        else:
+            start = (
+                cast - rule.stack_seconds if rule.stack_seconds > 0.0 else -float("inf")
+            )
+            landed = sum(1 for hit in hits if start <= hit < cast)
         levels.append(min(landed, rule.max_stacks))
     return tuple(levels)
 
