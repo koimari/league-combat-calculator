@@ -160,6 +160,9 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # The sourced counter a row's HEAL waits on, read by the module's own
         # derive_self_healing (Kindred's Hunter's Vigor).
         "heal_requires_stacks",
+        # The sourced rule by which a slot's OWN live stacks shorten its own
+        # cooldown, walked forward by the cast scheduler (Hecarim's Rampage).
+        "stack_scaled_cooldown",
         # Champion-owned critical-strike conversion (Yasuo/Yone P): total
         # crit chance doubled, crit damage scaled by a factor, and excess
         # crit chance converted to bonus AD.  The fight engine resolves it

@@ -135,6 +135,42 @@ def _effective_timed_cooldown(
     return cd
 
 
+def _stack_shortened(
+    ability_info: Mapping[str, Any],
+    cooldown: float,
+    own_casts: Sequence[float],
+    now: float,
+) -> float:
+    """A cooldown a slot's own live stacks shorten (Hecarim's Rampage).
+
+    The walk is forward, so there is no circle to break: the level a cast
+    leaves behind is known from the casts already placed, and it decides
+    when the next one lands. The cast just placed counts, because it is the
+    one that damaged.
+    """
+    payload = ability_info.get("stack_scaled_cooldown")
+    if not payload:
+        return cooldown
+    for required in ("by_stacks", "stack_seconds"):
+        if payload.get(required) is None:
+            raise ValueError(
+                f"stack_scaled_cooldown declares no {required!r}; every number "
+                "of the rule is sourced by the module"
+            )
+    by_stacks = [float(value) for value in payload["by_stacks"]]
+    if not by_stacks or any(value <= 0.0 for value in by_stacks):
+        raise ValueError(
+            "stack_scaled_cooldown's by_stacks holds a cooldown at or below "
+            "zero, which would let the slot recast without the clock moving"
+        )
+    window = float(payload["stack_seconds"])
+    live = sum(1 for cast in own_casts if now - cast < window)
+    level = min(live, len(by_stacks) - 1)
+    # ``cooldown`` is the zero-stack row already hasted, so the ratio of two
+    # BASE values carries the haste across without re-deriving it.
+    return cooldown * by_stacks[level] / by_stacks[0]
+
+
 def _cooldown_ready_at(
     state: "FightState", cooldown_start: float, cooldown: float
 ) -> float:
@@ -368,7 +404,9 @@ def _schedule_shared_casts(
             next_ready[key] = _cooldown_ready_at(
                 state,
                 cooldown_start,
-                cooldowns[key],
+                _stack_shortened(
+                    state.ability_damages[key], cooldowns[key], times[key], now
+                ),
             )
             # Only a slot that banks more than one cast can ever be held
             # by the short inter-cast gap; with one charge the recharge is
