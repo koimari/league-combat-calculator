@@ -1,0 +1,80 @@
+{
+ "slice": "mel-overwhelm-level",
+ "issue": "docs/surface-area-backlog.md SR8",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures all three baselines in the same commit."
+ },
+ "what_landed": "Mel's Golden Eclipse reads the Overwhelm level her own damage instances applied, walked in the cached window by the Case 6 seam.",
+ "why": [
+  "Mel applies a stack for EVERY instance of damage she deals, so the level the blast reads is a count of her own hits; r_overwhelm_stacks defaulted to three whatever the fight did.",
+  "Every moved leaf is hers, and they move where the fight's own hits differ from that three."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "Mel is the only kit this slice touches."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "the R row publishes the window its level is walked in"
+  },
+  "/metadata/fingerprint/numeric_leaves": {
+   "cause": "the same"
+  }
+ },
+ "summary": {
+  "direction": "the level the fight built replaces a declared three, in both directions",
+  "counts": {
+   "golden": 33,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Mel/abilities_level_11/R/detail",
+   "/champion_baselines/Mel/abilities_level_11/R/stack_window",
+   "/registered_champion_fights/Mel/11/magic_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/11/magic_build/breakdown_totals/shadowflame_Shadowflame",
+   "/registered_champion_fights/Mel/11/magic_build/total_damage",
+   "/registered_champion_fights/Mel/11/no_items/breakdown_totals/R",
+   "/registered_champion_fights/Mel/11/no_items/total_damage",
+   "/registered_champion_fights/Mel/11/physical_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/11/physical_build/total_damage",
+   "/registered_champion_fights/Mel/11/spellblade_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/11/spellblade_build/total_damage",
+   "/registered_champion_fights/Mel/11/sustained/magic_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/11/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Mel/11/sustained/no_items/breakdown_totals/R",
+   "/registered_champion_fights/Mel/11/sustained/no_items/total_damage",
+   "/registered_champion_fights/Mel/11/sustained/physical_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/11/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Mel/11/sustained/spellblade_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/11/sustained/spellblade_build/total_damage",
+   "/registered_champion_fights/Mel/18/magic_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/18/magic_build/total_damage",
+   "/registered_champion_fights/Mel/18/no_items/breakdown_totals/R",
+   "/registered_champion_fights/Mel/18/no_items/total_damage",
+   "/registered_champion_fights/Mel/18/physical_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/18/physical_build/total_damage",
+   "/registered_champion_fights/Mel/18/spellblade_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/18/spellblade_build/total_damage",
+   "/registered_champion_fights/Mel/18/sustained/physical_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/18/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Mel/18/sustained/spellblade_build/breakdown_totals/R",
+   "/registered_champion_fights/Mel/18/sustained/spellblade_build/total_damage"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}
