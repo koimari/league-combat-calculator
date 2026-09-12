@@ -220,11 +220,21 @@ class TestVolibear:
     W: the Wounded bite deals 50% (+25% per 100 bonus AD) more."""
 
     def test_p_stat_buff_fully_stacked(self) -> None:
-        stats, abilities = _parse("Volibear")
+        stats, abilities = _parse("Volibear", options={"relentless_storm_stacks": 5})
         assert abilities["passive"]["stat_buff"]["bonus_attack_speed"] == pytest.approx(
             25.0
         )
         assert stats["attack_damage"] == 124.0  # sanity for W base below
+
+    def test_p_unset_walks_the_ramp_and_arms_the_claws_at_the_threshold(self) -> None:
+        _, abilities = _parse("Volibear")
+        passive = abilities["passive"]
+        assert passive["swing_ramp"]["per_stack"] == pytest.approx(0.05)
+        assert passive["swing_ramp"]["stacks_from_swings"] is True
+        assert passive["swing_ramp"]["stacks_from_ability_casts"] is True
+        assert passive["armed_procs"]["hits_required"] == 5
+        assert passive["armed_procs"]["retained_at_threshold"] is True
+        assert "stat_buff" not in passive
 
     def test_p_stat_buff_partial_stacks(self) -> None:
         _, abilities = _parse("Volibear", options={"relentless_storm_stacks": 3})
@@ -233,7 +243,9 @@ class TestVolibear:
         )
 
     def test_p_stat_buff_scales_with_ap(self) -> None:
-        _, abilities = _parse("Volibear", ap=100.0)
+        _, abilities = _parse(
+            "Volibear", ap=100.0, options={"relentless_storm_stacks": 5}
+        )
         # 5 stacks x (5% + 3% per 100 AP) = 5 x 8% = 40%.
         assert abilities["passive"]["stat_buff"]["bonus_attack_speed"] == pytest.approx(
             40.0
@@ -242,7 +254,7 @@ class TestVolibear:
     def test_p_lightning_claws_on_hit_only_at_five_stacks(self) -> None:
         _, abilities = _parse("Volibear", options={"relentless_storm_stacks": 4})
         assert "on_hit" not in abilities["passive"]
-        _, abilities = _parse("Volibear")
+        _, abilities = _parse("Volibear", options={"relentless_storm_stacks": 5})
         on_hit = abilities["passive"]["on_hit"]
         expected = _value("Volibear", "P", "Bonus Magic Damage", 18)
         assert expected == pytest.approx(60.0)

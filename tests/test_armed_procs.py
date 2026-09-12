@@ -10,6 +10,7 @@ from src.calculator.calculate import calculate_payload
 from src.calculator.champions.armed_procs import (
     ArmedProcRule,
     armed_swing_count,
+    armed_swing_times,
     cached_stack_terms,
     counted_hit_times,
     declared_rule,
@@ -130,6 +131,58 @@ class TestTheHitCounterShape:
                 max_stacks=2,
                 hits_required=3,
                 stacks_from_swings=True,
+            )
+
+
+# Volibear's shape: a stack per attack or ability, five held for six
+# seconds each, and the empowerment STANDS at five rather than being spent.
+_THRESHOLD = ArmedProcRule(
+    arming_slots=frozenset(),
+    max_stacks=5,
+    hits_required=5,
+    stacks_from_swings=True,
+    stacks_from_ability_hits=True,
+    stack_seconds=6.0,
+    retained_at_threshold=True,
+    armed_at_start=False,
+)
+
+
+class TestTheRetainedThresholdShape:
+    """A count the swing READS rather than spends (Volibear's Claws)."""
+
+    SWINGS = (0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0)
+
+    def test_every_swing_after_the_threshold_lands_empowered(self) -> None:
+        """The fifth attack banks the fifth stack; the sixth is the first
+        empowered one, and none after it costs a stack."""
+        assert armed_swing_times(_THRESHOLD, (), self.SWINGS) == (5.0, 6.0, 7.0, 8.0)
+
+    def test_ability_hits_bring_the_threshold_forward(self) -> None:
+        assert armed_swing_times(_THRESHOLD, (), self.SWINGS, (0.5, 1.5)) == (
+            3.0,
+            4.0,
+            5.0,
+            6.0,
+            7.0,
+            8.0,
+        )
+
+    def test_a_stream_too_slow_to_fill_it_empowers_nothing(self) -> None:
+        assert armed_swing_times(_THRESHOLD, (), (0.0, 7.0, 14.0)) == ()
+
+    def test_the_state_lapses_when_the_stacks_run_out(self) -> None:
+        """Five fast attacks, then a long gap: the last swing is past the
+        six seconds the fifth stack lived, so it is not empowered."""
+        assert armed_swing_times(_THRESHOLD, (), (0.0, 0.1, 0.2, 0.3, 0.4, 9.0)) == ()
+
+    def test_a_retained_rule_with_no_threshold_is_refused(self) -> None:
+        with pytest.raises(ValueError, match="no threshold to stand at"):
+            ArmedProcRule(
+                arming_slots=frozenset(),
+                max_stacks=5,
+                per_cast=1,
+                retained_at_threshold=True,
             )
 
 
