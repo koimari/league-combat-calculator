@@ -287,6 +287,11 @@ def _options() -> dict:
             if key in _BLOCK_LISTS:
                 buckets["pre_fight"].append((name, key, label))
                 continue
+            if any(word in lowered for word in ("default", "derive", "unset")):
+                # A label that says the fight answers it wins over every
+                # table below: the reading is the module's own claim.
+                buckets["derived_default"].append((name, key, label))
+                continue
             if key in _IN_FIGHT_STACK_LEVELS:
                 # WHICH WAY it errs is the useful half: a level defaulted at
                 # the top of its range prices the fully stacked reading and
