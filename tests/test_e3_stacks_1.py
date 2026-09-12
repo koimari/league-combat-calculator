@@ -345,8 +345,13 @@ class TestTristanaExplosiveCharge:
 
     def test_four_stack_detonation_matches_full_stack_row(self) -> None:
         """Rank-5 E at 4 stacks: 160 + 4 x 40 = 320 physical (the wiki's
-        Full Stack Physical Damage row); one cast in a 10s fight."""
-        data = _fight("Tristana")
+        Full Stack Physical Damage row); one cast in a 10s fight.
+
+        The count is asked for here, because the identity being pinned is
+        between the rows: a default request derives the level the fight
+        actually stacked (``test_the_default_derives_the_level``).
+        """
+        data = _fight("Tristana", options={"e_stacks": 4})
         stats = data["champion_stats"]
         base = _resolve(
             "Tristana",
@@ -366,7 +371,28 @@ class TestTristanaExplosiveCharge:
         )
         expected = base + per_stack * 4
         assert data["breakdown"]["E"]["total_damage"] == pytest.approx(expected)
-        assert data["breakdown"]["E"]["casts"] == 1
+
+    def test_the_default_derives_the_level_the_fight_stacked(self) -> None:
+        """The charge holds for its cached seconds and the hits inside that
+        window stack it, so a fight with no swings detonates at the base."""
+        with_autos = _fight("Tristana", include_autos=True)
+        without = _fight("Tristana")
+        assert (
+            with_autos["breakdown"]["E"]["total_damage"]
+            > without["breakdown"]["E"]["total_damage"]
+        )
+        # The floor is the unstacked row: every stack is a hit that landed.
+        stats = without["champion_stats"]
+        base = _resolve(
+            "Tristana",
+            "E",
+            "Minimum Physical Damage",
+            5,
+            stats,
+            without["target_effective_max_health"],
+        )
+        assert without["breakdown"]["E"]["total_damage"] == pytest.approx(base)
+        assert without["breakdown"]["E"]["casts"] == 1
 
     def test_e_stacks_option_controls_the_charge(self) -> None:
         """e_stacks=0 prices the 0-stack base only."""

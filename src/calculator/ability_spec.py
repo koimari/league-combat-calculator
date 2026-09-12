@@ -226,6 +226,8 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
         count: Times the part hits per cast (Fox-Fire subsequent ×2).
         hp_scaled_damage: missing_ratio (0..1) → raw damage for one hit;
             overrides ``amount``.
+        stack_scaled_damage: the stack level this cast's own window
+            collected → raw damage for one hit; overrides ``amount``.
         crit_effectiveness: >0 — the part crits at this effectiveness
             (Akshan R: 0.3).
         basic_damage: the part is classified basic damage in-game (a
@@ -253,6 +255,10 @@ class DamagePart:  # pylint: disable=too-many-instance-attributes
     amount: float = 0.0
     count: int = 1
     hp_scaled_damage: Callable[[float], float] | None = None
+    # Case 6: the stack level the fight's own walk collected for THIS cast
+    # maps to one hit's raw damage, the way an hp-scaled part maps the
+    # target's missing health.
+    stack_scaled_damage: Callable[[int], float] | None = None
     crit_effectiveness: float = 0.0
     basic_damage: bool = False
     bonus_ad_ratio: float = 0.0

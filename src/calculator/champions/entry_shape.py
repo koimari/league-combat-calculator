@@ -145,6 +145,9 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # champions/armed_procs.py: the rule that arms a kit's empowered
         # basic attack, walked over the cast and swing schedules.
         "armed_procs",
+        # champions/armed_procs.py: the window a cast's own stack level is
+        # collected in, walked per cast and read by a stack_scaled part.
+        "stack_window",
         # Champion-owned critical-strike conversion (Yasuo/Yone P): total
         # crit chance doubled, crit damage scaled by a factor, and excess
         # crit chance converted to bonus AD.  The fight engine resolves it

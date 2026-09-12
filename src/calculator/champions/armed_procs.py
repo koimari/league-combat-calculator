@@ -217,6 +217,34 @@ def counted_hit_times(
     return tuple(procs)
 
 
+def stack_levels_for_casts(
+    rule: ArmedProcRule,
+    cast_times: Sequence[float],
+    swing_times: Sequence[float],
+    ability_hit_times: Sequence[float],
+) -> tuple[int, ...]:
+    """The stack level each cast's own window collects, in cast order.
+
+    A charge that attaches on the cast counts the hits that land on the
+    target while it holds: every stream the rule stacks from, inside
+    ``stack_seconds`` of the cast, capped at ``max_stacks``. The cast that
+    places the charge does not stack it; the hits after it do, which is the
+    cached reading ("attacks against the target increase its damage").
+    """
+    hits: list[float] = []
+    if rule.stacks_from_swings:
+        hits += list(swing_times)
+    if rule.stacks_from_ability_hits:
+        hits += list(ability_hit_times)
+    hits.sort()
+    levels: list[int] = []
+    for cast in cast_times:
+        end = cast + rule.stack_seconds if rule.stack_seconds > 0.0 else float("inf")
+        landed = sum(1 for hit in hits if cast < hit <= end)
+        levels.append(min(landed, rule.max_stacks))
+    return tuple(levels)
+
+
 def armed_swing_times(
     rule: ArmedProcRule,
     cast_times: Sequence[tuple[str, float]],

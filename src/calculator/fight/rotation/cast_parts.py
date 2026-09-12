@@ -76,7 +76,10 @@ def _evaluate_cast_parts(
     by_type: dict[str, float] = {}
     damage_events: list[dict[str, Any]] = []
     first_part_first_cast = 0.0
-    has_dynamic_part = any(part.hp_scaled_damage is not None for part in parts)
+    has_dynamic_part = any(
+        part.hp_scaled_damage is not None or part.stack_scaled_damage is not None
+        for part in parts
+    )
     for cast_index in range(num_casts):
         price = pricing[cast_index] if pricing is not None else _NO_PRICING
         rock_solid_consumed = False
@@ -116,6 +119,10 @@ def _evaluate_cast_parts(
                     1.0 - hp_now / target_health if target_health > 0 else 1.0
                 )
                 raw = part.hp_scaled_damage(missing_ratio)
+            elif part.stack_scaled_damage is not None:
+                # Case 6: the level this cast's own window collected, walked
+                # by the rotation from the streams the module says stack it.
+                raw = part.stack_scaled_damage(price.stack_level)
             else:
                 raw = part.amount
             # A mid-fight bonus-AD steroid re-prices the part's declared
