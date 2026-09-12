@@ -1,0 +1,72 @@
+{
+ "slice": "hecarim-rampage-cadence-and-damage",
+ "issue": "docs/surface-area-backlog.md SR8, the last stack level and the only circular one",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures the baselines it moved in the same commit."
+ },
+ "what_landed": "Rampage's stack level walks its own cadence and its own damage off one rule: the scheduler recomputes the cooldown per cast (stack_scaled_cooldown) and the cast pricing walks the damage through the Case 6 stack_window.",
+ "why": [
+  "The level decides the cadence and the cadence decides the level, which read as circular for three sessions. A FORWARD walk has no circle in it: the stacks a cast leaves behind are known from the casts already placed, and it is that level which decides when the next one lands.",
+  "The cached cooldown row is the source and had been misread all along. It holds four values indexed BY RAMPAGE STACKS, which its own units say, 4 / 3.25 / 2.5 / 1.75. extract_cooldown indexed it by RANK, so slot_extract's documented _axis_index fall-through priced every rank at the fully stacked 1.75s, and the module then subtracted a further 0.75 per stack on top of that. The Q cooldown leaf 1.75 -> 4.0 is that double count coming out.",
+  "The double count surfaced as a hang, not as a number: a stated three stacks reached a zero cooldown and the scheduler recast forever at one instant. The row is read by stack level now and nothing is subtracted, so no level can reach zero.",
+  "Ten seconds at full uptime: 9 casts and 1271.9 damage at a stated zero, 11 and 1439.5 derived, 12 and 1570.7 at a stated three. The derived reading sits between the ends because it starts at the unstacked cooldown and works down.",
+  "The Q totals fall because the unstacked cooldown is 4s and not 1.75s, so fewer casts fit. All 20 pair leaves are his. No coupled leaf moves: no coupled roster holds him."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "Hecarim's Q is the only row declaring stack_scaled_cooldown, and no coupled roster holds him."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "his Q row publishes a stack_window and a stack_scaled_cooldown it did not carry"
+  },
+  "/metadata/fingerprint/numeric_leaves": {
+   "cause": "the numbers among those keys, and the cooldown leaf itself"
+  }
+ },
+ "summary": {
+  "direction": "down: the unstacked cooldown is the cached 4s rather than the fully stacked 1.75s a ranked read was returning",
+  "counts": {
+   "golden": 20,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Hecarim/abilities_level_11/Q/cooldown",
+   "/champion_baselines/Hecarim/abilities_level_11/Q/detail",
+   "/champion_baselines/Hecarim/abilities_level_11/Q/stack_scaled_cooldown",
+   "/champion_baselines/Hecarim/abilities_level_11/Q/stack_window",
+   "/registered_champion_fights/Hecarim/11/sustained/magic_build/breakdown_totals/Q",
+   "/registered_champion_fights/Hecarim/11/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Hecarim/11/sustained/no_items/breakdown_totals/Q",
+   "/registered_champion_fights/Hecarim/11/sustained/no_items/total_damage",
+   "/registered_champion_fights/Hecarim/11/sustained/physical_build/breakdown_totals/Q",
+   "/registered_champion_fights/Hecarim/11/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Hecarim/11/sustained/spellblade_build/breakdown_totals/Q",
+   "/registered_champion_fights/Hecarim/11/sustained/spellblade_build/total_damage",
+   "/registered_champion_fights/Hecarim/18/sustained/magic_build/breakdown_totals/Q",
+   "/registered_champion_fights/Hecarim/18/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Hecarim/18/sustained/no_items/breakdown_totals/Q",
+   "/registered_champion_fights/Hecarim/18/sustained/no_items/total_damage",
+   "/registered_champion_fights/Hecarim/18/sustained/physical_build/breakdown_totals/Q",
+   "/registered_champion_fights/Hecarim/18/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Hecarim/18/sustained/spellblade_build/breakdown_totals/Q",
+   "/registered_champion_fights/Hecarim/18/sustained/spellblade_build/total_damage"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}

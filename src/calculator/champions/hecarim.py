@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from .. import healing_helpers as _healing
@@ -14,6 +15,65 @@ from .module_helpers import between_rows, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
+
+_RAMPAGE_RE = re.compile(
+    r"a stack of Rampage for (?P<seconds>\d+(?:\.\d+)?) seconds[^.]*?stacking up "
+    r"to (?P<stacks>\d+) times\. Each stack increases Rampage's damage by "
+    r"(?P<per_stack>\d+(?:\.\d+)?)% \(\+ (?P<per_ad>\d+(?:\.\d+)?)% per 100 "
+    r"bonus AD\) and reduces its base cooldown by (?P<refund>\d+(?:\.\d+)?) seconds"
+)
+
+
+def _rampage_cooldown_row(ability: dict[str, Any]) -> tuple[float, ...]:
+    """Rampage's cooldown at each stack level, straight from the cache.
+
+    The cached row is indexed BY RAMPAGE STACKS and not by rank, which its
+    own units say (" (based on Rampage stacks)"), so a ranked read lands on
+    the last value and prices every rank at the fully stacked cooldown.
+    """
+    row = ability.get("cooldown")
+    modifiers = None if row is None else row.get("modifiers")
+    for modifier in modifiers if modifiers is not None else ():
+        units = modifier.get("units")
+        if units is None or not all("Rampage stacks" in str(unit) for unit in units):
+            continue
+        values = modifier.get("values")
+        if values is None:
+            continue
+        return tuple(float(value) for value in values)
+    raise ValueError(
+        "Hecarim Q: the cached cooldown row is no longer the per-stack one "
+        "(its units no longer say 'based on Rampage stacks')"
+    )
+
+
+def _rampage_stack_terms(ability: dict[str, Any]) -> dict[str, float]:
+    """Rampage's own stack rule, read from the cached sentence.
+
+    Five numbers in one clause: how long a stack stands, how many stand at
+    once, what one is worth as damage, what it is worth per 100 bonus AD,
+    and how many seconds it takes off the base cooldown.
+    """
+    effects = ability.get("effects")
+    for effect in effects if effects else ():
+        description = effect.get("description")
+        if description is None:
+            continue
+        match = _RAMPAGE_RE.search(str(description))
+        if match is not None:
+            return {
+                "stack_seconds": float(match.group("seconds")),
+                "max_stacks": int(match.group("stacks")),
+                "per_stack": float(match.group("per_stack")) / 100.0,
+                "per_100_bonus_ad": float(match.group("per_ad")) / 100.0,
+                "cooldown_per_stack": float(match.group("refund")),
+            }
+    raise ValueError(
+        "Hecarim Q: the cached active no longer states Rampage's stack rule "
+        "('a stack of Rampage for N seconds ... stacking up to N times. Each "
+        "stack increases Rampage's damage by N% (+ N% per 100 bonus AD) and "
+        "reduces its base cooldown by N seconds')"
+    )
 
 
 def _warpath(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -40,14 +100,64 @@ _warpath.phase = BUFF
 
 @ranked_slot
 def _rampage(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
-    stacks = min(max(int(ctx.option("q_stacks")), 0), 3)
+    terms = _rampage_stack_terms(ability)
+    maximum = int(terms["max_stacks"])
+    by_stacks = _rampage_cooldown_row(ability)
     base = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
-    multiplier = 1.0 + stacks * (0.03 + 0.03 * ctx.stat("bonus_attack_damage") / 100.0)
+    per_stack = terms["per_stack"] + terms["per_100_bonus_ad"] * (
+        ctx.stat("bonus_attack_damage") / 100.0
+    )
+    requested = ctx.options.get("q_stacks")
+    if requested is None:
+        # The level and the cadence decide each other, and a FORWARD walk
+        # resolves both: the stacks a cast leaves behind are known from the
+        # casts already placed, and they shorten the wait for the next one.
+        # The scheduler walks the cooldown (stack_scaled_cooldown) and the
+        # cast pricing walks the damage (stack_window), off one rule.
+        entry = damage_entry(
+            ability_name(ability), rank, by_stacks[0], base, "physical"
+        )
+        entry["parts"] = (
+            DamagePart(
+                "physical",
+                base,
+                time_offset=0.1,
+                # The scaled reading REPLACES the part's amount, so it
+                # carries the whole packet: the base plus what the level
+                # adds, which is the base again at zero stacks.
+                stack_scaled_damage=lambda level: base * (1.0 + per_stack * level),
+            ),
+        )
+        entry["stack_window"] = {
+            "arming_slots": ("Q",),
+            "max_stacks": maximum,
+            "hits_required": maximum,
+            "stack_seconds": terms["stack_seconds"],
+            "stacks_from_ability_hits": True,
+            "armed_at_start": False,
+            "requested": False,
+        }
+        entry["stack_scaled_cooldown"] = {
+            "by_stacks": by_stacks,
+            "stack_seconds": terms["stack_seconds"],
+        }
+        entry["detail"] = (
+            f"Each Rampage stack adds {per_stack * 100:g}% damage and takes "
+            f"the cooldown from {by_stacks[0]:g}s to {by_stacks[-1]:g}s, up "
+            f"to {maximum} held for {terms['stack_seconds']:g}s; the fight "
+            "walks the casts that stack them."
+        )
+        return entry
+    stacks = min(max(int(requested), 0), maximum)
+    multiplier = 1.0 + stacks * per_stack
     value = base * multiplier
     return {
         "name": ability_name(ability),
         "rank": rank,
-        "cooldown": max(0.0, extract_cooldown(ability, rank) - 0.75 * stacks),
+        # The cached row already prices every stack level, so there is
+        # nothing to subtract: a ranked read of it lands on the last value
+        # and prices the fully stacked cooldown at every rank.
+        "cooldown": by_stacks[min(stacks, len(by_stacks) - 1)],
         "damage_type": "physical",
         "total_raw": value,
         "parts": (DamagePart("physical", value, time_offset=0.1),),
@@ -159,7 +269,16 @@ OPTIONS = [
         maximum=500.0,
         label="Bonus movement speed",
     ),
-    int_option("q_stacks", 0, minimum=0, maximum=3, label="Rampage stacks"),
+    int_option(
+        "q_stacks",
+        0,
+        minimum=0,
+        maximum=3,
+        label=(
+            "Rampage stacks; unset walks the casts that stack them, which "
+            "shorten the cooldown to the next cast as well as raising its damage"
+        ),
+    ),
     int_option(
         "w_ticks", _W_TICKS, minimum=1, maximum=_W_TICKS, label="Spirit of Dread ticks"
     ),

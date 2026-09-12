@@ -63,7 +63,7 @@ a way to get a wrong answer by leaving a default alone.
 
 A further 15 default to the whole sourced thing —
 a channel's every tick, a clip's every shot — so the option only removes
-from a complete reading, and 35 derive their
+from a complete reading, and 36 derive their
 default outright and take an override.
 36 are facts no engine holds: state the champion
 arrived with (stacks farmed over a game, souls collected) and facts about
@@ -75,9 +75,9 @@ dodged, how many swings landed from behind). Asking for those is correct.
 |---|---|---|
 | In-fight counts, still asked | 0 | the engine, once each is derived |
 | In-fight counts, blocked on data | 2 | nobody, until the missing number is sourced |
-| In-fight STACK LEVELS | 1 | the engine, once a stack timeline reaches the cast |
+| In-fight STACK LEVELS | 0 | the engine, once a stack timeline reaches the cast |
 | In-fight counts, full by default | 15 | already complete; the option removes |
-| In-fight counts, derived default | 35 | the engine; the option is an override |
+| In-fight counts, derived default | 36 | the engine; the option is an override |
 | Pre-fight state | 36 | the player, permanently |
 | Unreviewed | 0 | undecided; read the label |
 | Not a count at all | 265 | the player: a variant, a target, a cone's reach |
@@ -86,20 +86,6 @@ That first row is at zero. Every count of something inside the
 modelled fight is answered by the fight, and what remains below it
 is either blocked on a number no source here states, or a fact the
 engine has no standing to invent.
-
-Stack LEVELS the fight builds and a cast reads. Deriving these means
-walking a stack timeline into the cast pricing, not counting procs,
-so they are the next campaign (`docs/surface-area-backlog.md` SR8)
-and are reported apart from the row above rather than folded into it.
-
-`[full]` defaults to the top of its range, so it prices the fully
-stacked reading and over-counts a fight too short to reach it;
-`[floor]` defaults to the bottom and under-counts a long one. Which
-way each errs is the half a reader needs:
-
-| Champion | Option | Asks for |
-|---|---|---|
-| Hecarim | `q_stacks` | Rampage stacks [floor] |
 
 Counts the fight could walk if one missing number were sourced:
 
