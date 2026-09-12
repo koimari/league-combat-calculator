@@ -148,6 +148,9 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # champions/armed_procs.py: the window a cast's own stack level is
         # collected in, walked per cast and read by a stack_scaled part.
         "stack_window",
+        # interpreters/rearmed_swings: a ramp the CHAMPION declares over its
+        # own swing stream, walked the way an item ramp already is.
+        "swing_ramp",
         # Champion-owned critical-strike conversion (Yasuo/Yone P): total
         # crit chance doubled, crit damage scaled by a factor, and excess
         # crit chance converted to bonus AD.  The fight engine resolves it
