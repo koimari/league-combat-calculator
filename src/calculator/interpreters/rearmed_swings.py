@@ -152,6 +152,8 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
     critical_chance: float = 0.0,
     active_window: ActiveWindow | None = None,
     kit_ramp: DecayingStackRamp | None = None,
+    kit_ramp_stacks_swings: bool = True,
+    kit_ability_stack_times: Sequence[float] = (),
 ) -> tuple[float, ...]:
     """Walk *schedule*, one swing at a time, and return when each lands.
 
@@ -169,6 +171,11 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
     it. Each keeps its own stack clock, because their durations differ, and
     their bonuses add: one attack lands one stack on each.
 
+    A kit ramp need not stack on the swings it re-rates. *kit_ability_stack_times*
+    lands a stack at each given instant, and *kit_ramp_stacks_swings* says
+    whether a completed attack lands one too: Ezreal's Rising Spell Force
+    stacks on ability hits alone, Volibear's Relentless Storm on both.
+
     The arguments are the authored timing inputs, passed explicitly, so no
     caller can hide one in a global or let a stale fallback stand in for it.
     """
@@ -177,7 +184,11 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
     ramp, window = schedule.ramp, schedule.window
     times: list[float] = [0.0]
     stack_times: list[float] = [0.0]
-    kit_stack_times: list[float] = [0.0]
+    # A ramp that does not stack on swings opens the fight empty: the first
+    # swing is rated at whatever the ability stream has already landed.
+    kit_stack_times: list[float] = [0.0] if kit_ramp_stacks_swings else []
+    pending_ability_stacks = sorted(float(time) for time in kit_ability_stack_times)
+    admitted = 0
     current = 0.0
     active_until = 0.0 if window is None else window.duration
     cooldown = 0.0 if window is None else window.cooldown
@@ -194,6 +205,12 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
         if kit_ramp is None:
             kit_stack_times.clear()
         else:
+            while (
+                admitted < len(pending_ability_stacks)
+                and pending_ability_stacks[admitted] <= current + _SWING_EPSILON
+            ):
+                kit_stack_times.append(pending_ability_stacks[admitted])
+                admitted += 1
             kit_stack_times[:] = [
                 start
                 for start in kit_stack_times
@@ -223,7 +240,7 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
         times.append(next_time)
         if ramp is not None:
             stack_times.append(next_time)
-        if kit_ramp is not None:
+        if kit_ramp is not None and kit_ramp_stacks_swings:
             kit_stack_times.append(next_time)
         current = next_time
         first_attack = False

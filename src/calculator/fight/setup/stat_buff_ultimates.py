@@ -2,17 +2,33 @@
 
 import math
 from collections.abc import Mapping
+from dataclasses import dataclass
 
 from ... import item_effects
 from ...ability_atoms import ability_field, ability_sub_payload
 from ...interpreters import rearmed_swings
 from ...stats import calculate_attack_speed, resolve_move_speed
 from ..cast_slots import _slot_is_cast, slot_cast_start
+from ..rotation.cast_schedule import NO_REFUNDS, _schedule_shared_casts
 from ..config import BASE_CRIT_MULTIPLIER
 from ..state import FightState, _crit_profile
 
 
-def _kit_swing_ramp(state: FightState) -> rearmed_swings.DecayingStackRamp | None:
+@dataclass(frozen=True, slots=True)
+class KitRamp:
+    """A champion's own swing ramp, and which streams stack it.
+
+    The ramp's numbers are the same record an item ramp is. What differs
+    between kits is the stream: Jax and Jinx stack on their own attacks,
+    Ezreal on ability hits alone, Volibear on both.
+    """
+
+    ramp: rearmed_swings.DecayingStackRamp
+    stacks_from_swings: bool
+    stacks_from_ability_casts: bool
+
+
+def _kit_swing_ramp(state: FightState) -> KitRamp | None:
     """The ramp a CHAMPION declares over its own swing stream, or ``None``.
 
     Jax's Relentless Assault and its siblings are the record an item ramp
@@ -44,19 +60,51 @@ def _kit_swing_ramp(state: FightState) -> rearmed_swings.DecayingStackRamp | Non
     # a source that prices the first one apart (Jinx) states it, and absent
     # means absent rather than a stand-in number.
     first_stack = payload.get("first_stack")
-    return rearmed_swings.DecayingStackRamp(
-        per_stack=float(payload["per_stack"]),
-        max_stacks=int(payload["max_stacks"]),
-        stack_duration=float(payload["stack_duration"]),
-        first_stack=None if first_stack is None else float(first_stack),
+    # Which streams stack it is the module's statement too. Silence means
+    # the attacks the ramp re-rates, which is what Jax and Jinx declare and
+    # the only shape that existed before an ability stream reached here.
+    stacks_from_swings = payload.get("stacks_from_swings")
+    stacks_from_ability_casts = payload.get("stacks_from_ability_casts")
+    if stacks_from_swings is False and not stacks_from_ability_casts:
+        raise ValueError(
+            f"{owner}: swing_ramp stacks on neither the swings nor the ability "
+            "casts, so nothing would ever stack it"
+        )
+    return KitRamp(
+        ramp=rearmed_swings.DecayingStackRamp(
+            per_stack=float(payload["per_stack"]),
+            max_stacks=int(payload["max_stacks"]),
+            stack_duration=float(payload["stack_duration"]),
+            first_stack=None if first_stack is None else float(first_stack),
+        ),
+        stacks_from_swings=stacks_from_swings is not False,
+        stacks_from_ability_casts=bool(stacks_from_ability_casts),
     )
+
+
+def _kit_ability_stack_times(state: FightState, kit: KitRamp) -> tuple[float, ...]:
+    """When a kit that stacks on ability hits gets each of its stacks.
+
+    A cast's START is the instant, and against one target one cast is one hit.
+    """
+    if not kit.stacks_from_ability_casts:
+        return ()
+    # The rotation's own cast schedule, asked for before the rotation runs,
+    # which it can be because the only numbers it reads off the swing stream
+    # are Navori's. Those are not known yet, so this asks with NO_REFUNDS:
+    # every recast then lands at or later than the fight will place it, which
+    # can withhold a stack and never invent one.
+    schedule = _schedule_shared_casts(
+        state,
+        NO_REFUNDS,
+        float(state.champion_stats["basic_ability_haste"]),
+    )
+    return tuple(sorted(time for times in schedule.values() for time in times))
 
 
 def _swing_schedule_for(
     state: FightState,
-) -> tuple[
-    rearmed_swings.SwingSchedule | None, rearmed_swings.DecayingStackRamp | None
-]:
+) -> tuple[rearmed_swings.SwingSchedule | None, KitRamp | None]:
     """The schedule walking this fight's swings, and the kit ramp beside it.
 
     A build's item ramp and a kit's own ramp re-rate ONE stream and both
@@ -125,7 +173,13 @@ def _rate_attack_speed_grant(
             uptime=state.auto_attack_uptime,
             critical_chance=state.champion_stats["critical_strike_chance"] / 100.0,
             active_window=active_window,
-            kit_ramp=kit_ramp,
+            kit_ramp=None if kit_ramp is None else kit_ramp.ramp,
+            kit_ramp_stacks_swings=(
+                True if kit_ramp is None else kit_ramp.stacks_from_swings
+            ),
+            kit_ability_stack_times=(
+                () if kit_ramp is None else _kit_ability_stack_times(state, kit_ramp)
+            ),
         )
         state.support_attack_times = times
         state.num_auto_attacks = len(times)

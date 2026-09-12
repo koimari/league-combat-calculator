@@ -106,9 +106,21 @@ def _per_hit_raw(item, stats, target_health, current_health=None):
 class TestPassiveRisingSpellForce:
     """P: stat-buff only — 10% bonus attack speed per stack, no damage."""
 
-    def test_default_full_stacks(self, ezreal_data) -> None:
-        """Default 5 stacks grant 50% bonus attack speed, zero damage."""
+    def test_unset_walks_the_ramp_the_casts_stack(self, ezreal_data) -> None:
+        """Unset derives the level: a ramp stacked by casts, not by swings."""
         passive = _parse(ezreal_data, 9)["passive"]
+        ramp = passive["swing_ramp"]
+        assert ramp["per_stack"] == pytest.approx(0.10)
+        assert ramp["max_stacks"] == 5
+        assert ramp["stack_duration"] == pytest.approx(6.0)
+        assert ramp["stacks_from_swings"] is False
+        assert ramp["stacks_from_ability_casts"] is True
+        assert "stat_buff" not in passive
+        assert passive["total_raw"] == 0.0
+
+    def test_a_stated_level_is_the_flat_grant(self, ezreal_data) -> None:
+        """5 stated stacks grant 50% bonus attack speed, zero damage."""
+        passive = _parse(ezreal_data, 9, options={"passive_stacks": 5})["passive"]
         assert passive["stat_buff"]["bonus_attack_speed"] == pytest.approx(50.0)
         assert passive["total_raw"] == 0.0
         assert "+50% bonus attack speed" in passive["detail"]
@@ -133,7 +145,9 @@ class TestPassiveRisingSpellForce:
         self, ezreal_data, attacker_stats
     ) -> None:
         """The 50% bonus AS applies through the champion's AS ratio."""
-        abilities = _parse(ezreal_data, 18, ranks=_ALL_MAX)
+        abilities = _parse(
+            ezreal_data, 18, ranks=_ALL_MAX, options={"passive_stacks": 5}
+        )
         stats = attacker_stats()  # attack_speed 1.0, ratio 0.625
         _fight(stats, abilities)
         assert stats["attack_speed"] == pytest.approx(1.0 + 0.625 * 0.5)
