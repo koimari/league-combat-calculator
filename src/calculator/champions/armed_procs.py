@@ -233,6 +233,7 @@ def counted_hit_times(
     rule: ArmedProcRule,
     swing_times: Sequence[float],
     ability_hit_times: Sequence[float],
+    cast_times: Sequence[tuple[str, float]] = (),
 ) -> tuple[float, ...]:
     """WHEN the hit counter completes a cycle, over the streams it counts.
 
@@ -243,7 +244,16 @@ def counted_hit_times(
     attack against an enemy with 3 stacks" says. A stream a rule does not
     count still REFRESHES what is banked, the way a basic attack refreshes
     Talon's Wound without applying one.
+
+    A rule naming ``arming_slots`` counts only what lands on a target a cast
+    has MARKED: Kindred's Mounting Dread stacks on "her basic attacks
+    against the marked target", so a hit before the first E, or after the
+    mark has run out unrefreshed, counts toward nothing.
     """
+    if rule.arming_slots:
+        return _marked_counted_hit_times(
+            rule, swing_times, ability_hit_times, cast_times
+        )
     events: list[tuple[float, bool]] = []
     if rule.stacks_from_swings:
         events += [(time, True) for time in swing_times]
@@ -270,6 +280,46 @@ def counted_hit_times(
         if spends and len(stacks) >= rule.hits_required:
             procs.append(time)
             stacks.clear()
+    return tuple(procs)
+
+
+def _marked_counted_hit_times(
+    rule: ArmedProcRule,
+    swing_times: Sequence[float],
+    ability_hit_times: Sequence[float],
+    cast_times: Sequence[tuple[str, float]],
+) -> tuple[float, ...]:
+    """The counter's procs, counting only hits a live mark covers.
+
+    The mark opens at an arming cast and each counted hit refreshes it, so
+    the window is the same ``stack_seconds`` the stacks live by. A proc
+    consumes the count and the mark with it, which is "consuming all
+    stacks".
+    """
+    marks = sorted(time for slot, time in cast_times if slot in rule.arming_slots)
+    hits: list[float] = []
+    if rule.stacks_from_swings:
+        hits += list(swing_times)
+    if rule.stacks_from_ability_hits:
+        hits += list(ability_hit_times)
+    procs: list[float] = []
+    stacks = 0
+    marked_until = -1.0
+    mark_index = 0
+    for hit in sorted(hits):
+        while mark_index < len(marks) and marks[mark_index] <= hit:
+            marked_until = marks[mark_index] + rule.stack_seconds
+            stacks = 0
+            mark_index += 1
+        if hit > marked_until:
+            stacks = 0
+            continue
+        stacks = min(stacks + 1, rule.max_stacks)
+        marked_until = hit + rule.stack_seconds
+        if stacks >= rule.hits_required:
+            procs.append(hit)
+            stacks = 0
+            marked_until = -1.0
     return tuple(procs)
 
 

@@ -93,13 +93,21 @@ class TestCoverageMap:
             "E": "modeled",
             "R": "no_damage",
         }
+        # E reads zero at the DEFAULT options because the pounce is no
+        # longer priced at the cast: the shot marks and slows, and the
+        # damage rides the sibling row the third marked attack earns.
         assert coverage_truth.emitted("Kindred") == {
             "P": coverage_truth.ZERO,
             "Q": coverage_truth.PRICED,
             "W": coverage_truth.PRICED,
-            "E": coverage_truth.PRICED,
+            "E": coverage_truth.ZERO,
             "R": coverage_truth.ZERO,
         }
+        assert coverage_truth.parse("Kindred")["E_pounce"]["total_raw"] > 0.0
+        # A stated level puts it back on E, which is where it has always been.
+        stated = coverage_truth.emitted("Kindred", e_stacks=3)
+        assert stated["E"] == coverage_truth.PRICED
+        assert "E_pounce" not in coverage_truth.parse("Kindred", e_stacks=3)
 
     def test_the_two_no_damage_slots_disclose_why_they_price_nothing(self):
         for slot, expected in (("passive", "state"), ("R", "not enemy damage")):

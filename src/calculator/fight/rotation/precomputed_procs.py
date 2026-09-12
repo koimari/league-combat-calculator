@@ -68,6 +68,20 @@ def _add_precomputed_proc_damage(
             and rotation is not None
             and state.num_auto_attacks > 0
         )
+        if (
+            armed is not None
+            and "parts" in info
+            and not armed[1].requested
+            and state.num_auto_attacks <= 0
+            and armed[1].hits_required > 0
+            and armed[1].stacks_from_swings
+            and not armed[1].stacks_from_ability_hits
+        ):
+            # A counter that only basic attacks feed reaches nothing in a
+            # fight with no basic attacks. Without this the module's own
+            # count stands and a row the swings were supposed to earn is
+            # priced by a fight that never swung (Kindred's Wolf pounce).
+            continue
         if walkable and armed is not None:
             rule = armed[1]
             if state.one_rotation:
@@ -79,6 +93,7 @@ def _add_precomputed_proc_damage(
                     rule,
                     _auto_attack_timestamps(state),
                     _ability_hit_times(state, rotation),
+                    state.ability_cast_times,
                 )
             else:
                 times = armed_swing_times(
