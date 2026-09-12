@@ -10516,9 +10516,20 @@
           "total_raw": 205.2
         },
         "passive": {
+          "armed_procs": {
+            "armed_at_start": false,
+            "arming_slots": [],
+            "hits_required": 4,
+            "max_stacks": 4,
+            "requested": false,
+            "retained_at_threshold": true,
+            "stack_seconds": 6.0,
+            "stacks_from_ability_hits": true,
+            "stacks_from_swings": true
+          },
           "cc_reviewed": true,
           "damage_type": "magic",
-          "detail": "4 Ionian Fervor stack(s), +75.28% bonus attack speed; max-stack on-hit is explicit.",
+          "detail": "+18.82% bonus attack speed per Ionian Fervor stack, up to 4 held for 6s each; the fight walks the attacks and casts that stack them, and the max-stack on-hit is live for as long as the last stack is",
           "name": "Ionian Fervor",
           "on_hit": {
             "damage_per_hit": 40.0,
@@ -10526,8 +10537,12 @@
             "name": "Ionian Fervor max-stack hit"
           },
           "parts": [],
-          "stat_buff": {
-            "bonus_attack_speed": 75.28
+          "swing_ramp": {
+            "max_stacks": 4,
+            "per_stack": 0.19,
+            "stack_duration": 6.0,
+            "stacks_from_ability_casts": true,
+            "stacks_from_swings": true
           },
           "total_raw": 0.0
         }
@@ -53585,18 +53600,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60647,
-      "numeric_leaves": 46443,
+      "leaves": 60659,
+      "numeric_leaves": 46448,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "375c03d7389ec6d9ce1b8eaf3b44a7da66612c2f",
+    "git_head": "1a8fed4b3059dcc01bea7812e1eb99838c6a9109",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "1d05e400027ca874fe95d3d119e89309cf6d1cf6"
+    "src_tree_sha": "370e6b6cfffdffb96e476f356f9eb0484b91e116"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -62522,12 +62537,12 @@
               "Q": 101.47,
               "R": 815.04,
               "W": 578.8,
-              "auto_attacks": 384.0,
+              "auto_attacks": 448.0,
               "on_hit_ability_passive": 192.0,
               "proc_Luden's Echo": 155.36,
               "shadowflame_Shadowflame": 113.5
             },
-            "total_damage": 2749.77
+            "total_damage": 2813.77
           },
           "no_items": {
             "breakdown_totals": {
@@ -62535,10 +62550,10 @@
               "Q": 101.47,
               "R": 285.71,
               "W": 136.8,
-              "auto_attacks": 384.0,
+              "auto_attacks": 448.0,
               "on_hit_ability_passive": 171.43
             },
-            "total_damage": 1129.41
+            "total_damage": 1193.41
           },
           "physical_build": {
             "breakdown_totals": {
@@ -62546,11 +62561,11 @@
               "Q": 173.8,
               "R": 285.71,
               "W": 260.8,
-              "auto_attacks": 1932.7,
-              "on_hit_Kraken Slayer": 292.5,
+              "auto_attacks": 2208.8,
+              "on_hit_Kraken Slayer": 483.68,
               "on_hit_ability_passive": 355.0
             },
-            "total_damage": 3350.51
+            "total_damage": 3817.8
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -62558,11 +62573,11 @@
               "Q": 153.27,
               "R": 285.71,
               "W": 225.6,
-              "auto_attacks": 1462.8,
+              "auto_attacks": 1645.65,
               "on_hit_ability_passive": 355.43,
               "spellblade_Trinity Force": 256.0
             },
-            "total_damage": 2788.81
+            "total_damage": 2971.66
           }
         }
       },
@@ -62617,12 +62632,12 @@
               "Q": 114.53,
               "R": 935.04,
               "W": 641.2,
-              "auto_attacks": 578.67,
+              "auto_attacks": 661.33,
               "on_hit_ability_passive": 341.6,
               "proc_Luden's Echo": 155.36,
               "shadowflame_Shadowflame": 152.06
             },
-            "total_damage": 3456.06
+            "total_damage": 3538.73
           },
           "no_items": {
             "breakdown_totals": {
@@ -62630,10 +62645,10 @@
               "Q": 114.53,
               "R": 392.86,
               "W": 199.2,
-              "auto_attacks": 578.67,
+              "auto_attacks": 661.33,
               "on_hit_ability_passive": 305.0
             },
-            "total_damage": 1754.54
+            "total_damage": 1837.21
           },
           "physical_build": {
             "breakdown_totals": {
@@ -62641,11 +62656,11 @@
               "Q": 187.33,
               "R": 392.86,
               "W": 324.0,
-              "auto_attacks": 2772.0,
-              "on_hit_Kraken Slayer": 601.03,
+              "auto_attacks": 3080.0,
+              "on_hit_Kraken Slayer": 599.37,
               "on_hit_ability_passive": 591.43
             },
-            "total_damage": 5032.93
+            "total_damage": 5339.28
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -62653,11 +62668,11 @@
               "Q": 166.8,
               "R": 392.86,
               "W": 288.8,
-              "auto_attacks": 1876.2,
+              "auto_attacks": 2084.67,
               "on_hit_ability_passive": 534.86,
               "spellblade_Trinity Force": 330.67
             },
-            "total_damage": 3754.47
+            "total_damage": 3962.93
           }
         }
       }
