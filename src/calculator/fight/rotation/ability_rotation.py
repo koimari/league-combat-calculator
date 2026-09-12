@@ -818,6 +818,7 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             num_casts,
             cast_times=plan.times.get(ability_key, ()),
             running_damage=mitigated_damage_dealt,
+            pricing=pricing,
         )
         mitigated_damage_dealt += post_hit_total
 

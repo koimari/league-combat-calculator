@@ -63,9 +63,9 @@ a way to get a wrong answer by leaving a default alone.
 
 A further 15 default to the whole sourced thing —
 a channel's every tick, a clip's every shot — so the option only removes
-from a complete reading, and 20 derive their
+from a complete reading, and 21 derive their
 default outright and take an override.
-33 are facts no engine holds: state the champion
+34 are facts no engine holds: state the champion
 arrived with (stacks farmed over a game, souls collected) and facts about
 the ENEMY or about where the champion stood (how many attacks an evasion
 dodged, how many swings landed from behind). Asking for those is correct.
@@ -75,10 +75,10 @@ dodged, how many swings landed from behind). Asking for those is correct.
 |---|---|---|
 | In-fight counts, still asked | 0 | the engine, once each is derived |
 | In-fight counts, blocked on data | 2 | nobody, until the missing number is sourced |
-| In-fight STACK LEVELS | 19 | the engine, once a stack timeline reaches the cast |
+| In-fight STACK LEVELS | 17 | the engine, once a stack timeline reaches the cast |
 | In-fight counts, full by default | 15 | already complete; the option removes |
-| In-fight counts, derived default | 20 | the engine; the option is an override |
-| Pre-fight state | 33 | the player, permanently |
+| In-fight counts, derived default | 21 | the engine; the option is an override |
+| Pre-fight state | 34 | the player, permanently |
 | Unreviewed | 0 | undecided; read the label |
 | Not a count at all | 265 | the player: a variant, a target, a cone's reach |
 
@@ -106,14 +106,12 @@ way each errs is the half a reader needs:
 | Irelia | `p_stacks` | Ionian Fervor stacks [full] |
 | Jax | `p_stacks` | Relentless Assault stacks [full] |
 | Jinx | `jinx_rev_up_stacks` | Pow-Pow Rev'd Up stacks [full] |
-| Jinx | `jinx_get_excited_stacks` | Get Excited! champion stacks [full] |
 | Kalista | `rend_stacks` | Rend stacks [floor] |
 | Kassadin | `r_stacks` | Riftwalk stacks [floor] |
 | Kindred | `w_hunters_vigor_stacks` | Hunter's Vigor stacks (100 = the next basic attack heals) [floor] |
 | Kindred | `e_stacks` | Mounting Dread stacks (3 = pounce) [floor] |
 | Mel | `r_overwhelm_stacks` | Overwhelm stacks on the target when Golden Eclipse detonates [full] |
 | Samira | `p_style_stacks` | Style stacks (6 = S rank, R ready) [full] |
-| Varus | `blight_stacks` | Blight stacks on the target when Piercing Arrow lands (3 = fully stacked; the Q detonation consumes them) [full] |
 | Volibear | `relentless_storm_stacks` | The Relentless Storm stacks [floor] |
 | Wukong | `stone_skin_stacks` | Strength of Stone stacks [floor] |
 | Xayah | `clean_cuts_stacks` | Clean Cuts stacks [floor] |

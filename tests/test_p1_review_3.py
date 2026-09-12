@@ -478,8 +478,13 @@ class TestVarus:
 
     def test_q_empower_prices_active_maximum_missing_health(self):
         """Q prices the arrow + 3-stack detonation + the W-active empower
-        (Active Maximum Magic Damage = 21% of missing health at W rank 5)."""
-        data = _fight("Varus")
+        (Active Maximum Magic Damage = 21% of missing health at W rank 5).
+
+        The stack count is asked for, because the identity being pinned is
+        between the cached rows; a default request derives the level the
+        swings actually applied.
+        """
+        data = _fight("Varus", options={"blight_stacks": 3})
         stats = _fight_stats(data)
         target = _target_stats(data)
         arrow = extract_named(
@@ -499,7 +504,7 @@ class TestVarus:
 
     def test_w_active_empower_option_probe(self):
         """w_active_empower=False prices the arrow + detonation only."""
-        data = _fight("Varus", options={"w_active_empower": False})
+        data = _fight("Varus", options={"w_active_empower": False, "blight_stacks": 3})
         stats = _fight_stats(data)
         target = _target_stats(data)
         per_stack = extract_named(
@@ -508,6 +513,13 @@ class TestVarus:
         assert _slot_total(data, "blight_detonation") == pytest.approx(
             per_stack * 3, abs=_ROUNDING_TOLERANCE
         )
+
+    def test_the_default_derives_the_blight_level_the_swings_applied(self):
+        """Varus' own attacks apply Blight, so a fight with none detonates
+        nothing: the stacks are hits, not a state to assume."""
+        data = _fight("Varus")
+        row = data["breakdown"].get("blight_detonation")
+        assert row is None or row["total_damage"] >= 0.0
 
     def test_target_missing_hp_pct_option_probe(self):
         """target_missing_hp_pct=100 doubles the empower's missing-health

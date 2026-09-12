@@ -175,6 +175,8 @@ _ENEMY_OR_POSITIONAL = {
     "p_procs:Shaco": "whether each swing landed from behind the target",
     "p_procs:Miss Fortune": "how many distinct enemies the Love Taps tagged",
     "p_leverage_procs": "how many distinct enemies the mark moved between",
+    "jinx_get_excited_stacks:Jinx": "how many takedowns the fight scored, "
+    "which is a kill and not a hit",
     "passive_procs:Akali": "whether the champion walked back through her ring",
     "e_shots:Akshan": "how long the hook held while he swung around the anchor",
     "soldier_autos:Azir": "whether the attacks were taken through a soldier",
