@@ -330,6 +330,7 @@ def _apply_post_hit_proc(
     *,
     cast_times: tuple[float, ...],
     running_damage: float,
+    pricing: tuple[CastPricing, ...] | None = None,
 ) -> float:
     """Apply a proc that lands after its triggering hit.
 
@@ -341,6 +342,10 @@ def _apply_post_hit_proc(
     authored hit event, and applies its debuff afterwards. It is not counted
     as a cast and therefore cannot invent Muramana, burn, or spell-effect
     triggers.
+
+    ``pricing`` is the triggering slot's own per-cast pricing, so a proc
+    part that reprices against a stack level (Varus' Blight detonation)
+    reads the level its trigger's cast read.
     """
     spec = ability_info.get("post_hit_proc")
     if not spec or num_casts <= 0:
@@ -356,6 +361,7 @@ def _apply_post_hit_proc(
         state.resists.effective_mr,
         running_damage,
         cast_times=cast_times,
+        pricing=pricing,
     )
     if total <= 0:
         return 0.0

@@ -32157,7 +32157,7 @@
           ],
           "post_hit_proc": {
             "breakdown_key": "blight_detonation",
-            "detail": "3 Blight stack(s) consumed at 5 points in W; W-active empower: 210 magic (50% missing health x Active Maximum Magic Damage 5 points in W)",
+            "detail": "Blight stacks consumed: the swings that applied them inside their 6s window, at 5 points in W; W-active empower: 210 magic (50% missing health x Active Maximum Magic Damage 5 points in W)",
             "name": "Blight Detonation",
             "parts": [
               "DamagePart(magic, amount=300.0, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.0)",
@@ -32168,6 +32168,15 @@
           "resource_cost": 70.0,
           "resource_type": "MANA",
           "skillshot": true,
+          "stack_window": {
+            "armed_at_start": false,
+            "arming_slots": [],
+            "hits_required": 3,
+            "max_stacks": 3,
+            "requested": false,
+            "stack_seconds": 6.0,
+            "stacks_from_swings": true
+          },
           "total_raw": 870.0
         },
         "R": {
@@ -53531,18 +53540,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60607,
-      "numeric_leaves": 46424,
+      "leaves": 60611,
+      "numeric_leaves": 46425,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "69e3ac22be1b13e0066a797818470a753f86aa70",
+    "git_head": "d12305f88c35eec5b8b8270e6053093238174eb0",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "59edc3f8328a856989c4e6f0a0c2b329ca0b0246"
+    "src_tree_sha": "92d66417ac0257f0d52c29650265d0c447cdd931"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -80569,11 +80578,10 @@
             "R": 553.6,
             "W": 0.0,
             "auto_attacks": 0.0,
-            "blight_detonation": 421.79,
-            "proc_Luden's Echo": 155.36,
-            "shadowflame_Shadowflame": 33.6
+            "blight_detonation": 168.0,
+            "proc_Luden's Echo": 155.36
           },
-          "total_damage": 1444.35
+          "total_damage": 1156.96
         },
         "no_items": {
           "breakdown_totals": {
@@ -80582,9 +80590,9 @@
             "R": 178.57,
             "W": 0.0,
             "auto_attacks": 0.0,
-            "blight_detonation": 364.29
+            "blight_detonation": 150.0
           },
-          "total_damage": 822.86
+          "total_damage": 608.57
         },
         "physical_build": {
           "breakdown_totals": {
@@ -80593,9 +80601,9 @@
             "R": 178.57,
             "W": 0.0,
             "auto_attacks": 0.0,
-            "blight_detonation": 364.29
+            "blight_detonation": 150.0
           },
-          "total_damage": 1039.86
+          "total_damage": 825.57
         },
         "spellblade_build": {
           "breakdown_totals": {
@@ -80604,9 +80612,9 @@
             "R": 178.57,
             "W": 0.0,
             "auto_attacks": 0.0,
-            "blight_detonation": 364.29
+            "blight_detonation": 150.0
           },
-          "total_damage": 978.26
+          "total_damage": 763.97
         },
         "sustained": {
           "magic_build": {
@@ -80671,11 +80679,10 @@
             "R": 633.6,
             "W": 0.0,
             "auto_attacks": 0.0,
-            "blight_detonation": 421.79,
-            "proc_Luden's Echo": 155.36,
-            "shadowflame_Shadowflame": 33.6
+            "blight_detonation": 168.0,
+            "proc_Luden's Echo": 155.36
           },
-          "total_damage": 1604.35
+          "total_damage": 1316.96
         },
         "no_items": {
           "breakdown_totals": {
@@ -80684,9 +80691,9 @@
             "R": 250.0,
             "W": 0.0,
             "auto_attacks": 0.0,
-            "blight_detonation": 364.29
+            "blight_detonation": 150.0
           },
-          "total_damage": 974.29
+          "total_damage": 760.0
         },
         "physical_build": {
           "breakdown_totals": {
@@ -80695,9 +80702,9 @@
             "R": 250.0,
             "W": 0.0,
             "auto_attacks": 0.0,
-            "blight_detonation": 364.29
+            "blight_detonation": 150.0
           },
-          "total_damage": 1191.29
+          "total_damage": 977.0
         },
         "spellblade_build": {
           "breakdown_totals": {
@@ -80706,9 +80713,9 @@
             "R": 250.0,
             "W": 0.0,
             "auto_attacks": 0.0,
-            "blight_detonation": 364.29
+            "blight_detonation": 150.0
           },
-          "total_damage": 1129.69
+          "total_damage": 915.4
         },
         "sustained": {
           "magic_build": {

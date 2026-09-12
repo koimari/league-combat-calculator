@@ -1,0 +1,69 @@
+{
+ "slice": "varus-blight-level",
+ "issue": "docs/surface-area-backlog.md SR8",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures all three baselines in the same commit."
+ },
+ "what_landed": "Varus' Blight detonation reads the stack level his own swings applied, walked in the cached 6-second window (Case 6). The per-cast pricing seam is threaded into post_hit_proc, because the detonation rides one.",
+ "why": [
+  "blight_stacks defaulted to the sourced maximum, so a fight with no swings at all still detonated three stacks. Varus' own basic attacks are what apply Blight, so the level is a count of hits and the golden's scenarios land fewer than three inside the window.",
+  "Every moved leaf is Varus' and they move DOWN, by the stacks the fight did not apply."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "Varus is the only kit this slice touches."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "the Q row publishes the window its detonation level is walked in"
+  },
+  "/metadata/fingerprint/numeric_leaves": {
+   "cause": "the same"
+  }
+ },
+ "summary": {
+  "direction": "down: the declared default was the fully stacked reading",
+  "counts": {
+   "golden": 22,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Varus/abilities_level_11/Q/post_hit_proc/detail",
+   "/champion_baselines/Varus/abilities_level_11/Q/stack_window",
+   "/registered_champion_fights/Varus/11/magic_build/breakdown_totals/blight_detonation",
+   "/registered_champion_fights/Varus/11/magic_build/breakdown_totals/shadowflame_Shadowflame",
+   "/registered_champion_fights/Varus/11/magic_build/total_damage",
+   "/registered_champion_fights/Varus/11/no_items/breakdown_totals/blight_detonation",
+   "/registered_champion_fights/Varus/11/no_items/total_damage",
+   "/registered_champion_fights/Varus/11/physical_build/breakdown_totals/blight_detonation",
+   "/registered_champion_fights/Varus/11/physical_build/total_damage",
+   "/registered_champion_fights/Varus/11/spellblade_build/breakdown_totals/blight_detonation",
+   "/registered_champion_fights/Varus/11/spellblade_build/total_damage",
+   "/registered_champion_fights/Varus/18/magic_build/breakdown_totals/blight_detonation",
+   "/registered_champion_fights/Varus/18/magic_build/breakdown_totals/shadowflame_Shadowflame",
+   "/registered_champion_fights/Varus/18/magic_build/total_damage",
+   "/registered_champion_fights/Varus/18/no_items/breakdown_totals/blight_detonation",
+   "/registered_champion_fights/Varus/18/no_items/total_damage",
+   "/registered_champion_fights/Varus/18/physical_build/breakdown_totals/blight_detonation",
+   "/registered_champion_fights/Varus/18/physical_build/total_damage",
+   "/registered_champion_fights/Varus/18/spellblade_build/breakdown_totals/blight_detonation",
+   "/registered_champion_fights/Varus/18/spellblade_build/total_damage"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}

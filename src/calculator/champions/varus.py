@@ -30,6 +30,7 @@ Why each slot is non-generic:
   single-target model.
 """
 
+import re
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -102,10 +103,57 @@ def _blight_detonation(ctx: SlotCtx, rank: int) -> float:
         _BLIGHT_MAX_STACKS,
         max(0, int(ctx.options.get("blight_stacks", _BLIGHT_MAX_STACKS))),
     )
-    if stacks <= 0:
-        return 0.0
     per_stack = sum_modifiers(leveling, rank, ctx.stats, ctx.target)
     return per_stack * stacks
+
+
+def _blight_per_stack(ctx: SlotCtx, rank: int) -> float:
+    """One Blight stack's own damage, for the level the fight counts."""
+    ability = ctx.ability("W", 0)
+    if ability is None:
+        return 0.0
+    leveling = find_named_leveling(ability, _BLIGHT_DETONATION_ATTR)
+    if leveling is None:
+        return 0.0
+    return sum_modifiers(leveling, rank, ctx.stats, ctx.target)
+
+
+def _blight_stack_window(ctx: SlotCtx) -> dict[str, Any] | None:
+    """The cached window a Blight stack holds, and what applies one.
+
+    "Varus' basic attacks are empowered to ... apply a stack of Blight
+    on-hit for 6 seconds, refreshing ... and stacking up to 3 times", so
+    the swings stack it and the cache states both numbers.
+    """
+    ability = ctx.ability("W", 0)
+    if ability is None:
+        return None
+    effects = ability.get("effects")
+    for effect in effects if effects else ():
+        description = effect.get("description")
+        if description is None:
+            continue
+        match = _BLIGHT_WINDOW_RE.search(str(description))
+        if match is not None:
+            return {
+                "arming_slots": (),
+                "max_stacks": int(match.group("stacks")),
+                "hits_required": int(match.group("stacks")),
+                "stacks_from_swings": True,
+                "stack_seconds": float(match.group("seconds")),
+                "armed_at_start": False,
+                "requested": False,
+            }
+    raise ValueError(
+        "Varus W: the cached entry no longer states Blight's stack life and "
+        "cap ('for N seconds ... stacking up to N times')"
+    )
+
+
+_BLIGHT_WINDOW_RE = re.compile(
+    r"apply a stack of Blight on-hit for (?P<seconds>\d+(?:\.\d+)?) seconds"
+    r"[^.]*?stacking up to (?P<stacks>\d+) times"
+)
 
 
 def _charge_fraction(ctx: SlotCtx) -> float:
@@ -157,8 +205,29 @@ def _piercing_arrow(
         parts = []
         detail = []
         if detonation > 0:
-            parts.append(DamagePart("magic", detonation, time_offset=0.0))
-            detail.append(f"{stacks} Blight stack(s) consumed at {rank} points in W")
+            requested = ctx.options.get("blight_stacks")
+            window = _blight_stack_window(ctx) if requested is None else None
+            if window is not None:
+                per_stack = _blight_per_stack(ctx, rank)
+                parts.append(
+                    DamagePart(
+                        "magic",
+                        detonation,
+                        time_offset=0.0,
+                        stack_scaled_damage=lambda level: per_stack * level,
+                    )
+                )
+                entry["stack_window"] = window
+                detail.append(
+                    "Blight stacks consumed: the swings that applied them "
+                    f"inside their {window['stack_seconds']:g}s window, at "
+                    f"{rank} points in W"
+                )
+            else:
+                parts.append(DamagePart("magic", detonation, time_offset=0.0))
+                detail.append(
+                    f"{stacks} Blight stack(s) consumed at {rank} points in W"
+                )
         if empower > 0:
             parts.append(DamagePart("magic", empower, time_offset=0.0))
             empower_detail = (
@@ -275,8 +344,10 @@ OPTIONS: list[dict[str, Any]] = [
         _BLIGHT_MAX_STACKS,
         minimum=0,
         maximum=_BLIGHT_MAX_STACKS,
-        label="Blight stacks on the target when Piercing Arrow lands "
-        "(3 = fully stacked; the Q detonation consumes them)",
+        label=(
+            "Blight stacks at detonation; unset derives them from the swings "
+            "that applied Blight inside its cached window"
+        ),
     ),
     float_option(
         "q_charge_fraction",
