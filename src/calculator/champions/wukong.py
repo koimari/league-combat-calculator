@@ -68,6 +68,14 @@ from .stat_grants import with_attack_speed_window
 _WUKONG_Q_SPELL = spell_object("MonkeyKing", "MonkeyKingDoubleAttack")
 _WUKONG_R_SPELL = spell_object("MonkeyKing", "MonkeyKingSpinToWin")
 Q_SHRED_DURATION = data_value(_WUKONG_Q_SPELL, "ShredDuration")
+# ROOTED IN THE BINARY (data/bin/characters/monkeyking.bin.json): Strength
+# of Stone's cap and the seconds one stack stands are MonkeyKingPassive's
+# MaxStacks and StackDuration.
+_MK_PASSIVE_SPELL = spell_object("MonkeyKing", "MonkeyKingPassive")
+_STONE_SKIN_MAX_STACKS = int(data_value(_MK_PASSIVE_SPELL, "MaxStacks"))
+_STONE_SKIN_STACK_SECONDS = data_value(_MK_PASSIVE_SPELL, "StackDuration")
+
+
 _R_TICK_INTERVAL = data_value(_WUKONG_R_SPELL, "SecondsPerTick")
 # Nimbus Strike's bonus attack speed lasts the binary
 # MonkeyKingNimbus.AttackSpeedDuration; the cached E prose ("for 5
@@ -85,12 +93,35 @@ def _stone_skin(ctx: SlotCtx) -> dict[str, Any] | None:
     per_stack = find_named_leveling(ability, "Per-Level Scaling", 1)
     if base is None or per_stack is None:
         return None
-    stacks = min(max(int(ctx.option("stone_skin_stacks")), 0), 5)
-    armor = sum_modifiers(base, ctx.level) + stacks * sum_modifiers(
-        per_stack, ctx.level
-    )
-    ctx.stats["armor"] = ctx.stat("armor") + armor
+    max_stacks, seconds = _STONE_SKIN_MAX_STACKS, _STONE_SKIN_STACK_SECONDS
+    base_armor = sum_modifiers(base, ctx.level)
+    per_stack_armor = sum_modifiers(per_stack, ctx.level)
+    requested = ctx.options.get("stone_skin_stacks")
     entry = damage_entry("Stone Skin", ctx.level, 0.0, 0.0, "physical")
+    if requested is None:
+        # The innate armor stands whatever the count; the stacks ride the
+        # ramp. Armor is not a stat any swing walker carries, so the fight
+        # serves the level's time-weighted mean (champions/stat_ramp.py).
+        ctx.stats["armor"] = ctx.stat("armor") + base_armor
+        entry["stat_buff"] = {"armor": base_armor}
+        entry["stat_ramp"] = {
+            "per_stack": {"armor": per_stack_armor},
+            "max_stacks": max_stacks,
+            "stack_duration": seconds,
+            "stacks_from_swings": True,
+            "stacks_from_ability_casts": True,
+            "requested": False,
+        }
+        entry["detail"] = (
+            f"+{base_armor:.2f} innate bonus armor, and +{per_stack_armor:.2f} "
+            f"more per Strength of Stone stack, up to {max_stacks} held for "
+            f"{seconds:g}s each; the fight walks the attacks and abilities "
+            "that stack them"
+        )
+        return entry
+    stacks = min(max(int(requested), 0), max_stacks)
+    armor = base_armor + stacks * per_stack_armor
+    ctx.stats["armor"] = ctx.stat("armor") + armor
     entry["stat_buff"] = {"armor": armor}
     entry["detail"] = f"{stacks} Strength of Stone stack(s); +{armor:.2f} bonus armor"
     return entry
@@ -193,7 +224,14 @@ parse_abilities = build_parser(SLOTS, "Wukong", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     int_option(
-        "stone_skin_stacks", 0, minimum=0, maximum=5, label="Strength of Stone stacks"
+        "stone_skin_stacks",
+        0,
+        minimum=0,
+        maximum=_STONE_SKIN_MAX_STACKS,
+        label=(
+            "Strength of Stone stacks; unset walks the ramp over the attacks "
+            "and abilities that stack it and serves its fight mean"
+        ),
     ),
     bool_option("q_armor_reduction", True, label="Q armor reduction active"),
     int_option("r_casts", 1, minimum=1, maximum=2, label="Cyclone casts"),

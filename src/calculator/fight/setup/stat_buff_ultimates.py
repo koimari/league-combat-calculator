@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from ... import item_effects
 from ...ability_atoms import ability_field, ability_sub_payload
+from ...champions import stat_ramp as _stat_ramp
 from ...interpreters import rearmed_swings
 from ...stats import calculate_attack_speed, resolve_move_speed
 from ..cast_slots import _slot_is_cast, slot_cast_start
@@ -94,12 +95,7 @@ def _kit_ability_stack_times(state: FightState, kit: KitRamp) -> tuple[float, ..
     # are Navori's. Those are not known yet, so this asks with NO_REFUNDS:
     # every recast then lands at or later than the fight will place it, which
     # can withhold a stack and never invent one.
-    schedule = _schedule_shared_casts(
-        state,
-        NO_REFUNDS,
-        float(state.champion_stats["basic_ability_haste"]),
-    )
-    return tuple(sorted(time for times in schedule.values() for time in times))
+    return _cast_schedule_times(state)
 
 
 def _swing_schedule_for(
@@ -208,6 +204,67 @@ def _rate_attack_speed_grant(
     )
 
 
+def _resolve_stat_ramp(state: FightState) -> None:
+    """Turn a declared stat ramp into the grant its mean level is worth.
+
+    Resolved into the row's own ``stat_buff`` so that everything downstream
+    reads one kind of grant, and resolved BEFORE the loop below applies it.
+    """
+    declared = _stat_ramp.declared_rule(state.ability_damages)
+    if declared is None:
+        return
+    owner, rule = declared
+    swings = state.support_attack_times or _swings_at_uptime(state)
+    casts = _cast_schedule_times(state) if rule.stacks_from_ability_casts else ()
+    level = _stat_ramp.mean_stack_level(
+        rule, swings, casts, state.fight_duration_seconds
+    )
+    for info in state.ability_damages.values():
+        if isinstance(info, Mapping) and info.get("stat_ramp"):
+            standing = info.get("stat_buff")
+            grant = {} if standing is None else dict(standing)
+            grant.update(rule.grant(level))
+            info["stat_buff"] = grant
+            info["detail"] = (
+                f"{info.get('detail', owner)} (fight mean {level:.2f} stacks)"
+            )
+
+
+def _swings_at_uptime(state: FightState) -> tuple[float, ...]:
+    """Even swing times at the fight's own rate, for a stream nobody walked."""
+    rate = state.attack_speed * state.auto_attack_uptime
+    if rate <= 0.0 or state.fight_duration_seconds <= 0.0:
+        return ()
+    times: list[float] = []
+    time = 0.0
+    while time < state.fight_duration_seconds:
+        times.append(time)
+        time += 1.0 / rate
+    return tuple(times)
+
+
+def _cast_schedule_times(
+    state: FightState, slots: frozenset[str] = frozenset()
+) -> tuple[float, ...]:
+    """Every cast the setup-time schedule places, sorted.
+
+    *slots* narrows it to the ones a rule names; empty takes them all.
+    """
+    schedule = _schedule_shared_casts(
+        state,
+        NO_REFUNDS,
+        float(state.champion_stats["basic_ability_haste"]),
+    )
+    return tuple(
+        sorted(
+            time
+            for key, times in schedule.items()
+            if not slots or key in slots
+            for time in times
+        )
+    )
+
+
 def _apply_stat_buff_ultimates(state: FightState) -> None:
     """Apply ability stat buffs (e.g. Aatrox R bonus AD) and resolve crit.
 
@@ -222,6 +279,7 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
     stats = state.champion_stats
     resists = state.resists
     withheld: list[str] = []
+    _resolve_stat_ramp(state)
 
     for key, ability_info in state.ability_damages.items():
         stat_buff = ability_info.get("stat_buff")

@@ -61,6 +61,13 @@ _R_SLAM_DELAY_SECONDS = 0.6
 # cached P prose ("stacking up to 12 times"), and the two Per-Level
 # Scaling rows are ordered per-stack first, filled-at-maximum second.
 _P_MAX_STACKS = int(data_value(spell_object("Zaahen", "ZaahenPassive"), "MaxStacks"))
+# FallOffDuration is how long one stack stands before the decay begins. The
+# cache spells the decay itself as a staged one ("expire by 1 / 2 / 3 / 4 / 5
+# (based on seconds elapsed) every 0.5 seconds"), which the ramp does not
+# walk: each stack here simply expires its own five seconds after it lands.
+_P_STACK_SECONDS = data_value(
+    spell_object("Zaahen", "ZaahenPassive"), "FallOffDuration"
+)
 _P_PER_STACK_OCCURRENCE = 0
 _P_MAX_STACK_OCCURRENCE = 1
 
@@ -84,13 +91,9 @@ def _cultivation_of_war(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
 
-    stacks = min(max(int(ctx.option("p_determination_stacks")), 0), _P_MAX_STACKS)
+    requested = ctx.options.get("p_determination_stacks")
     per_stack = _determination_percent(ctx, _P_PER_STACK_OCCURRENCE)
     filled = _determination_percent(ctx, _P_MAX_STACK_OCCURRENCE)
-    percent = filled if stacks >= _P_MAX_STACKS else per_stack * stacks
-    bonus_ad = percent / 100.0 * ctx.stat("attack_damage")
-    ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
-    ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus_ad
     entry = damage_entry(
         ability_name(ability),
         ctx.level,
@@ -99,6 +102,35 @@ def _cultivation_of_war(ctx: SlotCtx) -> dict[str, Any] | None:
         "physical",
         zero_policy=STEROID_ZERO,
     )
+    if requested is None:
+        # A stack per damaging basic attack or ability, each standing its
+        # cached seconds. The grant is attack damage, which no swing walker
+        # can carry, so the fight serves the level's time-weighted mean
+        # (champions/stat_ramp.py states why that is the reading).
+        entry["stat_ramp"] = {
+            "per_stack": {
+                "bonus_attack_damage": per_stack / 100.0 * ctx.stat("attack_damage")
+            },
+            "max_stacks": _P_MAX_STACKS,
+            "stack_duration": _P_STACK_SECONDS,
+            "stacks_from_swings": True,
+            "stacks_from_ability_casts": True,
+            "filled_multiplier": filled / (per_stack * _P_MAX_STACKS),
+            "requested": False,
+        }
+        entry["detail"] = (
+            f"{per_stack:g}% AD per Determination stack, up to {_P_MAX_STACKS} "
+            f"held for {_P_STACK_SECONDS:g}s each, and {filled:g}% AD once "
+            "filled; the fight walks the attacks and abilities that stack "
+            "them.  The maximum-stack resurrection is the revive axis, which "
+            "has no mid-fight channel"
+        )
+        return entry
+    stacks = min(max(int(requested), 0), _P_MAX_STACKS)
+    percent = filled if stacks >= _P_MAX_STACKS else per_stack * stacks
+    bonus_ad = percent / 100.0 * ctx.stat("attack_damage")
+    ctx.stats["bonus_attack_damage"] = ctx.stat("bonus_attack_damage") + bonus_ad
+    ctx.stats["attack_damage"] = ctx.stat("attack_damage") + bonus_ad
     entry["stat_buff"] = {"bonus_attack_damage": bonus_ad}
     entry["detail"] = (
         f"{stacks}/{_P_MAX_STACKS} Determination stack(s) = {percent:g}% "
@@ -218,7 +250,10 @@ OPTIONS = [
         _P_MAX_STACKS,
         minimum=0,
         maximum=_P_MAX_STACKS,
-        label="Determination stacks (12 = filled, which doubles the bonus)",
+        label=(
+            "Determination stacks (12 = filled, which doubles the bonus); "
+            "unset walks the ramp and serves its fight mean"
+        ),
         rotation={
             "role": "self_state",
             "slot": "P",
