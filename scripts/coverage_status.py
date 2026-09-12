@@ -177,6 +177,13 @@ _ENEMY_OR_POSITIONAL = {
     "p_leverage_procs": "how many distinct enemies the mark moved between",
     "jinx_get_excited_stacks:Jinx": "how many takedowns the fight scored, "
     "which is a kill and not a hit",
+    "r_stacks:Kassadin": "how many Riftwalks preceded this one, which the "
+    "engine will not derive: the cast carries an escalating mana cost, and "
+    "an ultimate with one is never recast for a module that has not "
+    "certified it",
+    "p_style_stacks:Samira": "which abilities the combo used in which order; "
+    "the stacks grant movement speed, which is not modelled, and gate the "
+    "ultimate, which is a player's call",
     "passive_procs:Akali": "whether the champion walked back through her ring",
     "e_shots:Akshan": "how long the hook held while he swung around the anchor",
     "soldier_autos:Azir": "whether the attacks were taken through a soldier",
