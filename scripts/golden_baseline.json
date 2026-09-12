@@ -9610,9 +9610,9 @@
         "Q": {
           "area_damage": true,
           "cc_reviewed": true,
-          "cooldown": 1.75,
+          "cooldown": 4.0,
           "damage_type": "physical",
-          "detail": "0 Rampage stack(s); damage multiplier 1.000.",
+          "detail": "Each Rampage stack adds 3.144% damage and takes the cooldown from 4s to 1.75s, up to 3 held for 8s; the fight walks the casts that stack them.",
           "name": "Rampage",
           "parts": [
             "DamagePart(physical, amount=184.32, count=1, hp_scaled=no, crit_effectiveness=0.0, time_offset=0.1, cc_kind='none')"
@@ -9620,6 +9620,26 @@
           "rank": 5,
           "resource_cost": 20.0,
           "resource_type": "MANA",
+          "stack_scaled_cooldown": {
+            "by_stacks": [
+              4.0,
+              3.25,
+              2.5,
+              1.75
+            ],
+            "stack_seconds": 8.0
+          },
+          "stack_window": {
+            "armed_at_start": false,
+            "arming_slots": [
+              "Q"
+            ],
+            "hits_required": 3,
+            "max_stacks": 3,
+            "requested": false,
+            "stack_seconds": 8.0,
+            "stacks_from_ability_hits": true
+          },
           "total_raw": 184.32
         },
         "R": {
@@ -53661,18 +53681,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60705,
-      "numeric_leaves": 46477,
+      "leaves": 60717,
+      "numeric_leaves": 46485,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "21152d49d03cb088d522d13724cfca9f5d280b33",
+    "git_head": "e58a738b06c837d1b7d85502fd3ae6da831958fd",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "0407f5c8cbc2ee3f0e4ad45b3c13120a47da6a3b"
+    "src_tree_sha": "62facefeed70c1ac4654e0e4fdf6a7ae0dc26c20"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -61835,46 +61855,46 @@
           "magic_build": {
             "breakdown_totals": {
               "E": 111.73,
-              "Q": 491.52,
+              "Q": 245.76,
               "R": 553.6,
               "W": 513.6,
               "auto_attacks": 205.6,
               "proc_Luden's Echo": 155.36,
               "shadowflame_Shadowflame": 61.63
             },
-            "total_damage": 2093.05
+            "total_damage": 1847.29
           },
           "no_items": {
             "breakdown_totals": {
               "E": 111.73,
-              "Q": 368.64,
+              "Q": 245.76,
               "R": 178.57,
               "W": 142.86,
               "auto_attacks": 205.6
             },
-            "total_damage": 1007.4
+            "total_damage": 884.52
           },
           "physical_build": {
             "breakdown_totals": {
               "E": 435.96,
-              "Q": 653.6,
+              "Q": 435.73,
               "R": 178.57,
               "W": 142.86,
               "auto_attacks": 1148.89,
               "on_hit_Kraken Slayer": 284.27
             },
-            "total_damage": 2844.15
+            "total_damage": 2626.29
           },
           "spellblade_build": {
             "breakdown_totals": {
               "E": 322.8,
-              "Q": 783.84,
+              "Q": 587.88,
               "R": 178.57,
               "W": 142.86,
               "auto_attacks": 991.98,
               "spellblade_Trinity Force": 261.33
             },
-            "total_damage": 2681.38
+            "total_damage": 2485.42
           }
         }
       },
@@ -61926,46 +61946,46 @@
           "magic_build": {
             "breakdown_totals": {
               "E": 212.4,
-              "Q": 491.52,
+              "Q": 245.76,
               "R": 633.6,
               "W": 593.6,
               "auto_attacks": 267.6,
               "proc_Luden's Echo": 155.36,
               "shadowflame_Shadowflame": 94.98
             },
-            "total_damage": 2449.06
+            "total_damage": 2203.3
           },
           "no_items": {
             "breakdown_totals": {
               "E": 212.4,
-              "Q": 368.64,
+              "Q": 245.76,
               "R": 250.0,
               "W": 214.29,
               "auto_attacks": 267.6
             },
-            "total_damage": 1312.93
+            "total_damage": 1190.05
           },
           "physical_build": {
             "breakdown_totals": {
               "E": 550.06,
-              "Q": 653.6,
+              "Q": 435.73,
               "R": 250.0,
               "W": 214.29,
               "auto_attacks": 1606.62,
               "on_hit_Kraken Slayer": 354.47
             },
-            "total_damage": 3629.04
+            "total_damage": 3411.17
           },
           "spellblade_build": {
             "breakdown_totals": {
               "E": 430.18,
-              "Q": 783.84,
+              "Q": 587.88,
               "R": 250.0,
               "W": 214.29,
               "auto_attacks": 1128.9,
               "spellblade_Trinity Force": 344.0
             },
-            "total_damage": 3151.21
+            "total_damage": 2955.25
           }
         }
       }
