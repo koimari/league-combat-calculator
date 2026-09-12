@@ -17,10 +17,19 @@ class DecayingStackRamp:
     per_stack: float
     max_stacks: int
     stack_duration: float
+    first_stack: float | None = None
 
     def bonus_percent(self, live_stacks: int) -> float:
-        """The bonus attack speed *live_stacks* stacks are worth, as a percent."""
-        return 100.0 * self.per_stack * min(max(0, int(live_stacks)), self.max_stacks)
+        """The bonus attack speed *live_stacks* stacks are worth, as a percent.
+
+        *first_stack* prices the first stack apart where a source does (Jinx's
+        Rev'd up); unset, every stack is worth *per_stack*.
+        """
+        live = min(max(0, int(live_stacks)), self.max_stacks)
+        if live <= 0:
+            return 0.0
+        first = self.per_stack if self.first_stack is None else self.first_stack
+        return 100.0 * (first + (live - 1) * self.per_stack)
 
 
 @dataclass(frozen=True, slots=True)

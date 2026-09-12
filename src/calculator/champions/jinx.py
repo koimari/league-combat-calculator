@@ -6,6 +6,7 @@ to 110% AD while Pow-Pow's Rev'd Up changes attack cadence.  The W/E/R packet
 damage is sourced from the same Wiki snapshot as the generated roster.
 """
 
+import re
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
@@ -31,6 +32,28 @@ _JINX_PASSIVE_AS_PERCENT = data_value(
     spell_object("Jinx", "JinxPassiveMarker"), "ASBuff"
 )
 
+_REV_UP_STACK_RE = re.compile(
+    r"generate a stack of Rev'd up for (?P<seconds>\d+(?:\.\d+)?) seconds"
+    r"[^.]*?stacking up to (?P<stacks>\d+) times"
+)
+
+
+def _rev_up_stack_terms(ability: dict[str, Any]) -> tuple[float, int]:
+    """Rev'd up's cached stack life and cap."""
+    effects = ability.get("effects")
+    for effect in effects if effects else ():
+        description = effect.get("description")
+        if description is None:
+            continue
+        match = _REV_UP_STACK_RE.search(str(description))
+        if match is not None:
+            return float(match.group("seconds")), int(match.group("stacks"))
+    raise ValueError(
+        "Jinx Q: the cached Pow-Pow branch no longer states Rev'd up's stack "
+        "life and cap ('generate a stack of Rev'd up for N seconds ... "
+        "stacking up to N times')"
+    )
+
 
 @ranked_slot
 def _switcheroo(
@@ -52,18 +75,39 @@ def _switcheroo(
         }
         entry["detail"] = "Fishbones: 110% AD basic attacks"
     else:
-        stacks = int(ctx.option("jinx_rev_up_stacks"))
-        stacks = min(max(stacks, 0), 3)
+        seconds, max_stacks = _rev_up_stack_terms(ability)
         first = extract_value(ability, "Bonus Attack Speed", rank)
         subsequent = extract_value(ability, "Attack Speed per Subsequent Stack", rank)
-        bonus_as = 0.0 if stacks <= 0 else first + max(0, stacks - 1) * subsequent
-        ctx.stats["attack_speed"] = (
-            ctx.stat("attack_speed") + ctx.stat("attack_speed_ratio") * bonus_as / 100.0
-        )
-        entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
-        entry["detail"] = (
-            f"Pow-Pow: {stacks} Rev'd Up stack(s), {bonus_as:g}% bonus attack speed"
-        )
+        requested = ctx.options.get("jinx_rev_up_stacks")
+        if requested is None:
+            # One stack per attack with Pow-Pow, each living its cached
+            # seconds and the ones past the first worth half: the record an
+            # item ramp already is, walked by the same walker
+            # (interpreters/rearmed_swings).
+            entry["swing_ramp"] = {
+                "per_stack": subsequent / 100.0,
+                "first_stack": first / 100.0,
+                "max_stacks": max_stacks,
+                "stack_duration": seconds,
+            }
+            entry["detail"] = (
+                f"Pow-Pow: {first:g}% attack speed on the first Rev'd up stack "
+                f"and {subsequent:g}% on each of the {max_stacks - 1} after it, "
+                f"held {seconds:g}s each; the fight walks the swings that stack "
+                "them"
+            )
+        else:
+            stacks = min(max(int(requested), 0), max_stacks)
+            bonus_as = 0.0 if stacks <= 0 else first + (stacks - 1) * subsequent
+            ctx.stats["attack_speed"] = (
+                ctx.stat("attack_speed")
+                + ctx.stat("attack_speed_ratio") * bonus_as / 100.0
+            )
+            entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+            entry["detail"] = (
+                f"Pow-Pow: {stacks} Rev'd Up stack(s), {bonus_as:g}% bonus "
+                "attack speed"
+            )
     return entry
 
 
@@ -141,7 +185,14 @@ OPTIONS = [
         ],
     },
     int_option(
-        "jinx_rev_up_stacks", 3, minimum=0, maximum=3, label="Pow-Pow Rev'd Up stacks"
+        "jinx_rev_up_stacks",
+        3,
+        minimum=0,
+        maximum=3,
+        label=(
+            "Pow-Pow Rev'd Up stacks; unset walks the ramp, one stack per "
+            "attack, so the swings speed up as they land"
+        ),
     ),
     int_option(
         "jinx_get_excited_stacks",

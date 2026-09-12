@@ -69,6 +69,9 @@ SWING_KEYS = frozenset(
         "basic_attack_true_ratio",
         "critical_strike_magic_ratio",
         "empowers_next_auto",
+        # A kit ramp re-rates every swing the walker lands, which is the same
+        # per-swing pricing a flat bonus_attack_speed stat_buff gets below.
+        "swing_ramp",
     }
 )
 

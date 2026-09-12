@@ -40,10 +40,15 @@ def _kit_swing_ramp(state: FightState) -> rearmed_swings.DecayingStackRamp | Non
                 f"{owner}: swing_ramp declares no {field!r}; every number of "
                 "the ramp is sourced by the module"
             )
+    # ``first_stack`` is optional because most ramps price every stack alike;
+    # a source that prices the first one apart (Jinx) states it, and absent
+    # means absent rather than a stand-in number.
+    first_stack = payload.get("first_stack")
     return rearmed_swings.DecayingStackRamp(
         per_stack=float(payload["per_stack"]),
         max_stacks=int(payload["max_stacks"]),
         stack_duration=float(payload["stack_duration"]),
+        first_stack=None if first_stack is None else float(first_stack),
     )
 
 

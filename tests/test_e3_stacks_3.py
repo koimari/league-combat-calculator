@@ -636,7 +636,7 @@ class TestJinx:
     P: 25% total attack speed per takedown stack, up to 5."""
 
     def test_rev_up_three_stacks(self) -> None:
-        _, abilities = _parse("Jinx")
+        _, abilities = _parse("Jinx", options={"jinx_rev_up_stacks": 3})
         q = abilities["Q"]
         first = _value("Jinx", "Q", "Bonus Attack Speed", 5)
         subsequent = _value("Jinx", "Q", "Attack Speed per Subsequent Stack", 5)
