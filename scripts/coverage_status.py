@@ -284,6 +284,9 @@ def _options() -> dict:
             if not any(word in key for word in _COUNT_WORDS):
                 continue
             lowered = label.lower()
+            default = option.get("default")
+            maximum = option.get("max")
+            minimum = option.get("min")
             if key in _ENEMY_OR_POSITIONAL or f"{key}:{name}" in _ENEMY_OR_POSITIONAL:
                 buckets["pre_fight"].append((name, key, label))
                 continue
@@ -313,9 +316,6 @@ def _options() -> dict:
             if blocked is not None:
                 buckets["blocked"].append((name, key, blocked))
                 continue
-            default = option.get("default")
-            maximum = option.get("max")
-            minimum = option.get("min")
             whole = (
                 isinstance(default, (int, float))
                 and default == maximum

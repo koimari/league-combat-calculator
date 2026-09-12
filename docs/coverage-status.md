@@ -99,7 +99,7 @@ way each errs is the half a reader needs:
 
 | Champion | Option | Asks for |
 |---|---|---|
-| Hecarim | `q_stacks` | Rampage stacks [full] |
+| Hecarim | `q_stacks` | Rampage stacks [floor] |
 
 Counts the fight could walk if one missing number were sourced:
 
