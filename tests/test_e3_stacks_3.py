@@ -448,8 +448,15 @@ class TestXayah:
     plants a Feather; E detonates per-Feather damage x feather count."""
 
     def test_clean_cuts_state_slot(self) -> None:
+        """The row prices no single-target damage, and no longer claims a
+        stack count: the casts bank the stacks and the swings spend them,
+        which the fight counts (champions/armed_procs.py)."""
         _, abilities = _parse("Xayah")
         assert abilities["passive"]["total_raw"] == 0.0
+        assert "casts bank the stacks" in abilities["passive"]["detail"]
+
+    def test_clean_cuts_stacks_option_still_states_the_count(self) -> None:
+        _, abilities = _parse("Xayah", options={"clean_cuts_stacks": 5})
         assert "5/5 stack(s)" in abilities["passive"]["detail"]
 
     def test_e_detonates_per_feather_damage(self) -> None:

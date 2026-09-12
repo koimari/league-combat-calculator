@@ -69,6 +69,36 @@ _MAX_FEATHERS = 12  # + 5 R feathers (sourced maximum)
 _CLEAN_CUTS_LEVEL_BRACKETS = ((13, 3), (7, 2), (1, 1))  # 1/7/13 -> index
 
 
+_CLEAN_CUTS_RE = re.compile(
+    r"ability casts generate (?P<per>\d+) stacks of Clean Cuts, lasting for "
+    r"(?P<seconds>\d+(?:\.\d+)?) seconds[^.]*?stacking up to (?P<max>\d+) times"
+)
+
+
+def _clean_cuts_rule(ability: dict[str, Any]) -> dict[str, Any]:
+    """The cached rule for banking and spending a Clean Cuts stack."""
+    effects = ability.get("effects")
+    for effect in effects if effects else ():
+        description = effect.get("description")
+        if description is None:
+            continue
+        match = _CLEAN_CUTS_RE.search(str(description))
+        if match is not None:
+            return {
+                "arming_slots": ("Q", "W", "E", "R"),
+                "max_stacks": int(match.group("max")),
+                "per_cast": int(match.group("per")),
+                "stack_seconds": float(match.group("seconds")),
+                "armed_at_start": False,
+                "requested": False,
+            }
+    raise ValueError(
+        "Xayah P: the cached innate no longer states Clean Cuts' banking "
+        "rule ('ability casts generate N stacks ... lasting for N seconds "
+        "... stacking up to N times')"
+    )
+
+
 def _secondary_feather_ratio(ability: Mapping[str, Any], level: int) -> float:
     """Level-bracketed 35/45/55% AD secondary-feather damage (P prose)."""
     description = " ".join(
@@ -129,13 +159,25 @@ def _clean_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    stacks = int(ctx.options.get("clean_cuts_stacks", _CLEAN_CUTS_MAX_STACKS))
-    stacks = min(max(stacks, 0), _CLEAN_CUTS_MAX_STACKS)
+    requested = ctx.options.get("clean_cuts_stacks")
+    stacks = min(
+        max(int(requested if requested is not None else _CLEAN_CUTS_MAX_STACKS), 0),
+        _CLEAN_CUTS_MAX_STACKS,
+    )
     detail = (
-        f"{stacks}/{_CLEAN_CUTS_MAX_STACKS} stack(s); each empowered "
-        "auto plants one Feather (primary target takes the triggering "
-        "attack's damage — no single-target delta); E detonates "
-        "planted Feathers"
+        (
+            "Each empowered auto spends a stack and plants one Feather "
+            "(primary target takes the triggering attack's damage — no "
+            "single-target delta); the casts bank the stacks and the "
+            "swings spend them; E detonates planted Feathers"
+        )
+        if requested is None
+        else (
+            f"{stacks}/{_CLEAN_CUTS_MAX_STACKS} stack(s); each empowered "
+            "auto plants one Feather (primary target takes the triggering "
+            "attack's damage — no single-target delta); E detonates "
+            "planted Feathers"
+        )
     )
     secondary = min(max(int(ctx.option("clean_cuts_secondary_targets")), 0), 5)
     entry: dict[str, Any] = {
@@ -164,6 +206,13 @@ def _clean_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
             "damage_per_hit": per_auto,
             "damage_type": "physical",
         }
+        if requested is None:
+            # Only a swing that SPENDS a stack plants a feather, so the
+            # feathers a fight plants are the stacks its casts banked and
+            # its swings spent (champions/armed_procs.py).
+            entry["armed_procs"] = _clean_cuts_rule(ability)
+        else:
+            entry["on_hit"]["max_procs"] = stacks
         entry["detail"] = (
             f"{detail}  {secondary} other enemy(enemies) per feather at "
             f"{ratio * 100:g}% AD each (crit expectation "
@@ -320,7 +369,10 @@ OPTIONS = [
         _CLEAN_CUTS_MAX_STACKS,
         minimum=0,
         maximum=_CLEAN_CUTS_MAX_STACKS,
-        label="Clean Cuts stacks",
+        label=(
+            "Clean Cuts stacks; unset derives them from the casts that "
+            "bank them and the swings that spend them"
+        ),
     ),
     int_option(
         "bladecaller_feathers",
