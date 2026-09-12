@@ -65,20 +65,21 @@ A further 15 default to the whole sourced thing —
 a channel's every tick, a clip's every shot — so the option only removes
 from a complete reading, and 18 derive their
 default outright and take an override.
-22 are facts no engine holds: state the champion
+33 are facts no engine holds: state the champion
 arrived with (stacks farmed over a game, souls collected) and facts about
 the ENEMY or about where the champion stood (how many attacks an evasion
 dodged, how many swings landed from behind). Asking for those is correct.
-32 carry a label that says neither and need a reading.
+0 carry a label that says neither and need a reading.
 
 | Bucket | Options | Who can answer |
 |---|---|---|
 | In-fight counts, still asked | 0 | the engine, once each is derived |
 | In-fight counts, blocked on data | 2 | nobody, until the missing number is sourced |
+| In-fight STACK LEVELS | 21 | the engine, once a stack timeline reaches the cast |
 | In-fight counts, full by default | 15 | already complete; the option removes |
 | In-fight counts, derived default | 18 | the engine; the option is an override |
-| Pre-fight state | 22 | the player, permanently |
-| Unreviewed | 32 | undecided; read the label |
+| Pre-fight state | 33 | the player, permanently |
+| Unreviewed | 0 | undecided; read the label |
 | Not a count at all | 265 | the player: a variant, a target, a cone's reach |
 
 That first row is at zero. Every count of something inside the
@@ -86,25 +87,16 @@ modelled fight is answered by the fight, and what remains below it
 is either blocked on a number no source here states, or a fact the
 engine has no standing to invent.
 
-Counts the fight could walk if one missing number were sourced:
-
-| Champion | Option | Missing |
-|---|---|---|
-| Heimerdinger | `q_turret_attacks` | the turret's attack speed, which is in no cached field and in no spell object this repo tracks |
-| Kindred | `w_attacks` | Wolf's base attack rate; the cache states only that it scales with 25% of Kindred's bonus attack speed |
-
-Counting options whose label states neither reading:
+Stack LEVELS the fight builds and a cast reads. Deriving these means
+walking a stack timeline into the cast pricing, not counting procs,
+so they are the next campaign and are reported apart from the row
+above rather than folded into it:
 
 | Champion | Option | Asks for |
 |---|---|---|
 | Ashe | `q_focus_stacks` | Focus stacks (4 = Ranger's Focus ready) |
-| Aurelion Sol | `stardust_stacks` | Stardust stacks |
-| Braum | `e_blocked_skillshots` | Skillshot slots to block; an empty list blocks all marked skillshots |
-| Cho'Gath | `feast_stacks` | Feast stacks |
-| Draven | `adoration_stacks` | Adoration stacks |
 | Ezreal | `passive_stacks` | Passive stacks (Rising Spell Force) |
 | Graves | `e_true_grit_stacks` | True Grit stacks |
-| Gwen | `w_blocked_skillshots` | Skillshot slots to destroy; an empty list destroys all marked skillshots |
 | Hecarim | `q_stacks` | Rampage stacks |
 | Irelia | `p_stacks` | Ionian Fervor stacks |
 | Jax | `p_stacks` | Relentless Assault stacks |
@@ -115,20 +107,21 @@ Counting options whose label states neither reading:
 | Kindred | `w_hunters_vigor_stacks` | Hunter's Vigor stacks (100 = the next basic attack heals) |
 | Kindred | `e_stacks` | Mounting Dread stacks (3 = pounce) |
 | Mel | `r_overwhelm_stacks` | Overwhelm stacks on the target when Golden Eclipse detonates |
-| Pantheon | `e_blocked_skillshots` | Front-facing skillshot slots to block; an empty list blocks all marked skillshots |
 | Samira | `p_style_stacks` | Style stacks (6 = S rank, R ready) |
-| Samira | `w_blocked_skillshots` | Skillshot slots to destroy; an empty list destroys all marked skillshots |
-| Senna | `senna_mist_stacks` | Mist (soul) stacks |
-| Shyvana | `scalemail_stacks` | Scalemail stacks |
-| Smolder | `p_stacks` | Dragon Practice stacks (225+ = tier-3 true-damage burn on Q) |
 | Tristana | `e_stacks` | Explosive Charge stacks when it detonates (4 = max 100% increase, instant detonation) |
 | Varus | `blight_stacks` | Blight stacks on the target when Piercing Arrow lands (3 = fully stacked; the Q detonation consumes them) |
 | Volibear | `relentless_storm_stacks` | The Relentless Storm stacks |
 | Wukong | `stone_skin_stacks` | Strength of Stone stacks |
 | Xayah | `clean_cuts_stacks` | Clean Cuts stacks |
 | Yasuo | `e_stacks` | Ride the Wind stacks |
-| Yasuo | `w_blocked_skillshots` | Skillshot slots to block; an empty list blocks all marked skillshots |
 | Zaahen | `p_determination_stacks` | Determination stacks (12 = filled, which doubles the bonus) |
+
+Counts the fight could walk if one missing number were sourced:
+
+| Champion | Option | Missing |
+|---|---|---|
+| Heimerdinger | `q_turret_attacks` | the turret's attack speed, which is in no cached field and in no spell object this repo tracks |
+| Kindred | `w_attacks` | Wolf's base attack rate; the cache states only that it scales with 25% of Kindred's bonus attack speed |
 
 ## Items and runes
 

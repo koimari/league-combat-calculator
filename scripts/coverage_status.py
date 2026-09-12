@@ -120,6 +120,55 @@ _CLOCKLESS_ONLY = {
     ),
 }
 
+# A stack level the champion ACCUMULATES outside a fight: farm, kills,
+# takedowns, souls collected over a game. No fight walk reaches these, so
+# asking is correct and permanent.
+_CARRIED_STACKS = {
+    "stardust_stacks",
+    "feast_stacks",
+    "adoration_stacks",
+    "senna_mist_stacks",
+    "scalemail_stacks",
+    "p_stacks:Smolder",
+    "lavender_stacks",
+    "q_stacks:Nasus",
+}
+
+# Which enemy skillshots a blocking ability caught. That is what the ENEMY
+# threw and where they aimed it, so it is the same class as an evasion's
+# dodge count.
+_BLOCK_LISTS = (
+    "e_blocked_skillshots",
+    "w_blocked_skillshots",
+)
+
+# A stack level the fight itself builds, from the attacks and ability hits
+# it already schedules, and reads at the moment of a cast. Deriving these
+# means walking a stack timeline into the cast pricing rather than counting
+# procs, which is the next campaign and NOT the in-fight proc frontier this
+# page's first row measures; they are reported apart so neither number
+# flatters the other.
+_IN_FIGHT_STACK_LEVELS = {
+    "q_focus_stacks",
+    "passive_stacks",
+    "e_true_grit_stacks",
+    "q_stacks",
+    "p_stacks",
+    "jinx_rev_up_stacks",
+    "jinx_get_excited_stacks",
+    "rend_stacks",
+    "r_stacks",
+    "w_hunters_vigor_stacks",
+    "e_stacks",
+    "r_overwhelm_stacks",
+    "p_style_stacks",
+    "blight_stacks",
+    "relentless_storm_stacks",
+    "stone_skin_stacks",
+    "clean_cuts_stacks",
+    "p_determination_stacks",
+}
+
 _ENEMY_OR_POSITIONAL = {
     "e_dodged_attacks": "how many attacks the enemy threw into the evasion",
     "w_thorns_autos": "how many basic attacks the enemy spent on the curl",
@@ -212,6 +261,7 @@ def _options() -> dict:
     buckets: dict[str, list[tuple[str, str, str]]] = {
         "in_fight": [],
         "blocked": [],
+        "stack_levels": [],
         "full_by_default": [],
         "derived_default": [],
         "pre_fight": [],
@@ -230,6 +280,15 @@ def _options() -> dict:
                 continue
             if f"{key}:{name}" in _CLOCKLESS_ONLY:
                 buckets["derived_default"].append((name, key, label))
+                continue
+            if key in _CARRIED_STACKS or f"{key}:{name}" in _CARRIED_STACKS:
+                buckets["pre_fight"].append((name, key, label))
+                continue
+            if key in _BLOCK_LISTS:
+                buckets["pre_fight"].append((name, key, label))
+                continue
+            if key in _IN_FIGHT_STACK_LEVELS:
+                buckets["stack_levels"].append((name, key, label))
                 continue
             blocked = _BLOCKED_ON_DATA.get(f"{key}:{name}")
             if blocked is not None:
@@ -427,11 +486,12 @@ def render(data: dict) -> str:
         "|---|---|---|",
         f"| In-fight counts, still asked | {len(axes['in_fight'])} | the engine, once each is derived |",
         f"| In-fight counts, blocked on data | {len(axes['blocked'])} | nobody, until the missing number is sourced |",
+        f"| In-fight STACK LEVELS | {len(axes['stack_levels'])} | the engine, once a stack timeline reaches the cast |",
         f"| In-fight counts, full by default | {len(axes['full_by_default'])} | already complete; the option removes |",
         f"| In-fight counts, derived default | {len(axes['derived_default'])} | the engine; the option is an override |",
         f"| Pre-fight state | {len(axes['pre_fight'])} | the player, permanently |",
         f"| Unreviewed | {len(axes['to_review'])} | undecided; read the label |",
-        f"| Not a count at all | {axes['total'] - sum(len(axes[bucket]) for bucket in ('in_fight', 'blocked', 'full_by_default', 'derived_default', 'pre_fight', 'to_review'))} | the player: a variant, a target, a cone's reach |",
+        f"| Not a count at all | {axes['total'] - sum(len(axes[bucket]) for bucket in ('in_fight', 'blocked', 'stack_levels', 'full_by_default', 'derived_default', 'pre_fight', 'to_review'))} | the player: a variant, a target, a cone's reach |",
         "",
     ]
     if axes["in_fight"]:
@@ -451,6 +511,20 @@ def render(data: dict) -> str:
             "is either blocked on a number no source here states, or a fact the",
             "engine has no standing to invent.",
         ]
+
+    if axes["stack_levels"]:
+        lines += [
+            "",
+            "Stack LEVELS the fight builds and a cast reads. Deriving these means",
+            "walking a stack timeline into the cast pricing, not counting procs,",
+            "so they are the next campaign and are reported apart from the row",
+            "above rather than folded into it:",
+            "",
+            "| Champion | Option | Asks for |",
+            "|---|---|---|",
+        ]
+        for name, key, label in axes["stack_levels"]:
+            lines.append(f"| {name} | `{key}` | {label} |")
 
     if axes["blocked"]:
         lines += [
