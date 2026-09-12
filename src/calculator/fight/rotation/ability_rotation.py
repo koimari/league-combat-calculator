@@ -3,7 +3,7 @@
 from dataclasses import replace
 from typing import Any
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from ...ability_atoms import ability_field
 from ...champions.armed_procs import declared_rule, stack_levels_for_casts
@@ -58,7 +58,9 @@ def _with_stack_levels(
         rule[1],
         cast_times,
         _auto_attack_timestamps(state),
-        _stacking_ability_hit_times(state, rule[1].arming_slots),
+        _stacking_ability_hit_times(
+            state, rule[1].arming_slots, state.ability_cast_times
+        ),
     )
     base = pricing if pricing is not None else (CastPricing(),) * len(cast_times)
     return tuple(
@@ -67,7 +69,9 @@ def _with_stack_levels(
 
 
 def _stacking_ability_hit_times(
-    state: FightState, slots: frozenset[str]
+    state: FightState,
+    slots: frozenset[str],
+    cast_times: Sequence[tuple[str, float]] = (),
 ) -> tuple[float, ...]:
     """When this kit's ability hits landed, for a window that counts them.
 
@@ -83,12 +87,23 @@ def _stacking_ability_hit_times(
             continue
         if slots and key not in slots:
             continue
-        events = row.get("damage_events")
-        if not isinstance(events, list):
+        damage = row.get("total_damage")
+        if damage is None or float(damage) <= 0.0:
             continue
-        for event in events:
-            if isinstance(event, Mapping) and event.get("phase") == "ability":
-                times.append(float(event["time"]))
+        events = row.get("damage_events")
+        authored = [
+            float(event["time"])
+            for event in (events if isinstance(events, list) else ())
+            if isinstance(event, Mapping) and event.get("phase") == "ability"
+        ]
+        if authored:
+            times += authored
+            continue
+        # A row that prices damage and authors no per-hit event still HIT:
+        # the single-target model lands every accepted cast, so the cast
+        # times are what the stack counter reads. Without this a kit whose
+        # rows are coarse would stack nothing at all from its own abilities.
+        times += [time for cast_key, time in cast_times if cast_key == key]
     return tuple(sorted(times))
 
 

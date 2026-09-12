@@ -470,9 +470,13 @@ def test_varus_living_vengeance_is_off_until_a_takedown_arms_it():
     # 33% of the resulting TOTAL bonus attack speed, as both AD and AP.
     assert armed["bonus_attack_damage"] == pytest.approx(0.33 * 30.0)
     assert armed["ability_power"] == pytest.approx(0.33 * 30.0)
-    assert _fight("Varus")["total_damage"] == pytest.approx(1092.5, abs=0.05)
+    # 150 lower than the old declared reading: Blight is applied by his basic
+    # attacks and his Q opens the rotation, so nothing has stacked when the
+    # detonation lands (champions/armed_procs.py counts the hits BEFORE the
+    # consuming cast, never after it).
+    assert _fight("Varus")["total_damage"] == pytest.approx(942.5, abs=0.05)
     assert _fight("Varus", p_champion_takedown=True)["total_damage"] == pytest.approx(
-        1341.4, abs=0.05
+        1190.83, abs=0.05
     )
 
 
