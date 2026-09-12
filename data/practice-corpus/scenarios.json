@@ -929,6 +929,9 @@
     "champion": "Ashe",
     "level": 18,
     "role": "mid",
+    "champion_options": {
+     "q_focus_stacks": 4
+    },
     "items": [
      "Bloodthirster"
     ],
@@ -956,7 +959,7 @@
     "heal_per_auto": 20.1,
     "heal_count": 8,
     "healing_total": 160.8,
-    "formula": "Bloodthirster 15% lifesteal: 8 autos of 134.1 post-mitigation damage -> 8 heals of 20.1 (15% of 134.1)"
+    "formula": "Bloodthirster 15% lifesteal: 8 autos of 134.1 post-mitigation damage -> 8 heals of 20.1 (15% of 134.1). The 134.1 is a Ranger's Focus flurry auto, so q_focus_stacks now states the Focus this measurement was taken with: an unstated level derives, and a derived Ashe banks her fourth stack partway into this six-second fight and heals 15.5 per auto until she does."
    },
    "practice_tool_steps": "Practice Tool: Ashe buys Bloodthirster (15% lifesteal). Auto-attack a practice dummy 8 times; the combat log shows 8 Life steal heals of 20.1 each (15% of the 134.1 post-mitigation auto damage)."
   }

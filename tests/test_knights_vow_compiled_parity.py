@@ -347,6 +347,10 @@ def _coupled_fight(
             level=18,
             role="bottom",
             items=ally_items,
+            # Focus stated full: this roster is about Knight's Vow, and an
+            # unstated level would put the ally's own Ranger's Focus on the
+            # fight's attack schedule (champions/cast_arming.py).
+            champion_options={"q_focus_stacks": 4},
             item_options=(
                 {
                     ITEM_NAME: {
@@ -1600,6 +1604,7 @@ def _declared_source_fight(
             level=18,
             role="bottom",
             items=ally_items,
+            champion_options={"q_focus_stacks": 4},
             item_options=(
                 {ITEM_NAME: {"worthy_target_index": 0}}
                 if ITEM_NAME in ally_items

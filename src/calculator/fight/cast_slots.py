@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from ..ability_atoms import ability_field, ability_payload
+from ..champions.cast_arming import banking_swings, declared_rules, ready_at
 from .results import RotationResult
 from .state import FightState
 
@@ -57,11 +58,34 @@ def slot_cast_start(state: FightState, key: str) -> float:
     cast_start = 0.0
     for slot in state.cast_order:
         if slot in (key, base):
-            return cast_start
+            return max(cast_start, _armed_at(state, key, base))
         cast_start += float(
             ability_field(ability_payload(state.ability_damages, slot), "cast_time")
         )
     return 0.0
+
+
+def _armed_at(state: FightState, key: str, base: str) -> float:
+    """When a slot gated on a counter the fight banks may first cast.
+
+    Zero for every slot that declares no gate, which is all but Ashe's
+    Ranger's Focus. A gate the fight never fills answers at the fight's own
+    end, so the window the caller opens holds no swing: an unreachable
+    instant is not a number the rest of the engine can carry.
+    """
+    rules = declared_rules(state.ability_damages)
+    rule = rules.get(key) or rules.get(base)
+    if rule is None:
+        return 0.0
+    armed = ready_at(
+        rule,
+        banking_swings(
+            state.attack_speed,
+            state.auto_attack_uptime,
+            state.fight_duration_seconds,
+        ),
+    )
+    return min(armed, state.fight_duration_seconds)
 
 
 def _damaging_cast_times(state: FightState, rotation: RotationResult) -> list[float]:

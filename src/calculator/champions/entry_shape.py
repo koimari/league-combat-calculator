@@ -154,6 +154,9 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # champions/stat_ramp.py: a stack level granting a stat no swing
         # walker can carry, served as the level's time-weighted mean.
         "stat_ramp",
+        # champions/cast_arming.py: a counter the fight must fill before this
+        # slot's FIRST cast is available at all (Ashe's Ranger's Focus).
+        "cast_requires_stacks",
         # Champion-owned critical-strike conversion (Yasuo/Yone P): total
         # crit chance doubled, crit damage scaled by a factor, and excess
         # crit chance converted to bonus AD.  The fight engine resolves it
