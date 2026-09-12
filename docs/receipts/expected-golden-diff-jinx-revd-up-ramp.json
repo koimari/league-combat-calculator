@@ -1,0 +1,66 @@
+{
+ "slice": "jinx-revd-up-ramp",
+ "issue": "docs/surface-area-backlog.md SR8, the second champion on the ramp sub-shape",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures all three baselines in the same commit."
+ },
+ "what_landed": "Jinx's Pow-Pow Rev'd up rides the swing ramp instead of a declared stack level, and DecayingStackRamp takes an optional first_stack because her cache prices the first stack apart from the rest.",
+ "why": [
+  "Jinx opened every fight at three Rev'd up stacks because the level was declared. She ramps from nothing now. Measured with Rageblade held, so both readings are walked by the same exact walker: 9 swings in a five-second fight where a declared full stack claims 10, and 37 against 38 over twenty. The ramp is strictly weaker than the full level, which is the direction a ramp that starts empty must move.",
+  "Every leaf below nonetheless moves UP, and that is the OTHER path, not the ramp. None of these golden fights holds an item ramp, so before this slice they were priced through the per-phase floor, which drops the swing at each phase boundary; a kit ramp puts them on rearmed_swings, which is exact and keeps the t=0 swing. The no_items fight is the clean reading of it: auto_attacks 532 -> 608 is exactly one more swing at 76 each, with no other term moving. The ramp costs stacks and the exact walk returns one swing, and here the swing is worth more.",
+  "first_stack is optional and defaults to per_stack, so every item ramp prices what it priced before: the flat-ramp reading is pinned in tests/test_kit_swing_ramp.py::TestTheRampRecord.",
+  "All 17 pair leaves are hers. No coupled leaf moves: no coupled roster holds Jinx."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "Jax and Jinx are the only kits declaring a swing_ramp, and no coupled roster holds Jinx."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "her Q row publishes a swing_ramp of four numbers in place of a one-number stat_buff"
+  },
+  "/metadata/fingerprint/numeric_leaves": {
+   "cause": "the same"
+  }
+ },
+ "summary": {
+  "direction": "the ramp itself is down against a full stack level; the published totals are up, because a ramping row is walked exactly where a declared one was floored",
+  "counts": {
+   "golden": 15,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Jinx/abilities_level_11/Q/detail",
+   "/champion_baselines/Jinx/abilities_level_11/Q/stat_buff",
+   "/champion_baselines/Jinx/abilities_level_11/Q/swing_ramp",
+   "/registered_champion_fights/Jinx/11/sustained/physical_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Jinx/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+   "/registered_champion_fights/Jinx/11/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Jinx/18/sustained/magic_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Jinx/18/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Jinx/18/sustained/no_items/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Jinx/18/sustained/no_items/total_damage",
+   "/registered_champion_fights/Jinx/18/sustained/physical_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Jinx/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+   "/registered_champion_fights/Jinx/18/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Jinx/18/sustained/spellblade_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Jinx/18/sustained/spellblade_build/total_damage"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}

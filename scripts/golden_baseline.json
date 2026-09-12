@@ -11964,7 +11964,7 @@
           "cc_reviewed": true,
           "cooldown": 0.9,
           "damage_type": "physical",
-          "detail": "Pow-Pow: 3 Rev'd Up stack(s), 130% bonus attack speed",
+          "detail": "Pow-Pow: 65% attack speed on the first Rev'd up stack and 32.5% on each of the 2 after it, held 2.5s each; the fight walks the swings that stack them",
           "name": "Switcheroo!",
           "parts": [
             "DamagePart(physical, amount=0.0, count=1, hp_scaled=no, crit_effectiveness=0.0, cc_kind='none')"
@@ -11972,8 +11972,11 @@
           "rank": 5,
           "resource_cost": 20.0,
           "resource_type": "MANA",
-          "stat_buff": {
-            "bonus_attack_speed": 130.0
+          "swing_ramp": {
+            "first_stack": 0.65,
+            "max_stacks": 3,
+            "per_stack": 0.33,
+            "stack_duration": 2.5
           },
           "total_raw": 0.0
         },
@@ -53563,18 +53566,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60628,
-      "numeric_leaves": 46433,
+      "leaves": 60631,
+      "numeric_leaves": 46436,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "c66cae08583b414b3eeb46fe6648347c8505fb03",
+    "git_head": "b7cc7b3905dd0c50848404280285dd61252cd24d",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "d826ff95d88a96728f71f97a04e14e2ec1ba1b9c"
+    "src_tree_sha": "0c787c6b004fd283fb8f1b2a69d91f1f95949118"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -63797,10 +63800,10 @@
               "Q": 0.0,
               "R": 417.36,
               "W": 300.13,
-              "auto_attacks": 2138.4,
-              "on_hit_Kraken Slayer": 241.23
+              "auto_attacks": 2405.7,
+              "on_hit_Kraken Slayer": 395.23
             },
-            "total_damage": 3161.41
+            "total_damage": 3582.71
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -63864,10 +63867,10 @@
               "Q": 0.0,
               "R": 390.83,
               "W": 492.8,
-              "auto_attacks": 532.0,
+              "auto_attacks": 608.0,
               "proc_Luden's Echo": 155.36
             },
-            "total_damage": 2156.59
+            "total_damage": 2232.59
           },
           "no_items": {
             "breakdown_totals": {
@@ -63875,9 +63878,9 @@
               "Q": 0.0,
               "R": 390.83,
               "W": 492.8,
-              "auto_attacks": 532.0
+              "auto_attacks": 608.0
             },
-            "total_damage": 1622.77
+            "total_damage": 1698.77
           },
           "physical_build": {
             "breakdown_totals": {
@@ -63885,10 +63888,10 @@
               "Q": 0.0,
               "R": 548.58,
               "W": 782.13,
-              "auto_attacks": 2367.2,
-              "on_hit_Kraken Slayer": 301.4
+              "auto_attacks": 2663.1,
+              "on_hit_Kraken Slayer": 488.07
             },
-            "total_damage": 4206.46
+            "total_damage": 4689.02
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -63896,10 +63899,10 @@
               "Q": 0.0,
               "R": 503.8,
               "W": 700.0,
-              "auto_attacks": 1788.75,
+              "auto_attacks": 1987.5,
               "spellblade_Trinity Force": 304.0
             },
-            "total_damage": 3503.69
+            "total_damage": 3702.44
           }
         }
       }

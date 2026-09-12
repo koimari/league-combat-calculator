@@ -22,7 +22,11 @@ from src.calculator.rune_paths import precision
 # thing that moves. Jinx's window is long enough that three percent of
 # attack speed buys a whole extra auto; Ashe's rotation reads nothing but
 # her stat block, so bonus health shows up there and nowhere else.
+# Rev'd up is declared at its cap here rather than left to derive: unset it
+# rides the swing ramp, which re-rates the stream the rune is measured on
+# and would make two things move at once.
 _ATTACK_SPEED_PROBE = {
+    "champion_options": {"jinx_rev_up_stacks": 3},
     "champion": "Jinx",
     "level": 12,
     "items": ["Doran's Blade"],
