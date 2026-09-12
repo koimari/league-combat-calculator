@@ -288,7 +288,12 @@ def _options() -> dict:
                 buckets["pre_fight"].append((name, key, label))
                 continue
             if key in _IN_FIGHT_STACK_LEVELS:
-                buckets["stack_levels"].append((name, key, label))
+                # WHICH WAY it errs is the useful half: a level defaulted at
+                # the top of its range prices the fully stacked reading and
+                # over-counts a short fight; one at the floor prices the
+                # unstacked reading and under-counts a long one.
+                edge = "full" if default == maximum else "floor"
+                buckets["stack_levels"].append((name, key, f"{label} [{edge}]"))
                 continue
             blocked = _BLOCKED_ON_DATA.get(f"{key}:{name}")
             if blocked is not None:
@@ -517,8 +522,13 @@ def render(data: dict) -> str:
             "",
             "Stack LEVELS the fight builds and a cast reads. Deriving these means",
             "walking a stack timeline into the cast pricing, not counting procs,",
-            "so they are the next campaign and are reported apart from the row",
-            "above rather than folded into it:",
+            "so they are the next campaign (`docs/surface-area-backlog.md` SR8)",
+            "and are reported apart from the row above rather than folded into it.",
+            "",
+            "`[full]` defaults to the top of its range, so it prices the fully",
+            "stacked reading and over-counts a fight too short to reach it;",
+            "`[floor]` defaults to the bottom and under-counts a long one. Which",
+            "way each errs is the half a reader needs:",
             "",
             "| Champion | Option | Asks for |",
             "|---|---|---|",

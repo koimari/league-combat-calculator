@@ -89,32 +89,37 @@ engine has no standing to invent.
 
 Stack LEVELS the fight builds and a cast reads. Deriving these means
 walking a stack timeline into the cast pricing, not counting procs,
-so they are the next campaign and are reported apart from the row
-above rather than folded into it:
+so they are the next campaign (`docs/surface-area-backlog.md` SR8)
+and are reported apart from the row above rather than folded into it.
+
+`[full]` defaults to the top of its range, so it prices the fully
+stacked reading and over-counts a fight too short to reach it;
+`[floor]` defaults to the bottom and under-counts a long one. Which
+way each errs is the half a reader needs:
 
 | Champion | Option | Asks for |
 |---|---|---|
-| Ashe | `q_focus_stacks` | Focus stacks (4 = Ranger's Focus ready) |
-| Ezreal | `passive_stacks` | Passive stacks (Rising Spell Force) |
-| Graves | `e_true_grit_stacks` | True Grit stacks |
-| Hecarim | `q_stacks` | Rampage stacks |
-| Irelia | `p_stacks` | Ionian Fervor stacks |
-| Jax | `p_stacks` | Relentless Assault stacks |
-| Jinx | `jinx_rev_up_stacks` | Pow-Pow Rev'd Up stacks |
-| Jinx | `jinx_get_excited_stacks` | Get Excited! champion stacks |
-| Kalista | `rend_stacks` | Rend stacks |
-| Kassadin | `r_stacks` | Riftwalk stacks |
-| Kindred | `w_hunters_vigor_stacks` | Hunter's Vigor stacks (100 = the next basic attack heals) |
-| Kindred | `e_stacks` | Mounting Dread stacks (3 = pounce) |
-| Mel | `r_overwhelm_stacks` | Overwhelm stacks on the target when Golden Eclipse detonates |
-| Samira | `p_style_stacks` | Style stacks (6 = S rank, R ready) |
-| Tristana | `e_stacks` | Explosive Charge stacks when it detonates (4 = max 100% increase, instant detonation) |
-| Varus | `blight_stacks` | Blight stacks on the target when Piercing Arrow lands (3 = fully stacked; the Q detonation consumes them) |
-| Volibear | `relentless_storm_stacks` | The Relentless Storm stacks |
-| Wukong | `stone_skin_stacks` | Strength of Stone stacks |
-| Xayah | `clean_cuts_stacks` | Clean Cuts stacks |
-| Yasuo | `e_stacks` | Ride the Wind stacks |
-| Zaahen | `p_determination_stacks` | Determination stacks (12 = filled, which doubles the bonus) |
+| Ashe | `q_focus_stacks` | Focus stacks (4 = Ranger's Focus ready) [full] |
+| Ezreal | `passive_stacks` | Passive stacks (Rising Spell Force) [full] |
+| Graves | `e_true_grit_stacks` | True Grit stacks [floor] |
+| Hecarim | `q_stacks` | Rampage stacks [full] |
+| Irelia | `p_stacks` | Ionian Fervor stacks [full] |
+| Jax | `p_stacks` | Relentless Assault stacks [floor] |
+| Jinx | `jinx_rev_up_stacks` | Pow-Pow Rev'd Up stacks [full] |
+| Jinx | `jinx_get_excited_stacks` | Get Excited! champion stacks [full] |
+| Kalista | `rend_stacks` | Rend stacks [floor] |
+| Kassadin | `r_stacks` | Riftwalk stacks [floor] |
+| Kindred | `w_hunters_vigor_stacks` | Hunter's Vigor stacks (100 = the next basic attack heals) [floor] |
+| Kindred | `e_stacks` | Mounting Dread stacks (3 = pounce) [floor] |
+| Mel | `r_overwhelm_stacks` | Overwhelm stacks on the target when Golden Eclipse detonates [floor] |
+| Samira | `p_style_stacks` | Style stacks (6 = S rank, R ready) [floor] |
+| Tristana | `e_stacks` | Explosive Charge stacks when it detonates (4 = max 100% increase, instant detonation) [floor] |
+| Varus | `blight_stacks` | Blight stacks on the target when Piercing Arrow lands (3 = fully stacked; the Q detonation consumes them) [full] |
+| Volibear | `relentless_storm_stacks` | The Relentless Storm stacks [floor] |
+| Wukong | `stone_skin_stacks` | Strength of Stone stacks [floor] |
+| Xayah | `clean_cuts_stacks` | Clean Cuts stacks [floor] |
+| Yasuo | `e_stacks` | Ride the Wind stacks [floor] |
+| Zaahen | `p_determination_stacks` | Determination stacks (12 = filled, which doubles the bonus) [floor] |
 
 Counts the fight could walk if one missing number were sourced:
 
@@ -146,7 +151,7 @@ row, and each has a gate that fails when a row appears without one.
 |---|---|---|
 | `docs/coverage-census.json` | 40 | champion and item pairs that price coarsely or refuse |
 | `docs/coverage-residue.json` | 10 | frontier entries that cannot close without inventing data |
-| `docs/surface-area-backlog.md` | 9 | everything the surface-area campaigns surfaced and did not close |
+| `docs/surface-area-backlog.md` | 10 | everything the surface-area campaigns surfaced and did not close |
 | `scripts/swing_stream_audit.py` | 9 | cached per-attack riders that do not publish a swing key |
 
 ## What 100% would mean, and what it would not
