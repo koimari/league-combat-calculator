@@ -1,0 +1,59 @@
+{
+ "slice": "ezreal-rising-spell-force-ramp",
+ "issue": "docs/surface-area-backlog.md SR8, the first ramp stacked by casts rather than by swings",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures the baselines it moved in the same commit."
+ },
+ "what_landed": "A swing ramp may declare that the CASTS stack it and the swings do not, and the walker admits a stack at each cast instant. Ezreal's Rising Spell Force is the first kit on it.",
+ "why": [
+  "Ezreal opened every fight at five Rising Spell Force stacks because the level was declared. He ramps from nothing now. With Rageblade held, so every reading is walked by the same exact walker, over twenty seconds: 23 swings at no stacks, 27 ramped, 30 at a declared full five. The ramp sits between the two ends, which is where a ramp that starts empty and fills belongs.",
+  "The ordering that blocked this is gone rather than worked around. The rotation's cast schedule reads exactly two numbers off the swing stream, both Navori's, so `CooldownRefunds` names them and setup asks for a schedule with none. Every recast then lands at or later than the fight will place it, so the count is a floor: it can withhold a stack and never invent one.",
+  "The leaves below move UP for the same reason Jinx's did, and it is not the ramp. Neither of the two moved fights holds an item ramp, so both were priced through the per-phase floor, which drops the swing at each phase boundary; a kit ramp puts them on `rearmed_swings`, which is exact and keeps the t=0 swing.",
+  "All 10 pair leaves are his. No coupled leaf moves: no coupled roster holds Ezreal. The `CooldownRefunds` refactor that precedes this slice moved nothing at all, and both golden compares were identical on it."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "Jax, Jinx and Ezreal are the only kits declaring a swing_ramp, and no coupled roster holds Ezreal."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "his passive row publishes a five-key swing_ramp in place of a one-key stat_buff"
+  },
+  "/metadata/fingerprint/numeric_leaves": {
+   "cause": "three of those five keys are numbers where the stat_buff held one"
+  }
+ },
+ "summary": {
+  "direction": "the ramp itself sits between no stacks and a full level; the published totals are up, because a ramping row is walked exactly where a declared one was floored",
+  "counts": {
+   "golden": 8,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Ezreal/abilities_level_11/passive/detail",
+   "/champion_baselines/Ezreal/abilities_level_11/passive/stat_buff",
+   "/champion_baselines/Ezreal/abilities_level_11/passive/swing_ramp",
+   "/registered_champion_fights/Ezreal/11/sustained/physical_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Ezreal/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+   "/registered_champion_fights/Ezreal/11/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Ezreal/18/sustained/spellblade_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Ezreal/18/sustained/spellblade_build/total_damage"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}
