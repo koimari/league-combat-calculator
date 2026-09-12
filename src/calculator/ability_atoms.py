@@ -283,6 +283,8 @@ ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
                 # The sourced rule for an empowered basic attack a kit
                 # arms; the fight walks it (champions/armed_procs.py).
                 "armed_procs": None,
+                # The sourced window a cast's own stack level rides.
+                "stack_window": None,
                 "spellblade_bonus_true_ratio": 0.0,
                 "spellblade_true_ratio": 0.0,
             }

@@ -59,6 +59,7 @@ instead of being averaged into the magnitude.
   ``out_of_scope`` receipt (the Olaf-R / Sivir-R rule).
 """
 
+import re
 from typing import Any
 
 from ..ability_atoms import (
@@ -91,13 +92,39 @@ _E_MAX_STACKS = int(
 _Q_DURATION_SOURCE = "Tristana.Q[0].effects[0].description"
 
 
+_CHARGE_SECONDS_RE = re.compile(
+    r"attaches to them for (?P<value>\d+(?:\.\d+)?) seconds"
+)
+
+
+def _charge_seconds(ability: dict[str, Any]) -> float:
+    """How long the charge holds, from E's own cached sentence."""
+    effects = ability.get("effects")
+    for effect in effects if effects else ():
+        description = effect.get("description")
+        if description is None:
+            continue
+        match = _CHARGE_SECONDS_RE.search(str(description))
+        if match is not None:
+            return float(match.group("value"))
+    raise ValueError(
+        "Tristana E: the cached entry no longer states how long the charge "
+        "holds ('attaches to them for N seconds')"
+    )
+
+
 @ranked_slot
 def _explosive_charge(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
     """E: the detonation — base + e_stacks x per-stack bonus."""
 
-    stacks = min(_E_MAX_STACKS, max(0, int(ctx.options.get("e_stacks", _E_MAX_STACKS))))
+    requested = ctx.options.get("e_stacks")
+    stacks = (
+        min(_E_MAX_STACKS, max(0, int(requested)))
+        if requested is not None
+        else _E_MAX_STACKS
+    )
     base = extract_named(
         ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target
     )
@@ -112,13 +139,45 @@ def _explosive_charge(
         total,
         "physical",
     )
-    entry["parts"] = (DamagePart("physical", total),)
+    if requested is None:
+        # The charge attaches on the cast and every attack or ability hit
+        # against the target while it holds adds a stack, so the level at
+        # detonation is the fight's to count (champions/armed_procs.py).
+        # The part reprices against the level the walk collected for THIS
+        # cast; the declared total above is what a clockless parse reads.
+        entry["parts"] = (
+            DamagePart(
+                "physical",
+                total,
+                stack_scaled_damage=lambda level: base + per_stack * level,
+            ),
+        )
+        entry["stack_window"] = {
+            "arming_slots": (),
+            "max_stacks": _E_MAX_STACKS,
+            "hits_required": _E_MAX_STACKS,
+            "stacks_from_swings": True,
+            "stacks_from_ability_hits": True,
+            "stack_seconds": _charge_seconds(ability),
+            "armed_at_start": False,
+            "requested": False,
+        }
+    else:
+        entry["parts"] = (DamagePart("physical", total),)
     # One detonation, one blow ("The charge then detonates, dealing
     # physical damage to nearby enemies").
     entry["event_order_certified"] = "single_hit"
     entry["detail"] = (
-        f"{stacks}/4 stack(s); "
-        f"base {base:.2f} + {stacks} x {per_stack:.2f} per-stack bonus"
+        (
+            f"base {base:.2f} + {per_stack:.2f} per stack, up to "
+            f"{_E_MAX_STACKS}: the fight counts the attacks and ability hits "
+            "that land while the charge holds"
+        )
+        if requested is None
+        else (
+            f"{stacks}/{_E_MAX_STACKS} stack(s); base {base:.2f} + "
+            f"{stacks} x {per_stack:.2f} per-stack bonus"
+        )
     )
     return entry
 

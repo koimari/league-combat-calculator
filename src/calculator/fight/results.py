@@ -164,6 +164,10 @@ class CastPricing:
 
     bonus_attack_damage: float = 0.0
     dot_stacks: int = 0
+    # Case 6: the kit's OWN stack level for this cast, walked from the
+    # streams its module says stack it. Zero for every cast that declares
+    # no such window, which is every cast that was priced before this.
+    stack_level: int = 0
     # P3 package 3V: the cast is a Ferocity-empowered one (Rengar) — the
     # engine prices the entry's ferocity_parts instead of parts.
     ferocity_empowered: bool = False

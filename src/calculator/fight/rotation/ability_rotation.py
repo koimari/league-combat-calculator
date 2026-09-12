@@ -3,18 +3,22 @@
 from dataclasses import replace
 from typing import Any
 
+from collections.abc import Mapping
+
 from ...ability_atoms import ability_field
+from ...champions.armed_procs import declared_rule, stack_levels_for_casts
 from ...ability_spec import DamagePart
 from ...control_spec import ControlEvent, cc_kind_reviewed
 from ..autos.on_hit_stream import _ability_applied_on_hit_damage
 from ..autos.swing_schedule import (
+    _auto_attack_timestamps,
     _prepare_hail_attack_schedule,
     _prepare_lethal_tempo_attack_schedule,
 )
 from ..cast_control_marker import _declared_cc_kind, _entry_control_scope
 from ..empower_declaration import _empower_authored_timing, _empower_hits
 from ..ledger.event_rows import _damage_type_fields
-from ..results import AbilityItemApplication, RotationResult
+from ..results import AbilityItemApplication, CastPlan, CastPricing, RotationResult
 from ..setup.target_debuffs import (
     _ability_mr,
     _apply_target_shred,
@@ -33,6 +37,52 @@ from .cast_schedule import (
 )
 from .resource_admission import _apply_resource_limits
 from .stack_timeline import _build_stack_timeline
+
+
+def _with_stack_levels(
+    state: FightState,
+    ability_info: Mapping[str, Any],
+    plan: CastPlan,
+    ability_key: str,
+    pricing: tuple[CastPricing, ...] | None,
+) -> tuple[CastPricing, ...] | None:
+    """Fold this slot's own per-cast stack levels into its cast pricing."""
+    payload = ability_info.get("stack_window")
+    if not payload:
+        return pricing
+    rule = declared_rule({ability_key: {"name": ability_key, "armed_procs": payload}})
+    if rule is None:
+        return pricing
+    cast_times = plan.times[ability_key]
+    levels = stack_levels_for_casts(
+        rule[1],
+        cast_times,
+        _auto_attack_timestamps(state),
+        _stacking_ability_hit_times(state),
+    )
+    base = pricing if pricing is not None else (CastPricing(),) * len(cast_times)
+    return tuple(
+        replace(price, stack_level=level) for price, level in zip(base, levels)
+    )
+
+
+def _stacking_ability_hit_times(state: FightState) -> tuple[float, ...]:
+    """When this kit's ability hits landed, for a window that counts them.
+
+    Read off the breakdown the rotation has already written, which is the
+    accepted ledger: a hit the fight refused cannot stack anything.
+    """
+    times: list[float] = []
+    for row in state.breakdown.values():
+        if not isinstance(row, Mapping):
+            continue
+        events = row.get("damage_events")
+        if not isinstance(events, list):
+            continue
+        for event in events:
+            if isinstance(event, Mapping) and event.get("phase") == "ability":
+                times.append(float(event["time"]))
+    return tuple(sorted(times))
 
 
 def _compute_ability_rotation(state: FightState) -> RotationResult:
@@ -206,6 +256,11 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
             if timeline is not None
             else None
         )
+        # Case 6: a slot whose damage reads a stack level its OWN window
+        # collected (Tristana's Explosive Charge). The level is walked from
+        # the streams the module says stack it, one window per cast, and
+        # rides the same per-cast pricing seam the DoT stacks do.
+        pricing = _with_stack_levels(state, ability_info, plan, ability_key, pricing)
         # P3 package 3V: Rengar's live Ferocity walk marks the casts that
         # consume the 4-stack cap (empowered); the entry's ferocity_parts
         # replace the base parts for those casts.
