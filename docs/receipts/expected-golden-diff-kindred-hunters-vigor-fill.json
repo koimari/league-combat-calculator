@@ -1,0 +1,53 @@
+{
+ "slice": "kindred-hunters-vigor-fill",
+ "issue": "docs/surface-area-backlog.md SR8, the last stack level that was a healing question",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures the baselines it moved in the same commit."
+ },
+ "what_landed": "Hunter's Vigor heals where the fight's attacks fill the bar, and the heal reads a counter the row carries only when the heal can happen.",
+ "why": [
+  "Five stacks on-attack to a maximum of 100, both read from the cached sentence rather than written down, so twenty of Lamb's attacks fill it and the next one heals. Thirty seconds at full uptime heals once, at 19.1s; ten seconds heals not at all.",
+  "Movement fills the bar too, at one stack per 27 units, and this engine has no movement to walk. Counting only the attacks can delay a heal and can never invent one; the row's own receipt says so rather than leaving a reader to find it.",
+  "A fail-open the option had all along closes with it. derive_self_healing keyed the heal on the W_vigor ROW existing, and the row is emitted at every stated level, so a Kindred stated at ZERO stacks still healed on her first auto. The counter is absent below the cap, one attack at the cap, and twenty when derived, so presence now means what it says.",
+  "Only 2 leaves move, both on the parse row: no golden fight is long enough at full uptime to land twenty attacks, which is itself the reading. No coupled leaf moves."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "Kindred's W_vigor is the only row declaring heal_requires_stacks."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "the W_vigor row publishes a four-key heal_requires_stacks it did not carry"
+  },
+  "/metadata/fingerprint/numeric_leaves": {
+   "cause": "three of those four keys are numbers"
+  }
+ },
+ "summary": {
+  "direction": "down: a bar that has to be filled by twenty attacks heals less often than one declared full",
+  "counts": {
+   "golden": 2,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Kindred/abilities_level_11/W_vigor/detail",
+   "/champion_baselines/Kindred/abilities_level_11/W_vigor/heal_requires_stacks"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}
