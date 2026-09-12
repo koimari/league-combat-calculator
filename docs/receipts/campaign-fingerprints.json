@@ -54,7 +54,8 @@
   "Cooldown-armed procs (docs/receipts/expected-golden-diff-cooldown-armed-procs.json) move the three golden blocks. golden.leaves rises 60553 to 60545: both slots publish their arming rule. 679 pair leaves move and all of them rise, 648 in the item sweep, whose timed arm is ziggs_30s, because Short Fuse's engine walk stopped at the module's declared two procs and the shared walk runs to the fight's end for six. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here.",
   "Hit-counter procs (docs/receipts/expected-golden-diff-hit-counter-procs.json) move the three golden blocks. golden.leaves rises 60545 to 60591: Ekko's Z-Drive row is emitted where a zero default withheld it entirely, and four slots publish their arming rule. Only Ekko's fight numbers move; Akshan, Ambessa and Talon each move one declaration leaf, because in the golden's five-second window the walk agrees with the count each module declared. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here.",
   "Closing the in-fight counts (docs/receipts/expected-golden-diff-closing-the-in-fight-counts.json) moves the three golden blocks. golden.leaves rises 60591 to 60593: Shaco's clone, Yorick's two pets, Lux's Illumination and Milio's Fired Up! each publish the rule or the window the fight now walks for them. 81 pair leaves move, all of them those four kits', because a pet's attack count and a proc's count are what their totals are made of. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here.",
-  "Case 6 (docs/receipts/expected-golden-diff-case-6-stack-scaled-casts.json) opens SR8 and moves the three golden blocks. golden.leaves rises 60593 to 60600: Tristana's E row publishes the window its level is walked in. 18 pair leaves move and all are hers, downward, because her declared default was the fully stacked reading and the golden's scenarios land fewer hits inside the charge's four seconds. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here."
+  "Case 6 (docs/receipts/expected-golden-diff-case-6-stack-scaled-casts.json) opens SR8 and moves the three golden blocks. golden.leaves rises 60593 to 60600: Tristana's E row publishes the window its level is walked in. 18 pair leaves move and all are hers, downward, because her declared default was the fully stacked reading and the golden's scenarios land fewer hits inside the charge's four seconds. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here.",
+  "Yasuo's Ride the Wind level (docs/receipts/expected-golden-diff-yasuo-ride-the-wind-level.json) moves the three golden blocks. golden.leaves rises 60600 to 60607: the E row publishes the window its level is walked in and its detail no longer claims a count it does not know. No damage leaf moves, because the 6s per-target lockout outlasts the 5s stack and a duel never restacks it. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here."
  ],
  "provenance": {
   "golden": "VERIFIED",
@@ -69,23 +70,23 @@
  "golden": {
   "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights",
   "entries": 672,
-  "leaves": 60600,
-  "numeric_leaves": 46421,
-  "src_tree_sha": "180bca62cdb75d87d8db399944b0ee3f38ae3bf0"
+  "leaves": 60607,
+  "numeric_leaves": 46424,
+  "src_tree_sha": "59edc3f8328a856989c4e6f0a0c2b329ca0b0246"
  },
  "coupled_golden": {
   "sections": "coupled_scenarios",
   "entries": 26,
   "leaves": 124746,
   "numeric_leaves": 40591,
-  "src_tree_sha": "180bca62cdb75d87d8db399944b0ee3f38ae3bf0"
+  "src_tree_sha": "59edc3f8328a856989c4e6f0a0c2b329ca0b0246"
  },
  "coupled_golden_exact": {
   "sections": "coupled_scenarios",
   "entries": 30,
   "leaves": 224,
   "numeric_leaves": 0,
-  "src_tree_sha": "180bca62cdb75d87d8db399944b0ee3f38ae3bf0"
+  "src_tree_sha": "59edc3f8328a856989c4e6f0a0c2b329ca0b0246"
  },
  "bench": {
   "cassiopeia_3champ": {

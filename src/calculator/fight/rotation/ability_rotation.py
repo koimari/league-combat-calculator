@@ -58,7 +58,7 @@ def _with_stack_levels(
         rule[1],
         cast_times,
         _auto_attack_timestamps(state),
-        _stacking_ability_hit_times(state),
+        _stacking_ability_hit_times(state, rule[1].arming_slots),
     )
     base = pricing if pricing is not None else (CastPricing(),) * len(cast_times)
     return tuple(
@@ -66,15 +66,22 @@ def _with_stack_levels(
     )
 
 
-def _stacking_ability_hit_times(state: FightState) -> tuple[float, ...]:
+def _stacking_ability_hit_times(
+    state: FightState, slots: frozenset[str]
+) -> tuple[float, ...]:
     """When this kit's ability hits landed, for a window that counts them.
 
     Read off the breakdown the rotation has already written, which is the
-    accepted ledger: a hit the fight refused cannot stack anything.
+    accepted ledger: a hit the fight refused cannot stack anything. An
+    empty *slots* counts every slot's hits, which is what a kit whose
+    innate stacks on anything it lands says; a named set counts only its
+    own, which is what a slot that stacks ITSELF says (Yasuo's E).
     """
     times: list[float] = []
-    for row in state.breakdown.values():
+    for key, row in state.breakdown.items():
         if not isinstance(row, Mapping):
+            continue
+        if slots and key not in slots:
             continue
         events = row.get("damage_events")
         if not isinstance(events, list):
