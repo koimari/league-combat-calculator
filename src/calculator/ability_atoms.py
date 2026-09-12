@@ -289,6 +289,8 @@ ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
                 "swing_ramp": None,
                 # The sourced record of a stack ramp over a non-swing stat.
                 "stat_ramp": None,
+                # The sourced counter a slot's first cast waits on.
+                "cast_requires_stacks": None,
                 "spellblade_bonus_true_ratio": 0.0,
                 "spellblade_true_ratio": 0.0,
             }

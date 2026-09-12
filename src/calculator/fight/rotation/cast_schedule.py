@@ -8,6 +8,7 @@ from ... import item_effects
 from ...ability_atoms import ability_field
 from ...stats import effective_cooldown
 from ...trigger_stream import is_immobilizing_event
+from ...champions.cast_arming import banking_swings, declared_rules, ready_at
 from ..cast_control_marker import _declared_cc_marker
 from ..cast_slots import _base_slot, _slot_is_cast
 from ..empower_declaration import _empower_cooldown_delay
@@ -323,6 +324,21 @@ def _schedule_shared_casts(
 
     times: dict[str, list[float]] = {key: [] for key in keys}
     next_ready = dict.fromkeys(keys, 0.0)
+    # A slot whose first cast waits on a counter the fight banks opens at
+    # the instant the count stands, and never before (champions/cast_arming).
+    for key, rule in declared_rules(state.ability_damages).items():
+        if key in next_ready:
+            armed = ready_at(
+                rule,
+                banking_swings(
+                    state.attack_speed,
+                    state.auto_attack_uptime,
+                    state.fight_duration_seconds,
+                ),
+            )
+            # Past the horizon rather than unreachable: the loop below reads
+            # this as a time and an infinity is not one it can compare.
+            next_ready[key] = min(armed, duration + 1.0)
     pending = set(keys)
     now = 0.0
     while pending and now <= duration + _CAST_SCHEDULE_EPS:

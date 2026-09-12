@@ -376,9 +376,12 @@ def test_reviewed_single_target_slots_route_to_the_selected_enemy(champion):
 
 
 def ashe_q_body():
+    # Focus stated full: these rows are about Q's window, not about the
+    # attacks that bank the stacks it needs (champions/cast_arming.py).
     return {
         "champion": "Ashe",
         "level": 18,
+        "champion_options": {"q_focus_stacks": 4},
         "items": [],
         "ability_ranks": {"Q": 1, "W": 1, "E": 0, "R": 0},
         "fight_mode": "time_based",

@@ -1,0 +1,71 @@
+{
+ "slice": "ashe-rangers-focus-cast-arming",
+ "issue": "docs/surface-area-backlog.md SR8, the one level that gates a CAST rather than pricing one",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures the baselines it moved in the same commit."
+ },
+ "what_landed": "champions/cast_arming.py: a slot whose FIRST cast waits on a counter the fight banks. Ashe's Ranger's Focus is the one kit on it.",
+ "why": [
+  "Her Focus is neither a level a cast is priced against nor a ramp. It decides when the first cast may happen at all, which is the cast schedule's question and nobody else's. The rule answers one thing, the earliest instant the count stands over the attacks that bank it; the scheduler seeds the slot's readiness with it and slot_cast_start opens the row's attack-speed window there rather than at the fight's open.",
+  "Every leaf moves DOWN because she no longer opens every fight with Focus full. Over three seconds the fourth attack never lands, so the derived reading equals never casting it; over five it sits between never and opening ready.",
+  "An unreachable instant is honestly infinite in the rule and clamped at both readers. Carrying the infinity turned every roster request into a 400 ('cannot convert float NaN to integer'), which is how the clamp was found rather than assumed.",
+  "Three fixtures now state the Focus they were measured with. The e9 practice-corpus Bloodthirster receipt is the one that matters: its measured 20.1 heal per auto is 15% of a 134.1 FLURRY auto, and a derived Ashe heals 15.5 until her fourth stack lands, so that measurement was taken with Focus ready and the scenario says so instead of relying on an option default that has changed meaning.",
+  "All 19 pair leaves are hers. No coupled leaf moves: the rosters holding Ashe state her Focus."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "Ashe is the only kit declaring cast_requires_stacks."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "her Q row publishes a three-key cast_requires_stacks it did not carry"
+  },
+  "/metadata/fingerprint/numeric_leaves": {
+   "cause": "all three of those keys are numbers"
+  }
+ },
+ "summary": {
+  "direction": "down: a fight that has to bank four attacks first casts later than one that opens ready",
+  "counts": {
+   "golden": 19,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Ashe/abilities_level_11/Q/cast_requires_stacks",
+   "/registered_champion_fights/Ashe/11/sustained/magic_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Ashe/11/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Ashe/11/sustained/no_items/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Ashe/11/sustained/no_items/total_damage",
+   "/registered_champion_fights/Ashe/11/sustained/physical_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Ashe/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+   "/registered_champion_fights/Ashe/11/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Ashe/11/sustained/spellblade_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Ashe/11/sustained/spellblade_build/total_damage",
+   "/registered_champion_fights/Ashe/18/sustained/magic_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Ashe/18/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Ashe/18/sustained/no_items/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Ashe/18/sustained/no_items/total_damage",
+   "/registered_champion_fights/Ashe/18/sustained/physical_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Ashe/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+   "/registered_champion_fights/Ashe/18/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Ashe/18/sustained/spellblade_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Ashe/18/sustained/spellblade_build/total_damage"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}

@@ -110,6 +110,17 @@ _LEVEL = 18
 _AWAIT = "awaiting P1-10 wiring"
 
 
+# Ranger's Focus is DERIVED when the option is unset: the fight banks the
+# stacks its own attacks bank, and these rows are about the window, not
+# about reaching it. Each request states the level it wants unless the test
+# is the one asking what an unstated level derives to.
+def _with_focus(option: dict | None) -> dict:
+    """The caller's options with Focus stated full where they left it unsaid."""
+    stated = dict(option or {})
+    stated.setdefault("q_focus_stacks", 4)
+    return stated
+
+
 def _parse(option: dict | None, *, ranks: dict | None = None, data=None):
     stats = parse_stats(_LEVEL)
     return stats, parse_champion_abilities(
@@ -119,7 +130,7 @@ def _parse(option: dict | None, *, ranks: dict | None = None, data=None):
         ability_ranks=ranks if ranks is not None else _RANKS,
         champion_stats=stats,
         target_stats={"target_max_health": 2000.0},
-        champion_options=option,
+        champion_options=_with_focus(option),
     )
 
 
@@ -152,7 +163,7 @@ def _fight(
             cast_order=(cast_order if cast_order is not None else ["Q", "W", "R"]),
         ),
         score_only=score_only,
-        champion_options=dict(option),
+        champion_options=_with_focus(option),
     )
 
 
@@ -171,7 +182,7 @@ def _api(option: dict):
             "target_health": 2000,
             "target_armor": 50,
             "target_mr": 40,
-            "champion_options": option,
+            "champion_options": _with_focus(option),
         },
     )
 

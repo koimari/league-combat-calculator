@@ -120,12 +120,15 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
     """
     if not bool(ctx.option("q_active")):
         return None
-    focus = TimedStackState(
-        ASHE_FOCUS_STACK_RULE,
-        starting_stacks=max(0, min(int(ctx.option("q_focus_stacks")), 4)),
-    )
-    if focus.stacks < focus.rule.max_stacks:
-        return None
+    requested = ctx.options.get("q_focus_stacks")
+    rule = ASHE_FOCUS_STACK_RULE
+    if requested is not None:
+        focus = TimedStackState(
+            rule,
+            starting_stacks=max(0, min(int(requested), rule.max_stacks)),
+        )
+        if focus.stacks < rule.max_stacks:
+            return None
     ranked = ctx.ranked()
     if ranked is None:
         return None
@@ -136,12 +139,16 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
     # Flurry AD ratio, e.g. 110 (% AD) -> 1.10.
     flurry_ratio = extract_value(ability, "Total Damage Per Flurry", rank) / 100.0
 
-    # Apply the bonus AS to the shared stats context (BUFF phase).
-    ctx.stats["attack_speed"] = calculate_attack_speed(
-        ctx.stat("attack_speed"), ctx.stats["attack_speed_ratio"], bonus_as_pct
-    )
+    if requested is not None:
+        # A stated level says the window is already open, so the parse-time
+        # sheet carries it. A derived one does not know that yet: the fight
+        # opens the window where the count stands and rates the swings
+        # inside it, and a sheet buffed here would double the grant.
+        ctx.stats["attack_speed"] = calculate_attack_speed(
+            ctx.stat("attack_speed"), ctx.stats["attack_speed_ratio"], bonus_as_pct
+        )
 
-    return {
+    entry: dict[str, Any] = {
         "name": ability_name(ability),
         "rank": rank,
         "cooldown": extract_cooldown(ability, rank),
@@ -157,6 +164,17 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
             "active_duration": ASHE_Q_ACTIVE_DURATION_SECONDS,
         },
     }
+    if requested is None:
+        # "can only be activated at 4 stacks", and the attacks that bank
+        # them are the fight's, not the parser's. The cast waits on the
+        # count (champions/cast_arming.py) and its window opens where the
+        # count stands, so a fight too short to bank four never casts it.
+        entry["cast_requires_stacks"] = {
+            "stacks_required": rule.max_stacks,
+            "stack_seconds": rule.duration_seconds,
+            "max_stacks": rule.max_stacks,
+        }
+    return entry
 
 
 _rangers_focus.phase = BUFF
@@ -203,7 +221,10 @@ OPTIONS = [
         4,
         minimum=0,
         maximum=4,
-        label="Focus stacks (4 = Ranger's Focus ready)",
+        label=(
+            "Focus stacks (4 = Ranger's Focus ready); unset walks the attacks "
+            "that bank them and casts where the fourth lands"
+        ),
         state=ASHE_FOCUS_STACK_RULE.public_receipt(),
     ),
 ]
