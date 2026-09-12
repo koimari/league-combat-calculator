@@ -43340,7 +43340,7 @@
             "healing_reduced": 0.0,
             "health_damage": 2471.0,
             "incoming_damage": 2701.0,
-            "outgoing_damage_before_death": 3742.8,
+            "outgoing_damage_before_death": 3304.9,
             "participant_id": "main",
             "shield_absorbed": 230.0,
             "sources": [
@@ -43354,11 +43354,11 @@
               },
               {
                 "name": "Auto Attacks",
-                "total_damage": 917.3
+                "total_damage": 716.0
               },
               {
                 "name": "Empower",
-                "total_damage": 1570.1
+                "total_damage": 1333.4
               },
               {
                 "name": "Grandmaster-at-Arms",
@@ -43374,10 +43374,10 @@
               }
             ],
             "support_shield_received": 230.0,
-            "support_value": 5.0,
+            "support_value": 4.4,
             "survived_window": true,
             "team": "main",
-            "total_damage": 3742.8,
+            "total_damage": 3304.9,
             "utility_outcomes": {
               "applied_dimensions": [],
               "cleanse": {
@@ -43514,12 +43514,12 @@
           {
             "champion": "Aatrox",
             "death_time": null,
-            "effective_health": 7241.7,
+            "effective_health": 6681.0,
             "healing_output": 0.0,
-            "healing_received": 4653.7,
+            "healing_received": 4093.0,
             "healing_reduced": 0.0,
-            "health_damage": 4874.7,
-            "incoming_damage": 4874.7,
+            "health_damage": 4436.8,
+            "incoming_damage": 4436.8,
             "outgoing_damage_before_death": 4830.0,
             "participant_id": "enemy:Aatrox",
             "shield_absorbed": 0.0,
@@ -43555,9 +43555,9 @@
               },
               "contract": "utility_outcomes_v1",
               "damage_reduction": {
-                "event_count": 21,
+                "event_count": 19,
                 "multiplier_windows": [],
-                "ratio_seconds": 29.76
+                "ratio_seconds": 26.16
               },
               "dimensions": [],
               "economy": {
@@ -43578,7 +43578,7 @@
                 "bonus_mana": 0,
                 "event_count": 0
               },
-              "scored_support_amount": 5.04,
+              "scored_support_amount": 4.44,
               "slow": {
                 "event_count": 0,
                 "percent_seconds": 0
@@ -44235,6 +44235,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[28].support_damage_multiplier.multiplier": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[28].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -44252,6 +44256,10 @@
             "view_tag": "applied"
           },
           "events[29].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[29].support_damage_multiplier.multiplier": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -44276,6 +44284,22 @@
             "view_tag": "applied"
           },
           "events[2].time": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[30].cc_duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[30].control_source_atoms[0].values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[30].crowd_control.duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[30].crowd_control.until": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -44323,23 +44347,15 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[31].support_resistance_reduction[0].factor": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[31].support_resistance_reduction[0].fraction": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[31].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[32].cc_duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[32].control_source_atoms[0].values[0]": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[32].crowd_control.duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[32].crowd_control.until": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -44368,11 +44384,13 @@
             "view_tag": "applied"
           },
           "events[33].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[33].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[33].pair_damage": {
@@ -44383,28 +44401,18 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[33].support_damage_multiplier.multiplier": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[33].support_resistance_reduction[0].factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[33].support_resistance_reduction[0].fraction": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[33].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[34].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[34].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_state_blocked",
             "view_tag": "applied"
           },
           "events[34].pair_damage": {
@@ -44412,10 +44420,6 @@
             "view_tag": "applied"
           },
           "events[34].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[34].support_damage_multiplier.multiplier": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -44576,13 +44580,11 @@
             "view_tag": "applied"
           },
           "events[41].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[41].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[41].pair_damage": {
@@ -44593,18 +44595,20 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[41].support_damage_multiplier.multiplier": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[41].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[42].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[42].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_state_blocked",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[42].pair_damage": {
@@ -44612,6 +44616,10 @@
             "view_tag": "applied"
           },
           "events[42].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[42].support_damage_multiplier.multiplier": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -44663,6 +44671,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[44].support_resistance_reduction[0].factor": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[44].support_resistance_reduction[0].fraction": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[44].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -44707,10 +44723,6 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[46].support_damage_multiplier.multiplier": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[46].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -44728,10 +44740,6 @@
             "view_tag": "applied"
           },
           "events[47].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[47].support_damage_multiplier.multiplier": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -44755,18 +44763,6 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[48].support_damage_multiplier.multiplier": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[48].support_resistance_reduction[0].factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[48].support_resistance_reduction[0].fraction": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[48].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -44784,10 +44780,6 @@
             "view_tag": "applied"
           },
           "events[49].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[49].support_damage_multiplier.multiplier": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -44831,6 +44823,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[50].support_damage_multiplier.multiplier": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[50].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -44848,6 +44844,10 @@
             "view_tag": "applied"
           },
           "events[51].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[51].support_damage_multiplier.multiplier": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -44871,6 +44871,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[52].support_damage_multiplier.multiplier": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[52].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -44888,6 +44892,10 @@
             "view_tag": "applied"
           },
           "events[53].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[53].support_damage_multiplier.multiplier": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -44912,6 +44920,14 @@
             "view_tag": "applied"
           },
           "events[54].support_damage_multiplier.multiplier": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[54].support_resistance_reduction[0].factor": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[54].support_resistance_reduction[0].fraction": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -44959,18 +44975,6 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[56].support_damage_multiplier.multiplier": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[56].support_resistance_reduction[0].factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[56].support_resistance_reduction[0].fraction": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[56].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -44988,10 +44992,6 @@
             "view_tag": "applied"
           },
           "events[57].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[57].support_damage_multiplier.multiplier": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -45015,10 +45015,6 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[58].support_damage_multiplier.multiplier": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[58].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -45036,10 +45032,6 @@
             "view_tag": "applied"
           },
           "events[59].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[59].support_damage_multiplier.multiplier": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -45083,6 +45075,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[60].support_damage_multiplier.multiplier": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[60].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -45100,6 +45096,10 @@
             "view_tag": "applied"
           },
           "events[61].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[61].support_damage_multiplier.multiplier": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -45123,6 +45123,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[62].support_damage_multiplier.multiplier": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[62].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -45140,6 +45144,10 @@
             "view_tag": "applied"
           },
           "events[63].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[63].support_damage_multiplier.multiplier": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -45191,6 +45199,14 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[65].support_resistance_reduction[0].factor": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[65].support_resistance_reduction[0].fraction": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[65].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -45235,10 +45251,6 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[67].support_damage_multiplier.multiplier": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[67].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -45259,10 +45271,6 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[68].support_damage_multiplier.multiplier": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[68].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -45280,18 +45288,6 @@
             "view_tag": "applied"
           },
           "events[69].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[69].support_damage_multiplier.multiplier": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[69].support_resistance_reduction[0].factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[69].support_resistance_reduction[0].fraction": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -45335,10 +45331,6 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[70].support_damage_multiplier.multiplier": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[70].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -45356,6 +45348,10 @@
             "view_tag": "applied"
           },
           "events[71].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[71].support_damage_multiplier.multiplier": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -45379,6 +45375,18 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[72].support_damage_multiplier.multiplier": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[72].support_resistance_reduction[0].factor": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[72].support_resistance_reduction[0].fraction": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[72].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -45396,6 +45404,10 @@
             "view_tag": "applied"
           },
           "events[73].raw_damage": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[73].support_damage_multiplier.multiplier": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -45419,6 +45431,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[74].support_damage_multiplier.multiplier": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[74].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -45436,10 +45452,6 @@
             "view_tag": "applied"
           },
           "events[75].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[75].support_damage_multiplier.multiplier": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -45463,10 +45475,6 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[76].support_damage_multiplier.multiplier": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[76].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -45487,18 +45495,6 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[77].support_damage_multiplier.multiplier": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[77].support_resistance_reduction[0].factor": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[77].support_resistance_reduction[0].fraction": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[77].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -45516,10 +45512,6 @@
             "view_tag": "applied"
           },
           "events[78].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[78].support_damage_multiplier.multiplier": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -45603,16 +45595,22 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[81].support_damage_multiplier.multiplier": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[81].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[82].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[82].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "attacker_dead",
             "view_tag": "applied"
           },
           "events[82].pair_damage": {
@@ -45667,16 +45665,22 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[84].support_damage_multiplier.multiplier": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[84].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[85].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[85].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "target_dead",
             "view_tag": "applied"
           },
           "events[85].pair_damage": {
@@ -45692,13 +45696,11 @@
             "view_tag": "applied"
           },
           "events[86].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[86].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "attacker_dead",
+            "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[86].pair_damage": {
@@ -45738,11 +45740,13 @@
             "view_tag": "applied"
           },
           "events[88].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "outside_window",
             "view_tag": "applied"
           },
           "events[88].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "outside_window",
             "view_tag": "applied"
           },
           "events[88].pair_damage": {
@@ -45753,20 +45757,18 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "events[88].support_damage_multiplier.multiplier": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "events[88].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "events[89].damage": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "outside_window",
             "view_tag": "applied"
           },
           "events[89].overkill": {
-            "disposition": "MEASURED",
+            "disposition": "STRUCTURAL_ZERO",
+            "reason": "outside_window",
             "view_tag": "applied"
           },
           "events[89].pair_damage": {
@@ -45774,10 +45776,6 @@
             "view_tag": "applied"
           },
           "events[89].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[89].support_damage_multiplier.multiplier": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -45805,14 +45803,22 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "events[90].cc_duration": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "events[90].control_source_atoms[0].values[0]": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "events[90].damage": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "outside_window",
             "view_tag": "applied"
           },
           "events[90].overkill": {
             "disposition": "STRUCTURAL_ZERO",
-            "reason": "target_dead",
+            "reason": "outside_window",
             "view_tag": "applied"
           },
           "events[90].pair_damage": {
@@ -45824,100 +45830,6 @@
             "view_tag": "applied"
           },
           "events[90].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[91].damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[91].overkill": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[91].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[91].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[91].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[92].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "outside_window",
-            "view_tag": "applied"
-          },
-          "events[92].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "outside_window",
-            "view_tag": "applied"
-          },
-          "events[92].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[92].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[92].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[93].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "outside_window",
-            "view_tag": "applied"
-          },
-          "events[93].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "outside_window",
-            "view_tag": "applied"
-          },
-          "events[93].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[93].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[93].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[94].cc_duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[94].control_source_atoms[0].values[0]": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[94].damage": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "outside_window",
-            "view_tag": "applied"
-          },
-          "events[94].overkill": {
-            "disposition": "STRUCTURAL_ZERO",
-            "reason": "outside_window",
-            "view_tag": "applied"
-          },
-          "events[94].pair_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[94].raw_damage": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "events[94].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -49486,7 +49398,7 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "support_events[12].armor_reduction_percent": {
+          "support_events[12].cooldown": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -49498,15 +49410,15 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "support_events[12].multiplier": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "support_events[12].raw_amount": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "support_events[12].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[12].stack_count": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -49558,7 +49470,7 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "support_events[14].cooldown": {
+          "support_events[14].armor_reduction_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -49570,15 +49482,15 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "support_events[14].multiplier": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "support_events[14].raw_amount": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "support_events[14].reduced_amount": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "support_events[14].stack_count": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -49738,7 +49650,7 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "support_events[19].armor_reduction_percent": {
+          "support_events[19].cooldown": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -49750,15 +49662,15 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "support_events[19].multiplier": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "support_events[19].raw_amount": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "support_events[19].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[19].stack_count": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -49799,78 +49711,6 @@
             "view_tag": "applied"
           },
           "support_events[1].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[20].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[20].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[20].cooldown": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[20].duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[20].expires_at": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[20].multiplier": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[20].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[20].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[20].time": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[21].amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[21].applied_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[21].armor_reduction_percent": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[21].duration": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[21].expires_at": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[21].raw_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[21].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[21].stack_count": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[21].time": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -49986,7 +49826,7 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "support_events[5].armor_reduction_percent": {
+          "support_events[5].cooldown": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -49998,15 +49838,15 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "support_events[5].multiplier": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "support_events[5].raw_amount": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "support_events[5].reduced_amount": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
-          "support_events[5].stack_count": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -50022,7 +49862,7 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "support_events[6].cooldown": {
+          "support_events[6].armor_reduction_percent": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -50034,15 +49874,15 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
-          "support_events[6].multiplier": {
-            "disposition": "MEASURED",
-            "view_tag": "applied"
-          },
           "support_events[6].raw_amount": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
           "support_events[6].reduced_amount": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "support_events[6].stack_count": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -50335,7 +50175,7 @@
             "overkill": 0.0,
             "pair_damage": 113.8,
             "raw_damage": 190.0,
-            "sequence": 18,
+            "sequence": 16,
             "source": "on_hit_ability_W",
             "target": "enemy:Aatrox",
             "time": 0.0
@@ -50404,34 +50244,6 @@
             "time": 0.49
           },
           {
-            "attacker": "main",
-            "damage": 96.8,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:5",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 96.8,
-            "raw_damage": 185.0,
-            "sequence": 10,
-            "source": "auto_attacks",
-            "target": "enemy:Aatrox",
-            "time": 0.61
-          },
-          {
-            "attacker": "main",
-            "damage": 113.8,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Aatrox:6",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 113.8,
-            "raw_damage": 190.0,
-            "sequence": 19,
-            "source": "on_hit_ability_W",
-            "target": "enemy:Aatrox",
-            "time": 0.61
-          },
-          {
             "attacker": "enemy:Aatrox",
             "cc_kind": "slow",
             "damage": 74.1,
@@ -50462,6 +50274,34 @@
             "source": "W",
             "target": "main",
             "time": 0.85
+          },
+          {
+            "attacker": "main",
+            "damage": 96.8,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Aatrox:5",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 96.8,
+            "raw_damage": 185.0,
+            "sequence": 10,
+            "source": "auto_attacks",
+            "target": "enemy:Aatrox",
+            "time": 0.92
+          },
+          {
+            "attacker": "main",
+            "damage": 113.8,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Aatrox:6",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 113.8,
+            "raw_damage": 190.0,
+            "sequence": 17,
+            "source": "on_hit_ability_W",
+            "target": "enemy:Aatrox",
+            "time": 0.92
           },
           {
             "attacker": "ally:Lulu",
@@ -50556,34 +50396,6 @@
             "time": 1.08
           },
           {
-            "attacker": "main",
-            "damage": 96.8,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:7",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 96.8,
-            "raw_damage": 185.0,
-            "sequence": 11,
-            "source": "auto_attacks",
-            "target": "enemy:Aatrox",
-            "time": 1.22
-          },
-          {
-            "attacker": "main",
-            "damage": 113.8,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Aatrox:8",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 113.8,
-            "raw_damage": 190.0,
-            "sequence": 20,
-            "source": "on_hit_ability_W",
-            "target": "enemy:Aatrox",
-            "time": 1.22
-          },
-          {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
             "cc_kind": "knockup",
@@ -50619,12 +50431,12 @@
             "attacker": "main",
             "damage": 73.2,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:9",
+            "event_id": "main:enemy:Aatrox:7",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 73.2,
             "raw_damage": 73.2,
-            "sequence": 31,
+            "sequence": 27,
             "source": "spellblade_Bloodsong",
             "target": "enemy:Aatrox",
             "time": 1.5
@@ -50633,37 +50445,37 @@
             "attacker": "main",
             "damage": 104.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:11",
+            "event_id": "main:enemy:Aatrox:9",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 104.5,
             "raw_damage": 185.0,
-            "sequence": 12,
+            "sequence": 11,
             "source": "auto_attacks",
             "support_damage_multiplier": {
               "multiplier": 1.08,
               "source": "Bloodsong \u2014 Expose Weakness"
             },
             "target": "enemy:Aatrox",
-            "time": 1.82
+            "time": 1.78
           },
           {
             "attacker": "main",
             "damage": 122.9,
             "damage_type": "magic",
-            "event_id": "main:enemy:Aatrox:12",
+            "event_id": "main:enemy:Aatrox:10",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 122.9,
             "raw_damage": 190.0,
-            "sequence": 21,
+            "sequence": 18,
             "source": "on_hit_ability_W",
             "support_damage_multiplier": {
               "multiplier": 1.08,
               "source": "Bloodsong \u2014 Expose Weakness"
             },
             "target": "enemy:Aatrox",
-            "time": 1.82
+            "time": 1.78
           },
           {
             "area_damage": true,
@@ -50694,7 +50506,7 @@
             },
             "damage": 170.4,
             "damage_type": "magic",
-            "event_id": "main:enemy:Aatrox:15",
+            "event_id": "main:enemy:Aatrox:13",
             "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 170.4,
@@ -50882,46 +50694,10 @@
           },
           {
             "attacker": "main",
-            "damage": 104.5,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:17",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 104.5,
-            "raw_damage": 185.0,
-            "sequence": 13,
-            "source": "auto_attacks",
-            "support_damage_multiplier": {
-              "multiplier": 1.08,
-              "source": "Bloodsong \u2014 Expose Weakness"
-            },
-            "target": "enemy:Aatrox",
-            "time": 2.43
-          },
-          {
-            "attacker": "main",
-            "damage": 122.9,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Aatrox:18",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 122.9,
-            "raw_damage": 190.0,
-            "sequence": 22,
-            "source": "on_hit_ability_W",
-            "support_damage_multiplier": {
-              "multiplier": 1.08,
-              "source": "Bloodsong \u2014 Expose Weakness"
-            },
-            "target": "enemy:Aatrox",
-            "time": 2.43
-          },
-          {
-            "attacker": "main",
             "cc_kind": "none",
             "damage": 104.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:20",
+            "event_id": "main:enemy:Aatrox:14",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 104.5,
@@ -50939,37 +50715,37 @@
             "attacker": "main",
             "damage": 104.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:22",
+            "event_id": "main:enemy:Aatrox:16",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 104.5,
             "raw_damage": 185.0,
-            "sequence": 14,
+            "sequence": 12,
             "source": "auto_attacks",
             "support_damage_multiplier": {
               "multiplier": 1.08,
               "source": "Bloodsong \u2014 Expose Weakness"
             },
             "target": "enemy:Aatrox",
-            "time": 3.04
+            "time": 2.58
           },
           {
             "attacker": "main",
             "damage": 122.9,
             "damage_type": "magic",
-            "event_id": "main:enemy:Aatrox:23",
+            "event_id": "main:enemy:Aatrox:17",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 122.9,
             "raw_damage": 190.0,
-            "sequence": 23,
+            "sequence": 19,
             "source": "on_hit_ability_W",
             "support_damage_multiplier": {
               "multiplier": 1.08,
               "source": "Bloodsong \u2014 Expose Weakness"
             },
             "target": "enemy:Aatrox",
-            "time": 3.04
+            "time": 2.58
           },
           {
             "attacker": "ally:Lulu",
@@ -51075,37 +50851,73 @@
             "attacker": "main",
             "damage": 104.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:26",
+            "event_id": "main:enemy:Aatrox:20",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 104.5,
             "raw_damage": 185.0,
-            "sequence": 15,
+            "sequence": 13,
             "source": "auto_attacks",
             "support_damage_multiplier": {
               "multiplier": 1.08,
               "source": "Bloodsong \u2014 Expose Weakness"
             },
             "target": "enemy:Aatrox",
-            "time": 3.65
+            "time": 3.38
           },
           {
             "attacker": "main",
             "damage": 122.9,
             "damage_type": "magic",
-            "event_id": "main:enemy:Aatrox:27",
+            "event_id": "main:enemy:Aatrox:21",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 122.9,
             "raw_damage": 190.0,
-            "sequence": 24,
+            "sequence": 20,
             "source": "on_hit_ability_W",
             "support_damage_multiplier": {
               "multiplier": 1.08,
               "source": "Bloodsong \u2014 Expose Weakness"
             },
             "target": "enemy:Aatrox",
-            "time": 3.65
+            "time": 3.38
+          },
+          {
+            "attacker": "main",
+            "damage": 104.5,
+            "damage_type": "physical",
+            "event_id": "main:enemy:Aatrox:24",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 104.5,
+            "raw_damage": 185.0,
+            "sequence": 14,
+            "source": "auto_attacks",
+            "support_damage_multiplier": {
+              "multiplier": 1.08,
+              "source": "Bloodsong \u2014 Expose Weakness"
+            },
+            "target": "enemy:Aatrox",
+            "time": 4.14
+          },
+          {
+            "attacker": "main",
+            "damage": 122.9,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Aatrox:25",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 122.9,
+            "raw_damage": 190.0,
+            "sequence": 21,
+            "source": "on_hit_ability_W",
+            "support_damage_multiplier": {
+              "multiplier": 1.08,
+              "source": "Bloodsong \u2014 Expose Weakness"
+            },
+            "target": "enemy:Aatrox",
+            "time": 4.14
           },
           {
             "attacker": "ally:Lulu",
@@ -51150,42 +50962,6 @@
             },
             "target": "enemy:Aatrox",
             "time": 4.18
-          },
-          {
-            "attacker": "main",
-            "damage": 104.5,
-            "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:30",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 104.5,
-            "raw_damage": 185.0,
-            "sequence": 16,
-            "source": "auto_attacks",
-            "support_damage_multiplier": {
-              "multiplier": 1.08,
-              "source": "Bloodsong \u2014 Expose Weakness"
-            },
-            "target": "enemy:Aatrox",
-            "time": 4.26
-          },
-          {
-            "attacker": "main",
-            "damage": 122.9,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Aatrox:31",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 122.9,
-            "raw_damage": 190.0,
-            "sequence": 25,
-            "source": "on_hit_ability_W",
-            "support_damage_multiplier": {
-              "multiplier": 1.08,
-              "source": "Bloodsong \u2014 Expose Weakness"
-            },
-            "target": "enemy:Aatrox",
-            "time": 4.26
           },
           {
             "attacker": "enemy:Aatrox",
@@ -51247,12 +51023,12 @@
             "attacker": "main",
             "damage": 79.1,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:33",
+            "event_id": "main:enemy:Aatrox:27",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 79.1,
             "raw_damage": 79.1,
-            "sequence": 32,
+            "sequence": 28,
             "source": "spellblade_Bloodsong",
             "support_damage_multiplier": {
               "multiplier": 1.08,
@@ -51265,44 +51041,44 @@
             "attacker": "main",
             "damage": 104.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:36",
+            "event_id": "main:enemy:Aatrox:30",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 104.5,
             "raw_damage": 185.0,
-            "sequence": 17,
+            "sequence": 15,
             "source": "auto_attacks",
             "support_damage_multiplier": {
               "multiplier": 1.08,
               "source": "Bloodsong \u2014 Expose Weakness"
             },
             "target": "enemy:Aatrox",
-            "time": 4.86
+            "time": 4.89
           },
           {
             "attacker": "main",
             "damage": 122.9,
             "damage_type": "magic",
-            "event_id": "main:enemy:Aatrox:37",
+            "event_id": "main:enemy:Aatrox:31",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 122.9,
             "raw_damage": 190.0,
-            "sequence": 26,
+            "sequence": 22,
             "source": "on_hit_ability_W",
             "support_damage_multiplier": {
               "multiplier": 1.08,
               "source": "Bloodsong \u2014 Expose Weakness"
             },
             "target": "enemy:Aatrox",
-            "time": 4.86
+            "time": 4.89
           },
           {
             "attacker": "main",
             "cc_kind": "none",
             "damage": 152.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:39",
+            "event_id": "main:enemy:Aatrox:33",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 152.5,
@@ -51321,7 +51097,7 @@
             "cc_kind": "none",
             "damage": 104.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:41",
+            "event_id": "main:enemy:Aatrox:35",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 104.5,
@@ -51439,37 +51215,19 @@
             "attacker": "main",
             "damage": 122.9,
             "damage_type": "magic",
-            "event_id": "main:enemy:Aatrox:43",
+            "event_id": "main:enemy:Aatrox:37",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 122.9,
             "raw_damage": 190.0,
-            "sequence": 27,
+            "sequence": 23,
             "source": "on_hit_ability_W",
             "support_damage_multiplier": {
               "multiplier": 1.08,
               "source": "Bloodsong \u2014 Expose Weakness"
             },
             "target": "enemy:Aatrox",
-            "time": 5.47
-          },
-          {
-            "attacker": "main",
-            "damage": 122.9,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Aatrox:46",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 122.9,
-            "raw_damage": 190.0,
-            "sequence": 28,
-            "source": "on_hit_ability_W",
-            "support_damage_multiplier": {
-              "multiplier": 1.08,
-              "source": "Bloodsong \u2014 Expose Weakness"
-            },
-            "target": "enemy:Aatrox",
-            "time": 6.08
+            "time": 5.65
           },
           {
             "attacker": "ally:Lulu",
@@ -51514,6 +51272,24 @@
             },
             "target": "enemy:Aatrox",
             "time": 6.26
+          },
+          {
+            "attacker": "main",
+            "damage": 122.9,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Aatrox:40",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 122.9,
+            "raw_damage": 190.0,
+            "sequence": 24,
+            "source": "on_hit_ability_W",
+            "support_damage_multiplier": {
+              "multiplier": 1.08,
+              "source": "Bloodsong \u2014 Expose Weakness"
+            },
+            "target": "enemy:Aatrox",
+            "time": 6.4
           },
           {
             "attacker": "enemy:Aatrox",
@@ -51572,24 +51348,6 @@
             "time": 6.47
           },
           {
-            "attacker": "main",
-            "damage": 122.9,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Aatrox:49",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 122.9,
-            "raw_damage": 190.0,
-            "sequence": 29,
-            "source": "on_hit_ability_W",
-            "support_damage_multiplier": {
-              "multiplier": 1.08,
-              "source": "Bloodsong \u2014 Expose Weakness"
-            },
-            "target": "enemy:Aatrox",
-            "time": 6.69
-          },
-          {
             "area_damage": true,
             "attacker": "enemy:Aatrox",
             "cc_kind": "knockup",
@@ -51622,6 +51380,24 @@
             "time": 6.85
           },
           {
+            "attacker": "main",
+            "damage": 122.9,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Aatrox:43",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 122.9,
+            "raw_damage": 190.0,
+            "sequence": 25,
+            "source": "on_hit_ability_W",
+            "support_damage_multiplier": {
+              "multiplier": 1.08,
+              "source": "Bloodsong \u2014 Expose Weakness"
+            },
+            "target": "enemy:Aatrox",
+            "time": 7.15
+          },
+          {
             "area_damage": true,
             "attacker": "ally:Lulu",
             "cc_kind": "slow",
@@ -51641,28 +51417,10 @@
           },
           {
             "attacker": "main",
-            "damage": 122.9,
-            "damage_type": "magic",
-            "event_id": "main:enemy:Aatrox:52",
-            "event_precision": "exact",
-            "overkill": 0.0,
-            "pair_damage": 122.9,
-            "raw_damage": 190.0,
-            "sequence": 30,
-            "source": "on_hit_ability_W",
-            "support_damage_multiplier": {
-              "multiplier": 1.08,
-              "source": "Bloodsong \u2014 Expose Weakness"
-            },
-            "target": "enemy:Aatrox",
-            "time": 7.3
-          },
-          {
-            "attacker": "main",
             "cc_kind": "none",
             "damage": 104.5,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:54",
+            "event_id": "main:enemy:Aatrox:45",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 104.5,
@@ -51680,12 +51438,12 @@
             "attacker": "main",
             "damage": 79.1,
             "damage_type": "physical",
-            "event_id": "main:enemy:Aatrox:55",
+            "event_id": "main:enemy:Aatrox:46",
             "event_precision": "exact",
             "overkill": 0.0,
             "pair_damage": 79.1,
             "raw_damage": 79.1,
-            "sequence": 33,
+            "sequence": 29,
             "source": "spellblade_Bloodsong",
             "support_damage_multiplier": {
               "multiplier": 1.08,
@@ -51726,6 +51484,24 @@
             "source": "Q",
             "target": "main",
             "time": 7.85
+          },
+          {
+            "attacker": "main",
+            "damage": 122.9,
+            "damage_type": "magic",
+            "event_id": "main:enemy:Aatrox:49",
+            "event_precision": "exact",
+            "overkill": 0.0,
+            "pair_damage": 122.9,
+            "raw_damage": 190.0,
+            "sequence": 26,
+            "source": "on_hit_ability_W",
+            "support_damage_multiplier": {
+              "multiplier": 1.08,
+              "source": "Bloodsong \u2014 Expose Weakness"
+            },
+            "target": "enemy:Aatrox",
+            "time": 7.91
           },
           {
             "area_damage": true,
@@ -51785,7 +51561,7 @@
             ],
             "damage": 0.0,
             "damage_type": "magic",
-            "event_id": "main:enemy:Aatrox:58",
+            "event_id": "main:enemy:Aatrox:52",
             "event_precision": "hit",
             "overkill": 0.0,
             "pair_damage": 157.8,
@@ -52066,11 +51842,11 @@
           },
           {
             "amount": 86.7,
-            "applied_amount": 86.7,
+            "applied_amount": 0.0,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:8:ally:Lulu",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 86.7,
             "raw_amount": 86.7,
             "reduced_amount": 86.7,
             "source": "Umbral Dash",
@@ -52081,11 +51857,11 @@
           },
           {
             "amount": 85.5,
-            "applied_amount": 85.5,
+            "applied_amount": 0.0,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:8:main",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 85.5,
             "raw_amount": 85.5,
             "reduced_amount": 85.5,
             "source": "Umbral Dash",
@@ -52600,11 +52376,11 @@
           },
           {
             "amount": 44.8,
-            "applied_amount": 44.8,
+            "applied_amount": 24.5,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:22:ally:Lulu",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 20.3,
             "raw_amount": 44.8,
             "reduced_amount": 44.8,
             "source": "Umbral Dash",
@@ -52615,11 +52391,11 @@
           },
           {
             "amount": 57.5,
-            "applied_amount": 57.5,
+            "applied_amount": 0.0,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:22:main",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 57.5,
             "raw_amount": 57.5,
             "reduced_amount": 57.5,
             "source": "Umbral Dash",
@@ -52701,11 +52477,11 @@
           },
           {
             "amount": 359.4,
-            "applied_amount": 219.4,
+            "applied_amount": 31.5,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:23:main",
             "healing_reduction_factor": 1.0,
-            "overheal": 140.0,
+            "overheal": 327.9,
             "raw_amount": 359.4,
             "reduced_amount": 359.4,
             "source": "Deathbringer Stance",
@@ -52759,11 +52535,11 @@
           },
           {
             "amount": 69.4,
-            "applied_amount": 69.4,
+            "applied_amount": 0.0,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:26:ally:Lulu",
             "healing_reduction_factor": 1.0,
-            "overheal": 0.0,
+            "overheal": 69.4,
             "raw_amount": 69.4,
             "reduced_amount": 69.4,
             "source": "Umbral Dash",
@@ -52774,11 +52550,11 @@
           },
           {
             "amount": 68.4,
-            "applied_amount": 53.5,
+            "applied_amount": 0.0,
             "attacker": "enemy:Aatrox",
             "event_id": "enemy:Aatrox:heal:26:main",
             "healing_reduction_factor": 1.0,
-            "overheal": 14.9,
+            "overheal": 68.4,
             "raw_amount": 68.4,
             "reduced_amount": 68.4,
             "source": "Umbral Dash",
@@ -52893,11 +52669,11 @@
         "item_denial_receipts": [],
         "objective": {
           "enemy_team_damage_before_death": 4830.0,
-          "enemy_team_effective_health": 7241.7,
-          "focus_damage_before_death": 3742.8,
+          "enemy_team_effective_health": 6681.0,
+          "focus_damage_before_death": 3304.9,
           "focus_healing": 21.4,
           "focus_participant_id": "main",
-          "focus_support_value": 5.0,
+          "focus_support_value": 4.4,
           "focus_survival": {
             "action_downtime": 0.0,
             "action_downtime_intervals": [],
@@ -52994,9 +52770,9 @@
             },
             "contract": "utility_outcomes_v1",
             "damage_reduction": {
-              "event_count": 21,
+              "event_count": 19,
               "multiplier_windows": [],
-              "ratio_seconds": 29.76
+              "ratio_seconds": 26.16
             },
             "dimensions": [],
             "economy": {
@@ -53017,7 +52793,7 @@
               "bonus_mana": 0,
               "event_count": 0
             },
-            "scored_support_amount": 5.04,
+            "scored_support_amount": 4.44,
             "slow": {
               "event_count": 0,
               "percent_seconds": 0
@@ -53035,11 +52811,11 @@
               "ward_uses": 0
             }
           },
-          "main_team_damage_before_death": 4874.8,
+          "main_team_damage_before_death": 4436.9,
           "main_team_effective_health": 5381.4,
           "surviving_main_team": 1,
           "total_healing_reduced": 0.0,
-          "total_support_value": 235.0
+          "total_support_value": 234.4
         },
         "participants": [
           {
@@ -53413,14 +53189,14 @@
               "damage_deferral_cleared": 0.0,
               "damage_deferral_fraction": 0.0,
               "damage_deferral_pending": 0.0,
-              "damage_taken": 4874.7,
+              "damage_taken": 4436.8,
               "death_time": null,
               "defy_heal_received": 0.0,
               "defy_trigger_time": null,
               "defy_triggered": false,
-              "effective_health": 7241.7,
-              "ending_health": 2367.0,
-              "ending_health_ratio": 0.91,
+              "effective_health": 6681.0,
+              "ending_health": 2244.1,
+              "ending_health_ratio": 0.87,
               "execute_source": "",
               "execute_time": null,
               "first_death_time": null,
@@ -53434,12 +53210,12 @@
                 "cooldown_until": 0.0,
                 "trigger_events": []
               },
-              "healing_received": 4653.7,
+              "healing_received": 4093.0,
               "healing_reduced": 0.0,
               "healing_reduction_events": [],
               "healing_reduction_until": 0.0,
               "healing_reduction_window_sources": [],
-              "health_damage": 4874.7,
+              "health_damage": 4436.8,
               "invulnerable_until": 0.0,
               "jaksho": {
                 "dynamic_bonus_armor": 0.0,
@@ -53448,7 +53224,7 @@
                 "stacks": 0
               },
               "max_health": 2588.0,
-              "overhealing": 756.9,
+              "overhealing": 1317.7,
               "overkill": 0.0,
               "permanent_bonus_health_events": [],
               "permanent_bonus_health_received": 0.0,
@@ -53595,7 +53371,7 @@
             "attacker": "main",
             "duration": 6.0,
             "event_id": "enemy:Aatrox:support:6",
-            "expires_at": 6.61,
+            "expires_at": 6.92,
             "kind": "damage_modifier",
             "owner": "main",
             "raw_amount": 0.24,
@@ -53608,29 +53384,7 @@
             "target_policy": "explicit_selected_roster_target",
             "target_scope": "one_teammate",
             "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 0.61
-          },
-          {
-            "amount": 0.3,
-            "applied_amount": 0.3,
-            "armor_reduction_percent": 0.3,
-            "attacker": "main",
-            "duration": 6.0,
-            "event_id": "enemy:Aatrox:support:7",
-            "expires_at": 7.22,
-            "kind": "damage_modifier",
-            "owner": "main",
-            "raw_amount": 0.3,
-            "recipient": "enemy:Aatrox",
-            "reduced_amount": 0.3,
-            "resistance_type": "armor",
-            "source": "Black Cleaver \u2014 Carve",
-            "stack_count": 5.0,
-            "target": "enemy:Aatrox",
-            "target_policy": "explicit_selected_roster_target",
-            "target_scope": "one_teammate",
-            "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 1.22
+            "time": 0.92
           },
           {
             "all_sources": true,
@@ -53659,7 +53413,7 @@
             "armor_reduction_percent": 0.3,
             "attacker": "main",
             "duration": 6.0,
-            "event_id": "enemy:Aatrox:support:8",
+            "event_id": "enemy:Aatrox:support:7",
             "expires_at": 7.5,
             "kind": "damage_modifier",
             "owner": "main",
@@ -53681,51 +53435,29 @@
             "armor_reduction_percent": 0.3,
             "attacker": "main",
             "duration": 6.0,
+            "event_id": "enemy:Aatrox:support:8",
+            "expires_at": 7.78,
+            "kind": "damage_modifier",
+            "owner": "main",
+            "raw_amount": 0.3,
+            "recipient": "enemy:Aatrox",
+            "reduced_amount": 0.3,
+            "resistance_type": "armor",
+            "source": "Black Cleaver \u2014 Carve",
+            "stack_count": 5.0,
+            "target": "enemy:Aatrox",
+            "target_policy": "explicit_selected_roster_target",
+            "target_scope": "one_teammate",
+            "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
+            "time": 1.78
+          },
+          {
+            "amount": 0.3,
+            "applied_amount": 0.3,
+            "armor_reduction_percent": 0.3,
+            "attacker": "main",
+            "duration": 6.0,
             "event_id": "enemy:Aatrox:support:9",
-            "expires_at": 7.82,
-            "kind": "damage_modifier",
-            "owner": "main",
-            "raw_amount": 0.3,
-            "recipient": "enemy:Aatrox",
-            "reduced_amount": 0.3,
-            "resistance_type": "armor",
-            "source": "Black Cleaver \u2014 Carve",
-            "stack_count": 5.0,
-            "target": "enemy:Aatrox",
-            "target_policy": "explicit_selected_roster_target",
-            "target_scope": "one_teammate",
-            "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 1.82
-          },
-          {
-            "amount": 0.3,
-            "applied_amount": 0.3,
-            "armor_reduction_percent": 0.3,
-            "attacker": "main",
-            "duration": 6.0,
-            "event_id": "enemy:Aatrox:support:10",
-            "expires_at": 8.43,
-            "kind": "damage_modifier",
-            "owner": "main",
-            "raw_amount": 0.3,
-            "recipient": "enemy:Aatrox",
-            "reduced_amount": 0.3,
-            "resistance_type": "armor",
-            "source": "Black Cleaver \u2014 Carve",
-            "stack_count": 5.0,
-            "target": "enemy:Aatrox",
-            "target_policy": "explicit_selected_roster_target",
-            "target_scope": "one_teammate",
-            "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 2.43
-          },
-          {
-            "amount": 0.3,
-            "applied_amount": 0.3,
-            "armor_reduction_percent": 0.3,
-            "attacker": "main",
-            "duration": 6.0,
-            "event_id": "enemy:Aatrox:support:11",
             "expires_at": 8.5,
             "kind": "damage_modifier",
             "owner": "main",
@@ -53747,8 +53479,52 @@
             "armor_reduction_percent": 0.3,
             "attacker": "main",
             "duration": 6.0,
+            "event_id": "enemy:Aatrox:support:10",
+            "expires_at": 8.58,
+            "kind": "damage_modifier",
+            "owner": "main",
+            "raw_amount": 0.3,
+            "recipient": "enemy:Aatrox",
+            "reduced_amount": 0.3,
+            "resistance_type": "armor",
+            "source": "Black Cleaver \u2014 Carve",
+            "stack_count": 5.0,
+            "target": "enemy:Aatrox",
+            "target_policy": "explicit_selected_roster_target",
+            "target_scope": "one_teammate",
+            "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
+            "time": 2.58
+          },
+          {
+            "amount": 0.3,
+            "applied_amount": 0.3,
+            "armor_reduction_percent": 0.3,
+            "attacker": "main",
+            "duration": 6.0,
+            "event_id": "enemy:Aatrox:support:11",
+            "expires_at": 9.38,
+            "kind": "damage_modifier",
+            "owner": "main",
+            "raw_amount": 0.3,
+            "recipient": "enemy:Aatrox",
+            "reduced_amount": 0.3,
+            "resistance_type": "armor",
+            "source": "Black Cleaver \u2014 Carve",
+            "stack_count": 5.0,
+            "target": "enemy:Aatrox",
+            "target_policy": "explicit_selected_roster_target",
+            "target_scope": "one_teammate",
+            "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
+            "time": 3.38
+          },
+          {
+            "amount": 0.3,
+            "applied_amount": 0.3,
+            "armor_reduction_percent": 0.3,
+            "attacker": "main",
+            "duration": 6.0,
             "event_id": "enemy:Aatrox:support:12",
-            "expires_at": 9.04,
+            "expires_at": 10.14,
             "kind": "damage_modifier",
             "owner": "main",
             "raw_amount": 0.3,
@@ -53761,51 +53537,7 @@
             "target_policy": "explicit_selected_roster_target",
             "target_scope": "one_teammate",
             "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 3.04
-          },
-          {
-            "amount": 0.3,
-            "applied_amount": 0.3,
-            "armor_reduction_percent": 0.3,
-            "attacker": "main",
-            "duration": 6.0,
-            "event_id": "enemy:Aatrox:support:13",
-            "expires_at": 9.65,
-            "kind": "damage_modifier",
-            "owner": "main",
-            "raw_amount": 0.3,
-            "recipient": "enemy:Aatrox",
-            "reduced_amount": 0.3,
-            "resistance_type": "armor",
-            "source": "Black Cleaver \u2014 Carve",
-            "stack_count": 5.0,
-            "target": "enemy:Aatrox",
-            "target_policy": "explicit_selected_roster_target",
-            "target_scope": "one_teammate",
-            "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 3.65
-          },
-          {
-            "amount": 0.3,
-            "applied_amount": 0.3,
-            "armor_reduction_percent": 0.3,
-            "attacker": "main",
-            "duration": 6.0,
-            "event_id": "enemy:Aatrox:support:14",
-            "expires_at": 10.26,
-            "kind": "damage_modifier",
-            "owner": "main",
-            "raw_amount": 0.3,
-            "recipient": "enemy:Aatrox",
-            "reduced_amount": 0.3,
-            "resistance_type": "armor",
-            "source": "Black Cleaver \u2014 Carve",
-            "stack_count": 5.0,
-            "target": "enemy:Aatrox",
-            "target_policy": "explicit_selected_roster_target",
-            "target_scope": "one_teammate",
-            "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 4.26
+            "time": 4.14
           },
           {
             "all_sources": true,
@@ -53834,7 +53566,7 @@
             "armor_reduction_percent": 0.3,
             "attacker": "main",
             "duration": 6.0,
-            "event_id": "enemy:Aatrox:support:15",
+            "event_id": "enemy:Aatrox:support:13",
             "expires_at": 10.5,
             "kind": "damage_modifier",
             "owner": "main",
@@ -53856,8 +53588,8 @@
             "armor_reduction_percent": 0.3,
             "attacker": "main",
             "duration": 6.0,
-            "event_id": "enemy:Aatrox:support:16",
-            "expires_at": 10.86,
+            "event_id": "enemy:Aatrox:support:14",
+            "expires_at": 10.89,
             "kind": "damage_modifier",
             "owner": "main",
             "raw_amount": 0.3,
@@ -53870,7 +53602,51 @@
             "target_policy": "explicit_selected_roster_target",
             "target_scope": "one_teammate",
             "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 4.86
+            "time": 4.89
+          },
+          {
+            "amount": 0.3,
+            "applied_amount": 0.3,
+            "armor_reduction_percent": 0.3,
+            "attacker": "main",
+            "duration": 6.0,
+            "event_id": "enemy:Aatrox:support:15",
+            "expires_at": 11.0,
+            "kind": "damage_modifier",
+            "owner": "main",
+            "raw_amount": 0.3,
+            "recipient": "enemy:Aatrox",
+            "reduced_amount": 0.3,
+            "resistance_type": "armor",
+            "source": "Black Cleaver \u2014 Carve",
+            "stack_count": 5.0,
+            "target": "enemy:Aatrox",
+            "target_policy": "explicit_selected_roster_target",
+            "target_scope": "one_teammate",
+            "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
+            "time": 5.0
+          },
+          {
+            "amount": 0.3,
+            "applied_amount": 0.3,
+            "armor_reduction_percent": 0.3,
+            "attacker": "main",
+            "duration": 6.0,
+            "event_id": "enemy:Aatrox:support:16",
+            "expires_at": 11.0,
+            "kind": "damage_modifier",
+            "owner": "main",
+            "raw_amount": 0.3,
+            "recipient": "enemy:Aatrox",
+            "reduced_amount": 0.3,
+            "resistance_type": "armor",
+            "source": "Black Cleaver \u2014 Carve",
+            "stack_count": 5.0,
+            "target": "enemy:Aatrox",
+            "target_policy": "explicit_selected_roster_target",
+            "target_scope": "one_teammate",
+            "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
+            "time": 5.0
           },
           {
             "amount": 0.3,
@@ -53879,7 +53655,7 @@
             "attacker": "main",
             "duration": 6.0,
             "event_id": "enemy:Aatrox:support:17",
-            "expires_at": 11.0,
+            "expires_at": 13.5,
             "kind": "damage_modifier",
             "owner": "main",
             "raw_amount": 0.3,
@@ -53892,7 +53668,7 @@
             "target_policy": "explicit_selected_roster_target",
             "target_scope": "one_teammate",
             "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 5.0
+            "time": 7.5
           },
           {
             "amount": 0.3,
@@ -53901,28 +53677,6 @@
             "attacker": "main",
             "duration": 6.0,
             "event_id": "enemy:Aatrox:support:18",
-            "expires_at": 11.0,
-            "kind": "damage_modifier",
-            "owner": "main",
-            "raw_amount": 0.3,
-            "recipient": "enemy:Aatrox",
-            "reduced_amount": 0.3,
-            "resistance_type": "armor",
-            "source": "Black Cleaver \u2014 Carve",
-            "stack_count": 5.0,
-            "target": "enemy:Aatrox",
-            "target_policy": "explicit_selected_roster_target",
-            "target_scope": "one_teammate",
-            "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
-            "time": 5.0
-          },
-          {
-            "amount": 0.3,
-            "applied_amount": 0.3,
-            "armor_reduction_percent": 0.3,
-            "attacker": "main",
-            "duration": 6.0,
-            "event_id": "enemy:Aatrox:support:19",
             "expires_at": 13.5,
             "kind": "damage_modifier",
             "owner": "main",
@@ -53957,28 +53711,6 @@
             "target_policy": "explicit_selected_roster_target",
             "target_scope": "one_teammate",
             "target_selection_key": "damage_modifier:Bloodsong \u2014 Expose Weakness",
-            "time": 7.5
-          },
-          {
-            "amount": 0.3,
-            "applied_amount": 0.3,
-            "armor_reduction_percent": 0.3,
-            "attacker": "main",
-            "duration": 6.0,
-            "event_id": "enemy:Aatrox:support:20",
-            "expires_at": 13.5,
-            "kind": "damage_modifier",
-            "owner": "main",
-            "raw_amount": 0.3,
-            "recipient": "enemy:Aatrox",
-            "reduced_amount": 0.3,
-            "resistance_type": "armor",
-            "source": "Black Cleaver \u2014 Carve",
-            "stack_count": 5.0,
-            "target": "enemy:Aatrox",
-            "target_policy": "explicit_selected_roster_target",
-            "target_scope": "one_teammate",
-            "target_selection_key": "damage_modifier:Black Cleaver \u2014 Carve",
             "time": 7.5
           }
         ],
@@ -54019,9 +53751,9 @@
             },
             "contract": "utility_outcomes_v1",
             "damage_reduction": {
-              "event_count": 21,
+              "event_count": 19,
               "multiplier_windows": [],
-              "ratio_seconds": 29.76
+              "ratio_seconds": 26.16
             },
             "dimensions": [],
             "economy": {
@@ -54042,7 +53774,7 @@
               "bonus_mana": 0,
               "event_count": 0
             },
-            "scored_support_amount": 5.04,
+            "scored_support_amount": 4.44,
             "slow": {
               "event_count": 0,
               "percent_seconds": 0
@@ -54167,9 +53899,9 @@
               },
               "contract": "utility_outcomes_v1",
               "damage_reduction": {
-                "event_count": 21,
+                "event_count": 19,
                 "multiplier_windows": [],
-                "ratio_seconds": 29.76
+                "ratio_seconds": 26.16
               },
               "dimensions": [],
               "economy": {
@@ -54190,7 +53922,7 @@
                 "bonus_mana": 0,
                 "event_count": 0
               },
-              "scored_support_amount": 5.04,
+              "scored_support_amount": 4.44,
               "slow": {
                 "event_count": 0,
                 "percent_seconds": 0
@@ -54213,8 +53945,8 @@
       },
       "fights": {
         "0:Aatrox": {
-          "ability_damage": 1351.4,
-          "auto_attack_damage": 2569.5,
+          "ability_damage": 1334.6,
+          "auto_attack_damage": 2148.5,
           "auto_attack_policy": {
             "assumptions": [
               "No inferred player uptime; caller supplied the numeric value."
@@ -54226,8 +53958,8 @@
             "window_seconds": 8.0
           },
           "auto_attack_schedule": {
-            "expected_autos_per_rotation": 9.0,
-            "expected_autos_total": 9,
+            "expected_autos_per_rotation": 7.0,
+            "expected_autos_total": 7,
             "rotation_count": 1,
             "semantics": "sequential timed window; cooldowns, resources, cast lockouts, and item events follow the engine ledger",
             "status": "known",
@@ -54291,15 +54023,15 @@
             },
             "auto_attacks": {
               "casts": null,
-              "count": 9,
+              "count": 7,
               "crit_damage_per_hit": null,
               "damage_per_hit": 96.8,
               "name": "Auto Attacks",
               "non_crit_damage_per_hit": 96.8,
               "num_crits": 0,
-              "num_non_crits": 9,
+              "num_non_crits": 7,
               "total_amount": null,
-              "total_damage": 870.8,
+              "total_damage": 677.3,
               "unit": null
             },
             "expose_weakness_Bloodsong": {
@@ -54312,12 +54044,12 @@
               "num_crits": null,
               "num_non_crits": null,
               "total_amount": null,
-              "total_damage": 216.7,
+              "total_damage": 199.8,
               "unit": null
             },
             "on_hit_ability_W": {
               "casts": null,
-              "count": 13,
+              "count": 11,
               "crit_damage_per_hit": null,
               "damage_per_hit": 113.8,
               "name": "Empower",
@@ -54325,7 +54057,7 @@
               "num_crits": null,
               "num_non_crits": null,
               "total_amount": null,
-              "total_damage": 1479.0,
+              "total_damage": 1251.5,
               "unit": null
             },
             "spellblade_Bloodsong": {
@@ -54459,7 +54191,7 @@
             "armor_penetration_bonus_percent": 0.0,
             "armor_penetration_percent": 0.0,
             "attack_damage": 185,
-            "attack_speed": 1.64,
+            "attack_speed": 1.01,
             "attack_speed_ratio": 0.64,
             "base_attack_damage": 140,
             "base_health": 2401,
@@ -54467,7 +54199,7 @@
             "basic_ability_haste": 0.0,
             "bonus_armor": 93.0,
             "bonus_attack_damage": 45,
-            "bonus_attack_speed": 157.8,
+            "bonus_attack_speed": 57.8,
             "bonus_health": 600,
             "bonus_magic_resistance": 55.8,
             "bonus_mana": 0,
@@ -54498,8 +54230,8 @@
           },
           "champion_stats_state": "fight_effective",
           "damage_by_type": {
-            "magic": 2467.7,
-            "physical": 1453.2,
+            "magic": 2231.9,
+            "physical": 1251.2,
             "true": 0.0
           },
           "damage_events": [
@@ -54548,28 +54280,14 @@
               "damage_type": "physical",
               "phase": "auto",
               "source": "auto_attacks",
-              "time": 0.61
+              "time": 0.92
             },
             {
               "damage": 113.8,
               "damage_type": "magic",
               "phase": "auto",
               "source": "on_hit_ability_W",
-              "time": 0.61
-            },
-            {
-              "damage": 96.8,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 1.22
-            },
-            {
-              "damage": 113.8,
-              "damage_type": "magic",
-              "phase": "auto",
-              "source": "on_hit_ability_W",
-              "time": 1.22
+              "time": 0.92
             },
             {
               "damage": 73.2,
@@ -54583,28 +54301,28 @@
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
-              "time": 1.82
+              "time": 1.78
             },
             {
               "damage": 96.8,
               "damage_type": "physical",
               "phase": "auto",
               "source": "auto_attacks",
-              "time": 1.82
+              "time": 1.78
             },
             {
               "damage": 113.8,
               "damage_type": "magic",
               "phase": "auto",
               "source": "on_hit_ability_W",
-              "time": 1.82
+              "time": 1.78
             },
             {
               "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
-              "time": 1.82
+              "time": 1.78
             },
             {
               "damage": 12.6,
@@ -54641,34 +54359,6 @@
               "time": 2.0
             },
             {
-              "damage": 7.7,
-              "damage_type": "physical",
-              "phase": "amplifier",
-              "source": "expose_weakness_Bloodsong",
-              "time": 2.43
-            },
-            {
-              "damage": 96.8,
-              "damage_type": "physical",
-              "phase": "auto",
-              "source": "auto_attacks",
-              "time": 2.43
-            },
-            {
-              "damage": 113.8,
-              "damage_type": "magic",
-              "phase": "auto",
-              "source": "on_hit_ability_W",
-              "time": 2.43
-            },
-            {
-              "damage": 9.1,
-              "damage_type": "magic",
-              "phase": "amplifier",
-              "source": "expose_weakness_Bloodsong",
-              "time": 2.43
-            },
-            {
               "cc_kind": "none",
               "damage": 96.8,
               "damage_type": "physical",
@@ -54681,84 +54371,84 @@
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
-              "time": 3.04
+              "time": 2.58
             },
             {
               "damage": 96.8,
               "damage_type": "physical",
               "phase": "auto",
               "source": "auto_attacks",
-              "time": 3.04
+              "time": 2.58
             },
             {
               "damage": 113.8,
               "damage_type": "magic",
               "phase": "auto",
               "source": "on_hit_ability_W",
-              "time": 3.04
+              "time": 2.58
             },
             {
               "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
-              "time": 3.04
+              "time": 2.58
             },
             {
               "damage": 7.7,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
-              "time": 3.65
+              "time": 3.38
             },
             {
               "damage": 96.8,
               "damage_type": "physical",
               "phase": "auto",
               "source": "auto_attacks",
-              "time": 3.65
+              "time": 3.38
             },
             {
               "damage": 113.8,
               "damage_type": "magic",
               "phase": "auto",
               "source": "on_hit_ability_W",
-              "time": 3.65
+              "time": 3.38
             },
             {
               "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
-              "time": 3.65
+              "time": 3.38
             },
             {
               "damage": 7.7,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
-              "time": 4.26
+              "time": 4.14
             },
             {
               "damage": 96.8,
               "damage_type": "physical",
               "phase": "auto",
               "source": "auto_attacks",
-              "time": 4.26
+              "time": 4.14
             },
             {
               "damage": 113.8,
               "damage_type": "magic",
               "phase": "auto",
               "source": "on_hit_ability_W",
-              "time": 4.26
+              "time": 4.14
             },
             {
               "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
-              "time": 4.26
+              "time": 4.14
             },
             {
               "damage": 73.2,
@@ -54779,28 +54469,28 @@
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
-              "time": 4.86
+              "time": 4.89
             },
             {
               "damage": 96.8,
               "damage_type": "physical",
               "phase": "auto",
               "source": "auto_attacks",
-              "time": 4.86
+              "time": 4.89
             },
             {
               "damage": 113.8,
               "damage_type": "magic",
               "phase": "auto",
               "source": "on_hit_ability_W",
-              "time": 4.86
+              "time": 4.89
             },
             {
               "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
-              "time": 4.86
+              "time": 4.89
             },
             {
               "cc_kind": "none",
@@ -54831,84 +54521,63 @@
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
-              "time": 5.47
+              "time": 5.65
             },
             {
               "damage": 113.8,
               "damage_type": "magic",
               "phase": "auto",
               "source": "on_hit_ability_W",
-              "time": 5.47
+              "time": 5.65
             },
             {
               "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
-              "time": 5.47
+              "time": 5.65
             },
             {
               "damage": 7.7,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
-              "time": 6.08
+              "time": 6.4
             },
             {
               "damage": 113.8,
               "damage_type": "magic",
               "phase": "auto",
               "source": "on_hit_ability_W",
-              "time": 6.08
+              "time": 6.4
             },
             {
               "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
-              "time": 6.08
+              "time": 6.4
             },
             {
               "damage": 7.7,
               "damage_type": "physical",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
-              "time": 6.69
+              "time": 7.15
             },
             {
               "damage": 113.8,
               "damage_type": "magic",
               "phase": "auto",
               "source": "on_hit_ability_W",
-              "time": 6.69
+              "time": 7.15
             },
             {
               "damage": 9.1,
               "damage_type": "magic",
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
-              "time": 6.69
-            },
-            {
-              "damage": 7.7,
-              "damage_type": "physical",
-              "phase": "amplifier",
-              "source": "expose_weakness_Bloodsong",
-              "time": 7.3
-            },
-            {
-              "damage": 113.8,
-              "damage_type": "magic",
-              "phase": "auto",
-              "source": "on_hit_ability_W",
-              "time": 7.3
-            },
-            {
-              "damage": 9.1,
-              "damage_type": "magic",
-              "phase": "amplifier",
-              "source": "expose_weakness_Bloodsong",
-              "time": 7.3
+              "time": 7.15
             },
             {
               "cc_kind": "none",
@@ -54931,6 +54600,27 @@
               "phase": "amplifier",
               "source": "expose_weakness_Bloodsong",
               "time": 7.5
+            },
+            {
+              "damage": 7.7,
+              "damage_type": "physical",
+              "phase": "amplifier",
+              "source": "expose_weakness_Bloodsong",
+              "time": 7.91
+            },
+            {
+              "damage": 113.8,
+              "damage_type": "magic",
+              "phase": "auto",
+              "source": "on_hit_ability_W",
+              "time": 7.91
+            },
+            {
+              "damage": 9.1,
+              "damage_type": "magic",
+              "phase": "amplifier",
+              "source": "expose_weakness_Bloodsong",
+              "time": 7.91
             },
             {
               "damage": 12.6,
@@ -54970,10 +54660,10 @@
           "effective_armor": 91.2,
           "effective_mr": 67.0,
           "general_shield_absorbed": 0.0,
-          "health_damage": 3921.0,
+          "health_damage": 3483.1,
           "magic_shield_absorbed": 0.0,
           "notes": [],
-          "overkill": 1333.0,
+          "overkill": 895.1,
           "physical_shield_absorbed": 0.0,
           "resource_ledger": {
             "base_maximum": 1223.0,
@@ -55391,7 +55081,7 @@
             ],
             "note": "Every active damage source has authored event or cast-boundary order."
           },
-          "total_damage": 3921.0
+          "total_damage": 3483.1
         }
       }
     },
@@ -195410,15 +195100,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 26,
-      "leaves": 124746,
-      "numeric_leaves": 40591,
+      "leaves": 124544,
+      "numeric_leaves": 40535,
       "sections": "coupled_scenarios"
     },
-    "git_head": "8999a737955a5cc2a67744a39fb8706371268a0f",
+    "git_head": "c66cae08583b414b3eeb46fe6648347c8505fb03",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 26,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "3ab9d4352f582dc43bae2ec6df506abdf357bb23"
+    "src_tree_sha": "d826ff95d88a96728f71f97a04e14e2ec1ba1b9c"
   }
 }

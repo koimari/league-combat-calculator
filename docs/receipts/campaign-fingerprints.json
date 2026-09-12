@@ -60,7 +60,8 @@
   "Mel's Overwhelm level (docs/receipts/expected-golden-diff-mel-overwhelm-level.json) moves the three golden blocks. golden.leaves rises 60611 to 60618: the R row publishes the window its level is walked in. 31 pair leaves move, all hers, because her blast read a declared three stacks and now reads the damage instances she landed. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here.",
   "Xayah's Clean Cuts feathers (docs/receipts/expected-golden-diff-xayah-clean-cuts-feathers.json) move the three golden blocks. golden.leaves stays 60618 and one leaf moves, her passive row's detail string: the row no longer claims a stack count. No number moves because the golden's scenarios leave clean_cuts_secondary_targets at zero, and that option is what emits the on-hit the cap applies to. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here.",
   "The stack window's direction (docs/receipts/expected-golden-diff-stack-window-direction.json) corrects two earlier slices and moves the three golden blocks. golden.leaves rises 60618 to 60619: Tristana's window publishes which side of the cast it sits on. 34 pair leaves move and all fall, because Varus' and Mel's detonations were crediting hits that had not landed yet. Varus falls by the whole detonation: his Q opens the rotation. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here.",
-  "Kalista's Rend level (docs/receipts/expected-golden-diff-kalista-rend-level.json) moves the three golden blocks. golden.leaves rises 60619 to 60626: her E row publishes the window its level is walked in. No fight number moves, because the golden's scenarios sit at the floor of one the option already declared, and that floor is what keeps the row exact where Kindred's pounce would price zero. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here."
+  "Kalista's Rend level (docs/receipts/expected-golden-diff-kalista-rend-level.json) moves the three golden blocks. golden.leaves rises 60619 to 60626: her E row publishes the window its level is walked in. No fight number moves, because the golden's scenarios sit at the floor of one the option already declared, and that floor is what keeps the row exact where Kindred's pounce would price zero. coupled_golden and coupled_golden_exact keep every count and move only their src_tree_sha. captured_at_src_tree, bench, alloc, wall, tests, corpus, frontier, demonstrated_red, corrections and coupled_golden_exact_values are NOT re-measured here.",
+  "The jax-relentless-assault-ramp slice re-captures the three golden blocks (R-17, receipt docs/receipts/expected-golden-diff-jax-relentless-assault-ramp.json). Jax's Relentless Assault rides the build's swing ramp instead of a declared full stack level, so he opens every fight at zero stacks. Pair block: leaves 60626 -> 60628 and numeric_leaves 46431 -> 46433, the two leaves his passive row publishes now that it carries a ramp rather than a stat buff; entries unchanged. Coupled block: leaves 124746 -> 124544 and numeric_leaves 40591 -> 40535, the four events cleaver_bloodsong_roster no longer authors net of the two it gains, with 541 standing leaves absorbed, all enumerated in the receipt. Exact block: shape unchanged at 224 leaves; the three moved totals are cleaver_bloodsong_roster's combat/0:main/outgoing 3742.8 -> 3304.9, combat/2:enemy:Aatrox/incoming 4874.7 -> 4436.8 and fights/0:Aatrox 3921.0 -> 3483.1. coupled_golden_exact_values.sha256 is left as it stands: SR6 records that its stated rule does not reproduce the committed digest, so re-deriving it belongs to SR6 and not to this slice."
  ],
  "provenance": {
   "golden": "VERIFIED",
@@ -75,23 +76,23 @@
  "golden": {
   "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights",
   "entries": 672,
-  "leaves": 60626,
-  "numeric_leaves": 46431,
-  "src_tree_sha": "3ab9d4352f582dc43bae2ec6df506abdf357bb23"
+  "leaves": 60628,
+  "numeric_leaves": 46433,
+  "src_tree_sha": "d826ff95d88a96728f71f97a04e14e2ec1ba1b9c"
  },
  "coupled_golden": {
   "sections": "coupled_scenarios",
   "entries": 26,
-  "leaves": 124746,
-  "numeric_leaves": 40591,
-  "src_tree_sha": "3ab9d4352f582dc43bae2ec6df506abdf357bb23"
+  "leaves": 124544,
+  "numeric_leaves": 40535,
+  "src_tree_sha": "d826ff95d88a96728f71f97a04e14e2ec1ba1b9c"
  },
  "coupled_golden_exact": {
   "sections": "coupled_scenarios",
   "entries": 30,
   "leaves": 224,
   "numeric_leaves": 0,
-  "src_tree_sha": "3ab9d4352f582dc43bae2ec6df506abdf357bb23"
+  "src_tree_sha": "d826ff95d88a96728f71f97a04e14e2ec1ba1b9c"
  },
  "bench": {
   "cassiopeia_3champ": {

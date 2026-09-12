@@ -1,6 +1,7 @@
 """An ability's stat grant, and everything re-resolved from a buffed stat."""
 
 import math
+from collections.abc import Mapping
 
 from ... import item_effects
 from ...ability_atoms import ability_field, ability_sub_payload
@@ -9,6 +10,67 @@ from ...stats import calculate_attack_speed, resolve_move_speed
 from ..cast_slots import _slot_is_cast, slot_cast_start
 from ..config import BASE_CRIT_MULTIPLIER
 from ..state import FightState, _crit_profile
+
+
+def _kit_swing_ramp(state: FightState) -> rearmed_swings.DecayingStackRamp | None:
+    """The ramp a CHAMPION declares over its own swing stream, or ``None``.
+
+    Jax's Relentless Assault and its siblings are the record an item ramp
+    already is: a bonus per stack, a cap, and how long a stack lives, with
+    one stack landing per completed attack. The module states all three
+    from its cache; nothing here knows which champion.
+    """
+    found = [
+        (str(info.get("name", key)), info["swing_ramp"])
+        for key, info in state.ability_damages.items()
+        if isinstance(info, Mapping) and info.get("swing_ramp")
+    ]
+    if not found:
+        return None
+    if len(found) > 1:
+        raise ValueError(
+            "Two slots declare a swing_ramp ("
+            + ", ".join(name for name, _ in found)
+            + "); one swing stream carries one kit ramp"
+        )
+    owner, payload = found[0]
+    for field in ("per_stack", "max_stacks", "stack_duration"):
+        if payload.get(field) is None:
+            raise ValueError(
+                f"{owner}: swing_ramp declares no {field!r}; every number of "
+                "the ramp is sourced by the module"
+            )
+    return rearmed_swings.DecayingStackRamp(
+        per_stack=float(payload["per_stack"]),
+        max_stacks=int(payload["max_stacks"]),
+        stack_duration=float(payload["stack_duration"]),
+    )
+
+
+def _swing_schedule_for(
+    state: FightState,
+) -> tuple[
+    rearmed_swings.SwingSchedule | None, rearmed_swings.DecayingStackRamp | None
+]:
+    """The schedule walking this fight's swings, and the kit ramp beside it.
+
+    A build's item ramp and a kit's own ramp re-rate ONE stream and both
+    are real, so the walker takes both and adds their bonuses. A kit with
+    no item ramp still needs a schedule to walk, so its own ramp becomes
+    one; an item ramp keeps its window either way.
+    """
+    build = state.declared.charged_strikes.swing_schedule
+    kit = _kit_swing_ramp(state)
+    if kit is None:
+        return build, None
+    if build is None:
+        return (
+            rearmed_swings.SwingSchedule(
+                ramp=None, window=None, schedules_single_rotation=False
+            ),
+            kit,
+        )
+    return build, kit
 
 
 def _rate_attack_speed_grant(
@@ -46,8 +108,10 @@ def _rate_attack_speed_grant(
         active_window = rearmed_swings.ActiveWindow(
             cast_start, state.as_window_end, bonus_as_pct
         )
-    ramp = state.declared.charged_strikes.swing_schedule
-    if ramp is not None and ramp.schedules(one_rotation=state.one_rotation):
+    ramp, kit_ramp = _swing_schedule_for(state)
+    if ramp is not None and (
+        kit_ramp is not None or ramp.schedules(one_rotation=state.one_rotation)
+    ):
         times = rearmed_swings.swing_times(
             ramp,
             attack_speed=base_as if active_window is not None else state.attack_speed,
@@ -56,6 +120,7 @@ def _rate_attack_speed_grant(
             uptime=state.auto_attack_uptime,
             critical_chance=state.champion_stats["critical_strike_chance"] / 100.0,
             active_window=active_window,
+            kit_ramp=kit_ramp,
         )
         state.support_attack_times = times
         state.num_auto_attacks = len(times)
@@ -209,6 +274,13 @@ def _apply_stat_buff_ultimates(state: FightState) -> None:
                 * state.fight_duration_seconds
                 * state.auto_attack_uptime
             )
+
+    # A kit ramp re-rates the swing stream with no flat grant behind it, so
+    # nothing above would have reached the rater: the stacks ARE the bonus.
+    # An autos-only fight still swings, so it still ramps.
+    if _kit_swing_ramp(state) is not None and not state.support_attack_times:
+        _rate_attack_speed_grant(state, "", 0.0, None)
+        stats["attack_speed"] = state.attack_speed
 
     if withheld:
         state.notes.append(

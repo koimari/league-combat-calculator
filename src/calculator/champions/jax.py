@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -22,22 +23,67 @@ from .slot_extract import (
 from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
+_ASSAULT_STACK_RE = re.compile(
+    r"generate a stack of Relentless Assault on-attack for "
+    r"(?P<seconds>\d+(?:\.\d+)?) seconds[^.]*?stacking up to (?P<stacks>\d+) times"
+)
+
+
+def _assault_stack_terms(ability: dict[str, Any]) -> tuple[float, int]:
+    """Relentless Assault's cached stack life and cap."""
+    effects = ability.get("effects")
+    for effect in effects if effects else ():
+        description = effect.get("description")
+        if description is None:
+            continue
+        match = _ASSAULT_STACK_RE.search(str(description))
+        if match is not None:
+            return float(match.group("seconds")), int(match.group("stacks"))
+    raise ValueError(
+        "Jax P: the cached innate no longer states Relentless Assault's "
+        "stack life and cap ('on-attack for N seconds ... stacking up to N "
+        "times')"
+    )
+
 
 def _assault(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    stacks = min(max(int(ctx.option("p_stacks")), 0), 8)
+    requested = ctx.options.get("p_stacks")
+    seconds, max_stacks = _assault_stack_terms(ability)
+    stacks = min(max(int(requested), 0), max_stacks) if requested is not None else 0
     row = find_named_leveling(ability, "Per-Level Scaling")
     per_stack = sum_modifiers(row, ctx.level, ctx.stats, ctx.target) if row else 0.0
-    bonus_as = per_stack * stacks
     entry = no_damage(
         ctx,
         name=ability_name(ability),
-        reason=f"{stacks} attack-speed stacks; fish/river economy is explicit utility.",
+        reason=(
+            (
+                f"{per_stack:g}% attack speed per stack, up to {max_stacks} held "
+                f"for {seconds:g}s each; the fight walks the swings that stack "
+                "them.  Fish/river economy is explicit utility."
+            )
+            if requested is None
+            else (
+                f"{stacks} attack-speed stacks; fish/river economy is explicit "
+                "utility."
+            )
+        ),
     )
-    if entry is not None:
-        entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+    if entry is None:
+        return None
+    if requested is None:
+        # One stack per completed attack, each living its cached seconds:
+        # the record an item ramp already is, walked by the same walker
+        # (interpreters/rearmed_swings).
+        entry["swing_ramp"] = {
+            "per_stack": per_stack / 100.0,
+            "max_stacks": max_stacks,
+            "stack_duration": seconds,
+        }
+    else:
+        entry["stat_buff"] = {"bonus_attack_speed": per_stack * stacks}
     return entry
 
 
@@ -151,7 +197,16 @@ MODULE_CC = {"Q": "none", "W": "none", "R": "none", "E": "stun", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Jax", cc_kinds=MODULE_CC)
 OPTIONS = [
-    int_option("p_stacks", 8, minimum=0, maximum=8, label="Relentless Assault stacks"),
+    int_option(
+        "p_stacks",
+        8,
+        minimum=0,
+        maximum=8,
+        label=(
+            "Relentless Assault stacks; unset walks the ramp, one stack per "
+            "attack, so the swings speed up as they land"
+        ),
+    ),
     int_option(
         "e_dodged_attacks",
         0,

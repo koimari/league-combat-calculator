@@ -142,6 +142,7 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
     uptime: float = 1.0,
     critical_chance: float = 0.0,
     active_window: ActiveWindow | None = None,
+    kit_ramp: DecayingStackRamp | None = None,
 ) -> tuple[float, ...]:
     """Walk *schedule*, one swing at a time, and return when each lands.
 
@@ -154,6 +155,11 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
     Nothing here reads a roster, a target or a damage number: the fight
     ledger consumes the timestamps and prices them itself.
 
+    *kit_ramp* is the champion's OWN ramp (Jax's Relentless Assault), which
+    re-rates the same stream as a build's item ramp rather than replacing
+    it. Each keeps its own stack clock, because their durations differ, and
+    their bonuses add: one attack lands one stack on each.
+
     The arguments are the authored timing inputs, passed explicitly, so no
     caller can hide one in a global or let a stale fallback stand in for it.
     """
@@ -162,6 +168,7 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
     ramp, window = schedule.ramp, schedule.window
     times: list[float] = [0.0]
     stack_times: list[float] = [0.0]
+    kit_stack_times: list[float] = [0.0]
     current = 0.0
     active_until = 0.0 if window is None else window.duration
     cooldown = 0.0 if window is None else window.cooldown
@@ -175,6 +182,15 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
                 start for start in stack_times if current - start < ramp.stack_duration
             ]
         bonus = 0.0 if ramp is None else ramp.bonus_percent(len(stack_times))
+        if kit_ramp is None:
+            kit_stack_times.clear()
+        else:
+            kit_stack_times[:] = [
+                start
+                for start in kit_stack_times
+                if current - start < kit_ramp.stack_duration
+            ]
+            bonus += kit_ramp.bonus_percent(len(kit_stack_times))
         if active_window is not None:
             bonus += active_window.bonus_at(current)
         rate = calculate_attack_speed(attack_speed, attack_speed_ratio, bonus) * uptime
@@ -198,6 +214,8 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
         times.append(next_time)
         if ramp is not None:
             stack_times.append(next_time)
+        if kit_ramp is not None:
+            kit_stack_times.append(next_time)
         current = next_time
         first_attack = False
     return tuple(times)

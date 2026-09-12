@@ -285,6 +285,8 @@ ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
                 "armed_procs": None,
                 # The sourced window a cast's own stack level rides.
                 "stack_window": None,
+                # The sourced record of a kit's own swing ramp.
+                "swing_ramp": None,
                 "spellblade_bonus_true_ratio": 0.0,
                 "spellblade_true_ratio": 0.0,
             }

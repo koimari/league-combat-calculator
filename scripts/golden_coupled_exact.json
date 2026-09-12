@@ -72,12 +72,12 @@
     },
     "cleaver_bloodsong_roster": {
       "combat/0:main/incoming": "2701.0",
-      "combat/0:main/outgoing": "3742.8",
+      "combat/0:main/outgoing": "3304.9",
       "combat/1:ally:Lulu/incoming": "2129.0",
       "combat/1:ally:Lulu/outgoing": "1132.0",
-      "combat/2:enemy:Aatrox/incoming": "4874.7",
+      "combat/2:enemy:Aatrox/incoming": "4436.8",
       "combat/2:enemy:Aatrox/outgoing": "4830.0",
-      "fights/0:Aatrox": "3921.0"
+      "fights/0:Aatrox": "3483.1"
     },
     "control_event_roster": {
       "combat/0:main/incoming": "2146.2",
@@ -294,11 +294,11 @@
       "numeric_leaves": 0,
       "sections": "coupled_scenarios"
     },
-    "git_head": "8999a737955a5cc2a67744a39fb8706371268a0f",
+    "git_head": "c66cae08583b414b3eeb46fe6648347c8505fb03",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 30,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "3ab9d4352f582dc43bae2ec6df506abdf357bb23"
+    "src_tree_sha": "d826ff95d88a96728f71f97a04e14e2ec1ba1b9c"
   }
 }

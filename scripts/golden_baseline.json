@@ -11362,14 +11362,16 @@
           "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "8 attack-speed stacks; fish/river economy is explicit utility.",
+          "detail": "12.5% attack speed per stack, up to 8 held for 2.5s each; the fight walks the swings that stack them.  Fish/river economy is explicit utility.",
           "name": "Relentless Assault",
           "parts": [],
           "rank": 11,
           "resource_cost": 0.0,
           "resource_type": "MANA",
-          "stat_buff": {
-            "bonus_attack_speed": 100.0
+          "swing_ramp": {
+            "max_stacks": 8,
+            "per_stack": 0.12,
+            "stack_duration": 2.5
           },
           "total_raw": 0.0
         }
@@ -53561,18 +53563,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60626,
-      "numeric_leaves": 46431,
+      "leaves": 60628,
+      "numeric_leaves": 46433,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "8999a737955a5cc2a67744a39fb8706371268a0f",
+    "git_head": "c66cae08583b414b3eeb46fe6648347c8505fb03",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "3ab9d4352f582dc43bae2ec6df506abdf357bb23"
+    "src_tree_sha": "d826ff95d88a96728f71f97a04e14e2ec1ba1b9c"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -63243,12 +63245,12 @@
               "Q": 150.0,
               "R": 493.6,
               "W": 140.0,
-              "auto_attacks": 350.0,
-              "on_hit_ability_W": 2157.12,
+              "auto_attacks": 280.0,
+              "on_hit_ability_W": 1848.96,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 438.5
+              "shadowflame_Shadowflame": 376.86
             },
-            "total_damage": 4228.1
+            "total_damage": 3788.3
           },
           "no_items": {
             "breakdown_totals": {
@@ -63256,10 +63258,10 @@
               "Q": 150.0,
               "R": 125.0,
               "W": 140.0,
-              "auto_attacks": 350.0,
-              "on_hit_ability_W": 600.0
+              "auto_attacks": 280.0,
+              "on_hit_ability_W": 514.29
             },
-            "total_damage": 1450.71
+            "total_damage": 1295.0
           },
           "physical_build": {
             "breakdown_totals": {
@@ -63267,11 +63269,11 @@
               "Q": 253.33,
               "R": 125.0,
               "W": 572.0,
-              "auto_attacks": 1716.0,
+              "auto_attacks": 1430.0,
               "on_hit_Kraken Slayer": 333.13,
-              "on_hit_ability_W": 685.71
+              "on_hit_ability_W": 600.0
             },
-            "total_damage": 3770.9
+            "total_damage": 3399.18
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -63279,11 +63281,11 @@
               "Q": 224.0,
               "R": 125.0,
               "W": 381.6,
-              "auto_attacks": 1335.6,
-              "on_hit_ability_W": 771.43,
+              "auto_attacks": 1144.8,
+              "on_hit_ability_W": 685.71,
               "spellblade_Trinity Force": 280.0
             },
-            "total_damage": 3203.34
+            "total_damage": 2926.83
           }
         }
       },
@@ -63337,12 +63339,12 @@
               "Q": 150.0,
               "R": 553.6,
               "W": 186.67,
-              "auto_attacks": 560.0,
-              "on_hit_ability_W": 2913.28,
+              "auto_attacks": 466.67,
+              "on_hit_ability_W": 2549.12,
               "proc_Luden's Echo": 155.36,
-              "shadowflame_Shadowflame": 597.73
+              "shadowflame_Shadowflame": 524.9
             },
-            "total_damage": 5556.15
+            "total_damage": 5025.83
           },
           "no_items": {
             "breakdown_totals": {
@@ -63350,10 +63352,10 @@
               "Q": 150.0,
               "R": 178.57,
               "W": 186.67,
-              "auto_attacks": 560.0,
-              "on_hit_ability_W": 1085.71
+              "auto_attacks": 466.67,
+              "on_hit_ability_W": 950.0
             },
-            "total_damage": 2332.38
+            "total_damage": 2103.33
           },
           "physical_build": {
             "breakdown_totals": {
@@ -63361,11 +63363,11 @@
               "Q": 253.33,
               "R": 178.57,
               "W": 649.0,
-              "auto_attacks": 2271.5,
-              "on_hit_Kraken Slayer": 646.02,
-              "on_hit_ability_W": 1221.43
+              "auto_attacks": 1947.0,
+              "on_hit_Kraken Slayer": 412.69,
+              "on_hit_ability_W": 1085.71
             },
-            "total_damage": 5391.28
+            "total_damage": 4697.74
           },
           "spellblade_build": {
             "breakdown_totals": {
@@ -63373,11 +63375,11 @@
               "Q": 224.0,
               "R": 178.57,
               "W": 443.43,
-              "auto_attacks": 1773.73,
-              "on_hit_ability_W": 1357.14,
+              "auto_attacks": 1552.02,
+              "on_hit_ability_W": 1221.43,
               "spellblade_Trinity Force": 373.33
             },
-            "total_damage": 4521.64
+            "total_damage": 4164.21
           }
         }
       }
