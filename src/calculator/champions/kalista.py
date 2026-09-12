@@ -38,6 +38,7 @@ rather than staying silently absent from the parse output.
     event could carry.
 """
 
+import re
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -71,9 +72,47 @@ def _soul_marked(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
+_REND_WINDOW_RE = re.compile(
+    r"apply a stack of Rend to enemies for (?P<seconds>\d+(?:\.\d+)?) seconds"
+    r"[^.]*?stacking up to (?P<stacks>\d+) times"
+)
+
+
+def _rend_window(ability: dict[str, Any]) -> dict[str, Any]:
+    """The cached life and cap of a Rend stack, and what lodges one."""
+    effects = ability.get("effects")
+    for effect in effects if effects else ():
+        description = effect.get("description")
+        if description is None:
+            continue
+        match = _REND_WINDOW_RE.search(str(description))
+        if match is not None:
+            return {
+                "arming_slots": (),
+                "max_stacks": int(match.group("stacks")),
+                "hits_required": int(match.group("stacks")),
+                "stacks_from_swings": True,
+                "stacks_from_ability_hits": True,
+                "stack_seconds": float(match.group("seconds")),
+                "armed_at_start": False,
+                "requested": False,
+            }
+    raise ValueError(
+        "Kalista E: the cached entry no longer states Rend's stack life and "
+        "cap ('apply a stack of Rend to enemies for N seconds ... stacking "
+        "up to N times')"
+    )
+
+
 @ranked_slot
 def _rend(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
-    stacks = min(max(int(ctx.option("rend_stacks")), 1), 254)
+    requested = ctx.options.get("rend_stacks")
+    window = _rend_window(ability)
+    stacks = (
+        min(max(int(requested), 1), window["max_stacks"])
+        if requested is not None
+        else 1
+    )
     first = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     additional = extract_named(
         ability, "Bonus Damage per Additional Stack", rank, ctx.stats, ctx.target
@@ -86,8 +125,31 @@ def _rend(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | 
         total,
         "physical",
     )
-    entry["parts"] = (DamagePart("physical", total, time_offset=0.0),)
-    entry["detail"] = f"{stacks} Rend stack(s)"
+    if requested is None:
+        # Her basic attacks and Pierce lodge the spears Rend rips out, so
+        # the level it consumes is a count of the hits that landed before
+        # the cast (champions/armed_procs.py). The floor of one is the
+        # module's own reviewed rail and it stands: ripping out spears
+        # implies a spear, so a cast with none counted still prices one.
+        entry["parts"] = (
+            DamagePart(
+                "physical",
+                total,
+                time_offset=0.0,
+                stack_scaled_damage=(
+                    lambda level: first + max(0, max(level, 1) - 1) * additional
+                ),
+            ),
+        )
+        entry["stack_window"] = window
+        entry["detail"] = (
+            f"Rend consumes the spears her hits lodged: {first:.2f} for the "
+            f"first and {additional:.2f} for each additional, over the "
+            f"{window['stack_seconds']:g}s a stack holds"
+        )
+    else:
+        entry["parts"] = (DamagePart("physical", total, time_offset=0.0),)
+        entry["detail"] = f"{stacks} Rend stack(s)"
     return entry
 
 
@@ -165,7 +227,16 @@ parse_abilities = build_parser(
 )
 
 OPTIONS = [
-    int_option("rend_stacks", 1, minimum=1, maximum=254, label="Rend stacks"),
+    int_option(
+        "rend_stacks",
+        1,
+        minimum=1,
+        maximum=254,
+        label=(
+            "Rend stacks; unset derives them from the hits that lodged a "
+            "spear before the cast, with the module's floor of one"
+        ),
+    ),
     bool_option(
         "soul_mark_proc",
         False,
