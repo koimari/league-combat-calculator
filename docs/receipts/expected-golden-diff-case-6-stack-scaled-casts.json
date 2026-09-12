@@ -1,0 +1,67 @@
+{
+ "slice": "case-6-stack-scaled-casts",
+ "issue": "docs/surface-area-backlog.md SR8, opening it",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures all three baselines in the same commit."
+ },
+ "what_landed": "A part may declare stack_scaled_damage(level) beside hp_scaled_damage, and the rotation walks the level its own cast window collected from the streams the module says stack it. Tristana's Explosive Charge is the first slot on it.",
+ "why": [
+  "Tristana's detonation priced the fully stacked row whatever the fight did: e_stacks defaulted to 4 of 4. The charge attaches for its cached 4 seconds and every attack or ability hit inside that window stacks it, so a fight that lands fewer hits detonates for less, and one with no swings at all detonates at the base row.",
+  "Every moved leaf is Tristana's, and they move DOWN: the golden's sustained scenarios land fewer than four hits inside the charge's window, which the declared default was assuming. A request that names e_stacks still gets the count it named, and the four-stack identity between the cached rows is pinned by the test that now asks for it."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "Tristana is the only slot that declares a stack_window in this slice."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "the E row publishes its window and its detail changes shape"
+  },
+  "/metadata/fingerprint/numeric_leaves": {
+   "cause": "the same"
+  }
+ },
+ "summary": {
+  "direction": "down: the declared default was the fully stacked reading and the fight stacks fewer",
+  "counts": {
+   "golden": 20,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Tristana/abilities_level_11/E/detail",
+   "/champion_baselines/Tristana/abilities_level_11/E/stack_window",
+   "/registered_champion_fights/Tristana/11/magic_build/breakdown_totals/E",
+   "/registered_champion_fights/Tristana/11/magic_build/total_damage",
+   "/registered_champion_fights/Tristana/11/no_items/breakdown_totals/E",
+   "/registered_champion_fights/Tristana/11/no_items/total_damage",
+   "/registered_champion_fights/Tristana/11/physical_build/breakdown_totals/E",
+   "/registered_champion_fights/Tristana/11/physical_build/total_damage",
+   "/registered_champion_fights/Tristana/11/spellblade_build/breakdown_totals/E",
+   "/registered_champion_fights/Tristana/11/spellblade_build/total_damage",
+   "/registered_champion_fights/Tristana/18/magic_build/breakdown_totals/E",
+   "/registered_champion_fights/Tristana/18/magic_build/total_damage",
+   "/registered_champion_fights/Tristana/18/no_items/breakdown_totals/E",
+   "/registered_champion_fights/Tristana/18/no_items/total_damage",
+   "/registered_champion_fights/Tristana/18/physical_build/breakdown_totals/E",
+   "/registered_champion_fights/Tristana/18/physical_build/total_damage",
+   "/registered_champion_fights/Tristana/18/spellblade_build/breakdown_totals/E",
+   "/registered_champion_fights/Tristana/18/spellblade_build/total_damage"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}

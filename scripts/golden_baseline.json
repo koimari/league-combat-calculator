@@ -30570,7 +30570,7 @@
           "cc_reviewed": true,
           "cooldown": 16.0,
           "damage_type": "physical",
-          "detail": "4/4 stack(s); base 60.00 + 4 x 15.00 per-stack bonus",
+          "detail": "base 60.00 + 15.00 per stack, up to 4: the fight counts the attacks and ability hits that land while the charge holds",
           "event_order_certified": "single_hit",
           "name": "Explosive Charge",
           "parts": [
@@ -30580,6 +30580,16 @@
           "resource_cost": 50.0,
           "resource_type": "MANA",
           "skillshot": true,
+          "stack_window": {
+            "armed_at_start": false,
+            "arming_slots": [],
+            "hits_required": 4,
+            "max_stacks": 4,
+            "requested": false,
+            "stack_seconds": 4.0,
+            "stacks_from_ability_hits": true,
+            "stacks_from_swings": true
+          },
           "total_raw": 120.0
         },
         "Q": {
@@ -53510,18 +53520,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60593,
-      "numeric_leaves": 46418,
+      "leaves": 60600,
+      "numeric_leaves": 46421,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "19306c16bb6e801a25c711d92ae5b9b18ca8d094",
+    "git_head": "b7430b421f4c856148f739525f61450c254f6b4c",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "a355f12ca34b5046d3cc055818a97a61d4cc1bd3"
+    "src_tree_sha": "180bca62cdb75d87d8db399944b0ee3f38ae3bf0"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -79243,44 +79253,44 @@
       "11": {
         "magic_build": {
           "breakdown_totals": {
-            "E": 374.67,
+            "E": 187.33,
             "Q": 0.0,
             "R": 573.6,
             "W": 288.8,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 155.36
           },
-          "total_damage": 1392.43
+          "total_damage": 1205.09
         },
         "no_items": {
           "breakdown_totals": {
-            "E": 80.0,
+            "E": 40.0,
             "Q": 0.0,
             "R": 196.43,
             "W": 100.0,
             "auto_attacks": 0.0
           },
-          "total_damage": 376.43
+          "total_damage": 336.43
         },
         "physical_build": {
           "breakdown_totals": {
-            "E": 245.33,
+            "E": 122.67,
             "Q": 0.0,
             "R": 273.93,
             "W": 210.71,
             "auto_attacks": 0.0
           },
-          "total_damage": 729.98
+          "total_damage": 607.31
         },
         "spellblade_build": {
           "breakdown_totals": {
-            "E": 198.4,
+            "E": 99.2,
             "Q": 0.0,
             "R": 251.93,
             "W": 179.29,
             "auto_attacks": 0.0
           },
-          "total_damage": 629.61
+          "total_damage": 530.41
         },
         "sustained": {
           "magic_build": {
@@ -79331,44 +79341,44 @@
       "18": {
         "magic_build": {
           "breakdown_totals": {
-            "E": 508.0,
+            "E": 254.0,
             "Q": 0.0,
             "R": 613.6,
             "W": 344.8,
             "auto_attacks": 0.0,
             "proc_Luden's Echo": 155.36
           },
-          "total_damage": 1621.76
+          "total_damage": 1367.76
         },
         "no_items": {
           "breakdown_totals": {
-            "E": 213.33,
+            "E": 106.67,
             "Q": 0.0,
             "R": 232.14,
             "W": 150.0,
             "auto_attacks": 0.0
           },
-          "total_damage": 595.48
+          "total_damage": 488.81
         },
         "physical_build": {
           "breakdown_totals": {
-            "E": 378.67,
+            "E": 189.33,
             "Q": 0.0,
             "R": 309.64,
             "W": 260.71,
             "auto_attacks": 0.0
           },
-          "total_damage": 949.02
+          "total_damage": 759.69
         },
         "spellblade_build": {
           "breakdown_totals": {
-            "E": 331.73,
+            "E": 165.87,
             "Q": 0.0,
             "R": 287.64,
             "W": 229.29,
             "auto_attacks": 0.0
           },
-          "total_damage": 848.66
+          "total_damage": 682.8
         },
         "sustained": {
           "magic_build": {
