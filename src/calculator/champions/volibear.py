@@ -5,11 +5,11 @@ E3 additions over the CP10.9 packet module:
   to 5 stacks grants 5% (+ 3% per 100 AP) bonus attack speed (25% + 15%
   per 100 AP fully stacked), and at 5 stacks basic attacks gain
   Lightning Claws on-hit bonus magic damage (level-scaled flat + 45%
-  AP). The stack count is a user option (``relentless_storm_stacks``,
-  default 5 = the sustained-fight state) — the model cannot simulate
-  which specific damage events re-stack the 6-second window, so the
-  pre-stacked count is priced instead, matching the module convention
-  for stack passives (Ezreal P, Darius P).
+  AP). Unset, the count derives: the stacks ride the swing ramp that
+  the attacks and casts stack, and the same count arms Lightning Claws
+  as a retained threshold, live for as long as the last stack is.
+  ``relentless_storm_stacks`` still states a level for a reader who
+  wants one.
 - W (Frenzied Maul) prices the Wounded 2nd bite: the first cast marks
   the target Wounded for 8 seconds and the next cast on the same
   target deals 50% (+ 25% per 100 bonus AD) increased damage. The
@@ -59,6 +59,7 @@ _STORM_AS_PER_STACK = data_value(_VOLIBEAR_P_SPELL, "PAttackSpeed") * 100.0
 _STORM_AS_PER_100_AP = (
     calculation_coefficient(_VOLIBEAR_P_SPELL, "AttackSpeedCalc") * 10000.0
 )
+_STORM_STACK_SECONDS = data_value(_VOLIBEAR_P_SPELL, "BuffDuration")
 _VOLIBEAR_W_SPELL = spell_object("Volibear", "VolibearW")
 # W2DamageMultiplier is a total multiplier; the module stores its additive
 # bonus. W2BonusADDamageMultiplier is per bonus-AD point; convert it to the
@@ -89,37 +90,67 @@ def _relentless_storm(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
 
-    stacks = int(
-        ctx.options.get("relentless_storm_stacks", _RELENTLESS_STORM_MAX_STACKS)
-    )
-    stacks = min(max(stacks, 0), _RELENTLESS_STORM_MAX_STACKS)
+    requested = ctx.options.get("relentless_storm_stacks")
     ap = ctx.stat("ability_power")
     per_stack = _STORM_AS_PER_STACK + _STORM_AS_PER_100_AP * ap / 100.0
-    bonus_as = stacks * per_stack
-
+    per_hit = extract_named(
+        ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
+    )
+    claws = {
+        "name": "Lightning Claws (on-hit)",
+        "damage_per_hit": per_hit,
+        "damage_type": "magic",
+    }
     entry: dict[str, Any] = {
         "name": ability_name(ability),
         "rank": ctx.level,
         "damage_type": "magic",
         "total_raw": 0.0,
         "parts": (),
-        "stat_buff": {"bonus_attack_speed": bonus_as},
-        "detail": (
-            f"{stacks}/{_RELENTLESS_STORM_MAX_STACKS} stack(s); "
-            f"{bonus_as:g}% bonus attack speed ({per_stack:g}% per stack)"
-        ),
     }
-
-    if stacks >= _RELENTLESS_STORM_MAX_STACKS:
-        per_hit = extract_named(
-            ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
-        )
+    if requested is None:
+        # One stack per damaging basic attack or ability, each living its
+        # cached seconds: the ramp re-rates the swings and the same count
+        # turns Lightning Claws on, so the row declares both. The ramp reads
+        # the CASTS the setup schedule places; the threshold reads the
+        # fight's own ability-hit ledger. Each is the best stream available
+        # where it is resolved, and both are floors.
+        entry["swing_ramp"] = {
+            "per_stack": per_stack / 100.0,
+            "max_stacks": _RELENTLESS_STORM_MAX_STACKS,
+            "stack_duration": _STORM_STACK_SECONDS,
+            "stacks_from_swings": True,
+            "stacks_from_ability_casts": True,
+        }
+        entry["armed_procs"] = {
+            "arming_slots": (),
+            "max_stacks": _RELENTLESS_STORM_MAX_STACKS,
+            "hits_required": _RELENTLESS_STORM_MAX_STACKS,
+            "stacks_from_swings": True,
+            "stacks_from_ability_hits": True,
+            "stack_seconds": _STORM_STACK_SECONDS,
+            "retained_at_threshold": True,
+            "armed_at_start": False,
+            "requested": False,
+        }
         if per_hit > 0:
-            entry["on_hit"] = {
-                "name": "Lightning Claws (on-hit)",
-                "damage_per_hit": per_hit,
-                "damage_type": "magic",
-            }
+            entry["on_hit"] = claws
+        entry["detail"] = (
+            f"{per_stack:g}% bonus attack speed per stack, up to "
+            f"{_RELENTLESS_STORM_MAX_STACKS} held for {_STORM_STACK_SECONDS:g}s "
+            "each; the fight walks the attacks and casts that stack them, and "
+            "Lightning Claws is live for as long as the last stack is"
+        )
+        return entry
+    stacks = min(max(int(requested), 0), _RELENTLESS_STORM_MAX_STACKS)
+    bonus_as = stacks * per_stack
+    entry["stat_buff"] = {"bonus_attack_speed": bonus_as}
+    entry["detail"] = (
+        f"{stacks}/{_RELENTLESS_STORM_MAX_STACKS} stack(s); "
+        f"{bonus_as:g}% bonus attack speed ({per_stack:g}% per stack)"
+    )
+    if stacks >= _RELENTLESS_STORM_MAX_STACKS and per_hit > 0:
+        entry["on_hit"] = claws
     return entry
 
 
@@ -232,7 +263,10 @@ OPTIONS = [
         _RELENTLESS_STORM_MAX_STACKS,
         minimum=0,
         maximum=_RELENTLESS_STORM_MAX_STACKS,
-        label="The Relentless Storm stacks",
+        label=(
+            "The Relentless Storm stacks; unset walks the ramp, one stack per "
+            "attack or ability, and arms Lightning Claws where it fills"
+        ),
     ),
     bool_option("w_wounded", True, label="W hits an already-Wounded target (2nd bite)"),
 ]

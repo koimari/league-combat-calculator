@@ -1,0 +1,73 @@
+{
+ "slice": "volibear-relentless-storm-ramp",
+ "issue": "docs/surface-area-backlog.md SR8, the first stack level feeding TWO mechanics",
+ "landed_against": {
+  "golden": "scripts/golden_baseline.json",
+  "coupled_golden": "scripts/golden_coupled_baseline.json",
+  "coupled_exact": "scripts/golden_coupled_exact.json",
+  "rule": "R-17: this slice declares every diff path here and re-captures the baselines it moved in the same commit."
+ },
+ "what_landed": "Volibear's Relentless Storm rides the swing ramp on both streams, and the same count arms Lightning Claws through a new armed-proc arm: a threshold the swing READS rather than a charge it spends.",
+ "why": [
+  "His one stack count feeds two mechanics, which is why he was left when Jax, Jinx and Ezreal landed. The bonus attack speed re-rates the swings and the fifth stack turns Lightning Claws on, so the row declares a swing_ramp and an armed_procs rule together.",
+  "The claws needed an arm the walker did not have. Its hit counter SPENDS what it counts; Lightning Claws spends nothing and is live for as long as the fifth stack is. retained_at_threshold walks [reached, lost) spans over the counted streams and empowers every swing strictly inside one. The hit that banks the threshold stack is not itself empowered, because the state begins where it lands, which is the fail-closed reading.",
+  "The auto_attacks leaves move UP for the reason Jinx's and Ezreal's did, and it is not the ramp: none of these fights holds an item ramp, so each was priced through the per-phase floor, and a kit ramp puts it on the exact walker that keeps the t=0 swing. The leaf that measures the claws themselves moves DOWN, which is the ramp: on_hit_ability_passive 145.71 -> 121.43 at level 11 is the opening swings that now land before the fifth stack does.",
+  "All 22 pair leaves are his. No coupled leaf moves: no coupled roster holds Volibear."
+ ],
+ "qualifying_population": {
+  "enumerated_before_first_src_edit": false,
+  "rule": "Volibear is the only kit declaring both a swing_ramp and a retained-threshold armed_procs rule, and no coupled roster holds him."
+ },
+ "moved_values": {
+  "/metadata/fingerprint/leaves": {
+   "cause": "his passive row publishes a five-key swing_ramp and a nine-key armed_procs in place of a one-key stat_buff"
+  },
+  "/metadata/fingerprint/numeric_leaves": {
+   "cause": "the numbers among those keys"
+  }
+ },
+ "summary": {
+  "direction": "the claws are withheld until the count fills, which is down; the swing totals are up, because a ramping row is walked exactly where a declared one was floored",
+  "counts": {
+   "golden": 22,
+   "coupled_golden": 0
+  }
+ },
+ "described_leaves": {
+  "rule": "Amendment E: each claimed disposition transition names the leaf it describes and the values on both sides.",
+  "leaves": {}
+ },
+ "expected_diff_paths": {
+  "golden": [
+   "/champion_baselines/Volibear/abilities_level_11/passive/armed_procs",
+   "/champion_baselines/Volibear/abilities_level_11/passive/detail",
+   "/champion_baselines/Volibear/abilities_level_11/passive/stat_buff",
+   "/champion_baselines/Volibear/abilities_level_11/passive/swing_ramp",
+   "/registered_champion_fights/Volibear/11/sustained/magic_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Volibear/11/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Volibear/11/sustained/no_items/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Volibear/11/sustained/no_items/total_damage",
+   "/registered_champion_fights/Volibear/11/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+   "/registered_champion_fights/Volibear/11/sustained/physical_build/breakdown_totals/on_hit_ability_passive",
+   "/registered_champion_fights/Volibear/11/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Volibear/11/sustained/spellblade_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Volibear/11/sustained/spellblade_build/total_damage",
+   "/registered_champion_fights/Volibear/18/sustained/magic_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Volibear/18/sustained/magic_build/total_damage",
+   "/registered_champion_fights/Volibear/18/sustained/no_items/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Volibear/18/sustained/no_items/total_damage",
+   "/registered_champion_fights/Volibear/18/sustained/physical_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Volibear/18/sustained/physical_build/breakdown_totals/on_hit_Kraken Slayer",
+   "/registered_champion_fights/Volibear/18/sustained/physical_build/total_damage",
+   "/registered_champion_fights/Volibear/18/sustained/spellblade_build/breakdown_totals/auto_attacks",
+   "/registered_champion_fights/Volibear/18/sustained/spellblade_build/total_damage"
+  ],
+  "golden_shape_counters": [
+   "/metadata/fingerprint/leaves",
+   "/metadata/fingerprint/numeric_leaves"
+  ],
+  "coupled_golden": [],
+  "coupled_golden_shape_counters": [],
+  "coupled_exact": {}
+ }
+}

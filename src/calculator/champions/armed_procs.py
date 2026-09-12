@@ -65,7 +65,8 @@ class ArmedProcRule:
     Three arms, and a rule carries at least one. ``cooldown`` arms one
     charge every so many seconds; ``per_cast`` banks one on each arming
     cast; ``hits_required`` counts HITS, from the swing stream or the
-    ability stream or both, and procs on every Nth.
+    ability stream or both, and procs on every Nth, or, under
+    ``retained_at_threshold``, on EVERY swing while the count stands.
     ``cooldown_reduction_per_cast`` is Galio's shape, where a cast brings
     the timer forward rather than banking anything. ``stack_seconds``
     expires a banked charge, and ``max_stacks`` caps what may be held.
@@ -100,6 +101,11 @@ class ArmedProcRule:
     # ("the next basic attack OR ability hit against enemies"), so the
     # spending stream is both.
     spent_by_ability_hits: bool = False
+    # The threshold arm: the stacks are a STATE the swing reads, not a
+    # charge it spends. Volibear's Lightning Claws is live for as long as
+    # the fifth stack is, so every swing inside that span is empowered and
+    # no swing costs a stack. A counter spends; a threshold stands.
+    retained_at_threshold: bool = False
 
     def __post_init__(self) -> None:
         if self.max_stacks < 1:
@@ -118,6 +124,11 @@ class ArmedProcRule:
             raise ValueError(
                 "ArmedProcRule counts hits but names no stream to count them "
                 "from; a counter with no input never reaches its threshold"
+            )
+        if self.retained_at_threshold and self.hits_required <= 0:
+            raise ValueError(
+                "ArmedProcRule retains its stacks at a threshold but names no "
+                "hits_required, so there is no threshold to stand at"
             )
         if self.hits_required > self.max_stacks:
             raise ValueError(
@@ -172,12 +183,50 @@ def declared_rule(
         collects_after_cast=bool(payload.get("collects_after_cast")),
         consumed_by_swing=bool(payload.get("consumed_by_swing")),
         spent_by_ability_hits=bool(payload.get("spent_by_ability_hits")),
+        retained_at_threshold=bool(payload.get("retained_at_threshold")),
         cooldown=_optional(payload, "cooldown"),
         cooldown_reduction_per_cast=_optional(payload, "cooldown_reduction_per_cast"),
         per_cast=int(_optional(payload, "per_cast")),
         stack_seconds=_optional(payload, "stack_seconds"),
         armed_at_start=bool(_required(payload, "armed_at_start", owner)),
     )
+
+
+def _held_stack_spans(
+    rule: ArmedProcRule,
+    swing_times: Sequence[float],
+    ability_hit_times: Sequence[float],
+) -> tuple[tuple[float, float], ...]:
+    """When the retained count stands, as ``[reached, lost)`` spans.
+
+    Each counted hit banks a stack on its own clock, and the state is live
+    from the instant the threshold stack lands until the instant the count
+    falls back under it.
+    """
+    events: list[float] = []
+    if rule.stacks_from_swings:
+        events += list(swing_times)
+    if rule.stacks_from_ability_hits:
+        events += list(ability_hit_times)
+    stacks: deque[float] = deque()
+    spans: list[tuple[float, float]] = []
+    reached: float | None = None
+    for time in sorted(events):
+        while stacks and stacks[0] <= time:
+            stacks.popleft()
+            if reached is not None and len(stacks) < rule.hits_required:
+                spans.append((reached, time))
+                reached = None
+        if len(stacks) >= rule.max_stacks:
+            stacks.popleft()
+        stacks.append(
+            time + rule.stack_seconds if rule.stack_seconds > 0.0 else float("inf")
+        )
+        if reached is None and len(stacks) >= rule.hits_required:
+            reached = time
+    if reached is not None:
+        spans.append((reached, stacks[0] if stacks else float("inf")))
+    return tuple(spans)
 
 
 def counted_hit_times(
@@ -278,6 +327,16 @@ def armed_swing_times(
     event per proc needs to know which swing carried it, and a row that only
     counts takes the length.
     """
+    if rule.retained_at_threshold:
+        # The stacks are a state, not a charge: every swing inside a span
+        # the count holds is empowered, and the hit that banks the
+        # threshold stack is not, because the state begins where it lands.
+        spans = _held_stack_spans(rule, swing_times, ability_hit_times)
+        return tuple(
+            swing
+            for swing in sorted(swing_times)
+            if any(start < swing < end for start, end in spans)
+        )
     casts = sorted(((time, slot) for slot, time in cast_times), key=lambda row: row[0])
     stacks: deque[float] = deque()  # expiry times of banked charges
     ready_at = 0.0 if rule.armed_at_start else rule.cooldown
