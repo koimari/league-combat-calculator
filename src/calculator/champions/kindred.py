@@ -47,6 +47,7 @@ damage).  Q, W and E each price their own row.
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from .. import healing_helpers as _healing
@@ -107,6 +108,38 @@ _E_MARK_SECONDS = data_value(
 )
 _E_SLOW_SECONDS = data_value(spell_object("Kindred", "KindredEWrapper"), "SlowDuration")
 _E_SLOW_PERCENT = data_value(spell_object("Kindred", "KindredEWrapper"), "SlowAmount")
+
+_VIGOR_RE = re.compile(
+    r"(?P<per_attack>\d+) stacks on-attack, up to a maximum of "
+    r"(?P<maximum>\d+) stacks"
+)
+
+
+def _vigor_stack_terms(ability: dict[str, Any]) -> tuple[int, int]:
+    """Hunter's Vigor's cached on-attack gain and its cap."""
+    effects = ability.get("effects")
+    for effect in effects if effects else ():
+        description = effect.get("description")
+        if description is None:
+            continue
+        match = _VIGOR_RE.search(str(description))
+        if match is not None:
+            return int(match.group("per_attack")), int(match.group("maximum"))
+    raise ValueError(
+        "Kindred W: the cached passive no longer states Hunter's Vigor's "
+        "on-attack gain and cap ('N stacks on-attack, up to a maximum of N "
+        "stacks')"
+    )
+
+
+def _vigor_attacks_to_fill(ability: dict[str, Any]) -> int:
+    """How many of Lamb's attacks fill the bar, counting nothing else."""
+    # Movement fills it too, at one stack per 27 units, and this engine has
+    # no movement to walk. Counting only the attacks can delay a heal and
+    # can never invent one.
+    per_attack, maximum = _vigor_stack_terms(ability)
+    return -(-maximum // per_attack)
+
 
 # HARDCODED: verify on patch updates — wiki prose, not in the JSON.
 # Mounting Dread's third-stack pounce "increased by 0% : 50% (+ 0% :
@@ -313,30 +346,71 @@ def _hunters_vigor(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("W", 0)
     if ability is None:
         return None
-    stacks = min(max(int(ctx.option("w_hunters_vigor_stacks")), 0), 100)
-    if stacks < 100:
+    requested = ctx.options.get("w_hunters_vigor_stacks")
+    per_attack, maximum = _vigor_stack_terms(ability)
+    if requested is None:
+        heal = extract_named(ability, "Heal", ctx.level, ctx.stats, ctx.target)
+        attacks = _vigor_attacks_to_fill(ability)
+        entry = no_damage(
+            ctx,
+            slot="W",
+            name="Hunter's Vigor",
+            reason=(
+                f"{per_attack} stacks on-attack to a maximum of {maximum}, so "
+                f"every {attacks} attacks fill the bar and the next one heals "
+                f"Kindred for the missing-health share of {heal:g} (47 : 81 "
+                "based on level); the fight walks the attacks that fill it. "
+                "Movement fills it too, at one stack per 27 units, which this "
+                "engine does not walk, so the count is a floor.  The heal is "
+                "not triggered at full health."
+            ),
+        )
+        if entry is not None:
+            entry["heal_requires_stacks"] = {
+                "per_hit": per_attack,
+                "max_stacks": maximum,
+                "attacks_to_fill": attacks,
+                "repeats": True,
+            }
+        return entry
+    stacks = min(max(int(requested), 0), maximum)
+    if stacks < maximum:
         return no_damage(
             ctx,
             slot="W",
             name="Hunter's Vigor",
             reason=(
-                f"{stacks}/100 Hunter's Vigor stacks; at 100 stacks the "
+                f"{stacks}/{maximum} Hunter's Vigor stacks; at {maximum} the "
                 "next basic attack heals Kindred for 0% : 100% (based on "
                 "missing health) of 47 : 81 (based on level)."
             ),
         )
     heal = extract_named(ability, "Heal", ctx.level, ctx.stats, ctx.target)
-    return no_damage(
+    entry = no_damage(
         ctx,
         slot="W",
         name="Hunter's Vigor",
         reason=(
-            f"{stacks}/100 Hunter's Vigor stacks: the next basic attack "
+            f"{stacks}/{maximum} Hunter's Vigor stacks: the next basic attack "
             f"heals Kindred for the missing-health share of {heal:g} "
             "(47 : 81 based on level); the heal is not triggered at full "
             "health."
         ),
     )
+    if entry is not None:
+        # A bar stated full heals on the very next attack. The key is what
+        # derive_self_healing reads, and a row below the cap carries none,
+        # which is what stops a stated ZERO from healing: the row is emitted
+        # either way, so its presence alone never meant the heal happened.
+        # A stated level is a snapshot of one instant, not a bar the fight
+        # keeps refilling, so it pays once the way it always has.
+        entry["heal_requires_stacks"] = {
+            "per_hit": per_attack,
+            "max_stacks": maximum,
+            "attacks_to_fill": 1,
+            "repeats": False,
+        }
+    return entry
 
 
 @ranked_slot
@@ -418,7 +492,10 @@ OPTIONS = [
         100,
         minimum=0,
         maximum=100,
-        label="Hunter's Vigor stacks (100 = the next basic attack heals)",
+        label=(
+            "Hunter's Vigor stacks (100 = the next basic attack heals); unset "
+            "walks the attacks that fill the bar"
+        ),
     ),
     int_option(
         "e_stacks",
@@ -464,6 +541,24 @@ MODULE_COVERAGE = coverage(no_damage="PR")
 
 
 # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
+def _vigor_heal_events(
+    counter: dict[str, Any] | None, damage_events: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Which of Lamb's attacks carry the Hunter's Vigor heal."""
+    if counter is None:
+        return []
+    every = int(counter["attacks_to_fill"])
+    if every < 1:
+        return []
+    autos = list(
+        _healing.attributed_events(
+            damage_events, lambda source, _event: source == "auto_attacks"
+        )
+    )
+    carried = [autos[index] for index in range(every - 1, len(autos), every)]
+    return carried if counter["repeats"] else carried[:1]
+
+
 def derive_self_healing(
     champion_data: dict[str, Any],
     champion_stats: dict[str, float],
@@ -503,9 +598,14 @@ def derive_self_healing(
         heal = extract_named(
             _healing.ability_json(champion_data, "W"), "Heal", level, champion_stats, {}
         )
-        for event in _healing.attributed_events(
-            damage_events, lambda source, _event: source == "auto_attacks"
-        ):
+        # A stated level at the cap says the bar is full right now, so the
+        # first auto heals once. A derived one has to FILL it: the cached
+        # gain and cap say how many attacks that takes, the healing attack
+        # spends them, and the bar refills behind it. A stated level below
+        # the cap carries no counter at all and heals nothing, which is the
+        # reading the row's presence alone never gave.
+        counter = ability_damages["W_vigor"].get("heal_requires_stacks")
+        for event in _vigor_heal_events(counter, damage_events):
             healing.append(
                 {
                     "time": float(event.get("time", 0.0)),
@@ -516,7 +616,7 @@ def derive_self_healing(
                     **_healing.trigger_fields(event),
                 }
             )
-            break
+
     return healing
 
 

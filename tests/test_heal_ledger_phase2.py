@@ -490,7 +490,10 @@ def test_kindred_w_hunters_vigor_heals_self_on_the_next_auto_and_never_an_ally()
     """Hunter's Vigor heals Kindred herself on the next basic attack at 100
     stacks (no autos in a one-rotation fight -> no event; sustained fight
     -> exactly one).  The fabricated 'Wolf's Frenzy' ally heal is gone."""
-    res = _fight("Kindred", with_ally=True)
+    # The bar is STATED full throughout: left unset it derives, and neither
+    # of these windows lands the twenty attacks that fill it.
+    full = {"w_hunters_vigor_stacks": 100}
+    res = _fight("Kindred", with_ally=True, options=full)
     assert _main_heals(res, "Hunter's Vigor") == []
     assert _support_heals(res, "Wolf's Frenzy") == []
     assert _support_heals(res, "Hunter's Vigor") == []
@@ -499,7 +502,12 @@ def test_kindred_w_hunters_vigor_heals_self_on_the_next_auto_and_never_an_ally()
     # outside this issue's scope)
 
     sustained = _fight(
-        "Kindred", with_ally=True, duration=8.0, auto_uptime=1.0, include_autos=True
+        "Kindred",
+        with_ally=True,
+        duration=8.0,
+        auto_uptime=1.0,
+        include_autos=True,
+        options=full,
     )
     vigors = _main_heals(sustained, "Hunter's Vigor")
     assert len(vigors) == 1

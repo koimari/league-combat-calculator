@@ -14631,7 +14631,13 @@
         "W_vigor": {
           "cooldown": 16.0,
           "damage_type": "magic",
-          "detail": "100/100 Hunter's Vigor stacks: the next basic attack heals Kindred for the missing-health share of 67 (47 : 81 based on level); the heal is not triggered at full health.",
+          "detail": "5 stacks on-attack to a maximum of 100, so every 20 attacks fill the bar and the next one heals Kindred for the missing-health share of 67 (47 : 81 based on level); the fight walks the attacks that fill it. Movement fills it too, at one stack per 27 units, which this engine does not walk, so the count is a floor.  The heal is not triggered at full health.",
+          "heal_requires_stacks": {
+            "attacks_to_fill": 20,
+            "max_stacks": 100,
+            "per_hit": 5,
+            "repeats": true
+          },
           "name": "Hunter's Vigor",
           "parts": [],
           "rank": 3,
@@ -53655,18 +53661,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60701,
-      "numeric_leaves": 46474,
+      "leaves": 60705,
+      "numeric_leaves": 46477,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "bb4c1232559e5b84e1521463ffb2394a58bc6823",
+    "git_head": "21152d49d03cb088d522d13724cfca9f5d280b33",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "5f678072e88f5e8d3dbdbef37b3362e5d03a36fe"
+    "src_tree_sha": "0407f5c8cbc2ee3f0e4ad45b3c13120a47da6a3b"
   },
   "registered_champion_fights": {
     "Aatrox": {

@@ -256,8 +256,11 @@ class TestKindred:
     def test_heal_fires_on_first_auto_scaled_by_missing_health(self):
         """At 100 stacks the next basic attack heals the missing-health
         share of 47 : 81 (based on level) — 81 at level 18."""
+        # The bar is STATED full: unset it derives, and six seconds of
+        # attacks do not fill it (champions/kindred.py's counter).
         data = _fight(
             "Kindred",
+            options={"w_hunters_vigor_stacks": 100},
             mode="time_based",
             duration=6,
             include_autos=True,
