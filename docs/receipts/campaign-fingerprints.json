@@ -68,7 +68,8 @@
   "The irelia-ionian-fervor-ramp slice re-captures the PAIR golden block only (R-17, receipt docs/receipts/expected-golden-diff-irelia-ionian-fervor-ramp.json). Her passive row publishes a swing_ramp and a retained-threshold armed_procs rule in place of a one-key stat_buff: leaves 60647 -> 60659 and numeric_leaves 46443 -> 46448, entries unchanged, over 22 leaves all hers. The coupled and exact captures moved no value, so both files are left as they stand and their blocks keep the tree they were measured on.",
   "The stat-ramp-zaahen-graves-wukong slice re-captures the PAIR golden block only (R-17, receipt docs/receipts/expected-golden-diff-stat-ramp-zaahen-graves-wukong.json). Three rows publish a stat_ramp, and Zaahen's replaces a stat_buff the parser used to resolve: leaves 60659 -> 60676 and numeric_leaves 46448 -> 46456, entries unchanged, over 106 leaves of which 101 are Zaahen's, because his grant is attack damage and it reaches every number he prices. The coupled and exact captures moved no value, so both files are left as they stand and their blocks keep the tree they were measured on.",
   "The ashe-rangers-focus-cast-arming slice re-captures the PAIR golden block only (R-17, receipt docs/receipts/expected-golden-diff-ashe-rangers-focus-cast-arming.json). Her Q row publishes a three-key cast_requires_stacks it did not carry: leaves 60676 -> 60679 and numeric_leaves 46456 -> 46459, entries unchanged, over 19 leaves all hers, every one of them down because she no longer opens a fight with Focus full. The coupled and exact captures moved no value, so both files are left as they stand.",
-  "The kindred-mounting-dread-pounce slice re-captures the PAIR golden block only (R-17, receipt docs/receipts/expected-golden-diff-kindred-mounting-dread-pounce.json). Her E row trades its damage keys for a typed control_events row and a whole new E_pounce entry sits beside it: leaves 60679 -> 60701 and numeric_leaves 46459 -> 46474, entries unchanged, over 44 leaves all hers. The coupled and exact captures moved no value, so both files stand."
+  "The kindred-mounting-dread-pounce slice re-captures the PAIR golden block only (R-17, receipt docs/receipts/expected-golden-diff-kindred-mounting-dread-pounce.json). Her E row trades its damage keys for a typed control_events row and a whole new E_pounce entry sits beside it: leaves 60679 -> 60701 and numeric_leaves 46459 -> 46474, entries unchanged, over 44 leaves all hers. The coupled and exact captures moved no value, so both files stand.",
+  "The kindred-hunters-vigor-fill slice re-captures the PAIR golden block only (R-17, receipt docs/receipts/expected-golden-diff-kindred-hunters-vigor-fill.json). Her W_vigor row publishes a four-key heal_requires_stacks it did not carry: leaves 60701 -> 60705 and numeric_leaves 46474 -> 46477, entries unchanged, over 2 leaves both on that parse row. No golden fight is long enough at full uptime to land the twenty attacks that fill the bar, which is why nothing else moves. The coupled and exact captures moved no value."
  ],
  "provenance": {
   "golden": "VERIFIED",
@@ -83,9 +84,9 @@
  "golden": {
   "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights",
   "entries": 672,
-  "leaves": 60701,
-  "numeric_leaves": 46474,
-  "src_tree_sha": "5f678072e88f5e8d3dbdbef37b3362e5d03a36fe"
+  "leaves": 60705,
+  "numeric_leaves": 46477,
+  "src_tree_sha": "0407f5c8cbc2ee3f0e4ad45b3c13120a47da6a3b"
  },
  "coupled_golden": {
   "sections": "coupled_scenarios",
