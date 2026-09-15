@@ -91,11 +91,15 @@ def _attach_display_splits(result: dict[str, Any]) -> None:
     # walk reads, so the published scalar and the walk cannot disagree.
     heal_power = heal_and_shield_power_factor(result.get("champion_stats"))
     result["self_healing"] = sum(
-        float(event.get("amount", 0.0))
+        # Indexed: this iterates result["self_healing_events"], the stream
+        # docs/receipts/internal-row-census.json measures at 443 rows over
+        # all 173 champions with amount, kind, source and time on every one.
+        # healing_category below is NOT among them and keeps its default.
+        float(event["amount"])
         * (
             heal_power
             if amplifies_recovery(
-                str(event.get("kind", "")),
+                str(event["kind"]),
                 str(event.get("healing_category", "")),
             )
             else 1.0

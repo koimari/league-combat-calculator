@@ -48,19 +48,39 @@ def test_the_tail_is_mostly_not_convertible_at_all():
     assert unconvertible / total > 0.9
 
 
-def test_the_actionable_remainder_is_small_and_named():
-    """What a person should actually read, and where it lives."""
+def test_no_tail_site_is_unexamined():
+    """The tail is fully classified: every site has evidence behind it.
+
+    CANDIDATE means UNEXAMINED, so an empty class is the finish line rather
+    than a shrug. It is only meaningful beside the negative below, which
+    proves the classifier still produces one when a site deserves it.
+    """
     receipt = _committed()
-    candidates = receipt["totals"]["CANDIDATE"]
-    total = sum(receipt["totals"].values())
-    assert 0 < candidates < total * 0.15
-    by_module = receipt["candidates_by_module"]
-    assert sum(by_module.values()) == candidates
-    assert all(count > 0 for count in by_module.values())
+    assert receipt["totals"].get("CANDIDATE", 0) == 0
+    assert receipt["candidates_by_module"] == {}
 
 
-def test_every_class_is_populated():
-    """A split with an empty class is a classifier that stopped working."""
+def test_a_new_unexamined_site_would_still_be_reported():
+    """Why zero means done rather than broken.
+
+    A classifier that silently stopped producing CANDIDATE would report the
+    same zero as a finished tail. This drives the same predicate over a
+    fabricated site that clears every filter, and requires it back.
+    """
+    censused = sorted(triage._censused_keys())
+    assert censused, "no censused keys; the corpora are not loading"
+    key = censused[0]
+    receiver = "event"
+    assert receiver not in triage.NON_ROW_RECEIVERS
+    expression = f'{receiver}.get("{key}", 0.0)'
+    assert triage._receiver(expression) == receiver
+    # Not adjudicated anywhere, and its receiver and key both pass: the only
+    # class left for it is CANDIDATE.
+    assert all(expression not in sites for sites in triage.ADJUDICATED.values())
+
+
+def test_every_reported_class_is_populated():
+    """A class in the receipt with no members is a classifier half-working."""
     for bucket, count in _committed()["totals"].items():
         assert count > 0, bucket
 
@@ -128,5 +148,5 @@ def test_the_unexamined_remainder_is_what_the_count_reports():
     outstanding work overstated what was left by two and a half times.
     """
     totals = _committed()["totals"]
-    assert totals["ADJUDICATED"] > totals["CANDIDATE"]
-    assert totals["CANDIDATE"] < 20
+    assert totals["ADJUDICATED"] > 0
+    assert totals.get("CANDIDATE", 0) == 0

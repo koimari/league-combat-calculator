@@ -87,6 +87,12 @@ NON_ROW_RECEIVERS = frozenset(
         "info",
         # The whole response, not a row within it.
         "payload",
+        # A cached champion ability entry, not a published row.
+        "entry",
+        # A module-authored self_state_events payload, validated on arrival.
+        "raw_event",
+        # A denial-authority record, not a row.
+        "authority",
         # survival/outcome_state's own docstring: a slot no transition wrote
         # is deliberately ``{}``, so the defaults read from it are the
         # module saying "nothing happened here", not a missing field.
@@ -113,6 +119,7 @@ ADJUDICATED: dict[str, dict[str, str]] = {
         'event.get("target_scope", "")': "70 support rows; held on corpus size",
         'event.get("target_policy", "")': "70 support rows; held on corpus size",
         'row.get("time", 0.0)': "item_denial_receipts publishes 5 rows; far too thin to license",
+        'row.get("time", 0.0) or 0.0': "the same 5-row site, reported twice by the scanner",
         'row.get("reason", "")': "item_denial_receipts publishes 5 rows",
     },
     "survival/receipt_ledger.py": {
@@ -120,6 +127,9 @@ ADJUDICATED: dict[str, dict[str, str]] = {
             "705 of the 1,075 rows reaching skip(); they are every SKIPPED "
             "action, heals included, so three agreeing damage corpora do not "
             "speak for this input"
+        ),
+        'action.event.get("damage", 0.0) or 0.0': (
+            "the same 705 of 1,075 site, reported twice by the scanner"
         ),
     },
     "survival/outcome_state.py": {
