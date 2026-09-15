@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { request } from "./api";
 import { Icon } from "./Icon";
+import { Menu } from "./Menu";
 
 interface Candidate {
   name: string;
@@ -111,17 +112,15 @@ export function SlotSearch({
         </div>
         <label>
           <span>Rank by</span>
-          <select
+          <Menu
             aria-label="Item slot objective"
             value={objective}
-            onChange={(e) => onObjective(e.target.value)}
-          >
-            {Object.entries(objectives).map(([value, definition]) => (
-              <option value={value} key={value}>
-                {definition.label}
-              </option>
-            ))}
-          </select>
+            options={Object.entries(objectives).map(([value, definition]) => ({
+              value,
+              label: definition.label,
+            }))}
+            onChange={onObjective}
+          />
         </label>
         {busy ? (
           <button
@@ -131,7 +130,8 @@ export function SlotSearch({
               setBusy(false);
             }}
           >
-            <Icon name="close" leading />Cancel search · {elapsed}s
+            <Icon name="close" leading />
+            Cancel search · {elapsed}s
           </button>
         ) : (
           <button
@@ -140,7 +140,8 @@ export function SlotSearch({
             disabled={Boolean(ready)}
             onClick={search}
           >
-            <Icon name="ratings" leading />Rank this slot
+            <Icon name="ratings" leading />
+            Rank this slot
           </button>
         )}
       </div>
@@ -196,7 +197,7 @@ export function SlotSearch({
           )}
           {Boolean(
             result.partial_candidates?.length ||
-              result.withheld_candidates?.length,
+            result.withheld_candidates?.length,
           ) && (
             <details>
               <summary>

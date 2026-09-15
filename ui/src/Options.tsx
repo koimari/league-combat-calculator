@@ -1,4 +1,5 @@
 import type { Option, Values } from "./types";
+import { Menu } from "./Menu";
 
 const label = (value: string) => value.replaceAll("_", " ");
 
@@ -48,20 +49,16 @@ export function Options({
               <>
                 <span>{option.label ?? label(option.key)}</span>
                 {choices ? (
-                  <select
+                  <Menu
+                    aria-label={option.label ?? label(option.key)}
                     value={String(value)}
-                    onChange={(e) => change(e.target.value)}
-                  >
-                    {choices.map((choice) =>
-                      typeof choice === "string" ? (
-                        <option key={choice}>{choice}</option>
-                      ) : (
-                        <option key={choice.value} value={choice.value}>
-                          {choice.label}
-                        </option>
-                      ),
+                    options={choices.map((choice) =>
+                      typeof choice === "string"
+                        ? { value: choice, label: choice }
+                        : { value: String(choice.value), label: choice.label },
                     )}
-                  </select>
+                    onChange={change}
+                  />
                 ) : type === "string_list" ? (
                   <input
                     value={

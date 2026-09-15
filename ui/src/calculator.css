@@ -1981,3 +1981,99 @@
 .calculator-loadout-drawer {
   margin-block: 16px;
 }
+
+/* Site-drawn menus: the trigger sits on the field grammar, the list is a bordered surface panel. */
+.calculator-menu {
+  position: relative;
+  min-width: 0;
+}
+.calculator-menu-trigger {
+  display: inline-flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--calculator-surface);
+  border: 1px solid var(--calculator-line);
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 14px;
+  color: var(--calculator-ink);
+  text-align: left;
+  white-space: nowrap;
+}
+.calculator-menu-trigger > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.calculator-menu-trigger[aria-expanded="true"] {
+  border-color: var(--calculator-ink);
+}
+.calculator-menu-placeholder {
+  color: var(--calculator-muted);
+}
+.calculator-menu-chevron {
+  color: var(--calculator-muted);
+}
+.calculator-menu-trigger[aria-expanded="true"] .calculator-menu-chevron {
+  transform: rotate(180deg);
+}
+.calculator-menu-list {
+  position: absolute;
+  z-index: 6;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  max-height: 18rem;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--calculator-canvas, var(--calculator-surface));
+  border: 1px solid var(--calculator-line);
+  border-radius: 4px;
+  scrollbar-width: thin;
+}
+.calculator-menu-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 32px;
+  padding: 0 8px;
+  border-radius: 3px;
+  font-size: 13px;
+  color: var(--calculator-ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.calculator-menu-option:hover,
+.calculator-menu-option:focus-visible {
+  background: var(--calculator-subtle, var(--calculator-surface));
+  outline: none;
+}
+.calculator-menu-option[aria-selected="true"] {
+  font-weight: 600;
+}
+.calculator-menu-option[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: default;
+}
+.calculator-shop-sort .calculator-menu-trigger {
+  border: 0;
+  border-bottom: 1px solid var(--shop-line);
+  border-radius: 0;
+  padding: 0 2px 2px;
+  background: var(--shop-bg);
+  font-size: 11px;
+}
+.calculator-shop-sort .calculator-menu-list {
+  background: var(--shop-panel, var(--shop-bg));
+  border-color: var(--shop-line);
+  font-size: 11px;
+}
+.calculator-item-shop .calculator-menu-option:hover,
+.calculator-item-shop .calculator-menu-option:focus-visible {
+  background: var(--shop-panel);
+}
