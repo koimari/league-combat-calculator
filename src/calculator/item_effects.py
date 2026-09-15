@@ -43,6 +43,16 @@ ENERGIZED_SOURCE_RECEIPT: dict[str, str | int] = {
 }
 
 
+# Abyssal Mask's Unmake curse: the share every magic packet the cursed target
+# takes is multiplied by. TWO registries price it, under two spellings, and
+# for two subjects: ``_REFERENCE_ITEM_EFFECTS`` as ``magic_amp``, for the
+# holder's own magic, and ``ALLY_ITEM_EFFECTS`` as ``magic_damage_amp``, for
+# an ally benefiting from the same curse. It is one number in the source, so
+# it is one number here: written twice, a patch could move one and leave the
+# other answering the old share.
+ABYSSAL_UNMAKE_MAGIC_AMP = 0.12
+
+
 # Public controls for stateful item stats.  Both validation metadata and the
 # sourced numeric mechanics live here so routes/UI never carry item constants.
 ITEM_INPUT_OPTIONS: dict[str, dict[str, Any]] = {
@@ -646,7 +656,7 @@ ALLY_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
         "source_revision_id": 4031605,
     },
     "Abyssal Mask": {
-        "magic_damage_amp": 0.12,
+        "magic_damage_amp": ABYSSAL_UNMAKE_MAGIC_AMP,
         "source_url": "https://wiki.leagueoflegends.com/en-us/Abyssal_Mask",
         "source_revision_id": 3984960,
     },
@@ -2805,7 +2815,7 @@ _REFERENCE_ITEM_EFFECTS: dict[str, dict[str, Any]] = {
     "Abyssal Mask": {
         "type": "magic_damage_amp",
         # Enemies within 700 units take 12% increased magic damage
-        "magic_amp": 0.12,
+        "magic_amp": ABYSSAL_UNMAKE_MAGIC_AMP,
     },
     "Actualizer": {
         "type": "ability_damage_amp",

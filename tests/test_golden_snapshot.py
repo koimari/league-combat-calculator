@@ -1659,6 +1659,38 @@ class TestFingerprintsReceipt:
             assert block in receipt
             assert provenance in {"VERIFIED", "CARRIED", "PRIOR"}
 
+    def test_the_exact_values_digest_is_recomputable(self):
+        """SR6: the field that moves when a per-attacker TOTAL moves.
+
+        The exact capture's leaf counts cannot carry that news, because it
+        stores repr strings: its ``numeric_leaves`` is zero by construction
+        and its leaf count is the scenario shape. This digest is the one
+        that does, and before this it was decorative, reproducing under no
+        reading of its own stated rule on any tree it was checked against.
+        The rule is code now and this recomputes it.
+        """
+        receipt = _load(self.RECEIPT)["coupled_golden_exact_values"]
+        assert receipt["sha256"] == gs.exact_values_digest(_load(COUPLED_EXACT))
+
+    def test_the_retired_digest_is_marked_and_not_presented_as_current(self):
+        """The old number is kept as history and cannot be mistaken for live."""
+        receipt = _load(self.RECEIPT)["coupled_golden_exact_values"]
+        assert receipt["retired_sha256"] != receipt["sha256"]
+        assert "SR6" in receipt["retired_why"]
+
+    def test_the_digest_moves_when_a_total_moves(self):
+        """The permanent negative (R-05): the gate can fail on demand."""
+        snapshot = _load(COUPLED_EXACT)
+        scenario = sorted(snapshot["coupled_scenarios"])[0]
+        key = sorted(snapshot["coupled_scenarios"][scenario])[0]
+        before = gs.exact_values_digest(snapshot)
+        # Derived from the value it replaces rather than a fixed number: the
+        # first total in the capture is already "0.0", so a literal made this
+        # negative a no-op that passed by not moving anything.
+        original = snapshot["coupled_scenarios"][scenario][key]
+        snapshot["coupled_scenarios"][scenario][key] = f"{original}1"
+        assert gs.exact_values_digest(snapshot) != before
+
     def test_the_ratio_denominator_comes_from_the_receipt(self):
         """R-15's 1% clause reads a field, never a figure from a document."""
         receipt = _load(self.RECEIPT)

@@ -45,6 +45,7 @@ Usage:
 import argparse
 import ast
 import copy
+import hashlib
 import inspect
 import json
 import math
@@ -579,6 +580,22 @@ def fingerprint_counts(sections: Mapping[str, Any]) -> dict[str, int | str]:
         "leaves": leaves,
         "numeric_leaves": numeric,
     }
+
+
+def exact_values_digest(snapshot: Mapping[str, Any]) -> str:
+    """A digest over the exact capture's per-attacker TOTALS, not its shape.
+
+    Its leaf counts cannot carry that news: the capture stores repr strings,
+    so ``numeric_leaves`` is zero and the leaf count is the scenario shape.
+    A test recomputes this, which is what the field it replaces lacked (SR6).
+    """
+    scenarios = snapshot.get("coupled_scenarios", {})
+    payload = {
+        str(scenario): dict(sorted(totals.items()))
+        for scenario, totals in sorted(scenarios.items())
+    }
+    blob = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 
 def fingerprint(snapshot: Mapping[str, Any]) -> dict[str, int | str]:
