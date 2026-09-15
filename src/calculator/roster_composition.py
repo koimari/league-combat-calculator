@@ -197,9 +197,22 @@ def actor_params(base: FightParams, actor: Combatant) -> FightParams:
         cast_order=request.cast_order,
         item_options=request.item_options,
         ally_stat_bonuses=None,
-        keystone=base.keystone if actor.participant_id == "main" else "",
-        keystone_options=(
-            base.keystone_options if actor.participant_id == "main" else {}
+        # The attacker's RUNE PAGE is the attacker's alone. Blanking the
+        # keystone here and leaving the rest was an incomplete version of one
+        # decision: a roster actor wore the attacker's minor runes and stat
+        # shards, so an enemy earned Scorch damage and Adaptive Force it never
+        # selected. A roster actor carries no page at all until it can carry
+        # its OWN, which is a feature and not this field's answer.
+        **(
+            {}
+            if actor.participant_id == "main"
+            else {
+                "keystone": "",
+                "keystone_options": {},
+                "minor_runes": (),
+                "stat_shards": (),
+                "rune_options": None,
+            }
         ),
     )
 
