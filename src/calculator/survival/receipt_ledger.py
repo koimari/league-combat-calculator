@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, MutableMapping
 from typing import Any
 
-from .actions import action_key
+from .actions import action_key, scheduled_heal_time
 from .outcome_state import OutcomeLedger
 from .phases import TransitionRank
 from .typed_action import SurvivalAction, TriggerLinkage
@@ -140,7 +140,7 @@ class ReceiptLedger(TriggerLinkage):
         """Insert a recovery packet authored by a just-applied trigger
         beside the current action (receipt adapter observation)."""
         heal_event["_sk"] = action_key(
-            float(heal_event.get("time", 0.0)),
+            scheduled_heal_time(heal_event),
             TransitionRank.RECOVERY,
             recipient_id,
             heal_event,

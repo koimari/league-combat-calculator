@@ -207,6 +207,23 @@ def compiled_damage_action(
 ActionSortKey = tuple[float, TransitionRank, int, int, str, str, str, str]
 
 
+def scheduled_heal_time(heal_event: Mapping[str, Any]) -> float:
+    """WHEN a walk-authored heal lands, refusing an event that does not say.
+
+    Both ledgers that schedule one read this, so the two walks place it at
+    the same instant. A ``0.0`` default sorted a heal that lost its stamp to
+    the fight's open: earlier than everything it should follow, and silent.
+    """
+    time = heal_event.get("time")
+    if time is None:
+        raise ValueError(
+            "a walk-authored heal carries no 'time'; the producer "
+            f"({heal_event.get('source_key', '<unnamed>')!r}) must stamp when "
+            "it lands, because the ledger cannot place it otherwise"
+        )
+    return float(time)
+
+
 def action_key(
     event_time: float,
     phase: TransitionRank,

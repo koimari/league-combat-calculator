@@ -860,3 +860,34 @@ class TestOneRawRowsTimestamp:
     def test_a_non_finite_timestamp_is_a_stop(self) -> None:
         with pytest.raises(ValueError, match="must be finite"):
             event_timestamp({"time": float("inf")})
+
+
+class TestAWalkAuthoredHealMustSayWhenItLands:
+    """ER5: the shape rule 5 exists for, on an event rather than an item.
+
+    Both ledgers that schedule a walk-authored heal read its timestamp, and
+    both read it through a ``0.0`` default. A heal that lost its stamp did
+    not fail; it sorted to the fight's open, earlier than every action it
+    should have followed, and nothing in the result said so.
+    """
+
+    def test_a_stamped_heal_reads_its_own_time(self):
+        from src.calculator.survival.actions import scheduled_heal_time
+
+        assert scheduled_heal_time({"time": 3.5}) == 3.5
+        assert scheduled_heal_time({"time": 0.0}) == 0.0
+
+    def test_an_unstamped_heal_is_refused_and_names_its_producer(self):
+        from src.calculator.survival.actions import scheduled_heal_time
+
+        with pytest.raises(ValueError, match=r"omnivamp_Maw.*must stamp"):
+            scheduled_heal_time({"source_key": "omnivamp_Maw"})
+
+    def test_both_ledgers_read_the_one_helper(self):
+        """The two walks drive the identical kernel, so they cannot differ."""
+        from pathlib import Path
+
+        for module in ("score_state.py", "receipt_ledger.py"):
+            source = Path("src/calculator/survival", module).read_text(encoding="utf-8")
+            assert "scheduled_heal_time(heal_event)" in source, module
+            assert 'heal_event.get("time", 0.0)' not in source, module
