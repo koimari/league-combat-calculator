@@ -179,3 +179,41 @@ class TestTheChargeFieldCapsAreStillAbsent:
         data = json.loads((BINS / f"{stem}.bin.json").read_text(encoding="utf-8"))
         key = next(key for key in data if key.endswith(fragment))
         assert data[key]["mSpell"]["mMaxAmmo"] == expected
+
+
+def test_no_charge_rule_waits_on_a_stock_the_binaries_already_carry():
+    """Why reading ``mMaxAmmo`` into charge_cadence has no consumer.
+
+    The binaries carry a per-rank stock for every charge slot, so "source
+    the stock" reads like outstanding work. It is not: every rule that
+    banks one cast does so for a reason that is not a missing stock.
+
+    Three rules claimed otherwise and were wrong, Heimerdinger, Bard and
+    Caitlyn, and are corrected. Azir is the one that says it truly, and
+    even he is waiting on the FIELD cap rather than the stock: his cache
+    states "stocks a Sand Soldier, up to a maximum of 2" and says nothing
+    about how many may stand.
+
+    So this asserts the phrase survives in exactly one rule, and that the
+    rule means the cap. A second occurrence is a claim to re-check against
+    the binary before it is believed.
+    """
+    import importlib
+    import pathlib
+
+    waiting = []
+    for path in sorted(pathlib.Path("src/calculator/champions").glob("*.py")):
+        if "CHARGE_RULES" not in path.read_text(encoding="utf-8"):
+            continue
+        module = importlib.import_module(f"src.calculator.champions.{path.stem}")
+        for slot, rule in getattr(module, "CHARGE_RULES", {}).items():
+            why = " ".join(rule.why.split())
+            if re.search(
+                r"no cached field states|until the count is sourced", why, re.I
+            ):
+                waiting.append((path.stem, slot, why))
+
+    assert len(waiting) == 1, [name for name, _, _ in waiting]
+    stem, slot, why = waiting[0]
+    assert (stem, slot) == ("azir", "W")
+    assert "how many may stand at once" in why
