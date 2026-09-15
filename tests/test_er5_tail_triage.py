@@ -40,11 +40,12 @@ def test_the_tail_is_mostly_not_convertible_at_all():
     totals = _committed()["totals"]
     total = sum(totals.values())
     assert total > 1000
-    not_row = totals["NOT_A_ROW_FIELD"] / total
-    tolerant = totals["TOLERANCE_CONTRACT"] / total
-    assert not_row > 0.4, not_row
-    assert tolerant > 0.2, tolerant
-    assert not_row + tolerant > 0.85
+    unconvertible = sum(
+        totals[bucket]
+        for bucket in ("NOT_A_ROW_FIELD", "NOT_A_ROW_RECEIVER", "TOLERANCE_CONTRACT")
+    )
+    assert totals["NOT_A_ROW_FIELD"] / total > 0.4
+    assert unconvertible / total > 0.9
 
 
 def test_the_actionable_remainder_is_small_and_named():
@@ -62,6 +63,20 @@ def test_every_class_is_populated():
     """A split with an empty class is a classifier that stopped working."""
     for bucket, count in _committed()["totals"].items():
         assert count > 0, bucket
+
+
+def test_a_censused_key_on_a_non_row_receiver_is_not_a_candidate():
+    """The classifier's own false-positive guard.
+
+    ``name`` is universal on three published streams AND on every cached
+    champion and item dict, so matching the key alone called dozens of
+    ``champion_data.get("name", "")`` reads convertible. Receiver-blind
+    triage over-reports the work by roughly a factor of two.
+    """
+    assert triage._receiver('champion_data.get("name", "")') == "champion_data"
+    assert triage._receiver('getattr(action, "time", 0.0)') is None
+    assert "champion_data" in triage.NON_ROW_RECEIVERS
+    assert _committed()["totals"]["NOT_A_ROW_RECEIVER"] > 50
 
 
 def test_the_tolerance_signal_finds_the_modules_it_was_built_from():

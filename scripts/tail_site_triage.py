@@ -18,11 +18,18 @@ machine can answer, leaving a named remainder for the three it cannot.
     into a crash or a silent drop, which is clause 5, the one a census can
     never answer.
 
+``NOT_A_ROW_RECEIVER``
+    The key is censused but the read is against something that is not a
+    published row: a ``champion_data`` or ``item`` dict, a stat block, or a
+    ``getattr`` on a typed record. ``name`` is universal on three streams
+    and on every cached champion, so matching the key alone called dozens
+    of unrelated reads convertible.
+
 ``CANDIDATE``
-    The key is censused and no tolerance contract is evident. Clauses 2, 3
-    and 4 still apply and are judgement: does the variable certainly hold a
-    row, is the container guaranteed, does the site run after publication.
-    This is the only class worth a human's time.
+    The key is censused, the receiver is a row, and no tolerance contract
+    is evident. Clauses 2, 3 and 4 still apply and are judgement: does the
+    variable certainly hold a row, is the container guaranteed, does the
+    site run after publication. The only class worth a human's time.
 
 Run it with ``report`` to print the split, or ``write`` to refresh
 ``docs/receipts/er5-tail-triage.json``.
@@ -53,6 +60,28 @@ INTERNAL_CENSUS = REPO_ROOT / "docs" / "receipts" / "internal-row-census.json"
 #: survive input it did not build. Clause 5 in a form a scan can see.
 TOLERANCE_WORDS = ("malformed", "withhold", "partial", "unnamed", "invalid")
 
+#: Receivers that are not published rows, whatever the key is called. A key
+#: like ``name`` is universal on three streams AND on every champion_data and
+#: item dict in the tree, so matching on the key alone marked dozens of
+#: unrelated reads as convertible. The census speaks for rows; these are
+#: cached domain objects and typed records, and nothing here licenses them.
+NON_ROW_RECEIVERS = frozenset(
+    {
+        "champion_data",
+        "actor.champion_data",
+        "item",
+        "stats",
+        "atom",
+        "passive",
+        "part",
+        "entries[0]",
+        "coverage",
+        "combat",
+        "result",
+        "info",
+    }
+)
+
 
 def _censused_keys() -> set[str]:
     """Every key either census measures on every row of some stream."""
@@ -79,6 +108,12 @@ def _tolerance_modules() -> set[str]:
     return found
 
 
+def _receiver(expression: str) -> str | None:
+    """What the read is against; ``None`` when it is not a dict read at all."""
+    match = re.match(r"^([A-Za-z_][\w.\[\]\"\']*)\.get\(", expression)
+    return match.group(1) if match else None
+
+
 def _tail_modules() -> list[Path]:
     from tests.test_literal_defaults import ER5_TAIL  # noqa: PLC0415
 
@@ -93,8 +128,11 @@ def triage() -> dict[str, Any]:
     by_module: dict[str, Counter[str]] = {}
     for finding in literal_defaults.scan(_tail_modules()):
         rel = finding.path.split("src/calculator/")[1]
+        receiver = _receiver(finding.expression)
         if finding.key.strip("\"'") not in censused:
             bucket = "NOT_A_ROW_FIELD"
+        elif receiver is None or receiver in NON_ROW_RECEIVERS:
+            bucket = "NOT_A_ROW_RECEIVER"
         elif rel in tolerant:
             bucket = "TOLERANCE_CONTRACT"
         else:

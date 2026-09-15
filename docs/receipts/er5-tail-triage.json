@@ -1,33 +1,20 @@
 {
  "candidates_by_module": {
-  "ability_ranks.py": 1,
-  "ally_effects.py": 2,
-  "build_receipts.py": 2,
   "certainty.py": 1,
-  "delivery_classes.py": 4,
-  "delivery_eligibility.py": 4,
-  "delivery_facts.py": 6,
   "fight_receipts.py": 2,
-  "healing_reduction.py": 5,
-  "interaction_atoms.py": 2,
-  "ledger_adequacy.py": 3,
-  "program/views/receipt.py": 22,
-  "program/views/score.py": 1,
-  "projectile_defense.py": 1,
-  "rune_sustain_events.py": 3,
+  "ledger_adequacy.py": 1,
+  "program/views/receipt.py": 20,
   "self_state_effects.py": 2,
-  "spell_shield_eligibility.py": 4,
-  "support_bailout.py": 4,
-  "support_champion_packets.py": 6,
-  "support_row_metadata.py": 3,
+  "support_bailout.py": 1,
+  "support_champion_packets.py": 1,
   "survival/outcome_state.py": 3,
   "survival/receipt_ledger.py": 2,
-  "timed_stacks.py": 1,
   "validation_receipts.py": 2
  },
  "totals": {
-  "CANDIDATE": 86,
+  "CANDIDATE": 35,
   "NOT_A_ROW_FIELD": 704,
-  "TOLERANCE_CONTRACT": 480
+  "NOT_A_ROW_RECEIVER": 133,
+  "TOLERANCE_CONTRACT": 398
  }
 }
