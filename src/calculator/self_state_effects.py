@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .cast_event_row import cast_slot as _row_cast_slot
 import math
 from collections.abc import Iterable, Mapping
 from typing import Any
@@ -46,7 +47,7 @@ def derive_self_state_effects(
         casts = [
             cast
             for cast in cast_timeline
-            if isinstance(cast, Mapping) and str(cast.get("slot", "")) == str(slot)
+            if isinstance(cast, Mapping) and str(_row_cast_slot(cast)) == str(slot)
         ]
         for cast_index, cast in enumerate(casts):
             cast_time = _sourced_cast_time(cast, slot=str(slot))
