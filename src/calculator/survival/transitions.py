@@ -49,6 +49,7 @@ Ledger observation contract (the only adapter difference):
 
 from __future__ import annotations
 
+from ..heal_event_row import healed_source
 import math
 from collections.abc import Callable, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
@@ -2182,7 +2183,7 @@ def _cleanse_heal_entry(
         return None
     return {
         "amount": max(0.0, float(action.amount)),
-        "source": str(action.source or heal.get("source", "")),
+        "source": str(action.source or healed_source(heal)),
         "source_atoms": [dict(atom) for atom in heal.get("source_atoms", ())],
     }
 

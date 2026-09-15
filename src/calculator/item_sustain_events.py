@@ -1,5 +1,6 @@
 """The healing an item did, read back off a finished fight result."""
 
+from .heal_event_row import healed_amount, healed_time
 import math
 from collections.abc import Mapping
 from typing import Any
@@ -202,8 +203,8 @@ def _item_self_healing_events(
                 if not isinstance(heal, Mapping):
                     continue
                 try:
-                    event_time = float(heal.get("time", 0.0))
-                    amount = float(heal.get("amount", 0.0) or 0.0)
+                    event_time = healed_time(heal)
+                    amount = healed_amount(heal)
                 except (TypeError, ValueError):
                     continue
                 if (
