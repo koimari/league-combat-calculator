@@ -162,6 +162,7 @@ OPTIONS = [
             "Blade's End consumes; unset derives them from the ability hits "
             "that stack Wound and the swings that spend three"
         ),
+        derives=True,
     ),
 ]
 

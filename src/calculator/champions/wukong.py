@@ -232,6 +232,7 @@ OPTIONS = [
             "Strength of Stone stacks; unset walks the ramp over the attacks "
             "and abilities that stack it and serves its fight mean"
         ),
+        derives=True,
     ),
     bool_option("q_armor_reduction", True, label="Q armor reduction active"),
     int_option("r_casts", 1, minimum=1, maximum=2, label="Cyclone casts"),

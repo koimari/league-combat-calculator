@@ -260,6 +260,7 @@ OPTIONS = [
             "note": "Stacks Zaahen's own attacks and abilities generate; the "
             "buff is self-state, not a consumed setup.",
         },
+        derives=True,
     ),
 ]
 

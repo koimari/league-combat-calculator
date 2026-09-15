@@ -267,6 +267,7 @@ OPTIONS = [
             "The Relentless Storm stacks; unset walks the ramp, one stack per "
             "attack or ability, and arms Lightning Claws where it fills"
         ),
+        derives=True,
     ),
     bool_option("w_wounded", True, label="W hits an already-Wounded target (2nd bite)"),
 ]

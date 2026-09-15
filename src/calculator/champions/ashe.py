@@ -226,6 +226,7 @@ OPTIONS = [
             "that bank them and casts where the fourth lands"
         ),
         state=ASHE_FOCUS_STACK_RULE.public_receipt(),
+        derives=True,
     ),
 ]
 

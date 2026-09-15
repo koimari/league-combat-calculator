@@ -158,6 +158,7 @@ OPTIONS = [
             "Illumination procs; unset derives them from the casts that mark "
             "and the swings or Final Spark that consume the mark"
         ),
+        derives=True,
     ),
 ]
 

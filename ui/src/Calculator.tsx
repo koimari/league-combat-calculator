@@ -37,6 +37,7 @@ import { useLoadoutStats } from "./useLoadoutStats";
 import { request } from "./api";
 import { shopGroup, wikiText } from "./shop";
 import type { Build, Champion, Config, Item, Result } from "./types";
+import { Icon } from "./Icon";
 
 export interface CalculatorProps {
   apiBase?: string;
@@ -1670,13 +1671,13 @@ function CalculatorSession({
       </header>
       <div className="calculator-setup-actions">
         <button type="button" onClick={downloadSetup} disabled={!catalog}>
-          Save setup
+          <Icon name="download" leading />Save setup
         </button>
         <button type="button" onClick={() => setupFile.current?.click()}>
-          Load setup
+          <Icon name="folio" leading />Load setup
         </button>
         <button type="button" onClick={copySetupLink} disabled={!catalog}>
-          Copy setup link
+          <Icon name="copy" leading />Copy setup link
         </button>
         <input
           ref={setupFile}
@@ -1713,7 +1714,7 @@ function CalculatorSession({
               setLoadVersion((value) => value + 1);
             }}
           >
-            Retry connection
+            <Icon name="refresh" leading />Retry connection
           </button>
         </div>
       ) : !catalog ? (

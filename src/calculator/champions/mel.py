@@ -490,6 +490,7 @@ OPTIONS = [
             "Overwhelm stacks at detonation; unset derives them from the "
             "damage instances that applied them inside their window"
         ),
+        derives=True,
     ),
     int_option(
         "p_searing_brilliance_missiles",

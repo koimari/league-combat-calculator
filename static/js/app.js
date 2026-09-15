@@ -843,18 +843,26 @@ function resetAbilityInputs() {
   }]));
 }
 
+// An option the engine DERIVES starts absent, and absent is the request the
+// engine reads as "derive this". Seeding it with its declared default and
+// serializing that default is what made every derived reading unreachable
+// through the page while the API answered them correctly (SR9).
+function seededChampionOptions(definitions) {
+  return Object.fromEntries(
+    definitions
+      .filter((option) => !option.derives)
+      .map((option) => [option.key, option.default]),
+  );
+}
+
 function resetChampionOptions() {
   const definitions = engine.championOptions[state.attacker.champion]?.options || [];
-  state.attacker.championOptions = Object.fromEntries(
-    definitions.map((option) => [option.key, option.default]),
-  );
+  state.attacker.championOptions = seededChampionOptions(definitions);
 }
 
 function resetRosterChampionOptions(loadout) {
   const definitions = engine.championOptions[loadout?.champion]?.options || [];
-  loadout.championOptions = Object.fromEntries(
-    definitions.map((option) => [option.key, option.default]),
-  );
+  loadout.championOptions = seededChampionOptions(definitions);
 }
 
 function syncAbilityInputsToLevel() {
@@ -1704,7 +1712,22 @@ function championOptionControlHtml(option, slot = "") {
   const number = Number(value) || 0;
   const atMin = option.min != null && number <= Number(option.min);
   const atMax = option.max != null && number >= Number(option.max);
-  return `<span class="ability-rank ability-option"><small>${label}</small><button type="button" ${optionAttributes} data-champion-option="${key}" data-option-type="${escapeHtml(option.type)}" data-delta="${-step}" ${atMin ? "disabled" : ""} aria-label="Decrease ${label}">−</button><output>${escapeHtml(number)}${option.max != null ? `<i>/${escapeHtml(option.max)}</i>` : ""}</output><button type="button" ${optionAttributes} data-champion-option="${key}" data-option-type="${escapeHtml(option.type)}" data-delta="${step}" ${atMax ? "disabled" : ""} aria-label="Increase ${label}">+</button></span>`;
+  // A derived option reads "Auto" until the user states a level, and the
+  // Auto button is how they hand it back: the engine derives the reading
+  // whenever the key is absent, so the control needs a state that means
+  // absent rather than a number that happens to be the default.
+  const auto = option.derives
+    ? `<button type="button" ${optionAttributes} data-champion-option-auto="${key}" class="${isAutoOption(option) ? "active" : ""}" aria-pressed="${isAutoOption(option)}" title="Let the fight derive this">Auto</button>`
+    : "";
+  const shown = option.derives && isAutoOption(option)
+    ? "Auto"
+    : `${escapeHtml(number)}${option.max != null ? `<i>/${escapeHtml(option.max)}</i>` : ""}`;
+  return `<span class="ability-rank ability-option"><small>${label}</small>${auto}<button type="button" ${optionAttributes} data-champion-option="${key}" data-option-type="${escapeHtml(option.type)}" data-delta="${-step}" ${atMin && !option.derives ? "disabled" : ""} aria-label="Decrease ${label}">−</button><output>${shown}</output><button type="button" ${optionAttributes} data-champion-option="${key}" data-option-type="${escapeHtml(option.type)}" data-delta="${step}" ${atMax && !isAutoOption(option) ? "disabled" : ""} aria-label="Increase ${label}">+</button></span>`;
+}
+
+/** Whether a derived option is currently left for the fight to answer. */
+function isAutoOption(option) {
+  return Boolean(option.derives) && state.attacker.championOptions[option.key] == null;
 }
 
 function renderChampionOptions() {
@@ -1901,10 +1924,15 @@ function engineChampionOptions() {
       .flatMap((option) => Array.isArray(option.legacy_keys) ? option.legacy_keys : []),
   );
   const options = Object.fromEntries(
-    definition.options.map((option) => [
-      option.key,
-      state.attacker.championOptions[option.key] ?? option.default,
-    ]),
+    definition.options
+      // A derived option with no stored value is LEFT OUT: the engine reads
+      // an absent key as "derive this", and sending the default instead is
+      // what pinned every such reading to its stated level (SR9).
+      .filter((option) => !(option.derives && state.attacker.championOptions[option.key] == null))
+      .map((option) => [
+        option.key,
+        state.attacker.championOptions[option.key] ?? option.default,
+      ]),
   );
   definition.options.forEach((option) => {
     // A legacy alias never reaches the engine: the option it aliases carries
@@ -5136,6 +5164,14 @@ document.addEventListener("click", (event) => {
     setItemOptionValue(path, key, next);
     return render();
   }
+  const autoButton = event.target.closest("button[data-champion-option-auto]");
+  if (autoButton) {
+    // Handing the option back: the key leaves the request entirely, which
+    // is what the engine reads as "derive this".
+    delete state.attacker.championOptions[autoButton.dataset.championOptionAuto];
+    invalidateOptimization();
+    return render();
+  }
   const optionButton = event.target.closest("button[data-champion-option]");
   if (optionButton) {
     const { championOption: key, optionType: type } = optionButton.dataset;
@@ -5147,8 +5183,11 @@ document.addEventListener("click", (event) => {
     } else if (type === "select") {
       state.attacker.championOptions[key] = optionButton.dataset.value;
     } else {
+      const wasAuto = definition.derives && state.attacker.championOptions[key] == null;
       const current = Number(state.attacker.championOptions[key] ?? definition.default) || 0;
-      let next = current + Number(optionButton.dataset.delta || 0);
+      // Stepping away from Auto lands ON the declared default rather than one
+      // step past it, so the first press states a level instead of skipping one.
+      let next = wasAuto ? current : current + Number(optionButton.dataset.delta || 0);
       if (definition.min != null) next = Math.max(Number(definition.min), next);
       if (definition.max != null) next = Math.min(Number(definition.max), next);
       state.attacker.championOptions[key] = type === "int" ? Math.round(next) : Number(next.toFixed(4));

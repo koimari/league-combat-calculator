@@ -274,6 +274,7 @@ OPTIONS = [
         maximum=40,
         label="Attacks per Voidling (0 = none; defaults to the sourced "
         "attack-speed cadence over the fight window)",
+        derives=True,
     ),
 ]
 

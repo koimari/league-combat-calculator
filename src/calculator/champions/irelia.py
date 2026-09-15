@@ -193,6 +193,7 @@ OPTIONS = [
             "Ionian Fervor stacks; unset walks the ramp, one stack per attack "
             "or ability hit, and arms the max-stack on-hit where it fills"
         ),
+        derives=True,
     ),
     float_option(
         "w_charge",

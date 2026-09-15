@@ -546,6 +546,9 @@ class TestAbsentOption:
                 "Trial by Fire procs; unset derives them from the cached "
                 "cooldown, which a Powder Keg explosion would reset"
             ),
+            # SR9: the label already said "unset derives them"; the flag is
+            # what lets the page actually leave the key out.
+            "derives": True,
         }
         assert by_key["r_fire_at_will"] == {
             "key": "r_fire_at_will",
