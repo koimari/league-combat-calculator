@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import "./timeline.css";
 import type { AuthoredEvent } from "./scenario-state";
 import type { EventActor, EventCapabilities } from "./EventEditor";
+import { Icon } from "./Icon";
 
 /** One thing the engine already scheduled, drawn as a ghost the user can read but not move. */
 export interface ScheduledMark {
@@ -172,7 +173,7 @@ export function Timeline({
         aria-label="Timeline tools"
       >
         <label>
-          <span>Zoom</span>
+          <span><Icon name="zoom-in" leading />Zoom</span>
           <input
             type="range"
             min={ZOOM_MIN}
@@ -213,7 +214,7 @@ export function Timeline({
               onSelect("");
             }}
           >
-            Clear all
+            <Icon name="clear" leading />Clear all
           </button>
         )}
       </div>
@@ -459,7 +460,7 @@ export function Timeline({
             className="calculator-text-button"
             onClick={() => remove(selected.id)}
           >
-            Remove
+            <Icon name="close" leading />Remove
           </button>
         </div>
       )}
