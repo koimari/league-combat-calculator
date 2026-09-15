@@ -251,6 +251,7 @@ OPTIONS: list[dict[str, Any]] = [
             "Passive stacks (Rising Spell Force); unset walks the ramp, one "
             "stack per ability cast, so the swings speed up as the casts land"
         ),
+        derives=True,
     ),
 ]
 

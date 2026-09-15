@@ -279,6 +279,7 @@ OPTIONS: list[dict[str, Any]] = [
             "Explosive Charge stacks at detonation; unset derives them from "
             "the attacks and ability hits that land while the charge holds"
         ),
+        derives=True,
     ),
 ]
 

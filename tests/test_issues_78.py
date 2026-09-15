@@ -79,6 +79,9 @@ CONTROL_ATTRIBUTES = {
     "data-role-quest": [("main", "role_quest_complete")],
     "data-include-boots": [("main", "include_boots")],
     "data-champion-option": [("main", "champion_options")],
+    # SR9: hands a DERIVED option back to the engine by removing its key from
+    # the request, which is the same payload field under the same capability.
+    "data-champion-option-auto": [("main", "champion_options")],
     "data-rune-option": [("main", "rune_options")],
     # The rune page dialog: one pick control for keystone, minor and shard
     # rows; the duel rune rows (data-picker) open it at their section.

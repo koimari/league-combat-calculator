@@ -314,6 +314,11 @@ _EXTRA_ORDER = (
     "max_items",
     "state",
     "rotation",
+    # The engine derives this option when its key is ABSENT, so the browser
+    # has to be able to leave it absent. Without the flag the page seeds
+    # every option with its declared default and serializes all of them, and
+    # the derived branch is unreachable through the UI (SR9).
+    "derives",
     "legacy_bool",
     "legacy_keys",
 )
