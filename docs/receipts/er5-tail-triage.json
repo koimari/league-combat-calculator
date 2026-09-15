@@ -11,7 +11,7 @@
   "healing_reduction.py": 5,
   "interaction_atoms.py": 2,
   "ledger_adequacy.py": 3,
-  "program/views/receipt.py": 27,
+  "program/views/receipt.py": 22,
   "program/views/score.py": 1,
   "projectile_defense.py": 1,
   "rune_sustain_events.py": 3,
@@ -26,7 +26,7 @@
   "validation_receipts.py": 2
  },
  "totals": {
-  "CANDIDATE": 91,
+  "CANDIDATE": 86,
   "NOT_A_ROW_FIELD": 704,
   "TOLERANCE_CONTRACT": 480
  }
