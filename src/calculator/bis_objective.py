@@ -260,8 +260,13 @@ def bis_objective_score(
             published_tag(dispositions, path, surface=BIS_SURFACE),
         )
 
-    focus_survival = focus.get("survival", {})
-    focus_survival = focus_survival if isinstance(focus_survival, Mapping) else {}
+    # ``focus`` is bound from ``combat["participants"]`` by its caller, and the
+    # stream census measures ``survival`` as a Mapping on every one of those
+    # rows, so neither the default nor the type guard can fire. The four
+    # clauses in tests/test_row_stream_census.py all hold here: universal key,
+    # variable known to be a row, container the caller already indexes, and a
+    # payload build_participant_timeline has finished publishing.
+    focus_survival = focus["survival"]
     duration = float(combat.get("duration", 0.0) or 0.0)
     if duration <= 0.0:
         duration = DEFAULT_FIGHT_DURATION
