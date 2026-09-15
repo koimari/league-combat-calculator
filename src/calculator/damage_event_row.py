@@ -5,22 +5,26 @@ The cast-event row has one producer that stamps every field on every row
 builds most of them, and the keystone walks build their own, so what a row
 carries depends on which walk authored it.
 
-That difference decides which reads may be fail-closed. Measured over the
-2,458 damage and combat event rows in the committed coupled baseline, four
-keys are on every row:
+That difference decides which reads may be fail-closed, so it is measured
+rather than inferred. Two streams carry damage rows, and they are NOT one
+shape with optional fields, which is what a first pass at this concluded by
+pooling them:
 
-``time``, ``damage``, ``damage_type``, ``source``
+``combat/events`` (1,706 rows) stamps twelve keys on every row, including
+``raw_damage``, ``sequence``, ``attacker``, ``event_id``, ``overkill``,
+``pair_damage`` and ``target``. ``fights/damage_events`` (752 rows) stamps
+five, ``time``, ``damage``, ``damage_type``, ``source`` and ``phase``, and
+carries none of those seven at all.
 
-and every other key is legitimately absent somewhere. ``raw_damage``,
-``sequence``, ``attacker``, ``event_id``, ``overkill`` and ``pair_damage``
-are each on 1,706 of 2,458; ``phase`` on 752; ``cc_duration`` on 54.
+Pooled, that reads as "``raw_damage`` is on 1,706 of 2,458 rows", which
+invites the wrong conclusion that some producer stamps inconsistently. It
+does not: a reader holding a ``combat/events`` row may read ``raw_damage``
+fail-closed, and a reader holding a fight row may never.
 
-So a reader for one of those four refuses an absent key, and a reader for
-any other takes the caller's default and is not a rule-5 violation. Anyone
-converting the ER5 tail in bulk should read this first: treating the
-optional keys as required raises on rows the engine legitimately produces,
-and ``tests/test_damage_event_row.py`` re-derives the split from the
-committed baseline so the claim above cannot rot.
+The accessors below take the INTERSECTION, because the callers that adopted
+them serve both streams. A caller that knows which stream it holds may
+require more, and ``tests/test_row_stream_census.py`` is the table to check
+before doing so.
 """
 
 from __future__ import annotations

@@ -4,15 +4,16 @@ The third producer measured this way, and it answers like the damage event
 rather than like the cast event: several walks author a heal, so a field one
 of them stamps is not a field all of them stamp.
 
-Measured over the 1,161 healing rows in the committed coupled baseline,
-three keys are on every row:
+Two streams carry heal rows and they are not one shape either.
+``combat/healing_events`` (909 rows) stamps eleven keys on every row,
+including ``raw_amount``, ``applied_amount``, ``overheal``, ``attacker``
+and ``healing_reduction_factor``. ``fights/self_healing_events`` (252 rows)
+stamps four, ``time``, ``amount``, ``source`` and ``kind``, and carries
+none of the others.
 
-``time``, ``amount``, ``source``
-
-and every other key is legitimately absent somewhere. ``raw_amount``,
-``applied_amount``, ``overheal``, ``attacker``, ``event_id`` and
-``healing_reduction_factor`` are each on 909 of 1,161; ``trigger_target`` on
-861; ``kind`` on 252.
+The three below are the intersection, which is what a caller serving both
+streams may require. ``tests/test_row_stream_census.py`` holds the
+per-stream table for a caller that knows which one it has.
 
 The accessors below are spelled ``healed_*`` on purpose: ``heal_time`` and
 ``heal_amount`` are already local names in the modules that read these rows,
