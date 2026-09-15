@@ -2050,6 +2050,8 @@ MODULE_DECLARATION = frozenset(
 #: The covered set: files and directories every `.py` under which is
 #: scanned.  The rest of `src/calculator` is the declared tail (ER5).
 ROOTS = (
+    # The heal-event row reader, covered from the day it landed.
+    "heal_event_row.py",
     # The cast-event row reader, covered from the day it landed.
     "cast_event_row.py",
     # The damage-event row reader, covered from the day it landed.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .heal_event_row import healed_amount, healed_time
 from collections.abc import Mapping
 from typing import Any
 
@@ -330,7 +331,7 @@ def _yuumi_conversion_shield_packet(
     duration = float(shield_duration_atom["values"][0]) + float(
         channel_atom["values"][0]
     )
-    heal_amount = float(heal_event.get("amount", 0.0))
+    heal_amount = healed_amount(heal_event)
 
     def amount_formula(
         current_health: float,
@@ -340,7 +341,7 @@ def _yuumi_conversion_shield_packet(
         return max(0.0, heal - max(0.0, maximum_health - current_health))
 
     return {
-        "time": float(heal_event.get("time", 0.0)),
+        "time": healed_time(heal_event),
         "kind": "shield",
         "amount": 0.0,
         "amount_formula": amount_formula,

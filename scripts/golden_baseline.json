@@ -3207,6 +3207,7 @@
           "cast_time": 0.25,
           "cc_reviewed": true,
           "charge_between_casts": 0.0,
+          "charge_pool": 2,
           "cooldown": 18.0,
           "damage_type": "magic",
           "detail": "Ally heal (sourced by the support scanner) at the fully-charged shrine; the 5s charge ramp is not modeled.",
@@ -53681,18 +53682,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60717,
-      "numeric_leaves": 46485,
+      "leaves": 60718,
+      "numeric_leaves": 46486,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "bfbf7c7f3e874b1786c9efaf2abcb8c5e863ab9e",
+    "git_head": "9398f387a475db5f0c1952b8794e259a5fd1a53a",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "3f1f9a35abf6d4d70a23e1b475d82788d22edde6"
+    "src_tree_sha": "62065c95aadd4951866381ac44dc0f5effc4d702"
   },
   "registered_champion_fights": {
     "Aatrox": {

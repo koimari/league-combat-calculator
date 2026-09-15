@@ -265,10 +265,14 @@ CHARGE_RULES = {
             "W (Caretaker's Shrine) banks shrines on its cached 18s "
             "rechargeRate; the cached cooldown is the gap between "
             "placing two. The cached stock of 2 is not spent here: a "
-            "shrine stands and waits to be picked up, and no cached "
-            "field states how many may stand at once."
+            "shrine's heal is priced AT THE CAST, so the cast is the hit "
+            "and the persistent-object exemption does not reach it: that "
+            "exemption is for a cast whose object the module prices "
+            "separately. The sourced stock is spent here. The field cap is "
+            "cached too, 'Up to 3 shrines may be active at a time', and it "
+            "is the stock of 2 that binds below it."
         ),
-        charges=1,
+        charges=2,
     )
 }
 parse_abilities = build_parser(

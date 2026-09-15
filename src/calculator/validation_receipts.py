@@ -141,7 +141,10 @@ def displayed_prediction(
                 str(source["name"]): validate_damage_number(
                     source["total_damage"], f"predicted combat source {source['name']}"
                 )
-                for source in row.get("sources", ())
+                # Indexed like the total_damage read below it: sources is on
+                # all 77 combat/breakdown rows in the census, and this row is
+                # one, guarded by the participant_id match above.
+                for source in row["sources"]
                 if source.get("total_damage")
             }
             total = validate_damage_number(

@@ -155,6 +155,14 @@ def _legacy_overkill(result: Mapping[str, object]) -> float:
 
 def _public_damage_event(event: Mapping[str, object]) -> dict[str, object]:
     """Keep typed interaction fields on the public damage ledger."""
+    # These four ARE on every internal damage row the engine builds
+    # (docs/receipts/internal-row-census.json, 3,960 rows over 173
+    # champions), and they still keep their defaults. This serializer's
+    # contract is to TOLERATE a malformed row and withhold it, which
+    # tests/test_public_response.py pins by handing it partial events on
+    # purpose. Indexing here turns graceful withholding into a crash at the
+    # API boundary, so the census licenses the read and the contract forbids
+    # it (clause 5).
     row: dict[str, object] = {
         "time": _public_event_time(event),
         "source": str(event.get("source_key", "")),

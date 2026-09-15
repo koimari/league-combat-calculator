@@ -620,28 +620,37 @@ class TestLedgerReceipts:
         # Roadmap session 2 (2026-08-20): W and R are now modeled (they
         # carry a real cached cooldown/cost, per module_helpers.no_damage),
         # so this fixture's cast_order=["Q", "W", "R"] puts all three on
-        # the shared timed-cast timeline — one Q (60), one W (70), one R
-        # (100) at the front of the fight, then a second Q (60) once its
-        # cooldown is back up: 290 total spent of the 300 starting pool.
+        # the shared timed-cast timeline.
+        #
+        # W banks its sourced stock of TWO shrines (SR4), so the opening is
+        # one Q (60) and both shrines (70 each) before R (100), then a
+        # second Q (60) once its cooldown is back up. That is 360 asked of a
+        # 300 pool, so the pool empties at 300 and the last cast is refused
+        # rather than overdrawn, which is the ledger doing its job.
         result = _fight({"chimes": 35, "fight_duration_seconds": 10.0})
         ledger = result["resource_ledger"]
         assert ledger["kind"] == "mana"
         assert ledger["opening_current"] == pytest.approx(300.0)
         spends = [r for r in ledger["receipts"] if r["operation"] == "spend"]
-        assert len(spends) == 4
-        assert all(r["accepted"] for r in spends)
+        assert len(spends) == 5
+        # The second Q is REFUSED: 60 + 70 + 70 + 100 already spends the
+        # whole 300 pool, so the ledger declines it rather than overdrawing,
+        # and no damage is priced for it. That refusal is the point of the
+        # account, so it is asserted rather than tolerated.
+        assert [r["accepted"] for r in spends] == [True, True, True, True, False]
         by_slot = {r["detail"]["slot"]: r["amount"] for r in spends}
-        assert [r["detail"]["slot"] for r in spends] == ["Q", "W", "R", "Q"]
+        assert [r["detail"]["slot"] for r in spends] == ["Q", "W", "W", "R", "Q"]
         assert by_slot["W"] == pytest.approx(70.0)
         assert by_slot["R"] == pytest.approx(100.0)
         assert sum(1 for s in spends if s["detail"]["slot"] == "Q") == 2
+        assert sum(1 for s in spends if s["detail"]["slot"] == "W") == 2
         assert all(
             r["amount"] == pytest.approx(60.0)
             for r in spends
             if r["detail"]["slot"] == "Q"
         )
-        assert result["resource_spent"] == pytest.approx(290.0)
-        assert result["resource_remaining"] == pytest.approx(10.0)
+        assert result["resource_spent"] == pytest.approx(300.0)
+        assert result["resource_remaining"] == pytest.approx(0.0)
 
     def test_mana_receipts_are_resource_receipt_shaped(self):
         # The mana account's rows are ResourceReceipt-shaped — the shape
