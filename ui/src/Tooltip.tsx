@@ -13,6 +13,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import "./tooltip.css";
+import { Icon } from "./Icon";
 
 const HOVER_DELAY_MS = 350;
 
@@ -332,7 +333,7 @@ export function GameTooltip({
                   aria-label="Close details"
                   onClick={close}
                 >
-                  ×
+                  <Icon name="close" size={16} />
                 </button>
               )}
             </header>

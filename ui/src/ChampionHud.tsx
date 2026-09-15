@@ -3,6 +3,7 @@ import type { Champion, Item } from "./types";
 import "./champion-hud.css";
 import { GameTooltip } from "./Tooltip";
 import { wikiText } from "./shop";
+import { Icon } from "./Icon";
 import {
   decreaseSkillRank,
   increaseSkillRank,
@@ -329,7 +330,7 @@ export function ChampionHud({
                 onRanks?.({ Q: 0, W: 0, E: 0, R: 0, ...minimumRanks })
               }
             >
-              Reset skill points
+              <Icon name="history" leading />Reset skill points
             </button>
           </div>
         )}

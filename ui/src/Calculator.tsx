@@ -359,7 +359,7 @@ function ItemShop({
           className="calculator-shop-close"
           aria-label="Close item shop"
         >
-          ×
+          <Icon name="close" size={16} />
         </button>
       </header>
       <div className="calculator-shop-body">
@@ -430,7 +430,7 @@ function ItemShop({
               onClick={shop.onClear}
               aria-label="Remove selected inventory item"
             >
-              ×
+              <Icon name="close" size={16} />
             </button>
             <span className="calculator-shop-bag-hint">
               Select a slot to replace it
@@ -590,7 +590,7 @@ function ItemShop({
               aria-pressed={reverse}
               onClick={() => setReverse((value) => !value)}
             >
-              ↕
+              <Icon name="sort" size={16} />
             </button>
           </div>
           <div className="calculator-shop-grid-scroll">
@@ -733,7 +733,7 @@ function ItemShop({
             disabled={!shop.replacingName}
             onClick={shop.onClear}
           >
-            Remove item
+            <Icon name="close" leading />Remove item
           </button>
           <span>
             {shop.replacingName ??
@@ -829,7 +829,7 @@ function Picker({
           onClick={onClose}
           aria-label="Close selection"
         >
-          ×
+          <Icon name="close" size={16} />
         </button>
       </div>
       <label className="calculator-search">
@@ -1771,7 +1771,7 @@ function CalculatorSession({
                           disabled={allies.length >= 4}
                           onClick={() => addParticipant("ally")}
                         >
-                          Add ally
+                          <Icon name="plus" leading />Add ally
                         </button>
                       </div>
                       {rosterRow(main)}
@@ -1793,7 +1793,7 @@ function CalculatorSession({
                           disabled={enemies.length >= 5}
                           onClick={() => addParticipant("enemy")}
                         >
-                          Add enemy
+                          <Icon name="plus" leading />Add enemy
                         </button>
                       </div>
                       {enemies.map(rosterRow)}
@@ -1837,7 +1837,7 @@ function CalculatorSession({
                       className="calculator-primary"
                       onClick={() => setStep("build")}
                     >
-                      Next · Build
+                      Next · Build<Icon name="arrow-right" style={{ marginLeft: ".4rem" }} />
                     </button>
                   </div>
                 </>
@@ -1912,7 +1912,7 @@ function CalculatorSession({
                           className="calculator-text-button"
                           onClick={() => removeParticipant(selected.id)}
                         >
-                          Remove {participantLabel(selected).toLowerCase()}
+                          <Icon name="close" leading />Remove {participantLabel(selected).toLowerCase()}
                         </button>
                       )}
                     </div>
@@ -1998,7 +1998,7 @@ function CalculatorSession({
                             setAlternative(structuredClone(main.build))
                           }
                         >
-                          Copy build A
+                          <Icon name="copy" leading />Copy build A
                         </button>
                       )}
                       <span>{format(spend(selectedBuild))} gold in items</span>
@@ -2243,14 +2243,14 @@ function CalculatorSession({
                       className="calculator-secondary"
                       onClick={() => setStep("teams")}
                     >
-                      Back · Teams
+                      <Icon name="arrow-left" leading />Back · Teams
                     </button>
                     <button
                       type="button"
                       className="calculator-primary"
                       onClick={() => setStep("fight")}
                     >
-                      Next · Fight
+                      Next · Fight<Icon name="arrow-right" style={{ marginLeft: ".4rem" }} />
                     </button>
                   </div>
                 </>
@@ -2324,7 +2324,7 @@ function CalculatorSession({
                       className="calculator-secondary"
                       onClick={() => setStep("build")}
                     >
-                      Back · Build
+                      <Icon name="arrow-left" leading />Back · Build
                     </button>
                   </div>
                 </>

@@ -1,5 +1,6 @@
 import type { Champion } from "./types";
 import type { AuthoredEvent } from "./scenario-state";
+import { Icon } from "./Icon";
 export interface EventActor {
   id: string;
   label: string;
@@ -232,7 +233,7 @@ export function EventEditor({
                             )
                           }
                         >
-                          Remove
+                          <Icon name="close" leading />Remove
                         </button>
                       </td>
                     </tr>
@@ -252,7 +253,7 @@ export function EventEditor({
             disabled={!casters.length || events.length >= 100}
             onClick={add}
           >
-            Add spell event
+            <Icon name="plus" leading />Add spell event
           </button>
           <p className="calculator-event-help">
             Listed casters use only their authored spells. Other champions keep

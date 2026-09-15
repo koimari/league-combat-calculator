@@ -1,6 +1,7 @@
 import { useId, useState, type ReactNode } from "react";
 import type { Result } from "./types";
 import "./combat-results.css";
+import { Icon } from "./Icon";
 type Row = Record<string, unknown>;
 const record = (v: unknown): Row =>
   v !== null && typeof v === "object" && !Array.isArray(v) ? (v as Row) : {};
@@ -142,7 +143,7 @@ function Ledger({
               className="combat-show-more"
               onClick={() => setLimit((value) => value + 50)}
             >
-              Show next {Math.min(50, events.length - limit)} events
+              <Icon name="arrow-down" leading />Show next {Math.min(50, events.length - limit)} events
             </button>
           )}
         </>
