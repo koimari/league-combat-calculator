@@ -79,6 +79,7 @@ from pathlib import Path
 
 import pytest
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
 BASELINE = Path("scripts/golden_coupled_baseline.json")
 
 #: ``stream -> (row count, the keys on EVERY row of it)``. Regenerate with
@@ -315,3 +316,58 @@ def test_the_survival_fields_this_campaign_indexes_are_universal(field):
     assert rows
     absent = [row for row in rows if field not in row]
     assert absent == [], f"{field} missing from {len(absent)} of {len(rows)}"
+
+
+def _receipt_view_input_rows() -> list[dict]:
+    """The rows ``program/views/receipt`` is HANDED, not the ones it writes.
+
+    The view builds ``combat/events``, so the published census measures its
+    output and licenses none of its reads. Its input is captured here by
+    driving the same coupled rebuild the baseline is captured from, which
+    is the only corpus that speaks for it.
+    """
+    import sys as _sys
+
+    _sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    import golden_snapshot as gs
+
+    import src.calculator.program.views.receipt as receipt_view
+
+    seen: list[dict] = []
+    original = receipt_view._damage_event_rows
+
+    def spy(events, writer, prefix):
+        seen.extend(row for row in events if isinstance(row, dict))
+        return original(events, writer, prefix)
+
+    receipt_view._damage_event_rows = spy
+    try:
+        gs.rebuild_for(json.loads(BASELINE.read_text(encoding="utf-8")))
+    finally:
+        receipt_view._damage_event_rows = original
+    return seen
+
+
+@pytest.mark.parametrize("field", ["source_key", "damage_type", "damage", "time"])
+def test_the_receipt_view_is_handed_these_on_every_row(field):
+    """What licenses the indexed reads in ``_damage_event_rows``."""
+    rows = _receipt_view_input_rows()
+    assert len(rows) > 1500
+    absent = [row for row in rows if field not in row]
+    assert absent == [], f"{field} missing from {len(absent)} of {len(rows)}"
+
+
+@pytest.mark.parametrize(
+    ("field", "ceiling"),
+    [("overkill", 1.0), ("raw_damage", 0.9), ("event_precision", 0.5)],
+)
+def test_the_receipt_view_s_other_reads_really_are_optional(field, ceiling):
+    """Their defaults are the measurement, not an oversight.
+
+    ``overkill`` is the sharp one: 1,675 of 1,706 is near enough to
+    universal that a reader skimming would convert it.
+    """
+    rows = _receipt_view_input_rows()
+    present = sum(1 for row in rows if field in row)
+    assert 0 < present < len(rows), field
+    assert present / len(rows) <= ceiling, field

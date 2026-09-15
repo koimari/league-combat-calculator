@@ -174,12 +174,18 @@ def _damage_event_rows(
     for index, event in enumerate(events):
         row, leaf, refusal = _event_row(writer, prefix, index, event, family="events")
         leaf.raw("target", event.get("target"))
-        leaf.raw("source", event.get("source_key", ""))
-        leaf.raw("damage_type", event.get("damage_type", ""))
+        # Indexed: measured over the 1,706 rows this view is handed across
+        # all 26 coupled scenarios, source_key, damage_type, damage and time
+        # are on every one. The three reads below are NOT, and their
+        # defaults are the measurement too: overkill 1,675 of 1,706,
+        # raw_damage 1,365, event_precision 640. An absent one is that
+        # packet declaring none.
+        leaf.raw("source", str(event["source_key"]))
+        leaf.raw("damage_type", str(event["damage_type"]))
         _outcome(
             leaf,
             "damage",
-            round_field("events.damage", float(event.get("damage", 0.0))),
+            round_field("events.damage", float(event["damage"])),
             refusal,
         )
         leaf.measured(
