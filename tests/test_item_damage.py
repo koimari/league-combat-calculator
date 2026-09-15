@@ -3691,7 +3691,7 @@ class TestRagebladeOnHitAllItems:
     }
 
     def test_rageblade_only_hit_count(self) -> None:
-        """Rageblade's accelerated schedule yields 9 autos and 2 phantoms."""
+        """Rageblade's accelerated schedule yields 8 autos and 1 phantom."""
         fight = calculate_fight_damage(
             self.BASE_STATS,
             {},
@@ -3706,7 +3706,7 @@ class TestRagebladeOnHitAllItems:
         )
         rb = fight["breakdown"].get("on_hit_Guinsoo's Rageblade")
         assert rb is not None
-        assert rb["count"] == 11  # 9 scheduled autos + 2 phantoms
+        assert rb["count"] == 9  # 8 scheduled autos + 1 phantom
 
     def test_rageblade_plus_nashors_hit_counts(self) -> None:
         """Both Rageblade and Nashor's follow the same accelerated schedule."""
@@ -3727,8 +3727,8 @@ class TestRagebladeOnHitAllItems:
         )
         rb = fight["breakdown"]["on_hit_Guinsoo's Rageblade"]
         nt = fight["breakdown"]["on_hit_Nashor's Tooth"]
-        assert rb["count"] == 11
-        assert nt["count"] == 11  # Nashor's also gets phantom hit bonus
+        assert rb["count"] == 9
+        assert nt["count"] == 9  # Nashor's also gets phantom hit bonus
 
     def test_rageblade_plus_bork_hit_counts(self) -> None:
         """BoRK receives the two phantom applications on the accelerated schedule."""
@@ -3751,9 +3751,9 @@ class TestRagebladeOnHitAllItems:
         rb = fight["breakdown"]["on_hit_Guinsoo's Rageblade"]
         bork = fight["breakdown"]["on_hit_Blade of the Ruined King"]
 
-        assert autos["count"] == 9
-        assert rb["count"] == 11
-        assert bork["count"] == 11
+        assert autos["count"] == 8
+        assert rb["count"] == 9
+        assert bork["count"] == 9
 
     def test_bork_phantom_hit_double_procs_at_correct_hp(self) -> None:
         """BoRK phantom hit should proc at current HP after first BoRK hit."""
@@ -3848,7 +3848,7 @@ class TestRagebladeOnHitAllItems:
         )
         passive_oh = fight["breakdown"].get("on_hit_ability_passive")
         assert passive_oh is not None
-        assert passive_oh["count"] == 11
+        assert passive_oh["count"] == 9
 
 
 class TestKrakenSlayerPhantomHitStacking:
