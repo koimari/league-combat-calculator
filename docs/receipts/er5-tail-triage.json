@@ -2,16 +2,14 @@
  "candidates_by_module": {
   "certainty.py": 1,
   "fight_receipts.py": 2,
-  "ledger_adequacy.py": 1,
-  "program/views/receipt.py": 17,
+  "program/views/receipt.py": 1,
   "self_state_effects.py": 2,
   "support_bailout.py": 1,
-  "support_champion_packets.py": 1,
-  "survival/outcome_state.py": 1,
-  "survival/receipt_ledger.py": 2
+  "survival/receipt_ledger.py": 1
  },
  "totals": {
-  "CANDIDATE": 28,
+  "ADJUDICATED": 20,
+  "CANDIDATE": 8,
   "NOT_A_ROW_FIELD": 704,
   "NOT_A_ROW_RECEIVER": 136,
   "TOLERANCE_CONTRACT": 398

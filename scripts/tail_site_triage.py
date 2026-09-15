@@ -25,6 +25,12 @@ machine can answer, leaving a named remainder for the three it cannot.
     and on every cached champion, so matching the key alone called dozens
     of unrelated reads convertible.
 
+``ADJUDICATED``
+    Examined against a measured corpus and deliberately kept, with the
+    measurement recorded. A resolved site and an unexamined one look the
+    same to a scan, so without this class the count never falls for the
+    work that produced the most certainty.
+
 ``CANDIDATE``
     The key is censused, the receiver is a row, and no tolerance contract
     is evident. Clauses 2, 3 and 4 still apply and are judgement: does the
@@ -89,6 +95,45 @@ NON_ROW_RECEIVERS = frozenset(
 )
 
 
+#: Sites examined against a measured corpus and deliberately KEPT, with the
+#: measurement that decided it. A resolved site and an unexamined one look
+#: identical to a scan, so without this the candidate count never falls for
+#: the work that produced the most certainty. Keyed by module and the exact
+#: expression, so a site that changes shape returns to CANDIDATE.
+ADJUDICATED: dict[str, dict[str, str]] = {
+    "program/views/receipt.py": {
+        'event.get("overkill", 0.0)': "1,675 of 1,706 rows; absent means this packet overkilled nothing",
+        'event.get("event_precision", "exact")': "640 of 1,706 rows; the default is the declared reading",
+        'event.get("temporary_health", 0.0)': "0 of 909 heal rows; no coupled path sets it at all",
+        'event.get("healing_reduction_factor", 1.0)': "545 of 909 heal rows",
+        'event.get("target_selection_key", "")': "61 of 70 support rows",
+        'event.get("source", "")': "70 support rows is thin evidence beside 1,706; held on corpus size",
+        'event.get("kind", "")': "70 support rows; held on corpus size",
+        'event.get("amount", 0.0)': "70 support rows; held on corpus size",
+        'event.get("target_scope", "")': "70 support rows; held on corpus size",
+        'event.get("target_policy", "")': "70 support rows; held on corpus size",
+        'row.get("time", 0.0)': "item_denial_receipts publishes 5 rows; far too thin to license",
+        'row.get("reason", "")': "item_denial_receipts publishes 5 rows",
+    },
+    "survival/receipt_ledger.py": {
+        'action.event.get("damage", 0.0)': (
+            "705 of the 1,075 rows reaching skip(); they are every SKIPPED "
+            "action, heals included, so three agreeing damage corpora do not "
+            "speak for this input"
+        ),
+    },
+    "survival/outcome_state.py": {
+        "heal_event.get('source_key', '')": "0 of 909 heal rows carry source_key at all",
+    },
+    "support_champion_packets.py": {
+        'heal_event.get("target_selection_key", "")': "61 of 70 support rows",
+    },
+    "ledger_adequacy.py": {
+        'event.get("cc_duration", 0.0)': "54 of 2,458 published rows; overwhelmingly absent",
+    },
+}
+
+
 def _censused_keys() -> set[str]:
     """Every key either census measures on every row of some stream."""
     from tests.test_row_stream_census import CENSUS  # noqa: PLC0415
@@ -139,6 +184,8 @@ def triage() -> dict[str, Any]:
             bucket = "NOT_A_ROW_FIELD"
         elif receiver is None or receiver in NON_ROW_RECEIVERS:
             bucket = "NOT_A_ROW_RECEIVER"
+        elif finding.expression in ADJUDICATED.get(rel, {}):
+            bucket = "ADJUDICATED"
         elif rel in tolerant:
             bucket = "TOLERANCE_CONTRACT"
         else:

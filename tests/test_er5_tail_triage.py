@@ -88,3 +88,45 @@ def test_the_tolerance_signal_finds_the_modules_it_was_built_from():
     tolerant = triage._tolerance_modules()
     assert "public_response.py" in tolerant
     assert "bis_objective.py" in tolerant
+
+
+def test_every_adjudication_states_the_measurement_that_decided_it():
+    """An adjudication without a number is a suppression.
+
+    This class exists so the candidate count falls for sites examined and
+    deliberately kept. That only works if each entry carries the evidence,
+    otherwise it is a quiet allowlist and the count becomes a claim rather
+    than a measurement.
+    """
+    for module, sites in triage.ADJUDICATED.items():
+        assert sites, module
+        for expression, reason in sites.items():
+            assert reason.strip(), f"{module}: {expression}"
+            assert any(
+                char.isdigit() for char in reason
+            ), f"{module}: {expression} is kept with no measurement behind it"
+
+
+def test_an_adjudicated_site_still_exists_in_the_tree():
+    """A stale entry would shrink the count for work that no longer exists."""
+    from pathlib import Path
+
+    import literal_defaults
+
+    for module, sites in triage.ADJUDICATED.items():
+        path = Path("src/calculator") / module
+        assert path.is_file(), module
+        live = {finding.expression for finding in literal_defaults.scan([path])}
+        assert set(sites) <= live, f"{module}: {sorted(set(sites) - live)}"
+
+
+def test_the_unexamined_remainder_is_what_the_count_reports():
+    """CANDIDATE means unexamined, not unconverted.
+
+    The distinction is the point: 20 of the 28 sites this class held were
+    already measured and kept for a stated reason, and reporting them as
+    outstanding work overstated what was left by two and a half times.
+    """
+    totals = _committed()["totals"]
+    assert totals["ADJUDICATED"] > totals["CANDIDATE"]
+    assert totals["CANDIDATE"] < 20
