@@ -1,5 +1,9 @@
 """The healing an item did, read back off a finished fight result."""
 
+from .damage_event_row import (
+    event_damage as _row_damage,
+    event_time as _row_time,
+)
 from .heal_event_row import healed_amount, healed_time
 import math
 from collections.abc import Mapping
@@ -41,9 +45,9 @@ def _item_self_healing_events(
         else:
             duration = max(
                 (
-                    float(event.get("time", 0.0))
+                    _row_time(event)
                     for event in damage_events
-                    if isinstance(event, Mapping)
+                    if isinstance(event, Mapping) and "time" in event
                 ),
                 default=0.0,
             )
@@ -62,8 +66,8 @@ def _item_self_healing_events(
             if not isinstance(event, Mapping):
                 continue
             try:
-                amount = float(event.get("damage", 0.0))
-                time = float(event.get("time", 0.0))
+                amount = _row_damage(event)
+                time = _row_time(event)
             except (TypeError, ValueError):
                 continue
             if amount <= 0.0 or not math.isfinite(amount) or not math.isfinite(time):
@@ -118,8 +122,8 @@ def _item_self_healing_events(
                 if not isinstance(event, Mapping):
                     continue
                 try:
-                    hit_time = float(event.get("time", 0.0))
-                    hit_damage = float(event.get("damage", 0.0) or 0.0)
+                    hit_time = _row_time(event)
+                    hit_damage = _row_damage(event)
                 except (TypeError, ValueError):
                     continue
                 if hit_damage > 0.0 and math.isfinite(hit_time):
@@ -415,8 +419,8 @@ def _timestamped_damage_events(result: Mapping[str, Any]) -> list[Mapping[str, A
         if not isinstance(row, Mapping) or "time" not in row:
             continue
         try:
-            time = float(row["time"])
-            damage = float(row.get("damage", 0.0) or 0.0)
+            time = _row_time(row)
+            damage = _row_damage(row)
         except (TypeError, ValueError):
             continue
         if damage > 0.0 and math.isfinite(time):
