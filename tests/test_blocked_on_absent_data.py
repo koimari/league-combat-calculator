@@ -97,3 +97,77 @@ def test_the_block_is_still_declared_where_the_page_reads_it(option, champion):
     import coverage_status
 
     assert f"{option}:{champion}" in coverage_status._BLOCKED_ON_DATA
+
+
+class TestTheCharGeFieldCapsAreStillAbsent:
+    """SR4's seven persistent-object slots, and Caitlyn W's missing stock.
+
+    Each banks one cast because no source here states how many objects may
+    stand at once. Verified in BOTH places the number could be, the cached
+    ability prose and the tracked binary, so this is absence rather than
+    somewhere I did not look. Two of the original nine turned out to state
+    it in prose after all, which is exactly why this watches.
+    """
+
+    #: ``(champion, slot, the word the cap sentence would name)``.
+    SLOTS = [
+        ("Gangplank", "E", "keg"),
+        ("Jhin", "E", "trap"),
+        ("Teemo", "R", "mushroom"),
+        ("Zyra", "W", "seed"),
+        ("Azir", "W", "soldier"),
+        ("Ivern", "W", "brush"),
+        ("Kalista", "W", "sentinel"),
+    ]
+
+    FIELD_CAP = re.compile(
+        r"can be deployed at a time|may be active at a time|at a time|simultaneously",
+        re.I,
+    )
+
+    @pytest.mark.parametrize(("champion", "slot", "word"), SLOTS)
+    def test_no_field_cap_sentence(self, champion, slot, word):
+        prose = _ability_prose(champion, slot)
+        assert prose, f"{champion} {slot} has no cached prose at all"
+        assert not self.FIELD_CAP.search(prose), (
+            f"{champion} {slot} now states a field cap; its ChargeRule can "
+            f"bank more than one {word}, so re-read SR4"
+        )
+
+    def test_caitlyn_w_still_states_no_stock(self):
+        """The odd one out: no field cap AND no charge stock."""
+        prose = _ability_prose("Caitlyn", "W")
+        assert prose
+        assert not re.search(r"stocks?\b[^.]*?up to a maximum of \d+", prose, re.I)
+        assert not self.FIELD_CAP.search(prose)
+
+    #: ``champion -> (bin slot path fragment, the mMaxAmmo the binary holds)``.
+    #: The GAME FILES carry a charge stock for every one of these, per rank,
+    #: where the wiki prose carries one for only some. That is a source this
+    #: campaign had not looked in, and SR4 says the opposite about Caitlyn.
+    BINARY_AMMO = {
+        "caitlyn": ("CaitlynWAbility/CaitlynW", [2, 3, 3, 4, 4, 5, 5]),
+        "gangplank": ("GangplankEAbility/GangplankE", [3, 3, 3, 4, 4, 5, 5]),
+        "jhin": ("JhinEAbility/JhinE", [2, 2, 2, 2, 2, 2, 2]),
+        "zyra": ("ZyraWAbility/ZyraW", [2, 2, 2, 2, 2, 2, 2]),
+        "azir": ("AzirWAbility/AzirW", [2, 2, 2, 2, 2, 2, 2]),
+        "ivern": ("IvernWAbility/IvernW", [3, 3, 3, 3, 3, 3, 3]),
+    }
+
+    @pytest.mark.parametrize("stem", sorted(BINARY_AMMO))
+    def test_the_binary_carries_a_charge_stock_the_prose_does_not(self, stem):
+        """The find, pinned: these stocks are NOT absent, only unread.
+
+        A slot banking one cast because "the cache states no stock" is
+        resting on the wiki prose alone. ``mMaxAmmo`` is the game's own
+        ammo count and it is in the tracked binary for every one of these,
+        Caitlyn included, whose ``ChargeRule`` says no stock exists.
+
+        Wiring it into ``charge_cadence`` moves cast schedules for several
+        champions and is its own slice. This asserts the data is there so
+        that slice starts from a fact rather than a rediscovery.
+        """
+        fragment, expected = self.BINARY_AMMO[stem]
+        data = json.loads((BINS / f"{stem}.bin.json").read_text(encoding="utf-8"))
+        key = next(key for key in data if key.endswith(fragment))
+        assert data[key]["mSpell"]["mMaxAmmo"] == expected
