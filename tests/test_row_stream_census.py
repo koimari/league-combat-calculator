@@ -30,8 +30,19 @@ from a conversion that had to be undone:
    26 censused scenarios, so the stream's own default is real even though
    every field on every row it does publish is not.
 
-A site clears all three or it keeps its default, and the default is then
-correct rather than debt.
+4. Does the site run AFTER publication? This table is measured on published
+   rows. ``participant_timeline``'s overheal pass is the producer of
+   ``overheal`` and runs over heal events before they are published, which
+   is why it opens by skipping any row that already has one. A row in
+   flight is not yet the shape the census describes, so nothing here
+   licenses indexing it.
+
+A site clears all four or it keeps its default, and the default is then
+correct rather than debt. Mechanising clauses 1 and 2 over the largest tail
+module found five loops iterating a censused stream and exactly one site
+inside them, and clause 4 disqualified that one: the mechanically provable
+set is small, and the rest of the tail wants its author's intent rather
+than a scan.
 """
 
 import json
