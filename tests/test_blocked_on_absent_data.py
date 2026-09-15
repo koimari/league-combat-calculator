@@ -99,14 +99,22 @@ def test_the_block_is_still_declared_where_the_page_reads_it(option, champion):
     assert f"{option}:{champion}" in coverage_status._BLOCKED_ON_DATA
 
 
-class TestTheCharGeFieldCapsAreStillAbsent:
+class TestTheChargeFieldCapsAreStillAbsent:
     """SR4's seven persistent-object slots, and Caitlyn W's missing stock.
 
     Each banks one cast because no source here states how many objects may
-    stand at once. Verified in BOTH places the number could be, the cached
-    ability prose and the tracked binary, so this is absence rather than
-    somewhere I did not look. Two of the original nine turned out to state
-    it in prose after all, which is exactly why this watches.
+    stand at once. Verified in BOTH places the number could be: the cached
+    ability prose, and the spell objects in the tracked binaries, whose
+    scalar fields are cast and missile geometry with no cap among them.
+
+    The distinction this class rests on is between the STOCK, how many
+    casts are banked, and the FIELD cap, how many objects may hold at once.
+    The binaries do carry the stock, as ``mMaxAmmo`` per rank, which the
+    sibling class pins. They do not carry the cap, and it is the cap these
+    rules wait on.
+
+    Two of the original nine turned out to state a cap in prose after all,
+    which is exactly why this watches rather than asserts once.
     """
 
     #: ``(champion, slot, the word the cap sentence would name)``.

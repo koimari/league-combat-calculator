@@ -388,9 +388,14 @@ CHARGE_RULES = {
         why=(
             "W (Yordle Snap Trap) banks traps on its cached "
             "rechargeRate (10s at rank 5), which this slot already "
-            "prices. The cache states no stock for it, neither a "
-            "Maximum charges row nor a stocking sentence, so one banked "
-            "cast is the floor until the count is sourced."
+            "prices. A stock IS sourced, just not from the wiki: the "
+            "binary's CaitlynW mMaxAmmo is 2/3/3/4/4/5/5 by rank, where "
+            "no Maximum charges row and no stocking sentence exists. It "
+            "is not spent here all the same, and for the Heimerdinger "
+            "reason rather than an absent number: the trap stands and "
+            "arms, this row prices no damage at the cast, and what binds "
+            "is how many traps may hold at once, which neither source "
+            "states."
         ),
         charges=1,
     )
