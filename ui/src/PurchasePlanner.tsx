@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { request } from "./api";
+import { Icon } from "./Icon";
 interface PurchaseResult {
   items?: string[];
   boots?: string;
@@ -116,7 +117,7 @@ export function PurchasePlanner({
               setBusy(false);
             }}
           >
-            Cancel purchase search
+            <Icon name="close" leading />Cancel purchase search
           </button>
         ) : (
           <button
@@ -129,7 +130,7 @@ export function PurchasePlanner({
             }
             onClick={find}
           >
-            Find next purchase
+            <Icon name="lens" leading />Find next purchase
           </button>
         )}
       </div>
@@ -160,7 +161,7 @@ export function PurchasePlanner({
                     onApply(result.items ?? [], result.boots ?? "")
                   }
                 >
-                  Apply purchase plan
+                  <Icon name="pick" leading />Apply purchase plan
                 </button>
               ) : (
                 <p>

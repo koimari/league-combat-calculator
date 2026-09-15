@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { request } from "./api";
+import { Icon } from "./Icon";
 
 interface Candidate {
   name: string;
@@ -130,7 +131,7 @@ export function SlotSearch({
               setBusy(false);
             }}
           >
-            Cancel search · {elapsed}s
+            <Icon name="close" leading />Cancel search · {elapsed}s
           </button>
         ) : (
           <button
@@ -139,7 +140,7 @@ export function SlotSearch({
             disabled={Boolean(ready)}
             onClick={search}
           >
-            Rank this slot
+            <Icon name="ratings" leading />Rank this slot
           </button>
         )}
       </div>

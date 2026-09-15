@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import type { Build, Config, Rune } from "./types";
 import { GameTooltip } from "./Tooltip";
+import { Icon } from "./Icon";
 import {
   runeIcons,
   runeDescriptions,
@@ -213,7 +214,7 @@ export function RunePage({ config, build, onChange, onClose }: RunePageProps) {
           </span>
         </div>
         <button type="button" onClick={onClose} aria-label="Close rune page">
-          ×
+          <Icon name="close" size={16} />
         </button>
       </header>
       <div
@@ -390,7 +391,7 @@ export function RunePage({ config, build, onChange, onClose }: RunePageProps) {
             className="calculator-rune-done"
             onClick={onClose}
           >
-            Done
+            <Icon name="pick" leading />Done
           </button>
         </div>
       </footer>
