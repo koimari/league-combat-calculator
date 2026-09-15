@@ -72,7 +72,8 @@
   "The kindred-hunters-vigor-fill slice re-captures the PAIR golden block only (R-17, receipt docs/receipts/expected-golden-diff-kindred-hunters-vigor-fill.json). Her W_vigor row publishes a four-key heal_requires_stacks it did not carry: leaves 60701 -> 60705 and numeric_leaves 46474 -> 46477, entries unchanged, over 2 leaves both on that parse row. No golden fight is long enough at full uptime to land the twenty attacks that fill the bar, which is why nothing else moves. The coupled and exact captures moved no value.",
   "The hecarim-rampage-cadence slice re-captures the PAIR golden block only (R-17, receipt docs/receipts/expected-golden-diff-hecarim-rampage-cadence.json). His Q row publishes a stack_window and a stack_scaled_cooldown it did not carry, and its cooldown leaf goes 1.75 -> 4.0 where a ranked read of a per-STACK row had been returning the fully stacked value at every rank: leaves 60705 -> 60717 and numeric_leaves 46477 -> 46485, entries unchanged, over 20 leaves all his. This capture closes the in-fight stack-level frontier: docs/coverage-status.md reads 0. The coupled and exact captures moved no value.",
   "Review of the hecarim-rampage-cadence slice found three defects in its first cut, and this re-capture settles them: the derived damage never stacked (a slot that stacks itself is priced before its own breakdown row exists), the stack reduction was applied after Navori rather than to the base cooldown it names, and the authored-cast path never applied it. 16 pair leaves move against the first cut, all Hecarim Q and all upward, with no shape counter moving: the keys were already published, only their values changed.",
-  "The ramp-opens-empty slice re-captures all three golden blocks (R-17, receipt docs/receipts/expected-golden-diff-ramp-opens-empty.json). Every decaying-stack ramp now opens the fight empty, because the attack that grants a stack cannot be rated by it, so the walker no longer seeds one live stack at t=0. Pair block: leaves 60717 -> 60717 and numeric_leaves 46485 -> 46485, over 38 leaves, 2 of them Guinsoo's Rageblade in the item sweep and 36 across Jax and Jinx, the two kits on the ramp. Coupled block: leaves 124544 -> 124434 and numeric_leaves 40535 -> 40504, one roster, cleaver_bloodsong, whose swing stream shortened and cascaded through its event ledger. coupled_golden_exact_values.sha256 is left as it stands: SR6 records that its stated rule does not reproduce the committed digest."
+  "The ramp-opens-empty slice re-captures all three golden blocks (R-17, receipt docs/receipts/expected-golden-diff-ramp-opens-empty.json). Every decaying-stack ramp now opens the fight empty, because the attack that grants a stack cannot be rated by it, so the walker no longer seeds one live stack at t=0. Pair block: leaves 60717 -> 60717 and numeric_leaves 46485 -> 46485, over 38 leaves, 2 of them Guinsoo's Rageblade in the item sweep and 36 across Jax and Jinx, the two kits on the ramp. Coupled block: leaves 124544 -> 124434 and numeric_leaves 40535 -> 40504, one roster, cleaver_bloodsong, whose swing stream shortened and cascaded through its event ledger. coupled_golden_exact_values.sha256 is left as it stands: SR6 records that its stated rule does not reproduce the committed digest.",
+  "The bard-shrine-stock slice re-captures the PAIR golden block only (R-17, receipt docs/receipts/expected-golden-diff-bard-shrine-stock.json). Bard W banks its sourced stock of two shrines rather than one, because the shrine's heal is priced at the cast and the persistent-object exemption does not reach it: leaves 60717 -> 60718 and numeric_leaves 46485 -> 46486, over exactly one leaf, W/charge_pool, which moves from absent to 2 because the pool is newly published rather than newly different. No damage leaf moves and the coupled captures moved no value."
  ],
  "provenance": {
   "golden": "VERIFIED",
@@ -87,9 +88,9 @@
  "golden": {
   "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights",
   "entries": 672,
-  "leaves": 60717,
-  "numeric_leaves": 46485,
-  "src_tree_sha": "3f1f9a35abf6d4d70a23e1b475d82788d22edde6"
+  "leaves": 60718,
+  "numeric_leaves": 46486,
+  "src_tree_sha": "62065c95aadd4951866381ac44dc0f5effc4d702"
  },
  "coupled_golden": {
   "sections": "coupled_scenarios",
