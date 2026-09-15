@@ -12,6 +12,7 @@ import {
   type ScoreboardReadPlayer,
 } from "./scoreboard-load";
 import type { Participant } from "./scenario-state";
+import { Icon } from "./Icon";
 import {
   ScoreboardVision,
   type ScoreboardHit,
@@ -233,7 +234,7 @@ export function ScoreboardReader({
         title="Or paste a screenshot anywhere on the page"
         onClick={() => fileInput.current?.click()}
       >
-        Read a scoreboard screenshot
+        <Icon name="folio" leading />Read a scoreboard screenshot
       </button>
       <input
         ref={fileInput}
@@ -266,7 +267,7 @@ export function ScoreboardReader({
             onClick={() => dialog.current?.close()}
             aria-label="Close"
           >
-            ×
+            <Icon name="close" size={16} />
           </button>
         </header>
         <p role="status" className="calculator-scoreboard-status">
@@ -383,10 +384,10 @@ export function ScoreboardReader({
         )}
         <div className="calculator-scoreboard-actions">
           <button type="button" onClick={() => dialog.current?.close()}>
-            Close
+            <Icon name="close" leading />Close
           </button>
           <button type="button" disabled={pickedIndex < 0} onClick={loadPicked}>
-            Load into the calculator
+            <Icon name="download" leading />Load into the calculator
           </button>
         </div>
       </dialog>
