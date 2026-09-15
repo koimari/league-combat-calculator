@@ -496,6 +496,7 @@ OPTIONS = [
             "Hunter's Vigor stacks (100 = the next basic attack heals); unset "
             "walks the attacks that fill the bar"
         ),
+        derives=True,
     ),
     int_option(
         "e_stacks",
@@ -506,6 +507,7 @@ OPTIONS = [
             "Mounting Dread stacks (3 = pounce); unset walks the marked "
             "attacks and pounces wherever the third one lands"
         ),
+        derives=True,
     ),
 ]
 

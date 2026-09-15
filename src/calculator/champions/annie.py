@@ -379,6 +379,7 @@ OPTIONS = [
         maximum=30,
         label="Tibbers auto attacks (0 = none; defaults to the fight "
         "window at the sourced enrage + 0.625 AS cadence)",
+        derives=True,
     ),
     int_option(
         "pyromania_stacks",

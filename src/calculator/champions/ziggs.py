@@ -136,6 +136,7 @@ OPTIONS = [
             "Short Fuse procs; unset derives them from the cached 12s timer "
             "and the level refund each cast takes off it"
         ),
+        derives=True,
     ),
     int_option("mines_hit", 4, minimum=1, maximum=11, label="E mines hit"),
     bool_option("r_sweet_spot", True, label="R hits epicenter (sweet spot)"),

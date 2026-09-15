@@ -206,6 +206,7 @@ OPTIONS = [
             "Relentless Assault stacks; unset walks the ramp, one stack per "
             "attack, so the swings speed up as they land"
         ),
+        derives=True,
     ),
     int_option(
         "e_dodged_attacks",

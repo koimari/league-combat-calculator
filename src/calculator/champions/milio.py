@@ -150,6 +150,7 @@ OPTIONS = [
             "Fired Up! hits; unset derives them from the casts that enchant and "
             "the attacks or ability hits that spend it"
         ),
+        derives=True,
     ),
 ]
 

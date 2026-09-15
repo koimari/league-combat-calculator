@@ -250,6 +250,7 @@ OPTIONS = [
             "Empowered attacks; unset derives them from the casts that bank "
             "a Medarda Maxim stack and the swings that spend one"
         ),
+        derives=True,
     ),
 ]
 

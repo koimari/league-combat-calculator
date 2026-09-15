@@ -195,6 +195,7 @@ OPTIONS = [
             "True Grit stacks; unset walks the ramp over the Quickdraw casts "
             "and serves its fight mean"
         ),
+        derives=True,
     ),
     bool_option("r_secondary_target", False, label="Collateral Damage secondary cone"),
 ]

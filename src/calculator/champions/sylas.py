@@ -278,6 +278,7 @@ OPTIONS = [
             "that bank a stack and the swings that spend one"
         ),
         rotation={"role": "self_state", "slot": "P"},
+        derives=True,
     ),
 ]
 

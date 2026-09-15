@@ -287,6 +287,7 @@ OPTIONS = [
             "Trial by Fire procs; unset derives them from the cached "
             "cooldown, which a Powder Keg explosion would reset"
         ),
+        derives=True,
     ),
     bool_option("r_fire_at_will", False, label="Cannon Barrage Fire at Will upgrade"),
     bool_option(

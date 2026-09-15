@@ -373,6 +373,7 @@ OPTIONS = [
             "Clean Cuts stacks; unset derives them from the casts that "
             "bank them and the swings that spend them"
         ),
+        derives=True,
     ),
     int_option(
         "bladecaller_feathers",
