@@ -263,9 +263,15 @@ def _evaluate_build_uncached(
         )
         if main_row is None:
             return float("-inf")
+        # The row fields below are indexed rather than defaulted: the stream
+        # census (tests/test_row_stream_census.py) measures them on every row
+        # of combat/events, combat/participants and combat/breakdown. The
+        # CONTAINER reads keep their defaults, because combat/events is
+        # present in only 23 of the 26 censused scenarios: a missing stream is
+        # real, a missing field on a published row is not.
         if objective == "physical_damage":
             death_time = next(
-                row.get("survival", {}).get("death_time")
+                row["survival"]["death_time"]
                 for row in combat.get("participants", [])
                 if row.get("participant_id") == "main"
             )
@@ -273,15 +279,15 @@ def _evaluate_build_uncached(
                 base_params.fight_duration_seconds if death_time is None else death_time
             )
             return sum(
-                float(event.get("damage", 0.0))
+                float(event["damage"])
                 for event in combat.get("events", [])
                 if event.get("attacker") == "main"
                 and event.get("damage_type") == "physical"
-                and float(event.get("time", 0.0)) <= cutoff
+                and float(event["time"]) <= cutoff
             )
         if objective == "magic_damage":
             death_time = next(
-                row.get("survival", {}).get("death_time")
+                row["survival"]["death_time"]
                 for row in combat.get("participants", [])
                 if row.get("participant_id") == "main"
             )
@@ -289,20 +295,20 @@ def _evaluate_build_uncached(
                 base_params.fight_duration_seconds if death_time is None else death_time
             )
             return sum(
-                float(event.get("damage", 0.0))
+                float(event["damage"])
                 for event in combat.get("events", [])
                 if event.get("attacker") == "main"
                 and event.get("damage_type") == "magic"
-                and float(event.get("time", 0.0)) <= cutoff
+                and float(event["time"]) <= cutoff
             )
         if objective == "total_damage":
             # The participant timeline already truncates the main actor's
             # output at its event-ordered death time.  Effective health is a
             # receipt component describing that survival window; it is not
             # part of the primary damage score.
-            primary_score = float(main_row.get("total_damage", 0.0))
+            primary_score = float(main_row["total_damage"])
         else:
-            primary_score = float(main_row.get("total_damage", 0.0))
+            primary_score = float(main_row["total_damage"])
 
         # Equal-damage coupled builds still need a deterministic, sourced
         # decision.  Damage is capped by a kill, so every build that clears
@@ -316,12 +322,17 @@ def _evaluate_build_uncached(
         if timeline_audit is not None:
             main_survival = next(
                 (
-                    row.get("survival", {})
+                    row["survival"]
                     for row in combat.get("participants", [])
                     if row.get("participant_id") == "main"
                 ),
                 {},
             )
+            # NOT indexed, though the census proves every participants row
+            # carries it: main_survival is the ``{}`` this ``next`` falls back
+            # to when no main row is found, so the value here is not always a
+            # row. A census-proven field may be indexed only where the
+            # variable is known to hold one.
             effective_health = max(
                 0.0, float(main_survival.get("effective_health", 0.0))
             )
@@ -330,7 +341,7 @@ def _evaluate_build_uncached(
                 duration - float(row["survival"]["death_time"])
                 for row in combat.get("participants", [])
                 if row.get("team") == "enemy"
-                and row.get("survival", {}).get("death_time") is not None
+                and row["survival"]["death_time"] is not None
             )
             return primary_score + kill_margin * 1e-4 + effective_health * 1e-9
         return primary_score
