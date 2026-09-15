@@ -37,12 +37,20 @@ from a conversion that had to be undone:
    flight is not yet the shape the census describes, so nothing here
    licenses indexing it.
 
-5. Is the reader reached ONLY with engine output? ``bis_objective`` is not.
-   Its callers hand it synthetic and partial payloads, and ``bis.py`` wraps
-   the candidate loop in ``except (KeyError, ValueError)``, which withholds
-   that build from ranking. Indexing there converts a scored candidate into
-   a silently dropped one, so its defaults are load-bearing for a refusal
-   path rather than debt, whatever the census says about published rows.
+5. Is TOLERATING a malformed row part of the reader's contract? This is the
+   clause that has disqualified the most sites, and a census can never
+   answer it. ``bis_objective`` is handed partial payloads and ``bis.py``
+   wraps the candidate loop in ``except (KeyError, ValueError)``, which
+   withholds that build from ranking, so indexing converts a scored
+   candidate into a silently dropped one. ``public_response`` is worse:
+   withholding a malformed event IS its job, pinned by tests that hand it
+   partial rows on purpose, so indexing turns graceful withholding into a
+   crash at the API boundary. In both, the default is the contract.
+
+   The internal corpus (``docs/receipts/internal-row-census.json``) proves
+   all four fields the serializer reads are on every one of the 3,960 rows
+   the engine builds. It licenses the read and the contract forbids it. A
+   corpus answers what the data IS, never what a reader promised.
 
 And one boundary, which is where this method stops rather than a clause a
 site can pass. The census is trustworthy because

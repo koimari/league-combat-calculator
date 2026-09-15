@@ -1,0 +1,55 @@
+{
+ "champions": 173,
+ "probe": {
+  "enemy": "Aatrox",
+  "fight_duration_seconds": 10.0,
+  "level": 13,
+  "role": "mid"
+ },
+ "streams": {
+  "control_events": {
+   "rows": 18,
+   "universal": [
+    "application_id",
+    "cast_id",
+    "cc_duration",
+    "cc_kind",
+    "cc_reviewed",
+    "damage",
+    "damage_type",
+    "event_precision",
+    "is_ability",
+    "kind",
+    "sequence",
+    "skillshot",
+    "source",
+    "source_key",
+    "target_id",
+    "time"
+   ]
+  },
+  "damage_events": {
+   "rows": 3960,
+   "universal": [
+    "_lk",
+    "damage",
+    "damage_type",
+    "order",
+    "ordinal",
+    "phase",
+    "sequence",
+    "source_key",
+    "time"
+   ]
+  },
+  "self_healing_events": {
+   "rows": 443,
+   "universal": [
+    "amount",
+    "kind",
+    "source",
+    "time"
+   ]
+  }
+ }
+}
