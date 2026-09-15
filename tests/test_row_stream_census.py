@@ -13,6 +13,25 @@ that only four keys were universal, and recorded that ``raw_damage`` sat on
 is on every ``combat/events`` row and on no fight row. Pooling two shapes
 manufactures an optional field out of two required ones, and the conclusion
 it invites, that some producer stamps inconsistently, is false.
+
+Converting a tail site needs THREE answers, not one, and each was learned
+from a conversion that had to be undone:
+
+1. Is the key universal on the stream? That is what this table answers, and
+   answering it by pooling two streams is how the first attempt produced a
+   figure that was true and misleading at once.
+
+2. Does the variable definitely hold a row of that stream? A census-proven
+   field is still unsafe where the variable can be a sentinel:
+   ``build_evaluation``'s ``main_survival`` is the ``{}`` its own ``next``
+   falls back to, and indexing it raised on a real optimizer path.
+
+3. Is the CONTAINER guaranteed? ``combat/events`` is published by 23 of the
+   26 censused scenarios, so the stream's own default is real even though
+   every field on every row it does publish is not.
+
+A site clears all three or it keeps its default, and the default is then
+correct rather than debt.
 """
 
 import json
