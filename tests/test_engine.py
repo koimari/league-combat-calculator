@@ -1013,6 +1013,84 @@ class TestEntryKeyValidation:
         parse = build_parser({"Q": good_parser}, "TestChamp")
         assert "Q" in parse(_champion(), 9, 0.0)
 
+    def test_unknown_empower_sub_key_raises(self) -> None:
+        """SR5: the same failure mode one level down again.
+
+        Every sub-key is read by name in ``fight/empower_declaration.py``,
+        so a misspelling is silent: the reader's ``.get`` answers ``None``
+        and the empower simply does not do what the module asked for.
+        """
+
+        def bad_parser(_ctx):
+            return {
+                "name": "Empower",
+                "parts": (),
+                "empowers_next_auto": {"hits": 2, "attack_speeed": 1.5},
+            }
+
+        parse = build_parser({"Q": bad_parser}, "TestChamp")
+        with pytest.raises(ValueError, match=r"empowers_next_auto.*attack_speeed"):
+            parse(_champion(), 9, 0.0)
+
+    def test_known_empower_sub_keys_pass(self) -> None:
+        """The whole declared vocabulary, so the guard above is not vacuous."""
+
+        def good_parser(_ctx):
+            return {
+                "name": "Empower",
+                "parts": (),
+                "empowers_next_auto": {
+                    "hits": 2,
+                    "attack_speed": 1.5,
+                    "authored_timing": True,
+                    "rides_scheduled_auto": True,
+                    "cooldown_starts_after_hits": True,
+                    "swing_parts": (),
+                },
+            }
+
+        parse = build_parser({"Q": good_parser}, "TestChamp")
+        assert "Q" in parse(_champion(), 9, 0.0)
+
+    def test_the_declared_vocabulary_is_what_the_engine_actually_reads(self) -> None:
+        """The guard cannot drift from its readers without turning red.
+
+        Every sub-key is named by a reader in ``fight/``: four through a
+        ``.get``/``in`` on the payload and two through ``ability_field(...,
+        form="empower")``. Scanning for them is what caught ``swing_parts``,
+        which a first cut of this vocabulary missed and which took every
+        Camille parse down with it.
+        """
+        import re
+        from pathlib import Path
+
+        from src.calculator.champions.entry_shape import _ALLOWED_EMPOWER_KEYS
+
+        source = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in Path("src/calculator/fight").rglob("*.py")
+        )
+        read = set(
+            re.findall(r'empower(?:ment)?\.get\("([a-z_]+)"', source)
+            + re.findall(r'empower(?:ment)?\["([a-z_]+)"\]', source)
+            + re.findall(r'"([a-z_]+)" in empower\b', source)
+            + re.findall(r'ability_field\(\s*empower,\s*"([a-z_]+)"', source)
+        )
+        assert read, "found no empower reader at all; the scan itself broke"
+        assert read <= _ALLOWED_EMPOWER_KEYS, (
+            "the fight engine reads empower sub-keys the vocabulary does not "
+            f"allow: {sorted(read - _ALLOWED_EMPOWER_KEYS)}"
+        )
+
+    def test_an_empower_that_is_just_true_carries_no_sub_keys(self) -> None:
+        """``empowers_next_auto: True`` is one attack and has nothing to check."""
+
+        def good_parser(_ctx):
+            return {"name": "Empower", "parts": (), "empowers_next_auto": True}
+
+        parse = build_parser({"Q": good_parser}, "TestChamp")
+        assert "Q" in parse(_champion(), 9, 0.0)
+
 
 # ---------------------------------------------------------------------------
 # P-slot handling
