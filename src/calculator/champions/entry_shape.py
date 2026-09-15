@@ -214,6 +214,30 @@ _ALLOWED_POST_HIT_PROC_KEYS = frozenset(
 )
 
 
+#: The sub-keys an ``empowers_next_auto`` dict may declare. Each is read by
+#: name in ``fight/empower_declaration.py`` or ``fight/after/empowered_swings.py``,
+#: so a misspelling here is silent: the reader's ``.get`` answers ``None``
+#: and the empower simply does not do the thing the module asked for.
+_ALLOWED_EMPOWER_KEYS = frozenset(
+    {
+        # How many attacks the cast is delivered by.
+        "hits",
+        # The attack speed those hits fire at.
+        "attack_speed",
+        # The module states when the hits land rather than the scheduler.
+        "authored_timing",
+        # The empowered hit rides a swing the stream already scheduled
+        # instead of adding one (Jayce).
+        "rides_scheduled_auto",
+        # The slot's cooldown starts once the hits are spent, not at the cast.
+        "cooldown_starts_after_hits",
+        # Module-authored parts for the empowered swing itself, replacing the
+        # engine's default expected-crit swing (Camille).
+        "swing_parts",
+    }
+)
+
+
 # Key shapes that already passed validation.  Entries are rebuilt per
 # parse but their key sets are fixed per (champion, slot, options) code
 # path, so the optimizer's thousands of identical parses validate once.
@@ -247,12 +271,17 @@ def validate_entry_keys(
     down, silently shred nothing).
     """
     post_hit_proc = entry.get("post_hit_proc") or {}
+    # ``empowers_next_auto`` is True (one attack) or a dict; only the dict
+    # has sub-keys to check, and True has no iteration order to key on.
+    empower = entry.get("empowers_next_auto")
+    empower_keys = tuple(empower) if isinstance(empower, Mapping) else ()
     shape = (
         emitted,
         tuple(entry),
         tuple(entry.get("target_debuff", ())),
         tuple(post_hit_proc),
         tuple(post_hit_proc.get("target_debuff", ()) if post_hit_proc else ()),
+        empower_keys,
     )
     if shape in _VALIDATED_ENTRY_SHAPES:
         return
@@ -275,6 +304,12 @@ def validate_entry_keys(
             _ALLOWED_DEBUFF_KEYS,
             "post_hit_proc.target_debuff",
             "_ALLOWED_DEBUFF_KEYS",
+        ),
+        (
+            set(empower_keys),
+            _ALLOWED_EMPOWER_KEYS,
+            "empowers_next_auto",
+            "_ALLOWED_EMPOWER_KEYS",
         ),
     ):
         unknown = keys - allowed

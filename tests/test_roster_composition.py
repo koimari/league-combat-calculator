@@ -287,3 +287,77 @@ def test_two_declared_attack_speed_auras_stop_rather_than_pick_one(
 
     with pytest.raises(ValueError, match="attack-speed aura"):
         target_overrides(_defender(AURA_HOLDER))
+
+
+def test_a_roster_actor_wears_none_of_the_attacker_s_rune_page():
+    """SR1: the attacker's page is the attacker's alone.
+
+    The keystone was already blanked for a roster actor and the rest of the
+    page was not, so an ally and an enemy alike wore the attacker's minor
+    runes and stat shards: an enemy Aatrox earned Scorch damage and Adaptive
+    Force it never selected. All four fields are one decision, and a roster
+    actor carries no page until it can carry its own.
+    """
+    params = FightParams.from_request(
+        {
+            "fight_mode": "one_rotation",
+            "role": "mid",
+            "minor_runes": ["Scorch"],
+            "stat_shards": ["Adaptive Force"],
+        },
+        deterministic=True,
+    )
+    assert params.minor_runes == ("Scorch",)
+    assert params.stat_shards == ("Adaptive Force",)
+
+    def _actor(participant_id: str) -> Combatant:
+        return Combatant(
+            participant_id=participant_id,
+            team=participant_id.split(":")[0],
+            champion_data={"name": "Lux"},
+            level=12,
+            items=(),
+            stats={},
+            defenses=StartingDefenses(),
+            request=ActorRequest(
+                role="support",
+                role_quest_complete=False,
+                ability_ranks=None,
+                champion_options={},
+                cast_order=None,
+                item_options={},
+            ),
+        )
+
+    for participant_id in ("ally:Lux", "enemy:Aatrox"):
+        resolved = actor_params(params, _actor(participant_id))
+        assert resolved.keystone == "", participant_id
+        assert resolved.keystone_options == {}, participant_id
+        assert resolved.minor_runes == (), participant_id
+        assert resolved.stat_shards == (), participant_id
+        assert resolved.rune_options is None, participant_id
+
+    # ...and the attacker keeps the page it selected, so the blanking above
+    # is the roster branch and not a page nobody carries.
+    assert actor_params(params, _main_actor()).minor_runes == ("Scorch",)
+
+
+def _main_actor() -> Combatant:
+    """The attacker's own combatant, for the contrast above."""
+    return Combatant(
+        participant_id="main",
+        team="main",
+        champion_data={"name": "Ahri"},
+        level=18,
+        items=(),
+        stats={},
+        defenses=StartingDefenses(),
+        request=ActorRequest(
+            role="mid",
+            role_quest_complete=False,
+            ability_ranks=None,
+            champion_options={},
+            cast_order=None,
+            item_options={},
+        ),
+    )
