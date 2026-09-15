@@ -371,3 +371,45 @@ def test_the_receipt_view_s_other_reads_really_are_optional(field, ceiling):
     present = sum(1 for row in rows if field in row)
     assert 0 < present < len(rows), field
     assert present / len(rows) <= ceiling, field
+
+
+def test_three_agreeing_corpora_still_do_not_speak_for_a_fourth_input():
+    """The clearest case for measuring the input rather than inferring it.
+
+    ``damage`` is universal on every damage-row corpus this campaign built:
+    3,960 internal rows over 173 champions, the 1,706 the receipt view is
+    handed, and the 752 published fight rows. Converting
+    ``action.event.get("damage", 0.0)`` in ``survival/receipt_ledger`` on
+    the strength of those three would have been a bug.
+
+    The rows reaching ``skip()`` are every SKIPPED action, heals included,
+    so only ``_event_id``, ``attacker`` and ``time`` are on all of them.
+    Agreement between corpora is not evidence about a corpus nobody
+    measured.
+    """
+    import src.calculator.survival.receipt_ledger as receipt_ledger
+
+    seen: list[dict] = []
+    original = receipt_ledger.ReceiptLedger.skip
+
+    def spy(self, action, *args, **kwargs):
+        event = getattr(action, "event", None)
+        if isinstance(event, dict):
+            seen.append(dict(event))
+        return original(self, action, *args, **kwargs)
+
+    receipt_ledger.ReceiptLedger.skip = spy
+    try:
+        import sys as _sys
+
+        _sys.path.insert(0, str(REPO_ROOT / "scripts"))
+        import golden_snapshot as gs
+
+        gs.rebuild_for(json.loads(BASELINE.read_text(encoding="utf-8")))
+    finally:
+        receipt_ledger.ReceiptLedger.skip = original
+
+    assert len(seen) > 900
+    carrying = sum(1 for row in seen if "damage" in row)
+    assert 0 < carrying < len(seen), carrying
+    assert _universal(seen) == ("_event_id", "attacker", "time")

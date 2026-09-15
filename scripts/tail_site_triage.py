@@ -79,6 +79,12 @@ NON_ROW_RECEIVERS = frozenset(
         "combat",
         "result",
         "info",
+        # The whole response, not a row within it.
+        "payload",
+        # survival/outcome_state's own docstring: a slot no transition wrote
+        # is deliberately ``{}``, so the defaults read from it are the
+        # module saying "nothing happened here", not a missing field.
+        "recorded",
     }
 )
 

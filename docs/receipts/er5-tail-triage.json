@@ -7,14 +7,13 @@
   "self_state_effects.py": 2,
   "support_bailout.py": 1,
   "support_champion_packets.py": 1,
-  "survival/outcome_state.py": 3,
-  "survival/receipt_ledger.py": 2,
-  "validation_receipts.py": 2
+  "survival/outcome_state.py": 1,
+  "survival/receipt_ledger.py": 2
  },
  "totals": {
-  "CANDIDATE": 32,
+  "CANDIDATE": 28,
   "NOT_A_ROW_FIELD": 704,
-  "NOT_A_ROW_RECEIVER": 133,
+  "NOT_A_ROW_RECEIVER": 136,
   "TOLERANCE_CONTRACT": 398
  }
 }
