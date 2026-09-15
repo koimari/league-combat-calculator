@@ -9,11 +9,12 @@
  },
  "what_landed": "Rampage's stack level walks its own cadence and its own damage off one rule: the scheduler recomputes the cooldown per cast (stack_scaled_cooldown) and the cast pricing walks the damage through the Case 6 stack_window.",
  "why": [
-  "The level decides the cadence and the cadence decides the level, which read as circular for three sessions. A FORWARD walk has no circle in it: the stacks a cast leaves behind are known from the casts already placed, and it is that level which decides when the next one lands.",
+  "The level decides the cadence and the cadence decides the level, which read as circular for three sessions. A FORWARD walk has no circle in it: the stacks a cast leaves behind are known from the casts already placed, and it is that level which decides both what the next cast costs in time and what it is worth in damage.",
   "The cached cooldown row is the source and had been misread all along. It holds four values indexed BY RAMPAGE STACKS, which its own units say, 4 / 3.25 / 2.5 / 1.75. extract_cooldown indexed it by RANK, so slot_extract's documented _axis_index fall-through priced every rank at the fully stacked 1.75s, and the module then subtracted a further 0.75 per stack on top of that. The Q cooldown leaf 1.75 -> 4.0 is that double count coming out.",
   "The double count surfaced as a hang, not as a number: a stated three stacks reached a zero cooldown and the scheduler recast forever at one instant. The row is read by stack level now and nothing is subtracted, so no level can reach zero.",
-  "Ten seconds at full uptime: 9 casts and 1271.9 damage at a stated zero, 11 and 1439.5 derived, 12 and 1570.7 at a stated three. The derived reading sits between the ends because it starts at the unstacked cooldown and works down.",
-  "The Q totals fall because the unstacked cooldown is 4s and not 1.75s, so fewer casts fit. All 20 pair leaves are his. No coupled leaf moves: no coupled roster holds him."
+  "Review caught three defects in the first cut of this slice, each fixed here. ONE, the cadence shortened but the damage never stacked: _stacking_ability_hit_times reads the breakdown, and a slot that stacks ITSELF is being priced when it is asked, so its own row does not exist yet and every cast read level 0. The slot's own cast plan is what that row would have reported, and the walk already excludes each cast's own instant, so a cast is stacked by the casts before it and never by itself. TWO, the stack reduction was applied to the cooldown AFTER haste and Navori rather than to the base the cache names: Navori's refund is a simulation against a fixed auto interval and does not commute, so a stacked Q with Navori was scheduled 0.207s early on every cast (1.431s against the correct 1.638s). THREE, _schedule_authored_casts never applied the reduction at all, so a legal authored sequence was refused against the unstacked bar.",
+  "Ten seconds at full uptime: 3 casts and 276.5 Q damage at a stated zero, 5 casts and 486.9 derived, 6 casts and 605.1 at a stated three. The derived casts price 92.2, 95.1, 98.0, 100.9, 100.9, which is the forward walk with the cap reached at the fourth.",
+  "The Q totals fall against the PREVIOUS baseline because the unstacked cooldown is the cached 4s and not 1.75s, so fewer casts fit; they rise against the first cut of this slice because the stacks now reach the damage. All 20 pair leaves are his. No coupled leaf moves: no coupled roster holds him."
  ],
  "qualifying_population": {
   "enumerated_before_first_src_edit": false,
@@ -28,7 +29,7 @@
   }
  },
  "summary": {
-  "direction": "down: the unstacked cooldown is the cached 4s rather than the fully stacked 1.75s a ranked read was returning",
+  "direction": "down against the previous baseline, because the unstacked cooldown is the cached 4s rather than the fully stacked 1.75s a ranked read was returning; up against this slice's first cut, because the derived stacks now reach the damage as well as the cadence",
   "counts": {
    "golden": 20,
    "coupled_golden": 0
