@@ -37,12 +37,20 @@ from a conversion that had to be undone:
    flight is not yet the shape the census describes, so nothing here
    licenses indexing it.
 
-A site clears all four or it keeps its default, and the default is then
+5. Is the reader reached ONLY with engine output? ``bis_objective`` is not.
+   Its callers hand it synthetic and partial payloads, and ``bis.py`` wraps
+   the candidate loop in ``except (KeyError, ValueError)``, which withholds
+   that build from ranking. Indexing there converts a scored candidate into
+   a silently dropped one, so its defaults are load-bearing for a refusal
+   path rather than debt, whatever the census says about published rows.
+
+A site clears all five or it keeps its default, and the default is then
 correct rather than debt. Mechanising clauses 1 and 2 over the largest tail
 module found five loops iterating a censused stream and exactly one site
-inside them, and clause 4 disqualified that one: the mechanically provable
-set is small, and the rest of the tail wants its author's intent rather
-than a scan.
+inside them, and clause 4 disqualified that one. Clause 5 then disqualified
+the next five, which git history had cleared and the census licensed. The
+mechanically provable set is very small; a default in this tree is more
+often a contract than a mistake.
 """
 
 import json
@@ -238,3 +246,52 @@ def test_pooling_two_streams_manufactures_an_optional_field():
     # Pooled, a key that is required in one shape and absent from the other
     # reads as merely optional, which is the false conclusion.
     assert "raw_damage" not in _universal(combat + fights)
+
+
+def _survival_dicts() -> list[dict]:
+    """The ``survival`` sub-dict of every participants row.
+
+    Nested rather than a top-level list, so ``_streams`` does not reach it,
+    and censused separately because four call sites read its fields with
+    literal defaults. Every participants row carries one and it is always a
+    Mapping, which is what licenses indexing it at all.
+    """
+    snapshot = json.loads(BASELINE.read_text(encoding="utf-8"))
+    return [
+        row["survival"]
+        for scenario in snapshot["coupled_scenarios"].values()
+        for row in (scenario.get("combat") or {}).get("participants") or ()
+        if isinstance(row.get("survival"), dict)
+    ]
+
+
+#: The survival sub-dict's own universal keys, the four this campaign reads.
+#: Its full set is 67 wide; only the fields a caller indexes are pinned, so
+#: an unrelated field appearing or leaving does not turn this red.
+SURVIVAL_READ_FIELDS = (
+    "death_time",
+    "effective_health",
+    "healing_received",
+    "shield_absorbed",
+    "support_shield_received",
+)
+
+
+def test_every_participants_row_carries_a_survival_mapping():
+    """Clause 2 for the nested dict: the variable is always a row's own."""
+    snapshot = json.loads(BASELINE.read_text(encoding="utf-8"))
+    rows = [
+        row
+        for scenario in snapshot["coupled_scenarios"].values()
+        for row in (scenario.get("combat") or {}).get("participants") or ()
+    ]
+    assert rows
+    assert all(isinstance(row.get("survival"), dict) for row in rows)
+
+
+@pytest.mark.parametrize("field", SURVIVAL_READ_FIELDS)
+def test_the_survival_fields_this_campaign_indexes_are_universal(field):
+    rows = _survival_dicts()
+    assert rows
+    absent = [row for row in rows if field not in row]
+    assert absent == [], f"{field} missing from {len(absent)} of {len(rows)}"
