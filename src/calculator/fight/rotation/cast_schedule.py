@@ -1,6 +1,6 @@
 """When each ability casts: haste, refunds, lockouts and the shared cast timeline."""
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
@@ -109,6 +109,8 @@ def _effective_timed_cooldown(
     *,
     basic_ability_haste: float,
     control_applies: bool = True,
+    own_casts: Sequence[float] = (),
+    now: float | None = None,
 ) -> float:
     """Effective recast cooldown in timed mode: ability haste, Spear of
     Shojin basic-ability haste (Q/W/E), ultimate haste (R), the haste an
@@ -119,8 +121,14 @@ def _effective_timed_cooldown(
     to its base slot first: Briar's ``W_frenzy`` and Kindred's ``W_vigor`` are
     basic abilities and Riven's ``R_buff`` is an ultimate, and before this
     each of them matched neither branch and earned no Shojin-class or
-    ultimate haste at all."""
+    ultimate haste at all.
+
+    A slot its own stacks shorten reduces its BASE cooldown, so *own_casts*
+    and *now* are read here rather than folded in afterwards: Navori's walk
+    does not commute with scaling its input."""
     base_cd = ability_field(ability_info, "cooldown")
+    if now is not None:
+        base_cd = _stack_shortened(ability_info, base_cd, own_casts, now)
     slot = _base_slot(ability_key)
     total_haste = state.ability_haste
     if slot in ("Q", "W", "E"):
@@ -133,6 +141,42 @@ def _effective_timed_cooldown(
     if refunds.navori_refund > 0 and cd > 0 and slot in ("Q", "W", "E"):
         cd = _navori_effective_cd(cd, refunds.autos_per_second, refunds.navori_refund)
     return cd
+
+
+def _stack_shortened(
+    ability_info: Mapping[str, Any],
+    cooldown: float,
+    own_casts: Sequence[float],
+    now: float,
+) -> float:
+    """A cooldown a slot's own live stacks shorten (Hecarim's Rampage).
+
+    The walk is forward, so there is no circle to break: the level a cast
+    leaves behind is known from the casts already placed, and it decides
+    when the next one lands. The cast just placed counts, because it is the
+    one that damaged.
+    """
+    payload = ability_info.get("stack_scaled_cooldown")
+    if not payload:
+        return cooldown
+    for required in ("by_stacks", "stack_seconds"):
+        if payload.get(required) is None:
+            raise ValueError(
+                f"stack_scaled_cooldown declares no {required!r}; every number "
+                "of the rule is sourced by the module"
+            )
+    by_stacks = [float(value) for value in payload["by_stacks"]]
+    if not by_stacks or any(value <= 0.0 for value in by_stacks):
+        raise ValueError(
+            "stack_scaled_cooldown's by_stacks holds a cooldown at or below "
+            "zero, which would let the slot recast without the clock moving"
+        )
+    window = float(payload["stack_seconds"])
+    live = sum(1 for cast in own_casts if now - cast < window)
+    level = min(live, len(by_stacks) - 1)
+    # ``cooldown`` is the zero-stack row already hasted, so the ratio of two
+    # BASE values carries the haste across without re-deriving it.
+    return cooldown * by_stacks[level] / by_stacks[0]
 
 
 def _cooldown_ready_at(
@@ -217,6 +261,13 @@ def _schedule_authored_casts(
             basic_ability_haste=basic_ability_haste,
             control_applies=event.caster_id.startswith("enemy:")
             != event.recipient_id.startswith("enemy:"),
+            # An authored timeline is checked against the cooldown the
+            # earlier casts actually earned: a legal stacked sequence
+            # (Hecarim Q at 0 and 3.25s) is refused by the unstacked bar.
+            # This cast counts, because it is the one that damaged, which
+            # is the rule the shared walk applies to its own cast list.
+            own_casts=[*times[key], event.time],
+            now=event.time,
         )
         if times[key] and cooldown <= 0:
             raise ValueError(
@@ -365,10 +416,21 @@ def _schedule_shared_casts(
             pending.remove(key)
         else:
             cooldown_start = now + cast_times[key] + cooldown_delays[key]
+            # A slot its own stacks shorten is re-rated at every cast, from
+            # the base up, because the haste and Navori steps below the base
+            # are not linear in it.
             next_ready[key] = _cooldown_ready_at(
                 state,
                 cooldown_start,
-                cooldowns[key],
+                _effective_timed_cooldown(
+                    state,
+                    refunds,
+                    key,
+                    state.ability_damages[key],
+                    basic_ability_haste=basic_ability_haste,
+                    own_casts=times[key],
+                    now=now,
+                ),
             )
             # Only a slot that banks more than one cast can ever be held
             # by the short inter-cast gap; with one charge the recharge is

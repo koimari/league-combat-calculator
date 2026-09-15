@@ -60,7 +60,11 @@ def _with_stack_levels(
         cast_times,
         _auto_attack_timestamps(state),
         _stacking_ability_hit_times(
-            state, rule[1].arming_slots, state.ability_cast_times
+            state,
+            rule[1].arming_slots,
+            state.ability_cast_times,
+            own_slot=ability_key,
+            own_cast_times=cast_times,
         ),
     )
     base = pricing if pricing is not None else (CastPricing(),) * len(cast_times)
@@ -73,6 +77,9 @@ def _stacking_ability_hit_times(
     state: FightState,
     slots: frozenset[str],
     cast_times: Sequence[tuple[str, float]] = (),
+    *,
+    own_slot: str = "",
+    own_cast_times: Sequence[float] = (),
 ) -> tuple[float, ...]:
     """When this kit's ability hits landed, for a window that counts them.
 
@@ -81,8 +88,18 @@ def _stacking_ability_hit_times(
     empty *slots* counts every slot's hits, which is what a kit whose
     innate stacks on anything it lands says; a named set counts only its
     own, which is what a slot that stacks ITSELF says (Yasuo's E).
+
+    A slot that stacks ITSELF is the one case the breakdown cannot answer:
+    the rotation is pricing that slot right now, so its row is not written
+    yet and the loop below never reaches it. *own_cast_times* is its cast
+    plan, which is what the breakdown row would have reported, and the walk
+    excludes each cast's own instant, so a cast is stacked by the casts
+    before it and never by itself.
     """
     times: list[float] = []
+    if own_slot and (not slots or own_slot in slots):
+        if not isinstance(state.breakdown.get(own_slot), Mapping):
+            times += [float(time) for time in own_cast_times]
     for key, row in state.breakdown.items():
         if not isinstance(row, Mapping):
             continue

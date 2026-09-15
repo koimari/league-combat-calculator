@@ -293,6 +293,8 @@ ABILITY_PAYLOAD_SCHEMA: Mapping[str, Mapping[str, Any]] = MappingProxyType(
                 "cast_requires_stacks": None,
                 # The sourced counter a slot's heal waits on.
                 "heal_requires_stacks": None,
+                # The sourced rule by which a slot's own stacks shorten it.
+                "stack_scaled_cooldown": None,
                 "spellblade_bonus_true_ratio": 0.0,
                 "spellblade_true_ratio": 0.0,
             }
