@@ -5,6 +5,7 @@ import "./timeline.css";
 import type { AuthoredEvent } from "./scenario-state";
 import type { EventActor, EventCapabilities } from "./EventEditor";
 import { Icon } from "./Icon";
+import { Menu } from "./Menu";
 
 /** One thing the engine already scheduled, drawn as a ghost the user can read but not move. */
 export interface ScheduledMark {
@@ -173,7 +174,10 @@ export function Timeline({
         aria-label="Timeline tools"
       >
         <label>
-          <span><Icon name="zoom-in" leading />Zoom</span>
+          <span>
+            <Icon name="zoom-in" leading />
+            Zoom
+          </span>
           <input
             type="range"
             min={ZOOM_MIN}
@@ -186,19 +190,17 @@ export function Timeline({
         </label>
         <label>
           <span>Snap</span>
-          <select
-            value={snap}
-            onChange={(e) =>
-              setSnap(Number(e.target.value) as (typeof SNAP_STEPS)[number])
-            }
+          <Menu
             aria-label="Snap step in seconds"
-          >
-            {SNAP_STEPS.map((step) => (
-              <option key={step} value={step}>
-                {step}s
-              </option>
-            ))}
-          </select>
+            value={String(snap)}
+            options={SNAP_STEPS.map((step) => ({
+              value: String(step),
+              label: `${step}s`,
+            }))}
+            onChange={(step) =>
+              setSnap(Number(step) as (typeof SNAP_STEPS)[number])
+            }
+          />
         </label>
         <span className="calculator-roll-count" role="status">
           {events.length
@@ -214,7 +216,8 @@ export function Timeline({
               onSelect("");
             }}
           >
-            <Icon name="clear" leading />Clear all
+            <Icon name="clear" leading />
+            Clear all
           </button>
         )}
       </div>
@@ -430,22 +433,20 @@ export function Timeline({
           </label>
           <label>
             <span>Recipient</span>
-            <select
+            <Menu
+              aria-label="Recipient"
               value={selected.recipient_id}
-              onChange={(e) =>
-                edit(selected.id, { recipient_id: e.target.value })
-              }
-            >
-              {!recipientsFor(selectedActor, selected.slot).some(
-                (target) => target.id === selected.recipient_id,
-              ) && <option value="">Choose a legal recipient</option>}
-              {recipientsFor(selectedActor, selected.slot).map((target) => (
-                <option key={target.id} value={target.id}>
-                  {target.label}
-                  {target.id === selectedActor.id ? " (self)" : ""}
-                </option>
-              ))}
-            </select>
+              placeholder="Choose a legal recipient"
+              options={recipientsFor(selectedActor, selected.slot).map(
+                (target) => ({
+                  value: target.id,
+                  label: `${target.label}${
+                    target.id === selectedActor.id ? " (self)" : ""
+                  }`,
+                }),
+              )}
+              onChange={(recipient_id) => edit(selected.id, { recipient_id })}
+            />
           </label>
           {reachOf(selectedActor, selected.slot) === "every_enemy" && (
             <small>Area cast: reaches every enemy whoever is named.</small>
@@ -460,7 +461,8 @@ export function Timeline({
             className="calculator-text-button"
             onClick={() => remove(selected.id)}
           >
-            <Icon name="close" leading />Remove
+            <Icon name="close" leading />
+            Remove
           </button>
         </div>
       )}

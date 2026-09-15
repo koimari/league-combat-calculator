@@ -1,6 +1,7 @@
 import type { Champion } from "./types";
 import type { AuthoredEvent } from "./scenario-state";
 import { Icon } from "./Icon";
+import { Menu } from "./Menu";
 export interface EventActor {
   id: string;
   label: string;
@@ -151,77 +152,57 @@ export function EventEditor({
                         </label>
                       </td>
                       <td>
-                        <select
+                        <Menu
                           aria-label={`Event ${index + 1} caster`}
                           value={event.caster_id}
-                          onChange={(e) =>
-                            edit(event.id, { caster_id: e.target.value })
+                          placeholder="Choose supported caster"
+                          options={casters.map((candidate) => ({
+                            value: candidate.id,
+                            label: candidate.label,
+                          }))}
+                          onChange={(caster_id) =>
+                            edit(event.id, { caster_id })
                           }
-                        >
-                          {!casters.some(
-                            (caster) => caster.id === event.caster_id,
-                          ) && (
-                            <option value={event.caster_id}>
-                              Choose supported caster
-                            </option>
-                          )}
-                          {casters.map((candidate) => (
-                            <option key={candidate.id} value={candidate.id}>
-                              {candidate.label}
-                            </option>
-                          ))}
-                        </select>
+                        />
                       </td>
                       <td>
-                        <select
+                        <Menu
                           aria-label={`Event ${index + 1} spell`}
                           value={event.slot}
-                          onChange={(e) =>
-                            edit(event.id, {
-                              slot: e.target.value as AuthoredEvent["slot"],
-                            })
-                          }
-                        >
-                          {!available.includes(event.slot) && (
-                            <option value={event.slot}>
-                              Choose supported spell
-                            </option>
-                          )}
-                          {available.map((slot) => (
-                            <option key={slot} value={slot}>
-                              {slot} ·{" "}
-                              {actor?.champion?.abilities[slot]?.name ?? slot}
-                              {capabilities[actor?.champion?.name ?? ""]?.[slot]
+                          placeholder="Choose supported spell"
+                          options={available.map((slot) => ({
+                            value: slot,
+                            label: `${slot} · ${
+                              actor?.champion?.abilities[slot]?.name ?? slot
+                            }${
+                              capabilities[actor?.champion?.name ?? ""]?.[slot]
                                 ?.reach === "every_enemy"
                                 ? " (every enemy)"
-                                : ""}
-                              {!actor?.ranks[slot] ? " (unlearned)" : ""}
-                            </option>
-                          ))}
-                        </select>
+                                : ""
+                            }${!actor?.ranks[slot] ? " (unlearned)" : ""}`,
+                          }))}
+                          onChange={(slot) =>
+                            edit(event.id, {
+                              slot: slot as AuthoredEvent["slot"],
+                            })
+                          }
+                        />
                       </td>
                       <td>
-                        <select
+                        <Menu
                           aria-label={`Event ${index + 1} recipient`}
                           value={event.recipient_id}
-                          onChange={(e) =>
-                            edit(event.id, { recipient_id: e.target.value })
+                          placeholder="Choose a legal recipient"
+                          options={targets.map((candidate) => ({
+                            value: candidate.id,
+                            label: `${candidate.label}${
+                              candidate.id === event.caster_id ? " (self)" : ""
+                            }`,
+                          }))}
+                          onChange={(recipient_id) =>
+                            edit(event.id, { recipient_id })
                           }
-                        >
-                          {!targets.some(
-                            (target) => target.id === event.recipient_id,
-                          ) && (
-                            <option value="">Choose a legal recipient</option>
-                          )}
-                          {targets.map((candidate) => (
-                            <option key={candidate.id} value={candidate.id}>
-                              {candidate.label}
-                              {candidate.id === event.caster_id
-                                ? " (self)"
-                                : ""}
-                            </option>
-                          ))}
-                        </select>
+                        />
                       </td>
                       <td>
                         <button
@@ -233,7 +214,8 @@ export function EventEditor({
                             )
                           }
                         >
-                          <Icon name="close" leading />Remove
+                          <Icon name="close" leading />
+                          Remove
                         </button>
                       </td>
                     </tr>
@@ -253,7 +235,8 @@ export function EventEditor({
             disabled={!casters.length || events.length >= 100}
             onClick={add}
           >
-            <Icon name="plus" leading />Add spell event
+            <Icon name="plus" leading />
+            Add spell event
           </button>
           <p className="calculator-event-help">
             Listed casters use only their authored spells. Other champions keep

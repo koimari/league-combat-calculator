@@ -1,4 +1,5 @@
 import type { Result } from "./types";
+import { Menu } from "./Menu";
 const scopes = new Set([
   "one_teammate",
   "self_and_one_teammate",
@@ -25,8 +26,7 @@ export function SupportTargets({
   onChange: (id: string, key: string, value: number) => void;
 }) {
   const combat = result.combat as
-    | { support_events?: Record<string, unknown>[] }
-    | undefined;
+    { support_events?: Record<string, unknown>[] } | undefined;
   const packets = new Map<string, Record<string, unknown>>();
   for (const event of combat?.support_events ?? []) {
     if (
@@ -69,19 +69,17 @@ export function SupportTargets({
         {controls.map(({ owner, teammates, key, label }) => (
           <label className="calculator-field" key={`${owner.id}:${key}`}>
             <span>{label}</span>
-            <select
+            <Menu
               aria-label={`Recipient for ${label}`}
-              value={Math.min(owner.selections[key] ?? 0, teammates.length - 1)}
-              onChange={(event) =>
-                onChange(owner.id, key, Number(event.target.value))
-              }
-            >
-              {teammates.map((actor, index) => (
-                <option key={actor.id} value={index}>
-                  {actor.name}
-                </option>
-              ))}
-            </select>
+              value={String(
+                Math.min(owner.selections[key] ?? 0, teammates.length - 1),
+              )}
+              options={teammates.map((actor, index) => ({
+                value: String(index),
+                label: actor.name,
+              }))}
+              onChange={(index) => onChange(owner.id, key, Number(index))}
+            />
           </label>
         ))}
       </div>

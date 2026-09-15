@@ -38,6 +38,7 @@ import { request } from "./api";
 import { shopGroup, wikiText } from "./shop";
 import type { Build, Champion, Config, Item, Result } from "./types";
 import { Icon } from "./Icon";
+import { Menu } from "./Menu";
 
 export interface CalculatorProps {
   apiBase?: string;
@@ -524,13 +525,15 @@ function ItemShop({
               </label>
               <label className="calculator-shop-sort">
                 <span>Sort</span>
-                <select
+                <Menu
+                  aria-label="Sort items"
                   value={sort}
-                  onChange={(event) => setSort(event.target.value)}
-                >
-                  <option value="price">Price</option>
-                  <option value="name">Name</option>
-                </select>
+                  options={[
+                    { value: "price", label: "Price" },
+                    { value: "name", label: "Name" },
+                  ]}
+                  onChange={setSort}
+                />
               </label>
               <span aria-live="polite">{matches.length} items</span>
             </div>
@@ -733,7 +736,8 @@ function ItemShop({
             disabled={!shop.replacingName}
             onClick={shop.onClear}
           >
-            <Icon name="close" leading />Remove item
+            <Icon name="close" leading />
+            Remove item
           </button>
           <span>
             {shop.replacingName ??
@@ -1671,13 +1675,16 @@ function CalculatorSession({
       </header>
       <div className="calculator-setup-actions">
         <button type="button" onClick={downloadSetup} disabled={!catalog}>
-          <Icon name="download" leading />Save setup
+          <Icon name="download" leading />
+          Save setup
         </button>
         <button type="button" onClick={() => setupFile.current?.click()}>
-          <Icon name="folio" leading />Load setup
+          <Icon name="folio" leading />
+          Load setup
         </button>
         <button type="button" onClick={copySetupLink} disabled={!catalog}>
-          <Icon name="copy" leading />Copy setup link
+          <Icon name="copy" leading />
+          Copy setup link
         </button>
         <input
           ref={setupFile}
@@ -1714,7 +1721,8 @@ function CalculatorSession({
               setLoadVersion((value) => value + 1);
             }}
           >
-            <Icon name="refresh" leading />Retry connection
+            <Icon name="refresh" leading />
+            Retry connection
           </button>
         </div>
       ) : !catalog ? (
@@ -1771,7 +1779,8 @@ function CalculatorSession({
                           disabled={allies.length >= 4}
                           onClick={() => addParticipant("ally")}
                         >
-                          <Icon name="plus" leading />Add ally
+                          <Icon name="plus" leading />
+                          Add ally
                         </button>
                       </div>
                       {rosterRow(main)}
@@ -1793,7 +1802,8 @@ function CalculatorSession({
                           disabled={enemies.length >= 5}
                           onClick={() => addParticipant("enemy")}
                         >
-                          <Icon name="plus" leading />Add enemy
+                          <Icon name="plus" leading />
+                          Add enemy
                         </button>
                       </div>
                       {enemies.map(rosterRow)}
@@ -1837,7 +1847,11 @@ function CalculatorSession({
                       className="calculator-primary"
                       onClick={() => setStep("build")}
                     >
-                      Next · Build<Icon name="arrow-right" style={{ marginLeft: ".4rem" }} />
+                      Next · Build
+                      <Icon
+                        name="arrow-right"
+                        style={{ marginLeft: ".4rem" }}
+                      />
                     </button>
                   </div>
                 </>
@@ -1912,7 +1926,8 @@ function CalculatorSession({
                           className="calculator-text-button"
                           onClick={() => removeParticipant(selected.id)}
                         >
-                          <Icon name="close" leading />Remove {participantLabel(selected).toLowerCase()}
+                          <Icon name="close" leading />
+                          Remove {participantLabel(selected).toLowerCase()}
                         </button>
                       )}
                     </div>
@@ -1998,7 +2013,8 @@ function CalculatorSession({
                             setAlternative(structuredClone(main.build))
                           }
                         >
-                          <Icon name="copy" leading />Copy build A
+                          <Icon name="copy" leading />
+                          Copy build A
                         </button>
                       )}
                       <span>{format(spend(selectedBuild))} gold in items</span>
@@ -2006,20 +2022,18 @@ function CalculatorSession({
                     <div className="calculator-participant-settings">
                       <label className="calculator-field">
                         <span>Role</span>
-                        <select
+                        <Menu
                           aria-label={`${participantLabel(selected)} role`}
                           value={selected.role}
-                          onChange={(e) => roleChange(selected, e.target.value)}
-                        >
-                          <option value="">Choose role</option>
-                          {config?.domain_contract.role_quest.roles.map(
-                            (role) => (
-                              <option key={role} value={role}>
-                                {label(role)}
-                              </option>
-                            ),
-                          )}
-                        </select>
+                          placeholder="Choose role"
+                          options={(
+                            config?.domain_contract.role_quest.roles ?? []
+                          ).map((role) => ({
+                            value: role,
+                            label: label(role),
+                          }))}
+                          onChange={(role) => roleChange(selected, role)}
+                        />
                       </label>
                       <label className="calculator-check">
                         <input
@@ -2050,18 +2064,20 @@ function CalculatorSession({
                       </label>
                       <label className="calculator-field">
                         <span>Attack uptime</span>
-                        <select
+                        <Menu
+                          aria-label="Attack uptime"
                           value={selected.uptimeMode}
-                          onChange={(e) =>
+                          options={[
+                            { value: "calculated", label: "Calculated" },
+                            { value: "explicit", label: "Manual" },
+                          ]}
+                          onChange={(uptimeMode) =>
                             editParticipant(selected.id, {
-                              uptimeMode: e.target
-                                .value as Participant["uptimeMode"],
+                              uptimeMode:
+                                uptimeMode as Participant["uptimeMode"],
                             })
                           }
-                        >
-                          <option value="calculated">Calculated</option>
-                          <option value="explicit">Manual</option>
-                        </select>
+                        />
                       </label>
                       {selected.uptimeMode === "explicit" && (
                         <label className="calculator-field">
@@ -2243,14 +2259,19 @@ function CalculatorSession({
                       className="calculator-secondary"
                       onClick={() => setStep("teams")}
                     >
-                      <Icon name="arrow-left" leading />Back · Teams
+                      <Icon name="arrow-left" leading />
+                      Back · Teams
                     </button>
                     <button
                       type="button"
                       className="calculator-primary"
                       onClick={() => setStep("fight")}
                     >
-                      Next · Fight<Icon name="arrow-right" style={{ marginLeft: ".4rem" }} />
+                      Next · Fight
+                      <Icon
+                        name="arrow-right"
+                        style={{ marginLeft: ".4rem" }}
+                      />
                     </button>
                   </div>
                 </>
@@ -2324,7 +2345,8 @@ function CalculatorSession({
                       className="calculator-secondary"
                       onClick={() => setStep("build")}
                     >
-                      <Icon name="arrow-left" leading />Back · Build
+                      <Icon name="arrow-left" leading />
+                      Back · Build
                     </button>
                   </div>
                 </>
