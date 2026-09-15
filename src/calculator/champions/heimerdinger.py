@@ -287,8 +287,11 @@ CHARGE_RULES = {
             "rechargeRate, which this slot already prices; pricing the "
             "1s inter-deploy cooldown instead scheduled 9 deploys in a "
             "10s fight. The cached stock of 3 is not spent here: a "
-            "turret stays and attacks, and no cached field states how "
-            "many may stand at once."
+            "turret stays and attacks rather than landing a hit, so the "
+            "deploys are not casts to bank. The field cap IS cached, "
+            "'Up to 3 H-28G Evolution Turrets can be deployed at a time', "
+            "and the q_turrets option already prices exactly that many, "
+            "which is why this slot banks one deploy and not three."
         ),
         charges=1,
     )

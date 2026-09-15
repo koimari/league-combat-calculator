@@ -265,8 +265,11 @@ CHARGE_RULES = {
             "W (Caretaker's Shrine) banks shrines on its cached 18s "
             "rechargeRate; the cached cooldown is the gap between "
             "placing two. The cached stock of 2 is not spent here: a "
-            "shrine stands and waits to be picked up, and no cached "
-            "field states how many may stand at once."
+            "shrine stands and waits to be picked up rather than landing. "
+            "The field cap IS cached, 'Up to 3 shrines may be active at a "
+            "time', so the stock of 2 is what binds and not the field; "
+            "whether this slot should bank both is a support-value "
+            "question nobody has measured, not an absent number."
         ),
         charges=1,
     )
