@@ -44,6 +44,18 @@ from a conversion that had to be undone:
    a silently dropped one, so its defaults are load-bearing for a refusal
    path rather than debt, whatever the census says about published rows.
 
+And one boundary, which is where this method stops rather than a clause a
+site can pass. The census is trustworthy because
+``golden_coupled_baseline.json`` is a COMMITTED corpus of published rows
+that a test re-derives on every run. Internal rows have no such corpus: the
+pair baseline holds aggregate totals, not event rows. Probing a handful of
+fights measures nine universal keys on the internal ``damage_events`` shape
+and would license ``public_response``'s serializer reads, but a sample of
+eight champions in one scenario shape is not a corpus, and converting on it
+would be the pooling mistake again in a new costume. Censusing the internal
+shapes means capturing and gating a corpus for them first, which is its own
+slice.
+
 A site clears all five or it keeps its default, and the default is then
 correct rather than debt. Mechanising clauses 1 and 2 over the largest tail
 module found five loops iterating a censused stream and exactly one site
