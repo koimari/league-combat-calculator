@@ -183,10 +183,14 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
         return ()
     ramp, window = schedule.ramp, schedule.window
     times: list[float] = [0.0]
-    stack_times: list[float] = [0.0]
-    # A ramp that does not stack on swings opens the fight empty: the first
-    # swing is rated at whatever the ability stream has already landed.
-    kit_stack_times: list[float] = [0.0] if kit_ramp_stacks_swings else []
+    # Every ramp opens EMPTY. "Basic attacks grant 8% bonus attack speed"
+    # is the attack granting it, so the attack that lands a stack cannot be
+    # rated by it: its own rate was decided before it landed. Each swing is
+    # rated by the swings strictly before it, which is why the stack is
+    # recorded at the end of an iteration, at the instant that attack
+    # happened, rather than at the one it buys.
+    stack_times: list[float] = []
+    kit_stack_times: list[float] = []
     pending_ability_stacks = sorted(float(time) for time in kit_ability_stack_times)
     admitted = 0
     current = 0.0
@@ -239,9 +243,9 @@ def swing_times(  # pylint: disable=too-many-arguments,too-many-locals
                     cooldown = window.cooldown
         times.append(next_time)
         if ramp is not None:
-            stack_times.append(next_time)
+            stack_times.append(current)
         if kit_ramp is not None and kit_ramp_stacks_swings:
-            kit_stack_times.append(next_time)
+            kit_stack_times.append(current)
         current = next_time
         first_attack = False
     return tuple(times)

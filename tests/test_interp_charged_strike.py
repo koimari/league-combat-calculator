@@ -339,7 +339,14 @@ def test_the_ramp_is_patch_sourced_and_capped() -> None:
 
 
 def test_the_ramp_accelerates_the_stream_after_stacks() -> None:
-    """Later intervals are shorter than the first, which carries no bonus."""
+    """Later intervals are shorter than the first, which carries no bonus.
+
+    The first interval is the BARE rate: "basic attacks grant 8% bonus
+    attack speed" is the attack granting it, so the attack that lands a
+    stack cannot be rated by it. At one attack per second that is exactly
+    1.0s, and the second interval carries the one stack the first attack
+    left behind.
+    """
     times = rearmed_swings.swing_times(
         _schedule(RAMP),
         attack_speed=1.0,
@@ -348,19 +355,25 @@ def test_the_ramp_accelerates_the_stream_after_stacks() -> None:
     )
     assert times[0] == 0.0
     assert len(times) > 5
-    assert times[1] < 1.0
+    assert times[1] - times[0] == pytest.approx(1.0)
+    assert times[2] - times[1] == pytest.approx(1.0 / 1.08)
     assert times[2] - times[1] < times[1] - times[0]
 
 
 def test_the_ramp_does_not_accumulate_stale_stacks() -> None:
-    """At this rate each stack expires before the next hit, so one stays live."""
+    """At this rate each stack expires before the next hit, so NONE stays live.
+
+    The bare interval is five seconds and a stack lives three, so every
+    stack is gone before the attack that would have spent it and the stream
+    never leaves its base rate.
+    """
     times = rearmed_swings.swing_times(
         _schedule(RAMP),
         attack_speed=0.2,
         attack_speed_ratio=1.0,
         duration_seconds=12.0,
     )
-    assert times[-1] - times[-2] == pytest.approx(3.57142857)
+    assert times[-1] - times[-2] == pytest.approx(5.0)
 
 
 def test_the_window_starts_after_the_first_attack() -> None:

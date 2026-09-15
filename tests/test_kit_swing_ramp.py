@@ -112,7 +112,12 @@ class TestTheWalkerMergesTwoRamps:
         )
         times = self._times(kit_ramp=kit)
         gaps = [after - before for before, after in zip(times, times[1:])]
-        assert gaps == sorted(gaps, reverse=True)
+        # Non-increasing rather than strictly sorted: once the ramp caps, two
+        # consecutive gaps are the same number up to float noise, and an
+        # equality-sensitive sort compares them at 1e-16.
+        assert all(
+            later <= earlier + 1e-9 for earlier, later in zip(gaps, gaps[1:])
+        ), gaps
         assert gaps[-1] < gaps[0]
         assert len(times) > len(self._times())
 
@@ -384,7 +389,9 @@ class TestJinxRevdUp:
             "Jinx", {**self.POW_POW, "jinx_rev_up_stacks": 3}, 5.0, [RAGEBLADE]
         )
         ramped = _fight("Jinx", dict(self.POW_POW), 5.0, [RAGEBLADE])
-        assert _autos(ramped) == _autos(full) - 1
+        # Two swings, not one: BOTH ramps now open empty, so the build ramp
+        # and the kit ramp each cost the stream a stack over this window.
+        assert _autos(ramped) == _autos(full) - 2
         assert ramped["total_damage"] < full["total_damage"]
 
     def test_the_stacks_leave_the_published_stat_sheet(self):
