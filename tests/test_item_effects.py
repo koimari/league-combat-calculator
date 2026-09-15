@@ -1639,3 +1639,41 @@ class TestItemSetsAreDerivedNotHandKept:
             {"Umbral Glaive": {"nightstalker_ready": 1}},
             "Umbral Glaive",
         )
+
+
+class TestAbyssalUnmakeHasOneSourcedHome:
+    """SR3: one number in the source is one number here.
+
+    Abyssal Mask's Unmake curse is priced by two registries under two
+    spellings and for two subjects: ``ITEM_EFFECTS`` as ``magic_amp``, for
+    the holder's own magic, and ``ALLY_ITEM_EFFECTS`` as
+    ``magic_damage_amp``, for an ally benefiting from the same curse. Both
+    carried their own ``0.12``, so a patch could have moved one and left the
+    other answering the old share.
+    """
+
+    def test_both_registries_read_the_same_declared_share(self):
+        from src.calculator.item_effects import (
+            ABYSSAL_UNMAKE_MAGIC_AMP,
+            ALLY_ITEM_EFFECTS,
+            ITEM_EFFECTS as EFFECTS,
+        )
+
+        assert EFFECTS["Abyssal Mask"]["magic_amp"] == ABYSSAL_UNMAKE_MAGIC_AMP
+        assert (
+            ALLY_ITEM_EFFECTS["Abyssal Mask"]["magic_damage_amp"]
+            == ABYSSAL_UNMAKE_MAGIC_AMP
+        )
+
+    def test_the_share_is_written_once_in_the_source(self):
+        """Equal literals would pass the read above; this is what fails.
+
+        The registries hold the constant's NAME, so there is one place to
+        edit on a patch and no second copy to forget.
+        """
+        from pathlib import Path
+
+        source = Path("src/calculator/item_effects.py").read_text(encoding="utf-8")
+        assert source.count("ABYSSAL_UNMAKE_MAGIC_AMP = ") == 1
+        assert '"magic_amp": ABYSSAL_UNMAKE_MAGIC_AMP' in source
+        assert '"magic_damage_amp": ABYSSAL_UNMAKE_MAGIC_AMP' in source
