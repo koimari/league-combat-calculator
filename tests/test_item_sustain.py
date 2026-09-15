@@ -261,3 +261,52 @@ def test_spirit_visage_does_not_amplify_lifesteal_or_omnivamp():
     }
     result = _simulated_rows([source, target], incoming, healing, {}, 1.0)
     assert result["target"]["healing_received"] == pytest.approx(22.5)
+
+
+class TestTheTimestampGateAdmitsOnlyStampedRows:
+    """ER5: the gate that names its own contract now keeps it.
+
+    ``_timestamped_damage_events`` is documented as "the fight's damage rows
+    that carry a usable time and amount", and it read that time through a
+    ``0.0`` default. A row stating no time was therefore admitted as though
+    it landed at the fight's open, ahead of everything it should have
+    followed, and every caller downstream read it that way.
+
+    Nothing real is dropped by tightening it: all 2,458 event rows across
+    the committed coupled baseline carry a time, which is why neither golden
+    moves.
+    """
+
+    @staticmethod
+    def _gate(rows):
+        from src.calculator.item_sustain_events import _timestamped_damage_events
+
+        return _timestamped_damage_events({"damage_events": rows})
+
+    def test_a_row_with_no_time_is_dropped_rather_than_placed_at_zero(self):
+        admitted = self._gate(
+            [
+                {"time": 1.0, "damage": 10.0},
+                {"damage": 5.0},
+                {"time": 2.0, "damage": 7.0},
+            ]
+        )
+        assert [row["time"] for row in admitted] == [1.0, 2.0]
+
+    def test_stamped_rows_still_pass_and_sort_by_time(self):
+        admitted = self._gate(
+            [
+                {"time": 2.0, "damage": 7.0},
+                {"time": 0.0, "damage": 3.0},
+                {"time": 1.0, "damage": 10.0},
+            ]
+        )
+        assert [row["time"] for row in admitted] == [0.0, 1.0, 2.0]
+
+    def test_a_zero_time_row_is_kept_because_absent_is_not_zero(self):
+        """The distinction the default erased: t=0 is a real instant."""
+        assert self._gate([{"time": 0.0, "damage": 3.0}])
+
+    def test_an_unusable_time_is_still_dropped(self):
+        assert self._gate([{"time": float("inf"), "damage": 3.0}]) == []
+        assert self._gate([{"time": "soon", "damage": 3.0}]) == []

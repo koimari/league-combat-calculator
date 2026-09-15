@@ -29,6 +29,8 @@ def _rune_heal_times(result: Mapping[str, Any], effect: RuneHealEffect) -> list[
     event: a fight that lands no damage pays no Taste of Blood, and a fight
     the target survives pays no Triumph.
     """
+    # Every row this gate returns carries a usable ``time``, which is why
+    # the reads below index it rather than defaulting it (ER5).
     rows = _timestamped_damage_events(result)
     if effect.trigger is RuneHealTrigger.IMPAIRING_INSTANCES:
         # Whether a row applies control is the bus's answer, never a
@@ -45,11 +47,11 @@ def _rune_heal_times(result: Mapping[str, Any], effect: RuneHealEffect) -> list[
         # arrives no earlier than it should.
         if float(result.get("target_ending_health", 1.0) or 0.0) > 0.0:
             return []
-        return [float(rows[-1].get("time", 0.0)) + effect.delay_seconds]
+        return [float(rows[-1]["time"]) + effect.delay_seconds]
     times: list[float] = []
     ready_at = 0.0
     for row in rows:
-        time = float(row.get("time", 0.0))
+        time = float(row["time"])
         if time < ready_at:
             continue
         times.append(time + effect.delay_seconds)

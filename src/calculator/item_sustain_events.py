@@ -400,16 +400,24 @@ def _item_self_healing_events(
 
 
 def _timestamped_damage_events(result: Mapping[str, Any]) -> list[Mapping[str, Any]]:
-    """The fight's damage rows that carry a usable time and amount."""
+    """The fight's damage rows that carry a usable time and amount.
+
+    A row that states NO time is dropped rather than admitted at 0.0. This
+    gate is what every caller downstream relies on to read ``row["time"]``
+    directly, and reading the absence as the fight's open would have placed
+    an unstamped row ahead of everything it should follow, which is the
+    failure the rule-5 lint exists to catch (ER5). Every row any pinned
+    scenario produces carries one, so nothing real is dropped here.
+    """
     usable: list[Mapping[str, Any]] = []
     for row in result.get("damage_events") or ():
-        if not isinstance(row, Mapping):
+        if not isinstance(row, Mapping) or "time" not in row:
             continue
         try:
-            time = float(row.get("time", 0.0))
+            time = float(row["time"])
             damage = float(row.get("damage", 0.0) or 0.0)
         except (TypeError, ValueError):
             continue
         if damage > 0.0 and math.isfinite(time):
             usable.append(row)
-    return sorted(usable, key=lambda row: float(row.get("time", 0.0)))
+    return sorted(usable, key=lambda row: float(row["time"]))
