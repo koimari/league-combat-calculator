@@ -193,6 +193,7 @@ OPTIONS = [
             "Pow-Pow Rev'd Up stacks; unset walks the ramp, one stack per "
             "attack, so the swings speed up as they land"
         ),
+        derives=True,
     ),
     int_option(
         "jinx_get_excited_stacks",

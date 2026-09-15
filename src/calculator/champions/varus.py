@@ -348,6 +348,7 @@ OPTIONS: list[dict[str, Any]] = [
             "Blight stacks at detonation; unset derives them from the swings "
             "that applied Blight inside its cached window"
         ),
+        derives=True,
     ),
     float_option(
         "q_charge_fraction",

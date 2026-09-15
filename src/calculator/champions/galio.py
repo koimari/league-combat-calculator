@@ -225,6 +225,7 @@ OPTIONS: list[dict[str, Any]] = [
             "Colossal Smash attacks; unset derives them from the cached 5s "
             "timer and the 3s an ability hit takes off it"
         ),
+        derives=True,
     ),
     float_option(
         "w_charge_seconds",

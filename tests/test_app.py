@@ -1251,7 +1251,14 @@ def test_frontend_round_trips_all_backend_champion_options():
     assert "function renderChampionOptions()" in source
     assert "state.attacker.championOptions" in source
     assert 'data-champion-option="' in source
-    assert "definition.options.map((option)" in source
+    # Every backend option is still walked; the one exclusion is SR9's, a
+    # DERIVED option the user has not set, whose key the engine reads as
+    # "derive this" only while it is absent.
+    assert ".map((option) => [" in source
+    assert (
+        "!(option.derives && state.attacker.championOptions[option.key] == null)"
+        in source
+    )
     assert 'id="championOptionsRow"' in template
     assert (
         '$("championOptionsRow").innerHTML = champion ? renderChampionOptions() : "";'

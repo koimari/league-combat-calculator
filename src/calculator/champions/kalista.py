@@ -236,6 +236,7 @@ OPTIONS = [
             "Rend stacks; unset derives them from the hits that lodged a "
             "spear before the cast, with the module's floor of one"
         ),
+        derives=True,
     ),
     bool_option(
         "soul_mark_proc",

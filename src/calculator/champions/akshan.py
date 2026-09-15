@@ -399,6 +399,7 @@ OPTIONS = [
             "Dirty Fighting detonations; unset derives them from the swings "
             "and ability hits that stack it"
         ),
+        derives=True,
     ),
     int_option("e_shots", 5, minimum=0, maximum=20, label="E shots fired"),
 ]

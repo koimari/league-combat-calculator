@@ -283,6 +283,7 @@ OPTIONS = [
             "Ride the Wind stacks; unset derives the level each dash reads "
             "from the dashes before it"
         ),
+        derives=True,
     ),
     bool_option(
         "w_active", False, label="W (Wind Wall) active against selected skillshots"

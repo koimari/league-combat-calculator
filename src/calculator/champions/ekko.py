@@ -145,6 +145,7 @@ OPTIONS = [
             "Z-Drive Resonance detonations; unset derives them from the "
             "swings and ability hits that stack Resonance"
         ),
+        derives=True,
     ),
     bool_option("w_passive_ready", False, label="Parallel Convergence passive ready"),
     float_option(

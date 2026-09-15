@@ -278,6 +278,7 @@ OPTIONS = [
             "Rampage stacks; unset walks the casts that stack them, which "
             "shorten the cooldown to the next cast as well as raising its damage"
         ),
+        derives=True,
     ),
     int_option(
         "w_ticks", _W_TICKS, minimum=1, maximum=_W_TICKS, label="Spirit of Dread ticks"
