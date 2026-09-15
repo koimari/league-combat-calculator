@@ -3,6 +3,7 @@ view is starved."""
 
 from __future__ import annotations
 
+from .cast_event_row import cast_time as _row_cast_time
 import math
 from collections.abc import Collection, Iterable, Iterator, Mapping
 from dataclasses import replace
@@ -119,7 +120,7 @@ def _current_mana_at(
         if not isinstance(cast, Mapping):
             continue
         try:
-            cast_time = float(cast.get("time", 0.0) or 0.0)
+            cast_time = float(_row_cast_time(cast) or 0.0)
         except (TypeError, ValueError):
             continue
         if not math.isfinite(cast_time) or cast_time > event_time + 1e-9:
