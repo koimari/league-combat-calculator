@@ -53,6 +53,7 @@ that builds the walk compiles what the walk may not reach and hands it over.
 # not) this file exists to make impossible.
 from __future__ import annotations
 
+from ..cast_event_row import cast_slot as _row_cast_slot, cast_time as _row_cast_time
 import math
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
@@ -343,8 +344,8 @@ def ability_instance_for_event(
     candidates = [
         cast
         for cast in cast_timeline
-        if str(cast.get("slot", "")) == slot
-        and float(cast.get("time", 0.0)) <= event_time
+        if str(_row_cast_slot(cast)) == slot
+        and float(_row_cast_time(cast)) <= event_time
     ]
     if not candidates:
         return f"{slot}:{trigger_time_key(event_time)}"
@@ -353,7 +354,7 @@ def ability_instance_for_event(
     return (
         f"{slot}:{ordinal}"
         if ordinal is not None
-        else f"{slot}:{trigger_time_key(float(cast.get('time', 0.0)))}"
+        else f"{slot}:{trigger_time_key(float(_row_cast_time(cast)))}"
     )
 
 

@@ -11,6 +11,11 @@ or crowd-control behavior that the packets do not provide.
 
 from __future__ import annotations
 
+from .cast_event_row import (
+    cast_ordinal as _row_cast_ordinal,
+    cast_slot as _row_cast_slot,
+    cast_time as _row_cast_time,
+)
 import math
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
@@ -1725,9 +1730,9 @@ def _support_effect_templates(
     champion_name = str(attacker.champion_data.get("name", ""))
     if champion_name == "Gangplank":
         for cast_index, cast in enumerate(result.get("cast_timeline", ())):
-            if str(cast.get("slot", "")) != "W":
+            if str(_row_cast_slot(cast)) != "W":
                 continue
-            cast_time = float(cast.get("time", 0.0))
+            cast_time = float(_row_cast_time(cast))
             templates.append(
                 {
                     "kind": PacketKind.CLEANSE.value,
@@ -1756,7 +1761,7 @@ def _support_effect_templates(
         w_casts = [
             cast
             for cast in result.get("cast_timeline", ())
-            if str(cast.get("slot", "")) == "W"
+            if str(_row_cast_slot(cast)) == "W"
         ]
         if w_casts:
             ferocity_row = (result.get("breakdown") or {}).get("ferocity") or {}
@@ -1774,10 +1779,10 @@ def _support_effect_templates(
             }
             for cast_index, cast in enumerate(w_casts):
                 if not empowered_by_ordinal.get(
-                    int(cast.get("ordinal", 0) or 0), False
+                    int(_row_cast_ordinal(cast) or 0), False
                 ):
                     continue
-                cast_time = float(cast.get("time", 0.0))
+                cast_time = float(_row_cast_time(cast))
                 templates.append(
                     {
                         "kind": PacketKind.CLEANSE.value,
@@ -1798,9 +1803,9 @@ def _support_effect_templates(
                 )
     elif champion_name == "Milio":
         for cast_index, cast in enumerate(result.get("cast_timeline", ())):
-            if str(cast.get("slot", "")) != "R":
+            if str(_row_cast_slot(cast)) != "R":
                 continue
-            cast_time = float(cast.get("time", 0.0))
+            cast_time = float(_row_cast_time(cast))
             group = f"{attacker.participant_id}:milio:r:{cast_index}"
             recipients, _target_policy = _support_target_ids(
                 attacker,
@@ -1874,10 +1879,10 @@ def _support_effect_templates(
         # kernel fields) via the module constants; the MS facing/2000-
         # unit condition is prose-only.
         for cast in result.get("cast_timeline", ()):
-            if str(cast.get("slot", "")) != "R":
+            if str(_row_cast_slot(cast)) != "R":
                 continue
-            cast_time = float(cast.get("time", 0.0))
-            cast_index = int(cast.get("ordinal", 0) or 0)
+            cast_time = float(_row_cast_time(cast))
+            cast_index = int(_row_cast_ordinal(cast) or 0)
             templates.append(
                 {
                     "kind": PacketKind.CLEANSE.value,
@@ -2731,9 +2736,9 @@ def _grey_health_receipts(
         )
     if name == "Rengar":
         w_casts = sorted(
-            float(cast.get("time", 0.0))
+            float(_row_cast_time(cast))
             for cast in cast_timeline
-            if str(cast.get("slot", "")) == "W"
+            if str(_row_cast_slot(cast)) == "W"
         )
         consumed = 0.0
         for cast_time in w_casts:
@@ -2835,9 +2840,9 @@ def _grey_health_receipts(
         )
         pool = min(cap, dealt_total + taken_total)
         w_casts = sorted(
-            float(cast.get("time", 0.0))
+            float(_row_cast_time(cast))
             for cast in cast_timeline
-            if str(cast.get("slot", "")) == "W"
+            if str(_row_cast_slot(cast)) == "W"
         )
         consumed = 0.0
         if w_casts:
@@ -2888,9 +2893,9 @@ def _grey_health_receipts(
             {},
         )
         w_casts = sorted(
-            float(cast.get("time", 0.0))
+            float(_row_cast_time(cast))
             for cast in cast_timeline
-            if str(cast.get("slot", "")) == "W"
+            if str(_row_cast_slot(cast)) == "W"
         )
         consumed = 0.0
         for cast_time in w_casts:
