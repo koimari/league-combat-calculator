@@ -3,7 +3,7 @@
   "certainty.py": 1,
   "fight_receipts.py": 2,
   "ledger_adequacy.py": 1,
-  "program/views/receipt.py": 20,
+  "program/views/receipt.py": 17,
   "self_state_effects.py": 2,
   "support_bailout.py": 1,
   "support_champion_packets.py": 1,
@@ -12,7 +12,7 @@
   "validation_receipts.py": 2
  },
  "totals": {
-  "CANDIDATE": 35,
+  "CANDIDATE": 32,
   "NOT_A_ROW_FIELD": 704,
   "NOT_A_ROW_RECEIVER": 133,
   "TOLERANCE_CONTRACT": 398

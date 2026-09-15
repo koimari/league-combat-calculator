@@ -161,7 +161,11 @@ def _event_row(
     """One event's row, its leaf writer and refusal, time and attacker published."""
     row: dict[str, Any] = {}
     leaf = writer.block(row, f"{prefix}[{index}]")
-    leaf.measured("time", round_field(f"{family}.time", float(event.get("time", 0.0))))
+    # Every row this helper is handed carries a time: measured at 2,685 of
+    # 2,685 across all three families it serves, 1,706 events, 909 heals and
+    # 70 support. ``attacker`` below keeps its raw read because it is absent
+    # on the fight-level families.
+    leaf.measured("time", round_field(f"{family}.time", float(event["time"])))
     leaf.raw("attacker", event.get("attacker"))
     return row, leaf, _refusal(event)
 
@@ -192,14 +196,14 @@ def _damage_event_rows(
             "raw_damage",
             round_field(
                 "events.raw_damage",
-                float(event.get("raw_damage", event.get("damage", 0.0))),
+                float(event.get("raw_damage", event["damage"])),
             ),
         )
         leaf.measured(
             "pair_damage",
             round_field(
                 "events.pair_damage",
-                float(event.get("pair_damage", event.get("damage", 0.0))),
+                float(event.get("pair_damage", event["damage"])),
             ),
         )
         _outcome(
