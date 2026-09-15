@@ -2052,6 +2052,8 @@ MODULE_DECLARATION = frozenset(
 ROOTS = (
     # The cast-event row reader, covered from the day it landed.
     "cast_event_row.py",
+    # The damage-event row reader, covered from the day it landed.
+    "damage_event_row.py",
     "rank_allocation.py",
     "attack_windows.py",
     "certified_casts.py",
