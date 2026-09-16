@@ -22,8 +22,8 @@ from src.calculator.rune_paths import resolve
 #: asserted as "some string".
 REFUSALS = {
     "Demolish": "damages turrets",
-    "Second Wind": "carries neither the holder's health",
-    "Bone Plating": "damage the holder receives",
+    "Second Wind": "no rune trigger fires on damage TAKEN",
+    "Bone Plating": "read off the TARGET",
     "Revitalize": "the rune stat block has no channel for that stat",
 }
 

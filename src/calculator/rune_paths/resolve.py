@@ -297,16 +297,35 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
     ),
     "Second Wind": (
         Disposition.WITHHELD,
-        "it regenerates a share of the holder's *missing* health after taking "
-        "damage, and the pair engine prices the damage the holder deals: it "
-        "carries neither the holder's health nor a stream of damage received",
-        (),
+        "it heals a share of the holder's *missing* health after taking "
+        "damage, and no rune trigger fires on damage TAKEN: every member of "
+        "RuneHealTrigger and RuneTrigger names something the holder does, "
+        "damage dealt, an impair applied, a takedown, a self-shield",
+        (
+            "Second Wind's blocker is the trigger and not the health: the "
+            "fight does carry the holder's health and the damage it takes, "
+            "and publishes both as health_damage and effective_health on the "
+            "participant row. What it has no vocabulary for is a rune that "
+            "answers an incoming hit.",
+        ),
     ),
     "Bone Plating": (
         Disposition.WITHHELD,
-        "it reduces the damage the holder receives, and the pair engine "
-        "prices the damage the holder deals",
-        (),
+        "it takes a flat amount off each of the next hits the holder "
+        "receives, and the engine's flat-reduction channel runs the other "
+        "way: champion_damage_flat_reduction is read off the TARGET, where "
+        "it lowers the damage this attacker deals, and nothing reads the "
+        "holder's own",
+        (
+            "Bone Plating's blocker is the channel's direction, not its "
+            "shape. Guardian's Horn declares the same field and it works: "
+            "held by the enemy it drops a Garen fight from 2276.8 to 1826.8. "
+            "Held by the holder it changes no damage taken, so a rune "
+            "granting it would grant nothing.",
+            "Its own reading would also need the window the field has no "
+            "room for: the next 3 hits within 1.5 seconds, from the one "
+            "champion that triggered it.",
+        ),
     ),
     "Revitalize": (
         Disposition.WITHHELD,
