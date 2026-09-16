@@ -399,6 +399,9 @@ def measure() -> dict:
             "residue_rows": len(_residue()["acknowledged"]),
             "backlog_rows": _backlog_rows(),
             "swing_frontier": _swing_frontier(),
+            # Derived from the same scan the slot tables use, so the row and
+            # the watch that holds those slots cannot disagree about how many.
+            "axis_less": len(out_of_scope),
         },
     }
 
@@ -603,6 +606,8 @@ def render(data: dict) -> str:
         " surface-area campaigns surfaced and did not close |",
         f"| `scripts/swing_stream_audit.py` | {frontiers['swing_frontier']} | cached"
         " per-attack riders that do not publish a swing key |",
+        f"| `tests/test_axis_less_slots.py` | {frontiers['axis_less']} | the slots with"
+        " no engine axis, each blocker measured in both sources |",
         "",
         "## What 100% would mean, and what it would not",
         "",

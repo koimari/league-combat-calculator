@@ -118,6 +118,7 @@ row, and each has a gate that fails when a row appears without one.
 | `docs/coverage-residue.json` | 10 | frontier entries that cannot close without inventing data |
 | `docs/surface-area-backlog.md` | 11 | everything the surface-area campaigns surfaced and did not close |
 | `scripts/swing_stream_audit.py` | 9 | cached per-attack riders that do not publish a swing key |
+| `tests/test_axis_less_slots.py` | 5 | the slots with no engine axis, each blocker measured in both sources |
 
 ## What 100% would mean, and what it would not
 
