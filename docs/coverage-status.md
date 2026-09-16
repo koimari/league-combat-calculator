@@ -14,8 +14,8 @@ python scripts/coverage_status.py --check
 | Axis | Covered | Of |
 |---|---|---|
 | Champion slots priced or stateful | 771 | 865 (89.1%) |
-| Champion slots with nothing left to price | 88 | 865 (10.2%) |
-| Champion slots the engine has no axis for | 6 | 865 (0.7%) |
+| Champion slots with nothing left to price | 89 | 865 (10.3%) |
+| Champion slots the engine has no axis for | 5 | 865 (0.6%) |
 | Runes compiled | 62 | every selectable rune |
 | Keystones compiled | 62 | 62 |
 | Items swept clean by the census | 169 | 209 |
@@ -36,13 +36,12 @@ holds. Unknown names fail closed: there is no generic parser.
 | Q | 172 | 1 | 0 |
 | W | 151 | 21 | 1 |
 | E | 158 | 15 | 0 |
-| R | 160 | 11 | 2 |
+| R | 160 | 12 | 1 |
 
-The 6 slots with no engine axis at all:
+The 5 slots with no engine axis at all:
 
 | Champion | Slot |
 |---|---|
-| Sivir | R |
 | Sylas | R |
 | Teemo | P |
 | Udyr | P |
