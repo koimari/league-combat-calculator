@@ -35,6 +35,7 @@ from .cast_schedule import (
     _disclose_ultimate_cast_rule,
     CooldownRefunds,
     _schedule_shared_casts,
+    declares_swing_cooldown_refund,
 )
 from .resource_admission import _apply_resource_limits
 from .stack_timeline import _build_stack_timeline
@@ -180,9 +181,14 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
     refund = _crit_profile(state).cooldown_refund
     result.navori_refund = refund.fraction if refund is not None else 0.0
     result.has_navori = result.navori_refund > 0
+    # The swing rate is measured only when something reads it, and TWO things
+    # do: Navori Flickerblade's share of what is left, and a kit grant's flat
+    # seconds (Sivir's On the Hunt). Gating it on Navori alone left the kit
+    # refund walking at zero attacks a second, which fails closed to the
+    # unrefunded cooldown and is silent.
     result.autos_per_second = (
         state.attack_speed * state.auto_attack_uptime
-        if result.navori_refund > 0
+        if result.navori_refund > 0 or declares_swing_cooldown_refund(state)
         else 0.0
     )
 

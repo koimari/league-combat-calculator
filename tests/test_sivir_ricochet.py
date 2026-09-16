@@ -56,7 +56,13 @@ def _parse(*, level: int = 18, rank: int = 5, options: dict | None = None):
     return champion_stats, abilities
 
 
-def _fight(mode: str, *, duration: float = 10.0, uptime: float = 1.0) -> dict:
+def _fight(
+    mode: str,
+    *,
+    duration: float = 10.0,
+    uptime: float = 1.0,
+    ranks: dict | None = None,
+) -> dict:
     """One /api/calculate fight at level 18, no items — the real boundary."""
     from src import app as app_module
 
@@ -64,7 +70,7 @@ def _fight(mode: str, *, duration: float = 10.0, uptime: float = 1.0) -> dict:
         "champion": "Sivir",
         "level": 18,
         "items": [],
-        "ability_ranks": {"Q": 5, "W": 5, "E": 5, "R": 3},
+        "ability_ranks": ranks or {"Q": 5, "W": 5, "E": 5, "R": 3},
         "fight_mode": mode,
         "fight_duration": duration,
         "include_auto_attacks": True,
@@ -189,8 +195,24 @@ class TestThroughTheRequestBoundary:
         assert row["total_damage"] == pytest.approx(25.5)
 
     def test_a_ten_second_fight_prices_the_swing_stream(self):
-        """Four bounces: the window's own +40% earns one more swing than the
-        base cadence did."""
+        """Four bounces per cast: the window's own +40% earns one more swing
+        than the base cadence did."""
         row = _fight("time_based")["breakdown"]["W"]
-        assert row["total_damage"] == pytest.approx(102.0)
         assert "4 bounce(s)" in row["detail"]
+        # TWO casts of a 12s ability inside a 10s fight, which only On the
+        # Hunt's refund can buy: every attack inside the hunt takes 0.5s off
+        # W's live cooldown, so the recast lands at 7.35s instead of never.
+        assert row["casts"] == 2
+        assert row["total_damage"] == pytest.approx(204.0)
+
+    def test_without_the_hunt_the_twelve_second_recast_never_lands(self):
+        """The refund's own control: R unranked buys no hunt, so W casts once.
+
+        This is the half that makes the number above evidence rather than a
+        re-pin — the same fight with no grant is the old reading exactly.
+        """
+        row = _fight("time_based", ranks={"Q": 5, "W": 5, "E": 5, "R": 0})["breakdown"][
+            "W"
+        ]
+        assert row["casts"] == 1
+        assert row["total_damage"] == pytest.approx(102.0)

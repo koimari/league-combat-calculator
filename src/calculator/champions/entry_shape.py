@@ -163,6 +163,12 @@ _ALLOWED_ENTRY_KEYS = frozenset(
         # The sourced rule by which a slot's OWN live stacks shorten its own
         # cooldown, walked forward by the cast scheduler (Hecarim's Rampage).
         "stack_scaled_cooldown",
+        # The sourced rule by which THIS row's grant makes every basic attack
+        # pay down OTHER slots' live cooldowns for a window (Sivir's On the
+        # Hunt).  Unlike stack_scaled_cooldown it is authored on the granting
+        # row and names the slots it refunds, because the grant and the
+        # cooldown it shortens are different slots.
+        "swing_cooldown_refund",
         # Champion-owned critical-strike conversion (Yasuo/Yone P): total
         # crit chance doubled, crit damage scaled by a factor, and excess
         # crit chance converted to bonus AD.  The fight engine resolves it
@@ -238,6 +244,23 @@ _ALLOWED_EMPOWER_KEYS = frozenset(
 )
 
 
+#: The sub-keys a ``swing_cooldown_refund`` dict may declare, read by name in
+#: ``fight/rotation/cast_schedule.py``. Every one is required: a refund with no
+#: amount, no target slots or no window is not a rule, and the SR5 lesson is
+#: that a misspelling here would leave the reader's ``.get`` answering ``None``
+#: and the refund silently doing nothing.
+_ALLOWED_SWING_REFUND_KEYS = frozenset(
+    {
+        # Seconds each basic attack takes off the targets' live cooldowns.
+        "seconds_per_attack",
+        # The slots whose cooldowns it pays down, as a tuple of slot keys.
+        "slots",
+        # How long the grant lasts from the cast that bought it.
+        "window_seconds",
+    }
+)
+
+
 # Key shapes that already passed validation.  Entries are rebuilt per
 # parse but their key sets are fixed per (champion, slot, options) code
 # path, so the optimizer's thousands of identical parses validate once.
@@ -275,6 +298,8 @@ def validate_entry_keys(
     # has sub-keys to check, and True has no iteration order to key on.
     empower = entry.get("empowers_next_auto")
     empower_keys = tuple(empower) if isinstance(empower, Mapping) else ()
+    swing_refund = entry.get("swing_cooldown_refund")
+    refund_keys = tuple(swing_refund) if isinstance(swing_refund, Mapping) else ()
     shape = (
         emitted,
         tuple(entry),
@@ -282,6 +307,7 @@ def validate_entry_keys(
         tuple(post_hit_proc),
         tuple(post_hit_proc.get("target_debuff", ()) if post_hit_proc else ()),
         empower_keys,
+        refund_keys,
     )
     if shape in _VALIDATED_ENTRY_SHAPES:
         return
@@ -311,12 +337,25 @@ def validate_entry_keys(
             "empowers_next_auto",
             "_ALLOWED_EMPOWER_KEYS",
         ),
+        (
+            set(refund_keys),
+            _ALLOWED_SWING_REFUND_KEYS,
+            "swing_cooldown_refund",
+            "_ALLOWED_SWING_REFUND_KEYS",
+        ),
     ):
         unknown = keys - allowed
         if unknown:
             raise emitted.refuse(
                 f"unknown {label} key(s) {sorted(unknown)} (allowed keys "
                 f"are defined by engine.{constant})"
+            )
+    if refund_keys:
+        missing = sorted(_ALLOWED_SWING_REFUND_KEYS - set(refund_keys))
+        if missing:
+            raise emitted.refuse(
+                f"swing_cooldown_refund declares no {missing}; every number of "
+                "the rule is sourced by the module, so none may be defaulted"
             )
     _VALIDATED_ENTRY_SHAPES.add(shape)
 
