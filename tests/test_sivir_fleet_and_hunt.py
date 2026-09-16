@@ -1,9 +1,9 @@
-"""Sivir P (Fleet of Foot) and R (On the Hunt) — two slots, two verdicts.
+"""Sivir P (Fleet of Foot) and R (On the Hunt) — two slots, one verdict each.
 
-The roadmap slot session closes Sivir's last two ``out_of_scope`` rows,
-and they close **differently**. That asymmetry is the point of pinning
-them in one module: "no damage row" and "nothing left to model" are not
-the same claim, and the batch keeps mixing them up.
+Both read ``no_damage`` and they get there for different reasons. That
+asymmetry is the point of pinning them in one module: "no damage row" and
+"nothing left to model" are not the same claim, and the batch keeps mixing
+them up.
 
 **P closes as ``no_damage``.** Fleet of Foot's single cached effect is a
 self movement-speed grant — "basic attacks on-attack and ability hits
@@ -31,22 +31,27 @@ a damage row — Swiftmarch's ``adaptive_force_per_total_move_speed`` is
 resolved inside ``calculate_total_stats`` from the BUILD's move speed,
 before any cast.
 
-**R stays ``out_of_scope``, and that is not laziness.** The Olaf-R rule:
-a real, sourced, unmodeled mechanic is ``out_of_scope``, never
-``no_damage``. The binary confirms there is no damage to miss
-(``SivirR``'s ``mSpellCalculations`` is empty), but both sourced combat
-effects hit a *named* kernel gap, and each gap is pinned by measuring
-the kernel rather than by quoting the docstring:
+**R also closes as ``no_damage``, on both of its sourced effects.** The
+binary confirms there is no damage to miss (``SivirR``'s
+``mSpellCalculations`` is empty), and each effect is priced through a
+channel pinned by measuring the kernel rather than by quoting a
+docstring:
 
 * the rank-scaled bonus movement speed is an additive PERCENT;
   ``calculate_total_stats`` publishes the ``move_speed_flat`` /
-  ``move_speed_percent`` pair the slot now composes against, weighted
-  by its own cached ``Buff Duration`` — ``TestOnTheHuntMovementIsWired``
-  pins both the fold and the weighting;
-* ``on_attack_cooldown_refund`` is a field of
-  ``item_effects.CooldownProcEffect`` (the item-proc scheduler's
-  surface), so there is no ability-cooldown-refund channel a champion
-  module could author into.
+  ``move_speed_percent`` pair the slot composes against, weighted by its
+  own cached ``Buff Duration`` — ``TestOnTheHuntMovementIsWired`` pins
+  both the fold and the weighting;
+* the 0.5s per-attack cooldown refund rides ``swing_cooldown_refund``,
+  authored on R and naming Q, W and E, which the cast scheduler walks per
+  attack inside R's window. That is the KIT channel;
+  ``item_effects.CooldownProcEffect.on_attack_cooldown_refund`` is the
+  ITEM one and no ability entry borrows it, which
+  ``TestTheRefundIsTheKitsOwnChannelNotTheItemOne`` pins from both sides.
+
+One thing on R stays unmodeled and is named: the ally share of the buff,
+which prices another champion's cooldowns that this fight does not
+schedule.
 
 **One SOURCE CONFLICT is recorded, not used.** ``SivirR`` carries
 ``HuntAttackSpeed`` (5%/6%/7% at ranks 1-3) that the cached wiki text
@@ -343,14 +348,29 @@ class TestOnTheHuntCarriesNoDamage:
         assert abilities["R"]["parts"] == ()
 
 
-class TestOnTheHuntStaysOutOfScope:
-    def test_coverage_is_out_of_scope_not_no_damage(self):
-        assert MODULE_COVERAGE["R"] == "out_of_scope"
+class TestOnTheHuntCloses:
+    """Both sourced effects are priced, so the Olaf-R rule no longer holds it.
 
-    def test_olaf_rule_is_stated_explicitly(self):
+    The slot was ``out_of_scope`` on the SECOND effect, not the first: the
+    movement grant has ridden ``resolve_move_speed`` since the Teemo-W
+    channel landed, and what kept R open was the unpriced 0.5s cooldown
+    refund. ``swing_cooldown_refund`` prices it.
+    """
+
+    def test_coverage_is_no_damage_now_that_nothing_is_left_unpriced(self):
+        assert MODULE_COVERAGE["R"] == "no_damage"
+
+    def test_the_receipt_says_what_closed_it_and_names_the_shape(self):
         assumption = next(a for a in ASSUMPTIONS if "R (On the Hunt)" in a)
-        assert "out_of_scope, NOT no_damage" in assumption
-        assert "Olaf-R rule" in assumption
+        assert "CLOSES as no_damage" in assumption
+        assert "swing_cooldown_refund" in assumption
+        assert "AttackCooldownRefund" in assumption
+
+    def test_the_ally_share_is_still_named_as_unmodeled(self):
+        """One thing on this row genuinely stays out: the ally half prices
+        another champion's cooldowns, which this fight does not schedule."""
+        assumption = next(a for a in ASSUMPTIONS if "R (On the Hunt)" in a)
+        assert "ally share of the buff stays unmodeled" in assumption
 
     def test_both_sourced_effects_are_named_in_the_receipt(self):
         assumption = next(a for a in ASSUMPTIONS if "R (On the Hunt)" in a)
@@ -431,24 +451,41 @@ class TestOnTheHuntMovementIsWired:
         assert "30% bonus movement speed for 12s" in detail
 
 
-class TestOnTheHuntKernelGaps:
-    """The one remaining blocker is measured against the kernel."""
+class TestTheRefundIsTheKitsOwnChannelNotTheItemOne:
+    """Two cooldown-refund surfaces exist and they must not be confused.
 
-    def test_cooldown_refund_channel_is_item_proc_only(self):
+    ``CooldownProcEffect.on_attack_cooldown_refund`` is the ITEM one, read by
+    the item-proc scheduler. A kit's refund is authored on its own row and
+    walked by the cast scheduler, so the ability entry still carries no item
+    key -- which is what this pinned before, and still should.
+    """
+
+    def test_the_item_channel_still_exists_and_is_still_the_item_one(self):
         import dataclasses
 
         fields = {f.name for f in dataclasses.fields(CooldownProcEffect)}
         assert "on_attack_cooldown_refund" in fields
 
-    def test_no_ability_slot_emits_a_cooldown_refund_key(self):
+    def test_no_ability_slot_borrows_the_item_key(self):
         _, abilities = _parse()
         for entry in abilities.values():
             assert "on_attack_cooldown_refund" not in entry
 
-    def test_receipt_names_the_remaining_gap(self):
+    def test_the_kit_refund_rides_its_own_key_on_the_granting_row(self):
+        _, abilities = _parse()
+        payload = abilities["R"]["swing_cooldown_refund"]
+        assert payload["seconds_per_attack"] == pytest.approx(0.5)
+        assert tuple(payload["slots"]) == ("Q", "W", "E")
+        # The window is R's own Buff Duration row, rank 3 of 8/10/12.
+        assert payload["window_seconds"] == pytest.approx(12.0)
+        # And it is authored on R alone: no other slot claims it.
+        assert [
+            slot for slot, e in abilities.items() if "swing_cooldown_refund" in e
+        ] == ["R"]
+
+    def test_receipt_still_names_the_movement_fold_it_rides(self):
         assumption = next(a for a in ASSUMPTIONS if "R (On the Hunt)" in a)
         assert "resolve_move_speed" in assumption
-        assert "CooldownProcEffect" in assumption
 
 
 class TestHuntAttackSpeedIsAnUnusedSourceConflict:
@@ -503,11 +540,13 @@ class TestModeledSlotsAreUnchanged:
 # ---------------------------------------------------------------------------
 
 
-def test_module_coverage_is_the_explicit_two_verdict_dict():
+def test_module_coverage_leaves_no_slot_without_an_axis():
+    """Sivir is off the ``no engine axis at all`` table in coverage-status."""
     assert MODULE_COVERAGE == {
         "P": "no_damage",
         "Q": "modeled",
         "W": "modeled",
         "E": "modeled",
-        "R": "out_of_scope",
+        "R": "no_damage",
     }
+    assert "out_of_scope" not in MODULE_COVERAGE.values()

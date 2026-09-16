@@ -388,11 +388,21 @@ ASSUMPTIONS = [
     "resolves its window start from the Q slot (the Miss Fortune W "
     "precedent), because the unwindowed self-buff channel weights purely "
     "by time whereas this window is bounded by attack count as well, and "
-    "because the cooldown refund has no channel that FITS: a champion can "
-    "author a refund (Ezreal's _with_q_refund), but only as a static "
-    "parse-time divisor on an entry's own cooldown, which is sound for an "
-    "always-on stream and not for this 4s/2-attack window; nothing "
-    "mutates a cooldown mid-fight.",
+    "and because the cooldown refund has no BASE to take a share of. That "
+    "last blocker was re-measured on 2026-09-16 against both sources and "
+    "it is stronger than 'no channel', which is now false: Sivir's On the "
+    "Hunt gave the engine a per-attack windowed refund "
+    "(swing_cooldown_refund, walked by fight/rotation/cast_schedule.py). "
+    "Udyr's cannot ride it, because his refund is not seconds off a slot "
+    "the fight schedules: it is '5% of Awakened Spirit's total cooldown', "
+    "and that cooldown is stated NOWHERE. The cached P entry carries "
+    "cooldown None, rechargeRate None and no leveling row at all, the "
+    "prose says only that it 'is affected by ultimate haste' and is "
+    "'tracked on his health bar by an Awakening resource', and the "
+    "binary's UdyrPassive record carries UltCDReduction 0.05 and "
+    "AttackSpeedDuration 4.0 with no Cooldown field beside them. Five "
+    "percent of an unsourced number is unsourced, and Awakened Spirit is "
+    "not a slot this engine models, so the refund has no consumer either.",
 ]
 MODULE_COVERAGE = coverage(no_damage="E", out_of_scope="P")
 
