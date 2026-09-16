@@ -164,9 +164,12 @@ _FLAT_STAT_RULES: tuple[tuple[str, re.Pattern], ...] = (
         "attack_speed_percent",
         re.compile(r"\{\{as\|([\d.]+)% '''bonus''' attack speed\}\}"),
     ),
+    # Two runes write this stat two ways, against the BONUS (Celerity) and
+    # against the TOTAL (Approach Velocity), and both mean a percent the one
+    # movement-speed channel reads, so one rule takes both.
     (
         "move_speed_percent",
-        re.compile(r"\{\{as\|([\d.]+)% '''bonus''' movement speed\}\}"),
+        re.compile(r"\{\{as\|([\d.]+)% '''bonus(?: total)?''' movement speed\}\}"),
     ),
     ("bonus_health", re.compile(r"\{\{as\|([\d.]+) '''bonus''' health\}\}")),
     ("ability_haste", re.compile(r"([\d.]+) (?:\[\[ability haste\]\]|ability haste)")),

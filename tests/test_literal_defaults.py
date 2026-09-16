@@ -1666,6 +1666,13 @@ AUTHORED_DECLARATION = frozenset(
         ),
         (
             "rune_paths/inspiration.py",
+            "_compile_approach_velocity",
+            "dict.get",
+            '"effects"',
+            1,
+        ),
+        (
+            "rune_paths/inspiration.py",
             "_compile_jack_of_all_trades",
             "dict.get",
             '"effects"',

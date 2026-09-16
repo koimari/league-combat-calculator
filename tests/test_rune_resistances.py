@@ -257,3 +257,80 @@ class TestRevitalizeReachesEveryRecovery:
         disclosures = " ".join(resolve_rune("Revitalize").disclosures)
         assert "10% on targets below 40%" in disclosures
         assert "no per-target health gate" in disclosures
+
+
+class TestApproachVelocityReachesDamageThroughSwiftmarch:
+    """CF9's channel already existed; only the gate and the parse were absent.
+
+    Its old receipt said "no damage row reads movement speed". That is true
+    of a damage row and false of the build: Swiftmarch converts the holder's
+    total movement speed into adaptive force, so the stat reaches damage the
+    way Celerity's does. Celerity's own disclosure says it precisely and this
+    rune reuses the sentence.
+    """
+
+    def _swiftmarch(self, **runes):
+        request = {
+            "champion": "Garen",
+            "level": 18,
+            "role": "mid",
+            "boots": "Swiftmarch",
+            "role_quest_complete": True,
+            "items": [],
+            "enemies": [
+                {"kind": "champion", "champion": "Darius", "level": 18, "role": "top"}
+            ],
+            "fight_duration": 10,
+            "fight_mode": "time_based",
+            "deterministic": True,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+        }
+        request.update(runes)
+        return calculate_payload(request)
+
+    def test_the_parse_reads_the_total_form_beside_celerity_s_bonus_form(self):
+        """One key, two spellings, because one channel reads it."""
+        assert _RUNES["Approach Velocity"]["effects"]["move_speed_percent"] == 7.5
+        assert _RUNES["Celerity"]["effects"]["move_speed_percent"] == 1.0
+        effects, _ = parse_rune_effects(
+            "Approach Velocity", _RUNES["Approach Velocity"]["description"]
+        )
+        assert effects == {"move_speed_percent": 7.5}
+
+    def test_movement_speed_does_reach_damage_on_a_swiftmarch_build(self):
+        """The fact the old receipt got wrong, measured on Celerity."""
+        bare = self._swiftmarch(
+            keystone="Grasp of the Undying", minor_runes=[], stat_shards=[]
+        )
+        celerity = self._swiftmarch(
+            keystone="Grasp of the Undying",
+            minor_runes=["Celerity"],
+            stat_shards=[],
+        )
+        assert celerity["champion_stats"]["move_speed"] > (
+            bare["champion_stats"]["move_speed"]
+        )
+        assert celerity["total_damage"] > bare["total_damage"]
+
+    def test_the_gate_prices_it_and_the_default_grants_nothing(self):
+        off = self._swiftmarch(
+            keystone="Grasp of the Undying",
+            minor_runes=["Approach Velocity"],
+            stat_shards=[],
+            rune_options={"Approach Velocity": {"near_impaired_enemy": 0}},
+        )
+        on = self._swiftmarch(
+            keystone="Grasp of the Undying",
+            minor_runes=["Approach Velocity"],
+            stat_shards=[],
+            rune_options={"Approach Velocity": {"near_impaired_enemy": 1}},
+        )
+        assert off["champion_stats"]["move_speed"] == pytest.approx(405.0, abs=0.1)
+        assert on["champion_stats"]["move_speed"] == pytest.approx(431.3, abs=0.1)
+        assert on["total_damage"] - off["total_damage"] == pytest.approx(22.9, abs=0.1)
+
+    def test_it_says_how_the_stat_reaches_damage_rather_than_implying_a_row(self):
+        disclosures = " ".join(resolve_rune("Approach Velocity").disclosures)
+        assert "Swiftmarch's conversion" in disclosures
+        assert "no damage row reads movement speed itself" in disclosures

@@ -2026,7 +2026,9 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/ApproachVelocity/ApproachVelocity.png",
     "description": "{{sbc|Passive:}} Gain {{sti|{{as|{{fd|7.5}}% '''bonus total''' movement speed}}}} while facing {{tip|sight|visible}} enemy {{tip|champions}} that are {{tip|immobilize|immobilized}}, {{tip|ground|grounded}}, or {{tip|slow|slowed}} within {{tip|cr|icononly = true}} 1000 range.\nThis bonus is doubled to {{as|15%|ms}} and does not have a range cap nor require {{tip|sight|vision}} toward enemy champions whose movement you impaired when they were {{tip|sight|visible}}.{{bug|2}}",
-    "effects": {}
+    "effects": {
+      "move_speed_percent": 7.5
+    }
   },
   "Jack Of All Trades": {
     "name": "Jack Of All Trades",

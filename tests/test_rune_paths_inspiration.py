@@ -1,10 +1,12 @@
-"""Inspiration's minor runes: one stat grant and eight receipted refusals.
+"""Inspiration's minor runes: two stat grants and seven receipted refusals.
 
 Inspiration buys biscuits, boots, elixirs, summoner-spell swaps and gold
 back. Three of its runes have no combat number in any source and are exact
-zeros; five have one this engine cannot reach and are withheld. The ninth is
-Jack Of All Trades, whose stacks are the build's own item stat types and
-whose two channels are granted together.
+zeros; four have one this engine cannot reach and are withheld. Two grant a
+stat: Jack Of All Trades, whose stacks are the build's own item stat types
+and whose two channels are granted together, and Approach Velocity, whose
+movement speed reaches damage through Swiftmarch's conversion behind a
+switch for the position the request does not carry.
 """
 
 import pytest
@@ -24,7 +26,6 @@ DISPOSITIONS = {
     "Time Warp Tonic": ("WITHHELD", "the fight model consumes no potions"),
     "Biscuit Delivery": ("WITHHELD", "the fight model consumes none"),
     "Cosmic Insight": ("WITHHELD", "summoner-spell haste and item haste"),
-    "Approach Velocity": ("WITHHELD", "no damage row reads movement speed"),
 }
 
 
@@ -144,13 +145,24 @@ class TestInspirationCoverage:
         assert len(catalog) == 9
         assert all(entry["implemented"] is True for entry in catalog)
         assert {entry["name"] for entry in catalog} == set(DISPOSITIONS) | {
-            "Jack Of All Trades"
+            "Jack Of All Trades",
+            "Approach Velocity",
         }
 
-    def test_no_inspiration_rune_declares_an_option(self):
-        """Nothing here reads a number, so nothing here needs one asked for."""
+    def test_only_approach_velocity_declares_an_option(self):
+        """A refusal reads no number, so it needs none asked for.
+
+        Approach Velocity is the exception and the reason is the shape of
+        what it waits on: its movement speed is sourced and reaches damage,
+        and only the position its gate names is missing.
+        """
         catalog = {entry["name"]: entry for entry in rune_effects.rune_catalog()}
         assert all(catalog[name]["options"] == [] for name in DISPOSITIONS)
+        assert catalog["Jack Of All Trades"]["options"] == []
+        (option,) = catalog["Approach Velocity"]["options"]
+        assert option["key"] == "near_impaired_enemy"
+        assert option["kind"] == "switch"
+        assert option["default"] == 0.0
 
 
 def _stat_context(item_stat_types):

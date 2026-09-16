@@ -16,12 +16,19 @@ from ..rune_effects import (
     RuneEffect,
     RuneMultiStatGrantEffect,
     RuneOption,
+    RuneOptionKind,
     RuneStat,
     RuneStatContext,
+    RuneStatGrantEffect,
     RuneValues,
     no_damage_compiler,
     threshold_gates,
 )
+
+#: Approach Velocity's gate is where the holder is standing and what the
+#: enemy is suffering, and the request carries neither, so it is a switch
+#: with a disclosed default the way Waterwalking's river is.
+_NEAR_IMPAIRED = "near_impaired_enemy"
 
 #: The Inspiration runes that book no damage: disposition, the reason that
 #: becomes the receipt, and any further half this engine refuses.
@@ -91,13 +98,41 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
         "prices no consumable — a build that means to hold one lists it",
         (),
     ),
-    "Approach Velocity": (
-        Disposition.WITHHELD,
-        "it grants bonus movement speed toward impaired enemy champions, and "
-        "no damage row reads movement speed",
-        (),
-    ),
 }
+
+
+def _compile_approach_velocity(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
+    """Compile Approach Velocity: movement speed near an impaired enemy.
+
+    Movement speed is a stat the build publishes and Swiftmarch converts into
+    adaptive force, so the grant reaches damage the way Celerity's does. The
+    gate is the part the request cannot answer: whether a visible enemy
+    champion is impaired within the rune's range, and whether the holder is
+    facing them.
+    """
+    name = "Approach Velocity"
+    effects = RuneValues(name, entry.get("effects", {}))
+    percent = effects.number("move_speed_percent")
+
+    def amount(context: RuneStatContext) -> float:
+        return percent if context.option(name, _NEAR_IMPAIRED, 0.0) else 0.0
+
+    return RuneStatGrantEffect(
+        rune_name=name,
+        stat=RuneStat.MOVE_SPEED_PERCENT,
+        amount=amount,
+        disclosures=(
+            f"{name} grants {percent:g}% bonus total movement speed while its "
+            f"{_NEAR_IMPAIRED!r} option says a visible enemy champion is "
+            "impaired in range, and nothing by default: the fight model "
+            "carries no position, so where the holder stands is asked for "
+            "rather than inferred.",
+            f"{name}'s movement speed reaches the stat card and Swiftmarch's "
+            "conversion of movement speed into adaptive force, which prices "
+            "the build's one published movement speed; no damage row reads "
+            "movement speed itself.",
+        ),
+    )
 
 
 def _compile_jack_of_all_trades(entry: Mapping[str, Any]) -> RuneMultiStatGrantEffect:
@@ -141,6 +176,7 @@ def _compile_jack_of_all_trades(entry: Mapping[str, Any]) -> RuneMultiStatGrantE
 
 
 COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
+    "Approach Velocity": _compile_approach_velocity,
     "Jack Of All Trades": _compile_jack_of_all_trades,
     **{
         name: no_damage_compiler(name, *declaration)
@@ -148,4 +184,20 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
     },
 }
 
-OPTIONS: dict[str, tuple[RuneOption, ...]] = {}
+OPTIONS: dict[str, tuple[RuneOption, ...]] = {
+    "Approach Velocity": (
+        RuneOption(
+            key=_NEAR_IMPAIRED,
+            label="Near an impaired enemy",
+            kind=RuneOptionKind.SWITCH,
+            default=0.0,
+            bounds=(0.0, 1.0),
+            disclosure=(
+                "1 prices Approach Velocity with a visible enemy champion "
+                "impaired in range and the holder facing them, where its "
+                "movement speed is live; 0, its default, is the rest of the "
+                "fight."
+            ),
+        ),
+    ),
+}
