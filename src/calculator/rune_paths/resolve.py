@@ -5,13 +5,13 @@ engine holds no channel for: it prices one attacker's outgoing damage against
 one target, so a shield, a heal and a damage reduction compile to a refusal
 carrying the reason.
 
-Two are not refusals. Overgrowth's stacks buy maximum health, which the
-fight's stat block reads. Conditioning's RESISTANCES land in the same armor
-and magic-resistance fold an item's do, and a champion scaling off bonus
-armor or bonus magic resistance prices more damage for them: the grant
-reaches the fight through the scaling door. It does not reach a durability
-one, because the holder's own damage taken carries no resistance term, and
-the rune's disclosures say so.
+Some are not refusals. Overgrowth's stacks buy maximum health, which the
+fight's stat block reads. Conditioning's and Unflinching's RESISTANCES land
+in the same armor and magic-resistance fold an item's do, and a champion
+scaling off bonus armor or bonus magic resistance prices more damage for
+them: the grant reaches the fight through the scaling door. It does not reach
+a durability one, because the holder's own damage taken carries no resistance
+term, and both runes' disclosures say so.
 """
 
 from collections.abc import Callable, Mapping
@@ -232,6 +232,55 @@ def _compile_conditioning(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     )
 
 
+#: Unflinching's gate is whether enemies are holding the holder in crowd
+#: control, which the fight decides inside its survival walk, after the stat
+#: block that would carry the grant is already resolved. So it is a switch
+#: with a disclosed default, the shape Absolute Focus's health gate uses.
+_CROWD_CONTROLLED = "crowd_controlled"
+
+
+def _compile_unflinching(entry: Mapping[str, Any]) -> RuneMultiStatGrantEffect:
+    """Compile Unflinching: bonus resistances while enemies hold the holder.
+
+    Same channel as Conditioning and the same reading of what it buys: a
+    champion scaling off bonus armor or bonus magic resistance prices more
+    damage for them, and the holder's own damage taken carries no resistance
+    term either way.
+    """
+    name = "Unflinching"
+    effects = RuneValues(name, entry.get("effects", {}))
+    armor, magic_resist = effects.numbers(
+        "flat_bonus_armor", "flat_bonus_magic_resistance"
+    )
+
+    def amounts(context: RuneStatContext) -> dict[RuneStat, float]:
+        if not context.option(name, _CROWD_CONTROLLED, 0.0):
+            return {}
+        return {RuneStat.ARMOR: armor, RuneStat.MAGIC_RESIST: magic_resist}
+
+    return RuneMultiStatGrantEffect(
+        rune_name=name,
+        stats=(RuneStat.ARMOR, RuneStat.MAGIC_RESIST),
+        amounts=amounts,
+        disclosures=(
+            f"{name} grants {armor:g} bonus armor and {magic_resist:g} bonus "
+            f"magic resistance while its {_CROWD_CONTROLLED!r} option says "
+            "enemies are holding the holder, and nothing by default. The "
+            "fight decides that inside its survival walk, after the stat "
+            "block the grant would ride is resolved, so it is asked for "
+            "rather than inferred.",
+            f"{name} is priced as HELD for the whole window when the option "
+            "is on: a rune stat grant is one scalar for the fight, and the "
+            "rune's own 2-second lingering tail past the impairment is inside "
+            "that reading rather than added to it.",
+            f"{name} reaches the fight the way every rune resistance does, "
+            "through a kit that scales off bonus armor or bonus magic "
+            "resistance; the holder's own damage taken carries no resistance "
+            "term, so this buys no durability.",
+        ),
+    )
+
+
 #: The Resolve runes that book no damage: disposition, the reason that
 #: becomes the receipt, and any further half this engine refuses.
 _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
@@ -271,17 +320,12 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
             "with it, and neither number survives the parse.",
         ),
     ),
-    "Unflinching": (
-        Disposition.WITHHELD,
-        "it grants armor and magic resistance while the holder is crowd "
-        "controlled, and the pair engine prices the holder's outgoing damage",
-        (),
-    ),
 }
 
 
 COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
     "Conditioning": _compile_conditioning,
+    "Unflinching": _compile_unflinching,
     "Font of Life": _compile_font_of_life,
     "Overgrowth": _compile_overgrowth,
     "Shield Bash": _compile_shield_bash,
@@ -303,6 +347,20 @@ OPTIONS: dict[str, tuple[RuneOption, ...]] = {
                 "Which minute of the game the fight happens in; "
                 "Conditioning arms at minute 12 and grants nothing "
                 "before it."
+            ),
+        ),
+    ),
+    "Unflinching": (
+        RuneOption(
+            key=_CROWD_CONTROLLED,
+            label="Held in crowd control",
+            kind=RuneOptionKind.SWITCH,
+            default=0.0,
+            bounds=(0.0, 1.0),
+            disclosure=(
+                "1 prices Unflinching with enemies holding the holder in "
+                "crowd control, where its resistances are live; 0, its "
+                "default, is the rest of the fight."
             ),
         ),
     ),
