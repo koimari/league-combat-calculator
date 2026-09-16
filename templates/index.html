@@ -249,6 +249,14 @@
                 <button type="button" data-roster-level-all="18">18</button>
                 <button type="button" data-roster-level-all="main" id="rosterLevelMain">= main</button>
               </div>
+              <!-- The whole-side optimizer moves. Per-card "Best items" rides
+                   each roster card beside its item strip; these two run the
+                   same search over every ready card on one side. -->
+              <div class="roster-level-all" id="rosterOptimizeAll" hidden role="group" aria-label="Fill roster builds with their best items">
+                <span>Best items for</span>
+                <button type="button" data-optimize-roster-all="targets">every enemy</button>
+                <button type="button" data-optimize-roster-all="allies">every ally</button>
+              </div>
               <div class="add-row">
                 <button class="add-button" id="addEnemy" type="button">+ Add enemy</button>
                 <button class="add-button" id="addAlly" type="button">+ Add ally</button>
@@ -432,6 +440,7 @@
              per-slot moves (pick, stacks, item options, BIS) ride their row. -->
         <section class="build-actions" id="buildActions" aria-label="Build actions">
           <button class="build-action" id="bisButton" type="button" aria-describedby="bisPrerequisite">Find best item for a slot</button>
+          <button class="build-action" id="optimizeBuildButton" type="button" data-optimize-build>Find best full build</button>
           <button class="build-action" id="shareAnalystButton" type="button">Share this build</button>
           <p class="prerequisite" id="bisPrerequisite" hidden>
             <span id="bisPrerequisiteText"></span>

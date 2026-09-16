@@ -277,11 +277,10 @@ def _feature_fields() -> dict[str, dict[str, Any]]:
             state_path="optimization.bis",
             frontend_token="data-bis-path",
         ),
-        # The one locator no control answers: app.js reads
-        # ``data-optimize-roster`` (and ``-all``, ``data-optimize-build``) in
-        # its click delegate, and emits none of them, so the roster and
-        # full-build searches have no entry point on the page.  Named in
-        # ``app.js`` ``CONTROL_FAMILY_EXEMPTIONS``; backlog row SC2.
+        # Three controls answer this locator: ``data-optimize-build`` in the
+        # build-actions strip, ``data-optimize-roster`` on every roster card
+        # and ``data-optimize-roster-all`` per roster side.  All three are
+        # gated together by ``app.js`` ``CONTROL_FAMILY_GATES``.
         "optimize": _field(
             payload_field="optimize",
             state_path="optimization.roster",

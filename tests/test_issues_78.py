@@ -238,6 +238,8 @@ CONTROL_IDS = {
     # #152: the shortcut out of the blocked Best-in-slot state; it delegates
     # to #addEnemy, so it belongs to the same capability.
     "bisAddEnemy": ("controls", "roster_membership"),
+    # SR2: the full-build search's entry point, beside the per-slot one.
+    "optimizeBuildButton": ("controls", "optimize"),
     "economicsGold": ("controls", "purchase_optimize"),
     "economicsOptimize": ("controls", "purchase_optimize"),
     "economicsSell": ("controls", "purchase_optimize"),
@@ -548,30 +550,47 @@ def test_a_fully_supported_contract_refuses_nothing(tmp_path):
 
 
 def test_the_gate_table_covers_every_declared_control_family(tmp_path):
-    """A family is gated or it is an exemption that says why — never neither.
+    """A family is gated or it is an exemption that says why, never neither.
 
-    ``optimize`` is the exemption: it mounts no control at all, so the pass has
-    nothing to disable. Mounting one means adding its gate row here.
+    There is no exemption left: every declared family mounts a control, so
+    every one has a selector. A family added with nothing to disable belongs
+    in the exemption table with its reason rather than outside both.
     """
     gates = _control_gates(_contract(), tmp_path)
     declared = set(_contract()["controls"]["fields"])
     assert set(gates["gates"]) | set(gates["exemptions"]) == declared
     assert set(gates["gates"]) & set(gates["exemptions"]) == set()
-    assert set(gates["exemptions"]) == {"optimize"}
-    assert gates["exemptions"]["optimize"]
+    assert gates["exemptions"] == {}
 
 
-def test_the_exempt_family_really_mounts_nothing():
-    """The exemption's stated cause, checked: app.js reads the optimize
-    attributes in its click delegate and emits none of them, so the roster and
-    full-build searches have no entry point on the page."""
-    for attribute in (
-        "data-optimize-roster",
-        "data-optimize-roster-all",
-        "data-optimize-build",
+def test_every_optimizer_entry_point_is_mounted_and_reaches_its_handler():
+    """SR2: each attribute the click delegate reads is emitted by the page.
+
+    The three were read and never emitted, so ``/api/optimize`` had no user
+    entry point at all while CI exercised it 183 times a run. This pins both
+    halves of each wire, because an attribute emitted with no reader and one
+    read with no emitter look the same from either side alone.
+    """
+    # ``emitted`` is where the control is written, which is NOT where the
+    # delegate reads it: the per-card control is render-created in app.js and
+    # the other two are in the served document.
+    for attribute, emitted, handler in (
+        (
+            "data-optimize-roster",
+            'data-optimize-roster="${path}"',
+            "startRosterOptimization",
+        ),
+        (
+            "data-optimize-roster-all",
+            'data-optimize-roster-all="targets"',
+            "startRosterOptimization",
+        ),
+        ("data-optimize-build", "data-optimize-build>", "startOptimizeBuild"),
     ):
         assert f'closest("[{attribute}]")' in APP_JS, attribute
-        assert f'{attribute}="' not in FRONTEND, attribute
+        assert emitted in FRONTEND, attribute
+        assert handler in APP_JS, handler
+    assert 'data-optimize-roster-all="allies"' in TEMPLATE
 
 
 def test_the_refusal_pass_runs_at_render_time():
