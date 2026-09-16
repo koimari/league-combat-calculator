@@ -461,6 +461,49 @@ function applyPrerequisiteGates() {
     economicsBtn.disabled = Boolean(block);
     economicsBtn.title = block;
   }
+
+  applyOptimizerPrerequisiteGates();
+}
+
+/**
+ * Say out loud why each optimizer control would refuse (backlog SR2).
+ *
+ * The handlers already refuse silently: `startOptimizeBuild` returns on a
+ * missing champion, damage package or enemy, and `startRosterOptimization`
+ * returns when `rosterOptimizationPaths` filters every path away. A mounted
+ * button that returns without a word is the #152 failure again, so each block
+ * below mirrors the guard its own handler applies. Nothing here decides
+ * whether a search may run; the handler still decides that.
+ *
+ * Only the two template-served controls are gated here. The per-card trigger
+ * is render-created and states its own reason, because two renderers redraw a
+ * roster card without reaching this pass.
+ */
+function applyOptimizerPrerequisiteGates() {
+  const buildBlock = !state.attacker.champion
+    ? "Choose a champion to build for."
+    : !optimizerDamagePackageReady()
+      ? "Select a reviewed damage package first."
+      : !state.targets.length || !state.targets.every((target) => target.champion)
+        ? "A full build is searched against the enemy roster; finish every enemy."
+        : state.optimizer.running ? "Optimization is already running." : "";
+  document.querySelectorAll("[data-optimize-build]").forEach((button) => {
+    if (button.dataset.capabilityGated) return;
+    button.disabled = Boolean(buildBlock);
+    button.title = buildBlock || "Search every legal full build for Build A";
+  });
+
+  // The per-card `[data-optimize-roster]` trigger is deliberately absent here:
+  // it is render-created and carries its own state, exactly like .bis-trigger.
+  document.querySelectorAll("[data-optimize-roster-all]").forEach((button) => {
+    if (button.dataset.capabilityGated) return;
+    const root = button.dataset.optimizeRosterAll;
+    const block = !rosterOptimizationPaths(root).length
+      ? `No ${root === "allies" ? "ally" : "enemy"} has a champion and a role yet.`
+      : state.optimizer.running ? "Optimization is already running." : "";
+    button.disabled = Boolean(block);
+    button.title = block || `Fill every ready ${root === "allies" ? "ally" : "enemy"} build with its best items`;
+  });
 }
 
 /**
@@ -492,6 +535,12 @@ const CONTROL_FAMILY_GATES = {
   objective: { selector: "[data-objective]" },
   share: { selector: "#sharePanel, #shareAnalystButton", hide: true },
   roster_membership: { selector: "#addEnemy, #addAlly" },
+  // The prerequisite pass re-enables all three optimizer controls on every
+  // render, so a gated one is marked, exactly as #bisButton is.
+  optimize: {
+    selector: "[data-optimize-build], [data-optimize-roster], [data-optimize-roster-all]",
+    mark: true,
+  },
   purchase_optimize: { selector: "#economicsGold, #economicsOptimize" },
   picker: { selector: "[data-picker]" },
   scoreboard: { selector: "#scoreboardPaste, #scoreboardFile", hide: true },
@@ -500,16 +549,12 @@ const CONTROL_FAMILY_GATES = {
 /**
  * The declared control families this pass cannot gate, and why.
  *
- * `optimize` mounts nothing: `data-optimize-roster`, `data-optimize-roster-all`
- * and `data-optimize-build` are read by the click delegate and emitted by no
- * renderer or template, so the roster and full-build searches have no entry
- * point on the page and no selector to disable.  Its capability descriptor
- * publishes a locator anyway, which is the contract lying in the one way
- * `capabilities._field` warns about (backlog SC2).
+ * Empty: every declared family mounts at least one control, so every one has
+ * a selector above.  The table stays because the coverage test reads it — a
+ * family added with no control to disable belongs here with its reason, not
+ * silently outside both tables.
  */
-const CONTROL_FAMILY_EXEMPTIONS = {
-  optimize: "No control mounts this family, so there is nothing to disable.",
-};
+const CONTROL_FAMILY_EXEMPTIONS = {};
 
 /** Every declared control family the backend refuses, with its reason. */
 function refusedControlFamilies() {
@@ -2826,6 +2871,28 @@ function bisTrigger(path, compact = false) {
   return `<button class="bis-trigger${compact ? " compact" : ""}" type="button" data-bis-path="${path}" title="${escapeHtml(title)}" aria-label="Best item for this slot" ${ready ? "" : "disabled"}>BIS</button>`;
 }
 
+/**
+ * The whole-card optimizer trigger, beside the card's per-slot BIS buttons.
+ *
+ * It carries its own disabled state and reason for the same reason
+ * `bisTrigger` does: two renderers redraw a roster card without running the
+ * gating passes (the engine response at `scheduleEngineCalculation`, and the
+ * objective click), so a render-created control that waited to be gated would
+ * come back enabled and silent. `startRosterOptimization` refuses on the same
+ * condition; this says it before the click.
+ */
+function rosterOptimizeTrigger(path) {
+  const ready = rosterOptimizationPaths(path).length > 0;
+  const kind = participantKindForPath(path);
+  const reason = ready
+    ? (state.optimizer.running ? "Optimization is already running" : "Fill every slot on this card with its best item")
+    : kind === "ally"
+      ? "Needs a champion and role on this ally"
+      : "Needs a champion and role on this enemy";
+  const blocked = !ready || state.optimizer.running;
+  return `<button class="roster-optimize" type="button" data-optimize-roster="${path}" title="${escapeHtml(reason)}" ${blocked ? "disabled" : ""}>Best items</button>`;
+}
+
 function prototypeRosterItemSlot(root, index, loadout, slot) {
   const isBoots = slot === "boots";
   const id = isBoots ? loadout.boots : loadout.items[slot];
@@ -3061,10 +3128,11 @@ function renderPrototypeRoster(kind) {
     const roleQuestComplete = Boolean(loadout.roleQuestComplete);
     const roleQuestLabel = roleQuestComplete ? "Quest complete" : "Quest incomplete";
     const roleQuestButton = `<button class="roster-quest-toggle ${roleQuestComplete ? "active" : ""}" type="button" ${questCapability} data-roster-quest="${root}.${index}" aria-pressed="${roleQuestComplete}" aria-label="${roleQuestComplete ? "Mark" : "Mark"} ${label} role quest ${roleQuestComplete ? "incomplete" : "complete"}" ${loadout.role ? "" : "disabled"}>${roleQuestLabel}</button>`;
+    const optimizeButton = rosterOptimizeTrigger(`${root}.${index}`);
     const effectToggle = kind === "allies"
       ? `<button class="ally-toggle ${loadout.allyEffectsEnabled ? "active" : ""}" type="button" ${effectsCapability} data-ally-effects="${index}" aria-pressed="${Boolean(loadout.allyEffectsEnabled)}"><i></i><span>${loadout.allyEffectsEnabled ? "Apply modeled effects" : "Effects off"}</span></button>`
       : "";
-    return `<article class="roster-card"><button class="roster-pick" type="button" ${capabilityAttributes(participantKind, "champion")} data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div class="roster-card-copy"><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><div class="roster-controls-row"><label class="roster-role-control"><span>Role</span><select ${roleCapability} data-roster-role="${root}.${index}.role" aria-label="${label} role">${roleOptions.map(([value, name]) => `<option value="${value}" ${loadout.role === value ? "selected" : ""}>${name}</option>`).join("")}</select></label><div class="roster-level-control"><span>Level</span><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="-1" aria-label="Decrease ${label} level">−</button><output>Lv ${loadout.level}</output><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="1" aria-label="Increase ${label} level">+</button>${levelQuickHtml(`${root}.${index}.level`, loadout.level, roleLevelCap(loadout.role, Boolean(loadout.roleQuestComplete), loadout.level), levelCapability)}</div>${roleQuestButton}<button class="roster-boots-toggle ${bootsEnabled ? "active" : ""}" type="button" ${bootsCapability} data-include-roster-boots="${root}.${index}" aria-pressed="${bootsEnabled}">${bootsEnabled ? "Boots on" : "Boots off"}</button></div><p class="roster-strip-label">Items · affects your BIS</p><div class="roster-item-strip">${itemSlots}${bootsSlot}</div>${abilityRanks}${championOptions}${effectToggle}</div></article>`;
+    return `<article class="roster-card"><button class="roster-pick" type="button" ${capabilityAttributes(participantKind, "champion")} data-picker="champion" data-path="${root}.${index}.champion" aria-label="${champion ? `Change ${escapeHtml(champion.name)}` : `Choose ${label} champion`}">${champion ? `<img src="${championImage(champion.name)}" alt="${escapeHtml(champion.name)}" />` : "+"}</button><div class="roster-card-copy"><strong>${escapeHtml(champion?.name || `Choose ${label}`)}</strong><span>${escapeHtml(champion?.title || "Empty participant slot")}</span><div class="roster-meta">Lv ${loadout.level} · full participant</div></div><button class="remove-roster" type="button" data-remove-${kind === "targets" ? "target" : "ally"}="${index}" aria-label="Remove ${label}">×</button><div class="roster-card-editor"><div class="roster-controls-row"><label class="roster-role-control"><span>Role</span><select ${roleCapability} data-roster-role="${root}.${index}.role" aria-label="${label} role">${roleOptions.map(([value, name]) => `<option value="${value}" ${loadout.role === value ? "selected" : ""}>${name}</option>`).join("")}</select></label><div class="roster-level-control"><span>Level</span><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="-1" aria-label="Decrease ${label} level">−</button><output>Lv ${loadout.level}</output><button type="button" ${levelCapability} data-level-path="${root}.${index}.level" data-level-delta="1" aria-label="Increase ${label} level">+</button>${levelQuickHtml(`${root}.${index}.level`, loadout.level, roleLevelCap(loadout.role, Boolean(loadout.roleQuestComplete), loadout.level), levelCapability)}</div>${roleQuestButton}<button class="roster-boots-toggle ${bootsEnabled ? "active" : ""}" type="button" ${bootsCapability} data-include-roster-boots="${root}.${index}" aria-pressed="${bootsEnabled}">${bootsEnabled ? "Boots on" : "Boots off"}</button>${optimizeButton}</div><p class="roster-strip-label">Items · affects your BIS</p><div class="roster-item-strip">${itemSlots}${bootsSlot}</div>${abilityRanks}${championOptions}${effectToggle}</div></article>`;
   }).join("") || `<p class="roster-empty">${kind === "targets" ? "No enemies yet — the coupled timeline needs at least one." : "No allies in context."}</p>`;
   // The 2b mock shows a "…pushes your best fifth slot from X to Y" callout
   // here. No backend receipt produces that sentence today, and the renderer
@@ -3080,12 +3148,18 @@ function renderPrototypeBuilder() {
   $("championOptionsRow").innerHTML = champion ? renderChampionOptions() : "";
   renderPrototypeRoster("targets");
   renderPrototypeRoster("allies");
+  // The whole-roster rows: both appear once the roster holds a participant
+  // the row can act on. Whether either optimizer side is READY is the
+  // prerequisite pass's question, and it answers it on the buttons.
+  const hasFullParticipant = [...state.targets, ...state.allies].some((loadout) => loadout.champion && !isPracticeDummy(loadout));
   const levelAll = $("rosterLevelAll");
   if (levelAll) {
-    levelAll.hidden = ![...state.targets, ...state.allies].some((loadout) => loadout.champion && !isPracticeDummy(loadout));
+    levelAll.hidden = !hasFullParticipant;
     const mainButton = $("rosterLevelMain");
     if (mainButton) mainButton.textContent = `= main (Lv ${state.attacker.level})`;
   }
+  const optimizeAll = $("rosterOptimizeAll");
+  if (optimizeAll) optimizeAll.hidden = !hasFullParticipant;
   const actionsCapability = scenarioCapabilityFor("actions");
   document.querySelectorAll("[data-fight-mode]").forEach((button) => {
     const selected = (button.dataset.fightMode === "autos") === Boolean(state.fight.autosOnly);
@@ -4372,6 +4446,31 @@ function bisBackendPayload(path, objective = state.ui.objective) {
   return payload;
 }
 
+/**
+ * The scenario `/api/bis/batch` scores, for a whole roster CARD.
+ *
+ * A card path (`targets.0`) names the subject and no slot, which is exactly
+ * what the batch route wants: it carries the slots in its own `slots` list and
+ * writes `slot_kind`/`slot_index` per entry. `bisBackendPayload` answers the
+ * per-SLOT question (`targets.0.items.2`) and refuses a card path, so routing
+ * one through it made `startRosterOptimization` throw "Invalid roster
+ * optimization path" on its first call — which is what mounting the control
+ * surfaced (backlog SR2).
+ */
+function bisBatchSubjectPayload(path, objective = state.ui.objective) {
+  const parts = String(path).split(".");
+  if ((parts[0] !== "allies" && parts[0] !== "targets") || parts.length !== 2) return null;
+  const index = Number(parts[1]);
+  if (!Number.isInteger(index) || !state[parts[0]]?.[index]) return null;
+  const payload = { ...engineFightPayload("A") };
+  payload.objective = objectiveDefinition(objective)
+    ? objective
+    : Object.keys(OBJECTIVES)[0] || objective;
+  payload.subject_team = parts[0] === "allies" ? "ally" : "enemy";
+  payload.subject_index = index;
+  return payload;
+}
+
 function bisMetricLabel(value) {
   return String(value || "team-fight value")
     .replaceAll("effective health", "eHP")
@@ -4499,7 +4598,7 @@ function rosterOptimizationPaths(rootOrPath) {
 }
 
 async function requestBisBatch(path, slots) {
-  const payload = bisBackendPayload(path);
+  const payload = bisBatchSubjectPayload(path);
   if (!payload) throw new Error("Invalid roster optimization path");
   payload.slots = slots;
   const response = await postJson("/api/bis/batch", payload);

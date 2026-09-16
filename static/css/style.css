@@ -822,6 +822,7 @@ a { color: inherit; }
 }
 .roster-quest-toggle,
 .roster-boots-toggle,
+.roster-optimize,
 .ally-toggle {
   align-self: end;
   padding: 5px 9px;
@@ -834,7 +835,9 @@ a { color: inherit; }
 .roster-quest-toggle.active,
 .roster-boots-toggle.active,
 .ally-toggle.active { border-color: var(--win-dark); color: var(--win-dark); }
-.roster-quest-toggle:disabled { opacity: .4; cursor: not-allowed; }
+.roster-quest-toggle:disabled,
+.roster-optimize:disabled { opacity: .4; cursor: not-allowed; }
+.roster-optimize:hover:not(:disabled) { border-color: var(--win-dark); color: var(--win-dark); }
 .ally-toggle { display: inline-flex; align-items: center; gap: 6px; }
 .ally-toggle i { width: 7px; height: 7px; background: currentColor; }
 
@@ -2576,7 +2579,8 @@ a { color: inherit; }
   font: 700 10px var(--mono);
   color: color-mix(in srgb, var(--cream) 70%, transparent);
 }
-.roster-level-all button:hover { color: var(--cream); border-color: var(--cream-62); }
+.roster-level-all button:hover:not(:disabled) { color: var(--cream); border-color: var(--cream-62); }
+.roster-level-all button:disabled { opacity: .4; cursor: not-allowed; }
 
 /* --- ability cards: rank cap, engine cast readout, in-card options --- */
 .ability-key {
