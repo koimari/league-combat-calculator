@@ -10,7 +10,7 @@ from ...stats import effective_cooldown
 from ...trigger_stream import is_immobilizing_event
 from ...champions.cast_arming import banking_swings, declared_rules, ready_at
 from ..cast_control_marker import _declared_cc_marker
-from ..cast_slots import _base_slot, _slot_is_cast
+from ..cast_slots import _base_slot, _slot_is_cast, slot_cast_start
 from ..empower_declaration import _empower_cooldown_delay
 from .cast_resource_lockout import LockoutWalk, declared_rule
 from ..results import RotationResult
@@ -49,23 +49,43 @@ def _navori_effective_cd(
     autos_per_second: float,
     refund_percent: float,
 ) -> float:
-    """Compute effective cooldown with Navori Flickerblade CD refund.
+    """Navori Flickerblade alone: each auto takes a SHARE off what is left."""
+    return _attack_paid_cooldown(
+        base_cd, autos_per_second, refund_percent=refund_percent
+    )
 
-    The cooldown ticks down in real time (1 second per 1 second).  Each
-    auto attack that lands reduces the *remaining* cooldown by
-    ``refund_percent`` (e.g. 15%), which the loop below steps through.
 
-    Example (7s CD, 1 auto/sec, 15% refund)::
+def _attack_paid_cooldown(
+    base_cd: float,
+    autos_per_second: float,
+    *,
+    refund_percent: float = 0.0,
+    flat_refund: float = 0.0,
+    refund_window: tuple[float, float] | None = None,
+    cooldown_start: float = 0.0,
+) -> float:
+    """One walk for every cooldown the champion's own attacks pay down.
 
-        t=0  Cast, 7s remaining
-        t=1  Auto → remaining = (7-1) * 0.85 = 5.10
-        t=2  Auto → remaining = (5.10-1) * 0.85 = 3.485
-        t=3  Auto → remaining = (3.485-1) * 0.85 = 2.112
-        t=4  Auto → remaining = (2.112-1) * 0.85 = 0.945
-        t=5  Auto → remaining ≤ 0, ability ready
-        Effective CD ≈ 5.0s (down from 7.0s)
+    Two reducers ride the same attack. Navori Flickerblade takes a SHARE of
+    what is left (``refund_percent``); a kit grant takes FLAT seconds off it
+    (``flat_refund``, Sivir's On the Hunt) and only inside its own window.
+    They are walked together rather than composed, because two sequential
+    walks would each charge the elapsed time for the same attacks and place
+    the recast late.
+
+    Which reducer lands first on one attack is NOT sourced -- the game
+    applies both at the same instant. The share goes first, so the flat
+    refund is measured against what the share left, and a build holding both
+    gets the smaller of the two readings rather than the larger. That is the
+    stated approximation; it only binds on a build carrying Navori AND a kit
+    refund, and it is never a number the caller may choose.
+
+    Attacks are assumed to land at a constant interval from *cooldown_start*,
+    which is the same approximation the Navori reading has always made.
     """
-    if base_cd <= 0 or autos_per_second <= 0 or refund_percent <= 0:
+    if base_cd <= 0 or autos_per_second <= 0:
+        return base_cd
+    if refund_percent <= 0 and flat_refund <= 0:
         return base_cd
 
     retain = 1.0 - refund_percent  # 0.85 for 15% refund
@@ -76,18 +96,104 @@ def _navori_effective_cd(
     # Simulate auto attacks landing at regular intervals
     next_auto = auto_interval
     while remaining > 0:
-        if next_auto <= remaining:
-            # Time passes until auto lands, then refund
-            elapsed += next_auto
-            remaining -= next_auto
-            remaining *= retain
-            next_auto = auto_interval
-        else:
+        if next_auto > remaining:
             # No more autos before CD expires — just wait it out
             elapsed += remaining
-            remaining = 0.0
+            break
+        # Time passes until the auto lands, then it pays the cooldown down.
+        elapsed += next_auto
+        remaining -= next_auto
+        if refund_percent > 0:
+            remaining *= retain
+        if flat_refund > 0 and _inside(refund_window, cooldown_start + elapsed):
+            remaining -= flat_refund
+        next_auto = auto_interval
 
     return elapsed
+
+
+def _inside(window: tuple[float, float] | None, moment: float) -> bool:
+    """Whether *moment* falls in a half-open grant window. No window, no grant."""
+    if window is None:
+        return False
+    start, end = window
+    return start - _CAST_SCHEDULE_EPS <= moment < end + _CAST_SCHEDULE_EPS
+
+
+@dataclass(frozen=True, slots=True)
+class _SwingRefund:
+    """A resolved kit grant that pays other slots' cooldowns down per attack."""
+
+    owner: str
+    seconds_per_attack: float
+    slots: frozenset[str]
+    start: float
+    end: float
+
+
+def declares_swing_cooldown_refund(state: "FightState") -> bool:
+    """Whether any row declares a kit refund; ``_kit_swing_refund`` resolves it."""
+    # Pure declaration, so the rotation can ask before a cast order exists.
+    return any(
+        isinstance(info, Mapping) and info.get("swing_cooldown_refund")
+        for info in state.ability_damages.values()
+    )
+
+
+def _kit_swing_refund(state: "FightState") -> "_SwingRefund | None":
+    """The one kit grant whose window makes attacks pay cooldowns down.
+
+    Authored on the GRANTING row and naming the slots it refunds, because
+    the grant and the cooldowns it shortens are different slots: Sivir's R
+    says "While active, Sivir's basic attacks on-attack reduce her basic
+    abilities' current cooldowns by 0.5 seconds each". That is why this is
+    not ``stack_scaled_cooldown``, which a slot declares about itself.
+
+    The window opens at the granting row's own first cast, read through
+    ``slot_cast_start`` -- the same answer the kit's attack-speed windows
+    use, so a grant and a steroid bought by the same cast agree on when it
+    happened. A row the resolved rotation never casts grants nothing.
+
+    ONE owner per kit. A second declaration raises rather than compounding
+    two windows, because nothing sources how two flat refunds on one attack
+    combine and the engine must not pick.
+    """
+    declared = [
+        (key, info["swing_cooldown_refund"])
+        for key, info in state.ability_damages.items()
+        if isinstance(info, Mapping) and info.get("swing_cooldown_refund")
+    ]
+    if len(declared) > 1:
+        # Counted BEFORE the cast test: two owners is a kit the engine has no
+        # rule for, whether or not this rotation happens to cast both.
+        raise ValueError(
+            f"rows {sorted(key for key, _ in declared)!r} each declare "
+            "swing_cooldown_refund; how two flat refunds on one attack "
+            "combine is not sourced, so the engine refuses rather than choosing"
+        )
+    if not declared:
+        return None
+    key, payload = declared[0]
+    seconds = float(payload["seconds_per_attack"])
+    window = float(payload["window_seconds"])
+    slots = frozenset(str(slot) for slot in payload["slots"])
+    if seconds <= 0.0 or window <= 0.0 or not slots:
+        raise ValueError(
+            f"{key!r} declares a swing_cooldown_refund with no effect "
+            f"(seconds_per_attack={seconds!r}, window_seconds={window!r}, "
+            f"slots={sorted(slots)!r}); every number of the rule is sourced"
+        )
+    # A grant nothing casts grants nothing: autos-only earns no hunt, and
+    # neither does a rotation whose cast order leaves the slot out.
+    if not _slot_is_cast(
+        key,
+        state.ability_damages[key],
+        list(state.cast_order),
+        casts_nothing=state.auto_attacks_only,
+    ):
+        return None
+    start = slot_cast_start(state, key)
+    return _SwingRefund(key, seconds, slots, start, start + window)
 
 
 def _immobilize_ability_haste(
@@ -111,11 +217,13 @@ def _effective_timed_cooldown(
     control_applies: bool = True,
     own_casts: Sequence[float] = (),
     now: float | None = None,
+    cooldown_start: float | None = None,
 ) -> float:
     """Effective recast cooldown in timed mode: ability haste, Spear of
     Shojin basic-ability haste (Q/W/E), ultimate haste (R), the haste an
-    immobilizing slot earns (Imperial Mandate's Control), and Navori
-    auto-attack refunds.
+    immobilizing slot earns (Imperial Mandate's Control), and the refunds the
+    champion's own attacks pay -- Navori Flickerblade's share and a kit
+    grant's flat seconds (Sivir's On the Hunt).
 
     Which haste applies is a property of the SLOT, so a variant row resolves
     to its base slot first: Briar's ``W_frenzy`` and Kindred's ``W_vigor`` are
@@ -125,7 +233,13 @@ def _effective_timed_cooldown(
 
     A slot its own stacks shorten reduces its BASE cooldown, so *own_casts*
     and *now* are read here rather than folded in afterwards: Navori's walk
-    does not commute with scaling its input."""
+    does not commute with scaling its input.
+
+    *cooldown_start* is when the timer actually begins -- past the cast and
+    any empower delay -- and a kit refund needs it to know which attacks land
+    inside the grant's window. A caller that does not know it yet gets the
+    unrefunded reading, which is a floor in exactly the sense ``NO_REFUNDS``
+    is: the recast is placed at or later than the fight will place it."""
     base_cd = ability_field(ability_info, "cooldown")
     if now is not None:
         base_cd = _stack_shortened(ability_info, base_cd, own_casts, now)
@@ -138,8 +252,24 @@ def _effective_timed_cooldown(
     if control_applies:
         total_haste += _immobilize_ability_haste(state, ability_info)
     cd = effective_cooldown(base_cd, total_haste)
-    if refunds.navori_refund > 0 and cd > 0 and slot in ("Q", "W", "E"):
-        cd = _navori_effective_cd(cd, refunds.autos_per_second, refunds.navori_refund)
+    navori = refunds.navori_refund if slot in ("Q", "W", "E") else 0.0
+    kit = _kit_swing_refund(state) if cooldown_start is not None else None
+    flat = (
+        kit.seconds_per_attack
+        if kit is not None and (ability_key in kit.slots or slot in kit.slots)
+        else 0.0
+    )
+    if cd > 0 and (navori > 0 or flat > 0):
+        # One walk, not two: each attack pays both, and composing two walks
+        # would charge the same attacks' elapsed time twice.
+        cd = _attack_paid_cooldown(
+            cd,
+            refunds.autos_per_second,
+            refund_percent=navori,
+            flat_refund=flat,
+            refund_window=(kit.start, kit.end) if flat > 0 else None,
+            cooldown_start=cooldown_start or 0.0,
+        )
     return cd
 
 
@@ -253,6 +383,18 @@ def _schedule_authored_casts(
         if times[key] and key == "R" and not state.ultimate_recasts:
             raise ValueError(f"Cast {event.id}: this ultimate supports one cast")
         cast_time = ability_field(info, "cast_time")
+        # The cooldown's START is resolved first, because a kit refund reads
+        # it to know which attacks land inside the grant's window. Walking the
+        # lockout here rather than after is safe: the only thing between is a
+        # refusal, and a refusal ends the request.
+        hands_free = event.time + cast_time
+        if walk is not None:
+            locked = walk.cast(key, event.time, hands_free)
+            if locked > 0.0:
+                hands_free = max(hands_free, locked)
+        cooldown_start = hands_free + _empower_cooldown_delay(
+            info.get("empowers_next_auto")
+        )
         cooldown = _effective_timed_cooldown(
             state,
             refunds,
@@ -268,21 +410,13 @@ def _schedule_authored_casts(
             # is the rule the shared walk applies to its own cast list.
             own_casts=[*times[key], event.time],
             now=event.time,
+            cooldown_start=cooldown_start,
         )
         if times[key] and cooldown <= 0:
             raise ValueError(
                 f"Cast {event.id}: this slot has no certified recast cooldown"
             )
-        hands_free = event.time + cast_time
-        if walk is not None:
-            locked = walk.cast(key, event.time, hands_free)
-            if locked > 0.0:
-                hands_free = max(hands_free, locked)
-        ready[key] = _cooldown_ready_at(
-            state,
-            hands_free + _empower_cooldown_delay(info.get("empowers_next_auto")),
-            cooldown,
-        )
+        ready[key] = _cooldown_ready_at(state, cooldown_start, cooldown)
         times[key].append(event.time)
     return times
 
@@ -430,6 +564,7 @@ def _schedule_shared_casts(
                     basic_ability_haste=basic_ability_haste,
                     own_casts=times[key],
                     now=now,
+                    cooldown_start=cooldown_start,
                 ),
             )
             # Only a slot that banks more than one cast can ever be held

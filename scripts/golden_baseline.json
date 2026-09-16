@@ -27648,7 +27648,7 @@
           "cc_reviewed": true,
           "cooldown": 0.0,
           "damage_type": "magic",
-          "detail": "On the Hunt grants 25% bonus movement speed for 10s (25% over the fight window), published as a move_speed_percent stat buff. The ally share and the 0.5s basic-ability cooldown refund stay unmodeled.",
+          "detail": "On the Hunt grants 25% bonus movement speed for 10s (25% over the fight window), published as a move_speed_percent stat buff, and every basic attack inside the 10s window pays 0.5s off Q, W, E's live cooldowns. The ally share stays unmodeled.",
           "name": "On the Hunt",
           "parts": [],
           "rank": 2,
@@ -27656,6 +27656,15 @@
           "resource_type": "MANA",
           "stat_buff": {
             "move_speed_percent": 25.0
+          },
+          "swing_cooldown_refund": {
+            "seconds_per_attack": 0.5,
+            "slots": [
+              "Q",
+              "W",
+              "E"
+            ],
+            "window_seconds": 10.0
           },
           "total_raw": 0.0
         },
@@ -53682,18 +53691,18 @@
     "champions_fetched_at": 1787268652.393148,
     "fingerprint": {
       "entries": 672,
-      "leaves": 60718,
-      "numeric_leaves": 46486,
+      "leaves": 60723,
+      "numeric_leaves": 46488,
       "sections": "champion_baselines,item_sweep,keystone_fights,registered_champion_fights"
     },
-    "git_head": "9398f387a475db5f0c1952b8794e259a5fd1a53a",
+    "git_head": "ee570aeae993a4b4e8cb0db9f3396274ed3bf450",
     "item_count": 324,
     "item_sweep_error_count": 0,
     "items_fetched_at": 1787268672.008812,
     "patch_last_changed_max": "26.16",
     "registered_champion_count": 173,
     "snapshot_kind": "pair",
-    "src_tree_sha": "62065c95aadd4951866381ac44dc0f5effc4d702"
+    "src_tree_sha": "7b19a00c216f632fe8b0d81faba2553a5545f355"
   },
   "registered_champion_fights": {
     "Aatrox": {
@@ -76895,13 +76904,13 @@
           "spellblade_build": {
             "breakdown_totals": {
               "E": 0.0,
-              "Q": 316.93,
+              "Q": 633.87,
               "R": 0.0,
               "W": 383.59,
               "auto_attacks": 852.42,
               "spellblade_Trinity Force": 218.67
             },
-            "total_damage": 1771.6
+            "total_damage": 2088.54
           }
         }
       },
@@ -76983,13 +76992,13 @@
           "spellblade_build": {
             "breakdown_totals": {
               "E": 0.0,
-              "Q": 316.93,
+              "Q": 633.87,
               "R": 0.0,
               "W": 472.58,
               "auto_attacks": 945.17,
               "spellblade_Trinity Force": 272.0
             },
-            "total_damage": 2006.68
+            "total_damage": 2323.62
           }
         }
       }

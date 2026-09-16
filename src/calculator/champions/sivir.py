@@ -84,6 +84,7 @@ from ..ability_atoms import (
     required_ranked_attribute_atom,
 )
 from ..ability_spec import DamagePart
+from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .module_helpers import buff_window_share, ranked_slot
@@ -269,13 +270,38 @@ def _spell_shield(
     }
 
 
+#: The basic slots On the Hunt refunds. The cached sentence says "her basic
+#: abilities", which on this kit is exactly Q, W and E: R is the grant itself
+#: and P is not a cast.
+_R_REFUNDED_SLOTS = ("Q", "W", "E")
+
+
+def _r_attack_cooldown_refund() -> float:
+    """Seconds each attack takes off a basic cooldown, read from the binary."""
+    return data_value(spell_object("Sivir", "SivirR"), "AttackCooldownRefund")
+
+
 def _on_the_hunt(packet_r):
-    """R: the packet's zero-damage row, now carrying its movement grant.
+    """R: the packet's zero-damage row, carrying its two sourced grants.
 
     The cast's sourced bonus movement speed is an additive PERCENT, so it
     is published as a ``move_speed_percent`` stat buff — a term in the one
     ``resolve_move_speed`` fold, which re-applies the soft caps rather than
     adding onto the already-capped scalar (the Teemo-W channel).
+
+    The second grant is the reason this slot was ``out_of_scope``: while the
+    hunt is up, every basic attack pays 0.5s off Q, W and E's LIVE cooldowns.
+    It is authored here, on the granting row, because the grant and the
+    cooldowns it shortens are different slots — the one shape
+    ``stack_scaled_cooldown`` cannot carry, since that is a slot's rule about
+    itself. The cast scheduler walks it beside Navori's share on one pass.
+
+    The 0.5 is SOURCED TWICE and agreeing, so nothing here is a literal: the
+    cached prose says the attacks "reduce her basic abilities' current
+    cooldowns by 0.5 seconds each", and the tracked binary's ``SivirR``
+    carries an ``AttackCooldownRefund`` DataValue of 0.5 on every rank. The
+    binary is the root, per rule 5's shape — a patch that moves the number
+    moves it in the dump and this follows, where a constant would not.
     """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -299,11 +325,21 @@ def _on_the_hunt(packet_r):
         # published the same number in a 5s fight and a 30s one.
         published = percent * buff_window_share(ctx, duration)
         entry["stat_buff"] = {"move_speed_percent": published}
+        refund = _r_attack_cooldown_refund()
+        # The window is the same sourced Buff Duration row the movement grant
+        # is weighted by: one cast buys one hunt, and both grants ride it.
+        entry["swing_cooldown_refund"] = {
+            "seconds_per_attack": refund,
+            "slots": _R_REFUNDED_SLOTS,
+            "window_seconds": duration,
+        }
         entry["detail"] = (
             f"On the Hunt grants {percent:g}% bonus movement speed for "
             f"{duration:g}s ({published:g}% over the fight window), "
-            "published as a move_speed_percent stat buff. The ally share "
-            "and the 0.5s basic-ability cooldown refund stay unmodeled."
+            "published as a move_speed_percent stat buff, and every basic "
+            f"attack inside the {duration:g}s window pays {refund:g}s off "
+            f"{', '.join(_R_REFUNDED_SLOTS)}'s live cooldowns. The ally "
+            "share stays unmodeled."
         )
         return entry
 
@@ -405,31 +441,27 @@ ASSUMPTIONS = [
     "whole fight, and reading that row for the detail string alone left "
     "the buff duration-blind, publishing the same number in a 5s fight "
     "and a 30s one. "
-    "The slot still stays out_of_scope, NOT no_damage (the Olaf-R rule: "
-    "a real, sourced, unmodeled mechanic is out_of_scope). There is no "
-    "damage to miss - the binary's SivirR carries an empty "
-    "mSpellCalculations - but its other sourced combat effect is real and "
-    "unpriced: 'While active, Sivir's basic attacks on-attack reduce her "
-    "basic abilities' current cooldowns by 0.5 seconds each'. The blocker "
-    "is NOT that no channel exists - a champion-authored cooldown refund "
-    "does exist and Ezreal rides it (_with_q_refund divides each emitted "
-    "entry's cooldown by a refund rate factor; Darius W multiplies its "
-    "own) - it is that every such rewrite is STATIC and parse-time, which "
-    "is sound for Ezreal because his refund stream is always on. Sivir's "
-    "is gated on 'while active' (R's own 8/10/12s Buff Duration) and "
-    "driven by the auto-attack rate, so a fight-wide divisor would credit "
-    "it outside the window - the over-credit the movement grant above is "
-    "time-weighted to avoid - and no mid-fight cooldown-mutation surface "
-    "exists to gate it with (item_effects.CooldownProcEffect's "
-    "on_attack_cooldown_refund is read only by the item-proc scheduler, "
-    "and an entry's cooldown is fixed once the parse returns). "
-    "Time-weighting a COOLDOWN is also not the sourced operation "
-    "time-weighting a movement scalar is: a refund lands only on an "
-    "ability that is actually on cooldown. The ally share of the buff is "
-    "unmodeled too. "
+    "The slot CLOSES as no_damage: there is no damage to miss (the "
+    "binary's SivirR carries an empty mSpellCalculations) and its other "
+    "sourced combat effect is priced now. 'While active, Sivir's basic "
+    "attacks on-attack reduce her basic abilities' current cooldowns by "
+    "0.5 seconds each' is published as a swing_cooldown_refund on this "
+    "row, naming Q, W and E and its own Buff Duration window, and the "
+    "cast scheduler walks it per attack beside Navori's share. The 0.5 is "
+    "read from the binary's AttackCooldownRefund DataValue (0.5 on every "
+    "rank), which the cached sentence states verbatim. "
+    "What the earlier receipt called the blocker was real and is what "
+    "this shape answers: every champion-authored refund before it was a "
+    "STATIC parse-time rewrite (Ezreal's _with_q_refund divides an "
+    "emitted entry's cooldown; Darius W multiplies its own), sound only "
+    "because those streams are always on. Sivir's is gated on 'while "
+    "active' and driven by the auto rate, so it needed a walk that reads "
+    "the window and the swing stream rather than a fight-wide divisor. "
+    "The ally share of the buff stays unmodeled: it prices another "
+    "champion's cooldowns, which this fight does not schedule. "
     "SOURCE CONFLICT recorded, not used: SivirR also "
     "carries HuntAttackSpeed (rank 1-3 = 5%/6%/7%) that the cached wiki "
     "text does not mention at all; fail-closed, an uncorroborated "
     "attack-speed steroid is not modeled.",
 ]
-MODULE_COVERAGE = coverage(no_damage="P", out_of_scope="R")
+MODULE_COVERAGE = coverage(no_damage="PR")
