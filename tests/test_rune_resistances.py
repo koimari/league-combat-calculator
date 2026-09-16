@@ -178,3 +178,82 @@ class TestWhatTheResistancesBuyAndWhatTheyDoNot:
         assert "3% increase to TOTAL armor" in disclosures
         assert "percent-of-total resist channel" in disclosures
         assert "does not reach" in disclosures or "does not" in disclosures
+
+
+class TestRevitalizeReachesEveryRecovery:
+    """The third stat channel this campaign opened, and the cheapest.
+
+    Revitalize's own receipt named the gap exactly: the power "every heal and
+    shield the holder applies now reads", with no ``RuneStat`` member to land
+    in. The consumer was always there, so only the member was missing.
+    """
+
+    def test_the_cached_description_states_both_halves(self):
+        text = _RUNES["Revitalize"]["description"]
+        assert "5% [[Heal and shield power]]" in text
+        assert "increased by 10% on targets" in text
+        assert "below 40% of their '''maximum''' health" in text
+
+    def test_the_parser_reads_all_three_numbers(self):
+        effects, _ = parse_rune_effects(
+            "Revitalize", _RUNES["Revitalize"]["description"]
+        )
+        assert effects == {
+            "heal_and_shield_power_percent": 5.0,
+            "low_health_recovery_amp_ratio": 0.1,
+            "low_health_recovery_gate_ratio": 0.4,
+        }
+
+    def test_the_rule_matches_only_revitalize(self):
+        granting = {
+            name
+            for name, entry in _RUNES.items()
+            if isinstance(entry, dict)
+            and entry.get("description")
+            and "heal_and_shield_power_percent"
+            in parse_rune_effects(name, entry["description"])[0]
+        }
+        assert granting == {"Revitalize"}
+
+    def test_it_compiles_into_the_heal_power_channel(self):
+        effect = resolve_rune("Revitalize")
+        assert effect.stat is RuneStat.HEAL_AND_SHIELD_POWER
+
+    def test_the_power_reaches_the_stat_and_the_healing_it_multiplies(self):
+        """Aatrox heals off his own damage, so the factor is measurable."""
+        request = {
+            "champion": "Aatrox",
+            "level": 18,
+            "role": "top",
+            "items": [],
+            "boots": "",
+            "enemies": [
+                {"kind": "champion", "champion": "Darius", "level": 18, "role": "top"}
+            ],
+            "fight_duration": 10,
+            "fight_mode": "time_based",
+            "deterministic": True,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+        }
+        bare = calculate_payload(request)
+        held = calculate_payload(
+            {
+                **request,
+                "keystone": "Grasp of the Undying",
+                "minor_runes": ["Revitalize"],
+                "stat_shards": [],
+            }
+        )
+        assert bare["champion_stats"]["heal_and_shield_power_percent"] == 0.0
+        assert held["champion_stats"]["heal_and_shield_power_percent"] == 5.0
+        assert held["self_healing"] > bare["self_healing"]
+        assert held["self_healing"] - bare["self_healing"] == pytest.approx(
+            307.9, abs=0.1
+        )
+
+    def test_the_conditional_half_is_disclosed_not_folded_in(self):
+        """Folding it in would credit it against a full-health target."""
+        disclosures = " ".join(resolve_rune("Revitalize").disclosures)
+        assert "10% on targets below 40%" in disclosures
+        assert "no per-target health gate" in disclosures

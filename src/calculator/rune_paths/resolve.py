@@ -281,6 +281,43 @@ def _compile_unflinching(entry: Mapping[str, Any]) -> RuneMultiStatGrantEffect:
     )
 
 
+def _compile_revitalize(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
+    """Compile Revitalize: heal and shield power on every recovery.
+
+    The consumer was always there. ``healing_reduction`` builds one factor
+    from ``heal_and_shield_power_percent`` and every heal and shield the
+    holder applies is multiplied by it, so an item's grant already reached
+    them; the rune stat set simply had no member to land in.
+    """
+    name = "Revitalize"
+    effects = RuneValues(name, entry.get("effects", {}))
+    power, low_amp, low_gate = effects.numbers(
+        "heal_and_shield_power_percent",
+        "low_health_recovery_amp_ratio",
+        "low_health_recovery_gate_ratio",
+    )
+
+    def amount(context: RuneStatContext) -> float:  # pylint: disable=unused-argument
+        return power
+
+    return RuneStatGrantEffect(
+        rune_name=name,
+        stat=RuneStat.HEAL_AND_SHIELD_POWER,
+        amount=amount,
+        disclosures=(
+            f"{name} grants {power:g}% heal and shield power, which joins the "
+            "item and bonus terms in one champion stat, so the single factor "
+            "healing_reduction builds amplifies every heal and shield the "
+            "holder applies.",
+            f"{name}'s second half, a further {low_amp:.0%} on targets below "
+            f"{low_gate:.0%} of their maximum health, is withheld: the "
+            "recovery channel carries no per-target health gate, and reading "
+            "the share as always-on would credit it against a full-health "
+            "target it never reaches.",
+        ),
+    )
+
+
 #: The Resolve runes that book no damage: disposition, the reason that
 #: becomes the receipt, and any further half this engine refuses.
 _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
@@ -327,23 +364,12 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
             "champion that triggered it.",
         ),
     ),
-    "Revitalize": (
-        Disposition.WITHHELD,
-        "it grants heal and shield power, which every heal and shield the "
-        "holder applies now reads — but the rune stat block has no channel "
-        "for that stat, so a page's grant would have nowhere to land, and "
-        "neither number survives the parse",
-        (
-            "Revitalize's second half — more healing and shielding on "
-            "targets below a share of their maximum health — is withheld "
-            "with it, and neither number survives the parse.",
-        ),
-    ),
 }
 
 
 COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
     "Conditioning": _compile_conditioning,
+    "Revitalize": _compile_revitalize,
     "Unflinching": _compile_unflinching,
     "Font of Life": _compile_font_of_life,
     "Overgrowth": _compile_overgrowth,

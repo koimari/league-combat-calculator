@@ -1750,6 +1750,7 @@ AUTHORED_DECLARATION = frozenset(
         ("rune_paths/resolve.py", "_compile_conditioning", "dict.get", '"effects"', 1),
         ("rune_paths/resolve.py", "_compile_font_of_life", "dict.get", '"effects"', 1),
         ("rune_paths/resolve.py", "_compile_overgrowth", "dict.get", '"effects"', 1),
+        ("rune_paths/resolve.py", "_compile_revitalize", "dict.get", '"effects"', 1),
         ("rune_paths/resolve.py", "_compile_shield_bash", "dict.get", '"effects"', 1),
         ("rune_paths/resolve.py", "_compile_unflinching", "dict.get", '"effects"', 1),
         ("rune_paths/shards.py", "compile_shard", "dict.get", '"effects"', 2),

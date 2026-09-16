@@ -476,6 +476,11 @@ class RuneStat(Enum):
     #: through the scaling door and not through a durability one.
     ARMOR = "armor"
     MAGIC_RESIST = "magic_resist"
+    #: Heal and shield power, which every recovery the holder applies already
+    #: reads through ``healing_reduction.heal_and_shield_power_factor``. The
+    #: consumer was there and only this member was missing, so a page's grant
+    #: had nowhere to land.
+    HEAL_AND_SHIELD_POWER = "heal_and_shield_power_percent"
 
 
 class RuneOptionKind(Enum):
@@ -2140,6 +2145,9 @@ class RuneStatGrants:
     #: incoming stream against them without knowing a rune granted them.
     armor: float = 0.0
     magic_resist: float = 0.0
+    #: A percent, added to the same champion stat an item's grant feeds, so
+    #: one factor amplifies every heal and shield whatever granted it.
+    heal_and_shield_power_percent: float = 0.0
 
 
 #: Which :class:`RuneStatGrants` field each grant channel lands in.
@@ -2156,6 +2164,7 @@ _STAT_FIELDS: Mapping[RuneStat, str] = MappingProxyType(
         RuneStat.MAGIC_PENETRATION_FLAT: "magic_penetration_flat",
         RuneStat.ARMOR: "armor",
         RuneStat.MAGIC_RESIST: "magic_resist",
+        RuneStat.HEAL_AND_SHIELD_POWER: "heal_and_shield_power_percent",
     }
 )
 

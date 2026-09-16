@@ -1871,7 +1871,11 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/Revitalize/Revitalize.png",
     "description": "{{sbc|Passive:}} Grants {{sti|heal and shield power|5% [[Heal and shield power]]}}.\nOutgoing {{tip|heal|healing}} and outgoing {{tip|shield|shielding}} are increased by 10% on targets {{as|below 40% of their '''maximum''' health}}.",
-    "effects": {}
+    "effects": {
+      "heal_and_shield_power_percent": 5.0,
+      "low_health_recovery_amp_ratio": 0.1,
+      "low_health_recovery_gate_ratio": 0.4
+    }
   },
   "Unflinching": {
     "name": "Unflinching",

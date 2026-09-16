@@ -401,10 +401,14 @@ def calculate_total_stats(
         + runes.lifesteal_percent,
         "omnivamp_percent": total_item_stats["omnivamp_percent"]
         + bonuses.bonus_omnivamp,
+        # A rune's grant joins the item and bonus terms here, so the one
+        # factor healing_reduction builds amplifies every recovery the holder
+        # applies whatever granted the power.
         "heal_and_shield_power_percent": total_item_stats[
             "heal_and_shield_power_percent"
         ]
-        + bonuses.bonus_heal_shield_power * 100.0,
+        + bonuses.bonus_heal_shield_power * 100.0
+        + runes.heal_and_shield_power_percent,
         "health_regen_percent": total_item_stats["health_regen_percent"],
         "tenacity_percent": total_item_stats["tenacity_percent"],
         "gold_per_10": total_item_stats["gold_per_10"],

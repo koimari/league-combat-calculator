@@ -1,13 +1,14 @@
-"""Resolve's minor runes: five priced runes and four receipted refusals.
+"""Resolve's minor runes: six priced runes and three receipted refusals.
 
 Resolve is the durability path and the pair engine prices outgoing damage,
-so four of its nine runes compile to a refusal that says which half this
-engine holds no channel for. Five are not refusals: Overgrowth's stacks buy
+so three of its nine runes compile to a refusal that says which half this
+engine holds no channel for. Six are not refusals: Overgrowth's stacks buy
 maximum health, which the fight's stat block does read; Shield Bash prices
 the swing a self-shield armed; Font of Life heals on the casts that impair,
-which is the impaired stream read from the impairing side; and Conditioning
+which is the impaired stream read from the impairing side; Conditioning
 and Unflinching grant resistances, which a kit scaling off bonus armor or
-bonus magic resistance spends on damage.
+bonus magic resistance spends on damage; and Revitalize grants heal and
+shield power, which every recovery the holder applies is multiplied by.
 """
 
 import pytest
@@ -24,7 +25,6 @@ REFUSALS = {
     "Demolish": "damages turrets",
     "Second Wind": "no rune trigger fires on damage TAKEN",
     "Bone Plating": "read off the TARGET",
-    "Revitalize": "the rune stat block has no channel for that stat",
 }
 
 

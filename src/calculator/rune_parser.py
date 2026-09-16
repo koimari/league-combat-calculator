@@ -381,6 +381,18 @@ _TOTAL_RESIST_PERCENT = re.compile(
     r"\s+are increased by\s+([\d.]+)%",
     re.IGNORECASE,
 )
+# Revitalize's two halves. The flat grant names the stat in a wiki link, so
+# anchoring on that link matches it and nothing else in the cache; the
+# conditional half carries its own amount and the health gate it waits on.
+_HEAL_AND_SHIELD_POWER = re.compile(
+    r"([\d.]+)%\s*\[\[Heal and shield power\]\]", re.IGNORECASE
+)
+_LOW_HEALTH_RECOVERY_AMP = re.compile(
+    r"increased by ([\d.]+)% on targets", re.IGNORECASE
+)
+_LOW_HEALTH_RECOVERY_GATE = re.compile(
+    r"below ([\d.]+)% of their '''maximum''' health", re.IGNORECASE
+)
 _BUFF_WINDOW = re.compile(r"for ([\d.]+) seconds, causing")
 _PROC_DELAY = re.compile(r"\{\{fd\|([\d.]+)\}\}-second delay")
 _POUNCE_DELAY = re.compile(r"over \{\{fd\|([\d.]+)\}\} seconds, dealing")
@@ -1618,6 +1630,13 @@ def _parse_prose_rules(
             ("flat_bonus_armor", float, _FLAT_BONUS_ARMOR),
             ("flat_bonus_magic_resistance", float, _FLAT_BONUS_MR),
             ("total_resist_percent", _percent_ratio, _TOTAL_RESIST_PERCENT),
+            ("heal_and_shield_power_percent", float, _HEAL_AND_SHIELD_POWER),
+            ("low_health_recovery_amp_ratio", _percent_ratio, _LOW_HEALTH_RECOVERY_AMP),
+            (
+                "low_health_recovery_gate_ratio",
+                _percent_ratio,
+                _LOW_HEALTH_RECOVERY_GATE,
+            ),
         ),
     )
 
