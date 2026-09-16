@@ -18,7 +18,7 @@ python scripts/coverage_status.py --check
 | Champion slots the engine has no axis for | 5 | 865 (0.6%) |
 | Runes compiled | 62 | every selectable rune |
 | Keystones compiled | 62 | 62 |
-| Items swept clean by the census | 169 | 209 |
+| Items swept clean by the census | 173 | 209 |
 
 A slot is `modeled` when it carries a priced row or a state row the engine
 consumes, `no_damage` when it is emitted and has nothing left to price, and
@@ -99,9 +99,9 @@ Counts the fight could walk if one missing number were sourced:
   `item_effects.ITEM_EFFECTS`. Every number comes from the cache through a
   typed accessor with no literal fallback, and a missing key raises.
 - The census sweeps **209 items** against every registered
-  champion. 0 pairs fail; 40 price
+  champion. 0 pairs fail; 36 price
   coarsely, all of them one acknowledged mechanic
-  (`docs/coverage-residue.json`, 10 rows).
+  (`docs/coverage-residue.json`, 9 rows).
 - **62 runes** compile, including all
   62 keystones, with
   0 unmodeled. Only compiled runes are
@@ -114,8 +114,8 @@ row, and each has a gate that fails when a row appears without one.
 
 | Receipt | Rows | What it holds |
 |---|---|---|
-| `docs/coverage-census.json` | 40 | champion and item pairs that price coarsely or refuse |
-| `docs/coverage-residue.json` | 10 | frontier entries that cannot close without inventing data |
+| `docs/coverage-census.json` | 36 | champion and item pairs that price coarsely or refuse |
+| `docs/coverage-residue.json` | 9 | frontier entries that cannot close without inventing data |
 | `docs/surface-area-backlog.md` | 11 | everything the surface-area campaigns surfaced and did not close |
 | `scripts/swing_stream_audit.py` | 9 | cached per-attack riders that do not publish a swing key |
 | `tests/test_axis_less_slots.py` | 5 | the slots with no engine axis, each blocker measured in both sources |

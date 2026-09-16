@@ -1,7 +1,7 @@
 {
   "audit": "full_coverage_acknowledged_residue",
-  "rule": "A frontier entry the campaign cannot close without inventing data is acknowledged here, never left silent. Each row names the champion, the coarse source, the blocking slots, the cached sentence that describes those hits, precisely what that sentence fails to say, and a reason: unsourced (the cache is silent) or certification_shape (the source states it; the certification rule refuses the shape). scripts/coverage_census.py fails two ways against this file: on an entry no row acknowledges, and on a row whose entry no longer reproduces - so the list can neither grow in silence nor outlive its cause.",
-  "why_these_cannot_close": "The Everlasting scan certifies a timed fight only when every damaging ability event carries a reviewed crowd-control kind. MODULE_CC now names every slot a module emits, so a slot reaches that ledger unless its own control has no answer to state: each row below is a slot whose control varies within the cast and whose parts cannot carry the kinds apart, or whose control belongs to stack state no single cast applies. Authoring a cadence or a branch the source does not give would be inventing data, which this campaign's own banned shortcuts forbid. The 10 rows carry two different reasons: 9 are unsourced - the cache is silent about an instant or a branch, and they stay closed until the source says more. 1 is certification_shape (Yone E) - the source does state the missing piece, and its what_it_omits text opens with nothing: it is potentially closable by changing how certification reads an engine-built event, with no new data required.",
+  "rule": "A frontier entry the campaign cannot close without inventing data is acknowledged here, never left silent. Each row names the champion, the coarse source, the blocking slots, the cached sentence that describes those hits, precisely what that sentence fails to say, and a reason. Every row now reads unsourced: the cache is silent. The other reason the schema allows, certification_shape (the source states it and the certification rule refuses the shape), holds no rows, which is the finished state for it, because a shape this repo owns is a shape this repo can change. scripts/coverage_census.py fails two ways against this file: on an entry no row acknowledges, and on a row whose entry no longer reproduces, so the list can neither grow in silence nor outlive its cause.",
+  "why_these_cannot_close": "The Everlasting scan certifies a timed fight only when every damaging ability event carries a reviewed crowd-control kind. MODULE_CC names every slot a module emits, so a slot reaches that ledger unless its own control has no answer to state: each row below is a slot whose control varies within the cast and whose parts cannot carry the kinds apart, or whose control belongs to stack state no single cast applies. Authoring a cadence or a branch the source does not give would be inventing data, which this campaign's own banned shortcuts forbid. All 9 rows read unsourced and stay closed until the source says more. The one row that read certification_shape, Yone E, is closed: its stored-damage events are built by the fight engine from a rule the module declares, so they carried no parts for a reviewed kind to ride, and fight/after/stored_damage.py now stamps the owning entry's own reviewed state onto each one. No new data was needed, which is what that reason always meant.",
   "acknowledged": [
     {
       "champion": "Akali",
@@ -89,16 +89,6 @@
       "cached_sentence": "empowers his next three basic attacks on-attack within 5 seconds ... The third attack knocks up the target",
       "what_it_omits": "the interval between the three attacks, which are attack-speed paced and uncached - and the three do not control alike, so no slot-wide kind is true",
       "reason": "unsourced"
-    },
-    {
-      "champion": "Yone",
-      "source": "fimbulwinter_everlasting",
-      "slots": [
-        "E"
-      ],
-      "cached_sentence": "Yone dashes back to his body ... consuming the marks ... to deal true damage equal to the total amount of damage stored",
-      "what_it_omits": "nothing about timing - the cache times it and the module prices it there. The event is built by the fight engine from stored damage, so the module authors no part for a kind to ride.",
-      "reason": "certification_shape"
     },
     {
       "champion": "Zyra",

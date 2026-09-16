@@ -57,6 +57,15 @@ def _add_stored_damage(state: FightState, rotation: RotationResult) -> None:
         if ratio <= 0.0 or duration <= 0.0 or not source_slots:
             continue
 
+        # An engine-built event carries the owning slot's REVIEWED control
+        # state, the way the ordered ledger stamps it on a cast row. A stored
+        # row declares no parts by construction, so the parts-reading marker
+        # has nothing to read and the slot's own review is the only signal:
+        # without this Yone's E reached the control bus unreviewed and a
+        # control-armed holder shield went coarse on a slot MODULE_CC had
+        # already answered for. Fail-closed: an unreviewed entry stamps
+        # nothing and still goes coarse.
+        reviewed = {"cc_reviewed": True} if ability_info.get("cc_reviewed") else {}
         stored_events: list[dict[str, Any]] = []
         for start_time in cast_times[: max(0, int(row.get("casts", 0)))]:
             end_time = start_time + duration
@@ -95,6 +104,7 @@ def _add_stored_damage(state: FightState, rotation: RotationResult) -> None:
                         "damage_type": "true",
                         "damage": stored,
                         "event_precision": "exact",
+                        **reviewed,
                     }
                 )
 
