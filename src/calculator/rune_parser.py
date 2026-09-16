@@ -361,6 +361,26 @@ _DEATHFIRE_AMP_DELAY = re.compile(
     r"burn has lingered on a target for ([\d.]+) seconds", re.IGNORECASE
 )
 _DEATHFIRE_AMP_RATIO = re.compile(r"increased\{\{ft\|by ([\d.]+)%", re.IGNORECASE)
+# A durability rune's flat resistances. The two that grant them write the
+# number differently, so the optional ``}}`` is load-bearing: Conditioning
+# writes ``{{as|8 '''bonus''' armor}}`` and Unflinching closes a
+# ``{{#vardefineecho:armorunflinching|10}}`` first. Anchoring on the
+# ``'''bonus'''`` marker rather than on either wrapper matches those two and
+# no other rune in the cache.
+_FLAT_BONUS_ARMOR = re.compile(
+    r"([\d.]+)\s*(?:\}\})?\s*'''bonus'''\s+armor", re.IGNORECASE
+)
+_FLAT_BONUS_MR = re.compile(
+    r"([\d.]+)\s*(?:\}\})?\s*'''bonus'''\s+magic resistance", re.IGNORECASE
+)
+# Conditioning's second half, which multiplies the TOTAL rather than adding
+# to the bonus. Spelled out in full so it cannot match a percent elsewhere
+# in a description that happens to mention resistances.
+_TOTAL_RESIST_PERCENT = re.compile(
+    r"'''total'''\s+armor\}\}\s+and\s+\{\{as\|'''total'''\s+magic resistance\}\}"
+    r"\s+are increased by\s+([\d.]+)%",
+    re.IGNORECASE,
+)
 _BUFF_WINDOW = re.compile(r"for ([\d.]+) seconds, causing")
 _PROC_DELAY = re.compile(r"\{\{fd\|([\d.]+)\}\}-second delay")
 _POUNCE_DELAY = re.compile(r"over \{\{fd\|([\d.]+)\}\} seconds, dealing")
@@ -1595,6 +1615,9 @@ def _parse_prose_rules(
             ("deathfire_tick_interval_seconds", float, _DEATHFIRE_TICK),
             ("deathfire_amp_delay_seconds", float, _DEATHFIRE_AMP_DELAY),
             ("deathfire_amp_ratio", _percent_ratio, _DEATHFIRE_AMP_RATIO),
+            ("flat_bonus_armor", float, _FLAT_BONUS_ARMOR),
+            ("flat_bonus_magic_resistance", float, _FLAT_BONUS_MR),
+            ("total_resist_percent", _percent_ratio, _TOTAL_RESIST_PERCENT),
         ),
     )
 

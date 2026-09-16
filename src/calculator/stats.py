@@ -322,13 +322,22 @@ def calculate_total_stats(
     )
     # Terminus max-stack display assumption: bonus resists to both armor
     # and MR, percent pen to both armor and magic.
+    # A rune's resistances land here, beside the item totals, so the holder
+    # wears ONE armor and MR whatever granted them. The kit is what reads
+    # them: a champion scaling off bonus armor or bonus MR prices more
+    # damage. The holder's own damage taken does not, and that is the
+    # engine's shape rather than this fold's.
     final_armor = round(
-        base_stats["armor"] + total_item_stats["armor"] + bonuses.bonus_resists
+        base_stats["armor"]
+        + total_item_stats["armor"]
+        + bonuses.bonus_resists
+        + runes.armor
     )
     final_mr = round(
         base_stats["magic_resistance"]
         + total_item_stats["magic_resistance"]
         + bonuses.bonus_resists
+        + runes.magic_resist
     )
 
     final_armor_pen_percent = (
@@ -367,9 +376,13 @@ def calculate_total_stats(
         # Bonus (non-base) resists — champion mechanics scaling off bonus
         # armor/MR (Braum W's 36%) and the "% bonus armor" /
         # "% bonus magic resistance" scaling units read these.
-        "bonus_armor": round(total_item_stats["armor"] + bonuses.bonus_resists),
+        "bonus_armor": round(
+            total_item_stats["armor"] + bonuses.bonus_resists + runes.armor
+        ),
         "bonus_magic_resistance": round(
-            total_item_stats["magic_resistance"] + bonuses.bonus_resists
+            total_item_stats["magic_resistance"]
+            + bonuses.bonus_resists
+            + runes.magic_resist
         ),
         "lethality": lethality,
         "flat_armor_penetration": flat_armor_pen,

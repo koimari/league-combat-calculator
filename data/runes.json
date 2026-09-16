@@ -1803,7 +1803,11 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/Conditioning/Conditioning.png",
     "description": "{{sbc|Passive:}} After 12 minutes, gain {{sti|armor|{{as|8 '''bonus''' armor}}}} and {{sti|mr|{{as|8 '''bonus''' magic resistance}}}} and your {{as|'''total''' armor}} and {{as|'''total''' magic resistance}} are increased by 3%.",
-    "effects": {}
+    "effects": {
+      "flat_bonus_armor": 8.0,
+      "flat_bonus_magic_resistance": 8.0,
+      "total_resist_percent": 0.03
+    }
   },
   "Second Wind": {
     "name": "Second Wind",
@@ -1876,7 +1880,10 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/Unflinching/Unflinching.png",
     "description": "{{sbc|Passive:}} While afflicted with {{tip|crowd control}} sourced from enemy {{tip|champion|champions}}, gain {{as|{{#vardefineecho:armorunflinching|10}} '''bonus''' armor}} and {{as|{{#vardefineecho:mrunflinching|10}} '''bonus''' magic resistance}}, lingering for 2 seconds after the impairment ends.",
-    "effects": {}
+    "effects": {
+      "flat_bonus_armor": 10.0,
+      "flat_bonus_magic_resistance": 10.0
+    }
   },
   "Glacial Augment": {
     "name": "Glacial Augment",

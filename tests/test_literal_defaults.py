@@ -1747,6 +1747,7 @@ AUTHORED_DECLARATION = frozenset(
             1,
         ),
         ("rune_paths/precision.py", "_compile_triumph", "dict.get", '"effects"', 1),
+        ("rune_paths/resolve.py", "_compile_conditioning", "dict.get", '"effects"', 1),
         ("rune_paths/resolve.py", "_compile_font_of_life", "dict.get", '"effects"', 1),
         ("rune_paths/resolve.py", "_compile_overgrowth", "dict.get", '"effects"', 1),
         ("rune_paths/resolve.py", "_compile_shield_bash", "dict.get", '"effects"', 1),

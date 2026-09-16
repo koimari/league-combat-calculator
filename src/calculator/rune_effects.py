@@ -465,6 +465,17 @@ class RuneStat(Enum):
     BONUS_HEALTH = "bonus_health"
     LETHALITY = "lethality"
     MAGIC_PENETRATION_FLAT = "magic_penetration_flat"
+    #: The holder's own resistances, which land in the one armor and MR fold
+    #: beside an item's. What reads them is the KIT: a champion scaling off
+    #: bonus armor or bonus magic resistance prices more damage for them
+    #: (measured: Conditioning's 8 moves Malphite by 11.4 and Rammus by 9.6
+    #: over ten seconds). What does NOT read them is the holder's own damage
+    #: taken: ``program/walk``'s effective health is health, shields and
+    #: healing with no resistance term, and a pure-armor item changes no
+    #: number there. A rune granting here therefore reaches the fight
+    #: through the scaling door and not through a durability one.
+    ARMOR = "armor"
+    MAGIC_RESIST = "magic_resist"
 
 
 class RuneOptionKind(Enum):
@@ -2124,6 +2135,11 @@ class RuneStatGrants:
     bonus_health: float = 0.0
     lethality: float = 0.0
     magic_penetration_flat: float = 0.0
+    #: Bonus resistances the holder wears. They land beside the item totals
+    #: in the one armor and MR fold, so the survival side prices the
+    #: incoming stream against them without knowing a rune granted them.
+    armor: float = 0.0
+    magic_resist: float = 0.0
 
 
 #: Which :class:`RuneStatGrants` field each grant channel lands in.
@@ -2138,6 +2154,8 @@ _STAT_FIELDS: Mapping[RuneStat, str] = MappingProxyType(
         RuneStat.BONUS_HEALTH: "bonus_health",
         RuneStat.LETHALITY: "lethality",
         RuneStat.MAGIC_PENETRATION_FLAT: "magic_penetration_flat",
+        RuneStat.ARMOR: "armor",
+        RuneStat.MAGIC_RESIST: "magic_resist",
     }
 )
 

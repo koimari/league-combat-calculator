@@ -1,10 +1,17 @@
 """Resolve's minor runes.
 
-Resolve is the durability path, and durability is the half the pair engine
-holds no channel for: it prices one attacker's outgoing damage against one
-target, so a shield, a heal, a resistance and a damage reduction all compile
-to a refusal carrying the reason. Overgrowth is the exception — its stacks
-buy maximum health, which the fight's stat block does read.
+Resolve is the durability path, and durability is mostly the half the pair
+engine holds no channel for: it prices one attacker's outgoing damage against
+one target, so a shield, a heal and a damage reduction compile to a refusal
+carrying the reason.
+
+Two are not refusals. Overgrowth's stacks buy maximum health, which the
+fight's stat block reads. Conditioning's RESISTANCES land in the same armor
+and magic-resistance fold an item's do, and a champion scaling off bonus
+armor or bonus magic resistance prices more damage for them: the grant
+reaches the fight through the scaling door. It does not reach a durability
+one, because the holder's own damage taken carries no resistance term, and
+the rune's disclosures say so.
 """
 
 from collections.abc import Callable, Mapping
@@ -20,6 +27,8 @@ from ..rune_effects import (
     RuneOption,
     RuneProcEffect,
     RuneStat,
+    RuneMultiStatGrantEffect,
+    RuneOptionKind,
     RuneStatContext,
     RuneStatGrantEffect,
     RuneTrigger,
@@ -167,6 +176,62 @@ def _compile_shield_bash(entry: Mapping[str, Any]) -> RuneProcEffect:
     )
 
 
+#: Conditioning's clock is a fact about when the fight happens, which the
+#: request does not carry, so the minute is an option the way Gathering
+#: Storm's is. Its own sentence names the one boundary that matters.
+_GAME_MINUTE = "game_minute"
+_CONDITIONING_MINUTE = 12.0
+#: The game's own length has no cap the cache states; this is the range the
+#: option accepts, wide enough to hold any Summoner's Rift game.
+_MINUTE_BOUNDS = (0.0, 60.0)
+
+
+def _compile_conditioning(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
+    """Compile Conditioning: bonus resistances once the game is long enough.
+
+    The flat halves land in the holder's own armor and magic resistance, and
+    a champion scaling off bonus armor or bonus magic resistance prices more
+    damage for them, so they are a stat. The percent half is disclosed rather
+    than priced: it multiplies TOTAL resistances, and the stat fold has no
+    percent-of-total resist channel for either an item or a rune to use.
+    """
+    name = "Conditioning"
+    effects = RuneValues(name, entry.get("effects", {}))
+    armor, magic_resist, total_share = effects.numbers(
+        "flat_bonus_armor", "flat_bonus_magic_resistance", "total_resist_percent"
+    )
+
+    def amounts(context: RuneStatContext) -> dict[RuneStat, float]:
+        minute = context.option(name, _GAME_MINUTE, _MINUTE_BOUNDS[0])
+        if minute < _CONDITIONING_MINUTE:
+            return {}
+        return {RuneStat.ARMOR: armor, RuneStat.MAGIC_RESIST: magic_resist}
+
+    return RuneMultiStatGrantEffect(
+        rune_name=name,
+        stats=(RuneStat.ARMOR, RuneStat.MAGIC_RESIST),
+        amounts=amounts,
+        disclosures=(
+            f"{name} is priced at the game minute its {_GAME_MINUTE!r} option "
+            f"names, minute {_MINUTE_BOUNDS[0]:g} by default, where it grants "
+            f"nothing: it arms at minute {_CONDITIONING_MINUTE:g} and the "
+            "fight model carries no clock, so the minute is asked for rather "
+            "than inferred.",
+            f"{name} grants {armor:g} bonus armor and {magic_resist:g} bonus "
+            "magic resistance once armed. What reads them is the KIT: a "
+            "champion scaling off bonus armor or bonus magic resistance "
+            "prices more damage for them. What does not read them is the "
+            "holder's own damage taken, which carries no resistance term, so "
+            "this is priced through the scaling door and not a durability "
+            "one.",
+            f"{name}'s further {total_share:.0%} increase to TOTAL armor and "
+            "magic resistance is withheld: it multiplies the resistances "
+            "rather than adding to them, and the stat fold carries no "
+            "percent-of-total resist channel for any source to grant into.",
+        ),
+    )
+
+
 #: The Resolve runes that book no damage: disposition, the reason that
 #: becomes the receipt, and any further half this engine refuses.
 _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
@@ -180,12 +245,6 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
             "withheld with it; the cache carries its melee and ranged split "
             "unclassified, so no number of it is priced either way.",
         ),
-    ),
-    "Conditioning": (
-        Disposition.WITHHELD,
-        "it grants armor and magic resistance after a time, and the pair "
-        "engine prices the holder's outgoing damage",
-        (),
     ),
     "Second Wind": (
         Disposition.WITHHELD,
@@ -222,6 +281,7 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
 
 
 COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
+    "Conditioning": _compile_conditioning,
     "Font of Life": _compile_font_of_life,
     "Overgrowth": _compile_overgrowth,
     "Shield Bash": _compile_shield_bash,
@@ -232,6 +292,20 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
 }
 
 OPTIONS: dict[str, tuple[RuneOption, ...]] = {
+    "Conditioning": (
+        RuneOption(
+            key=_GAME_MINUTE,
+            label="Game minute",
+            kind=RuneOptionKind.COUNT,
+            default=_MINUTE_BOUNDS[0],
+            bounds=_MINUTE_BOUNDS,
+            disclosure=(
+                "Which minute of the game the fight happens in; "
+                "Conditioning arms at minute 12 and grants nothing "
+                "before it."
+            ),
+        ),
+    ),
     "Overgrowth": (
         stack_count_option(
             "Overgrowth",

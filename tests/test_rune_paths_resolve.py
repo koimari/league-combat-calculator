@@ -20,7 +20,6 @@ from src.calculator.rune_paths import resolve
 #: asserted as "some string".
 REFUSALS = {
     "Demolish": "damages turrets",
-    "Conditioning": "outgoing damage",
     "Second Wind": "carries neither the holder's health",
     "Bone Plating": "damage the holder receives",
     "Revitalize": "the rune stat block has no channel for that stat",
@@ -111,7 +110,18 @@ class TestOvergrowth:
 
 
 class TestResolveRefusals:
-    """Six runes the pair engine holds no channel for, each saying which."""
+    """The runes the pair engine holds no channel for, each saying which."""
+
+    def test_the_table_is_exactly_the_module_s_own_refusal_set(self):
+        """Derived, not hand-listed.
+
+        The table above is only a parametrize source, so a rune leaving
+        ``_NO_DAMAGE`` would drop out of the suite in silence and one added
+        to it would never be checked. This is what makes a removal here a
+        consequence of the module rather than a convenience: Conditioning
+        left both in the same commit, when its resistances reached a channel.
+        """
+        assert set(REFUSALS) == set(resolve._NO_DAMAGE)
 
     @pytest.mark.parametrize(("name", "reason"), sorted(REFUSALS.items()))
     def test_each_refusal_is_withheld_and_names_the_half_it_refuses(self, name, reason):
