@@ -2,6 +2,7 @@
 
 from ... import item_effects
 from ...ability_spec import AttackClass
+from ...stat_formulas import effective_cooldown
 from ...survival.pricing import AuthoredDeclaration
 from ..autos.on_hit_stream import _active_lifesteal_amount
 from ..cast_slots import _damaging_cast_times
@@ -139,6 +140,12 @@ def _add_auto_cooldown_strikes(
 
     Returns which swings the cone-carrying holder empowered, because that is
     the fact the cone's larger ratio is read against.
+
+    The cooldown each effect declares is shortened by the holder's item
+    haste through the shared haste formula — the one channel item haste
+    reaches, which Cosmic Insight grants into. The once-per-fight active
+    stream above reads no haste of any kind: it fires once whatever its
+    cooldown, so a shorter one buys nothing there.
     """
     num_auto_attacks = state.num_auto_attacks
     if num_auto_attacks <= 0:
@@ -152,6 +159,7 @@ def _add_auto_cooldown_strikes(
     secondary_active_indices: tuple[int, ...] = ()
     for effect in state.damage_effects.auto_cooldowns:
         source = effect.source
+        cooldown = effective_cooldown(effect.cooldown, state.item_haste)
         # Prefer the authored swing schedule over a duration quotient:
         # a cooldown is consumed by an actual empowered attack, so an
         # exact fight boundary with no swing must not invent another
@@ -162,14 +170,12 @@ def _add_auto_cooldown_strikes(
             for index, swing_time in enumerate(swing_times):
                 if swing_time + 1e-9 >= ready:
                     proc_indices.append(index)
-                    ready = swing_time + effect.cooldown
+                    ready = swing_time + cooldown
         if swing_times:
             procs = len(proc_indices)
         else:
             procs = (
-                1 + int(state.fight_duration_seconds / effect.cooldown)
-                if effect.cooldown > 0
-                else 1
+                1 + int(state.fight_duration_seconds / cooldown) if cooldown > 0 else 1
             )
             procs = min(procs, num_auto_attacks)
             proc_indices = list(range(procs))

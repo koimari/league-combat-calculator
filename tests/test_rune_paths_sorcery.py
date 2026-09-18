@@ -2,9 +2,10 @@
 
 Six runes land here beside A1's two exemplars — three adaptive-force grants
 behind an explicit option, ability haste gated on champion level, a flat
-share of movement speed, and the two whose halves this engine holds no
-channel for. Every number is quoted against the cached description, and
-every grant that reaches a stat is probed through the real pipeline.
+share of movement speed, maximum mana per banked stack, and the one whose
+halves this engine holds no channel for. Every number is quoted against the
+cached description, and every grant that reaches a stat is probed through
+the real pipeline.
 """
 
 import pytest
@@ -22,6 +23,44 @@ def _context(*, level=11, ability_power=0.0, bonus_attack_damage=0.0, options=No
         ability_power=ability_power,
         options=options or {},
     )
+
+
+def _stacked(stacks):
+    """A context carrying one Manaflow Band stack count and nothing else."""
+    return _context(options={"Manaflow Band": {"manaflow_band_stacks": stacks}})
+
+
+def _priced_fight(champion, role, keystone, items, stacks):
+    """One ten-second fight, with or without Manaflow Band's stacks."""
+    payload = {
+        "champion": champion,
+        "level": 18,
+        "role": role,
+        "items": list(items),
+        "enemies": [
+            {"kind": "champion", "champion": "Darius", "level": 18, "role": "top"}
+        ],
+        "fight_duration": 10,
+        "fight_mode": "time_based",
+        "deterministic": True,
+        "include_auto_attacks": True,
+        "auto_attack_uptime": 1.0,
+        "keystone": keystone,
+        "minor_runes": [],
+        "stat_shards": [],
+    }
+    if stacks is not None:
+        payload["minor_runes"] = ["Manaflow Band"]
+        payload["rune_options"] = {"Manaflow Band": {"manaflow_band_stacks": stacks}}
+    return calculate_payload(payload)
+
+
+def _ezreal(*, items=("Muramana",), stacks=None):
+    return _priced_fight("Ezreal", "mid", "Arcane Comet", items, stacks)
+
+
+def _garen(*, stacks=None):
+    return _priced_fight("Garen", "top", "Grasp of the Undying", ["Muramana"], stacks)
 
 
 def _request(**overrides):
@@ -222,15 +261,104 @@ class TestGatheringStorm:
         assert "is priced at game minute 0" not in note
 
 
-class TestSorceryRefusals:
-    """The two Sorcery runes whose halves this engine holds no channel for."""
+class TestManaflowBand:
+    """Maximum mana per banked stack, and the items that read it.
 
-    def test_manaflow_band_is_withheld_and_names_the_items_it_would_feed(self):
+    Its old receipt said "no rune stat channel carries mana" and named
+    Muramana and Archangel's Staff as what a channel would feed. Both were
+    true; neither was a missing capability. These probes measure the grant
+    on a holder of each item and, as the control, on a build holding
+    neither: the stat card moves there and no damage row moves with it.
+    """
+
+    def test_the_parser_reads_both_of_its_numbers_out_of_prose(self):
+        entry = rune_effects.RUNE_EFFECTS["Manaflow Band"]
+        effects, _ = rune_parser.parse_rune_effects(
+            "Manaflow Band", entry["description"]
+        )
+        assert effects == {"max_mana_per_stack": 25.0, "max_mana_cap": 250.0}
+        assert entry["effects"] == effects
+
+    def test_the_rule_matches_no_other_rune_in_the_cache(self):
+        """Presence of Mind restores a SHARE of maximum mana and must not match."""
+        matched = {
+            name
+            for name, entry in rune_effects.RUNE_EFFECTS.items()
+            if entry.get("description")
+            and "max_mana_per_stack"
+            in rune_parser.parse_rune_effects(name, entry["description"])[0]
+        }
+        assert matched == {"Manaflow Band"}
+
+    def test_it_grants_its_step_per_stack_up_to_its_own_ceiling(self):
         effect = rune_effects.resolve_rune("Manaflow Band")
-        assert isinstance(effect, rune_effects.RuneNoDamageEffect)
-        assert effect.zero_policy.disposition.name == "WITHHELD"
-        assert "no rune stat channel carries mana" in effect.zero_policy.reason
-        assert any("Muramana" in receipt for receipt in effect.receipts)
+        assert isinstance(effect, rune_effects.RuneStatGrantEffect)
+        assert effect.stat is rune_effects.RuneStat.MAX_MANA
+        assert effect.amount(_context()) == 0.0
+        assert effect.amount(_stacked(4)) == pytest.approx(100.0)
+        assert effect.amount(_stacked(10)) == pytest.approx(250.0)
+        assert effect.amount(_stacked(40)) == pytest.approx(250.0)
+
+    def test_the_stack_count_is_an_option_bounded_by_the_cached_ceiling(self):
+        catalog = {entry["name"]: entry for entry in rune_effects.rune_catalog()}
+        option = catalog["Manaflow Band"]["options"][0]
+        assert option["key"] == "manaflow_band_stacks"
+        assert (option["default"], option["maximum"]) == (0.0, 10.0)
+
+    def test_a_cache_whose_ceiling_is_not_whole_steps_fails_closed(self):
+        with pytest.raises(KeyError, match="stacks to nothing"):
+            sorcery.COMPILERS["Manaflow Band"](
+                {"effects": {"max_mana_per_stack": 25.0, "max_mana_cap": 0.0}}
+            )
+
+    def test_muramana_buys_attack_damage_from_the_granted_mana(self):
+        """2% of maximum mana: 250 mana is 5 bonus attack damage."""
+        bare = _ezreal()
+        held = _ezreal(stacks=10)
+        assert held["champion_stats"]["max_mana"] - bare["champion_stats"][
+            "max_mana"
+        ] == pytest.approx(250.0)
+        assert held["champion_stats"]["attack_damage"] - bare["champion_stats"][
+            "attack_damage"
+        ] == pytest.approx(5.0)
+        assert held["total_damage"] - bare["total_damage"] == pytest.approx(
+            103.8, abs=0.1
+        )
+
+    def test_archangels_buys_ability_power_from_it_as_bonus_mana(self):
+        """1% of bonus mana: a rune's grant is bonus mana as much as an item's."""
+        bare = _ezreal(items=["Archangel's Staff"])
+        held = _ezreal(items=["Archangel's Staff"], stacks=10)
+        assert held["champion_stats"]["bonus_mana"] - bare["champion_stats"][
+            "bonus_mana"
+        ] == pytest.approx(250.0)
+        assert held["total_damage"] > bare["total_damage"]
+
+    def test_without_a_mana_reading_item_the_pool_moves_and_damage_does_not(self):
+        """The control: mana is not damage until an item makes it damage."""
+        bare = _ezreal(items=[])
+        held = _ezreal(items=[], stacks=10)
+        assert held["champion_stats"]["max_mana"] - bare["champion_stats"][
+            "max_mana"
+        ] == pytest.approx(250.0)
+        assert held["total_damage"] == pytest.approx(bare["total_damage"])
+
+    def test_a_kit_with_no_mana_pool_takes_no_rune_mana_either(self):
+        """The same gate that withholds an item's mana withholds a rune's."""
+        bare = _garen()
+        held = _garen(stacks=10)
+        assert held["champion_stats"]["max_mana"] == bare["champion_stats"]["max_mana"]
+        assert held["total_damage"] == pytest.approx(bare["total_damage"])
+
+    def test_it_discloses_the_default_stack_count_and_the_withheld_half(self):
+        disclosures = " ".join(rune_effects.resolve_rune("Manaflow Band").disclosures)
+        assert "un-stacked zero" in disclosures
+        assert "Manamune and Muramana" in disclosures
+        assert "not gated by a resource" in disclosures
+
+
+class TestSorceryRefusals:
+    """The Sorcery rune whose halves this engine holds no channel for."""
 
     def test_nimbus_cloak_is_withheld_because_the_fight_casts_no_summoner_spell(self):
         effect = rune_effects.resolve_rune("Nimbus Cloak")

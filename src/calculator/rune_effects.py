@@ -314,6 +314,66 @@ class RuneHealEffect:
 
 
 @dataclass(frozen=True, slots=True)
+class RuneRegenerationEffect:
+    """A rune that regenerates its holder after an incoming hit.
+
+    Its own kind rather than a :class:`RuneHealEffect` with another trigger,
+    because the two are paid in different places and only one of them can
+    see an incoming hit. A rune heal is read back off the holder's own
+    finished fight, where every stream is damage the holder DEALT. A
+    regeneration window is armed inside the survival walk, which is the one
+    place that holds the packets the holder RECEIVED, their times and the
+    health left after each — the same lane Doran's Shield's Enduring Focus
+    is paid on.
+
+    The share is of the holder's missing health and the duration is the
+    window it arrives over; both are the rune's own cached numbers. Nothing
+    here states a cadence, because no source does: the walk splits the
+    window into whole seconds, which decides when the health lands and not
+    how much.
+    """
+
+    rune_name: str
+    missing_health_ratio: float
+    duration_seconds: float
+    disclosures: tuple[str, ...] = ()
+
+    @property
+    def source(self) -> str:
+        """The ledger label for this rune's regeneration ticks."""
+        return display_name(self.rune_name)
+
+
+@dataclass(frozen=True, slots=True)
+class RunePlatingEffect:
+    """A rune that takes a flat amount off the next hits the holder receives.
+
+    The mirror of an item's ``champion_damage_flat_reduction`` and, like
+    :class:`RuneRegenerationEffect`, paid in the survival walk rather than
+    against a damage row: the reduction belongs to the packets the holder
+    RECEIVED, which is the only ordered, timed incoming stream the engine
+    holds. What the item field could not express is this rune's own shape —
+    an activation that arms on one hit, takes the flat amount off a counted
+    few after it, and then waits out a cooldown.
+
+    ``flat_by_level`` is the holder's level table; the three clocks are the
+    rune's own cached numbers.
+    """
+
+    rune_name: str
+    flat_by_level: tuple[float, ...]
+    hits: int
+    window_seconds: float
+    cooldown_seconds: float
+    disclosures: tuple[str, ...] = ()
+
+    @property
+    def source(self) -> str:
+        """The ledger label for this rune's reductions."""
+        return display_name(self.rune_name)
+
+
+@dataclass(frozen=True, slots=True)
 class RuneNoDamageEffect:
     """A compiled rune that books no damage, and says why.
 
@@ -456,15 +516,53 @@ class RuneStat(Enum):
     #: Haste on the ultimate alone, the channel Malignance and its siblings
     #: feed, and the mirror of the one above.
     ULTIMATE_HASTE = "ultimate_haste"
+    #: Item haste, the channel Cosmic Insight grants into. What reads it is
+    #: the empowered-auto stream: ``fight.items.actives`` walks Titanic
+    #: Crescent's declared cooldown through the shared haste formula, so ten
+    #: item haste shortens ten seconds to nine and a window that holds the
+    #: extra proc prices it. The once-per-fight active stream is priced
+    #: whatever its cooldown, so it reads nothing here.
+    ITEM_HASTE = "item_haste"
     #: Life steal, which the fight's own life-steal walk turns into timed
     #: heal packets off the holder's physical attack events — so a rune
     #: granting here reaches the heal ledger through the same door an item's
     #: life steal does, and needs no rune-shaped heal of its own.
     LIFESTEAL_PERCENT = "lifesteal_percent"
     MOVE_SPEED_PERCENT = "move_speed_percent"
+    #: Flat bonus movement speed, the channel Magical Footwear's boots grant
+    #: rides. Separate from ``MOVE_SPEED_PERCENT`` because the stat fold keeps
+    #: the two terms apart until ``resolve_move_speed`` folds them under the
+    #: soft caps: a flat grant is not a percent of anything.
+    MOVE_SPEED_FLAT = "move_speed_flat"
     BONUS_HEALTH = "bonus_health"
     LETHALITY = "lethality"
     MAGIC_PENETRATION_FLAT = "magic_penetration_flat"
+    #: The holder's own resistances, which land in the one armor and MR fold
+    #: beside an item's. What reads them is the KIT: a champion scaling off
+    #: bonus armor or bonus magic resistance prices more damage for them
+    #: (measured: Conditioning's 8 moves Malphite by 11.4 and Rammus by 9.6
+    #: over ten seconds). What does NOT read them is the holder's own damage
+    #: taken: ``program/walk``'s effective health is health, shields and
+    #: healing with no resistance term, and a pure-armor item changes no
+    #: number there. A rune granting here therefore reaches the fight
+    #: through the scaling door and not through a durability one.
+    ARMOR = "armor"
+    MAGIC_RESIST = "magic_resist"
+    #: Heal and shield power, which every recovery the holder applies already
+    #: reads through ``healing_reduction.heal_and_shield_power_factor``. The
+    #: consumer was there and only this member was missing, so a page's grant
+    #: had nowhere to land.
+    HEAL_AND_SHIELD_POWER = "heal_and_shield_power_percent"
+    #: The holder's maximum mana, which is bonus mana as well: the pool is
+    #: base plus everything granted, and a rune's grant is no more base than
+    #: an item's. What reads it is the Awe family — Manamune and Muramana buy
+    #: bonus attack damage from MAXIMUM mana and Archangel's Staff buys
+    #: ability power from BONUS mana, and Muramana's Shock prices its on-hit
+    #: and on-cast rows off maximum mana — so a grant here reaches damage
+    #: through an item the build holds, and moves the stat card alone when it
+    #: holds none. A kit with no mana pool takes no rune mana either, by the
+    #: same gate that withholds an item's.
+    MAX_MANA = "max_mana"
 
 
 class RuneOptionKind(Enum):
@@ -676,6 +774,8 @@ RUNE_RECEIPT_ONLY_KINDS = (
     RuneStatGrantEffect,
     RuneMultiStatGrantEffect,
     RuneHealEffect,
+    RuneRegenerationEffect,
+    RunePlatingEffect,
 )
 
 
@@ -1312,6 +1412,8 @@ RuneEffect = (
     | RuneAbilityProcEffect
     | RuneNoDamageEffect
     | RuneHealEffect
+    | RuneRegenerationEffect
+    | RunePlatingEffect
     | RuneStatGrantEffect
     | RuneMultiStatGrantEffect
     | RuneConditionalAmpEffect
@@ -2119,11 +2221,31 @@ class RuneStatGrants:
     #: changing. A rune that actually grants contributes a float, as an
     #: item's declared read does.
     ultimate_haste: float = 0
+    #: Item haste off one rune page, read by the empowered-auto stream. A
+    #: plain float zero like every other rune-only grant: no item grants
+    #: into this channel, so no sibling read needs the neutral-int shape
+    #: ultimate haste keeps for its item side.
+    item_haste: float = 0.0
     lifesteal_percent: float = 0.0
     move_speed_percent: float = 0.0
+    #: Flat bonus movement speed off one rune page, added to the base and
+    #: item flat terms before the soft caps.
+    move_speed_flat: float = 0.0
     bonus_health: float = 0.0
     lethality: float = 0.0
     magic_penetration_flat: float = 0.0
+    #: Bonus resistances the holder wears. They land beside the item totals
+    #: in the one armor and MR fold, so the survival side prices the
+    #: incoming stream against them without knowing a rune granted them.
+    armor: float = 0.0
+    magic_resist: float = 0.0
+    #: A percent, added to the same champion stat an item's grant feeds, so
+    #: one factor amplifies every heal and shield whatever granted it.
+    heal_and_shield_power_percent: float = 0.0
+    #: Maximum mana off one rune page, added to the pool before the Awe
+    #: conversions read it, so one published mana total feeds the stat card,
+    #: the conversions and Muramana's Shock rows alike.
+    max_mana: float = 0.0
 
 
 #: Which :class:`RuneStatGrants` field each grant channel lands in.
@@ -2133,11 +2255,17 @@ _STAT_FIELDS: Mapping[RuneStat, str] = MappingProxyType(
         RuneStat.ABILITY_HASTE: "ability_haste",
         RuneStat.BASIC_ABILITY_HASTE: "basic_ability_haste",
         RuneStat.ULTIMATE_HASTE: "ultimate_haste",
+        RuneStat.ITEM_HASTE: "item_haste",
         RuneStat.LIFESTEAL_PERCENT: "lifesteal_percent",
         RuneStat.MOVE_SPEED_PERCENT: "move_speed_percent",
+        RuneStat.MOVE_SPEED_FLAT: "move_speed_flat",
         RuneStat.BONUS_HEALTH: "bonus_health",
         RuneStat.LETHALITY: "lethality",
         RuneStat.MAGIC_PENETRATION_FLAT: "magic_penetration_flat",
+        RuneStat.ARMOR: "armor",
+        RuneStat.MAGIC_RESIST: "magic_resist",
+        RuneStat.HEAL_AND_SHIELD_POWER: "heal_and_shield_power_percent",
+        RuneStat.MAX_MANA: "max_mana",
     }
 )
 

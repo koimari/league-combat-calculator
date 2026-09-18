@@ -148,6 +148,7 @@ def _stats(*, is_melee: bool = False, max_mana: float = 1500.0) -> dict:
         "omnivamp_percent": 0.0,
         "resource_regen_per_second": 0.0,
         "ultimate_haste": 0.0,
+        "item_haste": 0.0,
         "attack_damage": 80.0,
         "base_attack_damage": 60.0,
         "attack_speed": 0.7,

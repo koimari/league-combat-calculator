@@ -73,6 +73,7 @@ _STATS = {
     "omnivamp_percent": 0.0,
     "resource_regen_per_second": 0.0,
     "ultimate_haste": 0.0,
+    "item_haste": 0.0,
     "attack_damage": 100.0,
     "base_attack_damage": 60.0,
     "bonus_attack_damage": 40.0,

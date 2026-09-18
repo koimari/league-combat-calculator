@@ -443,6 +443,7 @@ def _resolve_combat_state(
         actualizer_basic_cooldown_multiplier=actualizer_basic_cooldown_multiplier,
         actualizer_resource_cost_multiplier=actualizer_resource_cost_multiplier,
         ability_haste=champion_stats["ability_haste"],
+        item_haste=champion_stats["item_haste"],
         one_rotation=config.one_rotation,
         include_actives=config.include_actives,
         clip_to_window=(

@@ -1,10 +1,17 @@
 """Resolve's minor runes.
 
-Resolve is the durability path, and durability is the half the pair engine
-holds no channel for: it prices one attacker's outgoing damage against one
-target, so a shield, a heal, a resistance and a damage reduction all compile
-to a refusal carrying the reason. Overgrowth is the exception — its stacks
-buy maximum health, which the fight's stat block does read.
+Resolve is the durability path, and durability is mostly the half the pair
+engine holds no channel for: it prices one attacker's outgoing damage against
+one target, so a shield, a heal and a damage reduction compile to a refusal
+carrying the reason.
+
+Some are not refusals. Overgrowth's stacks buy maximum health, which the
+fight's stat block reads. Conditioning's and Unflinching's RESISTANCES land
+in the same armor and magic-resistance fold an item's do, and a champion
+scaling off bonus armor or bonus magic resistance prices more damage for
+them: the grant reaches the fight through the scaling door. It does not reach
+a durability one, because the holder's own damage taken carries no resistance
+term, and both runes' disclosures say so.
 """
 
 from collections.abc import Callable, Mapping
@@ -18,8 +25,12 @@ from ..rune_effects import (
     RuneHealEffect,
     RuneHealTrigger,
     RuneOption,
+    RunePlatingEffect,
     RuneProcEffect,
+    RuneRegenerationEffect,
     RuneStat,
+    RuneMultiStatGrantEffect,
+    RuneOptionKind,
     RuneStatContext,
     RuneStatGrantEffect,
     RuneTrigger,
@@ -167,64 +178,273 @@ def _compile_shield_bash(entry: Mapping[str, Any]) -> RuneProcEffect:
     )
 
 
+#: Conditioning's clock is a fact about when the fight happens, which the
+#: request does not carry, so the minute is an option the way Gathering
+#: Storm's is. Its own sentence names the one boundary that matters.
+_GAME_MINUTE = "game_minute"
+_CONDITIONING_MINUTE = 12.0
+#: The game's own length has no cap the cache states; this is the range the
+#: option accepts, wide enough to hold any Summoner's Rift game.
+_MINUTE_BOUNDS = (0.0, 60.0)
+
+
+def _compile_conditioning(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
+    """Compile Conditioning: bonus resistances once the game is long enough.
+
+    The flat halves land in the holder's own armor and magic resistance, and
+    a champion scaling off bonus armor or bonus magic resistance prices more
+    damage for them, so they are a stat. The percent half is disclosed rather
+    than priced: it multiplies TOTAL resistances, and the stat fold has no
+    percent-of-total resist channel for either an item or a rune to use.
+    """
+    name = "Conditioning"
+    effects = RuneValues(name, entry.get("effects", {}))
+    armor, magic_resist, total_share = effects.numbers(
+        "flat_bonus_armor", "flat_bonus_magic_resistance", "total_resist_percent"
+    )
+
+    def amounts(context: RuneStatContext) -> dict[RuneStat, float]:
+        minute = context.option(name, _GAME_MINUTE, _MINUTE_BOUNDS[0])
+        if minute < _CONDITIONING_MINUTE:
+            return {}
+        return {RuneStat.ARMOR: armor, RuneStat.MAGIC_RESIST: magic_resist}
+
+    return RuneMultiStatGrantEffect(
+        rune_name=name,
+        stats=(RuneStat.ARMOR, RuneStat.MAGIC_RESIST),
+        amounts=amounts,
+        disclosures=(
+            f"{name} is priced at the game minute its {_GAME_MINUTE!r} option "
+            f"names, minute {_MINUTE_BOUNDS[0]:g} by default, where it grants "
+            f"nothing: it arms at minute {_CONDITIONING_MINUTE:g} and the "
+            "fight model carries no clock, so the minute is asked for rather "
+            "than inferred.",
+            f"{name} grants {armor:g} bonus armor and {magic_resist:g} bonus "
+            "magic resistance once armed. What reads them is the KIT: a "
+            "champion scaling off bonus armor or bonus magic resistance "
+            "prices more damage for them. What does not read them is the "
+            "holder's own damage taken, which carries no resistance term, so "
+            "this is priced through the scaling door and not a durability "
+            "one.",
+            f"{name}'s further {total_share:.0%} increase to TOTAL armor and "
+            "magic resistance is withheld: it multiplies the resistances "
+            "rather than adding to them, and the stat fold carries no "
+            "percent-of-total resist channel for any source to grant into.",
+        ),
+    )
+
+
+#: Unflinching's gate is whether enemies are holding the holder in crowd
+#: control, which the fight decides inside its survival walk, after the stat
+#: block that would carry the grant is already resolved. So it is a switch
+#: with a disclosed default, the shape Absolute Focus's health gate uses.
+_CROWD_CONTROLLED = "crowd_controlled"
+
+
+def _compile_unflinching(entry: Mapping[str, Any]) -> RuneMultiStatGrantEffect:
+    """Compile Unflinching: bonus resistances while enemies hold the holder.
+
+    Same channel as Conditioning and the same reading of what it buys: a
+    champion scaling off bonus armor or bonus magic resistance prices more
+    damage for them, and the holder's own damage taken carries no resistance
+    term either way.
+    """
+    name = "Unflinching"
+    effects = RuneValues(name, entry.get("effects", {}))
+    armor, magic_resist = effects.numbers(
+        "flat_bonus_armor", "flat_bonus_magic_resistance"
+    )
+
+    def amounts(context: RuneStatContext) -> dict[RuneStat, float]:
+        if not context.option(name, _CROWD_CONTROLLED, 0.0):
+            return {}
+        return {RuneStat.ARMOR: armor, RuneStat.MAGIC_RESIST: magic_resist}
+
+    return RuneMultiStatGrantEffect(
+        rune_name=name,
+        stats=(RuneStat.ARMOR, RuneStat.MAGIC_RESIST),
+        amounts=amounts,
+        disclosures=(
+            f"{name} grants {armor:g} bonus armor and {magic_resist:g} bonus "
+            f"magic resistance while its {_CROWD_CONTROLLED!r} option says "
+            "enemies are holding the holder, and nothing by default. The "
+            "fight decides that inside its survival walk, after the stat "
+            "block the grant would ride is resolved, so it is asked for "
+            "rather than inferred.",
+            f"{name} is priced as HELD for the whole window when the option "
+            "is on: a rune stat grant is one scalar for the fight, and the "
+            "rune's own 2-second lingering tail past the impairment is inside "
+            "that reading rather than added to it.",
+            f"{name} reaches the fight the way every rune resistance does, "
+            "through a kit that scales off bonus armor or bonus magic "
+            "resistance; the holder's own damage taken carries no resistance "
+            "term, so this buys no durability.",
+        ),
+    )
+
+
+def _compile_revitalize(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
+    """Compile Revitalize: heal and shield power on every recovery.
+
+    The consumer was always there. ``healing_reduction`` builds one factor
+    from ``heal_and_shield_power_percent`` and every heal and shield the
+    holder applies is multiplied by it, so an item's grant already reached
+    them; the rune stat set simply had no member to land in.
+    """
+    name = "Revitalize"
+    effects = RuneValues(name, entry.get("effects", {}))
+    power, low_amp, low_gate = effects.numbers(
+        "heal_and_shield_power_percent",
+        "low_health_recovery_amp_ratio",
+        "low_health_recovery_gate_ratio",
+    )
+
+    def amount(context: RuneStatContext) -> float:  # pylint: disable=unused-argument
+        return power
+
+    return RuneStatGrantEffect(
+        rune_name=name,
+        stat=RuneStat.HEAL_AND_SHIELD_POWER,
+        amount=amount,
+        disclosures=(
+            f"{name} grants {power:g}% heal and shield power, which joins the "
+            "item and bonus terms in one champion stat, so the single factor "
+            "healing_reduction builds amplifies every heal and shield the "
+            "holder applies.",
+            f"{name}'s second half, a further {low_amp:.0%} on targets below "
+            f"{low_gate:.0%} of their maximum health, is withheld: the "
+            "recovery channel carries no per-target health gate, and reading "
+            "the share as always-on would credit it against a full-health "
+            "target it never reaches.",
+        ),
+    )
+
+
 #: The Resolve runes that book no damage: disposition, the reason that
 #: becomes the receipt, and any further half this engine refuses.
 _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
     # Demolish's damage is real and sourced; its target is not a champion.
     "Demolish": (
         Disposition.WITHHELD,
-        "its empowered attack damages turrets, and the pair engine prices "
-        "one attacker against one champion",
+        "its empowered attack damages turrets, and the fight's whole target "
+        "vocabulary is champion and minion (item_effects.TARGET_CLASSES): "
+        "there is no structure class for a turret to be",
         (
             "Demolish's damage share of the holder's maximum health is "
             "withheld with it; the cache carries its melee and ranged split "
             "unclassified, so no number of it is priced either way.",
         ),
     ),
-    "Conditioning": (
-        Disposition.WITHHELD,
-        "it grants armor and magic resistance after a time, and the pair "
-        "engine prices the holder's outgoing damage",
-        (),
-    ),
-    "Second Wind": (
-        Disposition.WITHHELD,
-        "it regenerates a share of the holder's *missing* health after taking "
-        "damage, and the pair engine prices the damage the holder deals: it "
-        "carries neither the holder's health nor a stream of damage received",
-        (),
-    ),
-    "Bone Plating": (
-        Disposition.WITHHELD,
-        "it reduces the damage the holder receives, and the pair engine "
-        "prices the damage the holder deals",
-        (),
-    ),
-    "Revitalize": (
-        Disposition.WITHHELD,
-        "it grants heal and shield power, which every heal and shield the "
-        "holder applies now reads — but the rune stat block has no channel "
-        "for that stat, so a page's grant would have nowhere to land, and "
-        "neither number survives the parse",
-        (
-            "Revitalize's second half — more healing and shielding on "
-            "targets below a share of their maximum health — is withheld "
-            "with it, and neither number survives the parse.",
-        ),
-    ),
-    "Unflinching": (
-        Disposition.WITHHELD,
-        "it grants armor and magic resistance while the holder is crowd "
-        "controlled, and the pair engine prices the holder's outgoing damage",
-        (),
-    ),
 }
 
 
+def _compile_bone_plating(entry: Mapping[str, Any]) -> RunePlatingEffect:
+    """Compile Bone Plating: a flat cut off the next hits the holder takes.
+
+    Its refusal named the direction of a channel, and the direction was
+    only half of what was wrong with the fit. The item field it pointed at
+    is one number read off a target and applied to every packet; this rune
+    arms on a hit, pays a counted few after it, and then waits out a
+    cooldown. None of that fits a target field, and all of it fits the
+    survival walk, which holds the incoming packets in order with their
+    times. So the rune is priced there and the item field is left alone.
+    """
+    name = "Bone Plating"
+    effects = RuneValues(name, entry.get("effects", {}))
+    top = RuneValues(name, entry)
+    flat_by_level = required_leveling(name, effects)
+    hits = int(effects.number("incoming_hits_reduced"))
+    window = effects.number("incoming_reduction_window_seconds")
+    cooldown = top.number("cooldown")
+    if hits < 1 or window <= 0.0 or cooldown <= 0.0:
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] states {hits} hits over {window:g} "
+            f"seconds on a {cooldown:g} second cooldown, which takes nothing "
+            "off anything — wiki parse degraded"
+        )
+    return RunePlatingEffect(
+        rune_name=name,
+        flat_by_level=flat_by_level,
+        hits=hits,
+        window_seconds=window,
+        cooldown_seconds=cooldown,
+        disclosures=(
+            f"{name} takes {at_level(flat_by_level, 1):g} off each of the "
+            f"next {hits} hits at level 1, rising to "
+            f"{at_level(flat_by_level, 18):g} at level 18, for {window:g} "
+            f"seconds after the holder is hit and then not again for "
+            f"{cooldown:g} seconds. The arming hit is not one of the reduced "
+            "ones, as in game.",
+            f"{name} is priced against every incoming packet the walk holds, "
+            "whatever damage type it is and whatever cast authored it, "
+            "because the rune reduces true damage too; a packet smaller than "
+            "the reduction is taken to zero and not below it.",
+            f"{name}'s one enemy is not read: in game the reduced hits must "
+            "come from the champion that armed it, and the walk's incoming "
+            "stream is one enemy unless the request rosters more. Against "
+            f"several this prices the next {hits} hits from any of them, "
+            "which is a ceiling.",
+        ),
+    )
+
+
+def _compile_second_wind(entry: Mapping[str, Any]) -> RuneRegenerationEffect:
+    """Compile Second Wind: a share of missing health, after an incoming hit.
+
+    Its refusal was right about where the blocker was and wrong about how
+    far it went. There was no rune trigger for damage TAKEN, and there was
+    a lane: the survival walk holds the packets the holder received and
+    already arms a regeneration window off one of them for Doran's Shield.
+    What the rune vocabulary lacked was a kind that could be armed there,
+    and the cache lacked both of the rune's numbers.
+
+    The window is armed once and re-armed only after it has run out. A hit
+    inside a running window refreshes it in game and restarts the clock on
+    a share of the missing health the fight has grown since, which is more
+    than this pays, so the reading is a FLOOR and its receipt says so.
+    """
+    name = "Second Wind"
+    effects = RuneValues(name, entry.get("effects", {}))
+    ratio, duration = effects.numbers(
+        "missing_health_regen_ratio", "missing_health_regen_duration_seconds"
+    )
+    if ratio <= 0.0 or duration <= 0.0:
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] states a {ratio:g} share over "
+            f"{duration:g} seconds, which regenerates nothing — wiki parse "
+            "degraded"
+        )
+    return RuneRegenerationEffect(
+        rune_name=name,
+        missing_health_ratio=ratio,
+        duration_seconds=duration,
+        disclosures=(
+            f"{name} regenerates {ratio * 100:g}% of the holder's missing "
+            f"health over {duration:g} seconds, armed by the first champion "
+            "damage the holder takes that reaches health: damage a shield "
+            "absorbs whole arms nothing, which is the same certified hit "
+            "Doran's Shield's window waits for.",
+            f"{name}'s refresh is not replayed: a hit inside a running "
+            "window restarts it in game against the larger missing health "
+            "the fight has grown by then, so this reading is a floor. The "
+            "window re-arms only once it has run out.",
+            f"{name}'s share is priced against the missing health at each "
+            "second of the window rather than at the hit that armed it, "
+            "because no source states a regeneration cadence: the seconds "
+            "decide when the health lands, not how much.",
+        ),
+    )
+
+
 COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
+    "Conditioning": _compile_conditioning,
+    "Revitalize": _compile_revitalize,
+    "Unflinching": _compile_unflinching,
     "Font of Life": _compile_font_of_life,
     "Overgrowth": _compile_overgrowth,
     "Shield Bash": _compile_shield_bash,
+    "Second Wind": _compile_second_wind,
+    "Bone Plating": _compile_bone_plating,
     **{
         name: no_damage_compiler(name, *declaration)
         for name, declaration in _NO_DAMAGE.items()
@@ -232,6 +452,34 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
 }
 
 OPTIONS: dict[str, tuple[RuneOption, ...]] = {
+    "Conditioning": (
+        RuneOption(
+            key=_GAME_MINUTE,
+            label="Game minute",
+            kind=RuneOptionKind.COUNT,
+            default=_MINUTE_BOUNDS[0],
+            bounds=_MINUTE_BOUNDS,
+            disclosure=(
+                "Which minute of the game the fight happens in; "
+                "Conditioning arms at minute 12 and grants nothing "
+                "before it."
+            ),
+        ),
+    ),
+    "Unflinching": (
+        RuneOption(
+            key=_CROWD_CONTROLLED,
+            label="Held in crowd control",
+            kind=RuneOptionKind.SWITCH,
+            default=0.0,
+            bounds=(0.0, 1.0),
+            disclosure=(
+                "1 prices Unflinching with enemies holding the holder in "
+                "crowd control, where its resistances are live; 0, its "
+                "default, is the rest of the fight."
+            ),
+        ),
+    ),
     "Overgrowth": (
         stack_count_option(
             "Overgrowth",

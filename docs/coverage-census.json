@@ -33,12 +33,12 @@
   "crossover_unavailable": 0,
   "enemy_item_entries": 0,
   "expiry_refusals": 0,
-  "item_pair_coarse": 40,
+  "item_pair_coarse": 36,
   "item_pair_failures": 0,
   "keystone_failures": 0,
   "keystone_unmodeled": 0,
   "mode_refusals": 0,
-  "total": 40
+  "total": 36
  },
  "frontier": {
   "attacker_kit_coarse": {},
@@ -142,18 +142,6 @@
     "fimbulwinter_everlasting"
    ],
    "Xin Zhao|Fimbulwinter|timed|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Yone|Fimbulwinter|one_rotation|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Yone|Fimbulwinter|time_based|autos=True": [
-    "fimbulwinter_everlasting"
-   ],
-   "Yone|Fimbulwinter|timed|autos=False": [
-    "fimbulwinter_everlasting"
-   ],
-   "Yone|Fimbulwinter|timed|autos=True": [
     "fimbulwinter_everlasting"
    ],
    "Zyra|Fimbulwinter|one_rotation|autos=True": [

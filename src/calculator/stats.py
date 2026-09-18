@@ -124,14 +124,39 @@ def calculate_total_stats(
     total_item_stats["ability_power"] += float(external.get("ability_power", 0.0))
     total_item_stats["ability_haste"] += float(external.get("ability_haste", 0.0))
 
+    # The page compiles once and is totalled twice, because the fold needs
+    # some of its answers before the item conversions and the rest after.
+    page = compile_rune_page(rune_page)
+    item_stat_types = item_stat_type_count(total_item_stats)
+
+    # The first of the two totals, and the two channels it is read for are
+    # the two an item converts into adaptive force: maximum mana, which the
+    # Awe family buys attack damage and ability power from, and movement
+    # speed, which Swiftmarch does. Both have to be settled before the
+    # conversions that read them, and no rune granting either reads the
+    # adaptive comparison those conversions decide, which is why this total
+    # can be taken here.
+    rune_pre_conversion = page.grants(
+        level=level,
+        is_melee=is_melee,
+        bonus_attack_damage=total_item_stats["attack_damage"],
+        ability_power=total_item_stats["ability_power"],
+        item_stat_types=item_stat_types,
+    )
+
     # Mana first — stat conversions read it (Awe → AP, Muramana → AD).
     # An item's mana grant lands in a MANA pool only; the item still grants
     # the stat (Jack Of All Trades counts it above), the kit just has no
     # pool it can grow. The two reads stay separate from the item totals so
     # every consumer of the pool — the published card, the conversions and
-    # the fight's resource walk — sees the same one.
+    # the fight's resource walk — sees the same one. A rune's grant passes
+    # the same gate and then joins the item's: bonus mana is the pool above
+    # base whatever granted it, so Manaflow Band's stacks are read by the
+    # bonus-mana conversions exactly as an item's mana is.
     pool_takes_item_mana = item_mana_reaches_pool(champion_data)
     pool_item_mana = total_item_stats["mana"] if pool_takes_item_mana else 0.0
+    pool_rune_mana = rune_pre_conversion.max_mana if pool_takes_item_mana else 0.0
+    pool_bonus_mana = pool_item_mana + pool_rune_mana
     pool_item_mana_regen_percent = (
         total_item_stats["mana_regen_percent"] if pool_takes_item_mana else 0.0
     )
@@ -141,7 +166,7 @@ def calculate_total_stats(
         cdm.get("mana", {}).get("perLevel", 0),
         level,
     )
-    total_mana = base_mana + pool_item_mana
+    total_mana = base_mana + pool_bonus_mana
     base_resource_regen_per_five = growth_stat(
         cdm.get("manaRegen", {}).get("flat", 0),
         cdm.get("manaRegen", {}).get("perLevel", 0),
@@ -162,31 +187,21 @@ def calculate_total_stats(
     ) * (1.0 + total_item_stats["health_regen_percent"] / 100.0)
     health_regen_per_second = health_regen_per_five / 5.0
 
-    # The page compiles once and is totalled twice, because the fold needs
-    # two of its answers at two different points.
-    page = compile_rune_page(rune_page)
-    item_stat_types = item_stat_type_count(total_item_stats)
-
-    # Movement speed is the first of those two points, and it is settled
-    # here: every source of it — items, item state, rune grants — is
-    # already known, and the soft caps are what the champion actually
-    # moves at. Swiftmarch converts that one number into adaptive force,
-    # and the fight's ``item_state_receipts`` read the same published
-    # ``move_speed``, so the item sees one movement speed rather than an
-    # uncapped pre-rune one here and the real one there. No rune's
-    # movement-speed grant reads the adaptive comparison, which is why
-    # this total can be taken before the conversions that decide it.
-    move_speed_flat = base_stats["move_speed"] + total_item_stats["move_speed_flat"]
+    # Movement speed is settled here: every source of it — items, item
+    # state, rune grants — is already known, and the soft caps are what the
+    # champion actually moves at. The fight's ``item_state_receipts`` read
+    # the same published ``move_speed``, so Swiftmarch sees one movement
+    # speed rather than an uncapped pre-rune one here and the real one
+    # there.
+    move_speed_flat = (
+        base_stats["move_speed"]
+        + total_item_stats["move_speed_flat"]
+        + rune_pre_conversion.move_speed_flat
+    )
     move_speed_percent = (
         total_item_stats["move_speed_percent"]
         + input_move_speed_percent
-        + page.grants(
-            level=level,
-            is_melee=is_melee,
-            bonus_attack_damage=total_item_stats["attack_damage"],
-            ability_power=total_item_stats["ability_power"],
-            item_stat_types=item_stat_types,
-        ).move_speed_percent
+        + rune_pre_conversion.move_speed_percent
     )
     final_move_speed = resolve_move_speed(move_speed_flat, move_speed_percent)
 
@@ -194,7 +209,7 @@ def calculate_total_stats(
     # the per-item knowledge; this function owns the application order.
     bonuses = resolve_stat_effects(
         items,
-        bonus_mana=pool_item_mana,
+        bonus_mana=pool_bonus_mana,
         max_mana=total_mana,
         bonus_health=total_item_stats["health"],
         base_attack_damage=base_stats["attack_damage"],
@@ -322,13 +337,22 @@ def calculate_total_stats(
     )
     # Terminus max-stack display assumption: bonus resists to both armor
     # and MR, percent pen to both armor and magic.
+    # A rune's resistances land here, beside the item totals, so the holder
+    # wears ONE armor and MR whatever granted them. The kit is what reads
+    # them: a champion scaling off bonus armor or bonus MR prices more
+    # damage. The holder's own damage taken does not, and that is the
+    # engine's shape rather than this fold's.
     final_armor = round(
-        base_stats["armor"] + total_item_stats["armor"] + bonuses.bonus_resists
+        base_stats["armor"]
+        + total_item_stats["armor"]
+        + bonuses.bonus_resists
+        + runes.armor
     )
     final_mr = round(
         base_stats["magic_resistance"]
         + total_item_stats["magic_resistance"]
         + bonuses.bonus_resists
+        + runes.magic_resist
     )
 
     final_armor_pen_percent = (
@@ -367,9 +391,13 @@ def calculate_total_stats(
         # Bonus (non-base) resists — champion mechanics scaling off bonus
         # armor/MR (Braum W's 36%) and the "% bonus armor" /
         # "% bonus magic resistance" scaling units read these.
-        "bonus_armor": round(total_item_stats["armor"] + bonuses.bonus_resists),
+        "bonus_armor": round(
+            total_item_stats["armor"] + bonuses.bonus_resists + runes.armor
+        ),
         "bonus_magic_resistance": round(
-            total_item_stats["magic_resistance"] + bonuses.bonus_resists
+            total_item_stats["magic_resistance"]
+            + bonuses.bonus_resists
+            + runes.magic_resist
         ),
         "lethality": lethality,
         "flat_armor_penetration": flat_armor_pen,
@@ -379,7 +407,7 @@ def calculate_total_stats(
         ),
         "critical_strike_chance": total_item_stats["critical_strike_chance"],
         "max_mana": round(total_mana),
-        "bonus_mana": round(pool_item_mana),
+        "bonus_mana": round(pool_bonus_mana),
         "resource_regen_per_second": resource_regen_per_second,
         "base_health_regen_per_five": base_health_regen_per_five,
         "health_regen_per_five": health_regen_per_five,
@@ -388,10 +416,14 @@ def calculate_total_stats(
         + runes.lifesteal_percent,
         "omnivamp_percent": total_item_stats["omnivamp_percent"]
         + bonuses.bonus_omnivamp,
+        # A rune's grant joins the item and bonus terms here, so the one
+        # factor healing_reduction builds amplifies every recovery the holder
+        # applies whatever granted the power.
         "heal_and_shield_power_percent": total_item_stats[
             "heal_and_shield_power_percent"
         ]
-        + bonuses.bonus_heal_shield_power * 100.0,
+        + bonuses.bonus_heal_shield_power * 100.0
+        + runes.heal_and_shield_power_percent,
         "health_regen_percent": total_item_stats["health_regen_percent"],
         "tenacity_percent": total_item_stats["tenacity_percent"],
         "gold_per_10": total_item_stats["gold_per_10"],
@@ -405,6 +437,10 @@ def calculate_total_stats(
         ),
         "basic_ability_haste": bonuses.basic_ability_haste + runes.basic_ability_haste,
         "ultimate_haste": bonuses.ultimate_haste + runes.ultimate_haste,
+        # Item haste is rune-only today — no item stat block grants into it —
+        # so the page's grant is the whole channel, published beside the
+        # other hastes where the empowered-auto stream reads it.
+        "item_haste": runes.item_haste,
         "level": level,
         "is_melee": is_melee,
         "move_speed": final_move_speed,

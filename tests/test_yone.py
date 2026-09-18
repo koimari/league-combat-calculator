@@ -77,8 +77,16 @@ class TestReviewedCrowdControl:
         assert parsed["E"]["parts"] == ()
         assert parsed["E"]["stored_damage"]["duration"] == yone._E_SPIRIT_FORM_SECONDS
 
-    def test_the_unreviewable_slot_keeps_the_fight_coarse(self):
-        assert cc_review.unreviewed_ability_slots("Yone") == ["E"]
+    def test_the_engine_authored_slot_reaches_the_ledger_reviewed(self):
+        """E carries the review its module always stated.
+
+        The event is built by the fight engine from the module's
+        ``stored_damage`` rule, so it has no part for a kind to ride;
+        ``fight/after/stored_damage.py`` stamps the entry's own reviewed
+        state onto it instead. Before that, E was the one ability source the
+        ledger showed unreviewed and Fimbulwinter went coarse on it.
+        """
+        assert cc_review.unreviewed_ability_slots("Yone") == []
         coverage = cc_review.fimbulwinter_coverage("Yone")
-        assert coverage["complete"] is False
-        assert "fimbulwinter_everlasting" in coverage["coarse_sources"]
+        assert coverage["complete"] is True
+        assert coverage["coarse_sources"] == []

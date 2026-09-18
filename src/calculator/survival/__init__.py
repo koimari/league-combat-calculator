@@ -70,6 +70,7 @@ from .receipt_ledger import ReceiptLedger
 from .receipt_state import build_state, build_states
 from .score_state import ScoreLedger
 from .transitions import (
+    PlatingWindow,
     RegenerationWindow,
     TransitionContext,
     evaluate_live_raw_formula,
@@ -87,6 +88,7 @@ __all__ = [
     "SUPPORT_RANK_KEY",
     "TRIGGER_TIME_KEY_DIGITS",
     "ActionKind",
+    "PlatingWindow",
     "ReceiptLedger",
     "RegenerationWindow",
     "ScoreLedger",

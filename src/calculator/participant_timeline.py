@@ -179,6 +179,7 @@ from .survival import (
     EVENT_SLOTS,
     SUPPORT_RANK_KEY,
     ActionKind,
+    PlatingWindow,
     ReceiptLedger,
     RegenerationWindow,
     ScoreLedger,
@@ -434,19 +435,94 @@ def _regeneration_windows(
             sorted({str(item.get("name", "")) for item in combatant.items}),
             RegenerationRule,
         )
+        rune = _rune_regeneration(combatant)
+        if slot is None and rune is None:
+            windows.append(None)
+            continue
         windows.append(
-            None
-            if slot is None
-            else RegenerationWindow(
-                owner=slot.owner,
-                total_melee=slot.value("total_melee"),
-                total_reduced=slot.value("total_reduced"),
-                duration=slot.value("duration"),
-                missing_health_cap=slot.value("missing_health_cap"),
-                tick_interval=slot.value("tick_interval"),
+            RegenerationWindow(
+                owner="" if slot is None else slot.owner,
+                total_melee=0.0 if slot is None else slot.value("total_melee"),
+                total_reduced=0.0 if slot is None else slot.value("total_reduced"),
+                duration=0.0 if slot is None else slot.value("duration"),
+                missing_health_cap=(
+                    0.0 if slot is None else slot.value("missing_health_cap")
+                ),
+                tick_interval=0.0 if slot is None else slot.value("tick_interval"),
+                rune_owner="" if rune is None else rune.source,
+                rune_missing_health_ratio=(
+                    0.0 if rune is None else rune.missing_health_ratio
+                ),
+                rune_duration=0.0 if rune is None else rune.duration_seconds,
             )
         )
     return tuple(windows)
+
+
+def _plating_windows(
+    combatants: Sequence[Combatant],
+) -> tuple[PlatingWindow | None, ...]:
+    """Compile each participant's armed flat reduction for the walk.
+
+    The sibling of :func:`_regeneration_windows` and compiled here for the
+    same reason: the walk may not reach a rune declaration. The flat is
+    resolved at the holder's own level, which does not change inside a
+    walk.
+    """
+    windows: list[PlatingWindow | None] = []
+    for combatant in combatants:
+        plating = _rune_plating(combatant)
+        windows.append(
+            None
+            if plating is None
+            else PlatingWindow(
+                owner=plating.source,
+                flat=rune_effects.at_level(plating.flat_by_level, combatant.level),
+                hits=plating.hits,
+                window=plating.window_seconds,
+                cooldown=plating.cooldown_seconds,
+            )
+        )
+    return tuple(windows)
+
+
+def _rune_plating(combatant: Combatant) -> "rune_effects.RunePlatingEffect | None":
+    """The one armed flat reduction this participant's rune page declares."""
+    return _one_rune_walk_effect(combatant, rune_effects.RunePlatingEffect)
+
+
+def _rune_regeneration(
+    combatant: Combatant,
+) -> rune_effects.RuneRegenerationEffect | None:
+    """The one regeneration window this participant's rune page declares."""
+    return _one_rune_walk_effect(combatant, rune_effects.RuneRegenerationEffect)
+
+
+def _one_rune_walk_effect(combatant: Combatant, kind: type) -> Any | None:
+    """The one walk-lane effect of *kind* this participant's page declares.
+
+    A roster card brings no page and every actor but the main champion
+    answers ``None``. Two of one kind would be two windows on a lane that
+    holds one, so a second is refused rather than silently dropped: no page
+    in the game can select two, and a page that could would be a fact worth
+    failing on.
+    """
+    page = combatant.request.rune_page
+    if page is None:
+        return None
+    declared = [
+        effect
+        for effect in rune_effects.resolve_rune_page(page)
+        if isinstance(effect, kind)
+    ]
+    if len(declared) > 1:
+        raise ValueError(
+            f"{combatant.participant_id} declares {len(declared)} "
+            f"{kind.__name__} windows "
+            f"({', '.join(effect.rune_name for effect in declared)}); the "
+            "walk lane holds one per participant"
+        )
+    return declared[0] if declared else None
 
 
 def _below_half_healing_bonuses(
@@ -3705,6 +3781,7 @@ def _simulate_survival(
         index_of=index_of,
         ledger=ledger,
         regeneration_windows=_regeneration_windows(combatant_list),
+        plating_windows=_plating_windows(combatant_list),
         venom_profiles=[
             venom_profiles.get(combatant.participant_id) for combatant in combatant_list
         ],
@@ -4656,6 +4733,7 @@ def _score_with_search_context(
         index_of=context.index_of,
         ledger=ledger,
         regeneration_windows=_regeneration_windows(all_actors),
+        plating_windows=_plating_windows(all_actors),
         venom_profiles=venom_packs,
         # Both panels may have split a parent damage action; the kernel
         # cancels a child beside its parent, so it needs every split this

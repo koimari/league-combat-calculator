@@ -953,7 +953,9 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/RelentlessHunter/RelentlessHunter.png",
     "description": "{{sbc|Passive:}} Gain {{sti|{{as|8 '''bonus''' movement speed}}}} while [[combat status|out of combat]] per ''Bounty Hunter'' stack, up to {{as|40|ms}} at 5 stacks.\nEarn a ''Bounty Hunter'' [[stack]] whenever scoring a {{tip|takedown}} against an enemy champion, up to one per unique champion.",
-    "effects": {}
+    "effects": {
+      "flat_bonus_move_speed": 8.0
+    }
   },
   "Ultimate Hunter": {
     "name": "Ultimate Hunter",
@@ -1286,7 +1288,10 @@
     "cooldown": 15.0,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/ManaflowBand/ManaflowBand.png",
     "description": "{{sbc|Passive:}} {{tt|Affecting|See notes}} an enemy {{tip|champion}} with an [[champion ability|ability]] permanently increases your {{sti|mana|{{as|'''maximum''' mana by 25}}}}, up to {{as|250\u00a0mana}}. {{as|Mana}} gained from this effect preserves your {{as|'''current''' mana}}.\nAfter reaching {{as|250 '''bonus''' mana}}, permanently restore {{as|1% of your '''missing''' mana}} every 5\u00a0seconds.",
-    "effects": {}
+    "effects": {
+      "max_mana_per_stack": 25.0,
+      "max_mana_cap": 250.0
+    }
   },
   "Nimbus Cloak": {
     "name": "Nimbus Cloak",
@@ -1803,7 +1808,11 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/Conditioning/Conditioning.png",
     "description": "{{sbc|Passive:}} After 12 minutes, gain {{sti|armor|{{as|8 '''bonus''' armor}}}} and {{sti|mr|{{as|8 '''bonus''' magic resistance}}}} and your {{as|'''total''' armor}} and {{as|'''total''' magic resistance}} are increased by 3%.",
-    "effects": {}
+    "effects": {
+      "flat_bonus_armor": 8.0,
+      "flat_bonus_magic_resistance": 8.0,
+      "total_resist_percent": 0.03
+    }
   },
   "Second Wind": {
     "name": "Second Wind",
@@ -1812,7 +1821,10 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/SecondWind/SecondWind.png",
     "description": "{{sbc|Passive:}} After taking damage from an enemy {{tip|champion}}, {{sti|health regeneration|link=true|regenerate}} {{as|4% of your '''missing''' health}} over 10 seconds, refreshing on subsequent damage.",
-    "effects": {}
+    "effects": {
+      "missing_health_regen_ratio": 0.04,
+      "missing_health_regen_duration_seconds": 10.0
+    }
   },
   "Bone Plating": {
     "name": "Bone Plating",
@@ -1845,7 +1857,9 @@
           61.76470588235294,
           63.529411764705884
         ]
-      ]
+      ],
+      "incoming_hits_reduced": 3,
+      "incoming_reduction_window_seconds": 1.5
     }
   },
   "Overgrowth": {
@@ -1867,7 +1881,11 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/Revitalize/Revitalize.png",
     "description": "{{sbc|Passive:}} Grants {{sti|heal and shield power|5% [[Heal and shield power]]}}.\nOutgoing {{tip|heal|healing}} and outgoing {{tip|shield|shielding}} are increased by 10% on targets {{as|below 40% of their '''maximum''' health}}.",
-    "effects": {}
+    "effects": {
+      "heal_and_shield_power_percent": 5.0,
+      "low_health_recovery_amp_ratio": 0.1,
+      "low_health_recovery_gate_ratio": 0.4
+    }
   },
   "Unflinching": {
     "name": "Unflinching",
@@ -1876,7 +1894,10 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/Unflinching/Unflinching.png",
     "description": "{{sbc|Passive:}} While afflicted with {{tip|crowd control}} sourced from enemy {{tip|champion|champions}}, gain {{as|{{#vardefineecho:armorunflinching|10}} '''bonus''' armor}} and {{as|{{#vardefineecho:mrunflinching|10}} '''bonus''' magic resistance}}, lingering for 2 seconds after the impairment ends.",
-    "effects": {}
+    "effects": {
+      "flat_bonus_armor": 10.0,
+      "flat_bonus_magic_resistance": 10.0
+    }
   },
   "Glacial Augment": {
     "name": "Glacial Augment",
@@ -1959,7 +1980,9 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/MagicalFootwear/MagicalFootwear.png",
     "description": "{{sbc|Passive:}} After 12 minutes (reduced by 45 seconds whenever scoring a {{tip|takedown}} against an enemy champion), you gain {{ii|Slightly Magical Boots}} for {{g|free}}. ''Slightly Magical Boots'' are identical to {{ii|Boots}} and can be upgraded as if it were the item. If the inventory is full while receiving the boots, they will appear as soon as a slot in the inventory is available.\nAdditionally, your boots grant an additional {{sti|{{as|10 '''bonus''' movement speed}}}}.",
-    "effects": {}
+    "effects": {
+      "flat_bonus_move_speed": 10.0
+    }
   },
   "Cash Back": {
     "name": "Cash Back",
@@ -1996,7 +2019,9 @@
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/BiscuitDelivery/BiscuitDelivery.png",
     "description": "{{sbc|Passive:}} Receive a {{ii|Total Biscuit of Everlasting Will}} at {{sbc|2:00}}, {{sbc|4:00}}, and {{sbc|6:00}}. If the inventory is full while receiving a biscuit, the biscuit(s) will appear as soon as a slot in the inventory is available.\nConsuming a ''Biscuit'' will permanently increase your {{as|{{sti|'''maximum''' health}}}} by {{as|30|health}}, in addition to its effects. You will also gain the increased health if you sell the biscuit for {{g|5}}.",
     "effects": {
-      "flat_gold": 5.0
+      "flat_gold": 5.0,
+      "max_health_per_consumable": 30.0,
+      "consumable_deliveries": 3
     }
   },
   "Cosmic Insight": {
@@ -2006,7 +2031,10 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/CosmicInsight/CosmicInsight.png",
     "description": "{{sbc|Passive:}} Gain 18 [[ability haste#Increasing summoner spell haste|summoner spell haste]] and 10 [[ability haste#Increasing item haste|item haste]].",
-    "effects": {}
+    "effects": {
+      "summoner_spell_haste": 18.0,
+      "item_haste": 10.0
+    }
   },
   "Approach Velocity": {
     "name": "Approach Velocity",
@@ -2015,7 +2043,9 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/ApproachVelocity/ApproachVelocity.png",
     "description": "{{sbc|Passive:}} Gain {{sti|{{as|{{fd|7.5}}% '''bonus total''' movement speed}}}} while facing {{tip|sight|visible}} enemy {{tip|champions}} that are {{tip|immobilize|immobilized}}, {{tip|ground|grounded}}, or {{tip|slow|slowed}} within {{tip|cr|icononly = true}} 1000 range.\nThis bonus is doubled to {{as|15%|ms}} and does not have a range cap nor require {{tip|sight|vision}} toward enemy champions whose movement you impaired when they were {{tip|sight|visible}}.{{bug|2}}",
-    "effects": {}
+    "effects": {
+      "move_speed_percent": 7.5
+    }
   },
   "Jack Of All Trades": {
     "name": "Jack Of All Trades",

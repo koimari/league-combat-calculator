@@ -179,6 +179,7 @@ def _stats(ap: float = 100.0) -> dict:
         "move_speed": 0.0,
         "omnivamp_percent": 0.0,
         "ultimate_haste": 0.0,
+        "item_haste": 0.0,
         "attack_damage": 100.0,
         "ability_power": ap,
         "base_attack_damage": 60.0,
