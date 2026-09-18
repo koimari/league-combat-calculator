@@ -2020,6 +2020,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -2292,6 +2296,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -2557,6 +2565,10 @@
             "view_tag": "applied"
           },
           "participants[2].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -3912,6 +3924,7 @@
               "health_regen_per_second": 2.54,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -4051,6 +4064,7 @@
               "health_regen_per_second": 3.41,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -4190,6 +4204,7 @@
               "health_regen_per_second": 2.3,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -4826,6 +4841,7 @@
             "health_regen_per_second": 2.54,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -8221,6 +8237,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -8493,6 +8513,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -8758,6 +8782,10 @@
             "view_tag": "applied"
           },
           "participants[2].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -9058,6 +9086,10 @@
             "view_tag": "applied"
           },
           "participants[3].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[3].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -10901,6 +10933,7 @@
               "health_regen_per_second": 2.54,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -11040,6 +11073,7 @@
               "health_regen_per_second": 3.41,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -11179,6 +11213,7 @@
               "health_regen_per_second": 2.3,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -11348,6 +11383,7 @@
               "health_regen_per_second": 3.27,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -11953,6 +11989,7 @@
             "health_regen_per_second": 2.54,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -12615,6 +12652,7 @@
             "health_regen_per_second": 2.54,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -21103,6 +21141,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -21407,6 +21449,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -21707,6 +21753,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[2].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[2].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -21972,6 +22022,10 @@
             "view_tag": "applied"
           },
           "participants[3].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[3].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -26789,6 +26843,7 @@
               "health_regen_per_second": 2.57,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 10.0,
@@ -26951,6 +27006,7 @@
               "health_regen_per_second": 3.24,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -27113,6 +27169,7 @@
               "health_regen_per_second": 2.3,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -27252,6 +27309,7 @@
               "health_regen_per_second": 3.27,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -27962,6 +28020,7 @@
             "health_regen_per_second": 2.57,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 10.0,
@@ -28876,6 +28935,7 @@
             "health_regen_per_second": 2.57,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 10.0,
@@ -35980,6 +36040,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -36249,6 +36313,10 @@
             "view_tag": "applied"
           },
           "participants[1].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -36536,6 +36604,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[2].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[2].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -36817,6 +36889,10 @@
             "view_tag": "applied"
           },
           "participants[3].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[3].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -40813,6 +40889,7 @@
               "health_regen_per_second": 5.23,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 12.0,
@@ -40952,6 +41029,7 @@
               "health_regen_per_second": 3.24,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -41099,6 +41177,7 @@
               "health_regen_per_second": 2.3,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -41254,6 +41333,7 @@
               "health_regen_per_second": 3.27,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -41984,6 +42064,7 @@
             "health_regen_per_second": 5.23,
             "health_regen_percent": 0.0,
             "is_melee": true,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 12.0,
@@ -42757,6 +42838,7 @@
             "health_regen_per_second": 5.23,
             "health_regen_percent": 0.0,
             "is_melee": true,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 12.0,
@@ -48458,6 +48540,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -48727,6 +48813,10 @@
             "view_tag": "applied"
           },
           "participants[1].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -49011,6 +49101,10 @@
             "view_tag": "applied"
           },
           "participants[2].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -52735,6 +52829,7 @@
               "health_regen_per_second": 6.25,
               "health_regen_percent": 75.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -52874,6 +52969,7 @@
               "health_regen_per_second": 3.24,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -53021,6 +53117,7 @@
               "health_regen_per_second": 2.3,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -54071,6 +54168,7 @@
             "health_regen_per_second": 6.25,
             "health_regen_percent": 75.0,
             "is_melee": true,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -60372,6 +60470,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -60644,6 +60746,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -60909,6 +61015,10 @@
             "view_tag": "applied"
           },
           "participants[2].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -61225,6 +61335,10 @@
             "view_tag": "applied"
           },
           "participants[3].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[3].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -65223,6 +65337,7 @@
               "health_regen_per_second": 3.2,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -65362,6 +65477,7 @@
               "health_regen_per_second": 3.41,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -65501,6 +65617,7 @@
               "health_regen_per_second": 2.3,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -65684,6 +65801,7 @@
               "health_regen_per_second": 3.34,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -66649,6 +66767,7 @@
             "health_regen_per_second": 3.2,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -67250,6 +67369,7 @@
             "health_regen_per_second": 3.2,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -77633,6 +77753,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -77937,6 +78061,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -78237,6 +78365,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[2].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[2].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -78502,6 +78634,10 @@
             "view_tag": "applied"
           },
           "participants[3].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[3].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -84614,6 +84750,7 @@
               "health_regen_per_second": 2.57,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 10.0,
@@ -84776,6 +84913,7 @@
               "health_regen_per_second": 3.24,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -84938,6 +85076,7 @@
               "health_regen_per_second": 2.3,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -85077,6 +85216,7 @@
               "health_regen_per_second": 3.27,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -85789,6 +85929,7 @@
             "health_regen_per_second": 2.57,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 10.0,
@@ -86839,6 +86980,7 @@
             "health_regen_per_second": 2.57,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 10.0,
@@ -90178,6 +90320,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -90446,6 +90592,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -90711,6 +90861,10 @@
             "view_tag": "applied"
           },
           "participants[2].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -92138,6 +92292,7 @@
               "health_regen_per_second": 5.67,
               "health_regen_percent": 75.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -92277,6 +92432,7 @@
               "health_regen_per_second": 3.57,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -92416,6 +92572,7 @@
               "health_regen_per_second": 2.3,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -93006,6 +93163,7 @@
             "health_regen_per_second": 5.67,
             "health_regen_percent": 75.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -94422,6 +94580,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -94707,6 +94869,10 @@
             "view_tag": "applied"
           },
           "participants[1].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -95674,6 +95840,7 @@
               "health_regen_per_second": 4.69,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -95831,6 +95998,7 @@
               "health_regen_per_second": 5.23,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -96316,6 +96484,7 @@
             "health_regen_per_second": 4.69,
             "health_regen_percent": 0.0,
             "is_melee": true,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -100756,6 +100925,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -101044,6 +101217,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -101325,6 +101502,10 @@
             "view_tag": "applied"
           },
           "participants[2].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -103795,6 +103976,7 @@
               "health_regen_per_second": 2.57,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -103942,6 +104124,7 @@
               "health_regen_per_second": 3.24,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -104089,6 +104272,7 @@
               "health_regen_per_second": 2.3,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -104663,6 +104847,7 @@
             "health_regen_per_second": 2.57,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -110998,6 +111183,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -111267,6 +111456,10 @@
             "view_tag": "applied"
           },
           "participants[1].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -111551,6 +111744,10 @@
             "view_tag": "applied"
           },
           "participants[2].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -115350,6 +115547,7 @@
               "health_regen_per_second": 5.23,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -115489,6 +115687,7 @@
               "health_regen_per_second": 3.24,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -115636,6 +115835,7 @@
               "health_regen_per_second": 2.3,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -116289,6 +116489,7 @@
             "health_regen_per_second": 5.23,
             "health_regen_percent": 0.0,
             "is_melee": true,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -121064,6 +121265,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -121352,6 +121557,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -121633,6 +121842,10 @@
             "view_tag": "applied"
           },
           "participants[2].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -124191,6 +124404,7 @@
               "health_regen_per_second": 3.61,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 10.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -124338,6 +124552,7 @@
               "health_regen_per_second": 3.24,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -124485,6 +124700,7 @@
               "health_regen_per_second": 2.3,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -125153,6 +125369,7 @@
             "health_regen_per_second": 3.61,
             "health_regen_percent": 0.0,
             "is_melee": true,
+            "item_haste": 0.0,
             "lethality": 10.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -127177,6 +127394,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -127449,6 +127670,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -127714,6 +127939,10 @@
             "view_tag": "applied"
           },
           "participants[2].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -129011,6 +129240,7 @@
               "health_regen_per_second": 2.54,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -129150,6 +129380,7 @@
               "health_regen_per_second": 3.41,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -129291,6 +129522,7 @@
               "health_regen_per_second": 3.27,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -129851,6 +130083,7 @@
             "health_regen_per_second": 2.54,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -132476,6 +132709,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -132748,6 +132985,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -133013,6 +133254,10 @@
             "view_tag": "applied"
           },
           "participants[2].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[2].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -134840,6 +135085,7 @@
               "health_regen_per_second": 2.54,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -134979,6 +135225,7 @@
               "health_regen_per_second": 3.41,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -135118,6 +135365,7 @@
               "health_regen_per_second": 2.3,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -135992,6 +136240,7 @@
             "health_regen_per_second": 2.54,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -137805,6 +138054,7 @@
             "health_regen_per_second": 2.97,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -139549,6 +139799,7 @@
             "health_regen_per_second": 2.97,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -141269,6 +141520,7 @@
             "health_regen_per_second": 2.97,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -150710,6 +150962,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -151014,6 +151270,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[1].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[1].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -151314,6 +151574,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[2].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[2].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -151583,6 +151847,10 @@
             "view_tag": "applied"
           },
           "participants[3].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[3].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -157135,6 +157403,7 @@
               "health_regen_per_second": 2.57,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 10.0,
@@ -157297,6 +157566,7 @@
               "health_regen_per_second": 3.24,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -157461,6 +157731,7 @@
               "health_regen_per_second": 2.3,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -157603,6 +157874,7 @@
               "health_regen_per_second": 3.27,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -158306,6 +158578,7 @@
             "health_regen_per_second": 2.57,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 10.0,
@@ -159238,6 +159511,7 @@
             "health_regen_per_second": 2.57,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 10.0,
@@ -160693,6 +160967,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -160978,6 +161256,10 @@
             "view_tag": "applied"
           },
           "participants[1].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -161519,6 +161801,7 @@
               "health_regen_per_second": 3.34,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -161766,6 +162049,7 @@
               "health_regen_per_second": 3.34,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -162337,6 +162621,7 @@
             "health_regen_per_second": 3.34,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -163317,6 +163602,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -163602,6 +163891,10 @@
             "view_tag": "applied"
           },
           "participants[1].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -164143,6 +164436,7 @@
               "health_regen_per_second": 3.34,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -164390,6 +164684,7 @@
               "health_regen_per_second": 3.34,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -164936,6 +165231,7 @@
             "health_regen_per_second": 3.34,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -165863,6 +166159,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -166148,6 +166448,10 @@
             "view_tag": "applied"
           },
           "participants[1].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -166689,6 +166993,7 @@
               "health_regen_per_second": 3.34,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -166936,6 +167241,7 @@
               "health_regen_per_second": 3.34,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -167507,6 +167813,7 @@
             "health_regen_per_second": 3.34,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -168487,6 +168794,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -168772,6 +169083,10 @@
             "view_tag": "applied"
           },
           "participants[1].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -169313,6 +169628,7 @@
               "health_regen_per_second": 3.34,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -169560,6 +169876,7 @@
               "health_regen_per_second": 3.34,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -170131,6 +170448,7 @@
             "health_regen_per_second": 3.34,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -171138,6 +171456,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -171423,6 +171745,10 @@
             "view_tag": "applied"
           },
           "participants[1].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -171964,6 +172290,7 @@
               "health_regen_per_second": 3.34,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -172211,6 +172538,7 @@
               "health_regen_per_second": 3.34,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -172757,6 +173085,7 @@
             "health_regen_per_second": 3.34,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -173701,6 +174030,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -173986,6 +174319,10 @@
             "view_tag": "applied"
           },
           "participants[1].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -174527,6 +174864,7 @@
               "health_regen_per_second": 3.34,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -174774,6 +175112,7 @@
               "health_regen_per_second": 3.34,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -175345,6 +175684,7 @@
             "health_regen_per_second": 3.34,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -182042,6 +182382,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -182311,6 +182655,10 @@
             "view_tag": "applied"
           },
           "participants[1].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -182598,6 +182946,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[2].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[2].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -182879,6 +183231,10 @@
             "view_tag": "applied"
           },
           "participants[3].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[3].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -186827,6 +187183,7 @@
               "health_regen_per_second": 5.23,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -186966,6 +187323,7 @@
               "health_regen_per_second": 3.24,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -187113,6 +187471,7 @@
               "health_regen_per_second": 2.3,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -187268,6 +187627,7 @@
               "health_regen_per_second": 3.27,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -187973,6 +188333,7 @@
             "health_regen_per_second": 5.23,
             "health_regen_percent": 0.0,
             "is_melee": true,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -188726,6 +189087,7 @@
             "health_regen_per_second": 5.23,
             "health_regen_percent": 0.0,
             "is_melee": true,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -191750,6 +192112,10 @@
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
+          "participants[0].stats.item_haste": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
           "participants[0].stats.lethality": {
             "disposition": "MEASURED",
             "view_tag": "applied"
@@ -192019,6 +192385,10 @@
             "view_tag": "applied"
           },
           "participants[1].stats.health_regen_percent": {
+            "disposition": "MEASURED",
+            "view_tag": "applied"
+          },
+          "participants[1].stats.item_haste": {
             "disposition": "MEASURED",
             "view_tag": "applied"
           },
@@ -193643,6 +194013,7 @@
               "health_regen_per_second": 3.31,
               "health_regen_percent": 0.0,
               "is_melee": false,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -193784,6 +194155,7 @@
               "health_regen_per_second": 8.86,
               "health_regen_percent": 0.0,
               "is_melee": true,
+              "item_haste": 0.0,
               "lethality": 0.0,
               "level": 18,
               "lifesteal_percent": 0.0,
@@ -194299,6 +194671,7 @@
             "health_regen_per_second": 3.31,
             "health_regen_percent": 0.0,
             "is_melee": false,
+            "item_haste": 0.0,
             "lethality": 0.0,
             "level": 18,
             "lifesteal_percent": 0.0,
@@ -194930,15 +195303,15 @@
     "exact": false,
     "fingerprint": {
       "entries": 26,
-      "leaves": 124434,
-      "numeric_leaves": 40504,
+      "leaves": 124671,
+      "numeric_leaves": 40605,
       "sections": "coupled_scenarios"
     },
-    "git_head": "bfbf7c7f3e874b1786c9efaf2abcb8c5e863ab9e",
+    "git_head": "adce5fba0459f00edd9bdd46a277b1cefb294952",
     "items_fetched_at": 1787268672.008812,
     "producer_count": 6,
     "scenario_count": 26,
     "snapshot_kind": "coupled",
-    "src_tree_sha": "3f1f9a35abf6d4d70a23e1b475d82788d22edde6"
+    "src_tree_sha": "335e1cfba664537d97919376ae6496a2141ba351"
   }
 }
