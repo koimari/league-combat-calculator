@@ -13,6 +13,7 @@ promotes it.
 
 import pytest
 
+from src.calculator import rune_effects
 from src.calculator.calculate import calculate_payload
 
 #: (slot, name): keystones ride the keystone field, minors the minor list.
@@ -27,6 +28,16 @@ ZERO_RUNES = (
     ("minor", "Grisly Mementos"),
     ("minor", "Time Warp Tonic"),
 )
+
+#: Probe 2's settled buckets. A certified zero is a no-damage compiler with
+#: a measured exact zero pinned below and no axis that could price it (Jev
+#: unanimous exact-zero, zero priceable votes). What remains refused is a
+#: real number awaiting an axis or sourcing: Demolish (structure targets),
+#: Triple Tonic (elixir numbers live nowhere in-tree), Nimbus Cloak
+#: (summoner gate plus an unsourced decay shape). Priced is everything
+#: else: 50 real effects, 9 certified zeros, 3 refused, 62 total.
+CERTIFIED_ZEROS = frozenset(name for _, name in ZERO_RUNES)
+REFUSED_REMAINDER = frozenset({"Demolish", "Triple Tonic", "Nimbus Cloak"})
 
 
 def _fight(*, keystone="Arcane Comet", minor_runes=()):
@@ -71,3 +82,22 @@ class TestExactZerosMoveNothing:
             and ("deals no damage in any fight" in note or "is not priced" in note)
             for note in held["notes"]
         )
+
+
+class TestProbeTwoBucketsAreExhaustive:
+    def test_every_no_damage_compiler_is_certified_or_in_the_remainder(self):
+        """The settled definition, mechanised: a rune that books no damage
+        is either measured exactly zero above or one of the three real
+        numbers awaiting an axis. A new refusal — or a certified zero that
+        starts moving numbers — fails here until it is triaged."""
+        damageless = frozenset(
+            entry["name"]
+            for entry in rune_effects.rune_catalog()
+            if isinstance(
+                rune_effects.resolve_rune(entry["name"]),
+                rune_effects.RuneNoDamageEffect,
+            )
+        )
+        assert damageless == CERTIFIED_ZEROS | REFUSED_REMAINDER
+        assert CERTIFIED_ZEROS & REFUSED_REMAINDER == frozenset()
+        assert len(damageless) + 50 == 62
