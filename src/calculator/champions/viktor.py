@@ -27,10 +27,14 @@ P (Glorious Evolution) stays OPEN ``out_of_scope`` (the Olaf-R rule):
 its augments really do change what the other slots do, and the innate
 prices them in Hex Fragments earned from kills over a game (1 per minion
 or monster, 10 per siege/super/epic, 20 per champion takedown), an
-accumulation a single modeled fight has no room for and that the cache
-carries as pure prose — the entry has no leveling row anywhere and no
-augment's magnitude is cached at all, so pricing one would mean
-inventing both the fragment count and the effect.
+accumulation a single modeled fight earns none of. The fragment count
+itself is banked progress the request could state, the way a Legend count
+is — what is missing is per-slot: the E wake's damage has no amount
+anywhere, the Q evolved shield's 64 : 224 states no level breakpoints,
+and no evolved compiler exists for any of the four slots. Two augment
+magnitudes ARE cached and are not the blocker: Q Turbocharge's 30% speed
+with the 64 : 224 (+ 40% AP) shield, and R Perfect Storm's 25% speed with
++40% size and +3s duration per takedown.
 """
 
 from typing import Any

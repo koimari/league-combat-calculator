@@ -182,7 +182,8 @@ class TestWukongsCloneHasNoAttackRate:
 
 
 class TestViktorsAugmentsHaveNoCachedMagnitude:
-    """P's blocker is that no augment's effect size exists in either source."""
+    """P's blocker is per-slot, not total: two magnitudes are cached and are
+    not the blocker, and two gaps are."""
 
     def test_the_binary_carries_only_the_fragment_economy(self):
         values = _data_values(_bin("viktor"), "ViktorPassive")
@@ -208,6 +209,31 @@ class TestViktorsAugmentsHaveNoCachedMagnitude:
         prose = _prose("Viktor", "P")
         assert "100 Hex Fragments" in prose
         assert "Minions and monsters generate 1 Hex Fragment" in prose
+
+    def test_two_augment_magnitudes_are_cached_and_are_not_the_blocker(self):
+        """Q Turbocharge and R Perfect Storm state numbers in the slot text;
+        the old receipt's 'no magnitude cached at all' was wrong about them."""
+        slots = {slot: _prose("Viktor", slot) for slot in ("Q", "W", "E", "R")}
+        assert "30% bonus movement speed" in slots["Q"]
+        assert "64 : 224" in slots["Q"]
+        assert "moves 25% faster" in slots["R"]
+        assert "increased by 40%" in slots["R"]
+        assert "extended by 3 seconds" in slots["R"]
+
+    def test_the_e_wake_has_no_amount_and_the_q_breakpoints_none(self):
+        """The two gaps that keep P out of scope: E's wake deals damage no
+        source sizes, and Q's evolved 64 : 224 states no level breakpoints."""
+        slots = {slot: _prose("Viktor", slot) for slot in ("Q", "E")}
+        (wake,) = [
+            sentence
+            for sentence in slots["E"].split(". ")
+            if "wake" in sentence.lower()
+        ]
+        assert "dealing magic damage" in wake
+        # The sentence's only digit is the 1-second delay: the damage it
+        # deals has no amount anywhere.
+        assert re.findall(r"\d+", wake) == ["1"], wake
+        assert "64 : 224 (based on level)" in slots["Q"]
 
 
 class TestTeemosStealthTriggerIsUnreachable:
