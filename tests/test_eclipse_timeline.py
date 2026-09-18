@@ -26,6 +26,7 @@ def _stats() -> dict:
         "omnivamp_percent": 0.0,
         "resource_regen_per_second": 0.0,
         "ultimate_haste": 0.0,
+        "item_haste": 0.0,
         "attack_damage": 100,
         "ability_power": 0,
         "base_attack_damage": 100,

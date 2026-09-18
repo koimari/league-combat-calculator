@@ -226,6 +226,14 @@ class RegenerationWindow(NamedTuple):
     ``None`` for a participant declaring none.  An absent window is an
     answer, and the alternative — five defaulted zeros — is a recovery that
     silently pays nothing.
+
+    A rune may declare a window on the same lane, and one participant can
+    hold both (Doran's Shield and Second Wind are a common pair), so the
+    rune's three numbers ride here beside the item's rather than in a
+    second sequence.  Each half is present exactly when its owner is named:
+    ``owner`` empty is "no item declared one", ``rune_owner`` empty is "no
+    rune did", and the scheduler pays each half only for the owner that is
+    there.
     """
 
     owner: str
@@ -234,6 +242,31 @@ class RegenerationWindow(NamedTuple):
     duration: float
     missing_health_cap: float
     tick_interval: float
+    #: The rune half: a share of the holder's missing health, paid over its
+    #: own seconds, armed by the same certified incoming hit.
+    rune_owner: str = ""
+    rune_missing_health_ratio: float = 0.0
+    rune_duration: float = 0.0
+
+
+class PlatingWindow(NamedTuple):
+    """One holder's armed flat reduction, compiled before the walk runs.
+
+    The sibling of :class:`RegenerationWindow` on the other side of the
+    same incoming packet: that one schedules recovery after a hit, this one
+    takes a flat amount off the hits that follow one. Both are compiled by
+    the caller for the same reason — ``survival`` may not reach a rune or
+    an item declaration — and ``None`` is a participant declaring none.
+
+    ``flat`` is already resolved at the holder's level, because a level
+    does not change inside a walk.
+    """
+
+    owner: str
+    flat: float
+    hits: int
+    window: float
+    cooldown: float
 
 
 class SubjectDefenseProfile(NamedTuple):
@@ -254,10 +287,13 @@ class SubjectDefenseProfile(NamedTuple):
     force_bonus_magic_resistance: float
     has_stack_items: bool
     regeneration: RegenerationWindow | None
+    plating: PlatingWindow | None
 
 
 def _subject_defense_profile(
-    combatant: Any, regeneration: RegenerationWindow | None
+    combatant: Any,
+    regeneration: RegenerationWindow | None,
+    plating: PlatingWindow | None = None,
 ) -> SubjectDefenseProfile:
     """Extract one participant's fixed combat-state defense constants."""
     defenses = combatant.defenses
@@ -280,6 +316,7 @@ def _subject_defense_profile(
             or (force_interval > 0.0 and force_max > 0)
         ),
         regeneration=regeneration,
+        plating=plating,
     )
 
 
@@ -314,6 +351,11 @@ class TransitionContext:
     index_of: Mapping[str, int]
     ledger: SurvivalLedger
     regeneration_windows: Sequence[RegenerationWindow | None]
+    #: Compiled armed flat reductions, participant-index-aligned. Empty is
+    #: "this walk compiled none", which is the truthful answer for every
+    #: context built before a rune page reached it; a non-empty sequence is
+    #: held to the same alignment the regeneration windows are.
+    plating_windows: Sequence[PlatingWindow | None] = ()
     venom_profiles: list[tuple[float, float] | None] | None = None
     reduction_profiles: list[tuple[dict[str, Any], ...] | None] | None = None
     # Keyed by event slot (Phase 4 S1): ``redirect_children`` maps a parent
@@ -342,6 +384,7 @@ class TransitionContext:
     record_defy_damage: bool = field(init=False)
     stack_flags: list[bool] = field(init=False, repr=False)
     regeneration_flags: list[bool] = field(init=False, repr=False)
+    plating_flags: list[bool] = field(init=False, repr=False)
     _defense_profiles: list[SubjectDefenseProfile] = field(init=False, repr=False)
     # Every caster's heal-and-shield-power factor, resolved once per walk
     # so the recovery path never re-reads a stat dict per packet.
@@ -365,10 +408,18 @@ class TransitionContext:
                 "sequence is participant-index-aligned, so a short one would "
                 "give somebody else's window to the wrong subject"
             )
+        if self.plating_windows and len(self.plating_windows) != len(self.combatants):
+            raise ValueError(
+                f"{len(self.plating_windows)} compiled plating windows for "
+                f"{len(self.combatants)} participants; the sequence is "
+                "participant-index-aligned, so a short one would give "
+                "somebody else's reduction to the wrong subject"
+            )
+        plating = self.plating_windows or ((None,) * len(self.combatants))
         profiles = [
-            _subject_defense_profile(combatant, window)
-            for combatant, window in zip(
-                self.combatants, self.regeneration_windows, strict=False
+            _subject_defense_profile(combatant, window, armed)
+            for combatant, window, armed in zip(
+                self.combatants, self.regeneration_windows, plating, strict=False
             )
         ]
         self._defense_profiles = profiles
@@ -376,6 +427,10 @@ class TransitionContext:
         self.regeneration_flags = [
             profile.regeneration is not None for profile in profiles
         ]
+        # Read once per damage packet, so it is a plain list the way the
+        # stack and regeneration gates are: almost every walk has no plating
+        # holder at all and pays one index for the answer.
+        self.plating_flags = [profile.plating is not None for profile in profiles]
         self._heal_power = [
             heal_and_shield_power_factor(getattr(combatant, "stats", None))
             for combatant in self.combatants
@@ -866,6 +921,61 @@ def recovery_multiplier(state: Mapping[str, Any], action: SurvivalAction) -> flo
     return multiplier
 
 
+#: The state key one rune regeneration window arms. A window already
+#: running is refreshed in game and re-armed here by nothing: the ticks it
+#: is already paying re-read the missing health every second, and a refresh
+#: only adds seconds past the end this walk does not reach. What it does
+#: gate is the second window a long fight would otherwise start on every
+#: later hit, which is a recovery the rune never pays twice over.
+_RUNE_REGEN_ARMED_UNTIL = "rune_regeneration_armed_until"
+
+
+def _schedule_rune_regeneration(
+    ctx: TransitionContext,
+    action: SurvivalAction,
+    state: dict[str, Any],
+    window: RegenerationWindow,
+    combatant: Any,
+) -> None:
+    """Arm one rune's missing-health regeneration off this incoming hit.
+
+    The share and the seconds are the rune's own; the seconds are walked in
+    whole steps because no source states a regeneration cadence, and each
+    step re-reads the missing health the way the item half does.
+    """
+    duration_value = window.rune_duration
+    ratio = window.rune_missing_health_ratio
+    if duration_value <= 0.0 or ratio <= 0.0:
+        return
+    armed_until = state.get(_RUNE_REGEN_ARMED_UNTIL)
+    if armed_until is not None and action.time < float(armed_until) - 1e-9:
+        return
+    state[_RUNE_REGEN_ARMED_UNTIL] = action.time + duration_value
+    steps = max(1, round(duration_value))
+    step_seconds = duration_value / steps
+    trigger_id = EVENT_SLOTS.text(action.event_slot)
+    for step_index in range(1, steps + 1):
+        ctx.ledger.schedule_heal(
+            {
+                "time": round(action.time + step_seconds * step_index, 6),
+                "amount": 0.0,
+                "amount_formula": (
+                    lambda current_health, maximum_health, ratio=ratio, steps=steps: (
+                        max(0.0, maximum_health - current_health) * ratio / steps
+                    )
+                ),
+                "source": window.rune_owner,
+                "kind": "regen",
+                "attacker": combatant.participant_id,
+                "target": combatant.participant_id,
+                "_event_id": f"{trigger_id}:rune-regeneration:{step_index}",
+                "_trigger_event_id": trigger_id,
+                "sequence": step_index - 1,
+            },
+            combatant.participant_id,
+        )
+
+
 def schedule_regeneration_recovery(
     ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
 ) -> None:
@@ -877,6 +987,8 @@ def schedule_regeneration_recovery(
 
     Which subject has one, and every number the window pays, come from the
     compiled declaration the context was handed — never from an item name.
+    A holder may declare both halves; each is armed by this one hit and
+    neither knows about the other.
     """
     window = ctx.defense_profile(action.subject).regeneration
     if window is None:
@@ -888,6 +1000,8 @@ def schedule_regeneration_recovery(
     if applied_to_health <= 0.0:
         return
     combatant = ctx.combatants[action.subject]
+    if window.rune_owner:
+        _schedule_rune_regeneration(ctx, action, state, window, combatant)
     total_melee = window.total_melee
     total_reduced = window.total_reduced
     missing_cap = window.missing_health_cap
@@ -3229,6 +3343,52 @@ def _apply_source_on_hit_magic(
     return amount
 
 
+#: The three state keys one armed flat reduction keeps: when the activation
+#: it is inside ends, how many of its hits are left, and when it may arm
+#: again. All three are read and written here alone.
+_PLATING_ACTIVE_UNTIL = "plating_active_until"
+_PLATING_HITS_LEFT = "plating_hits_left"
+_PLATING_READY_AT = "plating_ready_at"
+
+
+def _apply_plating(
+    ctx: TransitionContext,
+    action: SurvivalAction,
+    state: dict[str, Any],
+    amount: float,
+) -> float:
+    """Take one armed flat reduction off this packet, or arm it on this one.
+
+    The order is the game's: a hit arriving inside a live activation with
+    hits left is reduced, and a hit arriving outside one arms the next
+    activation and is not. A reduction never takes a packet below zero, and
+    the activation's own cooldown is what stops a long fight from arming it
+    on every hit.
+    """
+    if amount <= 0.0 or not ctx.plating_flags[action.subject]:
+        return amount
+    plating = ctx.defense_profile(action.subject).plating
+    if plating is None:
+        return amount
+    event_time = float(action.time)
+    active_until = state.get(_PLATING_ACTIVE_UNTIL)
+    hits_left = int(state.get(_PLATING_HITS_LEFT, 0))
+    if (
+        active_until is not None
+        and event_time <= float(active_until) + 1e-9
+        and hits_left > 0
+    ):
+        state[_PLATING_HITS_LEFT] = hits_left - 1
+        return max(0.0, amount - plating.flat)
+    ready_at = float(state.get(_PLATING_READY_AT, 0.0) or 0.0)
+    if event_time + 1e-9 < ready_at:
+        return amount
+    state[_PLATING_ACTIVE_UNTIL] = event_time + plating.window
+    state[_PLATING_HITS_LEFT] = plating.hits
+    state[_PLATING_READY_AT] = event_time + plating.cooldown
+    return amount
+
+
 def _apply_damage(
     ctx: TransitionContext, action: SurvivalAction, state: dict[str, Any]
 ) -> None:
@@ -3311,6 +3471,8 @@ def _apply_damage(
                     "until": round(state["venom_until"], 6),
                 },
             )
+    if ctx.plating_flags[action.subject]:
+        amount = _apply_plating(ctx, action, state, amount)
     damage_type = action.damage_type
     # Absorption order, Lifeline arming, and the health transition are owned
     # by ``shield_ledger``; this kernel supplies the storage and the ledger

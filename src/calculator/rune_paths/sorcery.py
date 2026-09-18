@@ -2,9 +2,10 @@
 
 Every shape a minor rune takes is here: Absolute Focus, Waterwalking and
 Gathering Storm grant adaptive force behind an explicit option, Transcendence
-and Celerity grant a stat outright, Scorch prices a proc, Axiom Arcanist
-amplifies one slot's damage on the flat-amp kind, and the two runes whose
-halves this engine holds no channel for compile to a refusal with the reason.
+and Celerity grant a stat outright, Manaflow Band grants one behind a stack
+count the request states, Scorch prices a proc, Axiom Arcanist amplifies one
+slot's damage on the flat-amp kind, and the one rune whose halves this engine
+holds no channel for compiles to a refusal with the reason.
 """
 
 from collections.abc import Callable, Mapping
@@ -116,6 +117,60 @@ def _compile_scorch(entry: Mapping[str, Any]) -> RuneProcEffect:
 #: where and when the fight happens, and the request carries neither.
 _IN_RIVER = "in_river"
 _GAME_MINUTE = "game_minute"
+
+#: Manaflow Band's stacks are permanent progress earned one ability at a
+#: time over a game the engine simulates no part of, so the count is the
+#: request's to state and zero is the un-stacked state a fresh page is in.
+_MANAFLOW_STACKS = "manaflow_band_stacks"
+
+
+def _compile_manaflow_band(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
+    """Compile Manaflow Band: maximum mana per banked stack, to its ceiling.
+
+    The old receipt named the gap exactly — "no rune stat channel carries
+    mana" — and named what would read it if one did: Muramana and
+    Archangel's Staff. Both halves were true, and neither was a missing
+    capability. The channel is now a member of the closed stat set, the two
+    numbers came out of prose the parser had no rule for, and the grant
+    lands in the same pool an item's mana lands in, ahead of the
+    conversions that read it.
+    """
+    name = "Manaflow Band"
+    effects = RuneValues(name, entry.get("effects", {}))
+    per_stack, cap = effects.numbers("max_mana_per_stack", "max_mana_cap")
+    if per_stack <= 0 or cap < per_stack:
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] states {per_stack:g} mana per stack "
+            f"against a {cap:g} ceiling, which stacks to nothing — wiki "
+            "parse degraded"
+        )
+
+    def amount(context: RuneStatContext) -> float:
+        stacks = context.option(name, _MANAFLOW_STACKS, 0.0)
+        return min(stacks * per_stack, cap)
+
+    return RuneStatGrantEffect(
+        rune_name=name,
+        stat=RuneStat.MAX_MANA,
+        amount=amount,
+        disclosures=(
+            f"{name} grants {per_stack:g} maximum mana per banked stack up "
+            f"to {cap:g}, read from the {_MANAFLOW_STACKS!r} option: a stack "
+            "is one ability that has affected an enemy champion, earned over "
+            "a game the fight model simulates no part of, so its default is "
+            "the un-stacked zero.",
+            f"{name}'s mana reaches damage only through an item that reads "
+            "it: Manamune and Muramana buy bonus attack damage from maximum "
+            "mana and Muramana's Shock prices its rows off the same total, "
+            "Archangel's Staff buys ability power from bonus mana. A build "
+            "holding none of them sees the stat card move and no damage row "
+            "with it.",
+            f"{name}'s second half — restoring a share of missing mana every "
+            "five seconds once the ceiling is reached — is withheld: the "
+            "fight's rotation is not gated by a resource, so nothing it "
+            "refills would buy another cast.",
+        ),
+    )
 
 
 def _compile_transcendence(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
@@ -335,21 +390,6 @@ def _compile_gathering_storm(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
 #: The Sorcery runes that book no damage: disposition, the reason that
 #: becomes the receipt, and any further half this engine refuses.
 _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
-    # Mana is a stat this engine carries for items (Muramana, Archangel's),
-    # but not a channel a rune may grant into: the closed ``RuneStat`` set
-    # is what the fight's stat block reads, and mana is not in it. The
-    # number exists and is refused rather than converted.
-    "Manaflow Band": (
-        Disposition.WITHHELD,
-        "it grants maximum mana and then restores a share of the missing "
-        "mana, and no rune stat channel carries mana",
-        (
-            "Manaflow Band's zero is exact only while the holder owns no "
-            "mana-converting item; Muramana and Archangel's Staff buy attack "
-            "damage and ability power from maximum mana, and that coupling "
-            "is disclosed, not modeled.",
-        ),
-    ),
     # Nimbus Cloak's table is keyed by summoner-spell cooldown, not level —
     # and the fight casts no summoner spells at all, so no column of it is
     # ever reached.
@@ -370,6 +410,7 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
     "Axiom Arcanist": _compile_axiom_arcanist,
     "Celerity": _compile_celerity,
     "Gathering Storm": _compile_gathering_storm,
+    "Manaflow Band": _compile_manaflow_band,
     "Scorch": _compile_scorch,
     "Transcendence": _compile_transcendence,
     "Waterwalking": _compile_waterwalking,
@@ -379,7 +420,44 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
     },
 }
 
+
+def _manaflow_stack_ceiling() -> float:
+    """How many stacks Manaflow Band's own ceiling allows, from the cache.
+
+    The wiki states the ceiling in mana and the step in mana; the count is
+    their quotient, which is a reading of the two rather than a constant of
+    its own. A ceiling that is not a whole number of steps would mean one
+    of the two numbers has drifted, so it is refused rather than rounded.
+    """
+    name = "Manaflow Band"
+    per_stack, cap = cached_effects(name).numbers("max_mana_per_stack", "max_mana_cap")
+    stacks = cap / per_stack
+    if stacks != int(stacks):
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] caps at {cap:g} mana in steps of "
+            f"{per_stack:g}, which is not a whole number of stacks — wiki "
+            "parse degraded"
+        )
+    return float(int(stacks))
+
+
 OPTIONS: dict[str, tuple[RuneOption, ...]] = {
+    "Manaflow Band": (
+        RuneOption(
+            key=_MANAFLOW_STACKS,
+            label="Manaflow Band stacks",
+            kind=RuneOptionKind.COUNT,
+            default=0.0,
+            bounds=(0.0, _manaflow_stack_ceiling()),
+            disclosure=(
+                "How many stacks Manaflow Band has banked when the fight "
+                "opens; one is one ability that has affected an enemy "
+                "champion, and the engine simulates one fight and banks none "
+                f"during it. The count runs 0 to {_manaflow_stack_ceiling():g}"
+                ", 0 by default."
+            ),
+        ),
+    ),
     "Gathering Storm": (
         RuneOption(
             key=_GAME_MINUTE,

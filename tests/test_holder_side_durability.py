@@ -1,25 +1,32 @@
 """What the holder-side durability axis is, measured rather than asserted.
 
-Two Resolve runes wait on it, and their receipts name a blocker each. A
-receipt is only worth the measurement behind it, so this pins the facts both
-reasons rest on. Every one is a thing that would CHANGE if the axis were
-built, so the day it is, these fail and name what to re-read.
+Two Resolve runes waited on it and neither does now. What this file is for
+is the same as it was: the facts their receipts rested on, measured rather
+than asserted, so that a later reader can see which of them changed and
+which did not.
 
-The two blockers are different and neither is the one the older receipts
-gave, which was that the engine prices only the damage the holder deals:
-
-* Bone Plating waits on the DIRECTION of a channel that already exists.
-  ``champion_damage_flat_reduction`` is read off the target, where it lowers
-  the damage this attacker deals. Nothing reads the holder's own.
-* Second Wind waits on a TRIGGER. The fight carries the holder's health and
-  the damage it takes and publishes both; what it has no vocabulary for is a
-  rune that answers an incoming hit.
+* Bone Plating's receipt named the DIRECTION of an item channel.
+  ``champion_damage_flat_reduction`` is still read off the target alone, and
+  that is still true and no longer a blocker: the rune is priced on the
+  survival walk instead, where the packets the holder receives are held in
+  order with their times, which is the only place its activation, its hit
+  count and its cooldown all fit.
+* Second Wind's receipt named a TRIGGER. Neither rune trigger vocabulary
+  fires on damage taken, which is also still true and also not a blocker:
+  the walk arms its regeneration window off the incoming hit itself, the
+  lane Doran's Shield's Enduring Focus is already paid on.
 """
 
 import pytest
 
 from src.calculator.calculate import calculate_payload
-from src.calculator.rune_effects import RuneHealTrigger, RuneTrigger, resolve_rune
+from src.calculator.rune_effects import (
+    RuneHealEffect,
+    RunePlatingEffect,
+    RuneHealTrigger,
+    RuneTrigger,
+    resolve_rune,
+)
 from src.calculator.starting_defenses import StartingDefenses
 
 _ENEMY = {"kind": "champion", "champion": "Darius", "level": 18, "role": "top"}
@@ -62,45 +69,52 @@ class TestTheFightDoesCarryTheHolderSide:
         assert armored["effective_health"] == pytest.approx(bare["effective_health"])
 
 
-class TestBonePlatingWaitsOnTheChannelsDirection:
-    def test_the_flat_reduction_field_exists_on_the_defence_record(self):
-        assert hasattr(StartingDefenses, "__dataclass_fields__")
+class TestBonePlatingIsPaidOnTheWalkRatherThanTheItemChannel:
+    def test_the_item_channel_still_runs_one_way(self):
+        """Unchanged, and no longer the rune's blocker.
+
+        Guardian's Horn also grants health, so the holder's damage taken
+        goes UP rather than staying level when the holder wears it. That is
+        the point: none of the change is the flat reduction.
+        """
         fields = StartingDefenses.__dataclass_fields__
         assert "champion_damage_flat_reduction" in fields
-
-    def test_it_works_when_the_ENEMY_holds_it(self):
-        """The direction that is wired, with the number the receipt quotes."""
         bare = _fight()["total_damage"]
         mitigated = _fight(enemies=[{**_ENEMY, "items": ["Guardian's Horn"]}])[
             "total_damage"
         ]
         assert bare == pytest.approx(2276.8, abs=0.1)
         assert mitigated == pytest.approx(1826.8, abs=0.1)
-        assert mitigated < bare
-
-    def test_it_does_nothing_when_the_HOLDER_holds_it(self):
-        """The direction that is not, which is the whole blocker.
-
-        Guardian's Horn also grants health, so the holder's damage taken goes
-        UP rather than staying level. That is the point: none of the change
-        is the flat reduction.
-        """
-        bare = _fight()["combat"]["breakdown"][0]
         held = _fight(items=["Guardian's Horn"])["combat"]["breakdown"][0]
-        assert held["health_damage"] >= bare["health_damage"]
+        assert (
+            held["health_damage"] >= _fight()["combat"]["breakdown"][0]["health_damage"]
+        )
 
-    def test_the_receipt_names_the_direction_and_not_the_old_reason(self):
-        reason = resolve_rune("Bone Plating").zero_policy.reason
-        assert "runs the other way" in reason
-        assert "read off the TARGET" in reason
-        disclosures = " ".join(resolve_rune("Bone Plating").disclosures)
-        assert "2276.8 to 1826.8" in disclosures
-        assert "next 3 hits within 1.5 seconds" in disclosures
+    def test_the_rune_reduces_the_hits_after_the_one_that_armed_it(self):
+        bare = _fight()["combat"]["breakdown"][0]
+        plated = _fight(minor_runes=["Bone Plating"])["combat"]["breakdown"][0]
+        assert plated["death_time"] > bare["death_time"]
+
+    def test_the_receipt_names_the_lane_it_is_priced_on(self):
+        effect = resolve_rune("Bone Plating")
+        assert isinstance(effect, RunePlatingEffect)
+        assert effect.hits == 3
+        assert effect.window_seconds == pytest.approx(1.5)
 
 
-class TestSecondWindWaitsOnATrigger:
-    def test_no_trigger_in_either_vocabulary_fires_on_damage_taken(self):
-        """Every member names something the holder DOES."""
+class TestSecondWindIsPaidOnTheWalkSRecoveryLane:
+    """The trigger the vocabularies still lack, and the lane that has one.
+
+    Every member of both rune trigger enums still names something the
+    holder DOES, and that is the fact the old receipt rested on. What it
+    got wrong was the conclusion: the survival walk holds the packets the
+    holder RECEIVED, and a rune kind armed there needs no member of either
+    vocabulary. These pin both halves, so a trigger added to an enum does
+    not quietly become the explanation for a rune that is not paid by one.
+    """
+
+    def test_neither_trigger_vocabulary_fires_on_damage_taken(self):
+        """Unchanged, and no longer a blocker: the rune is not paid by one."""
         assert {member.name for member in RuneHealTrigger} == {
             "DAMAGE_DEALT",
             "IMPAIRING_INSTANCES",
@@ -113,9 +127,19 @@ class TestSecondWindWaitsOnATrigger:
             "IMPAIRED_INSTANCES",
             "SELF_SHIELD_EVENTS",
         }
+        assert not isinstance(resolve_rune("Second Wind"), RuneHealEffect)
 
-    def test_the_receipt_names_the_trigger_and_says_the_health_is_there(self):
-        effect = resolve_rune("Second Wind")
-        assert "no rune trigger fires on damage TAKEN" in effect.zero_policy.reason
-        disclosures = " ".join(effect.disclosures)
-        assert "blocker is the trigger and not the health" in disclosures
+    def test_the_window_is_armed_by_an_incoming_hit_and_pays_the_holder(self):
+        bare = _fight()["combat"]["breakdown"][0]
+        held = _fight(minor_runes=["Second Wind"])["combat"]["breakdown"][0]
+        assert bare["healing_received"] == pytest.approx(0.0)
+        assert held["healing_received"] == pytest.approx(19.6, abs=0.1)
+        assert held["effective_health"] > bare["effective_health"]
+
+    def test_it_rides_the_same_lane_doran_s_shield_does(self):
+        """One lane, two owners, and a holder may declare both."""
+        item_only = _fight(items=["Doran's Shield"])["combat"]["breakdown"][0]
+        both = _fight(items=["Doran's Shield"], minor_runes=["Second Wind"])["combat"][
+            "breakdown"
+        ][0]
+        assert both["healing_received"] > item_only["healing_received"]

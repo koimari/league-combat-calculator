@@ -278,6 +278,7 @@ _STATS = {
     "omnivamp_percent": 0.0,
     "resource_regen_per_second": 0.0,
     "ultimate_haste": 0.0,
+    "item_haste": 0.0,
     "attack_damage": 100.0,
     "base_attack_damage": 60.0,
     "bonus_attack_damage": 40.0,
@@ -356,10 +357,17 @@ class TestTheWalkerPricesEachShape:
             for note in result["notes"]
         )
 
-    def test_cosmic_insight_books_nothing_and_publishes_why(self):
+    def test_cosmic_insight_grants_its_haste_and_books_nothing_without_the_stream(
+        self,
+    ):
+        """A stat grant books no row: with no empowered-auto stream in this
+        fight the 10 item haste reaches the stat block and moves no total,
+        and the only receipt is the withheld summoner half, not a refusal."""
         result = _fight(minor_runes=("Cosmic Insight",))
         assert result["total_damage"] == pytest.approx(4 * _MITIGATED_CAST)
-        assert any("is not priced" in note for note in result["notes"])
+        assert not any(
+            "Cosmic Insight is not priced" in note for note in result["notes"]
+        )
 
     def test_a_keystone_and_its_minors_are_walked_together(self):
         result = _fight(

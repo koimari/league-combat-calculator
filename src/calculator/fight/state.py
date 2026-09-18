@@ -75,6 +75,10 @@ class FightState:
     actualizer_basic_cooldown_multiplier: float
     actualizer_resource_cost_multiplier: float
     ability_haste: float
+    #: Item haste off the holder's stat block, read by the empowered-auto
+    #: stream alone. Beside ``ability_haste`` because it rides the same
+    #: shared formula on a different set of cooldowns.
+    item_haste: float
     one_rotation: bool
     include_actives: bool
     # True when a landing timed past the fight's end is dropped: the

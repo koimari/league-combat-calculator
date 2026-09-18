@@ -1,14 +1,17 @@
-"""Resolve's minor runes: six priced runes and three receipted refusals.
+"""Resolve's minor runes: eight priced runes and one receipted refusal.
 
 Resolve is the durability path and the pair engine prices outgoing damage,
-so three of its nine runes compile to a refusal that says which half this
-engine holds no channel for. Six are not refusals: Overgrowth's stacks buy
+so one of its nine runes compiles to a refusal that says which half this
+engine holds no channel for. Eight are not refusals: Overgrowth's stacks buy
 maximum health, which the fight's stat block does read; Shield Bash prices
 the swing a self-shield armed; Font of Life heals on the casts that impair,
 which is the impaired stream read from the impairing side; Conditioning
 and Unflinching grant resistances, which a kit scaling off bonus armor or
-bonus magic resistance spends on damage; and Revitalize grants heal and
-shield power, which every recovery the holder applies is multiplied by.
+bonus magic resistance spends on damage; Revitalize grants heal and shield
+power, which every recovery the holder applies is multiplied by; and Second
+Wind regenerates a share of missing health off an incoming hit and Bone
+Plating takes a flat amount off the hits after one, both on the survival
+walk, which is where the packets the holder receives are held.
 """
 
 import pytest
@@ -22,9 +25,7 @@ from src.calculator.rune_paths import resolve
 #: carry — the reason is the receipt, so it is pinned per rune rather than
 #: asserted as "some string".
 REFUSALS = {
-    "Demolish": "damages turrets",
-    "Second Wind": "no rune trigger fires on damage TAKEN",
-    "Bone Plating": "read off the TARGET",
+    "Demolish": "no structure class for a turret to be",
 }
 
 
@@ -110,6 +111,207 @@ class TestOvergrowth:
         assert selected["total_damage"] == pytest.approx(bare["total_damage"])
 
 
+class TestSecondWindRegeneratesOffAnIncomingHit:
+    """The rune that waited on a trigger, and the lane that already had one.
+
+    Its refusal was right that no member of either rune trigger vocabulary
+    fires on damage taken, and wrong that this meant there was nowhere to
+    be paid: the survival walk holds the packets the holder RECEIVED and
+    already arms Doran's Shield's regeneration window off one. What was
+    missing was a rune kind that could be armed there and the two numbers,
+    neither of which the cache carried.
+    """
+
+    def _fight(self, *, runes=(), items=(), duration=10, enemies_attack=True):
+        return calculate_payload(
+            {
+                "champion": "Garen",
+                "level": 18,
+                "role": "top",
+                "items": list(items),
+                "boots": "",
+                "enemies": [
+                    {
+                        "kind": "champion",
+                        "champion": "Darius",
+                        "level": 18,
+                        "role": "top",
+                    }
+                ],
+                "fight_duration": duration,
+                "fight_mode": "time_based",
+                "deterministic": True,
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 1.0,
+                "enemies_attack": enemies_attack,
+                "keystone": "Grasp of the Undying",
+                "minor_runes": list(runes),
+                "stat_shards": [],
+            }
+        )
+
+    @staticmethod
+    def _healing(result):
+        return float(result["combat"]["breakdown"][0]["healing_received"])
+
+    def test_the_parser_reads_the_share_and_the_seconds(self):
+        entry = rune_effects.RUNE_EFFECTS["Second Wind"]
+        effects, _ = rune_parser.parse_rune_effects("Second Wind", entry["description"])
+        assert effects == {
+            "missing_health_regen_ratio": 0.04,
+            "missing_health_regen_duration_seconds": 10.0,
+        }
+        assert entry["effects"] == effects
+
+    def test_neither_rule_matches_another_rune(self):
+        """Manaflow Band's missing share is mana, and must not match."""
+        matched = {
+            name
+            for name, entry in rune_effects.RUNE_EFFECTS.items()
+            if entry.get("description")
+            and "missing_health_regen_ratio"
+            in rune_parser.parse_rune_effects(name, entry["description"])[0]
+        }
+        assert matched == {"Second Wind"}
+
+    def test_it_compiles_to_a_regeneration_window_carrying_both_numbers(self):
+        effect = rune_effects.resolve_rune("Second Wind")
+        assert isinstance(effect, rune_effects.RuneRegenerationEffect)
+        assert effect.missing_health_ratio == pytest.approx(0.04)
+        assert effect.duration_seconds == pytest.approx(10.0)
+        assert effect.source == "Second Wind (rune)"
+
+    def test_a_cache_stating_no_share_fails_closed(self):
+        with pytest.raises(KeyError, match="regenerates nothing"):
+            resolve.COMPILERS["Second Wind"](
+                {
+                    "effects": {
+                        "missing_health_regen_ratio": 0.0,
+                        "missing_health_regen_duration_seconds": 10.0,
+                    }
+                }
+            )
+
+    def test_the_holder_regenerates_only_once_it_has_been_hit(self):
+        """The trigger, measured from both sides of it."""
+        bare = self._fight()
+        held = self._fight(runes=["Second Wind"])
+        assert self._healing(bare) == pytest.approx(0.0)
+        assert self._healing(held) == pytest.approx(19.6, abs=0.1)
+
+    def test_with_no_enemy_attacking_the_window_is_never_armed(self):
+        """The control: the rune answers an incoming hit and nothing else.
+
+        The holder's own recovery is not zero in a fight nobody swings
+        back in, so the reading is against the same fight without the
+        rune rather than against zero.
+        """
+        quiet = self._fight(enemies_attack=False)
+        held = self._fight(runes=["Second Wind"], enemies_attack=False)
+        assert self._healing(held) == pytest.approx(self._healing(quiet))
+
+    def test_it_pays_beside_an_item_window_rather_than_replacing_one(self):
+        """One holder, two declarations, two recoveries."""
+        item_only = self._fight(items=["Doran's Shield"])
+        both = self._fight(runes=["Second Wind"], items=["Doran's Shield"])
+        assert self._healing(item_only) == pytest.approx(79.7, abs=0.1)
+        assert self._healing(both) == pytest.approx(108.0, abs=0.1)
+
+    def test_it_discloses_the_floor_and_the_cadence_it_chose(self):
+        disclosures = " ".join(rune_effects.resolve_rune("Second Wind").disclosures)
+        assert "this reading is a floor" in disclosures
+        assert "no source states a regeneration cadence" in disclosures
+        assert "damage a shield absorbs whole arms nothing" in disclosures
+
+
+class TestBonePlatingTakesItsFlatCutOffIncomingHits:
+    """The rune that waited on a channel's direction, priced on the walk.
+
+    The item field its refusal pointed at is one number read off a target
+    and applied to every packet. This rune arms on a hit, pays a counted
+    few after it and then waits out a cooldown, which no target field has
+    room for; the survival walk has all of it, because it holds the
+    incoming packets in order with their times.
+    """
+
+    def _fight(self, *, runes=(), enemy_level=6, duration=10):
+        return calculate_payload(
+            {
+                "champion": "Garen",
+                "level": 18,
+                "role": "top",
+                "items": [],
+                "boots": "",
+                "enemies": [
+                    {
+                        "kind": "champion",
+                        "champion": "Darius",
+                        "level": enemy_level,
+                        "role": "top",
+                    }
+                ],
+                "fight_duration": duration,
+                "fight_mode": "time_based",
+                "deterministic": True,
+                "include_auto_attacks": True,
+                "auto_attack_uptime": 1.0,
+                "enemies_attack": True,
+                "keystone": "Grasp of the Undying",
+                "minor_runes": list(runes),
+                "stat_shards": [],
+            }
+        )
+
+    def test_the_parser_reads_the_count_and_the_activation(self):
+        effects, _ = rune_parser.parse_rune_effects(
+            "Bone Plating", rune_effects.RUNE_EFFECTS["Bone Plating"]["description"]
+        )
+        assert effects["incoming_hits_reduced"] == 3
+        assert effects["incoming_reduction_window_seconds"] == 1.5
+
+    def test_it_compiles_with_its_level_table_and_all_three_clocks(self):
+        effect = rune_effects.resolve_rune("Bone Plating")
+        assert isinstance(effect, rune_effects.RunePlatingEffect)
+        assert effect.hits == 3
+        assert effect.window_seconds == pytest.approx(1.5)
+        assert effect.cooldown_seconds == pytest.approx(55.0)
+        assert effect.flat_by_level[0] == pytest.approx(30.0)
+        assert effect.flat_by_level[17] == pytest.approx(60.0)
+
+    def test_a_cache_stating_no_hits_fails_closed(self):
+        entry = dict(rune_effects.RUNE_EFFECTS["Bone Plating"])
+        entry["effects"] = {**entry["effects"], "incoming_hits_reduced": 0}
+        with pytest.raises(KeyError, match="takes nothing off anything"):
+            resolve.COMPILERS["Bone Plating"](entry)
+
+    def test_it_lowers_the_damage_the_holder_takes(self):
+        bare = self._fight()["combat"]["breakdown"][0]
+        plated = self._fight(runes=["Bone Plating"])["combat"]["breakdown"][0]
+        assert bare["health_damage"] == pytest.approx(731.2, abs=0.1)
+        assert plated["health_damage"] == pytest.approx(618.4, abs=0.1)
+
+    def test_it_buys_time_in_a_fight_the_holder_loses(self):
+        """The other reading of the same reduction: a later death."""
+        bare = self._fight(enemy_level=18)["combat"]["breakdown"][0]
+        plated = self._fight(runes=["Bone Plating"], enemy_level=18)["combat"][
+            "breakdown"
+        ][0]
+        assert bare["death_time"] == pytest.approx(3.75, abs=0.01)
+        assert plated["death_time"] == pytest.approx(4.103, abs=0.01)
+
+    def test_the_holder_s_own_damage_is_untouched(self):
+        """The control: a defensive rune moves nothing the holder deals."""
+        bare = self._fight()
+        plated = self._fight(runes=["Bone Plating"])
+        assert plated["total_damage"] == pytest.approx(bare["total_damage"])
+
+    def test_it_discloses_the_arming_hit_and_the_one_enemy_it_cannot_read(self):
+        disclosures = " ".join(rune_effects.resolve_rune("Bone Plating").disclosures)
+        assert "The arming hit is not one of the reduced ones" in disclosures
+        assert "reduces true damage too" in disclosures
+        assert "which is a ceiling" in disclosures
+
+
 class TestResolveRefusals:
     """The runes the pair engine holds no channel for, each saying which."""
 
@@ -134,8 +336,8 @@ class TestResolveRefusals:
 
     def test_a_selected_refusal_publishes_its_receipt_and_moves_nothing(self):
         bare = calculate_payload(_request())
-        with_rune = calculate_payload(_request(minor_runes=["Bone Plating"]))
-        assert any("Bone Plating is not priced" in note for note in with_rune["notes"])
+        with_rune = calculate_payload(_request(minor_runes=["Demolish"]))
+        assert any("Demolish is not priced" in note for note in with_rune["notes"])
         assert with_rune["total_damage"] == pytest.approx(bare["total_damage"])
 
 

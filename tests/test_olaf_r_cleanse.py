@@ -267,6 +267,7 @@ def _stats(max_mana: float = 2000.0) -> dict:
         "move_speed": 0.0,
         "omnivamp_percent": 0.0,
         "ultimate_haste": 0.0,
+        "item_haste": 0.0,
         "attack_damage": 100.0,
         "ability_power": 0.0,
         "base_attack_damage": 60.0,

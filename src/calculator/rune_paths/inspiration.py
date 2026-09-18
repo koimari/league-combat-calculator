@@ -1,11 +1,17 @@
 """Inspiration's minor runes.
 
 Inspiration is the path whose runes buy things the fight model has no axis
-for — biscuits, boots, elixirs, summoner-spell swaps, gold back. Eight of
-the nine compile to the same shape Cosmic Insight showed: selectable, and
-receipted as a refusal rather than a silent zero. The ninth is Jack Of All
-Trades, whose stacks are the build's own item stat types and whose two
-channels are granted together.
+for — biscuits, boots, elixirs, summoner-spell swaps, gold back. Four of
+the nine compile to the same shape Hextech Flashtraption showed: selectable,
+and receipted as a refusal rather than a silent zero. The other five grant a
+stat: Jack Of All Trades, whose stacks are the build's own item stat types
+and whose two channels are granted together, Approach Velocity, whose
+movement speed reaches damage through Swiftmarch's conversion behind a
+switch for the position the request does not carry, Magical Footwear,
+whose flat boots grant rides the same conversion with no gate to ask for,
+Cosmic Insight, whose item haste shortens the empowered-auto stream's own
+cooldown, and Biscuit Delivery, whose permanent maximum health is kept per
+biscuit the request says was consumed.
 """
 
 from collections.abc import Callable, Mapping
@@ -21,9 +27,20 @@ from ..rune_effects import (
     RuneStatContext,
     RuneStatGrantEffect,
     RuneValues,
+    cached_effects,
     no_damage_compiler,
     threshold_gates,
 )
+
+#: Biscuit Delivery's biscuits are drunk between fights, so how many the
+#: holder has kept the health of is banked progress the request states.
+_BISCUITS_CONSUMED = "biscuits_consumed"
+
+
+def _biscuit_count() -> float:
+    """How many biscuits the rune hands out, from its own cached count."""
+    return cached_effects("Biscuit Delivery").number("consumable_deliveries")
+
 
 #: Approach Velocity's gate is where the holder is standing and what the
 #: enemy is suffering, and the request carries neither, so it is a switch
@@ -33,57 +50,17 @@ _NEAR_IMPAIRED = "near_impaired_enemy"
 #: The Inspiration runes that book no damage: disposition, the reason that
 #: becomes the receipt, and any further half this engine refuses.
 _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
-    # Cosmic Insight's haste is real and reaches nothing this engine reads.
-    # Summoner spells are outside the damage model entirely, and an item
-    # active is priced once per fight (``damage._add_item_active_damage``)
-    # whatever its cooldown, so item haste changes no number either. That
-    # makes it withheld — the number exists and is refused — rather than a
-    # structural zero, and it is *not* a stat grant: ability haste, the one
-    # haste the engine reads, is not what this rune grants.
-    "Cosmic Insight": (
-        Disposition.WITHHELD,
-        "it grants summoner-spell haste and item haste, and the engine "
-        "reads neither — summoner spells are outside the damage model, "
-        "and an item active is priced once per fight whatever its cooldown",
-        (
-            "Cosmic Insight grants no ability haste, so nothing in the "
-            "fight's cooldowns is understated by withholding it.",
-        ),
-    ),
     "Hextech Flashtraption": (
         Disposition.STRUCTURAL_ZERO,
         "it replaces Flash with a charged blink while Flash is on cooldown, "
         "and no source states a combat number for it",
         (),
     ),
-    "Magical Footwear": (
-        Disposition.WITHHELD,
-        "it grants free boots on a clock and flat bonus movement speed, and "
-        "the engine buys no item on a clock and reads no movement speed in "
-        "any damage row",
-        (
-            "Magical Footwear's boots are the request's own to hold: a build "
-            "that means to wear them lists them, and the rune's saved gold "
-            "is not a fight number.",
-        ),
-    ),
     "Cash Back": (
         Disposition.STRUCTURAL_ZERO,
         "it refunds a share of every legendary item's gold cost, and gold "
         "never joins the fight's damage total",
         (),
-    ),
-    "Biscuit Delivery": (
-        Disposition.WITHHELD,
-        "its biscuits restore health and mana and each one consumed raises "
-        "maximum health permanently, and the fight model consumes none: they "
-        "arrive at fixed game minutes over a game one fight does not "
-        "simulate",
-        (
-            "Biscuit Delivery's permanent maximum health is unknown as well "
-            "as unearned: the cache carries the biscuit's sale price and not "
-            "the health consuming one grants.",
-        ),
     ),
     "Time Warp Tonic": (
         Disposition.WITHHELD,
@@ -135,6 +112,122 @@ def _compile_approach_velocity(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
     )
 
 
+def _compile_magical_footwear(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
+    """Compile Magical Footwear: flat bonus movement speed on boots.
+
+    The rune's two halves split the way Conditioning's did: the free boots
+    on a clock stay withheld — the engine buys no item on a clock, and a
+    build that means to wear boots lists them — while the flat 10 bonus
+    movement speed those boots grant rides the flat channel into the one
+    published movement speed Swiftmarch converts into adaptive force. No
+    gate is asked for: the +10 sentence carries no timing of its own, only
+    the boots do, so the grant is priced as held the way Unflinching's is.
+    """
+    name = "Magical Footwear"
+    effects = RuneValues(name, entry.get("effects", {}))
+    flat = effects.number("flat_bonus_move_speed")
+
+    def amount(context: RuneStatContext) -> float:
+        del context  # unconditional: the boots half is withheld, this half held
+        return flat
+
+    return RuneStatGrantEffect(
+        rune_name=name,
+        stat=RuneStat.MOVE_SPEED_FLAT,
+        amount=amount,
+        disclosures=(
+            f"{name} grants {flat:g} flat bonus movement speed, priced as "
+            "held: its free boots arrive on a clock the fight model carries "
+            "no clock for, so the boots are the request's own to list and "
+            "the rune's saved gold is not a fight number.",
+            f"{name}'s movement speed reaches the stat card and Swiftmarch's "
+            "conversion of movement speed into adaptive force, which prices "
+            "the build's one published movement speed; no damage row reads "
+            "movement speed itself.",
+        ),
+    )
+
+
+def _compile_cosmic_insight(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
+    """Compile Cosmic Insight: item haste into the empowered-auto stream.
+
+    Its old receipt named the channel exactly — "no channel carries item
+    haste" — and named what the channel would reach: the empowered-auto
+    stream, which walks Titanic Crescent's declared cooldown and counts one
+    proc per window. The member is now in the closed stat set and both
+    numbers came out of prose the parser had no rule for, so the grant
+    lands where the stream reads it. The summoner-spell half stays
+    withheld: summoner spells are outside the damage model, the
+    Ionian-Insight shape, and no request carries one.
+    """
+    name = "Cosmic Insight"
+    effects = RuneValues(name, entry.get("effects", {}))
+    item_haste = effects.number("item_haste")
+    summoner_haste = effects.number("summoner_spell_haste")
+
+    def amount(context: RuneStatContext) -> float:
+        del context  # unconditional: haste is worn, not gated
+        return item_haste
+
+    return RuneStatGrantEffect(
+        rune_name=name,
+        stat=RuneStat.ITEM_HASTE,
+        amount=amount,
+        disclosures=(
+            f"{name} grants {item_haste:g} item haste, which shortens the "
+            "empowered-auto stream's own cooldown through the shared haste "
+            "formula: that stream walks Titanic Crescent's declared cooldown "
+            "and counts one proc per window, so a shorter cooldown is more "
+            "procs in a window that holds the extra one. An item active "
+            "priced once per fight is unmoved by its own cooldown, so that "
+            "stream reads no haste of any kind.",
+            f"{name}'s {summoner_haste:g} summoner-spell haste is withheld: "
+            "summoner spells are outside the damage model and the fight "
+            "casts none, so nothing it shortens would buy another cast. It "
+            "grants no ability haste either, so no ability cooldown is "
+            "understated by withholding that half.",
+        ),
+    )
+
+
+def _compile_biscuit_delivery(entry: Mapping[str, Any]) -> RuneStatGrantEffect:
+    """Compile Biscuit Delivery: permanent maximum health per biscuit consumed.
+
+    Its refusal named two blockers and the first has gone: the cache carried
+    the biscuit's sale price and not the health, and the parser now reads
+    both the grant and the number of biscuits the rune hands out. The second
+    is not a blocker but a question — how many have been drunk by the time
+    the fight opens — and that is the shape every banked count on this page
+    takes. The restore itself stays withheld: it happens out of the fight,
+    on a clock the fight model has none of.
+    """
+    name = "Biscuit Delivery"
+    effects = RuneValues(name, entry.get("effects", {}))
+    per_biscuit = effects.number("max_health_per_consumable")
+    biscuits = effects.number("consumable_deliveries")
+
+    def amount(context: RuneStatContext) -> float:
+        consumed = min(context.option(name, _BISCUITS_CONSUMED, 0.0), biscuits)
+        return consumed * per_biscuit
+
+    return RuneStatGrantEffect(
+        rune_name=name,
+        stat=RuneStat.BONUS_HEALTH,
+        amount=amount,
+        disclosures=(
+            f"{name} grants {per_biscuit:g} permanent maximum health per "
+            f"biscuit consumed, read from the {_BISCUITS_CONSUMED!r} option "
+            f"and capped at the {biscuits:g} biscuits it hands out. The "
+            "default is zero, the state a fight before the first delivery is "
+            "in; the health is kept whether the biscuit is drunk or sold.",
+            f"{name}'s restore — the health and mana one biscuit gives back "
+            "when it is drunk — is withheld: the biscuits arrive at fixed "
+            "game minutes and are consumed between fights, and the fight "
+            "model carries no clock to place either on.",
+        ),
+    )
+
+
 def _compile_jack_of_all_trades(entry: Mapping[str, Any]) -> RuneMultiStatGrantEffect:
     """Compile Jack Of All Trades: ability haste per stack, adaptive at gates.
 
@@ -177,6 +270,9 @@ def _compile_jack_of_all_trades(entry: Mapping[str, Any]) -> RuneMultiStatGrantE
 
 COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
     "Approach Velocity": _compile_approach_velocity,
+    "Magical Footwear": _compile_magical_footwear,
+    "Biscuit Delivery": _compile_biscuit_delivery,
+    "Cosmic Insight": _compile_cosmic_insight,
     "Jack Of All Trades": _compile_jack_of_all_trades,
     **{
         name: no_damage_compiler(name, *declaration)
@@ -185,6 +281,21 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
 }
 
 OPTIONS: dict[str, tuple[RuneOption, ...]] = {
+    "Biscuit Delivery": (
+        RuneOption(
+            key=_BISCUITS_CONSUMED,
+            label="Biscuits consumed",
+            kind=RuneOptionKind.COUNT,
+            default=0.0,
+            bounds=(0.0, _biscuit_count()),
+            disclosure=(
+                "How many of Biscuit Delivery's biscuits have been consumed "
+                "or sold before the fight opens; each one kept its maximum "
+                f"health. The count runs 0 to {_biscuit_count():g}, 0 by "
+                "default, which is a fight before the first delivery."
+            ),
+        ),
+    ),
     "Approach Velocity": (
         RuneOption(
             key=_NEAR_IMPAIRED,

@@ -158,7 +158,11 @@ _FLAT_GOLD = re.compile(r"\{\{g\|([\d.]+)\}\}")
 #: way is absent from the payload rather than guessed at.  Ability haste is
 #: matched only in its bare and plainly-linked forms, so Cosmic Insight's
 #: ``[[ability haste#…|summoner spell haste]]`` — a different stat that links
-#: to the same page — reads as the absence it is.
+#: to the same page — reads as the absence it is.  Cosmic's two hastes are
+#: read by their own section-anchored rules below instead: item haste is a
+#: channel the fight's empowered-auto stream reads, summoner spell haste is
+#: parsed for the record and compiled by nothing, the Ionian-Insight shape
+#: (a sourced number with no summoner model to reach).
 _FLAT_STAT_RULES: tuple[tuple[str, re.Pattern], ...] = (
     (
         "attack_speed_percent",
@@ -173,6 +177,24 @@ _FLAT_STAT_RULES: tuple[tuple[str, re.Pattern], ...] = (
     ),
     ("bonus_health", re.compile(r"\{\{as\|([\d.]+) '''bonus''' health\}\}")),
     ("ability_haste", re.compile(r"([\d.]+) (?:\[\[ability haste\]\]|ability haste)")),
+    # Cosmic Insight states both hastes against their own section anchors —
+    # "Gain 18 [[ability haste#Increasing summoner spell haste|summoner spell
+    # haste]] and 10 [[ability haste#Increasing item haste|item haste]]" — so
+    # one rule takes each spelling and no other rune's.
+    (
+        "summoner_spell_haste",
+        re.compile(
+            r"([\d.]+) "
+            r"\[\[ability haste#Increasing summoner spell haste\|"
+            r"summoner spell haste\]\]"
+        ),
+    ),
+    (
+        "item_haste",
+        re.compile(
+            r"([\d.]+) " r"\[\[ability haste#Increasing item haste\|item haste\]\]"
+        ),
+    ),
 )
 #: Grants stated per stack of a named counter — "(+ 1.5% attack speed per
 #: ''Legend'' stack)".  What is recorded is the *step*, never a total: the
@@ -376,6 +398,55 @@ _FLAT_BONUS_ARMOR = re.compile(
 _FLAT_BONUS_MR = re.compile(
     r"([\d.]+)\s*(?:\}\})?\s*'''bonus'''\s+magic resistance", re.IGNORECASE
 )
+# A rune's flat movement speed. The two that state it write a plain number
+# against the ``'''bonus'''`` marker — Magical Footwear's 10 on boots and
+# Relentless Hunter's 8 per stack — so anchoring on the marker without a
+# percent takes those two and nothing else: Celerity's 1% and Approach
+# Velocity's 7.5% carry a ``%`` the pattern refuses, Stormraider's and Fleet
+# Footwork's melee/ranged splits carry one inside their ``{{rd}}`` pair, and
+# Waterwalking splits its number and its words across two templates.
+_FLAT_BONUS_MOVE_SPEED = re.compile(
+    r"([\d.]+)\s*(?:\}\})?\s*'''bonus'''\s+movement speed", re.IGNORECASE
+)
+# Manaflow Band's two numbers: the maximum mana one stack adds and the
+# ceiling the stacks reach. The step is anchored on "by", which is what
+# separates a grant from a share: Presence of Mind restores "15% of your
+# '''maximum''' mana" and carries no "by", so it cannot match. The ceiling
+# names its unit inside the same template, which no other rune's "up to"
+# does.
+_MAX_MANA_PER_STACK = re.compile(r"'''maximum'''\s+mana by\s+([\d.]+)", re.IGNORECASE)
+_MAX_MANA_CAP = re.compile(r"up to\s*\{\{as\|([\d.]+)\s*mana\}\}", re.IGNORECASE)
+# Biscuit Delivery's permanent half: the maximum health one consumed biscuit
+# adds. Deep Ward's "1 '''bonus''' health" is a ward's and says bonus, and
+# no other rune writes a maximum-health grant at all, so anchoring on the
+# "'''maximum''' health ... by" pair takes this one alone.
+_MAX_HEALTH_PER_CONSUMABLE = re.compile(
+    r"'''maximum''' health[}\s]*by \{\{as\|([\d.]+)", re.IGNORECASE
+)
+# Second Wind's two numbers: the share of missing health one window
+# regenerates and the seconds it takes. Manaflow Band's "1% of your
+# '''missing''' mana" is the only other missing-share in the cache and names
+# mana, so the health spelling takes this rune alone; the duration is
+# anchored on the same template's close for the same reason.
+_MISSING_HEALTH_REGEN_RATIO = re.compile(
+    r"\{\{as\|([\d.]+)% of your '''missing''' health\}\}", re.IGNORECASE
+)
+_MISSING_HEALTH_REGEN_DURATION = re.compile(
+    r"'''missing''' health\}\} over ([\d.]+)\s*seconds", re.IGNORECASE
+)
+# Bone Plating's two counts: how many incoming hits one activation takes a
+# flat amount off, and how long the activation lasts. Both sentences are the
+# rune's own shape and no other rune in the cache writes either.
+_INCOMING_HITS_REDUCED = re.compile(
+    r"the next (\d+) spells or attacks you receive", re.IGNORECASE
+)
+_INCOMING_REDUCTION_WINDOW = re.compile(
+    r"activate ''[^']+'' for \{\{fd\|([\d.]+)\}\} seconds", re.IGNORECASE
+)
+#: The clock times a delivery rune hands a consumable out at. Unsealed
+#: Spellbook's first swap is written through ``MinuteDisplay`` and carries no
+#: digits here, so this counts Biscuit Delivery's three and nothing else.
+_CONSUMABLE_DELIVERY_TIMES = re.compile(r"\{\{sbc\|\d+:\d\d\}\}")
 # Conditioning's second half, which multiplies the TOTAL rather than adding
 # to the bonus. Spelled out in full so it cannot match a percent elsewhere
 # in a description that happens to mention resistances.
@@ -1632,6 +1703,26 @@ def _parse_prose_rules(
             ("deathfire_amp_ratio", _percent_ratio, _DEATHFIRE_AMP_RATIO),
             ("flat_bonus_armor", float, _FLAT_BONUS_ARMOR),
             ("flat_bonus_magic_resistance", float, _FLAT_BONUS_MR),
+            ("flat_bonus_move_speed", float, _FLAT_BONUS_MOVE_SPEED),
+            ("max_mana_per_stack", float, _MAX_MANA_PER_STACK),
+            ("max_mana_cap", float, _MAX_MANA_CAP),
+            ("max_health_per_consumable", float, _MAX_HEALTH_PER_CONSUMABLE),
+            ("incoming_hits_reduced", int, _INCOMING_HITS_REDUCED),
+            (
+                "incoming_reduction_window_seconds",
+                float,
+                _INCOMING_REDUCTION_WINDOW,
+            ),
+            (
+                "missing_health_regen_ratio",
+                _percent_ratio,
+                _MISSING_HEALTH_REGEN_RATIO,
+            ),
+            (
+                "missing_health_regen_duration_seconds",
+                float,
+                _MISSING_HEALTH_REGEN_DURATION,
+            ),
             ("total_resist_percent", _percent_ratio, _TOTAL_RESIST_PERCENT),
             ("heal_and_shield_power_percent", float, _HEAL_AND_SHIELD_POWER),
             ("low_health_recovery_amp_ratio", _percent_ratio, _LOW_HEALTH_RECOVERY_AMP),
@@ -1649,6 +1740,14 @@ def _parse_prose_rules(
     }
     if deathfire_durations:
         recorder.record("deathfire_duration_seconds", deathfire_durations)
+
+    # How many consumables a delivery rune hands out, counted from the clock
+    # times it names rather than from a number it never writes: Biscuit
+    # Delivery's three biscuits are "2:00", "4:00" and "6:00", and the count
+    # is the ceiling on everything one of them can be consumed for.
+    deliveries = _CONSUMABLE_DELIVERY_TIMES.findall(description)
+    if deliveries:
+        recorder.record("consumable_deliveries", len(deliveries))
 
     _record_scalars(
         recorder, description, (("max_stacks", int, _MAX_STACKS, _STACK_CEILING),)

@@ -403,6 +403,7 @@ def test_m2_denied_casts_never_produce_refund():
         "move_speed": 0.0,
         "omnivamp_percent": 0.0,
         "ultimate_haste": 0.0,
+        "item_haste": 0.0,
         "ability_power": 0.0,
         "attack_damage": 100.0,
         "base_attack_damage": 60.0,

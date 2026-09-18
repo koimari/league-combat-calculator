@@ -311,6 +311,7 @@ def attacker_stats():
             "ability_haste": 0.0,
             "basic_ability_haste": 0.0,
             "ultimate_haste": 0.0,
+            "item_haste": 0.0,
             "max_mana": 500.0,
             "bonus_mana": 0.0,
             "resource_regen_per_second": 0.0,

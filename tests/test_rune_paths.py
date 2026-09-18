@@ -201,17 +201,17 @@ class TestScorch:
 
 
 class TestCosmicInsight:
-    """Inspiration row 3: compiled, selectable, and refused with a reason."""
+    """Inspiration row 3: compiled, selectable, and priced on its item half."""
 
-    def test_its_haste_is_withheld_because_the_engine_reads_neither_kind(self):
+    def test_it_grants_item_haste_and_withholds_only_the_summoner_half(self):
         effect = rune_effects.resolve_rune("Cosmic Insight")
-        assert isinstance(effect, rune_effects.RuneNoDamageEffect)
-        assert effect.zero_policy.disposition.name == "WITHHELD"
-        assert "summoner-spell haste and item haste" in effect.zero_policy.reason
-        assert "summoner spells are outside the damage model" in (
-            effect.zero_policy.reason
+        assert isinstance(effect, rune_effects.RuneStatGrantEffect)
+        assert effect.stat is rune_effects.RuneStat.ITEM_HASTE
+        assert any("10 item haste" in receipt for receipt in effect.disclosures)
+        assert any(
+            "summoner-spell haste is withheld" in receipt
+            for receipt in effect.disclosures
         )
-        assert any("no ability haste" in receipt for receipt in effect.receipts)
 
 
 def _context(*, level, ability_power=0.0, bonus_attack_damage=0.0, options=None):

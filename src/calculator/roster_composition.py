@@ -46,6 +46,11 @@ class ActorRequest:
     include_auto_attacks: bool | None = None
     auto_attack_uptime_mode: str | None = None
     auto_attack_uptime: float | None = None
+    #: The validated rune page this participant fights with, or ``None`` for
+    #: a participant that brings none. A roster card carries no page, so
+    #: ``None`` is the truthful answer for every actor but the main
+    #: champion, and the walk lanes a rune reaches read it from here.
+    rune_page: Any | None = None
 
     @classmethod
     def of_params(cls, params: FightParams) -> ActorRequest:
@@ -61,6 +66,7 @@ class ActorRequest:
             support_target_selections=params.support_target_selections,
             cast_order=params.cast_order,
             item_options=params.item_options,
+            rune_page=params.rune_page,
         )
 
 

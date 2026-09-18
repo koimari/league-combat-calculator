@@ -1,9 +1,9 @@
 """Precision's minor runes: what each one compiles to, and what it costs.
 
 Precision's rows split three ways and each half of the split is pinned here.
-Row 1 pays on takedowns and kills: Triumph's heal is priced on the takedown
-the fight really scores, and its two row-mates pay on events the pair engine
-never produces and compile to receipted refusals. Row 2 grows with a
+Row 1 pays on takedowns and kills: Triumph's heal and Absorb Life's are both
+priced on the one the fight really scores, and Presence of Mind pays on an
+event the pair engine never produces and compiles to a receipted refusal. Row 2 grows with a
 game-long ``Legend`` counter, which becomes a declared option: Alacrity's
 attack speed, Bloodline's life steal and bonus health, and Haste's *basic*
 ability haste are all real grants read through the real pipeline, each into
@@ -210,7 +210,6 @@ class TestTheRowThatPaysOnATakedown:
     @pytest.mark.parametrize(
         ("name", "phrase"),
         [
-            ("Absorb Life", "there is nothing to kill"),
             ("Presence of Mind", "not gated by a resource"),
         ],
     )
@@ -220,13 +219,13 @@ class TestTheRowThatPaysOnATakedown:
         assert effect.zero_policy.disposition.name == "WITHHELD"
         assert phrase in effect.zero_policy.reason
 
-    def test_absorb_life_now_quotes_the_heal_it_declines_to_place(self):
-        """The wiki's piecewise rule parses, so only the kill is missing.
+    def test_absorb_life_pays_its_level_table_on_the_kill_the_fight_scores(self):
+        """The wiki's piecewise rule parses, and the kill is the one Triumph uses.
 
-        The wiki states the span as "1 – 27 (based on level)" and its own
+        The wiki states the span as "1 - 27 (based on level)" and its own
         prose formula as "1, +0.25 per level until level 5, then +1 per
         level until level 10, then +2 per level"; the cached table is that
-        rule evaluated, and the receipt quotes its ends.
+        rule evaluated, and the heal is read off it at the holder's level.
         """
         table = rune_effects.RUNE_EFFECTS["Absorb Life"]["effects"]["leveling"][0]
         assert len(table) == 20
@@ -238,10 +237,53 @@ class TestTheRowThatPaysOnATakedown:
             pytest.approx(27.0),
         ]
         effect = rune_effects.resolve_rune("Absorb Life")
-        assert "heal 1 at level 1 rising to 23 at level 18 and 27 at level 20" in (
-            effect.disclosures[0]
+        assert isinstance(effect, rune_effects.RuneHealEffect)
+        assert effect.trigger is rune_effects.RuneHealTrigger.TAKEDOWNS
+        assert effect.delay_seconds == 0.0
+        assert effect.amount(_heal_inputs(health=2358.0, level=18)) == (
+            pytest.approx(23.0)
         )
-        assert "a kill carries no timestamp" in effect.disclosures[1]
+
+    def test_absorb_life_pays_a_fight_that_kills_and_not_one_that_does_not(self):
+        def fight(*, runes=(), enemy_level=6, duration=10):
+            return calculate_payload(
+                {
+                    "champion": "Garen",
+                    "level": 18,
+                    "role": "top",
+                    "items": ["Infinity Edge"],
+                    "boots": "",
+                    "enemies": [
+                        {
+                            "kind": "champion",
+                            "champion": "Darius",
+                            "level": enemy_level,
+                            "role": "top",
+                        }
+                    ],
+                    "fight_duration": duration,
+                    "fight_mode": "time_based",
+                    "deterministic": True,
+                    "include_auto_attacks": True,
+                    "auto_attack_uptime": 1.0,
+                    "keystone": "Press the Attack",
+                    "minor_runes": list(runes),
+                    "stat_shards": [],
+                }
+            )
+
+        killed = fight(runes=["Absorb Life"])
+        assert killed["target_ending_health"] == pytest.approx(0.0)
+        assert killed["self_healing"] == pytest.approx(23.0)
+        assert fight()["self_healing"] == pytest.approx(0.0)
+        survived = fight(runes=["Absorb Life"], enemy_level=18, duration=2)
+        assert survived["target_ending_health"] > 0.0
+        assert survived["self_healing"] == pytest.approx(0.0)
+
+    def test_absorb_life_discloses_the_kills_this_fight_does_not_hold(self):
+        effect = rune_effects.resolve_rune("Absorb Life")
+        assert "the heal is a floor" in effect.disclosures[1]
+        assert "minions and monsters a lane kills" in effect.disclosures[1]
 
     def test_triumph_heals_a_share_of_maximum_health_after_its_delay(self):
         """2.5% of maximum health, one second after the takedown."""
@@ -295,11 +337,11 @@ class TestTheRowThatPaysOnATakedown:
         assert killed["champion_stats"]["health"] == 2358
 
 
-def _heal_inputs(*, health):
-    """A heal input carrying only the stat Triumph's formula reads."""
+def _heal_inputs(*, health, level=18):
+    """A heal input carrying only the stats these heals' formulas read."""
     return DamageInputs(
         champion_stats={"health": health},
-        level=18,
+        level=level,
         is_melee=False,
         target_max_health=1000.0,
         target_current_health=0.0,

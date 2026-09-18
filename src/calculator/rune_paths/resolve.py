@@ -25,7 +25,9 @@ from ..rune_effects import (
     RuneHealEffect,
     RuneHealTrigger,
     RuneOption,
+    RunePlatingEffect,
     RuneProcEffect,
+    RuneRegenerationEffect,
     RuneStat,
     RuneMultiStatGrantEffect,
     RuneOptionKind,
@@ -324,47 +326,114 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
     # Demolish's damage is real and sourced; its target is not a champion.
     "Demolish": (
         Disposition.WITHHELD,
-        "its empowered attack damages turrets, and the pair engine prices "
-        "one attacker against one champion",
+        "its empowered attack damages turrets, and the fight's whole target "
+        "vocabulary is champion and minion (item_effects.TARGET_CLASSES): "
+        "there is no structure class for a turret to be",
         (
             "Demolish's damage share of the holder's maximum health is "
             "withheld with it; the cache carries its melee and ranged split "
             "unclassified, so no number of it is priced either way.",
         ),
     ),
-    "Second Wind": (
-        Disposition.WITHHELD,
-        "it heals a share of the holder's *missing* health after taking "
-        "damage, and no rune trigger fires on damage TAKEN: every member of "
-        "RuneHealTrigger and RuneTrigger names something the holder does, "
-        "damage dealt, an impair applied, a takedown, a self-shield",
-        (
-            "Second Wind's blocker is the trigger and not the health: the "
-            "fight does carry the holder's health and the damage it takes, "
-            "and publishes both as health_damage and effective_health on the "
-            "participant row. What it has no vocabulary for is a rune that "
-            "answers an incoming hit.",
-        ),
-    ),
-    "Bone Plating": (
-        Disposition.WITHHELD,
-        "it takes a flat amount off each of the next hits the holder "
-        "receives, and the engine's flat-reduction channel runs the other "
-        "way: champion_damage_flat_reduction is read off the TARGET, where "
-        "it lowers the damage this attacker deals, and nothing reads the "
-        "holder's own",
-        (
-            "Bone Plating's blocker is the channel's direction, not its "
-            "shape. Guardian's Horn declares the same field and it works: "
-            "held by the enemy it drops a Garen fight from 2276.8 to 1826.8. "
-            "Held by the holder it changes no damage taken, so a rune "
-            "granting it would grant nothing.",
-            "Its own reading would also need the window the field has no "
-            "room for: the next 3 hits within 1.5 seconds, from the one "
-            "champion that triggered it.",
-        ),
-    ),
 }
+
+
+def _compile_bone_plating(entry: Mapping[str, Any]) -> RunePlatingEffect:
+    """Compile Bone Plating: a flat cut off the next hits the holder takes.
+
+    Its refusal named the direction of a channel, and the direction was
+    only half of what was wrong with the fit. The item field it pointed at
+    is one number read off a target and applied to every packet; this rune
+    arms on a hit, pays a counted few after it, and then waits out a
+    cooldown. None of that fits a target field, and all of it fits the
+    survival walk, which holds the incoming packets in order with their
+    times. So the rune is priced there and the item field is left alone.
+    """
+    name = "Bone Plating"
+    effects = RuneValues(name, entry.get("effects", {}))
+    top = RuneValues(name, entry)
+    flat_by_level = required_leveling(name, effects)
+    hits = int(effects.number("incoming_hits_reduced"))
+    window = effects.number("incoming_reduction_window_seconds")
+    cooldown = top.number("cooldown")
+    if hits < 1 or window <= 0.0 or cooldown <= 0.0:
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] states {hits} hits over {window:g} "
+            f"seconds on a {cooldown:g} second cooldown, which takes nothing "
+            "off anything — wiki parse degraded"
+        )
+    return RunePlatingEffect(
+        rune_name=name,
+        flat_by_level=flat_by_level,
+        hits=hits,
+        window_seconds=window,
+        cooldown_seconds=cooldown,
+        disclosures=(
+            f"{name} takes {at_level(flat_by_level, 1):g} off each of the "
+            f"next {hits} hits at level 1, rising to "
+            f"{at_level(flat_by_level, 18):g} at level 18, for {window:g} "
+            f"seconds after the holder is hit and then not again for "
+            f"{cooldown:g} seconds. The arming hit is not one of the reduced "
+            "ones, as in game.",
+            f"{name} is priced against every incoming packet the walk holds, "
+            "whatever damage type it is and whatever cast authored it, "
+            "because the rune reduces true damage too; a packet smaller than "
+            "the reduction is taken to zero and not below it.",
+            f"{name}'s one enemy is not read: in game the reduced hits must "
+            "come from the champion that armed it, and the walk's incoming "
+            "stream is one enemy unless the request rosters more. Against "
+            f"several this prices the next {hits} hits from any of them, "
+            "which is a ceiling.",
+        ),
+    )
+
+
+def _compile_second_wind(entry: Mapping[str, Any]) -> RuneRegenerationEffect:
+    """Compile Second Wind: a share of missing health, after an incoming hit.
+
+    Its refusal was right about where the blocker was and wrong about how
+    far it went. There was no rune trigger for damage TAKEN, and there was
+    a lane: the survival walk holds the packets the holder received and
+    already arms a regeneration window off one of them for Doran's Shield.
+    What the rune vocabulary lacked was a kind that could be armed there,
+    and the cache lacked both of the rune's numbers.
+
+    The window is armed once and re-armed only after it has run out. A hit
+    inside a running window refreshes it in game and restarts the clock on
+    a share of the missing health the fight has grown since, which is more
+    than this pays, so the reading is a FLOOR and its receipt says so.
+    """
+    name = "Second Wind"
+    effects = RuneValues(name, entry.get("effects", {}))
+    ratio, duration = effects.numbers(
+        "missing_health_regen_ratio", "missing_health_regen_duration_seconds"
+    )
+    if ratio <= 0.0 or duration <= 0.0:
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] states a {ratio:g} share over "
+            f"{duration:g} seconds, which regenerates nothing — wiki parse "
+            "degraded"
+        )
+    return RuneRegenerationEffect(
+        rune_name=name,
+        missing_health_ratio=ratio,
+        duration_seconds=duration,
+        disclosures=(
+            f"{name} regenerates {ratio * 100:g}% of the holder's missing "
+            f"health over {duration:g} seconds, armed by the first champion "
+            "damage the holder takes that reaches health: damage a shield "
+            "absorbs whole arms nothing, which is the same certified hit "
+            "Doran's Shield's window waits for.",
+            f"{name}'s refresh is not replayed: a hit inside a running "
+            "window restarts it in game against the larger missing health "
+            "the fight has grown by then, so this reading is a floor. The "
+            "window re-arms only once it has run out.",
+            f"{name}'s share is priced against the missing health at each "
+            "second of the window rather than at the hit that armed it, "
+            "because no source states a regeneration cadence: the seconds "
+            "decide when the health lands, not how much.",
+        ),
+    )
 
 
 COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
@@ -374,6 +443,8 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
     "Font of Life": _compile_font_of_life,
     "Overgrowth": _compile_overgrowth,
     "Shield Bash": _compile_shield_bash,
+    "Second Wind": _compile_second_wind,
+    "Bone Plating": _compile_bone_plating,
     **{
         name: no_damage_compiler(name, *declaration)
         for name, declaration in _NO_DAMAGE.items()

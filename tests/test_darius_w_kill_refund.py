@@ -163,6 +163,7 @@ def _stats(max_mana: float = 1404.0, regen: float = 8.0) -> dict:
         "move_speed": 0.0,
         "omnivamp_percent": 0.0,
         "ultimate_haste": 0.0,
+        "item_haste": 0.0,
         "level": float(_LEVEL),
         "base_attack_damage": _BASE_AD,
         "bonus_attack_damage": _BONUS_AD,

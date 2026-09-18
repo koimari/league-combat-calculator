@@ -953,7 +953,9 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Domination/RelentlessHunter/RelentlessHunter.png",
     "description": "{{sbc|Passive:}} Gain {{sti|{{as|8 '''bonus''' movement speed}}}} while [[combat status|out of combat]] per ''Bounty Hunter'' stack, up to {{as|40|ms}} at 5 stacks.\nEarn a ''Bounty Hunter'' [[stack]] whenever scoring a {{tip|takedown}} against an enemy champion, up to one per unique champion.",
-    "effects": {}
+    "effects": {
+      "flat_bonus_move_speed": 8.0
+    }
   },
   "Ultimate Hunter": {
     "name": "Ultimate Hunter",
@@ -1286,7 +1288,10 @@
     "cooldown": 15.0,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Sorcery/ManaflowBand/ManaflowBand.png",
     "description": "{{sbc|Passive:}} {{tt|Affecting|See notes}} an enemy {{tip|champion}} with an [[champion ability|ability]] permanently increases your {{sti|mana|{{as|'''maximum''' mana by 25}}}}, up to {{as|250\u00a0mana}}. {{as|Mana}} gained from this effect preserves your {{as|'''current''' mana}}.\nAfter reaching {{as|250 '''bonus''' mana}}, permanently restore {{as|1% of your '''missing''' mana}} every 5\u00a0seconds.",
-    "effects": {}
+    "effects": {
+      "max_mana_per_stack": 25.0,
+      "max_mana_cap": 250.0
+    }
   },
   "Nimbus Cloak": {
     "name": "Nimbus Cloak",
@@ -1816,7 +1821,10 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Resolve/SecondWind/SecondWind.png",
     "description": "{{sbc|Passive:}} After taking damage from an enemy {{tip|champion}}, {{sti|health regeneration|link=true|regenerate}} {{as|4% of your '''missing''' health}} over 10 seconds, refreshing on subsequent damage.",
-    "effects": {}
+    "effects": {
+      "missing_health_regen_ratio": 0.04,
+      "missing_health_regen_duration_seconds": 10.0
+    }
   },
   "Bone Plating": {
     "name": "Bone Plating",
@@ -1849,7 +1857,9 @@
           61.76470588235294,
           63.529411764705884
         ]
-      ]
+      ],
+      "incoming_hits_reduced": 3,
+      "incoming_reduction_window_seconds": 1.5
     }
   },
   "Overgrowth": {
@@ -1970,7 +1980,9 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/MagicalFootwear/MagicalFootwear.png",
     "description": "{{sbc|Passive:}} After 12 minutes (reduced by 45 seconds whenever scoring a {{tip|takedown}} against an enemy champion), you gain {{ii|Slightly Magical Boots}} for {{g|free}}. ''Slightly Magical Boots'' are identical to {{ii|Boots}} and can be upgraded as if it were the item. If the inventory is full while receiving the boots, they will appear as soon as a slot in the inventory is available.\nAdditionally, your boots grant an additional {{sti|{{as|10 '''bonus''' movement speed}}}}.",
-    "effects": {}
+    "effects": {
+      "flat_bonus_move_speed": 10.0
+    }
   },
   "Cash Back": {
     "name": "Cash Back",
@@ -2007,7 +2019,9 @@
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/BiscuitDelivery/BiscuitDelivery.png",
     "description": "{{sbc|Passive:}} Receive a {{ii|Total Biscuit of Everlasting Will}} at {{sbc|2:00}}, {{sbc|4:00}}, and {{sbc|6:00}}. If the inventory is full while receiving a biscuit, the biscuit(s) will appear as soon as a slot in the inventory is available.\nConsuming a ''Biscuit'' will permanently increase your {{as|{{sti|'''maximum''' health}}}} by {{as|30|health}}, in addition to its effects. You will also gain the increased health if you sell the biscuit for {{g|5}}.",
     "effects": {
-      "flat_gold": 5.0
+      "flat_gold": 5.0,
+      "max_health_per_consumable": 30.0,
+      "consumable_deliveries": 3
     }
   },
   "Cosmic Insight": {
@@ -2017,7 +2031,10 @@
     "cooldown": null,
     "icon": "https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Inspiration/CosmicInsight/CosmicInsight.png",
     "description": "{{sbc|Passive:}} Gain 18 [[ability haste#Increasing summoner spell haste|summoner spell haste]] and 10 [[ability haste#Increasing item haste|item haste]].",
-    "effects": {}
+    "effects": {
+      "summoner_spell_haste": 18.0,
+      "item_haste": 10.0
+    }
   },
   "Approach Velocity": {
     "name": "Approach Velocity",

@@ -16,7 +16,7 @@ a declared option.
 from collections.abc import Callable, Mapping
 from typing import Any, NamedTuple
 
-from ..ability_spec import Disposition, ZeroPolicy
+from ..ability_spec import Disposition
 from ..champions.inputs import champion_stat
 from ..item_effects import DamageInputs
 from ..rune_effects import (
@@ -27,7 +27,6 @@ from ..rune_effects import (
     RuneHealEffect,
     RuneHealTrigger,
     RuneMultiStatGrantEffect,
-    RuneNoDamageEffect,
     RuneOption,
     RuneOptionKind,
     RuneStat,
@@ -193,35 +192,42 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
 }
 
 
-def _compile_absorb_life(entry: Mapping[str, Any]) -> RuneNoDamageEffect:
-    """Compile Absorb Life: a heal on a kill the pair engine has nothing to make.
+def _compile_absorb_life(entry: Mapping[str, Any]) -> RuneHealEffect:
+    """Compile Absorb Life: a leveled heal on a kill the fight actually scored.
 
-    Its amount is known — the wiki's piecewise progression parses — and its
-    destination now exists, so what is left is the event: the fight is one
-    champion against one champion, and a minion kill has neither an actor to
-    kill nor a timestamp to place the heal at. A kill count would be a
-    number with no moment, and a heal packet without a moment is the guessed
-    timestamp the ledger refuses everywhere else.
+    Its refusal said the pair engine prices one champion against one
+    champion and there is nothing to kill. The first half was already
+    false — a fight may be run against a minion — and the second is false
+    of any fight the target does not survive, which is the exact event
+    Triumph is already paid on. So the rune rides that stream, at the same
+    dated instant, and what stays withheld is every OTHER kill: the minions
+    and monsters a lane pays it on are not in this fight, so the reading is
+    a floor.
     """
     name = "Absorb Life"
     effects = RuneValues(name, entry.get("effects", {}))
     by_level = required_leveling(name, effects)
-    return RuneNoDamageEffect(
+
+    def amount(inputs: DamageInputs) -> float:
+        return at_level(by_level, inputs.level)
+
+    return RuneHealEffect(
         rune_name=name,
-        zero_policy=ZeroPolicy(
-            Disposition.WITHHELD,
-            "it heals on killing a minion or a monster, and the pair engine "
-            "prices one champion against one champion — there is nothing to "
-            "kill",
-        ),
+        trigger=RuneHealTrigger.TAKEDOWNS,
+        # Every kill pays; nothing gates a second one but a second kill.
+        cooldown_seconds=0.0,
+        delay_seconds=0.0,
+        amount=amount,
         disclosures=(
-            f"{name} would heal {at_level(by_level, 1):g} at level 1 rising "
-            f"to {at_level(by_level, 18):g} at level 18 and "
-            f"{at_level(by_level, 20):g} at level 20, per kill; the amount is "
-            "cached and only the kill is missing.",
-            f"{name}'s heal has nowhere to land in time even as a count: a "
-            "kill carries no timestamp, and the self-healing ledger takes "
-            "packets with moments rather than totals.",
+            f"{name} heals {at_level(by_level, 1):g} at level 1 rising to "
+            f"{at_level(by_level, 18):g} at level 18 and "
+            f"{at_level(by_level, 20):g} at level 20, on a kill the fight "
+            "actually scored — the target ending at or below zero health — "
+            "and nothing on a fight the target survives.",
+            f"{name} pays on every kill in game, and the only one this "
+            "fight holds is its own target: the minions and monsters a lane "
+            "kills are outside the pair it prices, so the heal is a floor "
+            "rather than the rune's full reading.",
         ),
     )
 
