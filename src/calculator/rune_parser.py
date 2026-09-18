@@ -434,6 +434,18 @@ _MISSING_HEALTH_REGEN_RATIO = re.compile(
 _MISSING_HEALTH_REGEN_DURATION = re.compile(
     r"'''missing''' health\}\} over ([\d.]+)\s*seconds", re.IGNORECASE
 )
+# Presence of Mind's three numbers. The takedown halves name the resource
+# whose maximum they share ("maximum mana", "maximum energy"), which is what
+# separates a restore from a grant: Demolish shares maximum HEALTH and
+# Manaflow restores "missing" mana, so neither spelling can match. The
+# damage-half cooldown is the rune's own parenthetical, which no other rune
+# in the cache writes. The damage-half table is the rune's melee/ranged
+# growth pair below, not a scalar.
+_TAKEDOWN_MAX_MANA = re.compile(r"([\d.]+)% of your '''maximum''' mana", re.IGNORECASE)
+_TAKEDOWN_MAX_ENERGY = re.compile(
+    r"([\d.]+)% of your '''maximum''' energy", re.IGNORECASE
+)
+_RESTORE_COOLDOWN = re.compile(r"\(([\d.]+) second cooldown\)", re.IGNORECASE)
 # Bone Plating's two counts: how many incoming hits one activation takes a
 # flat amount off, and how long the activation lasts. Both sentences are the
 # rune's own shape and no other rune in the cache writes either.
@@ -840,7 +852,18 @@ def _evaluate_piecewise(formula: str, columns: int) -> list[float]:
     level table is the parse degradation the accessors exist to catch.
     """
     parts = [part.strip() for part in formula.split(";") if part.strip()]
-    values = [float(parts[0])]
+    try:
+        values = [float(parts[0])]
+    except ValueError:
+        # A base written as arithmetic ("6*0.8", the ranged column of a
+        # growth pair): the wiki evaluates it, so this does too. A base
+        # naming the level is refused rather than guessed at a level.
+        expression = _safe_pp_expression(parts[0])
+        if any(isinstance(node, ast.Name) for node in ast.walk(expression)):
+            raise ValueError(
+                f"pp progression {formula!r} opens on a level, not a value"
+            )
+        values = [_evaluate_pp_node(expression.body, 1.0)]
     for index, part in enumerate(parts[1:], start=1):
         segment = _PIECEWISE_SEGMENT.match(part)
         if not segment:
@@ -1190,9 +1213,19 @@ def _parse_split_leveling(description: str, recorder: _EffectRecorder) -> None:
             continue
         try:
             pair = [evaluate_pp(formula, None) for formula in positional]
-        except ValueError as exc:
-            recorder.warn(str(exc))
-            continue
+        except ValueError:
+            # A bare growth pair renders twenty columns where the default
+            # reads eighteen: Presence of Mind's restore table is the one
+            # in the cache, and the wiki's other rendered width is the only
+            # second try this gets before the warning below.
+            try:
+                pair = [
+                    _evaluate_piecewise(formula, _FULL_LEVEL_COUNT)
+                    for formula in positional
+                ]
+            except ValueError as exc:
+                recorder.warn(str(exc))
+                continue
         key = (
             "heal_melee_ranged_leveling"
             if named.get("color") == "heal"
@@ -1438,6 +1471,7 @@ def _parse_scalar_templates(
         if rune_name == _GRASP_NAME
         else None
     )
+
     if grasp_health:
         recorder.record(
             "grasp_bonus_health_melee_ranged",
@@ -1724,6 +1758,9 @@ def _parse_prose_rules(
                 _MISSING_HEALTH_REGEN_DURATION,
             ),
             ("total_resist_percent", _percent_ratio, _TOTAL_RESIST_PERCENT),
+            ("takedown_mana_ratio", _percent_ratio, _TAKEDOWN_MAX_MANA),
+            ("takedown_energy_ratio", _percent_ratio, _TAKEDOWN_MAX_ENERGY),
+            ("restore_cooldown_seconds", float, _RESTORE_COOLDOWN),
             ("heal_and_shield_power_percent", float, _HEAL_AND_SHIELD_POWER),
             ("low_health_recovery_amp_ratio", _percent_ratio, _LOW_HEALTH_RECOVERY_AMP),
             (

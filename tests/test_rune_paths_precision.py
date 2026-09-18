@@ -2,8 +2,8 @@
 
 Precision's rows split three ways and each half of the split is pinned here.
 Row 1 pays on takedowns and kills: Triumph's heal and Absorb Life's are both
-priced on the one the fight really scores, and Presence of Mind pays on an
-event the pair engine never produces and compiles to a receipted refusal. Row 2 grows with a
+priced on the one the fight really scores, and Presence of Mind restores mana
+there and on damaging casts into the mana walk's own ledger. Row 2 grows with a
 game-long ``Legend`` counter, which becomes a declared option: Alacrity's
 attack speed, Bloodline's life steal and bonus health, and Haste's *basic*
 ability haste are all real grants read through the real pipeline, each into
@@ -13,7 +13,10 @@ the channel its own sentence names. Row 3's Coup de Grace is pinned in
 
 import pytest
 
+from types import SimpleNamespace
+
 from src.calculator import rune_effects
+from src.calculator import rune_restore_events
 from src.calculator.calculate import calculate_payload
 from src.calculator.item_effects import DamageInputs
 from src.calculator.rune_paths import precision
@@ -204,20 +207,257 @@ class TestLegendHaste:
         assert unstacked["total_damage"] == pytest.approx(bare["total_damage"])
 
 
-class TestTheRowThatPaysOnATakedown:
-    """Row 1: Triumph's takedown the fight can score, and two it cannot."""
+class TestPresenceOfMindPricesItsRestores:
+    """Row 1: mana restores on damage and on takedown, into the mana ledger.
 
-    @pytest.mark.parametrize(
-        ("name", "phrase"),
-        [
-            ("Presence of Mind", "not gated by a resource"),
-        ],
-    )
-    def test_each_is_withheld_for_the_reason_it_states(self, name, phrase):
-        effect = rune_effects.resolve_rune(name)
-        assert isinstance(effect, rune_effects.RuneNoDamageEffect)
-        assert effect.zero_policy.disposition.name == "WITHHELD"
-        assert phrase in effect.zero_policy.reason
+    Both halves were a missing parse, not a missing capability: the cache
+    carried only the takedown delay, and the pipeline always ran the mana
+    walk with omission, so the old "rotation is not gated" receipt was stale
+    about the ledger if true about damage. The damage half rides the walk's
+    timeline and the takedown half lands post-hoc at the scored takedown.
+    """
+
+    def _fight(self, runes, target_health=10000.0, **overrides):
+        request = {
+            "champion": "Ahri",
+            "level": 18,
+            "items": [],
+            "fight_mode": "time_based",
+            "fight_duration": 20.0,
+            "include_auto_attacks": True,
+            "auto_attack_uptime": 1.0,
+            "target_health": target_health,
+            "target_armor": 100.0,
+            "target_mr": 100.0,
+            "keystone": "Arcane Comet",
+            "minor_runes": runes,
+            "stat_shards": [],
+        }
+        request.update(overrides)
+        return calculate_payload(request, deterministic=True)
+
+    def _presence_receipts(self, result):
+        return [
+            row
+            for row in result["resource_ledger"]["receipts"]
+            if row.get("source") == "Presence of Mind (rune)"
+        ]
+
+    def test_the_parser_reads_the_growth_pair_and_the_three_scalars(self):
+        effects = rune_effects.RUNE_EFFECTS["Presence of Mind"]["effects"]
+        assert effects["takedown_mana_ratio"] == pytest.approx(0.15)
+        assert effects["takedown_energy_ratio"] == pytest.approx(0.15)
+        assert effects["restore_cooldown_seconds"] == pytest.approx(8.0)
+        assert effects["proc_delay_seconds"] == pytest.approx(1.0)
+        melee, ranged = effects["melee_ranged_leveling"]
+        assert (len(melee), len(ranged)) == (20, 20)
+        assert (melee[0], melee[17]) == pytest.approx((6.0, 44.0))
+        assert (ranged[0], ranged[17]) == pytest.approx((4.8, 35.2))
+        assert "parse_warnings" not in rune_effects.RUNE_EFFECTS["Presence of Mind"]
+
+    def test_the_scalar_rules_match_no_other_rune(self):
+        """The takedown shares name their resource and the cooldown is the
+        rune's own parenthetical; the growth pair is shared with Lethal Tempo
+        and Fleet Footwork, which state explicit ranges instead."""
+        from src.calculator.rune_parser import parse_rune_effects
+
+        runes = rune_effects.RUNE_EFFECTS
+        matched = {
+            key: sorted(
+                name
+                for name, entry in runes.items()
+                if isinstance(entry, dict)
+                and entry.get("description")
+                and key in parse_rune_effects(name, entry["description"])[0]
+            )
+            for key in (
+                "takedown_mana_ratio",
+                "takedown_energy_ratio",
+                "restore_cooldown_seconds",
+            )
+        }
+        assert matched == {
+            "takedown_mana_ratio": ["Presence of Mind"],
+            "takedown_energy_ratio": ["Presence of Mind"],
+            "restore_cooldown_seconds": ["Presence of Mind"],
+        }
+
+    def test_a_ranged_column_that_is_not_eighty_percent_fails_loud(self):
+        """The compiler's certification, and the proof it can fail."""
+        effect = rune_effects.resolve_rune("Presence of Mind")
+        assert isinstance(effect, rune_effects.RuneRestoreEffect)
+        with pytest.raises(KeyError, match="not the melee one at 80%"):
+            precision._certify_ranged_restore(
+                "Presence of Mind", [6.0, 10.0], [4.8, 9.0]
+            )
+
+    def test_it_compiles_into_the_restore_kind_with_both_halves(self):
+        effect = rune_effects.resolve_rune("Presence of Mind")
+        assert isinstance(effect, rune_effects.RuneRestoreEffect)
+        assert effect.takedown_mana_ratio == pytest.approx(0.15)
+        assert effect.takedown_delay_seconds == pytest.approx(1.0)
+        assert effect.restore_cooldown_seconds == pytest.approx(8.0)
+        assert effect.restore_melee_by_level[17] == pytest.approx(44.0)
+        assert effect.restore_ranged_by_level[17] == pytest.approx(35.2)
+
+    def test_the_damage_half_rides_the_walk_and_moves_no_damage(self):
+        """Three procs on their 8s cooldown, the first capped at the full
+        pool it lands in — the walk's own cap, receipted, not hidden. The
+        total holds still: no cast was omitted for mana, so no restore buys
+        one. The remaining moves by the two kept restores plus the regen the
+        new timeline pops re-account, which is the walk's arithmetic and not
+        a second implementation of it."""
+        bare = self._fight([])
+        held = self._fight(["Presence of Mind"])
+        assert held["total_damage"] == pytest.approx(bare["total_damage"])
+        assert held["resource_remaining"] - bare["resource_remaining"] == pytest.approx(
+            80.1, abs=0.2
+        )
+        receipts = self._presence_receipts(held)
+        assert [row["amount"] for row in receipts] == pytest.approx([35.2, 35.2, 35.2])
+        assert [row["reason"] for row in receipts] == [
+            "CAPPED",
+            "accepted",
+            "accepted",
+        ]
+        assert receipts[0]["time"] == pytest.approx(0.0)
+        assert receipts[1]["time"] - receipts[0]["time"] == pytest.approx(8.87, abs=0.1)
+
+    def test_the_takedown_half_lands_post_hoc_at_the_scored_kill(self):
+        """15% of the 843 maximum is 126.45, dated at the last damage
+        instance plus the sourced second and capped against the closing pool
+        the kill ended. Damage still holds: the restore lands after the last
+        cast it could have enabled."""
+        bare = self._fight([], target_health=400.0)
+        held = self._fight(["Presence of Mind"], target_health=400.0)
+        assert held.get("target_ending_health") == pytest.approx(0.0)
+        assert held["total_damage"] == pytest.approx(bare["total_damage"])
+        assert held["resource_remaining"] - bare["resource_remaining"] == pytest.approx(
+            206.5, abs=0.2
+        )
+        receipts = self._presence_receipts(held)
+        assert len(receipts) == 4
+        takedown = receipts[-1]
+        assert takedown["amount"] == pytest.approx(126.45)
+        assert takedown["reason"] == "accepted"
+        assert takedown["time"] == pytest.approx(19.85, abs=0.1)
+
+    def test_a_minion_target_arms_neither_half(self):
+        """The target dies and still nothing pays: a minion is not a
+        champion takedown and arms no champion damage trigger."""
+        bare = self._fight([], target_health=2000.0, target_class="minion")
+        held = self._fight(
+            ["Presence of Mind"], target_health=2000.0, target_class="minion"
+        )
+        assert held.get("target_ending_health") == pytest.approx(0.0)
+        assert held["total_damage"] == pytest.approx(bare["total_damage"])
+        assert self._presence_receipts(held) == []
+        assert held["resource_remaining"] == pytest.approx(bare["resource_remaining"])
+
+    def test_a_holder_with_no_mana_pool_walks_no_account(self):
+        bare = self._fight([], champion="Garen")
+        held = self._fight(["Presence of Mind"], champion="Garen")
+        assert held["total_damage"] == pytest.approx(bare["total_damage"])
+        assert held["resource_ledger"] == {}
+        assert any("no mana pool" in note for note in held["notes"])
+
+    def test_an_energy_holder_keeps_its_remaining_and_its_receipt(self):
+        """Lee Sin spends energy through a walk with no receipt account, so
+        both energy halves stay withheld and the rune moves nothing."""
+        bare = self._fight([], champion="Lee Sin")
+        held = self._fight(["Presence of Mind"], champion="Lee Sin")
+        assert held["total_damage"] == pytest.approx(bare["total_damage"])
+        assert held["resource_ledger"] == {}
+        assert held["resource_remaining"] == pytest.approx(bare["resource_remaining"])
+        assert any("energy halves" in note for note in held["notes"])
+
+    def test_it_discloses_the_floor_and_the_withheld_energy(self):
+        disclosures = " ".join(
+            rune_effects.resolve_rune("Presence of Mind").disclosures
+        )
+        assert "enables an omitted cast is priced" in disclosures
+        assert "a ceiling" in disclosures
+        assert "energy halves" in disclosures
+
+
+class TestTheTakedownHalfReadsBackOffTheResult:
+    """The post-hoc half, unit-pinned: every gate decides, nothing is assumed.
+
+    This import is also the module's front door (D-95): the integration
+    tests above exercise it through the pipeline, and these pin the gates
+    directly.
+    """
+
+    def _result(self, ending=0.0, closing=400.0, maximum=843.0):
+        return {
+            "target_ending_health": ending,
+            "damage_events": [{"time": 5.0, "damage": 100.0}],
+            "resource_ledger": {
+                "contract": "resource_ledger_v1",
+                "owner": "main",
+                "kind": "mana",
+                "opening_maximum": maximum,
+                "opening_current": maximum,
+                "closing_maximum": maximum,
+                "closing_current": closing,
+                "base_maximum": maximum,
+                "bonus_maximum": 0.0,
+                "receipts": [],
+            },
+            "resource_remaining": closing,
+        }
+
+    def _params(self, runes=("Presence of Mind",), target_class="champion"):
+        return SimpleNamespace(
+            rune_page=rune_effects.RunePage(minor_runes=runes),
+            target_class=target_class,
+        )
+
+    def test_a_scored_takedown_pays_fifteen_percent_capped_at_max(self):
+        result = self._result(ending=0.0, closing=400.0)
+        rune_restore_events.apply_rune_restore_takedown(result, self._params())
+        assert result["resource_remaining"] == pytest.approx(526.45)
+        assert result["resource_ledger"]["closing_current"] == pytest.approx(526.45)
+        (receipt,) = result["resource_ledger"]["receipts"]
+        assert receipt["source"] == "Presence of Mind (rune)"
+        assert receipt["amount"] == pytest.approx(126.45)
+        assert receipt["time"] == pytest.approx(6.0)
+        assert receipt["reason"] == "accepted"
+        assert receipt["current_before"] == pytest.approx(400.0)
+        assert receipt["current_after"] == pytest.approx(526.45)
+
+    def test_a_full_pool_clips_with_a_capped_receipt(self):
+        result = self._result(ending=0.0, closing=800.0)
+        rune_restore_events.apply_rune_restore_takedown(result, self._params())
+        assert result["resource_remaining"] == pytest.approx(843.0)
+        (receipt,) = result["resource_ledger"]["receipts"]
+        assert receipt["reason"] == "CAPPED"
+        assert receipt["current_after"] == pytest.approx(843.0)
+
+    def test_a_survived_target_a_minion_a_missing_ledger_and_no_rune_pay_nothing(
+        self,
+    ):
+        survived = self._result(ending=500.0)
+        rune_restore_events.apply_rune_restore_takedown(survived, self._params())
+        assert survived["resource_ledger"]["receipts"] == []
+        assert survived["resource_remaining"] == pytest.approx(400.0)
+        minion = self._result()
+        rune_restore_events.apply_rune_restore_takedown(
+            minion, self._params(target_class="minion")
+        )
+        assert minion["resource_ledger"]["receipts"] == []
+        ledgeless = self._result()
+        del ledgeless["resource_ledger"]
+        rune_restore_events.apply_rune_restore_takedown(ledgeless, self._params())
+        assert "resource_ledger" not in ledgeless
+        runeless = self._result()
+        rune_restore_events.apply_rune_restore_takedown(
+            runeless, self._params(runes=())
+        )
+        assert runeless["resource_ledger"]["receipts"] == []
+
+
+class TestAbsorbLifePricesItsLevelTable:
 
     def test_absorb_life_pays_its_level_table_on_the_kill_the_fight_scores(self):
         """The wiki's piecewise rule parses, and the kill is the one Triumph uses.
@@ -429,15 +669,25 @@ class TestTheGrantsReachTheRealPipeline:
         assert len(bare["self_healing_events"]) == 35
         assert len(stacked["self_healing_events"]) == 65
 
-    def test_a_withheld_rune_publishes_its_receipt_and_moves_no_number(self):
+    def test_a_formerly_withheld_rune_moves_only_resource_numbers(self):
+        """Presence of Mind used to refuse with 'not gated by a resource'.
+        The rotation was always admitted through the mana ledger; what it
+        never did was omit a cast for mana. So the rune moves the ledger
+        and the remaining pool, and damage holds still. Ashe's one rotation
+        spends so little that every restore caps at the full pool it lands
+        in — priced and receipted as CAPPED, moving no total either way."""
         bare = calculate_payload(dict(_HEALTH_PROBE))
-        withheld = calculate_payload(
-            {**_HEALTH_PROBE, "minor_runes": ["Presence of Mind"]}
-        )
-        assert withheld["total_damage"] == pytest.approx(bare["total_damage"])
-        assert withheld["champion_stats"] == bare["champion_stats"]
-        assert any(
-            "Presence of Mind is not priced" in note for note in withheld["notes"]
+        held = calculate_payload({**_HEALTH_PROBE, "minor_runes": ["Presence of Mind"]})
+        assert held["total_damage"] == pytest.approx(bare["total_damage"])
+        assert held["champion_stats"] == bare["champion_stats"]
+        receipts = [
+            row
+            for row in held["resource_ledger"]["receipts"]
+            if row.get("source") == "Presence of Mind (rune)"
+        ]
+        assert receipts and all(row["reason"] == "CAPPED" for row in receipts)
+        assert not any(
+            "Presence of Mind is not priced" in note for note in held["notes"]
         )
 
 

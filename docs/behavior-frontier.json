@@ -13,7 +13,7 @@
       "counter_1": 4
     },
     "calculator/fight/rotation/mana_walk.py": {
-      "counter_1": 4
+      "counter_1": 3
     },
     "calculator/interaction_effects.py": {
       "counter_1": 3
@@ -94,7 +94,7 @@
       "provenance": "VERIFIED",
       "retires_at": "3.4-3.7",
       "target": 0,
-      "value": 41
+      "value": 40
     },
     "counter_2": {
       "counts": "claim-prose sites in name-keyed containers",
@@ -444,8 +444,8 @@
       "counter_1": {
         "bound": 0,
         "criterion": "criterion 1: runtime item-name dispatch reaches zero",
-        "gap": 41,
-        "measured": 41,
+        "gap": 40,
+        "measured": 40,
         "met": false,
         "owed_to": "post-merge lane: runtime item-name dispatch (frontier-open-debts.json)"
       },

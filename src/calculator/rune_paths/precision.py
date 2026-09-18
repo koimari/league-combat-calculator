@@ -1,10 +1,11 @@
 """Precision's minor runes.
 
 Precision is the path that pays for a long game. Row 1 rewards a takedown or
-a kill, row 2 grows a stat with a game-long ``Legend`` counter, and row 3
-amplifies damage behind a health gate. The pair engine simulates one fight,
-so the counter is a declared option defaulting to no stacks (decision 5) and
-the row-1 rewards are receipted refusals rather than invented events.
+a kill: Triumph and Absorb Life heal on the takedowns the fight actually
+scores, and Presence of Mind restores mana there and on damaging casts into
+the mana walk's own ledger. Row 2 grows a stat with a game-long ``Legend``
+counter, so the count is a declared option defaulting to no stacks (decision
+5) and the row-1 rewards are dated events the fight holds, never invented ones.
 
 Row 3 is the conditional-damage row. Two of its runes gate on the *target's*
 health and are one shape read off the same three cached keys — Coup de Grace
@@ -13,7 +14,7 @@ which the pair engine does not track, so it is a flat amplifier whose gate is
 a declared option.
 """
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, NamedTuple
 
 from ..ability_spec import Disposition
@@ -29,6 +30,7 @@ from ..rune_effects import (
     RuneMultiStatGrantEffect,
     RuneOption,
     RuneOptionKind,
+    RuneRestoreEffect,
     RuneStat,
     RuneStatContext,
     RuneStatGrantEffect,
@@ -175,21 +177,87 @@ def _target_health_amp(name: str) -> RuneConditionalAmpEffect:
     )
 
 
-#: Precision's row-1 rewards: disposition, the reason that becomes the
-#: receipt, and any further half this engine refuses. Each pays out on an
-#: event one simulated fight between two champions never produces, and two of
-#: them pay in health there is no rune channel to receive.
-_NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
-    "Presence of Mind": (
-        Disposition.WITHHELD,
-        "it restores mana or energy, and the fight's rotation is not gated by "
-        "a resource — nothing it refills would buy another cast",
-        (
-            "Presence of Mind's takedown refund is withheld for a second "
-            "reason as well: the simulated fight scores no takedown.",
+#: Precision's row-1 refusals: disposition, the reason that becomes the
+#: receipt, and any further half this engine refuses. Empty: every Precision
+#: rune is priced, and the table stays so a future refusal has a guarded
+#: home rather than a silent zero.
+_NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {}
+
+
+def _certify_ranged_restore(
+    name: str, melee: Sequence[float], ranged: Sequence[float]
+) -> None:
+    """Certify the ranged column is the melee one at 80%, not a second table.
+
+    Presence of Mind states one restore twice — the melee growth and the
+    ranged one — and only the old mana-regen sentence ("reduced to 80%
+    effectiveness for ranged champions") says which is which. The 0.8 factor
+    decides it without pinning either table, so a patch may move both freely
+    and a reworded description still fails loudly.
+    """
+    if len(melee) != len(ranged) or any(
+        abs(ranged_value - 0.8 * melee_value) > 1e-9
+        for melee_value, ranged_value in zip(melee, ranged, strict=True)
+    ):
+        raise KeyError(
+            f"RUNE_EFFECTS[{name!r}] ranged restore is not the melee one at "
+            "80% — wiki parse degraded or description reordered"
+        )
+
+
+def _compile_presence_of_mind(entry: Mapping[str, Any]) -> RuneRestoreEffect:
+    """Compile Presence of Mind: mana restores on damage and on takedown.
+
+    Both halves were a missing parse rather than a missing capability: the
+    cached effects carried only the takedown delay, and the numbers sat in
+    prose the parser had no rule for. What reads them is the mana walk's own
+    ledger account, which publishes every restore the response carries, so
+    the damage half rides the walk's timeline (damaging casts and the auto
+    schedule it already walks, gated on its own cooldown) and the takedown
+    half lands post-hoc at the scored takedown the same instant Triumph is
+    paid on. Neither half reaches damage except through a cast the restore
+    enables, which is the floor the disclosure carries for the rare fight
+    that omits casts for mana.
+    """
+    name = "Presence of Mind"
+    effects = RuneValues(name, entry.get("effects", {}))
+    melee = required_leveling(name, effects, "melee_ranged_leveling", 0)
+    ranged = required_leveling(name, effects, "melee_ranged_leveling", 1)
+    _certify_ranged_restore(name, melee, ranged)
+    mana_ratio, energy_ratio = effects.numbers(
+        "takedown_mana_ratio", "takedown_energy_ratio"
+    )
+    return RuneRestoreEffect(
+        rune_name=name,
+        takedown_mana_ratio=mana_ratio,
+        takedown_delay_seconds=effects.number("proc_delay_seconds"),
+        restore_melee_by_level=tuple(melee),
+        restore_ranged_by_level=tuple(ranged),
+        restore_cooldown_seconds=effects.number("restore_cooldown_seconds"),
+        disclosures=(
+            f"{name} restores its damage-half mana on the mana walk's own "
+            "timeline: every damaging cast and every auto against a champion "
+            "target, once per "
+            f"{effects.number('restore_cooldown_seconds'):g}s, for its "
+            f"level table ({at_level(melee, 1):g} at level 1 rising to "
+            f"{at_level(melee, 18):g} at level 18 melee, 80% of that "
+            "ranged). The walk caps, regens and admits around it exactly as "
+            "it does around every other restore, so a restore that enables "
+            "an omitted cast is priced, not receipted.",
+            f"{name} restores {mana_ratio:.0%} of maximum mana on a takedown "
+            "the fight actually scored, dated at the window's last damage "
+            "instance plus its sourced 1-second delay and capped against "
+            "the closing pool: a kill that ends the spending is exact, and "
+            "a takedown landed at a full pool is a ceiling.",
+            f"{name} pays nothing the ledger cannot hold: a holder with no "
+            "mana pool walks no mana account, a minion target is not a "
+            "champion takedown and arms no champion damage trigger, and "
+            f"both energy halves ({energy_ratio:.0%} on a takedown, a flat 6 "
+            "on damage) are withheld, because the energy walk keeps a "
+            "running remaining with no receipt account for a rune restore "
+            "to land in.",
         ),
-    ),
-}
+    )
 
 
 def _compile_absorb_life(entry: Mapping[str, Any]) -> RuneHealEffect:
@@ -363,6 +431,7 @@ COMPILERS: dict[str, Callable[[Mapping[str, Any]], RuneEffect]] = {
     },
     "Absorb Life": _compile_absorb_life,
     "Triumph": _compile_triumph,
+    "Presence of Mind": _compile_presence_of_mind,
     "Legend: Alacrity": _compile_legend_alacrity,
     "Legend: Haste": _compile_legend_haste,
     "Legend: Bloodline": _compile_legend_bloodline,

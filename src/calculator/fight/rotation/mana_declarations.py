@@ -5,7 +5,7 @@ from collections.abc import Callable, Mapping
 from functools import partial
 from typing import Any
 
-from ... import item_effects, mana_item_schedules, manaflow_ledger
+from ... import item_effects, mana_item_schedules, manaflow_ledger, rune_effects
 from ...ability_atoms import ability_field, ability_payload
 from ...interpreters import stat_derivation
 from ...item_behavior import ResourceRestoreRule
@@ -13,6 +13,7 @@ from ..autos.swing_schedule import _restore_stream_attack_timestamps, _swings_at
 from ..config import declared_option_default
 from ..empower_declaration import _empower_burst_attack_speed, _empower_hits
 from ..results import CastPlan
+from .cast_schedule import _CAST_SCHEDULE_EPS
 from ..state import FightState
 from .cast_schedule import _CAST_SCHEDULE_EPS
 
@@ -471,3 +472,70 @@ _kill_refund_decl_for_state = partial(
 _mark_refund_decl_for_state = partial(
     _sole_refund_slot, reader=_mark_refund_decl, kind="mark_refund"
 )
+
+
+def _presence_restore_rows(state: FightState, plan: CastPlan) -> list[dict[str, Any]]:
+    """Presence of Mind's damage-half restores, in trigger order.
+
+    Empty unless the page holds the rune, the target is a champion, and the
+    holder walks a mana account: a minion target arms no champion damage
+    trigger, and a holder with no mana pool never reaches this walk at all.
+    The energy halves are not here either — the energy walk keeps a running
+    remaining with no receipt account, so a rune restore has no row to land
+    in there.
+
+    The triggers are every damaging planned cast plus the walk's own auto
+    schedule (the same swings the per-auto restore rides), gated on the
+    rune's own cooldown from the first trigger: the fight that lands no
+    damage pays nothing, and a trigger inside the cooldown window is not a
+    second proc. Amount is the rune's own level table, melee or ranged by
+    the holder.
+    """
+    effect = next(
+        (
+            effect
+            for effect in state.runes
+            if isinstance(effect, rune_effects.RuneRestoreEffect)
+        ),
+        None,
+    )
+    if effect is None:
+        return []
+    if state.target_class != item_effects.DEFAULT_TARGET_CLASS:
+        return []
+    if float(state.champion_stats["max_mana"]) <= 0.0:
+        return []
+    table = (
+        effect.restore_melee_by_level
+        if state.is_melee
+        else effect.restore_ranged_by_level
+    )
+    amount = rune_effects.at_level(table, state.level)
+    damaging = {
+        slot
+        for slot, entry in state.ability_damages.items()
+        if float(entry.get("total_raw", 0.0)) > 0.0
+    }
+    triggers = sorted(
+        cast_time
+        for slot, times in plan.times.items()
+        if slot in damaging
+        for cast_time in times
+    )
+    triggers.extend(_restore_stream_attack_timestamps(state))
+    rows: list[dict[str, Any]] = []
+    ready_at = 0.0
+    for trigger_time in sorted(triggers):
+        if trigger_time < ready_at:
+            continue
+        if trigger_time > state.fight_duration_seconds + _CAST_SCHEDULE_EPS:
+            continue
+        rows.append(
+            {
+                "time": trigger_time,
+                "amount": amount,
+                "source": effect.source,
+            }
+        )
+        ready_at = trigger_time + effect.restore_cooldown_seconds
+    return rows

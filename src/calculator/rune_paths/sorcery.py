@@ -400,6 +400,11 @@ _NO_DAMAGE: dict[str, tuple[Disposition, str, tuple[str, ...]]] = {
         (
             "Nimbus Cloak deals no damage of its own, so nothing in the "
             "damage total is understated by withholding it.",
+            "Three further halves wait behind the first: the amount is keyed "
+            "by the summoner spell's cooldown bracket, whose thresholds "
+            "differ by game mode; the grant decays over 2 seconds in a shape "
+            "no source states, so neither its peak-as-held nor any average "
+            "is priced; and its ghosting reaches no damage row.",
         ),
     ),
 }

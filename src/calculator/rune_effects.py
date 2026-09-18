@@ -374,6 +374,42 @@ class RunePlatingEffect:
 
 
 @dataclass(frozen=True, slots=True)
+class RuneRestoreEffect:
+    """A rune that restores its holder's mana, priced into the resource ledger.
+
+    Its own kind rather than a :class:`RuneHealEffect` because a restore is
+    paid in a different place: the mana walk owns every mana transition
+    against one ledger account, and a heal ledger packet can never move the
+    resource numbers the response publishes (``resource_remaining`` and the
+    ``resource_ledger`` receipts). The two halves split by what the engine
+    knows when: the damage-half restore rides the walk itself, because the
+    rotation plan holds every damaging cast time and the walk holds the auto
+    schedule, so it lands in order with caps, regen and cast admission all
+    exact; the takedown-half restore is dated post-hoc at the scored
+    takedown, because the takedown is a damage outcome the walk cannot see.
+
+    ``restore_melee_by_level`` and ``restore_ranged_by_level`` are the
+    holder's level tables for the damage half; the takedown half is a share
+    of maximum mana after ``takedown_delay_seconds``. Nothing here carries
+    energy: the energy walk keeps a running remaining with no receipt
+    account, so a rune restore has no row to land in there.
+    """
+
+    rune_name: str
+    takedown_mana_ratio: float
+    takedown_delay_seconds: float
+    restore_melee_by_level: tuple[float, ...]
+    restore_ranged_by_level: tuple[float, ...]
+    restore_cooldown_seconds: float
+    disclosures: tuple[str, ...] = ()
+
+    @property
+    def source(self) -> str:
+        """The ledger label for this rune's restore receipts."""
+        return display_name(self.rune_name)
+
+
+@dataclass(frozen=True, slots=True)
 class RuneNoDamageEffect:
     """A compiled rune that books no damage, and says why.
 
@@ -774,6 +810,7 @@ RUNE_RECEIPT_ONLY_KINDS = (
     RuneStatGrantEffect,
     RuneMultiStatGrantEffect,
     RuneHealEffect,
+    RuneRestoreEffect,
     RuneRegenerationEffect,
     RunePlatingEffect,
 )
@@ -1412,6 +1449,7 @@ RuneEffect = (
     | RuneAbilityProcEffect
     | RuneNoDamageEffect
     | RuneHealEffect
+    | RuneRestoreEffect
     | RuneRegenerationEffect
     | RunePlatingEffect
     | RuneStatGrantEffect

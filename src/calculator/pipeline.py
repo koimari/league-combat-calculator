@@ -38,6 +38,7 @@ from .item_sustain_events import _item_self_healing_events
 from .ledger_inputs import LedgerInputs, ResultProjection
 from .ledger_projection import ledger_projection
 from .rotation_resolver import build_rotation_receipt, resolve_cast_order
+from .rune_restore_events import apply_rune_restore_takedown
 from .rune_sustain_events import (
     _keystone_self_healing_events,
     _rune_self_healing_events,
@@ -433,6 +434,11 @@ def run_fight(
             int(event.get("_trigger_sequence", 0)),
         ),
     )
+    # Presence of Mind's takedown half lands here, post-hoc: the takedown is
+    # a damage outcome the rotation-time mana walk cannot see, so the restore
+    # is dated at the scored takedown and applied through the real ledger
+    # account. The damage half already rode the walk's own timeline.
+    apply_rune_restore_takedown(result, params)
     if score_only:
         return result
     _attach_display_splits(result)

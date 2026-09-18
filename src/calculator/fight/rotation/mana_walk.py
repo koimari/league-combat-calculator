@@ -27,6 +27,7 @@ from .mana_declarations import (
     _manaflow_swing_rows,
     _mark_refund_decl,
     _mark_refund_decl_for_state,
+    _presence_restore_rows,
     _return_denied_burst_budget,
 )
 
@@ -91,8 +92,11 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
 
     # The external restores on this lane are Catalyst's Eternity rows; the
     # restore handler reads the producer off the key rather than dispatching
-    # on an item name.
-    timeline = _resource_timeline(state, events, restore_producer="Catalyst of Aeons")
+    # on an item name. The key carries the receipt source itself, so the
+    # handler below never compares against one.
+    timeline = _resource_timeline(
+        state, events, restore_producer="Catalyst of Aeons (Eternity)"
+    )
     # Lost Chapter's Enlighten: the explicit sourced level-up timing (the
     # smallest public option choice) authors ONE marker event.  On pop it
     # schedules the deterministic 20%-over-3s ticks against the account's
@@ -165,6 +169,27 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         timeline.append(
             (swing_row["time"], 0, -5, row_index, "manaflow_on_hit", "", 0.0)
         )
+    # Presence of Mind's damage-half restores: one ledger gain per damaging
+    # trigger outside the rune's own cooldown, on the restore tier like
+    # every other restore, so a simultaneous cast spends it. They ride the
+    # shared "restore" kind with the rune's ledger source as the key, which
+    # the handler below reads back as the receipt source — the same spelling
+    # the takedown half publishes post-hoc. The takedown half is not here:
+    # the takedown is a damage outcome the rotation cannot see, so it lands
+    # post-hoc where Triumph's heal does.
+    presence_rows = _presence_restore_rows(state, plan)
+    for row_index, restore_row in enumerate(presence_rows):
+        timeline.append(
+            (
+                restore_row["time"],
+                0,
+                -6,
+                row_index,
+                "restore",
+                restore_row["source"],
+                restore_row["amount"],
+            )
+        )
     heapq.heapify(timeline)
 
     sequence = 0
@@ -208,12 +233,11 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
             )
             sequence += 1
         if kind == "restore":
-            # The heap key names the restore source: Catalyst's Eternity rows
-            # ride the item name, Spellblade procs ride the empty key.  No
-            # item-name dispatch happens here.
-            source = (
-                "Catalyst of Aeons (Eternity)" if key else "Essence Reaver (Manaflow)"
-            )
+            # The heap key carries the receipt source: Catalyst's Eternity
+            # rows ride their source, Spellblade procs ride the empty key,
+            # and a rune restore rides its ledger source. No item-name
+            # dispatch happens here.
+            source = key if key else "Essence Reaver (Manaflow)"
             ledger.apply(
                 resource_events.ResourceEvent(
                     owner=owner,

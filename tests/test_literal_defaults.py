@@ -360,6 +360,13 @@ ROW_READS = frozenset(
             1,
         ),
         (
+            "fight/rotation/mana_declarations.py",
+            "_presence_restore_rows",
+            "dict.get",
+            '"total_raw"',
+            1,
+        ),
+        (
             "fight/ledger/event_rows.py",
             "_item_proc_precision",
             "dict.get",
@@ -1755,6 +1762,13 @@ AUTHORED_DECLARATION = frozenset(
         ("rune_paths/precision.py", "_compile_last_stand", "dict.get", '"effects"', 1),
         (
             "rune_paths/precision.py",
+            "_compile_presence_of_mind",
+            "dict.get",
+            '"effects"',
+            1,
+        ),
+        (
+            "rune_paths/precision.py",
             "_compile_legend_alacrity",
             "dict.get",
             '"effects"',
@@ -2280,6 +2294,8 @@ ER5_TAIL = (
     "purchase_search.py",
     "roster_composition.py",
     "rotation_resolver.py",
+    # The rune restore reader, covered from the day it landed.
+    "rune_restore_events.py",
     "rune_sustain_events.py",
     "scenario.py",
     "self_state_effects.py",

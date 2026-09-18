@@ -365,6 +365,17 @@ class TestSorceryRefusals:
         assert effect.zero_policy.disposition.name == "WITHHELD"
         assert "the fight model casts none" in effect.zero_policy.reason
 
+    def test_nimbus_cloak_names_the_halves_behind_the_first_blocker(self):
+        """A summoner switch alone would not price it: the amount needs a
+        mode-dependent cooldown bracket and the 2-second decay needs a shape
+        no source states. The vault's own notes carry the brackets, the
+        Teleport and Zoe exceptions and the stacking rules — and no decay
+        curve."""
+        disclosures = " ".join(rune_effects.resolve_rune("Nimbus Cloak").disclosures)
+        assert "cooldown bracket" in disclosures
+        assert "decays over 2 seconds in a shape no source states" in disclosures
+        assert "ghosting" in disclosures
+
     def test_a_refusal_publishes_its_receipt_in_the_fight_notes(self):
         result = calculate_payload(_request(minor_runes=["Nimbus Cloak"]))
         assert any("Nimbus Cloak is not priced" in note for note in result["notes"])
