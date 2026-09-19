@@ -41,7 +41,8 @@ compares and `git diff --check`.
 
 - The repo `.venv` with `requirements.txt` installed (pytest, black, pylint,
   pip-audit and bandit come from it).
-- Node 24 or newer with `ui/node_modules` installed (`npm ci` in `ui/`).
+- Node at the version `engines.node` in `ui/package.json` states, with
+  `ui/node_modules` installed (`npm ci` in `ui/`).
 - Docker Desktop for `ci-container`; `brew install trivy` for the image scan.
 
 ## Timings on an M4 (2026-09-10)

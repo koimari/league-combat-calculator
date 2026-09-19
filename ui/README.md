@@ -18,7 +18,7 @@ sets `is_certified_best` and the user selects Apply.
 
 ## Build and check
 
-Use Node 22.18 or later.
+The required Node version is `engines.node` in `ui/package.json`.
 
 ```sh
 npm ci --prefix ui
