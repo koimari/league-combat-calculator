@@ -1,6 +1,6 @@
 """Validate user-authored spell casts before the combat engine prices them."""
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 import math
 from typing import Any
@@ -69,7 +69,7 @@ def event_receipt(event: CombatEvent) -> dict[str, Any]:
     }
 
 
-def roster_ids(names: list[str], team: str) -> list[str]:
+def roster_ids(names: Iterable[str], team: str) -> list[str]:
     """Use receipt IDs and suffix repeated champions in roster order."""
     counts: dict[str, int] = {}
     result = []

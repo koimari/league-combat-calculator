@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import named_damage, no_damage, ranked_slot
@@ -81,26 +82,17 @@ _smoke_screen = named_damage(
 )
 
 
-_TRUE_GRIT_RE = re.compile(
-    r"generating a stack of True Grit for (?P<seconds>\d+(?:\.\d+)?) seconds, "
-    r"stacking up to (?P<stacks>\d+) times"
-)
-
-
-def _true_grit_stack_terms(ability: dict[str, Any]) -> tuple[int, float]:
-    """True Grit's cached stack cap and the seconds one stack stands."""
-    effects = ability.get("effects")
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is None:
-            continue
-        match = _TRUE_GRIT_RE.search(str(description))
-        if match is not None:
-            return int(match.group("stacks")), float(match.group("seconds"))
-    raise ValueError(
+# True Grit's cached stack cap and the seconds one stack stands.
+_TRUE_GRIT = CachedSentence(
+    re.compile(
+        r"generating a stack of True Grit for (?P<seconds>\d+(?:\.\d+)?) seconds, "
+        r"stacking up to (?P<stacks>\d+) times"
+    ),
+    missing=(
         "Graves E: the cached active no longer states True Grit's stack life "
         "and cap ('a stack of True Grit for N seconds, stacking up to N times')"
-    )
+    ),
+)
 
 
 @ranked_slot
@@ -112,7 +104,7 @@ def _quickdraw(
         ability, "Bonus Magic Resistance", rank, ctx.stats, ctx.target
     )
     requested = ctx.options.get("e_true_grit_stacks")
-    max_stacks, seconds = _true_grit_stack_terms(ability)
+    seconds, max_stacks = _TRUE_GRIT.stack_terms(ability)
     if requested is None:
         entry = no_damage(
             ctx,

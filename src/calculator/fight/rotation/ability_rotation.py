@@ -43,6 +43,7 @@ from .stack_timeline import _build_stack_timeline
 
 def _with_stack_levels(
     state: FightState,
+    *,
     ability_info: Mapping[str, Any],
     plan: CastPlan,
     ability_key: str,
@@ -308,7 +309,13 @@ def _compute_ability_rotation(state: FightState) -> RotationResult:
         # collected (Tristana's Explosive Charge). The level is walked from
         # the streams the module says stack it, one window per cast, and
         # rides the same per-cast pricing seam the DoT stacks do.
-        pricing = _with_stack_levels(state, ability_info, plan, ability_key, pricing)
+        pricing = _with_stack_levels(
+            state,
+            ability_info=ability_info,
+            plan=plan,
+            ability_key=ability_key,
+            pricing=pricing,
+        )
         # P3 package 3V: Rengar's live Ferocity walk marks the casts that
         # consume the 4-stack cap (empowered); the entry's ferocity_parts
         # replace the base parts for those casts.

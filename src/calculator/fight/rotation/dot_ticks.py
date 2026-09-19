@@ -14,6 +14,7 @@ from ..state import FightState
 def _ability_dot_tick_events(
     entry: dict[str, Any],
     info: dict[str, Any],
+    *,
     cast_times: Sequence[float],
     resists: Resists,
     cutoff: float | None = None,
@@ -103,8 +104,8 @@ def _author_ability_dot_events(state: FightState, rotation: RotationResult) -> N
         events = _ability_dot_tick_events(
             entry,
             info,
-            times_by_slot.get(key, []),
-            state.resists,
+            cast_times=times_by_slot.get(key, []),
+            resists=state.resists,
             cutoff=state.fight_duration_seconds if state.clip_to_window else None,
         )
         if events is not None:

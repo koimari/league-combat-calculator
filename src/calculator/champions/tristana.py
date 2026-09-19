@@ -68,6 +68,7 @@ from ..ability_atoms import (
     required_ability_atom,
     required_ranked_attribute_atom,
 )
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import coverage
@@ -92,25 +93,14 @@ _E_MAX_STACKS = int(
 _Q_DURATION_SOURCE = "Tristana.Q[0].effects[0].description"
 
 
-_CHARGE_SECONDS_RE = re.compile(
-    r"attaches to them for (?P<value>\d+(?:\.\d+)?) seconds"
-)
-
-
-def _charge_seconds(ability: dict[str, Any]) -> float:
-    """How long the charge holds, from E's own cached sentence."""
-    effects = ability.get("effects")
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is None:
-            continue
-        match = _CHARGE_SECONDS_RE.search(str(description))
-        if match is not None:
-            return float(match.group("value"))
-    raise ValueError(
+# How long the charge holds, from E's own cached sentence.
+_CHARGE_SECONDS = CachedSentence(
+    re.compile(r"attaches to them for (?P<value>\d+(?:\.\d+)?) seconds"),
+    missing=(
         "Tristana E: the cached entry no longer states how long the charge "
         "holds ('attaches to them for N seconds')"
-    )
+    ),
+)
 
 
 @ranked_slot
@@ -158,7 +148,7 @@ def _explosive_charge(
             "hits_required": _E_MAX_STACKS,
             "stacks_from_swings": True,
             "stacks_from_ability_hits": True,
-            "stack_seconds": _charge_seconds(ability),
+            "stack_seconds": _CHARGE_SECONDS.value(ability),
             "collects_after_cast": True,
             "armed_at_start": False,
             "requested": False,

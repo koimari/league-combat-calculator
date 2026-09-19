@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping
 from typing import Any
 
 from .. import healing_helpers as _healing
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
@@ -16,15 +18,23 @@ from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
 
-_RAMPAGE_RE = re.compile(
-    r"a stack of Rampage for (?P<seconds>\d+(?:\.\d+)?) seconds[^.]*?stacking up "
-    r"to (?P<stacks>\d+) times\. Each stack increases Rampage's damage by "
-    r"(?P<per_stack>\d+(?:\.\d+)?)% \(\+ (?P<per_ad>\d+(?:\.\d+)?)% per 100 "
-    r"bonus AD\) and reduces its base cooldown by (?P<refund>\d+(?:\.\d+)?) seconds"
+_RAMPAGE = CachedSentence(
+    re.compile(
+        r"a stack of Rampage for (?P<seconds>\d+(?:\.\d+)?) seconds[^.]*?stacking up "
+        r"to (?P<stacks>\d+) times\. Each stack increases Rampage's damage by "
+        r"(?P<per_stack>\d+(?:\.\d+)?)% \(\+ (?P<per_ad>\d+(?:\.\d+)?)% per 100 "
+        r"bonus AD\) and reduces its base cooldown by \d+(?:\.\d+)? seconds"
+    ),
+    missing=(
+        "Hecarim Q: the cached active no longer states Rampage's stack rule "
+        "('a stack of Rampage for N seconds ... stacking up to N times. Each "
+        "stack increases Rampage's damage by N% (+ N% per 100 bonus AD) and "
+        "reduces its base cooldown by N seconds')"
+    ),
 )
 
 
-def _rampage_cooldown_row(ability: dict[str, Any]) -> tuple[float, ...]:
+def _rampage_cooldown_row(ability: Mapping[str, Any]) -> tuple[float, ...]:
     """Rampage's cooldown at each stack level, straight from the cache.
 
     The cached row is indexed BY RAMPAGE STACKS and not by rank, which its
@@ -47,33 +57,21 @@ def _rampage_cooldown_row(ability: dict[str, Any]) -> tuple[float, ...]:
     )
 
 
-def _rampage_stack_terms(ability: dict[str, Any]) -> dict[str, float]:
+def _rampage_stack_terms(ability: Mapping[str, Any]) -> dict[str, float]:
     """Rampage's own stack rule, read from the cached sentence.
 
-    Five numbers in one clause: how long a stack stands, how many stand at
-    once, what one is worth as damage, what it is worth per 100 bonus AD,
-    and how many seconds it takes off the base cooldown.
+    Four numbers in one clause: how long a stack stands, how many stand at
+    once, what one is worth as damage and what it is worth per 100 bonus AD.
+    The cooldown each stack takes off is priced from the cached per-stack
+    cooldown row, never from the sentence.
     """
-    effects = ability.get("effects")
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is None:
-            continue
-        match = _RAMPAGE_RE.search(str(description))
-        if match is not None:
-            return {
-                "stack_seconds": float(match.group("seconds")),
-                "max_stacks": int(match.group("stacks")),
-                "per_stack": float(match.group("per_stack")) / 100.0,
-                "per_100_bonus_ad": float(match.group("per_ad")) / 100.0,
-                "cooldown_per_stack": float(match.group("refund")),
-            }
-    raise ValueError(
-        "Hecarim Q: the cached active no longer states Rampage's stack rule "
-        "('a stack of Rampage for N seconds ... stacking up to N times. Each "
-        "stack increases Rampage's damage by N% (+ N% per 100 bonus AD) and "
-        "reduces its base cooldown by N seconds')"
-    )
+    match = _RAMPAGE.match(ability)
+    return {
+        "stack_seconds": float(match.group("seconds")),
+        "max_stacks": int(match.group("stacks")),
+        "per_stack": float(match.group("per_stack")) / 100.0,
+        "per_100_bonus_ad": float(match.group("per_ad")) / 100.0,
+    }
 
 
 def _warpath(ctx: SlotCtx) -> dict[str, Any] | None:

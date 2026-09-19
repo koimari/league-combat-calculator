@@ -2,6 +2,7 @@
 
 import re
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
 _PROSE_SECONDS_RE = re.compile(
@@ -58,6 +59,39 @@ def effect_description(ability: Mapping[str, Any], effect_index: int) -> str:
         return ""
     description = effect.get("description")
     return "" if description is None else str(description)
+
+
+@dataclass(frozen=True)
+class CachedSentence:
+    """A number the cache states only in prose: the sentence, and the refusal.
+
+    A module declares the sentence it prices beside the message a reworded
+    cache raises, so a stale value is never priced in its place.
+    """
+
+    pattern: re.Pattern[str]
+    missing: str
+
+    def match(self, ability: Mapping[str, Any]) -> re.Match[str]:
+        """The sentence's first match over the ability's effect descriptions."""
+        effects = ability.get("effects")
+        for effect in effects or ():
+            description = effect.get("description")
+            if description is None:
+                continue
+            match = self.pattern.search(str(description))
+            if match is not None:
+                return match
+        raise ValueError(self.missing)
+
+    def value(self, ability: Mapping[str, Any]) -> float:
+        """The ``value`` group, as the number the sentence states."""
+        return float(self.match(ability).group("value"))
+
+    def stack_terms(self, ability: Mapping[str, Any]) -> tuple[float, int]:
+        """The ``seconds`` and ``stacks`` groups: a stack's life and the cap."""
+        match = self.match(ability)
+        return float(match.group("seconds")), int(match.group("stacks"))
 
 
 def _prose_value(

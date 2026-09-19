@@ -19,6 +19,7 @@ import re
 from typing import Any
 
 from .. import healing_helpers as _healing
+from ..ability_prose import CachedSentence
 from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx
 from .healing_contract import self_healing_rule
@@ -52,25 +53,14 @@ def _fired_up_detail(burn: float, procs: int) -> str:
     )
 
 
-_ENCHANTMENT_RE = re.compile(
-    r"grant an enchantment for (?P<value>\d+(?:\.\d+)?) seconds"
-)
-
-
-def _enchantment_seconds(ability: dict[str, Any]) -> float:
-    """How long a Fired Up! enchantment waits, from the cached innate."""
-    effects = ability.get("effects")
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is None:
-            continue
-        match = _ENCHANTMENT_RE.search(str(description))
-        if match is not None:
-            return float(match.group("value"))
-    raise ValueError(
+# How long a Fired Up! enchantment waits, from the cached innate.
+_ENCHANTMENT = CachedSentence(
+    re.compile(r"grant an enchantment for (?P<value>\d+(?:\.\d+)?) seconds"),
+    missing=(
         "Milio P: the cached innate no longer states the enchantment's life "
         "('grant an enchantment for N seconds')"
-    )
+    ),
+)
 
 
 def _fired_up(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -91,7 +81,7 @@ def _fired_up(ctx: SlotCtx) -> dict[str, Any] | None:
         "arming_slots": ("Q", "W", "E", "R"),
         "max_stacks": 1,
         "per_cast": 1,
-        "stack_seconds": _enchantment_seconds(ability),
+        "stack_seconds": _ENCHANTMENT.value(ability),
         "spent_by_ability_hits": True,
         "armed_at_start": False,
         "requested": ctx.options.get("p_procs") is not None,

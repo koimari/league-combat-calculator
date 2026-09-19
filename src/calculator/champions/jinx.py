@@ -9,6 +9,7 @@ damage is sourced from the same Wiki snapshot as the generated roster.
 import re
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .inputs import int_option
@@ -32,27 +33,18 @@ _JINX_PASSIVE_AS_PERCENT = data_value(
     spell_object("Jinx", "JinxPassiveMarker"), "ASBuff"
 )
 
-_REV_UP_STACK_RE = re.compile(
-    r"generate a stack of Rev'd up for (?P<seconds>\d+(?:\.\d+)?) seconds"
-    r"[^.]*?stacking up to (?P<stacks>\d+) times"
-)
-
-
-def _rev_up_stack_terms(ability: dict[str, Any]) -> tuple[float, int]:
-    """Rev'd up's cached stack life and cap."""
-    effects = ability.get("effects")
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is None:
-            continue
-        match = _REV_UP_STACK_RE.search(str(description))
-        if match is not None:
-            return float(match.group("seconds")), int(match.group("stacks"))
-    raise ValueError(
+# Rev'd up's cached stack life and cap.
+_REV_UP_STACK = CachedSentence(
+    re.compile(
+        r"generate a stack of Rev'd up for (?P<seconds>\d+(?:\.\d+)?) seconds"
+        r"[^.]*?stacking up to (?P<stacks>\d+) times"
+    ),
+    missing=(
         "Jinx Q: the cached Pow-Pow branch no longer states Rev'd up's stack "
         "life and cap ('generate a stack of Rev'd up for N seconds ... "
         "stacking up to N times')"
-    )
+    ),
+)
 
 
 @ranked_slot
@@ -75,7 +67,7 @@ def _switcheroo(
         }
         entry["detail"] = "Fishbones: 110% AD basic attacks"
     else:
-        seconds, max_stacks = _rev_up_stack_terms(ability)
+        seconds, max_stacks = _REV_UP_STACK.stack_terms(ability)
         first = extract_value(ability, "Bonus Attack Speed", rank)
         subsequent = extract_value(ability, "Attack Speed per Subsequent Stack", rank)
         requested = ctx.options.get("jinx_rev_up_stacks")

@@ -98,7 +98,10 @@ from .fight.runes.page_damage import (
 from .fight.setup.combat_state import _resolve_combat_state
 from .fight.setup.shield_reaver import _apply_shield_reaver_venom
 from .fight.rotation.cast_resource_lockout import apply_lockout_attack_speed
-from .fight.setup.stat_buff_ultimates import _apply_stat_buff_ultimates
+from .fight.setup.stat_buff_ultimates import (
+    _apply_stat_buff_ultimates,
+    _rate_attack_speed_grant,
+)
 from .fight.stacks.ashe import _add_ashe_focus
 from .fight.stacks.aurelion_sol import _add_aurelion_sol_stardust
 from .fight.stacks.bard import _add_bard_travelers_call
@@ -220,7 +223,7 @@ def calculate_fight_damage(
     # The plan is what decides how often a self-silencing bar filled, so the
     # grant those windows buy is rated here, once the plan exists and before
     # the swing stream is counted.
-    apply_lockout_attack_speed(state)
+    apply_lockout_attack_speed(state, _rate_attack_speed_grant)
     state.ability_cast_times = tuple(
         (str(event["slot"]), float(event["time"])) for event in rotation.cast_events
     )

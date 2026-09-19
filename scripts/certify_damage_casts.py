@@ -17,25 +17,30 @@ Usage::
 
 from __future__ import annotations
 
-import argparse
-from pathlib import Path
 import sys
+from collections.abc import Mapping
+from functools import partial
+from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.calculator.champions import (  # noqa: E402  pylint: disable=wrong-import-position
+from scripts.generated_file import (
+    write_or_check,
+)  # pylint: disable=wrong-import-position
+from src.calculator.champions import (  # pylint: disable=wrong-import-position
     _CHAMPION_MODULES,
     get_custom_cast_order_unavailable_reason,
     parse_champion_abilities,
 )
-from src.calculator.combat_events import (  # noqa: E402  pylint: disable=wrong-import-position
+from src.calculator.combat_events import (  # pylint: disable=wrong-import-position
     CERTIFIED_ENEMY_CASTS,
     CERTIFIED_SUPPORT_CASTS,
 )
 from src.calculator.data_fetcher import (
     get_champion,
-)  # noqa: E402  pylint: disable=wrong-import-position
+)  # pylint: disable=wrong-import-position
 
 TARGET = ROOT / "src" / "calculator" / "certified_casts.py"
 SLOTS = ("Q", "W", "E", "R")
@@ -57,7 +62,7 @@ _STATS = {
 _TARGET = {"health": 2000.0, "max_health": 2000.0, "armor": 100.0, "mr": 60.0}
 
 
-def _prices_an_enemy(entry: dict) -> bool:
+def _prices_an_enemy(entry: Mapping[str, Any]) -> bool:
     parts = tuple(entry.get("parts") or ())
     damage = any(
         (getattr(part, "amount", 0.0) or 0.0) > 0.0
@@ -104,7 +109,7 @@ def derive() -> dict[tuple[str, str], str]:
     return table
 
 
-def render(table: dict[tuple[str, str], str]) -> str:
+def render(table: Mapping[tuple[str, str], str]) -> str:
     lines = [
         '"""Certified authored damage casts, one line per priced enemy-facing slot.',
         "",
@@ -126,23 +131,15 @@ def render(table: dict[tuple[str, str], str]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
-    mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument("--write", action="store_true")
-    mode.add_argument("--check", action="store_true")
-    args = parser.parse_args(argv)
-    text = render(derive())
-    if args.write:
-        TARGET.write_text(text, encoding="utf-8")
-        print(f"wrote {TARGET.relative_to(ROOT)}")
-        return 0
-    current = TARGET.read_text(encoding="utf-8") if TARGET.exists() else ""
-    if current != text:
-        print("certified_casts.py differs from the registered modules; run --write")
-        return 1
-    print("certified_casts.py matches the registered modules")
-    return 0
+main = partial(
+    write_or_check,
+    description=__doc__.split("\n", 1)[0],
+    target=TARGET,
+    root=ROOT,
+    render=lambda: render(derive()),
+    stale="certified_casts.py differs from the registered modules; run --write",
+    fresh="certified_casts.py matches the registered modules",
+)
 
 
 if __name__ == "__main__":

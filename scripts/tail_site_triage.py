@@ -55,7 +55,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-import literal_defaults  # noqa: E402
+import literal_defaults
+
+from tests.test_literal_defaults import ER5_TAIL
+from tests.test_row_stream_census import CENSUS
 
 RECEIPT = REPO_ROOT / "docs" / "receipts" / "er5-tail-triage.json"
 CALCULATOR = REPO_ROOT / "src" / "calculator"
@@ -146,8 +149,6 @@ ADJUDICATED: dict[str, dict[str, str]] = {
 
 def _censused_keys() -> set[str]:
     """Every key either census measures on every row of some stream."""
-    from tests.test_row_stream_census import CENSUS  # noqa: PLC0415
-
     keys: set[str] = set()
     for _, universal in CENSUS.values():
         keys |= set(universal)
@@ -175,20 +176,15 @@ def _receiver(expression: str) -> str | None:
     return match.group(1) if match else None
 
 
-def _tail_modules() -> list[Path]:
-    from tests.test_literal_defaults import ER5_TAIL  # noqa: PLC0415
-
-    return [CALCULATOR / rel for rel in ER5_TAIL if (CALCULATOR / rel).exists()]
-
-
 def triage() -> dict[str, Any]:
     """Split every tail site into the three classes above."""
     censused = _censused_keys()
     tolerant = _tolerance_modules()
     buckets: Counter[str] = Counter()
     by_module: dict[str, Counter[str]] = {}
-    for finding in literal_defaults.scan(_tail_modules()):
-        rel = finding.path.split("src/calculator/")[1]
+    tail = [CALCULATOR / rel for rel in ER5_TAIL if (CALCULATOR / rel).exists()]
+    for finding in literal_defaults.scan(tail):
+        rel = Path(finding.path).as_posix().split("src/calculator/")[1]
         receiver = _receiver(finding.expression)
         if finding.key.strip("\"'") not in censused:
             bucket = "NOT_A_ROW_FIELD"

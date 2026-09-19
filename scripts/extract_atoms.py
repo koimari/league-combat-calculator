@@ -863,6 +863,7 @@ def load_wiki_ally_slots() -> dict[str, set[str]]:
 def ally_targeted(
     atom_id: str,
     target: str,
+    *,
     entries: list[WikiEntry],
     ally_slots: set[str],
     champ_norm: str,
@@ -1040,11 +1041,11 @@ def extract_champion(
                 and ally_targeted(
                     atom_id,
                     target,
-                    wiki_types.get(champ_norm, []),
-                    ally_slots.get(champ_norm, set()),
-                    champ_norm,
-                    feat["name"],
-                    feat["alt"],
+                    entries=wiki_types.get(champ_norm, []),
+                    ally_slots=ally_slots.get(champ_norm, set()),
+                    champ_norm=champ_norm,
+                    name=feat["name"],
+                    alt=feat["alt"],
                 )
             )
             if ally_evidence:

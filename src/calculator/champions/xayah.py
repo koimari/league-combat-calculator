@@ -75,7 +75,7 @@ _CLEAN_CUTS_RE = re.compile(
 )
 
 
-def _clean_cuts_rule(ability: dict[str, Any]) -> dict[str, Any]:
+def _clean_cuts_rule(ability: Mapping[str, Any]) -> dict[str, Any]:
     """The cached rule for banking and spending a Clean Cuts stack."""
     effects = ability.get("effects")
     for effect in effects if effects else ():

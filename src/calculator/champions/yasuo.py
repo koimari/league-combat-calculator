@@ -33,7 +33,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from ..ability_prose import extract_description_duration
+from ..ability_prose import CachedSentence, extract_description_duration
 from ..ability_spec import DamagePart
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
@@ -127,26 +127,17 @@ def _per_target_lockout(ability: dict[str, Any], rank: int) -> float:
     return float(extract_cooldown(ability, rank) or 0.5)
 
 
-_RIDE_THE_WIND_RE = re.compile(
-    r"generates a stack of Ride the Wind for (?P<seconds>\d+(?:\.\d+)?) seconds"
-    r"[^.]*?stacks up to (?P<stacks>\d+) times"
-)
-
-
-def cached_stack_terms_for(ability: dict[str, Any]) -> tuple[float, int]:
-    """Ride the Wind's cached stack life and cap."""
-    effects = ability.get("effects")
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is None:
-            continue
-        match = _RIDE_THE_WIND_RE.search(str(description))
-        if match is not None:
-            return float(match.group("seconds")), int(match.group("stacks"))
-    raise ValueError(
+# Ride the Wind's cached stack life and cap.
+_RIDE_THE_WIND = CachedSentence(
+    re.compile(
+        r"generates a stack of Ride the Wind for (?P<seconds>\d+(?:\.\d+)?) seconds"
+        r"[^.]*?stacks up to (?P<stacks>\d+) times"
+    ),
+    missing=(
         "Yasuo E: the cached entry no longer states Ride the Wind's stack "
         "life and cap ('for N seconds ... stacks up to N times')"
-    )
+    ),
+)
 
 
 @ranked_slot
@@ -161,7 +152,7 @@ def _sweeping_blade(
     rank); that lockout is the cast-rate limiter here.
     """
     requested = ctx.options.get("e_stacks")
-    stack_seconds, max_stacks = cached_stack_terms_for(ability)
+    stack_seconds, max_stacks = _RIDE_THE_WIND.stack_terms(ability)
     # A clockless parse reads the unstacked row, which is the declared
     # default and the honest reading for one target: the per-target lockout
     # outlasts the stack, so a duel never restacks it.

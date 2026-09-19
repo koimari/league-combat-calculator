@@ -9,7 +9,7 @@ from .slotlib import extract_named, extract_value
 
 
 def derive_lulu_support_events(
-    champion_data: dict[str, Any],
+    champion_data: Mapping[str, Any],
     level: int,
     stats: Mapping[str, float],
     cast_timeline: Iterable[Mapping[str, Any]],

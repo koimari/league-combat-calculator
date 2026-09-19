@@ -47,24 +47,3 @@ def derived_attack_count(
     if attack_speed <= 0.0 or window <= 0.0:
         return 0
     return min(int(math.floor(window * attack_speed)), maximum)
-
-
-def window_detail(count: int, attack_speed: float, window: float) -> str:
-    """The sentence a derived count owes its reader."""
-    return (
-        f"{count} attack(s): {attack_speed:.2f} attacks per second over "
-        f"{window:g}s, derived from the fight window rather than declared"
-    )
-
-
-def pet_window_seconds(
-    ctx: SlotCtx, *, fallback_window: float, lifetime: float | None = None
-) -> float:
-    """The seconds this pet is around for inside this fight."""
-    window = float(ctx.options.get("fight_duration_seconds") or fallback_window)
-    return min(window, lifetime) if lifetime is not None else window
-
-
-def declared_override(ctx: SlotCtx, option_key: str) -> bool:
-    """Whether the request named the count itself."""
-    return ctx.options.get(option_key) is not None

@@ -46,6 +46,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..control_spec import ControlEvent
@@ -183,29 +184,18 @@ _two_shiv_poison = named_damage(
 )
 
 
-_CLONE_LIFETIME_RE = re.compile(
-    r"controllable clone for up to (?P<value>\d+(?:\.\d+)?) seconds"
+# How long the clone lives, from R's own cached sentence.
+_CLONE_LIFETIME = CachedSentence(
+    re.compile(r"controllable clone for up to (?P<value>\d+(?:\.\d+)?) seconds"),
+    missing=(
+        "Shaco R: the cached entry no longer states the clone's lifetime "
+        "('controllable clone for up to N seconds')"
+    ),
 )
 # A clockless parse reads the window the declared count was written
 # against, so such a parse prices what it always did.
 _CLONE_FALLBACK_WINDOW = 0.0
 _CLONE_MAX_ATTACKS = 30
-
-
-def _clone_lifetime_seconds(ability: dict[str, Any]) -> float:
-    """How long the clone lives, from R's own cached sentence."""
-    effects = ability.get("effects")
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is None:
-            continue
-        match = _CLONE_LIFETIME_RE.search(str(description))
-        if match is not None:
-            return float(match.group("value"))
-    raise ValueError(
-        "Shaco R: the cached entry no longer states the clone's lifetime "
-        "('controllable clone for up to N seconds')"
-    )
 
 
 @ranked_slot
@@ -223,7 +213,7 @@ def _hallucinate(
         "r_clone_attacks",
         attack_speed=float(ctx.stat("attack_speed")),
         fallback_window=_CLONE_FALLBACK_WINDOW,
-        lifetime=_clone_lifetime_seconds(ability),
+        lifetime=_CLONE_LIFETIME.value(ability),
         maximum=_CLONE_MAX_ATTACKS,
     )
     ad = float(ctx.stat("attack_damage"))

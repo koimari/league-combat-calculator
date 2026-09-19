@@ -435,6 +435,43 @@ def ability_sub_payload(
     return nested if isinstance(nested, Mapping) else EMPTY_PAYLOAD
 
 
+def declared_payload(
+    ability_damages: Mapping[str, Any], mechanic: str, *, one: str
+) -> tuple[str, Mapping[str, Any]] | None:
+    """The owner's name and payload of the one slot declaring *mechanic*.
+
+    Two declaring slots are refused with *one*, the clause saying why a kit
+    holds a single one, rather than resolved by slot order.
+    """
+    found = [
+        (str(info.get("name", key)), info[mechanic])
+        for key, info in ability_damages.items()
+        if isinstance(info, Mapping) and info.get(mechanic)
+    ]
+    if not found:
+        return None
+    if len(found) > 1:
+        raise ValueError(
+            f"Two slots declare {mechanic} ("
+            + ", ".join(name for name, _ in found)
+            + f"); {one}"
+        )
+    return found[0]
+
+
+def required_declaration(  # sightline-ok: 1 - key-typed read
+    payload: Mapping[str, Any], key: str, *, owner: str, mechanic: str
+) -> Any:
+    """One number the declaring module must state; a missing one is refused."""
+    value = payload.get(key)
+    if value is None:
+        raise ValueError(
+            f"{owner}: {mechanic} declares no {key!r}; every number of the rule "
+            "is sourced by the module, and a missing one cannot be guessed"
+        )
+    return value
+
+
 __all__ = [
     "ABILITY_PAYLOAD_SCHEMA",
     "EMPTY_PAYLOAD",
@@ -443,7 +480,9 @@ __all__ = [
     "ability_field",
     "ability_payload",
     "ability_sub_payload",
+    "declared_payload",
     "ranked_ability_atom_value",
     "required_ability_atom",
+    "required_declaration",
     "required_ranked_attribute_atom",
 ]

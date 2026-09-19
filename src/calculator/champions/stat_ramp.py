@@ -23,7 +23,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from functools import partial
 from typing import Any
+
+from ..ability_atoms import declared_payload, required_declaration
 
 
 @dataclass(frozen=True)
@@ -80,36 +83,21 @@ def declared_rule(
     ability_damages: Mapping[str, Any],
 ) -> tuple[str, StatRampRule] | None:
     """The one stat ramp this kit declares, with its owner's name."""
-    found: list[tuple[str, Mapping[str, Any]]] = []
-    for key, info in ability_damages.items():
-        if not isinstance(info, Mapping):
-            continue
-        payload = info.get("stat_ramp")
-        if payload:
-            found.append((str(info.get("name", key)), payload))
-    if not found:
+    declared = declared_payload(
+        ability_damages, "stat_ramp", one="one stack count carries one stat ramp"
+    )
+    if declared is None:
         return None
-    if len(found) > 1:
-        raise ValueError(
-            "Two slots declare a stat_ramp ("
-            + ", ".join(name for name, _ in found)
-            + "); one stack count carries one stat ramp"
-        )
-    owner, payload = found[0]
-    for required in ("per_stack", "max_stacks", "stack_duration"):
-        if payload.get(required) is None:
-            raise ValueError(
-                f"{owner}: stat_ramp declares no {required!r}; every number of "
-                "the ramp is sourced by the module"
-            )
+    owner, payload = declared
+    required = partial(required_declaration, payload, owner=owner, mechanic="stat_ramp")
     multiplier = payload.get("filled_multiplier")
     return owner, StatRampRule(
         per_stack={
             str(stat): float(value)
-            for stat, value in dict(payload["per_stack"]).items()
+            for stat, value in dict(required("per_stack")).items()
         },
-        max_stacks=int(payload["max_stacks"]),
-        stack_duration=float(payload["stack_duration"]),
+        max_stacks=int(required("max_stacks")),
+        stack_duration=float(required("stack_duration")),
         stacks_from_swings=bool(payload.get("stacks_from_swings")),
         stacks_from_ability_casts=bool(payload.get("stacks_from_ability_casts")),
         arming_slots=frozenset(

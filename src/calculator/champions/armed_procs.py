@@ -22,7 +22,10 @@ import re
 from collections import deque
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from functools import partial
 from typing import Any
+
+from ..ability_atoms import declared_payload, required_declaration
 
 #: The sentence every stacking innate in this cache writes the same way:
 #: "... apply a stack of <name> to <whom> for N seconds, refreshing ...
@@ -137,16 +140,6 @@ class ArmedProcRule:
             )
 
 
-def _required(payload: Mapping[str, Any], key: str, owner: str) -> Any:
-    value = payload.get(key)
-    if value is None:
-        raise ValueError(
-            f"{owner}: armed_procs declares no {key!r}; every number of the rule "
-            "is sourced by the module, and a missing one cannot be guessed"
-        )
-    return value
-
-
 def _optional(payload: Mapping[str, Any], key: str) -> float:
     """One number a rule may leave out, as the zero that means "no such arm"."""
     value = payload.get(key)
@@ -157,26 +150,19 @@ def declared_rule(
     ability_damages: Mapping[str, Any],
 ) -> tuple[str, ArmedProcRule] | None:
     """The one armed-proc rule this kit declares, with its owner's name."""
-    found: list[tuple[str, Mapping[str, Any]]] = []
-    for key, info in ability_damages.items():
-        if not isinstance(info, Mapping):
-            continue
-        payload = info.get("armed_procs")
-        if payload:
-            found.append((str(info.get("name", key)), payload))
-    if not found:
+    declared = declared_payload(
+        ability_damages, "armed_procs", one="one swing stream has one empowering innate"
+    )
+    if declared is None:
         return None
-    if len(found) > 1:
-        raise ValueError(
-            "Two slots declare armed_procs ("
-            + ", ".join(name for name, _ in found)
-            + "); one swing stream has one empowering innate"
-        )
-    owner, payload = found[0]
+    owner, payload = declared
+    required = partial(
+        required_declaration, payload, owner=owner, mechanic="armed_procs"
+    )
     return owner, ArmedProcRule(
-        arming_slots=frozenset(_required(payload, "arming_slots", owner)),
-        max_stacks=int(_required(payload, "max_stacks", owner)),
-        requested=bool(_required(payload, "requested", owner)),
+        arming_slots=frozenset(required("arming_slots")),
+        max_stacks=int(required("max_stacks")),
+        requested=bool(required("requested")),
         hits_required=int(_optional(payload, "hits_required")),
         stacks_from_swings=bool(payload.get("stacks_from_swings")),
         stacks_from_ability_hits=bool(payload.get("stacks_from_ability_hits")),
@@ -188,7 +174,7 @@ def declared_rule(
         cooldown_reduction_per_cast=_optional(payload, "cooldown_reduction_per_cast"),
         per_cast=int(_optional(payload, "per_cast")),
         stack_seconds=_optional(payload, "stack_seconds"),
-        armed_at_start=bool(_required(payload, "armed_at_start", owner)),
+        armed_at_start=bool(required("armed_at_start")),
     )
 
 

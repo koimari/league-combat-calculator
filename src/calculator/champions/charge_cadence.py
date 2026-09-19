@@ -34,11 +34,6 @@ from typing import Any
 from .slot_extract import extract_cooldown, extract_value
 from .slot_control import extract_recharge
 
-# Cached timers are wiki decimals and equality between two of them is exact
-# well inside this. It is a float-noise guard, not a tolerance for numbers
-# that disagree.
-_SAME_SECOND = 1e-9
-
 # "…periodically stocks a Seed charge, up to a maximum of 2." The stocking
 # verb is required: "stacking up to 2 times" on the same page is Rumble E's
 # DEBUFF limit, and a looser pattern reads it as a charge count.

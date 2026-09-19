@@ -18,11 +18,14 @@ had to do.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from functools import partial
 from typing import Any
 
+from ...ability_atoms import declared_payload, required_declaration
 from ..cast_slots import _base_slot
+from ..state import FightState
 
 
 @dataclass(frozen=True)
@@ -44,50 +47,30 @@ class LockoutRule:
         return _base_slot(ability_key) in self.slots
 
 
-def _required(payload: Mapping[str, Any], key: str, owner: str) -> Any:
-    value = payload.get(key)
-    if value is None:
-        raise ValueError(
-            f"{owner}: cast_resource_lockout declares no {key!r}; every number "
-            "of the rule is sourced by the module, and a missing one cannot be "
-            "guessed"
-        )
-    return value
-
-
 def declared_rule(ability_damages: Mapping[str, Any]) -> LockoutRule | None:
     """The one lockout rule this kit declares, or ``None``.
 
     Two rules would be two bars over one set of hands, and the walk has no
     reading for that, so it is refused rather than resolved by order.
     """
-    found: list[tuple[str, Mapping[str, Any]]] = []
-    for key, info in ability_damages.items():
-        if not isinstance(info, Mapping):
-            continue
-        payload = info.get("cast_resource_lockout")
-        if payload:
-            found.append((str(info.get("name", key)), payload))
-    if not found:
+    declared = declared_payload(
+        ability_damages, "cast_resource_lockout", one="one set of hands has one bar"
+    )
+    if declared is None:
         return None
-    if len(found) > 1:
-        raise ValueError(
-            "Two slots declare a cast_resource_lockout ("
-            + ", ".join(name for name, _ in found)
-            + "); one set of hands has one bar"
-        )
-    owner, payload = found[0]
+    owner, payload = declared
+    required = partial(
+        required_declaration, payload, owner=owner, mechanic="cast_resource_lockout"
+    )
     return LockoutRule(
-        slots=frozenset(_required(payload, "slots", owner)),
-        per_cast=float(_required(payload, "per_cast", owner)),
-        ceiling=float(_required(payload, "ceiling", owner)),
-        seconds=float(_required(payload, "seconds", owner)),
-        decay_per_second=float(_required(payload, "decay_per_second", owner)),
-        decay_delay_seconds=float(_required(payload, "decay_delay_seconds", owner)),
-        ultimate_slot=str(_required(payload, "ultimate_slot", owner)),
-        ultimate_delay_seconds=float(
-            _required(payload, "ultimate_delay_seconds", owner)
-        ),
+        slots=frozenset(required("slots")),
+        per_cast=float(required("per_cast")),
+        ceiling=float(required("ceiling")),
+        seconds=float(required("seconds")),
+        decay_per_second=float(required("decay_per_second")),
+        decay_delay_seconds=float(required("decay_delay_seconds")),
+        ultimate_slot=str(required("ultimate_slot")),
+        ultimate_delay_seconds=float(required("ultimate_delay_seconds")),
         name=owner,
     )
 
@@ -161,11 +144,6 @@ def lockout_seconds_within(
     return covered
 
 
-def lockout_rule_for(state: Any) -> LockoutRule | None:
-    """The kit's rule, read off the parsed entries the fight holds."""
-    return declared_rule(state.ability_damages)
-
-
 def declared_grant(ability_damages: Mapping[str, Any]) -> tuple[str, float] | None:
     """The slot and full attack-speed grant the lockout's owner declares."""
     for key, info in ability_damages.items():
@@ -185,7 +163,7 @@ def declared_grant(ability_damages: Mapping[str, Any]) -> tuple[str, float] | No
     return None
 
 
-def _covered_share(state: Any) -> float:
+def _covered_share(state: FightState) -> float:
     """The share of the fight the derived windows cover, in [0, 1]."""
     duration = float(state.fight_duration_seconds)
     if duration <= 0.0:
@@ -194,17 +172,20 @@ def _covered_share(state: Any) -> float:
     return min(1.0, covered / duration)
 
 
-def apply_lockout_attack_speed(state: Any) -> None:
+def apply_lockout_attack_speed(
+    state: FightState,
+    rate_grant: Callable[[FightState, str, float, float | None], None],
+) -> None:
     """Rate the lockout owner's attack-speed grant by the windows it earned.
 
     The grant is worth its full percent for the seconds the windows cover
     and nothing outside them, so the fight-averaged bonus is exact here:
     attack speed is linear in the bonus percent. The share is DERIVED from
     the plan, so a build that fills the bar more often is worth more attack
-    speed with nobody saying so.
+    speed with nobody saying so. *rate_grant* is the kit-grant rater
+    (``stat_buff_ultimates._rate_attack_speed_grant``), handed in because
+    that module reads the plan this one feeds.
     """
-    from ..setup.stat_buff_ultimates import _rate_attack_speed_grant
-
     grant = declared_grant(state.ability_damages)
     if grant is None:
         return
@@ -218,11 +199,11 @@ def apply_lockout_attack_speed(state: Any) -> None:
     state.champion_stats["bonus_attack_speed"] = (
         float(state.champion_stats["bonus_attack_speed"]) + bonus
     )
-    _rate_attack_speed_grant(state, key, bonus, None)
+    rate_grant(state, key, bonus, None)
     state.champion_stats["attack_speed"] = state.attack_speed
 
 
-def lockout_empowered_swings(state: Any, swing_times: tuple[float, ...]) -> int:
+def lockout_empowered_swings(state: FightState, swing_times: tuple[float, ...]) -> int:
     """How many of the fight's swings land inside a derived window."""
     windows = tuple(state.lockout_windows)
     if not windows:

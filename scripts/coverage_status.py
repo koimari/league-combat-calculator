@@ -29,20 +29,25 @@ Usage::
 
 from __future__ import annotations
 
-import argparse
 import collections
 import json
-from pathlib import Path
 import sys
+from collections.abc import Mapping
+from functools import partial
+from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from src.calculator import (  # noqa: E402  pylint: disable=wrong-import-position
+from scripts.generated_file import (
+    write_or_check,
+)  # pylint: disable=wrong-import-position
+from src.calculator import (  # pylint: disable=wrong-import-position
     item_effects,
     rune_effects,
 )
-from src.calculator.champions import (  # noqa: E402  pylint: disable=wrong-import-position
+from src.calculator.champions import (  # pylint: disable=wrong-import-position
     _CHAMPION_MODULES,
     get_champion_module_contract,
     get_champion_options_meta,
@@ -342,14 +347,9 @@ def _options() -> dict:
     return {"total": total, **buckets}
 
 
-def _census() -> dict:
-    path = ROOT / "docs" / "coverage-census.json"
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def _residue() -> dict:
-    path = ROOT / "docs" / "coverage-residue.json"
-    return json.loads(path.read_text(encoding="utf-8"))
+def _receipt(name: str) -> dict[str, Any]:
+    """One committed receipt under docs/, as written."""
+    return json.loads((ROOT / "docs" / name).read_text(encoding="utf-8"))
 
 
 def _backlog_rows() -> int:
@@ -364,16 +364,16 @@ def _backlog_rows() -> int:
 
 def _swing_frontier() -> int:
     """Rows on the swing-stream audit's pinned frontier."""
-    import swing_stream_audit  # noqa: PLC0415  pylint: disable=import-outside-toplevel
+    import swing_stream_audit  # pylint: disable=import-outside-toplevel
 
     return len(swing_stream_audit.FRONTIER)
 
 
-def measure() -> dict:
+def measure() -> dict[str, Any]:
     """Every number the page states, measured in one pass."""
     totals, per_slot, out_of_scope = _champion_slots()
     options = _options()
-    census = _census()
+    census = _receipt("coverage-census.json")
     return {
         "champions": {
             "modules": len(_CHAMPION_MODULES),
@@ -396,7 +396,7 @@ def measure() -> dict:
         "axes": options,
         "frontiers": {
             "census_total": census["counts"]["total"],
-            "residue_rows": len(_residue()["acknowledged"]),
+            "residue_rows": len(_receipt("coverage-residue.json")["acknowledged"]),
             "backlog_rows": _backlog_rows(),
             "swing_frontier": _swing_frontier(),
             # Derived from the same scan the slot tables use, so the row and
@@ -410,7 +410,7 @@ def _percent(part: int, whole: int) -> str:
     return f"{100.0 * part / whole:.1f}%" if whole else "n/a"
 
 
-def render(data: dict) -> str:
+def render(data: Mapping[str, Any]) -> str:
     """The page, written from the measurement and from nothing else."""
     champions = data["champions"]
     slots = champions["slots"]
@@ -628,23 +628,15 @@ def render(data: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.split("\n", 1)[0])
-    mode = parser.add_mutually_exclusive_group(required=True)
-    mode.add_argument("--write", action="store_true")
-    mode.add_argument("--check", action="store_true")
-    args = parser.parse_args(argv)
-    text = render(measure())
-    if args.write:
-        TARGET.write_text(text, encoding="utf-8")
-        print(f"wrote {TARGET.relative_to(ROOT)}")
-        return 0
-    current = TARGET.read_text(encoding="utf-8") if TARGET.exists() else ""
-    if current != text:
-        print("docs/coverage-status.md is stale; run --write")
-        return 1
-    print("docs/coverage-status.md matches the tree")
-    return 0
+main = partial(
+    write_or_check,
+    description=__doc__.split("\n", 1)[0],
+    target=TARGET,
+    root=ROOT,
+    render=lambda: render(measure()),
+    stale="docs/coverage-status.md is stale; run --write",
+    fresh="docs/coverage-status.md matches the tree",
+)
 
 
 if __name__ == "__main__":

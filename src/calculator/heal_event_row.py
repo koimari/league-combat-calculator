@@ -25,7 +25,10 @@ the baseline, so neither half of the claim can rot.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import partial
 from typing import Any
+
+from .event_row_field import required_field
 
 __all__ = [
     "HEAL_REQUIRED_FIELDS",
@@ -38,15 +41,9 @@ __all__ = [
 HEAL_REQUIRED_FIELDS = ("time", "amount", "source")
 
 
-def _required(event: Mapping[str, Any], field: str) -> Any:
-    """One universal field, or a refusal naming what the row does carry."""
-    if field not in event:
-        raise ValueError(
-            f"a heal event carries no {field!r}; every walk that authors one "
-            f"stamps it, so this row ({sorted(event)}) is not a heal event or "
-            "its producer stopped stamping it"
-        )
-    return event[field]
+_required = partial(
+    required_field, kind="heal event", stamper="every walk that authors one"
+)
 
 
 def healed_time(event: Mapping[str, Any]) -> float:

@@ -108,7 +108,6 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx
-from .inputs import int_option
 from .packet_module import build_packet_module
 from .slot_entries import on_hit_entry
 from .slot_extract import (

@@ -63,25 +63,63 @@ def test_only_a_self_read_benefit_atom_is_re_read():
     slots = {"W"}
     entries = [("W", "Ebb and Flow", None)]
     assert ally_targeted(
-        "heal-shield.heal", "self", entries, slots, "nami", "NamiW", ""
+        "heal-shield.heal",
+        "self",
+        entries=entries,
+        ally_slots=slots,
+        champ_norm="nami",
+        name="NamiW",
+        alt="",
     )
     # An explicit policy already resolved elsewhere is never overwritten.
     assert not ally_targeted(
-        "heal-shield.heal", "enemy", entries, slots, "nami", "NamiW", ""
+        "heal-shield.heal",
+        "enemy",
+        entries=entries,
+        ally_slots=slots,
+        champ_norm="nami",
+        name="NamiW",
+        alt="",
     )
     # Damage and control never become ally-targeted through this bridge.
     assert not ally_targeted(
-        "damage.damage-instance", "self", entries, slots, "nami", "NamiW", ""
+        "damage.damage-instance",
+        "self",
+        entries=entries,
+        ally_slots=slots,
+        champ_norm="nami",
+        name="NamiW",
+        alt="",
     )
     assert not ally_targeted(
-        "crowd-control-mobility.slow", "self", entries, slots, "nami", "NamiW", ""
+        "crowd-control-mobility.slow",
+        "self",
+        entries=entries,
+        ally_slots=slots,
+        champ_norm="nami",
+        name="NamiW",
+        alt="",
     )
     # Nor does a heal-family atom that lands on an enemy.
     for atom_id in ENEMY_HEAL_ATOMS:
-        assert not ally_targeted(atom_id, "self", entries, slots, "nami", "NamiW", "")
+        assert not ally_targeted(
+            atom_id,
+            "self",
+            entries=entries,
+            ally_slots=slots,
+            champ_norm="nami",
+            name="NamiW",
+            alt="",
+        )
     # A slot with no ally evidence keeps its policy.
     assert not ally_targeted(
-        "heal-shield.heal", "self", entries, set(), "nami", "NamiW", ""
+        "heal-shield.heal",
+        "self",
+        entries=entries,
+        ally_slots=set(),
+        champ_norm="nami",
+        name="NamiW",
+        alt="",
     )
 
 

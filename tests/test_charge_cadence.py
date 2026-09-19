@@ -66,7 +66,7 @@ class TestEveryChargeSlotIsReviewed:
     def test_every_module_parses_at_both_ends_of_the_rank_axis(self, ranks) -> None:
         """A slot that prices the short timer raises, so this is the gate."""
         for name in sorted(_CHAMPION_MODULES):
-            _entries(name, ranks=ranks, level=18 if ranks is _RANKS else 1)
+            assert _entries(name, ranks=ranks, level=18 if ranks is _RANKS else 1), name
 
     def test_a_charge_slot_prices_its_cached_recharge(self) -> None:
         for name, slot in _charge_slots():

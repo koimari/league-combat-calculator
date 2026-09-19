@@ -3,9 +3,15 @@
 import math
 from collections.abc import Mapping
 from dataclasses import dataclass
+from functools import partial
 
 from ... import item_effects
-from ...ability_atoms import ability_field, ability_sub_payload
+from ...ability_atoms import (
+    ability_field,
+    ability_sub_payload,
+    declared_payload,
+    required_declaration,
+)
 from ...champions import stat_ramp as _stat_ramp
 from ...interpreters import rearmed_swings
 from ...stats import calculate_attack_speed, resolve_move_speed
@@ -37,26 +43,18 @@ def _kit_swing_ramp(state: FightState) -> KitRamp | None:
     one stack landing per completed attack. The module states all three
     from its cache; nothing here knows which champion.
     """
-    found = [
-        (str(info.get("name", key)), info["swing_ramp"])
-        for key, info in state.ability_damages.items()
-        if isinstance(info, Mapping) and info.get("swing_ramp")
-    ]
-    if not found:
+    declared = declared_payload(
+        state.ability_damages, "swing_ramp", one="one swing stream carries one kit ramp"
+    )
+    if declared is None:
         return None
-    if len(found) > 1:
-        raise ValueError(
-            "Two slots declare a swing_ramp ("
-            + ", ".join(name for name, _ in found)
-            + "); one swing stream carries one kit ramp"
-        )
-    owner, payload = found[0]
-    for field in ("per_stack", "max_stacks", "stack_duration"):
-        if payload.get(field) is None:
-            raise ValueError(
-                f"{owner}: swing_ramp declares no {field!r}; every number of "
-                "the ramp is sourced by the module"
-            )
+    owner, payload = declared
+    required = partial(
+        required_declaration, payload, owner=owner, mechanic="swing_ramp"
+    )
+    per_stack = float(required("per_stack"))
+    max_stacks = int(required("max_stacks"))
+    stack_duration = float(required("stack_duration"))
     # ``first_stack`` is optional because most ramps price every stack alike;
     # a source that prices the first one apart (Jinx) states it, and absent
     # means absent rather than a stand-in number.
@@ -73,9 +71,9 @@ def _kit_swing_ramp(state: FightState) -> KitRamp | None:
         )
     return KitRamp(
         ramp=rearmed_swings.DecayingStackRamp(
-            per_stack=float(payload["per_stack"]),
-            max_stacks=int(payload["max_stacks"]),
-            stack_duration=float(payload["stack_duration"]),
+            per_stack=per_stack,
+            max_stacks=max_stacks,
+            stack_duration=stack_duration,
             first_stack=None if first_stack is None else float(first_stack),
         ),
         stacks_from_swings=stacks_from_swings is not False,

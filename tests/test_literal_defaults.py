@@ -2108,6 +2108,8 @@ ROOTS = (
     "cast_event_row.py",
     # The damage-event row reader, covered from the day it landed.
     "damage_event_row.py",
+    # The stamped-field read the three row readers share.
+    "event_row_field.py",
     "rank_allocation.py",
     "attack_windows.py",
     "certified_casts.py",

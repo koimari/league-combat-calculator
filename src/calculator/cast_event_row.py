@@ -20,7 +20,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from functools import partial
 from typing import Any
+
+from .event_row_field import required_field
 
 __all__ = [
     "CastEventRow",
@@ -42,15 +45,7 @@ class CastEventRow:
     cast_id: str
 
 
-def _required(event: Mapping[str, Any], field: str) -> Any:
-    """One stamped field, or a refusal naming what the row does carry."""
-    if field not in event:
-        raise ValueError(
-            f"a cast event carries no {field!r}; ability_rotation stamps it on "
-            f"every row it builds, so this row ({sorted(event)}) did not come "
-            "from the rotation or the producer stopped stamping it"
-        )
-    return event[field]
+_required = partial(required_field, kind="cast event", stamper="ability_rotation")
 
 
 def cast_time(event: Mapping[str, Any]) -> float:

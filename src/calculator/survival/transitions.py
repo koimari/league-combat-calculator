@@ -509,7 +509,7 @@ def grant_temporary_health(
     state["temporary_health_source"] = source
 
 
-def expire_support_buffs(state: dict[str, Any], event_time: float) -> None:
+def expire_support_buffs(state: Mapping[str, Any], event_time: float) -> None:
     """Remove expired support stat windows before the next event reads them."""
     buffs = state.get("support_buffs")
     if buffs:
@@ -933,6 +933,7 @@ _RUNE_REGEN_ARMED_UNTIL = "rune_regeneration_armed_until"
 def _schedule_rune_regeneration(
     ctx: TransitionContext,
     action: SurvivalAction,
+    *,
     state: dict[str, Any],
     window: RegenerationWindow,
     combatant: Any,
@@ -1001,7 +1002,9 @@ def schedule_regeneration_recovery(
         return
     combatant = ctx.combatants[action.subject]
     if window.rune_owner:
-        _schedule_rune_regeneration(ctx, action, state, window, combatant)
+        _schedule_rune_regeneration(
+            ctx, action, state=state, window=window, combatant=combatant
+        )
     total_melee = window.total_melee
     total_reduced = window.total_reduced
     missing_cap = window.missing_health_cap

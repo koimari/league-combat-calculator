@@ -23,6 +23,7 @@ P1-3 closures:
 import re
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .inputs import int_option
@@ -38,25 +39,14 @@ PACKET_SHA256 = "2f20b99c3cd6919e7b81d1fb0cf912d9e02ea8ac475c4c4fa6381bc33240713
 _P_ILLUMINATION_DEFAULT_PROCS = 3
 
 
-_ILLUMINATION_MARK_RE = re.compile(
-    r"apply a mark to enemies hit for (?P<value>\d+(?:\.\d+)?) seconds"
-)
-
-
-def _illumination_mark_seconds(ability: dict[str, Any]) -> float:
-    """How long an Illumination mark waits, from the cached innate."""
-    effects = ability.get("effects")
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is None:
-            continue
-        match = _ILLUMINATION_MARK_RE.search(str(description))
-        if match is not None:
-            return float(match.group("value"))
-    raise ValueError(
+# How long an Illumination mark waits, from the cached innate.
+_ILLUMINATION_MARK = CachedSentence(
+    re.compile(r"apply a mark to enemies hit for (?P<value>\d+(?:\.\d+)?) seconds"),
+    missing=(
         "Lux P: the cached innate no longer states the Illumination mark's "
         "life ('apply a mark to enemies hit for N seconds')"
-    )
+    ),
+)
 
 
 def _illumination(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -99,7 +89,7 @@ def _illumination(ctx: SlotCtx) -> dict[str, Any] | None:
         "arming_slots": ("Q", "E", "R"),
         "max_stacks": 1,
         "per_cast": 1,
-        "stack_seconds": _illumination_mark_seconds(ability),
+        "stack_seconds": _ILLUMINATION_MARK.value(ability),
         "armed_at_start": False,
         "requested": ctx.options.get("p_illumination_procs") is not None,
     }

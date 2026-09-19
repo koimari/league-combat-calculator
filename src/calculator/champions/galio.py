@@ -11,6 +11,7 @@ import math
 import re
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import float_option, int_option
@@ -32,31 +33,16 @@ _E_DASH_SPEED = 2300.0
 _R_LANDING_TIME = 2.75
 
 
-_SMASH_REDUCTION_RE = re.compile(
-    r"cooldown is reduced by (?P<value>\d+(?:\.\d+)?) seconds"
-)
-
-
-def _smash_cooldown_reduction(ability: dict[str, Any]) -> float:
-    """The seconds an ability hit takes off Colossal Smash, from the cache.
-
-    "Whenever Galio hits at least one enemy champion or epic monster with
-    an ability, Colossal Smash's current cooldown is reduced by 3
-    seconds" — the sentence the walk needs, so a reworded cache raises
-    here rather than pricing a stale three.
-    """
-    effects = ability.get("effects")
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is None:
-            continue
-        match = _SMASH_REDUCTION_RE.search(str(description))
-        if match is not None:
-            return float(match.group("value"))
-    raise ValueError(
+# "Whenever Galio hits at least one enemy champion or epic monster with an
+# ability, Colossal Smash's current cooldown is reduced by 3 seconds": the
+# seconds an ability hit takes off the timer, which the walk needs.
+_SMASH_REDUCTION = CachedSentence(
+    re.compile(r"cooldown is reduced by (?P<value>\d+(?:\.\d+)?) seconds"),
+    missing=(
         "Galio P: the cached innate no longer states Colossal Smash's "
         "cooldown reduction ('cooldown is reduced by N seconds')"
-    )
+    ),
+)
 
 
 def _colossal_smash(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -85,7 +71,7 @@ def _colossal_smash(ctx: SlotCtx) -> dict[str, Any] | None:
             "arming_slots": ("Q", "W", "E", "R"),
             "max_stacks": 1,
             "cooldown": extract_cooldown(ability, ctx.rank_for()),
-            "cooldown_reduction_per_cast": _smash_cooldown_reduction(ability),
+            "cooldown_reduction_per_cast": _SMASH_REDUCTION.value(ability),
             "armed_at_start": True,
             "requested": ctx.options.get("passive_procs") is not None,
         },

@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
@@ -23,27 +24,18 @@ from .slot_extract import (
 from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
-_ASSAULT_STACK_RE = re.compile(
-    r"generate a stack of Relentless Assault on-attack for "
-    r"(?P<seconds>\d+(?:\.\d+)?) seconds[^.]*?stacking up to (?P<stacks>\d+) times"
-)
-
-
-def _assault_stack_terms(ability: dict[str, Any]) -> tuple[float, int]:
-    """Relentless Assault's cached stack life and cap."""
-    effects = ability.get("effects")
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is None:
-            continue
-        match = _ASSAULT_STACK_RE.search(str(description))
-        if match is not None:
-            return float(match.group("seconds")), int(match.group("stacks"))
-    raise ValueError(
+# Relentless Assault's cached stack life and cap.
+_ASSAULT_STACK = CachedSentence(
+    re.compile(
+        r"generate a stack of Relentless Assault on-attack for "
+        r"(?P<seconds>\d+(?:\.\d+)?) seconds[^.]*?stacking up to (?P<stacks>\d+) times"
+    ),
+    missing=(
         "Jax P: the cached innate no longer states Relentless Assault's "
         "stack life and cap ('on-attack for N seconds ... stacking up to N "
         "times')"
-    )
+    ),
+)
 
 
 def _assault(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -51,7 +43,7 @@ def _assault(ctx: SlotCtx) -> dict[str, Any] | None:
     if ability is None:
         return None
     requested = ctx.options.get("p_stacks")
-    seconds, max_stacks = _assault_stack_terms(ability)
+    seconds, max_stacks = _ASSAULT_STACK.stack_terms(ability)
     stacks = min(max(int(requested), 0), max_stacks) if requested is not None else 0
     row = find_named_leveling(ability, "Per-Level Scaling")
     per_stack = sum_modifiers(row, ctx.level, ctx.stats, ctx.target) if row else 0.0

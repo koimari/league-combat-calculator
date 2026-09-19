@@ -51,6 +51,7 @@ import re
 from typing import Any
 
 from .. import healing_helpers as _healing
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import coverage
@@ -109,27 +110,23 @@ _E_MARK_SECONDS = data_value(
 _E_SLOW_SECONDS = data_value(spell_object("Kindred", "KindredEWrapper"), "SlowDuration")
 _E_SLOW_PERCENT = data_value(spell_object("Kindred", "KindredEWrapper"), "SlowAmount")
 
-_VIGOR_RE = re.compile(
-    r"(?P<per_attack>\d+) stacks on-attack, up to a maximum of "
-    r"(?P<maximum>\d+) stacks"
+_VIGOR = CachedSentence(
+    re.compile(
+        r"(?P<per_attack>\d+) stacks on-attack, up to a maximum of "
+        r"(?P<maximum>\d+) stacks"
+    ),
+    missing=(
+        "Kindred W: the cached passive no longer states Hunter's Vigor's "
+        "on-attack gain and cap ('N stacks on-attack, up to a maximum of N "
+        "stacks')"
+    ),
 )
 
 
 def _vigor_stack_terms(ability: dict[str, Any]) -> tuple[int, int]:
     """Hunter's Vigor's cached on-attack gain and its cap."""
-    effects = ability.get("effects")
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is None:
-            continue
-        match = _VIGOR_RE.search(str(description))
-        if match is not None:
-            return int(match.group("per_attack")), int(match.group("maximum"))
-    raise ValueError(
-        "Kindred W: the cached passive no longer states Hunter's Vigor's "
-        "on-attack gain and cap ('N stacks on-attack, up to a maximum of N "
-        "stacks')"
-    )
+    per_attack, maximum = _VIGOR.match(ability).group("per_attack", "maximum")
+    return int(per_attack), int(maximum)
 
 
 def _vigor_attacks_to_fill(ability: dict[str, Any]) -> int:

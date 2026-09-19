@@ -15,7 +15,7 @@ import sqlite3
 import sys
 import tempfile
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Collection, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -1122,7 +1122,7 @@ def api_champions() -> Response:
 def _item_shop_fields(
     item: Mapping[str, Any],
     sources: Mapping[str, Any],
-    catalog_ids: set[int],
+    catalog_ids: Collection[int],
 ) -> dict[str, Any]:
     """Expose source ranks and recipe edges without changing selection policy."""
 

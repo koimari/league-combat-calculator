@@ -39,6 +39,7 @@ rather than staying silently absent from the parse output.
 """
 
 import re
+from collections.abc import Mapping
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -78,7 +79,7 @@ _REND_WINDOW_RE = re.compile(
 )
 
 
-def _rend_window(ability: dict[str, Any]) -> dict[str, Any]:
+def _rend_window(ability: Mapping[str, Any]) -> dict[str, Any]:
     """The cached life and cap of a Rend stack, and what lodges one."""
     effects = ability.get("effects")
     for effect in effects if effects else ():

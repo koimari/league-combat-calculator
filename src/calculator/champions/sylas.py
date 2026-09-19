@@ -103,6 +103,7 @@ import re
 from typing import Any
 
 from .. import healing_helpers as _healing
+from ..ability_prose import CachedSentence
 from ..binary_roots import calculation_coefficients, spell_object
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
@@ -129,25 +130,13 @@ _MAX_UNSHACKLED_STACKS = 3
 # The same sentence's other half: "generates a stack of Unshackled for 4
 # seconds, refreshing on subsequent casts". The stack's own clock, which
 # the walk needs to know when a banked stack is gone.
-_UNSHACKLED_STACK_RE = re.compile(
-    r"generates a stack of Unshackled for (?P<value>\d+(?:\.\d+)?) seconds"
-)
-
-
-def _unshackled_stack_seconds(ability: dict[str, Any]) -> float:
-    """How long one Unshackled stack lasts, read from the cached innate."""
-    effects = ability.get("effects")
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is None:
-            continue
-        match = _UNSHACKLED_STACK_RE.search(str(description))
-        if match is not None:
-            return float(match.group("value"))
-    raise ValueError(
+_UNSHACKLED_STACK = CachedSentence(
+    re.compile(r"generates a stack of Unshackled for (?P<value>\d+(?:\.\d+)?) seconds"),
+    missing=(
         "Sylas P: the cached innate no longer states the Unshackled stack "
         "duration ('generates a stack of Unshackled for N seconds')"
-    )
+    ),
+)
 
 
 def _chain_lash(packet_q):
@@ -215,7 +204,7 @@ def _petricite_burst(packet_passive):
             "arming_slots": ("Q", "W", "E", "R"),
             "max_stacks": _MAX_UNSHACKLED_STACKS,
             "per_cast": 1,
-            "stack_seconds": _unshackled_stack_seconds(ability),
+            "stack_seconds": _UNSHACKLED_STACK.value(ability),
             "armed_at_start": False,
             "requested": ctx.options.get("passive_procs") is not None,
         }
