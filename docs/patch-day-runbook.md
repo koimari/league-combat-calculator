@@ -17,7 +17,7 @@ clear staleness.
 ## Roles
 
 - **Patch owner**: one person accountable for the whole day-0 cycle. Runs every step, owns
-  the SLA, writes the announcement.
+  the SLA, writes both beta-channel posts from `docs/patch-announcement-template.md`.
 - **Engine reviewers**: called in for escalations, meaning a champion kit rework or an
   item rework.
 
