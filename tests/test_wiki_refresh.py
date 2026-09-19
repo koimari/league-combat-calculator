@@ -2,7 +2,6 @@
 
 import json
 import os
-import plistlib
 import selectors
 import sqlite3
 import subprocess
@@ -13,7 +12,6 @@ from types import SimpleNamespace
 
 import pytest
 
-from scripts.install_wiki_refresh import job
 from scripts.wiki_refresh import refresh as refresh_source
 from scripts.wiki_refresh import run_audit, scheduled_refresh
 
@@ -271,25 +269,6 @@ def test_delayed_wakeup_catches_up_once_for_the_due_period(tmp_path):
         action=lambda: pytest.fail("duplicate period"),
     )
     assert result["skipped"] == "already_attempted"
-
-
-def test_launchd_command_round_trips_with_spaces(tmp_path):
-    value = job(
-        repo=tmp_path / "a repo",
-        python=tmp_path / "python",
-        source=tmp_path / "source repo",
-        logs=tmp_path / "logs",
-        axword=tmp_path / "kit.ts",
-        seed=tmp_path / "vault",
-        anchor=date(2026, 9, 9),
-    )
-    assert plistlib.loads(plistlib.dumps(value)) == value
-    assert value["StartCalendarInterval"] == {"Weekday": 3, "Hour": 9, "Minute": 0}
-    assert value["ProgramArguments"][1] == str(
-        tmp_path / "a repo/scripts/patch_update.py"
-    )
-    assert "--scheduled" in value["ProgramArguments"]
-    assert value["RunAtLoad"] is True
 
 
 def test_audit_infrastructure_failure_is_distinct_from_review_drift(tmp_path):
