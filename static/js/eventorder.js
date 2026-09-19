@@ -17,18 +17,10 @@
 
   var MOUNT_ID = "eventOrderPanel";
   var latest = null;
+  var escapeHtml = window.scryglass.escapeHtml;
 
   function byId(id) {
     return document.getElementById(id);
-  }
-
-  function escapeHtml(value) {
-    return String(value == null ? "" : value)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
   }
 
   function fmtTime(value) {

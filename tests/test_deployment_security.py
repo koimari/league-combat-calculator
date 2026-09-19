@@ -1,12 +1,26 @@
 """Keep production hardening visible and regression-tested."""
 
+import re
 from pathlib import Path
+
+
+def test_the_image_runs_the_python_version_the_tests_run():
+    """One home for the version: production shipped a 3.15 release candidate
+    while every test ran 3.14, and nothing read the two together."""
+    dockerfile = Path("Dockerfile").read_text(encoding="utf-8")
+    version = Path(".python-version").read_text(encoding="utf-8").strip()
+
+    reference = re.search(r"^ARG PYTHON_IMAGE=(\S+)$", dockerfile, re.MULTILINE)
+    assert reference, "the base image is not one overridable reference"
+    assert re.fullmatch(
+        rf"python:{re.escape(version)}-slim@sha256:[0-9a-f]{{64}}", reference[1]
+    ), reference[1]
+    assert "FROM ${PYTHON_IMAGE}" in dockerfile
 
 
 def test_container_is_pinned_minimal_nonroot_and_health_checked():
     dockerfile = Path("Dockerfile").read_text(encoding="utf-8")
 
-    assert "FROM python:" in dockerfile
     assert "-slim@sha256:" in dockerfile
     assert "COPY requirements-runtime.txt" in dockerfile
     assert "COPY requirements.txt" not in dockerfile
