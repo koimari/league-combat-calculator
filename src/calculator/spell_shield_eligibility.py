@@ -40,7 +40,7 @@ from .state_timeline import SourceReceipt
 
 # The sourced categorical rules of the spell-shield lifecycle.  Each rule
 # is a typed declaration with its cache receipt; the kernel never invents
-# a policy the cache does not evidence (architecture.md, "Design rules").
+# a policy the cache does not evidence.
 SPELL_SHIELD_ONE_USE_RULE = (
     "One shield use blocks ONE hostile ability instance; every packet of "
     "the same cast follows the same block decision without spending again."

@@ -48,10 +48,9 @@ receipt.  The shield-destroying exception ("Shield-destroying effects
 bypass this...") and the allied-CC exclusion have no modeled source in
 the calculator and are declared follow-ups.
 
-Design rules (``architecture.md``, "Design rules"): categorical rules
-are small frozen declarations with public receipts; missing values
-raise naming the declaration; the kernel never invents a number or a
-policy the caches do not evidence.
+Design rules: categorical rules are small frozen declarations with
+public receipts; missing values raise naming the declaration; the kernel
+never invents a number or a policy the caches do not evidence.
 """
 
 from __future__ import annotations
