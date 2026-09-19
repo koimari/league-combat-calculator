@@ -62,9 +62,9 @@ a cast counts when it *starts* within the window
 (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`,
 the cast epochs of a solo ability are `0, c_i, 2c_i, …`, again a deterministic
 renewal schedule; the shared-timeline version is the superposition with
-mutual-exclusion, resolved greedily by cast order. This replaced the legacy
-`1 + T/c` independent-timeline count, which overcounted short-cooldown
-abilities (Cassiopeia E: 5 vs. 3 in-game casts over 3 s).
+mutual-exclusion, resolved greedily by cast order. The independent-timeline
+count `1 + T/c` is not the model here: it overcounts short-cooldown abilities
+(Cassiopeia E: 5 against 3 in-game casts over 3 s).
 
 **Theorem (renewal-reward).** For a renewal process with interarrival times
 `X_i` and i.i.d. rewards `R_i` attached to each cycle, the long-run average
@@ -458,16 +458,18 @@ confidence" claims to the existing corpus, and it is the recommended next step
 Legend: **EXACT** = instantiates the identity exactly under the deterministic
 model; **APPROX** = documented approximation (never silently presented as
 exact). All game-rule claims were cross-checked against the League Wiki
-(armor/penetration, movement speed, crit, grievous wounds, executes).
+(armor/penetration, movement speed, crit, grievous wounds, executes). A formula
+`CLAUDE.md` states is named below, not spelled: each row carries the identity's
+name, the verdict, and the edge case the identity alone does not settle.
 
 | Engine family (location) | Theorem / identity it instantiates | Verdict | Edge case the math says is wrong / must be documented |
 |---|---|---|---|
-| Resistance mitigation (`resistance.apply_resistance`) | `m(R)=100/(100+R)`; EHP round-trip `raw = post·(1+R/100)`; sigmoid family | **EXACT** | Negative branch is `2−100/(100−R)` (not the analytic continuation); continuous at 0, saturates at 2× |
-| Penetration (`resistance.apply_{armor,magic}_penetration`) | percent-then-flat, floor at 0; reduction-then-penetration composition | **EXACT** | Penetration never deepens negative resistance (reduction-only); composition order is non-commutative and reproduced exactly |
+| Resistance mitigation (`resistance.apply_resistance`) | the mitigation identity `CLAUDE.md` states, derived in §2.1; EHP round-trip `raw = post·(1+R/100)`; sigmoid family | **EXACT** | Negative branch is `2−100/(100−R)` (not the analytic continuation); continuous at 0, saturates at 2× |
+| Penetration (`resistance.apply_{armor,magic}_penetration`) | the penetration order `CLAUDE.md` states, derived in §2.2; reduction-then-penetration composition | **EXACT** | Penetration never deepens negative resistance (reduction-only); composition order is non-commutative and reproduced exactly |
 | Percent reduction on negative armor (`reduce_resistance`) | Wiki rule: "Flat armor reduction can reduce armor values below 0, while **percentage armor reduction cannot**" (League Wiki, *Armor penetration*) | **EXACT** | Engine applies % reduction only while R>0, matching the wiki rule; residual ambiguity (game behavior on an input already below 0) is a game-file-verification item, not a formula error |
-| Stat growth (`stat_formulas.growth_stat`) | `base + growth·(L−1)·(0.7025 + 0.0175·(L−1))` | **EXACT** | Level cap 20 (top lane); formula season-volatile, single source of truth `MAX_LEVEL` |
-| Attack speed (`stat_formulas.calculate_attack_speed`) | `base_AS + AS_ratio·bonus/100` | **EXACT** | Total AS cap 3.003 deliberately NOT clamped fight-wide (Jayce reads it) |
-| Ability haste (`stat_formulas.effective_cooldown`) | `cd' = cd·100/(100+AH)`; casts/unit time affine in AH | **EXACT** | R recasts on its hasted cooldown only for modules certifying `ULTIMATE_RECASTS`; every other kit casts R exactly once per timed fight (model constraint, documented) |
+| Stat growth (`stat_formulas.growth_stat`) | the level-growth formula `CLAUDE.md` states | **EXACT** | The level cap is a seasonal rule and top lane only; `MAX_LEVEL` is its single source of truth, so the number is not written here |
+| Attack speed (`stat_formulas.calculate_attack_speed`) | the attack-speed formula `CLAUDE.md` states | **EXACT** | Total AS cap 3.003 deliberately NOT clamped fight-wide (Jayce reads it) |
+| Ability haste (`stat_formulas.effective_cooldown`) | the ability-haste identity `CLAUDE.md` states; casts/unit time affine in AH | **EXACT** | R recasts on its hasted cooldown only for modules certifying `ULTIMATE_RECASTS`; every other kit casts R exactly once per timed fight (model constraint, documented) |
 | Auto DPS / auto count (`fight/autos/swing_schedule.py`, `FightState.num_auto_attacks`) | renewal counting `N(T)=⌊AS·u·T⌋`; periodic schedule `t_i=i/rate` | **EXACT*** | *uptime-as-rate-scale approximation; swing exactly at T excluded (measure-zero boundary) |
 | Crit expectation (`fight/autos/simulation.py`, `fight/rotation/cast_parts.py`) | `E[swing] = (1−p)·1 + p·CM = 1+p·(CM−1)`; mitigation commutes with expectation (linear in raw) | **EXACT** | Deterministic path evaluates `f(E[H])` for health-dependent terms; exact for affine f (Kraken), Jensen-biased for convex f (Veigar R ramp) |
 | Ability rotation casts (`fight/rotation/cast_schedule.py`, `fight/rotation/ability_rotation.py`) | shared-timeline renewal schedule; cast starts within window | **EXACT** | GCD/0.5s inter-cast estimate used only in one-rotation burn spread (see burn row); R single-cast |
