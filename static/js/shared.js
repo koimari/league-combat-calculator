@@ -1,10 +1,12 @@
 /*!
  * shared.js — what more than one of the page's scripts needs.
  *
- * One HTML escaper for the whole page: a second copy is a second thing to
- * fix when an escape is found missing, which is the one duplication with a
- * security edge. Publishes onto window.scryglass, the surface app.js also
- * merges its request helpers onto, so the two load in either order.
+ * The HTML escaper eventorder.js and feedback.js bind at load, so index.html
+ * loads this script before them and tests/test_redesign_frontend.py holds
+ * that order. Both this file and app.js merge onto window.scryglass rather
+ * than assigning it, so the namespace itself survives either load order.
+ * app.js keeps its own narrower escapeHtml, which scoreboard.js resolves off
+ * the page's global scope.
  */
 (function () {
   "use strict";

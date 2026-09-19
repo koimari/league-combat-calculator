@@ -512,6 +512,24 @@ def test_feedback_widget_validates_the_displayed_payload(source: str):
     )
 
 
+def test_the_page_loads_shared_js_before_every_reader_of_its_escaper():
+    """A reader binds ``window.scryglass.escapeHtml`` at IIFE time, so the
+    page's script order is the only thing that satisfies it. The reader set
+    is read from ``static/js``, never listed here."""
+    order = re.findall(
+        r'<script src="/static/js/([^"]+)"',
+        (ROOT / "templates" / "index.html").read_text(encoding="utf-8"),
+    )
+    readers = {
+        path.name
+        for path in (ROOT / "static" / "js").glob("*.js")
+        if "window.scryglass.escapeHtml" in path.read_text(encoding="utf-8")
+    } - {"shared.js"}
+    assert readers, "nothing reads the shared escaper"
+    for name in readers:
+        assert order.index("shared.js") < order.index(name), name
+
+
 def test_the_dead_quick_mode_layer_is_gone(source: str):
     """Quick mode's DOM left in 2026-08; its render/wiring layer survived as
     dead code addressing elements that do not exist. It is removed, while the
