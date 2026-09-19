@@ -1,9 +1,9 @@
-"""Certification for the 90 SR-admitted ``stats_only`` items (roadmap-100 §1).
+"""Certification for the SR-admitted ``stats_only`` items, the one home.
 
 ``stats_only`` means ``item_coverage._attacker_coverage()`` found no
 outgoing-damage mechanic on the item's OWN HOLDER to model -- not that the
-cached entry is textually numberless.  51 of the 92 have no described
-passive/active at all; the other 41 have a real, numeric passive/active
+cached entry is textually numberless.  51 of the 90 have no described
+passive/active at all; the other 39 have a real, numeric passive/active
 (shields, Grievous Wounds, stasis, ally-directed heals routed through the
 separate support ledger, ...) that is correctly excluded from this
 calculator's outgoing-TDD model.  See ``item_coverage.py``'s
@@ -35,13 +35,12 @@ from src.calculator.item_stat_block import get_item_stats
 from src.calculator.stats import calculate_total_stats
 from tests import item_probe
 
-# The 91-plus SR-admitted items whose current cached data classifies as
-# stats_only.  Computed live (the same predicate the optimizer's candidate
-# pool and docs/roadmap-100.md §6.1 use) rather than hand-listed, so this
-# suite cannot drift from what the runtime actually classifies -- if a patch
-# changes the *count*, ``test_certified_count_matches_roadmap_100`` below
-# fails loudly instead of silently certifying a different set than the one
-# reported in the roadmap.
+# The SR-admitted items whose current cached data classifies as stats_only.
+# Computed live, behind the same predicate the optimizer's candidate pool
+# uses, rather than hand-listed, so this suite cannot drift from what the
+# runtime classifies -- if a patch changes the *count*,
+# ``test_certified_count_matches_roadmap_100`` below fails loudly instead of
+# silently certifying a different set.
 
 
 def _all_stats_only_items() -> list[dict]:
@@ -65,17 +64,17 @@ _ITEMS_BY_NAME = {str(item["name"]): item for item in _CERTIFIED_ITEMS}
 
 
 def test_certified_count_matches_roadmap_100():
-    """The SR-admitted ``stats_only`` population, re-pinned from the
+    """The SR-admitted ``stats_only`` population, from the
     declaration-driven classifier.
 
-    90, not the roadmap's 92.  Six items left the population because they
-    declare something the engines run — Diadem of Songs, Dream Maker, Echoes
-    of Helia, Moonstone Renewer and Solstice Sleigh declare ally_packet
-    mechanics the support ledger schedules, and Spirit Visage declares a
-    sustain multiplier — and four joined it because their declared families
-    are all defences: Bramble Vest and Thornmail (reactive), Force of Nature
-    and Jak'Sho (combat_state).  A count drift from here means the classifier
-    moved again and must be re-read, not silently tolerated.
+    90.  An item that declares something an engine runs is not in the set
+    (Diadem of Songs, Dream Maker, Echoes of Helia, Moonstone Renewer and
+    Solstice Sleigh declare ally_packet mechanics the support ledger
+    schedules; Spirit Visage declares a sustain multiplier), and an item
+    whose declared families are all defences is (Bramble Vest and Thornmail
+    are reactive, Force of Nature and Jak'Sho are combat_state).  A count
+    drift from here means the classifier moved and must be re-read, not
+    silently tolerated.
     """
     assert len(_CERTIFIED_ITEMS) == 90
 

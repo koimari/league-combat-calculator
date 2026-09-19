@@ -160,8 +160,7 @@ ASSUMPTIONS = [
     "the wiki cache, not to this module or its tests (no test currently "
     "asserts Nilah's resource_cost). Clearing patch_regression.py's "
     "ability_rows_stale flag requires a data/champions.json re-pull/"
-    "re-cert, which is outside this task's scope (see "
-    "docs/patch-day-runbook.md Step 3.A).",
+    "re-cert, which is patch-day work (the /patch-update skill).",
     "P (Joy Unending) and W (Jubilant Veil) carry no enemy-damage "
     "formula of any kind (the reviewed packet's own slot declarations "
     "already carry kind='no_damage' for both): Joy Unending is the "

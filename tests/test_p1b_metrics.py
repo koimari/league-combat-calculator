@@ -679,19 +679,10 @@ def test_beta_metrics_cli_json(sqlite_database, tmp_path):
 
 
 def test_beta_metrics_docs_exist():
-    doc = ROOT / "docs" / "beta-metrics.md"
-    assert doc.exists(), "docs/beta-metrics.md is required (P1b deliverable)"
-    text = doc.read_text(encoding="utf-8")
-    for required in (
-        "25%",
-        "20",
-        "72",
-        "page_view",
-        "metrics_events",
-        "session_id",
-    ):
-        assert required in text, required
+    """The two docs the metrics code cites by path must resolve.
 
-    schema_doc = ROOT / "docs" / "database-schema.md"
-    assert schema_doc.exists()
-    assert "metrics_events" in schema_doc.read_text(encoding="utf-8")
+    Their prose is not asserted: a substring test over markdown goes red on
+    a rewrite while the metrics it describes are untouched (audit 2.3).
+    """
+    assert (ROOT / "docs" / "beta-metrics.md").exists()
+    assert (ROOT / "docs" / "database-schema.md").exists()

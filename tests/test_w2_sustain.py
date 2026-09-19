@@ -324,7 +324,7 @@ class TestViBlastShield:
 
         The shield is 292.8 for 3 s from 3.221, and it absorbs the 228.4 Ahri
         deals before 6.221 (49.5 + 129.3 + 49.5).  Writeup:
-        ``docs/receipts/self-shield-carrier-rebind-2026-08-21.md``.
+        ``docs/self-shield-rebinding.md``.
         """
         payload = _fight("Vi")
         survival = _main_survival(payload)

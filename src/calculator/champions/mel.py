@@ -559,7 +559,7 @@ ASSUMPTIONS = [
     "this module or its tests — no test currently asserts W's cooldown "
     "value, so this module's behavior is otherwise unaffected. Clearing "
     "patch_regression.py's ability_rows_stale flag requires a "
-    "data/champions.json re-pull/re-cert, which is outside this task's "
-    "scope (see docs/patch-day-runbook.md Step 3.A).",
+    "data/champions.json re-pull/re-cert, which is patch-day work "
+    "(the /patch-update skill).",
 ]
 MODULE_COVERAGE = coverage(no_damage="W")

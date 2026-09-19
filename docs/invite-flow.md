@@ -2,7 +2,7 @@
 
 How beta invites are issued, what an invitee sees from first link to first
 calculation, and how invite batches rotate. Companion to the operator docs
-(`docs/beta-operations.md`, `docs/deploy-runbook.md`) and the P0a auth layer
+(`docs/beta-operations.md`, `docs/deploy.md`) and the P0a auth layer
 (`src/app.py`: `_invite_codes`, `auth_login`, `api_auth_invite`).
 
 ## 1. How an invite is issued
@@ -17,16 +17,16 @@ database rows. Everything lives in two environment variables:
 
 Issuing an invite is two steps:
 
-1. **Create the account** — add `"Username": "<scrypt-hash>"` to
+1. **Create the account.** Add `"Username": "<scrypt-hash>"` to
    `SCRYGLASS_AUTH_USERS` (generate the hash with the scrypt tooling; the
    value must start with `scrypt$`).
-2. **Share a code from the batch** — send the invitee one code from
+2. **Share a code from the batch.** Send the invitee one code from
    `SCRYGLASS_INVITE_CODES` **plus** their account name and the
    research-account password you set.
 
 Matching rules (see `src/app.py::_invite_codes`):
 
-- Codes are trimmed, deduplicated, and matched **exactly** — `BETA-2026` and
+- Codes are trimmed, deduplicated, and matched **exactly**, so `BETA-2026` and
   `beta-2026` are distinct codes.
 - An unset/empty `SCRYGLASS_INVITE_CODES` keeps the deployment in
   password-only mode (no invite field, no invite gate).
@@ -37,10 +37,10 @@ Matching rules (see `src/app.py::_invite_codes`):
 
 The invitee journey, end to end:
 
-1. **Beta landing** — any unauthenticated visit to `/` redirects to
+1. **Beta landing.** Any unauthenticated visit to `/` redirects to
    `/auth/login` (the beta landing page). It explains the product and shows
    the sign-in card.
-2. **Code + password** — the form asks for three fields in invite-gated
+2. **Code and password.** The form asks for three fields in invite-gated
    deployments:
    - **Invite code** (the batch code they were sent),
    - **Research account** (their username),
@@ -49,12 +49,12 @@ The invitee journey, end to end:
    on a bad code), then the credentials. The validated code is stored in the
    signed session cookie so every later request carries its invite source
    (`/auth/status` → `user.invite`).
-3. **First-run overlay** — after login the calculator loads and, on first
+3. **First-run overlay.** After login the calculator loads and, on first
    browser visit (`localStorage` `scryglass_onboarded` not yet set), the
    welcome overlay explains champion setup, build setup, and result proof. It
    is dismissible (Skip / × / Escape) and never blocks. The full walkthrough
    is in `docs/onboarding-guide.md`.
-4. **The calculator** — the invitee lands in the analyst view (the app;
+4. **The calculator.** The invitee lands in the analyst view (the app;
    per-slot Best-in-slot covers "best next item").
 
 The pre-auth surface stays public by design: `/healthz`, `/api/health/*`,
@@ -66,22 +66,22 @@ The pre-auth surface stays public by design: `/healthz`, `/api/health/*`,
 
 Rotate a batch when any of these happens:
 
-- **A code leaks or appears in public** (issue tracker, pastebin, stream) —
+- **A code leaks or appears in public** (issue tracker, pastebin, stream):
   remove it from `SCRYGLASS_INVITE_CODES` immediately. Because codes are
   matched exactly against the configured list, deleting the code revokes it
   for every future login.
-- **A cohort closes** — e.g. after a review wave, replace the batch with a
+- **A cohort closes**, for example after a review wave, replace the batch with a
   new code so distinct waves stay separable in `/auth/status` (the session
   records which code was used).
-- **The account list changes** — remove the account from `SCRYGLASS_AUTH_USERS`
+- **The account list changes**: remove the account from `SCRYGLASS_AUTH_USERS`
   (or rotate its password hash) and re-deploy; existing sessions expire on
   the auth TTL.
 
-Rotation procedure (per `docs/deploy-runbook.md`):
+Rotation procedure (per `docs/deploy.md`):
 
 1. Edit `SCRYGLASS_INVITE_CODES` (and `SCRYGLASS_AUTH_USERS` if accounts
    changed) in the deployment environment.
-2. Redeploy / restart the app — the env is read per request
+2. Redeploy or restart the app; the env is read per request
    (`_invite_codes()` is stateless), so no migration or cache flush is
    needed.
 3. Verify with `curl https://<beta-host>/api/auth/invite` (reports
@@ -98,7 +98,7 @@ Rotation procedure (per `docs/deploy-runbook.md`):
 - **The validation API** (`POST /api/auth/invite`) checks a code without
   logging in: `200 {"valid": true, "invite": ...}` for a configured code,
   `401` unknown, `503` when no codes are configured. It is for operators and
-  API clients — the landing page ships no JavaScript (`script-src 'self'`),
+  API clients, because the landing page ships no JavaScript (`script-src 'self'`),
   so its form posts the code with the credentials to `/auth/login`, which
   validates the code first.
 - **Audit trail:** `/auth/status` exposes the current session's invite code;
@@ -111,4 +111,4 @@ Rotation procedure (per `docs/deploy-runbook.md`):
 | Wrong invite code | 401 on the landing page; no session | Re-send the correct batch code |
 | Code removed mid-batch | Existing sessions keep working until TTL; new logins rejected | Rotate + notify |
 | `SCRYGLASS_INVITE_CODES` unset | Password-only mode; no invite field | Intended fallback for internal deploys |
-| Auth env misconfigured | 503 with a setup error, never a silent open door | Fix env per `docs/deploy-runbook.md` |
+| Auth env misconfigured | 503 with a setup error, never a silent open door | Fix env per `docs/deploy.md` |
