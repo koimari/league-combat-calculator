@@ -118,8 +118,8 @@ class TestTheReaderSetIsDerived:
         """
         readers = lint.Readers.in_tree(ROOT)
         absent = f"docs/receipts/{uuid4()}.json"
-        assert not readers.name(absent)
-        assert readers.name("docs/receipts/campaign-fingerprints.json")
+        assert not readers.covers(absent)
+        assert readers.covers("docs/receipts/campaign-fingerprints.json")
 
     def test_a_docstring_mention_is_not_a_reader(self, repo):
         """The failure this rule exists for: prose about a corpus nothing opens."""

@@ -109,7 +109,7 @@ class Readers(NamedTuple):
         globs = (text for text in literals if "*" in text or "?" in text)
         return cls(literals, frozenset(filter(names_a_family, globs)))
 
-    def name(self, relative: str) -> bool:
+    def covers(self, relative: str) -> bool:
         """Whether a reader names this repo-relative path, exactly or by family."""
         leaf = _segment(relative)
         return (
@@ -127,7 +127,7 @@ def orphans(root: Path = ROOT) -> tuple[str, ...]:
         for path in tracked(root, *RECEIPT_ROOTS)
         if path.suffix == ".json"
     )
-    return tuple(sorted(name for name in receipts if not readers.name(name)))
+    return tuple(sorted(name for name in receipts if not readers.covers(name)))
 
 
 def _strings(payload: object) -> Iterator[str]:
