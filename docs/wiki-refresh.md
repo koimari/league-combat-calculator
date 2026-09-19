@@ -54,9 +54,10 @@ from, so the source checkout comes from the flag and every path is absolute:
 ```
 
 The command finds its own checkout from the script path, so the job entry
-needs no working directory. `--scheduled` selects the most recent fortnight due date from the anchor and
-runs that period once, so a wake after sleep catches up the due date. Receipts
-in `data/wiki/wiki-schedule/` record attempts, failures, and successful
-updates, and the command skips a period it already attempted. A failed period
-has no automatic retry; run the command without `--scheduled` to retry it.
+needs no working directory. `--scheduled` selects the most recent fortnight
+due date from the anchor and runs that period once, so a wake after sleep
+catches up the due date. Receipts in `data/wiki/wiki-schedule/` record
+attempts, failures, and successful updates, and the command skips a period it
+already attempted. A failed period has no automatic retry; run the command
+without `--scheduled` to retry it.
 All steps use local scripts and source APIs. Model calls are absent.

@@ -526,6 +526,7 @@ def test_the_page_loads_shared_js_before_every_reader_of_its_escaper():
         if "window.scryglass.escapeHtml" in path.read_text(encoding="utf-8")
     } - {"shared.js"}
     assert readers, "nothing reads the shared escaper"
+    assert "shared.js" in order, f"index.html loads {readers} without shared.js"
     for name in readers:
         assert order.index("shared.js") < order.index(name), name
 
