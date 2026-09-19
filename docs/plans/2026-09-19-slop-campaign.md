@@ -9,12 +9,17 @@ are the audit's own.
 
 - One worker, one worktree, one branch `slop/<unit>`, one scope list. A worker edits nothing
   outside its scope. Traps it learns go in its report, not `TRAPS.md`. The integrator appends them.
-- Gates per unit, fresh output quoted in the report: `pytest -n auto`, `black --check src/ tests/
-  scripts/`, `pylint src/ --jobs=0 --fail-under=9 --fail-on=E0601,E0602` for code changes, both
-  golden compares (`scripts/golden_baseline.json`, `scripts/golden_coupled_baseline.json`),
-  `python scripts/prose_lint.py`, `python scripts/literal_defaults.py`, plus the owning gate of
-  anything touched (`coverage_status.py --check`, `swing_stream_audit.py`, `build_icon_sprite.py
-  --check`, `certify_damage_casts.py --check`, `node build.mjs --check` under `ui/`).
+- Gates per unit, fresh output quoted in the report: `black --check src/ tests/ scripts/`,
+  `pylint src/ --jobs=4 --fail-under=9 --fail-on=E0601,E0602` for code changes, both golden
+  compares (`scripts/golden_baseline.json`, `scripts/golden_coupled_baseline.json`),
+  `python scripts/prose_lint.py`, `python scripts/literal_defaults.py`, `pytest <the test files
+  the unit touched or that read what it changed>` without `-n`, plus the owning gate of anything
+  touched (`coverage_status.py --check`, `swing_stream_audit.py`, `build_icon_sprite.py --check`,
+  `certify_damage_casts.py --check`, `node build.mjs --check` under `ui/`).
+- The full suite (`pytest -n auto`, `coverage_census.py check`, `make ci-full`) runs once per
+  wave, by the integrator, on the merged tree. Four concurrent full runs took the machine out of
+  memory; a worker or skeptic never runs the whole suite, never passes `-n`, and never runs more
+  than one pytest at a time.
 - A pure refactor or deletion prints `OK: snapshot identical` on both golden compares. A unit that
   moves a golden stops and reports the diff instead of re-capturing.
 - Codemods land one at a time with a green golden between each, never batched.
