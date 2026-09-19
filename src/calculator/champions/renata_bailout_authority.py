@@ -10,11 +10,11 @@
 # character binary — and they did not agree.
 #
 # ``BAILOUT_AUTHORITY["adjudication"]`` below is the per-field record of that
-# disagreement and how each field was settled.  The rule applied is the
-# repo's standing precedent (CLAUDE.md, the Gnar Mega-form entry): where the
-# game files and the Wiki disagree on a number, **the game files win** — the
-# Wiki's stat boxes have been provably stale before (Gnar Mega AD growth 5.7
-# on the Wiki against 5.5 in the game).
+# disagreement and how each field was settled.  The rule applied is the repo's
+# standing precedent (TRAPS.md, Champions, the Gnar Mega-form entry): where
+# the game files and the Wiki disagree on a number, **the game files win** —
+# the Wiki's stat boxes have been provably stale before (Gnar Mega AD growth
+# 5.7 on the Wiki against 5.5 in the game).
 #
 # The adjudication settled the CADENCE and left the DAMAGE CLASS open:
 #
@@ -114,7 +114,7 @@ BAILOUT_AUTHORITY = {
     # Each row is (binary value, wiki value, chosen value, basis); ``chosen``
     # is ``None`` exactly where no local source can decide the field.
     "adjudication": {
-        "precedent": "CLAUDE.md Gnar Mega-form game-file authority",
+        "precedent": "TRAPS.md, Champions, Gnar Mega-form game-file authority",
         "rule": "gamefile_wins_over_wiki",
         "fields": {
             # ---- settled: both sources agree -----------------------------

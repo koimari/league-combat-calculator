@@ -89,7 +89,7 @@
       "Lord Dominik's Regards"
     ],
     "deterministic": true,
-    "why_deterministic": "the build is crit-capable and damage.py rolls per swing, so the capture would not reproduce without it (CLAUDE.md, Known Quirks)"
+    "why_deterministic": "the build is crit-capable and damage.py rolls per swing, so the capture would not reproduce without it (TRAPS.md, Engine and pricing)"
   },
   "arms_that_moved": {
     "note": "every armed arm differs from its own control, which is what makes the section coverage rather than 24 copies of one number. Totals at capture:",
