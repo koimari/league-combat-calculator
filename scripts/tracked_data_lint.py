@@ -5,8 +5,12 @@
 file must be named by a regenerator or read by a test, and the reader set is
 derived rather than listed: every string literal outside a docstring in
 ``src/``, ``scripts/`` and ``tests/``, matched against the file's name whole or
-as a glob.  A corpus nothing names cannot be dated, regenerated, or trusted,
-which is how 139 oracle receipts stayed tracked while 2 were read.
+as a family glob.  A corpus nothing names cannot be dated, regenerated, or
+trusted, which is how 139 oracle receipts stayed tracked while 2 were read.
+A glob names a family only when it pins something past the suffix
+(``oracle-C6-*.json``); ``*`` and ``*.json`` match every receipt there is, so
+counting either as a reader would answer for the whole corpus and leave the
+rule reporting nothing, whatever the tree held.
 
 ``machine_path`` covers every tracked JSON file.  A string that starts a
 Windows drive or a ``/Users`` or ``/home`` home directory is one machine's
@@ -27,7 +31,8 @@ import subprocess
 import sys
 from collections.abc import Iterable, Iterator
 from fnmatch import fnmatch
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+from typing import NamedTuple
 
 ROOT = Path(__file__).resolve().parent.parent
 RECEIPT_ROOTS = ("docs/receipts", "data/atoms")
@@ -76,26 +81,53 @@ def read_literals(paths: Iterable[Path]) -> frozenset[str]:
     return frozenset(literals)
 
 
-def _names(path: Path, root: Path) -> tuple[str, str]:
-    """The two spellings a reader may use: the file name and its repo path."""
-    return path.name, path.relative_to(root).as_posix()
+def _segment(text: str) -> str:
+    """The last path segment, which is what a file name is matched against."""
+    return text.rsplit("/", 1)[-1]
+
+
+def names_a_family(pattern: str) -> bool:
+    """Whether a glob names a family of files rather than scanning a directory."""
+    segment = _segment(pattern)
+    pinned = segment.replace("*", "").replace("?", "")
+    return bool(pinned) and pinned != PurePosixPath(segment).suffix
+
+
+class Readers(NamedTuple):
+    """Every spelling the tree's Python sources use to name a file."""
+
+    literals: frozenset[str]
+    families: frozenset[str]
+
+    @classmethod
+    def in_tree(cls, root: Path = ROOT) -> Readers:
+        """The reader set of a checkout, derived from its tracked sources."""
+        sources = [
+            path for path in tracked(root, *READER_ROOTS) if path.suffix == ".py"
+        ]
+        literals = read_literals(sources)
+        globs = (text for text in literals if "*" in text or "?" in text)
+        return cls(literals, frozenset(filter(names_a_family, globs)))
+
+    def name(self, relative: str) -> bool:
+        """Whether a reader names this repo-relative path, exactly or by family."""
+        leaf = _segment(relative)
+        return (
+            relative in self.literals
+            or leaf in self.literals
+            or any(fnmatch(leaf, _segment(pattern)) for pattern in self.families)
+        )
 
 
 def orphans(root: Path = ROOT) -> tuple[str, ...]:
-    """Receipt files no literal in the tree names, directly or by glob."""
-    sources = [path for path in tracked(root, *READER_ROOTS) if path.suffix == ".py"]
-    literals = read_literals(sources)
-    globs = tuple(text for text in literals if "*" in text or "?" in text)
-    missing = []
-    for path in tracked(root, *RECEIPT_ROOTS):
-        if path.suffix != ".json":
-            continue
-        name, relative = _names(path, root)
-        named = name in literals or relative in literals
-        globbed = any(fnmatch(name, pattern.rsplit("/", 1)[-1]) for pattern in globs)
-        if not named and not globbed:
-            missing.append(relative)
-    return tuple(sorted(missing))
+    """Receipt files no reader in the tree names, directly or by family."""
+    readers = Readers.in_tree(root)
+    receipts = (
+        path.relative_to(root).as_posix()
+        for path in tracked(root, *RECEIPT_ROOTS)
+        if path.suffix == ".json"
+    )
+    return tuple(sorted(name for name in receipts if not readers.name(name)))
 
 
 def _strings(payload: object) -> Iterator[str]:

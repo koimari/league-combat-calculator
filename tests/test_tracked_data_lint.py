@@ -14,6 +14,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 
@@ -82,6 +83,43 @@ class TestTheReaderSetIsDerived:
             }
         )
         assert lint.orphans(root) == ()
+
+    def test_a_directory_scan_is_not_a_reader(self, repo):
+        """One ``*.json`` anywhere in the tree would otherwise cover every receipt."""
+        root, commit = repo
+        commit(
+            {
+                "docs/receipts/orphan.json": "{}",
+                "scripts/scan.py": 'RECEIPTS.glob("*.json")\nTESTS.rglob("*")\n',
+            }
+        )
+        assert lint.orphans(root) == ("docs/receipts/orphan.json",)
+
+    @pytest.mark.parametrize(
+        ("pattern", "family"),
+        [
+            ("*", False),
+            ("*.json", False),
+            ("docs/receipts/*.json", False),
+            ("*.atoms.json", True),
+            ("oracle-C6-*.json", True),
+            ("expected-*-diff-*.json", True),
+        ],
+    )
+    def test_a_glob_counts_only_where_it_pins_a_name(self, pattern, family):
+        assert lint.names_a_family(pattern) is family
+
+    def test_the_real_reader_set_cannot_name_a_receipt_that_never_existed(self):
+        """The discrimination, measured against the literals the tree holds.
+
+        The negatives above see only the two-line corpus they write, and the
+        absent name is generated because a spelled-out one would name itself:
+        this file is one of the sources the reader set is derived from.
+        """
+        readers = lint.Readers.in_tree(ROOT)
+        absent = f"docs/receipts/{uuid4()}.json"
+        assert not readers.name(absent)
+        assert readers.name("docs/receipts/campaign-fingerprints.json")
 
     def test_a_docstring_mention_is_not_a_reader(self, repo):
         """The failure this rule exists for: prose about a corpus nothing opens."""
