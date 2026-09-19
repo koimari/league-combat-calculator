@@ -4,10 +4,10 @@
 # vendor/ (the wiki scraper) stays out — patch-day data updates run locally
 # and arrive here as committed changes to data/.
 # .python-version is the version's one home and tests/test_deployment_security.py
-# holds this reference to it. One argument carries tag and digest together,
-# because either alone would let the pair disagree.
-ARG PYTHON_IMAGE=python:3.14-slim@sha256:caaf356f40667c496d405780745b9ac25771c189a51dfcc42430d531ea09f8a2
-FROM ${PYTHON_IMAGE}
+# holds this line to it. Tag and digest sit together on a literal FROM, which
+# is the only form Dependabot tracks: behind an ARG the digest stops receiving
+# security bumps (dependabot-core#10190).
+FROM python:3.14-slim@sha256:caaf356f40667c496d405780745b9ac25771c189a51dfcc42430d531ea09f8a2
 
 WORKDIR /app
 
