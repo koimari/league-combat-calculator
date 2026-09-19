@@ -2,10 +2,12 @@
 
 The atomic catalog: every champion mechanic decomposed into typed behavior
 atoms with dual provenance (wiki page + game binary). Schema:
-`atoms.schema.json`. Per-champion atom files are gitignored (regenerable from
-`data/bin`) except seven tracked samples (Aatrox, Anivia, Kayle, Neeko, Senna,
-Thresh, Vladimir); `atom-summary.json`, `classification-report.json`, and
-`unclassified.json` are tracked.
+`atoms.schema.json`, the contract `tests/test_atoms_schema.py` holds the
+corpus to. All 173 per-champion atom files are tracked, as are
+`atom-summary.json`, `classification-report.json` and `unclassified.json`.
+`.gitignore` still lists `data/atoms/*.atoms.json` and tracked wins, so read
+`git ls-files` before calling one of them regenerable. Regenerating them needs
+the game bins under `data/bin`.
 
 ## Classifier v3 (data-driven)
 
