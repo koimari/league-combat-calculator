@@ -45,13 +45,16 @@ and golden files intact.
 ## Deterministic fortnightly schedule
 
 Give any OS scheduler, cron, a systemd timer, launchd, or Task Scheduler, this
-command:
+command. A scheduler has no shell environment to read `LCC_SCRYGLASS_ROOT`
+from, so the source checkout comes from the flag and every path is absolute:
 
 ```bash
-python scripts/patch_update.py wiki-refresh --scheduled --anchor-date 2026-09-09
+/abs/python /abs/repo/scripts/patch_update.py wiki-refresh \
+  --scryglass-root /abs/scryglass --scheduled --anchor-date 2026-09-09
 ```
 
-`--scheduled` selects the most recent fortnight due date from the anchor and
+The command finds its own checkout from the script path, so the job entry
+needs no working directory. `--scheduled` selects the most recent fortnight due date from the anchor and
 runs that period once, so a wake after sleep catches up the due date. Receipts
 in `data/wiki/wiki-schedule/` record attempts, failures, and successful
 updates, and the command skips a period it already attempted. A failed period

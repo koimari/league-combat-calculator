@@ -2,7 +2,9 @@
 
 import json
 import os
+import re
 import selectors
+import shlex
 import sqlite3
 import subprocess
 import sys
@@ -12,6 +14,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from scripts.patch_update import _build_parser
 from scripts.wiki_refresh import refresh as refresh_source
 from scripts.wiki_refresh import run_audit, scheduled_refresh
 
@@ -269,6 +272,26 @@ def test_delayed_wakeup_catches_up_once_for_the_due_period(tmp_path):
         action=lambda: pytest.fail("duplicate period"),
     )
     assert result["skipped"] == "already_attempted"
+
+
+def test_every_documented_wiki_refresh_command_runs(monkeypatch):
+    """``docs/wiki-refresh.md`` is the one place a scheduler entry is copied
+    from, and a scheduler has no ``LCC_SCRYGLASS_ROOT``. Each ``bash`` block
+    goes through the real parser, so a block missing a required flag fails
+    here rather than at the first fortnightly wake."""
+    monkeypatch.delenv("LCC_SCRYGLASS_ROOT", raising=False)
+    doc = (Path(__file__).parent.parent / "docs/wiki-refresh.md").read_text(
+        encoding="utf-8"
+    )
+    blocks = [
+        shlex.split(block.replace("\\\n", " "))
+        for block in re.findall(r"```bash\n(.*?)```", doc, re.DOTALL)
+        if "wiki-refresh" in block
+    ]
+    assert blocks, "the doc documents no wiki-refresh command"
+    for words in blocks:
+        args = _build_parser().parse_args(words[words.index("wiki-refresh") :])
+        assert args.scryglass_root is not None, words
 
 
 def test_audit_infrastructure_failure_is_distinct_from_review_drift(tmp_path):
