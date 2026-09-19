@@ -49,8 +49,8 @@ CURRENT RUNTIME FACTS (verified before pinning):
 - Score staging gate (already generic): both cleanse shapes — the
   cleanse-kind template and the heal carrying the marker — are staged by
   the compiled score path, which carries the marker fields the shared
-  kernel dispatches on, so a cleanse can never be silently re-priced or
-  dropped there (HANDOVER section 9 rule; issue #226).
+  kernel dispatches on, so a cleanse is never re-priced or dropped
+  there: the walk's semantics, or a named fail-closed receipt (#226).
 
 Contract sections (numbered as in the RLM-2 C brief):
   S1  Source evidence + typed values (cached W rows; the module parse

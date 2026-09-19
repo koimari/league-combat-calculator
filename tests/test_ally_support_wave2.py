@@ -1,16 +1,15 @@
-"""Wave-2 ally-support coverage (HANDOVER 8.5) for the coordinator's
-support champions: Nami W return bounce, Yuumi R Best Friend bonus and
-overheal-to-shield conversion, and Renata E all-teammate shield spread.
+"""Ally-support rider coverage: Nami W return bounce, Yuumi R Best Friend
+bonus and overheal-to-shield conversion, and Renata E all-teammate shield
+spread.
 
 Every packet amount is priced from the cached leveling rows through the
 typed atom catalog; the tests pin the atom hashes so a data drift fails
 closed at the assertion instead of silently changing a formula.
 
-Existing packets (Sona W aura shield/heal, Janna E, Milio W, Ivern E,
-Karma E, Seraphine W, Taric W/R/Q, Rakan Q/E/P, Yuumi E) are asserted as
-regression pins only where this wave adds packets beside them; their
-full coverage lives in tests/test_e8_support.py and
-tests/test_support_effects.py.
+Base packets (Sona W aura shield/heal, Janna E, Milio W, Ivern E, Karma E,
+Seraphine W, Taric W/R/Q, Rakan Q/E/P, Yuumi E) are asserted as regression
+pins only where a rider sits beside them; their full coverage lives in
+tests/test_e8_support.py and tests/test_support_effects.py.
 """
 
 import pytest

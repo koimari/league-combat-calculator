@@ -1,8 +1,8 @@
 """Mechanics packets — charges/channels, recasts, executes, secondary targets.
 
-Each packet was audited against HANDOVER 8.6/8.7 and the module's existing
-assumptions before implementation (a generic path already covered several
-listed candidates — see the per-champion audit in the mission reply).  Every
+Each packet is verified against the runtime and the module's existing
+assumptions before implementation, because a generic path already covers
+several of the candidate mechanics and would price them twice.  Every
 number asserted here traces to a cached ``data/champions.json`` leveling row
 or to the cached description prose the module reads with a fail-closed regex
 (the Ziggs Short-Fuse precedent).  Default option values reproduce the
