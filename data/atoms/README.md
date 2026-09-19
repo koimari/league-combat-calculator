@@ -1,4 +1,4 @@
-# data/atoms — fundamental behavior atoms (WS3, v3)
+# data/atoms: fundamental behavior atoms (WS3, v3)
 
 The atomic catalog: every champion mechanic decomposed into typed behavior
 atoms with dual provenance (wiki page + game binary). Schema:
@@ -10,7 +10,7 @@ Thresh, Vladimir); `atom-summary.json`, `classification-report.json`, and
 ## Classifier v3 (data-driven)
 
 - **Identity**: wiki vocabularies in `data/wiki-atoms/` (185 atoms, 6
-  families incl. `interaction`) are the only identity source — zero hardcoded
+  families incl. `interaction`) are the only identity source, with zero hardcoded
   champion/spell names in code.
 - **Semantic layer**: `spell-tags.json` maps the game's own `mSpellTags`
   vocabulary (Trait_ActiveHeal, Trait_Shield, Trait_Invisibility,
@@ -20,10 +20,10 @@ Thresh, Vladimir); `atom-summary.json`, `classification-report.json`, and
   `champion-spell-atoms.json`): form-change passives (Neeko/Kayle), shared-
   script summons (Annie Tibbers, Heimer turrets, Malzahar Voidlings, Yorick,
   Zyra, Ivern, Azir, Kindred, Illaoi), traps, and clones (LeBlanc, Zed,
-  Wukong) — behaviors the binaries cannot express as SpellObject tags.
+  Wukong), behaviors the binaries cannot express as SpellObject tags.
 - **Two-tier matching**: strong hits (object-name tokens, multi-token
   keywords, tags) always count; weak hits (single datavalue tokens) only when
-  no strong hit exists (cap 2) — removed ~3,000 spurious atoms with zero
+  no strong hit exists (cap 2). That removed ~3,000 spurious atoms with zero
   object-level recall loss.
 - **Clone inheritance**: `*Missile/*Attack/*Mis/*Mini/*Hit/*Return` variants
   (digit-stripped, incl. the game's "Missle" typo) inherit the parent spell's
@@ -31,7 +31,7 @@ Thresh, Vladimir); `atom-summary.json`, `classification-report.json`, and
 - **Noise**: engine/cosmetic artifacts (Managers, VFX, Trackers, skins,
   tooltips, UI helpers) are excluded by object name only.
 
-## Current state (v4 — no over-classification)
+## Current state (v4, no over-classification)
 
 - 173-wiki-champion universe (excludes TFT/test entities).
 - **5,372 atoms, 0 weak-evidence atoms** (over-classification = atoms guessed from datavalues only; none emitted). Evidence is tag/name/rule/inherited/wiki-map only. 19/19 sanity checks.
@@ -46,7 +46,7 @@ Thresh, Vladimir); `atom-summary.json`, `classification-report.json`, and
   ally reads `ally`.
 - Known limitation: the CharacterRecord bins do not carry damage types; a
   bridge from `data/champions.json` per-ability damageType now types ~53% of
-  damage atoms — the rest keep damage_type null.
+  damage atoms; the rest keep damage_type null.
 
 ## Item domain (unified Atomizer, issue #140)
 
@@ -57,7 +57,7 @@ provenance.
 Contract (enforced by `tests/test_item_atomizer.py`):
 
 - Each passive/active is classified from **its own fragment text**
-  (`passives[i].branches`, `active[i].branches`), never a whole-item blob —
+  (`passives[i].branches`, `active[i].branches`), never a whole-item blob:
   the first passive cannot absorb later effects.
 - Dedup happens at emission by `(atom_id, behavior)`; identical atoms from
   different effects **merge while preserving every effect's evidence
@@ -71,7 +71,7 @@ Contract (enforced by `tests/test_item_atomizer.py`):
 
 Per-item consumers read `data/atoms/items.json` (the unified Atom
 record is `atom_id`/`behavior`/`source`/`name`/`values`/
-`units`/`evidence`/`hash` — see `src/calculator/atomizer.py`; the tracked
+`units`/`evidence`/`hash`, see `src/calculator/atomizer.py`; the tracked
 `atoms.schema.json` describes the older champion-atom shape).
 `scripts/build_receipts.py` reads the unified file too (issue #163) and
 fails closed when it is missing or malformed.
