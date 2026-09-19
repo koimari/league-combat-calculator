@@ -19,7 +19,7 @@ $ARGUMENTS
 
 ### Step 1: Fetch the Wiki Page
 
-Fetch the champion's wiki page at `https://wiki.leagueoflegends.com/en-us/<ChampionName>` for prose: mechanics and interaction notes. Take every number from the raw data templates, `https://wiki.leagueoflegends.com/en-us/Template:Data_<ChampionName>/<Ability>?action=raw`, reading `{{pp|values|breakpoints}}` verbatim. A summarized fetch of the rendered page garbles progression tables and invents rules the champion once had (Bard and Cassiopeia in bug-history).
+Fetch the champion's wiki page at `https://wiki.leagueoflegends.com/en-us/<ChampionName>` for prose: mechanics and interaction notes. Take every number from the raw data templates, `https://wiki.leagueoflegends.com/en-us/Template:Data_<ChampionName>/<Ability>?action=raw`, reading `{{pp|values|breakpoints}}` verbatim. A summarized fetch of the rendered page garbles progression tables and invents rules the champion once had (Bard and Cassiopeia in `TRAPS.md`).
 
 Extract for each ability (P, Q, W, E, R):
 - Name
@@ -113,7 +113,7 @@ Each of these pitfalls has shipped as a bug at least once. Flag every one the ki
 14. **Ability "applies on-hit effects"**: on an on-hit-item champion (Bel'Veth, Kai'Sa-style builds) this is a top-tier damage source, not a footnote. Bel'Veth's Q/E item on-hits were 22% of her fight total. Three coupled requirements (engine supports all three via `applies_item_on_hits`):
     - Item on-hit damage applies per application at the ability's stated effectiveness. Never assumption-list it away.
     - Counter-gated items (Kraken every-3rd, Hullbreaker every-5th) run on ONE shared hit sequence across autos + ability applications; procs fire at the triggering hit's effectiveness.
-    - Classify the ability's trigger scope from the wiki notes: on-hit only vs on-hit + on-attack (`triggers=`). Each item's class is its registry `counter_trigger` key, read through `item_effects.counter_trigger(name)` (the wiki's closed On-Attacking list: Guinsoo's, Navori, RFC, Runaan's, Voltaic, Yun Tal); spellblade is neither. Ask the user: wiki interaction notes can be stale (see Azir in bug-history).
+    - Classify the ability's trigger scope from the wiki notes: on-hit only vs on-hit + on-attack (`triggers=`). Each item's class is its registry `counter_trigger` key, read through `item_effects.counter_trigger(name)` (the wiki's closed On-Attacking list: Guinsoo's, Navori, RFC, Runaan's, Voltaic, Yun Tal); spellblade is neither. Ask the user: wiki interaction notes can be stale (see Azir in `TRAPS.md`).
 
 ### Step 5: Present Findings and Ask the User
 
@@ -180,4 +180,4 @@ Agent tool:
 
 ## Reference: Past Issues by Champion
 
-Read `.claude/skills/analyze-champion/bug-history.md` before Step 4. Every logged bug ends in a "Pattern to watch for" line; those patterns calibrate this analysis.
+Read the Champions section of `TRAPS.md` before Step 4. Every bullet there is a pattern that bit one champion and generalizes to the next; those patterns calibrate this analysis. A new one found while implementing a champion is appended there.

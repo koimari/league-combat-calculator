@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
-"""Prose lint over ``src/`` and ``scripts/``: docstrings and comments hold current state.
+"""Python prose lint over ``src/`` and ``scripts/``: docstrings and comments hold current state.
+
+This reads ``.py`` files only.  Markdown is the plugin hook
+``comment_lint.lint_prose``, which the stop gate runs over every changed ``.md``
+file; the two share no code and no findings.
 
 ``tests/test_prose_lint.py`` pins four findings at zero: a function docstring
 longer than the body it documents, a comment run longer than the function it
 belongs to, prose about what the code was rather than what it is, and a section
 banner with no statement under it, which is what an extraction leaves when it
 cuts the bodies out and not the headers.  A fifth, ``pointer``, names prose
-citing a campaign document where the reason itself belongs; it reports without
-failing.  Prose citing a wiki URL or a game file for a number is evidence, and
-is never reported.
+citing a campaign document where the reason itself belongs.  It reports rather
+than failing, under a ceiling the test holds and that may only fall; moving it
+into ``FAILING`` is one edit once the ceiling reaches zero.  Prose citing a wiki
+URL or a game file for a number is evidence, and is never reported.
 
 A comment run belongs to the function holding it, or — when it touches a ``def``
 — to the definition it introduces.  Inside a body the bound is the body; above

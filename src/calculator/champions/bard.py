@@ -2,7 +2,7 @@
 
 Why each slot is non-generic:
 - P (Traveler's Call) is a custom fn: the JSON entry has ZERO
-  effects/leveling (known-degraded parse — CLAUDE.md Known Quirks), so
+  effects/leveling (known-degraded parse — TRAPS.md, Champions), so
   the meep formula lives as wiki-sourced module constants. Meep damage
   scales with a chime-counter champion option, and meep AVAILABILITY is
   a stock + recharge model — the emitted on-hit carries ``max_procs`` =
