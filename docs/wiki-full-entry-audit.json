@@ -97737,7 +97737,7 @@
   "failures": [],
   "infrastructure": {
     "ok": true,
-    "query_tool": "/Users/river/Projects/league-combat-calculator/vendor/league-wiki-query/scripts/query_league_wiki.py"
+    "query_tool": "vendor/league-wiki-query/scripts/query_league_wiki.py"
   },
   "matrix": "league_wiki_full_parent_entry",
   "passed": true,
