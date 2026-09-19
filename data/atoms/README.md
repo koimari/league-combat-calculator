@@ -69,8 +69,7 @@ Contract (enforced by `tests/test_item_atomizer.py`):
   position ≥2 emit atoms) and a full-corpus provenance gate over all 324
   items.
 
-The legacy per-item files under the `data/item-atoms/` tree are not
-written; consumers should read `data/atoms/items.json` (the unified Atom
+Per-item consumers read `data/atoms/items.json` (the unified Atom
 record is `atom_id`/`behavior`/`source`/`name`/`values`/
 `units`/`evidence`/`hash` — see `src/calculator/atomizer.py`; the tracked
 `atoms.schema.json` describes the older champion-atom shape).
