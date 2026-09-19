@@ -68,7 +68,7 @@ body.calculator-advanced {
 }
 
 .calculator-advanced .verdict,
-.calculator-advanced .wiki-popover,
+.calculator-advanced .item-tip,
 .calculator-advanced .site-footer,
 .calculator-advanced .buy-band {
   --cream: var(--surface);
