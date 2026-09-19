@@ -42,7 +42,7 @@ pylint src/           # Lint code
 python scripts/golden_snapshot.py compare scripts/golden_baseline.json   # Numeric regression gate
 python scripts/coverage_census.py check docs/coverage-census.json        # Coverage frontier gate (own CI job, 4 shards; ~1 min on 16 cores)
 python scripts/prose_lint.py          # Python prose gate: docstrings and comments under src/ and scripts/ hold current state, none longer than its body, no banner over an empty section. It reads no markdown; the plugin hook `comment_lint.lint_prose` is the markdown one
-python scripts/literal_defaults.py    # Rule-5 lint over the whole package: literal fallbacks on cached data (tests/test_literal_defaults.py owns the covered set `ROOTS` and the ratcheted `ER5_TAIL`)
+python scripts/literal_defaults.py    # Rule-5 report: literal fallbacks on cached data. It prints every site and exits 1 on any, so it exits 1 on this tree; the gate is tests/test_literal_defaults.py, which owns the covered set `ROOTS` and the ceiling `ER5_TAIL`
 python scripts/swing_stream_audit.py  # Swing-stream gate: a cached per-attack rider or Bonus Attack Speed row publishes a swing key or sits on the script's pinned FRONTIER with its reason
 python scripts/patch_update.py run    # Patch day, the one orchestrator: detect/audit/fetch/bis/packets are its other subcommands (see /patch-update skill)
 python scripts/bench_request.py --compare benchmarks.md  # Request-latency instrument, not a gate (its medians are one machine's); benchmarks.md is the one home for perf numbers
@@ -66,7 +66,8 @@ baseline with every diff explained in the commit.
 `[tool.ruff.lint] ignore` and `per-file-ignores`, `[tool.simply-elegant]`
 `comment-rules-off` and `comment-per-file-off`, and `[tool.sightline]` `excludes`
 and `rules-off`, each with its reason beside it. Run the tree gate with
-`python <plugin>/hooks/lint_gate.py --tree . --statistics`. `.sightline-baseline`
+`python <plugin>/hooks/lint_gate.py --tree . --statistics`. The ruff suite is at
+zero, so a finding there is a regression. `.sightline-baseline`
 holds only what is deferred with a reason, today 59 entries under three rules:
 #27 (53), #14 (3) and #11 (3). A finding under any other rule is a regression,
 not a candidate for the baseline; `sightline baseline .` regenerates the file and
