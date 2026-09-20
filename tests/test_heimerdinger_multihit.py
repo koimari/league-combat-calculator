@@ -1089,5 +1089,5 @@ class TestScoreReceiptParity:
 #     tests/test_catalyst_resource_ledger.py tests/test_item_sustain.py \
 #     tests/test_mana_restore_refund.py tests/test_app.py
 # Heimerdinger grep surface (contract 10), run separately:
-#   tests/test_e4_summon_1.py tests/test_cp10_batch_02.py \
+#   tests/test_summoned_unit_damage_1.py tests/test_cp10_batch_02.py \
 #     tests/test_wiki_parser.py

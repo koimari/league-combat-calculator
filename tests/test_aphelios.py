@@ -405,7 +405,7 @@ class TestDuskwaveAppliesTheOnHits:
 
 class TestModuleCoverage:
     """P/Q/W/R are exercised through the thematic suites
-    (test_e1_healing_b1.py, test_issue_137.py, the closure block below,
+    (test_self_heal_rules_1.py, test_state_transition_engine.py, the closure block below,
     test_spellblade_on_hit_matrix.py, test_survival_kernel.py); what this
     pins is that no slot is left out_of_scope."""
 

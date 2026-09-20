@@ -846,7 +846,7 @@ class TestScoreReceiptParity:
 
 
 class TestRegressionSurface:
-    def test_e5_fix_2_quinn_contract_stays_green(self):
+    def test_corrected_ability_rows_2_quinn_contract_stays_green(self):
         # The E5-2 fix's own assertions, re-pinned: level 18, no items,
         # the Harrier row prices 120 + 0.4 x bAD per auto (bAD 0 here)
         # and the passive parses physical.

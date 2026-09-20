@@ -55,7 +55,7 @@ Contract under test (typed source-backed values):
   Helm ``stats_only`` because the CHAMPION-class contribution is zero.
 
 Sibling owners: the Tear of the Goddess Helping Hand precedent (same 5.0
-flat, same minion-only boundary) is pinned in ``tests/test_cp20_items.py``
+flat, same minion-only boundary) is pinned in ``tests/test_item_quest_economy_packets.py``
 and ``tests/test_resource_ledger.py``; the P3-3X matrix conventions follow
 ``tests/test_muramana_packet.py``.  This file is disjoint and pins only the
 Doran's Helm acceptance observables.

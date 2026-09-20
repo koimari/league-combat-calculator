@@ -1430,7 +1430,7 @@ class TestUnchangedBoundaries:
 # The broader regression surface (every test that touches gangplank /
 # scurvy / cleanse / cleanse_eligibility, per the brief contract #11):
 #   tests/test_cleanse_eligibility.py tests/test_cleanse_eligibility_kernel.py
-#   tests/test_cleanse_eligibility_consumers.py tests/test_e1_healing_b3.py
-#   tests/test_heal_ledger_phase2.py tests/test_issue_143.py
+#   tests/test_cleanse_eligibility_consumers.py tests/test_self_heal_rules_3.py
+#   tests/test_heal_ledger_phase2.py tests/test_heal_ledger_ownership.py
 #   tests/test_crowd_control_immunity.py tests/test_survival_kernel.py
 #   tests/test_guardian_angel_resurrection.py tests/test_app.py

@@ -420,7 +420,7 @@ def test_check_fails_on_a_short_corpus(corpus):
     dropped = non_legacy_scenarios(mutated)[0]
     mutated["scenarios"] = [s for s in mutated["scenarios"] if s["id"] != dropped["id"]]
     reasons = check_pins(mutated, parametrized=[s["id"] for s in _EXECUTED])
-    assert any("test_e9_corpus" in reason for reason in reasons), reasons
+    assert any("test_practice_tool_corpus" in reason for reason in reasons), reasons
 
 
 def test_check_fails_when_the_receipt_count_disagrees(corpus):

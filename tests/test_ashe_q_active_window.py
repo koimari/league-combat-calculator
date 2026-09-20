@@ -1219,7 +1219,7 @@ class TestRegressionSurface:
 # completion adds the typed window declaration (S13) to the parse
 # output.
 #
-# Existing-pin note for the coordinator: tests/test_e3_stacks_2.py
+# Existing-pin note for the coordinator: tests/test_stack_systems_2.py
 # test_ashe_focus_stacks_gate_rangers_focus pins the PERMANENT window
 # over a 10s fight (damage_per_hit == AD x flurry) and will need a
 # re-pin when the window lands — it is outside this file's editable

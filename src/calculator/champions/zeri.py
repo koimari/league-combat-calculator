@@ -86,7 +86,7 @@ ZERI_P_EXECUTE_RULE = _LivingBatteryExecuteRule()
 PACKET_SHA256 = "f03ac495eb30baef9672e60deb2f448b0da551e22e39c3113cbc0cfee9e1c055"
 
 # Burst Fire fires 7 rounds (Total Physical Damage / per-hit on Q, locked
-# by tests/test_e2_dot_3.py) "in the target direction over the cast time",
+# by tests/test_dot_tick_counts_3.py) "in the target direction over the cast time",
 # and the cached Q entry carries no castTime of its own ("Burst Fire's
 # cooldown and cast time are reduced with attack speed"), so the burst is
 # authored at the cast with no interval between rounds.  E's Lightning

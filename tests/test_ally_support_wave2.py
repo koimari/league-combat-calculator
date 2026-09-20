@@ -9,7 +9,7 @@ closed at the assertion instead of silently changing a formula.
 Base packets (Sona W aura shield/heal, Janna E, Milio W, Ivern E, Karma E,
 Seraphine W, Taric W/R/Q, Rakan Q/E/P, Yuumi E) are asserted as regression
 pins only where a rider sits beside them; their full coverage lives in
-tests/test_e8_support.py and tests/test_support_effects.py.
+tests/test_revive_and_ally_support_events.py and tests/test_support_effects.py.
 """
 
 import pytest

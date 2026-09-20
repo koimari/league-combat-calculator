@@ -7,7 +7,7 @@ parsed atoms (``dot_duration``, ``on_hit``, ``applies_dot_stack``,
 module OPTION rotation declarations (``target_poisoned``,
 ``blight_stacks``, ``p_illumination_procs``, ``moonlight_reset``, ...),
 and the structured wiki attribute rows.  The hand seeds it defers to, and
-the receipt the resolver publishes, are ``tests/test_f2_rotation.py``'s.
+the receipt the resolver publishes, are ``tests/test_rotation_resolver_combos.py``'s.
 
 This suite asserts the combo invariants for EVERY champion:
 
@@ -252,7 +252,7 @@ def _edge_kinds(edges):
 
 class TestOverrideSeeds:
     """Which champions seed, and why, is stated once in
-    ``tests/test_f2_rotation.py``; this suite asks only what the derivation
+    ``tests/test_rotation_resolver_combos.py``; this suite asks only what the derivation
     does when it meets one."""
 
     def test_seed_rules_are_not_marked_derived(self) -> None:

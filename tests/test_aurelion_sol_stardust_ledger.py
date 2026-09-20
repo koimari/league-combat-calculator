@@ -951,4 +951,4 @@ class TestUnchangedBoundaries:
 # S10 — Regression surface (kept green; run list)
 # ---------------------------------------------------------------------------
 # Aurelion Sol / stardust grep surface (contract 10), run separately:
-#   tests/test_aurelion_sol.py tests/test_e2_dot_1.py #     tests/test_mechanics_packets.py
+#   tests/test_aurelion_sol.py tests/test_dot_tick_counts_1.py #     tests/test_mechanics_packets.py

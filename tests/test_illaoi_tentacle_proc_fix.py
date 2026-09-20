@@ -17,7 +17,7 @@ see ``TestSourcedPerStrikeValue``).  The bug scaled the fight-row total as
 This was invisible to the golden snapshot (whose defaults use
 p_tentacles=1, where N == N^2) and invisible to the pre-existing
 ``TestIllaoiTentacles.test_tentacle_count_option`` in
-``test_e4_summon_1.py`` (that test's own assertion,
+``test_summoned_unit_damage_1.py`` (that test's own assertion,
 ``total_damage == count * damage_per_hit``, is a tautology under the bug
 too: the packet's ``damage_per_hit`` column was itself already inflated
 by the same factor, so the identity held on both sides of the fix).

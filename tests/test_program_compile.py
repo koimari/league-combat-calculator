@@ -13,7 +13,7 @@ cannot stage raises with a named receipt rather than compiling a hole.
 The behaviour of the two relocated builders is not re-tested here.  Their
 bodies are unchanged and are already pinned by the suites that pinned them
 before the move (``test_event_slots``, ``test_modifier_classes``,
-``test_issue_137``, ``test_survival_kernel``, ``test_participant_timeline``),
+``test_state_transition_engine``, ``test_survival_kernel``, ``test_participant_timeline``),
 and re-asserting them under a new name would be a second pin that can drift
 from the first.  What is new is what is tested.
 """

@@ -408,7 +408,7 @@ class TestSurroundSound:
         the scanner cannot price per recipient, so it publishes no row at
         all - and w_already_shielded, which exists only to drop the
         caster's shield gate, must not resurrect a zero-amount one.
-        tests/test_e8_support.py pins the same refusal on the roster
+        tests/test_revive_and_ally_support_events.py pins the same refusal on the roster
         path.
         """
         for options in (None, {"w_already_shielded": True}):

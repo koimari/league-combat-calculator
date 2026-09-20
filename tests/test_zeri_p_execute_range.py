@@ -920,5 +920,5 @@ class TestRegressionSurface:
 #     tests/test_catalyst_resource_ledger.py tests/test_item_sustain.py \
 #     tests/test_champion_options.py tests/test_app.py
 # Existing Zeri regression files (the S10 grep pin), run separately:
-#   tests/test_spellblade_on_hit_matrix.py tests/test_e5_fix_2.py \
-#   tests/test_cp10_batch_10.py tests/test_e2_dot_3.py
+#   tests/test_spellblade_on_hit_matrix.py tests/test_corrected_ability_rows_2.py \
+#   tests/test_cp10_batch_10.py tests/test_dot_tick_counts_3.py

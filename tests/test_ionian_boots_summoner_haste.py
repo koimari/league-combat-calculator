@@ -72,10 +72,10 @@ summoner spell haste]]."; cross-checked by data/atoms/items.json 3158
 Existing regression surface touching this item (kept green, disjoint):
 tests/test_app.py (allies boots slot -> ability_haste 10, lines ~1350/
 1363/1429), tests/test_optimizer.py (~1037, boots pool), tests/
-test_scenario.py (~243+), tests/test_issues_82.py (~479).
+test_scenario.py (~243+), tests/test_role_quest_and_support_progression.py (~479).
 
 Sibling owners: the Tear of the Goddess / Doran's Helm Helping Hand
-precedents are pinned in tests/test_cp20_items.py and
+precedents are pinned in tests/test_item_quest_economy_packets.py and
 tests/test_dorans_helm_minion_damage.py; the Gluttonous Greaves
 pre-implementation matrix conventions follow tests/test_gluttonous_
 greaves.py.  This file is disjoint and pins only the Ionian Insight

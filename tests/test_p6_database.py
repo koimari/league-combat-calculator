@@ -222,7 +222,7 @@ def test_share_links_are_unique_per_build(sqlite_database):
 
 def test_feedback_read_filters(sqlite_database):
     """GET /api/feedback lists what the receipt writer stored, newest first.
-    The only HTTP writer is POST /api/receipts (tests/test_p7_validation.py);
+    The only HTTP writer is POST /api/receipts (tests/test_validation_loop.py);
     rows are seeded through the persistence helper it calls."""
     client = _client()
     feedback_id = db.add_feedback(

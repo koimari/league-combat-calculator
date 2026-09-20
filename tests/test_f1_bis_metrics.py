@@ -390,7 +390,7 @@ def test_frontend_bis_trigger_disables_with_context_tooltip():
     assert "const ready = bisReadyForPath(path);" in source
     assert "function requestBisBatch(path, slots)" in source
     # Through the one JSON POST helper, like every other backend write:
-    # tests/test_p5_ux.py::test_app_js_posts_json_through_one_helper owns
+    # tests/test_casual_ux_and_trust_labels.py::test_app_js_posts_json_through_one_helper owns
     # that rule and this endpoint is inside it.
     assert 'postJson("/api/bis/batch"' in source
 

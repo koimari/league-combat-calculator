@@ -4,8 +4,8 @@ Talon, Warwick, Teemo, Rumble).
 Each champion drives /api/calculate fights at level 18 (basic abilities
 rank 5, R rank 3, no items, target armor/MR 0) and asserts the corrected
 sourced pricing recomputed from data/champions.json leveling rows against
-the fight's own stats — the same conventions as test_e2_dot_3.py and
-test_e3_stacks_1.py.
+the fight's own stats — the same conventions as test_dot_tick_counts_3.py and
+test_stack_systems_1.py.
 
 Fixes under test:
 

@@ -2,7 +2,7 @@
 
 Every test here pins one acceptance criterion from a GitHub ``front-end``
 issue against the shipped template, stylesheet, or ``app.js`` source — the
-same browser-free contract style as ``test_f0_frontend.py``.
+same browser-free contract style as ``test_frontend_contract.py``.
 
 Root cause worth remembering: the stylesheet's ``@media (max-width: 720px)``
 block was never closed, so ``[hidden]``, ``.economics-bar``, ``.engine-error``

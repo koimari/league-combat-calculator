@@ -1090,6 +1090,6 @@ class TestUnchangedBoundaries:
 #       tests/test_resource_ledger_champion_consumers.py \
 #       tests/test_catalyst_resource_ledger.py tests/test_item_sustain.py \
 #       tests/test_mana_restore_refund.py tests/test_app.py
-# The existing Ashe pins (tests/test_ashe.py, tests/test_e3_stacks_2.py
+# The existing Ashe pins (tests/test_ashe.py, tests/test_stack_systems_2.py
 # test_ashe_focus_stacks_gate_rangers_focus, tests/test_state_lifecycle_
 # consumers.py TestAsheFocusConsumer) stay green.

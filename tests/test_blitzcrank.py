@@ -371,7 +371,7 @@ class TestRStaticField:
 class TestPassiveManaBarrier:
     """Passive is a defensive shield; it has no standalone row in
     ``abilities`` — the shield rides Q's ``self_shield_events`` payload
-    (see TestQRocketGrab / tests/test_e8_shields.py) — but MODULE_COVERAGE
+    (see TestQRocketGrab / tests/test_champion_shield_events.py) — but MODULE_COVERAGE
     reports it modeled, not out_of_scope (roadmap session 4 batch B)."""
 
     def test_passive_not_in_results(self, blitzcrank_data, parse_at) -> None:

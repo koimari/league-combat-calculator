@@ -111,13 +111,13 @@ boundary shape); the Doran's Helm and Ionian Boots precedents in
 ``tests/test_dorans_helm_minion_damage.py`` (3M) and
 ``tests/test_ionian_boots_summoner_haste.py`` (3N); the kernel score==
 receipt contract in ``tests/test_survival_kernel.py`` (issue #137).  The
-E8d champion-revive interface is pinned in ``tests/test_e8_support.py`` /
-``tests/test_e8_followup_hooks.py``.  Existing regression surface touching
+E8d champion-revive interface is pinned in ``tests/test_revive_and_ally_support_events.py`` /
+``tests/test_engine_hooks.py``.  Existing regression surface touching
 this item (kept green, disjoint, quoted in section 13):
 ``tests/test_participant_timeline.py`` (test_guardian_angel_revives_target_
 after_first_lethal_packet ~136), ``tests/test_defensive_effects.py``
 (test_guardian_angel_resolves_sourced_base_health_rebirth ~240),
-``tests/test_e8_followup_hooks.py`` (test_guardian_angel_keeps_item_source
+``tests/test_engine_hooks.py`` (test_guardian_angel_keeps_item_source
 ~70), ``tests/test_item_coverage.py`` (~275/480/561), ``tests/test_economy.py``
 (~51 sell 1280) and ``tests/test_app.py`` (~1991 coverage pins).  This file
 is disjoint and pins only the Guardian Angel acceptance observables.
@@ -1513,7 +1513,7 @@ def test_sustained_fight_revive_lands_exactly_four_seconds_after_the_lethal_pack
 #     assert defenses.public_summary()["revive"] == {
 #         "health_amount": 900.0, "delay": 4.0, "cooldown": 300.0}
 #
-# * tests/test_e8_followup_hooks.py:70-76
+# * tests/test_engine_hooks.py:70-76
 #   test_guardian_angel_keeps_item_source:
 #     d = _resolve("Ahri", base_health=1500.0,
 #                  items=[get_item_by_name("Guardian Angel")])
@@ -1533,7 +1533,7 @@ def test_sustained_fight_revive_lands_exactly_four_seconds_after_the_lethal_pack
 #         "revive"]
 #     "Rebirth" in items["Guardian Angel"]["model_coverage"]["reason"]
 #
-# * tests/test_e8_support.py:92-220 (the shared revive interface GA uses —
+# * tests/test_revive_and_ally_support_events.py:92-220 (the shared revive interface GA uses —
 #   Anivia/Zac/Zilean sourced revives ride the same StartingDefenses
 #   revive_* fields and the same kernel transition).
 #
@@ -1555,7 +1555,7 @@ def test_regression_surface_guardian_angel_defensive_layer_stays_green():
 
 
 def test_regression_surface_guardian_angel_item_source_label_stays_green():
-    """Mirrors test_e8_followup_hooks.py:70-76: the item keeps its own source
+    """Mirrors test_engine_hooks.py:70-76: the item keeps its own source
     label (750.0 = 50% of the 1500 base health)."""
     defenses = resolve_starting_defenses(
         "Ahri", 18, {"health": 1500.0, "base_health": 1500.0}, [_ga_item()]

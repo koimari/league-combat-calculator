@@ -15,7 +15,7 @@ have no symptom, held to one home by a scan rather than by review.
 
     python scripts/single_owner_lint.py
 
-`tests/test_event_slots.py`, `tests/test_issue_159.py` and
+`tests/test_event_slots.py`, `tests/test_shield_absorption_kernel.py` and
 `tests/test_transition_rank.py` each import the rule they own.
 """
 

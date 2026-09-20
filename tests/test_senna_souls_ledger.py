@@ -795,7 +795,7 @@ class TestUnchangedBoundaries:
 #     tests/test_catalyst_resource_ledger.py tests/test_mana_restore_refund.py \
 #     tests/test_app.py
 # Senna/mist/souls grep surface (contract 10), run separately:
-#   tests/test_e3_stacks_3.py tests/test_e8_shields.py \
-#     tests/test_cp10_batch_07.py tests/test_e1_healing_b2.py \
+#   tests/test_stack_systems_3.py tests/test_champion_shield_events.py \
+#     tests/test_cp10_batch_07.py tests/test_self_heal_rules_2.py \
 #     tests/test_spellblade_on_hit_matrix.py tests/test_champion_primitives.py \
 #     tests/test_interaction_atoms.py

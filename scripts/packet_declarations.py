@@ -11,7 +11,7 @@ sites, so a branch no fixture reaches is held to the same declaration.
 
 Findings are the sites that name no literal source or no literal
 `Authority.<member>`.  `tests/test_item_support_effects.py` and
-`tests/test_phase0_sentinels.py` read the sites through this module, which is
+`tests/test_deferred_semantics_sentinels.py` read the sites through this module, which is
 why there is one walk rather than one per suite.
 """
 

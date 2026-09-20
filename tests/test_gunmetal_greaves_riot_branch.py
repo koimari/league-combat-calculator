@@ -82,12 +82,12 @@ Sibling owners: the Ionian Insight precedent is pinned in
 ``tests/test_ionian_boots_summoner_haste.py`` (same receipt-only
 named-boundary shape); the Doran's Helm Helping Hand precedent is
 pinned in ``tests/test_dorans_helm_minion_damage.py``; the typed
-lifesteal receipt is pinned in ``tests/test_issues_45_43.py``
+lifesteal receipt is pinned in ``tests/test_sustain_and_on_hit_families.py``
 (LIFESTEAL_PINS "Gunmetal Greaves": (5.0, 4013706)).  Existing
 regression surface touching this item (kept green, disjoint):
-``tests/test_app.py`` (boots slot ~2046), ``tests/test_issues_82.py``
+``tests/test_app.py`` (boots slot ~2046), ``tests/test_role_quest_and_support_progression.py``
 (~100+ tier contract), ``tests/test_item_coverage.py`` (~202), and
-``tests/test_issues_45_43.py`` (~87).  This file is disjoint and pins
+``tests/test_sustain_and_on_hit_families.py`` (~87).  This file is disjoint and pins
 only the Gunmetal Greaves acceptance observables.
 """
 

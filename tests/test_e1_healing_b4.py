@@ -18,7 +18,7 @@ Pyke P is a grey-health heal sourced from post-mitigation damage TAKEN
 (plus an out-of-vision requirement); the fight ledger only carries damage
 dealt, so it does not apply to the 1v1 model (E8a documents the vision
 boundary). Rengar W is now implemented by the E8a grey-health primitive
-(see tests/test_e8_grey_health.py). Udyr's base W on-hit heal exists only
+(see tests/test_grey_health.py). Udyr's base W on-hit heal exists only
 in prose (no leveling attribute), and its leveling-sourced heal stream
 belongs to the Awakened recast the fight model does not model — those two
 remain skipped by the rule set.
@@ -177,8 +177,8 @@ def test_skipped_champions_have_no_self_heal_rule():
     # Pyke P heals from damage taken only while out of enemy vision; the
     # 1v1 ledger does not model vision, so the E8a grey-health primitive
     # stores the pool but authors no in-window heal (see
-    # tests/test_e8_grey_health.py). Rengar W is implemented by E8a and
+    # tests/test_grey_health.py). Rengar W is implemented by E8a and
     # was removed from this skip list. (Udyr's W Iron Mantle heal is now
-    # implemented — see test_e3_udyr_yuumi_heals.py.)
+    # implemented — see test_udyr_yuumi_heal_streams.py.)
     combat = _fight("Pyke", ranks={"Q": 5, "W": 5, "E": 5, "R": 3})
     assert not _main_heals(combat), "Pyke must not self-heal in-window"

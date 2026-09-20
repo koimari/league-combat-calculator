@@ -1317,4 +1317,4 @@ class TestScoreReceiptParity:
 #     tests/test_resource_ledger*.py tests/test_catalyst_resource_ledger.py \
 #     tests/test_item_sustain.py tests/test_champion_options.py tests/test_app.py
 # Aurelion Sol / stardust grep surface (contract 11), run separately:
-#   tests/test_aurelion_sol.py tests/test_e2_dot_1.py tests/test_mechanics_packets.py
+#   tests/test_aurelion_sol.py tests/test_dot_tick_counts_1.py tests/test_mechanics_packets.py

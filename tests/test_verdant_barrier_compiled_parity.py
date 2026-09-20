@@ -36,7 +36,7 @@ component and the candidate pool holds legendaries and boots.
 
 Siblings: `tests/test_survival_kernel.py` owns the compiled-versus-receipt
 kernel contract, and the Annul family regression surface is in
-`tests/test_spell_shield_eligibility.py`, `tests/test_issues_46.py`,
+`tests/test_spell_shield_eligibility.py`, `tests/test_opening_mitigation_and_lifeline.py`,
 `tests/test_participant_timeline.py`, `tests/test_defensive_effects.py`,
 `tests/test_app.py` and `tests/test_item_coverage.py`.
 """
@@ -1007,7 +1007,7 @@ def test_bis_exclusion_is_by_construction_not_withheld():
     """Verdant Barrier is an EPIC tier-2 component of Banshee's Veil
     (buildsInto 3102); the BIS candidate pool ranks only legendary items
     and boots, so it is excluded by construction — never a candidate, never
-    withheld for a coverage failure (mirrors test_issues_46)."""
+    withheld for a coverage failure (mirrors test_opening_mitigation_and_lifeline)."""
     data = get_item_by_name(ITEM_NAME)
     assert "EPIC" in data["rank"]
     assert data["tier"] == 2
@@ -1052,7 +1052,7 @@ def test_bis_exclusion_is_by_construction_not_withheld():
 
 def test_spell_shield_legendaries_still_certify_in_bis():
     """The legendary Annul items remain certified BIS candidates for
-    fitting roles (mirrors test_issues_46): Banshee's Veil on Ahri mid,
+    fitting roles (mirrors test_opening_mitigation_and_lifeline): Banshee's Veil on Ahri mid,
     Edge of Night on Talon mid."""
     client = app_module.app.test_client()
     ranks = {"Q": 5, "W": 5, "E": 5, "R": 3}
@@ -1118,7 +1118,7 @@ def test_regression_surface_defensive_effects_annul_is_ready(item_name, blocked_
 
 
 def test_regression_surface_issues_46_annul_blocks_one_typed_ability():
-    """Mirrors test_issues_46.py (test_annul_spell_shield_is_ready_and_
+    """Mirrors test_opening_mitigation_and_lifeline.py (test_annul_spell_shield_is_ready_and_
     blocks_one_typed_ability) for Verdant Barrier through /api/calculate:
     the shield is ready at fight start, exactly one ability packet is
     blocked, and the blocked packet carries the sourced label."""

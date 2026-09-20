@@ -281,7 +281,7 @@ class TestDeclarations:
         green.  This drives the real recorder with a merge receipt that
         does confirm, and with one that does not, so the branch is proved
         to discriminate rather than merely to run.  ``tests/
-        test_f3_rotation_all.py``'s second-opinion measurement mirrors the
+        test_rotation_derivation_every_champion.py``'s second-opinion measurement mirrors the
         same read and inherits this evidence.
         """
         from types import SimpleNamespace

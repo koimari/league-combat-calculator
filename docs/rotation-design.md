@@ -201,12 +201,12 @@ count, its reason histogram and its `head_only` list, the seeds whose
 champion also declares, derived from `get_champion_cast_dependencies` rather
 than named, are published in `docs/cast-dependency-audit.json` under
 `order_override_frontier`, and this section's name list is asserted against
-the live table by `tests/test_f2_rotation.py`.  After the retirements every
+the live table by `tests/test_rotation_resolver_combos.py`.  After the retirements every
 survivor carries the same reason, so `head_only` is the only place the
 frontier can tell Zed's and Brand's disposition from a seed held by hand end
 to end.  Two seeds deliberately deviate from a
 detected data edge (the seed's judgment wins, documented in
-`tests/test_f3_rotation_all.py`):
+`tests/test_rotation_derivation_every_champion.py`):
 
 - **Cassiopeia**: W (Miasma) also applies poison → data says W→E, but
   the seed casts E before W to start the 0.75s Twin Fang spam cadence
@@ -260,13 +260,13 @@ Unchanged from F2 (`static/js/eventorder.js` is self-contained).
 
 ## Verification
 
-- `tests/test_f3_rotation_all.py`, the combo-invariant suite for ALL 173
+- `tests/test_rotation_derivation_every_champion.py`, the combo-invariant suite for ALL 173
   champions: (a) a derived order never violates a detected edge (setup
   before consume); (b) the rationale cites real atoms; (c) the order is
   deterministic and stable across the level/build matrix; (d) the order
   is a permutation of the certified/base slots and the surviving seeds
   stay as overrides.  The two documented seed exceptions are pinned.
-- `tests/test_f2_rotation.py`, the F2 contract.
+- `tests/test_rotation_resolver_combos.py`, the F2 contract.
 - `docs/surface-area-backlog.md` row RV1, the champions whose derivation
   is ambiguous: conflicting atoms, or no data signal where a known
   combo exists.

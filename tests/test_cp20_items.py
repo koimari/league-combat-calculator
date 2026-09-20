@@ -680,7 +680,9 @@ def test_new_typed_keys_have_exactly_one_registry_owner():
         "World Atlas",
     ],
 )
-def test_cp20_items_are_classified_modeled_state_and_optimizer_eligible(item_name):
+def test_item_quest_economy_packets_are_classified_modeled_state_and_optimizer_eligible(
+    item_name,
+):
     item = get_item_by_name(item_name)
     coverage = item_probe.attacker_coverage(item)
     assert coverage["status"] == "modeled_state"

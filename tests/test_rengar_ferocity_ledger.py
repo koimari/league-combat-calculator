@@ -641,6 +641,6 @@ class TestResourceLedgerVisibility:
 # ---------------------------------------------------------------------------
 # S10 — Regression surface (kept green; run list)
 # ---------------------------------------------------------------------------
-# The existing Rengar/ferocity pins (test_e3_stacks_2.py
+# The existing Rengar/ferocity pins (test_stack_systems_2.py
 # test_rengar_ferocity_empowers_q_w_e; test_state_lifecycle_consumers.py
 # TestRengarFerocityConsumer) and the resource-ledger consumers stay green.

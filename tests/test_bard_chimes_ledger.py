@@ -959,6 +959,6 @@ class TestUnchangedBoundaries:
 #     tests/test_catalyst_resource_ledger.py tests/test_item_sustain.py \
 #     tests/test_mana_restore_refund.py tests/test_app.py
 # Bard / chime / meep grep surface (contract 9), run separately:
-#   tests/test_bard.py tests/test_damage.py tests/test_e8_followup_hooks.py \
-#     tests/test_e8_support.py tests/test_e1_healing_b5.py \
+#   tests/test_bard.py tests/test_damage.py tests/test_engine_hooks.py \
+#     tests/test_revive_and_ally_support_events.py tests/test_self_heal_rules_5.py \
 #     tests/test_zhonya_packet.py tests/test_interaction_atoms.py

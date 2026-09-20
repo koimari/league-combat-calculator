@@ -1194,6 +1194,6 @@ class TestApiSurface:
 #   tests/test_spell_shield_eligibility.py tests/test_delivery_interaction_eligibility.py
 #   tests/test_delivery_eligibility_kernel.py (Yasuo W wind wall)
 #   tests/test_cp10_batch_10.py tests/test_event_order_certification.py (roster)
-#   tests/test_e9_fix_3.py (Yone E stored damage) tests/test_atomizer.py (Yasuo W atom)
+#   tests/test_champion_row_gaps_3.py (Yone E stored damage) tests/test_atomizer.py (Yasuo W atom)
 #   tests/test_rotation_semantics.py tests/test_crowd_control_immunity.py
-#   tests/test_e3_stacks_2.py tests/test_cleanse_eligibility.py tests/test_e8_grievous.py
+#   tests/test_stack_systems_2.py tests/test_cleanse_eligibility.py tests/test_grievous_wounds.py

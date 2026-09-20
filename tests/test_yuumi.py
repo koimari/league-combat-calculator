@@ -83,7 +83,7 @@ class TestReviewedCrowdControl:
         """W attaches and E shields; neither damages an enemy.
 
         Coverage is about the row a slot publishes, not about damage: E is
-        ``modeled`` on its 165.0 shield to the anchor (test_e8_support.py),
+        ``modeled`` on its 165.0 shield to the anchor (test_revive_and_ally_support_events.py),
         while W prices nothing an enemy takes and reads ``no_damage``
         (TestYouAndMeIsASourcedZeroDamageRow re-derives that verdict).
         """

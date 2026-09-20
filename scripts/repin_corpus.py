@@ -13,7 +13,7 @@ reproduce, so the writer can never launder a broken receipt into a fresh pin.
 
 ``--check`` is the commit gate.  It fails on a missing pin and on a corpus that
 has shrunk away from the count ``docs/receipts/campaign-fingerprints.json``
-pins or from the set ``tests/test_e9_corpus.py`` parametrizes, so silence
+pins or from the set ``tests/test_practice_tool_corpus.py`` parametrizes, so silence
 cannot be mistaken for success.
 
 Usage:
@@ -71,7 +71,7 @@ def non_legacy_scenarios(corpus: Mapping[str, Any]) -> list[dict[str, Any]]:
 
 
 def parametrized_ids() -> tuple[str, ...]:
-    """The scenario ids ``tests/test_e9_corpus.py`` parametrizes."""
+    """The scenario ids ``tests/test_practice_tool_corpus.py`` parametrizes."""
     return tuple(s["id"] for s in non_legacy_scenarios(load_corpus()))
 
 
@@ -130,7 +130,7 @@ def check_pins(
         missing = sorted(set(parametrized) - set(executed))
         extra = sorted(set(executed) - set(parametrized))
         reasons.append(
-            "the executed set does not match the set test_e9_corpus "
+            "the executed set does not match the set test_practice_tool_corpus "
             f"parametrizes (missing {missing}, unexpected {extra})"
         )
     return tuple(reasons)
@@ -162,10 +162,10 @@ def reprobe_failures(
 ) -> tuple[tuple[str, str], ...]:
     """``(id, message)`` for every scenario whose receipt fails to reproduce.
 
-    The receipt kinds live once, in ``tests/test_e9_corpus.py``; the writer
+    The receipt kinds live once, in ``tests/test_practice_tool_corpus.py``; the writer
     borrows them rather than growing a second copy that could disagree.
     """
-    from tests.test_e9_corpus import (  # sightline-ok: 35 - borrows the suite's receipts
+    from tests.test_practice_tool_corpus import (  # sightline-ok: 35 - borrows the suite's receipts
         _KIND_ASSERTIONS,
         _run_calculate,
     )

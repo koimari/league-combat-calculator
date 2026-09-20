@@ -1291,4 +1291,4 @@ class TestScoreReceiptParity:
 #     tests/test_mana_restore_refund.py tests/test_app.py
 # K'Sante grep surface (contract 10), run separately:
 #   tests/test_ksante_r_atomizer.py tests/test_ksante.py \
-#     tests/test_e1_healing_b6.py tests/test_cp10_batch_02.py
+#     tests/test_self_heal_rules_6.py tests/test_cp10_batch_02.py

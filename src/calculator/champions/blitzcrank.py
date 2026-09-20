@@ -27,7 +27,7 @@ Why each slot is non-generic:
   sourced shield (35% max mana, up to 10s) on Q's damage event as a
   ``self_shield_events`` payload the survival ledger grants pre-fight,
   live-tested end to end
-  (``tests/test_e8_shields.py::test_blitzcrank_mana_barrier_payload_is_sourced``,
+  (``tests/test_champion_shield_events.py::test_blitzcrank_mana_barrier_payload_is_sourced``,
   ``test_blitzcrank_api_mana_barrier_absorbs_sourced_amount``).  That
   channel is why the coverage map calls P ``modeled`` rather than
   out_of_scope, with no standalone P row in the ``abilities`` dict.

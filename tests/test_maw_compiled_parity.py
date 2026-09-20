@@ -131,11 +131,11 @@ Sibling owners: the compiled-vs-receipt kernel contract lives in
 ``tests/test_survival_kernel.py`` (issue #137); the 3Q/3S matrix shapes
 in ``tests/test_force_of_nature_compiled_parity.py`` and
 ``tests/test_knights_vow_compiled_parity.py``; the Lifeline family
-regression surface in ``tests/test_issues_46.py`` (threshold trigger +
+regression surface in ``tests/test_opening_mitigation_and_lifeline.py`` (threshold trigger +
 omnivamp toggle + BIS), ``tests/test_shield_ledger.py`` (magic-only
 absorption + strict threshold), ``tests/test_defensive_effects.py``
 (melee/ranged amounts), ``tests/test_participant_timeline.py``
-(post-trigger omnivamp heal), ``tests/test_issue_159.py`` (strict
+(post-trigger omnivamp heal), ``tests/test_shield_absorption_kernel.py`` (strict
 threshold in both walks), and ``tests/test_item_coverage.py``
 (modeled_event_certified + certified-timeline guard).  This file is
 disjoint and pins only the Maw acceptance observables.
@@ -986,7 +986,7 @@ def test_calculate_api_models_the_enemy_maw_shield_in_certified_timed_fights():
     """Certified timed fight: the enemy holder's Lifeline arms, the target
     result reports the threshold absorption, and the enemy's post-trigger
     outgoing damage heals from the temporary omnivamp (mirrors
-    test_issues_46)."""
+    test_opening_mitigation_and_lifeline)."""
     client = app_module.app.test_client()
     payload = {
         "champion": "Ziggs",
@@ -1366,7 +1366,7 @@ def test_regression_surface_defensive_effects_melee_and_ranged_amounts():
 
 def test_regression_surface_shield_ledger_magic_only_and_strict_threshold():
     """Mirrors test_shield_ledger.py (magic absorbs magic only) and
-    test_issue_159.py (damage landing exactly on the threshold does not
+    test_shield_absorption_kernel.py (damage landing exactly on the threshold does not
     arm) through the survival walk with real Maw defenses."""
     holder = _holder(1000.0)
     result = _run_packets(
@@ -1442,7 +1442,7 @@ def test_regression_surface_item_coverage_target_certified_guard():
 
 
 def test_regression_surface_issues_46_lifeline_certifies_in_bis():
-    """Mirrors test_issues_46.py (test_lifeline_items_certify_in_bis): a
+    """Mirrors test_opening_mitigation_and_lifeline.py (test_lifeline_items_certify_in_bis): a
     timed Aatrox top BIS search whose timeline is complete certifies Maw as
     a candidate."""
     client = app_module.app.test_client()

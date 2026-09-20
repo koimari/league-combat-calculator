@@ -12,7 +12,7 @@ participant loadout fields, scenario fields, feature-level controls (view
 switch, game-state lens, objective, best-in-slot, optimizer, quick mode,
 share, picker dialog, roster membership, manual damage package), and the
 catalogs that feed them (champion options, item options, role quest, keystone,
-and ability metadata).  test_issues_78.py proves every control attribute and
+and ability metadata).  test_frontend_capability_contract.py proves every control attribute and
 id the frontend renders maps to a declared ``frontend_token`` and that the
 API responses behind those controls expose exactly the declared fields.
 """

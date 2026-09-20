@@ -453,7 +453,7 @@ CAST_DEPENDENCIES = (  # sightline-ok: 32 - module_contract reads it by name
                     "because a Q2 that ever gains a real charge cooldown "
                     "brings the reversed edge with it. This is the fact "
                     "the ('E','Q2') seed exception in "
-                    "tests/test_f3_rotation_all.py claimed while silently "
+                    "tests/test_rotation_derivation_every_champion.py claimed while silently "
                     "passing, moved where the audit can see it (D-84)."
                 ),
             ),

@@ -112,7 +112,7 @@ class TestWIsAZeroDamageSupportCast:
 
     The slot exists so the rotation casts it and the ally-support scanner
     can price the cached "Shield Strength" row; the coupled probe is in
-    tests/test_e8_support.py.
+    tests/test_revive_and_ally_support_events.py.
     """
 
     def test_w_emits_no_damage(self, jarvan_iv_data, parse_at) -> None:

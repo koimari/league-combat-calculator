@@ -37,7 +37,7 @@ def test_advanced_workspace_keeps_its_calculator_contract():
     assert response.status_code == 200
     assert "Scryglass — Item calculator" in page
     # #148: the brand points at this app's canonical home, not an external
-    # marketing site; tests/test_frontend_qa_147_157.py owns the full contract.
+    # marketing site; tests/test_frontend_qa_regressions.py owns the full contract.
     assert 'class="brand" href="/"' in page
     # The redesign has no visible page title — the rail header carries the
     # brand — so the H1 is a screen-reader landmark.
