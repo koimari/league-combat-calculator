@@ -53,13 +53,15 @@ would need.  Modelling R needs a cross-champion ultimate-import kernel,
 which is a project and not a slot.
 """
 
-from dataclasses import replace
 import re
+from dataclasses import replace
 from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_prose import CachedSentence
 from ..binary_roots import calculation_coefficients, spell_object
+from ..damage_event_row import event_damage as _row_damage
+from ..damage_event_row import event_time as _row_time
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -289,11 +291,11 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     min_heal, max_heal = ctx.ranked_rows("W", "Minimum Heal", "Maximum Heal")
     for payment in ctx.payments(_healing.HealAnchor.CAST, "W"):
         event = payment.event
-        if float(event.get("damage", 0.0)) <= 0.0:
+        if _row_damage(event) <= 0.0:
             continue
         healing.append(
             {
-                "time": float(event.get("time", 0.0)),
+                "time": _row_time(event),
                 "amount": 0.0,
                 "amount_formula": _healing.missing_health_scaled_heal(
                     min_heal, max_heal

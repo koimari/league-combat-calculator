@@ -44,6 +44,8 @@ from typing import Any
 from ..ability_atoms import ability_field, ability_payload
 from ..ability_prose import CachedSentence, extract_description_duration
 from ..ability_spec import DamagePart
+from ..damage_event_row import event_damage as _row_damage
+from ..damage_event_row import event_time as _row_time
 from ..healing_helpers import (
     HealAnchor,
     ability_json,
@@ -359,11 +361,11 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
 
     for payment in passive_payments:
         event = payment.event
-        amount = max(0.0, float(event.get("damage", 0.0))) * healing_amp
+        amount = max(0.0, _row_damage(event)) * healing_amp
         if amount > 0:
             healing.append(
                 {
-                    "time": float(event.get("time", 0.0)),
+                    "time": _row_time(event),
                     "amount": amount,
                     "source": "Deathbringer Stance",
                     "kind": "champion_passive",
@@ -375,11 +377,11 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         event = payment.event
         if _is_persistent(event):
             continue
-        amount = max(0.0, float(event.get("damage", 0.0))) * e_ratio * healing_amp
+        amount = max(0.0, _row_damage(event)) * e_ratio * healing_amp
         if amount > 0:
             healing.append(
                 {
-                    "time": float(event.get("time", 0.0)),
+                    "time": _row_time(event),
                     "amount": amount,
                     "source": "Umbral Dash",
                     "kind": "champion_passive",

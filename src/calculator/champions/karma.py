@@ -6,6 +6,7 @@ from typing import Any
 
 from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
+from ..cast_event_row import cast_time as _row_cast_time
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat
@@ -161,7 +162,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         for cast in ctx.cast_timeline or []:
             if cast.get("slot") != "W":
                 continue
-            cast_time = float(cast.get("time", 0.0))
+            cast_time = _row_cast_time(cast)
             healing.extend(
                 {
                     "time": cast_time + offset,

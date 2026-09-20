@@ -34,6 +34,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from ..cast_event_row import cast_time as _row_cast_time
 from ..control_spec import ControlScope
 from .contract_vocabulary import coverage
 from .engine import ONHIT, SlotCtx
@@ -421,7 +422,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         for cast in ctx.cast_timeline or []:
             if cast.get("slot") != "W":
                 continue
-            start = float(cast.get("time", 0.0))
+            start = _row_cast_time(cast)
             healing.extend(
                 {
                     "time": start + index * 0.25,

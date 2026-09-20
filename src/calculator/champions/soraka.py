@@ -32,6 +32,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from ..damage_event_row import event_time as _row_time
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -197,7 +198,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         trigger = _healing.trigger_fields(event)
         healing.extend(
             {
-                "time": float(event.get("time", 0.0)) + index * 0.2,
+                "time": _row_time(event) + index * 0.2,
                 "amount": float(per_tick),
                 "source": "Starcall · Rejuvenation",
                 "kind": "champion_ability",

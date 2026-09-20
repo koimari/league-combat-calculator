@@ -8,6 +8,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from ..damage_event_row import event_damage as _row_damage
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option
@@ -281,7 +282,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         ctx.damage_events,
         lambda source, _event: source == "on_hit_ability_passive",
     ):
-        dealt = float(event.get("damage", 0.0))
+        dealt = _row_damage(event)
         _healing.heal_from_damage(
             healing,
             event,

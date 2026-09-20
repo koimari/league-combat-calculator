@@ -538,12 +538,10 @@
       "burrow": 1,
       "carnivore": 2,
       "carried": 1,
-      "cast": 13,
       "entry": 13,
-      "event": 46,
+      "event": 1,
       "fix": 2,
       "part_timing": 1,
-      "proc_auto": 2,
       "realm": 1,
       "spec": 3,
       "tribute": 2,
@@ -553,7 +551,7 @@
     "totals": {
       "forbidden_input_fallbacks": 0,
       "hand_built_entries": 67,
-      "produced_fallbacks": 88
+      "produced_fallbacks": 28
     }
   }
 }

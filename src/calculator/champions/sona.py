@@ -32,6 +32,7 @@ import re
 from typing import Any
 
 from ..ability_prose import CachedSentence
+from ..cast_event_row import cast_time as _row_cast_time
 from ..healing_helpers import ability_json, parsed_rank
 from .contract_vocabulary import coverage
 from .engine import ONHIT, SlotCtx
@@ -240,7 +241,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         return []
     return [
         {
-            "time": float(cast.get("time", 0.0)),
+            "time": _row_cast_time(cast),
             "amount": heal,
             "source": "Aria of Perseverance",
             "kind": "champion_ability",

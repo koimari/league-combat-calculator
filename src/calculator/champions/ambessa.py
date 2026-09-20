@@ -31,6 +31,8 @@ from .. import healing_helpers as _healing
 from ..ability_atoms import ability_field, ability_payload
 from ..ability_prose import CachedSentence
 from ..binary_roots import data_value, spell_object
+from ..damage_event_row import event_damage as _row_damage
+from ..damage_event_row import event_time as _row_time
 from .engine import SlotCtx, SlotParser, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
@@ -330,11 +332,11 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
             lambda source: source in {"Q", "Q2", "W", "E", "R"},
         ):
             event = payment.event
-            amount = max(0.0, float(event.get("damage", 0.0))) * ratio / 100.0
+            amount = max(0.0, _row_damage(event)) * ratio / 100.0
             if amount > 0:
                 healing.append(
                     {
-                        "time": float(event.get("time", 0.0)),
+                        "time": _row_time(event),
                         "amount": amount,
                         "source": "Public Execution",
                         "kind": "champion_passive",

@@ -22,6 +22,7 @@ replaces that slot.
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
+from ..damage_event_row import event_time as _row_time
 from ..healing_helpers import HealAnchor, ability_json, parsed_rank, trigger_fields
 from .engine import BUFF, SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -174,7 +175,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
 
     return [
         {
-            "time": float(payment.event.get("time", 0.0)),
+            "time": _row_time(payment.event),
             "amount": 0.0,
             "amount_formula": consume_heal,
             "source": "Consume",

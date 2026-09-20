@@ -30,6 +30,8 @@ from ..ability_atoms import ability_payload
 from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from ..damage_event_row import event_damage as _row_damage
+from ..damage_event_row import event_time as _row_time
 from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -336,11 +338,11 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         inferno_aegis_heal = _healing.flat_plus_missing_heal(flat, missing_pct)
         for payment in ctx.payments(_healing.HealAnchor.CAST, "W"):
             event = payment.event
-            if float(event.get("damage", 0.0)) <= 0.0:
+            if _row_damage(event) <= 0.0:
                 continue
             healing.append(
                 {
-                    "time": float(event.get("time", 0.0)),
+                    "time": _row_time(event),
                     "amount": 0.0,
                     "amount_formula": inferno_aegis_heal,
                     "source": "Inferno Aegis",

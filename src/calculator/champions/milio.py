@@ -20,6 +20,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_prose import CachedSentence
+from ..cast_event_row import cast_time as _row_cast_time
 from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -192,7 +193,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
                 continue
             healing.append(
                 {
-                    "time": float(cast.get("time", 0.0)),
+                    "time": _row_cast_time(cast),
                     "amount": heal,
                     "source": "Breath of Life",
                     "kind": "champion_ability",
@@ -224,7 +225,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         for cast in ctx.cast_timeline or []:
             if cast.get("slot") != "W":
                 continue
-            start = float(cast.get("time", 0.0))
+            start = _row_cast_time(cast)
             healing.extend(
                 {
                     "time": start + index * 0.24,

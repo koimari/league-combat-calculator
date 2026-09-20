@@ -39,6 +39,7 @@ from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..control_spec import ControlScope
+from ..damage_event_row import event_damage as _row_damage
 from ..healing_helpers import HealAnchor, heal_from_damage
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
@@ -323,7 +324,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         event = payment.event
         if event.get("damage_type") != "physical":
             continue
-        amount = max(0.0, float(event.get("damage", 0.0))) * ratio
+        amount = max(0.0, _row_damage(event)) * ratio
         heal_from_damage(healing, event, amount, "Soul Eater")
     return healing
 

@@ -6,6 +6,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from ..damage_event_row import event_damage as _row_damage
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, int_option
@@ -190,7 +191,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     for event in _healing.attributed_events(
         ctx.damage_events, lambda source, _event: source == "W"
     ):
-        dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
+        dealt = float(event.get("raw_damage", _row_damage(event)) or 0.0)
         _healing.heal_from_damage(healing, event, portion * dealt, "Bountiful Harvest")
     return healing
 

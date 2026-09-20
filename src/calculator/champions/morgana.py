@@ -39,6 +39,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from ..damage_event_row import event_damage as _row_damage
 from ..healing_helpers import HealAnchor, heal_from_damage
 from .engine import SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -220,7 +221,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         heal_from_damage(
             healing,
             payment.event,
-            0.18 * max(0.0, float(payment.event.get("damage", 0.0))),
+            0.18 * max(0.0, _row_damage(payment.event)),
             "Soul Siphon",
         )
     return healing

@@ -6,6 +6,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
+from ..damage_event_row import event_time as _row_time
 from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import int_option
@@ -157,7 +158,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     )
     healing.extend(
         {
-            "time": float(event.get("time", 0.0)),
+            "time": _row_time(event),
             "amount": 0.0,
             "amount_formula": lambda current_health, maximum_health: (
                 max(0.0, maximum_health - current_health) * 0.05

@@ -54,6 +54,7 @@ from .. import healing_helpers as _healing
 from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from ..damage_event_row import event_time as _row_time
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -601,7 +602,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         for event in _vigor_heal_events(counter, ctx.damage_events):
             healing.append(
                 {
-                    "time": float(event.get("time", 0.0)),
+                    "time": _row_time(event),
                     "amount": 0.0,
                     "amount_formula": _healing.missing_health_scaled_heal(0.0, heal),
                     "source": "Hunter's Vigor",

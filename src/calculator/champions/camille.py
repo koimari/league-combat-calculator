@@ -42,6 +42,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from ..damage_event_row import event_damage as _row_damage
 from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -337,8 +338,8 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     )
     for payment in ctx.payments(_healing.HealAnchor.CAST, "W"):
         event = payment.event
-        raw = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
-        post = float(event.get("damage", 0.0) or 0.0)
+        raw = float(event.get("raw_damage", _row_damage(event)) or 0.0)
+        post = _row_damage(event)
         outer_raw = max(0.0, raw - base_raw)
         amount = outer_raw * (post / raw) if raw > 0.0 else 0.0
         _healing.heal_from_damage(healing, event, amount, "Tactical Sweep")

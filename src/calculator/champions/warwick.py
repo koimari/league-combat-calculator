@@ -53,6 +53,7 @@ from .. import healing_helpers as _healing
 from ..ability_atoms import ability_payload
 from ..ability_spec import DamageClass
 from ..binary_roots import data_value, spell_object
+from ..damage_event_row import event_damage as _row_damage
 from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .module_helpers import ability_slot, missing_hp_fraction, named_damage, ranked_slot
@@ -339,14 +340,14 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
             _healing.heal_from_damage(
                 healing,
                 event,
-                float(event.get("damage", 0.0)) * q_ratio / 100.0,
+                _row_damage(event) * q_ratio / 100.0,
                 "Jaws of the Beast",
             )
         elif source == "R":
             # Infinite Duress explicitly heals for 100% of all
             # post-mitigation damage dealt to its target.
             _healing.heal_from_damage(
-                healing, event, float(event.get("damage", 0.0)), "Infinite Duress"
+                healing, event, _row_damage(event), "Infinite Duress"
             )
     # Eternal Hunger (P): "While below 50% maximum health, Warwick also
     # heals for 100% of the post-mitigation damage dealt by Eternal Hunger,
@@ -373,7 +374,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
             _healing.heal_from_damage(
                 healing,
                 event,
-                float(event.get("damage", 0.0)) * hunger_share,
+                _row_damage(event) * hunger_share,
                 "Eternal Hunger",
             )
     return healing

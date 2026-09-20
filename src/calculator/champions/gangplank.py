@@ -8,6 +8,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, data_value_at_rank, spell_object
+from ..cast_event_row import cast_time as _row_cast_time
 from .charge_cadence import ChargeRule
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -317,7 +318,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
             continue
         healing.append(
             {
-                "time": float(cast.get("time", 0.0)),
+                "time": _row_cast_time(cast),
                 "amount": 0.0,
                 "amount_formula": remove_scurvy_heal,
                 "source": "Remove Scurvy",

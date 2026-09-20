@@ -15,6 +15,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..cast_event_row import cast_time as _row_cast_time
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import float_option
@@ -168,7 +169,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         for cast_index, cast in enumerate(ctx.cast_timeline or []):
             if cast.get("slot") != "R":
                 continue
-            start = float(cast.get("time", 0.0))
+            start = _row_cast_time(cast)
             healing.extend(
                 {
                     "time": start + index * 0.25,

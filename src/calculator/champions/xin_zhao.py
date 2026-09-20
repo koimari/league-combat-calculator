@@ -45,6 +45,7 @@ from .. import healing_helpers as _healing
 from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from ..damage_event_row import event_damage as _row_damage
 from .engine import ONHIT, SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat
@@ -276,9 +277,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         for event in _healing.attributed_events(
             ctx.damage_events, lambda source, _event: source == "W"
         ):
-            amount = (
-                0.333 * max(0.0, float(event.get("damage", 0.0))) * lifesteal / 100.0
-            )
+            amount = 0.333 * max(0.0, _row_damage(event)) * lifesteal / 100.0
             _healing.heal_from_damage(healing, event, amount, "Wind Becomes Lightning")
     # Determination (P): the third stack "consume[s] them all to deal ...
     # bonus physical damage and heal Xin Zhao for 2% / 3.5% / 5% (based on

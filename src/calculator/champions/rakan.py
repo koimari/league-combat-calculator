@@ -21,6 +21,7 @@ it).  The out-of-combat refresh cadence stays state.
 from typing import Any
 
 from .. import healing_helpers as _healing
+from ..damage_event_row import event_time as _row_time
 from .contract_vocabulary import coverage
 from .engine import build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -162,7 +163,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
             event = payment.event
             healing.append(
                 {
-                    "time": float(event.get("time", 0.0)) + 3.0,
+                    "time": _row_time(event) + 3.0,
                     "amount": heal,
                     "source": "Gleaming Quill",
                     "kind": "champion_ability",

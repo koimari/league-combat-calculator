@@ -34,6 +34,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
+from ..damage_event_row import event_time as _row_time
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import int_option
@@ -296,7 +297,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         amount = float(carnivore.get("amount", 0.0) or 0.0)
         healing.extend(
             {
-                "time": float(payment.event.get("time", 0.0)),
+                "time": _row_time(payment.event),
                 "amount": amount,
                 "source": "Carnivore",
                 "kind": "champion_passive",

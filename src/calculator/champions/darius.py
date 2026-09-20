@@ -37,6 +37,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
+from ..damage_event_row import event_time as _row_time
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, int_option
@@ -530,7 +531,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     healing = []
     for payment in ctx.payments(_healing.HealAnchor.CAST, "Q"):
         event = payment.event
-        trigger_time = float(event.get("time", 0.0))
+        trigger_time = _row_time(event)
         trigger_sequence = int(event.get("sequence", 0) or 0)
 
         def missing_health_heal(

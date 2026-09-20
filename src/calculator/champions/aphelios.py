@@ -41,6 +41,7 @@ from ..ability_atoms import ability_field, ability_payload
 from ..ability_prose import extract_description_duration
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from ..damage_event_row import event_damage as _row_damage
 from .aphelios_weapons import (
     _Q_CC_BY_WEAPON,
     _R_CC_BY_WEAPON,
@@ -491,7 +492,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
                 if _healing.event_source(event) == "auto_attacks"
                 else ability_ratio
             )
-            amount = max(0.0, float(event.get("damage", 0.0))) * ratio
+            amount = max(0.0, _row_damage(event)) * ratio
             _healing.heal_from_damage(healing, event, amount, "Severum")
             if overheal_shield and amount > 0.0 and shield_cap > 0.0:
                 healing[-1]["overheal_to_shield"] = True

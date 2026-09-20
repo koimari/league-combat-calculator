@@ -22,6 +22,8 @@ from functools import partial
 from typing import Any
 
 from ..ability_spec import DamagePart
+from ..cast_event_row import cast_time as _row_cast_time
+from ..damage_event_row import event_time as _row_time
 from ..healing_helpers import (
     ability_json,
     attributed_events,
@@ -192,7 +194,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         if slot not in {"Q", "W", "E", "R"}:
             continue
         try:
-            cast_time = float(cast.get("time", 0.0))
+            cast_time = _row_cast_time(cast)
         except (TypeError, ValueError):
             continue
         trigger_by_time[cast_time] = trigger_by_time.get(cast_time, 0) + (
@@ -201,7 +203,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     trigger_times = sorted(trigger_by_time)
     auto_by_time: dict[float, dict[str, Any]] = {}
     for event in auto_events:
-        auto_by_time.setdefault(round(float(event.get("time", 0.0)), 6), event)
+        auto_by_time.setdefault(round(_row_time(event), 6), event)
     auto_times = sorted(auto_by_time)
     trigger_index = 0
     auto_index = 0
@@ -240,7 +242,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         if auto_index >= len(auto_times):
             break
         proc_auto = auto_by_time[auto_times[auto_index]]
-        heal_time = float(proc_auto.get("time", 0.0)) + 0.25
+        heal_time = _row_time(proc_auto) + 0.25
         if heal_time > duration + 1e-9:
             break
         healing.append(
@@ -254,7 +256,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
                 **trigger_fields(proc_auto),
             }
         )
-        proc_time = float(proc_auto.get("time", 0.0))
+        proc_time = _row_time(proc_auto)
         while (
             trigger_index < len(trigger_times)
             and trigger_times[trigger_index] <= proc_time + 1e-9

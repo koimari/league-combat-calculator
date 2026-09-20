@@ -61,6 +61,7 @@ instead of Yuumi").
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
+from ..cast_event_row import cast_time as _row_cast_time
 from ..healing_helpers import (
     HealAnchor,
     ability_json,
@@ -262,7 +263,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         for cast in ctx.cast_timeline or []:
             if cast.get("slot") != "R":
                 continue
-            start = float(cast.get("time", 0.0))
+            start = _row_cast_time(cast)
             healing.extend(
                 {
                     "time": start + index * 0.7,

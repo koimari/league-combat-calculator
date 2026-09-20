@@ -49,6 +49,8 @@ from ..ability_atoms import (
 from ..ability_spec import AttackClass, DamageClass, DamagePart
 from ..binary_roots import data_value, spell_object
 from ..control_spec import ControlEvent
+from ..damage_event_row import event_damage as _row_damage
+from ..damage_event_row import event_time as _row_time
 from ..survival.phases import TransitionRank
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -566,12 +568,12 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         lambda source: source.startswith("stacking_dot_"),
     ):
         event = payment.event
-        dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
+        dealt = float(event.get("raw_damage", _row_damage(event)) or 0.0)
         amount = 0.25 * dealt
         if amount > 0.0:
             healing.append(
                 {
-                    "time": float(event.get("time", 0.0)),
+                    "time": _row_time(event),
                     "amount": amount,
                     "source": "Crimson Curse",
                     "kind": "champion_passive",
@@ -595,10 +597,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     max_health = champion_stat(ctx.champion_stats, "health")
     for payment in ctx.payments(_healing.HealAnchor.CAST, "W"):
         event = payment.event
-        snack_heal = (
-            0.05 * max_health
-            + float(event.get("damage", 0.0) or 0.0) * heal_percent / 100.0
-        )
+        snack_heal = 0.05 * max_health + _row_damage(event) * heal_percent / 100.0
         _healing.heal_from_damage(healing, event, snack_heal, "Snack Attack")
     # R (Certain Death) grants life steal (10 / 15 / 20% by rank) while
     # Hematomania lasts; life steal heals for the sourced percentage of
@@ -617,7 +616,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
             _healing.heal_from_damage(
                 healing,
                 event,
-                float(event.get("damage", 0.0) or 0.0) * life_steal / 100.0,
+                _row_damage(event) * life_steal / 100.0,
                 "Certain Death",
             )
     return healing

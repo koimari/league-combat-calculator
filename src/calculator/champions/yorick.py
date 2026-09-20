@@ -51,14 +51,15 @@ from ..binary_roots import (
     data_value_at_rank,
     spell_object,
 )
+from ..damage_event_row import event_time as _row_time
 from ..stat_formulas import growth_multiplier
-from .pet_window import derived_attack_count
 from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS, coverage
 from .engine import SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import ability_slot, no_damage, ranked_slot
 from .packet_module import build_packet_module
+from .pet_window import derived_attack_count
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown
@@ -328,7 +329,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         event = payment.event
         healing.append(
             {
-                "time": float(event.get("time", 0.0)),
+                "time": _row_time(event),
                 "amount": 0.0,
                 "amount_formula": last_rites_heal,
                 "source": "Last Rites",

@@ -10,6 +10,9 @@ from .. import healing_helpers as _healing
 from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
+from ..cast_event_row import cast_time as _row_cast_time
+from ..damage_event_row import event_damage as _row_damage
+from ..damage_event_row import event_time as _row_time
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import float_option, int_option
@@ -319,7 +322,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """
     healing: list[dict[str, Any]] = []
     w_casts = [
-        float(cast.get("time", 0.0))
+        _row_cast_time(cast)
         for cast in (ctx.cast_timeline or [])
         if cast.get("slot") == "W"
     ]
@@ -328,13 +331,13 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
             _healing.HealAnchor.DAMAGING_HIT, lambda _source: True
         ):
             event = payment.event
-            event_time = float(event.get("time", 0.0))
+            event_time = _row_time(event)
             if not any(
                 cast_time <= event_time <= cast_time + _SPIRIT_OF_DREAD_WINDOW_SECONDS
                 for cast_time in w_casts
             ):
                 continue
-            amount = _SPIRIT_OF_DREAD_SHARE * max(0.0, float(event.get("damage", 0.0)))
+            amount = _SPIRIT_OF_DREAD_SHARE * max(0.0, _row_damage(event))
             _healing.heal_from_damage(healing, event, amount, "Spirit of Dread")
     return healing
 

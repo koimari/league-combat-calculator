@@ -31,6 +31,7 @@ import dataclasses
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
+from ..damage_event_row import event_time as _row_time
 from ..healing_helpers import HealAnchor, missing_health_scaled_heal, trigger_fields
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
@@ -166,7 +167,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     min_heal, max_heal = ctx.ranked_rows("E", "Minimum Heal", "Maximum Heal")
     healing.extend(
         {
-            "time": float(payment.event.get("time", 0.0)),
+            "time": _row_time(payment.event),
             "amount": 0.0,
             "amount_formula": missing_health_scaled_heal(min_heal, max_heal),
             "source": "Primal Surge",

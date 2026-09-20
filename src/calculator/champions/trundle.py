@@ -19,6 +19,8 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_atoms import ability_payload
+from ..damage_event_row import event_damage as _row_damage
+from ..damage_event_row import event_time as _row_time
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -187,7 +189,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     for event in _healing.attributed_events(
         ctx.damage_events, lambda source, _event: source == "R"
     ):
-        dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
+        dealt = float(event.get("raw_damage", _row_damage(event)) or 0.0)
         _healing.heal_from_damage(
             healing, event, dealt, "Subjugate", link_to_damage=False
         )
@@ -202,7 +204,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         amount = float(tribute.get("amount", 0.0) or 0.0)
         healing.extend(
             {
-                "time": float(payment.event.get("time", 0.0)),
+                "time": _row_time(payment.event),
                 "amount": amount,
                 "source": "King's Tribute",
                 "kind": "champion_passive",

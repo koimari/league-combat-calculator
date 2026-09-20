@@ -52,6 +52,7 @@ from typing import Any
 from ..ability_atoms import ability_payload
 from ..ability_prose import CachedSentence
 from ..ability_spec import DamageClass, DamagePart
+from ..damage_event_row import event_time as _row_time
 from ..healing_helpers import HealAnchor, ability_json, trigger_fields
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -372,7 +373,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     self_ratio = _TRIUMPHANT_ROAR_SELF_HEAL.value(passive) / 100.0
     casts = sorted(
         ctx.payments(HealAnchor.CAST, "Q") + ctx.payments(HealAnchor.CAST, "W"),
-        key=lambda payment: float(payment.event.get("time", 0.0)),
+        key=lambda payment: _row_time(payment.event),
     )
     carried = ability_payload(ctx.ability_damages, "passive").get("self_heal_state")
     qw_seen = int(carried.get("stacks", 0) or 0) if isinstance(carried, dict) else 0
@@ -382,7 +383,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         if qw_seen % stack_cap == 0:
             healing.append(
                 {
-                    "time": float(event.get("time", 0.0)),
+                    "time": _row_time(event),
                     "amount": self_ratio * champion_stat(ctx.champion_stats, "health"),
                     "source": "Triumphant Roar",
                     "kind": "champion_passive",

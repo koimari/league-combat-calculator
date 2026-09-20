@@ -28,6 +28,7 @@ in ASSUMPTIONS.
 from typing import Any
 
 from .. import healing_helpers as _healing
+from ..damage_event_row import event_damage as _row_damage
 from .charge_cadence import ChargeRule
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
@@ -204,14 +205,14 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
             _healing.heal_from_damage(
                 healing,
                 event,
-                float(event.get("damage", 0.0)) * q_ratio,
+                _row_damage(event) * q_ratio,
                 "Formless Blade",
             )
         elif source == "R" and r_ratio > 0.0:
             _healing.heal_from_damage(
                 healing,
                 event,
-                float(event.get("damage", 0.0)) * r_ratio,
+                _row_damage(event) * r_ratio,
                 "Apotheosis",
             )
     return healing

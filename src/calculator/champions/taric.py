@@ -46,6 +46,7 @@ from functools import partial
 from typing import Any
 
 from ..ability_prose import CachedSentence
+from ..cast_event_row import cast_time as _row_cast_time
 from ..healing_helpers import ability_json, parsed_rank
 from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx
@@ -339,7 +340,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
                 continue
             healing.append(
                 {
-                    "time": float(cast.get("time", 0.0)),
+                    "time": _row_cast_time(cast),
                     "amount": heal,
                     "source": "Starlight's Touch",
                     "kind": "champion_ability",
