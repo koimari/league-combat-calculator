@@ -39,7 +39,7 @@ are the audit's own.
 |---|---|---|---|
 | A | 1, 2 | `data`: 1.1 tracked data, 1.4 guards, X5 machine-path lint, X6 one atomizer. `docs`: 1.2 finished docs, 6.2 merges, HANDOVER citations. `frontend`: D34 to D41, A4, A7, X7 escapers. `claude-md`: 6.4 split into `TRAPS.md` and `architecture.md`, HANDOVER section 11 lift, stale citations, word-budget test, pointer rule. | parallel, one integrator |
 | B | 3 | `contract-tests`: 2.1, 2.2, 2.7 codemods. `dead-tests`: 2.3, 2.4, 2.5, 2.6 with A1 Akshan fixed first, 2.8, 2.9, A8, A12, A13. `relocate`: 2.10, 2.11, 2.12, X3 `ER5_TAIL` derivation. | parallel, one integrator |
-| C | 4 | `dead-src`: D1 to D27, A3, A5, A6, A9, A10, A11. `wrappers`: D29 to D33, W2 to W12. | parallel, one integrator |
+| C | 4 | `dead-src`: D1 to D27, A3, A5, A6, A9, A10, A11, pylint `--fail-on` widened. `wrappers`: D29 to D33, W2 to W12, branched from the verified `dead-src` because both edit the interpreters and the catalog. | chained, one integrator |
 | D | 5 | one unit per codemod in the audit's order: C1, A2 then C4 `CachedSentence`, C5, C4 rest, C7, C8, C6, C9 to C11, C2, C3 | sequential, goldens between |
 | E | 6 | P1 module by module, P3, P4 and P5, P6 and X1, P8 P10 P12 P13 X2, then P2 behind a `benchmarks.md` row | sequential |
 
