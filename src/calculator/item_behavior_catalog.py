@@ -5212,42 +5212,6 @@ def _defense_flag_holds(mechanic: DefenseMechanic, entry: Mapping[str, Any]) -> 
     return True
 
 
-def _compile_opening_defense(
-    family: RuleFamily,
-    source: ValueSource,
-    entry: Mapping[str, Any],
-) -> tuple[BehaviorRule, ...]:
-    """Defences already in force when the modeled exchange opens."""
-    return _compile_defense(family, source, entry)
-
-
-def _compile_threshold_defense(
-    family: RuleFamily,
-    source: ValueSource,
-    entry: Mapping[str, Any],
-) -> tuple[BehaviorRule, ...]:
-    """Defences armed by the subject's health crossing a declared fraction."""
-    return _compile_defense(family, source, entry)
-
-
-def _compile_combat_state(
-    family: RuleFamily,
-    source: ValueSource,
-    entry: Mapping[str, Any],
-) -> tuple[BehaviorRule, ...]:
-    """Defences that accrue, or are spent, while the fight is in progress."""
-    return _compile_defense(family, source, entry)
-
-
-def _compile_reactive(
-    family: RuleFamily,
-    source: ValueSource,
-    entry: Mapping[str, Any],
-) -> tuple[BehaviorRule, ...]:
-    """Defences armed by an incoming event rather than by the clock."""
-    return _compile_defense(family, source, entry)
-
-
 # ── stat derivation (3.7 residual) ────────────────────────────────────────
 #
 # Eight shapes the build's stat block is made of, told apart by the value
@@ -5933,7 +5897,9 @@ def _compile_stat_derivation(
 
 # One module-level ``def`` per key, keyed by a closed enum, totality asserted
 # — D-52's three conditions, which is what makes a callable registry a ruled
-# exception rather than a hole in "no callables in declarations".
+# exception rather than a hole in "no callables in declarations".  The four
+# defence keys share one compiler: the family is what tells their readings
+# apart, and ``RuleFamily`` is where each of the four says what it is.
 _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.ON_HIT_STRIKE: _compile_on_hit_strike,
     RuleFamily.CHARGED_STRIKE: _compile_charged_strike,
@@ -5946,10 +5912,10 @@ _COMPILERS: Mapping[RuleFamily, Compiler] = {
     RuleFamily.RESISTANCE_SHRED: _compile_resistance_shred,
     RuleFamily.CRIT_PROFILE: _compile_crit_profile,
     RuleFamily.DAMAGE_ROUTING: _compile_damage_routing,
-    RuleFamily.OPENING_DEFENSE: _compile_opening_defense,
-    RuleFamily.THRESHOLD_DEFENSE: _compile_threshold_defense,
-    RuleFamily.COMBAT_STATE: _compile_combat_state,
-    RuleFamily.REACTIVE: _compile_reactive,
+    RuleFamily.OPENING_DEFENSE: _compile_defense,
+    RuleFamily.THRESHOLD_DEFENSE: _compile_defense,
+    RuleFamily.COMBAT_STATE: _compile_defense,
+    RuleFamily.REACTIVE: _compile_defense,
     RuleFamily.SUSTAIN: _compile_sustain,
     RuleFamily.STAT_DERIVATION: _compile_stat_derivation,
     RuleFamily.ALLY_PACKET: _compile_ally_packet,

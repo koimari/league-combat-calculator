@@ -110,10 +110,15 @@ class RuleFamily(Enum):
     RESISTANCE_SHRED = "resistance_shred"
     CRIT_PROFILE = "crit_profile"
     DAMAGE_ROUTING = "damage_routing"
-    # defence — the subject survives differently
+    # defence — the subject survives differently.  One compiler serves the
+    # four; what each of them is, is here.
+    # already in force when the modeled exchange opens
     OPENING_DEFENSE = "opening_defense"
+    # armed by the subject's health crossing a declared fraction
     THRESHOLD_DEFENSE = "threshold_defense"
+    # accrues, or is spent, while the fight is in progress
     COMBAT_STATE = "combat_state"
+    # armed by an incoming event rather than by the clock
     REACTIVE = "reactive"
     # rest
     SUSTAIN = "sustain"
