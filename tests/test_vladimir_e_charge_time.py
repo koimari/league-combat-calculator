@@ -493,10 +493,10 @@ class TestChargeFractions:
         # fraction 1.0, monotone between (the 4%/6% tier boundaries are
         # not sourced — AMBIGUITY 3; only endpoints are pinned here).
         from src.calculator.champions.vladimir import (
-            TIDES_OF_BLOOD_BOUNDARY_RULES,
+            TIDES_OF_BLOOD_BOUNDARY_RECEIPT,
         )
 
-        receipt = TIDES_OF_BLOOD_BOUNDARY_RULES.public_receipt()["health_cost"]
+        receipt = TIDES_OF_BLOOD_BOUNDARY_RECEIPT["health_cost"]
         assert receipt["cost_percent_at_min_charge"] == pytest.approx(2.0)
         assert receipt["cost_percent_at_max_charge"] == pytest.approx(8.0)
         assert receipt["source"]["wiki"]["revision_id"] == 2864482
@@ -649,10 +649,10 @@ class TestHealthCostFreeRule:
         # (effects[4]); the engine has no attacker current-health input
         # today (AMBIGUITY 3), so the seam needs one.
         from src.calculator.champions.vladimir import (
-            TIDES_OF_BLOOD_BOUNDARY_RULES,
+            TIDES_OF_BLOOD_BOUNDARY_RECEIPT,
         )
 
-        receipt = TIDES_OF_BLOOD_BOUNDARY_RULES.public_receipt()["health_cost"]
+        receipt = TIDES_OF_BLOOD_BOUNDARY_RECEIPT["health_cost"]
         assert receipt["free_below_fraction_of_max_health"] == pytest.approx(0.12)
 
 
@@ -690,10 +690,10 @@ class TestSlow:
         # ("charged for at least 1 second" == ramp completion); below
         # full charge the interpolated nova carries no slow.
         from src.calculator.champions.vladimir import (
-            TIDES_OF_BLOOD_BOUNDARY_RULES,
+            TIDES_OF_BLOOD_BOUNDARY_RECEIPT,
         )
 
-        receipt = TIDES_OF_BLOOD_BOUNDARY_RULES.public_receipt()["slow"]
+        receipt = TIDES_OF_BLOOD_BOUNDARY_RECEIPT["slow"]
         assert receipt["slow_level_1"] == pytest.approx(40.0)
         assert receipt["slow_level_5"] == pytest.approx(60.0)
         assert receipt["duration_seconds"] == pytest.approx(0.5)
@@ -826,10 +826,10 @@ class TestSourceAndAtomReceipts:
         # wiki prose named as the 1s-ramp root (no atom carries it,
         # AMBIGUITY 2).
         from src.calculator.champions.vladimir import (
-            TIDES_OF_BLOOD_CHARGE_RULE,
+            TIDES_OF_BLOOD_CHARGE_RECEIPT,
         )
 
-        receipt = TIDES_OF_BLOOD_CHARGE_RULE.public_receipt()
+        receipt = TIDES_OF_BLOOD_CHARGE_RECEIPT
         assert receipt["ramp_seconds"] == pytest.approx(1.0)
         assert receipt["channel_seconds"] == pytest.approx(1.5)
         assert receipt["default_fraction"] == pytest.approx(1.0)

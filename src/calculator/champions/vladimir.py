@@ -20,6 +20,8 @@ derive one from another — and the pinned reviewed packet declares P
 ``MODULE_COVERAGE`` states the reviewed absence of damage.
 """
 
+from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Any
 
 from .. import healing_helpers as _healing
@@ -72,70 +74,50 @@ _E_CHARGE_RAMP_SECONDS = data_value(_VLAD_E_SPELL, "TimetoRampMaxDamage")
 _E_CHANNEL_SECONDS = data_value(_VLAD_E_SPELL, "MaxChannelTime")
 
 
-class _TidesOfBloodChargeRule:
-    """The typed charge-model certification (the Asol/Briar pattern).
-
-    The charge selection: e_charge_fraction (0..1, default 1.0 = fully
-    charged, reproducing the reviewed packet's maximum-row numbers).
-    The min/max rows are the atoms ability.minimum _magic _damage /
-    ability.maximum _magic _damage (modifiers 0..2); the channel is the
-    timing.active_duration atom; the ramp and channel seconds root in the
-    binary VladimirE DataValues (TimetoRampMaxDamage / MaxChannelTime).
-    """
-
-    def public_receipt(self) -> dict[str, Any]:
-        """The typed charge-model receipt (ramp/channel/default/atoms)."""
-        return {
-            "name": "Tides of Blood charge model",
-            "ramp_seconds": _E_CHARGE_RAMP_SECONDS,
-            "channel_seconds": _E_CHANNEL_SECONDS,
-            "default_fraction": 1.0,
-            "ramp_source": (
-                "wiki prose (degraded 'charge time' parse — no atom): "
-                "'increased based on charge time up to the first second'"
-            ),
-            "atom_ids": {
-                "channel_seconds": {
-                    "atom_id": "timing.active_duration",
-                    "hash": "367b90ae9fc5cf38",
-                },
-                "min_modifier_0": {
-                    "atom_id": "ability.minimum _magic _damage.modifier_0",
-                    "hash": "ed0a9a756a254ee9",
-                },
-                "max_modifier_0": {
-                    "atom_id": "ability.maximum _magic _damage.modifier_0",
-                    "hash": "1e9f85c82f8835bf",
-                },
+# The charge selection: e_charge_fraction (0..1, default 1.0 = fully
+# charged, reproducing the reviewed packet's maximum-row numbers).  The
+# min/max rows are the atoms ability.minimum _magic _damage /
+# ability.maximum _magic _damage (modifiers 0..2); the channel is the
+# timing.active_duration atom; the ramp and channel seconds root in the
+# binary VladimirE DataValues (TimetoRampMaxDamage / MaxChannelTime).
+TIDES_OF_BLOOD_CHARGE_RECEIPT: Mapping[str, Any] = MappingProxyType(
+    {
+        "name": "Tides of Blood charge model",
+        "ramp_seconds": _E_CHARGE_RAMP_SECONDS,
+        "channel_seconds": _E_CHANNEL_SECONDS,
+        "default_fraction": 1.0,
+        "ramp_source": (
+            "wiki prose (degraded 'charge time' parse — no atom): "
+            "'increased based on charge time up to the first second'"
+        ),
+        "atom_ids": {
+            "channel_seconds": {
+                "atom_id": "timing.active_duration",
+                "hash": "367b90ae9fc5cf38",
             },
-        }
+            "min_modifier_0": {
+                "atom_id": "ability.minimum _magic _damage.modifier_0",
+                "hash": "ed0a9a756a254ee9",
+            },
+            "max_modifier_0": {
+                "atom_id": "ability.maximum _magic _damage.modifier_0",
+                "hash": "1e9f85c82f8835bf",
+            },
+        },
+    }
+)
 
 
-TIDES_OF_BLOOD_CHARGE_RULE = _TidesOfBloodChargeRule()
-
-
-class _TidesOfBloodBoundaryRules:
-    """The documented out-of-scope boundaries (receipts, not seams).
-
-    The health cost: the cached cost row's values are zeroed with the
-    2% / 4% / 6% / 8% tiers in the units prose; the engine has no
-    attacker current-health input, so the cost is NOT priced (the
-    endpoints + the below-12% free clause from effects[4] are declared
-    as the documented boundary).  The enemy slow (40-60% for 0.5s, only
-    at full charge — "charged for at least 1 second" == the ramp
-    completion) is utility per the module assumptions.
-    """
-
-    def public_receipt(self) -> dict[str, Any]:
-        """Both boundary receipts (the test surface calls public_receipt)."""
-        return {
-            "health_cost": self.health_cost_receipt(),
-            "slow": self.slow_receipt(),
-        }
-
-    def health_cost_receipt(self) -> dict[str, Any]:
-        """The health-cost boundary receipt (2/8% endpoints + the 12% free clause)."""
-        return {
+# The documented out-of-scope boundaries (receipts, not seams).  The health
+# cost: the cached cost row's values are zeroed with the 2% / 4% / 6% / 8%
+# tiers in the units prose; the engine has no attacker current-health input,
+# so the cost is NOT priced (the endpoints and the below-12% free clause
+# from effects[4] are the declared boundary).  The enemy slow (40-60% for
+# 0.5s, only at full charge, "charged for at least 1 second" == the ramp
+# completion) is utility per the module assumptions.
+TIDES_OF_BLOOD_BOUNDARY_RECEIPT: Mapping[str, Any] = MappingProxyType(
+    {
+        "health_cost": {
             "name": "Tides of Blood health cost (boundary)",
             "priced": False,
             "cost_percent_at_min_charge": 2.0,
@@ -150,11 +132,8 @@ class _TidesOfBloodBoundaryRules:
                 },
                 "boundary": "no attacker current-health input exists",
             },
-        }
-
-    def slow_receipt(self) -> dict[str, Any]:
-        """The enemy-slow utility boundary receipt (40-60% for 0.5s at full charge)."""
-        return {
+        },
+        "slow": {
             "name": "Tides of Blood slow (utility boundary)",
             "priced": False,
             "slow_level_1": 40.0,
@@ -170,10 +149,9 @@ class _TidesOfBloodBoundaryRules:
                 },
                 "boundary": "utility, not modeled",
             },
-        }
-
-
-TIDES_OF_BLOOD_BOUNDARY_RULES = _TidesOfBloodBoundaryRules()
+        },
+    }
+)
 
 
 @ranked_slot
