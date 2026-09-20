@@ -221,24 +221,32 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Yasuo",
     PACKET_SHA256,
     assumption_overrides=(
-        "Q3 (Gathering Storm at 2 stacks) deals the same sourced damage as a normal Q. Its 0.9s "
-        "knock-up is an authored control interval on the cast's parts.",
-        "E (Sweeping Blade) prices Ride the Wind stacks: base + N x per-stack bonus, capped at 4 "
-        "stacks (the wiki Total Combined Damage)",
-        "P (Way of the Wanderer) Intent is now priced: total crit chance is doubled (capped at "
-        "100%), crits deal 90% of the normal crit damage, and excess crit chance converts to 0.5 "
-        "bonus AD per 1% — applied by the fight engine to autos and Steel Tempest's crit-eligible "
-        "AD part. The Flow shield stays state (no enemy damage)",
-        "Q (Steel Tempest) splits the flat 20-120 base (never crits) from the 105% AD portion "
-        "(crits at the converted crit stats, per the cached description 'damage based on its AD "
-        "ratio can critically strike')",
-        "W (Wind Wall) uses the cached active-duration value as a selected projectile-defense "
-        "window. The scenario can name source slots, specific event ids (w_blocked_event_ids), or "
-        "leave the lists empty for every marked projectile. Event ids are positional per scenario "
-        "('attacker:defender:index'); changes to the build, ranks, or roster renumber them, and "
-        "any selected id that never matches an incoming event is reported on the survival receipt "
-        "as blocked_event_ids_unmatched. R (Last Breath) keeps the reviewed CP10.10 packet "
-        "pricing.",
+        "Q3 (Gathering Storm at 2 stacks) deals the same sourced damage as a normal "
+        "Q.",
+        "Its 0.9s knock-up is an authored control interval on the cast's parts.",
+        "E (Sweeping Blade) prices Ride the Wind stacks: base + N x per-stack bonus, "
+        "capped at 4 stacks.",
+        "That equals the wiki Total Combined Damage row.",
+        "P (Way of the Wanderer) Intent doubles total crit chance, capped at 100%.",
+        "Crits deal 90% of normal crit damage, and excess crit chance converts to 0.5 "
+        "bonus AD per 1%.",
+        "The fight engine applies it to autos and Steel Tempest's crit-eligible AD "
+        "part.",
+        "The Flow shield stays state, with no enemy damage.",
+        "Q (Steel Tempest) splits the flat 20-120 base, which never crits, from the "
+        "105% AD portion.",
+        "That portion crits at the converted crit stats: cached 'damage based on its "
+        "AD ratio can crit'.",
+        "W (Wind Wall) uses the cached active-duration value as a selected "
+        "projectile-defense window.",
+        "The scenario can name source slots or specific event ids "
+        "(w_blocked_event_ids).",
+        "Empty lists mean every marked projectile.",
+        "Event ids are positional per scenario ('attacker:defender:index').",
+        "Build, rank or roster changes renumber them.",
+        "An id that never matches is reported on the survival receipt as "
+        "blocked_event_ids_unmatched.",
+        "R (Last Breath) keeps the reviewed packet pricing.",
     ),
     single_hit_slots=frozenset({"R"}),
     slot_parsers={

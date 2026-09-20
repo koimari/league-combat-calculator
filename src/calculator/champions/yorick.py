@@ -215,20 +215,25 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Yorick",
     PACKET_SHA256,
     assumption_overrides=(
-        "Mist Walker attack damage (15 : 100 by level x stat progression + 20% bonus AD, "
-        "physical) and Maiden attack damage (50/75/100 by R rank + 30% bonus AD, magic — 13.21 "
-        "rank bases) are game-file constants — the wiki pet infobox is stale; verify on patch "
-        "updates against Community Dragon",
-        "Mist Walkers attack at 0.5 : 1.18 attack speed (based on level): the default 5 attacks "
-        "per walker fills the 5-second one-rotation window; pet pathing, HP and leash range are "
-        "not modeled",
-        "Maiden attacks at 1.0 attack speed (default 5 attacks per window); the Touch of the "
-        "Maiden % max-health mark and recast-lane-push are state, not modeled",
+        "Mist Walker attack damage is 15 to 100 by level x stat progression + 20% "
+        "bonus AD physical.",
+        "Maiden attack damage is 50/75/100 by R rank + 30% bonus AD magic, at 13.21 "
+        "rank bases.",
+        "Both are game-file constants, the wiki pet infobox being unreliable.",
+        "Verify on patch updates against Community Dragon.",
+        "Mist Walkers attack at 0.5 to 1.18 attack speed by level.",
+        "The default 5 attacks per walker fills the 5-second one-rotation window.",
+        "Pet pathing, health and leash range are not modeled.",
+        "Maiden attacks at 1.0 attack speed, default 5 attacks per window.",
+        "The Touch of the Maiden %max-health mark and the recast lane push are state, "
+        "not modeled.",
         "The 30% bonus damage Mist Walkers deal against Mourning Mist-marked enemies for 8 attacks "
         "is not modeled (mark state)",
-        "W (Dark Procession) has no enemy-damage formula: the cached 'Wall Health' leveling row is "
-        "the wall's own destructible HP, not a term dealt to an enemy (the pinned packet declares "
-        "the slot kind='no_damage'), so the slot is no_damage rather than an unmodeled gap",
+        "W (Dark Procession) has no enemy-damage formula: the cached Wall Health row "
+        "is the wall's own HP.",
+        "It is not a term dealt to an enemy, and the pinned packet declares the slot "
+        "kind no_damage.",
+        "So W is no_damage rather than an unmodeled gap.",
     ),
     # Q is one empowered swing and E is one globule's splash; neither
     # has a travel or tick phase to place.

@@ -227,14 +227,14 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "E (Spark Surge) prices the dash plus Lightning Rounds: 7 Burst "
-    "Fire rounds x the wiki's 'Burst Fire Bonus Magic Damage' row "
-    "(22-30 + 20% AP, data/champions.json E), the E2-sourced round "
-    "count on Q.",
-    "Lightning Rounds bonus damage is 'increased by 0% : 100% (+ 0% : "
-    "30%) (based on critical strike chance)'; the module scales "
-    "linearly with crit chance, exact at the sourced 0%/100% endpoints.",
-    "The dash itself deals no damage; 'Burst Fire Secondary Target "
-    "Damage' (80-100%) applies to enemies past the first and is outside "
-    "this single-target model.",
+    "E (Spark Surge) prices the dash plus Lightning Rounds: 7 Burst Fire rounds.",
+    "Each is the cached Burst Fire Bonus Magic Damage row, 22 to 30 + 20% AP, the "
+    "round count from Q.",
+    "Lightning Rounds bonus damage is 'increased by 0% : 100% (+ 0% : 30%) based on "
+    "crit chance'.",
+    "The module scales linearly with crit chance, exact at the sourced 0% and 100% "
+    "endpoints.",
+    "The dash itself deals no damage.",
+    "Burst Fire Secondary Target Damage, 80 to 100%, hits enemies past the first, "
+    "outside this model.",
 ]

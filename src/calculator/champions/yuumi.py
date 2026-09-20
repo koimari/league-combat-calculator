@@ -142,60 +142,68 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 ASSUMPTIONS = [
     *ASSUMPTIONS,
-    "E (Zoomies) places its bonus attack speed (the cached row's base plus "
-    "its AP term) as a 3-second window at the first E cast, as Yuumi's own "
-    "grant: the 1v1 surface cannot attach her. Attached, Zoomies affects "
-    "the Anchor instead, and that transfer is outside module sight (the "
-    "shield's anchor transfer is the ally scanner's).",
-    "R (Final Chapter) emits, per cast on the selected teammate (the "
-    "anchor/Best Friend): the sourced Total Heal (150-350 + 60% AP), the "
-    "sourced per-level Best Friend bonus packet (30% : 60% based on "
-    "level, 30/35/40/45/50/55/60% row read at the repo's clamped level "
-    "index — the wiki bracket levels are not in the cache), and one "
-    "overheal-conversion shield per heal packet: max(0, heal - missing "
-    "health) for 1.5s + the full 3.5s channel (lump-at-cast model).  The "
-    "conversion shields are grants into the shared shield ledger; the "
-    "heal actions still book the identical excess as overhealing (kernel "
-    "carve-out applies only to heal-compiled events).",
-    "Feline Friendship (P) pays its sourced self-heal (20 : 120.59 by "
-    "level + 30% AP) on the first damaging hit — a basic attack or "
-    "Prowling Projectile, per the cached innate — that its own per-level "
-    "recharge row (20 : 8s, affectedByCdr false) allows, through this "
-    "module's healing rule (COVERAGE_CHANNELS P -> self_healing_rule).  "
-    "The ANCHOR half of the same heal stays unmodeled: the ally-support "
-    "scanner hangs packets on casts and a passive is never cast, so only "
-    "the self half has a channel.  You and Me!'s heal-and-shield-power "
-    "amplifier is not published; see the W assumption for why.",
-    "W (You and Me!) is no_damage, NOT out_of_scope. The cached entry "
-    "carries damageType null and affects Allies, and every effect is "
-    "attachment, dash, recast or the Best Friend Bonus — there is no "
-    "enemy-damage clause anywhere in the slot, so there is no damage to "
-    "miss. Its two leveling rows are both RECOVERY rows (Heal and Shield "
-    "Power 4/5/6/7/8%, Healing On-Hit 3/4/5/6/7 + 3% AP), read live into "
-    "the emitted row rather than restated as literals. Neither is "
-    "published. The retired receipt blamed the CHANNEL — 'no outgoing "
-    "heal-power kernel hook (the kernel prices received-healing "
-    "multipliers, not caster heal power)' — and that is false: "
-    "heal_and_shield_power_percent is a real stat key, "
-    "damage._apply_stat_buff_ultimates adds any stat key generically, and "
-    "healing_reduction.heal_and_shield_power_factor folds it back for the "
-    "CASTER at pipeline._attach_display_splits and as "
-    "ctx.heal_power(action.attacker) in survival/transitions (verified "
-    "live: an 8% grant on a cast Yuumi slot moves champion_stats "
-    "heal_and_shield_power_percent 0.0 -> 8.0 and self_healing 570.0 -> "
-    "615.6, exactly x1.08). The real blocker is the CONDITION. The bonus "
-    "requires Yuumi to be ATTACHED to a Best Friend, and W's own active is "
-    "'dashes to the target allied champion and attaches to them' — an "
-    "ability a 1v1 surface cannot cast at all. A stat_buff is emitted from "
-    "parse_abilities, which has no roster visibility (SlotCtx exposes no "
-    "teammate; the ally path is the cast-keyed support scanner and its "
-    "_SCOPE_OVERRIDES, which is how E's shield reaches the anchor), so the "
-    "grant could not be gated on an anchor existing and would inflate "
-    "self_healing by up to 8% in every solo Yuumi fight. Withheld as a "
-    "documented rider instead (the Akshan-W convention). The Best Friend's "
-    "healing on-hit is an ALLY grant and has no channel either, and "
-    "attached Yuumi's untargetability and cast-from-anchor position remain "
-    "participant state the engine does not model.",
+    "E (Zoomies) places its bonus attack speed as a 3-second window at the first E "
+    "cast.",
+    "That is the cached row's base plus its AP term, as Yuumi's own grant.",
+    "The 1v1 surface cannot attach her.",
+    "Attached, Zoomies affects the Anchor instead, a transfer outside module sight.",
+    "The shield's anchor transfer is the ally scanner's.",
+    "R (Final Chapter) emits per cast on the selected teammate, the anchor or Best "
+    "Friend.",
+    "It pays the sourced Total Heal, 150 to 350 + 60% AP.",
+    "It adds the sourced per-level Best Friend bonus packet, 30% to 60% by level.",
+    "That row, 30/35/40/45/50/55/60%, is read at the repo's clamped level index.",
+    "The wiki bracket levels are not in the cache.",
+    "One overheal-conversion shield lands per heal packet: max(0, heal - missing "
+    "health).",
+    "It holds 1.5s plus the full 3.5s channel, a lump-at-cast model.",
+    "The conversion shields are grants into the shared shield ledger.",
+    "The heal actions still book the identical excess as overhealing.",
+    "The kernel carve-out applies only to heal-compiled events.",
+    "Feline Friendship (P) pays its sourced self-heal, 20 to 120.59 by level + 30% "
+    "AP.",
+    "P's heal is assumed to fire on the first damaging hit allowed: a basic attack or "
+    "Prowling Projectile.",
+    "Its per-level recharge row, 20 to 8s, affectedByCdr false, is what allows it.",
+    "This module's healing rule authors it (COVERAGE_CHANNELS P to "
+    "self_healing_rule).",
+    "The ANCHOR half of the same heal stays unmodeled: the scanner hangs packets on "
+    "casts.",
+    "A passive is never cast, so only the self half has a channel.",
+    "You and Me!'s heal-and-shield-power amplifier is not published; the W assumption "
+    "says why.",
+    "W (You and Me!) is no_damage, NOT out_of_scope.",
+    "The cached entry carries damageType null and affects Allies.",
+    "Every effect is attachment, dash, recast or the Best Friend Bonus, with no "
+    "enemy-damage clause.",
+    "There is no damage to miss.",
+    "Its two leveling rows are both RECOVERY rows, read live into the emitted row, "
+    "not restated.",
+    "They are Heal and Shield Power 4/5/6/7/8% and Healing On-Hit 3/4/5/6/7 + 3% AP.",
+    "Neither is published, and the blocker is the CONDITION, not the channel.",
+    "heal_and_shield_power_percent is a real stat key and _apply_stat_buff_ultimates "
+    "adds any key.",
+    "healing_reduction.heal_and_shield_power_factor folds it back for the CASTER at "
+    "two call sites.",
+    "Those are pipeline._attach_display_splits and ctx.heal_power(action.attacker) in "
+    "transitions.",
+    "Live: an 8% grant moves heal_and_shield_power_percent 0.0 to 8.0 and "
+    "self_healing 570.0 to 615.6.",
+    "That is exactly x1.08.",
+    "The bonus requires Yuumi to be ATTACHED to a Best Friend.",
+    "W's own active 'dashes to the target allied champion and attaches to them', "
+    "uncastable in a 1v1.",
+    "A stat_buff is emitted from parse_abilities, which has no roster visibility.",
+    "SlotCtx exposes no teammate; the ally path is the cast-keyed support scanner and "
+    "_SCOPE_OVERRIDES.",
+    "That is how E's shield reaches the anchor, a path parse_abilities does not "
+    "model.",
+    "So the grant could not be gated on an anchor and would inflate self_healing up "
+    "to 8% in a solo fight.",
+    "It is withheld as a documented rider, the Akshan-W convention.",
+    "The Best Friend's healing on-hit is an ALLY grant with no channel either.",
+    "Attached Yuumi's untargetability and cast-from-anchor position are participant "
+    "state.",
 ]
 MODULE_COVERAGE = coverage(no_damage="W")
 COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}

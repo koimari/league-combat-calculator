@@ -83,10 +83,10 @@ def _death_mark(
 
 
 ASSUMPTIONS = [
-    "R (Death Mark) stores the fight rotation's pre-mitigation spell "
-    "damage (Q + E raw totals); basic attacks and Shadow copies are not "
-    "tracked in the ability parse, so they are excluded from the stored "
-    "pool.",
+    "R (Death Mark) stores the fight rotation's pre-mitigation spell damage, Q + E "
+    "raw totals.",
+    "Basic attacks and Shadow copies are not tracked in the ability parse, so they "
+    "are excluded.",
     "The mark detonates 3 seconds after cast ('Marked for Death for 3 "
     "seconds ... detonating at the end of the duration').",
     "Q prices one enemy-champion hit; the 60%-reduced beyond-first-target "

@@ -5,31 +5,29 @@ This reads ``.py`` files only.  Markdown is the plugin hook
 ``comment_lint.lint_prose``, which the stop gate runs over every changed ``.md``
 file; the two share no code and no findings.
 
-``tests/test_prose_lint.py`` pins five findings at zero: a function docstring
+``tests/test_prose_lint.py`` pins six findings at zero: a function docstring
 longer than the body it documents, a comment run longer than the function it
 belongs to, prose about what the code was rather than what it is, a section
 banner with no statement under it, which is what an extraction leaves when it
-cuts the bodies out and not the headers, and a module docstring under
-``CHAMPIONS_SCOPE`` over ``MODULE_DOCSTRING_CAP`` lines.  A champion header
-holds what a reader of the module needs today, so a trap belongs in
-``TRAPS.md``, a review stamp in that module's ``SOURCES``, and a project id
-nowhere.
+cuts the bodies out and not the headers, a module docstring under
+``CHAMPIONS_SCOPE`` over ``MODULE_DOCSTRING_CAP`` lines, and an ``ASSUMPTIONS``
+string there over ``ASSUMPTION_CAP`` characters.  A champion header holds what a
+reader of the module needs today, so a trap belongs in ``TRAPS.md``, a review
+stamp in that module's ``SOURCES``, and a project id nowhere.  ``/api/config``
+and ``/api/not-modeled`` publish the assumption strings, so one holds the
+number, the condition and the source and nothing else; a second fact is a
+second string.
 
-A sixth, ``pointer``, names prose citing a campaign document where the reason
+A seventh, ``pointer``, names prose citing a campaign document where the reason
 itself belongs.  It reports rather than failing, under a ceiling the test holds
 and that may only fall; moving it into ``FAILING`` is one edit once the ceiling
 reaches zero.  Prose citing a wiki URL or a game file for a number is evidence,
 and is never reported.
 
-A seventh, ``unsourced_constant``, reports a module-level numeric literal under
+An eighth, ``unsourced_constant``, reports a module-level numeric literal under
 ``CHAMPIONS_SCOPE`` whose provenance nothing states: a citation, a cached field
 name or a composition, either trailing the line or heading the unbroken run of
 assignments it sits in.  It reports under its own ceiling for the same reason.
-
-An eighth, ``long_assumption``, reports an ``ASSUMPTIONS`` string under
-``CHAMPIONS_SCOPE`` over ``ASSUMPTION_CAP`` characters.  ``/api/config`` and
-``/api/not-modeled`` publish these strings, so one holds the number, the
-condition and the source and nothing else; a second fact is a second string.
 
 A comment run belongs to the function holding it, or — when it touches a ``def``
 — to the definition it introduces.  Inside a body the bound is the body; above
@@ -61,8 +59,9 @@ FAILING = (
     "history",
     "dead_banner",
     "long_module_docstring",
+    "long_assumption",
 )
-REPORTING = ("pointer", "unsourced_constant", "long_assumption")
+REPORTING = ("pointer", "unsourced_constant")
 SCOPES = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 FUNCS = (ast.FunctionDef, ast.AsyncFunctionDef)
 

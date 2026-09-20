@@ -133,24 +133,22 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "W (Spell Thief) prices all three orbiting bolts — the wiki's 'Total "
-    "Magic Damage' row (45-165 + 30% AP == 3 x 'Magic Damage Per Bolt', "
-    "data/champions.json W).",
-    "The stolen Spell Shard actives are option-gated no-damage rows: "
-    "Heal heals Zoe, Barrier shields her, and Smite deals true damage "
-    "to monsters/minions — none deals damage to enemy champions in this "
-    "calculator's scope (wiki prose on W).",
-    "The mimicked summoner Heal (w_summoner=1) has no sourced amount: "
-    "summoner-spell values (90 : 345 based on level) are not part of "
-    "data/champions.json, so no heal atom is authored — the option "
-    "stays a no-damage receipt until a summoner-spell atom exists.",
-    "R (Portal Jump) has no enemy-damage formula: it is a blink "
-    "reposition with a static movement-speed lock and a basic-attack "
-    "reset, no term dealt to an enemy (confirmed by the pinned reviewed "
-    "packet's kind='no_damage' declaration for R). R is a cast slot in "
-    "this module (never reassigned away from build_packet_module's "
-    "no_damage branch), so MODULE_COVERAGE reflects a sourced "
-    "no-damage classification rather than an unmodeled gap (no_damage, "
-    "not out_of_scope).",
+    "W (Spell Thief) prices all three orbiting bolts: the wiki Total Magic Damage "
+    "row.",
+    "That is 45 to 165 + 30% AP == 3 x Magic Damage Per Bolt.",
+    "The stolen Spell Shard actives are option-gated no-damage rows.",
+    "Heal heals Zoe, Barrier shields her, and Smite deals true damage to monsters and "
+    "minions.",
+    "None deals damage to an enemy champion in this calculator's scope (wiki prose on "
+    "W).",
+    "The mimicked summoner Heal (w_summoner=1) has no sourced amount.",
+    "Summoner-spell values, 90 to 345 by level, are not part of data/champions.json.",
+    "No heal atom is authored, so the option stays a no-damage receipt until one "
+    "exists.",
+    "R (Portal Jump) has no enemy-damage formula: a blink with a movement lock and an "
+    "attack reset.",
+    "No term is dealt to an enemy, and the reviewed packet declares R kind no_damage.",
+    "R is a cast slot here, so MODULE_COVERAGE records a sourced no_damage, not an "
+    "unmodeled gap.",
 ]
 MODULE_COVERAGE = coverage(no_damage="R")

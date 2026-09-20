@@ -175,16 +175,16 @@ MODULE_COVERAGE = coverage(no_damage="PWE")
 COVERAGE_CHANNELS = {"R": ("starting_revive_defense",)}
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Q's stun is emitted only when the explicit second-bomb state is selected; "
-    "the second bomb detonates the first bomb immediately (so the detonation "
-    "moves from its 3s fuse to the cast boundary) and uses the sourced "
-    "Stun Duration row",
-    "R (Chronoshift) is modeled as the sourced revive state: 600 / 850 / 1100 "
-    "(+ 200% AP) restored after a 3s resurrection on a 120 / 90 / 60s cooldown "
-    "by rank (cached R Heal row).",
-    "P (Time in a Bottle), W (Rewind), and E (Time Warp) carry no sourced "
-    "damage/heal/shield row (P and W leveling are empty; E's only leveling "
-    "row is a Movement Speed Modifier, and slow/haste effects create no "
-    "action downtime in this engine) — all three are no_damage, not "
-    "out_of_scope.",
+    "Q's stun is emitted only when the explicit second-bomb state is selected.",
+    "The second bomb detonates the first immediately, moving it from a 3s fuse to the "
+    "cast boundary.",
+    "It uses the sourced Stun Duration row.",
+    "R (Chronoshift) is the sourced revive state: 600/850/1100 + 200% AP after a 3s "
+    "resurrection.",
+    "Its cooldown is 120/90/60s by rank, from the cached R Heal row.",
+    "P (Time in a Bottle), W (Rewind) and E (Time Warp) carry no sourced damage, heal "
+    "or shield row.",
+    "P and W leveling are empty; E's only row is a Movement Speed Modifier.",
+    "Slow and haste effects create no action downtime here, so all three are "
+    "no_damage.",
 ]

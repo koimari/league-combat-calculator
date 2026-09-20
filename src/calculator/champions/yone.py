@@ -198,12 +198,15 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Yone",
     PACKET_SHA256,
     assumption_overrides=(
-        "Q3 (Gathering Storm at 2 stacks) deals the same sourced damage as a normal Q; its empower "
-        "is the 0.75s knock-up, modeled as crowd-control state, so q_gathering_storm only changes "
-        "the Q row's detail",
+        "Q3 (Gathering Storm at 2 stacks) deals the same sourced damage as a normal "
+        "Q.",
+        "Its empower is the 0.75s knock-up, crowd-control state, so q_gathering_storm "
+        "only moves the detail.",
         "P (Way of the Hunter) soul mark is state",
-        "E (Soul Unbound) stores the sourced percentage of post-mitigation physical and magic "
-        "champion damage from Q/W/R and basic attacks inside each five-second Spirit Form window. "
+        "E (Soul Unbound) stores the sourced share of post-mitigation physical and "
+        "magic champion damage.",
+        "That covers Q, W, R and basic attacks inside each five-second Spirit Form "
+        "window.",
         "The fight engine emits the stored amount as a true-damage recast event.",
         "W (Spirit Cleave) uses the sourced physical row followed by the sourced magic row.",
         "R (Fate Sealed) uses the sourced magic row followed by the sourced physical row.",

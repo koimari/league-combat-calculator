@@ -187,17 +187,22 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zyra",
     PACKET_SHA256,
     assumption_overrides=(
-        "Plant attack damage (15 : 75 by level + 20% AP magic, 0.8 attack speed, 8s duration) is a "
-        "game-file constant (ZyraP PlantDamage); verify on patch updates against Community Dragon",
-        "Thorn Spitters (Q) and Vine Lashers (E) share the same attack formula; the Vine Lasher "
-        "slow and the Stranglethorns enrage flurry (2 shots per attack at 150%) are state, not "
-        "modeled",
-        "The 50% damage falloff for plants that are not the first to attack their target and the "
-        "Monster Hunter bonus vs non-epic monsters are not modeled",
-        "P (Garden of Thorns) has no enemy-damage formula: it periodically spawns Seeds (vision "
-        "wards enemies can walk over to destroy), no term dealt to an enemy (the pinned packet "
-        "declares the slot kind='no_damage'), so the slot is no_damage rather than an "
-        "unmodeled gap",
+        "Plant attack damage is 15 to 75 by level + 20% AP magic, 0.8 attack speed, "
+        "8s duration.",
+        "It is a game-file constant (ZyraP PlantDamage); verify on patch updates "
+        "against Community Dragon.",
+        "Thorn Spitters (Q) and Vine Lashers (E) share one formula; the Vine Lasher "
+        "slow is not modeled.",
+        "The Stranglethorns (R) enrage flurry, 2 shots per attack at 150%, is state, "
+        "not modeled.",
+        "The 50% falloff for plants that are not first to attack their target is not "
+        "modeled.",
+        "Neither is the Monster Hunter bonus against non-epic monsters.",
+        "P (Garden of Thorns) has no enemy-damage formula: it spawns Seeds, vision "
+        "wards enemies destroy.",
+        "No term is dealt to an enemy, and the pinned packet declares the slot kind "
+        "no_damage.",
+        "So P is no_damage rather than an unmodeled gap.",
     ),
     # E's vines burst on the enemies they reach and R damages "as it
     # expands"; neither packet carries a travel or tick phase to place.

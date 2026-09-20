@@ -203,12 +203,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     assumption_overrides=(
         "The Darkin Glaive prices both strikes (Physical Damage per Hit x 2 "
         "== Total Physical Damage).",
-        "Dreaded Return prices both legs — the cached Total Physical "
-        "Damage row (70/110/150/190/230 + 80% bonus AD) == Initial "
-        "Physical Damage + Subsequent Physical Damage.  The generated "
-        "packet priced the Initial leg alone.  The aggregate is declared "
-        "at the cast boundary; the glaive's travel to maximum range is "
-        "not authored.",
+        "Dreaded Return prices both legs: the cached Total Physical Damage row, "
+        "70/110/150/190/230.",
+        "It adds 80% bonus AD and equals Initial + Subsequent Physical Damage.",
+        "W's aggregate is declared at the cast boundary; the glaive's travel to "
+        "maximum range is not authored.",
     ),
     # E's flourish is one hit at the cast; its packet carries no travel or
     # tick phase to place.  W prices two legs and declares their aggregate
@@ -261,15 +260,16 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Cultivation of War) grants bonus attack damage equal to the "
-    "cached per-level Determination row (1.5% : 2.95% AD) per stack, "
-    "replaced at the 12-stack cap by the filled row (36% : 70.87% AD).  "
-    "p_determination_stacks (default 12, the sourced maximum) is the "
-    "stack state the request does not carry; the buff reaches the parse "
-    "context before Q/W/E/R, so their AD ratios scale off it.",
-    "The passive's maximum-stack resurrection — 4 seconds of "
-    "invulnerability restoring 30-75% of maximum health — is not "
-    "priced: the revive axis states a fight's opening health, not a "
+    "P (Cultivation of War) grants bonus AD of the cached per-level Determination row "
+    "per stack.",
+    "That is 1.5% to 2.95% AD, replaced at the 12-stack cap by the filled 36% to "
+    "70.87% AD row.",
+    "p_determination_stacks (default 12, the sourced maximum) feeds Q, W, E and R "
+    "before they parse.",
+    "The buff reaches the parse context first, so their AD ratios scale off it.",
+    "The passive's maximum-stack resurrection is 4s of invulnerability restoring 30 "
+    "to 75% health.",
+    "It is not priced: the revive axis states a fight's opening health, not a "
     "mid-fight trigger.",
 ]
 

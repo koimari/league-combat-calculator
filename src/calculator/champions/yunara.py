@@ -248,25 +248,28 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Vow of the First Lands) rides each critical strike as a share of its "
-    "pre-mitigation damage dealt again as magic (10% + 10% per 100 AP); a "
-    "build with no critical strike chance pays nothing.",
-    "Q's passive bonus magic damage is an on-hit on every basic attack, so "
+    "P (Vow of the First Lands) rides each critical strike: 10% + 10% per 100 AP of "
+    "its pre-mitigation.",
+    "That share is dealt again as magic; a build with no crit chance pays nothing.",
+    "Q's passive bonus magic damage is an on-hit on every basic attack.",
     "Rageblade phantom hits and spellblade re-application apply it again.",
-    "Q's active (Unleash) is placed once, at the Q cast, as a 5-second "
-    "attack-speed window whose swings carry the active on-hit; the Unleash "
-    "stacks a longer fight would rebuild for a second cast are not modeled, "
-    "and the spread attacks (30% AD, 30% on-hit) hit other enemies, never "
-    "the single target.",
-    "W (Arc of Judgment) prices the initial impact plus 4 lingering-bead "
-    "ticks at 0.25s intervals over the 1-second linger (Linger Magic "
-    "Damage per Tick x 4 == Total Expanded Damage; per-tick is 15% of "
-    "the initial impact).",
-    "R (Transcend One's Self) is a buff, not direct damage: the zero-"
-    "damage R entry documents the Transcendent State; r_transcendent "
-    "(default False) switches W to the empowered Arc of Ruin (base "
-    "160/320/480 by R rank + 120% bonus AD + 75% AP) and keeps Unleash "
-    "active for the whole fight (exact up to the 15-second state).",
+    "Q's active (Unleash) is placed once, at the Q cast, as a 5-second attack-speed "
+    "window.",
+    "The swings inside it carry the active on-hit.",
+    "Q's Unleash stacks a longer fight would rebuild for a second cast are not "
+    "modeled.",
+    "The spread attacks, 30% AD and 30% on-hit, hit other enemies, never the single "
+    "target.",
+    "W (Arc of Judgment) prices the initial impact plus 4 lingering-bead ticks at "
+    "0.25s intervals.",
+    "That is the 1-second linger: per-tick x 4 == Total Expanded Damage, each 15% of "
+    "the impact.",
+    "R (Transcend One's Self) is a buff, not direct damage; its zero-damage entry "
+    "documents the state.",
+    "r_transcendent (default False) switches W to Arc of Ruin, 160/320/480 by R rank "
+    "+ 120% bonus AD.",
+    "Arc of Ruin adds 75% AP, and Unleash stays active for the whole fight, exact to "
+    "the 15-second state.",
 ]
 OPTIONS.append(
     {

@@ -151,8 +151,9 @@ OPTIONS = [
 ASSUMPTIONS = [
     "Short Fuse structure bonus (175% damage, 87.5% AP vs turrets) not "
     "modeled — champion-fight calculator",
-    "Short Fuse proc count is user-set (default 2); its per-ability-cast "
-    "cooldown refund (4/5/6s) is applied against the authored cast timeline",
+    "Short Fuse proc count is user-set, default 2.",
+    "Its per-ability-cast cooldown refund, 4/5/6s, applies against the authored cast "
+    "timeline.",
     "Q bounces don't change damage; single explosion assumed to hit",
     "W turret-execute threshold (Demolition) not modeled — turrets only",
     "E slow and W knockback are utility, no damage contribution",

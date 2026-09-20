@@ -19,7 +19,6 @@ PENDING: tuple[str, ...] = ()
 CEILINGS = {
     "pointer": (559, "state the fact instead of citing a campaign document"),
     "unsourced_constant": (69, "cite the cached field, the source or the composition"),
-    "long_assumption": (46, "one published assumption holds one fact"),
 }
 
 #: One assumption at the cap and one a character past it, so the champion-tree

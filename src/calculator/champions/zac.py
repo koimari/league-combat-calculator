@@ -149,9 +149,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Zac",
     PACKET_SHA256,
     assumption_overrides=(
-        "Let's Bounce! prices the initial bounce plus 3 reduced bounces "
-        "(Magic Damage Per Hit + 3 x Reduced Damage Per Hit == Total Magic "
-        "Damage).",
+        "Let's Bounce! prices the initial bounce plus 3 reduced bounces.",
+        "That is per-hit + 3 x reduced per-hit == Total Magic Damage.",
     ),
     # E's landing and W's explosion are one hit each at the cast.  W states
     # its certification through a slot parser because it is a
@@ -193,22 +192,23 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 COVERAGE_CHANNELS = {"P": ("starting_revive_defense", "self_healing_rule")}
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Q (Stretching Strikes) prices both arm strikes: 2 x the sourced "
-    "per-hit 'Magic Damage' row == the wiki's 'Total Magic Damage' row "
-    "(data/champions.json Q; 120-360 + 60% AP + 6% of bonus health at "
-    "rank 5); the second strike replaces Zac's next basic attack while "
-    "the tether persists (0.25s cast).",
-    "P (Cell Division) is modeled as the sourced revive state: 50% maximum "
-    "health restored after the level-bracketed resurrection window "
-    "(8 / 7 / 6 / 5 / 4s at levels 1 / 6 / 10 / 13 / 17) on a 300s cooldown "
-    "(cached passive prose; all four bloblets assumed to survive).",
-    "P emits a state row with NO damage part: the packet generator's "
-    "'targetMaxHp' ratio is a mislabeled self-heal-on-chunk term ('heal "
-    "for 4% : 8.47% of HIS maximum health', not the target's), so it is "
-    "not published in the damage vocabulary at all. The revive and the "
-    "chunk heal are what the engine prices for the slot, through the "
-    "starting_revive_defense and self_healing_rule channels this module "
-    "names in COVERAGE_CHANNELS.",
+    "Q (Stretching Strikes) prices both arm strikes: 2 x the sourced per-hit Magic "
+    "Damage row.",
+    "That equals the wiki Total Magic Damage row, 120 to 360 + 60% AP + 6% of bonus "
+    "health at rank 5.",
+    "The second strike replaces Zac's next basic attack while the tether persists, a "
+    "0.25s cast.",
+    "P (Cell Division) is the sourced revive state: 50% maximum health after the "
+    "resurrection window.",
+    "That window is 8/7/6/5/4s at levels 1/6/10/13/17, on a 300s cooldown (cached "
+    "passive prose).",
+    "P assumes all four bloblets survive.",
+    "P emits a state row with NO damage part.",
+    "The generator's 'targetMaxHp' ratio is a mislabeled self-heal-on-chunk term.",
+    "The cache reads 'heal for 4% : 8.47% of HIS maximum health', not the target's.",
+    "So it is not published in the damage vocabulary at all.",
+    "The revive and the chunk heal are what the engine prices, through the named "
+    "COVERAGE_CHANNELS.",
 ]
 
 

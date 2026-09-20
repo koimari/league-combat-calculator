@@ -181,21 +181,22 @@ OPTIONS: list[dict[str, Any]] = [
 ASSUMPTIONS = [
     "Passive procs every 3rd damaging hit; autos AND damaging ability "
     "hits (Q first cast, Q recast, E, R) all count stacks",
-    "Passive damage is % of target max health with AP-scaled percent "
-    "(1% + 2.7% per 100 AP) — wiki prose; the JSON only carries the "
-    "monster cap",
+    "Passive damage is % of target maximum health at 1% + 2.7% per 100 AP, wiki "
+    "prose.",
+    "The JSON carries only the monster cap.",
     "Passive healing/Spirits not modeled (no enemy damage)",
     "Q recast always fires once per Q cast (auto-recast at mark end)",
     "Q recast missing-HP scaling evaluated against the fight sim's "
     "tracked target HP (BotRK-style decreasing-HP model)",
-    "Q subsequent bolts (the sourced 'Subsequent Bolt Minimum/Maximum "
-    "Magic Damage' rows, exactly 20% of the main recast) are priced "
-    "per additional marked enemy selected via q_marked_enemies (default "
-    "0 = single-target); each expunge bolt passing through the primary "
-    "target is missing-health interpolated like the main recast",
-    "W (Across the Veil) carries no enemy-damage attribute (damageType: "
-    "None, dash/invisibility/MS leveling rows only); it emits a sourced "
-    "no_damage row",
+    "Q's subsequent bolts are the sourced Subsequent Bolt rows, exactly 20% of the "
+    "main recast.",
+    "They are priced per additional marked enemy via q_marked_enemies (default 0 = "
+    "single target).",
+    "Each expunge bolt passing through the primary target is missing-health "
+    "interpolated like the recast.",
+    "W (Across the Veil) carries no enemy-damage attribute: damageType None, dash and "
+    "movement rows only.",
+    "It emits a sourced no_damage row.",
     "R rift zone / slows are utility — only the leap damage is modeled",
 ]
 
