@@ -161,8 +161,22 @@ OPTIONS = [
             ),
         },
     ),
-    int_option("w_ticks", 8, minimum=1, maximum=8, label="Bountiful Harvest ticks"),
-    int_option("r_ticks", 20, minimum=1, maximum=20, label="Crowstorm ticks"),
+    int_option(
+        "w_ticks",
+        8,
+        minimum=1,
+        maximum=8,
+        label="Bountiful Harvest ticks",
+        rotation={"role": "self_state", "slot": "W"},
+    ),
+    int_option(
+        "r_ticks",
+        20,
+        minimum=1,
+        maximum=20,
+        label="Crowstorm ticks",
+        rotation={"role": "self_state", "slot": "R"},
+    ),
 ]
 
 ASSUMPTIONS = [

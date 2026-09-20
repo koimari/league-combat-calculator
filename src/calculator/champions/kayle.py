@@ -96,8 +96,18 @@ SLOTS = {
     "R": _kayle_r,
 }
 OPTIONS = [
-    bool_option("p_exalted", True, label="Exalted Aflame wave"),
-    bool_option("e_empowered", True, label="Starfire empowered attack"),
+    bool_option(
+        "p_exalted",
+        True,
+        label="Exalted Aflame wave",
+        rotation={"role": "self_state", "slot": "P"},
+    ),
+    bool_option(
+        "e_empowered",
+        True,
+        label="Starfire empowered attack",
+        rotation={"role": "irrelevant", "slot": "E"},
+    ),
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Kayle")

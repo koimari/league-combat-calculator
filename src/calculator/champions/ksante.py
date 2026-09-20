@@ -290,7 +290,12 @@ MODULE_CC = {"Q": "slow", "W": CC_PER_PART, "R": "stun", "P": "none", "E": "none
 parse_abilities = build_parser(SLOTS, "K'Sante", cc_kinds=MODULE_CC)
 OPTIONS = [
     int_option(
-        "p_marks", 1, minimum=0, maximum=8, label="Dauntless Instinct marked attacks"
+        "p_marks",
+        1,
+        minimum=0,
+        maximum=8,
+        label="Dauntless Instinct marked attacks",
+        rotation={"role": "self_state", "slot": "P"},
     ),
     float_option(
         "w_charge",
@@ -300,9 +305,20 @@ OPTIONS = [
         label="Path Maker charge fraction",
         step=0.25,
         state=KSANTE_PATH_MAKER_RULE.public_receipt(),
+        rotation={"role": "self_state", "slot": "W"},
     ),
-    bool_option("r_terrain", False, label="All Out terrain strike"),
-    bool_option("all_out", False, label="All Out state"),
+    bool_option(
+        "r_terrain",
+        False,
+        label="All Out terrain strike",
+        rotation={"role": "irrelevant", "slot": "R"},
+    ),
+    bool_option(
+        "all_out",
+        False,
+        label="All Out state",
+        rotation={"role": "self_state", "slot": "R"},
+    ),
 ]
 ASSUMPTIONS = [
     "Dauntless Instinct is an explicit marked-attack proc, not an assumed proc on every auto.",

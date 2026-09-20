@@ -481,8 +481,22 @@ MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "P": "none", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Kindred", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    int_option("marks", 0, minimum=0, maximum=25, label="Mark of the Kindred stacks"),
-    int_option("w_attacks", 3, minimum=1, maximum=8, label="Wolf attacks (W)"),
+    int_option(
+        "marks",
+        0,
+        minimum=0,
+        maximum=25,
+        label="Mark of the Kindred stacks",
+        rotation={"role": "self_state", "slot": "P"},
+    ),
+    int_option(
+        "w_attacks",
+        3,
+        minimum=1,
+        maximum=8,
+        label="Wolf attacks (W)",
+        rotation={"role": "self_state", "slot": "W"},
+    ),
     int_option(
         "w_hunters_vigor_stacks",
         100,
@@ -493,6 +507,7 @@ OPTIONS = [
             "walks the attacks that fill the bar"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "W"},
     ),
     int_option(
         "e_stacks",
@@ -504,6 +519,7 @@ OPTIONS = [
             "attacks and pounces wherever the third one lands"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "E"},
     ),
 ]
 

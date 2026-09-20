@@ -105,11 +105,26 @@ parse_abilities = build_parser(SLOTS, "Fiora", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     int_option(
-        "p_vitals", 0, minimum=0, maximum=4, label="Duelist's Dance vitals triggered"
+        "p_vitals",
+        0,
+        minimum=0,
+        maximum=4,
+        label="Duelist's Dance vitals triggered",
+        rotation={"role": "self_state", "slot": "P"},
     ),
-    int_option("e_attacks", 2, minimum=1, maximum=2, label="Bladework attacks"),
+    int_option(
+        "e_attacks",
+        2,
+        minimum=1,
+        maximum=2,
+        label="Bladework attacks",
+        rotation={"role": "self_state", "slot": "E"},
+    ),
     bool_option(
-        "w_active", False, label="W (Riposte) active against selected incoming events"
+        "w_active",
+        False,
+        label="W (Riposte) active against selected incoming events",
+        rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
         "w_active_from",
@@ -117,6 +132,7 @@ OPTIONS = [
         minimum=0.0,
         maximum=120.0,
         label="W active start time in seconds",
+        rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
         "w_active_seconds",
@@ -124,6 +140,7 @@ OPTIONS = [
         minimum=0.0,
         maximum=0.75,
         label="W active seconds; zero uses the sourced 0.75 second duration",
+        rotation={"role": "self_state", "slot": "W"},
     ),
     {
         "key": "w_blocked_sources",
@@ -133,6 +150,7 @@ OPTIONS = [
         "label": (
             "Incoming sources to negate; an empty list negates all matching events"
         ),
+        "rotation": {"role": "irrelevant", "slot": "W"},
     },
 ]
 

@@ -135,9 +135,22 @@ OPTIONS = [
             "and the level refund each cast takes off it"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "P"},
     ),
-    int_option("mines_hit", 4, minimum=1, maximum=11, label="E mines hit"),
-    bool_option("r_sweet_spot", True, label="R hits epicenter (sweet spot)"),
+    int_option(
+        "mines_hit",
+        4,
+        minimum=1,
+        maximum=11,
+        label="E mines hit",
+        rotation={"role": "self_state", "slot": "E"},
+    ),
+    bool_option(
+        "r_sweet_spot",
+        True,
+        label="R hits epicenter (sweet spot)",
+        rotation={"role": "irrelevant", "slot": "R"},
+    ),
 ]
 
 ASSUMPTIONS = [

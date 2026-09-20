@@ -344,6 +344,12 @@ OPTIONS: list[dict[str, Any]] = [
             "that applied Blight inside its cached window"
         ),
         derives=True,
+        rotation={
+            "role": "consume",
+            "slot": "Q",
+            "condition": "blight",
+            "kind": "stack_consume",
+        },
     ),
     float_option(
         "q_charge_fraction",
@@ -354,12 +360,14 @@ OPTIONS: list[dict[str, Any]] = [
         "arrow interpolates between the sourced Minimum and Maximum "
         "damage rows)",
         step=0.25,
+        rotation={"role": "self_state", "slot": "Q"},
     ),
     bool_option(
         "w_active_empower",
         True,
         label="W active empowers the next Piercing Arrow (+% of the "
         "target's missing health as magic damage)",
+        rotation={"role": "self_state", "slot": "W"},
     ),
     int_option(
         "target_missing_hp_pct",
@@ -367,6 +375,12 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=0,
         maximum=100,
         label="Target missing health %",
+        rotation={
+            "role": "execute",
+            "slot": "Q",
+            "condition": "execute",
+            "kind": "execute",
+        },
     ),
     bool_option(
         "p_champion_takedown",

@@ -124,6 +124,7 @@ OPTIONS = [
             {"value": "darkin", "label": "Darkin Slayer"},
             {"value": "shadow_assassin", "label": "Shadow Assassin"},
         ],
+        "rotation": {"role": "irrelevant", "slot": "P"},
     }
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)

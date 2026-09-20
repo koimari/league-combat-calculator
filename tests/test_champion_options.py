@@ -43,6 +43,7 @@ class TestGetChampionOptionsMeta:
                 "type": "bool",
                 "default": True,
                 "label": "E Condemn into wall",
+                "rotation": {"role": "irrelevant", "slot": "E"},
             },
             {
                 "key": "q_tumble_reset",
@@ -55,6 +56,7 @@ class TestGetChampionOptionsMeta:
                     "Trait_AttackReset tag; the acceleration magnitude is "
                     "script-side)"
                 ),
+                "rotation": {"role": "irrelevant", "slot": "Q"},
             },
         ]
         assert any("Silver Bolts" in text for text in meta["assumptions"])

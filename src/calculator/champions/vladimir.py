@@ -372,6 +372,7 @@ OPTIONS = [
         True,
         label="Hemoplague mark active: the target takes 10% increased "
         "damage from all sources while marked (R-first opening)",
+        rotation={"role": "setup", "slot": "R", "condition": "amp", "kind": "amp"},
     ),
 ]
 

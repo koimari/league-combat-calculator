@@ -285,5 +285,6 @@ OPTIONS.append(
         "type": "bool",
         "default": False,
         "label": "R Transcendent State (Unleash stays active, W becomes Arc of Ruin)",
+        "rotation": {"role": "self_state", "slot": "R"},
     }
 )

@@ -384,6 +384,7 @@ OPTIONS = [
         "choices": [
             {"value": key, "label": label} for key, label in _WEAPON_LABELS.items()
         ],
+        "rotation": {"role": "irrelevant", "slot": "Q"},
     },
     int_option(
         "aphelios_calibrum_marks",
@@ -400,6 +401,7 @@ OPTIONS = [
         minimum=0,
         maximum=6,
         label="Weapon Master AD points",
+        rotation={"role": "self_state", "slot": "P"},
     ),
     int_option(
         "aphelios_bonus_as_points",
@@ -407,6 +409,7 @@ OPTIONS = [
         minimum=0,
         maximum=6,
         label="Weapon Master AS points",
+        rotation={"role": "self_state", "slot": "P"},
     ),
     int_option(
         "aphelios_lethality_points",
@@ -414,11 +417,13 @@ OPTIONS = [
         minimum=0,
         maximum=6,
         label="Weapon Master lethality points",
+        rotation={"role": "self_state", "slot": "P"},
     ),
     bool_option(
         "aphelios_overheal_shield",
         True,
         label="Severum overheal converts into a shield",
+        rotation={"role": "self_state", "slot": "P"},
     ),
 ]
 

@@ -243,7 +243,12 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 OPTIONS = [
     int_option(
-        "plant_count", 1, minimum=0, maximum=8, label="Plants attacking the target"
+        "plant_count",
+        1,
+        minimum=0,
+        maximum=8,
+        label="Plants attacking the target",
+        rotation={"role": "self_state", "slot": "R"},
     ),
     int_option(
         "plant_attacks",
@@ -254,6 +259,7 @@ OPTIONS = [
             "Plant attacks per plant; unset derives them from the plant's "
             "0.8 attack speed over its sourced 8-second life"
         ),
+        rotation={"role": "self_state", "slot": "R"},
     ),
 ]
 

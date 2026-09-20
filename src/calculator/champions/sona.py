@@ -189,6 +189,7 @@ OPTIONS = [
         minimum=0,
         maximum=10,
         label="Power Chords landed",
+        rotation={"role": "self_state", "slot": "P"},
     ),
 ]
 

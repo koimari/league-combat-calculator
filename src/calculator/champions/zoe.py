@@ -132,6 +132,7 @@ OPTIONS = [
         minimum=0,
         maximum=3,
         label="W Spell Shard mimic (0 Spell Thief bolts / 1 Heal / 2 Barrier / 3 Smite)",
+        rotation={"role": "irrelevant", "slot": "W"},
     ),
 ]
 

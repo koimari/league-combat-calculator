@@ -453,4 +453,5 @@ def _variant_slot(
         "label": f"{slot} packet variant",
         "min": 0,
         "max": len(variants) - 1,
+        "rotation": {"role": "irrelevant", "slot": slot},
     }

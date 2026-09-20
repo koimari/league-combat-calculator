@@ -118,9 +118,24 @@ MODULE_CC = {"Q": "slow", "W": CC_PER_PART, "P": "none", "E": "none", "R": "none
 
 parse_abilities = build_parser(SLOTS, "Karma", cc_kinds=MODULE_CC)
 OPTIONS = [
-    bool_option("q_mantra", False, label="Mantra Soulflare"),
-    bool_option("w_renewal", False, label="Mantra Renewal"),
-    bool_option("w_tether_holds", True, label="Focused Resolve tether completes"),
+    bool_option(
+        "q_mantra",
+        False,
+        label="Mantra Soulflare",
+        rotation={"role": "self_state", "slot": "Q"},
+    ),
+    bool_option(
+        "w_renewal",
+        False,
+        label="Mantra Renewal",
+        rotation={"role": "self_state", "slot": "W"},
+    ),
+    bool_option(
+        "w_tether_holds",
+        True,
+        label="Focused Resolve tether completes",
+        rotation={"role": "irrelevant", "slot": "W"},
+    ),
 ]
 ASSUMPTIONS = [
     "Mantra is an explicit next-ability state; Soulflare and Renewal use the Mantra "

@@ -144,6 +144,7 @@ OPTIONS: list[dict[str, Any]] = [
         maximum=18,
         label="Essence Fragment stacks (9 = the passive heal is ready and "
         "consumes them)",
+        rotation={"role": "self_state", "slot": "P"},
     ),
 ]
 

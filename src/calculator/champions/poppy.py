@@ -130,7 +130,12 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 OPTIONS = [
     *list(OPTIONS),
-    bool_option("r_charged", False, label="Fully-charged Keeper's Verdict (R)"),
+    bool_option(
+        "r_charged",
+        False,
+        label="Fully-charged Keeper's Verdict (R)",
+        rotation={"role": "irrelevant", "slot": "R"},
+    ),
 ]
 
 ASSUMPTIONS = [

@@ -312,6 +312,7 @@ OPTIONS: list[dict[str, Any]] = [
         label="Splinters of Wrath stacks (40: Q gains a 2nd charge; 60: W "
         "bonus true damage; 100: R executes below 15% max HP; 120: +15% "
         "total AP)",
+        rotation={"role": "self_state", "slot": "P"},
     ),
     int_option(
         "r_spheres",
@@ -319,6 +320,7 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=_R_MIN_SPHERES,
         maximum=_R_MAX_SPHERES,
         label="Dark Spheres hit by R (3 fired + up to 4 already on the field)",
+        rotation={"role": "self_state", "slot": "R"},
     ),
 ]
 

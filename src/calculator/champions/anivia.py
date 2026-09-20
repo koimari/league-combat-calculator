@@ -165,6 +165,7 @@ OPTIONS = [
         maximum=30,
         label="R duration (seconds)",
         step=0.5,
+        rotation={"role": "self_state", "slot": "R"},
     ),
 ]
 

@@ -233,8 +233,18 @@ CUSTOM_CAST_ORDER_UNAVAILABLE_REASON = (
 )
 
 OPTIONS = [
-    bool_option("wall_contact", True, label="Target crosses Wall of Pain"),
-    bool_option("q_isolated", True, label="Lay Waste hits only one target"),
+    bool_option(
+        "wall_contact",
+        True,
+        label="Target crosses Wall of Pain",
+        rotation={"role": "irrelevant", "slot": "W"},
+    ),
+    bool_option(
+        "q_isolated",
+        True,
+        label="Lay Waste hits only one target",
+        rotation={"role": "self_state", "slot": "Q"},
+    ),
     int_option(
         "e_ticks",
         5,
@@ -242,6 +252,7 @@ OPTIONS = [
         maximum=_E_MAX_SELECTED_TICKS,
         label="Defile damage ticks (one rotation)",
         step=1,
+        rotation={"role": "self_state", "slot": "E"},
     ),
 ]
 

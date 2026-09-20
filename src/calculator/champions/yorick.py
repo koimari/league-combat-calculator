@@ -269,6 +269,7 @@ OPTIONS = [
         minimum=0,
         maximum=4,
         label="Mist Walkers attacking the target",
+        rotation={"role": "self_state", "slot": "R"},
     ),
     int_option(
         "mist_walker_attacks",
@@ -279,6 +280,7 @@ OPTIONS = [
             "Mist Walker attacks per walker; unset derives them from the "
             "walker's cadence over the fight window"
         ),
+        rotation={"role": "self_state", "slot": "R"},
     ),
     int_option(
         "maiden_attacks",
@@ -289,6 +291,7 @@ OPTIONS = [
             "Maiden attacks; unset derives them from her cadence over the "
             "fight window"
         ),
+        rotation={"role": "self_state", "slot": "R"},
     ),
 ]
 

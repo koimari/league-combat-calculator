@@ -125,8 +125,20 @@ MODULE_CC = {"Q": "none", "W": "none", "E": "slow", "R": "none", "P": "none"}
 
 parse_abilities = build_parser(SLOTS, "Kassadin", cc_kinds=MODULE_CC)
 OPTIONS = [
-    bool_option("w_empowered", True, label="Nether Blade empowered attack"),
-    int_option("r_stacks", 0, minimum=0, maximum=4, label="Riftwalk stacks"),
+    bool_option(
+        "w_empowered",
+        True,
+        label="Nether Blade empowered attack",
+        rotation={"role": "irrelevant", "slot": "W"},
+    ),
+    int_option(
+        "r_stacks",
+        0,
+        minimum=0,
+        maximum=4,
+        label="Riftwalk stacks",
+        rotation={"role": "self_state", "slot": "R"},
+    ),
 ]
 ASSUMPTIONS = [
     "Void Stone's magic-damage reduction is defensive and never enters TDD.",

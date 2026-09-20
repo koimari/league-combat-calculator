@@ -221,12 +221,32 @@ parse_abilities = build_parser(SLOTS, "Gwen", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     int_option(
-        "q_snippy_stacks", 4, minimum=0, maximum=4, label="Snippy stacks consumed by Q"
+        "q_snippy_stacks",
+        4,
+        minimum=0,
+        maximum=4,
+        label="Snippy stacks consumed by Q",
+        rotation={"role": "self_state", "slot": "Q"},
     ),
-    bool_option("q_center", True, label="Q center hit"),
-    int_option("r_casts", 3, minimum=1, maximum=3, label="Needlework casts"),
     bool_option(
-        "w_active", False, label="W (Hallowed Mist) active against selected skillshots"
+        "q_center",
+        True,
+        label="Q center hit",
+        rotation={"role": "irrelevant", "slot": "Q"},
+    ),
+    int_option(
+        "r_casts",
+        3,
+        minimum=1,
+        maximum=3,
+        label="Needlework casts",
+        rotation={"role": "self_state", "slot": "R"},
+    ),
+    bool_option(
+        "w_active",
+        False,
+        label="W (Hallowed Mist) active against selected skillshots",
+        rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
         "w_active_from",
@@ -234,6 +254,7 @@ OPTIONS = [
         minimum=0.0,
         maximum=120.0,
         label="W active start time in seconds",
+        rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
         "w_active_seconds",
@@ -241,6 +262,7 @@ OPTIONS = [
         minimum=0.0,
         maximum=4.0,
         label="W active seconds; zero uses the sourced four-second duration",
+        rotation={"role": "self_state", "slot": "W"},
     ),
     {
         "key": "w_blocked_skillshots",
@@ -250,6 +272,7 @@ OPTIONS = [
         "label": (
             "Skillshot slots to destroy; an empty list destroys all marked skillshots"
         ),
+        "rotation": {"role": "irrelevant", "slot": "W"},
     },
 ]
 

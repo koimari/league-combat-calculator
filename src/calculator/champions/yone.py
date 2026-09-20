@@ -232,5 +232,6 @@ OPTIONS = [
         minimum=0,
         maximum=2,
         label="Gathering Storm stacks (2 = Q3 ready)",
+        rotation={"role": "self_state", "slot": "Q"},
     ),
 ]

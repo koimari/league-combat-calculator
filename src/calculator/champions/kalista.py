@@ -235,6 +235,12 @@ OPTIONS = [
             "spear before the cast, with the module's floor of one"
         ),
         derives=True,
+        rotation={
+            "role": "consume",
+            "slot": "E",
+            "condition": "rend",
+            "kind": "stack_consume",
+        },
     ),
     bool_option(
         "soul_mark_proc",

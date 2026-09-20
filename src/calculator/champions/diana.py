@@ -242,6 +242,7 @@ OPTIONS: list[dict[str, Any]] = [
         maximum=_R_MAX_CHAMPIONS_PULLED,
         label="Champions pulled by R (beam gains 35/60/85 +15% AP per "
         "champion beyond the first)",
+        rotation={"role": "self_state", "slot": "R"},
     ),
 ]
 

@@ -143,6 +143,7 @@ OPTIONS = [
         minimum=0,
         maximum=3,
         label="Acquired Taste stacks before Q",
+        rotation={"role": "self_state", "slot": "Q"},
     ),
     bool_option(
         "e_convert_grey_shield",

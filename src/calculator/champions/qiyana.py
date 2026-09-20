@@ -138,9 +138,13 @@ OPTIONS = [
         minimum=0,
         maximum=2,
         label="Q element (edge, brush/river, terrain)",
+        rotation={"role": "irrelevant", "slot": "Q"},
     ),
     bool_option(
-        "q_target_below_half", False, label="Terrain Q target below 50% health"
+        "q_target_below_half",
+        False,
+        label="Terrain Q target below 50% health",
+        rotation={"role": "self_state", "slot": "Q"},
     ),
 ]
 

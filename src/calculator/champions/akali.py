@@ -87,7 +87,14 @@ def _perfect_execution(
 
 
 OPTIONS = [
-    int_option("passive_procs", 4, minimum=0, maximum=20, label="Passive procs"),
+    int_option(
+        "passive_procs",
+        4,
+        minimum=0,
+        maximum=20,
+        label="Passive procs",
+        rotation={"role": "self_state", "slot": "P"},
+    ),
 ]
 
 ASSUMPTIONS = [

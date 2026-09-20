@@ -326,6 +326,12 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=0,
         maximum=100,
         label="Target missing health %",
+        rotation={
+            "role": "execute",
+            "slot": "E",
+            "condition": "execute",
+            "kind": "execute",
+        },
     ),
     int_option(
         "lavender_stacks",
@@ -333,11 +339,22 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=0,
         maximum=200,
         label="Permanent Lavender stacks (takedowns)",
+        rotation={"role": "self_state", "slot": "P"},
     ),
     int_option(
-        "q_casts", 4, minimum=1, maximum=4, label="Q casts (directional charges used)"
+        "q_casts",
+        4,
+        minimum=1,
+        maximum=4,
+        label="Q casts (directional charges used)",
+        rotation={"role": "self_state", "slot": "Q"},
     ),
-    bool_option("true_form", False, label="True Form active (consumed Void Coral)"),
+    bool_option(
+        "true_form",
+        False,
+        label="True Form active (consumed Void Coral)",
+        rotation={"role": "self_state", "slot": "R"},
+    ),
 ]
 
 ASSUMPTIONS = [

@@ -198,6 +198,7 @@ OPTIONS: list[dict[str, Any]] = [
         maximum=200,
         label="Chimes collected",
         state=BARD_TRAVELERS_CALL_RULE.public_receipt(),
+        rotation={"role": "self_state", "slot": "P"},
     ),
 ]
 

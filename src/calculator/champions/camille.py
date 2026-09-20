@@ -228,7 +228,12 @@ def _hextech_ultimatum(
 
 
 OPTIONS: list[dict[str, Any]] = [
-    bool_option("w_outer_cone", True, label="W Outer cone (sweet spot)"),
+    bool_option(
+        "w_outer_cone",
+        True,
+        label="W Outer cone (sweet spot)",
+        rotation={"role": "irrelevant", "slot": "W"},
+    ),
 ]
 
 # HARDCODED: verify on patch updates — Adaptive Defenses' shield amount,

@@ -154,6 +154,7 @@ OPTIONS = [
         label="Fury (0-100): at 100, Furious Bite deals 120% damage as true "
         "damage (the cached True Damage row)",
         step=25,
+        rotation={"role": "self_state", "slot": "E"},
     ),
     int_option(
         "p_burrow_fury",

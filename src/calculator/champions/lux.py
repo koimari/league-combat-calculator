@@ -148,6 +148,12 @@ OPTIONS = [
             "and the swings or Final Spark that consume the mark"
         ),
         derives=True,
+        rotation={
+            "role": "consume",
+            "slot": "R",
+            "condition": "illumination",
+            "kind": "mark_consume",
+        },
     ),
 ]
 

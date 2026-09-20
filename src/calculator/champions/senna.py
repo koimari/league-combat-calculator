@@ -299,6 +299,7 @@ OPTIONS = [
         maximum=300,
         label="Mist (soul) stacks",
         state=SENNA_MIST_RULE.public_receipt(),
+        rotation={"role": "self_state", "slot": "P"},
     ),
 ]
 

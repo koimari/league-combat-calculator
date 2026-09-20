@@ -139,6 +139,7 @@ OPTIONS = [
         minimum=0,
         maximum=6,
         label="Arcane Perfection stacks (R barrage bonus)",
+        rotation={"role": "self_state", "slot": "R"},
     ),
 ]
 

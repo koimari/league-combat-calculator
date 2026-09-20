@@ -264,6 +264,7 @@ OPTIONS = [
         minimum=0,
         maximum=2,
         label="Gathering Storm stacks (2 = Q3 ready)",
+        rotation={"role": "self_state", "slot": "Q"},
     ),
     int_option(
         "e_stacks",
@@ -275,9 +276,13 @@ OPTIONS = [
             "from the dashes before it"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "E"},
     ),
     bool_option(
-        "w_active", False, label="W (Wind Wall) active against selected skillshots"
+        "w_active",
+        False,
+        label="W (Wind Wall) active against selected skillshots",
+        rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
         "w_active_from",
@@ -285,6 +290,7 @@ OPTIONS = [
         minimum=0.0,
         maximum=120.0,
         label="W active start time in seconds",
+        rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
         "w_active_seconds",
@@ -292,6 +298,7 @@ OPTIONS = [
         minimum=0.0,
         maximum=4.0,
         label="W active seconds; zero uses the source duration",
+        rotation={"role": "self_state", "slot": "W"},
     ),
     {
         "key": "w_blocked_skillshots",
@@ -301,6 +308,7 @@ OPTIONS = [
         "label": (
             "Skillshot slots to block; an empty list blocks all marked " "skillshots"
         ),
+        "rotation": {"role": "irrelevant", "slot": "W"},
     },
     {
         "key": "w_blocked_event_ids",
@@ -313,6 +321,7 @@ OPTIONS = [
             "scenario: builds, ranks, or roster changes renumber them. "
             "An empty list blocks nothing by event id."
         ),
+        "rotation": {"role": "irrelevant", "slot": "W"},
     },
 ]
 

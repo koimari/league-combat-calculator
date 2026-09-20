@@ -245,7 +245,12 @@ MODULE_CC = {
 parse_abilities = build_parser(SLOTS, "Hwei", cc_kinds=MODULE_CC)
 OPTIONS = [
     int_option(
-        "q_variant", 0, minimum=0, maximum=2, label="Disaster subject (QQ/QW/QE)"
+        "q_variant",
+        0,
+        minimum=0,
+        maximum=2,
+        label="Disaster subject (QQ/QW/QE)",
+        rotation={"role": "irrelevant", "slot": "Q"},
     ),
     float_option(
         "q_missing_health",
@@ -254,18 +259,53 @@ OPTIONS = [
         maximum=1.0,
         label="Severing Bolt missing-health fraction",
         step=0.1,
+        rotation={
+            "role": "execute",
+            "slot": "Q",
+            "condition": "execute",
+            "kind": "execute",
+        },
     ),
     int_option(
-        "q_explosions", 7, minimum=1, maximum=7, label="Molten Fissure explosions"
+        "q_explosions",
+        7,
+        minimum=1,
+        maximum=7,
+        label="Molten Fissure explosions",
+        rotation={"role": "self_state", "slot": "Q"},
     ),
     int_option(
-        "w_variant", 0, minimum=0, maximum=2, label="Serenity subject (WQ/WW/WE)"
+        "w_variant",
+        0,
+        minimum=0,
+        maximum=2,
+        label="Serenity subject (WQ/WW/WE)",
+        rotation={"role": "irrelevant", "slot": "W"},
     ),
-    int_option("we_hits", 3, minimum=1, maximum=3, label="Stirring Lights hits"),
     int_option(
-        "e_variant", 0, minimum=0, maximum=2, label="Torment subject (EQ/EW/EE)"
+        "we_hits",
+        3,
+        minimum=1,
+        maximum=3,
+        label="Stirring Lights hits",
+        rotation={"role": "self_state", "slot": "E"},
     ),
-    int_option("p_triggers", 1, minimum=0, maximum=8, label="Signature detonations"),
+    int_option(
+        "e_variant",
+        0,
+        minimum=0,
+        maximum=2,
+        label="Torment subject (EQ/EW/EE)",
+        rotation={"role": "irrelevant", "slot": "E"},
+    ),
+    int_option(
+        "p_triggers",
+        1,
+        minimum=0,
+        maximum=8,
+        label="Signature detonations",
+        rotation={"role": "self_state", "slot": "P"},
+    ),
 ]
 ASSUMPTIONS = [
     "The three subject toggles are state-only; the selected QQ/QW/QE, WQ/WW/WE and "

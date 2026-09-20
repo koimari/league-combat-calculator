@@ -186,7 +186,14 @@ SLOTS = {
 MODULE_COVERAGE = coverage(no_damage="PR")
 
 OPTIONS = [
-    int_option("w_card", 0, minimum=0, maximum=2, label="Pick a Card selection"),
+    int_option(
+        "w_card",
+        0,
+        minimum=0,
+        maximum=2,
+        label="Pick a Card selection",
+        rotation={"role": "irrelevant", "slot": "W"},
+    ),
 ]
 
 # Reviewed crowd control, read from the cached kit.  Q (Wild Cards)

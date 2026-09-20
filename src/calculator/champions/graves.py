@@ -175,7 +175,12 @@ MODULE_CC = {"Q": "none", "W": "slow", "R": "none", "P": "none", "E": "none"}
 parse_abilities = build_parser(SLOTS, "Graves", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    bool_option("p_critical_pellets", False, label="Critical pellet branch"),
+    bool_option(
+        "p_critical_pellets",
+        False,
+        label="Critical pellet branch",
+        rotation={"role": "irrelevant", "slot": "P"},
+    ),
     int_option(
         "e_true_grit_stacks",
         1,
@@ -186,8 +191,14 @@ OPTIONS = [
             "and serves its fight mean"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "E"},
     ),
-    bool_option("r_secondary_target", False, label="Collateral Damage secondary cone"),
+    bool_option(
+        "r_secondary_target",
+        False,
+        label="Collateral Damage secondary cone",
+        rotation={"role": "irrelevant", "slot": "R"},
+    ),
 ]
 
 ASSUMPTIONS = [

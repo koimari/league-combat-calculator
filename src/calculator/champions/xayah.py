@@ -353,6 +353,7 @@ OPTIONS = [
             "bank them and the swings that spend them"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "P"},
     ),
     int_option(
         "bladecaller_feathers",
@@ -360,6 +361,7 @@ OPTIONS = [
         minimum=0,
         maximum=_MAX_FEATHERS,
         label="Feathers recalled by Bladecaller",
+        rotation={"role": "self_state", "slot": "E"},
     ),
 ]
 

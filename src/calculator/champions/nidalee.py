@@ -151,6 +151,7 @@ OPTIONS.append(
         "min": 1,
         "max": _W_TRAP_CAP,
         "label": "Sprung Bushwhack traps",
+        "rotation": {"role": "self_state", "slot": "W"},
     }
 )
 MODULE_COVERAGE = coverage(no_damage="PR")

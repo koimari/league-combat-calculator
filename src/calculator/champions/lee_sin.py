@@ -120,7 +120,12 @@ MODULE_CC = {"Q": "none", "E": "slow", "R": "knockback", "P": "none", "W": "none
 parse_abilities = build_parser(SLOTS, "Lee Sin", cc_kinds=MODULE_CC)
 
 OPTIONS: list[dict[str, Any]] = [
-    bool_option("q_recast", True, label="Resonating Strike recast follows Sonic Wave"),
+    bool_option(
+        "q_recast",
+        True,
+        label="Resonating Strike recast follows Sonic Wave",
+        rotation={"role": "self_state", "slot": "Q"},
+    ),
 ]
 
 ASSUMPTIONS = [

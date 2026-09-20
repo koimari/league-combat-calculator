@@ -162,6 +162,7 @@ OPTIONS = [
         maximum=1.0,
         label="Q charge fraction",
         step=0.25,
+        rotation={"role": "self_state", "slot": "Q"},
     ),
 ]
 

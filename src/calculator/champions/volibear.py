@@ -266,8 +266,19 @@ OPTIONS = [
             "attack or ability, and arms Lightning Claws where it fills"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "P"},
     ),
-    bool_option("w_wounded", True, label="W hits an already-Wounded target (2nd bite)"),
+    bool_option(
+        "w_wounded",
+        True,
+        label="W hits an already-Wounded target (2nd bite)",
+        rotation={
+            "role": "consume",
+            "slot": "W",
+            "condition": "wounded",
+            "kind": "mark_consume",
+        },
+    ),
 ]
 
 ASSUMPTIONS = [

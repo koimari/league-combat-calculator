@@ -155,6 +155,7 @@ OPTIONS: list[dict[str, Any]] = [
         maximum=6,
         label="Echoing Flames legs that fire (each shotgun leg procs once "
         "per its cooldown)",
+        rotation={"role": "self_state", "slot": "P"},
     ),
 ]
 

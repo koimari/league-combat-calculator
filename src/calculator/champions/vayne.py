@@ -116,7 +116,12 @@ def _silver_bolts(
 
 
 OPTIONS = [
-    bool_option("condemn_wall", True, label="E Condemn into wall"),
+    bool_option(
+        "condemn_wall",
+        True,
+        label="E Condemn into wall",
+        rotation={"role": "irrelevant", "slot": "E"},
+    ),
     bool_option(
         "q_tumble_reset",
         False,
@@ -124,6 +129,7 @@ OPTIONS = [
         "buys one extra basic attack (the wiki: 'Tumble resets Vayne's "
         "basic attack timer'; the binary Trait_AttackReset tag; the "
         "acceleration magnitude is script-side)",
+        rotation={"role": "irrelevant", "slot": "Q"},
     ),
 ]
 

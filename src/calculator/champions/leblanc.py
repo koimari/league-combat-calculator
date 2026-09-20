@@ -158,8 +158,23 @@ SLOTS = {
     "R": _mimic,
 }
 OPTIONS = [
-    bool_option("q_consume", True, label="Sigil mark is consumed"),
-    bool_option("e_chain_complete", True, label="Ethereal Chains completes"),
+    bool_option(
+        "q_consume",
+        True,
+        label="Sigil mark is consumed",
+        rotation={
+            "role": "setup",
+            "slot": "Q",
+            "condition": "sigil",
+            "kind": "mark_applier",
+        },
+    ),
+    bool_option(
+        "e_chain_complete",
+        True,
+        label="Ethereal Chains completes",
+        rotation={"role": "irrelevant", "slot": "E"},
+    ),
     {
         "key": "r_mimic",
         "type": "select",
@@ -170,6 +185,7 @@ OPTIONS = [
             {"value": "W", "label": "Mimic W"},
             {"value": "E", "label": "Mimic E"},
         ],
+        "rotation": {"role": "irrelevant", "slot": "R"},
     },
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)

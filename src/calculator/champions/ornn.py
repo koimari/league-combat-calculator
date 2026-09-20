@@ -218,7 +218,16 @@ MODULE_CC = {"Q": "slow", "W": "none", "E": "none", "R": CC_PER_PART}
 
 parse_abilities = build_parser(SLOTS, "Ornn", cc_kinds=MODULE_CC)
 
-OPTIONS = [int_option("r_passes", 2, minimum=1, maximum=2, label="R elemental passes")]
+OPTIONS = [
+    int_option(
+        "r_passes",
+        2,
+        minimum=1,
+        maximum=2,
+        label="R elemental passes",
+        rotation={"role": "self_state", "slot": "R"},
+    )
+]
 
 ASSUMPTIONS = [
     "Bellows Breath uses five sourced 0.15-second ticks and exposes the final-gout "

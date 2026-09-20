@@ -92,7 +92,14 @@ SLOTS = {
     "R": delayed_damage(delay=_R_IMPACT_SECONDS, attr="Magic Damage", dmg_type="magic"),
 }
 OPTIONS = [
-    int_option("p_marks", 1, minimum=0, maximum=6, label="Sunlight ally detonations")
+    int_option(
+        "p_marks",
+        1,
+        minimum=0,
+        maximum=6,
+        label="Sunlight ally detonations",
+        rotation={"role": "self_state", "slot": "P"},
+    )
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Leona")

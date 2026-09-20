@@ -290,9 +290,19 @@ parse_abilities = build_parser(
     SLOTS, "Jhin", cc_kinds=MODULE_CC, charge_rules=CHARGE_RULES
 )
 OPTIONS = [
-    bool_option("p_final_shot", False, label="Whisper fourth shot"),
+    bool_option(
+        "p_final_shot",
+        False,
+        label="Whisper fourth shot",
+        rotation={"role": "irrelevant", "slot": "P"},
+    ),
     int_option(
-        "p_shot_number", 1, minimum=1, maximum=4, label="Shots into the 4-round clip"
+        "p_shot_number",
+        1,
+        minimum=1,
+        maximum=4,
+        label="Shots into the 4-round clip",
+        rotation={"role": "self_state", "slot": "P"},
     ),
     float_option(
         "p_missing_health",
@@ -301,13 +311,40 @@ OPTIONS = [
         maximum=1.0,
         label="Target missing-health ratio on the final round",
         step=0.05,
+        rotation={"role": "irrelevant", "slot": "P"},
     ),
-    int_option("q_bounces", 1, minimum=1, maximum=4, label="Dancing Grenade bounces"),
     int_option(
-        "q_target_deaths", 0, minimum=0, maximum=3, label="Deaths after grenade hit"
+        "q_bounces",
+        1,
+        minimum=1,
+        maximum=4,
+        label="Dancing Grenade bounces",
+        rotation={"role": "self_state", "slot": "Q"},
     ),
-    int_option("e_traps", 1, minimum=1, maximum=2, label="Lotus Trap detonations"),
-    int_option("r_shots", 4, minimum=1, maximum=4, label="Curtain Call bullets"),
+    int_option(
+        "q_target_deaths",
+        0,
+        minimum=0,
+        maximum=3,
+        label="Deaths after grenade hit",
+        rotation={"role": "self_state", "slot": "Q"},
+    ),
+    int_option(
+        "e_traps",
+        1,
+        minimum=1,
+        maximum=2,
+        label="Lotus Trap detonations",
+        rotation={"role": "self_state", "slot": "E"},
+    ),
+    int_option(
+        "r_shots",
+        4,
+        minimum=1,
+        maximum=4,
+        label="Curtain Call bullets",
+        rotation={"role": "self_state", "slot": "R"},
+    ),
 ]
 ASSUMPTIONS = [
     "Every Moment Matters uses the cached level scaling plus explicit "

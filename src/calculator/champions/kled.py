@@ -150,7 +150,12 @@ SLOTS = {
     "R": _charge,
 }
 OPTIONS = [
-    bool_option("q_pull", True, label="Bear Trap pull resolves"),
+    bool_option(
+        "q_pull",
+        True,
+        label="Bear Trap pull resolves",
+        rotation={"role": "irrelevant", "slot": "Q"},
+    ),
     float_option(
         "charge_fraction",
         1.0,
@@ -158,6 +163,7 @@ OPTIONS = [
         maximum=1.0,
         label="Chaaaaaaaarge distance",
         step=0.25,
+        rotation={"role": "self_state", "slot": "R"},
     ),
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)

@@ -90,8 +90,18 @@ SLOTS = {
     ),
 }
 OPTIONS = [
-    bool_option("p_ready", True, label="Unseen Threat armed"),
-    bool_option("q_isolated", True, label="Isolated target"),
+    bool_option(
+        "p_ready",
+        True,
+        label="Unseen Threat armed",
+        rotation={"role": "self_state", "slot": "P"},
+    ),
+    bool_option(
+        "q_isolated",
+        True,
+        label="Isolated target",
+        rotation={"role": "self_state", "slot": "Q"},
+    ),
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Kha'Zix")

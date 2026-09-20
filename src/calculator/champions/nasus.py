@@ -215,6 +215,7 @@ OPTIONS: list[dict[str, Any]] = [
         maximum=5000,
         label="Permanent Siphoning Strike stacks (each adds 1 bonus damage "
         "to Q; 3 per minion kill, 12 per champion kill)",
+        rotation={"role": "self_state", "slot": "Q"},
     ),
 ]
 

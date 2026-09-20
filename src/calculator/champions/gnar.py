@@ -359,9 +359,24 @@ def _r(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    bool_option("mega", False, label="Mega Gnar form"),
-    bool_option("q_pickup", True, label="Catch Q (boomerang/boulder)"),
-    bool_option("r_wall", True, label="R into wall (1.5x damage + sourced stun)"),
+    bool_option(
+        "mega",
+        False,
+        label="Mega Gnar form",
+        rotation={"role": "self_state", "slot": "R"},
+    ),
+    bool_option(
+        "q_pickup",
+        True,
+        label="Catch Q (boomerang/boulder)",
+        rotation={"role": "irrelevant", "slot": "Q"},
+    ),
+    bool_option(
+        "r_wall",
+        True,
+        label="R into wall (1.5x damage + sourced stun)",
+        rotation={"role": "irrelevant", "slot": "R"},
+    ),
     int_option(
         "q_secondary_targets",
         0,

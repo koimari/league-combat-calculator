@@ -184,6 +184,7 @@ OPTIONS.append(
         "type": "bool",
         "default": True,
         "label": "Q Discharge empowered next basic attack",
+        "rotation": {"role": "self_state", "slot": "Q"},
     }
 )
 MODULE_COVERAGE = coverage(out_of_scope="P", no_damage="W")

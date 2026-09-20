@@ -377,6 +377,7 @@ OPTIONS = [
         maximum=_FEROCITY_MAX,
         label="Ferocity stacks (4 = empowered next)",
         state=RENGAR_FEROCITY_STACK_RULE.public_receipt(),
+        rotation={"role": "self_state", "slot": "P"},
     ),
     bool_option(
         "r_thrill_attack",

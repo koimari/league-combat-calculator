@@ -327,6 +327,7 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=0,
         maximum=_R_MAX_CHARGES,
         label="R charges stored at fight start",
+        rotation={"role": "self_state", "slot": "R"},
     ),
     int_option(
         "r_big_one_cycle_position",
@@ -334,6 +335,7 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=0,
         maximum=_R_BIG_ONE_CYCLE - 1,
         label="Missiles already fired toward the next Big One",
+        rotation={"role": "self_state", "slot": "R"},
     ),
     float_option(
         "w_patch_uptime",
@@ -342,6 +344,7 @@ OPTIONS: list[dict[str, Any]] = [
         maximum=1.0,
         label="Fraction of W's 2.5s patch duration the target stays in it",
         step=0.1,
+        rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
         "e_cone_uptime",
@@ -350,6 +353,7 @@ OPTIONS: list[dict[str, Any]] = [
         maximum=1.0,
         label="Fraction of E's 4s duration the target stays in the cone",
         step=0.1,
+        rotation={"role": "self_state", "slot": "E"},
     ),
 ]
 

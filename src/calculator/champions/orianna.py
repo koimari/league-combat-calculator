@@ -156,7 +156,12 @@ OPTIONS: list[dict[str, Any]] = [
         "sourced 70% Reduced Damage row)",
         rotation={"role": "irrelevant", "slot": "Q"},
     ),
-    bool_option("e_passes_through_target", True, label="E ball passes through target"),
+    bool_option(
+        "e_passes_through_target",
+        True,
+        label="E ball passes through target",
+        rotation={"role": "irrelevant", "slot": "E"},
+    ),
 ]
 
 ASSUMPTIONS = [

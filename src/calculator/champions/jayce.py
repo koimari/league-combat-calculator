@@ -466,9 +466,17 @@ def _transform(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    bool_option("hammer_stance", False, label="Hammer stance (Cannon when off)"),
     bool_option(
-        "accelerated_q", True, label="Shock Blast through Acceleration Gate (+40%)"
+        "hammer_stance",
+        False,
+        label="Hammer stance (Cannon when off)",
+        rotation={"role": "irrelevant", "slot": "R"},
+    ),
+    bool_option(
+        "accelerated_q",
+        True,
+        label="Shock Blast through Acceleration Gate (+40%)",
+        rotation={"role": "irrelevant", "slot": "Q"},
     ),
 ]
 

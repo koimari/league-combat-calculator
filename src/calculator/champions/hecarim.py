@@ -267,6 +267,7 @@ OPTIONS = [
         minimum=0.0,
         maximum=500.0,
         label="Bonus movement speed",
+        rotation={"role": "self_state", "slot": "auto_stream"},
     ),
     int_option(
         "q_stacks",
@@ -278,9 +279,15 @@ OPTIONS = [
             "shorten the cooldown to the next cast as well as raising its damage"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "Q"},
     ),
     int_option(
-        "w_ticks", _W_TICKS, minimum=1, maximum=_W_TICKS, label="Spirit of Dread ticks"
+        "w_ticks",
+        _W_TICKS,
+        minimum=1,
+        maximum=_W_TICKS,
+        label="Spirit of Dread ticks",
+        rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
         "e_charge",
@@ -289,6 +296,7 @@ OPTIONS = [
         maximum=1.0,
         label="Devastating Charge distance fraction",
         step=0.25,
+        rotation={"role": "self_state", "slot": "E"},
     ),
 ]
 ASSUMPTIONS = [

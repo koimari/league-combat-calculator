@@ -203,11 +203,22 @@ def _petrifying_gaze(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS: list[dict[str, Any]] = [
-    bool_option("target_poisoned", True, label="Target poisoned (E enhanced damage)"),
+    bool_option(
+        "target_poisoned",
+        True,
+        label="Target poisoned (E enhanced damage)",
+        rotation={
+            "role": "consume",
+            "slot": "E",
+            "condition": "poison",
+            "kind": "dot_consume",
+        },
+    ),
     bool_option(
         "r_target_facing",
         True,
         label="R target faces Cassiopeia (stun instead of slow)",
+        rotation={"role": "irrelevant", "slot": "R"},
     ),
 ]
 

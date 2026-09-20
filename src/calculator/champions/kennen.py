@@ -251,8 +251,20 @@ SLOTS = {
     "R": _slicing_maelstrom,
 }
 OPTIONS = [
-    bool_option("w_empowered", True, label="Four-stack Electrical Surge attack"),
-    int_option("r_bolts", 6, minimum=1, maximum=6, label="Slicing Maelstrom bolts"),
+    bool_option(
+        "w_empowered",
+        True,
+        label="Four-stack Electrical Surge attack",
+        rotation={"role": "irrelevant", "slot": "W"},
+    ),
+    int_option(
+        "r_bolts",
+        6,
+        minimum=1,
+        maximum=6,
+        label="Slicing Maelstrom bolts",
+        rotation={"role": "self_state", "slot": "R"},
+    ),
     int_option(
         "mark_stacks",
         0,
@@ -260,6 +272,7 @@ OPTIONS = [
         maximum=2,
         label="Marks of the Storm already on the target (a third would "
         "already have stunned)",
+        rotation={"role": "self_state", "slot": "P"},
     ),
 ]
 ASSUMPTIONS = [

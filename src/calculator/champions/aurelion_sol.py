@@ -365,9 +365,20 @@ OPTIONS: list[dict[str, Any]] = [
         maximum=999,
         label="Stardust stacks",
         state=AURELION_SOL_STARDUST_RULE.public_receipt(),
+        rotation={"role": "self_state", "slot": "P"},
     ),
-    bool_option("w_active", False, label="W (Astral Flight) active"),
-    bool_option("r_empowered", False, label="R empowered (The Skies Descend)"),
+    bool_option(
+        "w_active",
+        False,
+        label="W (Astral Flight) active",
+        rotation={"role": "self_state", "slot": "W"},
+    ),
+    bool_option(
+        "r_empowered",
+        False,
+        label="R empowered (The Skies Descend)",
+        rotation={"role": "self_state", "slot": "R"},
+    ),
     int_option(
         "q_secondary_targets",
         0,

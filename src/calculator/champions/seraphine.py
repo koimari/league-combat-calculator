@@ -281,11 +281,13 @@ OPTIONS = [
         minimum=0,
         maximum=_NOTE_CAP,
         label="Notes on the empowered attack",
+        rotation={"role": "self_state", "slot": "P"},
     ),
     bool_option(
         "w_already_shielded",
         False,
         label="W caster already has a shield for the first pulse",
+        rotation={"role": "self_state", "slot": "W"},
     ),
 ]
 

@@ -162,6 +162,7 @@ OPTIONS = [
             "that stack Wound and the swings that spend three"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "P"},
     ),
 ]
 

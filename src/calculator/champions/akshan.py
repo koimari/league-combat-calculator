@@ -388,8 +388,16 @@ OPTIONS = [
             "and ability hits that stack it"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "P"},
     ),
-    int_option("e_shots", 5, minimum=0, maximum=20, label="E shots fired"),
+    int_option(
+        "e_shots",
+        5,
+        minimum=0,
+        maximum=20,
+        label="E shots fired",
+        rotation={"role": "self_state", "slot": "E"},
+    ),
 ]
 
 ASSUMPTIONS = [

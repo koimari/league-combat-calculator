@@ -238,15 +238,20 @@ OPTIONS = [
         minimum=0,
         maximum=6,
         label="Style stacks (6 = S rank, R ready)",
+        rotation={"role": "self_state", "slot": "P"},
     ),
     bool_option(
         "p_blade_zone",
         True,
         label="Samira fights inside her 200-unit blade zone (blade attacks; "
         "Flair slashes) — the Daredevil Impulse rider's range gate",
+        rotation={"role": "self_state", "slot": "P"},
     ),
     bool_option(
-        "w_active", False, label="W (Blade Whirl) active against selected skillshots"
+        "w_active",
+        False,
+        label="W (Blade Whirl) active against selected skillshots",
+        rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
         "w_active_from",
@@ -254,6 +259,7 @@ OPTIONS = [
         minimum=0.0,
         maximum=120.0,
         label="W active start time in seconds",
+        rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
         "w_active_seconds",
@@ -261,6 +267,7 @@ OPTIONS = [
         minimum=0.0,
         maximum=0.75,
         label="W active seconds; zero uses the sourced 0.75 second duration",
+        rotation={"role": "self_state", "slot": "W"},
     ),
     {
         "key": "w_blocked_skillshots",
@@ -268,6 +275,7 @@ OPTIONS = [
         "default": [],
         "max_items": 24,
         "label": "Skillshot slots to destroy; an empty list destroys all marked skillshots",
+        "rotation": {"role": "irrelevant", "slot": "W"},
     },
 ]
 

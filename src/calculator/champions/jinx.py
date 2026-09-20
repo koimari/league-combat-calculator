@@ -173,6 +173,7 @@ OPTIONS = [
             {"value": "minigun", "label": "Pow-Pow minigun"},
             {"value": "rocket", "label": "Fishbones rocket launcher"},
         ],
+        "rotation": {"role": "irrelevant", "slot": "Q"},
     },
     int_option(
         "jinx_rev_up_stacks",
@@ -184,6 +185,7 @@ OPTIONS = [
             "attack, so the swings speed up as they land"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "Q"},
     ),
     int_option(
         "jinx_get_excited_stacks",
@@ -191,5 +193,6 @@ OPTIONS = [
         minimum=0,
         maximum=5,
         label="Get Excited! champion stacks",
+        rotation={"role": "self_state", "slot": "P"},
     ),
 ]

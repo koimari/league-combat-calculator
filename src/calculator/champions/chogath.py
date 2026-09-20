@@ -203,6 +203,7 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=0,
         maximum=15,
         label="Feast stacks",
+        rotation={"role": "self_state", "slot": "R"},
     ),
     int_option(
         "p_carnivore_kills",

@@ -320,6 +320,12 @@ OPTIONS: list[dict[str, Any]] = [
         maximum=_POISON_MAX_STACKS,
         label="Deadly Venom stacks on the target when the fight opens "
         "(6 = fully stacked)",
+        rotation={
+            "role": "consume",
+            "slot": "E",
+            "condition": "poison",
+            "kind": "stack_consume",
+        },
     ),
     bool_option(
         "q_ambush_break",

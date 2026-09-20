@@ -126,9 +126,28 @@ SLOTS = {
 }
 
 OPTIONS: list[dict[str, Any]] = [
-    int_option("q_casts", 3, minimum=1, maximum=3, label="Ritual Nails casts"),
-    int_option("soul_nails", 0, minimum=0, maximum=3, label="Soul Nails stacks"),
-    bool_option("e_dash", True, label="Ashen Pursuit dash"),
+    int_option(
+        "q_casts",
+        3,
+        minimum=1,
+        maximum=3,
+        label="Ritual Nails casts",
+        rotation={"role": "self_state", "slot": "Q"},
+    ),
+    int_option(
+        "soul_nails",
+        0,
+        minimum=0,
+        maximum=3,
+        label="Soul Nails stacks",
+        rotation={"role": "self_state", "slot": "P"},
+    ),
+    bool_option(
+        "e_dash",
+        True,
+        label="Ashen Pursuit dash",
+        rotation={"role": "self_state", "slot": "E"},
+    ),
 ]
 
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)

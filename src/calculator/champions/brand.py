@@ -158,7 +158,12 @@ def _blaze(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
 
 OPTIONS: list[dict[str, Any]] = [
     int_option(
-        "r_bounces", 3, minimum=1, maximum=3, label="R bounces hitting the target"
+        "r_bounces",
+        3,
+        minimum=1,
+        maximum=3,
+        label="R bounces hitting the target",
+        rotation={"role": "self_state", "slot": "R"},
     ),
 ]
 

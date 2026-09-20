@@ -153,7 +153,10 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 OPTIONS = [
     bool_option(
-        "sapling_empowered", True, label="Sapling thrown into brush (empowered burn)"
+        "sapling_empowered",
+        True,
+        label="Sapling thrown into brush (empowered burn)",
+        rotation={"role": "irrelevant", "slot": "E"},
     ),
 ]
 

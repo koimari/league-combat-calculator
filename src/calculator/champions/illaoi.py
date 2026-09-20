@@ -135,7 +135,14 @@ MODULE_CC = {"W": "none", "R": "none", "P": "none", "Q": "none", "E": "slow"}
 
 parse_abilities = build_parser(SLOTS, "Illaoi", cc_kinds=MODULE_CC)
 OPTIONS = [
-    int_option("p_tentacles", 1, minimum=0, maximum=12, label="Tentacle strikes")
+    int_option(
+        "p_tentacles",
+        1,
+        minimum=0,
+        maximum=12,
+        label="Tentacle strikes",
+        rotation={"role": "self_state", "slot": "P"},
+    )
 ]
 ASSUMPTIONS = [
     "Tentacle strikes use the level-scaled parent formula and Q rank increase; the "

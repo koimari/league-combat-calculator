@@ -306,6 +306,7 @@ OPTIONS.append(
         "min": 1,
         "max": 5,
         "label": "Shroom detonations (Noxious Trap)",
+        "rotation": {"role": "self_state", "slot": "R"},
     }
 )
 ASSUMPTIONS.extend(

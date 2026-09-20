@@ -188,8 +188,18 @@ def _living_artillery(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    bool_option("q_shred", True, label="Apply Q Resistance Shred"),
-    bool_option("w_active", True, label="W Active (Bio-Arcane Barrage)"),
+    bool_option(
+        "q_shred",
+        True,
+        label="Apply Q Resistance Shred",
+        rotation={"role": "self_state", "slot": "Q"},
+    ),
+    bool_option(
+        "w_active",
+        True,
+        label="W Active (Bio-Arcane Barrage)",
+        rotation={"role": "self_state", "slot": "W"},
+    ),
 ]
 
 ASSUMPTIONS = [

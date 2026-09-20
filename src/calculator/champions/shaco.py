@@ -314,6 +314,7 @@ OPTIONS.append(
         "min": 0,
         "max": 20,
         "label": "Backstab attacks (basic attacks landing from behind)",
+        "rotation": {"role": "self_state", "slot": "P"},
     }
 )
 OPTIONS.append(
@@ -324,6 +325,7 @@ OPTIONS.append(
         "min": 1,
         "max": _BOX_MAX_ATTACKS,
         "label": "Jack in the Box attacks",
+        "rotation": {"role": "self_state", "slot": "W"},
     }
 )
 OPTIONS.append(
@@ -332,6 +334,12 @@ OPTIONS.append(
         "type": "bool",
         "default": False,
         "label": "E hits a target below 30% max HP (increased damage)",
+        "rotation": {
+            "role": "execute",
+            "slot": "E",
+            "condition": "execute",
+            "kind": "execute",
+        },
     }
 )
 OPTIONS.append(
@@ -345,5 +353,6 @@ OPTIONS.append(
             "R clone basic attacks; unset derives them from Shaco's own "
             "attack speed over the clone's sourced lifetime"
         ),
+        "rotation": {"role": "self_state", "slot": "R"},
     }
 )

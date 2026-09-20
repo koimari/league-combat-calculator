@@ -285,10 +285,19 @@ OPTIONS = [
             "cooldown, which a Powder Keg explosion would reset"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "P"},
     ),
-    bool_option("r_fire_at_will", False, label="Cannon Barrage Fire at Will upgrade"),
     bool_option(
-        "r_deaths_daughter", False, label="Cannon Barrage Death's Daughter upgrade"
+        "r_fire_at_will",
+        False,
+        label="Cannon Barrage Fire at Will upgrade",
+        rotation={"role": "irrelevant", "slot": "R"},
+    ),
+    bool_option(
+        "r_deaths_daughter",
+        False,
+        label="Cannon Barrage Death's Daughter upgrade",
+        rotation={"role": "irrelevant", "slot": "R"},
     ),
 ]
 

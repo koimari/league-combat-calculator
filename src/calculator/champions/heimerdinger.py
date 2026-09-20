@@ -302,11 +302,37 @@ parse_abilities = build_parser(
 )
 OPTIONS = [
     int_option(
-        "q_variant", 0, minimum=0, maximum=1, label="Turret variant (Evolution/Apex)"
+        "q_variant",
+        0,
+        minimum=0,
+        maximum=1,
+        label="Turret variant (Evolution/Apex)",
+        rotation={"role": "irrelevant", "slot": "Q"},
     ),
-    int_option("q_turrets", 3, minimum=1, maximum=3, label="Deployed turrets"),
-    int_option("q_turret_attacks", 3, minimum=1, maximum=12, label="Turret attacks"),
-    int_option("q_beams", 1, minimum=0, maximum=3, label="Charged beams"),
+    int_option(
+        "q_turrets",
+        3,
+        minimum=1,
+        maximum=3,
+        label="Deployed turrets",
+        rotation={"role": "self_state", "slot": "Q"},
+    ),
+    int_option(
+        "q_turret_attacks",
+        3,
+        minimum=1,
+        maximum=12,
+        label="Turret attacks",
+        rotation={"role": "self_state", "slot": "Q"},
+    ),
+    int_option(
+        "q_beams",
+        1,
+        minimum=0,
+        maximum=3,
+        label="Charged beams",
+        rotation={"role": "self_state", "slot": "Q"},
+    ),
     int_option(
         "w_rockets",
         5,
@@ -314,6 +340,7 @@ OPTIONS = [
         maximum=5,
         label="Rockets hitting the target",
         state=HEIMER_W_ROCKETS_RULE.public_receipt(),
+        rotation={"role": "self_state", "slot": "W"},
     ),
     int_option(
         "e_upgrade",
@@ -322,6 +349,7 @@ OPTIONS = [
         maximum=1,
         label="Grenade variant",
         state=HEIMER_E_GRENADE_RULE.public_receipt(),
+        rotation={"role": "irrelevant", "slot": "E"},
     ),
 ]
 ASSUMPTIONS = [

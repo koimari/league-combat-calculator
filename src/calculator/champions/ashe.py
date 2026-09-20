@@ -213,7 +213,12 @@ _hawkshot = no_damage_slot(
 
 
 OPTIONS = [
-    bool_option("q_active", True, label="Ranger's Focus active"),
+    bool_option(
+        "q_active",
+        True,
+        label="Ranger's Focus active",
+        rotation={"role": "self_state", "slot": "Q"},
+    ),
     int_option(
         "q_focus_stacks",
         4,
@@ -225,6 +230,7 @@ OPTIONS = [
         ),
         state=ASHE_FOCUS_STACK_RULE.public_receipt(),
         derives=True,
+        rotation={"role": "self_state", "slot": "Q"},
     ),
 ]
 

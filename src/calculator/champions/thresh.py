@@ -177,7 +177,12 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 OPTIONS = [
     *list(OPTIONS),
     int_option(
-        "souls", _DEFAULT_SOULS, minimum=0, maximum=_MAX_SOULS, label="Souls collected"
+        "souls",
+        _DEFAULT_SOULS,
+        minimum=0,
+        maximum=_MAX_SOULS,
+        label="Souls collected",
+        rotation={"role": "self_state", "slot": "P"},
     ),
 ]
 

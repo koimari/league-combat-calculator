@@ -210,6 +210,7 @@ OPTIONS: list[dict[str, Any]] = [
             "timer and the 3s an ability hit takes off it"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "P"},
     ),
     float_option(
         "w_charge_seconds",
@@ -218,6 +219,7 @@ OPTIONS: list[dict[str, Any]] = [
         maximum=2.0,
         label="W charge time (seconds)",
         step=0.16,
+        rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
         "e_dash_distance",
@@ -226,6 +228,7 @@ OPTIONS: list[dict[str, Any]] = [
         maximum=650.0,
         label="E travel distance",
         step=50.0,
+        rotation={"role": "self_state", "slot": "E"},
     ),
 ]
 

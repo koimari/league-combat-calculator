@@ -356,12 +356,14 @@ OPTIONS: list[dict[str, Any]] = [
         "q_recast",
         True,
         label="Q recast hits the bleeding target (bonus damage + heal)",
+        rotation={"role": "self_state", "slot": "Q"},
     ),
     bool_option(
         "w_hunt",
         True,
         label="W hunt is active (20% AD bonus attack damage + the raised "
         "Packmate cap)",
+        rotation={"role": "self_state", "slot": "W"},
     ),
 ]
 

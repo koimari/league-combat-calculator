@@ -268,6 +268,7 @@ OPTIONS: list[dict[str, Any]] = [
             "the attacks and ability hits that land while the charge holds"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "E"},
     ),
 ]
 

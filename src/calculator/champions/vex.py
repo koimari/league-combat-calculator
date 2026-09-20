@@ -231,6 +231,7 @@ OPTIONS = [
         label="Gloom mark detonations (each: next basic attack deals the "
         "sourced bonus magic damage; marks require the enemy to "
         "dash/blink)",
+        rotation={"role": "self_state", "slot": "P"},
     ),
 ]
 

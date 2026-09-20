@@ -126,9 +126,13 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=1,
         maximum=3,
         label="Sand Soldiers attacking the target",
+        rotation={"role": "self_state", "slot": "R"},
     ),
     bool_option(
-        "soldier_autos", True, label="Replace basic attacks with Sand Soldier attacks"
+        "soldier_autos",
+        True,
+        label="Replace basic attacks with Sand Soldier attacks",
+        rotation={"role": "self_state", "slot": "R"},
     ),
 ]
 

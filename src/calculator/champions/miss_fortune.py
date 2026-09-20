@@ -228,6 +228,7 @@ OPTIONS.append(
         "min": 0,
         "max": 20,
         "label": "Love Taps (attacks that tag a new enemy)",
+        "rotation": {"role": "self_state", "slot": "P"},
     }
 )
 

@@ -309,6 +309,7 @@ OPTIONS = [
             {"value": "normal", "label": "Fresh ground · 5 shards"},
             {"value": "worked", "label": "Worked Ground · boulder"},
         ],
+        "rotation": {"role": "irrelevant", "slot": "Q"},
     },
     int_option(
         "e_detonations",
@@ -317,6 +318,7 @@ OPTIONS = [
         maximum=4,
         label="E stones detonated by the target",
         step=1,
+        rotation={"role": "irrelevant", "slot": "E"},
     ),
     float_option(
         "q_target_distance",
@@ -325,6 +327,7 @@ OPTIONS = [
         maximum=1000.0,
         label="Threaded Volley target distance",
         step=50.0,
+        rotation={"role": "self_state", "slot": "Q"},
     ),
 ]
 

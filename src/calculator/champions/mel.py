@@ -471,6 +471,12 @@ OPTIONS = [
             "damage instances that applied them inside their window"
         ),
         derives=True,
+        rotation={
+            "role": "consume",
+            "slot": "R",
+            "condition": "overwhelm",
+            "kind": "stack_consume",
+        },
     ),
     int_option(
         "p_searing_brilliance_missiles",
@@ -478,6 +484,7 @@ OPTIONS = [
         minimum=0,
         maximum=_P_MAX_MISSILES,
         label="Searing Brilliance projectiles consumed per empowered attack",
+        rotation={"role": "self_state", "slot": "P"},
     ),
 ]
 

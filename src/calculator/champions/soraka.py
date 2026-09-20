@@ -81,7 +81,12 @@ def _equinox(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any]
 
 
 OPTIONS = [
-    bool_option("e_second_hit", True, label="Target remains for E eruption"),
+    bool_option(
+        "e_second_hit",
+        True,
+        label="Target remains for E eruption",
+        rotation={"role": "irrelevant", "slot": "E"},
+    ),
 ]
 
 ASSUMPTIONS = [

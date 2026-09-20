@@ -197,6 +197,7 @@ OPTIONS = [
             "attack, so the swings speed up as they land"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "P"},
     ),
     int_option(
         "e_dodged_attacks",
@@ -204,14 +205,21 @@ OPTIONS = [
         minimum=0,
         maximum=5,
         label="Counter Strike attacks dodged",
+        rotation={"role": "self_state", "slot": "E"},
     ),
-    bool_option("e_active", False, label="E (Counter Strike) evasion active"),
+    bool_option(
+        "e_active",
+        False,
+        label="E (Counter Strike) evasion active",
+        rotation={"role": "self_state", "slot": "E"},
+    ),
     float_option(
         "e_active_from",
         0.0,
         minimum=0.0,
         maximum=120.0,
         label="E evasion start time in seconds",
+        rotation={"role": "self_state", "slot": "E"},
     ),
     float_option(
         "e_active_seconds",
@@ -219,8 +227,14 @@ OPTIONS = [
         minimum=0.0,
         maximum=2.0,
         label="E evasion seconds; zero uses the sourced duration",
+        rotation={"role": "self_state", "slot": "E"},
     ),
-    bool_option("r_passive_ready", False, label="Grandmaster passive hit ready"),
+    bool_option(
+        "r_passive_ready",
+        False,
+        label="Grandmaster passive hit ready",
+        rotation={"role": "self_state", "slot": "P"},
+    ),
 ]
 ASSUMPTIONS = [
     "Relentless Assault is an explicit stack-derived attack-speed buff; it is applied "

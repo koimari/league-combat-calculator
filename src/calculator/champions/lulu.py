@@ -253,6 +253,7 @@ OPTIONS.extend(
             "min": 0,
             "max": 3,
             "label": "Pix bolts per basic attack",
+            "rotation": {"role": "self_state", "slot": "P"},
         },
         {
             "key": "lulu_whimsy_target",

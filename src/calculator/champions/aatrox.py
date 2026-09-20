@@ -273,6 +273,7 @@ OPTIONS = [
         minimum=0,
         maximum=7,
         label="Q damage variant",
+        rotation={"role": "irrelevant", "slot": "Q"},
     ),
 ]
 

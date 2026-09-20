@@ -236,6 +236,7 @@ OPTIONS = [
         minimum=0,
         maximum=30,
         label="Enemy basic attacks during Defensive Ball Curl",
+        rotation={"role": "self_state", "slot": "W"},
     ),
 ]
 

@@ -347,6 +347,7 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=0,
         maximum=100,
         label="Dr. Mundo's missing health (%)",
+        rotation={"role": "self_state", "slot": "E"},
     ),
     int_option(
         "r_nearby_champions",
@@ -354,6 +355,7 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=0,
         maximum=R_MAX_NEARBY_CHAMPIONS,
         label="Enemy champions near R cast (rank 3 bonus)",
+        rotation={"role": "self_state", "slot": "R"},
     ),
     bool_option(
         "e_reset_throughput",
@@ -363,6 +365,7 @@ OPTIONS: list[dict[str, Any]] = [
         "'Blunt Force Trauma resets Dr. Mundo's basic attack timer'; "
         "the binary Trait_AttackReset tag; the acceleration magnitude "
         "is script-side)",
+        rotation={"role": "irrelevant", "slot": "E"},
     ),
 ]
 

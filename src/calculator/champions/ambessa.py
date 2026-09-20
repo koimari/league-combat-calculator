@@ -226,7 +226,12 @@ def _sundering_slam(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 OPTIONS = [
-    bool_option("sweetspot", True, label="Q/Q2 Sweetspot (doubled damage)"),
+    bool_option(
+        "sweetspot",
+        True,
+        label="Q/Q2 Sweetspot (doubled damage)",
+        rotation={"role": "irrelevant", "slot": "Q"},
+    ),
     int_option(
         "passive_procs",
         4,
@@ -237,6 +242,7 @@ OPTIONS = [
             "a Medarda Maxim stack and the swings that spend one"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "P"},
     ),
 ]
 

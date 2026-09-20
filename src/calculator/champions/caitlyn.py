@@ -307,8 +307,16 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=0,
         maximum=5,
         label="Pre-stacked Headshot Count stacks",
+        rotation={"role": "self_state", "slot": "P"},
     ),
-    int_option("w_traps", 1, minimum=0, maximum=5, label="Sprung Yordle Snap Traps"),
+    int_option(
+        "w_traps",
+        1,
+        minimum=0,
+        maximum=5,
+        label="Sprung Yordle Snap Traps",
+        rotation={"role": "self_state", "slot": "W"},
+    ),
     int_option(
         "q_secondary_targets",
         0,

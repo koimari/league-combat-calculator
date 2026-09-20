@@ -204,7 +204,12 @@ parse_abilities = build_parser(SLOTS, "Fizz", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     int_option(
-        "e_variant", 0, minimum=0, maximum=1, label="E variant (0 Playful, 1 Trickster)"
+        "e_variant",
+        0,
+        minimum=0,
+        maximum=1,
+        label="E variant (0 Playful, 1 Trickster)",
+        rotation={"role": "irrelevant", "slot": "E"},
     ),
     int_option(
         "r_size",
@@ -212,6 +217,7 @@ OPTIONS = [
         minimum=0,
         maximum=2,
         label="R lure size (0 Guppy, 1 Chomper, 2 Gigalodon)",
+        rotation={"role": "irrelevant", "slot": "R"},
     ),
 ]
 

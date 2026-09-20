@@ -266,6 +266,7 @@ OPTIONS = [
         maximum=4,
         label="Active Voidlings (3 = one full W cast at 2 Zz'Rot stacks; "
         "4 models an overlapping second wave in a sustained window)",
+        rotation={"role": "self_state", "slot": "R"},
     ),
     int_option(
         "voidling_attacks",
@@ -275,6 +276,7 @@ OPTIONS = [
         label="Attacks per Voidling (0 = none; defaults to the sourced "
         "attack-speed cadence over the fight window)",
         derives=True,
+        rotation={"role": "self_state", "slot": "R"},
     ),
 ]
 

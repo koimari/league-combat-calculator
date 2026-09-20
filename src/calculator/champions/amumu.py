@@ -119,10 +119,19 @@ def _despair(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any]
 
 OPTIONS = [
     bool_option(
-        "target_cursed", True, label="Target already Cursed (10% bonus true damage)"
+        "target_cursed",
+        True,
+        label="Target already Cursed (10% bonus true damage)",
+        rotation={"role": "self_state", "slot": "R"},
     ),
     float_option(
-        "w_seconds", 3.0, minimum=0.5, maximum=30, label="W seconds active", step=0.5
+        "w_seconds",
+        3.0,
+        minimum=0.5,
+        maximum=30,
+        label="W seconds active",
+        step=0.5,
+        rotation={"role": "self_state", "slot": "W"},
     ),
 ]
 

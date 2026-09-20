@@ -438,11 +438,13 @@ OPTIONS: list[dict[str, Any]] = [
         True,
         label="Blood Frenzy / Hematomania frenzy active (W attack & move "
         "speed; enables Snack Attack; R maintains it)",
+        rotation={"role": "self_state", "slot": "W"},
     ),
     bool_option(
         "e_wall_collision",
         False,
         label="E fully-charged knockback collides with terrain " "(bonus magic damage)",
+        rotation={"role": "irrelevant", "slot": "E"},
     ),
     float_option(
         "e_charge_seconds",
@@ -459,6 +461,12 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=0,
         maximum=100,
         label="Target missing health %",
+        rotation={
+            "role": "execute",
+            "slot": "W",
+            "condition": "execute",
+            "kind": "execute",
+        },
     ),
 ]
 

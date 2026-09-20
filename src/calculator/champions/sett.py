@@ -312,6 +312,7 @@ OPTIONS = [
         minimum=0,
         maximum=30,
         label="Right Punch count (Pit Grit combo)",
+        rotation={"role": "self_state", "slot": "P"},
     ),
     int_option(
         "w_grit",
@@ -319,6 +320,7 @@ OPTIONS = [
         minimum=0,
         maximum=3000,
         label="Expended Grit (Haymaker damage + shield)",
+        rotation={"role": "self_state", "slot": "W"},
     ),
 ]
 

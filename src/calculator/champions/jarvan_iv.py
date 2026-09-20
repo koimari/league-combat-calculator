@@ -138,8 +138,18 @@ _demacian_standard.phase = BUFF
 
 
 OPTIONS: list[dict[str, Any]] = [
-    bool_option("q_armor_shred", True, label="Q armor shred active"),
-    bool_option("near_flag", True, label="Near Demacian Standard (flag planted)"),
+    bool_option(
+        "q_armor_shred",
+        True,
+        label="Q armor shred active",
+        rotation={"role": "self_state", "slot": "Q"},
+    ),
+    bool_option(
+        "near_flag",
+        True,
+        label="Near Demacian Standard (flag planted)",
+        rotation={"role": "self_state", "slot": "E"},
+    ),
 ]
 
 ASSUMPTIONS = [

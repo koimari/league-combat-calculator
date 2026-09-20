@@ -242,7 +242,14 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 OPTIONS = [
     *list(OPTIONS),
-    int_option("q_variant", 0, minimum=0, maximum=2, label="Q damage variant"),
+    int_option(
+        "q_variant",
+        0,
+        minimum=0,
+        maximum=2,
+        label="Q damage variant",
+        rotation={"role": "irrelevant", "slot": "Q"},
+    ),
     int_option(
         "p_determination_stacks",
         _P_MAX_STACKS,

@@ -271,6 +271,7 @@ OPTIONS.append(
             "Warwick's own health % (Eternal Hunger heals for 100% of its "
             "damage below 50%, 250% below 25%)"
         ),
+        "rotation": {"role": "self_state", "slot": "P"},
     }
 )
 OPTIONS.append(
@@ -281,6 +282,12 @@ OPTIONS.append(
         "min": 0,
         "max": 100,
         "label": "Target missing health % (Blood Hunt doubles above 75%)",
+        "rotation": {
+            "role": "execute",
+            "slot": "W",
+            "condition": "execute",
+            "kind": "execute",
+        },
     }
 )
 

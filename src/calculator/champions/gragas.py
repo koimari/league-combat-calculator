@@ -101,7 +101,12 @@ MODULE_CC = {"Q": "slow", "W": "none", "E": "knockback", "R": "knockback", "P": 
 parse_abilities = build_parser(SLOTS, "Gragas", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    bool_option("q_fully_fermented", True, label="Barrel Roll fully fermented"),
+    bool_option(
+        "q_fully_fermented",
+        True,
+        label="Barrel Roll fully fermented",
+        rotation={"role": "irrelevant", "slot": "Q"},
+    ),
 ]
 
 ASSUMPTIONS = [

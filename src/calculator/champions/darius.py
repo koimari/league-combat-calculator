@@ -409,6 +409,7 @@ OPTIONS: list[dict[str, Any]] = [
         maximum=5,
         label="Hemorrhage stacks on the target when the fight opens "
         "(5 = already stacked, so Noxian Might is up)",
+        rotation={"role": "self_state", "slot": "R"},
     ),
     bool_option(
         "w_kill_assertion",
@@ -416,6 +417,7 @@ OPTIONS: list[dict[str, Any]] = [
         label="Assume every accepted W empowered attack kills the target: "
         "Crippling Strike's cooldown is halved (PercentCDRefund 50.0) "
         "and its mana cost (40) is refunded",
+        rotation={"role": "irrelevant", "slot": "W"},
     ),
 ]
 

@@ -101,7 +101,12 @@ MODULE_CC = {"Q": "none", "E": "none", "R": "none", "P": "none", "W": "none"}
 parse_abilities = build_parser(SLOTS, "Garen", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    bool_option("e_nearest_target", True, label="Judgment nearest-target branch"),
+    bool_option(
+        "e_nearest_target",
+        True,
+        label="Judgment nearest-target branch",
+        rotation={"role": "irrelevant", "slot": "E"},
+    ),
 ]
 
 ASSUMPTIONS = [

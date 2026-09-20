@@ -112,12 +112,27 @@ parse_abilities = build_parser(SLOTS, "Draven", cc_kinds=MODULE_CC)
 
 OPTIONS = [
     int_option(
-        "adoration_stacks", 0, minimum=0, maximum=10000, label="Adoration stacks"
+        "adoration_stacks",
+        0,
+        minimum=0,
+        maximum=10000,
+        label="Adoration stacks",
+        rotation={"role": "self_state", "slot": "P"},
     ),
     bool_option(
-        "adoration_cash_in", False, label="Cash in Adoration on a champion kill"
+        "adoration_cash_in",
+        False,
+        label="Cash in Adoration on a champion kill",
+        rotation={"role": "irrelevant", "slot": "P"},
     ),
-    int_option("r_passes", 2, minimum=1, maximum=2, label="Whirling Death passes"),
+    int_option(
+        "r_passes",
+        2,
+        minimum=1,
+        maximum=2,
+        label="Whirling Death passes",
+        rotation={"role": "self_state", "slot": "R"},
+    ),
 ]
 
 ASSUMPTIONS = [

@@ -371,6 +371,7 @@ OPTIONS = [
         maximum=45,
         label="Tibbers aura duration (seconds)",
         step=0.5,
+        rotation={"role": "self_state", "slot": "R"},
     ),
     int_option(
         "tibbers_attacks",
@@ -380,6 +381,7 @@ OPTIONS = [
         label="Tibbers auto attacks (0 = none; defaults to the fight "
         "window at the sourced enrage + 0.625 AS cadence)",
         derives=True,
+        rotation={"role": "self_state", "slot": "R"},
     ),
     int_option(
         "pyromania_stacks",
@@ -388,6 +390,7 @@ OPTIONS = [
         maximum=4,
         label="Pyromania charge at the opening (4 = Energized, the cached "
         "innate's state on spawn)",
+        rotation={"role": "self_state", "slot": "P"},
     ),
     int_option(
         "e_shield_retaliations",
@@ -395,6 +398,7 @@ OPTIONS = [
         minimum=0,
         maximum=_MAX_RETALIATIONS,
         label="Enemies that damage Molten Shield (once per enemy per cast)",
+        rotation={"role": "self_state", "slot": "E"},
     ),
 ]
 

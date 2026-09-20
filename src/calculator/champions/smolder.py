@@ -201,6 +201,7 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=0,
         maximum=400,
         label="Dragon Practice stacks (225+ = tier-3 true-damage burn on Q)",
+        rotation={"role": "self_state", "slot": "P"},
     ),
 ]
 

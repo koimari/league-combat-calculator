@@ -107,6 +107,7 @@ _packet_options = [
         "min": 0,
         "max": 6,
         "label": "Dagger retrieval procs",
+        "rotation": {"role": "self_state", "slot": "P"},
     },
     {
         "key": "r_daggers",
@@ -115,6 +116,7 @@ _packet_options = [
         "min": 1,
         "max": 15,
         "label": "Death Lotus daggers",
+        "rotation": {"role": "self_state", "slot": "R"},
     },
 ]
 

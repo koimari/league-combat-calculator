@@ -206,7 +206,12 @@ parse_abilities = build_parser(
     SLOTS, "Ivern", cc_kinds=MODULE_CC, charge_rules=CHARGE_RULES
 )
 OPTIONS = [
-    bool_option("w_in_brush", True, label="Ivern is in brush"),
+    bool_option(
+        "w_in_brush",
+        True,
+        label="Ivern is in brush",
+        rotation={"role": "irrelevant", "slot": "W"},
+    ),
     int_option(
         "daisy_attacks",
         6,
@@ -216,6 +221,7 @@ OPTIONS = [
             "Daisy attacks; unset derives them from her cadence over the "
             "fight window"
         ),
+        rotation={"role": "self_state", "slot": "R"},
     ),
 ]
 ASSUMPTIONS = [

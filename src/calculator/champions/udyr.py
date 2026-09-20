@@ -344,6 +344,7 @@ OPTIONS.append(
         "type": "bool",
         "default": False,
         "label": "Q Awaken recast (empowered attacks + lightning)",
+        "rotation": {"role": "self_state", "slot": "Q"},
     }
 )
 OPTIONS.append(
@@ -354,6 +355,7 @@ OPTIONS.append(
         "min": 0,
         "max": _Q_EMPOWERED_ATTACKS_DEFAULT,
         "label": "Q empowered basic attacks",
+        "rotation": {"role": "self_state", "slot": "Q"},
     }
 )
 ASSUMPTIONS = [

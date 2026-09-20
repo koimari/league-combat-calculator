@@ -596,6 +596,7 @@ OPTIONS = [
         "type": "select",
         "default": "auto",
         "label": "Icathian Rain evolution",
+        "rotation": {"role": "irrelevant", "slot": "Q"},
         "legacy_bool": True,
         "choices": [
             {"value": "auto", "label": "Automatic from build"},
@@ -608,6 +609,7 @@ OPTIONS = [
         "type": "select",
         "default": "auto",
         "label": "Void Seeker evolution",
+        "rotation": {"role": "irrelevant", "slot": "W"},
         "legacy_bool": True,
         "choices": [
             {"value": "auto", "label": "Automatic from build"},
@@ -622,6 +624,12 @@ OPTIONS = [
         maximum=4,
         label="Plasma stacks already on each target",
         step=1,
+        rotation={
+            "role": "consume",
+            "slot": "W",
+            "condition": "plasma",
+            "kind": "stack_consume",
+        },
     ),
     float_option(
         "w_target_distance",
@@ -630,6 +638,7 @@ OPTIONS = [
         maximum=3000.0,
         label="Void Seeker target distance",
         step=50.0,
+        rotation={"role": "self_state", "slot": "W"},
     ),
 ]
 

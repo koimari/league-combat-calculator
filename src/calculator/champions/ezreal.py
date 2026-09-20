@@ -239,6 +239,7 @@ OPTIONS: list[dict[str, Any]] = [
             {"value": "ability", "label": "Ability (refunds 60 + its mana cost)"},
             {"value": "basic_attack", "label": "Basic attack (no mana refund)"},
         ],
+        "rotation": {"role": "irrelevant", "slot": "W"},
     },
     int_option(
         "passive_stacks",
@@ -250,6 +251,7 @@ OPTIONS: list[dict[str, Any]] = [
             "stack per ability cast, so the swings speed up as the casts land"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "P"},
     ),
 ]
 

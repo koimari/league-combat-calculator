@@ -133,8 +133,20 @@ MODULE_CC = {"Q": "none", "W": "none", "E": "stun", "P": "none", "R": "none"}
 parse_abilities = build_parser(SLOTS, "Elise", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    bool_option("spider_form", False, label="Spider Form"),
-    int_option("q_form", 0, minimum=0, maximum=1, label="Q form (0 human, 1 spider)"),
+    bool_option(
+        "spider_form",
+        False,
+        label="Spider Form",
+        rotation={"role": "self_state", "slot": "R"},
+    ),
+    int_option(
+        "q_form",
+        0,
+        minimum=0,
+        maximum=1,
+        label="Q form (0 human, 1 spider)",
+        rotation={"role": "irrelevant", "slot": "Q"},
+    ),
 ]
 
 ASSUMPTIONS = [

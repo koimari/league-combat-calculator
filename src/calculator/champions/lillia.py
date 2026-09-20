@@ -108,10 +108,32 @@ SLOTS = {
     "R": _lilting_lullaby,
 }
 OPTIONS = [
-    int_option("p_ticks", 6, minimum=1, maximum=6, label="Dream Dust ticks"),
-    bool_option("q_outer_edge", True, label="Blooming Blows outer edge"),
-    bool_option("w_epicenter", True, label="Watch Out! Eep! epicenter"),
-    bool_option("r_wake", True, label="Lilting Lullaby wake damage"),
+    int_option(
+        "p_ticks",
+        6,
+        minimum=1,
+        maximum=6,
+        label="Dream Dust ticks",
+        rotation={"role": "self_state", "slot": "P"},
+    ),
+    bool_option(
+        "q_outer_edge",
+        True,
+        label="Blooming Blows outer edge",
+        rotation={"role": "irrelevant", "slot": "Q"},
+    ),
+    bool_option(
+        "w_epicenter",
+        True,
+        label="Watch Out! Eep! epicenter",
+        rotation={"role": "irrelevant", "slot": "W"},
+    ),
+    bool_option(
+        "r_wake",
+        True,
+        label="Lilting Lullaby wake damage",
+        rotation={"role": "irrelevant", "slot": "R"},
+    ),
 ]
 ASSUMPTIONS = list(REVIEWED_MODULE_ASSUMPTIONS)
 SOURCES = load_champion_sources("Lillia")

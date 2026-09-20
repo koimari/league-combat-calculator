@@ -323,9 +323,19 @@ _spirits_refuge = no_damage_slot(
 
 
 OPTIONS = [
-    bool_option("q_spirit_blade_hit", True, label="Q blade passes through a champion"),
+    bool_option(
+        "q_spirit_blade_hit",
+        True,
+        label="Q blade passes through a champion",
+        rotation={"role": "irrelevant", "slot": "Q"},
+    ),
     int_option(
-        "q_attacks_landed", 3, minimum=0, maximum=3, label="Q empowered attacks landed"
+        "q_attacks_landed",
+        3,
+        minimum=0,
+        maximum=3,
+        label="Q empowered attacks landed",
+        rotation={"role": "self_state", "slot": "Q"},
     ),
     float_option(
         "q_first_attack_delay",
@@ -334,6 +344,7 @@ OPTIONS = [
         maximum=2.0,
         label="Delay to first Q attack (seconds)",
         step=0.1,
+        rotation={"role": "self_state", "slot": "Q"},
     ),
     float_option(
         "e_dash_distance",
@@ -342,6 +353,7 @@ OPTIONS = [
         maximum=600.0,
         label="E dash distance",
         step=50.0,
+        rotation={"role": "self_state", "slot": "E"},
     ),
 ]
 

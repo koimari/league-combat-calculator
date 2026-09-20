@@ -142,6 +142,7 @@ OPTIONS = [
             "the attacks or ability hits that spend it"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "P"},
     ),
 ]
 

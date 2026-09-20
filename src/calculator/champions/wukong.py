@@ -231,9 +231,22 @@ OPTIONS = [
             "and abilities that stack it and serves its fight mean"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "P"},
     ),
-    bool_option("q_armor_reduction", True, label="Q armor reduction active"),
-    int_option("r_casts", 1, minimum=1, maximum=2, label="Cyclone casts"),
+    bool_option(
+        "q_armor_reduction",
+        True,
+        label="Q armor reduction active",
+        rotation={"role": "self_state", "slot": "Q"},
+    ),
+    int_option(
+        "r_casts",
+        1,
+        minimum=1,
+        maximum=2,
+        label="Cyclone casts",
+        rotation={"role": "self_state", "slot": "R"},
+    ),
 ]
 
 ASSUMPTIONS = [

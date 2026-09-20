@@ -146,8 +146,14 @@ OPTIONS = [
             "swings and ability hits that stack Resonance"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "P"},
     ),
-    bool_option("w_passive_ready", False, label="Parallel Convergence passive ready"),
+    bool_option(
+        "w_passive_ready",
+        False,
+        label="Parallel Convergence passive ready",
+        rotation={"role": "self_state", "slot": "W"},
+    ),
     float_option(
         "w_target_missing_health",
         0.5,
@@ -155,6 +161,12 @@ OPTIONS = [
         maximum=1.0,
         label="W target missing-health ratio",
         step=0.05,
+        rotation={
+            "role": "execute",
+            "slot": "W",
+            "condition": "execute",
+            "kind": "execute",
+        },
     ),
 ]
 

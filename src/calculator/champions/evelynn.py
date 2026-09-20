@@ -153,16 +153,54 @@ MODULE_CC = {"Q": "none", "E": "none", "R": "none", "P": "none", "W": CC_PER_PAR
 parse_abilities = build_parser(SLOTS, "Evelynn", cc_kinds=MODULE_CC)
 
 OPTIONS = [
-    int_option("q_recasts", 3, minimum=0, maximum=3, label="Hate Spike recasts"),
-    bool_option("q_marked_target", True, label="Hate Spike mark is active"),
-    bool_option("w_charmed", True, label="Allure fully charmed champion"),
+    int_option(
+        "q_recasts",
+        3,
+        minimum=0,
+        maximum=3,
+        label="Hate Spike recasts",
+        rotation={"role": "self_state", "slot": "Q"},
+    ),
+    bool_option(
+        "q_marked_target",
+        True,
+        label="Hate Spike mark is active",
+        rotation={
+            "role": "consume",
+            "slot": "Q",
+            "condition": "mark",
+            "kind": "mark_consume",
+        },
+    ),
+    bool_option(
+        "w_charmed",
+        True,
+        label="Allure fully charmed champion",
+        rotation={"role": "irrelevant", "slot": "W"},
+    ),
     bool_option(
         "w_charm_triggered",
         False,
         label="Allure mark is expunged after its 2.5 second maturity",
+        rotation={"role": "irrelevant", "slot": "W"},
     ),
-    bool_option("e_empowered", False, label="Empowered Whiplash"),
-    bool_option("r_execute_ready", False, label="Last Caress execute branch"),
+    bool_option(
+        "e_empowered",
+        False,
+        label="Empowered Whiplash",
+        rotation={"role": "irrelevant", "slot": "E"},
+    ),
+    bool_option(
+        "r_execute_ready",
+        False,
+        label="Last Caress execute branch",
+        rotation={
+            "role": "execute",
+            "slot": "R",
+            "condition": "execute",
+            "kind": "execute",
+        },
+    ),
 ]
 
 ASSUMPTIONS = [

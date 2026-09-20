@@ -197,15 +197,30 @@ OPTIONS: list[dict[str, Any]] = [
         "q_execute",
         False,
         label="Q hits a target below 20% maximum health (execute row)",
+        rotation={
+            "role": "execute",
+            "slot": "Q",
+            "condition": "execute",
+            "kind": "execute",
+        },
     ),
     bool_option(
         "q_mortal_will",
         True,
         label="Mortal Will empowered Q (first basic ability at 5 stacks)",
+        rotation={"role": "self_state", "slot": "Q"},
     ),
-    bool_option("r_edge", False, label="R edge hit (Reduced Damage row)"),
     bool_option(
-        "e_active", False, label="E (Aegis Assault) active against selected skillshots"
+        "r_edge",
+        False,
+        label="R edge hit (Reduced Damage row)",
+        rotation={"role": "irrelevant", "slot": "R"},
+    ),
+    bool_option(
+        "e_active",
+        False,
+        label="E (Aegis Assault) active against selected skillshots",
+        rotation={"role": "self_state", "slot": "E"},
     ),
     float_option(
         "e_active_from",
@@ -213,6 +228,7 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=0.0,
         maximum=120.0,
         label="E active start time in seconds",
+        rotation={"role": "self_state", "slot": "E"},
     ),
     float_option(
         "e_active_seconds",
@@ -220,6 +236,7 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=0.0,
         maximum=1.5,
         label="E active seconds; zero uses the sourced 1.5 second duration",
+        rotation={"role": "self_state", "slot": "E"},
     ),
     {
         "key": "e_blocked_skillshots",
@@ -230,6 +247,7 @@ OPTIONS: list[dict[str, Any]] = [
             "Front-facing skillshot slots to block; an empty list blocks all marked "
             "skillshots"
         ),
+        "rotation": {"role": "irrelevant", "slot": "E"},
     },
 ]
 

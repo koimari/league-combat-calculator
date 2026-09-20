@@ -531,6 +531,7 @@ OPTIONS = [
         maximum=1.25,
         label="Q charge time (seconds)",
         step=0.125,
+        rotation={"role": "self_state", "slot": "Q"},
     ),
     float_option(
         "q_dash_distance",
@@ -539,6 +540,7 @@ OPTIONS = [
         maximum=725.0,
         label="Q distance to target",
         step=25.0,
+        rotation={"role": "self_state", "slot": "Q"},
     ),
     int_option(
         "denting_blows_starting_stacks",
@@ -547,6 +549,12 @@ OPTIONS = [
         maximum=2,
         label="W stacks already on each target",
         step=1,
+        rotation={
+            "role": "consume",
+            "slot": "W",
+            "condition": "denting-blows",
+            "kind": "stack_consume",
+        },
     ),
     float_option(
         "e_attack_delay",
@@ -555,6 +563,7 @@ OPTIONS = [
         maximum=2.0,
         label="Delay from Q hit to E attack",
         step=0.05,
+        rotation={"role": "self_state", "slot": "E"},
     ),
     float_option(
         "r_start_distance",
@@ -563,6 +572,7 @@ OPTIONS = [
         maximum=800.0,
         label="R starting distance",
         step=25.0,
+        rotation={"role": "self_state", "slot": "R"},
     ),
 ]
 

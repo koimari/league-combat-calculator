@@ -192,6 +192,7 @@ OPTIONS = [
             "or ability hit, and arms the max-stack on-hit where it fills"
         ),
         derives=True,
+        rotation={"role": "self_state", "slot": "P"},
     ),
     float_option(
         "w_charge",
@@ -200,8 +201,16 @@ OPTIONS = [
         maximum=1.0,
         label="Defiant Dance charge fraction",
         step=0.25,
+        rotation={"role": "self_state", "slot": "W"},
     ),
-    int_option("r_passes", 2, minimum=1, maximum=2, label="Vanguard's Edge passes"),
+    int_option(
+        "r_passes",
+        2,
+        minimum=1,
+        maximum=2,
+        label="Vanguard's Edge passes",
+        rotation={"role": "self_state", "slot": "R"},
+    ),
 ]
 ASSUMPTIONS = [
     "Ionian Fervor's per-stack attack speed is applied before damage and its "

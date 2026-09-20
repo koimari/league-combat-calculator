@@ -280,18 +280,42 @@ OPTIONS = [
         minimum=0,
         maximum=_SCALEMAIL_MAX_STACKS,
         label="Scalemail stacks",
+        rotation={"role": "self_state", "slot": "P"},
     ),
-    bool_option("dragon_form", False, label="Dragon Form"),
-    int_option("q_casts", 1, minimum=1, maximum=3, label="Emberstrike casts"),
-    bool_option("w_recast", True, label="Inferno Aegis recast hits"),
+    bool_option(
+        "dragon_form",
+        False,
+        label="Dragon Form",
+        rotation={"role": "self_state", "slot": "R"},
+    ),
+    int_option(
+        "q_casts",
+        1,
+        minimum=1,
+        maximum=3,
+        label="Emberstrike casts",
+        rotation={"role": "self_state", "slot": "Q"},
+    ),
+    bool_option(
+        "w_recast",
+        True,
+        label="Inferno Aegis recast hits",
+        rotation={"role": "self_state", "slot": "W"},
+    ),
     int_option(
         "w_nearby_champions",
         1,
         minimum=0,
         maximum=5,
         label="Nearby enemy champions (W shield increment)",
+        rotation={"role": "self_state", "slot": "W"},
     ),
-    bool_option("e_second_explosion", False, label="Dragon E second explosion"),
+    bool_option(
+        "e_second_explosion",
+        False,
+        label="Dragon E second explosion",
+        rotation={"role": "irrelevant", "slot": "E"},
+    ),
 ]
 
 MODULE_COVERAGE = coverage(no_damage="P")

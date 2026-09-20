@@ -113,6 +113,7 @@ OPTIONS = [
         minimum=0.0,
         maximum=500.0,
         label="Bonus movement speed",
+        rotation={"role": "self_state", "slot": "auto_stream"},
     ),
     float_option(
         "q_charge",
@@ -121,6 +122,7 @@ OPTIONS = [
         maximum=1.0,
         label="Howling Gale charge fraction",
         step=0.25,
+        rotation={"role": "self_state", "slot": "Q"},
     ),
 ]
 ASSUMPTIONS = [

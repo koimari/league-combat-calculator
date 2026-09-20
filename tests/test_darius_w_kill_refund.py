@@ -499,8 +499,8 @@ class TestEmpoweredAutoBaseline:
 class TestKillPath:
     def test_option_meta_declares_w_kill_assertion(self) -> None:
         """The kill-assertion option: bool, default False, labelled for
-        the sourced kill rule, and DELIBERATELY rotation-free — an
-        execute-role edge on the damage row would make the resolver
+        the sourced kill rule, and DELIBERATELY classified irrelevant —
+        an execute-role edge on the damage row would make the resolver
         derive a different Darius order (W's kill is a
         resource/cooldown assertion, not a rotation edge; the
         r_execute_recast metadata is R's own)."""
@@ -509,11 +509,9 @@ class TestKillPath:
         assert option["type"] == "bool"
         assert option["default"] is False
         assert "kill" in option["label"].lower()
-        assert "rotation" not in option
-        rotation = get_champion_option_rotation(CHAMPION)
-        # Centrally classified irrelevant (NOT an execute edge — an
-        # execute role would reorder the derived Darius rotation).
-        assert rotation[OPTION_KEY] == {"role": "irrelevant", "slot": "W"}
+        irrelevant = {"role": "irrelevant", "slot": "W"}
+        assert option["rotation"] == irrelevant
+        assert get_champion_option_rotation(CHAMPION)[OPTION_KEY] == irrelevant
 
     def test_parse_halves_w_cooldown_and_declares_the_refund_rule(self) -> None:
         """With the assertion on, the W entry's sourced cooldown is halved

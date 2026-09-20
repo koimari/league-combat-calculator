@@ -304,9 +304,13 @@ OPTIONS: list[dict[str, Any]] = [
         True,
         label="W (Stand Behind Me) active: grants self 20-40 (+36% bonus) "
         "armor and magic resistance",
+        rotation={"role": "self_state", "slot": "W"},
     ),
     bool_option(
-        "e_active", False, label="E (Unbreakable) active against selected skillshots"
+        "e_active",
+        False,
+        label="E (Unbreakable) active against selected skillshots",
+        rotation={"role": "self_state", "slot": "E"},
     ),
     float_option(
         "e_active_from",
@@ -314,6 +318,7 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=0.0,
         maximum=120.0,
         label="E active start time in seconds",
+        rotation={"role": "self_state", "slot": "E"},
     ),
     float_option(
         "e_active_seconds",
@@ -321,6 +326,7 @@ OPTIONS: list[dict[str, Any]] = [
         minimum=0.0,
         maximum=4.0,
         label="E active seconds; zero uses the sourced rank duration",
+        rotation={"role": "self_state", "slot": "E"},
     ),
     {
         "key": "e_blocked_skillshots",
@@ -330,6 +336,7 @@ OPTIONS: list[dict[str, Any]] = [
         "label": (
             "Skillshot slots to block; an empty list blocks all marked " "skillshots"
         ),
+        "rotation": {"role": "irrelevant", "slot": "E"},
     },
     {
         "key": "e_blocked_event_ids",
@@ -342,6 +349,7 @@ OPTIONS: list[dict[str, Any]] = [
             "scenario: builds, ranks, or roster changes renumber them. "
             "An empty list blocks nothing by event id."
         ),
+        "rotation": {"role": "irrelevant", "slot": "E"},
     },
 ]
 
