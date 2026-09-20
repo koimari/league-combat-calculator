@@ -46,9 +46,7 @@ _MILIO_P = json.loads((_REPO / "data" / "champions.json").read_text(encoding="ut
     "Milio"
 ]["abilities"]["P"][0]
 _ATOMS = json.loads(
-    (_REPO / "data" / "atoms" / "v2" / "milio.atoms.v2.json").read_text(
-        encoding="utf-8"
-    )
+    (_REPO / "tests" / "fixtures" / "milio.atoms.v2.json").read_text(encoding="utf-8")
 )
 _DDRAGON = json.loads(
     (_REPO / "data" / "gamefiles" / "ddragon" / "Milio.json").read_text(

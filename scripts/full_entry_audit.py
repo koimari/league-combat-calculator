@@ -93,6 +93,19 @@ def resolve_query_tool(cli_value: str | Path | None = None) -> Path:
     )
 
 
+def portable_tool_path(tool: str | Path) -> str:
+    """The spelling the receipt records: repo-relative, or the bare name.
+
+    Where the tool resolved is one machine's fact and reproduces nowhere else,
+    which ``scripts/tracked_data_lint.py`` refuses in a tracked receipt.
+    """
+    resolved = Path(tool).resolve()
+    try:
+        return resolved.relative_to(ROOT).as_posix()
+    except ValueError:
+        return resolved.name
+
+
 def _load(path: Path) -> dict[str, Any]:
     with path.open(encoding="utf-8") as handle:
         value = json.load(handle)
@@ -748,7 +761,7 @@ def audit(
             "entries": entries,
             "champion_modules": module_entries,
             "champion_module_failures": module_failures,
-            "infrastructure": {"ok": True, "query_tool": str(tool)},
+            "infrastructure": {"ok": True, "query_tool": portable_tool_path(tool)},
         },
     )
     # The detailed per-scope counts stay addressable for existing consumers.

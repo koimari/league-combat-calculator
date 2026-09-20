@@ -200,7 +200,7 @@ def test_audit_report_marks_infrastructure_ok(tmp_path, monkeypatch):
     tool.write_text("", encoding="utf-8")
     monkeypatch.setattr(audit, "QUERY_TOOL", None)
     report = audit.audit(champions=[], items=[], query_tool=tool)
-    assert report["infrastructure"] == {"ok": True, "query_tool": str(tool)}
+    assert report["infrastructure"] == {"ok": True, "query_tool": tool.name}
     assert report["passed"] is True
 
 

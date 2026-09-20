@@ -1,10 +1,10 @@
 # League interface source assets
 
-These files come from the CommunityDragon export for patch **16.17**. `source-manifest.json` records each source URL, SHA-256, byte length, and image dimensions. This folder contains a bounded set of HUD textures, rune backgrounds, and layout evidence.
+The interface assets come from the CommunityDragon export for patch **16.17**. `source-manifest.json` records each source URL, SHA-256, byte length, and image dimensions, so any asset is refetchable and verifiable from it. This file records the geometry measured from those exports.
 
 ## HUD geometry
 
-`playerframe-layout.json` and `playerinventory-layout.json` are Riot UIBase property exports. Each element supplies `Position.UIRect.Position`, `Size`, the source resolution, its anchor, and layer order. `TextureData.mTextureUV` gives pixel bounds `[left, top, right, bottom]` within the named atlas. The HUD elements use a 1600 by 1200 source resolution and a bottom-center anchor `[0.5, 1]`.
+The Riot UIBase property exports for the player frame and the player inventory give each element a `Position.UIRect.Position`, a `Size`, a source resolution, an anchor, and a layer order. `TextureData.mTextureUV` gives pixel bounds `[left, top, right, bottom]` within the named atlas. The HUD elements use a 1600 by 1200 source resolution and a bottom-center anchor `[0.5, 1]`.
 
 | Element | Atlas | UV bounds | Render size | Source position |
 | --- | --- | --- | --- | --- |
@@ -22,9 +22,7 @@ These descriptors allow the web component to use the original frame art and meas
 
 ## Rune editor
 
-`rune-environment-{style}.jpg` contains the plain stage for each tree. All five are 1162×720. Style IDs are Precision 8000, Domination 8100, Sorcery 8200, Inspiration 8300, and Resolve 8400. The client adds separate construct and keystone layers above these environments. `rune-keystone-border.svg` contains the original selection border.
-
-`client-collections.css` is the exact client CSS export retained as research evidence. Read its selector geometry and colors when building isolated application styles. It contains unrelated collection styles and client-only asset paths.
+The per-tree rune environment images are the plain stage for each tree. All five are 1162×720. Style IDs are Precision 8000, Domination 8100, Sorcery 8200, Inspiration 8300, and Resolve 8400. The client adds separate construct and keystone layers above these environments, and a keystone border SVG carries the selection border.
 
 Use the patch-specific [perk data](https://raw.communitydragon.org/16.17/plugins/rcp-be-lol-game-data/global/default/v1/perks.json) for names and `iconPath`. The [style data](https://raw.communitydragon.org/16.17/plugins/rcp-be-lol-game-data/global/default/v1/perkstyles.json) defines tree IDs, rows, and shard order. Map `/lol-game-data/assets/<path>` to `https://raw.communitydragon.org/16.17/plugins/rcp-be-lol-game-data/global/default/<lowercase-path>`, as described in the [CommunityDragon asset documentation](https://communitydragon.org/documentation/assets).
 
@@ -32,6 +30,6 @@ The `assetMap` merged backgrounds in perkstyles include the central rune symbol.
 
 ## Serving
 
-The standalone build can copy only PNG, JPG, and SVG assets to `static/calculator/league/`. Scryglass can copy them to `public/calculator/league/`. Keep the manifest and layout/CSS evidence in the source folder. Components can instead use the exact versioned remote URLs from the manifest when their host permits them.
+`champion-hud.css` and `rune-assets.ts` load the versioned remote URLs the manifest records, so no image is served from this folder. A host that forbids the remote origin fetches each asset from its manifest URL, checks it against the recorded SHA-256, and serves it under `static/calculator/league/`.
 
 The assets are owned by Riot Games. CommunityDragon exports them under Riot's [Legal Jibber Jabber policy](https://www.riotgames.com/en/legal).

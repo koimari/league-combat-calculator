@@ -434,125 +434,18 @@ def _casts(entry):
     return [(cast["time"], cast["slot"]) for cast in fight["cast_timeline"]]
 
 
-def _without_coverage_prose(value):
-    """The same tree with every ``item_coverage`` block removed.
-
-    The utility-outcomes payload carries one coverage record per item — a
-    status and a reason, both prose about *why* the model does or does not
-    price a mechanic, and neither a number.  Phase 3's 3.8 flip regenerated
-    all of them, and the leaves are enumerated in
-    ``docs/receipts/expected-golden-diff-3.8-coverage-flip.json``, which is
-    where they are pinned.  Dropping them here is the same split ``rotation``
-    already gets: this assertion is about what the engine computed.
-    """
-    if isinstance(value, dict):
-        return {
-            key: _without_coverage_prose(child)
-            for key, child in value.items()
-            if key != "item_coverage"
-        }
-    if isinstance(value, list):
-        return [_without_coverage_prose(child) for child in value]
-    return value
-
-
-def _priced(entry):
-    """Everything the scenario prices — the entry minus its receipts' prose.
-
-    ``rotation`` is the receipt that says *why* the order is what it is, and
-    ``item_coverage`` is the receipt that says why a mechanic is or is not
-    priced; every other leaf is what the engine computed.  The prose moves
-    when a hand seed retires against a declaration, or when a coverage
-    classifier stops reading a hand registry, and no number may: splitting
-    them here is what lets one assertion mean "the change moved nothing"
-    instead of "the wording is unchanged".  ``cast_order`` and ``order`` live
-    inside ``rotation`` and are pinned separately below by the cast timeline,
-    which is the executed fact.
-    """
-    fights = {
-        key: {name: value for name, value in fight.items() if name != "rotation"}
-        for key, fight in entry["fights"].items()
-    }
-    # ``dispositions`` is Phase 4 S9's parallel map: one entry per published
-    # leaf, saying whether a rule produced that number.  It is a receipt
-    # *about* the numbers rather than one of them, and it did not exist when
-    # this baseline was captured, so it joins the prose this comparison
-    # excludes.  Its own coverage is asserted in
-    # ``tests/test_payload_dispositions.py``, two-way, against a live run.
-    combat = {
-        name: value
-        for name, value in entry.get("combat", {}).items()
-        if name != "dispositions"
-    }
-    trimmed = {**entry, "fights": fights}
-    if "combat" in entry:
-        trimmed["combat"] = combat
-    return _without_coverage_prose(trimmed)
-
-
 _PIN_SPLINTERS = (39, 60, 120)
 
 
-def _allowlisted_moves():
-    """Every coupled leaf a committed R-17 allowlist claims, with its new value.
-
-    R-17 lands a semantic slice against the *old* baseline plus a committed
-    allowlist and re-captures at the boundary, so between the two a pin that
-    demands byte-equality with the committed entry forbids every correction
-    this campaign exists to make.  What must hold in between is the weaker
-    pair the allowlist itself states: a leaf outside it did not move, and a
-    leaf inside it holds the value its receipt declared.  Once the boundary
-    lands the difference set is empty and both clauses hold trivially.
-    """
-    claimed: set[str] = set()
-    declared: dict[str, object] = {}
-    receipts = (_REPO_ROOT / "docs" / "receipts").glob("expected-golden-diff-*.json")
-    for receipt in sorted(receipts):
-        block = json.loads(receipt.read_text(encoding="utf-8"))
-        paths = block.get("expected_diff_paths", {})
-        for key in ("coupled_golden", "coupled_golden_shape_counters"):
-            claimed.update(paths.get(key, ()))
-        for path, move in (block.get("moved_values") or {}).items():
-            claimed.add(path)
-            declared[path] = move.get("new")
-    return claimed, declared
-
-
-def _pin_diffs(name):
-    """The live run against the committed entry, through R-15's own instrument."""
-    snapshot = _golden_snapshot()
-    live = {"coupled_scenarios": {name: _priced(_capture(name))}}
-    committed = {"coupled_scenarios": {name: _priced(_coupled_baseline()[name])}}
-    return snapshot.leaf_report(committed, live)
-
-
-def _assert_pinned(name):
-    """The scenario reproduces its committed entry, allowlist included."""
-    claimed, declared = _allowlisted_moves()
-    for diff in _pin_diffs(name):
-        assert (
-            diff.path in claimed
-        ), f"{name} moved {diff.path}, which no receipt claims"
-        if diff.path in declared:
-            assert diff.new == declared[diff.path], (
-                f"{name} moved {diff.path} to {diff.new!r}, where the receipt claiming "
-                f"it declares {declared[diff.path]!r}"
-            )
-
-
 class TestTheDerivedOrderPinScenario:
-    """Criterion 6 — the 5.0 s Q recast, pinned by the coupled baseline.
+    """Criterion 6 — the 5.0 s Q recast and the second charge's cast times.
 
     The splinter count is load-bearing: Q's second charge arrives at 40
     stacks and W's bonus true damage at 60, so the same run totals three
-    different numbers across the variants and a pin without that axis is
-    ambiguous.  Every expectation here is read from the committed
-    baseline; the suite retypes nothing.
+    different numbers across the variants and a shape assertion without
+    that axis is ambiguous.  The totals are the coupled baseline's;
+    ``golden_snapshot.py compare`` is what binds them.
     """
-
-    @pytest.mark.parametrize("splinters", _PIN_SPLINTERS)
-    def test_the_live_run_reproduces_the_committed_entry(self, splinters) -> None:
-        _assert_pinned(f"syndra_derived_order_{splinters}")
 
     @pytest.mark.parametrize("splinters", _PIN_SPLINTERS)
     def test_q_recasts_at_five_seconds(self, splinters) -> None:
@@ -585,10 +478,6 @@ class TestTheCustomOrderPinReadsTheBaseline:
     committed number, so a change that keeps the shape and moves the damage
     cannot pass both.
     """
-
-    @pytest.mark.parametrize("splinters", _PIN_SPLINTERS)
-    def test_the_live_run_reproduces_the_committed_entry(self, splinters) -> None:
-        _assert_pinned(f"syndra_custom_order_{splinters}")
 
     def test_the_requested_order_keeps_the_second_charge(self) -> None:
         entry = _capture("syndra_custom_order_120")

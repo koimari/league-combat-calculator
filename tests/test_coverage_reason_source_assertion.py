@@ -17,8 +17,8 @@ clause after it — is one literal in ``src`` and is what this file binds.
 
 — published on an item's coverage payload, and the fact it asserts is about
 ``item_behavior.RuleFamily``: that every family the item declares is in the
-defence group.  ``oracle-P3-3.8-leaf24.json`` could not check it and said so
-in its own limitations block; the amendment permits the sentence to say it
+defence group.  An R-19 investigation cannot check that claim, because its
+export excludes ``src/``; the amendment permits the sentence to say it
 **because this file is what keeps it true**, which is the campaign's own
 prose-must-not-outrun-code mechanism turned on prose.  Without this file the
 ruling rests on a premise nobody enforces, so it lands with it.

@@ -1,12 +1,8 @@
-"""Issue #163 — build_receipts.py consumes the unified Atomizer item domain.
+"""``scripts/build_receipts.py`` consumes the unified Atomizer item domain.
 
-The item-atoms/ tree was retired by the unified Atomizer migration, but
-``scripts/build_receipts.py`` still pointed at it: ``data/item-atoms/items.json``
-did not exist, so every item receipt reported zero atoms and ``main()`` raised
-``KeyError: 'effects'`` on the summary write.  These tests pin the repaired
-contract: one item receipt schema, fail-closed validation of the unified
-``data/atoms/items.json`` payload, atomic publish (no partial tree), a manifest
-cross-check, and the real-data regression.
+These tests pin its contract: one item receipt schema, fail-closed validation
+of the ``data/atoms/items.json`` payload, atomic publish (no partial tree), a
+manifest cross-check, and the real-data regression.
 """
 
 import json

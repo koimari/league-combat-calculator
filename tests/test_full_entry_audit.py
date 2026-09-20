@@ -3,6 +3,26 @@
 from copy import deepcopy
 
 from scripts import full_entry_audit as audit
+from scripts.tracked_data_lint import MACHINE_PATH
+
+
+def test_the_receipt_records_a_portable_tool_path(tmp_path, monkeypatch):
+    """Where the CLI resolved is one machine's fact; the tracked receipt is not.
+
+    ``patch_update.py run`` writes this receipt, so an absolute path here
+    would fail ``tracked_data_lint`` on the next patch day.
+    """
+    vendored = audit.ROOT / "vendor/league-wiki-query/scripts/query_league_wiki.py"
+    assert audit.portable_tool_path(vendored) == (
+        "vendor/league-wiki-query/scripts/query_league_wiki.py"
+    )
+    outside = tmp_path / "query_league_wiki.py"
+    outside.write_text("", encoding="utf-8")
+    monkeypatch.setattr(audit, "QUERY_TOOL", None)
+    report = audit.audit(champions=[], items=[], query_tool=outside)
+    recorded = report["infrastructure"]["query_tool"]
+    assert recorded == "query_league_wiki.py"
+    assert not MACHINE_PATH.search(recorded)
 
 
 def test_champion_audit_requires_parent_and_all_namespace_10_templates(monkeypatch):
