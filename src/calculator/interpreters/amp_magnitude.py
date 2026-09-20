@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
+from functools import partial
 
 from ..item_behavior import (
     AbsoluteWindow,
@@ -195,8 +196,7 @@ def amp_fields(
     if not isinstance(payload, (DeltaAmpRule, PartAmpRule)):
         raise DeltaAmpInterpretationError(f"{rule.mechanic_id} is not a delta-amp rule")
 
-    def field(name: str, value: float) -> KernelField:
-        return KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
+    field = partial(KernelField, lane=lane, rule_id=rule.mechanic_id)
 
     fields = list(_magnitude_fields(payload.magnitude, ctx, field))
     if isinstance(payload.activation, AbsoluteWindow):

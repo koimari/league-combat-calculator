@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from functools import partial
 
 from ..item_behavior import (
     BehaviorRule,
@@ -52,10 +53,9 @@ def routing_fields(
     routing reaches and what share of the swing rides it.  A third field would
     be a second producer of a number a source family already declares.
 
-    Registered for both the pair engine and the receipt walk: the lane is the
-    only thing that differs between them, so one body is what makes "the walk
-    reads the same declaration the pair engine reads" a property of the tree
-    rather than a claim two functions could drift out of.
+    Registered for both the pair engine and the receipt walk, with the lane
+    the only difference, so "the walk reads the declaration the pair engine
+    reads" is a property of the tree rather than two bodies' claim.
     """
     payload = rule.payload
     if not isinstance(payload, SecondaryTargetRule):
@@ -63,13 +63,7 @@ def routing_fields(
             f"{rule.mechanic_id} is not a secondary-target rule"
         )
 
-    def field(name: str, value: float) -> KernelField:
-        return KernelField(
-            name=name,
-            value=value,
-            lane=lane,
-            rule_id=rule.mechanic_id,
-        )
+    field = partial(KernelField, lane=lane, rule_id=rule.mechanic_id)
 
     return (
         field(MAX_TARGETS_FIELD, resolve(payload.max_targets, ctx.level)),

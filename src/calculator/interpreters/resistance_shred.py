@@ -33,6 +33,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass
+from functools import partial
 
 from ..ability_spec import DamageClass
 from ..item_behavior import (
@@ -114,8 +115,7 @@ def ramp_fields(
             f"{rule.mechanic_id} is not a resistance-shred rule"
         )
 
-    def field(name: str, value: float) -> KernelField:
-        return KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
+    field = partial(KernelField, lane=lane, rule_id=rule.mechanic_id)
 
     ramp = payload.ramp
     return (

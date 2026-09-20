@@ -28,6 +28,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from functools import partial
 
 from ..item_behavior import (
     BehaviorRule,
@@ -93,9 +94,7 @@ def pair_fields(
     same reason the magnitude carries a split rather than the typing carrying
     an attack class.
     """
-
-    def field(name: str, value: float) -> KernelField:
-        return KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
+    field = partial(KernelField, lane=lane, rule_id=rule.mechanic_id)
 
     payload = rule.payload
     if isinstance(payload, ExecuteRule):
@@ -138,9 +137,7 @@ def walk_fields(
     resolved against the holder paying it and a venom against the holder
     applying it.
     """
-
-    def field(name: str, value: float) -> KernelField:
-        return KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
+    field = partial(KernelField, lane=lane, rule_id=rule.mechanic_id)
 
     payload = rule.payload
     if isinstance(payload, ExecuteRule):
