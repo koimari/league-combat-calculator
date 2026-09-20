@@ -230,7 +230,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     rank = _healing.parsed_rank(ctx.ability_damages, "Q")
     amount = extract_named(ability, "Heal", rank, ctx.champion_stats, {})
     for event in ctx.damage_events:
-        if _healing.event_source(event) == "Q":
+        if _healing.ledger_source_key(event) == "Q":
             _healing.heal_from_damage(healing, event, amount, "Bladesurge")
     return healing
 

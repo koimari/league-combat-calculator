@@ -200,7 +200,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         lambda source: source in {"Q", "auto_attacks", "R"},
     ):
         event = payment.event
-        source = _healing.event_source(event)
+        source = _healing.ledger_source_key(event)
         if source in ("Q", "auto_attacks") and q_ratio > 0.0:
             _healing.heal_from_damage(
                 healing,

@@ -198,7 +198,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         else 0
     )
     for event in ctx.damage_events:
-        if _healing.event_source(event) != "Q" or tick_count <= 0:
+        if _healing.ledger_source_key(event) != "Q" or tick_count <= 0:
             continue
         trigger = _healing.trigger_fields(event)
         healing.extend(

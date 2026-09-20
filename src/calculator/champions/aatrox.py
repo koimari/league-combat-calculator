@@ -49,7 +49,7 @@ from ..damage_event_row import event_time as _row_time
 from ..healing_helpers import (
     HealAnchor,
     ability_json,
-    event_source,
+    ledger_source_key,
     leveling_value,
     trigger_fields,
 )
@@ -332,7 +332,7 @@ def _is_persistent(event: dict[str, Any]) -> bool:
     The engine's own source keys are stable public receipts for these rows;
     no damage amount or champion archetype is guessed here.
     """
-    source = event_source(event).lower()
+    source = ledger_source_key(event).lower()
     return (
         source.startswith(("burn_", "stacking_dot_", "immolate_"))
         or "tibbers_aura" in source

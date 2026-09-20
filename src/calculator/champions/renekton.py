@@ -15,7 +15,12 @@ here, so it emits that sourced zero-damage row: MODULE_COVERAGE reads
 from functools import partial
 from typing import Any
 
-from ..healing_helpers import ability_json, event_source, heal_from_damage, parsed_rank
+from ..healing_helpers import (
+    ability_json,
+    heal_from_damage,
+    ledger_source_key,
+    parsed_rank,
+)
 from .contract_vocabulary import coverage
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .packet_module import build_packet_module
@@ -84,7 +89,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     rank = parsed_rank(ctx.ability_damages, "Q")
     amount = extract_named(ability, "Champion Healing", rank, ctx.champion_stats, {})
     for event in ctx.damage_events:
-        if event_source(event) == "Q":
+        if ledger_source_key(event) == "Q":
             heal_from_damage(healing, event, amount, "Cull the Meek")
     return healing
 

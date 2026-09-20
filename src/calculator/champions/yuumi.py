@@ -65,7 +65,7 @@ from ..cast_event_row import cast_time as _row_cast_time
 from ..healing_helpers import (
     HealAnchor,
     ability_json,
-    event_source,
+    ledger_source_key,
     parsed_rank,
     payments,
 )
@@ -320,7 +320,7 @@ def _feline_friendship_heals(
     ready = 0.0
     for payment in sorted(
         payments(HealAnchor.DAMAGING_HIT, _P_TRIGGER_SOURCES, damage_events),
-        key=lambda pay: (pay.cast_time, event_source(pay.event)),
+        key=lambda pay: (pay.cast_time, ledger_source_key(pay.event)),
     ):
         if payment.cast_time + 1e-9 < ready:
             continue

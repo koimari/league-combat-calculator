@@ -494,7 +494,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
             # count as ability attacks for the heal.
             ratio = (
                 basic_ratio
-                if _healing.event_source(event) == "auto_attacks"
+                if _healing.ledger_source_key(event) == "auto_attacks"
                 else ability_ratio
             )
             amount = max(0.0, _row_damage(event)) * ratio

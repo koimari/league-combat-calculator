@@ -342,7 +342,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     q_rank = _healing.parsed_rank(ctx.ability_damages, "Q")
     q_ratio = extract_named(q, "Healing Percentage", q_rank, ctx.champion_stats, {})
     for event in ctx.damage_events:
-        source = _healing.event_source(event)
+        source = _healing.ledger_source_key(event)
         if source == "Q":
             _healing.heal_from_damage(
                 healing,

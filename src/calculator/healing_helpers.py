@@ -19,11 +19,22 @@ from __future__ import annotations
 from collections.abc import Callable, Container, Iterable, Mapping
 from dataclasses import dataclass
 from enum import Enum
+from functools import partial
 from typing import Any
+
+from .event_row_field import required_field
 
 # The event source a heal rule reads: a slot letter, a set of source keys,
 # or a predicate over the key.
 HealSource = str | Container[str] | Callable[[str], bool]
+
+# A reconstructed ledger row keys its slot as ``source_key``; the published
+# breakdown row names itself ``source`` and ``damage_event_row`` reads that one.
+_required_ledger_field = partial(
+    required_field,
+    kind="ledger damage event",
+    stamper="fight.ledger.event_rows",
+)
 
 
 def modifier_at_rank(
@@ -95,15 +106,16 @@ def leveling_ratio(
     return 0.0
 
 
-def event_source(event: Mapping[str, Any]) -> str:
-    return str(event.get("source_key", ""))
+def ledger_source_key(event: Mapping[str, Any]) -> str:
+    """The slot key a ledger damage event carries, never a row's ``source``."""
+    return str(_required_ledger_field(event, "source_key"))
 
 
 def attributed_events(
     events: Iterable[dict[str, Any]],
     predicate: Callable[[str, dict[str, Any]], bool],
 ) -> list[dict[str, Any]]:
-    return [event for event in events if predicate(event_source(event), event)]
+    return [event for event in events if predicate(ledger_source_key(event), event)]
 
 
 def parsed_rank(ability_damages: Mapping[str, dict[str, Any]], slot: str) -> int:
@@ -117,7 +129,7 @@ def parsed_rank(ability_damages: Mapping[str, dict[str, Any]], slot: str) -> int
 def trigger_fields(event: dict[str, Any]) -> dict[str, Any]:
     """Carry a stable internal receipt for the damage that caused a heal."""
     fields: dict[str, Any] = {
-        "_trigger_source": event_source(event),
+        "_trigger_source": ledger_source_key(event),
         "_trigger_time": float(event.get("time", 0.0)),
     }
     if event.get("sequence") is not None:
@@ -337,10 +349,10 @@ def _events_matching(
 ) -> list[dict[str, Any]]:
     """Damage events whose source key the rule claims."""
     if callable(source):
-        return [event for event in damage_events if source(event_source(event))]
+        return [event for event in damage_events if source(ledger_source_key(event))]
     if isinstance(source, str):
-        return [event for event in damage_events if event_source(event) == source]
-    return [event for event in damage_events if event_source(event) in source]
+        return [event for event in damage_events if ledger_source_key(event) == source]
+    return [event for event in damage_events if ledger_source_key(event) in source]
 
 
 def _attributing_cast(cast_times: Iterable[float], event_time: float) -> float | None:

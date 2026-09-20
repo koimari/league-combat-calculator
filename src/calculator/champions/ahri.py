@@ -208,7 +208,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
             ctx.champion_stats,
         )
         for event in ctx.damage_events:
-            source = _healing.event_source(event)
+            source = _healing.ledger_source_key(event)
             if source not in {"Q", "W", "E", "R"}:
                 continue
             _healing.heal_from_damage(

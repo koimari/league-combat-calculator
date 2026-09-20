@@ -568,7 +568,6 @@ ENGINE_ROW|champions/vi.py|_denting_stream|dict.get|"Q" 1
 ENGINE_ROW|champions/vladimir.py|derive_self_healing|or-default|"raw_damage" 1
 ENGINE_ROW|champions/xin_zhao.py|derive_self_healing|or-default|"stacks_required" 1
 ENGINE_ROW|healing_helpers.py|cast_slot_times|dict.get|"time" 1
-ENGINE_ROW|healing_helpers.py|event_source|dict.get|"source_key" 1
 ENGINE_ROW|healing_helpers.py|heal_from_damage|dict.get|"damage" 1
 ENGINE_ROW|healing_helpers.py|heal_from_damage|dict.get|"time" 1
 ENGINE_ROW|healing_helpers.py|payments|dict.get|"damage" 1
