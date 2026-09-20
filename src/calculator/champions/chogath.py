@@ -43,6 +43,7 @@ from .slot_control import with_control
 from .slot_entries import damage_entry
 from .slot_extract import (
     ability_name,
+    extract_cast_time,
     extract_cooldown,
     extract_named,
     extract_value,
@@ -75,11 +76,16 @@ _DEFAULT_FEAST_STACKS = 6
 # after a 0.627 seconds delay ... dealing magic damage to enemies within
 # and knocking them up for 1 second", with the cached note "The delay
 # before the rupture does not include the cast time."  ``time_offset`` is
-# measured from the cast start, so the cached castTime (0.5) is added to
-# the cached delay; both numbers come from the same Q entry.
-_Q_CAST_TIME_S = 0.5
+# measured from the cast start, so the cached castTime is added to the
+# cached delay; both numbers come from the same Q entry.
 _Q_RUPTURE_DELAY_S = 0.627
-_Q_RUPTURE_FROM_CAST_START_S = _Q_CAST_TIME_S + _Q_RUPTURE_DELAY_S
+
+
+@ability_slot()
+def _rupture(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
+    """Q: the eruption, at the cached cast time plus the cached delay."""
+    delay = extract_cast_time(ability) + _Q_RUPTURE_DELAY_S
+    return delayed_damage(delay=delay, attr="Magic damage", dmg_type="magic")(ctx)
 
 
 def _feast_stacks(ctx: SlotCtx) -> int:
@@ -246,11 +252,7 @@ ASSUMPTIONS = [
 SLOTS = {
     "P": _carnivore,
     "R": _feast,
-    "Q": delayed_damage(
-        delay=_Q_RUPTURE_FROM_CAST_START_S,
-        attr="Magic damage",
-        dmg_type="magic",
-    ),
+    "Q": _rupture,
     # One roar in a cone, landing at the cast, carrying the sourced silence.
     "W": with_control(
         simple_damage(
