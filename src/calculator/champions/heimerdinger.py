@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Mapping
+from types import MappingProxyType
+from typing import Any, NamedTuple
 
 from ..ability_spec import DamagePart
 from .charge_cadence import ChargeRule
@@ -22,7 +24,7 @@ from .slot_extract import (
     extract_cooldown,
     extract_named,
 )
-from .source_receipts import load_champion_sources
+from .source_receipts import load_champion_sources, state_receipt
 
 
 def _turret_damage(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -96,29 +98,45 @@ _E_UPGRADED_VALUES = (100.0, 200.0, 300.0)
 _E_UPGRADED_AP_RATIO = 0.60
 
 
-class _MicroRocketsRule:
-    """The typed Hextech Micro-Rockets declaration (P3 package 3Z).
+class _MicroRocketsRule(NamedTuple):
+    """The typed Hextech Micro-Rockets declaration.
 
     W prices one first rocket from the "Initial Rocket Magic Damage"
     row + (n-1) subsequent rockets from the "Subsequent Rocket Magic
     Damage" row (the per-rocket champion reduction).  The cached
-    leveling rows are degraded (units arrays empty) — the module names
+    leveling rows are degraded (units arrays empty), so the module names
     the explicit rows, which resolve flat.  The rocket count (1..5,
     default 5) and the timing pins (subsequent 0.35 start @ 0.08
     interval = module-authored) ride the ``w_rockets`` option's state
     receipt; the first rocket lands on the cached W ``castTime``.
     """
 
-    def __init__(self) -> None:
-        self.first_row_attribute = "Initial Rocket Magic Damage"
-        self.subsequent_row_attribute = "Subsequent Rocket Magic Damage"
-        self.first_time_source = "cached W castTime"
-        self.subsequent_time_offset = _W_LATER_TIME_OFFSET
-        self.hit_interval = _W_HIT_INTERVAL
-        self.default = 5
-        self.min = 1
-        self.max = 5
-        self.source = {
+    first_row_attribute: str
+    subsequent_row_attribute: str
+    first_time_source: str
+    subsequent_time_offset: float
+    hit_interval: float
+    default: int
+    min: int
+    max: int
+    source: Mapping[str, Any]
+
+    def public_receipt(self) -> dict[str, Any]:
+        """The published Micro-Rockets declaration."""
+        return state_receipt("Heimerdinger — Hextech Micro-Rockets (W)", self)
+
+
+HEIMER_W_ROCKETS_RULE = _MicroRocketsRule(
+    first_row_attribute="Initial Rocket Magic Damage",
+    subsequent_row_attribute="Subsequent Rocket Magic Damage",
+    first_time_source="cached W castTime",
+    subsequent_time_offset=_W_LATER_TIME_OFFSET,
+    hit_interval=_W_HIT_INTERVAL,
+    default=5,
+    min=1,
+    max=5,
+    source=MappingProxyType(
+        {
             "label": "Local League Wiki cache — Heimerdinger W template",
             "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Heimerdinger/W",
             "revision_id": 2864243,
@@ -128,45 +146,45 @@ class _MicroRocketsRule:
             "subsequent_time_offset/hit_interval are module-authored "
             "(no JSON home), flagged uncertified.",
         }
-
-    def public_receipt(self) -> dict[str, Any]:
-        return {
-            "name": "Heimerdinger — Hextech Micro-Rockets (W)",
-            "first_row_attribute": self.first_row_attribute,
-            "subsequent_row_attribute": self.subsequent_row_attribute,
-            "first_time_source": self.first_time_source,
-            "subsequent_time_offset": self.subsequent_time_offset,
-            "hit_interval": self.hit_interval,
-            "default": self.default,
-            "min": self.min,
-            "max": self.max,
-            "source": dict(self.source),
-        }
+    ),
+)
 
 
-HEIMER_W_ROCKETS_RULE = _MicroRocketsRule()
-
-
-class _GrenadeRule:
-    """The typed Electron Storm Grenade declaration (P3 package 3Z).
+class _GrenadeRule(NamedTuple):
+    """The typed Electron Storm Grenade declaration.
 
     E prices ONE champion damage instance per cast.  The base variant
-    reads the cached "Magic Damage" row (degraded units — resolved
+    reads the cached "Magic Damage" row (degraded units, resolved
     flat); the R-upgraded variant prices the module tuple
-    100/200/300 (+60% AP) — the cached E[1] row is HALF-PARSED
-    (modifiers:[] — the numbers survive only in the attribute string),
+    100/200/300 (+60% AP), because the cached E[1] row is HALF-PARSED
+    (modifiers:[], the numbers survive only in the attribute string),
     so the tuple is a declared module constant with provenance.  The
     0.6 impact offset is module-authored (uncertified).  Bounces,
     stun and slow are control state, not damage.
     """
 
-    def __init__(self) -> None:
-        self.base_row_attribute = "Magic Damage"
-        self.upgraded_values = _E_UPGRADED_VALUES
-        self.upgraded_ap_ratio = _E_UPGRADED_AP_RATIO
-        self.time_offset = _E_TIME_OFFSET
-        self.one_instance = True
-        self.source = {
+    base_row_attribute: str
+    upgraded_values: tuple[float, ...]
+    upgraded_ap_ratio: float
+    time_offset: float
+    one_instance: bool
+    source: Mapping[str, Any]
+
+    def public_receipt(self) -> dict[str, Any]:
+        """The published Electron Storm Grenade declaration."""
+        return state_receipt(
+            "Heimerdinger — CH-2/CH-3X Electron Storm Grenade (E)", self
+        )
+
+
+HEIMER_E_GRENADE_RULE = _GrenadeRule(
+    base_row_attribute="Magic Damage",
+    upgraded_values=_E_UPGRADED_VALUES,
+    upgraded_ap_ratio=_E_UPGRADED_AP_RATIO,
+    time_offset=_E_TIME_OFFSET,
+    one_instance=True,
+    source=MappingProxyType(
+        {
             "label": "Local League Wiki cache — Heimerdinger E template",
             "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Heimerdinger/E",
             "revision_id": 2864389,
@@ -177,20 +195,8 @@ class _GrenadeRule:
             "time_offset is module-authored (no JSON home) — flagged "
             "uncertified.",
         }
-
-    def public_receipt(self) -> dict[str, Any]:
-        return {
-            "name": "Heimerdinger — CH-2/CH-3X Electron Storm Grenade (E)",
-            "base_row_attribute": self.base_row_attribute,
-            "upgraded_values": list(self.upgraded_values),
-            "upgraded_ap_ratio": self.upgraded_ap_ratio,
-            "time_offset": self.time_offset,
-            "one_instance": self.one_instance,
-            "source": dict(self.source),
-        }
-
-
-HEIMER_E_GRENADE_RULE = _GrenadeRule()
+    ),
+)
 
 
 @ranked_slot
