@@ -24,7 +24,6 @@ from typing import NamedTuple
 
 import pytest
 
-from src.calculator.survival import actions as actions_module
 from src.calculator.survival import classify, phases
 from src.calculator.survival.actions import (
     action_key,
@@ -767,10 +766,7 @@ def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:
     is the point — the pin moves when *another* change publishes something,
     never when this one does.)
     """
-    from src.calculator.capabilities import (
-        CAPABILITY_SCHEMA_VERSION,
-        PARTICIPANT_LEDGER_CONTRACT,
-    )
+    from src.calculator.capabilities import PARTICIPANT_LEDGER_CONTRACT
     from src.calculator.survival.phases import public_phase
 
     assert public_phase(TransitionRank.DEBUFF_ARM) == "state_transition"

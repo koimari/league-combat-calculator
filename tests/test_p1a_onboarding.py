@@ -17,9 +17,6 @@ browser, following the F0/P5 static-contract pattern:
 * ``node --check`` still passes for the shipped JS
 """
 
-import re
-import shutil
-import subprocess
 from pathlib import Path
 
 import pytest

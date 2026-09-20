@@ -5,13 +5,11 @@ waves by a stacking 10%.
 """
 
 import copy
-import inspect
 import itertools
 
 import pytest
 
 from src import app as app_module
-from src.calculator import healing_reduction
 from src.calculator.champions import get_champion_module_contract, yuumi
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review

@@ -20,10 +20,7 @@ import pytest
 from src import app as app_module
 from src.calculator import ally_packet_shape
 from src.calculator.ability_spec import AttackClass, Authority, DamageClass
-from src.calculator.capabilities import (
-    CAPABILITY_SCHEMA_VERSION,
-    PARTICIPANT_LEDGER_CONTRACT,
-)
+from src.calculator.capabilities import PARTICIPANT_LEDGER_CONTRACT
 from src.calculator.item_support_effects import derive_item_support_effects
 from src.calculator.survival.classify import SUPPORT_RANK_KEY, support_transition_rank
 from src.calculator.survival.phases import TransitionRank, ordering_slot, public_phase

@@ -83,7 +83,6 @@ from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival.compile import unrepresentable_template_receipt
 

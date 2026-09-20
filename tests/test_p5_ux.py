@@ -15,7 +15,6 @@ These tests pin the *contracts the browser UI consumes* without a browser:
   cards and single-column picker grids
 """
 
-import re
 import shutil
 import subprocess
 from pathlib import Path

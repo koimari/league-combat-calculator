@@ -15,7 +15,6 @@ These tests pin the F0 redesign without a browser:
 """
 
 import json
-import re
 import shutil
 import subprocess
 from pathlib import Path

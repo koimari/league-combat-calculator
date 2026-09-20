@@ -17,7 +17,6 @@ initialiser, so its two rules are pinned here too, and S9 adds
 from __future__ import annotations
 
 import ast
-import re
 from pathlib import Path
 from types import SimpleNamespace
 

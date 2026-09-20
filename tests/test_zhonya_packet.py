@@ -81,7 +81,6 @@ from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.pipeline import run_fight
 from src.calculator.starting_defenses import StartingDefenses, defense_source
 from src.calculator.stats import calculate_total_stats
 from tests import item_probe

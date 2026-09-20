@@ -12,7 +12,6 @@ from src.calculator import champion_rotation_rule
 from src.calculator import champions as champions_package
 from src.calculator.ability_dps_matrix import rank_ability_dps
 from src.calculator.cast_edge_inference import detect_setup_consume_edges
-from src.calculator.cast_edge_markers import _PRE_CAMPAIGN_CC_ORDERING
 from src.calculator.champion_rotation_rule import _DERIVED_RULE_CACHE
 from src.calculator.champions import get_champion_cast_order, parse_champion_abilities
 from src.calculator.champions.slot_cc import _apply_module_cc

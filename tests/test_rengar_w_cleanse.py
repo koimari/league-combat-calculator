@@ -118,8 +118,7 @@ from src.calculator.cleanse_declarations import (
     ITEM_CLEANSE_DECLARATIONS,
     resolve_cleanse_item,
 )
-from src.calculator.cleanse_eligibility import CleanseDecision, CleanseEligibility
-from src.calculator.control_intervals import truncate_intervals
+from src.calculator.cleanse_eligibility import CleanseEligibility
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.fight.config import FightConfig

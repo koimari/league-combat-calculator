@@ -102,10 +102,8 @@ from src.calculator.ledger_inputs import SHARED_ROW_FIELDS, LightRow
 from src.calculator.optimizer_candidates import get_eligible_legendaries
 from src.calculator.participant_timeline import (
     Combatant,
-    CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.pipeline import run_fight
 from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival.compile import (

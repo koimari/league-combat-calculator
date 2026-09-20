@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 
 from src.calculator.capabilities import (
-    CAPABILITY_SCHEMA_VERSION,
     FIGHT_EFFECTIVE_STATS,
     PARTICIPANT_LEDGER_CONTRACT,
     PRE_COMBAT_STATS,

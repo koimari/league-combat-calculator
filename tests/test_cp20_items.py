@@ -34,7 +34,6 @@ from src.calculator.item_effects import (
     manaflow_declaration,
     manaflow_items,
     required_effect_value,
-    resolve_damage_effects,
 )
 from src.calculator.item_support_effects import derive_item_support_effects
 from src.calculator.manaflow_ledger import ManaflowDeclaration, ManaflowLedger

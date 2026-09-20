@@ -100,7 +100,6 @@ from src.calculator.participant_timeline import (
     _WalkCompiler,
     build_participant_timeline,
 )
-from src.calculator.pipeline import run_fight
 from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival.compile import unrepresentable_template_receipt
