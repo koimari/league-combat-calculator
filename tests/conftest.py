@@ -35,6 +35,9 @@ the one deliberate removal: in a *filtered* session the full-session tier is
 reports skipped is a tier that reports nothing.
 """
 
+import functools
+import sys
+
 import pytest
 
 from src.calculator.champions import parse_champion_abilities
@@ -283,6 +286,43 @@ def parse_at():
         return stats, abilities
 
     return _parse
+
+
+def _binders_of(value, name):
+    """Every imported module binding *value* under *name*."""
+    return [
+        module
+        for module in list(sys.modules.values())
+        if getattr(module, name, None) is value
+    ]
+
+
+@pytest.fixture
+def cold_memo(monkeypatch):
+    """Hand one test an empty copy of a process-wide memo.
+
+    ``.clear()`` on a module-level cache evicts it for every later test on
+    the same xdist worker, which costs them the warm table and, when two
+    tests share a worker, lets one measure the other's state.  Rebinding
+    gives this test a cold read and puts the warm table back at teardown.
+    An ``lru_cache`` is rebuilt around the same function at the same
+    parameters, and every module that imported the memo by name is rebound
+    with it, because a ``from ... import`` alias is what a clear reached
+    and a plain ``setattr`` on the owner would not.
+    """
+
+    def _cold(module, name):
+        current = getattr(module, name)
+        wrapped = getattr(current, "__wrapped__", None)
+        if wrapped is None:
+            fresh = type(current)()
+        else:
+            fresh = functools.lru_cache(**current.cache_parameters())(wrapped)
+        for binder in dict.fromkeys([module, *_binders_of(current, name)]):
+            monkeypatch.setattr(binder, name, fresh)
+        return fresh
+
+    return _cold
 
 
 @pytest.fixture

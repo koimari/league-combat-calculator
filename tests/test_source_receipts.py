@@ -15,7 +15,7 @@ VALID_ROW = {
 
 
 @pytest.fixture(name="receipt_root")
-def fixture_receipt_root(tmp_path, monkeypatch):
+def fixture_receipt_root(tmp_path, monkeypatch, cold_memo):
     """Point the loader at a temporary static root, isolating its cache."""
     monkeypatch.setattr(source_receipts, "_STATIC_ROOT", tmp_path)
     monkeypatch.setattr(
@@ -24,9 +24,8 @@ def fixture_receipt_root(tmp_path, monkeypatch):
     monkeypatch.setattr(
         source_receipts, "_PACKET_MANIFEST", tmp_path / "reviewed-packets.json"
     )
-    source_receipts._source_index.cache_clear()
-    yield tmp_path
-    source_receipts._source_index.cache_clear()
+    cold_memo(source_receipts, "_source_index")
+    return tmp_path
 
 
 def _write(root, name, payload):

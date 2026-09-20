@@ -31,13 +31,6 @@ from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.rotation_resolver import resolve_cast_order
 
 
-@pytest.fixture(autouse=True)
-def _clear_resolver_cache():
-    """The resolver cache is process-global; keep tests order-independent."""
-    yield
-    champion_rotation_rule._DERIVED_RULE_CACHE.clear()
-
-
 @pytest.fixture(scope="session")
 def champion_by_name():
     champions = fetch_champion_data()
@@ -219,14 +212,14 @@ class TestKalistaSoulMarkProc:
         assert "soul_mark_proc" in _receipt_text(rule_on)
 
     def test_option_gated_w_is_deterministic_across_cache_warmth(
-        self, champion_by_name, items_by_name
+        self, champion_by_name, items_by_name, cold_memo
     ) -> None:
         """Cold cache must not drop the option-gated W slot (issue #145 §6)."""
         data = champion_by_name["Kalista"]
         parsed_on = _parse(
             data, 11, (), items_by_name, champion_options={"soul_mark_proc": True}
         )
-        champion_rotation_rule._DERIVED_RULE_CACHE.clear()  # cold
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
         order_cold, rule_cold = _resolve(
             data, parsed_on, champion_options={"soul_mark_proc": True}
         )
@@ -241,7 +234,7 @@ class TestKalistaSoulMarkProc:
         assert "soul_mark_proc" in _receipt_text(rule_warm)
 
     def test_pipeline_path_without_resolver_options_is_deterministic(
-        self, champion_by_name, items_by_name
+        self, champion_by_name, items_by_name, cold_memo
     ) -> None:
         """The pipeline calls the resolver without champion_options; the
         option-gated W must still survive a cold cache via the base-order
@@ -250,7 +243,7 @@ class TestKalistaSoulMarkProc:
         parsed_on = _parse(
             data, 11, (), items_by_name, champion_options={"soul_mark_proc": True}
         )
-        champion_rotation_rule._DERIVED_RULE_CACHE.clear()
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
         order_cold, _ = _resolve(data, parsed_on)
         order_warm, _ = _resolve(data, parsed_on)
         assert order_cold == order_warm
@@ -277,7 +270,7 @@ class TestSelfStateOptions:
 
 class TestNoSignalGuard:
     def test_unclassified_option_never_claims_no_signal(
-        self, champion_by_name, items_by_name, monkeypatch
+        self, champion_by_name, items_by_name, monkeypatch, cold_memo
     ) -> None:
         """A receipt cannot claim "no detectable setup/consume signal" while
         an enabled option is unclassified (issue #145 acceptance)."""
@@ -293,7 +286,7 @@ class TestNoSignalGuard:
 
         for module in (cast_edge_inference, champion_rotation_rule):
             monkeypatch.setattr(module, "get_champion_option_rotation", unclassified)
-        champion_rotation_rule._DERIVED_RULE_CACHE.clear()
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
         _order, rule = _resolve(data, parsed)
         assert "unclassified" in rule.rationale
         assert "no detectable setup/consume signal" not in rule.rationale
@@ -301,15 +294,15 @@ class TestNoSignalGuard:
 
 class TestCacheBoundary:
     def test_partial_fight_does_not_poison_full_kit_rule(
-        self, champion_by_name, items_by_name
+        self, champion_by_name, items_by_name, cold_memo
     ) -> None:
         """A partial request must not become the cached full-kit order."""
         data = champion_by_name["Ezreal"]
         full = _parse(data, 11, (), items_by_name)
         partial = {"Q": full["Q"]}
 
-        champion_rotation_rule._DERIVED_RULE_CACHE.clear()
-        ability_dps_matrix._MATRIX_DPS_CACHE.clear()
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
+        cold_memo(ability_dps_matrix, "_MATRIX_DPS_CACHE")
         partial_order, _ = _resolve(data, partial)
         full_order, _ = _resolve(data, full)
 

@@ -13,7 +13,6 @@ from src.calculator import champions as champions_package
 from src.calculator.ability_dps_matrix import rank_ability_dps
 from src.calculator.cast_edge_inference import detect_setup_consume_edges
 from src.calculator.cast_edge_markers import _PRE_CAMPAIGN_CC_ORDERING
-from src.calculator.champion_rotation_rule import _DERIVED_RULE_CACHE
 from src.calculator.champions import get_champion_cast_order, parse_champion_abilities
 from src.calculator.champions.slot_cc import _apply_module_cc
 from src.calculator.data_fetcher import fetch_champion_data
@@ -218,7 +217,7 @@ class TestAModuleAuthoredKitFactDoesNotOrderTheRotation:
         )
 
     @staticmethod
-    def _derive(monkeypatch, champion_name, champion_data, parsed):
+    def _derive(monkeypatch, champion_name, champion_data, parsed, cold_memo):
         """The derived rule for *parsed*, through the production path.
 
         ``derive_champion_rule`` re-parses the canonical kit itself, so the
@@ -229,21 +228,18 @@ class TestAModuleAuthoredKitFactDoesNotOrderTheRotation:
         monkeypatch.setattr(
             champion_rotation_rule, "_canonical_kit_parse", lambda *_a, **_k: parsed
         )
-        _DERIVED_RULE_CACHE.clear()
-        try:
-            return resolve_cast_order(
-                champion_name,
-                parsed,
-                champion_data=champion_data,
-                certified_order=get_champion_cast_order(champion_name),
-            )
-        finally:
-            _DERIVED_RULE_CACHE.clear()
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
+        return resolve_cast_order(
+            champion_name,
+            parsed,
+            champion_data=champion_data,
+            certified_order=get_champion_cast_order(champion_name),
+        )
 
     @pytest.mark.parametrize("champion_name", CHAMPIONS)
     @pytest.mark.parametrize("authoring", ["declared", "authored"])
     def test_recording_control_changes_no_order_and_no_rationale(
-        self, champions, monkeypatch, champion_name, authoring
+        self, champions, monkeypatch, champion_name, authoring, cold_memo
     ) -> None:
         """The ruling itself, on the strongest form of each authoring site:
         every slot of the kit carries a stun, and nothing moves."""
@@ -252,13 +248,13 @@ class TestAModuleAuthoredKitFactDoesNotOrderTheRotation:
         marked = self._marked(champion_name, data)
 
         silent_order, silent_rule = self._derive(
-            monkeypatch, champion_name, data, silent
+            monkeypatch, champion_name, data, silent, cold_memo
         )
         self._declaring(
             monkeypatch, champion_name, marked if authoring == "declared" else ()
         )
         marked_order, marked_rule = self._derive(
-            monkeypatch, champion_name, data, marked
+            monkeypatch, champion_name, data, marked, cold_memo
         )
 
         assert marked_order == silent_order

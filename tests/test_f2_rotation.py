@@ -342,18 +342,20 @@ class TestCastOrderOverrides:
             ComboRule(champion="X", order=("Q",), rationale="").override_reason is None
         )
 
-    def test_an_unreasoned_override_fails_at_import(self) -> None:
+    def test_an_unreasoned_override_fails_at_import(self, monkeypatch) -> None:
         """The check is reachable: it fires on a table with a bad entry."""
-        original = dict(CAST_ORDER_OVERRIDES)
-        CAST_ORDER_OVERRIDES["Synthetic"] = ComboRule(
-            champion="Synthetic", order=("Q",), rationale="", override_reason="vibes"
+        monkeypatch.setitem(
+            CAST_ORDER_OVERRIDES,
+            "Synthetic",
+            ComboRule(
+                champion="Synthetic",
+                order=("Q",),
+                rationale="",
+                override_reason="vibes",
+            ),
         )
-        try:
-            with pytest.raises(ValueError, match="override_reason"):
-                _validate_override_reasons()
-        finally:
-            CAST_ORDER_OVERRIDES.clear()
-            CAST_ORDER_OVERRIDES.update(original)
+        with pytest.raises(ValueError, match="override_reason"):
+            _validate_override_reasons()
 
     def test_every_rule_has_order_rationale_and_sources(self) -> None:
         for name, rule in CAST_ORDER_OVERRIDES.items():

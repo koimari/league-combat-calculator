@@ -523,13 +523,14 @@ def test_the_unbounded_memo_set_is_the_keyed_set_minus_the_bounded_ones() -> Non
 
 def test_the_ability_atoms_memo_drops_its_superseded_generation(
     bumped_version,
+    cold_memo,
 ) -> None:
     """The eviction claim, for the memo the merge added to the keyed table."""
     from src.calculator import ability_atoms
     from src.calculator.data_fetcher import get_champion
 
     champion = get_champion("Ahri")
-    ability_atoms._ABILITY_ATOMS_MEMO.clear()
+    cold_memo(ability_atoms, "_ABILITY_ATOMS_MEMO")
     ability_atoms._ability_atoms("Ahri", champion)
     before = len(ability_atoms._ABILITY_ATOMS_MEMO)
 
