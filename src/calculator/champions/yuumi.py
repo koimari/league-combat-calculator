@@ -1,61 +1,22 @@
-"""Yuumi — CP10.10 full-entry-reviewed packet module.
+"""Yuumi: ally-support slot map.
 
-E8d ally-support: E (Zoomies) grants the caster a shield (Shield 65-165 +
-40% AP; scope one_teammate — the attached anchor) and R (Final Chapter)
-heals allies hit by the waves (Heal per Hit x5 == Total Heal, scope
-one_teammate).  Both events are authored by the engine's ally-support
-scanner from cached leveling at the cast times; the module declares E/R in
-SLOTS so the fight rotation casts them.
-
-Two ally-support riders, both authored by the scanner on the R cast:
-- Best Friend Bonus: Final Chapter's heal to the Best Friend is increased
-  by 30% : 60% (based on level) — the deterministic roster model treats
-  the selected teammate as the anchor/Best Friend (the same teammate the E
-  shield already targets), so the bonus is a second heal packet
-  (``heal:R:<cast>:best_friend``) priced at the sourced per-level row,
-  read with the repo's clamped level convention (endpoints exact).
-- Overheal conversion: "each heal instance beyond maximum health being
-  converted into a shield that lasts for 1.5 seconds plus the remaining
-  channel duration instead" — one conversion shield per heal packet with a
-  live excess formula (max(0, heal - missing health)) and a sourced
-  lifetime of 1.5s + the full 3.5s channel (the scanner lumps the heal at
-  the cast).  The heal actions still book the same excess as overhealing
-  (the kernel's excess-conversion carve-out applies only to heal-compiled
-  events, not support templates — survival/ is outside this wave's edit
-  boundary), so the public receipt shows both lines and the shield is the
-  authored effect.
-- The self-heal stream of R (5 waves x Heal per Hit) is owned by this
-  module's ``derive_self_healing`` rule and is unchanged.
-P (Feline Friendship) is ``modeled`` through ``COVERAGE_CHANNELS``
-(``self_healing_rule``).  The heal is hit-anchored, which is a channel
-this kernel has: ``healing_helpers.HealAnchor.DAMAGING_HIT`` pays per
-damaging hit and is read against the ``auto_attacks`` source key by
-Briar's lifesteal rule (``briar.py``), Kindred, Maokai and Aphelios.
-Both of P's gates are cached rows this module reads live — the per-level
-"Heal" (20 : 120.59 by level + 30% AP) and the passive's own per-level
-cooldown (20 : 8s, with ``affectedByCdr`` false, so ability haste never
-shortens the recharge).  The heal's ANCHOR half is what has no channel:
-the ally-support scanner hangs packets on CASTS and a passive is never
-cast (``champions/engine.py`` keys a P entry "passive" and no rotation
-schedules one), so only the self half is priced.
-
-W (You and Me!) is ``no_damage``: the whole slot is attachment, dashing and
-the Best Friend Bonus, with no enemy-damage clause anywhere in it
-(``damageType: None``, ``affects: Allies``, and both leveling rows are
-recovery rows).  Its heal-and-shield-power half is withheld on its
-CONDITION, not for want of a channel.  The CASTER hook is live:
-``heal_and_shield_power_percent`` is a real stat key,
-``damage._apply_stat_buff_ultimates`` adds any stat key generically, and
-``healing_reduction.heal_and_shield_power_factor`` reads it back for the
-caster at ``pipeline._attach_display_splits`` and as
-``ctx.heal_power(action.attacker)`` in ``survival/transitions``.  The
-condition is being attached to a Best Friend, which no module-visible
-state can establish — see ASSUMPTIONS.
-
-E's shield reaches the anchor rather than Yuumi through the scanner's
-sourced scope override (``support_effects._SCOPE_OVERRIDES``), which is the
-one home for the attached-bonus anchor transfer ("Affects the Anchor
-instead of Yuumi").
+E (Zoomies) shields the anchor, not Yuumi: the scanner's sourced scope
+override (``support_effects._SCOPE_OVERRIDES``) is the one home for that
+transfer.  R (Final Chapter) heals the ally each wave hits.  Both are
+authored by the ally-support scanner from cached leveling at the cast,
+and both are in SLOTS so the rotation casts them.
+Two riders ride the R cast.  The Best Friend bonus, 30 to 60% by level,
+is a second heal packet, the selected teammate being the anchor.  The
+overheal conversion turns each heal's excess into a shield lasting 1.5s
+plus the channel; the heal actions still book that excess as overhealing,
+so the receipt shows both lines.
+P (Feline Friendship) is modeled through ``COVERAGE_CHANNELS`` for its
+self half only.  The heal is hit-anchored, a channel this kernel has,
+but the scanner hangs packets on casts and a passive is never cast, so
+the ally half has no anchor.
+W (You and Me!) is ``no_damage``.  Its heal-and-shield-power grant is
+withheld on its condition, being attached to a Best Friend, which no
+module-visible state establishes, not for want of a channel.
 """
 
 from typing import Any

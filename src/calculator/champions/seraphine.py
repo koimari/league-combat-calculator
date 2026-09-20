@@ -1,77 +1,22 @@
-"""Seraphine — CP10.7 full-entry-reviewed packet module.
+"""Seraphine: slot map for the archetype engine.
 
-E8d ally-support: W (Surround Sound) shields the caster and every selected
-teammate (Shield Strength 60-140 + 20% AP; scope self_and_all_teammates).
-The event is authored by the engine's ally-support scanner from cached
-leveling at the W cast time; the module declares W in SLOTS so the fight
-rotation casts it.  W's conditional pulse heal ("% of target's missing
-health") uses a live missing-health formula and the caster's shield state.
-
-P1 addition over the reviewed packet:
-- Q (High Note) prices the missing-health amplifier: "Against champions
-  and monsters, the damage is increased by 0% : 75% (based on target's
-  missing health)" (cached Q description, second effect).  The base row
-  "Magic Damage" (60-160 + 40% AP) is the flat part; a second
-  hp-scaled part adds 0.75 x base x missing-health-ratio, so at full
-  missing health the total equals the cached "Maximum Enhanced Damage"
-  row (105-280 + 70% AP = 1.75 x base).  The engine evaluates the
-  hp-scaled part at the cast with the target's live missing health —
-  deterministic given the fight's health walk (Akshan R precedent).
-
-Roadmap session (2026-08-21): closes both remaining out_of_scope slots
-(P, W).
-
-  - P (Stage Presence) is NOT a no-damage slot.  Its third effect row
-    carries a real sourced on-hit damage formula: "While any amount of
-    Notes are active, Seraphine's next basic attack is empowered ... and
-    fire all Notes at the target, with each one dealing 4 : 27.47 (based
-    on level) (+ 4% AP) magic damage" (``data/champions.json`` Seraphine
-    P, effect 2, leveling attribute "Bonus Magic Damage" — a 20-entry
-    per-LEVEL array plus one 4% AP modifier).  The game binary agrees
-    exactly (``data/bin/characters/seraphine.bin.json``, record
-    ``SeraphinePassive``: ``AutoDamage`` ByCharLevel 4 -> 25 with the
-    level-20 extrapolation to 27.47, and ``NoteAPRatio`` 0.04).  The
-    packet's ``no_damage`` label was therefore INCOMPLETE, not stale.
-
-    Notes are a stack window the fight engine does not simulate (they
-    are granted by ability casts, last 6 seconds and cap at 4 per unit),
-    so the number of Notes fired is explicit state: the ``p_notes_fired``
-    option (0 by default), the Rumble ``overheat_autos`` / Rammus
-    ``w_thorns_autos`` template for a proc whose trigger count the engine
-    cannot derive.  Its ceiling of 4 is the sourced ``MaxNotes`` cap, and
-    the option prices ONE empowered basic attack — a fight with a second
-    empowered attack would fire more Notes, so the reading is
-    conservative in the fail-closed direction.
-
-    Two sourced riders in the same effect are deliberately NOT modeled:
-      * Ally Notes ("reduced by 75% for Notes from allies", binary
-        ``AllyNoteDamagePercent`` 0.25).  They require allied champions
-        standing in range at Seraphine's cast times — structurally
-        outside the 1v1 damage surface (the Rakan-E / Kai'Sa-R
-        ally-coupling boundary).  Only Seraphine's own Notes are priced.
-      * The empowered attack's "uncancellable windup" and "25 bonus
-        attack range per Note".  Neither is damage and this engine has
-        no attack-range or windup channel.
-
-  - W (Surround Sound) is a sourced self-and-ally shield with no damage
-    row of any kind: Shield Strength 60/80/100/120/140 (+ 20% AP) for
-    2.5 seconds, plus the conditional missing-health pulse heal already
-    described above.  Being shield-only it cannot carry
-    ``attach_self_shield`` (that payload rides damage-event rows), so it
-    stays priced by the ally-support scanner, which already derives BOTH
-    rows — the shield at target scope ``self_and_all_teammates`` with
-    ``target_self`` true, and the gated heal with its typed live
-    missing-health atom (pinned by tests/test_support_effects.py).
-    Reclassified out_of_scope -> modeled, the Ekko-W / Rumble-W
-    precedent for a scanner-priced shield-only slot.
-
-    W's SELF movement grant (20% + 2% per 100 AP, decaying) is published
-    as a ``move_speed_percent`` stat buff, which ``damage.py`` re-folds
-    through ``stats.resolve_move_speed`` (soft caps included).  Its
-    magnitude is prose in the cached description rather than a leveling
-    row, so it is a pinned module constant; the ally half (8% + 0.8% per
-    100 AP) has no 1v1 channel.  The 2-stack shield rule is state and
-    the base row is priced.
+Q (High Note) is a flat "Magic Damage" row plus an hp-scaled part worth
+0.75 x base x the target's missing-health ratio, evaluated at the cast,
+so full missing health reaches the cached "Maximum Enhanced Damage" row.
+W (Surround Sound) is a shield-only slot with no damage row, priced by
+the ally-support scanner at scope ``self_and_all_teammates`` together
+with its gated missing-health pulse heal.  A shield-only slot cannot
+carry ``attach_self_shield``, which rides damage-event rows.  W is in
+SLOTS so the rotation casts it, and its self move-speed grant rides
+``move_speed_percent`` from a pinned constant, the magnitude being prose
+rather than a leveling row.
+P (Stage Presence) does damage: the empowered basic attack fires every
+active Note for 4 to 27.47 by level (+ 4% AP) each.  The engine does not
+simulate the Note window, so the count is explicit state through
+``p_notes_fired``, default 0 and capped at the sourced ``MaxNotes`` 4,
+pricing one empowered attack.  Ally Notes (25% damage) need allies in
+range at the cast and are outside the 1v1 surface; the bonus attack
+range and the uncancellable windup have no channel here.
 """
 
 from typing import Any

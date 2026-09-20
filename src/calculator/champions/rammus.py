@@ -1,55 +1,22 @@
-"""Rammus — CP10.6 full-entry-reviewed packet module, plus the E9-3 W fix.
+"""Rammus: full-entry-reviewed packet module.
 
-E9-3: Defensive Ball Curl (W) is a defensive stance whose damage is the
-THORNS proc against basic-attacking enemies: "enemies that use a basic
-attack on-hit against Rammus are dealt 15 (+ 10% total armor) (+ 10%
-total magic resistance) magic damage".  The reviewed packet misread the
-stance's 'Bonus Armor' leveling row as magic damage (47 + 60% armor
-against MR at rank 5); the thorns formula has no leveling row in the
-cache, so its flat damage and ratios are rooted in named binary fields.  The
-module prices the thorns damage per enemy basic attack that lands
-during the stance via the ``w_thorns_autos`` option (0 by default — the
-fight engine has no incoming-auto hook, so the enemy's auto count is
-explicit state); the stance's bonus armor/MR rows are the defensive
-buff, not damage, and remain state.
-
-Roadmap session (2026-08-21): closes both of Rammus' out_of_scope slots
-(P, E).
-
-  - P (Spiked Shell) is NOT the thorns reflect (that is W, above) — it is
-    a pure bonus-AD conversion: "Rammus gains bonus attack damage equal to
-    the sum of 15% total armor and 15% total magic resistance"
-    (``data/champions.json`` Rammus P, one effect row, ``leveling: []``).
-    Both ratios are corroborated by the game binary
-    (``data/bin/characters/rammus.bin.json``, record
-    ``Characters/Rammus/Spells/RammusPAbility/RammusP``): ``ArmorRatio``
-    and ``MagicResistRatio`` are 0.15 at every rank index, and the spell's
-    only calculation, ``TotalDamage``, is exactly the two
-    ``StatByNamedDataValueCalculationPart`` terms (armor stat + magic
-    resist stat) with no third part — so the record's stray
-    ``BaseDamage`` DataValue (10.0) is NOT in the formula and is not
-    modeled here (the wiki text carries no flat term either). Modeled as
-    a BUFF-phase ``stat_buff`` on ``bonus_attack_damage`` (the Dr. Mundo
-    ``_passive_bonus_ad`` precedent for a percent-of-a-stat passive
-    steroid), so autos and every bonus-AD-scaling item see it.
-    ``stat_buff``'s percent_of mode reads one stat, never a sum, so
-    the addition is written in the module rather than declared.
-    Reclassified out_of_scope -> modeled; this one IS a behavior change
-    (see the golden receipt), not a stale label.
-  - E (Frenzying Taunt): the taunt itself is already modeled (the
-    ``with_control_event`` wrapper below emits the sourced 1.2-2.0s taunt),
-    and the packet declares E ``kind: "no_damage"``. The cached entry does
-    carry one damage row — "Monster Magic Damage" (80-160 + 70% AP) — but
-    the sourced description restricts it by target class: "Monsters are
-    additionally dealt magic damage upon being affected." Against this
-    engine's fight target it is exactly zero: ``FightConfig.target_class``
-    is a two-value label (``"champion"`` default / ``"minion"``, roadmap
-    §3.1) with no monster class at all, and champion-ability class clauses
-    are a named, still-open kernel boundary of that same slice (§3.1 item
-    3), not a Rammus gap. Reclassified out_of_scope -> no_damage on the
-    champion-target surface, with the monster row documented in
-    ASSUMPTIONS rather than silently priced against a champion (the Lulu W
-    control-only precedent plus the Doran's Helm minion-only boundary).
+W (Defensive Ball Curl) does damage through thorns, not the stance:
+enemies that basic attack Rammus take 15 (+ 10% total armor) (+ 10%
+total magic resistance) magic.  That formula has no cached leveling row,
+so its flat term and ratios are rooted in named binary fields, and the
+fight engine has no incoming-auto hook, so the enemy's attack count is
+explicit state through ``w_thorns_autos``, 0 by default.  The stance's
+bonus armor and magic resistance rows are the defensive buff.
+P (Spiked Shell) grants bonus attack damage equal to 15% total armor
+plus 15% total magic resistance, a BUFF-phase ``stat_buff`` so autos and
+every bonus-AD item see it.  ``stat_buff``'s ``percent_of`` reads one
+stat and never a sum, so the addition is written here.  The binary
+record's ``BaseDamage`` of 10.0 is not in its ``TotalDamage``
+calculation and is not priced.
+E (Frenzying Taunt) is ``no_damage`` on the champion surface, its taunt
+emitted by ``with_control_event``.  Its cached "Monster Magic Damage"
+row is restricted by target class, and ``FightConfig.target_class``
+carries champion and minion only.
 """
 
 from typing import Any

@@ -1,64 +1,22 @@
-"""Anivia — slot map for the archetype engine.
+"""Anivia: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- Q (Flash Frost) must read "Total Magic Damage" (pass-through +
-  detonation combined) — an attribute override, not a classifier pick.
-- E (Frostbite) must read "Enhanced Damage" (target assumed Chilled).
-- R (Glacial Storm) is a two-phase toggle DoT: the first 1.5 s (3 ticks
-  at 0.5 s) deal the initial per-tick damage, everything after deals the
-  empowered value. Duration comes from the ``r_duration`` option
-  (default 5 s, floored at 1.5 s so the initial phase always completes),
-  and the cooldown is pinned to 999 s so the fight engine casts it
-  exactly once per fight.
-- W (utility wall) deals no damage — see the Roadmap session note below.
-- P (Rebirth) is never cast, so it is absent from the slot map;
-  ``starting_revive_defense`` below prices its revive state, which is
-  why the coverage map calls P ``modeled`` through the
-  ``starting_revive_defense`` channel.
-
-Roadmap session 3 (2026-08-20): closes both of Anivia's out_of_scope slots
-(P, W).
-
-  - P (Rebirth): already fully modeled as the sourced revive state via
-    ``starting_revive_defense`` below (full max health after a 6s
-    resurrection on a 240s cooldown, cached passive prose) — the same
-    ``StartingDefenses.revive_*`` interface Zac's Cell Division and
-    Zilean's Chronoshift use (``defensive_effects.py``'s
-    ``_CHAMPION_REVIVE_SOURCES``), and it is live-tested end to end
-    (``tests/test_revive_and_ally_support_events.py::test_anivia_rebirth_revives_with_sourced_full_health``).
-    ``MODULE_COVERAGE`` was simply stale, still reading "out_of_scope" for
-    a slot the revive kernel had already closed — the identical stale-label
-    pattern Zilean's R (Chronoshift) was already corrected under in
-    Roadmap session 1. Reclassified from out_of_scope to modeled; no
-    behavior change. One sourced number on this same passive stays
-    unmodeled and is documented rather than silently dropped: the "-40 :
-    20 (based on level) bonus armor and bonus magic resistance" granted
-    while resurrecting (cached P effects[1] "Per-Level Scaling" row) has
-    no consumer anywhere in this engine — the survival subsystem builds
-    each combatant's defensive armor/MR state once from the pre-fight
-    roster snapshot and the revive transition does not feed it a
-    mid-resurrection resistance delta (grepped
-    ``survival/transitions.py`` and ``defensive_effects.py``'s
-    ``StartingDefenses``: no ``revive_bonus_armor`` /
-    ``revive_bonus_magic_resistance`` field exists), so there is nothing
-    to wire it into today (Singed R's identically-unconsumed bonus
-    armor/MR rider is the same pattern).
-  - W (Crystallize): the cached ability's only leveling rows are Width,
-    Number of ice segments, and inter-segment distances (data/
-    champions.json Anivia W) — pure geometry, no damage/heal/shield
-    attribute. Cross-checked against both sourced captures: the atoms
-    file (data/atoms/anivia.atoms.json) records Crystallize's family as
-    "stack-transform-summon-resource" with ``"damage_type": null``, and
-    the game binary (data/bin/characters/anivia.bin.json,
-    ``Characters/Anivia/Spells/CrystallizeAbility/Crystallize``)
-    DataValues are exactly ``WallDuration``, ``WallWidth``, ``WallChunks``,
-    ``ChampPushDistance``, ``NonChampPushDistance`` — a knockback wall
-    with no damage field anywhere. Reclassified from out_of_scope to
-    no_damage and given an explicit, user-visible zero-damage row (the
-    Shen-W / Singed-P/W convention) rather than staying silently absent.
-
-All numeric values are read from the champion JSON data; nothing is
-hardcoded.
+Q (Flash Frost) reads "Total Magic Damage", the pass-through and the
+detonation combined, as an attribute override rather than a classifier
+pick.
+E (Frostbite) reads "Enhanced Damage", the target being assumed Chilled.
+R (Glacial Storm) is a two-phase toggle DoT: the first 1.5s, three ticks
+at 0.5s, deal the initial per-tick damage and everything after deals the
+empowered value.  ``r_duration`` (default 5s) is floored at 1.5s so the
+initial phase always completes, and the cooldown is pinned to 999s so
+the fight casts it once.
+W (Crystallize) is ``no_damage``: its only cached leveling rows are wall
+geometry.
+P (Rebirth) is never cast, so it is absent from the slot map;
+``starting_revive_defense`` below prices the revive state and is the
+channel ``MODULE_COVERAGE`` calls P modeled through.  The resurrection's
+own bonus armor and magic resistance have no consumer, because the
+survival subsystem builds each combatant's defenses once from the
+pre-fight roster and the revive transition feeds it no delta.
 """
 
 from typing import Any

@@ -1,59 +1,21 @@
-"""Aurelion Sol — slot map for the archetype engine.
+"""Aurelion Sol: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- Q (Breath of Light) is a channeled beam the classifier cannot model:
-  the per-cast entry is one full 3.25s channel (beam per-second x 3.25
-  plus 3 bursts), the burst's Stardust %maxHP component is a degraded
-  wiki parse (values all 0, garbage units) with its value rooted in the
-  character binary below, the W toggle
-  multiplies the beam's flat damage, and timed fights channel Q
-  continuously for the whole fight (the pipeline injects the duration
-  via the ``fight_duration_seconds`` option; see ``pipeline.run_fight``).
-  The JSON attr "Total Maximum Magic Damage" has only 4 values because
-  rank 5 has no practical channel cap (160s) — never read it; the
-  per-second attr is complete at every rank.
-- W (Astral Flight) is a damage-less dash, deliberately absent from the
-  map; its only calc effect is Q's beam modifier, gated by ``w_active``.
-  The cached "Breath of Light Flat Damage Modifier" row (108-112%) is a
-  multiplier on Q, not a W damage row — hence ``no_damage``, not a gap.
-- E (Singularity) must read "Total Magic Damage" (full 5s zone) and
-  carries the execute-threshold display line (5% + 2.6% per 100
-  Stardust of max HP — wiki prose with no usable JSON home).
-- R swaps between Falling Star (R[0]) and The Skies Descend (R[1]) via
-  the ``r_empowered`` option. The empowered shockwave (R[1] effect[1])
-  is excluded: a target hit by the star is immune to the shockwave.
-- P (Cosmic Creator) is the Stardust stack mechanic — no damage row; it
-  exists as the ``stardust_stacks`` option feeding Q and E.  Every
-  Stardust effect the cache states (Q burst %maxHP, W range, E radius and
-  execute threshold, R radius) augments another slot, so nothing about P
-  is unpriced.
-
-P and W are ``no_damage``, not ``out_of_scope``: both emit an explicit,
-user-visible zero-damage row (``module_helpers.no_damage``) rather than
-staying silently absent from the parse output.
-
-  - P (Cosmic Creator): the cached entry's own leveling is empty
-    (``data/champions.json`` AurelionSol P: single effect row,
-    ``"leveling": []``) — P grants no damage of its own; it is the
-    permanent Stardust counter that parameterizes Q's burst and E's
-    execute threshold (both already modeled above via
-    ``AURELION_SOL_STARDUST_RULE`` / the ``stardust_stacks`` option).
-    Corroborated by the game binary
-    (``data/bin/characters/aurelionsol.bin.json``,
-    ``Characters/AurelionSol/Spells/AurelionSolPassiveAbility/
-    AurelionSolPassive``): its ``mSpell`` carries no damage-type field,
-    and its only ``mSpellCalculations`` entries (``QPassiveScaling``,
-    ``EPassiveScalingExecute``) are the shared scaling formulas Q/E
-    already read — P itself computes nothing.
-  - W (Astral Flight): the cached entry's only leveling row is "Breath
-    of Light Flat Damage Modifier" (108-112%), a multiplier consumed by
-    Q's beam (``_w_beam_modifier`` above) — W carries no damage
-    attribute of its own. Corroborated by the game binary
-    (``Characters/AurelionSol/Spells/AurelionSolWAbility/AurelionSolW``):
-    its ``mSpellCalculations`` are ``DashSpeed`` and two dash-speed/
-    level-interpolation helpers, no damage node. W stays gated behind
-    the existing ``w_active`` option for its Q-modifier effect; the new
-    slot only makes W's own zero-damage state visible.
+Q (Breath of Light) is a channel the classifier cannot model: one cast
+is the whole 3.25s channel, the per-second beam times 3.25 plus three
+bursts, W multiplies its flat damage, and a timed fight channels Q for
+the whole fight through ``fight_duration_seconds``.  Read the per-second
+attribute, never "Total Maximum Magic Damage", which carries four values
+because rank 5 has no practical channel cap.
+E (Singularity) reads "Total Magic Damage", the full 5s zone, and
+carries the execute threshold as a display line, the wiki stating it in
+prose with no leveling row.
+R swaps Falling Star and The Skies Descend on ``r_empowered``.  The
+empowered shockwave is excluded: a target the star hits is immune to it.
+P (Cosmic Creator) and W (Astral Flight) are ``no_damage``.  P is the
+Stardust counter that ``stardust_stacks`` feeds into Q's burst and E's
+execute threshold, and W is a dash whose one cached leveling row, the
+108 to 112% "Breath of Light Flat Damage Modifier", is a multiplier on
+Q gated by ``w_active``.
 """
 
 from typing import Any

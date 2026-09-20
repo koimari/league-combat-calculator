@@ -1,62 +1,22 @@
-"""Tristana — slot map for the archetype engine (E3 stack systems).
+"""Tristana: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- E (Explosive Charge) is the stack system: the charge attaches to the
-  target and each of Tristana's basic attacks / abilities against it
-  increases the detonation damage by 25%, stacking up to 4 times (100%)
-  and detonating instantly at max stacks. The detonation is priced from
-  the ``e_stacks`` option (default 4 = the sourced max): "Minimum
-  Physical Damage" (the 0-stack base) plus ``e_stacks`` x "Bonus Damage
-  Per Stack" — at 4 stacks this equals the wiki's "Full Stack Physical
-  Damage" row at every rank. The charge detonates once per cast.
-- Q (Rapid Fire) is the attack-speed steroid, and for a marksman whose
-  output is basic attacks it is the biggest number in the kit: the
-  "Bonus Attack Speed" row (60-120%) rides a BUFF-phase ``stat_buff`` so
-  the fight engine's auto count scales with it.  It is published with a
-  sourced WINDOW rather than a fight-averaged magnitude — see below.
-- P (Draw a Bead) is attack range only: an emitted zero-damage row.
-- W (Rocket Jump) and R (Buster Shot) are plain attribute reads; W's
-  takedown/max-stack-detonation reset is CC/state only, and R's
-  knockback/stun is CC only.
-
-Roadmap session 5 batch L (2026-08-21): Q's magnitude and window both
-move onto typed ability atoms, and the window is published to the engine
-instead of being averaged into the magnitude.
-
-  Both roots are typed atoms — ``ability.bonus _attack _speed``
-  (60/75/90/105/120% by rank) and ``timing.active_duration`` (7.0s) — and
-  the game binary agrees (``TristanaQ`` ``AttackSpeedMod``
-  [.45 .60 .75 .90 1.05 1.20 1.35]; Riot spell DataValues are
-  rank-0-indexed, so ranks 1-5 are indices 1..5 = 60/75/90/105/120%, with
-  ``BuffDuration`` 7.0 flat at every rank index).  Nothing here is a
-  literal, so a degraded cache raises instead of zeroing out.
-
-  Why a published window beats ``module_helpers.buff_window_share`` HERE:
-  the share helper weights the MAGNITUDE by the fraction of the fight the
-  buff covers, which is the only option when the engine cannot place the
-  window.  The engine CAN place this one — it resolves a window's start
-  at the first cast of the row that grants it — and Rapid Fire IS the Q
-  cast, first in the order, so [0, 7) is its real window.  The engine
-  then splits the fight into pre-window / in-window / post-window auto
-  counts at the full magnitude, which is the exact answer rather than a
-  fight-averaged one.  (The Teemo P boundary, from the other side: a
-  steroid whose trigger the fight never reaches has no cast to place it
-  at and keeps the share helper.)
-
-  The override carries ``active_duration`` and NOTHING else on purpose.
-  ``ad_ratio`` defaults to 1.0 and the per-swing ``swing_window_ratio``
-  that consumes it is read only inside the ``crit_as_bonus`` branch
-  (Ashe's flurry), so a bare window changes the auto COUNT and never the
-  per-swing formula — which is exactly what Rapid Fire does.
-
-  P (Draw a Bead) closes as ``no_damage``.  Its whole payload is bonus
-  attack RANGE (0 : 167.65 by level, atom ``ability.per-_level
-  _scaling``); ``damageType`` is ``None`` and the slot has no timing or
-  damage atom at all.  Attack range is inert in this model — ``is_melee``
-  is a static champion stat, never derived from range — so unlike an
-  unmodeled attack-speed steroid nothing about it would change damage if
-  it were modeled.  That is the settled ``no_damage`` shape, not an
-  ``out_of_scope`` receipt (the Olaf-R / Sivir-R rule).
+E (Explosive Charge) is the stack system: the charge attaches and every
+attack or ability against the target adds 25%, up to four stacks.  The
+detonation is priced from ``e_stacks`` (default 4, the sourced max) as
+"Minimum Physical Damage" plus ``e_stacks`` x "Bonus Damage Per Stack",
+which at four stacks equals the cached "Full Stack Physical Damage" row.
+It detonates once per cast.
+Q (Rapid Fire) is the attack-speed steroid and the kit's biggest number.
+Its 60 to 120% rides a BUFF-phase ``stat_buff`` with a published window
+rather than a fight-averaged magnitude, because Rapid Fire is the Q cast
+and the engine places a window at the granting row's first cast, making
+[0, 7) exact.  The override carries ``active_duration`` and nothing
+else: a bare window moves the auto count, never the per-swing formula.
+P (Draw a Bead) is ``no_damage``, bonus attack range only.  Range is
+inert in this model, since ``is_melee`` is a static champion stat and is
+never derived from range.
+W (Rocket Jump) and R (Buster Shot) are plain attribute reads; W's
+detonation reset is state and R's knockback is control.
 """
 
 import re

@@ -1,56 +1,22 @@
 """Sylas: full-entry-reviewed packet module.
 
-Why P rides ``auto_attack_conversion`` rather than an added magic row,
-and how to spot the same shape on the next champion, is in the
-Champions section of ``TRAPS.md``.  The module supplies only the non-AD
-remainder, ``bonus_raw = 1.30 x AD + 0.30 x AP - AD``, and the engine's
-swing path owns the AD term, crits and mid-fight AD changes.  The
-ratios are module constants because the cached entry's ``leveling``
-arrays are all empty and the numbers live in description prose (the
-Darius-P precedent), which is why the tests re-derive both from the
-binary rather than trusting the constants.
-
-W (Kingslayer) heals on a missing-health scale from the cached
-Minimum/Maximum Heal rows, authored by ``derive_self_healing``
-(``HEALING_RULE_CHAMPIONS``).
-
-E (Abscond/Abduct) prices the Abduct magic damage and nothing else.
-The live kit carries no shield row on either E entry, so the packet is
-complete.
-
-Four sourced P riders are deliberately not modelled:
-
-- the secondary whirl (40% AD + 20% AP), which needs nearby enemies the
-  1v1 damage surface does not have;
-- the nonstandard critical strike.  The wiki records Petricite Burst
-  critting for (175% + 30%) rather than the standard (200% + 30%), and
-  this kernel cannot express that: ``DamagePart.crit_effectiveness``
-  scales the crit PROBABILITY, not the multiplier, and
-  ``state.crit_multiplier`` is the global figure, so the only available
-  encoding would overstate the crit bonus.  ``auto_attack_conversion``
-  crits the AD component at the standard multiplier and never crits
-  ``bonus_raw``; at the zero crit chance of an ordinary Sylas build the
-  two readings coincide exactly.  The divergence is documented, not
-  approximated;
-- ``MonsterDamageMulti`` and the secondary-target minion execute, since
-  this engine's ``target_class`` has no monster value and the execute is
-  secondary-target-only;
-- the 125% bonus attack speed and the uncancellable windup.  The
-  steroid lasts only until the stack is spent, so its uptime is not
-  derivable from a static build, and there is no windup channel.
-
-R (Hijack) stays ``out_of_scope``.  The Olaf-R rule applies in its
-strongest form: this is not a slot whose damage is zero, it is a slot
-whose damage is another champion's ultimate.  Hijack's own binary
-record holds one calculation, ``PerTargetCooldown``, and no damage
-formula, so calling it ``no_damage`` would be flatly false.  The
-blocker is a named kernel gap: every attacker resolves to exactly one
-validated champion contract and unknown names fail closed, so no
-surface lets one champion's parse instantiate another champion's R at a
-rank of its own, and nothing in the kernel re-writes a foreign
-ability's scaling terms the way the sourced AD-to-AP conversion rule
-would need.  Modelling R needs a cross-champion ultimate-import kernel,
-which is a project and not a slot.
+P replaces the basic attack rather than adding to it, so it rides
+``auto_attack_conversion`` and the module supplies only the non-AD
+remainder, ``bonus_raw = 1.30 x AD + 0.30 x AP - AD``; the engine's
+swing path owns the AD term, crits and mid-fight AD changes.  The ratios
+are module constants because the cached entry's ``leveling`` arrays are
+empty and the numbers live in description prose, so the tests re-derive
+both from the binary.  TRAPS.md carries the shape for the next champion.
+W (Kingslayer) heals on a missing-health scale through
+``derive_self_healing``; E (Abscond/Abduct) prices the Abduct magic
+damage and nothing else.
+P's nonstandard critical strike is documented, not approximated: the
+wiki records 175% + 30% where this kernel's ``crit_effectiveness``
+scales the crit probability and ``state.crit_multiplier`` is global, and
+at an ordinary Sylas build's zero crit chance both readings agree.
+R (Hijack) stays ``out_of_scope`` because its damage is another
+champion's ultimate.  Every attacker resolves to one validated contract,
+so importing a foreign R at a rank of its own is a kernel project.
 """
 
 import re

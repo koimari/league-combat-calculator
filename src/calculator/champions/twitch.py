@@ -1,85 +1,21 @@
-"""Twitch — slot map for the archetype engine (E3 stack systems).
+"""Twitch: stack-system slot map.
 
-Why each slot is non-generic:
-- P (Deadly Venom) is the stack system: basic attacks apply stacks (max
-  6, 6s, refreshing); each stack deals level-scaled TRUE damage over the
-  duration. The wiki carries the per-stack totals only in prose
-  ("6 / 12 / 18 / 24 / 30 (based on level) (+ 18% AP) total true damage
-  over the duration"), so the breakpoints live here as module constants
-  (the Akshan/Braum prose-value precedent). The DoT is priced once per
-  fight from the ``poison_stacks`` option (default 6 = sourced max).
-- E (Contaminate) is the DETONATION: base physical damage plus, for
-  each Deadly Venom stack, "Physical Damage Per Stack" physical (+35%
-  bonus AD) and 35%-AP magic damage (prose ratio). The reviewed packet
-  priced only the base row, losing the entire per-stack scaling.
-- R (Spray and Pray) is a BUFF, not a damage packet: it grants 30/45/60
-  bonus attack damage for 6 seconds. The reviewed packet priced that AD
-  as if it were direct damage; the stat_buff (Vayne R precedent) makes
-  autos and E's %bonus-AD stack term parse against the buffed stat.
-- Q (Ambush) deals no direct damage, but "upon breaking stealth, Twitch
-  gains bonus attack speed for 6 seconds" — the "Bonus Attack Speed" row
-  (40-60%), emitted as a second BUFF-phase ``stat_buff`` so the fight
-  engine's auto count scales with it.  It is OPTION-GATED and DEFAULT
-  OFF — see below.
-- W (Venom Cask) is a slow zone that applies poison stacks (covered by
-  the pre-stack option) and emits a zero-damage row.
-
-Roadmap session 5 batch L (2026-08-21): Q's magnitude moves onto its
-typed atom, the window is published to the engine instead of being
-averaged into the magnitude, and the whole buff is gated behind an
-explicit state assertion.
-
-  The magnitude is a typed atom, ``ability.bonus _attack _speed``
-  (40/45/50/55/60% by rank), and the binary agrees:
-  ``TwitchHideInShadows`` ``AttackSpeedMod`` [.35 .40 .45 .50 .55 .60
-  .65].  Riot spell DataValues are rank-0-indexed, and this file's
-  ``StealthDuration`` row proves that indexing independently — its
-  indices 1..5 are 10/11/12/13/14, exactly the wiki's
-  ``ability.stealth _duration`` atom.  So indices 1..5 of
-  ``AttackSpeedMod`` are the rank 1-5 values.
-
-  The 6-second WINDOW has no ability atom (the wiki carries it as prose
-  in the effect description, not a ``leveling`` row), so it lives here as
-  a module constant with both receipts: the cached description ("Upon
-  breaking stealth, Twitch gains bonus attack speed for 6 seconds") and
-  ``AttackSpeedDuration`` 6.0 flat at every rank index.
-  ``tests/test_twitch_ambush_and_cask.py`` re-derives it from both.
-
-  Why DEFAULT OFF, unlike Tristana Q: Rapid Fire fires ON THE CAST, so
-  "Q is cast at t=0" and "the buff starts at t=0" are the same
-  statement.  Ambush does the opposite — casting it makes Twitch
-  CAMOUFLAGED after a 1-second fade (binary ``MaxFadeTime`` 1.0), for
-  10-14s, and the attack speed arrives only when he BREAKS that stealth.
-  A Twitch who casts Q at t=0 is not attacking at t=0, so a buff that is
-  live from t=0 by default is a phantom proc (the Rammus lesson).  The
-  option ``q_ambush_break`` is the user ASSERTING the pre-fight state —
-  Twitch walked in already stealthed and breaks Ambush as the fight
-  opens — which is the same shape as ``poison_stacks`` asserting stacks
-  already on the target.  Under that assertion the window [0, 6) is
-  exact, because the engine places a window at the first cast of the row
-  that grants it, and Q is first in ``state.cast_order``.
-
-  That exactness is why the window is published rather than folded into
-  the magnitude by ``module_helpers.buff_window_share``: the share helper
-  weights the MAGNITUDE by the fraction of the fight the buff covers,
-  which is the right answer only when the engine cannot place the window.
-  Here it can, so the engine splits the auto count at full magnitude.
-
-  The override carries ``active_duration`` and NOTHING else on purpose.
-  ``ad_ratio`` defaults to 1.0 and the per-swing ``swing_window_ratio``
-  that consumes it is read only inside the ``crit_as_bonus`` branch
-  (Ashe's flurry), so a bare window changes the auto COUNT and never the
-  per-swing formula.
-
-  W (Venom Cask) closes as ``no_damage``.  ``damageType`` is ``None`` and
-  the slot's whole atom catalog is the slow (30/35/40/45/50%, plus 6% per
-  100 AP) and the cooldown.  The one damage-relevant thing it does —
-  applying Deadly Venom stacks in the zone — is already priced by
-  ``poison_stacks``, so nothing damaging is left unmodeled and the Olaf-R
-  rule does not force an ``out_of_scope`` receipt.  The slow carries no
-  sourced DURATION anywhere in the cache (the zone's 3 seconds is prose
-  with no ``leveling`` row), so it is named rather than published as a
-  control event.
+P (Deadly Venom) is the stack pool: autos apply up to 6 stacks and each
+deals level-scaled true damage over 6 seconds.  The wiki carries the
+per-stack totals in prose only, so the breakpoints are module constants
+here, and the DoT is priced once per fight from ``poison_stacks``.
+E (Contaminate) detonates the pool: a base physical row plus, per stack,
+physical (+35% bonus AD) and 35% AP magic.
+R (Spray and Pray) grants 30/45/60 bonus attack damage for 6 seconds as
+a ``stat_buff``, so autos and E's bonus-AD term parse against it.
+Q (Ambush) publishes its 40 to 60% attack speed as a placed window, not
+a fight-averaged magnitude, because the engine places it at Q's cast.
+It is gated behind ``q_ambush_break`` and default off: the speed arrives
+when Twitch breaks stealth, so the option is the user asserting he walked
+in stealthed.  The 6-second window is a module constant carrying both
+receipts, the cached description and ``AttackSpeedDuration`` 6.0.
+W (Venom Cask) is a slow zone with no damage row; the stacks it applies
+are already priced by ``poison_stacks``.
 """
 
 from collections.abc import Mapping

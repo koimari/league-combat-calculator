@@ -1,77 +1,21 @@
-"""Jayce — slot map for the archetype engine.
+"""Jayce: two-form slot map for the archetype engine.
 
-Jayce is a two-form champion (the Gnar shape) with one extra twist that
-breaks the engine's shared assumptions: he **starts with R at rank 1 and
-can never level it**, so his 18 skill points all go to Q/W/E, which have
-SIX ranks each. ``skill_orders._SKILL_ORDERS["Jayce"]`` therefore holds
-no "R" at all, and ``get_ability_rank("R", ...)`` returns 0 for him —
-the R slot below ignores rank entirely and keys its values off CHAMPION
-LEVEL, which is where they genuinely scale.
-
-Why each slot is non-generic:
-- The ``hammer_stance`` option (off = Cannon, Jayce's default form)
-  swaps which JSON entry every slot reads — a bool, like Gnar's
-  ``mega``. Q/W/E store [0] = Hammer, [1] = Cannon; R
-  stores the two INVERTED, so R resolves its entry by NAME. The forms
-  emit genuinely different entry shapes (Hammer W is a 4-tick DoT,
-  Cannon W an empowered-auto set; Hammer E is %maxHP damage, Cannon E a
-  non-damaging enabler), so each slot is a small champion-local form
-  dispatcher rather than a ``by_option`` (whose cases must share a
-  shape).
-- Q Cannon (Shock Blast) picks its attribute by the ``accelerated_q``
-  option: "Increased Damage" is the TOTAL of a blast fired through the
-  Acceleration Gate (exactly 1.4x the base "Physical Damage" line at
-  every rank), never an addition to it — reading both would overstate Q
-  by 240%. Q Hammer is a plain read whose "Slow" entry must not leak.
-- W Hammer (Lightning Field) must read "Total Magic Damage" by exact
-  name: the ability's FIRST leveling entry is "Mana Restored", a
-  resource restore, and its second is the per-tick line (the total is
-  exactly 4x it — 4 ticks over 4 seconds, declared as ``dot_duration``
-  so item burns keep refreshing through the zone).
-- W Cannon (Hyper Charge) empowers the next 3 basic attacks to deal
-  MODIFIED physical damage — 70-110% of TOTAL AD REPLACES the attack's
-  own damage rather than adding to it, so at rank 1 each empowered
-  attack hits for LESS than a plain auto. The entry therefore carries
-  only the DELTA from a normal swing and rides ``empowers_next_auto``
-  (see ``_hyper_charge``). Its +360% bonus attack speed and 3-attack
-  window have no JSON home and live as constants. The speed belongs to
-  those 3 attacks ONLY — declared as ``empowers_next_auto``'s
-  ``attack_speed`` rather than a fight-wide ``stat_buff``, because the
-  buff ends when its third attack lands. The fight engine spends the
-  burst at that rate and runs the rest of the fight at Jayce's ordinary
-  one, so W buys extra ordinary autos with the time it saves.
-- E Hammer (Thundering Blow) is MAGIC damage despite scaling off bonus
-  AD; its one "Magic Damage" leveling entry carries BOTH the %maxHP and
-  the bonus-AD modifier, and its "Capped Monster Damage" sibling entry
-  is a monster-only clamp that must never reach a champion target.
-  E Cannon (Acceleration Gate) is a pure movement-speed zone — absent
-  from the results; its only damage relevance is supercharging Shock
-  Blast, which ``accelerated_q`` owns.
-- R (Transform) has ENTIRELY EMPTY ``leveling`` arrays in both JSON
-  entries: every number is module constants (below). Hammer grants
-  armor+MR and one empowered magic auto; Cannon shreds the target's
-  armor+MR as a ``target_debuff`` (the Kog'Maw rule: applied after the
-  ability's own damage, so it never amplifies itself) and raises attack
-  range from 125 to 500 — a range change with no damage effect, noted
-  here and modeled nowhere. Both branches declare
-  ``empowers_next_auto`` with ``rides_scheduled_auto``: Transform resets
-  no attack timer in the cache, so the swing that carries the bonus (and
-  opens the shred's 5-second window) is the stream's next one.
-- P (Hextech Capacitor) grants movement speed and ghosting on stance
-  swap; its one leveling array is empty (``leveling: []``) — pure
-  utility state with no combat-damage interaction. Roadmap session 4
-  batch C (2026-08-21): closes the single out_of_scope slot with an
-  explicit ``no_damage`` row via ``module_helpers.no_damage`` (the
-  Cassiopeia P / Cho'Gath P pattern) rather than leaving
-  MODULE_COVERAGE reading "out_of_scope" for an intentionally
-  unmodeled state passive. Its two JSON entries ("Hextech Capacitor" /
-  "Hextech Capacitor 2") carry byte-identical descriptions and are a
-  parser artifact, not two effects — the row reads entry [0]. Jayce is
-  not in ``rotation_resolver.COMBO_TABLE``, but IS a hand-authored
-  ``CAST_ORDER`` champion (the derived-rule path filters by
-  ``CAST_ORDER`` membership, per the Aatrox/Aphelios batch-A
-  precedent) — appended "P" to ``CAST_ORDER`` so the fully-derived
-  rotation still carries it.
+R starts at rank 1 and never levels, so ``skill_orders`` holds no "R"
+and ``get_ability_rank("R", ...)`` returns 0; the R slot ignores rank and
+keys off champion level.  Its cached leveling arrays are empty in both
+entries, so its numbers are the module constants below.
+``hammer_stance`` (off is Cannon, his default) swaps which cached entry
+every slot reads: Q/W/E store [0] Hammer, [1] Cannon, while R stores the
+two inverted and resolves its entry by name.
+Q Cannon under ``accelerated_q`` reads "Increased Damage", the TOTAL of
+a gated blast at 1.4x the "Physical Damage" row, never an addition.
+W Hammer reads "Total Magic Damage" by exact name, its first leveling
+row being "Mana Restored", and ticks four times over four seconds.
+W Cannon's 70 to 110% total AD REPLACES the swing, so its entry carries
+only the delta from a plain auto and its +360% attack speed rides
+``empowers_next_auto``, ending with the third attack.
+E Hammer is magic damage scaling off bonus AD; its "Capped Monster
+Damage" sibling must never reach a champion target.
 """
 
 from typing import Any

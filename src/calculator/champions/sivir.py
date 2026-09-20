@@ -1,77 +1,22 @@
-"""Sivir — CP10.7 full-entry-reviewed packet module, plus the E9-3 Q fix.
+"""Sivir: slot map for the archetype engine.
 
-E9-3: Boomerang Blade (Q) is a two-way blade: "Upon reaching maximum
-range, the crossblade returns to her ... dealing the same damage to
-enemies on its way back" — the cached "Total Maximum Champion Damage"
-row (120-320 + 140% bonus AD + 120% AP) is exactly double the
-single-pass "Physical Damage" row the reviewed packet priced.  The
-module now prices the Total row so a full out-and-back pass deals the
-in-game 2x damage (320 at rank 5 vs the old 160).
-
-E (Spell Shield) is ``modeled`` as a timed ``self_state_events`` window:
-the sourced 1.5s shield blocks one hostile effect and, after the sourced
-0.25s delay, heals Sivir for the cached Heal row (60-80% AD + 50% AP by
-rank), scoped to herself — "she heals herself and activates Fleet of
-Foot" names no ally.
-
-W (Ricochet) prices the cached **Bounce Damage** row (40-50% AD by
-rank), one bounce per empowered basic attack the fight's own auto
-cadence schedules inside the sourced 4-second window.  The reviewed
-packet's ``ad`` ratio was the neighbouring **Bonus Attack Speed** row
-(20-40%), which underpriced every bounce.
-
-  - P (Fleet of Foot) closes as ``no_damage``.  Its single cached effect
-    is a self movement-speed buff — "basic attacks on-attack and ability
-    hits against enemy champions grant her 55 : 75 (based on level) bonus
-    movement speed decaying over 1.5 seconds" — with no enemy-damage row
-    anywhere in the entry, and the game binary agrees: the
-    ``SivirPassive`` record's ONLY calculation is ``FlatMS`` (plus a
-    ``HasteDuration`` of 1.5), with no damage formula at all.  The label
-    is the Vayne-P / Kalista-P / Pyke-P shape: sourced, non-damaging.
-
-    The grant is still NOT a ``stat_buff``, and the reason is the cache
-    rather than the channel: R now rides that same channel, so the fold
-    composes.  Two cached rows are missing.  (1) The magnitude is a LEVEL
-    ladder the cache cannot index: atom ``ability.per-_level _scaling``
-    carries five values [55, 60, 65, 70, 75] with every unit empty, and
-    P has no rank, so nothing in the cache says which level each value
-    starts at (only the gitignored binary's ``ByCharLevelBreakpoints``
-    does).  (2) The grant decays to zero across the sourced 1.5s window
-    and refreshes on hit, and no cached row carries its uptime or its
-    average, so a constant full-value buff would over-credit it.  That
-    over-credit is not cosmetic: ``item_effects``'
-    ``adaptive_force_per_total_move_speed`` (Swiftmarch) turns total
-    movement speed into DAMAGE.  It stays state.
-
-  - R (On the Hunt) grants its sourced 20/25/30% bonus movement speed
-    through the shared fold — a ``move_speed_percent`` stat buff, the
-    Teemo-W channel, which ``damage._apply_stat_buff_ultimates`` re-folds
-    through ``stats.resolve_move_speed`` so the soft caps are re-applied
-    rather than bypassed.  The slot stays OPEN ``out_of_scope`` (the
-    Olaf-R rule) because its other sourced combat effect is real and
-    still unpriced: "While active, Sivir's basic attacks on-attack reduce
-    her basic abilities' current cooldowns by 0.5 seconds each".
-    A champion-authored cooldown-refund surface DOES exist — Ezreal's
-    ``_with_q_refund`` divides each emitted entry's cooldown by a refund
-    rate factor (the Gnar Q pickup-refund precedent), and Darius' W
-    multiplies its own — so the blocker is not "no channel"; both are
-    STATIC parse-time rewrites of one entry's cooldown, valid for Ezreal
-    because his refund stream is always on.  Sivir's is not: the cache
-    gates it on "while active", i.e. R's own 8/10/12s Buff Duration, and
-    drives it off the auto-attack rate, so a fight-wide divisor would
-    credit the refund outside the window — the over-credit that the
-    movement grant right above is time-weighted to avoid.  There is no
-    mid-fight cooldown-mutation surface to gate it with
-    (``item_effects.CooldownProcEffect.on_attack_cooldown_refund`` is
-    read only by the item-proc scheduler, and a champion entry's
-    ``cooldown`` is fixed once the parse returns), and time-weighting a
-    COOLDOWN is not the sourced operation time-weighting a movement
-    scalar is: a refund lands only on an ability actually on cooldown.
-    The ally share of the buff is unmodeled too.
-    One further binary row is a genuine SOURCE CONFLICT and is recorded
-    rather than used: ``SivirR`` carries ``HuntAttackSpeed`` (rank 1-3 =
-    5%/6%/7%) that the cached wiki text does not mention at all.
-    Fail-closed: an uncorroborated attack-speed steroid is not modeled.
+Q (Boomerang Blade) prices the cached "Total Maximum Champion Damage"
+row, the out-and-back pass, exactly twice the single-pass row.
+W (Ricochet) prices the cached "Bounce Damage" row, one bounce per
+empowered basic attack the auto cadence schedules inside the 4-second
+window; the neighbouring "Bonus Attack Speed" row is not the ratio.
+E (Spell Shield) is a timed ``self_state_events`` window: a 1.5s shield
+that heals Sivir alone after the sourced 0.25s delay.
+P (Fleet of Foot) is ``no_damage``.  Its movement grant is state, not a
+``stat_buff``: the magnitude is a per-level ladder with empty units that
+the cache cannot index, and it decays over 1.5s with no cached uptime,
+so a constant buff would over-credit Swiftmarch's adaptive force.
+R (On the Hunt) publishes its 20/25/30% move speed through the stat-buff
+fold, which re-applies the soft caps, and stays ``out_of_scope`` for its
+unpriced cooldown refund: the refund is gated on R's own window and
+driven by the auto rate, so a parse-time divisor would credit it outside
+the window.  ``SivirR``'s binary ``HuntAttackSpeed`` appears nowhere in
+the cached text and is recorded, not modeled.
 """
 
 import math
