@@ -150,6 +150,7 @@ Each owner above resolves to one file per idea. These are the leaves they hold:
 | `champions/renata_bailout_authority.py` | the field-by-field source adjudication that keeps Bailout's lethal half withheld |
 | `champions/aurelion_sol_stardust.py` | the Stardust stack pool, and what a Q burst and an E execute are worth per stack |
 | `champions/aphelios_weapons.py` | which of the five weapons is in hand, what each adds on hit, and the Weapon Master points |
+| `champions/shared_option_keys.py` | every option key whose declaration and its read sit in different files |
 | `quantity.py` | what a published number is: measured, a structural zero, withheld, or starved |
 | `control_spec.py` | the one crowd-control vocabulary, its three partitions, and the control event a cast carries |
 | `fight_request_bounds.py` | what a public fight request may say, and the readers that coerce it |

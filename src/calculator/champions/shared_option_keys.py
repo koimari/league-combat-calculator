@@ -22,15 +22,8 @@ class DefenseWindowOptions(NamedTuple):
     active_seconds: str
 
 
-def _window(slot: str) -> DefenseWindowOptions:
-    key = slot.lower()
-    return DefenseWindowOptions(
-        f"{key}_active", f"{key}_active_from", f"{key}_active_seconds"
-    )
-
-
-W_WINDOW = _window("W")
-E_WINDOW = _window("E")
+W_WINDOW = DefenseWindowOptions("w_active", "w_active_from", "w_active_seconds")
+E_WINDOW = DefenseWindowOptions("e_active", "e_active_from", "e_active_seconds")
 
 #: The window a slot's options drive, for a reader holding the slot letter.
 WINDOW_OPTIONS = MappingProxyType({"W": W_WINDOW, "E": E_WINDOW})
