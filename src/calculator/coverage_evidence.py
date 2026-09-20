@@ -43,7 +43,7 @@ must never both be spelled ``Lane``.
 import keyword
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, get_args
 
 # ── vocabularies ──────────────────────────────────────────────────────────
 
@@ -93,36 +93,12 @@ EvidenceRegistry = Literal[
     "ITEM_INPUT_OPTIONS",
 ]
 
-LANES: frozenset[str] = frozenset({"attacker", "target", "support_packet", "utility"})
-CLAIM_STATUSES: frozenset[str] = frozenset(
-    {
-        "modeled_effect",
-        "modeled_state",
-        "stats_only",
-        "withheld",
-        "review_pending",
-        "modeled",
-        "modeled_event_certified",
-        "not_target_relevant",
-    }
-)
-SUBJECT_KINDS: frozenset[str] = frozenset({"item"})
-SYMBOL_ROLES: frozenset[str] = frozenset(
-    {
-        "pair_engine",
-        "walk_packet_builder",
-        "value_accessor",
-        "tag_handler",
-        "certification_guard",
-        "compiler",
-    }
-)
-OWNER_POLICIES: frozenset[str] = frozenset(
-    {"owner_skips_holder", "holder_is_not_a_source", "holder_priced_by_walk"}
-)
-EVIDENCE_REGISTRIES: frozenset[str] = frozenset(
-    {"ITEM_EFFECTS", "ALLY_ITEM_EFFECTS", "RUNE_EFFECTS", "ITEM_INPUT_OPTIONS"}
-)
+LANES: frozenset[str] = frozenset(get_args(ClaimLane))
+CLAIM_STATUSES: frozenset[str] = frozenset(get_args(ClaimStatus))
+SUBJECT_KINDS: frozenset[str] = frozenset(get_args(SubjectKind))
+SYMBOL_ROLES: frozenset[str] = frozenset(get_args(SymbolRole))
+OWNER_POLICIES: frozenset[str] = frozenset(get_args(OwnerPolicy))
+EVIDENCE_REGISTRIES: frozenset[str] = frozenset(get_args(EvidenceRegistry))
 
 # The outcome-dimension set, **projected from
 # ``item_behavior.UtilityDimension``** — that enum is the vocabulary's single

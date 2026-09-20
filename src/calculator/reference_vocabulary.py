@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Literal
+from typing import Literal, get_args
 
 ValueRegistry = Literal["ITEM_EFFECTS", "ALLY_ITEM_EFFECTS", "RUNE_EFFECTS"]
 
 
-VALUE_REGISTRIES: frozenset[str] = frozenset(
-    {"ITEM_EFFECTS", "ALLY_ITEM_EFFECTS", "RUNE_EFFECTS"}
-)
+VALUE_REGISTRIES: frozenset[str] = frozenset(get_args(ValueRegistry))
 
 
 # Why a raw number is allowed to sit inside a frozen declaration at all.
@@ -22,9 +20,7 @@ VALUE_REGISTRIES: frozenset[str] = frozenset(
 StructuralReason = Literal["count", "cap", "rank", "flag", "unit_scale", "origin"]
 
 
-STRUCTURAL_REASONS: frozenset[str] = frozenset(
-    {"count", "cap", "rank", "flag", "unit_scale", "origin"}
-)
+STRUCTURAL_REASONS: frozenset[str] = frozenset(get_args(StructuralReason))
 
 
 # How a two-key level ramp is interpolated.  ``registry_start`` delegates to
@@ -36,9 +32,7 @@ STRUCTURAL_REASONS: frozenset[str] = frozenset(
 LevelScale = Literal["registry_start", "linear_1_18", "linear_1_20"]
 
 
-LEVEL_SCALES: frozenset[str] = frozenset(
-    {"registry_start", "linear_1_18", "linear_1_20"}
-)
+LEVEL_SCALES: frozenset[str] = frozenset(get_args(LevelScale))
 
 
 # The top level each linear ramp interpolates to.  A ramp reaches its maximum
@@ -56,7 +50,7 @@ _LINEAR_RAMP_CAP: Mapping[str, int] = {"linear_1_18": 18, "linear_1_20": 20}
 DerivedOp = Literal["ADD", "SUB", "MUL", "MIN", "MAX", "RATIO"]
 
 
-DERIVED_OPS: frozenset[str] = frozenset({"ADD", "SUB", "MUL", "MIN", "MAX", "RATIO"})
+DERIVED_OPS: frozenset[str] = frozenset(get_args(DerivedOp))
 
 
 class ValueRefError(ValueError):
