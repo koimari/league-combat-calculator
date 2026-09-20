@@ -219,20 +219,22 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "R (Shadow Surge) always lands both hits: the Shadow's cached Magic "
-    "Damage at the cast and the recast consume 0.5s later. The player "
-    "picks that instant anywhere inside the cached 4-second mark, so the "
-    "0.5s cadence is authored (Lee Sin Q's) rather than cached; the two "
-    "hits sum to the cached Total Magic Damage row exactly, and the "
-    "parser refuses the slot if they ever stop doing so.",
-    "W (Personal Space) grants Vex the sourced shield (flat + 75% AP) for "
-    "2.5s at the cast; the shield absorbs damage before health in the "
-    "participant ledger.",
-    "P (Doom 'n Gloom) Gloom detonations are priced as on-hit riders: "
-    "p_gloom_detonations basic attacks each deal the sourced bonus magic "
-    "damage (40:162.94 by level + 25% AP, cached 'Bonus Magic Damage' "
-    "row), capped by the engine's max_procs.  The mark requires a "
-    "dashing/blinking enemy, so the count is the user-controlled fight "
-    "state; the Doom fear/knock-down (CC) and the reduced non-champion "
-    "damage are state/out of scope.",
+    "R (Shadow Surge) always lands both hits: the Shadow's cached Magic Damage at the "
+    "cast and a recast.",
+    "The recast consume lands 0.5s later, a cadence authored like Lee Sin Q rather "
+    "than cached.",
+    "The player picks that instant anywhere inside the cached 4-second mark.",
+    "The two hits sum to the cached Total Magic Damage row exactly; the parser "
+    "refuses the slot otherwise.",
+    "W (Personal Space) grants Vex the sourced shield, flat + 75% AP, for 2.5s at the "
+    "cast.",
+    "The shield absorbs damage before health in the participant ledger.",
+    "P (Doom 'n Gloom) Gloom detonations are priced as on-hit riders on "
+    "p_gloom_detonations attacks.",
+    "Each deals the cached Bonus Magic Damage row, 40 to 162.94 by level + 25% AP, "
+    "capped by max_procs.",
+    "The mark needs a dashing or blinking enemy, so the count is user-controlled "
+    "fight state.",
+    "P's Doom fear and knock-down and the reduced non-champion damage are state or "
+    "out of scope.",
 ]

@@ -112,8 +112,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Viktor",
     PACKET_SHA256,
     assumption_overrides=(
-        "Arcane Storm prices the impact plus the full 6.5-second storm "
-        "(Magic Damage + 6 x Magic Damage Per Tick == Total Magic Damage).",
+        "Arcane Storm prices the impact plus the full 6.5-second storm.",
+        "That is Magic Damage + 6 x Magic Damage Per Tick == Total Magic Damage.",
     ),
     # One beam, one hit: "fires an energy beam along the target path that
     # deals magic damage to enemies hit" — the packet has no travel or tick
@@ -151,14 +151,15 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Q (Siphon Power) shields Viktor for the per-level 40 : 140 (+ 25% AP) "
-    "for 2.5 seconds (the cache's 'Bonus Damage' row is the shield base, "
-    "level-indexed); the shield is granted at the cast (E8c "
-    "self_shield_events payload).",
-    "Q's Discharge empowers the next basic attack for 4 seconds: the "
-    "Modified Magic Damage row (20 : 120 by rank + 100% AD + 50% AP) is "
-    "priced as a one-application on-hit (q_discharge, default True). "
-    "The Total Magic Damage row is the projectile + discharge sum.",
+    "Q (Siphon Power) shields Viktor for the per-level 40 to 140 + 25% AP for 2.5 "
+    "seconds.",
+    "The cache's 'Bonus Damage' row is the shield base, level-indexed; the grant "
+    "lands at the cast.",
+    "Q's Discharge empowers the next basic attack for 4 seconds.",
+    "The Modified Magic Damage row, 20 to 120 by rank + 100% AD + 50% AP, is a "
+    "one-application on-hit.",
+    "q_discharge defaults True; the Total Magic Damage row is the projectile plus "
+    "discharge sum.",
     "W (Gravity Field) crowd control and P (Glorious Evolution) augments "
     "remain documented out of scope.",
 ]

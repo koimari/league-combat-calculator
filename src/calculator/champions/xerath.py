@@ -140,26 +140,23 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "R (Rite of the Arcane) prices every Arcane Barrage: 'Number of "
-    "Recasts' (4/5/6) x 'Magic Damage' per shot == the cached 'Total "
-    "Magic Damage' row (680/1100/1620 + 180/225/270% AP) at the sourced "
-    "0.627-second cadence.",
-    "Arcane Perfection (the E3-stacks worklist entry) is option-gated: "
-    "r_arcane_perfection stacks add 'Increased Damage per Stack' "
-    "(20/25/30 + 5% AP) to every barrage beyond the first, capped at the "
-    "sourced 'Maximum Stacks' (3/4/5); 0 (default) prices the sourced "
-    "Total row.",
-    "Every barrage is assumed to hit the single duel target (a champion "
-    "duel); the 0.5s-first-recast window and the 10s channel are state.",
-    "P (Mana Surge) has no enemy-damage formula: its cached effects are "
-    "a self mana-restore-on-next-auto-attack proc and a kill-triggered "
-    "cooldown reduction, with no enemy-damage leveling row (confirmed by "
-    "the pinned reviewed packet's kind='no_damage' declaration for P, "
-    "and live: parse_champion_abilities emits P as a zero total_raw row "
-    "absent from the fight breakdown). P is a cast slot in this module "
-    "(never reassigned away from build_packet_module's no_damage "
-    "branch — only R is overridden above), so MODULE_COVERAGE reflects "
-    "a sourced no-damage classification rather than an unmodeled gap "
-    "(no_damage, not out_of_scope).",
+    "R (Rite of the Arcane) prices every Arcane Barrage: recasts 4/5/6 x Magic Damage "
+    "per shot.",
+    "That equals the cached Total Magic Damage row, 680/1100/1620 + 180/225/270% AP.",
+    "The cadence is the sourced 0.627 seconds.",
+    "r_arcane_perfection stacks add Increased Damage per Stack, 20/25/30 + 5% AP, "
+    "past the first barrage.",
+    "They cap at the sourced Maximum Stacks, 3/4/5; 0 (the default) prices the "
+    "sourced Total row.",
+    "Every barrage is assumed to hit the single duel target, a champion duel.",
+    "The 0.5s first-recast window and the 10s channel are state.",
+    "P (Mana Surge) has no enemy-damage formula and no enemy-damage leveling row.",
+    "Its cached effects are a self mana restore on the next basic attack and a kill "
+    "cooldown cut.",
+    "The reviewed packet declares P kind no_damage, and P parses as a zero total_raw "
+    "row.",
+    "That row is absent from the fight breakdown.",
+    "P is a cast slot here, so MODULE_COVERAGE records a sourced no_damage, not an "
+    "unmodeled gap.",
 ]
 MODULE_COVERAGE = coverage(no_damage="P")

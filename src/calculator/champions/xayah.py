@@ -362,30 +362,29 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Clean Cuts stack count is user-set (default 5); the 8-second stack "
-    "window and which casts generate stacks are not simulated",
-    "Each empowered auto deals the triggering attack's damage to the "
-    "primary target (no single-target delta); with "
-    "clean_cuts_secondary_targets (default 0) selected, each Feather "
-    "also hits that many OTHER enemies at the level-scaled 35/45/55% "
-    "AD read from the cached P prose (1/7/13 level brackets), with the "
-    "sourced '(200% + 30%)' crit rider baked in as an expected-value "
-    "multiplier on the triggering attack's crit chance; the on-hit "
-    "rides every auto (the fight model cannot simulate how many "
-    "empowered autos land before E — the existing Clean Cuts "
-    "simplification)",
-    "Bladecaller prices per-Feather damage x the recalled Feather count "
-    "(user-set, default 7 = 5 empowered autos + 2 Q daggers; maximum 12 "
-    "adds R's 5 Feathers) — the fight model cannot simulate how many "
-    "empowered autos land before the recall",
-    "Bladecaller's crit-chance damage increase (0-50% + 0-15%) is not "
-    "modeled; the root is emitted when at least three Feathers are recalled",
-    "W (Deadly Plumage) is a 4-second window placed once at the W cast "
-    "(the second frenzy a longer fight would earn is not placed): the "
-    "swings inside it ride the sourced bonus attack speed and are priced "
-    "at 125% AD for the extra 25%-damage feather, which crits with its "
-    "triggering attack and applies no on-hit of its own; the reviewed "
-    "packet had read the attack-speed row as one 55%-AD hit per cast. "
-    "The feather is not double-counted with Clean Cuts, and Rakan's "
-    "empowerment is another champion's",
+    "Clean Cuts stack count is user-set, default 5.",
+    "The 8-second stack window and which casts generate stacks are not simulated.",
+    "Each empowered auto deals the triggering attack's damage to the primary target, "
+    "no delta.",
+    "clean_cuts_secondary_targets (default 0) sends each Feather at that many other "
+    "enemies.",
+    "They take 35/45/55% AD by level, read from cached P prose at the 1/7/13 "
+    "brackets.",
+    "The sourced '(200% + 30%)' crit rider is an expected-value multiplier on the "
+    "attack's crit chance.",
+    "The on-hit rides every auto: the model cannot simulate how many empowered autos "
+    "land before E.",
+    "Bladecaller's recalled Feather count is user-set: default 7 (5 autos + 2 Q "
+    "daggers), max 12 with R.",
+    "It prices per-Feather damage x that count.",
+    "The model cannot simulate how many empowered autos land before the recall.",
+    "Bladecaller's crit-chance damage increase, 0 to 50% + 0 to 15%, is not modeled.",
+    "The root is emitted when at least three Feathers are recalled.",
+    "W (Deadly Plumage) is a 4-second window placed once at the W cast.",
+    "The second frenzy a longer fight would earn is not placed.",
+    "Swings inside it ride the sourced bonus attack speed and price at 125% AD.",
+    "The extra 25% is the feather, which crits with its triggering attack and applies "
+    "no on-hit.",
+    "The feather is not double-counted with Clean Cuts, and Rakan's empowerment is "
+    "another champion's.",
 ]

@@ -233,23 +233,23 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Viego Q's mark-consuming second strike requires a prior damaging "
-    "ability and the next marked basic attack; that stateful rider is "
-    "option-gated by this named module.",
-    "Q (Blade of the Ruined King) prices the active 'Physical Damage' row "
-    "(25-85 + 70% AD); the passive 2-6% current-health on-hit (minimum "
-    "10-30) rides every auto on the engine's current-health on-hit path; "
-    "the mark-consuming second strike (20% AD + 15% AP wiki prose) is "
-    "option-gated via q_second_strike (0 by default).",
-    "R (Heartbreaker) prices the 120% AD base strike (wiki prose) plus "
-    "the %missing-health bonus ('Physical Damage' row 12/16/20% + 5% per "
-    "100 bonus AD) as a live hp-scaled part evaluated at the strike; "
+    "Q's mark-consuming second strike needs a prior damaging ability and the next "
+    "marked basic attack.",
+    "That stateful rider is option-gated by this named module.",
+    "Q (Blade of the Ruined King) prices the active Physical Damage row, 25 to 85 + "
+    "70% AD.",
+    "Its passive 2 to 6% current health on-hit, minimum 10 to 30, rides every auto.",
+    "The mark-consuming second strike, 20% AD + 15% AP wiki prose, is q_second_strike "
+    "(0 by default).",
+    "R (Heartbreaker) prices the 120% AD base strike (wiki prose).",
+    "It adds the %missing-health bonus row, 12/16/20% + 5% per 100 bonus AD, live at "
+    "the strike.",
     "total_raw is the static base bound.",
-    "E (Harrowed Path) grants the cached Bonus Attack Speed row "
-    "(30-50%) while Viego stands in his own mist; e_mist_uptime "
-    "(default 100%) is that share of the fight, since the trail lasts 8 "
-    "seconds and E's cooldown falls to 6 by rank 5.  The trail's bonus "
-    "movement speed and camouflage have no engine channel.",
+    "E (Harrowed Path) grants the cached 30 to 50% Bonus Attack Speed while Viego "
+    "stands in his mist.",
+    "E's e_mist_uptime (default 100%) is that share of the fight.",
+    "The trail lasts 8 seconds and E's cooldown falls to 6 by rank 5.",
+    "The trail's bonus movement speed and camouflage have no engine channel.",
     "The possession/transform mechanic is inherently out of scope (E8d "
     "note): P stays an emitted zero-damage row.",
 ]

@@ -277,21 +277,21 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "The Relentless Storm stack count is user-set (default 5 = fully "
-    "stacked); the 6-second stack window and which damage events refresh "
-    "it are not simulated",
+    "The Relentless Storm stack count is user-set, default 5, fully stacked.",
+    "The 6-second stack window and which damage events refresh it are not simulated.",
     "Each stack grants 5% (+ 3% per 100 AP) bonus attack speed — wiki "
     "prose (module constant)",
-    "Lightning Claws on-hit magic damage applies to every basic attack "
-    "while at 5 stacks; the 450-range secondary-target chain is not "
-    "modeled (single-target calc)",
-    "Frenzied Maul's Wounded 2nd bite deals 50% (+ 25% per 100 bonus AD) "
-    "increased damage — binary-rooted W2 values, corroborated by cached "
-    "prose; the option picks "
-    "the already-marked bite because the one-rotation model casts W once",
-    "E (Sky Splitter) also shields Volibear for 14% max HP + 75% AP for "
-    "3s at the cast (cached description prose, module constants); the "
-    "shield absorbs incoming damage in the participant ledger",
+    "Lightning Claws on-hit magic damage applies to every basic attack at 5 stacks.",
+    "The 450-range secondary-target chain is not modeled in this single-target "
+    "calculator.",
+    "Frenzied Maul's Wounded second bite deals 50% + 25% per 100 bonus AD increased "
+    "damage.",
+    "Those W2 values are binary-rooted and corroborated by cached prose.",
+    "The option picks the already-marked bite: the one-rotation model casts W once.",
+    "E (Sky Splitter) also shields Volibear for 14% maximum health + 75% AP for 3s at "
+    "the cast.",
+    "Those are cached description prose held as module constants; the ledger absorbs "
+    "with it.",
     "Q's stun/MS, W's heal and R's bonus health remain utility/state " "only",
 ]
 

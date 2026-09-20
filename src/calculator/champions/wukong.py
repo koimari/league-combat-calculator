@@ -230,21 +230,22 @@ ASSUMPTIONS = [
     "separate survival effect.",
     "Crushing Blow exposes its bonus packet and attaches the next basic attack "
     "through the shared empowered-auto path.",
-    "Q's armor reduction (10-30% of target's armor by rank, 3s) applies "
-    "to damage dealt after the empowered attack lands, not to the attack "
-    "itself.",
-    "E (Nimbus Strike) places its arrival's bonus attack speed as a "
-    "5-second window at the first E cast; the second window a 7-second "
-    "cooldown earns in a longer fight is not placed.",
-    "Warrior Trickster's clone is out_of_scope on its SWING COUNT, not on "
-    "its output: the 'Clone Outgoing Damage' ratio (40/45/50/55/60%) is the "
-    "slot's only cached leveling row, but no clone attack rate is stated "
-    "anywhere in the cache, so the number of autonomous attacks over the "
-    "clone's 4 seconds cannot be sourced. The Shaco-R route (make the count "
-    "an explicit player option) does not apply, because that clone is "
-    "commanded and this one is not, so a count would be invented rather "
-    "than read; the copied Cyclone would need a second attacker's cast "
-    "timeline, which the engine does not have.",
+    "Q's armor reduction, 10 to 30% of target armor by rank for 3s, applies after the "
+    "empowered attack.",
+    "It does not apply to the attack itself.",
+    "E (Nimbus Strike) places its arrival's bonus attack speed as a 5-second window "
+    "at the first E cast.",
+    "The second window a 7-second cooldown earns in a longer fight is not placed.",
+    "Warrior Trickster's clone is out_of_scope on its swing count, not on its output.",
+    "The Clone Outgoing Damage ratio, 40/45/50/55/60%, is the slot's only cached "
+    "leveling row.",
+    "No clone attack rate is stated anywhere, so autonomous attacks over its 4 "
+    "seconds cannot be sourced.",
+    "The Shaco-R route of an explicit player option does not apply: that clone is "
+    "commanded, this is not.",
+    "A count would be invented rather than read.",
+    "The copied Cyclone would need a second attacker's cast timeline, which the "
+    "engine does not have.",
     "Cyclone uses eight sourced 0.25-second ticks per cast; the second cast is explicit.",
 ]
 

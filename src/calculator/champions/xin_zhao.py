@@ -186,43 +186,44 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "W": _wind_becomes_lightning,
     },
     assumption_overrides=(
-        "Q (Three Talon Strike) prices all three empowered attacks — the "
-        "cached Total Bonus Physical Damage row (45/90/135/180/225 + 120% "
-        "bonus AD), three times the per-attack Bonus Physical Damage row "
-        "the generated packet selected.  Their spacing across the "
-        "5-second window is not authored.  The row declares "
-        "crit_effectiveness=1.0 — 'Three Talon Strike's bonus damage is "
-        "affected by critical strike modifiers' (cached Q effect 2) — so "
-        "it crits at the fight's own chance and multiplier.",
-        "W (Wind Becomes Lightning) prices the whole cast — the cached "
-        "Total Physical Damage row (80/125/170/215/260 + 120% AD + 65% "
-        "AP), which is the four slashes plus the thrust.  The generated "
-        "packet priced Physical Damage per Slash, one slash of four with "
-        "no thrust.  The row is declared as one aggregate hit at the cast "
-        "boundary; the slash cadence remains unpriced.",
-        "W's thrust is 'increased by 0% : 33.3% (based on critical strike "
-        "chance)' (cached W effect 0) — a deterministic amplifier, not a "
-        "crit roll, so it is NOT crit_effectiveness (that key would route "
-        "through the crit multiplier and misprice an Infinity Edge "
-        "build).  The module scales the cached Thrust Physical Damage row "
-        "alone by 1 + 0.333 x crit chance, exact at both sourced "
-        "endpoints and linear between them (the Nilah Q / Smolder Q / "
-        "Zeri E precedent); the four slashes take no amplifier.",
-        "P (Determination) prices the third-stack bonus at the wiki's "
-        "15% / 30% / 45% / 60% (based on level) AD + 5% / 10% / 15% / "
-        "20% AP (level breakpoints 1/6/11/16) — module constants, "
-        "because the cached P entry carries no leveling row.  Stacks "
-        "come from basic attacks and from Wind Becomes Lightning's "
-        "first slash hit and thrust, one each — declared per slot "
-        "(ability_stack_slots {'W': 2}) rather than through the "
-        "kit-wide ability-hit counter, which would also count E and R, "
-        "and they generate none.  The Challenged mark is state.",
-        "E (Audacious Charge) places its bonus attack speed (the cached "
-        "row's base plus its AP term) as a 5-second window at the first E "
-        "cast; the row's third term, 1% per 5% bonus attack speed from "
-        "non-buff sources, has no attributable unit in the cache and is "
-        "not priced, and the second window a longer fight earns is not "
-        "placed.",
+        "Q (Three Talon Strike) prices all three empowered attacks: the cached Total "
+        "Bonus Physical row.",
+        "That is 45/90/135/180/225 + 120% bonus AD, three times the per-attack row.",
+        "Their spacing across the 5-second window is not authored.",
+        "The row declares crit_effectiveness 1.0: cached Q effect 2 says the bonus "
+        "takes crit modifiers.",
+        "W (Wind Becomes Lightning) prices the whole cast: the cached Total Physical "
+        "Damage row.",
+        "That is 80/125/170/215/260 + 120% AD + 65% AP, four slashes plus the thrust.",
+        "W's row is declared as one aggregate hit at the cast boundary; the slash "
+        "cadence stays unpriced.",
+        "W's thrust is 'increased by 0% : 33.3% (based on critical strike chance)', "
+        "cached W effect 0.",
+        "That is a deterministic amplifier, not a crit roll, so it is not "
+        "crit_effectiveness.",
+        "That key would route through the crit multiplier and misprice an Infinity "
+        "Edge build.",
+        "The module scales the cached Thrust Physical Damage row alone by 1 + 0.333 x "
+        "crit chance.",
+        "It is exact at both sourced endpoints and linear between, the Nilah Q and "
+        "Zeri E precedent.",
+        "The four slashes take no amplifier.",
+        "P (Determination) prices the third-stack bonus at 15/30/45/60% AD by level + "
+        "5/10/15/20% AP.",
+        "The level breakpoints are 1/6/11/16, module constants: the cached P entry "
+        "has no leveling row.",
+        "Stacks come from basic attacks and from Wind Becomes Lightning's first slash "
+        "hit and thrust.",
+        "They are declared per slot as ability_stack_slots {'W': 2}, not through the "
+        "kit-wide counter.",
+        "That counter would also count E and R, which generate none; the Challenged "
+        "mark is state.",
+        "E (Audacious Charge) places its bonus attack speed as a 5-second window at "
+        "the first E cast.",
+        "That is the cached row's base plus its AP term.",
+        "E's third term, 1% per 5% bonus attack speed from non-buff sources, is not "
+        "priced: no cached unit.",
+        "The second window a longer fight earns is not placed.",
     ),
     slot_wrappers={
         "E": lambda packet_e: with_attack_speed_window(

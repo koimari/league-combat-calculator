@@ -570,35 +570,34 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "One-rotation mode is one Q -> E -> R rotation with the certified "
-    "stack ordering; timed mode walks W's stack cycle over the fight's "
-    "merged hit stream",
+    "One rotation is one Q, E, R rotation with the certified stack ordering.",
+    "Timed mode walks W's stack cycle over the fight's merged hit stream.",
     "Every selected enemy is in Q's path, E's cone, and R's path; enemy 1 is "
     "the primary E/R target",
     "Q and primary-target E each add one W stack; E secondary targets do not",
     "In one rotation, W proc damage uses pre-shred armor, then later hits "
     "use 20% reduced armor",
-    "Timed W stacks come from ambient autos and Q hits (E's empowered "
-    "attacks consume ambient swings, so they are counted as those swings; "
-    "with no auto stream each E cast forces one attack); stacks expire 4s "
-    "after the last application, and Q/E are assumed cast on cooldown from "
-    "t=0 on one shared cast timeline without item cooldown modifiers or "
-    "mana exhaustion",
+    "Timed W stacks come from ambient autos and Q hits.",
+    "E's empowered attacks consume ambient swings, so they count as those swings.",
+    "With no auto stream each E cast forces one attack, and stacks expire 4s after "
+    "the last.",
+    "Q and E are assumed cast on cooldown from t=0 on one shared timeline.",
+    "That timeline carries no item cooldown modifiers and no mana exhaustion.",
     "An autos-only fight casts nothing, so only the ambient swings stack "
-    "(the pipeline states this with the auto_attacks_only reserved "
-    "option) and no cast carries the shred window",
-    "Timed W procs are priced against the fight's static target max health "
-    "and the 20% shred is time-weighted over 4s windows anchored at the "
-    "carrier ability's cast times (Q, else E) — the engine anchors shred "
-    "windows to casts, not procs",
+    "(auto_attacks_only).",
+    "No cast carries the shred window.",
+    "Timed W procs are priced against the fight's static target maximum health.",
+    "The 20% shred is time-weighted over 4s windows anchored at the carrier's cast "
+    "times, Q else E.",
+    "The engine anchors shred windows to casts, not procs.",
     "W's 30-50% attack-speed steroid after a proc is not modeled "
     "(conservative in both modes)",
-    "P (Blast Shield) grants 12% of maximum health for 3 seconds (cached "
-    "P prose) on the first ranked ability hit of the fight — the shield "
-    "rides that slot's first damage event into the ledger, and only the "
-    "primary target's fight authors it, so a roster grants one shield. "
-    "Its unstated internal cooldown ('periodically') is not enforced and "
-    "the 4-second reduction per Denting Blows consume is not modeled",
+    "P (Blast Shield) grants 12% of maximum health for 3 seconds (cached P prose).",
+    "It fires on the first ranked ability hit of the fight, riding that slot's first "
+    "damage event.",
+    "Only the primary target's fight authors it, so a roster grants one shield.",
+    "P's unstated internal cooldown is not enforced and the 4s Denting Blows "
+    "reduction is not modeled.",
 ]
 
 SOURCES = load_champion_sources("Vi")

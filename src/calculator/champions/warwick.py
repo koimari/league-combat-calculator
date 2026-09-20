@@ -267,42 +267,44 @@ OPTIONS.append(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "R (Infinite Duress) prices the wiki Total Magic Damage "
-    "(175/350/525 + 167% bonus AD by rank) as one cast over the "
-    "1.5-second suppress channel; healing.py's existing 100%-of-R-"
-    "damage self-heal rule fires on the R damage event.  The channel's "
-    "0.25s magic-damage ticks and its 3 on-hit/on-attack applications "
-    "are documented cadence: item on-hits are not multiplied (the "
-    "cache publishes no per-tick row).",
-    "P (Eternal Hunger) is an on-hit rider on every basic attack: the "
-    "cached per-level row (6 : 60.76 + 15% bonus AD + 10% AP magic).  "
-    "It is an on-hit itself, so item on-hit effects do not proc from "
-    "it — they proc from the swing it rides.  Its self-heal (100% of "
-    "the post-mitigation damage below 50% maximum health, 250% below "
-    "25%) is cached prose, gated on the p_self_health_percent option "
-    "(default 100% — a healthy Warwick heals nothing) and paid by the "
-    "Warwick healing rule.",
-    "W (Blood Hunt) grants the sourced Bonus Attack Speed row "
-    "(70-110% by rank) for the whole fight: the active marks the target "
-    "'regardless of their current health', so the base tier needs no "
-    "condition.  The doubled row (140-220%) applies when "
-    "target_missing_hp_pct exceeds 75 (the target below 25% maximum "
-    "health).  Blood Hunt's bonus movement speed and its 8-second mark "
-    "duration are not modeled — stat_buff has no movement-speed key.",
-    "E (Primal Howl) is modeled as a zero-damage self-state window: the "
-    "ranked Damage Reduction row (35/40/45/50/55%, required_ranked_"
-    "attribute_atom) prices the multiplier and the description's prose "
-    "'for up to 2.75 seconds' (timing.active_duration atom) prices the "
-    "window, armed through self_state_events kind=damage_modifier "
-    "(Briar-E / Alistar-R precedent). Every DamageClass is declared: the "
-    "cached E description and notes name no excluded damage type, so "
-    "narrowing the set would be the invented reading rather than the "
-    "conservative one. The window priced is the automatic recast's — the "
-    "cache says Primal Howl 'does so automatically after the duration' — "
-    "so a manual recast (legal after 1 second) shortening it is not "
-    "modeled, and neither is that recast's 1-second fear or its 90% slow "
-    "(crowd control this model does not price on a recast it never "
-    "issues).",
+    "R (Infinite Duress) prices the wiki Total Magic Damage, 175/350/525 + 167% bonus "
+    "AD by rank.",
+    "It is one cast over the 1.5-second suppress channel.",
+    "The 100%-of-R-damage self-heal rule fires on the R damage event.",
+    "The channel's 0.25s ticks and its 3 on-hit applications are documented cadence.",
+    "Item on-hits are not multiplied: the cache publishes no per-tick row.",
+    "P (Eternal Hunger) is an on-hit rider on every basic attack, the cached "
+    "per-level row.",
+    "That is 6 to 60.76 + 15% bonus AD + 10% AP magic.",
+    "It is an on-hit itself, so item on-hits proc from the swing it rides, not from "
+    "it.",
+    "Its self-heal is 100% of post-mitigation damage below 50% maximum health, 250% "
+    "below 25%.",
+    "That is cached prose gated on p_self_health_percent (default 100%): a healthy "
+    "Warwick heals nothing.",
+    "W (Blood Hunt) grants the sourced 70 to 110% by rank Bonus Attack Speed for the "
+    "whole fight.",
+    "The active marks the target 'regardless of their current health', so the base "
+    "tier is unconditional.",
+    "The doubled row, 140 to 220%, applies when target_missing_hp_pct exceeds 75.",
+    "W's bonus movement speed and its 8-second mark are not modeled: stat_buff has no "
+    "movement key.",
+    "E (Primal Howl) is a zero-damage self-state window: the ranked Damage Reduction "
+    "row 35 to 55%.",
+    "The required_ranked_attribute_atom prices the multiplier.",
+    "The prose 'for up to 2.75 seconds' (timing.active_duration atom) prices the "
+    "window.",
+    "It arms through self_state_events kind=damage_modifier, the Briar-E and "
+    "Alistar-R precedent.",
+    "Every DamageClass is declared: the cached E description and notes name no "
+    "excluded type.",
+    "Narrowing the set would be the invented reading rather than E's conservative "
+    "one, an Alistar-R call.",
+    "The window priced is the automatic recast's: the cache says it 'does so "
+    "automatically'.",
+    "A manual recast, legal after 1 second, shortening it is not modeled.",
+    "Neither is that recast's 1-second fear or its 90% slow, control on a recast "
+    "never issued.",
 ]
 # No MODULE_COVERAGE: with E closed, every slot this module emits is
 # ``modeled``, which is exactly what ``default_coverage`` derives from

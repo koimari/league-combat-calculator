@@ -302,8 +302,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Vladimir",
     PACKET_SHA256,
     assumption_overrides=(
-        "Sanguine Pool prices all 4 pool ticks (Magic Damage Per Tick x 4 "
-        "== Total Magic Damage) at 0.5-second intervals over 2 seconds.",
+        "Sanguine Pool prices all 4 pool ticks, per-tick x 4 == Total Magic Damage.",
+        "They land at 0.5-second intervals over 2 seconds.",
     ),
     # Q "drains blood from the target enemy, dealing magic damage": one
     # hit, at the cast.  E's nova also damages an enemy "only once", but
@@ -350,34 +350,33 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "R (Hemoplague) marks the target for 4 seconds: all damage dealt "
-    "while marked is increased by 10% (cached R prose; patch history "
-    "'reduced to 10% from 12%').  The AMP pseudo-slot adds the sourced "
-    "10% bonus part to every damage entry (Q/W/E/R), so the R "
-    "detonation itself prices 165/275/385 (+ 77% AP) — the wiki's "
-    "explicit self-amplified note.  The mark is assumed applied at "
-    "fight start (R-first opening) so the whole one-rotation window "
-    "sits inside the 4s mark; toggle r_hemoplague_debuff off to price "
-    "an unmarked rotation.  In-game true damage is not amplified "
-    "(wiki bug note); Vladimir's kit deals none.",
-    "E (Tides of Blood) interpolates each sourced modifier (flat, "
-    "% maximum health, % AP) between the cached Minimum and Maximum "
-    "Magic Damage rows by the e_charge_fraction option (default 1.0 = "
-    "fully charged, exactly the reviewed packet's maximum-row numbers). "
-    "The ramp completes over the first 1 second of the 1.5-second "
-    "channel (wiki prose; the degraded 'charge time' parse carries no "
-    "leveling data, so the fraction is the selection).  The "
-    "% maximum health term follows the reviewed packet's stat "
-    "resolution: the champion's own maximum health.  The 40-60% slow "
-    "on fully charged casts is utility.",
-    "P (Crimson Pact) has no enemy-damage formula: it converts a "
-    "percentage of bonus health into ability power, a pure self "
-    "stat-conversion (confirmed by the pinned reviewed packet's "
-    "kind='no_damage' declaration for P). P is a cast slot in this "
-    "module (never reassigned away from build_packet_module's "
-    "no_damage branch), so MODULE_COVERAGE reflects a sourced "
-    "no-damage classification rather than an unmodeled gap (no_damage, "
-    "not out_of_scope).",
+    "R (Hemoplague) marks the target for 4 seconds; all damage dealt while marked "
+    "rises 10%.",
+    "That is cached R prose.",
+    "The AMP pseudo-slot adds the sourced 10% bonus part to every damage entry.",
+    "So the R detonation itself prices 165/275/385 + 77% AP, the wiki's "
+    "self-amplified note.",
+    "The mark is assumed applied at fight start, so Q, W, E and R all sit inside the "
+    "4s mark.",
+    "r_hemoplague_debuff off prices an unmarked rotation.",
+    "In-game true damage is not amplified (wiki bug note); Vladimir's kit deals none.",
+    "E (Tides of Blood) interpolates each sourced modifier between the cached Minimum "
+    "and Maximum rows.",
+    "Those are the flat, % maximum health and % AP terms.",
+    "e_charge_fraction (default 1.0) selects the point, fully charged being the "
+    "reviewed maximum row.",
+    "The ramp completes over the first 1 second of the 1.5-second channel (wiki "
+    "prose).",
+    "The degraded 'charge time' parse carries no leveling data, so the fraction is "
+    "the selection.",
+    "The % maximum health term reads the champion's own maximum health.",
+    "The 40-60% slow on fully charged casts is utility.",
+    "P (Crimson Pact) has no enemy-damage formula: it converts bonus health into "
+    "ability power.",
+    "That is a pure self stat-conversion, and the reviewed packet declares P kind "
+    "no_damage.",
+    "P is a cast slot here, so MODULE_COVERAGE records a sourced no_damage, not an "
+    "unmodeled gap.",
 ]
 MODULE_COVERAGE = coverage(no_damage="P")
 
