@@ -119,11 +119,7 @@ from src.calculator.item_effects import (
 )
 from src.calculator.item_source import branch_losses, source_audit
 from src.calculator.passive_parser import _ITEM_PARSE_CONFIG
-from src.calculator.patch_identity import (
-    PatchIdentityError,
-    canonical_patch,
-    client_patch,
-)
+from src.calculator.patch_identity import PatchIdentityError, canonical_patch
 
 GOLDEN_BASELINE = REPO_ROOT / "scripts" / "golden_baseline.json"
 REVIEWED_PACKETS = REPO_ROOT / "static" / "reviewed-packets.json"
@@ -1113,7 +1109,7 @@ def run_staleness_gate(out: Path | None = None, patch: str | None = None) -> int
     argv = ["check", "--out", str(out)]
     if patch:
         try:
-            patch = client_patch(patch)
+            patch = canonical_patch(patch).client_patch
         except ValueError as exc:
             print(f"\nFAIL: invalid public patch label: {exc}", flush=True)
             return 2
@@ -1222,7 +1218,7 @@ def run_gamefile_refresh(
     print("== Gate: refreshing game-file evidence ==", flush=True)
     if patch:
         try:
-            patch = client_patch(patch)
+            patch = canonical_patch(patch).client_patch
         except ValueError as exc:
             print(f"\nFAIL: invalid public patch label: {exc}", flush=True)
             return 2
