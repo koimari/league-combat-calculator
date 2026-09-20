@@ -19,7 +19,7 @@
       "counter_1": 3
     },
     "calculator/item_coverage.py": {
-      "class_c_claim_evidence": 267,
+      "class_c_claim_evidence": 225,
       "counter_2": 18
     },
     "calculator/item_effects.py": {
@@ -272,14 +272,13 @@
           "_ISSUE_REF_ONLY_ITEMS": "the two items whose only claim carrier is their tracked review, authored so the ref rides a claim instead of being published by nothing",
           "_REVIEW_ISSUE_REFS": "criterion 14's own blessed survivor: tracked review issues per item, routed onto a claim at import.  An issue reference states no coverage, so it is not the prose counter 2 is named for",
           "_SOURCE_REFS": "the wiki revision each claim's evidence was read from; a claim with no source is the sentence this phase deletes, so the table is mandated rather than retirable",
-          "_STATS_ONLY_CERTIFIED_EFFECT_TEXT": "the cached wiki branch text each certified stats-only item was read at, pinned so tests/test_stats_only_items.py fails loudly when a refresh appends a mechanic to a passive without renaming it.  The member is the evidence a review was performed, not a claim about coverage, so it is the same exclusion _SOURCE_REFS carries for the same reason",
           "_SUPPORT_PACKET_CLAIMS": "the support-packet lane's authored claims, each quoting the packet source the totality check reads back",
           "_TARGET_CERTIFIED_IMPLS": "the target lane's certified half, same shape and same resolution",
           "_TARGET_MODELED_IMPLS": "the target lane's authored claims, each naming the implementation the resolver resolves it against",
           "_UTILITY_HOMES": "the utility lane's authored evidence: the module and symbol a utility outcome is delivered by"
         }
       },
-      "sites": 267,
+      "sites": 225,
       "sites_by_container": {
         "calculator/item_coverage.py": {
           "_ATTACKER_STATE_HOMES": 22,
@@ -287,7 +286,6 @@
           "_ISSUE_REF_ONLY_ITEMS": 3,
           "_REVIEW_ISSUE_REFS": 22,
           "_SOURCE_REFS": 59,
-          "_STATS_ONLY_CERTIFIED_EFFECT_TEXT": 42,
           "_SUPPORT_PACKET_CLAIMS": 19,
           "_TARGET_CERTIFIED_IMPLS": 9,
           "_TARGET_MODELED_IMPLS": 42,

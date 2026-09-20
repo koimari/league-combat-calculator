@@ -267,14 +267,6 @@ CLASS_C_CLAIM_EVIDENCE_CONTAINERS: Mapping[str, Mapping[str, str]] = {
             "item, routed onto a claim at import.  An issue reference states no "
             "coverage, so it is not the prose counter 2 is named for"
         ),
-        "_STATS_ONLY_CERTIFIED_EFFECT_TEXT": (
-            "the cached wiki branch text each certified stats-only item was "
-            "read at, pinned so tests/test_stats_only_items.py fails loudly "
-            "when a refresh appends a mechanic to a passive without renaming "
-            "it.  The member is the evidence a review was performed, not a "
-            "claim about coverage, so it is the same exclusion _SOURCE_REFS "
-            "carries for the same reason"
-        ),
     },
 }
 
