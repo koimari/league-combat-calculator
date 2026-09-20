@@ -202,7 +202,6 @@ def _threaded_volley(
     if ground not in {"normal", "worked"}:
         raise ValueError("Taliyah q_ground must be normal or worked")
     distance = clamp(float(ctx.option("q_target_distance")), 0.0, _Q_MAX_RANGE)
-    q_start = _cast_start(ctx, "E", "W")
 
     # A timed fight window derives the terrain sequence itself; the
     # q_ground select prices the two states in one-rotation mode only.
@@ -212,6 +211,7 @@ def _threaded_volley(
             ctx, ability, rank, distance, duration=float(duration)
         )
 
+    q_start = _cast_start(ctx, "E", "W")
     if ground == "worked":
         raw, primary = _boulder_damage(ctx, ability, rank)
         hit_time = q_start + extract_cast_time(ability) + _worked_travel_time(distance)
