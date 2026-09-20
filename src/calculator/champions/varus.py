@@ -33,6 +33,7 @@ Why each slot is non-generic:
 import re
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
@@ -128,31 +129,27 @@ def _blight_stack_window(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("W", 0)
     if ability is None:
         return None
-    effects = ability.get("effects")
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is None:
-            continue
-        match = _BLIGHT_WINDOW_RE.search(str(description))
-        if match is not None:
-            return {
-                "arming_slots": (),
-                "max_stacks": int(match.group("stacks")),
-                "hits_required": int(match.group("stacks")),
-                "stacks_from_swings": True,
-                "stack_seconds": float(match.group("seconds")),
-                "armed_at_start": False,
-                "requested": False,
-            }
-    raise ValueError(
+    seconds, stacks = _BLIGHT_WINDOW.stack_terms(ability)
+    return {
+        "arming_slots": (),
+        "max_stacks": stacks,
+        "hits_required": stacks,
+        "stacks_from_swings": True,
+        "stack_seconds": seconds,
+        "armed_at_start": False,
+        "requested": False,
+    }
+
+
+_BLIGHT_WINDOW = CachedSentence(
+    re.compile(
+        r"apply a stack of Blight on-hit for (?P<seconds>\d+(?:\.\d+)?) seconds"
+        r"[^.]*?stacking up to (?P<stacks>\d+) times"
+    ),
+    missing=(
         "Varus W: the cached entry no longer states Blight's stack life and "
         "cap ('for N seconds ... stacking up to N times')"
-    )
-
-
-_BLIGHT_WINDOW_RE = re.compile(
-    r"apply a stack of Blight on-hit for (?P<seconds>\d+(?:\.\d+)?) seconds"
-    r"[^.]*?stacking up to (?P<stacks>\d+) times"
+    ),
 )
 
 

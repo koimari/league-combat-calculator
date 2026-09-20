@@ -42,6 +42,7 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from .charge_cadence import ChargeRule
 from .contract_vocabulary import coverage
@@ -73,36 +74,32 @@ def _soul_marked(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-_REND_WINDOW_RE = re.compile(
-    r"apply a stack of Rend to enemies for (?P<seconds>\d+(?:\.\d+)?) seconds"
-    r"[^.]*?stacking up to (?P<stacks>\d+) times"
+_REND_WINDOW = CachedSentence(
+    re.compile(
+        r"apply a stack of Rend to enemies for (?P<seconds>\d+(?:\.\d+)?) seconds"
+        r"[^.]*?stacking up to (?P<stacks>\d+) times"
+    ),
+    missing=(
+        "Kalista E: the cached entry no longer states Rend's stack life and "
+        "cap ('apply a stack of Rend to enemies for N seconds ... stacking "
+        "up to N times')"
+    ),
 )
 
 
 def _rend_window(ability: Mapping[str, Any]) -> dict[str, Any]:
     """The cached life and cap of a Rend stack, and what lodges one."""
-    effects = ability.get("effects")
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is None:
-            continue
-        match = _REND_WINDOW_RE.search(str(description))
-        if match is not None:
-            return {
-                "arming_slots": (),
-                "max_stacks": int(match.group("stacks")),
-                "hits_required": int(match.group("stacks")),
-                "stacks_from_swings": True,
-                "stacks_from_ability_hits": True,
-                "stack_seconds": float(match.group("seconds")),
-                "armed_at_start": False,
-                "requested": False,
-            }
-    raise ValueError(
-        "Kalista E: the cached entry no longer states Rend's stack life and "
-        "cap ('apply a stack of Rend to enemies for N seconds ... stacking "
-        "up to N times')"
-    )
+    seconds, stacks = _REND_WINDOW.stack_terms(ability)
+    return {
+        "arming_slots": (),
+        "max_stacks": stacks,
+        "hits_required": stacks,
+        "stacks_from_swings": True,
+        "stacks_from_ability_hits": True,
+        "stack_seconds": seconds,
+        "armed_at_start": False,
+        "requested": False,
+    }
 
 
 @ranked_slot

@@ -447,10 +447,6 @@ CACHED_SOURCE_ROW|champions/slot_extract.py|sum_modifiers|dict.get|"values" 1
 CACHED_SOURCE_ROW|champions/slotlib.py|parse|or-default|"targeting" 1
 CACHED_SOURCE_ROW|champions/syndra.py|_dark_sphere_second_charge|dict.get|"resource" 1
 CACHED_SOURCE_ROW|champions/xayah.py|_bladecaller|dict.get|"values" 2
-CACHED_SOURCE_ROW|champions/xayah.py|_secondary_feather_crit_extra|dict.get|"description" 1
-CACHED_SOURCE_ROW|champions/xayah.py|_secondary_feather_crit_extra|dict.get|"effects" 1
-CACHED_SOURCE_ROW|champions/xayah.py|_secondary_feather_ratio|dict.get|"description" 1
-CACHED_SOURCE_ROW|champions/xayah.py|_secondary_feather_ratio|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/yasuo.py|_per_target_lockout|or-default|"onTargetCdStatic" 1
 CACHED_SOURCE_ROW|champions/yasuo_yone.py|q3_knockup_duration|or-default|"description" 1
 CACHED_SOURCE_ROW|champions/yasuo_yone.py|q3_knockup_duration|or-default|"effects" 1

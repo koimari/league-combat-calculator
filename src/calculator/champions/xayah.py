@@ -27,6 +27,7 @@ from ..ability_atoms import (
     ranked_ability_atom_value,
     required_ability_atom,
 )
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..control_spec import ControlEvent
@@ -69,52 +70,54 @@ _MAX_FEATHERS = 12  # + 5 R feathers (sourced maximum)
 _CLEAN_CUTS_LEVEL_BRACKETS = ((13, 3), (7, 2), (1, 1))  # 1/7/13 -> index
 
 
-_CLEAN_CUTS_RE = re.compile(
-    r"ability casts generate (?P<per>\d+) stacks of Clean Cuts, lasting for "
-    r"(?P<seconds>\d+(?:\.\d+)?) seconds[^.]*?stacking up to (?P<max>\d+) times"
+_CLEAN_CUTS_RULE = CachedSentence(
+    re.compile(
+        r"ability casts generate (?P<per>\d+) stacks of Clean Cuts, lasting for "
+        r"(?P<seconds>\d+(?:\.\d+)?) seconds[^.]*?stacking up to (?P<max>\d+) times"
+    ),
+    missing=(
+        "Xayah P: the cached innate no longer states Clean Cuts' banking "
+        "rule ('ability casts generate N stacks ... lasting for N seconds "
+        "... stacking up to N times')"
+    ),
+)
+_SECONDARY_FEATHER_RATIO = CachedSentence(
+    re.compile(
+        r"(?P<values>\d+% / \d+% / \d+%) \(based on level\) AD physical damage",
+        re.IGNORECASE,
+    ),
+    missing=(
+        "Xayah P: the 35/45/55% AD secondary-feather damage is missing "
+        "from the cached description"
+    ),
+)
+_SECONDARY_FEATHER_CRIT = CachedSentence(
+    re.compile(
+        r"critically strike for \(200% \+ (?P<value>\d+)%\) damage", re.IGNORECASE
+    ),
+    missing=(
+        "Xayah P: the secondary-feather crit bonus is missing from the "
+        "cached description"
+    ),
 )
 
 
 def _clean_cuts_rule(ability: Mapping[str, Any]) -> dict[str, Any]:
     """The cached rule for banking and spending a Clean Cuts stack."""
-    effects = ability.get("effects")
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is None:
-            continue
-        match = _CLEAN_CUTS_RE.search(str(description))
-        if match is not None:
-            return {
-                "arming_slots": ("Q", "W", "E", "R"),
-                "max_stacks": int(match.group("max")),
-                "per_cast": int(match.group("per")),
-                "stack_seconds": float(match.group("seconds")),
-                "armed_at_start": False,
-                "requested": False,
-            }
-    raise ValueError(
-        "Xayah P: the cached innate no longer states Clean Cuts' banking "
-        "rule ('ability casts generate N stacks ... lasting for N seconds "
-        "... stacking up to N times')"
-    )
+    match = _CLEAN_CUTS_RULE.match(ability)
+    return {
+        "arming_slots": ("Q", "W", "E", "R"),
+        "max_stacks": int(match.group("max")),
+        "per_cast": int(match.group("per")),
+        "stack_seconds": float(match.group("seconds")),
+        "armed_at_start": False,
+        "requested": False,
+    }
 
 
 def _secondary_feather_ratio(ability: Mapping[str, Any], level: int) -> float:
     """Level-bracketed 35/45/55% AD secondary-feather damage (P prose)."""
-    description = " ".join(
-        str(effect.get("description", "")) for effect in ability.get("effects", [])
-    )
-    match = re.search(
-        r"(\d+)% / (\d+)% / (\d+)% \(based on level\) AD physical damage",
-        description,
-        flags=re.IGNORECASE,
-    )
-    if not match:
-        raise ValueError(
-            "Xayah P: the 35/45/55% AD secondary-feather damage is missing "
-            "from the cached description"
-        )
-    values = tuple(float(match.group(index)) for index in range(1, 4))
+    values = _SECONDARY_FEATHER_RATIO.level_values(ability)
     for min_level, index in _CLEAN_CUTS_LEVEL_BRACKETS:
         if level >= min_level:
             return values[index - 1] / 100.0
@@ -122,27 +125,8 @@ def _secondary_feather_ratio(ability: Mapping[str, Any], level: int) -> float:
 
 
 def _secondary_feather_crit_extra(ability: Mapping[str, Any]) -> float:
-    """Extra crit multiplier on the secondary feather (P prose).
-
-    "can critically strike for (200% + 30%) damage if the triggering
-    attack does" — the feather crits at the triggering attack's crit
-    roll with 230% damage, so the expected multiplier is
-    ``1 + 0.30 * crit_chance``.
-    """
-    description = " ".join(
-        str(effect.get("description", "")) for effect in ability.get("effects", [])
-    )
-    match = re.search(
-        r"critically strike for \(200% \+ (\d+)%\) damage",
-        description,
-        flags=re.IGNORECASE,
-    )
-    if not match:
-        raise ValueError(
-            "Xayah P: the secondary-feather crit bonus is missing from the "
-            "cached description"
-        )
-    return float(match.group(1)) / 100.0
+    """The secondary feather's extra crit share: 230% on the trigger's roll."""
+    return _SECONDARY_FEATHER_CRIT.value(ability) / 100.0
 
 
 def _clean_cuts(ctx: SlotCtx) -> dict[str, Any] | None:

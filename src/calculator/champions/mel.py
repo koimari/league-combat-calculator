@@ -46,6 +46,7 @@ Roadmap slot session (2026-08-21) closes this module's last two
 import re
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import (
     calculation_coefficient,
@@ -271,8 +272,12 @@ def _rebuttal(
     )
 
 
-_OVERWHELM_RE = re.compile(
-    r"apply a stack of Overwhelm[^.]*?for (?P<seconds>\d+(?:\.\d+)?) seconds"
+_OVERWHELM_STACK_LIFE = CachedSentence(
+    re.compile(r"apply a stack of Overwhelm[^.]*?for (?P<value>\d+(?:\.\d+)?) seconds"),
+    missing=(
+        "Mel P: the cached innate no longer states Overwhelm's stack life "
+        "('apply a stack of Overwhelm ... for N seconds')"
+    ),
 )
 # "stacking infinitely" — the cache states no cap, so the rail the option
 # already declared is the bound, and it is a declared one, not a sourced.
@@ -281,28 +286,16 @@ _R_MAX_OVERWHELM_STACKS = 50
 
 def _overwhelm_window(ctx: SlotCtx) -> dict[str, Any]:
     """The cached life of an Overwhelm stack, and what applies one."""
-    ability = ctx.ability("P")
-    effects = (ability if ability else {}).get("effects")
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is None:
-            continue
-        match = _OVERWHELM_RE.search(str(description))
-        if match is not None:
-            return {
-                "arming_slots": (),
-                "max_stacks": _R_MAX_OVERWHELM_STACKS,
-                "hits_required": _R_MAX_OVERWHELM_STACKS,
-                "stacks_from_swings": True,
-                "stacks_from_ability_hits": True,
-                "stack_seconds": float(match.group("seconds")),
-                "armed_at_start": False,
-                "requested": False,
-            }
-    raise ValueError(
-        "Mel P: the cached innate no longer states Overwhelm's stack life "
-        "('apply a stack of Overwhelm ... for N seconds')"
-    )
+    return {
+        "arming_slots": (),
+        "max_stacks": _R_MAX_OVERWHELM_STACKS,
+        "hits_required": _R_MAX_OVERWHELM_STACKS,
+        "stacks_from_swings": True,
+        "stacks_from_ability_hits": True,
+        "stack_seconds": _OVERWHELM_STACK_LIFE.value(ctx.ability("P") or {}),
+        "armed_at_start": False,
+        "requested": False,
+    }
 
 
 @ranked_slot

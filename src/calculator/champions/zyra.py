@@ -40,6 +40,7 @@ import re
 from typing import Any
 
 from ..data_fetcher import get_champion
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_interpolation, data_value, spell_object
 from .pet_window import derived_attack_count
@@ -82,39 +83,23 @@ _PLANT_DAMAGE_START, _PLANT_DAMAGE_END = calculation_interpolation(
 _PLANT_AP_RATIO = data_value(_ZYRA_P_SPELL, "APRatio")
 _PLANT_AS = 0.8
 
-_PLANT_LIFETIME_RE = re.compile(
-    r"sprouts into a Thorn Spitter that lasts for (?P<value>\d+(?:\.\d+)?) seconds"
-)
-
-
-def _plant_lifetime_seconds() -> float:
-    """The plant's own clock, read from Q's cached sentence.
-
-    Q is where the cache states it ("If Deadly Spine hits a Seed, it sprouts
-    into a Thorn Spitter that lasts for 8 seconds"), and a cache that stops
-    saying so raises here rather than leaving a stale constant to price a
-    plant that outlives its sentence.
-    """
-    abilities = get_champion("Zyra")["abilities"]
-    for ability in abilities["Q"]:
-        effects = ability.get("effects")
-        for effect in effects if effects else ():
-            description = effect.get("description")
-            if description is None:
-                continue
-            match = _PLANT_LIFETIME_RE.search(str(description))
-            if match is not None:
-                return float(match.group("value"))
-    raise ValueError(
-        "Zyra Q: the cached entry no longer states the plant's lifetime "
-        "('sprouts into a Thorn Spitter that lasts for N seconds')"
-    )
-
-
 # "If Deadly Spine hits a Seed, it sprouts into a Thorn Spitter that lasts
 # for 8 seconds" — the plant's own clock, which bounds the derived attack
-# count however long the fight runs.
-_PLANT_LIFETIME_SECONDS = _plant_lifetime_seconds()
+# count however long the fight runs.  Q is where the cache states it, and a
+# cache that stops saying so raises rather than leaving a stale constant to
+# price a plant that outlives its sentence.
+_PLANT_LIFETIME = CachedSentence(
+    re.compile(
+        r"sprouts into a Thorn Spitter that lasts for (?P<value>\d+(?:\.\d+)?) seconds"
+    ),
+    missing=(
+        "Zyra Q: the cached entry no longer states the plant's lifetime "
+        "('sprouts into a Thorn Spitter that lasts for N seconds')"
+    ),
+)
+_PLANT_LIFETIME_SECONDS = _PLANT_LIFETIME.value(
+    get_champion("Zyra")["abilities"]["Q"][0]
+)
 # A clockless parse reads the five-second one-rotation window the declared
 # count was written against, so such a parse prices what it always did.
 _PLANT_FALLBACK_WINDOW = 5.0
