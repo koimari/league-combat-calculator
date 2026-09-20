@@ -2,6 +2,11 @@
 
 from src.calculator.champions import neeko
 from tests import cc_review
+from functools import partial
+from tests import champion_closure as closure
+import pytest
+from src.calculator.champions.slot_extract import extract_named
+import json
 
 
 class TestReviewedCrowdControl:
@@ -41,3 +46,46 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Neeko")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+# One rotation at level 18 into the bare 2000-HP dummy; slot rows are parsed
+# against the shared reference stat block.
+_closure_fight = partial(closure.fight, role="top")
+_closure_parse = closure.reference_abilities
+
+
+# ---------------------------------------------------------------------------
+# Neeko — Q three-burst chain + R Pop Blossom shield
+# ---------------------------------------------------------------------------
+
+
+class TestNeeko:
+    """P1-3: Q re-blooms and the game-file R shield."""
+
+    def test_q_prices_initial_plus_two_reblooms(self):
+        """Q: Initial + 2 x Subsequent == the Total Maximum Magic Damage."""
+        data = _closure_fight("Neeko")
+        stats = closure.fight_stats(data)
+        target = closure.target_stats(data)
+        total = extract_named(
+            closure.ability_row("Neeko", "Q"),
+            "Total Maximum Magic Damage",
+            5,
+            stats,
+            target,
+        )
+        assert total == pytest.approx(530.0)
+        assert closure.slot_total(data, "Q") == pytest.approx(
+            total, abs=closure.ROUNDING
+        )
+
+    def test_r_shield_prices_game_file_amount(self):
+        """R shield: ShieldAmount + ShieldPerChampion (1 nearby enemy) +
+        115% AP, 2s (neeko.bin.json NeekoR)."""
+        data = _closure_fight(
+            "Neeko", mode="time_based", duration=6, enemy=closure.AHRI
+        )
+        rows = closure.response_shields(data, "Pop Blossom")
+        assert len(rows) == 1
+        # rank 3: 175 + 80 (+ 75% + 40% AP) == 255 at 0 AP
+        assert rows[0]["amount"] == pytest.approx(255.0)

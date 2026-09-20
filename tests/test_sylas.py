@@ -9,6 +9,9 @@ import pytest
 
 from src.calculator.champions import get_champion_module_contract, sylas
 from tests import cc_review, rider_probe, row_review
+from functools import partial
+from tests import champion_closure as closure
+from src.calculator.champions.slot_extract import extract_named
 
 
 class TestReviewedCrowdControl:
@@ -135,3 +138,36 @@ class TestTheSlotThatStaysOutOfScope:
         }
         assert "another champion's ultimate" in sylas.__doc__
         assert "cross-champion ultimate-import kernel" in sylas.__doc__
+
+
+# Level 18, ranks Q5/W5/E5/R3, no items, six seconds of autos at full uptime
+# into a 3000-HP Aatrox whose own resistances mitigate.
+_closure_fight = partial(
+    closure.combat,
+    mode="time_based",
+    duration=6.0,
+    include_autos=True,
+    auto_uptime=1.0,
+    target_health=3000.0,
+    enemy=closure.AATROX,
+)
+_closure_parse = partial(closure.parse, target=closure.TARGET_3000)
+
+
+# ---------------------------------------------------------------------------
+# Sylas — E2 shield is historical (removed V10.2), no current shield row
+# ---------------------------------------------------------------------------
+
+
+def test_sylas_e_packet_is_complete_without_a_shield():
+    data, stats, abilities = _closure_parse("Sylas")
+    e = data["abilities"]["E"][1]  # Abduct (the damaging second cast)
+    assert "self_shield_events" not in abilities["E"]
+    expected = extract_named(e, "Magic Damage", 5, stats, {})
+    assert abilities["E"]["total_raw"] == pytest.approx(expected)
+    combat = _closure_fight("Sylas")
+    assert not closure.shield_rows(combat, source_startswith="Abscond")
+    assert not closure.shield_rows(combat, source_startswith="Abduct")
+    events = closure.main_damage_events(combat, "E")
+    assert events
+    assert events[0]["raw_damage"] == pytest.approx(expected / len(events))

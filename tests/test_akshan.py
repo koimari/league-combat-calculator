@@ -12,6 +12,9 @@ from src.calculator.damage import calculate_fight_damage
 from src.calculator.fight.config import FightConfig
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
+from functools import partial
+from tests import champion_closure as closure
+from src.calculator.champions.slot_extract import extract_named
 
 
 class TestQAvengerang:
@@ -498,3 +501,49 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Akshan")
         assert coverage["complete"] is True
         assert coverage["coarse_sources"] == []
+
+
+# Level 18, ranks Q5/W5/E5/R3, no items, six seconds of autos at full uptime
+# into a 3000-HP Aatrox whose own resistances mitigate.
+_closure_fight = partial(
+    closure.combat,
+    mode="time_based",
+    duration=6.0,
+    include_autos=True,
+    auto_uptime=1.0,
+    target_health=3000.0,
+    enemy=closure.AATROX,
+)
+_closure_parse = partial(closure.parse, target=closure.TARGET_3000)
+
+
+# ---------------------------------------------------------------------------
+# Akshan — Dirty Fighting 3-stack proc shield
+# ---------------------------------------------------------------------------
+
+
+def test_akshan_proc_shield_payload_is_sourced():
+    data, stats, abilities = _closure_parse("Akshan")
+    (shield,) = abilities["passive"]["self_shield_events"]
+    passive = data["abilities"]["P"][0]
+    expected = extract_named(passive, "Bonus Damage", 18, stats, {})
+    assert shield["amount"] == pytest.approx(expected)
+    assert shield["amount"] == pytest.approx(280.0)  # L18 flat, 0 bonus AD
+    assert shield["duration"] == pytest.approx(2.0)
+    assert shield["source"] == "Dirty Fighting (3-Stack Shield)"
+
+
+def test_akshan_api_proc_shield_absorbs_sourced_amount():
+    combat = _closure_fight("Akshan")
+    rows = closure.shield_rows(combat, source_startswith="Dirty Fighting (3-Stack")
+    assert len(rows) == 1
+    assert rows[0]["amount"] == pytest.approx(280.0)
+    assert rows[0]["duration"] == pytest.approx(2.0)
+    survival = closure.main_survival(combat)
+    assert survival["support_shield_received"] == pytest.approx(280.0)
+
+
+def test_akshan_zero_procs_emit_no_shield():
+    combat = _closure_fight("Akshan", options={"passive_procs": 0})
+    assert not closure.shield_rows(combat, source_startswith="Dirty Fighting (3-Stack")
+    assert closure.main_survival(combat)["support_shield_received"] == 0.0

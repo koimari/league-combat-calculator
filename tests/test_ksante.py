@@ -4,6 +4,9 @@ Ntofo slows, Path Maker stuns outside All Out, All Out itself stuns.
 """
 
 from tests import cc_review
+from functools import partial
+from tests import champion_closure as closure
+import pytest
 
 # ---------------------------------------------------------------------------
 # Reviewed crowd control (MODULE_CC, wave 4B)
@@ -64,3 +67,53 @@ class TestReviewedCrowdControl:
         assert coverage["complete"] is True
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+# Level 18, ranks Q5/W5/E5/R3, no items, six seconds of autos at full uptime
+# into a 3000-HP Aatrox whose own resistances mitigate.
+_closure_fight = partial(
+    closure.combat,
+    mode="time_based",
+    duration=6.0,
+    include_autos=True,
+    auto_uptime=1.0,
+    target_health=3000.0,
+    enemy=closure.AATROX,
+)
+_closure_parse = partial(closure.parse, target=closure.TARGET_3000)
+
+
+# ---------------------------------------------------------------------------
+# K'Sante — All Out 20% omnivamp
+# ---------------------------------------------------------------------------
+
+
+def _omnivamp_heals(combat):
+    return [
+        h
+        for h in combat.get("healing_events", [])
+        if h.get("attacker") == "main" and h.get("source", "").startswith("Omnivamp")
+    ]
+
+
+def test_ksante_all_out_omnivamp_heals_twenty_percent_of_attack_packets():
+    combat = _closure_fight("KSante", options={"all_out": True})
+    heals = _omnivamp_heals(combat)
+    assert heals, "All Out omnivamp heal missing"
+    attack_damage = sum(
+        e.get("damage", 0.0) for e in closure.main_damage_events(combat, "auto_attacks")
+    )
+    # Per-packet heals are rounded to 0.1, so the summed heal can differ
+    # from the exact 20% by a fraction of a point (autoresearch pass 30
+    # changed the R bonus-pen channel, shifting the packet mix).
+    assert sum(h["amount"] for h in heals) == pytest.approx(
+        0.20 * attack_damage, abs=0.25
+    )
+    survival = closure.main_survival(combat)
+    assert survival["healing_received"] == pytest.approx(0.20 * attack_damage, abs=0.25)
+
+
+def test_ksante_without_all_out_authors_no_omnivamp():
+    combat = _closure_fight("KSante")
+    assert not _omnivamp_heals(combat)
+    assert closure.main_survival(combat)["healing_received"] == 0.0

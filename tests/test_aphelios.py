@@ -13,6 +13,8 @@ from src.calculator.champions import (
 )
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
+from functools import partial
+from tests import champion_closure as closure
 
 # The two prose-sourced weapon innates, read back out of the sentence each
 # constant was reviewed from, so a patch that stops stating the number turns
@@ -403,7 +405,7 @@ class TestDuskwaveAppliesTheOnHits:
 
 class TestModuleCoverage:
     """P/Q/W/R are exercised through the thematic suites
-    (test_e1_healing_b1.py, test_issue_137.py, test_p1_review_2.py,
+    (test_e1_healing_b1.py, test_issue_137.py, the closure block below,
     test_spellblade_on_hit_matrix.py, test_survival_kernel.py); what this
     pins is that no slot is left out_of_scope."""
 
@@ -415,3 +417,86 @@ class TestModuleCoverage:
             "E": "no_damage",
             "R": "modeled",
         }
+
+
+# One rotation at level 18 into the bare 2000-HP dummy, and the same fight
+# into an Ahri enemy, which is what produces the coupled participant ledger.
+_closure_fight = partial(closure.fight, role="mid", duration=5.0)
+_closure_enemy_fight = partial(
+    closure.fight, role="top", enemy=closure.AHRI, target_health=None
+)
+_closure_parse = closure.abilities
+
+
+# ---------------------------------------------------------------------------
+# Aphelios — Severum overheal -> shield
+# ---------------------------------------------------------------------------
+
+
+class TestAphelios:
+    """The E1 Severum heal already fires; P1-2 adds the overheal shield."""
+
+    def test_severum_q_and_r_damage(self) -> None:
+        stats = closure.stats("Aphelios")
+        data = _closure_fight("Aphelios", options={"aphelios_main_weapon": "severum"})
+        bonus_as = float(stats.get("bonus_attack_speed", 0.0))
+        count = max(1, int(6 + 2 * bonus_as / 100.0))
+        per_hit = 0.41 * float(stats["attack_damage"])  # level-18 ratio
+        assert data["breakdown"]["Q"]["total_damage"] == pytest.approx(
+            per_hit * count, abs=closure.ROUNDING
+        )
+        assert data["breakdown"]["R"]["total_damage"] == pytest.approx(225.0)
+
+    def test_r_detail_stamps_overheal_shield_marker(self) -> None:
+        abilities = _closure_parse(
+            "Aphelios", options={"aphelios_main_weapon": "severum"}
+        )
+        assert "overheal shield on" in abilities["R"]["detail"]
+
+    def test_severum_overheal_converts_to_timed_shield(self) -> None:
+        """At full health the heal is all excess: the sourced cap (10 : 160
+        by level + 6% maximum health) converts it into a timed shield."""
+        data = _closure_enemy_fight(
+            "Aphelios",
+            options={"aphelios_main_weapon": "severum"},
+            enemy_ranks={"Q": 0, "W": 0, "E": 0, "R": 0},
+        )
+        main = next(
+            p for p in data["combat"]["participants"] if p["participant_id"] == "main"
+        )
+        assert main["survival"]["support_shield_received"] > 0.0
+        heals = [
+            h
+            for h in data["combat"]["healing_events"]
+            if h.get("attacker") == "main" and h.get("source") == "Severum"
+        ]
+        assert heals
+        # Every heal is all excess (applied_amount 0) and the walk converts
+        # each into the timed shield instead of wasting it (overheal 0), so
+        # the shield receipt equals what the heals were worth.  Onslaught's
+        # six attacks are six of those heals, one per attack.
+        assert all(float(heal["applied_amount"]) == 0.0 for heal in heals)
+        assert all(float(heal["overheal"]) == 0.0 for heal in heals)
+        # The response rounds each heal to one decimal, so the tolerance
+        # grows with the number of rows summed.
+        assert float(main["survival"]["support_shield_received"]) == pytest.approx(
+            sum(float(heal["amount"]) for heal in heals),
+            abs=0.15 + 0.05 * len(heals),
+        )
+        # The cap: 160 (level 18 flat) + 6% maximum health.
+        cap = 160.0 + 0.06 * float(main["survival"]["max_health"])
+        assert float(main["survival"]["support_shield_received"]) <= cap + 0.2
+
+    def test_overheal_shield_option_off(self) -> None:
+        data = _closure_enemy_fight(
+            "Aphelios",
+            options={
+                "aphelios_main_weapon": "severum",
+                "aphelios_overheal_shield": False,
+            },
+            enemy_ranks={"Q": 0, "W": 0, "E": 0, "R": 0},
+        )
+        main = next(
+            p for p in data["combat"]["participants"] if p["participant_id"] == "main"
+        )
+        assert main["survival"]["support_shield_received"] == 0.0

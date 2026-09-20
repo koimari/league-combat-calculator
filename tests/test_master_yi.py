@@ -9,6 +9,10 @@ import pytest
 
 from src.calculator.champions import master_yi, parse_champion_abilities
 from tests import cc_review, rider_probe, row_review
+from functools import partial
+from tests import champion_closure as closure
+from src.calculator.data_fetcher import get_champion
+from src.calculator.healing import derive_self_healing
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -107,3 +111,79 @@ class TestDoubleStrikeCrits:
         ] == pytest.approx(
             1.15 * plain["breakdown"][rider_probe.RIDER_ROW]["total_damage"], abs=0.1
         )
+
+
+# One rotation at level 18 into the bare 2000-HP dummy, and the same fight
+# into an Ahri enemy, which is what produces the coupled participant ledger.
+_closure_fight = partial(closure.fight, role="mid", duration=5.0)
+_closure_enemy_fight = partial(
+    closure.fight, role="top", enemy=closure.AHRI, target_health=None
+)
+_closure_parse = closure.abilities
+
+
+# ---------------------------------------------------------------------------
+# Master Yi — W Meditate heal stream
+# ---------------------------------------------------------------------------
+
+
+class TestMasterYi:
+    """W: 8 ticks at 0.5s over the 4s channel, missing-health scaled."""
+
+    def test_meditate_heal_rule_emits_eight_ticks(self) -> None:
+        stats = closure.stats("MasterYi")
+        heals = derive_self_healing(
+            get_champion("MasterYi"),
+            stats,
+            {"W": {"rank": 5}},
+            [],
+            cast_timeline=[{"time": 0.0, "slot": "W"}],
+            fight_duration_seconds=4.0,
+        )
+        meditate = [h for h in heals if h.get("source") == "Meditate"]
+        assert len(meditate) == 8
+        assert [round(float(h["time"]), 2) for h in meditate] == [
+            0.5,
+            1.0,
+            1.5,
+            2.0,
+            2.5,
+            3.0,
+            3.5,
+            4.0,
+        ]
+        # At full health the tick pays the Minimum Heal Per Tick row
+        # (55 + 12.5% AP at rank 5).
+        formula = meditate[0]["amount_formula"]
+        assert float(formula(stats["health"], stats["health"])) == pytest.approx(55.0)
+
+    def test_meditate_heals_in_fight(self) -> None:
+        data = _closure_enemy_fight(
+            "MasterYi",
+            mode="time_based",
+            duration=4.0,
+            include_autos=False,
+            enemy_ranks={"Q": 5, "W": 5, "E": 0, "R": 3},
+        )
+        heals = [
+            h
+            for h in data["combat"]["healing_events"]
+            if h.get("attacker") == "main" and h.get("source") == "Meditate"
+        ]
+        assert len(heals) == 8
+        assert all(float(h["raw_amount"]) >= 55.0 - 0.2 for h in heals)
+
+    def test_w_slot_is_casted(self) -> None:
+        data = _closure_fight("MasterYi")
+        assert data["breakdown"]["W"]["total_damage"] == 0.0
+
+
+def test_the_closed_slots_are_declared_modeled() -> None:
+    """Every slot this module closed says so in its MODULE_COVERAGE."""
+    coverage = closure.module_coverage("master_yi")
+    assert {slot: coverage[slot] for slot in ("P", "W", "Q", "E")} == {
+        "P": "modeled",
+        "W": "modeled",
+        "Q": "modeled",
+        "E": "modeled",
+    }

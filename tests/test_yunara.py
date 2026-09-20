@@ -17,6 +17,8 @@ from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.fight.config import FightConfig
 from tests import cc_review
+from functools import partial
+from tests import champion_closure as closure
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _UNLEASH_WINDOW = 5.0
@@ -266,3 +268,56 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Yunara")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+# One rotation at level 18 into the bare 2000-HP dummy, and the same fight
+# into an Ahri enemy, which is what produces the coupled participant ledger.
+_closure_fight = partial(closure.fight, role="mid", duration=5.0)
+_closure_enemy_fight = partial(
+    closure.fight, role="top", enemy=closure.AHRI, target_health=None
+)
+_closure_parse = closure.abilities
+
+
+# ---------------------------------------------------------------------------
+# Yunara — W linger beads + R as buff
+# ---------------------------------------------------------------------------
+
+
+class TestYunara:
+    """W prices the initial impact plus 4 linger ticks (15% of impact per
+    0.25s; per-tick row x 4 == Total Expanded Damage); R is a zero-damage
+    buff with the r_transcendent option switching W to Arc of Ruin."""
+
+    def test_w_prices_initial_plus_linger_ticks(self) -> None:
+        data = _closure_fight("Yunara")
+        assert data["breakdown"]["W"]["total_damage"] == pytest.approx(
+            215.0 + 4 * 32.25, abs=closure.ROUNDING
+        )
+        events = _closure_enemy_fight("Yunara")
+        w_events = [
+            e
+            for e in events["combat"]["events"]
+            if e.get("attacker") == "main" and e.get("source") == "W"
+        ]
+        assert len(w_events) == 5  # impact + 4 linger ticks
+
+    def test_r_is_zero_damage_buff(self) -> None:
+        data = _closure_fight("Yunara")
+        assert data["breakdown"]["R"]["total_damage"] == 0.0
+
+    def test_r_transcendent_prices_arc_of_ruin(self) -> None:
+        data = _closure_fight("Yunara", options={"r_transcendent": True})
+        assert data["breakdown"]["W"]["total_damage"] == pytest.approx(480.0)
+
+
+def test_the_closed_slots_are_declared_modeled() -> None:
+    """Every slot this module closed says so in its MODULE_COVERAGE."""
+    coverage = closure.module_coverage("yunara")
+    assert {slot: coverage[slot] for slot in ("P", "Q", "W", "E", "R")} == {
+        "P": "modeled",
+        "Q": "modeled",
+        "W": "modeled",
+        "E": "modeled",
+        "R": "modeled",
+    }

@@ -1192,7 +1192,7 @@ class TestApiSurface:
 #     tests/test_resource_ledger*.py tests/test_catalyst_resource_ledger.py \
 #     tests/test_item_sustain.py tests/test_champion_options.py tests/test_app.py
 # Yasuo / Yone grep surface (contract 10), run separately by the coordinator:
-#   tests/test_p1_review_1.py (Yasuo P/Q crit pins)
+#   tests/test_yasuo.py (Yasuo P/Q crit pins)
 #   tests/test_spell_shield_eligibility.py tests/test_delivery_interaction_eligibility.py
 #   tests/test_delivery_eligibility_kernel.py (Yasuo W wind wall)
 #   tests/test_cp10_batch_10.py tests/test_event_order_certification.py (roster)

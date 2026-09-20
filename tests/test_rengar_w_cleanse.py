@@ -1886,6 +1886,6 @@ class TestUnchangedBoundaries:
 # #15): test_e8_grey_health.py test_e1_healing_b4.py
 # test_e1_healing_b6.py test_heal_ledger_phase2.py test_e3_stacks_2.py
 # test_e9_corpus.py test_cp10_batch_06.py test_import_namespace.py
-# test_lord_dominik.py test_mikael_packet.py test_p1_review_1.py
+# test_lord_dominik.py test_mikael_packet.py test_locke.py
 # test_redemption_packet.py test_rengar_pen_breakpoints.py
 # test_self_healing_champions.py tests/test_app.py

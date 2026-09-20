@@ -11,6 +11,9 @@ import pytest
 
 from src.calculator.champions import get_champion_module_contract, seraphine
 from tests import cc_review, rider_probe
+from functools import partial
+from tests import champion_closure as closure
+from src.calculator.champions.slot_extract import extract_named
 
 
 class TestReviewedCrowdControl:
@@ -67,3 +70,57 @@ class TestStagePresenceRider:
         assert get_champion_module_contract("Seraphine").coverage == dict.fromkeys(
             "PQWER", "modeled"
         )
+
+
+# Level 18, ranks Q5/W5/E5/R3, no items, six seconds of autos at full uptime
+# into a 3000-HP Aatrox whose own resistances mitigate.
+_closure_fight = partial(
+    closure.combat,
+    mode="time_based",
+    duration=6.0,
+    include_autos=True,
+    auto_uptime=1.0,
+    target_health=3000.0,
+    enemy=closure.AATROX,
+)
+_closure_parse = partial(closure.parse, target=closure.TARGET_3000)
+
+
+# ---------------------------------------------------------------------------
+# Seraphine — Q missing-health amplifier
+# ---------------------------------------------------------------------------
+
+
+def test_seraphine_q_hp_scaled_part_equals_maximum_enhanced_damage():
+    data, stats, abilities = _closure_parse("Seraphine")
+    q = data["abilities"]["Q"][0]
+    base = extract_named(q, "Magic Damage", 5, stats, {})
+    maximum = extract_named(q, "Maximum Enhanced Damage", 5, stats, {})
+    assert base == pytest.approx(160.0)
+    assert maximum == pytest.approx(280.0)  # 1.75 x base
+    flat_part, enhanced_part = abilities["Q"]["parts"]
+    assert flat_part.amount == pytest.approx(base)
+    assert enhanced_part.hp_scaled_damage(0.0) == pytest.approx(0.0)
+    assert enhanced_part.hp_scaled_damage(1.0) == pytest.approx(maximum - base)
+
+
+def test_seraphine_api_q_always_at_least_the_flat_base():
+    # The pair ledger re-prices the hp-scaled part at the defender's live
+    # missing-health ratio, so the API total is >= the flat base mitigated
+    # against the defender's own magic resistance (the fight's own stats)
+    # and <= the Maximum Enhanced Damage row mitigated the same way.
+    # The assertion covers High Note's missing-health amplifier. Disable
+    # other damaging and control casts so their state does not change the
+    # target before Q lands.
+    combat = _closure_fight(
+        "Seraphine",
+        ranks={"Q": 5, "W": 0, "E": 0, "R": 0},
+    )
+    enemy_stats = closure.enemy_stats(combat)
+    base_mitigated = 160.0 * 100.0 / (100.0 + enemy_stats["magic_resistance"])
+    max_mitigated = 280.0 * 100.0 / (100.0 + enemy_stats["magic_resistance"])
+    row = closure.main_breakdown(combat)
+    q = next(s for s in row["sources"] if s["name"] == "High Note")
+    assert q["total_damage"] >= base_mitigated - 0.05
+    assert q["total_damage"] <= max_mitigated + 0.05
+    assert q["total_damage"] > base_mitigated + 0.5  # the amp is live

@@ -14,6 +14,8 @@ from src.calculator.champions import lulu
 from src.calculator.champions.slot_cc import CC_PER_PART
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review
+from functools import partial
+from tests import champion_closure as closure
 
 # The phrase each declared kind was read from, in that slot's cached text.
 QUOTED = {"Q": "slowing them by 80% decaying over 2 seconds"}
@@ -102,3 +104,49 @@ class TestReviewedCrowdControl:
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
         assert coverage["coarse_sources"] == []
+
+
+# One rotation at level 18 into the bare 2000-HP dummy, and the same fight
+# into an Ahri enemy, which is what produces the coupled participant ledger.
+_closure_fight = partial(closure.fight, role="mid", duration=5.0)
+_closure_enemy_fight = partial(
+    closure.fight, role="top", enemy=closure.AHRI, target_health=None
+)
+_closure_parse = closure.abilities
+
+
+# ---------------------------------------------------------------------------
+# Lulu — P Pix bolt barrage on-hit
+# ---------------------------------------------------------------------------
+
+
+class TestLulu:
+    """P: 3 bolts per basic attack, each the per-level row + 5% AP."""
+
+    def test_pix_bolts_on_hit(self) -> None:
+        data = _closure_fight(
+            "Lulu", include_autos=True, mode="time_based", duration=5.0
+        )
+        row = data["breakdown"]["on_hit_ability_passive"]
+        # 3 bolts x 39 (level-18 per-bolt flat) + 0 AP.
+        assert row["damage_per_hit"] == pytest.approx(3 * 39.0, abs=0.1)
+        assert row["total_damage"] == pytest.approx(
+            row["damage_per_hit"] * row["count"], abs=closure.ROUNDING
+        )
+
+    def test_pix_bolts_option(self) -> None:
+        data = _closure_fight(
+            "Lulu",
+            options={"lulu_pix_bolts": 1},
+            include_autos=True,
+            mode="time_based",
+            duration=5.0,
+        )
+        row = data["breakdown"]["on_hit_ability_passive"]
+        assert row["damage_per_hit"] == pytest.approx(39.0, abs=0.1)
+
+
+def test_the_closed_slots_are_declared_modeled() -> None:
+    """Every slot this module closed says so in its MODULE_COVERAGE."""
+    coverage = closure.module_coverage("lulu")
+    assert {slot: coverage[slot] for slot in ("P",)} == {"P": "modeled"}

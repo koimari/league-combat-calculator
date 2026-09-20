@@ -9,6 +9,8 @@ import pytest
 
 from src.calculator.champions import get_champion_module_contract, shaco
 from tests import cc_review, rider_probe, row_review
+from functools import partial
+from tests import champion_closure as closure
 
 
 class TestReviewedCrowdControl:
@@ -116,3 +118,49 @@ class TestBackstab:
         assert get_champion_module_contract("Shaco").coverage == dict.fromkeys(
             "PQWER", "modeled"
         )
+
+
+# One rotation at level 18 into the bare 2000-HP dummy, and the same fight
+# into an Ahri enemy, which is what produces the coupled participant ledger.
+_closure_fight = partial(closure.fight, role="mid", duration=5.0)
+_closure_enemy_fight = partial(
+    closure.fight, role="top", enemy=closure.AHRI, target_health=None
+)
+_closure_parse = closure.abilities
+
+
+# ---------------------------------------------------------------------------
+# Shaco — E execute row + R clone option
+# ---------------------------------------------------------------------------
+
+
+class TestShaco:
+    """E prices the <30%-HP Increased Damage row when e_execute is on; R's
+    controllable clone is r_clone_attacks x 75% AD physical."""
+
+    def test_e_default_base_row(self) -> None:
+        data = _closure_fight("Shaco")
+        assert data["breakdown"]["E"]["total_damage"] == pytest.approx(170.0)
+
+    def test_e_execute_row_option(self) -> None:
+        data = _closure_fight("Shaco", options={"e_execute": True})
+        assert data["breakdown"]["E"]["total_damage"] == pytest.approx(255.0)
+
+    def test_r_clone_attacks_option(self) -> None:
+        stats = closure.stats("Shaco")
+        data = _closure_fight("Shaco", options={"r_clone_attacks": 3})
+        clone = 3 * 0.75 * float(stats["attack_damage"])
+        assert data["breakdown"]["R"]["total_damage"] == pytest.approx(
+            300.0 + clone, abs=closure.ROUNDING
+        )
+
+
+def test_the_closed_slots_are_declared_modeled() -> None:
+    """Every slot this module closed says so in its MODULE_COVERAGE."""
+    coverage = closure.module_coverage("shaco")
+    assert {slot: coverage[slot] for slot in ("Q", "W", "E", "R")} == {
+        "Q": "modeled",
+        "W": "modeled",
+        "E": "modeled",
+        "R": "modeled",
+    }

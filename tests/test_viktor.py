@@ -6,6 +6,9 @@ Field, which this module does not price.
 
 from src.calculator.champions import get_champion_module_contract, viktor
 from tests import cc_review
+from functools import partial
+from tests import champion_closure as closure
+import pytest
 
 
 class TestReviewedCrowdControl:
@@ -66,3 +69,59 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Viktor")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+# One rotation at level 18 into the bare 2000-HP dummy, and the same fight
+# into an Ahri enemy, which is what produces the coupled participant ledger.
+_closure_fight = partial(closure.fight, role="mid", duration=5.0)
+_closure_enemy_fight = partial(
+    closure.fight, role="top", enemy=closure.AHRI, target_health=None
+)
+_closure_parse = closure.abilities
+
+
+# ---------------------------------------------------------------------------
+# Viktor — Q shield + Discharge empowered auto
+# ---------------------------------------------------------------------------
+
+
+class TestViktor:
+    """Q grants the per-level shield (140 at level 18) for 2.5s and its
+    Discharge empowers the next basic attack (Modified Magic Damage)."""
+
+    def test_q_shield_emitted(self) -> None:
+        data = _closure_enemy_fight("Viktor")
+        shields = closure.main_support(data, "Siphon Power")
+        assert shields
+        assert float(shields[0]["amount"]) == pytest.approx(140.0, abs=0.2)
+        assert float(shields[0]["duration"]) == pytest.approx(2.5)
+
+    def test_q_discharge_on_hit(self) -> None:
+        stats = closure.stats("Viktor")
+        expected = 120.0 + 1.0 * float(stats["attack_damage"])
+        data = _closure_fight(
+            "Viktor", include_autos=True, mode="time_based", duration=5.0
+        )
+        row = data["breakdown"]["on_hit_ability_Q"]
+        assert row["count"] == 1
+        assert row["damage_per_hit"] == pytest.approx(expected, abs=0.1)
+
+    def test_q_discharge_option_off(self) -> None:
+        data = _closure_fight(
+            "Viktor",
+            options={"q_discharge": False},
+            include_autos=True,
+            mode="time_based",
+            duration=5.0,
+        )
+        assert "on_hit_ability_Q" not in data["breakdown"]
+
+
+def test_the_closed_slots_are_declared_modeled() -> None:
+    """Every slot this module closed says so in its MODULE_COVERAGE."""
+    coverage = closure.module_coverage("viktor")
+    assert {slot: coverage[slot] for slot in ("Q", "E", "R")} == {
+        "Q": "modeled",
+        "E": "modeled",
+        "R": "modeled",
+    }

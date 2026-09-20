@@ -11,6 +11,11 @@ from src.calculator.champions import (
 )
 from src.calculator.champions.slot_cc import CC_PER_PART
 from tests import cc_review, coverage_truth
+from functools import partial
+from tests import champion_closure as closure
+import pytest
+from src.calculator.data_fetcher import get_champion
+from src.calculator.stats import calculate_total_stats
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -126,3 +131,75 @@ class TestCoverageMap:
         assert "grant himself a shield" in cc_review.slot_text(
             cc_review.kit("Yasuo"), "P"
         )
+
+
+# Level 18, ranks Q5/W5/E5/R3, no items, six seconds of autos at full uptime
+# into a 3000-HP Aatrox whose own resistances mitigate.
+_closure_fight = partial(
+    closure.combat,
+    mode="time_based",
+    duration=6.0,
+    include_autos=True,
+    auto_uptime=1.0,
+    target_health=3000.0,
+    enemy=closure.AATROX,
+)
+_closure_parse = partial(closure.parse, target=closure.TARGET_3000)
+
+
+# ---------------------------------------------------------------------------
+# Yasuo — P Intent crit conversion + Q crit-eligible AD portion
+# ---------------------------------------------------------------------------
+
+
+def test_yasuo_q_splits_flat_and_crit_eligible_ad_parts():
+    _, stats, abilities = _closure_parse("Yasuo")
+    q = abilities["Q"]
+    flat_part, ad_part = q["parts"]
+    assert flat_part.amount == pytest.approx(120.0)  # rank 5 flat base
+    assert flat_part.crit_effectiveness == 0.0
+    assert ad_part.amount == pytest.approx(1.05 * stats["attack_damage"])
+    assert ad_part.crit_effectiveness == 1.0
+    assert q["total_raw"] == pytest.approx(120.0 + 1.05 * stats["attack_damage"])
+
+
+def test_yasuo_p_crit_conversion_payload_is_sourced():
+    _, _, abilities = _closure_parse("Yasuo")
+    crit = abilities["passive"]["crit_modifier"]
+    assert crit["crit_chance_multiplier"] == 2.0
+    assert crit["crit_damage_multiplier_factor"] == 0.9
+    assert crit["excess_crit_bonus_ad_per_percent"] == 0.5
+
+
+def test_yasuo_no_items_auto_damage_has_no_crits():
+    combat = _closure_fight("Yasuo")
+    events = closure.main_damage_events(combat, "auto_attacks")
+    assert events
+    enemy_stats = closure.enemy_stats(combat)
+    _, stats, _ = _closure_parse("Yasuo")
+    assert sum(e["damage"] for e in events) == pytest.approx(
+        stats["attack_damage"] * 100.0 / (100.0 + enemy_stats["armor"]) * len(events),
+        rel=1e-3,
+    )
+
+
+def test_yasuo_crit_conversion_doubles_chance_and_reduces_crit_damage():
+    # Infinity Edge (25%) + Phantom Dancer (25%) = 50% crit -> doubled to
+    # 100%: every auto crits at 0.9 x (2.0 + 0.30 IE bonus) = 2.07 x AD.
+    combat = _closure_fight("Yasuo", items=["Infinity Edge", "Phantom Dancer"])
+    enemy_stats = closure.enemy_stats(combat)
+    events = closure.main_damage_events(combat, "auto_attacks")
+    assert events
+    from src.calculator.data_fetcher import get_item_by_name
+
+    stats = calculate_total_stats(
+        get_champion("Yasuo"),
+        18,
+        [get_item_by_name("Infinity Edge"), get_item_by_name("Phantom Dancer")],
+    )
+    assert stats["critical_strike_chance"] == pytest.approx(50.0)
+    mitigation = 100.0 / (100.0 + enemy_stats["armor"])
+    per_hit = sum(e["damage"] for e in events) / len(events)
+    assert per_hit == pytest.approx(
+        stats["attack_damage"] * 2.07 * mitigation, rel=0.01
+    )

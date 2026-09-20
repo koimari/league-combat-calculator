@@ -309,7 +309,7 @@ class TestVladimirSanguinePool:
 
         The P1-3 Hemoplague AMP (10% increased damage taken) is disabled
         here so this suite pins the raw per-tick x 4 == Total row; the
-        amplified pricing is covered by tests/test_p1_review_3.py.
+        amplified pricing is covered by tests/test_vladimir.py.
         """
         data = _fight("Vladimir", self.RANKS, options={"r_hemoplague_debuff": False})
         main_stats, target_stats = _context(data)

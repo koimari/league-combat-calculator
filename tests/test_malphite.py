@@ -8,6 +8,10 @@ says makes the whole timed fight fall back to coarse ordering.
 from src.calculator.champions import malphite
 from src.calculator.control_spec import IMMOBILIZING_CC_KINDS, NON_IMMOBILIZING_CC_KINDS
 from tests import cc_review
+from functools import partial
+from tests import champion_closure as closure
+import pytest
+from src.calculator.champions.slot_extract import extract_named
 
 
 class TestReviewedCrowdControl:
@@ -55,3 +59,73 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Malphite")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+# Level 18, ranks Q5/W5/E5/R3, no items, six seconds of autos at full uptime
+# into a 3000-HP Aatrox whose own resistances mitigate.
+_closure_fight = partial(
+    closure.combat,
+    mode="time_based",
+    duration=6.0,
+    include_autos=True,
+    auto_uptime=1.0,
+    target_health=3000.0,
+    enemy=closure.AATROX,
+)
+_closure_parse = partial(closure.parse, target=closure.TARGET_3000)
+
+
+# ---------------------------------------------------------------------------
+# Malphite — W empowered-attack parts + tripled bonus armor
+# ---------------------------------------------------------------------------
+
+
+def test_malphite_w_prices_empowered_attack_both_parts():
+    data, stats, abilities = _closure_parse("Malphite")
+    w = data["abilities"]["W"][0]
+    armor_grant = extract_named(w, "Increased Bonus Armor", 5, stats, {})
+    assert armor_grant == pytest.approx(0.9 * stats["armor"])  # tripled 30%
+    buffed = dict(stats)
+    buffed["armor"] = stats["armor"] + armor_grant
+    on_hit = extract_named(w, "Additional Physical Damage", 5, buffed, {})
+    cone = extract_named(w, "Physical Damage", 5, buffed, {})
+    part_on_hit, part_cone = abilities["W"]["parts"]
+    assert part_on_hit.amount == pytest.approx(on_hit)
+    assert part_cone.amount == pytest.approx(cone)
+    assert abilities["W"]["total_raw"] == pytest.approx(on_hit + cone)
+
+
+def test_malphite_e_scales_off_tripled_armor():
+    data, stats, abilities = _closure_parse("Malphite")
+    w = data["abilities"]["W"][0]
+    e = data["abilities"]["E"][0]
+    armor_grant = extract_named(w, "Increased Bonus Armor", 5, stats, {})
+    buffed = dict(stats)
+    buffed["armor"] = stats["armor"] + armor_grant
+    expected_e = extract_named(e, "Magic Damage", 5, buffed, {})
+    assert abilities["E"]["total_raw"] == pytest.approx(expected_e)
+    # The grant is damage-relevant: without it E would price the lower armor.
+    assert abilities["E"]["total_raw"] > extract_named(e, "Magic Damage", 5, stats, {})
+
+
+def test_malphite_api_w_and_e_match_sourced_mitigation():
+    combat = _closure_fight("Malphite")
+    enemy_stats = closure.enemy_stats(combat)
+    _, _stats, abilities = _closure_parse("Malphite")
+    w_raw = abilities["W"]["total_raw"]
+    e_raw = abilities["E"]["total_raw"]
+    w_events = closure.main_damage_events(combat, "W")
+    e_events = closure.main_damage_events(combat, "E")
+    assert w_events
+    assert e_events
+    # Thunderclap lands its empowered-attack bonus and its cone in one
+    # instant but at two magnitudes, so the row's claim is that its events
+    # ACCOUNT for the raw total, not that they are equal shares of it.
+    assert sum(e["raw_damage"] for e in w_events) == pytest.approx(w_raw, rel=1e-3)
+    assert e_events[0]["raw_damage"] == pytest.approx(e_raw / len(e_events), rel=1e-3)
+    assert sum(e["damage"] for e in w_events) == pytest.approx(
+        w_raw * 100.0 / (100.0 + enemy_stats["armor"]), rel=1e-3
+    )
+    assert sum(e["damage"] for e in e_events) == pytest.approx(
+        e_raw * 100.0 / (100.0 + enemy_stats["magic_resistance"]), rel=1e-3
+    )

@@ -13,6 +13,9 @@ from src.calculator.calculate import calculate_payload
 from src.calculator.champions import lux
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review
+from functools import partial
+from tests import champion_closure as closure
+from src.calculator.champions.slot_extract import extract_named
 
 # The phrase each declared kind was read from, in that slot's cached text.
 QUOTED = {
@@ -73,3 +76,61 @@ class TestReviewedCrowdControl:
         assert coverage["certification"] == "event_order_certified"
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
         assert coverage["coarse_sources"] == []
+
+
+# One rotation at level 18 into the bare 2000-HP dummy; slot rows are parsed
+# against the shared reference stat block.
+_closure_fight = partial(closure.fight, role="top")
+_closure_parse = closure.reference_abilities
+
+
+# ---------------------------------------------------------------------------
+# Lux — P Illumination procs + W Prismatic Barrier (double) shield
+# ---------------------------------------------------------------------------
+
+
+class TestLux:
+    """P1-3: the P proc and the W two-stack shield join the packet."""
+
+    def test_illumination_procs_price_sourced_per_level_damage(self):
+        """P: 30 : 200 (based on level) + 35% AP per proc, default 3 procs."""
+        data = _closure_fight("Lux")
+        stats = closure.fight_stats(data)
+        per_proc = extract_named(
+            closure.ability_row("Lux", "P"),
+            "Per-Level Scaling",
+            18,
+            stats,
+            closure.target_stats(data),
+        )
+        assert per_proc == pytest.approx(200.0)
+        row = data["breakdown"]["passive"]
+        assert row["count"] == 3
+        assert float(row["total_damage"]) == pytest.approx(per_proc * 3)
+
+    def test_illumination_procs_option_probe(self):
+        """p_illumination_procs=1 prices exactly one proc."""
+        data = _closure_fight("Lux", options={"p_illumination_procs": 1})
+        stats = closure.fight_stats(data)
+        per_proc = extract_named(
+            closure.ability_row("Lux", "P"),
+            "Per-Level Scaling",
+            18,
+            stats,
+            closure.target_stats(data),
+        )
+        assert closure.slot_total(data, "passive") == pytest.approx(per_proc)
+
+    def test_w_prismatic_barrier_shields_maximum_shield(self):
+        """W shields Lux for the sourced Maximum Shield (throw + return)."""
+        data = _closure_fight("Lux", mode="time_based", duration=6, enemy=closure.AHRI)
+        rows = closure.response_shields(data, "Prismatic Barrier")
+        assert len(rows) == 1
+        expected = extract_named(
+            closure.ability_row("Lux", "W"),
+            "Maximum Shield",
+            5,
+            closure.fight_stats(data),
+            {},
+        )
+        assert rows[0]["amount"] == pytest.approx(expected)

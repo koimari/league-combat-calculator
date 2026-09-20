@@ -8,6 +8,9 @@ cast, which the packet now authors.
 from src.calculator.champions import parse_champion_abilities, vladimir
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
+from functools import partial
+from tests import champion_closure as closure
+import pytest
 
 
 class TestReviewedCrowdControl:
@@ -75,3 +78,37 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Vladimir")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+# One rotation at level 18 into the bare 2000-HP dummy; slot rows are parsed
+# against the shared reference stat block.
+_closure_fight = partial(closure.fight, role="top")
+_closure_parse = closure.reference_abilities
+
+
+# ---------------------------------------------------------------------------
+# Vladimir — R Hemoplague 10% increased-damage-taken
+# ---------------------------------------------------------------------------
+
+
+class TestVladimir:
+    """P1-3: the R debuff amplifies every damage entry by 10%."""
+
+    def test_r_debuff_amplifies_all_damage(self):
+        """R-first combo: every entry is amplified 10%, so the R
+        detonation itself prices the wiki's self-amplified 385."""
+        data = _closure_fight("Vladimir", cast_order=["R", "Q", "W", "E"])
+        assert closure.slot_total(data, "R") == pytest.approx(350.0 * 1.1)
+        assert closure.slot_total(data, "Q") == pytest.approx(160.0 * 1.1)
+        assert closure.slot_total(data, "W") == pytest.approx(300.0 * 1.1)
+
+    def test_hemoplague_debuff_option_probe(self):
+        """r_hemoplague_debuff=False prices the unmarked rotation."""
+        data = _closure_fight("Vladimir", options={"r_hemoplague_debuff": False})
+        assert closure.slot_total(data, "R") == pytest.approx(350.0)
+        assert closure.slot_total(data, "Q") == pytest.approx(160.0)
+
+    def test_sanguine_pool_keeps_four_sourced_ticks(self):
+        """The E2 tick certification survives the AMP (4 x 82.5 at rank 5)."""
+        data = _closure_fight("Vladimir")
+        assert closure.slot_total(data, "W") == pytest.approx(300.0 * 1.1, abs=0.6)

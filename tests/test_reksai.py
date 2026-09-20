@@ -4,6 +4,9 @@ import pytest
 
 from src.calculator.champions import reksai
 from tests import cc_review, row_review
+from functools import partial
+from tests import champion_closure as closure
+from src.calculator.champions.slot_extract import extract_named
 
 
 class TestReviewedCrowdControl:
@@ -72,3 +75,50 @@ def test_the_published_options_are_the_three_the_module_reads():
 
     keys = {option["key"] for option in get_champion_options_meta("Rek'Sai")["options"]}
     assert keys == {"q_variant", "e_fury", "p_burrow_fury"}
+
+
+# Level 18, ranks Q5/W5/E5/R3, no items, six seconds of autos at full uptime
+# into a 3000-HP Aatrox whose own resistances mitigate.
+_closure_fight = partial(
+    closure.combat,
+    mode="time_based",
+    duration=6.0,
+    include_autos=True,
+    auto_uptime=1.0,
+    target_health=3000.0,
+    enemy=closure.AATROX,
+)
+_closure_parse = partial(closure.parse, target=closure.TARGET_3000)
+
+
+# ---------------------------------------------------------------------------
+# Rek'Sai — E max-Fury true-damage variant
+# ---------------------------------------------------------------------------
+
+
+def test_reksai_e_prices_physical_bite_by_default():
+    data, stats, abilities = _closure_parse("RekSai")
+    e = data["abilities"]["E"][0]
+    expected = extract_named(e, "Physical Damage", 5, stats, {})
+    assert abilities["E"]["total_raw"] == pytest.approx(expected)
+    assert abilities["E"]["damage_type"] == "physical"
+    combat = _closure_fight("RekSai")
+    events = closure.main_damage_events(combat, "E")
+    assert events
+    assert events[0]["damage_type"] == "physical"
+    assert events[0]["raw_damage"] == pytest.approx(expected / len(events))
+
+
+def test_reksai_e_at_max_fury_is_true_damage():
+    data, stats, abilities = _closure_parse("RekSai", options={"e_fury": 100})
+    e = data["abilities"]["E"][0]
+    expected = extract_named(e, "True Damage", 5, stats, {})
+    assert expected == pytest.approx(204.0)  # 120% of 170 physical
+    assert abilities["E"]["total_raw"] == pytest.approx(expected)
+    assert abilities["E"]["damage_type"] == "true"
+    combat = _closure_fight("RekSai", options={"e_fury": 100})
+    events = closure.main_damage_events(combat, "E")
+    assert events
+    assert events[0]["damage_type"] == "true"
+    # True damage ignores the target's armor entirely at 0 resists.
+    assert sum(e["damage"] for e in events) == pytest.approx(expected, rel=1e-3)
