@@ -1,24 +1,15 @@
-"""Talon — CP10.8 packet module with the E9-1 gap fixes.
+"""Talon: packet module over the Blade's End bleed.
 
-E9-1 closes the two remaining audit gaps over the CP10.8 packet:
-- P (Blade's End) prices the 3-stack consume bleed.  Talon's abilities
-  apply Wound stacks (max 3, 6s, refreshing); the next basic attack
-  consumes them to bleed the target for the wiki's per-level total
-  (80 : 303.53 based on level + 210% bonus AD), delivered as 16 ticks
-  of the sourced per-tick array ("5 : 18.97 (based on level) (+
-  13.125% bonus AD) physical damage every 0.125 seconds").  The bleed
-  is priced once per fight from the ``passive_procs`` option (default
-  1 = one 3-stack consume).
-- Q's on-kill self-heal (9 : 60.41 based on level) is authored by this
-  module's own ``derive_self_healing`` (the kill condition is the
-  boundary the assumption below documents).
-
-W two-hit and R are modeled.
-
-Coverage: E (Assassin's Path) vaults terrain and deals nothing. The
-pinned reviewed packet declares E ``kind: "no_damage"``, and this module
-does not reassign the slot, so E emits that sourced zero row rather than
-being left an unmodeled gap.
+P (Blade's End) prices the three-stack consume bleed.  Talon's abilities apply
+Wound stacks to a cap of three over 6 refreshing seconds, and the next basic
+attack consumes them to bleed the target for the cached per-level total,
+delivered as sixteen ticks of the sourced per-tick array at 0.125 seconds.  The
+bleed is priced once per fight from ``passive_procs``, default 1, one consume.
+Q's on-kill self-heal is authored by this module's ``derive_self_healing``; the
+kill condition is the boundary the assumption below documents.
+W's two hits and R are modeled.
+E (Assassin's Path) vaults terrain and deals nothing, so it emits the pinned
+packet's sourced zero row rather than being left an unmodeled gap.
 """
 
 from typing import Any

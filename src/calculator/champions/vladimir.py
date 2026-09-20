@@ -1,23 +1,17 @@
-"""Vladimir — CP10.9 full-entry-reviewed packet module.
+"""Vladimir: full-entry-reviewed packet module.
 
-P1-3 closure — R (Hemoplague) damage amplification: the reviewed R
-packet priced only the detonation burst (plus the E1 heal family).  The
-plague also "infects enemies hit for 4 seconds, increasing the damage
-they take from all sources by 10%" (data/champions.json R prose; the
-wiki's Hemoplague notes state it "amplifies itself for an actual damage
-of 165 / 275 / 385 (+ 77% AP)" — the 150/250/350 (+ 70% AP) detonation
-plus its own 10%).  An AMP-phase pseudo-slot (the Amumu Cursed Touch
-precedent) adds a 10% bonus part to every damage entry while the mark is
-on the target, gated by the ``r_hemoplague_debuff`` option (default on,
-with the sourced R-first opening assumption).  In-game true damage is
-not amplified (wiki bug note); Vladimir's kit deals none.
-
-Coverage: P (Crimson Pact) converts ability power into bonus health and
-bonus health back into ability power. A two-way stat conversion is an
-axis the engine does not have — ``stat_buff`` grants a stat, it does not
-derive one from another — and the pinned reviewed packet declares P
-``kind: "no_damage"``, so the slot emits that sourced zero row and
-``MODULE_COVERAGE`` states the reviewed absence of damage.
+R (Hemoplague) amplifies as well as bursting: the plague infects enemies hit for
+4 seconds, raising the damage they take from all sources by 10%.  An AMP-phase
+pseudo-slot adds that bonus part to every damage entry while the mark is on the
+target, gated by ``r_hemoplague_debuff``, default on with the sourced R-first
+opening assumption.  The wiki's own notes give the check: the detonation
+amplifies itself, so R's real damage is 110% of its cached row.  True damage is
+not amplified in game, and Vladimir's kit deals none.
+P (Crimson Pact) converts ability power into bonus health and bonus health back
+into ability power.  A two-way stat conversion is an axis this engine does not
+have, ``stat_buff`` granting a stat rather than deriving one from another, so
+the slot emits a sourced zero row and ``MODULE_COVERAGE`` states that reviewed
+absence of damage.
 """
 
 from collections.abc import Mapping

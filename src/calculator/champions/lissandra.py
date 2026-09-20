@@ -1,23 +1,14 @@
-"""Lissandra — revision-backed direct-damage slot map.
+"""Lissandra: revision-backed direct-damage slot map.
 
-Q, W, E, and R each deal one sourced magic-damage instance. E's recast only
-moves Lissandra, while R's ice field deals the same damage whether she targets
+Q, W, E and R each deal one sourced magic-damage instance.  E's recast only
+moves Lissandra, and R's ice field deals the same damage whether she targets
 herself or an enemy.
-
-P (Iceborn Subjugation) spawns a Frozen Thrall from a NEARBY ENEMY
-CHAMPION'S corpse when it dies; the thrall chases for 4 seconds, then
-shatters for the cached "Per-Level Scaling" magic damage (120 : 520 over
-levels 1-18) + 50% AP (prose-only rider, not a structured modifier).
-Roadmap session 4 batch C (2026-08-21): closes the single out_of_scope
-slot with an explicit zero-damage boundary receipt (the Karthus P
-"Death Defied" / Kog'Maw P "Icathian Surprise" pattern) rather than
-leaving MODULE_COVERAGE reading "out_of_scope" for a kill-triggered
-effect this calculator's deterministic 1v1 fight cannot enter (the
-target never dies in the model). The sourced would-be magnitude is
-computed and reported in the row's detail text for traceability, but
-priced at zero damage since the trigger never fires here — the thrall
-is also a summoned pet on its own timeline, an axis the engine does
-not have, so nothing but the boundary receipt could be priced anyway.
+P (Iceborn Subjugation) spawns a Frozen Thrall from a nearby enemy champion's
+corpse, which chases for 4 seconds and then shatters for the cached per-level
+magic damage plus a prose-only 50% AP rider.  The trigger is a kill this
+deterministic duel never reaches, and the thrall is a summoned pet on its own
+timeline, an axis this engine lacks, so the slot is a zero-damage boundary
+receipt whose detail reports the would-be magnitude for traceability.
 """
 
 from typing import Any

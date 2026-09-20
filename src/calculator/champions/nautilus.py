@@ -1,23 +1,15 @@
-"""Nautilus — CP10.5 full-entry-reviewed packet module.
+"""Nautilus: full-entry-reviewed packet module.
 
-E5-2 fix — Staggering Blow (P): the reviewed packet read the passive's
-root-duration row ("Bonus Damage" 0.75-1.5 seconds) as a flat physical
-damage amount and dropped the actual damage term.  The wiki text is:
-"Nautilus' basic attacks are empowered to deal 14 : 128 (based on level)
-bonus physical damage" (data/champions.json P "Per-Level Scaling" row),
-so the passive is an on-hit entry priced at the per-level value.  The
-0.75-1.5 "Bonus Damage" row is the root duration (a CC state, not
-damage) and is deliberately not priced.
-
-P1-2 fixes:
-- W (Titan's Wrath) prices the Total Magic Damage of Pain of Wrath
-  (30 : 70 by rank + 40% AP) split across its two sourced instances
-  (half immediately, half after 1.25 seconds) instead of one Magic
-  Damage per Instance row.
-- R (Depth Charge) prices the primary-target Increased Damage
-  (150 : 400 by rank + 80% AP) instead of the chase-eruption Magic
-  Damage row: the wake eruptions hit enemies around the charge's path,
-  not the primary target of the single-target fight.
+P (Staggering Blow) is an on-hit entry priced at the cached per-level row.  Its
+neighbouring "Bonus Damage" row is the 0.75 to 1.5-second ROOT duration, a
+control state rather than damage, and reading it as a flat amount drops the
+damage term entirely.
+W (Titan's Wrath) prices the Total Magic Damage of Pain of Wrath split across
+its two sourced instances, half immediately and half after 1.25 seconds, rather
+than one per-instance row.
+R (Depth Charge) prices the primary target's "Increased Damage" row rather than
+the chase-eruption row: the wake eruptions hit enemies around the charge's path,
+not the primary target of a single-target fight.
 """
 
 from typing import Any

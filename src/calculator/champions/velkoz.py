@@ -1,23 +1,18 @@
-"""Vel'Koz — slot map for the archetype engine (E3 stack systems).
+"""Vel'Koz: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Organic Deconstruction) is the stack system: Vel'Koz's abilities
-  apply Deconstruction stacks (max 3, 7s, refreshing; basic attacks
-  refresh but do not add). The third stack consumes all stacks to deal
-  level-scaled TRUE damage ("Per-Level Scaling" 35-197.06 array) plus
-  60% AP (prose ratio). The rotation's damaging abilities (Q, W x2
-  hits, E, R ticks) always exceed three applications, so the proc is
-  priced once per fight — the conservative floor (Brand's Blaze
-  once-per-rotation precedent); R's repeated 0.7s Deconstruction
-  applications could proc more in a long channel.
-- Q (Plasma Fission), W (Void Rift), E (Tectonic Disruption) are plain
-  attribute reads: W uses "Total Magic Damage" (both rift hits — the
-  classifier would pick only the first).
-- R (Life Form Disintegration Ray) (E9-3) prices the full 13-tick
-  channel: 13 x "Damage Per Tick" == "Maximum Damage" (450/700/925) at
-  the sourced 0.2-second cadence over the 2.6-second channel (the E2
-  per-tick x count pattern). The Researched true-damage conversion is
-  a documented boundary, not modeled.
+P (Organic Deconstruction) is the stack system: his abilities apply stacks to a
+cap of three over 7 refreshing seconds, basic attacks refreshing but not adding,
+and the third consumes them all for level-scaled TRUE damage plus a prose 60% AP
+ratio.  The rotation's damaging abilities always exceed three applications, so
+the proc is priced once per fight, the conservative floor; R's repeated 0.7s
+applications could proc more in a long channel.
+Q (Plasma Fission), W (Void Rift) and E (Tectonic Disruption) are plain
+attribute reads, W taking "Total Magic Damage" for both rift hits where the
+classifier would pick only the first.
+R (Life Form Disintegration Ray) prices the full thirteen-tick channel, the
+per-tick row times thirteen equalling the cached "Maximum Damage" at the sourced
+0.2-second cadence over 2.6 seconds.  The Researched true-damage conversion is a
+documented boundary, not modeled.
 """
 
 from typing import Any

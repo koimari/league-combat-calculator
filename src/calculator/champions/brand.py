@@ -1,24 +1,20 @@
-"""Brand — slot map for the archetype engine.
+"""Brand: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Blaze) is invisible to the generic parser and needs two custom
-  pieces. The Ablaze DoT (2% of target max HP per stack over 4 s) is
-  prose-only — P effect[1] has no leveling entry — so it lives as a
-  hardcoded constant below. The 3-stack detonation reads the 40-entry
-  per-level "Max Health Damage" array (effect[2]) plus 2% per 100 AP.
-  Both depend on how many stacks the rotation applies (Q/W/E = 1 each,
-  R = 1 per bounce), so P lists AFTER the damage slots and counts them
-  from ``ctx.results``. P effect[0]'s "Per-Level Scaling" [20..40] is
-  the mana refund on takedown and must contribute zero damage.
-- W (Pillar of Flame) is always Ablaze-empowered: the "Increased
-  Damage" attribute (effect[1]), not the base "Magic Damage" the
-  classifier would pick.
-- R (Pyroclasm) is per-bounce "Magic Damage" x the ``r_bounces``
-  option. The same leveling also carries "Total Single-Target Damage"
-  (3-bounce total) — summing both double-counts, so the per-bounce
-  read is pinned in a custom fn.
-- Q/E are plain "Magic Damage" reads, pinned explicitly.
-- Q's stun, E's spread doubling, and R's slow are utility-only.
+P (Blaze) is invisible to the generic parser and needs two custom pieces.  The
+Ablaze DoT, 2% of the target's maximum health per stack over 4 seconds, is
+prose-only, its effect carrying no leveling entry, so it is a module constant.
+The three-stack detonation reads the 40-entry per-level "Max Health Damage"
+array plus 2% per 100 AP.  Both depend on how many stacks the rotation applies,
+one each for Q, W and E and one per R bounce, so P lists AFTER the damage slots
+and counts them from ``ctx.results``.  The passive's first "Per-Level Scaling"
+row is the mana refund on takedown and must contribute zero damage.
+W (Pillar of Flame) is always Ablaze-empowered, so it reads the "Increased
+Damage" attribute rather than the base row the classifier would pick.
+R (Pyroclasm) is per-bounce "Magic Damage" times ``r_bounces``.  The same
+leveling also carries a three-bounce "Total Single-Target Damage" row, and
+summing both double-counts, so the per-bounce read is pinned.
+Q and E are plain "Magic Damage" reads; Q's stun, E's spread doubling and R's
+slow are utility only.
 """
 
 from typing import Any

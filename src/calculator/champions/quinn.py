@@ -1,23 +1,15 @@
-"""Quinn — CP10.6 full-entry-reviewed packet module.
+"""Quinn: full-entry-reviewed packet module.
 
-E5-2 fix — Harrier (P): the reviewed packet declared the passive
-no_damage/out_of_scope even though the wiki carries a sourced on-hit
-formula — "Quinn's basic attacks on-hit against Harrier targets are
-empowered to consume the mark to deal 15 : 132.35 (based on level)
-(+ 40% bonus AD) bonus physical damage" (data/champions.json P "Bonus
-Physical Damage" row) — while equivalent on-hit passives (Nautilus P,
-Poppy P) are modeled.  Harrier is now an on-hit entry priced at the
-per-level flat plus 40% bonus AD per marked-target auto.
-
-W (Heightened Senses) carries the other half of that mark: "whenever
-Quinn uses a basic attack on-attack against a target marked by Harrier
-or consumes their mark, she gains bonus attack speed ... for 2 seconds".
-The module already prices Harrier on every auto, so the same auto stream
-keeps the 2-second window refreshed and the cached "Bonus Attack Speed"
-row (28-80%) is emitted as a BUFF-phase ``stat_buff``.  W's other grant
-is movement speed, for which ``stat_buff`` has no key.  W is therefore
-*modeled*, not the packet's zero-damage row: this module replaces that
-slot.
+P (Harrier) is an on-hit entry, not a no-damage slot: the cache carries a
+sourced formula, a per-level flat plus 40% bonus AD, for the empowered attack
+that consumes a Harrier mark, so it is priced per marked-target auto.
+W (Heightened Senses) carries the other half of that mark: an attack against a
+marked target, or one that consumes the mark, grants bonus attack speed for 2
+seconds.  The module prices Harrier on every auto, so the same auto stream keeps
+that window refreshed and the cached "Bonus Attack Speed" row is emitted as a
+BUFF-phase ``stat_buff``.  W's other grant is movement speed, for which
+``stat_buff`` has no key.  W is therefore modeled here rather than the packet's
+zero-damage row.
 """
 
 from typing import Any

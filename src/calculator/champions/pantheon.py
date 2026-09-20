@@ -1,23 +1,17 @@
-"""Pantheon — CP10.6 full-entry-reviewed packet module (E9-2 gap fixes).
+"""Pantheon: full-entry-reviewed packet module.
 
-The CP-era gap items are closed here:
-- Q (Comet Spear) prices the Hurl base (70-190 + 115% bonus AD + 50% AP)
-  plus the Mortal Will empowered term (20 : 265.88 by level + 115%
-  bonus AD; Pantheon starts fights with maximum stacks, so the first
-  basic ability is empowered by default).  The <20%-HP execute — the
-  Increased Hurl Damage row (155-455 + 230% bonus AD + 100% AP) — is
-  exposed through the ``q_execute`` option (the user states the target
-  is below the threshold when Q lands).
-- W (Shield Vault) prices its sourced %max-HP physical damage row
-  (6-8% + 1.5% per 100 AP + 0.4% per 100 bonus health of the target's
-  maximum health) instead of reading the percentage as flat damage —
-  MODULE_COVERAGE flips W to modeled.
-- R (Grand Starfall) prices the center Magic Damage row by default and
-  exposes the Reduced edge row (150-350 + 50% AP) through the ``r_edge``
-  option.
-- P (Mortal Will) is a ``no_damage`` row, not a missing axis: the
-  empowered rider is priced in Q, and what remains is the resource
-  stack counter, which grants nothing the engine would price.
+Q (Comet Spear) prices the Hurl base plus the Mortal Will empowered term,
+because Pantheon starts fights at maximum stacks and the first basic ability is
+empowered by default.  The below-20%-health execute, the "Increased Hurl Damage"
+row, is exposed through ``q_execute``: the user states the target is under the
+threshold when Q lands.
+W (Shield Vault) prices its sourced %max-health physical row rather than reading
+that percentage as flat damage.
+R (Grand Starfall) prices the centre "Magic Damage" row by default and exposes
+the reduced edge row through ``r_edge``.
+P (Mortal Will) is a ``no_damage`` row rather than a missing axis: the empowered
+rider is priced in Q and what remains is the stack counter, which grants nothing
+the engine would price.
 """
 
 from typing import Any

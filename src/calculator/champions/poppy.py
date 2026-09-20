@@ -1,23 +1,12 @@
-"""Poppy — CP10.6 full-entry-reviewed packet module.
+"""Poppy: full-entry-reviewed packet module.
 
-E5-2 fix — Iron Ambassador (P): the reviewed packet priced only the
-%max-HP "Max Health Damage" row (0.11-0.2106, which is actually the
-SHIELD the buckler grants when Poppy retrieves it, not damage) with a
-zero base and dropped the flat damage term.  The wiki text is:
-"Poppy's next basic attack ... deal[ing] 20 : 198.82 (based on level)
-bonus magic damage" (data/champions.json P "Bonus Magic Damage" row),
-so the passive is an on-hit entry priced at the per-level flat value.
-
-2026-08-20 packet refresh (16.16.1 re-pull) — Q (Hammer Shock): the
-reviewed packet was pinned to a pre-16.16.1 champions.json snapshot and
-had drifted from the current data/champions.json "Physical Damage" row
-in two fields: the bonus-AD ratio (100% flat -> 75% flat at every rank)
-and the target-max-HP ratio (9% flat at every rank -> 7/7.5/8/8.5/9%,
-now rank-scaling). Regenerated via
-``LCC_WIKI_DB=<real wiki revision index> scripts/build_reviewed_modules.py``
-against the current data/champions.json and spliced into
-static/reviewed-packets.json (only the Poppy entry changed; the other
-172 champion entries and their PACKET_SHA256 pins are untouched).
+P (Iron Ambassador) is an on-hit entry priced at the cached per-level "Bonus
+Magic Damage" row.  Its neighbouring %max-health row is the SHIELD the buckler
+grants when Poppy retrieves it, not damage, so reading that row instead drops
+the flat damage term entirely.
+Q (Hammer Shock) reads the current "Physical Damage" row: the bonus-AD ratio is
+75% flat at every rank and the target-max-health ratio scales by rank, so a
+packet pinned to a stale cache drifts on both fields.
 """
 
 from typing import Any

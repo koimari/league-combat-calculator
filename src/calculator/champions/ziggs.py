@@ -1,24 +1,18 @@
-"""Ziggs — slot map for the archetype engine.
+"""Ziggs: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Short Fuse) is invisible to the generic path: its JSON leveling
-  carries ONLY the per-level base values (no AP modifier at all), so the
-  50% AP ratio is hardcoded here from the wiki, and the proc count is a
-  champion option (``passive_procs``) — its 12s cooldown is refunded
-  4/5/6s per ability cast, so uptime depends on the rotation. Row 0 of
-  the "Per-Level Scaling" pair is vs champions; row 1 (the 175%
-  vs-structures multiple) is deliberately ignored.
-- E (Hexplosive Minefield) is multi-hit: 1 full mine plus
-  ``mines_hit - 1`` at the "Reduced Damage per Mine" values, clamped at
-  the "Maximum Total Magic Damage" row. The generic path counts one
-  mine.
-- R (Mega Inferno Bomb) is a sweet-spot toggle (``r_sweet_spot``):
-  "Epicenter Magic Damage" vs the outer-ring "Reduced Damage" row.
-- Q and W are plain reads, pinned to their exact "Magic Damage"
-  attribute so W's turret-only "Demolition Threshold" row can never win.
-
-All numeric values are read from the champion JSON data except the
-Short Fuse AP ratio (see HARDCODED below).
+P (Short Fuse) is invisible to the generic path: its cached leveling carries
+ONLY the per-level base values with no AP modifier at all, so the 50% AP ratio
+is a module constant from the wiki, and the proc count is the ``passive_procs``
+option, its 12-second cooldown being refunded per ability cast so uptime depends
+on the rotation.  Row 0 of the "Per-Level Scaling" pair is against champions;
+row 1, the 175% vs-structures multiple, is deliberately ignored.
+E (Hexplosive Minefield) is multi-hit: one full mine plus ``mines_hit - 1`` at
+the "Reduced Damage per Mine" values, clamped at the "Maximum Total Magic
+Damage" row.  The generic path counts one mine.
+R (Mega Inferno Bomb) is a sweet-spot toggle on ``r_sweet_spot``, "Epicenter
+Magic Damage" against the outer ring's "Reduced Damage" row.
+Q and W are plain reads pinned to their exact "Magic Damage" attribute, so W's
+turret-only "Demolition Threshold" row can never win.
 """
 
 import re

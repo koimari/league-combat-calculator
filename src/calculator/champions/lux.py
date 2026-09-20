@@ -1,23 +1,15 @@
-"""Lux — CP10.4 full-entry-reviewed packet module.
+"""Lux: full-entry-reviewed packet module.
 
-P1-3 closures:
-
-- P (Illumination): the reviewed packet declared the passive no_damage,
-  but the wiki carries a sourced proc formula: "Lux's basic attacks
-  on-hit and Final Spark consume the mark to deal 30 : 200 (based on
-  level) (+ 35% AP) bonus magic damage" (data/champions.json P
-  "Per-Level Scaling", 30-200 over levels 1-18).  Each marking ability
-  (Q/E/R) lets the next auto (or Final Spark itself) consume the mark,
-  so the P slot prices ``p_illumination_procs`` procs (default 3 — one
-  per Q/E/R in the one-rotation combo), each at the sourced per-level
-  amount.
-
-- W (Prismatic Barrier): Lux "gains the shield upon throwing and upon
-  retrieving the wand", so one cast stacks two shields of "Shield
-  Strength" (40-100 + 40% AP by rank) into the sourced "Maximum Shield"
-  row (80-200 + 80% AP).  The shield is a self-targeted support packet:
-  support_effects.py prices "Maximum Shield" at the W cast with a
-  self scope override (no teammate roster in the 1v1).
+P (Illumination) is a sourced proc, not a no-damage slot: a basic attack or
+Final Spark consumes the mark for a per-level amount plus 35% AP.  Each marking
+ability lets the next attack, or Final Spark itself, consume the mark, so the
+slot prices ``p_illumination_procs`` procs, default 3, one per Q, E and R in the
+one-rotation combo.
+W (Prismatic Barrier) shields Lux both on throwing and on retrieving the wand,
+so one cast stacks two "Shield Strength" shields into the cached "Maximum
+Shield" row.  It is a self-targeted support packet: the scanner prices "Maximum
+Shield" at the W cast under a self scope override, a duel having no teammate
+roster.
 """
 
 import re

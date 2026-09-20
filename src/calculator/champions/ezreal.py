@@ -1,24 +1,20 @@
-"""Ezreal — slot map for the archetype engine.
+"""Ezreal: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Rising Spell Force) is a stat-buff-only passive with NO JSON
-  leveling data (pure stack mechanic): 10% bonus attack speed per stack,
-  up to 5 stacks, driven by the ``passive_stacks`` option. The generic
-  path drops it entirely; here it is a BUFF-phase zero-damage entry
-  (Bel'Veth precedent — stat-buff slots never silently vanish).
-- Q (Mystic Shot) applies item on-hit AND on-attack effects (wiki
-  explicit), cannot crit, and every hit refunds 1.5s on ALL of Ezreal's
-  current cooldowns including Q's own — the kit-wide refund is emitted
-  as adjusted entry cooldowns (Gnar Q pickup-refund precedent; math in
-  ``_q_hasted_period`` / ``_refund_rate_factor``).
-- W (Essence Flux): its damage lives at effect[1] under "Bonus Magic
-  Damage" (the projectile itself deals zero — all damage is the mark
-  detonation, assumed always triggered), plus the Q-refund cooldown.
-- E (Arcane Shift): plain "Magic Damage" read; module-owned for the
-  Q-refund cooldown (blink/reveal utility ignored).
-- R (Trueshot Barrage) must read "Magic Damage" exactly: effect[1]
-  carries "Modified Damage" — the minion/non-epic-monster value — which
-  must never leak into champion damage. Plus the Q-refund cooldown.
+P (Rising Spell Force) is a stat-buff-only passive with no cached leveling at
+all, a pure stack mechanic: 10% bonus attack speed per stack to five stacks,
+driven by ``passive_stacks``.  The generic path drops it entirely; here it is a
+BUFF-phase zero-damage entry, because a stat-buff slot never silently vanishes.
+Q (Mystic Shot) applies item on-hit AND on-attack effects, cannot crit, and
+every hit refunds 1.5 seconds on ALL of Ezreal's current cooldowns including Q's
+own.  That kit-wide refund is emitted as adjusted entry cooldowns.
+W (Essence Flux) keeps its damage at ``effects[1]`` under "Bonus Magic Damage":
+the projectile itself deals zero and all the damage is the mark detonation,
+assumed always triggered.
+E (Arcane Shift) is a plain "Magic Damage" read, module-owned only for the Q
+refund.
+R (Trueshot Barrage) must read "Magic Damage" exactly, because ``effects[1]``
+carries "Modified Damage", the minion and non-epic-monster value, which must
+never leak into champion damage.
 """
 
 from typing import Any
