@@ -63,6 +63,26 @@ def _combatant_stub() -> SimpleNamespace:
     )
 
 
+#: The state fields ``build_state`` resolves per call rather than off the
+#: memoized prototype: this combatant's health-derived pools and the eleven
+#: defence-contract fields whose resolvers read inputs the value key cannot
+#: see.  The prototype declares the slots; only the values are the caller's.
+PER_CALL_FIELDS = (
+    "pools",
+    "starting_shield",
+    "projectile_defense",
+    "projectile_defense_eligibility",
+    "projectile_defense_composition",
+    "projectile_defense_uses_remaining",
+    "physical_damage_reduction",
+    "spell_shield_eligibility",
+    "spell_shield_composition",
+    "spell_shield_uses_remaining",
+    "spell_shield_cooldown_seconds",
+    "spell_shield_cooldown_atom",
+    "spell_shield_rearm",
+)
+
 MEMO_SUFFIXES = ("_MEMO", "_CACHE")
 MEMO_MUTATIONS = ("clear", "pop", "setdefault", "update")
 
@@ -589,7 +609,7 @@ def test_the_prototype_holds_no_health_derived_value() -> None:
     proto = receipt_state._build_state_uncached(  # pylint: disable=W0212
         _combatant_stub(), 0.0
     )
-    for field in receipt_state._PER_CALL_FIELDS:  # pylint: disable=W0212
+    for field in PER_CALL_FIELDS:
         assert field in proto
     assert proto["pools"] is None
     assert proto["starting_shield"] == 0.0

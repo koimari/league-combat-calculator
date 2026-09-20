@@ -65,14 +65,6 @@ class FightTrace:
             "lines": [line.published() for line in self.lines],
         }
 
-    def refusals_by_source(self) -> dict[str, tuple[str, ...]]:
-        """Which facts each source key left unstated, over the whole trace."""
-        refused: dict[str, set[str]] = {}
-        for line in self.lines:
-            if line.refusals:
-                refused.setdefault(line.source, set()).update(line.refusals)
-        return {source: tuple(sorted(names)) for source, names in refused.items()}
-
 
 def _declaration(event: Mapping[str, Any]) -> AuthoredDeclaration | None:
     """The declaration riding one ledger event, in its named shape."""

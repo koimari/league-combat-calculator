@@ -40,46 +40,6 @@ _STATE_KEY_STATS = (
     "bonus_magic_resistance",
 )
 
-#: The two state fields :func:`build_state` writes per call instead of
-#: cloning, because both derive from the combatant's **health** and health is
-#: not in the key.  The prototype carries the slots — so a built state's field
-#: order is the construction's — and never a health-derived value in them.
-#:
-#: Why this is a declaration and not a detail: two combatants whose defence
-#: record and four resistances match now share one prototype, and one of them
-#: may have 1000 health and the other 2500.  Sharing is correct **only**
-#: because these two are overwritten on every call, and until S10 that was a
-#: property of the write order rather than of the prototype — the health read
-#: was inside the memoized construction, reached through
-#: ``transitions.participant_pools`` rather than through ``combatant.stats``,
-#: where the guard that checks the key covers every stat the prototype reads
-#: structurally cannot see it.  Now the prototype does not read health at
-#: all, so the key really is every input it has.
-#:
-#: The eleven defence-contract fields joined for the same reason, and they
-#: are this merge's own finding: the resolvers behind them read the combatant's
-#: ``champion_data``, ``level``, ``request.champion_options`` and ``items``
-#: — four inputs the value key structurally cannot see — so resolving them
-#: inside the memoized construction would hand two combatants with one
-#: defence record and four matching resistances the same Braum window, the
-#: same Annul contract and the same Amumu reduction.  They are resolved per
-#: call instead, beside the pools.
-_PER_CALL_FIELDS = (
-    "pools",
-    "starting_shield",
-    "projectile_defense",
-    "projectile_defense_eligibility",
-    "projectile_defense_composition",
-    "projectile_defense_uses_remaining",
-    "physical_damage_reduction",
-    "spell_shield_eligibility",
-    "spell_shield_composition",
-    "spell_shield_uses_remaining",
-    "spell_shield_cooldown_seconds",
-    "spell_shield_cooldown_atom",
-    "spell_shield_rearm",
-)
-
 
 def _state_proto_key(
     combatant: CombatantFacts, below_half_healing_bonus: float
@@ -132,7 +92,7 @@ def build_state(
         proto, container_keys = memo
     # The prototype itself is never handed out: the walk mutates its state,
     # so every caller gets a clone with its own pools and containers.  The
-    # :data:`_PER_CALL_FIELDS` are filled here and nowhere else — this
+    # per-call fields are filled here and nowhere else — this
     # combatant's health, and the defence contracts resolved from inputs the
     # memo key cannot see, neither of which the shared prototype may hold.
     pools = participant_pools(combatant)
@@ -154,7 +114,7 @@ def _build_state_uncached(
 
     Every stat it reads is named in :data:`_STATE_KEY_STATS`; a read added
     here without joining that tuple is an input the key cannot see.  That
-    sentence is why the two :data:`_PER_CALL_FIELDS` below are left empty
+    sentence is why the two per-call fields below are left empty
     rather than built: they derive from health, health is not in the key,
     and a memoized construction that read it would be filed under inputs
     that do not determine it — legal only because :func:`build_state`
@@ -176,7 +136,7 @@ def _build_state_uncached(
     return {
         # Every shield and health transition rides shield_ledger; this is the
         # one place this participant's absorbing state lives.
-        # Both are :data:`_PER_CALL_FIELDS`: the slots are declared here so a
+        # Both are per-call fields: the slots are declared here so a
         # built state's field order is this construction's, and the values
         # are the caller's because they are derived from health.
         "pools": None,
@@ -277,7 +237,7 @@ def _build_state_uncached(
         # resolve from the starting defenses and the held item; Sivir's timed
         # shield is armed later by the walk's SPELL_SHIELD action.  These
         # five and the four projectile-defence slots below are
-        # :data:`_PER_CALL_FIELDS` — declared here, filled by
+        # per-call fields — declared here, filled by
         # :func:`_resolved_defence_contracts`.
         "spell_shield_eligibility": None,
         "spell_shield_composition": None,

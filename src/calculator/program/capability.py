@@ -64,13 +64,6 @@ class CapabilityView:
                 "not assume a mechanic it has never heard of is representable"
             ) from None
 
-    def compilable(self) -> bool:
-        """Whether every declared mechanic in this view can be compiled."""
-        return all(
-            isinstance(view.compilability, Compilable)
-            for view in self.mechanics.values()
-        )
-
     def refusals(self) -> tuple[tuple[MechanicId, str], ...]:
         """Every mechanic that cannot compile, with the reason it gives.
 

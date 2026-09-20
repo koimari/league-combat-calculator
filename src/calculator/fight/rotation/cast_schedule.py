@@ -44,17 +44,6 @@ class CooldownRefunds:
 NO_REFUNDS = CooldownRefunds()
 
 
-def _navori_effective_cd(
-    base_cd: float,
-    autos_per_second: float,
-    refund_percent: float,
-) -> float:
-    """Navori Flickerblade alone: each auto takes a SHARE off what is left."""
-    return _attack_paid_cooldown(
-        base_cd, autos_per_second, refund_percent=refund_percent
-    )
-
-
 def _attack_paid_cooldown(
     base_cd: float,
     autos_per_second: float,

@@ -320,18 +320,6 @@ class OutcomeLedger(TriggerLinkage):
             ),
         )
 
-    def quantities(self, action_slot: int) -> dict[str, Quantity]:
-        """Every numeric outcome field of one slot, each as a ``Quantity``.
-
-        A field no transition wrote comes back ``Starved``: only the
-        projection knows which fields a transition owed, so it hears about it.
-        """
-        return {
-            field: self.quantity(action_slot, field)
-            for field in OUTCOME_FIELDS
-            if field != "skipped_reason"
-        }
-
     def slots(self) -> Iterator[int]:
         """Every slot this ledger recorded anything for, in write order."""
         return iter(self._fields)

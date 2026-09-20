@@ -587,7 +587,7 @@ def test_a_comparison_no_declaration_uses_has_no_branch() -> None:
 
 
 def test_no_interpreter_precomputes_a_live_predicate_pool() -> None:
-    """Criterion: ``requires_live_pool`` means the pool is never a build value.
+    """Criterion: a live predicate's pool is never a build value.
 
     Two halves.  The build context an interpreter may read carries no pool —
     it is level, owner, data version and three configuration facts fixed
@@ -609,7 +609,6 @@ def test_no_interpreter_precomputes_a_live_predicate_pool() -> None:
     ]
     assert live, "no rule declares a live predicate, so this test proves nothing"
     for rule in live:
-        assert rule.payload.activation.requires_live_pool
         ctx = build_context(
             rule.owner,
             FightFacts(

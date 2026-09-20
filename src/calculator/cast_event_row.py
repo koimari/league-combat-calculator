@@ -19,30 +19,16 @@ that wants the whole row takes :class:`CastEventRow`.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
 from functools import partial
 from typing import Any
 
 from .event_row_field import required_field
 
 __all__ = [
-    "CastEventRow",
     "cast_ordinal",
-    "cast_row",
     "cast_slot",
     "cast_time",
 ]
-
-
-@dataclass(frozen=True, slots=True)
-class CastEventRow:
-    """The fields every ``cast_events`` row carries, as one record."""
-
-    time: float
-    slot: str
-    ordinal: int
-    name: str
-    cast_id: str
 
 
 _required = partial(required_field, kind="cast event", stamper="ability_rotation")
@@ -61,14 +47,3 @@ def cast_slot(event: Mapping[str, Any]) -> str:
 def cast_ordinal(event: Mapping[str, Any]) -> int:
     """Which cast of that slot this is, counting from one."""
     return int(_required(event, "ordinal"))
-
-
-def cast_row(event: Mapping[str, Any]) -> CastEventRow:
-    """The whole row, for a reader that wants more than one field."""
-    return CastEventRow(
-        time=cast_time(event),
-        slot=cast_slot(event),
-        ordinal=cast_ordinal(event),
-        name=str(_required(event, "name")),
-        cast_id=str(_required(event, "cast_id")),
-    )

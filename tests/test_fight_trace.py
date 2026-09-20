@@ -149,7 +149,12 @@ class TestThePinnedFight:
     def test_the_pinned_fight_refuses_nothing(self, fixture_result):
         """Every row states the raw its step priced from and the resistance
         that step mitigated against, so the whole table is numbers."""
-        assert fight_trace(fixture_result).refusals_by_source() == {}
+        refused = [
+            (line.source, line.refusals)
+            for line in fight_trace(fixture_result).lines
+            if line.refusals
+        ]
+        assert refused == []
 
     def test_the_shred_lands_after_the_cast_that_applies_it(self, fixture_result):
         """Q meets the MR it shredded, and the rest of the fight meets the shred.

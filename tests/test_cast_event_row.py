@@ -14,13 +14,7 @@ origin, or attributed to no slot, and nothing would say so (ER5).
 
 import pytest
 
-from src.calculator.cast_event_row import (
-    CastEventRow,
-    cast_ordinal,
-    cast_row,
-    cast_slot,
-    cast_time,
-)
+from src.calculator.cast_event_row import cast_ordinal, cast_slot, cast_time
 
 STAMPED = {
     "time": 3.25,
@@ -39,11 +33,6 @@ class TestAStampedRowReadsItsOwnFields:
         assert cast_slot(STAMPED) == "Q"
         assert cast_ordinal(STAMPED) == 2
 
-    def test_the_whole_row_reads_as_one_record(self):
-        assert cast_row(STAMPED) == CastEventRow(
-            time=3.25, slot="Q", ordinal=2, name="Rampage", cast_id="Q:2"
-        )
-
     def test_a_cast_at_the_fight_s_own_origin_is_a_real_cast(self):
         """The distinction the ``0.0`` default erased.
 
@@ -51,7 +40,6 @@ class TestAStampedRowReadsItsOwnFields:
         default was indistinguishable from the most common real value.
         """
         assert cast_time({**STAMPED, "time": 0.0}) == 0.0
-        assert cast_row({**STAMPED, "time": 0.0}).time == 0.0
 
 
 class TestAnUnstampedRowIsRefused:
@@ -68,12 +56,6 @@ class TestAnUnstampedRowIsRefused:
         """So a reader can tell a broken producer from a foreign row."""
         with pytest.raises(ValueError, match=r"'name'.*'ordinal'"):
             cast_time({"name": "Rampage", "ordinal": 1})
-
-    @pytest.mark.parametrize("field", ["name", "cast_id"])
-    def test_the_whole_row_needs_every_field_it_publishes(self, field):
-        row = {key: value for key, value in STAMPED.items() if key != field}
-        with pytest.raises(ValueError, match=field):
-            cast_row(row)
 
 
 def test_the_producer_still_stamps_every_field_this_module_reads():

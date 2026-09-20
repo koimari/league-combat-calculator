@@ -25,7 +25,6 @@ from src.calculator.item_behavior import (
     RESTRICTED_CHANNEL_PACKETS,
     RULE_FAMILY_COUNT,
     SUBJECT_AUTHORITY,
-    TRIGGER_STREAM,
     Always,
     BehaviorRule,
     BehaviorRuleError,
@@ -44,18 +43,15 @@ from src.calculator.item_behavior import (
     RuleFamily,
     RulePayload,
     Subject,
-    TriggerEvent,
     Typing,
     UtilityDimension,
     ZeroPolicy,
     is_value_reference,
-    policy_values,
     policy_walk,
     sole_declared,
     validate_rule,
 )
 from src.calculator.item_behavior_catalog import behavior_rules, rule_owners
-from src.calculator.trigger_stream import Stream
 from src.calculator.value_ref import Const
 from src.calculator.value_source_receipt import SourceReceipt
 
@@ -123,12 +119,6 @@ def test_item_behavior_is_a_leaf() -> None:
         "value_source_receipt",
         "value_ref",
     }
-
-
-def test_every_trigger_names_a_stream_the_bus_carries() -> None:
-    """The local enum is a view of Phase 2's Stream, not a second vocabulary."""
-    assert frozenset(TRIGGER_STREAM) == frozenset(TriggerEvent)
-    assert set(TRIGGER_STREAM.values()) <= {stream.name for stream in Stream}
 
 
 def test_a_roster_scoped_subject_is_incompatible_with_pair_only() -> None:
@@ -209,16 +199,6 @@ def test_a_receipt_only_rule_states_its_cause() -> None:
     validate_rule(_rule(compilability=ReceiptOnly(*_AMP_REFUSAL)))
     with pytest.raises(BehaviorRuleError, match="reason"):
         ReceiptOnly("  ", ReceiptScope.SCORE_KERNEL_DAMAGE_MODIFIER)
-
-
-def test_no_policy_field_is_a_callable_dict_or_open_string() -> None:
-    """Criterion 6, reaching every field of the rule rather than its surface."""
-    values = policy_values(_rule(compilability=ReceiptOnly(*_AMP_REFUSAL)))
-    assert len(values) > 10
-    for value in values:
-        assert not callable(value)
-        assert not isinstance(value, dict)
-        assert not isinstance(value, str)
 
 
 def test_every_compiled_rule_of_every_owner_holds_no_open_policy_field() -> None:

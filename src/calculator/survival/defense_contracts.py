@@ -17,7 +17,7 @@ from ..projectile_defense import (
 
 
 def _resolved_defence_contracts(combatant: Any) -> dict[str, Any]:
-    """The eleven :data:`_PER_CALL_FIELDS` a defence resolver decides.
+    """The eleven per-call state fields a defence resolver decides.
 
     One home for the resolution, so the prototype declares the slots and
     this fills them.  ``None`` throughout is "this combatant holds no such

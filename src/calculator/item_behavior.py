@@ -17,10 +17,9 @@ consequences are deliberate and worth stating, because both look like
 duplication until the constraint is remembered:
 
 * :class:`TriggerEvent` is a local closed enum rather than a re-export of
-  ``trigger_stream``'s ``Stream``.  It is not a second vocabulary: every
-  member declares the stream it reads in :data:`TRIGGER_STREAM`, and
-  ``tests/test_item_behavior.py`` asserts that projection lands inside
-  ``Stream``'s own member names.
+  ``trigger_stream``'s ``Stream``.  It names what arms a rule's window, not
+  which bus stream carries it: ``trigger_stream.CAPABILITIES`` is where a
+  mechanic declares its stream, and there is no second answer here.
 * :class:`KernelField` and :class:`BuildContext` — the ``interpreters/`` →
   ``survival/`` contract — live here, because this is the one module both
   packages may import and a name in a cross-package signature needs a home.
@@ -251,11 +250,7 @@ COMPILABILITY_TYPES: tuple[type, ...] = (Compilable, ReceiptOnly)
 
 
 class TriggerEvent(Enum):
-    """What arms or gates a rule's window.
-
-    Local to this leaf by necessity (see the module docstring) and joined to
-    the trigger bus by :data:`TRIGGER_STREAM`.
-    """
+    """What arms or gates a rule's window, local to this leaf by necessity."""
 
     IMMOBILIZE = "immobilize"
     ANY_CROWD_CONTROL = "any_crowd_control"
@@ -264,21 +259,6 @@ class TriggerEvent(Enum):
     BASIC_ATTACK_HIT = "basic_attack_hit"
     TAKEDOWN = "takedown"
     SUPPORT_TRIGGER = "support_trigger"
-
-
-# Which bus stream each trigger reads.  The values are ``trigger_stream``
-# ``Stream`` member *names*; the projection is asserted against the enum in
-# the test front door, which is what keeps this from being a second
-# vocabulary rather than a view of the one that exists.
-TRIGGER_STREAM: dict[TriggerEvent, str] = {
-    TriggerEvent.IMMOBILIZE: "CC",
-    TriggerEvent.ANY_CROWD_CONTROL: "CC",
-    TriggerEvent.CHAMPION_DAMAGE: "DAMAGE",
-    TriggerEvent.ABILITY_HIT: "DAMAGE",
-    TriggerEvent.BASIC_ATTACK_HIT: "DAMAGE",
-    TriggerEvent.TAKEDOWN: "TAKEDOWN",
-    TriggerEvent.SUPPORT_TRIGGER: "SUPPORT_TRIGGER",
-}
 
 
 class WindowMerge(Enum):
@@ -382,11 +362,6 @@ class LivePredicate:
     probe: Probe
     cmp: Comparison
     threshold: AnyValueRef
-
-    @property
-    def requires_live_pool(self) -> bool:
-        """Always true — the field exists so interpreters can branch on it."""
-        return True
 
 
 Activation = (
@@ -3665,11 +3640,6 @@ def policy_walk(rule: BehaviorRule) -> PolicyWalk:
     return PolicyWalk(tuple(sites), tuple(identifiers))
 
 
-def policy_values(rule: BehaviorRule) -> tuple[object, ...]:
-    """Every policy value the rule carries, flattened for reflective checks."""
-    return tuple(value for _site, value in policy_walk(rule).sites)
-
-
 def _validate_policy_types(rule: BehaviorRule) -> None:
     """Refuse a rule whose policy field holds a callable, dict or open string.
 
@@ -3951,7 +3921,6 @@ __all__ = [
     "SUBJECT_AUTHORITY",
     "SUSTAIN_PAYLOAD_REFERENCES",
     "SUSTAIN_VALUE_PAYLOADS",
-    "TRIGGER_STREAM",
     "AbsoluteWindow",
     "Activation",
     "ActiveCastRule",
@@ -4101,7 +4070,6 @@ __all__ = [
     "is_denial_receipt",
     "is_packet_kind",
     "is_value_reference",
-    "policy_values",
     "policy_walk",
     "sole_declaration",
     "sole_declared",

@@ -1,7 +1,7 @@
 """Tests for the fight-damage engine core (src.calculator.damage).
 
 Covers calculate_fight_damage behavior (cast order), the private simulation
-helpers (_simulate_bork_damage, _calculate_phantom_hits, _navori_effective_cd),
+helpers (_simulate_bork_damage, _calculate_phantom_hits, _attack_paid_cooldown),
 and the auto-vs-ability breakdown split. Per-item fight-damage tests live in
 test_item_damage.py; resistance/pen primitives in test_resistance.py; ability
 primitives in test_champion_primitives.py.
@@ -35,7 +35,7 @@ from src.calculator.fight.ledger.coverage import _event_timeline_coverage
 from src.calculator.fight.ledger.event_ledger import _ordered_damage_events
 from src.calculator.fight.mitigation import _mitigate_hits
 from src.calculator.fight.resists import _mitigate
-from src.calculator.fight.rotation.cast_schedule import _navori_effective_cd
+from src.calculator.fight.rotation.cast_schedule import _attack_paid_cooldown
 from src.calculator.interpreters import on_hit_strike
 from src.calculator.item_behavior import FightFacts
 from src.calculator.item_effects import DamageInputs, resolve_damage_effects
@@ -1799,8 +1799,13 @@ class TestPhantomHitCalculation:
         assert autos == {5, 8, 11, 14, 17}
 
 
+def _navori_effective_cd(base_cd: float, autos_per_second: float, refund: float):
+    """Navori's share-of-remaining refund through the one cooldown walk."""
+    return _attack_paid_cooldown(base_cd, autos_per_second, refund_percent=refund)
+
+
 class TestNavoriEffectiveCd:
-    """Tests for Navori Flickerblade CD refund helper."""
+    """Navori Flickerblade's share-of-remaining refund."""
 
     def test_no_autos_returns_base_cd(self) -> None:
         """With 0 autos per second, CD is unchanged."""

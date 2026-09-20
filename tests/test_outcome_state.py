@@ -202,14 +202,16 @@ def test_the_starved_read_is_lazy() -> None:
     assert all(item.disposition is Disposition.STARVED for item in held)
 
 
-def test_quantities_answers_every_numeric_field_and_no_receipt_field() -> None:
+def test_quantity_answers_every_numeric_field_and_no_receipt_field() -> None:
     """``skipped_reason`` is a receipt, not a number, so it has no quantity."""
     ledger = outcome_state.OutcomeLedger()
     ledger.write(action(3), damage=10.0, shield_absorbed=2.0)
-    quantities = ledger.quantities(3)
-    assert set(quantities) == {"applied", "absorbed", "to_health", "overkill"}
-    assert quantities["applied"].disposition is Disposition.MEASURED
-    assert quantities["to_health"].disposition is Disposition.STARVED
+    dispositions = {
+        field: ledger.quantity(3, field).disposition
+        for field in ("applied", "absorbed", "to_health", "overkill")
+    }
+    assert dispositions["applied"] is Disposition.MEASURED
+    assert dispositions["to_health"] is Disposition.STARVED
     with pytest.raises(ValueError):
         ledger.quantity(3, "skipped_reason")
 
