@@ -23,7 +23,7 @@ ci_section "static: linter"
 # An undefined name fails the gate whatever the score: at 9.70 one passed
 # in damage.py and sat as a latent NameError.
 if PYLINT="$(ci_python_tool pylint)"; then
-  run_step "pylint src/ --fail-under=9 --fail-on=E0601,E0602" "$PYLINT" src/ --jobs=0 --fail-under=9 --fail-on=E0601,E0602
+  run_step "pylint src/ --fail-under=9 --fail-on=E0601,E0602,E0102" "$PYLINT" src/ --jobs=0 --fail-under=9 --fail-on=E0601,E0602,E0102
 else
   ci_fail "pylint missing from the venv (pip install -r requirements.txt)"
 fi

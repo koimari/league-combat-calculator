@@ -38,7 +38,7 @@ pytest                # Run all tests
 pytest --cov=src      # Run tests with coverage
 black src/ tests/ scripts/          # Format code
 black --check src/ tests/ scripts/  # Formatting gate (CI runs this)
-pylint src/           # Lint code
+pylint src/ --jobs=4 --fail-under=9 --fail-on=E0601,E0602,E0102   # Lint gate, as CI runs it: a score, plus the undefined-name and redefinition families whatever the score
 python scripts/golden_snapshot.py compare scripts/golden_baseline.json   # Numeric regression gate
 python scripts/coverage_census.py check docs/coverage-census.json        # Coverage frontier gate (own CI job, 4 shards; ~1 min on 16 cores)
 python scripts/prose_lint.py          # Python prose gate: docstrings and comments under src/ and scripts/ hold current state, none longer than its body, no banner over an empty section. It reads no markdown; the plugin hook `comment_lint.lint_prose` is the markdown one

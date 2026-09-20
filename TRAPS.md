@@ -41,11 +41,11 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   `Path.read_text`; the hazard is the disk read, not the API. Gate a shared tree
   only after every writer stops, or against a `git archive HEAD` copy.
 - **CI's pylint gate is a score (`--fail-under=9`), so an undefined name passes
-  it at 9.70.** `--fail-on=E0601,E0602` fails on the undefined-name family
-  whatever the score. The rest of the tree's E-class messages are vendor-path
-  import errors, pylint's NamedTuple `_replace` false positive, and one real
-  `E0102`: `rune_parser._percent_ratio` has two definitions with identical
-  bodies. Widen `--fail-on` past that family only with those accounted for.
+  it at 9.70.** `--fail-on=E0601,E0602,E0102` fails on the undefined-name and
+  the redefinition families whatever the score. The rest of the tree's E-class
+  messages are vendor-path import errors and pylint's NamedTuple `_replace`
+  false positive, neither of them reachable from `src/`. Widen `--fail-on` past
+  those three only with the remaining messages accounted for.
 - **Parallel lint workers pass alone and fail together.** A helper one worker
   adds meets the rules another worker owns only after the merge, as a new
   one-line helper is unannotated, over-wide, or positional past four; and a phase

@@ -1647,10 +1647,6 @@ def _parse_scalar_templates(
         recorder.record("deathfire_ap_ratios_by_state", deathfire_ratios["AP"][:2])
 
 
-def _percent_ratio(raw: str) -> float:
-    return float(raw) / 100.0
-
-
 def _record_scalars(
     recorder: _EffectRecorder, description: str, rules: Iterable[tuple]
 ) -> None:
