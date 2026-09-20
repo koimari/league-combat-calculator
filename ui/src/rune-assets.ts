@@ -4,7 +4,6 @@
  * https://raw.communitydragon.org/16.17/plugins/rcp-be-lol-game-data/global/default/v1/perks.json
  * https://raw.communitydragon.org/16.17/plugins/rcp-be-lol-game-data/global/default/v1/perkstyles.json
  */
-export const runeAssetVersion = "16.17";
 export const runePathAssets: Record<
   string,
   { id: number; icon: string; background: string }

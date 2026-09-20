@@ -1,4 +1,4 @@
-import type { Build, Champion, Config, Values, RankRules } from "./types";
+import type { Build, Config, Values, RankRules } from "./types";
 
 export type SkillRanks = Record<string, number>;
 export interface Participant {
@@ -150,9 +150,6 @@ export function compactSlotIndex(
   return items[visualSlot]
     ? items.slice(0, visualSlot).filter(Boolean).length
     : items.filter(Boolean).length;
-}
-export function championByName(champions: Champion[], name: string) {
-  return champions.find((champion) => champion.name === name);
 }
 /** Preserve the identity of a selected teammate when roster positions change. */
 export function reindexSupportTargets(

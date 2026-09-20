@@ -319,7 +319,7 @@
              bottom of the rail. One row expands at a time below the bar. -->
         <section class="constraints-bar" id="railConstraints" aria-label="Constraints">
           <div class="constraints-row">
-            <span class="constraints-kicker" id="constraintsLabel">Constraints</span>
+            <span class="constraints-kicker">Constraints</span>
             <button class="constraint-row" type="button" data-constraint-toggle="gold" aria-expanded="false" aria-controls="constraintGoldBody">
               <span class="constraint-name">Available gold</span>
               <span class="constraint-value" id="goldValue">—</span>
@@ -448,7 +448,7 @@
           </p>
         </section>
 
-        <section class="hp-band" id="hpBand" aria-label="Team fight health at window end">
+        <section class="hp-band" aria-label="Team fight health at window end">
           <header class="band-head">
             <p class="band-title">Team fight</p>
             <p class="band-note">HP at end</p>
@@ -456,7 +456,7 @@
           <div id="healthRows"></div>
         </section>
 
-        <section class="timeline-band" id="timelineBand" aria-label="Fight timeline">
+        <section class="timeline-band" aria-label="Fight timeline">
           <header class="band-head">
             <p class="band-title" id="timelineTitle">Fight timeline</p>
             <p class="band-note">Cumulative damage</p>
@@ -560,7 +560,7 @@
         </section>
       </div>
       <div class="onboarding-progress">
-        <span class="onboarding-counter" id="onboardingCounter" role="status" aria-live="polite">1 of 3</span>
+        <span class="onboarding-counter" role="status" aria-live="polite">1 of 3</span>
         <div class="onboarding-dots" aria-hidden="true"><span class="is-active"></span><span></span><span></span></div>
       </div>
       <footer class="onboarding-actions">
@@ -621,6 +621,7 @@
     </div>
   </dialog>
 
+  <script src="/static/js/shared.js"></script>
   <script src="/static/js/app.js"></script>
   <script src="/static/js/eventorder.js"></script>
   <script src="/static/js/staleness.js"></script>

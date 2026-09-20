@@ -587,22 +587,25 @@ class TestReaderRewriting:
 class TestCheckedInAssignments:
     """``scripts/assignments/`` against the tree it records."""
 
-    def test_every_module_an_assignment_declares_exists_on_disk(self) -> None:
+    def test_every_assignment_names_a_source_that_exists_on_disk(self) -> None:
         """A record naming a file the tree does not hold is a record nobody can read.
 
-        The mapping is reviewable rather than replayable (post-run renames live
-        in each file's ``decisions``), so the path is what still has to be true.
+        Each record is the judgement half of an applied split, its ``source``
+        and the ``decisions`` the mapping could not carry, so the source path
+        is what still has to be true.
         """
         root = Path(__file__).resolve().parent.parent
-        missing = [
-            f"{assignment.name}: {module['path']}"
+        records = {
+            assignment.name: json.loads(assignment.read_text(encoding="utf-8"))
             for assignment in sorted((root / "scripts" / "assignments").glob("*.json"))
-            for module in json.loads(assignment.read_text(encoding="utf-8")).get(
-                "modules", ()
-            )
-            if not (root / module["path"]).exists()
+        }
+        missing = [
+            f"{name}: {record['source']}"
+            for name, record in records.items()
+            if not (root / record["source"]).exists()
         ]
         assert missing == []
+        assert records, "the walk found no assignment to check"
 
 
 class TestCommandLine:

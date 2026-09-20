@@ -547,7 +547,6 @@ a { color: inherit; }
 .ability-card small { display: block; font: 500 9px var(--mono); color: color-mix(in srgb, var(--cream) 58%, transparent); }
 
 .ability-rank,
-.ability-casts,
 .ability-variants {
   grid-column: 2;
   display: flex;
@@ -556,15 +555,13 @@ a { color: inherit; }
   gap: 5px;
 }
 .ability-rank small,
-.ability-casts small,
 .ability-variants small {
   font: 700 9px var(--font);
   letter-spacing: .12em;
   text-transform: uppercase;
   color: color-mix(in srgb, var(--cream) 68%, transparent);
 }
-.ability-rank button,
-.ability-casts button {
+.ability-rank button {
   width: 20px; height: 20px;
   border: 1px solid var(--dline-3);
   border-radius: var(--radius);
@@ -572,10 +569,8 @@ a { color: inherit; }
   font: 700 11px var(--font);
   color: var(--cream-70);
 }
-.ability-rank button:disabled,
-.ability-casts button:disabled { opacity: .4; cursor: not-allowed; }
-.ability-rank output,
-.ability-casts output {
+.ability-rank button:disabled { opacity: .4; cursor: not-allowed; }
+.ability-rank output {
   min-width: 16px;
   text-align: center;
   font: 700 11px var(--mono);

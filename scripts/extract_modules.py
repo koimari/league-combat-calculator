@@ -7,12 +7,12 @@ The assignment (JSON) names the source module, a docstring line per new package
 directory, and each new module's path, one-line docstring and defs in source
 order: ``{"source": <path>, "packages": {<dir>: <docstring>}, "modules":
 [{"path": <path>, "docstring": <line>, "defs": [<name>, ...]}]}``.  One file per
-source module, all of them under ``scripts/assignments/``, so a split is
-reviewable as its own mapping: name, old home, new home.  A run may be followed
-by edits the mapping does not carry (a moved def published under a shorter
-name), and those live in the file's ``decisions``, so the record is reviewable
-rather than replayable.  ``tests/test_extract_modules.py`` holds every declared
-path to a file that exists.
+source module, all of them under ``scripts/assignments/``.  A run may be
+followed by edits the mapping does not carry (a moved def published under a
+shorter name), so an applied record keeps its ``source`` and the ``decisions``
+that outlive the mapping, and the tree itself carries where each unit landed.
+``tests/test_extract_modules.py`` holds every record's ``source`` to a file
+that exists.
 
 A top-level ``def``, ``class`` or assignment is one movable unit, cut by AST span
 with the contiguous ``#`` block above it; order inside a unit never changes and a

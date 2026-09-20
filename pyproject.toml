@@ -7,8 +7,9 @@
 # is this year" is not a contract. The formatter version is pinned in
 # requirements.txt; CI enforces the result with `black --check src/ tests/`.
 #
-# Deliberately NO target-version. The project runs 3.14 (Dockerfile, CI), but
-# declaring py314 lets black apply PEP 758 and rewrite
+# Deliberately NO target-version. The project runs the version in
+# .python-version, which the Dockerfile and CI agree with, but declaring
+# py314 lets black apply PEP 758 and rewrite
 #   except (TypeError, ValueError):  ->  except TypeError, ValueError:
 # across 9 files. That parses only on 3.14+, and it reads like the Python 2
 # `except Error, name:` bind-to-variable form. Letting black auto-detect per

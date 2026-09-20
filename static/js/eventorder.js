@@ -8,7 +8,8 @@
  * The module never depends on app.js internals.  It listens for the
  * "scryglass:result" event app.js publishes whenever it displays a result,
  * whose detail is that receipt — no extra API calls, no wrapper around the
- * app's own request, and no load-order constraint.  It renders into the
+ * app's own request, and no ordering against app.js.  shared.js is the one
+ * script it loads after, for the page's HTML escaper.  It renders into the
  * optional #eventOrderPanel mount point (templates/index.html) and stays
  * hidden when no rotation receipt exists.
  */
@@ -17,18 +18,10 @@
 
   var MOUNT_ID = "eventOrderPanel";
   var latest = null;
+  var escapeHtml = window.scryglass.escapeHtml;
 
   function byId(id) {
     return document.getElementById(id);
-  }
-
-  function escapeHtml(value) {
-    return String(value == null ? "" : value)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
   }
 
   function fmtTime(value) {

@@ -6062,7 +6062,7 @@ document.addEventListener("scryglass:engine-ready", () => {
 // feedback.js validates the number on screen: the hook hands it the exact
 // /api/calculate payload behind the displayed Build A result (null while
 // nothing is displayed), so a receipt's prediction is that same total.
-window.scryglass = { getCurrentLoadout: () => engine.responses?.requests.a ?? null, postJson };
+Object.assign((window.scryglass ??= {}), { getCurrentLoadout: () => engine.responses?.requests.a ?? null, postJson });
 
 initShareControls();
 

@@ -3,7 +3,11 @@
 # Ships only the runtime: src/, static/, templates/, and the data/ cache.
 # vendor/ (the wiki scraper) stays out — patch-day data updates run locally
 # and arrive here as committed changes to data/.
-FROM python:3.15.0rc2-slim@sha256:5a2a26a2439c981f3fc53c6372f08bc1ba1e21d7e48e966cd83af9f829fa8882
+# .python-version is the version's one home and tests/test_deployment_security.py
+# holds this line to it. Tag and digest sit together on a literal FROM, which
+# is the only form Dependabot tracks: behind an ARG the digest stops receiving
+# security bumps (dependabot-core#10190).
+FROM python:3.14-slim@sha256:caaf356f40667c496d405780745b9ac25771c189a51dfcc42430d531ea09f8a2
 
 WORKDIR /app
 

@@ -498,8 +498,8 @@ def test_feedback_widget_validates_the_displayed_payload(source: str):
     assert "window.scryglass.getCurrentLoadout" in feedback
     assert 'addEventListener("scryglass:result", refreshContext)' in feedback
     assert (
-        "window.scryglass = { getCurrentLoadout: () => engine.responses?.requests.a"
-        " ?? null, postJson };" in source
+        "Object.assign((window.scryglass ??= {}), { getCurrentLoadout: () =>"
+        " engine.responses?.requests.a ?? null, postJson });" in source
     )
     # C3: the widget posts through app.js's one JSON POST, not its own fetch.
     assert "fetch(" not in feedback
@@ -510,6 +510,25 @@ def test_feedback_widget_validates_the_displayed_payload(source: str):
         'dispatchEvent(new CustomEvent("scryglass:result",'
         " { detail: engine.responses.a }))" in calculation
     )
+
+
+def test_the_page_loads_shared_js_before_every_reader_of_its_escaper():
+    """A reader binds ``window.scryglass.escapeHtml`` at IIFE time, so the
+    page's script order is the only thing that satisfies it. The reader set
+    is read from ``static/js``, never listed here."""
+    order = re.findall(
+        r'<script src="/static/js/([^"]+)"',
+        (ROOT / "templates" / "index.html").read_text(encoding="utf-8"),
+    )
+    readers = {
+        path.name
+        for path in (ROOT / "static" / "js").glob("*.js")
+        if "window.scryglass.escapeHtml" in path.read_text(encoding="utf-8")
+    } - {"shared.js"}
+    assert readers, "nothing reads the shared escaper"
+    assert "shared.js" in order, f"index.html loads {readers} without shared.js"
+    for name in readers:
+        assert order.index("shared.js") < order.index(name), name
 
 
 def test_the_dead_quick_mode_layer_is_gone(source: str):

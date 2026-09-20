@@ -7,9 +7,12 @@
  * `scryglass:result` detail, in order. stdout is JSON: one `{ hidden, html }`
  * per dispatch, read off the #eventOrderPanel mount.
  */
+import { dirname, join } from "node:path";
 import { harnessContext, runScript } from "./harness_context.mjs";
 
 const [scriptPath, fixturePath] = process.argv.slice(2);
+// The page loads shared.js first; the panel's escaper is published there.
+const sharedPath = join(dirname(scriptPath), "shared.js");
 
 // eventorder.js is DOM behaviour, so this harness supplies a real document
 // rather than the shared stub: a mount to render into and an event bus.
@@ -37,6 +40,10 @@ class MutationObserver {
 }
 
 const context = harnessContext(fixturePath, { document, MutationObserver });
+// The stub window answers an unknown key with a stub, and a stub is truthy,
+// so the shared namespace has to be real before shared.js reads for it.
+context.window.scryglass = {};
+runScript(context, sharedPath, "shared.js");
 runScript(context, scriptPath, "eventorder.js");
 
 const seen = context.__fixture.results.map((result) => {

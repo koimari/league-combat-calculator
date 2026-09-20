@@ -20,6 +20,7 @@
 
   var MOUNT_ID = "feedbackWidget";
   var RESULT_AREA_SELECTOR = ".canvas";
+  var escapeHtml = window.scryglass.escapeHtml;
   var STATE = {
     action: null,
     loadout: null,
@@ -39,15 +40,6 @@
     if (!node) return null;
     var value = Number(String(node.value != null ? node.value : node.textContent).trim());
     return Number.isFinite(value) ? value : null;
-  }
-
-  function escapeHtml(value) {
-    return String(value == null ? "" : value)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
   }
 
   /* ------------------------------------------------------------------ *
