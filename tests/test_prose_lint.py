@@ -2,7 +2,13 @@
 
 import pytest
 
-from scripts.prose_lint import FAILING, MODULE_DOCSTRING_CAP, REPORTING, scan
+from scripts.prose_lint import (
+    ASSUMPTION_CAP,
+    FAILING,
+    MODULE_DOCSTRING_CAP,
+    REPORTING,
+    scan,
+)
 
 #: Files exempt from the counters. Empty, and a new exemption needs a reason.
 PENDING: tuple[str, ...] = ()
@@ -13,7 +19,15 @@ PENDING: tuple[str, ...] = ()
 CEILINGS = {
     "pointer": (559, "state the fact instead of citing a campaign document"),
     "unsourced_constant": (69, "cite the cached field, the source or the composition"),
+    "long_assumption": (610, "one published assumption holds one fact"),
 }
+
+#: One assumption at the cap and one a character past it, so the champion-tree
+#: counter fires once on the same seed as the other four.
+ASSUMPTIONS_BLOCK = (
+    f'\nASSUMPTIONS = [\n    "{"a" * ASSUMPTION_CAP}",\n'
+    f'    "{"b" * (ASSUMPTION_CAP + 1)}",\n]\n'
+)
 
 #: One module header a line past the cap, so the champion-tree counter fires on
 #: the same seed as the other four.
@@ -54,7 +68,7 @@ def _history():
 
 def _kept():
     return 4
-'''
+''' + ASSUMPTIONS_BLOCK
 
 
 CONSTANTS = '''"""Seed."""
@@ -136,6 +150,19 @@ def test_a_champion_header_at_the_cap_passes_and_a_header_outside_never_counts(
     (champions / "seed.py").write_text(at_cap, encoding="utf-8")
     (tmp_path / "src" / "outside.py").write_text(SEEDED, encoding="utf-8")
     assert scan(root=tmp_path)["long_module_docstring"] == []
+
+
+def test_only_the_assumption_past_the_cap_is_reported(tmp_path):
+    """The cap is the boundary, and it is the champion tree's alone."""
+    champions = tmp_path / "src" / "calculator" / "champions"
+    champions.mkdir(parents=True)
+    (tmp_path / "scripts").mkdir()
+    (champions / "seed.py").write_text(SEEDED, encoding="utf-8")
+    (tmp_path / "src" / "outside.py").write_text(SEEDED, encoding="utf-8")
+    hits = scan(root=tmp_path)["long_assumption"]
+    assert len(hits) == 1, hits
+    assert hits[0].startswith("src/calculator/champions/seed.py:")
+    assert hits[0].endswith(f"{ASSUMPTION_CAP + 1} characters over {ASSUMPTION_CAP}")
 
 
 def test_a_number_answers_to_the_note_beside_it_or_over_its_block(tmp_path):

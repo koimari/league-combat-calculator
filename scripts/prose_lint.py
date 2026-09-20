@@ -26,6 +26,11 @@ A seventh, ``unsourced_constant``, reports a module-level numeric literal under
 name or a composition, either trailing the line or heading the unbroken run of
 assignments it sits in.  It reports under its own ceiling for the same reason.
 
+An eighth, ``long_assumption``, reports an ``ASSUMPTIONS`` string under
+``CHAMPIONS_SCOPE`` over ``ASSUMPTION_CAP`` characters.  ``/api/config`` and
+``/api/not-modeled`` publish these strings, so one holds the number, the
+condition and the source and nothing else; a second fact is a second string.
+
 A comment run belongs to the function holding it, or — when it touches a ``def``
 — to the definition it introduces.  Inside a body the bound is the body; above
 the ``def`` it is the whole definition, header and docstring included, so moving
@@ -49,6 +54,7 @@ ROOT = Path(__file__).resolve().parent.parent
 TARGETS = ("src", "scripts")
 CHAMPIONS_SCOPE = "src/calculator/champions/"
 MODULE_DOCSTRING_CAP = 20
+ASSUMPTION_CAP = 120
 FAILING = (
     "long_docstring",
     "long_comment",
@@ -56,7 +62,7 @@ FAILING = (
     "dead_banner",
     "long_module_docstring",
 )
-REPORTING = ("pointer", "unsourced_constant")
+REPORTING = ("pointer", "unsourced_constant", "long_assumption")
 SCOPES = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 FUNCS = (ast.FunctionDef, ast.AsyncFunctionDef)
 
@@ -168,6 +174,31 @@ def _unsourced_constants(
     return found
 
 
+def assumption_strings(tree: ast.Module) -> Iterable[ast.Constant]:
+    """Every string literal an ``ASSUMPTIONS`` binding publishes."""
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.Assign, ast.AnnAssign)) or node.value is None:
+            continue
+        bound = node.targets if isinstance(node, ast.Assign) else [node.target]
+        names = (n for t in bound for n in ast.walk(t) if isinstance(n, ast.Name))
+        if not any(name.id == "ASSUMPTIONS" for name in names):
+            continue
+        yield from (
+            text
+            for text in ast.walk(node.value)
+            if isinstance(text, ast.Constant) and isinstance(text.value, str)
+        )
+
+
+def _long_assumptions(tree: ast.Module, where: str) -> list[str]:
+    """Every published assumption string past the cap, with its length."""
+    return [
+        f"{where}:{text.lineno}: {len(text.value)} characters over {ASSUMPTION_CAP}"
+        for text in assumption_strings(tree)
+        if len(text.value) > ASSUMPTION_CAP
+    ]
+
+
 def _overlong_module_docstring(tree: ast.Module, where: str) -> list[str]:
     """This module's header if it runs past the cap, as a one-item list."""
     doc = _docstring(tree)
@@ -233,7 +264,7 @@ def _cite(found: Mapping[str, list], where: str, line: int, text: str) -> None:
 
 
 def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str]]:
-    """Report the six findings over every ``.py`` file under ``TARGETS``."""
+    """Report every finding over every ``.py`` file under ``TARGETS``."""
     found: dict[str, list[str]] = {key: [] for key in (*FAILING, *REPORTING)}
     paths = (
         p for t in TARGETS for p in (root / t).rglob("*.py") if p.name not in exclude
@@ -265,6 +296,7 @@ def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str
                 source, tree, blocks, where
             )
             found["long_module_docstring"] += _overlong_module_docstring(tree, where)
+            found["long_assumption"] += _long_assumptions(tree, where)
     return found
 
 
