@@ -136,7 +136,7 @@ def _assignment_runs(tree: ast.Module) -> dict[int, int]:
 
 
 def _unsourced_constants(
-    source: str, tree: ast.Module, blocks: list[tuple[int, list[str]]], where: str
+    source: str, tree: ast.Module, blocks: Iterable[tuple[int, list[str]]], where: str
 ) -> list[str]:
     """Module-level numbers whose provenance no comment beside them states."""
     trailing = _trailing_comments(source)
