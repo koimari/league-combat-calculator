@@ -57,9 +57,12 @@ from .source_receipts import load_champion_sources
 SPIKES_ATTACKS_PER_CAST = 3
 
 # E's Feast rider lives only in the %maxHP modifier's units text
-# ("% (+ 0.5% per Feast stack) of target's maximum health") — the regex
-# pulls the per-stack percent out of the unit string, so the number
-# stays data-driven.
+# ("% (+ 0.5% per Feast stack) of target's maximum health"), so the
+# per-stack percent is read out of the unit string and the number stays
+# data-driven.  A %maxHP unit that stops stating the rider raises rather
+# than falling through to the shared resolver, which would price the base
+# percentage alone and understate every stack.
+_MAX_HEALTH_UNIT = "maximum health"
 _FEAST_STACK_RIDER = re.compile(
     r"\+\s*(\d+(?:\.\d+)?)%\s+per\s+Feast\s+stack", re.IGNORECASE
 )
@@ -104,9 +107,14 @@ def _vorpal_spikes(
     stacks = _feast_stacks(ctx)
 
     def _stack_rider(unit: str, value: float) -> float | None:
+        if _MAX_HEALTH_UNIT not in unit:
+            return None
         match = _FEAST_STACK_RIDER.search(unit)
         if match is None:
-            return None
+            raise ValueError(
+                "Cho'Gath E (Vorpal Spikes): the cached %maxHP unit no longer "
+                f"states its per-Feast-stack rider ({unit!r})"
+            )
         percent = value + float(match.group(1)) * stacks
         return percent / 100.0 * ctx.target_stat("target_max_health")
 
