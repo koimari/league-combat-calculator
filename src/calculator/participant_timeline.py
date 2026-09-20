@@ -3101,11 +3101,13 @@ def _grey_health_event_receipt(
     if name == "Tahm Kench":
         if not incoming:
             return None
-        rank = max(1, int(ability_ranks.get("E", 0) or 0) if ability_ranks else 0)
-        if rank == 0:
-            rank = max(1, int(get_ability_rank("E", level, name)))
+        ability_rank = max(
+            1, int(ability_ranks.get("E", 0) or 0) if ability_ranks else 0
+        )
+        if ability_rank == 0:
+            ability_rank = max(1, int(get_ability_rank("E", level, name)))
         rank_row = _TAHM_E_STORE_MULTI_RANK if enemy_count >= 2 else _TAHM_E_STORE_RANK
-        ratio = rank_row[min(rank, len(rank_row)) - 1]
+        ratio = rank_row[min(ability_rank, len(rank_row)) - 1]
         return ratio * max(0.0, float(event.get("damage", 0.0) or 0.0))
     if name == "Mordekaiser":
         damage = max(0.0, float(event.get("damage", 0.0) or 0.0))
