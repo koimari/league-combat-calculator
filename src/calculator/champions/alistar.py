@@ -56,7 +56,7 @@ from ..healing_helpers import HealAnchor, ability_json, trigger_fields
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .shared_mechanics import damage_reduction_window
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
@@ -182,7 +182,8 @@ def _trample(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any]
 _TRIUMPH_CARRY_MAX = 6
 
 
-def _triumphant_roar(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _triumphant_roar(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: the Triumph stacks Alistar carries into the fight.
 
     "Alistar generates a stack of Triumph for each enemy champion he stuns
@@ -195,9 +196,6 @@ def _triumphant_roar(ctx: SlotCtx) -> dict[str, Any] | None:
     itself stays in the self-heal rule, which reads it from the same cached
     P prose.
     """
-    ability = ctx.ability("P")
-    if ability is None:
-        return None
     stacks = max(0, min(int(ctx.option("p_triumph_stacks")), _TRIUMPH_CARRY_MAX))
     if stacks <= 0:
         return None

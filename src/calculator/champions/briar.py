@@ -53,7 +53,7 @@ from ..survival.phases import TransitionRank
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option, target_stat
-from .module_helpers import missing_hp_fraction, ranked_slot
+from .module_helpers import ability_slot, missing_hp_fraction, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
@@ -91,16 +91,14 @@ Q_SHRED_DURATION = data_value(_BRIAR_Q_SPELL, "ShredDuration")
 E_FULL_CHARGE_SECONDS = 1.0
 
 
-def _crimson_curse(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _crimson_curse(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: declare the stacking bleed; damage.py walks the hit timeline.
 
     Single stack = 10-50 by level (linear over 1-18, clamped past 18)
     + 50% bonus AD, physical over 5s. Cross-check: the JSON's 5-stack
     window totals (P effect[0].leveling[4]) are exactly 2x this base.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
 
     level = min(ctx.level, P_BLEED_LEVEL_CAP)
     single_stack = (

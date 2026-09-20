@@ -36,7 +36,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import missing_hp_fraction, ranked_slot
+from .module_helpers import ability_slot, missing_hp_fraction, ranked_slot
 from .slot_control import with_control
 from .slot_entries import ability_on_hit_entry, damage_entry
 from .slot_extract import (
@@ -96,7 +96,8 @@ def _per_level_scaling(
     return 0.0
 
 
-def _death_in_lavender(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _death_in_lavender(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: full basic-attack damage, full on-hits, and bonus attack speed.
 
     BUFF phase — the bonus AS (temporary buff + permanent Lavender stacks)
@@ -105,9 +106,6 @@ def _death_in_lavender(ctx: SlotCtx) -> dict[str, Any] | None:
     override keeps attacks at full damage while scaling every on-hit rider
     (items, spellblade, R's ramping proc).
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
 
     temp_as = PASSIVE_TEMP_BONUS_AS
     per_stack = _per_level_scaling(ability, 0, ctx.level)

@@ -49,7 +49,7 @@ from ..stat_formulas import effective_cooldown
 from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import float_option, int_option
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .slot_control import extract_recharge
 from .slot_entries import damage_entry
 from .slot_extract import (
@@ -108,7 +108,8 @@ def _ticks_at_uptime(ticks: int, uptime: float) -> int:
     return math.floor(ticks * uptime + 0.5)
 
 
-def _hextech_munitions(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _hextech_munitions(_ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: every basic attack deals 20% of total AD again as true damage.
 
     Declared as a share of the attack's PRE-MITIGATION damage rather
@@ -117,9 +118,6 @@ def _hextech_munitions(ctx: SlotCtx) -> dict[str, Any] | None:
     identical wiki wording for the spellblade special case is the
     identical constant.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
 
     return {
         "name": ability_name(ability),

@@ -28,7 +28,7 @@ from ..binary_roots import data_value, spell_object
 from ..cast_dependency import CastDependency
 from .engine import SlotCtx, build_parser
 from .inputs import int_option
-from .module_helpers import delayed_damage, ranked_slot
+from .module_helpers import ability_slot, delayed_damage, ranked_slot
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import (
@@ -96,7 +96,8 @@ def _pyroclasm(
     return entry
 
 
-def _blaze(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _blaze(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: one rotation's Ablaze DoT + 3-stack detonation, as a proc entry.
 
     Counts stack applications from the slots that emitted this parse
@@ -106,9 +107,6 @@ def _blaze(ctx: SlotCtx) -> dict[str, Any] | None:
     rotation (``proc_count`` schedules the entry outside the cast
     rotation, once per fight).
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
 
     applications = sum(1 for slot in ("Q", "W", "E") if slot in ctx.results)
     if "R" in ctx.results:

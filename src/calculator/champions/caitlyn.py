@@ -47,7 +47,7 @@ from ..stat_formulas import effective_cooldown
 from .charge_cadence import ChargeRule
 from .engine import SlotCtx, build_parser
 from .inputs import int_option
-from .module_helpers import at_level, ranked_slot
+from .module_helpers import ability_slot, at_level, ranked_slot
 from .shared_mechanics import reduced_secondary_hits
 from .slot_control import extract_recharge
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
@@ -168,7 +168,8 @@ def _headshot_counts(ctx: SlotCtx, trap_grants: int) -> tuple[int, int, int, int
     return trap_used, e_used, 0, swings, detail
 
 
-def _headshot(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _headshot(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: every-6th-auto rider + one headshot per E cast + one trap headshot.
 
     ``_headshot_counts`` decides how many headshots land (and whether
@@ -176,9 +177,6 @@ def _headshot(ctx: SlotCtx) -> dict[str, Any] | None:
     rider bonus is the wiki formula — an ADDITIVE total-AD ratio,
     crit-scaled; the rider itself cannot crit.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
 
     total_ad = ctx.stat("attack_damage")
     crit_chance = min(ctx.stat("critical_strike_chance") / 100.0, 1.0)

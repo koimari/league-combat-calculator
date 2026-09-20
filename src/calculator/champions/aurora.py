@@ -42,7 +42,7 @@ from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import coverage
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import int_option
-from .module_helpers import no_damage_slot, ranked_slot
+from .module_helpers import ability_slot, no_damage_slot, ranked_slot
 from .slot_entries import ability_on_hit_entry, damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .slotlib import simple_damage
@@ -61,11 +61,9 @@ _SPIRIT_PCT_BASE = (
 _SPIRIT_PCT_PER_100_AP = 2.7  # additional % per 100 AP
 
 
-def _spirit_abjuration(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _spirit_abjuration(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: every-3rd-hit %maxHP magic proc; autos AND ability hits stack."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
 
     ap = ctx.stat("ability_power")
     percent = _SPIRIT_PCT_BASE + _SPIRIT_PCT_PER_100_AP * ap / 100.0

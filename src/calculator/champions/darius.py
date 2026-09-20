@@ -40,7 +40,7 @@ from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, int_option
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .slot_cc import CC_PER_PART
 from .slot_control import with_control_event
 from .slot_entries import damage_entry
@@ -151,7 +151,8 @@ def _starting_stacks(ctx: SlotCtx) -> int:
     return min(max(stacks, 0), P_BLEED_MAX_STACKS)
 
 
-def _hemorrhage(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _hemorrhage(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: the stacking bleed and the Noxian Might window it triggers.
 
     One stack = 13-32 by level (+30% bonus AD) physical over 5s, four
@@ -160,9 +161,6 @@ def _hemorrhage(ctx: SlotCtx) -> dict[str, Any] | None:
     +30-280 bonus AD window that re-prices casts, autos and the bleed
     itself.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
 
     bonus_ad = ctx.stat("bonus_attack_damage")
     single_stack = (

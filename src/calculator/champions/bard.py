@@ -43,7 +43,7 @@ from .charge_cadence import ChargeRule
 from .contract_vocabulary import coverage
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import int_option
-from .module_helpers import no_damage_slot
+from .module_helpers import ability_slot, no_damage_slot
 from .slot_cc import CC_PER_PART
 from .slot_control import with_control, with_control_event
 from .slot_entries import ability_on_hit_entry, support_cast
@@ -137,11 +137,9 @@ def _tier_value(tiers: tuple, chimes: int) -> Any:
     return next(value for threshold, value in tiers if chimes >= threshold)
 
 
-def _travelers_call(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _travelers_call(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: meep on-hit magic damage, applications capped by stock + recharge."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
 
     chimes = max(0, int(ctx.options.get("chimes", _DEFAULT_CHIMES)))
     ap = ctx.stat("ability_power")

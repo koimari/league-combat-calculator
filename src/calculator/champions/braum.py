@@ -40,7 +40,7 @@ from ..binary_roots import data_value, spell_object
 from ..stat_formulas import effective_cooldown
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option
-from .module_helpers import at_level, ranked_slot
+from .module_helpers import ability_slot, at_level, ranked_slot
 from .slot_cc import CC_PER_PART
 from .slot_control import with_control
 from .slot_entries import damage_entry
@@ -111,7 +111,8 @@ def _hit_timeline(ctx: SlotCtx, duration: float) -> list[tuple[float, int]]:
     return events
 
 
-def _concussive_blows(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _concussive_blows(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: walk the auto/Q timeline through stack -> proc -> immunity cycles.
 
     Each auto or Q application adds a stack (stacks reset if 4s pass
@@ -121,9 +122,6 @@ def _concussive_blows(ctx: SlotCtx) -> dict[str, Any] | None:
     proc entry; per-cast mode (no injected fight window) emits nothing —
     a single rotation's lone Q application never reaches 4 stacks.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
     duration = ctx.options.get("fight_duration_seconds")
     if duration is None:
         return None

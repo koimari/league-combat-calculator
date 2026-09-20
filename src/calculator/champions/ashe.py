@@ -42,7 +42,7 @@ from .charge_cadence import ChargeRule
 from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import no_damage_slot
+from .module_helpers import ability_slot, no_damage_slot
 from .slot_extract import ability_name, extract_cooldown, extract_value
 from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
@@ -180,11 +180,9 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
 _rangers_focus.phase = BUFF
 
 
-def _frost_shot(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _frost_shot(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: crit-as-bonus auto override — carried here only when Q isn't."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
 
     entry: dict[str, Any] = {
         "name": ability_name(ability),

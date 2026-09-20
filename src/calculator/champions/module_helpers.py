@@ -64,15 +64,17 @@ def typed_damage(
 
 
 def ability_slot(slot: str | None = None, index: int = 0) -> Callable[..., SlotParser]:
-    """A slot that prices nothing while its cached entry is absent; *body* gets it."""
+    """A slot that prices nothing while its cached entry is absent; *body* gets it.
+
+    Not functools.wraps, and a parser this decorates is never called by
+    name: pylint reads both against the body's own signature.
+    """
 
     def wrap(body: Callable[[SlotCtx, dict[str, Any]], Any]) -> SlotParser:
         def guarded(ctx: SlotCtx) -> dict[str, Any] | None:
             ability = ctx.ability(slot, index)
             return None if ability is None else body(ctx, ability)
 
-        # Not functools.wraps: a ``__wrapped__`` would make pylint read a
-        # direct ``slot(ctx)`` call against the body's own signature.
         guarded.__name__, guarded.__qualname__ = body.__name__, body.__qualname__
         guarded.__doc__, guarded.__module__ = body.__doc__, body.__module__
         return guarded
@@ -365,8 +367,6 @@ def no_damage_parser(
     """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        # Not @ability_slot: pylint cannot infer a called decorator's wrapper,
-        # and rank_gated_no_damage_parser calls the parser this returns.
         ability = ctx.ability()
         if ability is None:
             return None
@@ -459,8 +459,10 @@ def innate_on_hit(
 ) -> SlotParser:
     """P: an on-hit row from the innate's per-level *attr*, named as the kit names it."""
 
-    @ability_slot("P")
-    def parse(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
+    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        ability = ctx.ability("P", 0)
+        if ability is None:
+            return None
         per_hit = extract_named(ability, attr, ctx.level, ctx.stats, ctx.target)
         entry = on_hit_entry(name or ability_name(ability), per_hit, dmg_type)
         if detail is not None:

@@ -37,7 +37,7 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import int_option
-from .module_helpers import delayed_damage, ranked_slot
+from .module_helpers import ability_slot, delayed_damage, ranked_slot
 from .slot_control import with_control
 from .slot_entries import damage_entry
 from .slot_extract import (
@@ -132,7 +132,8 @@ def _vorpal_spikes(
     }
 
 
-def _carnivore(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _carnivore(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: the on-kill heal receipt the self-heal rule places.
 
     "Whenever Cho'Gath kills an enemy, it heals for 18 : 52 (based on
@@ -140,9 +141,6 @@ def _carnivore(ctx: SlotCtx) -> dict[str, Any] | None:
     kills are player state the duel does not simulate, so the receipt only
     exists once the user declares some.
     """
-    ability = ctx.ability("P")
-    if ability is None:
-        return None
     kills = max(0, int(ctx.option("p_carnivore_kills")))
     if kills <= 0:
         return None

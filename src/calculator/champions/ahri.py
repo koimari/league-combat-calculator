@@ -30,7 +30,7 @@ from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .slot_extract import (
     ability_name,
     extract_auto,
@@ -42,7 +42,8 @@ from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 
-def _essence_theft(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _essence_theft(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: zero-damage receipt for the 9-fragment self-heal.
 
     Emitted only when the user's fragment count has reached 9 (the sourced
@@ -51,9 +52,6 @@ def _essence_theft(ctx: SlotCtx) -> dict[str, Any] | None:
     is player state (fragments come from minion/monster kills, which the
     champion duel does not simulate), so it is exposed as an option.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
     fragments = max(0, int(ctx.option("p_essence_fragments")))
     if fragments < 9:
         return None

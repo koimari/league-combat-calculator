@@ -54,7 +54,7 @@ from .armed_procs import cached_stack_terms
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import champion_stat, int_option
-from .module_helpers import no_damage_slot, ranked_slot
+from .module_helpers import ability_slot, no_damage_slot, ranked_slot
 from .slot_entries import attach_self_shield, damage_entry
 from .slot_extract import (
     ability_name,
@@ -195,11 +195,9 @@ def _extract_double_shot_ratio(passive: Mapping[str, Any]) -> float:
     return _DOUBLE_SHOT_AD_RATIO.value(passive) / 100.0
 
 
-def _heroic_swing(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _heroic_swing(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """E: per-shot damage x ``e_shots`` option (default 5), on its cadence."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     rank = ctx.rank_for()
     shots = int(ctx.option("e_shots"))
     if rank < 1 or shots <= 0:
@@ -271,11 +269,9 @@ def _comeuppance(
     return entry
 
 
-def _double_shot(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _double_shot(_ctx: SlotCtx, passive: dict[str, Any]) -> dict[str, Any] | None:
     """passive_double_shot: every auto fires a second %AD shot."""
-    passive = ctx.ability("P")
-    if passive is None:
-        return None
     return {
         "name": "Dirty Fighting (Double Shot)",
         "double_shot": {
