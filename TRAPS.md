@@ -67,9 +67,10 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   reader-coverage lint zero by construction. `names_a_family` is the predicate. A
   docstring mention is not a reader either: `read_literals` skips every
   `ast.Expr`-wrapped string.
-- **A guard over tracked files reads `git ls-files`, never `rglob`.**
-  `tests/test_escalated_defects_cached_data.py` writes an untracked scratch file
-  into `docs/receipts/` mid-test, which a directory scan races under xdist.
+- **A guard over tracked files reads `git ls-files`, never `rglob`.** A test that
+  writes a scratch file into a tracked directory races a directory scan under
+  xdist, so `tests/test_patch_update.py::TestEscalatedCachedDataLines` builds its
+  negative in `tmp_path`.
 
 ## Goldens and receipts
 

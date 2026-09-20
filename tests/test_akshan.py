@@ -88,14 +88,14 @@ class TestEHeroicSwing:
         )
         assert abilities["E"]["cooldown"] > 0
 
-    def test_e_per_shot_rank1(self, akshan_data) -> None:
-        """E rank 1 per shot: 8 + 25% AD."""
+    @pytest.mark.parametrize("bonus_as", [0.0, 68.0, 250.0])
+    def test_e_per_shot_rank1(self, akshan_data, bonus_as) -> None:
+        """8 + 25% AD, times 1 + 0.3 per 100% bonus attack speed."""
         stats = calculate_total_stats(akshan_data, 1, [])
-        e_ability = akshan_data["abilities"]["E"][0]
-        per_shot = _extract_e_per_shot(e_ability, 1, stats)
+        stats["bonus_attack_speed"] = bonus_as
         ad = stats["attack_damage"]
-        expected = 8 + 0.25 * ad
-        assert abs(per_shot - expected) < 1.0
+        per_shot = _extract_e_per_shot(akshan_data["abilities"]["E"][0], 1, stats)
+        assert per_shot == pytest.approx((8 + 0.25 * ad) * (1 + 0.003 * bonus_as))
 
     def test_e_total_scales_with_shots(self, akshan_data, parse_at) -> None:
         """E total damage should scale linearly with shot count."""
