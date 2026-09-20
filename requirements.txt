@@ -36,7 +36,7 @@ psycopg==3.3.5
 redis==8.1.0
 
 # P0b error tracking (lazy import; only initialised when SENTRY_DSN is set).
-sentry-sdk==2.69.1
+sentry-sdk==2.69.2
 
 # P0b load sanity test (scripts/load_sanity.py).
 httpx==0.28.1
