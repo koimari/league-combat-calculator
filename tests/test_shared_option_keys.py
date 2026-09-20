@@ -14,7 +14,10 @@ from pathlib import Path
 from src.calculator.champions import champion_options_meta_map, shared_option_keys
 from src.calculator.champions.aphelios_weapons import OPTION_KEYS
 
-ENGINE = Path(__file__).resolve().parent.parent / "src" / "calculator" / "fight"
+#: Every engine module, which is the whole package but the champion
+#: modules: a module reading the key it declares itself is not a contract.
+ENGINE = Path(__file__).resolve().parent.parent / "src" / "calculator"
+CHAMPIONS = ENGINE / "champions"
 
 #: The helpers that take an option key as their last argument.
 _KEYED_HELPERS = {
@@ -103,8 +106,9 @@ def test_the_engine_reads_no_champion_option_by_literal() -> None:
     """
     keys = _declared()
     sites = {
-        f"{path.relative_to(ENGINE.parent).as_posix()}:{line}": key
+        f"{path.relative_to(ENGINE).as_posix()}:{line}": key
         for path in sorted(ENGINE.rglob("*.py"))
+        if CHAMPIONS not in path.parents
         for line, key in _literal_reads(
             ast.parse(path.read_text(encoding="utf-8")), keys
         )
