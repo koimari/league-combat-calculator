@@ -1489,3 +1489,27 @@ class TestEconomicsLines:
         assert not ok
         assert any(line.startswith("  BLOCKING: pinned to DDragon ") for line in lines)
         assert lines[-1].startswith("  ** BLOCKING")
+
+
+class TestEscalatedCachedDataLines:
+    """Patch day is the scheduled home of the cached-data defects, so it says so."""
+
+    def test_the_committed_receipt_prints_one_entry_per_open_defect(self) -> None:
+        receipt = json.loads(
+            patch_update.ESCALATED_CACHED_DATA.read_text(encoding="utf-8")
+        )
+        printed = "\n".join(patch_update.escalated_cached_data_lines())
+        assert receipt["defects"]
+        for defect in receipt["defects"]:
+            assert defect["id"] in printed
+            assert defect["scheduled_home"]["what_fires_it"] in printed
+
+    def test_an_entry_with_no_scheduled_home_prints_the_absence(
+        self, tmp_path: Path
+    ) -> None:
+        homeless = {"defects": [{"id": "d", "dated": "2026-01-01", "what": "w"}]}
+        path = tmp_path / "homeless.json"
+        path.write_text(json.dumps(homeless), encoding="utf-8")
+        assert "(no home named)" in "\n".join(
+            patch_update.escalated_cached_data_lines(path)
+        )

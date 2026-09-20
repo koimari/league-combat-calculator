@@ -102,6 +102,20 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 - **A receipt field read with a literal default is the rule-5 failure shape.**
   `program/compile` reading a published raw as `row.get("raw_damage", 0.0)` held
   172 coupled-golden raw leaves at zero. Read it through the stamp or refuse.
+- **Two cached-data defects on Imperial Mandate are open, and patch day is where
+  they close.** `data/items.json["4005"].simpleDescription` reads "Defer damage
+  until later.", which describes another item, and
+  `scripts/build_effect_catalog.py::_text` puts that sentence ahead of every
+  passive's own text. The same item's Control branch,
+  `passives[0].branches[0]`, fans out into three atoms in
+  `data/atoms/items.json`, `control.immobilize`, `stat.haste` and
+  `timing.cooldown`, each valued 20.0, while the item's flat
+  `stats.abilityHaste` is 15, so a consumer summing `stat.haste` overstates it
+  by 20. Neither defect reaches a damage number, because rule 5 keeps every
+  runtime item value in `item_effects.py`. `data/` has one writer, so the next
+  pull reverts a hand edit to the cache. The entries live in
+  `docs/receipts/escalated-defects-cached-data.json`, and
+  `python scripts/patch_update.py audit` prints one line per open entry.
 
 ## Engine and pricing
 
