@@ -50,6 +50,7 @@ from .inputs import int_option
 from .module_helpers import ability_slot, at_level, ranked_slot
 from .shared_mechanics import reduced_secondary_hits
 from .slot_control import extract_recharge
+from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
@@ -284,19 +285,19 @@ def _yordle_snap_trap(ctx: SlotCtx) -> dict[str, Any] | None:
     traps = _trap_grants(ctx)
     if traps <= 0:
         return None
-    return {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_recharge(ability, rank),
-        "damage_type": "magic",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": (
+    return damage_entry(
+        ability_name(ability),
+        rank,
+        extract_recharge(ability, rank),
+        0.0,
+        "magic",
+        parts=(),
+        detail=(
             f"{traps} sprung Yordle Snap Trap(s): root 1.5s + reveal 3s; "
             "each grants one trap Headshot whose W damage increase is "
             "priced by the passive row (the trap deals no direct damage)."
         ),
-    }
+    )
 
 
 OPTIONS: list[dict[str, Any]] = [

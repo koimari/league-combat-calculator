@@ -47,15 +47,15 @@ _R_CAST_TIME = 0.25
 def _wall_of_pain(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
-    entry: dict[str, Any] = {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "magic",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": "Target crosses the wall before the damaging sequence",
-    }
+    entry = damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "magic",
+        parts=(),
+        detail="Target crosses the wall before the damaging sequence",
+    )
     if bool(ctx.option("wall_contact")):
         entry["target_debuff"] = {
             "mr_reduction_percent": _W_MR_REDUCTION_PERCENT,

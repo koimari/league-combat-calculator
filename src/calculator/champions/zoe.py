@@ -59,15 +59,15 @@ def _spell_thief(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None
         reason = _W_SUMMONER_VARIANTS.get(
             summoner, "Unknown summoner Spell Shard mimic."
         )
-        return {
-            "name": ability_name(ability),
-            "rank": rank,
-            "cooldown": extract_cooldown(ability, rank),
-            "damage_type": "magic",
-            "total_raw": 0.0,
-            "parts": (),
-            "detail": reason,
-        }
+        return damage_entry(
+            ability_name(ability),
+            rank,
+            extract_cooldown(ability, rank),
+            0.0,
+            "magic",
+            parts=(),
+            detail=reason,
+        )
     total = extract_named(ability, "Total Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),

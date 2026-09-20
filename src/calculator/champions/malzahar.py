@@ -54,7 +54,7 @@ from .inputs import champion_stat, int_option
 from .module_helpers import named_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slot_control import with_control
-from .slot_entries import fixed_count_pet_row
+from .slot_entries import damage_entry, fixed_count_pet_row
 from .slot_extract import (
     ability_name,
     extract_cooldown,
@@ -179,18 +179,18 @@ def _void_swarm(
             ),
         )
 
-    return {
-        "name": ability_name(ability),
-        "rank": w_rank,
-        "cooldown": extract_cooldown(ability, w_rank),
-        "damage_type": "magic",
-        "total_raw": 0.0,  # the summon itself deals no direct damage
-        "parts": (),
-        "detail": (
+    return damage_entry(
+        ability_name(ability),
+        w_rank,
+        extract_cooldown(ability, w_rank),
+        0.0,  # the summon itself deals no direct damage
+        "magic",
+        parts=(),
+        detail=(
             f"Summons {count} Voidling(s); their attacks are priced on the "
             "voidling_attacks row."
         ),
-    }
+    )
 
 
 # E: the full 4-second Total Magic Damage across 16 sourced ticks.  Item

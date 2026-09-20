@@ -28,6 +28,7 @@ from .module_helpers import (
     no_damage,
     ranked_slot,
 )
+from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .slotlib import proc_damage, simple_damage, with_item_on_hits
 from .source_receipts import load_champion_sources
@@ -48,13 +49,17 @@ def _death_lotus(
         ability, "Magic Damage Per Dagger", rank, ctx.stats, ctx.target
     )
     interval = _DEATH_LOTUS_DURATION / daggers
-    return {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "mixed",
-        "total_raw": (physical + magic) * daggers,
-        "parts": (
+    # No ``event_order_certified``: the certification vocabulary is a string
+    # ("single_hit" / "auto_stack_proc"), and 15 daggers over a 2.5-second
+    # channel is neither.  The parts author their own cadence, which is what
+    # the ledger reads.
+    return damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        (physical + magic) * daggers,
+        "mixed",
+        parts=(
             DamagePart(
                 "physical",
                 physical,
@@ -70,15 +75,11 @@ def _death_lotus(
                 hit_interval=interval,
             ),
         ),
-        # No ``event_order_certified``: the certification vocabulary is a
-        # string ("single_hit" / "auto_stack_proc"), and 15 daggers over a
-        # 2.5-second channel is neither.  The parts author their own
-        # cadence, which is what the ledger reads.
-        "detail": (
+        detail=(
             f"{daggers} sourced daggers at 0.166-second cadence; "
             "on-hit/Grievous Wounds are ordered state."
         ),
-    }
+    )
 
 
 _packet_slots = {

@@ -31,18 +31,18 @@ def _sigil_of_malice(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | 
         "Total Magic Damage" if bool(ctx.option("q_consume")) else "Magic Damage"
     )
     value = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
-    return {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "magic",
-        "total_raw": value,
-        "parts": (DamagePart("magic", value),),
-        "detail": (
+    return damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        value,
+        "magic",
+        parts=(DamagePart("magic", value),),
+        detail=(
             "Sigil orb plus optional mark consumption are one explicitly "
             "ordered target sequence."
         ),
-    }
+    )
 
 
 # Ethereal Chains lands twice and the cache times the second hit: the
@@ -112,18 +112,18 @@ def _mimic(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
         "E": "Total Magic Damage",
     }.get(choice, "Total Magic Damage")
     value = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
-    return {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "magic",
-        "total_raw": value,
-        # Mimic's reviewed control is the copied ability's, so it is
-        # authored here rather than declared for the slot.  Sigil of Malice
-        # and Distortion control nothing; the Ethereal Chains variant
-        # prices the application and the fracture together and only the
-        # fracture roots, so that variant is left unreviewed.
-        "parts": (
+    # Mimic's reviewed control is the copied ability's, so it is authored
+    # here rather than declared for the slot.  Sigil of Malice and Distortion
+    # control nothing; the Ethereal Chains variant prices the application and
+    # the fracture together and only the fracture roots, so that variant is
+    # left unreviewed.
+    return damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        value,
+        "magic",
+        parts=(
             DamagePart(
                 "magic",
                 value,
@@ -131,11 +131,11 @@ def _mimic(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
                 cc_kind=None if choice == "E" else "none",
             ),
         ),
-        "detail": (
+        detail=(
             f"Mimic variant {choice}; copied basic-ability effects remain in "
             "the explicit variant choice."
         ),
-    }
+    )
 
 
 SLOTS = {

@@ -23,6 +23,7 @@ from .engine import SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import level_row, ranked_slot
 from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .slotlib import proc_damage, simple_damage
 from .source_receipts import load_champion_sources
@@ -64,13 +65,13 @@ def _perfect_execution(
     # at cast time — the part's closure sees HP after R1 lands because
     # the engine threads running damage through parts in order.
     span = r2_max - r2_min
-    return {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "magic",
-        "total_raw": r1_damage + r2_max,
-        "parts": (
+    return damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        r1_damage + r2_max,
+        "magic",
+        parts=(
             DamagePart("magic", r1_damage, time_offset=0.25),
             DamagePart(
                 "magic",
@@ -82,7 +83,7 @@ def _perfect_execution(
                 time_offset=2.75,
             ),
         ),
-    }
+    )
 
 
 OPTIONS = [

@@ -21,6 +21,7 @@ from .module_helpers import (
     no_damage,
     ranked_slot,
 )
+from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
@@ -53,19 +54,19 @@ def _taste_their_fear(
     isolated = bool(ctx.option("q_isolated"))
     attribute = "Isolated Target Physical Damage" if isolated else "Physical Damage"
     value = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
-    return {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "physical",
-        "total_raw": value,
-        "parts": (DamagePart("physical", value),),
-        "detail": (
+    return damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        value,
+        "physical",
+        event_order_certified="single_hit",
+        parts=(DamagePart("physical", value),),
+        detail=(
             "Isolated target branch is explicit; nearby-allies state disables "
             "the 210% branch."
         ),
-        "event_order_certified": "single_hit",
-    }
+    )
 
 
 SLOTS = {

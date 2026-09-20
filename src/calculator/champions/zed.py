@@ -36,6 +36,7 @@ from ..cast_dependency import CastDependency
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .module_helpers import no_damage_parser, ranked_slot
+from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_value
 from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
@@ -74,25 +75,25 @@ def _death_mark(
     stored_damage = (stored_percent / 100.0) * stored_pool
 
     total = ad_damage + stored_damage
-    return {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "physical",
-        "total_raw": total,
-        "parts": (
+    return damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        total,
+        "physical",
+        parts=(
             DamagePart(
                 "physical",
                 total,
                 time_offset=_DEATH_MARK_DETONATION_DELAY,
             ),
         ),
-        "detail": (
+        detail=(
             f"100% AD ({ad_damage:.2f}) + {stored_percent:g}% of stored "
             f"pre-mitigation spell damage ({stored_damage:.2f}); detonates "
             "3s after the mark"
         ),
-    }
+    )
 
 
 ASSUMPTIONS = [

@@ -31,7 +31,7 @@ from .module_helpers import (
     ranked_slot,
 )
 from .slot_cc import CC_PER_PART
-from .slot_entries import ability_on_hit_entry
+from .slot_entries import ability_on_hit_entry, damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
@@ -121,20 +121,20 @@ def _slicing_maelstrom(
 ) -> dict[str, Any] | None:
     bolts = max(1, min(6, int(ctx.option("r_bolts"))))
     per = extract_named(ability, "Magic Damage Per Bolt", rank, ctx.stats, ctx.target)
-    return {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "magic",
-        "total_raw": per * bolts,
-        "parts": (
+    return damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        per * bolts,
+        "magic",
+        parts=(
             DamagePart("magic", per, count=bolts, time_offset=0.5, hit_interval=0.5),
         ),
-        "detail": (
+        detail=(
             f"{bolts} ordered bolts; later strikes use the sourced escalating "
             "storm packet."
         ),
-    }
+    )
 
 
 def _mark_stream(ctx: SlotCtx, duration: float, storm_cap: int) -> list[float]:

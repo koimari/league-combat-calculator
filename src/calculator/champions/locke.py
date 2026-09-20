@@ -29,7 +29,7 @@ from .module_helpers import (
     typed_damage,
     with_item_on_hit_specs,
 )
-from .slot_entries import on_hit_entry
+from .slot_entries import damage_entry, on_hit_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
@@ -73,18 +73,18 @@ def _ritual_nails(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | Non
     parts = [DamagePart("magic", per, count=casts, time_offset=0.15, hit_interval=0.15)]
     if bonus:
         parts.append(DamagePart("magic", bonus, time_offset=0.5))
-    return {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "magic",
-        "total_raw": per * casts + bonus,
-        "parts": tuple(parts),
-        "detail": (
+    return damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        per * casts + bonus,
+        "magic",
+        parts=tuple(parts),
+        detail=(
             f"{casts} Ritual Nails casts; {stacks} Soul Nails stacks are "
             "consumed by the next damaging attack."
         ),
-    }
+    )
 
 
 # E: blink packet plus the optional empowered dash attack.

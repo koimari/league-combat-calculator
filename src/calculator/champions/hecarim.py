@@ -147,18 +147,18 @@ def _rampage(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any]
     stacks = min(max(int(requested), 0), maximum)
     multiplier = 1.0 + stacks * per_stack
     value = base * multiplier
-    return {
-        "name": ability_name(ability),
-        "rank": rank,
+    return damage_entry(
+        ability_name(ability),
+        rank,
         # The cached row already prices every stack level, so there is
         # nothing to subtract: a ranked read of it lands on the last value
         # and prices the fully stacked cooldown at every rank.
-        "cooldown": by_stacks[min(stacks, len(by_stacks) - 1)],
-        "damage_type": "physical",
-        "total_raw": value,
-        "parts": (DamagePart("physical", value, time_offset=0.1),),
-        "detail": f"{stacks} Rampage stack(s); damage multiplier {multiplier:.3f}.",
-    }
+        by_stacks[min(stacks, len(by_stacks) - 1)],
+        value,
+        "physical",
+        parts=(DamagePart("physical", value, time_offset=0.1),),
+        detail=f"{stacks} Rampage stack(s); damage multiplier {multiplier:.3f}.",
+    )
 
 
 # W (Spirit of Dread) ticks once per second for 5 seconds — the JSON's

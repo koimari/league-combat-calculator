@@ -281,14 +281,14 @@ def _venom_cask(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     typed atoms so the row names sourced numbers.
     """
     rank = ctx.rank_for()
-    entry: dict[str, Any] = {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "magic",
-        "total_raw": 0.0,
-        "parts": (),
-    }
+    entry = damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "magic",
+        parts=(),
+    )
     if rank < 1:
         entry["detail"] = (
             "Contaminated zone applies Deadly Venom stacks and slows; "

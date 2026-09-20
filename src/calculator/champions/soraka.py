@@ -38,7 +38,7 @@ from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option
 from .module_helpers import ranked_slot
 from .slot_control import park_control_interval
-from .slot_entries import support_cast
+from .slot_entries import damage_entry, support_cast
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
@@ -51,11 +51,13 @@ def _equinox(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any]
     per_hit = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     second_hit = bool(ctx.option("e_second_hit"))
     count = 2 if second_hit else 1
-    entry: dict[str, Any] = {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "parts": (
+    entry = damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        per_hit * count,
+        "magic",
+        parts=(
             DamagePart(
                 "magic",
                 per_hit,
@@ -64,10 +66,8 @@ def _equinox(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any]
                 hit_interval=1.5 if second_hit else None,
             ),
         ),
-        "total_raw": per_hit * count,
-        "damage_type": "magic",
-        "detail": "Initial hit + eruption" if second_hit else "Initial hit only",
-    }
+        detail="Initial hit + eruption" if second_hit else "Initial hit only",
+    )
     if second_hit:
         # The eruption refreshes ability-triggered item burns 1.5s later.
         entry["dot_duration"] = 1.5

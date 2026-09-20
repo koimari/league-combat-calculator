@@ -258,17 +258,17 @@ def _force_of_will(
 
     ap = ctx.stat("ability_power")
     true_bonus = (W_TRUE_RATIO_BASE + W_TRUE_RATIO_PER_100_AP * ap / 100.0) * magic
-    return {
-        "name": name,
-        "rank": rank,
-        "cooldown": cooldown,
-        "damage_type": "mixed",
-        "total_raw": magic + true_bonus,
+    return damage_entry(
+        name,
+        rank,
+        cooldown,
+        magic + true_bonus,
+        "mixed",
+        event_order_certified="single_hit",
         # Magic part FIRST: the evaluator's first-part return is the
         # Horizon Focus trigger for mixed entries.
-        "parts": (DamagePart("magic", magic), DamagePart("true", true_bonus)),
-        "event_order_certified": "single_hit",
-    }
+        parts=(DamagePart("magic", magic), DamagePart("true", true_bonus)),
+    )
 
 
 # ---------------------------------------------------------------------------

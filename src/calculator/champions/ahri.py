@@ -31,6 +31,7 @@ from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import ability_slot, ranked_slot
+from .slot_entries import damage_entry
 from .slot_extract import (
     ability_name,
     extract_auto,
@@ -55,20 +56,20 @@ def _essence_theft(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | No
     fragments = max(0, int(ctx.option("p_essence_fragments")))
     if fragments < 9:
         return None
-    return {
-        "name": ability_name(ability),
-        "rank": ctx.level,
-        "cooldown": 0.0,
-        "damage_type": "magic",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": (
+    return damage_entry(
+        ability_name(ability),
+        ctx.level,
+        0.0,
+        0.0,
+        "magic",
+        parts=(),
+        detail=(
             f"{fragments} Essence Fragment(s): at 9 stacks the passive heals "
             "35 : 95 (based on level) (+ 20% AP); the champion-takedown heal "
             "(75 : 165 by level + 30% AP) is a kill boundary, not a fight "
             "receipt."
         ),
-    }
+    )
 
 
 @ranked_slot
@@ -80,17 +81,17 @@ def _fox_fire(
     initial = extract_named(ability, "Primary Magic Damage", rank, ctx.stats)
     subsequent = extract_named(ability, "Subsequent Magic Damage", rank, ctx.stats)
 
-    return {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "parts": (
+    return damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        initial + (subsequent * 2),
+        "magic",
+        parts=(
             DamagePart("magic", initial),
             DamagePart("magic", subsequent, count=2),
         ),
-        "total_raw": initial + (subsequent * 2),
-        "damage_type": "magic",
-    }
+    )
 
 
 @ranked_slot
@@ -114,25 +115,25 @@ def _spirit_rush(
 def _charm(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     """E: one magic hit with the authored charm/knockdown control marker."""
     damage = extract_auto(ability, rank, ctx.stats, ctx.target)[0]
-    return {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        # The charm's KIND is declared once in MODULE_CC and stamped onto
-        # this part; what the entry states here is the sourced DURATION
-        # and the separate claim that E's one hit lands at the cast
-        # boundary, which is what puts the marker in the event ledger.
-        "parts": (
+    # The charm's KIND is declared once in MODULE_CC and stamped onto this
+    # part; what the entry states here is the sourced DURATION and the
+    # separate claim that E's one hit lands at the cast boundary, which is
+    # what puts the marker in the event ledger.
+    return damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        damage,
+        "magic",
+        event_order_certified="single_hit",
+        parts=(
             DamagePart(
                 "magic",
                 damage,
                 cc_duration=extract_value(ability, "Disable Duration", rank),
             ),
         ),
-        "total_raw": damage,
-        "damage_type": "magic",
-        "event_order_certified": "single_hit",
-    }
+    )
 
 
 OPTIONS: list[dict[str, Any]] = [

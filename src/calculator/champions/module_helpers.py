@@ -249,16 +249,15 @@ def mixed_damage(
 ) -> dict[str, Any]:
     """Build an explicitly split magic/true damage receipt."""
 
-    parts = (DamagePart("magic", magic), DamagePart("true", true_damage))
-    return {
-        "name": name,
-        "rank": rank_value,
-        "cooldown": cooldown,
-        "damage_type": "mixed",
-        "total_raw": magic + true_damage,
-        "parts": parts,
-        "detail": detail,
-    }
+    return damage_entry(
+        name,
+        rank_value,
+        cooldown,
+        magic + true_damage,
+        "mixed",
+        parts=(DamagePart("magic", magic), DamagePart("true", true_damage)),
+        detail=detail,
+    )
 
 
 def rank(ctx: SlotCtx) -> int:
@@ -341,18 +340,15 @@ def no_damage(  # pylint: disable=too-many-arguments
     selected_rank = ctx.level if key == "P" else ctx.rank_for(key)
     if selected_rank < 1:
         return None
-    entry: dict[str, Any] = {
-        "name": name,
-        "rank": selected_rank,
-        "cooldown": (
-            extract_cooldown(ability, selected_rank) if cooldown is None else cooldown
-        ),
-        "damage_type": dmg_type,
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": reason,
-    }
-    return entry
+    return damage_entry(
+        name,
+        selected_rank,
+        extract_cooldown(ability, selected_rank) if cooldown is None else cooldown,
+        0.0,
+        dmg_type,
+        parts=(),
+        detail=reason,
+    )
 
 
 def no_damage_parser(
@@ -369,15 +365,15 @@ def no_damage_parser(
         ability = ctx.ability()
         if ability is None:
             return None
-        return {
-            "name": ability.get("name", f"Ability {slot}"),
-            "rank": ctx.rank_for(),
-            "cooldown": 0.0,
-            "damage_type": "magic",
-            "total_raw": 0.0,
-            "parts": (),
-            "detail": reason,
-        }
+        return damage_entry(
+            ability.get("name", f"Ability {slot}"),
+            ctx.rank_for(),
+            0.0,
+            0.0,
+            "magic",
+            parts=(),
+            detail=reason,
+        )
 
     parse.phase = "damage"
     return parse

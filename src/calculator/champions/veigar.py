@@ -35,6 +35,7 @@ from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .module_helpers import delayed_damage, no_damage_parser, ranked_slot
 from .slot_control import park_control_interval
+from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
@@ -53,15 +54,15 @@ def _event_horizon(
     _ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
     """E: one sourced stun interval after the cage rises."""
-    entry = {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "magic",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": "One edge stun after the sourced 0.5 second cage delay.",
-    }
+    entry = damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        0.0,
+        "magic",
+        parts=(),
+        detail="One edge stun after the sourced 0.5 second cage delay.",
+    )
     park_control_interval(
         entry, extract_value(ability, "Stun Duration", rank), time_offset=0.5
     )
@@ -95,21 +96,19 @@ def _primordial_burst(
 ) -> dict[str, Any] | None:
     """R: minimum-damage row scaled by the missing-health execute curve."""
     base = extract_named(ability, "Minimum Magic Damage", rank, ctx.stats, ctx.target)
-    return {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "magic",
-        "total_raw": base,
-        "parts": (
-            DamagePart("magic", hp_scaled_damage=_primordial_burst_scaled(base)),
-        ),
-        "event_order_certified": "single_hit",
-        "detail": (
+    return damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        base,
+        "magic",
+        event_order_certified="single_hit",
+        parts=(DamagePart("magic", hp_scaled_damage=_primordial_burst_scaled(base)),),
+        detail=(
             "Minimum Magic Damage base, boosted up to +100% (Maximum row) "
             "at 66.66% missing health, then capped"
         ),
-    }
+    )
 
 
 ASSUMPTIONS = [

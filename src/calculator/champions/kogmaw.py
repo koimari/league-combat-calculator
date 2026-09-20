@@ -43,7 +43,7 @@ from .engine import DEBUFF, SlotCtx, build_parser
 from .inputs import bool_option
 from .module_helpers import ranked_slot
 from .shared_mechanics import unreachable_innate
-from .slot_entries import ability_on_hit_entry
+from .slot_entries import ability_on_hit_entry, damage_entry
 from .slot_extract import (
     ability_name,
     extract_cooldown,
@@ -66,18 +66,18 @@ def _caustic_spittle(
     """Q: magic damage + bonus-AS stat buff + resistance shred debuff."""
 
     damage = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    entry: dict[str, Any] = {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "magic",
-        "parts": (DamagePart("magic", damage),),
-        "total_raw": damage,
-        # One wad, first enemy hit, no travel row in the cached packet:
-        # the cast boundary is the hit, which is what carries MODULE_CC's
+    entry = damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        damage,
+        "magic",
+        # One wad, first enemy hit, no travel row in the cached packet: the
+        # cast boundary is the hit, which is what carries MODULE_CC's
         # reviewed answer for Q into the event ledger.
-        "event_order_certified": "single_hit",
-    }
+        event_order_certified="single_hit",
+        parts=(DamagePart("magic", damage),),
+    )
 
     # Passive bonus attack speed: the fight engine recalculates auto
     # attacks from the stat_buff.

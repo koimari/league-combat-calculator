@@ -35,6 +35,7 @@ from .engine import SlotCtx, build_parser
 from .inputs import float_option
 from .module_helpers import no_damage_parser, ranked_slot
 from .slot_cc import CC_PER_PART
+from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
@@ -59,22 +60,22 @@ def _decimating_smash(
     # knocking them up ... and stunning them", two immobilize kinds at
     # once, which is what the un-narrowed reviewed kind names.
     charged = fraction >= 0.5
-    return {
-        "name": ability_name(ability),
-        "rank": rank,
-        "cooldown": extract_cooldown(ability, rank),
-        "damage_type": "physical",
-        "total_raw": value,
-        "parts": (
+    return damage_entry(
+        ability_name(ability),
+        rank,
+        extract_cooldown(ability, rank),
+        value,
+        "physical",
+        # One strike, one blow per target, at either charge.
+        event_order_certified="single_hit",
+        parts=(
             DamagePart("physical", value, cc_kind="immobilize" if charged else "slow"),
         ),
-        # One strike, one blow per target, at either charge.
-        "event_order_certified": "single_hit",
-        "detail": (
+        detail=(
             f"Minimum/Maximum Physical Damage rows interpolated by charge "
             f"fraction {fraction:.2f}"
         ),
-    }
+    )
 
 
 @ranked_slot

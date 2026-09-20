@@ -188,15 +188,15 @@ def _soul_eater(ctx: SlotCtx) -> dict[str, Any] | None:
 @ability_slot()
 def _wither(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """W: slow/cripple — no enemy damage."""
-    return {
-        "name": ability_name(ability),
-        "rank": ctx.rank_for(),
-        "cooldown": extract_cooldown(ability, ctx.rank_for()),
-        "damage_type": "magic",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": "Slow and attack-speed cripple: CC only, no damage.",
-    }
+    return damage_entry(
+        ability_name(ability),
+        ctx.rank_for(),
+        extract_cooldown(ability, ctx.rank_for()),
+        0.0,
+        "magic",
+        parts=(),
+        detail="Slow and attack-speed cripple: CC only, no damage.",
+    )
 
 
 OPTIONS: list[dict[str, Any]] = [

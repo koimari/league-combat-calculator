@@ -65,6 +65,8 @@ def damage_entry(
     zero_policy: ZeroPolicy = MODULE_FORMULA_ZERO,
     event_order_certified: str | None = None,
     crit_effectiveness: float = 0.0,
+    parts: tuple[DamagePart, ...] | None = None,
+    detail: str | None = None,
 ) -> dict[str, Any]:
     """Build a castable-ability entry in the fight-engine format.
 
@@ -74,6 +76,10 @@ def damage_entry(
     test/golden diagnostic with per-entry semantics (usually the parts sum;
     proc entries store per-proc x count, and hp-scaled entries store a bound);
     the fight engine reads ONLY ``parts``.
+
+    A caller that computed its own parts passes ``parts=`` and they are taken
+    verbatim, and ``detail=`` writes the row's user-visible sentence last, in
+    the position an ``entry[...] = `` after the call put it.
 
     ``zero_policy`` says what a zero total *means*.  It defaults to
     :data:`MODULE_FORMULA_ZERO`, the one declared default in the champion tree,
@@ -96,10 +102,11 @@ def damage_entry(
     modifiers" is 1.0).  The default 0.0 is the wiki's general rule that
     ability damage does not crit unless stated.
     """
-    if cc_kind is not None and dmg_type == "mixed":
+    if cc_kind is not None and (dmg_type == "mixed" or parts is not None):
         raise ValueError(
-            f"damage_entry({name!r}): cc_kind requires a single-part entry "
-            "(dmg_type must not be 'mixed')"
+            f"damage_entry({name!r}): cc_kind rides the part this builder makes, "
+            "so it needs a single-part entry (dmg_type must not be 'mixed') and "
+            "no caller-supplied parts"
         )
     entry: dict[str, Any] = {
         "name": name,
@@ -108,7 +115,9 @@ def damage_entry(
         "damage_type": dmg_type,
         "total_raw": total,
     }
-    if dmg_type == "mixed":
+    if parts is not None:
+        entry["parts"] = parts
+    elif dmg_type == "mixed":
         entry["parts"] = (
             DamagePart(
                 "magic",
@@ -135,6 +144,8 @@ def damage_entry(
         )
     if event_order_certified is not None:
         entry["event_order_certified"] = event_order_certified
+    if detail is not None:
+        entry["detail"] = detail
     return entry
 
 

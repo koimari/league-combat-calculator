@@ -51,6 +51,7 @@ from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import int_option
 from .module_helpers import ability_slot, typed_damage
 from .packet_module import build_packet_module
+from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_named
 from .slotlib import with_item_on_hits
 
@@ -76,14 +77,14 @@ _BURN_DURATION = data_value(_SMOLDER_Q_SPELL, "Tier3_DotLength")
 def _dragon_practice(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: documented zero-damage row tied to the tier-3 burn on Q."""
     stacks = max(0, int(ctx.options.get("p_stacks", _TIER3_STACKS)))
-    return {
-        "name": ability_name(ability),
-        "rank": ctx.level,
-        "cooldown": 0.0,
-        "damage_type": "true",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": (
+    return damage_entry(
+        ability_name(ability),
+        ctx.level,
+        0.0,
+        0.0,
+        "true",
+        parts=(),
+        detail=(
             f"{stacks} Dragon Practice stack(s).  At 225 stacks (tier 3) "
             "Q hits set the enemy on fire for 3s, dealing true damage "
             "equal to 2.5% per 100 bonus AD (+ 0.5% per 100 stacks) of "
@@ -92,7 +93,7 @@ def _dragon_practice(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | 
             "damage on basic abilities and the 6.5% burn execution are "
             "documented boundaries."
         ),
-    }
+    )
 
 
 def _super_scorcher_breath(packet_q):

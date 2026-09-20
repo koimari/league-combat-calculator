@@ -241,20 +241,20 @@ def _draw_a_bead(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None
     bonus_range, _range_atom = required_ranked_attribute_atom(
         "Tristana", champion_data, "P", "Per-Level Scaling", ctx.level
     )
-    return {
-        "name": ability_name(ability),
-        "rank": ctx.level,
-        "cooldown": 0.0,
-        "damage_type": "physical",
-        "total_raw": 0.0,
-        "parts": (),
-        "detail": (
+    return damage_entry(
+        ability_name(ability),
+        ctx.level,
+        0.0,
+        0.0,
+        "physical",
+        parts=(),
+        detail=(
             f"Innate: +{bonus_range:g} bonus attack range at level "
             f"{ctx.level} (0 : 167.65 by level) on basic attacks, Explosive "
             "Charge and Buster Shot. Range is positioning state with no "
             "damage instance and no damage channel in this model."
         ),
-    }
+    )
 
 
 OPTIONS: list[dict[str, Any]] = [
