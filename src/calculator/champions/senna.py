@@ -293,41 +293,38 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Mist stack count is user-set (default 40 — the expected mid-game "
-    "state); Wraith-farming and mark-consume Mist generation are not "
-    "simulated",
-    "Each Mist stack grants 0.75 bonus AD; every 20 stacks grant 20 "
-    "bonus attack range and 10% crit chance — wiki prose (module "
-    "constants)",
-    "Weakened Soul procs on every 2nd hit (autos and ability hits "
-    "alternate apply/consume); the 4-second mark duration is assumed "
-    "not to expire during sustained combat",
-    "Weakened Soul's % current-health damage is priced against the "
-    "target's MAX health (the engine on-hit convention) — the real "
-    "term decays with the target's current health, so the model "
-    "overstates late-fight consumes",
-    "Relic Cannon's per-auto on-hit is MODELED as 20% of TOTAL AD bonus "
-    "physical damage (the wiki prose, P effects[3] — leveling empty, no "
-    "atom; the binary SennaPassive BonusOnHitDamage 0.2 x mStat 2 with no "
-    "mStatFormula = total AD — see SENNA_RELIC_CANNON_RULE).  It rides "
-    "the P2 slot's own on_hit payload: every basic-attack on-hit (autos, "
-    "phantom hits, double shots — never ability hits), its own breakdown "
-    "row on_hit_ability_P2, the Mist-buffed parse-time AD.  The engine "
-    "has no structure or invulnerability concept: the wiki's exclusions "
-    "(not vs structures; only when the attack deals >0 damage) are "
-    "named boundaries; the MS-steal (10/15/20% for 0.5s) is utility and "
-    "not modeled.",
-    "R (Dawning Shadow) also shields Senna herself for flat + 50% AP + "
-    "150% of the selected Mist stacks for 3s at the cast; the ally "
-    "half of the light wave is emitted by the ally-support scanner "
-    "without the Mist term (documented boundary)",
-    "E (Curse of the Black Mist) has no enemy-damage formula: all five "
-    "cached effects are self/ally camouflage and movement-speed utility "
-    "(confirmed by the pinned reviewed packet's kind='no_damage' "
-    "declaration for E). E is a cast slot in this module (never "
-    "reassigned away from build_packet_module's no_damage branch), so "
-    "MODULE_COVERAGE reflects a sourced no-damage classification "
-    "rather than an unmodeled gap (no_damage, not out_of_scope).",
+    "Mist stack count is user-set, default 40, the expected mid-game state.",
+    "Wraith-farming and mark-consume Mist generation are not simulated.",
+    "Each Mist stack grants 0.75 bonus AD; every 20 grant 20 bonus attack range and "
+    "10% crit chance.",
+    "Weakened Soul procs on every 2nd hit: autos and ability hits alternate apply and "
+    "consume.",
+    "Its 4-second mark is assumed not to expire during sustained combat.",
+    "Weakened Soul's % current-health damage is priced against the target's MAX "
+    "health (on-hit convention).",
+    "The real term decays with current health, so the model overstates late-fight "
+    "consumes.",
+    "Relic Cannon's per-auto on-hit is MODELED as 20% of TOTAL AD bonus physical "
+    "(SENNA_RELIC_CANNON_RULE).",
+    "Wiki P prose carries it with an empty leveling row and no atom.",
+    "The binary's SennaPassive BonusOnHitDamage 0.2 x mStat 2 with no mStatFormula is "
+    "total AD.",
+    "It rides the P2 slot's own on_hit payload: autos, phantom hits and double shots, "
+    "never ability hits.",
+    "Its breakdown row is on_hit_ability_P2, at the Mist-buffed parse-time AD.",
+    "The engine has no structure or invulnerability concept, so the wiki's exclusions "
+    "are named limits.",
+    "P's 10/15/20% movement steal for 0.5s is utility and not modeled.",
+    "R (Dawning Shadow) also shields Senna for flat + 50% AP + 150% of the selected "
+    "Mist stacks for 3s.",
+    "R's ally half is emitted by the scanner without the Mist term, a documented "
+    "boundary.",
+    "E (Curse of the Black Mist) has no enemy-damage formula: all five cached effects "
+    "are self and ally.",
+    "They are camouflage and movement speed, matching the reviewed packet's no_damage "
+    "declaration for E.",
+    "E is a cast slot here, so MODULE_COVERAGE records a sourced no_damage rather "
+    "than an unmodeled gap.",
 ]
 
 MODULE_COVERAGE = coverage(no_damage="E")

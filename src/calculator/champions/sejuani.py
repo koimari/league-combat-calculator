@@ -113,11 +113,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "W (Winter's Wrath) prices both flail swings: the first and second "
-    "'Physical Damage' rows sum to the cached 'Total Physical Damage' "
-    "row (10-130 + 90% AP + 12% of Sejuani's maximum health) at every "
-    "rank; the '% of her maximum health' terms are priced against "
-    "Sejuani's live max health (her own stat, not the target's).",
+    "W (Winter's Wrath) prices both flail swings: the two Physical Damage rows sum to "
+    "the cached Total row.",
+    "That is 10 to 130 + 90% AP + 12% of Sejuani's maximum health at every rank.",
+    "The '% of her maximum health' terms price against Sejuani's live maximum health, "
+    "not the target's.",
     "The second swing's exact in-cast delay is not cached; both swings "
     "are priced at the cast boundary.",
 ]

@@ -264,26 +264,33 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Sett",
     PACKET_SHA256,
     assumption_overrides=(
-        "Pit Grit's combo alternates Left and Right punches on-attack; the Right Punch deals the "
-        "sourced bonus physical damage (5 : 100 by level + 55% bonus AD) and is priced per "
-        "p_right_punches",
-        "The fight model does not auto-derive Right Punch count from the auto stream (each attack "
-        "alternates); p_right_punches is the explicit pre-stack state",
+        "Pit Grit's combo alternates Left and Right punches on-attack.",
+        "The Right Punch deals the sourced 5 to 100 by level + 55% bonus AD, priced "
+        "per p_right_punches.",
+        "The model does not derive the Right Punch count from the auto stream, since "
+        "each attack alternates.",
+        "p_right_punches is the explicit pre-stack state.",
         "The Right Punch's 8x attack speed and 50 bonus range are state",
-        "Q (Knuckle Down) prices BOTH empowered attacks from the cached 'Total Bonus Physical "
-        "Damage' row (20-100 by rank); the %max-HP term uses the cached base percentage plus the "
-        "rank-scaled per-100-AD percentage embedded in the row's unit string",
-        "W (Haymaker) prices the center-line TRUE damage: the cached 'Damage' row flat (80-160 by "
-        "rank) plus 25% (+ 25% per 100 bonus AD) of the expended Grit (w_grit option, 0 = flat "
-        "only); the expended Grit also grants Sett an equal shield for 3s (self_shield_events). "
-        "The outer physical ring is state",
+        "Q (Knuckle Down) prices both empowered attacks from the cached Total Bonus "
+        "Physical Damage row.",
+        "That is 20 to 100 by rank.",
+        "The %max-health term uses the cached base percentage plus the rank-scaled "
+        "per-100-AD percentage.",
+        "W (Haymaker) prices the center-line true damage: the cached Damage row flat, "
+        "80 to 160 by rank.",
+        "It adds 25% + 25% per 100 bonus AD of the expended Grit (w_grit, 0 = flat "
+        "only).",
+        "The expended Grit also shields Sett for an equal amount for 3s; the outer "
+        "physical ring is state.",
         "E/R damage keep the reviewed CP10.7 packet pricing",
-        "P (Pit Grit) always-on missing-health regeneration is authored by this module's "
-        "derive_self_healing: the cached prose row 0.075 / 0.25 / 0.5 / 1 / 1.025 / 1.05 (based on "
-        "level) health per 0.5 seconds per 5% of missing health, capped at the sourced 19x maximum "
-        "at 95% missing health (1.425 / 4.75 / 9.5 / 19 / 19.475 / 19.95); the 6-value rows use "
-        "the standard 1/6/11/16/17/18 breakpoints and the survival walk re-prices each tick from "
-        "the fighter's live health",
+        "P (Pit Grit)'s always-on missing-health regeneration is authored by "
+        "derive_self_healing.",
+        "The cached row is 0.075/0.25/0.5/1/1.025/1.05 by level health per 0.5s per "
+        "5% missing health.",
+        "It caps at the sourced 19x maximum at 95% missing health: "
+        "1.425/4.75/9.5/19/19.475/19.95.",
+        "The 6-value rows use the standard 1/6/11/16/17/18 breakpoints.",
+        "The survival walk re-prices each tick from the fighter's live health.",
     ),
     # Facebreaker and The Show Stopper each land one blow on a target
     # ("dealing physical damage and slowing them"; "Enemies within the

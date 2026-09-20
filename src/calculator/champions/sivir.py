@@ -318,95 +318,98 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Q (Boomerang Blade) prices the full two-way pass from the cached "
-    "'Total Maximum Champion Damage' row (120-320 + 140% bonus AD + "
-    "120% AP == 2 x the single-pass 'Physical Damage' row): the blade "
-    "deals the same damage on the way out and back.",
-    "The exact return cadence is still not cached, so both passes are "
-    "priced at the cast boundary: Q's entry carries no travel-time or "
-    "return-delay atom, and its raw 'speed' field is two unlabelled "
-    "values ('1450 - 1200') against a 1250 targetRange, so which value "
-    "governs the outbound pass and which the return is not readable. "
-    "castTime '0.25 : 0.1 (based on bonus attack speed)' times the cast, "
-    "not the blade.",
-    "E (Spell Shield) grants a 1.5 second shield (atom-backed: "
-    "timing.active_duration 4d718bc78f540f0a). The first hostile ability "
-    "effect during that window is blocked. The cached Heal row is applied "
-    "after the sourced 0.25 second delay (prose-only — no catalog atom "
-    "exists; recorded SOURCE GAP). Fleet of Foot is state and stays "
-    "outside the damage ledger.",
-    "W (Ricochet) prices the cached 'Bounce Damage' row (40-50% AD by "
-    "rank, atom ability.bounce _damage), NOT the neighbouring 'Bonus "
-    "Attack Speed' row (20-40%) the reviewed packet's ad ratio had "
-    "matched. One bounce lands per empowered basic attack, and that count "
-    "rests on one cached sentence: bounces 'prioritize the nearest new "
-    "target, then the nearest target if no new targets are available', "
-    "occur 'only up to 8 times' and 'can target each enemy up to one "
-    "additional time per empowered attack'. A pair fight has one enemy "
-    "and no new target, so it takes exactly one bounce per swing and the "
-    "8 never binds. The swing count is the window's own auto cadence "
-    "((attack_speed + the window's bonus) x auto_attack_uptime) across the "
-    "sourced 4 second window (atom timing.active_duration), with a floor "
-    "of one swing because 'Ricochet resets Sivir's basic attack timer'. "
-    "Each bounce crits with the swing that triggered it at full "
-    "effectiveness: the cached 'Bounce Critical Damage' row is exactly 2x "
-    "'Bounce Damage' at every rank. W's own 20-40% bonus attack speed is "
-    "placed by the engine as a 4-second window at the first W cast (one "
-    "window per fight), and the bounces carry no authored sub-cast timing.",
-    "P (Fleet of Foot) has no enemy-damage clause anywhere in its cached "
-    "entry: the single effect grants Sivir 55:75 (based on level) bonus "
-    "movement speed decaying over 1.5 seconds on her own attacks and "
-    "ability hits, and the game binary's SivirPassive record carries only "
-    "FlatMS and HasteDuration 1.5 with no damage formula at all. The slot "
-    "emits a sourced zero-damage row (MODULE_COVERAGE: no_damage, not "
-    "out_of_scope; the Vayne-P / Kalista-P / Pyke-P precedent). The flat "
-    "movement grant is NOT modeled as a stat_buff, and the blocker is the "
-    "cache rather than the channel (R rides that channel, so the fold "
-    "composes). Two cached rows are missing. (1) The magnitude is a level "
-    "ladder the cache cannot index: atom ability.per-_level _scaling "
-    "carries five values [55, 60, 65, 70, 75] with every unit empty and P "
-    "has no rank, so no cached row says which level each value starts at "
-    "- only the gitignored binary's ByCharLevelBreakpoints does. (2) The "
-    "grant decays to zero across the sourced 1.5 second window and "
-    "refreshes on hit, and no cached row carries its uptime or average, "
-    "so a constant full-value buff would over-credit the one number the "
-    "slot would publish. (An ability stat_buff does NOT become damage "
-    "here: Swiftmarch's adaptive_force_per_total_move_speed is resolved "
-    "inside calculate_total_stats from the BUILD's move speed, before "
-    "any cast, so the over-credit would land on the published "
-    "champion_stats and the end-of-fight item_state_receipts, not on a "
-    "damage row.) It stays state.",
-    "R (On the Hunt) publishes its sourced 20/25/30% bonus movement speed "
-    "(atom ability.bonus _movement _speed) as a move_speed_percent "
-    "stat_buff, the shared channel damage._apply_stat_buff_ultimates "
-    "re-folds through stats.resolve_move_speed so the movement soft caps "
-    "are re-applied instead of bypassed (the Teemo-W wiring). It is "
-    "time-weighted by buff_window_share over its own sourced Buff "
-    "Duration row (8/10/12s by rank): a stat_buff is one scalar for the "
-    "whole fight, and reading that row for the detail string alone left "
-    "the buff duration-blind, publishing the same number in a 5s fight "
-    "and a 30s one. "
-    "The slot CLOSES as no_damage: there is no damage to miss (the "
-    "binary's SivirR carries an empty mSpellCalculations) and its other "
-    "sourced combat effect is priced now. 'While active, Sivir's basic "
-    "attacks on-attack reduce her basic abilities' current cooldowns by "
-    "0.5 seconds each' is published as a swing_cooldown_refund on this "
-    "row, naming Q, W and E and its own Buff Duration window, and the "
-    "cast scheduler walks it per attack beside Navori's share. The 0.5 is "
-    "read from the binary's AttackCooldownRefund DataValue (0.5 on every "
-    "rank), which the cached sentence states verbatim. "
-    "What the earlier receipt called the blocker was real and is what "
-    "this shape answers: every champion-authored refund before it was a "
-    "STATIC parse-time rewrite (Ezreal's _with_q_refund divides an "
-    "emitted entry's cooldown; Darius W multiplies its own), sound only "
-    "because those streams are always on. Sivir's is gated on 'while "
-    "active' and driven by the auto rate, so it needed a walk that reads "
-    "the window and the swing stream rather than a fight-wide divisor. "
-    "The ally share of the buff stays unmodeled: it prices another "
-    "champion's cooldowns, which this fight does not schedule. "
-    "SOURCE CONFLICT recorded, not used: SivirR also "
-    "carries HuntAttackSpeed (rank 1-3 = 5%/6%/7%) that the cached wiki "
-    "text does not mention at all; fail-closed, an uncorroborated "
-    "attack-speed steroid is not modeled.",
+    "Q (Boomerang Blade) prices the full two-way pass from the cached Total Maximum "
+    "Champion Damage row.",
+    "That is 120 to 320 + 140% bonus AD + 120% AP, exactly 2x the single-pass "
+    "Physical Damage row.",
+    "The blade deals the same damage out and back.",
+    "The return cadence is not cached, so both Q passes are priced at the cast "
+    "boundary.",
+    "Q's entry carries no travel-time or return-delay atom.",
+    "Its raw speed field is two unlabelled values, '1450 - 1200', against a 1250 "
+    "targetRange.",
+    "Which value governs the outbound pass and which the return is not readable.",
+    "castTime '0.25 : 0.1 (based on bonus attack speed)' times the cast, not the "
+    "blade.",
+    "E (Spell Shield) grants a 1.5 second shield (atom timing.active_duration "
+    "4d718bc78f540f0a).",
+    "The first hostile ability effect during that window is blocked.",
+    "The cached Heal row applies after the sourced 0.25s delay, prose-only with no "
+    "atom: SOURCE GAP.",
+    "Fleet of Foot is state and stays outside the damage ledger.",
+    "W (Ricochet) prices the cached 'Bounce Damage' row, 40 to 50% AD by rank (atom "
+    "ability.bounce_damage).",
+    "It is not the neighbouring 'Bonus Attack Speed' row, 20 to 40%, which the "
+    "reviewed ratio had matched.",
+    "One bounce lands per empowered basic attack, resting on one cached sentence.",
+    "Bounces 'prioritize the nearest new target, then the nearest target if no new "
+    "targets are available'.",
+    "They occur 'only up to 8 times' and 'can target each enemy up to one additional "
+    "time per attack'.",
+    "A pair fight has one enemy and no new target, so it takes one bounce per swing "
+    "and the 8 never binds.",
+    "W's swing count is the window's own cadence, (attack speed + bonus) x "
+    "auto_attack_uptime.",
+    "That runs across the sourced 4 second window (atom timing.active_duration).",
+    "It floors at one swing because 'Ricochet resets Sivir's basic attack timer'.",
+    "Each bounce crits with its swing at full effectiveness: Bounce Critical Damage "
+    "is exactly 2x.",
+    "W's own 20 to 40% bonus attack speed is placed as a 4-second window at the first "
+    "W cast.",
+    "The bounces carry no authored sub-cast timing.",
+    "P (Fleet of Foot) has no enemy-damage clause anywhere in its cached entry.",
+    "Its single effect grants 55 to 75 by level movement speed decaying over 1.5s on "
+    "her hits.",
+    "The binary's SivirPassive carries only FlatMS and HasteDuration 1.5, with no "
+    "damage formula.",
+    "The slot emits a sourced zero-damage row: no_damage, not out_of_scope.",
+    "The flat movement grant is NOT modeled as a stat_buff; the blocker is the cache, "
+    "not the channel.",
+    "R rides that channel, so the fold composes; two cached rows are missing.",
+    "The magnitude is a level ladder the cache cannot index: atom ability.per-_level "
+    "_scaling, units empty.",
+    "P has no rank, so only the binary's ByCharLevelBreakpoints says which level each "
+    "value starts at.",
+    "The grant decays to zero over the sourced 1.5s and refreshes on hit.",
+    "No cached row carries P's uptime or average, so a constant full-value buff would "
+    "over-credit.",
+    "Swiftmarch's adaptive_force_per_total_move_speed resolves inside "
+    "calculate_total_stats, pre-cast.",
+    "So the over-credit would land on champion_stats and the item_state_receipts, not "
+    "on a damage row.",
+    "P stays state.",
+    "R (On the Hunt) publishes its sourced 20/25/30% movement speed as a "
+    "move_speed_percent stat_buff.",
+    "The atom is ability.bonus_movement_speed.",
+    "damage._apply_stat_buff_ultimates re-folds through stats.resolve_move_speed, so "
+    "soft caps re-apply.",
+    "That is the Teemo-W wiring.",
+    "It is time-weighted by buff_window_share over its sourced Buff Duration row, "
+    "8/10/12s by rank.",
+    "A stat_buff is one scalar for the whole fight, so reading that row for the "
+    "detail alone left it blind.",
+    "Blind meant the same number in a 5s fight and a 30s one.",
+    "The slot CLOSES as no_damage: the binary's SivirR carries an empty "
+    "mSpellCalculations.",
+    "Its other sourced combat effect is priced: the on-attack cooldown refund while "
+    "active.",
+    "'Sivir's basic attacks on-attack reduce her basic abilities' current cooldowns "
+    "by 0.5 seconds each'.",
+    "It publishes as a swing_cooldown_refund naming Q, W and E and its own Buff "
+    "Duration window.",
+    "The cast scheduler walks it per attack beside Navori's share.",
+    "The 0.5 is the binary's AttackCooldownRefund DataValue, 0.5 on every rank, "
+    "stated verbatim.",
+    "Every champion-authored refund before it was a static parse-time rewrite, sound "
+    "on always-on streams.",
+    "Sivir's is gated on 'while active' and driven by the auto rate, so it needs a "
+    "walk, not a divisor.",
+    "The ally share of the buff stays unmodeled.",
+    "It is not modeled because it prices another champion's Q, W and E cooldowns this "
+    "fight never schedules.",
+    "SOURCE CONFLICT recorded, not used: SivirR carries HuntAttackSpeed 5%/6%/7% by "
+    "rank.",
+    "The cached wiki text does not mention it, so R's steroid is not modeled, "
+    "fail-closed.",
 ]
 MODULE_COVERAGE = coverage(no_damage="PR")

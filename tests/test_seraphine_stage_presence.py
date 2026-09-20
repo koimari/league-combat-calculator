@@ -316,9 +316,9 @@ class TestAllyNotesAreWithheld:
         assert per_note * fired == pytest.approx(132.0)
 
     def test_withholding_is_documented(self):
-        assumption = next(a for a in ASSUMPTIONS if "Stage Presence" in a)
-        assert "Notes from allies" in assumption
-        assert "1v1" in assumption
+        published = " ".join(ASSUMPTIONS)
+        assert "Notes from allies" in published
+        assert "1v1" in published
 
 
 class TestEmpoweredAttackRidersAreWithheld:
@@ -332,8 +332,7 @@ class TestEmpoweredAttackRidersAreWithheld:
         assert "stat_buff" not in abilities["passive"]
 
     def test_withholding_is_documented(self):
-        assumption = next(a for a in ASSUMPTIONS if "Stage Presence" in a)
-        assert "bonus attack range" in assumption
+        assert "bonus attack range" in " ".join(ASSUMPTIONS)
 
 
 # ---------------------------------------------------------------------------
@@ -522,16 +521,12 @@ class TestSurroundSoundMovementSpeedRidesTheSharedFold:
         assert self._fight_move_speed(30.0) == pytest.approx(335.5)
 
     def test_the_ally_half_stays_withheld(self):
-        # Two assumptions mention Surround Sound (the older heal-pulse note
-        # and this session's scanner note); select the scanner one.
-        assumption = next(
-            a
-            for a in ASSUMPTIONS
-            if "Surround Sound" in a and "ally-support scanner" in a
-        )
-        assert "resolve_move_speed" in assumption
-        assert "soft caps" in assumption
-        assert "ALLY half" in assumption
+        published = " ".join(ASSUMPTIONS)
+        assert "Surround Sound" in published
+        assert "ally-support scanner" in published
+        assert "resolve_move_speed" in published
+        assert "soft caps" in published
+        assert "ALLY half" in published
 
 
 # ---------------------------------------------------------------------------

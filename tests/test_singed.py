@@ -322,9 +322,10 @@ class TestNoxiousSlipstreamHasNoSourcedMagnitude:
         assert "stat_buff" not in abilities["passive"]
 
     def test_the_gap_is_named_in_the_assumptions(self) -> None:
-        assumption = next(text for text in ASSUMPTIONS if "MSPercent" in text)
-        assert "empty leveling array" in assumption
-        assert "ambiguous between per-stack and total" in assumption
+        published = " ".join(ASSUMPTIONS)
+        assert "MSPercent" in published
+        assert "empty leveling array" in published
+        assert "ambiguous between per-stack and total" in published
 
 
 # ---------------------------------------------------------------------------

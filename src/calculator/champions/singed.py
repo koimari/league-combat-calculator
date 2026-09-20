@@ -111,52 +111,51 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "W (Mega Adhesive) stays out of MODULE_CC: its slow is sourced "
-    "(the cached 'Slow' row, 50/55/60/65/70%) but its window is not. "
-    "The field lasts 3 seconds by the effect description alone, and the "
-    "only seconds atom the slot carries is the 0.375s landing delay -- "
-    "reading that one as the control window would understate the slow "
-    "eightfold, so the slot is left unreviewed rather than declared "
-    "against the wrong number.",
-    "R (Insanity Potion) grants the cached Bonus Stats row (25/55/85, "
-    "corroborated by the game binary's InsanityPotion StatAmount "
-    "DataValue) as ability power, bonus armour, bonus magic resistance "
-    "and movement speed for the sourced 25 seconds, time-weighted by the "
-    "share of the fight window the buff covers.  The ability power "
-    "reaches the parse context before Q and E, so their AP ratios scale "
-    "off it.  The movement key is move_speed_flat, the shared "
-    "resolve_move_speed fold's INPUT, so the grant is soft-capped like "
-    "every other movement term; keying the displayed move_speed directly "
-    "skipped the fold and published an uncapped number.  The same row's "
-    "health/mana regeneration (2.5/5.5/8.5 per "
-    "0.5s by rank) has no stat_buff key because nothing in this "
-    "fixed-window engine consumes regen, and the Grievous Wounds R adds "
-    "to Poison Trail reduces enemy healing, which the one-pair fight "
+    "W (Mega Adhesive) stays out of MODULE_CC: its slow is sourced, 50/55/60/65/70%, "
+    "but its window is not.",
+    "The field lasts 3 seconds by the effect description alone.",
+    "The only seconds atom the slot carries is the 0.375s landing delay.",
+    "Reading that as the control window would understate the slow eightfold, so W is "
+    "left unreviewed.",
+    "R (Insanity Potion) grants the cached Bonus Stats row, 25/55/85, for the sourced "
+    "25 seconds.",
+    "The binary's InsanityPotion StatAmount DataValue corroborates it.",
+    "It lands as ability power, bonus armour, bonus magic resist and movement speed, "
+    "fight-share weighted.",
+    "The ability power reaches the parse context before Q and E, so their AP ratios "
+    "scale off it.",
+    "The movement key is move_speed_flat, the resolve_move_speed fold's input, so it "
+    "is soft-capped.",
+    "Keying the displayed move_speed directly would skip the fold and publish an "
+    "uncapped number.",
+    "The row's 2.5/5.5/8.5 per 0.5s health/mana regeneration has no stat_buff key: "
+    "nothing consumes regen.",
+    "R's Grievous Wounds on Poison Trail cuts enemy healing, which the one-pair fight "
     "does not model.",
-    "E (Fling) sources a second, conditional effect the engine does not "
-    "arm: the target is rooted (1/1.25/1.5/1.75/2s) only 'if the target "
-    "lands on Mega Adhesive's area of effect after the displacement'.  "
-    "The slot's declared control is the unconditional displacement; the "
-    "root would need a W-field placement the fight does not track.",
-    "P (Noxious Slipstream) is stacking movement speed and W (Mega "
-    "Adhesive) a slow and a ground: both are emitted zero-damage rows. "
-    "W's slow magnitude is blocked on the cache (its only seconds atom "
-    "is the 0.375 landing delay).  Neither spell object carries a damage "
-    "field in the game binary.",
-    "P (Noxious Slipstream) is NOT published as a move_speed_percent "
-    "stat_buff, unlike the other percent-movement grants: its magnitude "
-    "has no cached row to read.  All three cached P effects carry an "
-    "empty leveling array, so extract_value would return its "
-    "missing-row 0.0, and the only number anywhere is the v2 atom "
-    "corpus' SingedP MSPercent = 0.25, "
-    "which is ambiguous between per-stack and total: the cached prose "
-    "reads '25% bonus movement speed' per stack 'up to a maximum of "
-    "625%', and 625 == 25 x 25 is the 25-stack cap multiplied into the "
-    "per-stack slot, the signature of a wiki-template substitution.  A "
-    "25x span is not a rounding question, so the slot stays unwired.  "
-    "The stack count is unmodeled state on top: stacks come from moving "
-    "past champions on a sourced 8s per-target cooldown (PerTargetCD), "
-    "which a one-pair fight cannot walk.",
+    "E (Fling) sources a second, conditional effect the engine does not arm.",
+    "The target is rooted 1/1.25/1.5/1.75/2s only on landing in Mega Adhesive's area "
+    "of effect.",
+    "E's declared control is the unconditional displacement.",
+    "E's root would need a W-field placement this fight does not model.",
+    "P (Noxious Slipstream) is stacking movement speed and W (Mega Adhesive) a slow "
+    "and a ground.",
+    "Both are emitted zero-damage rows, and neither spell object carries a damage "
+    "field in the binary.",
+    "W's slow magnitude is blocked on the cache: its only seconds atom is the 0.375s "
+    "landing delay.",
+    "P (Noxious Slipstream) is not published as a move_speed_percent stat_buff: no "
+    "cached row reads it.",
+    "All three cached P effects carry an empty leveling array, so extract_value would "
+    "return 0.0.",
+    "The one number anywhere is the corpus' SingedP MSPercent 0.25, ambiguous between "
+    "per-stack and total.",
+    "The cached prose reads '25% bonus movement speed' per stack 'up to a maximum of "
+    "625%'.",
+    "625 == 25 x 25 is the 25-stack cap in the per-stack slot, a wiki-template "
+    "substitution.",
+    "A 25x span is not a rounding question, so the slot stays unwired.",
+    "The stack count is unmodeled state: stacks need a sourced 8s PerTargetCD a "
+    "one-pair fight cannot walk.",
 ]
 
 # P and W are emitted and grant nothing the engine prices.

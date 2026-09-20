@@ -239,52 +239,49 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "W (Surround Sound) pulses its sourced missing-health heal after 2.5 "
-    "seconds when Seraphine has a shield at cast time; the first cast can "
-    "use the explicit w_already_shielded option",
-    "Q (High Note) prices the missing-health amplifier: base (60-160 + "
-    "40% AP) plus 0.75 x base x the target's live missing-health ratio "
-    "(0%:75% based on missing health; equals the cached Maximum Enhanced "
-    "Damage row at full missing health)",
-    "P (Stage Presence) prices the empowered basic attack's Note damage - "
-    "4:27.47 by level + 4% AP per Note fired (cached P effect 3, leveling "
-    "attribute 'Bonus Magic Damage', a per-level array; corroborated by "
-    "the game binary's SeraphinePassive AutoDamage ByCharLevel 4->25 and "
-    "NoteAPRatio 0.04). The fight engine does not simulate the Note stack "
-    "window, so p_notes is the explicit count of Notes the empowered "
-    "attack fires, capped at the sourced MaxNotes of 4 and defaulting to "
-    "that cap because every ability cast grants a Note and a full Q/W/E/R "
-    "rotation reaches it. The row rides the basic-attack stream as an "
-    "on-hit with max_procs 1: one empowered attack fires every Note it "
-    "holds and the next has none. Notes from allies (25% damage, binary "
-    "AllyNoteDamagePercent 0.25) are NOT priced: they require allied "
-    "champions in range at cast time and are structurally outside the 1v1 "
-    "damage surface, as is Echo's free recast. The empowered attack's 25 "
-    "bonus attack range per Note and its uncancellable windup are not "
-    "damage and remain state. Reclassified from out_of_scope to modeled; "
-    "the packet's no_damage label was incomplete, not stale.",
-    "W (Surround Sound) is a sourced shield with no damage row: 60/80/100/"
-    "120/140 + 20% AP for 2.5 seconds on Seraphine and nearby allies. "
-    "Shield-only abilities cannot carry attach_self_shield (that payload "
-    "rides damage-event rows), so W stays priced by the ally-support "
-    "scanner, which derives the shield at target scope "
-    "self_and_all_teammates with target_self true. The conditional "
-    "missing-health pulse heal is REFUSED rather than published at zero: "
-    "its amount depends on each recipient's live missing health, which the "
-    "scanner cannot price per recipient, and w_already_shielded only drops "
-    "the caster's shield gate - it must not resurrect a zero-amount pulse "
-    "row (pinned by tests/test_revive_and_ally_support_events.py). W's SELF movement grant "
-    "(20% + 2% per 100 AP) is published as a move_speed_percent "
-    "stat_buff, a term in the shared resolve_move_speed fold (soft caps "
-    "included). Its magnitude is prose in the cached W description and "
-    "not a leveling row, so it is a HARDCODED module constant pinned by "
-    "the cached sentence, the way the Q missing-health amplifier and "
-    "Naafiri's 20% AD are. The ALLY half (8% + 0.8% per 100 AP) is not "
-    "published: it needs allied champions in range, which is outside the "
-    "1v1 surface. The 2.5s decay, the 2-stack shield rule and the ally "
-    "shield scope are state and the base Shield Strength row is "
-    "priced. Reclassified from out_of_scope to modeled (the Ekko-W / "
-    "Rumble-W precedent for a scanner-priced shield-only slot).",
+    "W (Surround Sound) pulses its sourced missing-health heal after 2.5s if "
+    "Seraphine has a shield at cast.",
+    "The first cast can use the explicit w_already_shielded option.",
+    "Q (High Note) prices the missing-health amplifier: base 60 to 160 + 40% AP.",
+    "It adds 0.75 x base x the target's live missing-health ratio, 0 to 75%.",
+    "At full missing health that equals the cached Maximum Enhanced Damage row.",
+    "P (Stage Presence) prices the empowered attack's Note damage: 4 to 27.47 by "
+    "level + 4% AP per Note.",
+    "That is cached P effect 3's Bonus Magic Damage per-level array.",
+    "The binary's SeraphinePassive AutoDamage 4 to 25 by level and NoteAPRatio 0.04 "
+    "corroborate it.",
+    "The engine does not simulate the Note window, so p_notes counts the Notes the "
+    "attack fires.",
+    "p_notes caps at the sourced MaxNotes of 4 and defaults there: a full Q/W/E/R "
+    "rotation reaches it.",
+    "The row rides the basic-attack stream as an on-hit with max_procs 1, so the next "
+    "attack has none.",
+    "Notes from allies price 25% (binary AllyNoteDamagePercent 0.25), need allies in "
+    "range, outside the 1v1.",
+    "Echo's free recast is outside it too, and the 25 bonus attack range per Note is "
+    "state.",
+    "W (Surround Sound) is a sourced shield with no damage row: 60/80/100/120/140 + "
+    "20% AP for 2.5s.",
+    "It covers Seraphine and nearby allies.",
+    "A shield-only ability cannot carry attach_self_shield, which rides damage-event "
+    "rows.",
+    "W stays priced by the ally-support scanner at scope self_and_all_teammates with "
+    "target_self true.",
+    "The conditional missing-health pulse heal is refused rather than published at "
+    "zero.",
+    "Its amount depends on each recipient's live missing health, which the scanner "
+    "cannot price.",
+    "w_already_shielded only drops the caster's shield gate; it must not resurrect a "
+    "zero-amount row.",
+    "W's self movement grant, 20% + 2% per 100 AP, publishes as a move_speed_percent "
+    "stat_buff.",
+    "It is a term in the shared resolve_move_speed fold, soft caps included.",
+    "Its magnitude is prose in the cached W description, a hardcoded constant pinned "
+    "by that sentence.",
+    "The ALLY half, 8% + 0.8% per 100 AP, needs allies in range and is outside the "
+    "1v1 surface.",
+    "The 2.5s decay, the 2-stack shield rule and the ally shield scope are state.",
+    "The base Shield Strength row is what is priced.",
 ]
 
 # No MODULE_COVERAGE: every slot is emitted and priced, which is exactly

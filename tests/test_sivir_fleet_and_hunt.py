@@ -229,9 +229,10 @@ class TestFleetOfFootHasNoDamageAnywhere:
         assert MODULE_COVERAGE["P"] == "no_damage"
 
     def test_classification_is_documented_with_the_binary_receipt(self):
-        assumption = next(a for a in ASSUMPTIONS if "Fleet of Foot) has no" in a)
-        assert "no_damage, not out_of_scope" in assumption
-        assert "SivirPassive" in assumption
+        published = " ".join(ASSUMPTIONS)
+        assert "Fleet of Foot) has no" in published
+        assert "no_damage, not out_of_scope" in published
+        assert "SivirPassive" in published
 
 
 class TestMovementSpeedIsNotStatBuffed:
@@ -307,12 +308,12 @@ class TestMovementSpeedIsNotStatBuffed:
         assert apply_movement_speed_soft_caps(435.5) == pytest.approx(431.4)
 
     def test_withholding_names_the_two_cached_gaps(self):
-        assumption = next(a for a in ASSUMPTIONS if "Fleet of Foot) has no" in a)
-        assert "ability.per-_level _scaling" in assumption
-        assert "ByCharLevelBreakpoints" in assumption
-        assert "decays to zero" in assumption
-        assert "adaptive_force_per_total_move_speed" in assumption
-        assert "NOT modeled as a stat_buff" in assumption
+        published = " ".join(ASSUMPTIONS)
+        assert "ability.per-_level _scaling" in published
+        assert "ByCharLevelBreakpoints" in published
+        assert "decays to zero" in published
+        assert "adaptive_force_per_total_move_speed" in published
+        assert "NOT modeled as a stat_buff" in published
 
 
 # ---------------------------------------------------------------------------
@@ -367,21 +368,20 @@ class TestOnTheHuntCloses:
         assert MODULE_COVERAGE["R"] == "no_damage"
 
     def test_the_receipt_says_what_closed_it_and_names_the_shape(self):
-        assumption = next(a for a in ASSUMPTIONS if "R (On the Hunt)" in a)
-        assert "CLOSES as no_damage" in assumption
-        assert "swing_cooldown_refund" in assumption
-        assert "AttackCooldownRefund" in assumption
+        published = " ".join(ASSUMPTIONS)
+        assert "CLOSES as no_damage" in published
+        assert "swing_cooldown_refund" in published
+        assert "AttackCooldownRefund" in published
 
     def test_the_ally_share_is_still_named_as_unmodeled(self):
         """One thing on this row genuinely stays out: the ally half prices
         another champion's cooldowns, which this fight does not schedule."""
-        assumption = next(a for a in ASSUMPTIONS if "R (On the Hunt)" in a)
-        assert "ally share of the buff stays unmodeled" in assumption
+        assert "ally share of the buff stays unmodeled" in " ".join(ASSUMPTIONS)
 
     def test_both_sourced_effects_are_named_in_the_receipt(self):
-        assumption = next(a for a in ASSUMPTIONS if "R (On the Hunt)" in a)
-        assert "20/25/30%" in assumption
-        assert "0.5 seconds" in assumption
+        published = " ".join(ASSUMPTIONS)
+        assert "20/25/30%" in published
+        assert "0.5 seconds" in published
 
     @pytest.mark.needs_game_files
     def test_binary_movement_ladder_matches_the_wiki_ranks(self):
@@ -492,8 +492,7 @@ class TestTheRefundIsTheKitsOwnChannelNotTheItemOne:
         ] == ["R"]
 
     def test_receipt_still_names_the_movement_fold_it_rides(self):
-        assumption = next(a for a in ASSUMPTIONS if "R (On the Hunt)" in a)
-        assert "resolve_move_speed" in assumption
+        assert "resolve_move_speed" in " ".join(ASSUMPTIONS)
 
 
 class TestHuntAttackSpeedIsAnUnusedSourceConflict:
@@ -516,10 +515,10 @@ class TestHuntAttackSpeedIsAnUnusedSourceConflict:
             assert ("bonus_attack_speed" in buff) == (slot == "W")  # W's own row
 
     def test_conflict_is_recorded_rather_than_used(self):
-        assumption = next(a for a in ASSUMPTIONS if "R (On the Hunt)" in a)
-        assert "SOURCE CONFLICT" in assumption
-        assert "HuntAttackSpeed" in assumption
-        assert "fail-closed" in assumption
+        published = " ".join(ASSUMPTIONS)
+        assert "SOURCE CONFLICT" in published
+        assert "HuntAttackSpeed" in published
+        assert "fail-closed" in published
 
 
 # ---------------------------------------------------------------------------

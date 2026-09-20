@@ -98,15 +98,15 @@ def _roar_of_the_slayer(
 
 
 ASSUMPTIONS = [
-    "Q (Decimating Smash) interpolates the Minimum/Maximum Physical "
-    "Damage rows by charge time; the default is fully charged "
-    "(q_charge_fraction 1.0).",
+    "Q (Decimating Smash) interpolates the Minimum and Maximum Physical Damage rows "
+    "by charge time.",
+    "Q's default is fully charged, q_charge_fraction 1.0.",
     "R (Unstoppable Onslaught) prices the maximum-charge slam (Maximum "
     "Physical Damage row).",
     "P deals no enemy damage and is an explicit no-damage slot.",
-    "E (Roar of the Slayer) inflicts the cached 25% armor reduction for "
-    "4 seconds (wiki prose on E); the target_debuff applies after E's "
-    "own damage, so all later physical damage (autos, Q, R) benefits.",
+    "E (Roar of the Slayer) inflicts the cached 25% armor reduction for 4 seconds "
+    "(wiki prose on E).",
+    "The target_debuff applies after E's own damage, so later autos, Q and R benefit.",
 ]
 
 SOURCES = load_champion_sources("Sion")

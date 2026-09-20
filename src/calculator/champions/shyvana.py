@@ -313,27 +313,29 @@ OPTIONS = [
 MODULE_COVERAGE = coverage(no_damage="P")
 
 ASSUMPTIONS = [
-    "P (Scalemail) prices the stack resists: the cached effect "
-    "sentence 'For each stack, Shyvana gains 0.3 bonus armor and 0.3 "
-    "bonus magic resistance' is read out of the description (there is no "
-    "leveling row anywhere in the entry) and multiplied by the "
-    "user-set scalemail_stacks option, emitted as a BUFF-phase "
-    "stat_buff.  Takedown stacking is not simulated -- stacks come from "
-    "takedowns before the fight -- so the count is an input with a "
-    "disclosed default of 0, and the slot deals no enemy damage.",
-    "Inferno Aegis grants the sourced self-shield ('Shield Strength' 60-140 "
-    "by rank + 12% bonus health, plus 'Increased shield per champion' "
-    "18-42 by rank + 3.6% bonus health per nearby enemy champion, "
-    "w_nearby_champions default 1 for a 1v1) for 2.5s, or until the "
-    "one-second recast consumes it.",
-    "The dragon-form recast heal (60 : 104.71 based on level + 4% : 8.47% "
-    "based on level of missing health when the explosion hits a champion) "
-    "is authored by the healing rule (healing.py, HEALING_RULE_CHAMPIONS) "
-    "keyed on the W recast damage events and gated on dragon_form; the "
-    "human-form recast deals the sourced damage without healing.",
-    "Inferno Aegis defaults to its one-second recast damage; with "
-    "w_recast=False the shield holds its full 2.5-second window and the "
-    "auto-explosion at expiry is not priced.",
+    "P (Scalemail) prices the stack resists: 0.3 bonus armor and 0.3 bonus magic "
+    "resist per stack.",
+    "That sentence is read out of the cached description; the entry has no leveling "
+    "row anywhere.",
+    "It multiplies by the user-set scalemail_stacks option and emits as a buff-phase "
+    "stat_buff.",
+    "P's takedown stacking is not simulated, so the count is an input with a "
+    "disclosed default of 0.",
+    "The slot carries no enemy damage.",
+    "Inferno Aegis grants the sourced self-shield: Shield Strength 60 to 140 by rank "
+    "+ 12% bonus health.",
+    "Inferno Aegis adds 18 to 42 by rank + 3.6% bonus health per nearby champion "
+    "(w_nearby_champions default 1).",
+    "It holds 2.5s, or until the one-second recast consumes it.",
+    "The dragon-form recast heal is 60 to 104.71 by level + 4 to 8.47% by level of "
+    "missing health.",
+    "It fires when the explosion hits a champion, authored by the healing rule and "
+    "gated on dragon_form.",
+    "It is keyed on the W recast damage events; the human-form recast deals damage "
+    "without healing.",
+    "Inferno Aegis defaults to its one-second recast damage.",
+    "With w_recast False the shield holds its full 2.5s window and the expiry "
+    "explosion goes unpriced.",
     "Dragon-form Q/E variants and the second explosion are explicit "
     "options, never inferred from a cast count.",
 ]

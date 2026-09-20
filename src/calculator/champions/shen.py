@@ -331,28 +331,29 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     "The standard damage order is E, then Q empowered attacks.",
-    "Q attack count and first-attack delay are selected explicitly; enhanced "
-    "Q uses its sourced 50% bonus attack speed for spacing.",
+    "Q attack count and first-attack delay are selected explicitly.",
+    "Enhanced Q uses its sourced 50% bonus attack speed for spacing.",
     "Each landed Q attack and E champion hit restores the sourced level-based "
     "energy amount.",
-    "Timed fights cap Q casts at the ambient swings that consume them; each "
-    "bonus instance is an authored event on the module's swing schedule "
-    "(selected first-attack delay, then the enhanced cadence), and the "
-    "consumed swings themselves are shown on the Q row at the auto stream's "
-    "per-hit damage.",
-    "Ki Barrier (P) has no cast of its own; its sourced self-shield "
-    "(per-level base + 13% bonus health) is attached to Shadow Dash (E), the "
-    "first ability to complete in the certified E-then-Q order, since its 11s "
-    "flat cooldown allows only one grant per one-rotation fight.",
-    "Spirit's Refuge (W) is a pure attack-block zone with no damage, heal or "
-    "shield attribute in the cached data; it emits an explicit zero-damage "
-    "state row rather than staying silently absent, because the engine's "
-    "attack-block convention lives on the defender side of an interaction.",
-    "Stand United (R) deals no damage; the ally-support scanner prices its "
-    "sourced shield floor (Minimum Shield Strength + 135% AP + 15% of his "
-    "bonus health).  The 0-60% missing-health ramp to the Maximum row is a "
-    "live-health condition the scan cannot establish, and the 3-second "
-    "channel's teleport is not modeled.",
+    "Timed fights cap Q casts at the ambient swings that consume them.",
+    "Each bonus instance is an authored event on the module's swing schedule.",
+    "That schedule is the selected first-attack delay, then the enhanced cadence.",
+    "The consumed swings show on the Q row at the auto stream's per-hit damage.",
+    "Ki Barrier (P) has no cast of its own; its sourced per-level base + 13% bonus "
+    "health shield rides E.",
+    "E (Shadow Dash) is the first ability to complete in the certified E-then-Q "
+    "order.",
+    "Its 11s flat cooldown allows only one grant per one-rotation fight.",
+    "Spirit's Refuge (W) is a pure attack-block zone with no damage, heal or shield "
+    "attribute cached.",
+    "It emits an explicit zero-damage state row rather than staying silently absent.",
+    "The engine's attack-block convention lives on the defender side of an "
+    "interaction.",
+    "Stand United (R) deals no damage; the scanner prices its sourced shield floor.",
+    "That floor is Minimum Shield Strength + 135% AP + 15% of his bonus health.",
+    "The 0 to 60% missing-health ramp to the Maximum row is a live-health condition "
+    "the scan cannot set.",
+    "R's 3-second channel teleport is not modeled.",
 ]
 
 SOURCES = load_champion_sources("Shen")

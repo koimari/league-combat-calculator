@@ -156,8 +156,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Skarner",
     PACKET_SHA256,
     assumption_overrides=(
-        "Shattered Earth prices all three empowered basic attacks (Bonus "
-        "Physical Damage per Hit x 3 == Total Bonus Physical Damage).",
+        "Shattered Earth prices all three empowered basic attacks: per-hit x 3 == "
+        "Total Bonus Physical Damage.",
     ),
     # Impale is one lash ("lashes them forward ... dealing magic damage to
     # enemies hit"), so its single part is a hit the ledger can time.
@@ -192,17 +192,21 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Q (Shattered Earth) grants its bonus attack speed on each cast's three "
-    "empowered attacks, published as one fight-wide stat buff weighted by "
-    "the share of the window those swings cover across the mirrored casts "
-    "(Braum-pattern schedule: each cast at t=0 and every hasted cooldown); "
-    "the 5-second hold between attacks and Upheaval's early throw are not "
-    "modeled, and the Upheaval variant grants nothing.",
-    "W (Seismic Bastion) shields Skarner for 8% of his maximum health "
-    "for 2.5 seconds (cached W prose) via the shared self_shield_events "
-    "interface; the shockwave damage is unchanged.",
-    "E (Ixtal's Impact) prices the sourced 'Physical Damage' row "
-    "(30-150 + 120% bonus AD + 6% of his maximum health by rank, "
-    "data/champions.json E) assuming the charged target collides with "
-    "terrain; the charge, grab, and stun are state.",
+    "Q (Shattered Earth) grants its bonus attack speed on each cast's three empowered "
+    "attacks.",
+    "It publishes as one fight-wide stat buff weighted by the window share those "
+    "swings cover.",
+    "Casts follow the Braum-pattern schedule: each at t=0 and every hasted cooldown "
+    "after.",
+    "Q's 5-second hold between attacks and Upheaval's early throw are not modeled.",
+    "The Upheaval variant grants nothing.",
+    "W (Seismic Bastion) shields Skarner for 8% of his maximum health for 2.5 seconds "
+    "(cached W prose).",
+    "It rides the shared self_shield_events interface; the shockwave damage is "
+    "unchanged.",
+    "E (Ixtal's Impact) prices the sourced Physical Damage row: 30 to 150 + 120% "
+    "bonus AD by rank.",
+    "E adds 6% of his maximum health, assuming the charged target collides with "
+    "terrain.",
+    "The charge, grab and stun are state.",
 ]
