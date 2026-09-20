@@ -818,10 +818,10 @@ class WalkCompiler:
 
         A pair row the registry declares ``THEORETICAL`` is a *preview* of a
         number the coupled walk owns, so it and its events are dropped
-        (:func:`~.build.pair_preview_sources`) — composing it would put the
-        walk's number and a preview of it into one total.  A preview the walk
-        *re-prices* keeps its packet: the walk is about to price it from its
-        declaration, and dropping it would delete the family's damage.
+        (:func:`~.capability.pair_preview_sources`) — composing it would put
+        the walk's number and a preview of it into one total.  A preview the
+        walk *re-prices* keeps its packet: the walk is about to price it from
+        its declaration, and dropping it would delete the family's damage.
 
         The four fields a pair fight cannot see for itself, and the caller
         can:
@@ -846,9 +846,9 @@ class WalkCompiler:
         price them differently per defender (Dr. Mundo's Maximum Dosage).
         Trigger-linked actor-wide heals still fail closed before the skip.
 
-        ``view`` selects the **receipt projection** (:class:`~.build.Projection`
-        ``RECEIPT``): the per-event dict enrichment the roster composition
-        reads, built from the same locals the action beside it is built from.
+        ``view`` selects the **receipt projection** (:class:`PairView`): the
+        per-event dict enrichment the roster composition reads, built from the
+        same locals the action beside it is built from.
         Three things the score walk owes are not the receipt's: the
         fail-closed refusal of a transition *the score kernel* cannot stage
         (the receipt walk stages every one of them, which is what the
