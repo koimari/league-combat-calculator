@@ -64,6 +64,7 @@ from .module_helpers import clamp, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import (
     ability_name,
+    extract_cast_time,
     extract_cooldown,
     extract_named,
     extract_value,
@@ -76,7 +77,6 @@ _Q_FIRST_HIT_DELAY = 0.4
 _Q_VOLLEY_DURATION = 1.0
 _Q_NORMAL_MISSILES = 6
 _Q_EVOLVED_MISSILES = 12
-_W_CAST_TIME = 0.4
 _W_MISSILE_SPEED = 1750.0
 _W_MAX_RANGE = 3000.0
 _W_NORMAL_STACKS = 2
@@ -144,7 +144,7 @@ def _w_hit_time(ctx: SlotCtx) -> tuple[float, float]:
         0.0,
         _W_MAX_RANGE,
     )
-    return distance, _W_CAST_TIME + distance / _W_MISSILE_SPEED
+    return distance, extract_cast_time(ctx.ability("W")) + distance / _W_MISSILE_SPEED
 
 
 def _evolution_state(
@@ -280,9 +280,9 @@ def _plasma_application_stream(
             _basic_ability_haste(ctx),
         )
         _, hit_delay = _w_hit_time(ctx)
-        # The cooldown runs from the end of W's 0.4s cast on the shared
+        # The cooldown runs from the end of W's cached cast on the shared
         # timeline, so the recast period includes it.
-        period = cooldown + _W_CAST_TIME
+        period = cooldown + extract_cast_time(w_ability)
         casts = 1 + int(duration / period) if period > 0 else 1
         stacks_per_hit = _W_EVOLVED_STACKS if w_evolved else _W_NORMAL_STACKS
         events.extend(
