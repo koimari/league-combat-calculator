@@ -22,6 +22,7 @@ from typing import Any
 
 from ..binary_roots import calculation_coefficients, spell_object
 from .engine import ONHIT, SlotCtx
+from .module_helpers import ability_slot
 from .packet_module import build_packet_module
 from .slot_entries import on_hit_entry
 from .slot_extract import ability_name
@@ -37,11 +38,9 @@ _RELL_P_SPELL = spell_object("Rell", "RellP")
 PACKET_SHA256 = "c88088e022b4afb695def1471bb4068ad40512c06c50d5a43cd479eebd11445a"
 
 
-def _break_the_mold(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _break_the_mold(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: on-hit bonus magic damage from Rell's own resistances."""
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
     armor = float(ctx.stat("armor"))
     magic_resistance = float(ctx.stat("magic_resistance"))
     per_hit = (

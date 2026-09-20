@@ -31,7 +31,7 @@ from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .shared_mechanics import reduced_secondary_hits
 from .slot_control import with_control
 from .slot_entries import damage_entry, on_hit_entry
@@ -46,7 +46,8 @@ from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 
-def _clockwork_windup(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _clockwork_windup(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: bonus magic on every basic attack, ramping with Winding stacks.
 
     Emits the 0-stack base as ``damage_per_hit`` plus a ``stack_ramp``
@@ -55,9 +56,6 @@ def _clockwork_windup(ctx: SlotCtx) -> dict[str, Any] | None:
     cap is reconstructed from the pre-computed 2-stack row rather than
     hardcoded, and a mismatch raises (patch-drift guard).
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
 
     base_row = find_named_leveling(ability, "Bonus Magic Damage")
     per_stack_row = find_named_leveling(ability, "Per-Level Scaling")

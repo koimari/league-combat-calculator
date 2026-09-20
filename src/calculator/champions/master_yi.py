@@ -39,7 +39,13 @@ from .. import healing_helpers as _healing
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
-from .module_helpers import buff_window_share, no_damage, ranked_slot, steroid_entry
+from .module_helpers import (
+    ability_slot,
+    buff_window_share,
+    no_damage,
+    ranked_slot,
+    steroid_entry,
+)
 from .packet_module import build_packet_module
 from .slot_entries import ability_on_hit_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
@@ -82,11 +88,9 @@ _R_DURATION_SECONDS = data_value(spell_object("Master Yi", "Highlander"), "RDura
 _E_DURATION_SECONDS = data_value(spell_object("Master Yi", "WujuStyle"), "Duration")
 
 
-def _double_strike(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _double_strike(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: every 3rd auto strikes twice — second strike 50% AD physical."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     ad = ctx.stat("attack_damage")
     per_proc = _SECOND_STRIKE_AD_RATIO * ad
     return ability_on_hit_entry(

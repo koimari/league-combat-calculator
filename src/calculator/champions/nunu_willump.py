@@ -25,7 +25,7 @@ from ..binary_roots import data_value, spell_object
 from ..healing_helpers import HealAnchor, ability_json, parsed_rank, trigger_fields
 from .engine import BUFF, SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
-from .module_helpers import named_damage
+from .module_helpers import ability_slot, named_damage
 from .packet_module import build_packet_module
 from .slot_entries import STEROID_ZERO, damage_entry
 from .slot_extract import ability_name, extract_named
@@ -37,11 +37,11 @@ _P_BONUS_ATTACK_SPEED = data_value(_NUNU_PASSIVE_SPELL, "ASIncrease") * 100.0
 _P_BONUS_MOVEMENT_SPEED = data_value(_NUNU_PASSIVE_SPELL, "MSIncrease") * 100.0
 
 
-def _call_of_the_freljord(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _call_of_the_freljord(
+    ctx: SlotCtx, ability: dict[str, Any]
+) -> dict[str, Any] | None:
     """P: the 20% attack speed the duo's own damage keeps refreshed."""
-    ability = ctx.ability("P")
-    if ability is None:
-        return None
     entry = damage_entry(
         ability_name(ability),
         ctx.level,

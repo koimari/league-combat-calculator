@@ -60,7 +60,7 @@ from ..control_spec import ControlScope
 from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx
 from .inputs import int_option
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .packet_module import build_packet_module
 from .slot_cc import CC_PER_PART
 from .slot_control import with_control_event
@@ -87,7 +87,8 @@ _SPIKED_SHELL_ARMOR_RATIO = data_value(_RAMMUS_P_SPELL, "ArmorRatio")
 _SPIKED_SHELL_MAGIC_RESISTANCE_RATIO = data_value(_RAMMUS_P_SPELL, "MagicResistRatio")
 
 
-def _spiked_shell(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _spiked_shell(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: bonus AD equal to 15% total armour plus 15% total magic resist.
 
     BUFF phase so the grant lands in ``ctx.stats`` before any later slot
@@ -98,9 +99,6 @@ def _spiked_shell(ctx: SlotCtx) -> dict[str, Any] | None:
     zero-damage carrier for the buff, exactly like the packet ``no_damage``
     row it replaces.
     """
-    ability = ctx.ability("P")
-    if ability is None:
-        return None
 
     armor = ctx.stat("armor")
     magic_resistance = ctx.stat("magic_resistance")

@@ -5,7 +5,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import named_damage, ranked_slot
+from .module_helpers import ability_slot, named_damage, ranked_slot
 from .slot_cc import CC_PER_PART
 from .slot_entries import ability_on_hit_entry, damage_entry, on_hit_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
@@ -13,10 +13,8 @@ from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 
-def _royal_privilege(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("P")
-    if ability is None:
-        return None
+@ability_slot("P")
+def _royal_privilege(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     total = extract_named(
         ability, "Bonus Physical Damage", ctx.level, ctx.stats, ctx.target
     )

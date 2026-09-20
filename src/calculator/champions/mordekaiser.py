@@ -42,7 +42,7 @@ from ..binary_roots import (
 )
 from .engine import ONHIT, SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
-from .module_helpers import ability_cast_times
+from .module_helpers import ability_cast_times, ability_slot
 from .packet_module import build_packet_module
 from .slot_entries import damage_entry, on_hit_entry
 from .slot_extract import ability_name
@@ -92,11 +92,11 @@ _R_DRAIN = CachedSentence(
 )
 
 
-def _darkness_rise_on_hit(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _darkness_rise_on_hit(
+    ctx: SlotCtx, ability: dict[str, Any]
+) -> dict[str, Any] | None:
     """P: the bonus magic damage every basic attack carries (40% AP)."""
-    ability = ctx.ability("P")
-    if ability is None:
-        return None
     per_hit = _P_ON_HIT_AP_RATIO * float(ctx.stat("ability_power"))
     entry = on_hit_entry(ability_name(ability), per_hit, "magic")
     entry["detail"] = (

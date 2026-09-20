@@ -11,7 +11,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
-from .module_helpers import no_damage_parser
+from .module_helpers import ability_slot, no_damage_parser
 from .slot_entries import damage_entry
 from .slot_extract import extract_cooldown, extract_named
 from .slotlib import simple_damage
@@ -64,10 +64,8 @@ def _packet_parser(
     tick_fix: dict[str, Any] | None = None,
     part_timing: dict[str, Any] | None = None,
 ):
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability = ctx.ability()
-        if ability is None:
-            return None
+    @ability_slot()
+    def parse(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
         rank = ctx.level if spec.get("ranks") == "level" else ctx.rank_for()
         if rank < 1:
             return None

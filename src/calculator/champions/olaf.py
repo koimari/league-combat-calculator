@@ -34,7 +34,7 @@ from typing import Any
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .inputs import int_option
-from .module_helpers import buff_window_share, ranked_slot
+from .module_helpers import ability_slot, buff_window_share, ranked_slot
 from .packet_module import build_packet_module
 from .slot_entries import STEROID_ZERO, damage_entry
 from .slot_extract import (
@@ -75,11 +75,9 @@ def _per_level_row(ability: dict[str, Any], occurrence: int, level: int) -> floa
     return sum_modifiers(leveling, level, level=level)
 
 
-def _berserker_rage(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _berserker_rage(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: missing-health-scaled attack speed (0-100% of 50-107.84%)."""
-    ability = ctx.ability("P")
-    if ability is None:
-        return None
 
     missing = (
         min(max(float(ctx.option("olaf_missing_health_percent")), 0.0), 100.0) / 100.0

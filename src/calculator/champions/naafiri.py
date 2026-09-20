@@ -48,7 +48,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option
-from .module_helpers import buff_window_share, ranked_slot
+from .module_helpers import ability_slot, buff_window_share, ranked_slot
 from .packet_module import build_packet_module
 from .shared_mechanics import multi_pass_damage
 from .slot_entries import STEROID_ZERO, damage_entry
@@ -159,7 +159,8 @@ def _call_of_the_pack(
 _call_of_the_pack.phase = BUFF
 
 
-def _we_are_more(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _we_are_more(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: the pack's sourced share of Hounds' Pursuit (Illaoi-P pattern).
 
     The innate summon deals no damage of its own.  What the Packmates
@@ -167,9 +168,6 @@ def _we_are_more(ctx: SlotCtx) -> dict[str, Any] | None:
     times the sourced Packmate count at this level and hunt state; their
     basic attacks stay unpriced with a named receipt (module docstring).
     """
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
     name = ability_name(ability)
     hunt = bool(ctx.option("w_hunt"))
     count = _packmate_count(ctx.level, hunt=hunt)

@@ -44,7 +44,7 @@ from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .shared_mechanics import innate_zero_row, ticked_channel
 from .slot_control import with_control_event
 from .slot_entries import damage_entry
@@ -185,11 +185,9 @@ def _soul_eater(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _wither(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _wither(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """W: slow/cripple — no enemy damage."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     return {
         "name": ability_name(ability),
         "rank": ctx.rank_for(),

@@ -57,7 +57,7 @@ from ..binary_roots import (
 from .contract_vocabulary import coverage
 from .engine import ONHIT, SlotCtx
 from .inputs import int_option
-from .module_helpers import no_damage, ranked_slot
+from .module_helpers import ability_slot, no_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry, on_hit_entry
@@ -190,7 +190,8 @@ def _searing_brilliance_per_missile(ctx: SlotCtx, ability: dict[str, Any]) -> fl
     return cached + _P_MISSILE_AP_RATIO * float(ctx.stat("ability_power") or 0.0)
 
 
-def _searing_brilliance(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _searing_brilliance(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: the stack-consuming empowered attack — a cast-armed on-hit.
 
     Every ability cast generates 3 Searing Brilliance stacks for 5
@@ -211,9 +212,6 @@ def _searing_brilliance(ctx: SlotCtx) -> dict[str, Any] | None:
     is deliberately absent — no cached source says consuming the buff
     restarts its 5 seconds.
     """
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
     per_missile = _searing_brilliance_per_missile(ctx, ability)
     missiles = int(ctx.option("p_searing_brilliance_missiles"))
     missiles = max(0, min(missiles, _P_MAX_MISSILES))

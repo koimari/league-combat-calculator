@@ -37,7 +37,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from .engine import BUFF, ONHIT, SlotCtx
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .packet_module import build_packet_module
 from .slot_entries import damage_entry, on_hit_entry
 from .slot_extract import (
@@ -150,11 +150,9 @@ def _bullet_time(
     return entry
 
 
-def _love_tap(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _love_tap(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: the AD-scaled bonus on each attack that tags a NEW enemy."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     ratio = _love_tap_ad_ratio(ctx, ability)
     per_tap = ratio * ctx.stat("attack_damage")
     if per_tap <= 0:

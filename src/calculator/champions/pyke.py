@@ -44,6 +44,7 @@ from ..binary_roots import calculation_coefficient, data_value, spell_object
 from ..stat_conversion import BonusHealthConversion
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
+from .module_helpers import ability_slot
 from .packet_module import build_packet_module
 from .slot_entries import damage_entry
 from .slot_extract import (
@@ -77,11 +78,9 @@ _R_DAMAGE_BONUS_AD_RATIO = _R_THRESHOLD_BONUS_AD_RATIO * _R_REDUCED_DAMAGE
 _R_DAMAGE_PER_LETHALITY = _R_THRESHOLD_PER_LETHALITY * _R_REDUCED_DAMAGE
 
 
-def _death_from_below(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("R")
+def _death_from_below(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """R: level-based physical damage row + 40% bAD + 0.75 per Lethality."""
-    ability = ctx.ability("R", 0)
-    if ability is None:
-        return None
     level = ctx.level
     if level < 1:
         return None
