@@ -12,7 +12,7 @@ from .charge_cadence import ChargeRule
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, int_option
-from .module_helpers import named_damage, no_damage, ranked_slot
+from .module_helpers import ability_slot, named_damage, no_damage, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
@@ -27,10 +27,8 @@ _GANGPLANK_R_SPELL = spell_object("Gangplank", "GangplankR")
 _P_MAX_PROCS = 10
 
 
-def _trial_proc(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _trial_proc(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     procs = min(max(int(ctx.option("p_procs")), 0), 10)
     requested = ctx.options.get("p_procs") is not None
     if procs <= 0 and requested:
@@ -189,10 +187,8 @@ def _require_w_rows(ability: Mapping[str, Any]) -> None:
     raise KeyError("Gangplank Remove Scurvy has no 'Heal' leveling row")
 
 
-def _remove_scurvy(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _remove_scurvy(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     _require_w_rows(ability)
     return no_damage(
         ctx,

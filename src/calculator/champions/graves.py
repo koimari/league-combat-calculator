@@ -8,7 +8,7 @@ from typing import Any
 from ..ability_prose import CachedSentence
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import named_damage, no_damage, ranked_slot
+from .module_helpers import ability_slot, named_damage, no_damage, ranked_slot
 from .shared_mechanics import multi_pass_damage
 from .slot_extract import (
     ability_name,
@@ -33,10 +33,8 @@ def _level_scaling(
     return sum_modifiers(leveling, level, stats, target)
 
 
-def _new_destiny(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _new_destiny(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     total_ratio = _level_scaling(ability, 2, ctx.level, ctx.stats, target=ctx.target)
     critical = bool(ctx.option("p_critical_pellets"))
     if critical:

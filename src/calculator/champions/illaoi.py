@@ -9,16 +9,14 @@ from ..ability_spec import DamagePart
 from .engine import ONHIT, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import int_option
-from .module_helpers import named_damage, no_damage, ranked_slot
+from .module_helpers import ability_slot, named_damage, no_damage, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
 
 
-def _tentacle(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _tentacle(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     count = min(max(int(ctx.option("p_tentacles")), 0), 12)
     if count <= 0:
         return None

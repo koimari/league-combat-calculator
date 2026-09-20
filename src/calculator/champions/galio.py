@@ -15,7 +15,7 @@ from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import float_option, int_option
-from .module_helpers import named_damage, ranked_slot
+from .module_helpers import ability_slot, named_damage, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
@@ -45,7 +45,8 @@ _SMASH_REDUCTION = CachedSentence(
 )
 
 
-def _colossal_smash(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _colossal_smash(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: replace the ordinary swings Colossal Smash arms with magic ones.
 
     How many it arms is the fight's question, not the reader's: the timer
@@ -53,9 +54,6 @@ def _colossal_smash(ctx: SlotCtx) -> dict[str, Any] | None:
     the cached 3 off it, so the walk over the cast and swing schedules
     answers it (``champions/armed_procs.py``).
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
     conversions = max(0, int(ctx.option("passive_procs")))
     total_modified_raw = extract_named(
         ability,

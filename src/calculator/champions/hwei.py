@@ -7,7 +7,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import float_option, int_option
-from .module_helpers import level_row, no_damage, ranked_slot
+from .module_helpers import ability_slot, level_row, no_damage, ranked_slot
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
@@ -15,11 +15,9 @@ from .slotlib import proc_damage
 from .source_receipts import load_champion_sources
 
 
-def _signature(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _signature(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """Emit Hwei's sourced Signature detonation as an explicit proc count."""
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
 
     entry = proc_damage(
         level_row("Per-Level Scaling"),

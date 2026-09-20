@@ -46,7 +46,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import (
     ability_name,
@@ -81,16 +81,14 @@ _R_BEAM_SECONDS = data_value(_DIANA_R_SPELL, "Delay")
 _TRIPLED_AS_OCCURRENCE = 1
 
 
-def _moonsilver_blade(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _moonsilver_blade(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: tripled bonus attack speed (15-35% base, x3 after any cast).
 
     BUFF phase — the tripled AS is fed into ``ctx.stats`` (so the cleave
     slot's auto count sees it) and emitted as a ``stat_buff`` so the
     fight engine's auto count and reported champion stats reflect it.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
 
     leveling = find_named_leveling(
         ability, "Per-Level Scaling", occurrence=_TRIPLED_AS_OCCURRENCE
@@ -121,7 +119,8 @@ def _moonsilver_blade(ctx: SlotCtx) -> dict[str, Any] | None:
 _moonsilver_blade.phase = BUFF
 
 
-def _moonsilver_cleave(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _moonsilver_cleave(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P cleave: every 3rd basic attack deals spell AoE magic damage.
 
     Rides the auto stream only — floor(autos / 3) procs over a timed
@@ -130,9 +129,6 @@ def _moonsilver_cleave(ctx: SlotCtx) -> dict[str, Any] | None:
     attack speed already includes P's buff (BUFF phase ran first), so
     the count matches the fight engine's buffed auto count.
     """
-    ability = ctx.ability("P")
-    if ability is None:
-        return None
     duration = ctx.options.get("fight_duration_seconds")
     if duration is None:
         return None

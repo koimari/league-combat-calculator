@@ -26,7 +26,7 @@ from typing import Any
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, SlotParser, build_parser
 from .inputs import int_option
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .slotlib import simple_damage
@@ -117,7 +117,8 @@ def _with_q_refund(parser: SlotParser) -> SlotParser:
 # ---------------------------------------------------------------------------
 
 
-def _rising_spell_force(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _rising_spell_force(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: stat-buff only — 10% bonus attack speed per stack, no damage.
 
     BUFF-phase zero-damage entry; the fight engine applies the
@@ -125,9 +126,6 @@ def _rising_spell_force(ctx: SlotCtx) -> dict[str, Any] | None:
     not a parse-time scaling stat for any of Ezreal's damage reads, so
     ``ctx.stats`` is left untouched.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
     entry = damage_entry(ability_name(ability), ctx.level, 0.0, 0.0, "physical")
     requested = ctx.options.get("passive_stacks")
     if requested is None:

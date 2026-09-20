@@ -7,7 +7,7 @@ from typing import Any
 from ..control_spec import ControlScope
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import named_damage, no_damage
+from .module_helpers import ability_slot, named_damage, no_damage
 from .slot_control import with_control_event
 from .slot_entries import damage_entry
 from .slot_extract import extract_cooldown, extract_named
@@ -18,10 +18,8 @@ _SPIDER_BONUS_DAMAGE = (12.0, 22.0, 32.0, 42.0)
 _SPIDER_HEAL = (6.0, 8.0, 10.0, 12.0)
 
 
-def _spider_queen(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _spider_queen(ctx: SlotCtx, _ability: dict[str, Any]) -> dict[str, Any] | None:
     if not bool(ctx.option("spider_form")):
         return None
     tier = min(sum(ctx.level >= threshold for threshold in _SPIDER_FORM_LEVELS) - 1, 3)

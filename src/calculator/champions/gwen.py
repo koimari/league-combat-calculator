@@ -11,7 +11,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option
-from .module_helpers import no_damage, ranked_slot
+from .module_helpers import ability_slot, no_damage, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
@@ -22,10 +22,8 @@ _Q_CENTER_TRUE_FRACTION = data_value(_GWEN_Q_SPELL, "TrueDamageConversion")
 _E_BASE_DAMAGE = data_value(_GWEN_E_SPELL, "BaseDamage")
 
 
-def _thousand_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _thousand_cuts(ctx: SlotCtx, _ability: dict[str, Any]) -> dict[str, Any] | None:
     target_max = float(ctx.target_stat("target_max_health") or 0.0)
     # The parent page describes the champion branch as 1% (+0.6% per 100 AP)
     # of target maximum health. The level row in the cache is for the

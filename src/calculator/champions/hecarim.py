@@ -13,7 +13,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import float_option, int_option
-from .module_helpers import between_rows, ranked_slot
+from .module_helpers import ability_slot, between_rows, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
@@ -74,10 +74,8 @@ def _rampage_stack_terms(ability: Mapping[str, Any]) -> dict[str, float]:
     }
 
 
-def _warpath(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _warpath(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     percent = extract_value(ability, "Per-Level Scaling", ctx.level)
     bonus_ms = float(ctx.option("bonus_movement_speed"))
     if bonus_ms <= 0.0:

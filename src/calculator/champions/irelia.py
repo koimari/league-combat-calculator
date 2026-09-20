@@ -10,7 +10,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import float_option, int_option
-from .module_helpers import between_rows, named_damage, ranked_slot
+from .module_helpers import ability_slot, between_rows, named_damage, ranked_slot
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry, on_hit_entry
 from .slot_extract import (
@@ -35,10 +35,8 @@ def _p_row(ability: dict[str, Any], occurrence: int, ctx: SlotCtx) -> float:
     return sum_modifiers(row, ctx.level, ctx.stats, ctx.target) if row else 0.0
 
 
-def _fervor(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _fervor(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     as_per_stack = _p_row(ability, 0, ctx)
     entry = on_hit_entry(ability_name(ability), 0.0, "magic")
     max_hit = {

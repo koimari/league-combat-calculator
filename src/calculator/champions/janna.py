@@ -18,16 +18,20 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import float_option
-from .module_helpers import between_rows, named_damage, no_damage, ranked_slot
+from .module_helpers import (
+    ability_slot,
+    between_rows,
+    named_damage,
+    no_damage,
+    ranked_slot,
+)
 from .slot_entries import damage_entry, on_hit_entry
 from .slot_extract import ability_name, extract_cooldown
 from .source_receipts import load_champion_sources
 
 
-def _tailwind(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _tailwind(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     bonus_ms = max(0.0, float(ctx.option("bonus_movement_speed")))
     value = 0.30 * bonus_ms
     entry = on_hit_entry(ability_name(ability), value, "magic")

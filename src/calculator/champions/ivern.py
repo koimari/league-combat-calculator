@@ -10,7 +10,7 @@ from .pet_window import derived_attack_count
 from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import named_damage, no_damage, ranked_slot
+from .module_helpers import ability_slot, named_damage, no_damage, ranked_slot
 from .slot_cc import CC_PER_PART
 from .slot_control import with_control
 from .slot_entries import damage_entry, on_hit_entry
@@ -19,10 +19,8 @@ from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 
-def _brushmaker(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _brushmaker(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     if not bool(ctx.option("w_in_brush")):
         return no_damage(
             ctx,

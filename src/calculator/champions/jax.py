@@ -9,7 +9,7 @@ from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
-from .module_helpers import no_damage, ranked_slot
+from .module_helpers import ability_slot, no_damage, ranked_slot
 from .shared_mechanics import empowered_auto_entry
 from .slot_control import with_control
 from .slot_entries import damage_entry
@@ -38,10 +38,8 @@ _ASSAULT_STACK = CachedSentence(
 )
 
 
-def _assault(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _assault(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     requested = ctx.options.get("p_stacks")
     seconds, max_stacks = _ASSAULT_STACK.stack_terms(ability)
     stacks = min(max(int(requested), 0), max_stacks) if requested is not None else 0
