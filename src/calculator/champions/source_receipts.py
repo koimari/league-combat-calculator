@@ -1,4 +1,4 @@
-"""Public loader for champion full-entry source receipts.
+"""The two receipts a champion module publishes: its sources, and one named state.
 
 ``static/champion-source-receipts.json`` is the one home for the revision a
 champion module was reviewed against; this module is its only reader, so a
@@ -7,14 +7,20 @@ falls back to the receipt ``reviewed-packets.json`` carries for the cached
 page, which ``build_reviewed_modules.py`` regenerates: a different fact
 (what the cache holds now), and the reason ``full_entry_audit`` can report a
 module's pin as behind the manifest.
+
+:func:`state_receipt` is the other: a named state (Stardust, Mist souls, a
+charge model) is a frozen ``NamedTuple`` of sourced values, published under
+the name the API shows, JSON-safe and copied so a reader cannot reach back
+into the rule.
 """
 
 from __future__ import annotations
 
 import json
+from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 _STATIC_ROOT = Path(__file__).resolve().parents[3] / "static"
 _RECEIPT_ASSET = _STATIC_ROOT / "champion-source-receipts.json"
@@ -97,3 +103,18 @@ def load_champion_sources(name: str) -> list[dict[str, Any]]:
     if rows is None:
         raise RuntimeError(f"No source receipts are published for {name!r}")
     return [dict(row) for row in rows]
+
+
+def _published(value: Any) -> Any:
+    """A JSON-safe copy: a mapping is a group of terms, a sequence a value."""
+    if isinstance(value, Mapping):
+        return {key: _published(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return list(value)
+    return value
+
+
+def state_receipt(name: str, rule: NamedTuple) -> dict[str, Any]:
+    """*rule*'s fields under its published *name*."""
+    fields = {key: _published(value) for key, value in rule._asdict().items()}
+    return {"name": name, **fields}

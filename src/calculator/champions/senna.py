@@ -33,8 +33,10 @@ anyone, so ``SELF_HEALING_RULE`` is the slot, the sourced row and the
 source name it is published under.
 """
 
+from collections.abc import Mapping
 from functools import partial
-from typing import Any
+from types import MappingProxyType
+from typing import Any, NamedTuple
 
 from .. import healing_helpers as _healing
 from ..binary_roots import calculation_coefficient, data_value, spell_object
@@ -48,6 +50,7 @@ from .slot_control import with_control
 from .slot_entries import attach_self_shield
 from .slot_extract import ability_name, extract_named, extract_value
 from .slotlib import with_item_on_hits
+from .source_receipts import state_receipt
 
 PACKET_SHA256 = "97538cf620050743705205ae884ef53611e35fbad8ed2808fd3617fb3bc3b7d5"
 
@@ -63,43 +66,44 @@ _MIST_CRIT_PER_THRESHOLD = 10.0  # % crit chance
 _MARK_STACKS = 2  # apply on hit 1, consume on hit 2
 
 
-class _MistRule:
-    """The typed Mist (Absolution) counter declaration (P3 package 3W).
+class _MistRule(NamedTuple):
+    """The typed Mist (Absolution) counter declaration.
 
     Mist is a PERMANENT counter: each soul grants 0.75 bonus AD and every
     20 souls grant 20 bonus attack range + 10% critical strike chance.
     The four numbers are wiki prose in the cached P entry (leveling
-    empty — no atom exists); the source receipt pins the P template
+    empty, no atom exists); the source receipt pins the P template
     revision.  ``public_receipt()`` rides the option's ``state`` and the
     resource-ledger souls declaration.
     """
 
-    def __init__(self) -> None:
-        self.per_stack_bonus_ad = _MIST_AD_PER_STACK
-        self.stacks_per_threshold = _MIST_STACKS_PER_THRESHOLD
-        self.range_per_threshold = _MIST_RANGE_PER_THRESHOLD
-        self.crit_per_threshold = _MIST_CRIT_PER_THRESHOLD
-        self.permanent = True
-        self.source = {
+    per_stack_bonus_ad: float
+    stacks_per_threshold: int
+    range_per_threshold: float
+    crit_per_threshold: float
+    permanent: bool
+    source: Mapping[str, Any]
+
+    def public_receipt(self) -> dict[str, Any]:
+        """The published Mist declaration."""
+        return state_receipt("Senna — Absolution (Mist souls)", self)
+
+
+SENNA_MIST_RULE = _MistRule(
+    per_stack_bonus_ad=_MIST_AD_PER_STACK,
+    stacks_per_threshold=_MIST_STACKS_PER_THRESHOLD,
+    range_per_threshold=_MIST_RANGE_PER_THRESHOLD,
+    crit_per_threshold=_MIST_CRIT_PER_THRESHOLD,
+    permanent=True,
+    source=MappingProxyType(
+        {
             "label": "Local League Wiki cache — Senna P (Absolution) Mist prose",
             "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_Senna/I",
             "revision_id": 2864157,
             "revision_timestamp": "2019-11-03T20:06:33Z",
         }
-
-    def public_receipt(self) -> dict[str, Any]:
-        return {
-            "name": "Senna — Absolution (Mist souls)",
-            "per_stack_bonus_ad": self.per_stack_bonus_ad,
-            "stacks_per_threshold": self.stacks_per_threshold,
-            "range_per_threshold": self.range_per_threshold,
-            "crit_per_threshold": self.crit_per_threshold,
-            "permanent": self.permanent,
-            "source": dict(self.source),
-        }
-
-
-SENNA_MIST_RULE = _MistRule()
+    ),
+)
 
 # HARDCODED: verify on patch updates — Relic Cannon's per-auto bonus
 # physical damage is 20% of TOTAL AD (wiki prose, P effects[3], leveling
