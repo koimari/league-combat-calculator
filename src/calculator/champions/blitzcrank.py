@@ -154,27 +154,21 @@ OPTIONS: list[dict[str, Any]] = []
 ULTIMATE_RECASTS = True
 
 ASSUMPTIONS = [
-    "P (Mana Barrier) is modeled as a pre-fight granted shield: the "
-    "cached passive (35% of maximum mana for up to 10s, 90s cooldown) "
-    "rides the first Q cast's event so the ledger grants it before "
-    "incoming damage. The in-game trigger (damage taken while below "
-    "30% max health) is a documented boundary — the pre-fight grant "
-    "approximates an always-ready barrier for the fight window",
-    "W (Overdrive) attack speed (30-70%) is active for the first 5 "
-    "seconds of the fight; fights of 5s or less have it up throughout. "
-    "Movement speed and the post-buff slow are ignored",
-    "E (Power Fist) fires once per cast on the next auto (attack "
-    "reset), applies item on-hits, procs spellblade, and its "
-    "100% AD + 25% AP bonus benefits from expected crit scaling",
-    "R (Static Field) passive lightning is not modeled — casting R "
-    "disables it and realistic bolt counts are small next to the "
-    "active; only the active burst is counted",
-    "R (Static Field) recasts on its cooldown inside a timed window "
-    "(ULTIMATE_RECASTS): the cached 60/40/20s cooldown is marked "
-    "affectedByCdr, the 100 mana cost is flat at every rank, and the "
-    "active is a plain burst with no form, charge or stack state, so "
-    "ultimate haste shortens it exactly as ability haste shortens a "
-    "basic. Every other kit keeps the engine's one-cast-per-fight rule",
+    "P (Mana Barrier) rides the first Q cast: 35% of maximum mana for 10s, 90s "
+    "cooldown, approximating the trigger.",
+    "That in-game trigger is damage taken below 30% maximum health, a documented "
+    "boundary.",
+    "W (Overdrive) gives 30 to 70% attack speed for the fight's first 5 seconds.",
+    "Its movement speed and post-buff slow are ignored.",
+    "E (Power Fist) fires once per cast on the next auto, applying item on-hits and "
+    "spellblade.",
+    "Its 100% AD + 25% AP bonus takes the expected crit scaling.",
+    "R (Static Field) passive lightning is not modeled: casting R disables it, and "
+    "only the active burst counts.",
+    "R recasts on its cooldown in a timed window: cached 60/40/20s affectedByCdr, 100 "
+    "flat mana, a plain burst.",
+    "Ultimate haste shortens it as ability haste does; every other kit keeps the "
+    "one-cast-per-fight rule.",
 ]
 
 

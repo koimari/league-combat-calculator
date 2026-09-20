@@ -166,20 +166,18 @@ OPTIONS: list[dict[str, Any]] = [
 ASSUMPTIONS = [
     "Every Ablaze stack burns its full 4-second duration (2% of target "
     "max HP per stack, max 3 stacks per rotation)",
-    "Blaze detonation fires once per rotation — the 4s re-stack lockout "
-    "prevents faster procs; timed fights still count one Blaze cycle "
-    "(DoT + detonation) per fight",
-    "Detonation % keeps its linear level scaling past 18 (12.35% at 19, "
-    "12.71% at 20) per the parser array, not the wiki-prose 12% cap",
+    "Blaze detonates once per rotation: the 4s re-stack lockout blocks a faster proc, "
+    "one cycle per fight.",
+    "Detonation % scales linearly past 18 (12.35% at 19, 12.71% at 20) per the parser "
+    "array, not the 12% prose cap.",
     "W is always Ablaze-empowered (a rotation opening with Q or E guarantees it)",
-    "Ablaze ticks count as ability damage, keeping item burns "
-    "(Liandry's Torment, Blackfire Torch) refreshed for the full 4s "
-    "after Brand's last cast",
-    "Q's 1.75-second stun is sourced but conditional — it is Blaze's "
-    "'Ablaze Bonus' branch, so the rotation's opening Q (the applier) "
-    "stuns nothing.  One kind per slot cannot say both, so Q stays "
-    "unreviewed and its stun is not counted as target action downtime; "
-    "E's spread doubling and R's slow remain utility-only",
+    "Ablaze ticks count as ability damage, so item burns stay refreshed for the full "
+    "4s after the last cast.",
+    "Q's 1.75s stun is Blaze's Ablaze Bonus branch, so the rotation's opening Q stuns "
+    "nothing and is not priced.",
+    "One kind per slot cannot say both, so Q stays unreviewed and its stun is no "
+    "target action downtime.",
+    "E's spread doubling and R's slow remain utility-only.",
 ]
 
 # Cached kit review.  E "creates a blast that deals magic damage" and its

@@ -352,11 +352,9 @@ class TestSourceAndTypedValues:
             p_prose
         )
         meta = get_champion_options_meta("Bard")
-        assert any("stock + recharge" in text for text in meta["assumptions"])
-        assert any(
-            "Meep slow and the 15+ chime AoE/cone splash are not modeled" in text
-            for text in meta["assumptions"]
-        )
+        published = " ".join(meta["assumptions"])
+        assert "min(autos, stock + fight_duration / recharge)" in published
+        assert "Meep slow and the 15-chime cone splash are not modeled" in published
         sources = {row["label"]: row for row in meta["sources"]}
         assert sources["Local League Wiki cache"]["url"].endswith("/en-us/Bard")
         assert sources["Local League Wiki cache"]["revision_id"] == 4002472

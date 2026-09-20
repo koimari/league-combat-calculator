@@ -350,46 +350,42 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Passive 20% temporary attack speed is treated as active throughout the "
-    "selected combo because every ability cast refreshes its three seconds",
-    "Patch 26.15 restored basic attacks and crits to 100% damage; on-hit "
-    "riders use Bel'Veth's sourced 100% modifier (75% removed in 26.15)",
-    "Q applies item on-hit effects once per dash at 100%; E once per slash "
-    "at 12-24% (interpolated by target missing health) — each is that "
-    "ability's own modifier, independent of the passive's auto-only modifier",
-    "R's ramping true-damage passive applies on every basic attack and on "
-    "Q/E on-hit instance, using the carrier's own on-hit effectiveness",
-    "Q/E applications trigger on-hit item damage (Nashor's, Wit's End, "
-    "BotRK, ...) and count on the shared on-hit stack counters "
-    "(Kraken/Hullbreaker) — a proc fires at the effectiveness of the hit "
-    "that landed it",
-    "E slashes are real attacks (wiki: on-hit, on-attack, and ability "
-    "effects) and advance on-attack cadences: Guinsoo's phantom-hit "
-    "counter (a slash-fired phantom re-applies item on-hits at the "
-    "slash's 12-24%); Q is on-hit only and never advances on-attack "
-    "mechanics",
-    "On-attack mechanics the engine does not model per-hit are "
-    "unaffected by E: energized stacking (RFC/Voltaic use a cooldown "
-    "model), Navori's refund (continuous auto rate), Yun Tal (baked "
-    "stat), Runaan's (unmodeled)",
+    "The passive's 20% attack speed holds through the combo: every ability cast "
+    "refreshes its three seconds.",
+    "Basic attacks and crits deal 100%, and on-hit riders use Bel'Veth's sourced 100% "
+    "modifier.",
+    "Q applies item on-hit once per dash at 100%, E once per slash at 12 to 24% by "
+    "target missing health.",
+    "Each is the ability's own modifier, independent of the passive's auto-only one.",
+    "R's ramping true damage rides every basic attack and every Q or E on-hit, at the "
+    "carrier's effectiveness.",
+    "Q and E fire on-hit item damage and advance the shared stack counters (Kraken, "
+    "Hullbreaker).",
+    "A proc fires at the effectiveness of the hit that landed it.",
+    "E slashes are real attacks (wiki: on-hit, on-attack and ability effects) and "
+    "advance on-attack cadences.",
+    "A slash-fired Guinsoo phantom re-applies item on-hits at the slash's 12 to 24%.",
+    "Q is on-hit only and never advances an on-attack mechanic.",
+    "E leaves alone the on-attack mechanics the engine does not model per hit: "
+    "energized, Navori, Yun Tal, Runaan's.",
     "Spellblade (Sheen line) is consumed by the next basic attack — "
     "never by Q/E applications",
-    "Shared counter hit order: rotation ability hits (cast order, "
-    "recasts grouped) land before the fight's autos — the sim's "
-    "existing rotation-then-autos timeline",
+    "Shared counters see rotation ability hits (cast order, recasts grouped) before "
+    "the fight's autos.",
     "Target missing health defaults to 50% (shared option driving E slash "
     "damage, E on-hit effectiveness, and R explosion)",
-    "Q per-direction dash cooldown (16-12s) is wiki prose (the JSON holds "
-    "the 1s cast lockout); its bonus-AS haste conversion (0.25 haste per "
-    "1% bonus AS) is not modeled",
+    "Q's per-direction dash cooldown 16 to 12s is wiki prose; the JSON holds only the "
+    "1s cast lockout.",
+    "Its bonus-AS haste conversion, 0.25 haste per 1% bonus attack speed, is not "
+    "modeled.",
     "Monster/minion-only damage components skipped (champion combat calculator)",
-    "Void Remora pets, R heal, and E damage reduction/lifesteal remain "
-    "outside the combat ledger; W knock-up downtime is sourced and counted, "
-    "while its slow remains utility",
+    "Void Remora pets, the R heal and E's damage reduction stay outside the combat "
+    "ledger.",
+    "W's knock-up downtime is sourced and counted; its slow remains utility.",
     "True Form's total-AS increase multiplies final attack speed and does "
     "not count as bonus AS for E's slash count",
-    "'Based on level' scalings read the JSON per-level arrays (which "
-    "extend past level 18); a shorter array would clamp at its last entry",
+    "'Based on level' scalings read the JSON per-level arrays past 18; a short array "
+    "clamps at its last entry.",
 ]
 
 SOURCES = load_champion_sources("Bel'Veth")

@@ -190,20 +190,19 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Meep availability is stock + recharge: min(autos, stock + "
-    "fight_duration / recharge) autos are meep-empowered; remaining "
-    "autos are plain (one-rotation mode uses stocked meeps only)",
-    "Meep damage formula is uncapped (+6 per 5 chimes continues); stock "
-    "caps at the 100-chime breakpoint (9 meeps), recharge at 70 (4s)",
-    "Meep slow and the 15+ chime AoE/cone splash are not modeled — "
-    "single-target calculator; the splash never hits the primary target",
+    "Meep autos are min(autos, stock + fight_duration / recharge), the rest plain; "
+    "one rotation uses stock only.",
+    "Meep damage is uncapped (+6 per 5 chimes); stock caps at 100 chimes (9 meeps) "
+    "and recharge at 70 chimes (4s).",
+    "Meep slow and the 15-chime cone splash are not modeled: single target, and the "
+    "splash misses the primary.",
     "Q counted as a single hit on the primary target; the slow/stun is "
     "CC with no damage component",
-    "W (heal), E (portal), and R (stasis) deal no enemy damage. W is "
-    "cast so the ally-support scanner can price its sourced heal at the "
-    "fully-charged shrine; E and R emit an explicit zero-damage state "
-    "row (no_damage) rather than staying absent from the breakdown, "
-    "with the portal's travel and the stasis magnitude left unpriced",
+    "W (heal), E (portal) and R (stasis) deal no enemy damage.",
+    "W is cast so the ally-support scanner prices its sourced heal at the "
+    "fully-charged shrine.",
+    "E and R emit a no_damage row; the portal's travel and the stasis magnitude stay "
+    "unpriced.",
 ]
 
 SLOTS = {

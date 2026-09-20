@@ -116,23 +116,21 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Passive Sun Disc not modeled (requires a destroyed tower; separate "
-    "entity) (MODULE_COVERAGE: no_damage, not out_of_scope)",
+    "Passive Sun Disc needs a destroyed tower, a separate entity: not modeled, "
+    "no_damage rather than out_of_scope.",
     "Single-target: soldier spear line's reduced damage to targets beyond "
     "the closest (20-100% by level) not modeled",
     "Q deals one instance regardless of soldier count (in-game rule)",
-    "E (Shifting Sands) shields Azir for the sourced 70/110/150/190/230 "
-    "+ 60% AP for 1.5s at the cast; the shield is emitted by the "
-    "ally-support scanner from the cached Shield Strength row (untimed "
-    "packet — the 1.5s expiry is a documented boundary of that "
-    "interface) and absorbs incoming damage in the participant ledger",
-    "Soldier attacks use Azir's attack speed; they cannot crit, apply no "
-    "lifesteal, and apply on-hit effects at 50% effectiveness to the "
-    "primary target",
+    "E (Shifting Sands) shields Azir for 70/110/150/190/230 + 60% AP over 1.5s at the "
+    "cast (cached Shield Strength row).",
+    "E's ally-support packet is untimed, so the 1.5s expiry is a documented boundary "
+    "of that interface.",
+    "Soldier attacks take Azir's attack speed, cannot crit, carry no lifesteal, and "
+    "apply on-hit at 50%.",
     "Additional soldiers' 25% instances apply no on-hit effects",
-    "All per-attack and proc-style item effects (on-hit, spellblade, "
-    "energized, stack-counter procs like Kraken Slayer) apply at 50% "
-    "effectiveness on soldier attacks; Sundered Sky does not apply at all",
+    "Every per-attack item effect (on-hit, spellblade, energized, Kraken-style procs) "
+    "is 50% on soldier attacks.",
+    "Sundered Sky does not apply to soldier attacks at all.",
 ]
 
 SLOTS = {

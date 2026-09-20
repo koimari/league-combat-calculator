@@ -609,7 +609,7 @@ class TestAsheFocusConsumer:
         state = focus_option["state"]
         assert state["max_stacks"] == 4
         assert state["source"]["url"].endswith("/Ashe")
-        assert any("typed kernel stack state" in text for text in meta["assumptions"])
+        assert any("refreshing per attack" in text for text in meta["assumptions"])
 
     def test_kernel_state_drains_after_the_window(self):
         state = timed_stacks.TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=4)

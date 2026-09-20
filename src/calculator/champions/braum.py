@@ -342,36 +342,30 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Passive stacks come only from Braum's own basic attacks and Q "
-    "(solo — allied champions' attacks, which add stacks in real games, "
-    "are not modeled)",
-    "Passive trigger damage extrapolates linearly past level 18 "
-    "(16 + 10 x level; 216 at level 20), consistent with the JSON's "
-    "bonus-damage array",
-    "Passive is valued only in timed fights (the stack cycle walks the "
-    "auto/Q timeline, with Q assumed cast on cooldown from t=0); in "
-    "one-rotation mode a single Q application never reaches 4 stacks, so "
-    "no passive damage is shown",
+    "Passive stacks come only from Braum's own attacks and Q; allied champions' "
+    "attacks are not modeled.",
+    "Passive trigger damage extrapolates linearly past 18 (16 + 10 x level, 216 at "
+    "20), as the JSON array does.",
+    "The passive prices in timed fights only: the stack cycle walks the auto and Q "
+    "timeline, Q assumed on cooldown.",
+    "One rotation never reaches 4 stacks from a single Q, so it shows no passive "
+    "damage.",
     "An autos-only fight casts no Q, so only the ambient swings stack "
-    "(the pipeline states this with the auto_attacks_only reserved "
-    "option)",
-    "Passive stacks last 4s (refreshing) — with autos in the timeline "
-    "they never expire mid-buildup; without autos (Q-only stacking) the "
-    "expiry IS modeled, so the passive correctly never procs off Q alone",
-    "Passive stun (1.25-1.75s) is an authored control interval. R's "
-    "maximum knock-up duration is sourced from the cached rank row; the "
-    "slow field remains utility",
+    "(auto_attacks_only).",
+    "Passive stacks last 4s and refresh, so with autos in the timeline they never "
+    "expire mid-buildup.",
+    "With Q-only stacking the expiry is modeled, so the passive never procs off Q "
+    "alone.",
+    "The passive stun of 1.25 to 1.75s is an authored control interval.",
+    "R's maximum knock-up is the cached rank row; its slow field remains utility.",
     "Q's 2.5% max HP scaling uses Braum's own built max HP",
     "Q applies a passive stack but no on-hit effects and no "
     "immunity-window bonus (autos only)",
-    "E (Unbreakable) uses the cached Barrier Duration and Damage reduction "
-    "rows. The interaction atom blocks the first selected hit and reduces "
-    "later selected hits. The scenario chooses the active window, source "
-    "slots, and optional specific event ids (e_blocked_event_ids). Event "
-    "ids are positional per scenario ('attacker:defender:index'); changes "
-    "to the build, ranks, or roster renumber them, and any selected id that "
-    "never matches an incoming event is reported on the survival receipt "
-    "as blocked_event_ids_unmatched.",
+    "E (Unbreakable) reads the cached Barrier Duration and Damage reduction rows.",
+    "Its atom blocks the first selected hit and reduces later ones; the scenario "
+    "picks window, slots and event ids.",
+    "Event ids are positional per scenario, and an id matching nothing is reported as "
+    "blocked_event_ids_unmatched.",
     "W resistances affect the stats panel only; no damage in the kit "
     "scales off them",
 ]
