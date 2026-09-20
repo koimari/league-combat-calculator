@@ -1,39 +1,20 @@
-"""Teemo — CP10.8 full-entry-reviewed packet module.
+"""Teemo: full-entry-reviewed packet module.
 
-E (Toxic Shot) rides the swing stream: the "Magic Damage On-Hit" row
-(9-65 + 5% bonus AD + 30% AP) is an on-hit on every basic attack, and the
-"Total Poison Damage" row (24-120 + 10% bonus AD + 40% AP) is a
-one-stack refreshing DoT every attack re-applies, integrated by the
-engine's stacking-DoT walk over the fight's hit timeline (the reviewed
-packet had priced one on-hit and one 4-tick poison per fight).
-
-E4 summon: R (Noxious Trap) is a summoned trap.  The E2-3 tick fix
-already prices one shroom detonation as the full 4-second poison (4
-ticks of "Magic Damage per Tick" == the wiki Total Magic Damage row at
-every rank, one tick per second).  This module keeps that pricing and
-adds the player-controlled trap state:
-
-- ``r_shrooms`` (default 1) — how many shroom detonations the fight
-  prices.  The wiki note is explicit that stepping on multiple shrooms
-  only REFRESHES the poison duration (never stacks), so each detonation
-  prices its own full 4-tick DoT; a cluster walked onto simultaneously
-  would be one DoT, and ``r_shrooms`` models sequential detonations
-  (pre-placed field, charges stocked every 35/30/25s by rank).
-- The sourced slow (30/40/50% by rank for 4 seconds, from the cache's
-  "Slow" leveling row) is crowd-control utility the fight model does
-  not price; it is reported on the row detail.
-
-Boundary: shroom/trap placement, arm time, trigger radius and the 6-HP
-trap health bar are state the fight model does not price — the damage
-is the detonation DoT above.
-
-Coverage: W (Move Quick) is Teemo's own movement speed with no
-enemy-damage clause anywhere in the slot, so it is a zero-damage row
-carrying the cast's sourced ``move_speed_percent`` stat buff.  P
-(Guerrilla Warfare) is idle stealth
-with a real attack-speed steroid on breaking it, which WOULD change
-damage — so it stays ``out_of_scope`` with a receipt (the Olaf-R rule),
-never ``no_damage``.
+E (Toxic Shot) rides the swing stream twice over: its "Magic Damage On-Hit" row
+lands on every basic attack, and its "Total Poison Damage" row is a one-stack
+refreshing DoT that every attack re-applies, integrated by the engine's
+stacking-DoT walk over the fight's hit timeline.
+R (Noxious Trap) prices one shroom detonation as the full 4-second poison, four
+ticks of the per-tick row summing to the cached total.  Stepping on more shrooms
+only REFRESHES the poison, so ``r_shrooms`` models sequential detonations rather
+than stacked ones, each with its own four ticks.  Its sourced slow is control
+the model does not price and is reported on the row detail, and placement, arm
+time, trigger radius and the trap's own health are state.
+W (Move Quick) is a zero-damage row carrying the cast's sourced
+``move_speed_percent`` stat buff.
+P (Guerrilla Warfare) is idle stealth with a real attack-speed steroid on
+breaking it, which WOULD change damage, so it stays ``out_of_scope`` with a
+receipt rather than ``no_damage``.
 """
 
 from __future__ import annotations

@@ -1,40 +1,22 @@
-"""Camille — slot map for the archetype engine.
+"""Camille: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- Q (Precision Protocol) is TWO empowered basic attacks per cycle under
-  one JSON entry (damageType OTHER_DAMAGE — the classifier cannot type
-  it). Q1 rides the next auto (+20-40% total AD physical); Q2 is always
-  modeled as the DELAYED recast: doubled bonus ("Increased Mixed
-  Damage") with (36% + 4% per level, 100% from level 16) of the WHOLE
-  attack — base swing, bonus, and the spellblade proc it consumes —
-  converted to true damage. Neither Q attack can crit, so both entries
-  author their own non-crit forced swing via ``empowers_next_auto
-  {"swing_parts"}`` instead of the engine's default expected-crit swing.
-- W (Tactical Sweep) adds the outer-cone sweet spot: (6-8% + 2.5% per
-  100 bonus AD) of target MAX health — the "% per 100 bonus AD" unit
-  means percent-of-max-health, which generic scaling would misread as
-  flat damage. W's effect[2] holds monster-only values (excluded).
-- E (Hookshot/Wall Dive) splits across two JSON entries: damage and the
-  40-60% bonus-AS steroid live on E[1] (Wall Dive, cooldown None), the
-  cooldown on E[0] (Hookshot). BUFF phase: the AS is modeled as active
-  for the whole fight.
-- R (The Hextech Ultimatum) deals NO upfront damage — each basic attack
-  on the trapped target deals 4/6/8% of its CURRENT health as bonus
-  magic damage while the zone lasts. Emitted as an ``on_hit`` payload
-  with ``proc_window`` (zone duration): the fight engine procs it on
-  the autos landing inside the window against decaying current health,
-  and shows zero with no autos (one-rotation / autos off).
-- P (Adaptive Defenses) is a defensive shield with no cast of its own,
-  so it is absent from the slot map; W's ``with_self_shield`` wrapper
-  hangs the sourced shield (20% max HP, 2s) on W's damage event as a
-  ``self_shield_events`` payload the survival ledger grants pre-fight,
-  live-tested end to end
-  (``tests/test_champion_shield_events.py::test_camille_adaptive_defenses_payload_is_sourced``,
-  ``test_camille_api_adaptive_defenses_absorbs_known_incoming_hit``).
-  That channel is why the coverage map calls P ``modeled`` rather than
-  out_of_scope, with no standalone P row in the ``abilities`` dict.
-
-All numeric values are read from the champion JSON data.
+Q (Precision Protocol) is two empowered basic attacks per cycle under one cached
+entry typed OTHER_DAMAGE.  Q1 rides the next auto; Q2 is always the delayed
+recast, a doubled bonus plus 36% + 4% per level, 100% from level 16, of the
+WHOLE attack, base swing and spellblade proc included, converted to true damage.
+Neither Q attack can crit, so both author their own non-crit forced swing
+through ``empowers_next_auto`` rather than the engine's expected-crit swing.
+W (Tactical Sweep) adds the outer-cone sweet spot as a percent of the target's
+maximum health; its "% per 100 bonus AD" unit would otherwise read as flat
+damage, and its ``effects[2]`` holds monster-only values.
+E (Hookshot) splits across two cached entries: the damage and the 40 to 60%
+attack-speed steroid on E[1], the cooldown on E[0].  The steroid is modeled as
+active for the whole fight.
+R (The Hextech Ultimatum) deals nothing upfront.  Each basic attack on the
+trapped target deals 4/6/8% of its CURRENT health as bonus magic, emitted as an
+``on_hit`` with a ``proc_window``, so it shows zero when no autos land.
+P (Adaptive Defenses) has no cast, so it is absent from the slot map; W's
+``with_self_shield`` hangs the sourced shield on W's damage event.
 """
 
 from typing import Any

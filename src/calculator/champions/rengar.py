@@ -1,41 +1,20 @@
-"""Rengar — Ferocity (4-stack) empowered-ability system.
+"""Rengar: the four-stack Ferocity system.
 
-Stack mechanics modeled (E3):
-- P (Unseen Predator): casting a basic ability generates a Ferocity
-  stack (cap 4). At maximum stacks the next basic ability consumes them
-  to become EMPOWERED: the empowered Q/W/E replaces the base ability's
-  damage with the wiki "Ferocity Bonus" sourced values (per-level
-  arrays). ``p_ferocity`` is the explicit pre-stack state; at 4 the
-  Q/W/E rows price the empowered values.
-- Q (Savagery) base: "Additional Physical Damage" (20 : 160 by rank
-  + 5% AD); empowered: "Bonus Physical Damage" (35 : 260 by level
-  + 20% AD).  The reviewed CP10.6 packet misread the per-level
-  Ferocity-Bonus array as per-rank base damage; this module prices the
-  rank array for base and the level array for the empower.
-- W (Battle Roar) base: "Magic Damage" (50 : 170 + 80% AP); empowered:
-  "Bonus Magic Damage" (50 : 240 by level + 80% AP).
-- E (Bola Strike) base: "Physical Damage" (55 : 235 + 80% bonus AD);
-  empowered: "Bonus Physical Damage" (50 : 335 by level + 80% bonus AD).
-
-R (Thrill of the Hunt) is not a self buff.  Its priced effect is the
-armour reduction the empowered attack leaves on the target — "then
-inflicts armor reduction for 4 seconds", the cached "Armor Reduction"
-row (15/20/25) — emitted as a ``target_debuff`` the fight engine shreds
-with (``engine.py`` ``_ALLOWED_DEBUFF_KEYS``).  All numeric values are
-read from the champion JSON data.
-
-What R still does NOT price is the ambush attack's damage rider —
-"deals 100% AD additional physical damage" — and that stays open on
-sourced grounds: rengar.bin.json
-RengarRAbility/RengarR carries mSpellCalculations.BonusDamage
-(StatByCoefficientCalculationPart, mStat=2 = bonus AD, coefficient 1.0)
-against wiki prose reading an ambiguous "100% AD", and an ArmorShred
-DataValues array of 7 values ([10,15,20,25,30,35,40]) against the
-wiki's 3-value leveling row — two authority conflicts — while no
-marked-target / Unseen-Predator proc-condition kernel exists to gate a
-"next basic attack against the marked enemy" trigger.  A
-discovered-but-unresolved formula stays named and unpriced rather than
-being mislabelled in either direction (the Dr. Mundo P precedent).
+P (Unseen Predator) generates a Ferocity stack per basic ability cast, to a cap
+of four.  At the cap the next basic ability is EMPOWERED and its damage is the
+cached "Ferocity Bonus" row, which REPLACES the base row rather than adding to
+it.  ``p_ferocity`` is the explicit pre-stack state, and at 4 the Q, W and E
+rows price the empowered values.
+The two arrays are indexed differently, which is the trap: base damage is the
+per-RANK row and the Ferocity bonus is a per-LEVEL row.
+R (Thrill of the Hunt) is not a self buff.  Its priced effect is the armor
+reduction the empowered attack leaves for 4 seconds, emitted as a
+``target_debuff`` the fight engine shreds with.
+R's ambush rider, "deals 100% AD additional physical damage", stays named and
+unpriced on two authority conflicts: the binary's ``BonusDamage`` reads bonus
+AD at coefficient 1.0 against the wiki's ambiguous "100% AD", and its
+``ArmorShred`` carries seven values against the wiki's three-value leveling
+row.  No marked-target proc kernel exists to gate the trigger either.
 """
 
 from __future__ import annotations

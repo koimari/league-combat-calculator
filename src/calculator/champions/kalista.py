@@ -1,41 +1,18 @@
-"""Kalista's stateful combat packets.
+"""Kalista: stateful combat packets.
 
-The generated packet used Soul-Marked damage without an Oathsworn state and
-treated Rend as a one-stack constant.  This module keeps those states
-explicit, while every numeric value still comes from the pinned champion
-cache and its full-entry Wiki receipt.
-
-Coverage: P and R are ``no_damage``, not ``out_of_scope``.  Both emit an
-explicit, user-visible zero-damage row (``module_helpers.no_damage``)
-rather than staying silently absent from the parse output.
-
-  - P (Martial Poise): all four cached effect rows carry empty leveling
-    (``data/champions.json`` Kalista P effects[0..3]) — the innate
-    windup-dash mechanic, its boots-tier range/speed table, and the
-    Oathsworn Bond declaration are pure movement/state prose with no
-    damage attribute anywhere. Corroborated by the game binary
-    (``data/bin/characters/kalista.bin.json``,
-    ``Characters/Kalista/Spells/KalistaPassiveBuffAbility/
-    KalistaPassiveDashSpell(Actual)``): neither carries a
-    ``mSpellCalculations`` table, and their ``mEffectAmount`` rows are
-    dash duration/speed/range parameters (1.5s, 40/50 speed, the
-    15-225 boots-tier range ramp) — no damage node exists for P.
-  - R (Fate's Call): the cached entry's only leveling row is "Airborne
-    Duration" (1/1.5/2s by rank) — a crowd-control duration, not a
-    damage value; the ability's full text is retrieve-and-hold, cleanse,
-    invulnerability, a guided dash, and a knockback/airborne landing,
-    with no damage sentence anywhere (``data/champions.json`` Kalista R).
-    Corroborated by the game binary (``KalistaRxAbility/KalistaRx`` and
-    its child spells ``KalistaRAllyStun``/``KalistaRAllyDash``): the
-    only named ``DataValues`` entry is ``KnockupDuration`` [0, 1, 1.5,
-    2, ...], matching the wiki's Airborne Duration exactly, and none of
-    R's spell records carry a ``mSpellCalculations`` table — no damage
-    formula exists for R to price. R's effects land entirely on the
-    Oathsworn ally (retrieval, cleanse, invulnerability) or on enemies
-    as pure CC (knockback + airborne), never as a priced hit.  That
-    airborne is real control, but the row prices no damage part, so
-    ``MODULE_CC`` leaves R unreviewed rather than declaring a kind no
-    event could carry.
+Soul-Marked damage needs an Oathsworn state and Rend is a stack count, not a
+constant, so both stay explicit here; every number still comes from the pinned
+champion cache.
+P (Martial Poise) is ``no_damage``: all four cached effect rows carry empty
+leveling, the windup dash, its boots-tier range table and the Oathsworn Bond
+declaration being movement and state prose, and the binary's passive spells
+carry no calculations at all, only dash duration, speed and range.
+R (Fate's Call) is ``no_damage``: its one leveling row is "Airborne Duration",
+a control duration rather than a damage value, and the binary's only named
+value is the matching ``KnockupDuration``.  R lands on the Oathsworn ally as
+retrieval, cleanse and invulnerability, or on enemies as pure knockback, so
+``MODULE_CC`` leaves R unreviewed rather than declaring a kind no event could
+carry.
 """
 
 import re

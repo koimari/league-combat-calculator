@@ -1,41 +1,22 @@
-"""Caitlyn — slot map for the archetype engine.
+"""Caitlyn: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Headshot) has ZERO effects/leveling data in the JSON — the
-  every-6th-attack rider formula is hand-authored from the wiki template
-  below: ``bonus = total AD x (level bracket ratio + crit chance x
-  (1 + bonus crit damage))``. The crit component is an ADDITIVE AD
-  ratio, so the flat rider is computed here from the parse context's
-  crit stats — never via the engine's multiplicative
-  ``crit_effectiveness`` formula, which is wrong below level 13.
-  The slot counts the fight's headshot procs: natural cadence over the
-  timed auto stream, one conversion per E cast, and exactly one trap
-  headshot (which alone takes W's damage increase). In one-rotation
-  mode (no auto stream) the granted headshots are the basic attacks the
-  combo forces, so each row carries the expected-crit base swing plus
-  the rider (the Blitzcrank E / Vayne Q one-rotation precedent).
-- W (Yordle Snap Trap) deals no damage itself, but the generic
-  classifier misread its "Headshot Damage Increase" leveling entry as a
-  standalone magic nuke. E4 treats the trap as a summoned unit: the W
-  slot is an explicit zero-damage utility row (root 1.5s + reveal 3s)
-  whose damage contribution is the trap Headshot — priced by P with
-  this slot's "Headshot Damage Increase". The ``w_traps`` option
-  (default 1) is the player-controlled number of traps the enemy steps
-  on; each sprung trap grants one trap Headshot (P multiplies).
-- R (Ace in the Hole) reads the JSON's "Physical damage" (lowercase d)
-  and adds the wiki-prose crit scaling: up to +30% (+IE) with crit
-  chance — exactly the engine's ``crit_effectiveness=0.3`` part formula
-  (the Akshan R pattern).
-- Q (Piltover Peacemaker) pins the primary "Physical Damage" attribute;
-  the JSON also carries a "Reduced Damage" secondary-target entry the
-  single-target model must never pick up.
-- E (90 Caliber Net) pins "Magic Damage"; its headshot conversion is
-  counted by P.
-
-The parse context's ``crit_damage_bonus`` key (the build's crit damage
-above the 2.0 base, e.g. Infinity Edge's +0.3) is injected by
-``pipeline.run_fight``; direct parse calls without it price headshots
-at base crit damage.
+P (Headshot) has no cached effects or leveling at all, so the every-sixth-attack
+rider is authored from the wiki template below: total AD x (the level-bracket
+ratio + crit chance x (1 + bonus crit damage)).  The crit component is an
+ADDITIVE AD ratio computed here from the parse context's crit stats, never the
+engine's multiplicative ``crit_effectiveness``, which is wrong below level 13.
+The slot counts the fight's procs: the natural cadence over a timed auto stream,
+one conversion per E cast, and exactly one trap headshot, which alone takes W's
+damage increase.  With no auto stream the granted headshots are the swings the
+combo forces, so each row carries the expected-crit base swing plus the rider.
+``crit_damage_bonus``, the build's crit damage over the 2.0 base, is injected by
+``pipeline.run_fight``; a direct parse call prices headshots at base crit damage.
+W (Yordle Snap Trap) is a zero-damage utility row: its "Headshot Damage Increase"
+row is not a nuke, and each of ``w_traps`` sprung traps grants one trap Headshot.
+R (Ace in the Hole) reads "Physical damage" with a lowercase d and adds the
+prose crit scaling as ``crit_effectiveness=0.3``.
+Q pins the primary "Physical Damage"; its "Reduced Damage" secondary-target row
+must never reach a single-target model.  E pins "Magic Damage".
 """
 
 import math

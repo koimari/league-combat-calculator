@@ -1,41 +1,22 @@
-"""Syndra — slot map for the archetype engine.
+"""Syndra: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Transcendent) is a splinter-stack threshold system the JSON cannot
-  express: its only leveling row ("Per-Level Scaling" 20/25/30/35/40) is
-  stack bookkeeping, not damage. At 120 splinters the passive multiplies
-  TOTAL AP by 1.15 — a BUFF-phase slot listed first, so every damage
-  slot parses against the multiplied AP. The 15% has no JSON home
-  (module constant). Below 120 the passive grants nothing direct and
-  emits no row.
-- Q (Dark Sphere) is a plain "Magic Damage" read wrapped twice over the
-  generic path: R passively grants 10/20/30 ability haste TO Q ONLY
-  (R[0] effect[0] "Ability Haste"), folded into the emitted cooldown
-  against the build's global haste so the fight engine's own haste
-  division lands on the true 7 x 100/(100 + Q haste + global haste);
-  and at 40+ splinters Q holds 2 charges, modeled as the synthetic
-  "Q2" slot below.
-- Q2 is the second charge: ONE extra Q cast available at fight open
-  (cooldown 0.0 = the engine's cast-exactly-once idiom; charge
-  recharge beyond the opener is not simulated).
-- W (Force of Will) at 60+ splinters adds bonus TRUE damage equal to
-  (12% + 2% per 100 AP) of W's magic damage — quadratic in AP, so the
-  formula lives here as module constants. The JSON's effect[3] rows
-  ("Bonus True Damage" / "Total Mixed Damage") are a half-parsed
-  expansion of this exact formula with garbled squared-AP units
-  ('  2') and must never be read (sanity anchor: their flat 8.4 at
-  rank 1 = 0.12 x 70).
-- E (Scatter the Weak) is a clean "Magic Damage" read; explicit attr
-  for symmetry with the rest of the kit. The 80-splinter upgrade
-  (wider angle, 70% slow) is utility only. Its authored stun is the
-  one slot in this kit whose cast order is a mechanic rather than a
-  preference, which is what ``CAST_DEPENDENCIES`` below declares.
-- R (Unleashed Power) must read "Magic Damage per Sphere" — the
-  "Minimum/Maximum Magic Damage" rows are precomputed 3- and 7-sphere
-  totals that would double-count with the sphere-count option. The
-  100-splinter upgrade executes a target when R leaves it below 15% of
-  maximum health. The entry carries that terminal threshold into the
-  shared participant ledger.
+P (Transcendent) is a splinter threshold the cache cannot express: at 120 splinters
+it multiplies TOTAL AP by 1.15, so it is a BUFF-phase slot listed first and every
+damage slot parses against the multiplied AP.  The 15% is a module constant, and
+below 120 the slot emits no row.
+Q (Dark Sphere) is a plain "Magic Damage" read wrapped twice: R passively grants
+10/20/30 ability haste to Q ALONE, folded into the emitted cooldown against global
+haste, and at 40 splinters Q holds two charges, the synthetic Q2 slot below.
+W (Force of Will) at 60 splinters adds bonus TRUE damage worth 12% + 2% per 100 AP
+of its own magic damage, quadratic in AP, so the formula is module constants.  The
+cached ``effects[3]`` rows are a half-parsed expansion of it with garbled
+squared-AP units and must never be read.
+E (Scatter the Weak) is a clean read whose authored stun is the one slot here with
+a mechanical cast order, which ``CAST_DEPENDENCIES`` declares.
+R (Unleashed Power) must read "Magic Damage per Sphere": the Minimum and Maximum
+rows are precomputed three- and seven-sphere totals that would double-count the
+sphere option.  Its 100-splinter execute below 15% maximum health goes into the
+shared participant ledger as a terminal threshold.
 """
 
 from typing import Any

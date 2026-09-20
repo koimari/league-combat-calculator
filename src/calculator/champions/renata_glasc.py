@@ -1,41 +1,22 @@
-"""Renata Glasc — CP10.6 full-entry-reviewed packet module (E9-2 fixes).
+"""Renata Glasc: full-entry-reviewed packet module.
 
-E9-2 gap fixes:
-- P (Leverage) is modeled as an on-hit mark: the first basic attack on an
-  unmarked target deals bonus magic damage equal to 1% : 2% (based on
-  level) (+ 2% per 100 AP) of the target's maximum health (cached P
-  Per-Level Scaling row; the AP per-100 ratio is wiki prose).  The mark
-  lasts 6 seconds and refreshes on subsequent hits, so a sustained 1v1
-  prices ONE unmarked first-hit per target — the ``p_leverage_procs``
-  option (default 1).
-- E (Loyalty Program) grants Renata herself a shield: "Renata and allies
-  struck are granted a shield for 3 seconds".  The shield strength is the
-  cached "Shield Strength" row (50-110 + 50% AP) and rides the E damage
-  entry as a module-authored self-shield (E8c payload), so the 1v1 ledger
-  grants it without needing a teammate.
-- Q/E damage remain modeled.
-
-W (Bailout) grants "the target bonus attack speed and bonus movement
-speed ... with both of the bonuses increasing in effectiveness by
-0% : 100% (based on seconds elapsed)" across its 5 seconds, and the
-cache carries both ends of that ramp: "Bonus Attack Speed" (10-30% + 1%
-per 100 AP) at the start and "Maximum Bonus Attack Speed" (20-60% + 2%
-per 100 AP) at the end.  The self cast's mean of the two rides a
-BUFF-phase ``stat_buff``; an ally cast is the roster's and reaches it
-through the ally-support scanner.  The movement-speed rows have no
-engine channel, and R (Hostile Takeover) berserks its targets — control
-the engine records as a kind without a magnitude.
-
-Bailout's LETHAL half (the 100%-health restore paid for with a
-maximum-health burn) stays fail-closed, and the conflict behind that
-refusal is adjudicated field by field in ``BAILOUT_AUTHORITY``: the burn
-CADENCE is settled in favour of the game binary on the repo's Gnar
-precedent (0.25s, ten ticks, a 2.5s window), while the burn's damage
-CLASS remains unresolved — the cached description calls it true damage,
-the same entry's notes call it raw damage, and the binary defines no
-damage class for it at all.  A class that cannot be resolved cannot
-decide whether a shield or a damage-reduction window absorbs a tick, so
-the survival result is unpublishable and the named denial receipts stand.
+P (Leverage) is an on-hit mark: the first basic attack on an unmarked target
+deals 1 to 2% by level (+ 2% per 100 AP) of the target's maximum health.  The
+mark lasts 6 seconds and refreshes on later hits, so a sustained duel prices
+one unmarked first hit through ``p_leverage_procs``, default 1.
+E (Loyalty Program) shields Renata herself as well as allies struck, so the
+cached "Shield Strength" row rides the E damage entry as a module-authored
+self-shield and the duel ledger grants it without a teammate.
+W (Bailout) ramps bonus attack speed over its 5 seconds and the cache carries
+both ends, so the self cast rides the mean of the two on a BUFF-phase
+``stat_buff``; an ally cast is the roster's and reaches it through the
+support scanner.  Its movement speed has no channel, and R's berserk is
+control the engine records as a kind without a magnitude.
+Bailout's lethal half stays fail-closed and ``BAILOUT_AUTHORITY`` adjudicates
+it field by field.  The burn CADENCE is settled in the binary's favour, ten
+ticks of 0.25s over 2.5 seconds; the damage CLASS is not, the description
+calling it true, the notes raw and the binary defining none, and a class that
+cannot be resolved cannot decide whether a shield absorbs a tick.
 """
 
 from typing import Any

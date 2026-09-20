@@ -1,41 +1,22 @@
-"""Pyke — CP10.6 full-entry-reviewed packet module.
+"""Pyke: full-entry-reviewed packet module.
 
-E5-2 fix — Death from Below (R): the reviewed packet pinned the
-1.5x-threshold array (375-825 == 1.5 x the 250-550 execute threshold)
-to the first three R ranks as flat MAGIC damage and dropped every
-scaling term.  The wiki (data/champions.json R) carries two per-level
-rows:
-
-- "Per-Level Scaling" [0]: 250 : 550 (+ 80% bonus AD) (+ 1.5 per 1
-  Lethality) — the EXECUTE THRESHOLD: champions below it die outright.
-- "Per-Level Scaling" [1]: 125 : 275 (+ 40% bonus AD) (+ 0.75 per 1
-  Lethality) — the physical damage dealt to non-executed enemies
-  ("Other enemies hit and enemy champions above the threshold are
-  instead dealt 50% of the amount as physical damage").
-
-The calculator's target is a full-health champion above the threshold,
-so R prices the sourced damage row (level-based, physical) plus the
-bAD and lethality terms.  The threshold itself is documented, not
-priced as damage — an execution is a kill boundary, not a number.
-
-P and W are ``no_damage``: neither carries an enemy-damage clause, and
-the pinned packet declares both so.  Each still has a named missing
-axis, which the label does not close:
-
-- P (Gift of the Drowned Ones) is three mechanics. The grey-health store
-  is priced by the shared E8a primitive (probe: ``grey_health_stored``
-  80.0 at level 18 with no items — the flat cap; "Pyke" is registered in
-  ``healing.GREY_HEALTH_RULE_CHAMPIONS``), but its consume is a VISION
-  boundary ("while Pyke is not visible to enemies") and the engine has no
-  vision axis, so nothing is paid back. The stat half is a CONVERSION,
-  declared as ``MODULE_STAT_CONVERSION`` and applied where item stats are
-  folded: his maximum health may not rise except by growth, and the bonus
-  health he is denied returns as 1 attack damage per 14. Probe at level
-  18 with Warmog's Armor: health 2540, attack damage 96 -> 176 (the
-  wiki's own conversion table reads 71.4 for Warmog's 1000-health stat
-  block, and Vitality raises that block to 1120 before the conversion).
-- W (Ghostwater Dive) is camouflage plus lethality-scaled movement speed:
-  no vision/stealth axis, and ``stat_buff`` has no movement-speed key.
+R (Death from Below) carries two per-level rows and they are not the same
+number.  The first is the EXECUTE THRESHOLD, 250 to 550 (+ 80% bonus AD)
+(+ 1.5 per lethality), below which a champion dies outright; the second is half
+of it and is the physical damage everyone above the threshold takes.  This
+calculator's target is a full-health champion above it, so R prices the second
+row and the threshold is documented rather than priced: an execution is a kill
+boundary, not a number.
+P (Gift of the Drowned Ones) is three mechanics.  The grey-health store is
+priced by the shared primitive, but its consume is a VISION boundary and the
+engine has no vision axis, so nothing is paid back.  The stat half is a
+CONVERSION declared as ``MODULE_STAT_CONVERSION`` and applied where item stats
+fold: his maximum health may not rise except by growth, and the bonus health he
+is denied returns as 1 attack damage per 14.
+W (Ghostwater Dive) is camouflage plus lethality-scaled movement speed; the
+vision half has no axis here and the movement grant is unmodeled.
+P and W are ``no_damage``: neither carries an enemy-damage clause, which the
+label says and the named missing axes above do not close.
 """
 
 from typing import Any

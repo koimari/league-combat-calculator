@@ -1,40 +1,18 @@
-"""Aatrox — slot map for the archetype engine.
+"""Aatrox: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- R (World Ender) grants bonus AD as a PERCENTAGE of total AD — a
-  ``stat_buff`` in percent_of mode (BUFF phase, so Q/W scale off the
-  buffed AD).
-- Q (The Darkin Blade) is three sequential casts with individually
-  named damage attributes; ``_darkin_blade`` emits one part per strike,
-  spaced by the cached 1-second static recast cooldown.
-- W (Infernal Chains) hits twice — the chain's "Physical Damage" on
-  impact and the same amount again when the cached 1.5-second tether
-  expires; the two sum to the cached "Total Damage" attribute exactly.
-- P (Deathbringer Stance) is on-hit magic damage as a per-LEVEL
-  percentage of target max health — champion-local ``_deathbringer_stance``.
-- E (Umbral Dash) is a dash with healing amp only — no enemy damage of
-  its own, so ``_umbral_dash`` emits a sourced zero rather than leaving
-  the slot absent. It is still ``modeled``: ``derive_self_healing``
-  prices its heal share of every damaging hit, the
-  ``self_healing_rule`` channel the coverage map names. Only the dash
-  itself — mobility, an axis the engine lacks — is unpriced.
-
-All numeric values are read from the champion JSON data; nothing is
-hardcoded.
-
-Roadmap session (2026-08-21): closes the single out_of_scope slot (E).
-E (Umbral Dash): ``data/champions.json`` Aatrox E carries
-``damageType: None`` and its three effect rows are entirely non-combat
-text — "Passive: Aatrox heals for 16% (+ 1.1% per 100 bonus health) of
-non-persistent post-mitigation damage he deals against enemy champions"
-(the heal, already modeled by ``derive_self_healing``'s E-ratio path),
-"Active: Aatrox dashes in the target direction" (a pure position change),
-and the basic-attack-timer-reset/cast-interrupt clause (mobility/utility,
-not a combat number). No effect row carries a ``leveling`` entry at all —
-there is no enemy-damage attribute anywhere on this ability to model.
-So the slot emits an atoms-confirmed zero-HP-number row rather than
-staying silently absent, and its heal keeps it ``modeled`` through the
-``self_healing_rule`` channel.
+R (World Ender) grants bonus AD as a PERCENTAGE of total AD, a ``stat_buff`` in
+``percent_of`` mode on the BUFF phase, so Q and W scale off the buffed AD.
+Q (The Darkin Blade) is three sequential casts with individually named damage
+attributes, one part per strike, spaced by the cached 1-second static recast.
+W (Infernal Chains) hits twice, the chain's "Physical Damage" on impact and the
+same amount again when the cached 1.5-second tether expires, the two summing to
+the cached "Total Damage" row exactly.
+P (Deathbringer Stance) is on-hit magic damage as a per-LEVEL percentage of the
+target's maximum health.
+E (Umbral Dash) has no enemy damage of its own, so it emits a sourced zero
+rather than leaving the slot absent.  It stays modeled through the
+``self_healing_rule`` channel, which prices its heal share of every damaging
+hit; only the dash itself, mobility, is unpriced.
 """
 
 import re
