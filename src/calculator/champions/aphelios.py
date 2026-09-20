@@ -47,6 +47,7 @@ from .aphelios_weapons import (
     _R_CC_BY_WEAPON,
     _WEAPON_INDEX,
     _WEAPON_LABELS,
+    OPTION_KEYS,
     _main_weapon,
     _weapon_master,
 )
@@ -377,7 +378,7 @@ OPTIONS = [
         rotation={"role": "irrelevant", "slot": "R"},
     ),
     {
-        "key": "aphelios_main_weapon",
+        "key": OPTION_KEYS.main_weapon,
         "type": "select",
         "default": "calibrum",
         "label": "Aphelios main weapon",
@@ -387,7 +388,7 @@ OPTIONS = [
         "rotation": {"role": "irrelevant", "slot": "Q"},
     },
     int_option(
-        "aphelios_calibrum_marks",
+        OPTION_KEYS.calibrum_marks,
         0,
         minimum=0,
         maximum=5,
@@ -396,7 +397,7 @@ OPTIONS = [
         rotation={"role": "irrelevant", "slot": "P"},
     ),
     int_option(
-        "aphelios_bonus_ad_points",
+        OPTION_KEYS.bonus_ad_points,
         0,
         minimum=0,
         maximum=6,
@@ -404,7 +405,7 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "P"},
     ),
     int_option(
-        "aphelios_bonus_as_points",
+        OPTION_KEYS.bonus_as_points,
         0,
         minimum=0,
         maximum=6,
@@ -412,7 +413,7 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "P"},
     ),
     int_option(
-        "aphelios_lethality_points",
+        OPTION_KEYS.lethality_points,
         0,
         minimum=0,
         maximum=6,

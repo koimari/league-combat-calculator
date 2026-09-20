@@ -1,11 +1,31 @@
 """Which of the five weapons is in hand, what each adds on hit, and the Weapon Master points."""
 
-from typing import Any
+from typing import Any, NamedTuple
 
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_value
+
+
+class WeaponOptionKeys(NamedTuple):
+    """The option keys ``aphelios.py`` declares and this module reads back."""
+
+    main_weapon: str
+    calibrum_marks: str
+    bonus_ad_points: str
+    bonus_as_points: str
+    lethality_points: str
+
+
+OPTION_KEYS = WeaponOptionKeys(
+    "aphelios_main_weapon",
+    "aphelios_calibrum_marks",
+    "aphelios_bonus_ad_points",
+    "aphelios_bonus_as_points",
+    "aphelios_lethality_points",
+)
+
 
 _WEAPON_INDEX = {
     "calibrum": 0,
@@ -54,7 +74,7 @@ _R_CC_BY_WEAPON = dict.fromkeys(_WEAPON_INDEX, "none") | {"gravitum": "slow"}
 
 
 def _main_weapon(ctx: SlotCtx) -> str:
-    value = str(ctx.option("aphelios_main_weapon")).lower()
+    value = str(ctx.option(OPTION_KEYS.main_weapon)).lower()
     return value if value in _WEAPON_INDEX else "calibrum"
 
 
@@ -109,7 +129,7 @@ def _weapon_branch(ctx: SlotCtx, weapon: str) -> tuple[dict[str, Any] | None, st
     other three declare their reviewed reason and price nothing.
     """
     if weapon == "calibrum":
-        marks = max(int(ctx.option("aphelios_calibrum_marks")), 0)
+        marks = max(int(ctx.option(OPTION_KEYS.calibrum_marks)), 0)
         if not marks:
             return None, "no marks consumed, so the empowered attack is a plain one"
         per_mark = _CALIBRUM_MARK_FLAT + _CALIBRUM_MARK_BONUS_AD_RATIO * ctx.stat(
@@ -153,9 +173,9 @@ def _weapon_master(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability("P")
     if not ability:
         return None
-    ad_points = max(int(ctx.option("aphelios_bonus_ad_points")), 0)
-    as_points = max(int(ctx.option("aphelios_bonus_as_points")), 0)
-    lethality_points = max(int(ctx.option("aphelios_lethality_points")), 0)
+    ad_points = max(int(ctx.option(OPTION_KEYS.bonus_ad_points)), 0)
+    as_points = max(int(ctx.option(OPTION_KEYS.bonus_as_points)), 0)
+    lethality_points = max(int(ctx.option(OPTION_KEYS.lethality_points)), 0)
     entry = damage_entry(ability_name(ability), 1, 0.0, 0.0, "physical")
     bonus_ad = _weapon_master_grant(ability, "Bonus Attack Damage", ad_points)
     bonus_as = _weapon_master_grant(ability, "Bonus Attack Speed", as_points)
