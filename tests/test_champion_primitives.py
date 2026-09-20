@@ -1,10 +1,9 @@
 """Tests for champion-layer primitives shared by all champion modules.
 
-Covers calculate_ability_damage (champions.common), effective_cooldown
-(damage.py), castTime extraction (champions.slotlib), skill-order rank
-resolution (champions.skill_orders), the shared mechanic shapes
-(champions.shared_mechanics) and the composition helpers
-(champions.module_helpers).
+Covers effective_cooldown (stats.py), castTime extraction
+(champions.slotlib), skill-order rank resolution (champions.skill_orders),
+the shared mechanic shapes (champions.shared_mechanics) and the composition
+helpers (champions.module_helpers).
 """
 
 import re
@@ -13,7 +12,6 @@ import pytest
 
 from src.calculator.ability_spec import DamageClass
 from src.calculator.champions import parse_champion_abilities
-from src.calculator.champions.common import calculate_ability_damage
 from src.calculator.champions.inputs import ChampionInputError
 from src.calculator.champions.module_helpers import (
     innate_on_hit,
@@ -41,21 +39,6 @@ from src.calculator.champions.slot_extract import extract_cast_time
 from src.calculator.champions.stat_grants import attack_speed_steroid, move_speed_grant
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import effective_cooldown
-
-
-class TestCalculateAbilityDamage:
-    """Tests for raw ability damage calculation."""
-
-    def test_base_only(self) -> None:
-        assert calculate_ability_damage(100, 0.5, 0) == 100.0
-
-    def test_with_scaling(self) -> None:
-        result = calculate_ability_damage(100, 0.5, 200)
-        assert result == 200.0
-
-    def test_zero_base_with_scaling(self) -> None:
-        result = calculate_ability_damage(0, 0.5, 200)
-        assert result == 100.0
 
 
 class TestGetAbilityRank:
