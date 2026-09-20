@@ -120,24 +120,23 @@ OPTIONS = [
 ASSUMPTIONS = [
     "R (Final Hour) always active if ranked — bonus AD applied",
     "W (Silver Bolts) procs every 3rd hit (on-hit model)",
-    "Q (Tumble) damage rides the next auto — casts capped by the auto "
-    "count; the dash is an attack reset, so it costs no attack time.  "
-    "The reset's THROUGHPUT is opt-in via q_tumble_reset: with the "
-    "option on, each accepted Q cast's empowered auto is an EXTRA swing "
-    "(the entry becomes a self-supplying burst at an infinite rate — "
-    "'fires immediately', the wiki reset prose + the binary "
-    "Trait_AttackReset tag; the acceleration magnitude is script-side, "
-    "so no finite number is invented); casts lift to the cooldown grid "
-    "and the W/on-hit counters ride the augmented stream.  Default "
-    "keeps the conservative cap (the reset's gain not modeled).",
+    "Q (Tumble) damage rides the next auto, so casts cap at the auto count.",
+    "The dash is an attack reset, so it costs no attack time.",
+    "q_tumble_reset makes each accepted Q cast's empowered auto an extra swing.",
+    "The entry becomes a self-supplying burst at an infinite rate, the cached reset "
+    "prose.",
+    "The binary's Trait_AttackReset tag agrees; the acceleration magnitude is "
+    "script-side.",
+    "Casts lift to the cooldown grid and the W and on-hit counters ride the augmented "
+    "stream.",
+    "Q's default keeps the conservative cap, so the reset's gain is not modeled.",
     "E stuns for the sourced 1.5 seconds only when Condemn is set to hit a wall",
-    "P (Night Hunter) has no enemy-damage formula: the bonus movement "
-    "speed toward slowed/immobile enemies is self-directed only "
-    "(confirmed by the pinned reviewed packet's kind='no_damage' "
-    "declaration for P). P is deliberately absent from SLOTS so the "
-    "fight ledger never invents an enemy hit; MODULE_COVERAGE reflects "
-    "a sourced no-damage classification rather than an unmodeled gap "
-    "(no_damage, not out_of_scope).",
+    "P (Night Hunter) has no enemy-damage formula: the movement speed toward slowed "
+    "enemies is self-only.",
+    "The pinned reviewed packet declares P kind no_damage.",
+    "P is deliberately absent from SLOTS so the fight ledger never invents an enemy "
+    "hit.",
+    "MODULE_COVERAGE records a sourced no_damage rather than an unmodeled gap.",
 ]
 
 _condemn_damage = by_option(

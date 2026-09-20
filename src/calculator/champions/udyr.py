@@ -277,8 +277,9 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Udyr",
     PACKET_SHA256,
     assumption_overrides=(
-        "Wingborne Storm prices all 8 blizzard ticks (Magic Damage per Tick "
-        "x 8 == Total Magic Damage) at 0.5-second intervals over 4 seconds.",
+        "Wingborne Storm prices all 8 blizzard ticks, per-tick x 8 == Total Magic "
+        "Damage.",
+        "They land at 0.5-second intervals over 4 seconds.",
     ),
     slot_parsers={
         "R": repeat_damage_parser(
@@ -309,23 +310,27 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Q (Wilding Claw) empowers q_empowered_attacks (default 2) basic "
-    "attacks with the sourced on-hit payload: Bonus Physical Damage "
-    "(3% : 8% by rank of the target's maximum health + 3.5% per 100 bonus "
-    "AD) plus the 4-second Bonus Physical Damage On-Hit (6 : 36 by rank + "
-    "20% bonus AD + 1% : 2% by rank of bonus health).",
-    "q_awaken (default False) adds the per-level Max Health Damage row "
-    "(2% : 4.24% by level + 1.5% per 100 bonus AD + 0.1% per 100 bonus "
-    "health) to the empowered attacks and prices each empowered attack's "
-    "lightning chain as 6 magic strikes at the sourced 0.2s cadence "
-    "(1.5% : 3.18% by level + 0.6% per 100 AP of the target's maximum "
-    "health per strike; all six chain onto the single target).",
-    "The cache's Q 'Heal' row (40 : 174.12 by level) is the lightning "
-    "strike's minimum damage against minions, not a self-heal; the Awaken "
-    "self-heal family is the W stance stream, which healing.py models.",
-    "W (Iron Mantle) shield (Shield Strength 45 : 145 by rank + 50% bonus "
-    "AD + 40% AP + 2% : 3.5% by rank maximum health) is emitted by the "
-    "ally-support scanner at the W cast.",
+    "Q (Wilding Claw) empowers q_empowered_attacks (default 2) basic attacks with a "
+    "sourced on-hit.",
+    "The payload is 3% to 8% by rank of target maximum health + 3.5% per 100 bonus "
+    "AD.",
+    "It adds the 4-second on-hit row, 6 to 36 by rank + 20% bonus AD + 1 to 2% by "
+    "rank of bonus health.",
+    "q_awaken (default False) adds the per-level Max Health Damage row to the "
+    "empowered attacks.",
+    "That row is 2% to 4.24% by level + 1.5% per 100 bonus AD + 0.1% per 100 bonus "
+    "health.",
+    "It also prices each empowered attack's lightning chain as 6 magic strikes at the "
+    "sourced 0.2s cadence.",
+    "Each strike is 1.5% to 3.18% by level + 0.6% per 100 AP of target maximum "
+    "health, all on one target.",
+    "The cache's Q 'Heal' row, 40 to 174.12 by level, is the lightning strike's "
+    "minimum against minions.",
+    "It is not a self-heal; the Awaken self-heal family is the W stance stream "
+    "healing.py models.",
+    "W (Iron Mantle)'s shield is 45 to 145 by rank + 50% bonus AD + 40% AP + 2 to "
+    "3.5% by rank max health.",
+    "The ally-support scanner emits it at the W cast.",
 ]
 OPTIONS.append(
     {
@@ -349,52 +354,50 @@ OPTIONS.append(
 )
 ASSUMPTIONS = [
     *ASSUMPTIONS,
-    "E (Blazing Stampede) is a sourced zero-damage row (MODULE_COVERAGE: "
-    "no_damage, reclassified from out_of_scope). Its empowered attack IS "
-    "priced as a sourced control event: a 0.75s stun from the validated "
-    "timing.control_duration atom, corroborated by the binary's UdyrE "
-    "StunDuration 0.75. It is published at cast_boundary precision "
-    "(time_offset=None) because the stun rides the next empowered basic "
-    "attack and no cast-to-hit delay is sourced, and once per cast "
-    "because the sourced on-target cooldown exceeds the window. The "
-    "stance's own Bonus Movement Speed row (25/31/37/43/49/55% + 5% per "
-    "100 bonus AD) is published as a move_speed_percent stat_buff, a term "
-    "in the shared resolve_move_speed fold (soft caps included), "
-    "time-weighted by buff_window_share over the stance's 4-second "
-    "window. That window is cached PROSE, not an atom (the slot's only "
-    "timing.active_duration atom is the 0.75s stun from the first "
-    "effect), so it is a HARDCODED module constant, the Singed-R "
-    "precedent. Two "
-    "sourced riders stay withheld: the Decayed Bonus Movement Speed row "
-    "(7.5/9.3/11.1/12.9/14.7/16.5% + 1.5% per 100 bonus AD) would need a "
-    "decay curve the one-scalar stat_buff channel has no shape for, and "
-    "the Awaken recast's per-level 30% : 41.18% (+10% per 100 bonus AD) "
-    "bonus has no recast option on this slot. Nothing damage-relevant is "
-    "left unmodeled once the stun is authored.",
-    "P (Bridge Between) stays out_of_scope, not no_damage (the Olaf-R "
-    "rule): Monk Training's 30% bonus attack speed on the next two "
-    "attacks within 4s is a real sourced steroid that would change "
-    "damage (wiki prose plus the binary's UdyrPassive AttackSpeed "
-    "calculation 0.30, AttackSpeedDuration 4.0, UltCDReduction 0.05). It "
-    "is withheld because the engine's only windowed attack-speed path "
-    "resolves its window start from the Q slot (the Miss Fortune W "
-    "precedent), because the unwindowed self-buff channel weights purely "
-    "by time whereas this window is bounded by attack count as well, and "
-    "and because the cooldown refund has no BASE to take a share of. That "
-    "last blocker was re-measured on 2026-09-16 against both sources and "
-    "it is stronger than 'no channel', which is now false: Sivir's On the "
-    "Hunt gave the engine a per-attack windowed refund "
-    "(swing_cooldown_refund, walked by fight/rotation/cast_schedule.py). "
-    "Udyr's cannot ride it, because his refund is not seconds off a slot "
-    "the fight schedules: it is '5% of Awakened Spirit's total cooldown', "
-    "and that cooldown is stated NOWHERE. The cached P entry carries "
-    "cooldown None, rechargeRate None and no leveling row at all, the "
-    "prose says only that it 'is affected by ultimate haste' and is "
-    "'tracked on his health bar by an Awakening resource', and the "
-    "binary's UdyrPassive record carries UltCDReduction 0.05 and "
-    "AttackSpeedDuration 4.0 with no Cooldown field beside them. Five "
-    "percent of an unsourced number is unsourced, and Awakened Spirit is "
-    "not a slot this engine models, so the refund has no consumer either.",
+    "E (Blazing Stampede) is a sourced zero-damage row (MODULE_COVERAGE: no_damage).",
+    "Its empowered attack is a sourced control event: a 0.75s timing.control_duration "
+    "stun at cast_boundary.",
+    "The binary's UdyrE StunDuration 0.75 corroborates it, and no cast-to-hit delay "
+    "is sourced.",
+    "It fires once per cast: the sourced on-target cooldown exceeds the window.",
+    "The stance's Bonus Movement Speed row, 25/31/37/43/49/55% + 5% per 100 bonus AD, "
+    "is a percent buff.",
+    "It is a term in the shared resolve_move_speed fold, soft caps included.",
+    "It is time-weighted by buff_window_share over the stance's 4-second window.",
+    "That window is cached prose, not an atom, so it is a hardcoded constant, the "
+    "Singed-R precedent.",
+    "The slot's only timing.active_duration atom is the 0.75s stun from the first "
+    "effect.",
+    "The Decayed Bonus Movement Speed row is withheld: one scalar has no shape for a "
+    "decay curve.",
+    "The Awaken recast's 30% to 41.18% + 10% per 100 bonus AD bonus is an R-side "
+    "boundary: no option.",
+    "Nothing damage-relevant is left unmodeled once the stun is authored.",
+    "Monk Training keeps P out_of_scope, not no_damage: the Miss Fortune W precedent "
+    "binds its window.",
+    "P (Bridge Between)'s steroid is 30% bonus attack speed on the next two attacks "
+    "within 4s, sourced.",
+    "Wiki prose plus binary UdyrPassive AttackSpeed 0.30, AttackSpeedDuration 4.0, "
+    "UltCDReduction 0.05.",
+    "The only windowed attack-speed path resolves its window start from the Q slot.",
+    "The unwindowed self-buff channel weights purely by time; this window is bounded "
+    "by attack count too.",
+    "The cooldown refund has no base to take a share of.",
+    "'No channel' is false: Sivir's On the Hunt gave the engine a per-attack windowed "
+    "refund.",
+    "Udyr's cannot ride swing_cooldown_refund: his refund is not seconds off a slot "
+    "the fight schedules.",
+    "It is '5% of Awakened Spirit's total cooldown', and that cooldown is stated "
+    "nowhere.",
+    "The cached P entry carries cooldown None, rechargeRate None and no leveling row "
+    "at all.",
+    "The prose says only that it is affected by ultimate haste and tracked as an "
+    "Awakening resource.",
+    "The binary's UdyrPassive carries UltCDReduction 0.05 and AttackSpeedDuration "
+    "4.0, with no Cooldown.",
+    "Five percent of an unsourced number is unsourced.",
+    "Awakened Spirit is not a slot this engine models, so the refund has no consumer "
+    "either.",
 ]
 MODULE_COVERAGE = coverage(no_damage="E", out_of_scope="P")
 

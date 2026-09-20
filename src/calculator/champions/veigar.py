@@ -98,16 +98,16 @@ def _primordial_burst(
 
 
 ASSUMPTIONS = [
-    "R (Primordial Burst) prices the Minimum Magic Damage row and reaches "
-    "the Maximum row (+100%) at 66.66% missing health, then caps "
-    "('increased by 0% : 100% based on target's missing health'; live "
-    "tooltip '1.5% per 1% of target's missing health; capped at 66.66% "
-    "missing health'; pass-16 curve min(1, missing_ratio / (2/3))).",
+    "R (Primordial Burst) prices the Minimum Magic Damage row.",
+    "It reaches the Maximum row, +100%, at 66.66% missing health, then caps.",
+    "Cached prose: 'increased by 0% : 100% based on target's missing health'.",
+    "The live tooltip reads 1.5% per 1% of the target's missing health, capped at "
+    "66.66%.",
+    "The curve is min(1, missing_ratio / (2/3)).",
     "Q and W price one enemy-champion hit each; W's strike lands 1.221s "
     "from the start of the cast (the cached delay note).",
-    "P and E deal no enemy damage and are explicit no-damage slots; E "
-    "authors the cage's sourced stun as a control interval 0.5s after "
-    "the cast.",
+    "P and E deal no enemy damage and are explicit no-damage slots.",
+    "E authors the cage's sourced stun as a control interval 0.5s after the cast.",
 ]
 
 SOURCES = load_champion_sources("Veigar")

@@ -90,23 +90,24 @@ def _organic_deconstruction(
 OPTIONS: list[dict[str, Any]] = []
 
 ASSUMPTIONS = [
-    "Organic Deconstruction procs once per fight: the rotation's "
-    "damaging abilities apply 3+ stacks (Q, W's two rift hits, E, and R "
-    "ticks), so the conservative floor is one 3-stack consume per fight",
-    "An autos-only fight never reaches the third stack (the pipeline "
-    "states this with the auto_attacks_only reserved option): the cached "
-    "P text sources stacking to \"Vel'Koz's abilities apply a stack of "
-    "Deconstruction to enemies hit for 7 seconds, refreshing on basic "
-    'attacks on-hit" — a swing refreshes a stack it cannot create',
-    "Proc damage = the 'Per-Level Scaling' array value at the champion's "
-    "level (35 at 1 up to 197.06 at 19+) + 60% AP (prose ratio, module "
-    "constant)",
-    "R prices the full 13-tick channel: 13 x 'Damage Per Tick' == the "
-    "'Maximum Damage' row (450/700/925) at the sourced 0.2-second "
-    "cadence over the 2.6-second channel; the Researched true-damage "
-    "conversion is not modeled",
-    "The Researched mark (applying 3 stacks marks the target for 7s, "
-    "making R deal true damage) is not modeled — R stays magic",
+    "Conservative floor: Q, W's rifts, E and R ticks stack Organic Deconstruction to "
+    "one consume per fight.",
+    "Each of those hits applies a stack, so the rotation reaches 3+.",
+    "An autos-only fight never reaches the third stack (auto_attacks_only).",
+    "Cached P text sources stacking to \"Vel'Koz's abilities apply a stack of "
+    'Deconstruction".',
+    "The stack lasts 7 seconds, refreshing on basic attacks on-hit: a swing refreshes "
+    "what it cannot make.",
+    "Proc damage is the Per-Level Scaling array at the champion's level, 35 at 1 to "
+    "197.06 at 19+.",
+    "It adds 60% AP, a prose ratio held as a module constant.",
+    "R prices the full 13-tick channel: 13 x Damage Per Tick == the Maximum Damage "
+    "row, 450/700/925.",
+    "The ticks land at the sourced 0.2-second cadence over the 2.6-second channel.",
+    "R's Researched true-damage conversion is not modeled.",
+    "The Researched mark, 3 stacks marking the target for 7s so R deals true damage, "
+    "is not modeled.",
+    "R stays magic.",
     "Q slow and W sight are utility; E's sourced 0.75-second knockup and "
     "stun count as target action downtime",
 ]

@@ -283,42 +283,46 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "W (Venom Cask) stays out of MODULE_CC: its slow is sourced (the "
-    "cached 'Slow' row, 30/35/40/45/50% + 6% per 100 AP) but its window "
-    "is not. The contaminated area lasts 3 seconds by the second effect's "
-    "description alone, and the slot carries no seconds atom at all, so "
-    "there is no sourced interval for a control event to publish.",
-    "Deadly Venom stacks come from the poison_stacks option (default 6 "
-    "= the sourced max); each stack deals its full 6-second total of "
-    "level-scaled true damage (6/12/18/24/30 by level + 18% AP — wiki "
-    "prose, module constants) once per fight",
-    "E (Contaminate) detonates all stacks: base physical + stacks x "
-    "per-stack physical (+35% bonus AD) + stacks x 35% AP magic",
-    "R (Spray and Pray) is a 6s bonus-AD buff (+30/45/60 by rank) that "
-    "raises autos and E's %bonus-AD stack term — modeled as a BUFF-phase "
-    "stat_buff, not direct damage",
-    "The auto-attack rate that applies poison in a real fight is not "
-    "modeled (stack rate is the option); the fight's own autos still "
-    "deal their base AD damage",
-    "Q (Ambush) deals no enemy damage. Element of Surprise — the sourced "
-    "40/45/50/55/60% bonus attack speed for 6 seconds on breaking stealth "
-    "(atom ability.bonus _attack _speed; binary TwitchHideInShadows "
-    "AttackSpeedMod agrees, and its AttackSpeedDuration 6.0 plus the "
-    "cached prose carry the window) — is published as a stat_buff with a "
-    "bare 6-second auto_attack_override window ONLY when the "
-    "q_ambush_break option is on. It defaults OFF because the buff needs "
-    "Twitch to break an already-active Ambush: casting Q at the fight "
-    "open makes him camouflaged, not faster, so an always-on window would "
-    "be a phantom proc. With the option on, the Q-slot kernel places the "
-    "window at [0, 6) exactly, and the override carries the window only — "
-    "no ad_ratio and no crit conversion — so the per-swing formula is "
-    "untouched and only the auto count moves. The 1-second entry delay, "
-    "the camouflage and its movement speed are not modeled",
-    "W (Venom Cask) is a movement slow only (30/35/40/45/50%, +6% per 100 "
-    "AP): a sourced zero-damage row (MODULE_COVERAGE: no_damage). Its "
-    "in-zone Deadly Venom applications are already priced by the "
-    "poison_stacks option, so no damage channel is left unmodeled, and "
-    "the slow has no sourced duration to publish as a control event",
+    "W (Venom Cask) stays out of MODULE_CC: its slow is sourced, 30/35/40/45/50% + 6% "
+    "per 100 AP.",
+    "Its window is not: the contaminated area lasts 3 seconds by the second effect's "
+    "description.",
+    "The slot carries no seconds atom, so no sourced interval exists for a control "
+    "event.",
+    "Deadly Venom stacks come from poison_stacks (default 6, the sourced max).",
+    "Each stack deals its full 6-second total of 6/12/18/24/30 by level + 18% AP true "
+    "damage, once.",
+    "Those are wiki-prose module constants.",
+    "E (Contaminate) detonates all stacks: base physical + stacks x per-stack (+35% "
+    "bonus AD).",
+    "It adds stacks x 35% AP magic.",
+    "R (Spray and Pray) is a 6s bonus-AD buff, +30/45/60 by rank, raising autos and "
+    "E's stack term.",
+    "It is a buff-phase stat_buff, not direct damage.",
+    "The auto-attack rate that applies poison is not modeled: the stack rate is the "
+    "option.",
+    "The fight's own autos still deal their base AD damage.",
+    "Q (Ambush) deals no enemy damage.",
+    "Element of Surprise is 40/45/50/55/60% bonus attack speed for 6 seconds on "
+    "breaking stealth.",
+    "The atom is ability.bonus_attack_speed; binary TwitchHideInShadows "
+    "AttackSpeedMod agrees.",
+    "Its AttackSpeedDuration 6.0 and the cached prose carry the window.",
+    "It publishes as a stat_buff with a bare 6-second auto_attack_override only when "
+    "q_ambush_break is on.",
+    "Q defaults off: the buff needs Twitch to break an active Ambush, not to cast Q "
+    "at the open.",
+    "An always-on window would be a phantom proc.",
+    "With it on, the Q-slot kernel places the window at [0, 6) exactly.",
+    "The override carries the window only, no ad_ratio and no crit conversion, so "
+    "only the count moves.",
+    "The 1-second entry delay, the camouflage and its movement speed are not modeled.",
+    "W (Venom Cask) is a movement slow only, 30/35/40/45/50% + 6% per 100 AP: a "
+    "zero-damage row.",
+    "Its in-zone Deadly Venom applications are already priced by the poison_stacks "
+    "option.",
+    "No damage channel is left unmodeled, and the slow has no sourced duration to "
+    "publish.",
 ]
 
 SLOTS = {

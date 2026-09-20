@@ -387,42 +387,45 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "W (Blighted Quiver) is an on-hit passive: every basic attack deals "
-    "its bonus magic damage (4-40 + 15% bonus AD + 25% AP by rank) and "
-    "applies one Blight stack; stacks cap at 3 and refresh for 6s",
-    "Blight detonation is priced on Piercing Arrow (the primary "
-    "detonator) once per Q cast from the blight_stacks option — E and R "
-    "also detonate in-game, but re-stacking between casts is not "
-    "double-priced in this single-target rotation (conservative)",
-    "Detonation per stack = the sourced 'Bonus Magic Damage per Stack' "
-    "row (% of target max health + 1.3% per 100 AP by rank); Q's "
-    "0-50% charge bonus (the 'Maximum' rows) is not modeled — the "
-    "arrow itself is priced at its Maximum (fully-charged) row",
-    "W active empower: the next Piercing Arrow is empowered for the "
-    "sourced 'Active Maximum Magic Damage' row (9-21% of the target's "
-    "missing health by W rank, data/champions.json W) — priced at "
-    "Maximum like the arrow, against the target_missing_hp_pct option "
-    "(default 50%); toggle w_active_empower off to price an unempowered "
-    "arrow",
+    "W (Blighted Quiver) is an on-hit passive: every basic attack deals 4 to 40 + 15% "
+    "bonus AD + 25% AP.",
+    "That is by rank, and each attack applies one Blight stack; stacks cap at 3 and "
+    "refresh for 6s.",
+    "Blight detonation is priced on Piercing Arrow once per Q cast, from the "
+    "blight_stacks option.",
+    "E and R also detonate in game, but re-stacking between casts is not "
+    "double-priced, conservative.",
+    "Detonation per stack is the sourced Bonus Magic Damage per Stack row.",
+    "That is % of target maximum health + 1.3% per 100 AP by rank.",
+    "Q's 0 to 50% charge bonus is not modeled: the arrow is priced at its Maximum "
+    "row.",
+    "W's active empowers the next Piercing Arrow for the sourced Active Maximum Magic "
+    "Damage row.",
+    "That is 9 to 21% of the target's missing health by W rank, priced at Maximum "
+    "like the arrow.",
+    "It reads target_missing_hp_pct (default 50%); w_active_empower off prices an "
+    "unempowered arrow.",
     "Q detonation requires the Q cast; with blight_stacks=0 the option "
     "models a fresh target and no detonation fires",
     "P (Living Vengeance) prices its champion-takedown branch when "
-    "p_champion_takedown is on (default off, because a takedown is not "
-    "implied by a damage package): +30% bonus attack speed, and attack "
-    "damage and ability power each equal to 33% of the resulting total "
-    "bonus attack speed — cached P prose, since the passive carries no "
-    "leveling row.  Its unit-kill branch (10%/15%/20% by level) is not "
-    "priced: the cache names no level breakpoints for it",
+    "p_champion_takedown is on.",
+    "P defaults off, because a takedown is not implied by a damage package.",
+    "The branch is +30% bonus attack speed, with AD and AP each 33% of the resulting "
+    "total bonus AS.",
+    "That is cached P prose, since the passive carries no leveling row.",
+    "Its unit-kill branch, 10/15/20% by level, is not priced: the cache names no "
+    "level breakpoints.",
     "E is physical damage (JSON and in-game); the reviewed packet's "
     "magic label was a parser error, corrected here",
-    "E's desecrated ground applies Grievous Wounds for 3 seconds (wiki "
-    "prose); the coupled timeline wounds enemies it damages with the "
-    "patch-wide 40% window",
-    "R's primary-target root is a sourced 2-second action lock; secondary "
-    "chain spread and Q's self-slow are outside the single-target model",
-    "P (Living Vengeance) deals no enemy damage — the pinned reviewed "
-    "packet declares it kind='no_damage' — so the slot's priced row is "
-    "the self steroid it grants (a zero-damage stat buff), not a hit.",
+    "E's desecrated ground applies Grievous Wounds for 3 seconds (wiki prose).",
+    "The coupled timeline wounds enemies it damages with the patch-wide 40% window.",
+    "R's primary-target root is a sourced 2-second action lock.",
+    "The secondary chain spread and Q's self-slow are outside the single-target "
+    "model.",
+    "P (Living Vengeance) deals no enemy damage; the reviewed packet declares it kind "
+    "no_damage.",
+    "The slot's priced row is the self steroid it grants, a zero-damage stat buff, "
+    "not a hit.",
 ]
 
 

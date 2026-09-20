@@ -137,17 +137,18 @@ def _pick_a_card(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 ASSUMPTIONS = [
-    "W (Pick a Card) prices exactly one selected card; the default is the "
-    "Gold Card (stun).  The other two cards are selectable via the w_card "
-    "option.",
+    "W (Pick a Card) prices exactly one selected card, the Gold Card stun by default.",
+    "The other two cards are selectable through the w_card option.",
     "Q (Wild Cards) prices one enemy-champion pass.",
-    "E (Stacked Deck) is a passive on the swing stream: its bonus attack "
-    "speed is an innate grant the fight always holds (autos-only too), and "
-    "its bonus magic damage rides every 4th basic attack (three stacking "
-    "attacks, the fourth consumes them) through the engine's stack-"
-    "acceleration on-hit, the Master Yi Double Strike convention: the proc "
-    "is spread across the stacking hits, stacks start at zero (the "
-    "respawn full-stack rule is not modeled), and only basic attacks stack.",
+    "E (Stacked Deck) is a passive on the swing stream, its attack speed held for the "
+    "whole fight.",
+    "That grant is innate and applies in an autos-only fight too.",
+    "Its bonus magic damage rides every 4th basic attack: three stack, the fourth "
+    "consumes them.",
+    "The engine's stack-acceleration on-hit spreads the proc across the stacking "
+    "hits.",
+    "E's stacks start at zero (the respawn full-stack rule is not modeled) and only "
+    "autos stack.",
     "P and R deal no enemy damage and are explicit no-damage slots.",
 ]
 

@@ -157,17 +157,17 @@ OPTIONS: list[dict[str, Any]] = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "W (Purge) prices all 12 sourced shots of the 4-second channel at the "
-    "fixed 3.0 attack speed (3.0 AS x 4s; Modified Physical Damage row "
-    "per shot, 1/3s cadence); on-hit effects at 50% effectiveness and "
-    "the monster/minion minimum threshold are state",
-    "P (Echoing Flames) deals per-level % AD (40% : 100%) plus per-level "
-    "% of the target's maximum health (2% : 6%) physical damage per leg "
-    "shot; the leg rotation/cooldown cadence is combat state, so the "
-    "user sets how many legs fire (p_legs, default 1)",
-    "R (Fear Beyond Death) prices the chem-drill's initial Physical "
-    "Damage row; the Mercy recast below 25% maximum health is an "
-    "execution — a kill boundary, documented not priced (Pyke R "
-    "convention); the post-execution fear is CC state",
+    "W (Purge) prices all 12 sourced shots of the 4-second channel at the fixed 3.0 "
+    "attack speed.",
+    "That is the Modified Physical Damage row per shot on a 1/3s cadence.",
+    "On-hit effects at 50% effectiveness and the monster minimum threshold are state.",
+    "P (Echoing Flames) deals 40% to 100% AD by level + 2% to 6% by level of target "
+    "maximum health.",
+    "That is physical damage per leg shot.",
+    "The leg rotation cadence is combat state, so the user sets p_legs (default 1).",
+    "R (Fear Beyond Death) prices the chem-drill's initial Physical Damage row.",
+    "R's Mercy recast below 25% maximum health is a kill boundary, documented not "
+    "priced.",
+    "The post-execution fear is crowd-control state.",
     "E (Disdain) shield is authored by the E8c support scanner.",
 ]

@@ -22,9 +22,9 @@ from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 ASSUMPTIONS = [
-    "Q (Bloodlust) is a heal; no enemy-damage leveling row exists for it "
-    "(Maximum Bonus Attack Damage / Minimum Heal are state/heal terms). "
-    "The heal is authored by healing.py from the Q cast timeline.",
+    "Q (Bloodlust) is a heal: no enemy-damage leveling row exists for it.",
+    "Maximum Bonus Attack Damage and Minimum Heal are state and heal terms; "
+    "healing.py authors it.",
     "E (Spinning Slash) prices one enemy-champion hit.",
     "P, W, and R deal no enemy damage and are explicit no-damage slots.",
 ]

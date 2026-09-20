@@ -233,28 +233,30 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "E (Explosive Charge) detonates once per cast with e_stacks stacks "
-    "(default 4 = the sourced max): Minimum Physical Damage + stacks x "
-    "Bonus Damage Per Stack, equal to the wiki's Full Stack Physical "
-    "Damage row at 4 stacks",
-    "The auto-attack rate that adds stacks in a real fight is not "
-    "modeled — the stack count is the option; the fight's own autos "
-    "still deal their base AD damage",
+    "E (Explosive Charge) detonates once per cast at e_stacks (default 4, the sourced "
+    "max).",
+    "It prices Minimum Physical Damage + stacks x Bonus Damage Per Stack.",
+    "At 4 stacks that equals the wiki's Full Stack Physical Damage row.",
+    "The auto-attack rate that adds stacks in a real fight is not modeled: the count "
+    "is the option.",
+    "The fight's own autos still deal their base AD damage.",
     "The charge's 0-40% (+0-12%) crit-chance bonus to its total damage "
     "is not modeled (no crit in the no-items reference)",
-    "Q (Rapid Fire) is a modeled zero-damage buff: the sourced "
-    "60/75/90/105/120% bonus attack speed (atom ability.bonus _attack "
-    "_speed; binary TristanaQ AttackSpeedMod agrees) is published as a "
-    "stat_buff with the sourced 7-second window (atom "
-    "timing.active_duration; binary BuffDuration 7.0 flat), so the "
-    "fight's auto count splits into pre-window / in-window / post-window "
-    "at the Q cast rather than carrying a fight-averaged magnitude. The "
-    "override carries the window only — no ad_ratio and no crit "
-    "conversion — so the per-swing formula is untouched",
-    "P (Draw a Bead) is bonus attack RANGE only (0 : 167.65 by level): a "
-    "sourced zero-damage row (MODULE_COVERAGE: no_damage). Range is inert "
-    "in this model — is_melee is a static champion stat, never derived "
-    "from attack range — so no damage channel is left unmodeled",
+    "Q (Rapid Fire) is a modeled zero-damage buff: the sourced 60/75/90/105/120% "
+    "bonus attack speed.",
+    "The atom is ability.bonus_attack_speed and the binary's TristanaQ AttackSpeedMod "
+    "agrees.",
+    "It publishes as a stat_buff over the sourced 7-second window (binary "
+    "BuffDuration 7.0 flat).",
+    "The auto count splits pre-window, in-window and post-window at the Q cast, not "
+    "fight-averaged.",
+    "The override carries the window only, no ad_ratio and no crit conversion, so the "
+    "formula is untouched.",
+    "P (Draw a Bead) is bonus attack range only, 0 to 167.65 by level: a sourced "
+    "zero-damage row.",
+    "Range is inert here, since is_melee is a static champion stat, never derived "
+    "from attack range.",
+    "So no damage channel is left unmodeled.",
     "W's takedown/max-stack reset and R's knockback/stun are " "CC/state only",
 ]
 

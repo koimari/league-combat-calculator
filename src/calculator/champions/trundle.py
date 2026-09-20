@@ -79,8 +79,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"Q"}),
     cc_kinds=MODULE_CC,
     assumption_overrides=(
-        "Subjugate prices the full 4-second drain: Magic Damage Per Second "
-        "x 8 == Total Magic Damage / Total Healing at every rank.",
+        "Subjugate prices the full 4-second drain: per-second x 8 == Total Magic "
+        "Damage and Total Healing.",
     ),
     slot_parsers={
         "R": repeat_damage_parser(
@@ -153,23 +153,25 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (King's Tribute) heals 1.8% : 5.94% (based on level) of the dying "
-    "unit's maximum health per nearby enemy death — the cached P level "
-    "row, which the wiki data mislabels 'Max Health Damage'. A duel "
-    "simulates no wave, so p_nearby_deaths (default 0) supplies the count "
-    "and the heals ride Trundle's first damaging hits; the dying unit is "
-    "priced as the enemy champion this fight targets, so a minion death "
-    "would be worth far less than the receipt states",
-    "W (Frozen Domain) is ground, not a self-buff: its 30-90% bonus attack "
-    "speed only applies while Trundle stands inside the zone, so "
-    "w_zone_uptime (default 1.0 — the whole window, which an 8-second zone "
-    "on a recastable cooldown can cover) scales the granted percentage. "
-    "Attack speed is linear in the bonus percent, so a scaled grant is the "
-    "exact fight average rather than an approximation. W's bonus movement "
-    "speed and its 25% increased healing from all sources are not modeled",
-    "E (Pillar of Ice) is terrain, a knockback and a 34-50% slow: the "
-    "slow is priced as a control event with its cached duration and "
-    "magnitude, while the terrain and knockback have no engine axis",
+    "P (King's Tribute) heals 1.8% to 5.94% by level of the dying unit's maximum "
+    "health per nearby death.",
+    "That is the cached P level row, which the wiki data mislabels 'Max Health "
+    "Damage'.",
+    "A duel simulates no wave, so p_nearby_deaths (default 0) supplies the count on "
+    "the first hits.",
+    "The dying unit is priced as this fight's enemy champion, so a minion death would "
+    "be worth far less.",
+    "W (Frozen Domain) is ground, not a self-buff: its 30 to 90% attack speed needs "
+    "Trundle inside.",
+    "w_zone_uptime (default 1.0) scales the granted percentage over the 8-second "
+    "zone.",
+    "Attack speed is linear in the bonus percent, so a scaled grant is the exact "
+    "fight average.",
+    "W's bonus movement speed and its 25% increased healing from all sources are not "
+    "modeled.",
+    "E (Pillar of Ice) is terrain, a knockback and a 34 to 50% slow.",
+    "The slow is a control event at its cached duration; terrain and knockback have "
+    "no engine axis.",
 ]
 
 MODULE_COVERAGE = coverage(no_damage="E")
