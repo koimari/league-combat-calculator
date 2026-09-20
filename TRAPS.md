@@ -603,6 +603,11 @@ a pattern that bit one champion and generalizes to the next.
   3-second, 12-tick ability, overstating the charge by a third. Compute the total
   from `duration x ticks_per_second x per_tick` and use the cached total only if
   it agrees; the per-tick value wins. Re-pulling the data never fixes this.
+- **A cached `Max Health Damage` leveling row is often a percent-of-maximum-health
+  SELF restore rather than enemy damage**, that being the wiki parser's generic
+  name for the shape, so read the effect's own prose for whose health the row
+  pays before pricing it: Rek'Sai P, Tahm Kench E, Trundle P, Zac P and
+  Dr. Mundo P each carry a heal under that name.
 - **A threshold can exist only in the game files.** Dr. Mundo E's "0% to 40%
   (based on missing health)" reaches its maximum at 70% missing health, published
   nowhere on the ability page and present in `drmundo.bin.json` as

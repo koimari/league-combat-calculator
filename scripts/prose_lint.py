@@ -5,18 +5,24 @@ This reads ``.py`` files only.  Markdown is the plugin hook
 ``comment_lint.lint_prose``, which the stop gate runs over every changed ``.md``
 file; the two share no code and no findings.
 
-``tests/test_prose_lint.py`` pins four findings at zero: a function docstring
+``tests/test_prose_lint.py`` pins five findings at zero: a function docstring
 longer than the body it documents, a comment run longer than the function it
-belongs to, prose about what the code was rather than what it is, and a section
+belongs to, prose about what the code was rather than what it is, a section
 banner with no statement under it, which is what an extraction leaves when it
-cuts the bodies out and not the headers.  A fifth, ``pointer``, names prose
-citing a campaign document where the reason itself belongs.  It reports rather
-than failing, under a ceiling the test holds and that may only fall; moving it
-into ``FAILING`` is one edit once the ceiling reaches zero.  Prose citing a wiki
-URL or a game file for a number is evidence, and is never reported.
+cuts the bodies out and not the headers, and a module docstring under
+``CHAMPIONS_SCOPE`` over ``MODULE_DOCSTRING_CAP`` lines.  A champion header
+holds what a reader of the module needs today, so a trap belongs in
+``TRAPS.md``, a review stamp in that module's ``SOURCES``, and a project id
+nowhere.
 
-A sixth, ``unsourced_constant``, reports a module-level numeric literal under
-``CONSTANTS_SCOPE`` whose provenance nothing states: a citation, a cached field
+A sixth, ``pointer``, names prose citing a campaign document where the reason
+itself belongs.  It reports rather than failing, under a ceiling the test holds
+and that may only fall; moving it into ``FAILING`` is one edit once the ceiling
+reaches zero.  Prose citing a wiki URL or a game file for a number is evidence,
+and is never reported.
+
+A seventh, ``unsourced_constant``, reports a module-level numeric literal under
+``CHAMPIONS_SCOPE`` whose provenance nothing states: a citation, a cached field
 name or a composition, either trailing the line or heading the unbroken run of
 assignments it sits in.  It reports under its own ceiling for the same reason.
 
@@ -41,8 +47,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TARGETS = ("src", "scripts")
-CONSTANTS_SCOPE = "src/calculator/champions/"
-FAILING = ("long_docstring", "long_comment", "history", "dead_banner")
+CHAMPIONS_SCOPE = "src/calculator/champions/"
+MODULE_DOCSTRING_CAP = 20
+FAILING = (
+    "long_docstring",
+    "long_comment",
+    "history",
+    "dead_banner",
+    "long_module_docstring",
+)
 REPORTING = ("pointer", "unsourced_constant")
 SCOPES = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 FUNCS = (ast.FunctionDef, ast.AsyncFunctionDef)
@@ -155,6 +168,15 @@ def _unsourced_constants(
     return found
 
 
+def _overlong_module_docstring(tree: ast.Module, where: str) -> list[str]:
+    """This module's header if it runs past the cap, as a one-item list."""
+    doc = _docstring(tree)
+    lines = 0 if doc is None else doc.end_lineno - doc.lineno + 1
+    if lines <= MODULE_DOCSTRING_CAP:
+        return []
+    return [f"{where}:{doc.lineno}: {lines} lines over {MODULE_DOCSTRING_CAP}"]
+
+
 def _definition_spans(funcs: list[ast.stmt]) -> dict[int, int]:
     """First line of each definition (decorators included) to its line count."""
     heads = {}
@@ -238,10 +260,11 @@ def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str
                 found["long_comment"].append(f"{where}:{line}: {len(block)} lines")
         for line in _dead_banners(blocks, tree):
             found["dead_banner"].append(f"{where}:{line}: banner over nothing")
-        if where.startswith(CONSTANTS_SCOPE):
+        if where.startswith(CHAMPIONS_SCOPE):
             found["unsourced_constant"] += _unsourced_constants(
                 source, tree, blocks, where
             )
+            found["long_module_docstring"] += _overlong_module_docstring(tree, where)
     return found
 
 

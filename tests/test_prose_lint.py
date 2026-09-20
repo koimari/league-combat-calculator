@@ -2,7 +2,7 @@
 
 import pytest
 
-from scripts.prose_lint import FAILING, REPORTING, scan
+from scripts.prose_lint import FAILING, MODULE_DOCSTRING_CAP, REPORTING, scan
 
 #: Files exempt from the counters. Empty, and a new exemption needs a reason.
 PENDING: tuple[str, ...] = ()
@@ -11,11 +11,15 @@ PENDING: tuple[str, ...] = ()
 #: a run prints; never raise it.  At zero the rule joins ``FAILING`` and its
 #: row goes away.
 CEILINGS = {
-    "pointer": (583, "state the fact instead of citing a campaign document"),
+    "pointer": (559, "state the fact instead of citing a campaign document"),
     "unsourced_constant": (69, "cite the cached field, the source or the composition"),
 }
 
-SEEDED = '''"""Seed."""
+#: One module header a line past the cap, so the champion-tree counter fires on
+#: the same seed as the other four.
+OVER_THE_CAP = '"""Seed.\n' + "Over the cap.\n" * (MODULE_DOCSTRING_CAP - 1) + '"""'
+
+SEEDED = OVER_THE_CAP + '''
 
 
 def public():
@@ -114,10 +118,24 @@ def test_the_reported_count_only_falls(findings, kind):
 
 @pytest.mark.parametrize("kind", FAILING)
 def test_the_counter_fires_on_a_seeded_offender(tmp_path, kind):
-    (tmp_path / "src").mkdir()
+    champions = tmp_path / "src" / "calculator" / "champions"
+    champions.mkdir(parents=True)
     (tmp_path / "scripts").mkdir()
-    (tmp_path / "src" / "seed.py").write_text(SEEDED, encoding="utf-8")
+    (champions / "seed.py").write_text(SEEDED, encoding="utf-8")
     assert len(scan(root=tmp_path)[kind]) == 1
+
+
+def test_a_champion_header_at_the_cap_passes_and_a_header_outside_never_counts(
+    tmp_path,
+):
+    """The cap is the boundary, and it is the champion tree's alone."""
+    champions = tmp_path / "src" / "calculator" / "champions"
+    champions.mkdir(parents=True)
+    (tmp_path / "scripts").mkdir()
+    at_cap = '"""Seed.\n' + "At the cap.\n" * (MODULE_DOCSTRING_CAP - 2) + '"""\n'
+    (champions / "seed.py").write_text(at_cap, encoding="utf-8")
+    (tmp_path / "src" / "outside.py").write_text(SEEDED, encoding="utf-8")
+    assert scan(root=tmp_path)["long_module_docstring"] == []
 
 
 def test_a_number_answers_to_the_note_beside_it_or_over_its_block(tmp_path):
