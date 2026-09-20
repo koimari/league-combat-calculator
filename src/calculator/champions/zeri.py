@@ -14,6 +14,8 @@ deals no damage.  Secondary targets ("Burst Fire Secondary Target
 Damage" 80-100%) are outside this single-target model.
 """
 
+from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Any
 
 from ..ability_spec import DamagePart
@@ -39,49 +41,42 @@ _ZAP_EXECUTE_AP_RATIO = calculation_coefficient(
 )
 
 
-class _LivingBatteryExecuteRule:
-    """The typed Living Battery execute-range rule (the Asol pattern).
-
-    The threshold 70..170.59 + 20% AP roots in the DEGRADED wiki row
-    ("Bonus Damage", effects[1] — values survive, units empty) with the
-    binary PassiveExecuteThreshold 70.0->160.0 + coefficient 0.2 as the
-    corroborating root; the atoms 9fa7c9206eb1e3c8 / 404ba4027bf78118
-    pin the row (a drift trips the tests).
-    """
-
-    def public_receipt(self) -> dict[str, Any]:
-        return {
-            "name": "Living Battery execute range",
-            "threshold_level_1": 70.0,
-            "threshold_level_20": 170.59,
-            "ap_ratio": _ZAP_EXECUTE_AP_RATIO,
-            "zap_ap_ratio": _ZAP_AP_RATIO,
-            "atom_ids": {
-                "execute_threshold": {
-                    "atom_id": "ability.bonus _damage.modifier_0",
-                    "hash": "9fa7c9206eb1e3c8",
-                },
-                "execute_ap_ratio": {
-                    "atom_id": "ability.bonus _damage.modifier_1",
-                    "hash": "404ba4027bf78118",
-                },
+# The typed Living Battery execute-range rule.  The threshold 70..170.59 +
+# 20% AP roots in the DEGRADED wiki row ("Bonus Damage", effects[1]: values
+# survive, units empty) with the binary PassiveExecuteThreshold 70.0->160.0
+# + coefficient 0.2 as the corroborating root; the atoms 9fa7c9206eb1e3c8 /
+# 404ba4027bf78118 pin the row (a drift trips the tests).
+ZERI_P_EXECUTE_RECEIPT: Mapping[str, Any] = MappingProxyType(
+    {
+        "name": "Living Battery execute range",
+        "threshold_level_1": 70.0,
+        "threshold_level_20": 170.59,
+        "ap_ratio": _ZAP_EXECUTE_AP_RATIO,
+        "zap_ap_ratio": _ZAP_AP_RATIO,
+        "atom_ids": {
+            "execute_threshold": {
+                "atom_id": "ability.bonus _damage.modifier_0",
+                "hash": "9fa7c9206eb1e3c8",
             },
-            "source": {
-                "wiki": {
-                    "url": "https://wiki.leagueoflegends.com/en-us/Zeri",
-                    "revision_id": 4019486,
-                    "row": "data/champions.json P effects[1] 'Bonus Damage' "
-                    "(degraded: values survive, units empty)",
-                },
-                "binary": (
-                    "data/bin/characters/zeri.bin.json ZeriQ "
-                    "PassiveExecuteThreshold 70.0->160.0 + coefficient 0.2"
-                ),
+            "execute_ap_ratio": {
+                "atom_id": "ability.bonus _damage.modifier_1",
+                "hash": "404ba4027bf78118",
             },
-        }
-
-
-ZERI_P_EXECUTE_RULE = _LivingBatteryExecuteRule()
+        },
+        "source": {
+            "wiki": {
+                "url": "https://wiki.leagueoflegends.com/en-us/Zeri",
+                "revision_id": 4019486,
+                "row": "data/champions.json P effects[1] 'Bonus Damage' "
+                "(degraded: values survive, units empty)",
+            },
+            "binary": (
+                "data/bin/characters/zeri.bin.json ZeriQ "
+                "PassiveExecuteThreshold 70.0->160.0 + coefficient 0.2"
+            ),
+        },
+    }
+)
 
 PACKET_SHA256 = "f03ac495eb30baef9672e60deb2f448b0da551e22e39c3113cbc0cfee9e1c055"
 

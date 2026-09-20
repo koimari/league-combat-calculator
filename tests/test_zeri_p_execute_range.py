@@ -792,16 +792,14 @@ class TestSourceAndAtomReceipts:
         # Mirror the Asol _StardustRule pattern: a typed rule with a
         # public receipt and an atom_ids surface for the threshold
         # (per-level values + 20% AP), whose hashes trip on data drift.
-        from src.calculator.champions.zeri import ZERI_P_EXECUTE_RULE
+        from src.calculator.champions.zeri import ZERI_P_EXECUTE_RECEIPT
 
-        receipt = ZERI_P_EXECUTE_RULE.public_receipt()
+        receipt = ZERI_P_EXECUTE_RECEIPT
         assert receipt["threshold_level_1"] == pytest.approx(70.0)
         assert receipt["threshold_level_20"] == pytest.approx(170.59)
         assert receipt["ap_ratio"] == pytest.approx(0.20)
         assert receipt["source"]["wiki"]["revision_id"] == 4019486
-        assert ZERI_P_EXECUTE_RULE.public_receipt()[
-            "atom_ids"
-        ]  # typed certification surface
+        assert receipt["atom_ids"]  # typed certification surface
 
 
 # ---------------------------------------------------------------------------
