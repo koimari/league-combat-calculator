@@ -31,6 +31,21 @@ def _module(champion_name: str):
     return _CHAMPION_MODULES[champion_name]
 
 
+def _imported_key_names(module) -> dict[str, str]:
+    """Option key -> the name this module spells it with, where it has one."""
+    names: dict[str, str] = {}
+    for name, value in vars(module).items():
+        if name.startswith("__"):
+            continue
+        if isinstance(value, str):
+            names[value] = name
+        elif isinstance(value, tuple) and hasattr(value, "_asdict"):
+            for field, member in value._asdict().items():
+                if isinstance(member, str):
+                    names[member] = f"{name}.{field}"
+    return names
+
+
 class TestGetChampionOptionsMeta:
     """Per-champion metadata accessor."""
 
@@ -194,19 +209,24 @@ class TestOptionsDeclarationValidity:
                 )
 
     def test_every_option_key_is_consumed_by_the_module(self) -> None:
-        """Each OPTIONS key must appear in its module's source.
+        """Each OPTIONS key must be spelled in its module's source.
 
         The parse path reads options via ``ctx.options.get(key, ...)``
         or archetype params (``by_option(key, ...)``,
         ``count_option=key``), so a
         declared key that never appears in the module source is a stale
-        declaration or a rename that missed the parse path.  The one generic
+        declaration or a rename that missed the parse path.  A key a
+        second file also reads is spelled as the name it is imported
+        under (`shared_option_keys`, `aphelios_weapons.OPTION_KEYS`),
+        which counts.  The one generic
         consumer is ``packet_module.select_variant``: it both declares a
         ``<slot>_variant`` option (labelled ``"<SLOT> packet variant"``) and
         reads it, so those keys need no literal in the champion module.
         """
         for name in _CHAMPION_MODULES:
-            source = inspect.getsource(_module(name))
+            module = _module(name)
+            source = inspect.getsource(module)
+            names = _imported_key_names(module)
             for opt in get_champion_options_meta(name)["options"]:
                 key = opt["key"]
                 if (
@@ -214,8 +234,9 @@ class TestOptionsDeclarationValidity:
                     and opt["label"] == f"{key[0].upper()} packet variant"
                 ):
                     continue
-                assert f'"{opt["key"]}"' in source, (
-                    f"{name}: OPTIONS key {opt['key']!r} is not referenced "
+                spelling = names.get(key, f'"{key}"')
+                assert spelling in source, (
+                    f"{name}: OPTIONS key {key!r} is not referenced "
                     f"anywhere in its module — stale declaration or rename?"
                 )
 
