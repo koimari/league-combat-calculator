@@ -7,6 +7,7 @@ from typing import Any
 
 from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
+from .defense_window_options import E_WINDOW
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import ability_slot, no_damage, ranked_slot
@@ -208,13 +209,13 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "E"},
     ),
     bool_option(
-        "e_active",
+        E_WINDOW.active,
         False,
         label="E (Counter Strike) evasion active",
         rotation={"role": "self_state", "slot": "E"},
     ),
     float_option(
-        "e_active_from",
+        E_WINDOW.active_from,
         0.0,
         minimum=0.0,
         maximum=120.0,
@@ -222,7 +223,7 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "E"},
     ),
     float_option(
-        "e_active_seconds",
+        E_WINDOW.active_seconds,
         0.0,
         minimum=0.0,
         maximum=2.0,

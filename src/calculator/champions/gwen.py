@@ -9,6 +9,7 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..damage_event_row import event_damage as _row_damage
+from .defense_window_options import W_BLOCKED_SKILLSHOTS, W_WINDOW
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option
@@ -243,13 +244,13 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "R"},
     ),
     bool_option(
-        "w_active",
+        W_WINDOW.active,
         False,
         label="W (Hallowed Mist) active against selected skillshots",
         rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
-        "w_active_from",
+        W_WINDOW.active_from,
         0.0,
         minimum=0.0,
         maximum=120.0,
@@ -257,7 +258,7 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
-        "w_active_seconds",
+        W_WINDOW.active_seconds,
         0.0,
         minimum=0.0,
         maximum=4.0,
@@ -265,7 +266,7 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "W"},
     ),
     {
-        "key": "w_blocked_skillshots",
+        "key": W_BLOCKED_SKILLSHOTS,
         "type": "string_list",
         "default": [],
         "max_items": 24,

@@ -7,6 +7,12 @@ from dataclasses import dataclass
 from typing import Any
 
 from .ability_atoms import atom_receipt, required_ability_atom
+from .champions.defense_window_options import (
+    E_BLOCKED_EVENT_IDS,
+    E_BLOCKED_SKILLSHOTS,
+    E_WINDOW,
+    WINDOW_OPTIONS,
+)
 from .defense_composition import (
     DefenseComposition,
     DestructionRule,
@@ -68,7 +74,7 @@ def resolve_projectile_defense(combatant: CombatantFacts) -> ProjectileDefense |
     options = getattr(request, "champion_options", None)
     options = options if isinstance(options, Mapping) else {}
 
-    if champion == "Braum" and bool(options.get("e_active", False)):
+    if champion == "Braum" and bool(options.get(E_WINDOW.active, False)):
         rank = rank_for(champion, int(combatant.level), request, "E")
         ability = cached_ability(champion_data, "E")
         if rank < 1 or ability is None:
@@ -95,15 +101,15 @@ def resolve_projectile_defense(combatant: CombatantFacts) -> ProjectileDefense |
             / 100.0
         )
         start, duration = requested_window(
-            options, "e_active_from", "e_active_seconds", source_duration
+            options, E_WINDOW.active_from, E_WINDOW.active_seconds, source_duration
         )
         return ProjectileDefense(
             kind="braum_unbreakable",
             source="Braum E · Unbreakable",
             start=start,
             duration=duration,
-            blocked_sources=source_selection(options, "e_blocked_skillshots"),
-            blocked_event_ids=source_selection(options, "e_blocked_event_ids"),
+            blocked_sources=source_selection(options, E_BLOCKED_SKILLSHOTS),
+            blocked_event_ids=source_selection(options, E_BLOCKED_EVENT_IDS),
             damage_reduction=reduction,
             full_block_first=True,
             source_atoms=(
@@ -116,8 +122,8 @@ def resolve_projectile_defense(combatant: CombatantFacts) -> ProjectileDefense |
     if window is None:
         return None
     slot, fields = window
-    key = slot.lower()
-    if not bool(options.get(f"{key}_active", False)):
+    keys = WINDOW_OPTIONS[slot]
+    if not bool(options.get(keys.active, False)):
         return None
     rank = rank_for(champion, int(combatant.level), request, slot)
     ability = cached_ability(champion_data, slot)
@@ -125,7 +131,7 @@ def resolve_projectile_defense(combatant: CombatantFacts) -> ProjectileDefense |
         return None
     source_duration, duration_atom = prose_duration_atom(champion, champion_data, slot)
     start, duration = requested_window(
-        options, f"{key}_active_from", f"{key}_active_seconds", source_duration
+        options, keys.active_from, keys.active_seconds, source_duration
     )
     selections = {
         name: source_selection(options, fields[name])

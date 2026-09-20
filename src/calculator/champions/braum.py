@@ -38,6 +38,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..stat_formulas import effective_cooldown
+from .defense_window_options import E_BLOCKED_EVENT_IDS, E_BLOCKED_SKILLSHOTS, E_WINDOW
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option
 from .module_helpers import ability_slot, at_level, ranked_slot
@@ -268,8 +269,8 @@ def _unbreakable(ctx: SlotCtx) -> dict[str, Any] | None:
         return None
     reduction = extract_value(ability, "Damage reduction", rank) / 100.0
     duration = extract_value(ability, "Barrier Duration", rank)
-    active = bool(ctx.option("e_active"))
-    selected_duration = float(ctx.option("e_active_seconds") or 0.0)
+    active = bool(ctx.option(E_WINDOW.active))
+    selected_duration = float(ctx.option(E_WINDOW.active_seconds) or 0.0)
     if selected_duration > 0.0:
         duration = min(duration, selected_duration)
     return {
@@ -285,7 +286,7 @@ def _unbreakable(ctx: SlotCtx) -> dict[str, Any] | None:
             "duration": duration if active else 0.0,
             "damage_reduction": reduction,
             "full_block_first": True,
-            "blocked_sources": list(ctx.option("e_blocked_skillshots")),
+            "blocked_sources": list(ctx.option(E_BLOCKED_SKILLSHOTS)),
         },
         "detail": (
             "Directional barrier: first selected champion hit is fully "
@@ -307,13 +308,13 @@ OPTIONS: list[dict[str, Any]] = [
         rotation={"role": "self_state", "slot": "W"},
     ),
     bool_option(
-        "e_active",
+        E_WINDOW.active,
         False,
         label="E (Unbreakable) active against selected skillshots",
         rotation={"role": "self_state", "slot": "E"},
     ),
     float_option(
-        "e_active_from",
+        E_WINDOW.active_from,
         0.0,
         minimum=0.0,
         maximum=120.0,
@@ -321,7 +322,7 @@ OPTIONS: list[dict[str, Any]] = [
         rotation={"role": "self_state", "slot": "E"},
     ),
     float_option(
-        "e_active_seconds",
+        E_WINDOW.active_seconds,
         0.0,
         minimum=0.0,
         maximum=4.0,
@@ -329,7 +330,7 @@ OPTIONS: list[dict[str, Any]] = [
         rotation={"role": "self_state", "slot": "E"},
     ),
     {
-        "key": "e_blocked_skillshots",
+        "key": E_BLOCKED_SKILLSHOTS,
         "type": "string_list",
         "default": [],
         "max_items": 24,
@@ -339,7 +340,7 @@ OPTIONS: list[dict[str, Any]] = [
         "rotation": {"role": "irrelevant", "slot": "E"},
     },
     {
-        "key": "e_blocked_event_ids",
+        "key": E_BLOCKED_EVENT_IDS,
         "type": "string_list",
         "default": [],
         "max_items": 24,

@@ -36,6 +36,7 @@ from typing import Any
 from ..ability_prose import CachedSentence, extract_description_duration
 from ..ability_spec import DamagePart
 from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS, coverage
+from .defense_window_options import W_BLOCKED_EVENT_IDS, W_BLOCKED_SKILLSHOTS, W_WINDOW
 from .engine import SlotCtx
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import ability_slot, no_damage, ranked_slot
@@ -91,11 +92,11 @@ def _wind_wall(ctx: SlotCtx) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     if ability is None or rank < 1:
         return None
-    active = bool(ctx.option("w_active"))
+    active = bool(ctx.option(W_WINDOW.active))
     duration = extract_description_duration(ability)
     if duration is None:
         return None
-    selected_duration = float(ctx.option("w_active_seconds") or 0.0)
+    selected_duration = float(ctx.option(W_WINDOW.active_seconds) or 0.0)
     if selected_duration > 0.0:
         duration = min(duration, selected_duration)
     return {
@@ -109,7 +110,7 @@ def _wind_wall(ctx: SlotCtx) -> dict[str, Any] | None:
             "kind": "yasuo_wind_wall",
             "active": active,
             "duration": duration if active else 0.0,
-            "blocked_sources": list(ctx.option("w_blocked_skillshots")),
+            "blocked_sources": list(ctx.option(W_BLOCKED_SKILLSHOTS)),
         },
         "detail": (
             "Wind Wall destroys selected marked projectiles during the "
@@ -279,13 +280,13 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "E"},
     ),
     bool_option(
-        "w_active",
+        W_WINDOW.active,
         False,
         label="W (Wind Wall) active against selected skillshots",
         rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
-        "w_active_from",
+        W_WINDOW.active_from,
         0.0,
         minimum=0.0,
         maximum=120.0,
@@ -293,7 +294,7 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
-        "w_active_seconds",
+        W_WINDOW.active_seconds,
         0.0,
         minimum=0.0,
         maximum=4.0,
@@ -301,7 +302,7 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "W"},
     ),
     {
-        "key": "w_blocked_skillshots",
+        "key": W_BLOCKED_SKILLSHOTS,
         "type": "string_list",
         "default": [],
         "max_items": 24,
@@ -311,7 +312,7 @@ OPTIONS = [
         "rotation": {"role": "irrelevant", "slot": "W"},
     },
     {
-        "key": "w_blocked_event_ids",
+        "key": W_BLOCKED_EVENT_IDS,
         "type": "string_list",
         "default": [],
         "max_items": 24,

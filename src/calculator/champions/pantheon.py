@@ -30,6 +30,7 @@ from ..binary_roots import (
     spell_object,
 )
 from .contract_vocabulary import coverage
+from .defense_window_options import E_BLOCKED_SKILLSHOTS, E_WINDOW
 from .engine import SlotCtx
 from .inputs import bool_option, float_option
 from .module_helpers import ranked_slot
@@ -217,13 +218,13 @@ OPTIONS: list[dict[str, Any]] = [
         rotation={"role": "irrelevant", "slot": "R"},
     ),
     bool_option(
-        "e_active",
+        E_WINDOW.active,
         False,
         label="E (Aegis Assault) active against selected skillshots",
         rotation={"role": "self_state", "slot": "E"},
     ),
     float_option(
-        "e_active_from",
+        E_WINDOW.active_from,
         0.0,
         minimum=0.0,
         maximum=120.0,
@@ -231,7 +232,7 @@ OPTIONS: list[dict[str, Any]] = [
         rotation={"role": "self_state", "slot": "E"},
     ),
     float_option(
-        "e_active_seconds",
+        E_WINDOW.active_seconds,
         0.0,
         minimum=0.0,
         maximum=1.5,
@@ -239,7 +240,7 @@ OPTIONS: list[dict[str, Any]] = [
         rotation={"role": "self_state", "slot": "E"},
     ),
     {
-        "key": "e_blocked_skillshots",
+        "key": E_BLOCKED_SKILLSHOTS,
         "type": "string_list",
         "default": [],
         "max_items": 24,

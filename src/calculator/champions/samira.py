@@ -37,6 +37,7 @@ from typing import Any
 
 from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS
+from .defense_window_options import W_BLOCKED_SKILLSHOTS, W_WINDOW
 from .engine import ONHIT, SlotCtx
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import ability_slot, at_level, no_damage
@@ -248,13 +249,13 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "P"},
     ),
     bool_option(
-        "w_active",
+        W_WINDOW.active,
         False,
         label="W (Blade Whirl) active against selected skillshots",
         rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
-        "w_active_from",
+        W_WINDOW.active_from,
         0.0,
         minimum=0.0,
         maximum=120.0,
@@ -262,7 +263,7 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
-        "w_active_seconds",
+        W_WINDOW.active_seconds,
         0.0,
         minimum=0.0,
         maximum=0.75,
@@ -270,7 +271,7 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "W"},
     ),
     {
-        "key": "w_blocked_skillshots",
+        "key": W_BLOCKED_SKILLSHOTS,
         "type": "string_list",
         "default": [],
         "max_items": 24,

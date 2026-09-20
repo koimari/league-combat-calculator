@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from .. import healing_helpers as _healing
+from .defense_window_options import W_BLOCKED_SOURCES, W_WINDOW
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option
@@ -121,13 +122,13 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "E"},
     ),
     bool_option(
-        "w_active",
+        W_WINDOW.active,
         False,
         label="W (Riposte) active against selected incoming events",
         rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
-        "w_active_from",
+        W_WINDOW.active_from,
         0.0,
         minimum=0.0,
         maximum=120.0,
@@ -135,7 +136,7 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "W"},
     ),
     float_option(
-        "w_active_seconds",
+        W_WINDOW.active_seconds,
         0.0,
         minimum=0.0,
         maximum=0.75,
@@ -143,7 +144,7 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "W"},
     ),
     {
-        "key": "w_blocked_sources",
+        "key": W_BLOCKED_SOURCES,
         "type": "string_list",
         "default": [],
         "max_items": 24,

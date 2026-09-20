@@ -11,6 +11,12 @@ from .ability_atoms import (
     ranked_ability_atom_value,
     required_ability_atom,
 )
+from .champions.defense_window_options import (
+    E_BLOCKED_SKILLSHOTS,
+    W_BLOCKED_EVENT_IDS,
+    W_BLOCKED_SKILLSHOTS,
+    W_BLOCKED_SOURCES,
+)
 from .champions.skill_orders import get_ability_rank
 from .delivery_facts import ChampionFacts, RequestFacts
 
@@ -94,8 +100,8 @@ PROSE_DURATION_WINDOWS: dict[str, tuple[str, dict[str, Any]]] = {
         {
             "kind": "yasuo_wind_wall",
             "source": "Yasuo W · Wind Wall",
-            "blocked_sources": "w_blocked_skillshots",
-            "blocked_event_ids": "w_blocked_event_ids",
+            "blocked_sources": W_BLOCKED_SKILLSHOTS,
+            "blocked_event_ids": W_BLOCKED_EVENT_IDS,
             "destroy_projectiles": True,
         },
     ),
@@ -104,7 +110,7 @@ PROSE_DURATION_WINDOWS: dict[str, tuple[str, dict[str, Any]]] = {
         {
             "kind": "samira_blade_whirl",
             "source": "Samira W · Blade Whirl",
-            "blocked_sources": "w_blocked_skillshots",
+            "blocked_sources": W_BLOCKED_SKILLSHOTS,
             "destroy_projectiles": True,
         },
     ),
@@ -113,7 +119,7 @@ PROSE_DURATION_WINDOWS: dict[str, tuple[str, dict[str, Any]]] = {
         {
             "kind": "gwen_hallowed_mist",
             "source": "Gwen W · Hallowed Mist",
-            "blocked_sources": "w_blocked_skillshots",
+            "blocked_sources": W_BLOCKED_SKILLSHOTS,
             "destroy_projectiles": True,
         },
     ),
@@ -122,7 +128,7 @@ PROSE_DURATION_WINDOWS: dict[str, tuple[str, dict[str, Any]]] = {
         {
             "kind": "fiora_riposte",
             "source": "Fiora W · Riposte",
-            "blocked_sources": "w_blocked_sources",
+            "blocked_sources": W_BLOCKED_SOURCES,
             "full_block_all": True,
             "requires_skillshot": False,
         },
@@ -132,7 +138,7 @@ PROSE_DURATION_WINDOWS: dict[str, tuple[str, dict[str, Any]]] = {
         {
             "kind": "pantheon_aegis_assault",
             "source": "Pantheon E · Aegis Assault",
-            "blocked_sources": "e_blocked_skillshots",
+            "blocked_sources": E_BLOCKED_SKILLSHOTS,
             "full_block_all": True,
         },
     ),
