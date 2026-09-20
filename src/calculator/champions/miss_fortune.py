@@ -218,32 +218,26 @@ OPTIONS.append(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "R (Bullet Time) prices the full channel: per-wave damage x the "
-    "sourced Total Waves row (14/16/18 by rank) at the sourced Wave "
-    "Interval Time cadence.  The wiki's Maximum Total Physical Damage "
-    "row matches per-wave x waves at every rank except its rank-2 "
-    "display (500 vs 480) — a rounding artifact.",
-    "Each wave is a 6-projectile spread that can critically strike for "
-    "130% + 9% per 10% critical strike chance (wiki R effect[1]); the "
-    "fight model prices the whole wave as one event without rolling "
-    "per-projectile crits.",
-    "P (Love Tap) rides basic attacks that tag a NEW enemy, adding "
-    "50/60/70/80/90/100/110/120/130% of TOTAL AD as bonus physical "
-    "damage at levels 1/4/7/9/11/13/20/25/30 (game file "
-    "MissFortunePassive TotalDamage: mStat 2 with no mStatFormula over a "
-    "ByCharLevelBreakpoints ladder; the cached wiki 'Per-Level Scaling' "
-    "row 50-100 reproduces the first six tiers and is asserted against "
-    "the ladder at parse time).  The mark expires only on attacking a "
-    "different enemy, so the duel model gives it one tap by default "
-    "(p_procs); raise it to price a fight where the player taps back and "
-    "forth.  Love Tap modifies the attack rather than applying on-hit, so "
-    "item on-hit effects do not proc from it; it is not modeled as "
-    "critting, its life-steal clause is out of scope (healing), and the "
-    "against-minions half-value row is not priced (no minions here).",
-    "W (Strut) carries no damage instance in the atoms capture.  It "
-    "grants the sourced Bonus Attack Speed row (40-100% by rank) for the "
-    "cached 4-second active window, taken as that window's share of the "
-    "fight (whole bonus in one-rotation mode, prorated in a timed fight) "
-    "rather than as full uptime.  Both movement-speed rows are not "
-    "modeled (stat_buff has no movement-speed key).",
+    "R (Bullet Time) prices per-wave damage x the sourced 14/16/18 waves at the "
+    "cached Wave Interval.",
+    "The wiki's Maximum Total row matches that at every rank but its rank-2 display, "
+    "500 against 480.",
+    "Each R wave is a 6-projectile spread critting for 130% + 9% per 10% crit chance "
+    "(wiki R effect).",
+    "The fight prices the whole wave as one event, with no per-projectile crit roll.",
+    "P (Love Tap) rides a basic attack that tags a new enemy, adding 50 to 130% of "
+    "total AD as physical.",
+    "Love Tap's ByCharLevelBreakpoints ladder is levels 1/4/7/9/11/13/20/25/30, "
+    "asserted at parse time.",
+    "P's mark expires only on attacking a different enemy, so the duel gives one tap "
+    "by default (p_procs).",
+    "Love Tap modifies the attack rather than applying on-hit, so item on-hits do not "
+    "proc from it.",
+    "It is not modeled as critting, its life steal is out of scope, and the minion "
+    "half-value row is unpriced.",
+    "W (Strut) carries no damage instance in the atoms capture.",
+    "W (Strut) grants the sourced 40 to 100% Bonus Attack Speed for its cached 4s "
+    "window, as its share.",
+    "W is prorated in a timed fight rather than full uptime; both movement-speed rows "
+    "are not modeled.",
 ]

@@ -132,15 +132,16 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Staggering Blow) deals 14 : 128 (based on level) bonus physical "
-    "damage on empowered basic attacks — the wiki's 'Per-Level Scaling' "
-    "row (data/champions.json). The packet's old 0.75-1.5 'Bonus Damage' "
-    "values are the root duration, a crowd-control state, not damage.",
-    "W (Titan's Wrath) prices the Total Magic Damage of Pain of Wrath "
-    "(30 : 70 by rank + 40% AP) across its two sourced instances: half "
-    "immediately, half after 1.25 seconds (module constant; wiki prose).",
-    "R (Depth Charge) prices the primary-target final eruption "
-    "(Increased Damage 150 : 400 by rank + 80% AP); the chase eruptions "
-    "in the charge's wake hit enemies around the path, not the single "
-    "target, and are not priced.",
+    "P (Staggering Blow) adds 14 to 128 by level physical on an empowered basic "
+    "attack (Per-Level row).",
+    "The packet's 0.75 to 1.5 Bonus Damage values are the root duration, a control "
+    "state, not damage.",
+    "W (Titan's Wrath) prices Pain of Wrath's Total Magic Damage, 30 to 70 by rank + "
+    "40% AP.",
+    "It lands in two sourced instances: half at once, half after 1.25s (wiki prose "
+    "constant).",
+    "R (Depth Charge) prices the primary target's final eruption, 150 to 400 by rank "
+    "+ 80% AP.",
+    "R's chase eruptions hit enemies around the path, not the single target, and are "
+    "not priced.",
 ]

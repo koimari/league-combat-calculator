@@ -162,19 +162,16 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Q (Blooming Burst) prices the full three-burst chain: Initial Magic "
-    "Damage + 2 x Subsequent Magic Damage == the wiki's Total Maximum "
-    "Magic Damage row (data/champions.json Q); each re-bloom fires "
-    "because the burst hits a champion, 0.75s apart.",
-    "R (Pop Blossom) shield is priced from the game files (neeko.bin.json "
-    "NeekoR: ShieldAmount 75/125/175 + ShieldPerChampion 40/60/80 per "
-    "nearby enemy champion + 75% AP + 40% AP, 2s) — the cached wiki page "
-    "omits the shield row; the 1v1 fight's own target is the one nearby "
-    "enemy champion.",
-    "P (Inherent Glamour) is the disguise passive with no enemy-damage "
-    "formula in the pinned packet; it emits the sourced zero-damage row "
-    "(MODULE_COVERAGE: no_damage, not out_of_scope). P is already a cast "
-    "slot in this module (never overridden from build_packet_module's "
-    "no_damage branch).",
+    "Q (Blooming Burst) prices Initial + 2 x Subsequent Magic Damage, the cached "
+    "Total Maximum row.",
+    "Each re-bloom fires because the burst hits a champion, 0.75s apart.",
+    "R (Pop Blossom)'s shield comes from the game file: 75/125/175 + 75% AP over 2s.",
+    "It adds 40/60/80 + 40% AP per nearby enemy champion; the cached wiki page omits "
+    "the shield row.",
+    "The 1v1 fight's own target is that one nearby enemy champion.",
+    "P (Inherent Glamour) is the disguise passive with no enemy-damage formula in the "
+    "pinned packet.",
+    "It emits the sourced zero-damage row as no_damage, and P is already a cast slot "
+    "here.",
 ]
 MODULE_COVERAGE = coverage(no_damage="P")

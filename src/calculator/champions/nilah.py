@@ -126,41 +126,32 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Joy Unending) converts self-heal excess beyond maximum health "
-    "into a 6-second shield (cached description); the conversion ratios "
-    "are 0%:20% (Q autos) and 20%:50% (R) by critical strike chance "
-    "(module constants). The excess is a live healing state the shared "
-    "ledger only prices for Bloodthirster, so the conversion is "
-    "documented, not emitted as a fixed shield amount",
-    "Q (Formless Blade) prices the wiki's 'Minimum Physical Damage' row "
-    "(0-40 + 100% AD) as the 0%-crit base. The damage 'increased by "
-    "0% : 70% (+ 0% : 21%) (based on critical strike chance)' with the "
-    "cached Maximum row (0-76.4 + 191% AD) exactly 1.91x the Minimum at "
-    "every rank; the module scales linearly with the fight's crit "
-    "chance, exact at both sourced endpoints.",
-    "KNOWN CACHE LAG (verified 16.16.1, not fixed here — out of this "
-    "module's file scope): E (Slipstream)'s cached cost row is flat 30 "
-    "at every rank; the game files say 40 — bin NilahEAbility/NilahE "
-    "'mana' [40, 40, 40, 40, 40, 40] and ddragon Nilah.json costBurn "
-    "'40' (single value, all ranks) both confirm 40, not 30 (Nilah's "
-    "resource is MANA per the CharacterRecord arType). This module does "
-    "not model resource costs at all (no extract_cost call, no "
-    "hardcoded value to re-pin) — the generic engine.py resource-cost "
-    "stamp reads data/champions.json directly, so the flag traces to "
-    "the wiki cache, not to this module or its tests (no test currently "
-    "asserts Nilah's resource_cost). Clearing patch_regression.py's "
-    "ability_rows_stale flag requires a data/champions.json re-pull/"
-    "re-cert, which is patch-day work (the /patch-update skill).",
-    "P (Joy Unending) and W (Jubilant Veil) carry no enemy-damage "
-    "formula of any kind (the reviewed packet's own slot declarations "
-    "already carry kind='no_damage' for both): Joy Unending is the "
-    "excess-heal-to-shield converter documented above; Jubilant Veil is "
-    "the ghost/mist self-and-ally defensive buff (bonus movement speed, "
-    "25% magic damage reduction, basic-attack dodge). Reclassified from "
-    "out_of_scope to no_damage (a stale label, not a computation "
-    "change): both slots were previously mislabeled out_of_scope "
-    "despite the packet layer already carrying no enemy-damage formula "
-    "for them.",
+    "P (Joy Unending) turns self-heal excess above maximum health into a 6s shield "
+    "(cached description).",
+    "Its ratios are 0 to 20% on Q autos and 20 to 50% on R by crit chance, module "
+    "constants.",
+    "The excess is live healing state the ledger prices only for Bloodthirster, so P "
+    "is documented.",
+    "Q (Formless Blade) prices the cached Minimum Physical Damage row, 0 to 40 + 100% "
+    "AD, at 0% crit.",
+    "The cached Maximum row, 0 to 76.4 + 191% AD, is exactly 1.91x the Minimum at "
+    "every rank.",
+    "Q scales linearly with the fight's crit chance, exact at both sourced endpoints.",
+    "KNOWN CACHE LAG: E (Slipstream)'s cached cost row is flat 30, and the game files "
+    "say 40 at every rank.",
+    "Bin NilahE 'mana' [40 x6] and ddragon costBurn '40' both confirm 40, verified on "
+    "16.16.1.",
+    "Nilah's resource is mana per the CharacterRecord arType.",
+    "This module does not model E's resource cost; engine.py stamps it from "
+    "data/champions.json.",
+    "So the flag traces to the wiki cache, and no test asserts Nilah's resource_cost.",
+    "Clearing patch_regression's ability_rows_stale flag needs a cache re-pull, which "
+    "is patch-day work.",
+    "P (Joy Unending) and W (Jubilant Veil) carry no enemy-damage formula; both slots "
+    "are no_damage.",
+    "Joy Unending is the excess-heal-to-shield converter documented above.",
+    "Jubilant Veil is the ghost self-and-ally buff: movement speed, 25% magic "
+    "reduction, attack dodge.",
 ]
 MODULE_COVERAGE = coverage(no_damage="PW")
 

@@ -204,31 +204,28 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Q (Siphoning Strike) bonus damage = the rank flat (40-120) + the "
-    "q_stacks option total (100% of Siphoning Strike stacks); the "
-    "permanent gain (+3 per kill, +12 for champions) is not modeled — "
-    "the target never dies here, so the option IS the current stack "
-    "state",
-    "Q empowers the next basic attack (empowers_next_auto), so its "
-    "casts are capped by the fight's auto count; with no auto stream it "
-    "forces its own swing",
+    "Q (Siphoning Strike) bonus damage is the rank flat 40 to 120 plus the q_stacks "
+    "option total.",
+    "Q's permanent gain, +3 per kill and +12 for champions, is not modeled: the "
+    "option is the stack state.",
+    "Q empowers the next basic attack, so its casts cap at the fight's auto count.",
+    "With no auto stream Q forces its own swing.",
     "E (Spirit Fire) prices the initial hit + 10 sourced 0.5s zone "
     "ticks (E2 fix, unchanged from the reviewed packet)",
-    "R (Fury of the Sands) prices all 30 sourced 0.5s ticks (E2 fix, "
-    "unchanged); its bonus health/resistances are self-stats.  While "
-    "R is active (ranked and r_q_cooldown_halved on, the default) "
-    "Siphoning Strike's cooldown is halved — the cached R prose "
-    "('Siphoning Strike's cooldown is halved') — and the module prices "
-    "the whole fight inside R's 15s window, consistent with pricing "
-    "all 30 ticks",
-    "P (Soul Eater) lifesteal is a self-heal rule (HEALING_RULE_CHAMPIONS): "
-    "12% / 18% / 24% (based on level; game-file breakpoints at 7/13) of the "
-    "post-mitigation physical basic-attack/on-hit damage dealt; W (Wither) "
-    "slow/cripple is a zero-damage row",
-    "W (Wither) is CC-only (slow + attack-speed cripple) with no enemy "
-    "damage formula in the pinned packet; it emits the sourced "
-    "zero-damage row (MODULE_COVERAGE: no_damage, not out_of_scope). W "
-    'is already a cast slot in this module (SLOTS["W"] = _wither).',
+    "R (Fury of the Sands) prices all 30 sourced 0.5s ticks; its bonus health and "
+    "resistances are self-stats.",
+    "With R ranked and r_q_cooldown_halved on (the default), Siphoning Strike's "
+    "cooldown halves.",
+    "The module prices the whole fight inside R's 15s window, matching those 30 "
+    "ticks.",
+    "P (Soul Eater) life steal is 12/18/24% by level, breakpoints at 7 and 13 in the "
+    "game file.",
+    "It heals from post-mitigation physical basic-attack and on-hit damage; W's slow "
+    "is a zero-damage row.",
+    "W (Wither) is control only, a slow and attack-speed cripple with no enemy-damage "
+    "formula.",
+    "It emits the sourced zero-damage row as no_damage, and W is already a cast slot "
+    "here.",
 ]
 
 SLOTS = {

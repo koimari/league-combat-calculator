@@ -144,33 +144,32 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Fired Up!) prices the sourced burn the enchanted hit applies "
-    "(10 : 50 based on level + 20% of Milio's AP, priced at the hit rather "
-    "than over its six 0.25s ticks) once per cast (selectable); the "
-    "7% / 11% / 15% of the enchanted target's AD on the same hit has no "
-    "cached leveling row and no sourced level breakpoints, so it is "
-    "disclosed rather than guessed.",
-    "P (Fired Up!)'s withheld burst scales with the ENCHANTED TARGET's AD "
-    "and is tagged proc damage when an ally triggers it (cached P notes). "
-    "This engine models a single attacker, so the ally-carried case has no "
-    "attacker whose AD could source the term.",
-    "P (Fired Up!)'s proc count is a selectable option rather than a "
-    "derived arming window: the hearth applies Fired Up! every 3 seconds "
-    "over W's 6s duration (ddragon healfrequencyseconds, atom "
-    "HealFrequencySeconds = 3.0), while damage.py's _empower_window_procs "
-    "resolves armed_by slots to cast times only, so declaring W as an "
-    "arming slot would undercount its arms.",
-    "Cozy Campfire (W) heals each selected teammate the sourced Total "
-    "Heal (70-150 + 15% AP) as one lump packet at the cast; the 25-tick "
-    "cadence (Heal per Tick x25 over the 6s fuemigo, every 0.264s) is "
-    "priced only for Milio's own self-heal stream below, and the ally "
-    "branch fails closed on per-tick rows rather than inventing a tick "
+    "P (Fired Up!) prices the enchanted hit's burn, 10 to 50 by level + 20% of "
+    "Milio's AP, once per cast.",
+    "It is priced at the hit rather than over its six 0.25s ticks, and the count is "
+    "selectable.",
+    "The 7/11/15% of the enchanted target's AD has no cached row, so it is disclosed, "
+    "not guessed.",
+    "P's withheld burst scales with the enchanted target's AD, tagged proc damage on "
+    "an ally trigger.",
+    "This engine models one attacker, so the ally-carried case has no AD to source "
+    "the term.",
+    "P's proc count is a selectable option, not a derived arming window.",
+    "The hearth applies Fired Up! every 3 seconds over W's 6s duration (atom "
+    "HealFrequencySeconds 3.0).",
+    "_empower_window_procs resolves armed_by slots to cast times only, so arming on W "
+    "would undercount.",
+    "Cozy Campfire (W) heals each selected teammate the sourced 70 to 150 + 15% AP as "
+    "one lump at the cast.",
+    "Its 25-tick cadence over the 6s fuemigo, every 0.264s, is priced for Milio's own "
+    "self-heal only.",
+    "The ally branch fails closed on per-tick rows rather than inventing a tick "
     "schedule.",
-    "Warm Hugs (E) shields the selected teammate for the sourced Shield "
-    "Strength (45-165 + 45% AP) for 2.5s and Breath of Life (R) heals "
-    "Milio and every selected teammate the sourced Heal (150-350 + 50% "
-    "AP) via the fan-out below; the 65% tenacity and cleanse are utility "
-    "state.",
+    "Warm Hugs (E) shields the selected teammate for the sourced 45 to 165 + 45% AP "
+    "over 2.5s.",
+    "Breath of Life (R) heals Milio and every selected teammate the sourced 150 to "
+    "350 + 50% AP.",
+    "R's 65% tenacity and its cleanse are utility state.",
 ]
 
 

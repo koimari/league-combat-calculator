@@ -51,20 +51,19 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"Q", "W", "R"}),
     cc_kinds=MODULE_CC,
     assumption_overrides=(
-        "W (Ebb and Flow) emits two ally heal packets per cast on the "
-        "selected teammate: the sourced Heal row (55-155 + 40% AP) and the "
-        "return bounce at 60% + 30% per 100 AP of the original, never below "
-        "the sourced Minimum Heal row (93 + 24% AP at rank 5) — the cached "
-        "prose reduces each bounce by -20% (+ 15% per 100 AP) of the "
-        "original, and the Minimum row is exactly 60% of the Heal row at "
-        "every rank.  The bounce damage against the enemy keeps the module's "
-        "full Magic Damage row (the first-bounce reduction of the damage "
-        "half is not separately priced).",
-        "P (Surging Tides) grants nearby allies bonus movement speed after "
-        "an ability cast; it is pure ally-utility state with no enemy "
-        "damage, so it emits the packet's sourced zero-damage row "
-        "(MODULE_COVERAGE: no_damage, not out_of_scope). P is not a cast "
-        "slot in this engine's rotation.",
+        "W (Ebb and Flow) emits two ally heal packets per cast on the selected "
+        "teammate.",
+        "The first is the sourced 55 to 155 + 40% AP Heal row.",
+        "The bounce is 60% + 30% per 100 AP of the original, never below the sourced "
+        "Minimum Heal row.",
+        "Cached prose cuts each bounce by 20% + 15% per 100 AP, and Minimum is 60% of "
+        "Heal at every rank.",
+        "The enemy bounce keeps the full Magic Damage row: the first-bounce cut is "
+        "not separately priced.",
+        "P (Surging Tides) grants nearby allies bonus movement speed after an ability "
+        "cast.",
+        "It is ally-utility state with no enemy damage, emits the zero-damage row, "
+        "and is not a cast slot.",
     ),
 )
 MODULE_COVERAGE = coverage(no_damage="P")

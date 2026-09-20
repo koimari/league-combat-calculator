@@ -351,58 +351,53 @@ OPTIONS: list[dict[str, Any]] = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Q (Darkin Daggers) prices the initial hit, 10 sourced 0.5s bleed "
-    "ticks (Total Bleed Physical Damage == per-tick x 10, E2 worklist), "
-    "and the recast's bonus damage — interpolated between the "
-    "Minimum/Maximum Bonus Physical Damage rows (0% : 100% based on "
-    "target missing health) when q_recast is on (default); the remaining "
-    "bleed damage of the recast is covered by the already-priced bleed "
-    "ticks and is not double-counted",
-    "Q recast against a champion heals Naafiri for the cached Heal row "
-    "(45-105 + 40% bonus AD) — one heal per Q cast, authored by the E1 "
-    "self-heal rule; the support scanner defers this slot to keep one "
-    "ledger receipt",
-    "E (Eviscerate) prices the dash plus the Flurry explosion (Dash "
-    "Physical Damage + Flurry Physical Damage == Total Physical Damage)",
-    "W (The Call of the Pack) grants bonus attack damage equal to 20% of "
-    "total AD for the 5s hunt (wiki W prose, corroborated by the game "
-    "binary's NaafiriADPercentBoost = 0.20 on the SWAPPED NaafiriR "
-    "record — see the module docstring's slot-label warning).  It is a "
-    "BUFF-phase stat_buff, so Q/E/R and the Packmate row all price off "
-    "the buffed bonus AD and the fight engine applies it to autos; the "
-    "w_hunt option (default on) withholds the whole hunt when off",
-    "W's bonus movement speed (20/22.5/25/27.5/30% by rank, a real "
-    "leveling row corroborated by the binary's MoveSpeedAmount) is "
-    "published as a move_speed_percent stat_buff on the same w_hunt "
-    "gate as the AD steroid, so it composes through the shared "
-    "resolve_move_speed fold (soft caps included) rather than as a "
-    "second one.  It takes the SAME buff_window_share as the AD term of "
-    "the same cast: the hunt expires at 5s, and a stat_buff is one "
-    "scalar for the whole fight, so an unweighted term would read the "
-    "same in a 5s fight and a 30s one.  The hunt's 1s untargetability, the "
-    "Packmate vanish/reappear and the 1.75s hunt extension from casting "
-    "R are state",
-    "P (We Are More) prices the pack's sourced share of Hounds' Pursuit: "
-    "R's own 'Physical Damage per Packmate' row (12.5/20/27.5 + 10% "
-    "bonus AD) times the sourced Packmate count — 2/3/4/5 by level "
-    "(wiki P text; binary PackmateCap breakpoints at levels 9/12/15), "
-    "or the hunt-raised 4/5/6/7 while w_hunt is on (wiki W note).  Both "
-    "columns are confirmed by the wiki R notes' packmate-total table "
-    "(e.g. levels 16-18: 5 x 27.5 = 137.5 + 50% bonus AD, 7 x 27.5 = "
-    "192.5 + 70% bonus AD).  The whole pack lands at the end of R's "
-    "0.75s channel, emitted as proc_count = the Packmate count with ONE "
-    "hit per part — the engine prices sum(part.amount x part.count) x "
-    "proc_count, so carrying the pack size in both fields would square "
-    "it — and the row is withheld entirely while Hounds' Pursuit is "
-    "unlearned, which keeps it exactly one pack landing per R cast",
-    "P Packmate BASIC ATTACKS are documented-not-modeled: their formula "
-    "exists only in the game binary (NaafiriP's PackmateTotalDamage = "
-    "level-interpolated 10-20 + 4% bonus AD, PackmateBaseAS 0.688) "
-    "because the wiki's Pets entry is not part of the local cache "
-    "(data/champions.json P says only 'See Pets for full details'), and "
-    "the pack's uptime, leap range, frenzy stacking and taunt are "
-    "unmodeled state on top; the E4 summon precedent requires a cached "
-    "wiki row for a pet's per-attack damage",
+    "Q (Darkin Daggers) prices the initial hit and 10 sourced 0.5s bleed ticks, "
+    "per-tick x 10.",
+    "Q's recast bonus interpolates the Minimum and Maximum rows by missing health, "
+    "q_recast (default on).",
+    "The recast's remaining bleed is already in those ticks and is not "
+    "double-counted.",
+    "Q's recast on a champion heals Naafiri the cached 45 to 105 + 40% bonus AD, one "
+    "heal per cast.",
+    "The self-heal rule authors it and the support scanner defers, keeping one ledger "
+    "receipt.",
+    "E (Eviscerate) prices the dash plus the Flurry explosion, summing to the Total "
+    "Physical Damage row.",
+    "W (The Call of the Pack) grants bonus AD of 20% of total AD for the 5s hunt "
+    "(wiki W prose).",
+    "The binary's NaafiriADPercentBoost 0.20 sits on the swapped R record, per the "
+    "module docstring.",
+    "It is a buff-phase stat_buff, so Q, E, R, Packmate and autos price off it; "
+    "w_hunt (default on) gates it.",
+    "W's bonus movement speed, 20/22.5/25/27.5/30% by rank, is a real leveling row "
+    "matching the binary.",
+    "It publishes as a move_speed_percent stat_buff on the same w_hunt gate, through "
+    "resolve_move_speed.",
+    "It takes the same buff_window_share as the AD term: the hunt expires at 5s and a "
+    "stat_buff is one scalar.",
+    "The hunt's 1s untargetability, the Packmate vanish and the 1.75s R extension are "
+    "state.",
+    "P (We Are More) prices the pack's share of Hounds' Pursuit: R's 12.5/20/27.5 + "
+    "10% bonus AD per Packmate.",
+    "The Packmate count is the sourced 2/3/4/5 by level, with binary breakpoints at "
+    "levels 9, 12 and 15.",
+    "While w_hunt is on it is the raised 4/5/6/7 (wiki W note); the wiki R table "
+    "confirms both columns.",
+    "The whole pack lands at the end of R's 0.75s channel as proc_count = Packmate "
+    "with one hit per part.",
+    "The engine prices sum(part.amount x count) x proc_count, so carrying the size "
+    "twice would square it.",
+    "The row is withheld while Hounds' Pursuit is unlearned, keeping one pack landing "
+    "per R cast.",
+    "P Packmate BASIC ATTACKS are documented-not-modeled: the formula lives only in "
+    "the game binary.",
+    "NaafiriP's PackmateTotalDamage is 10 to 20 + 4% bonus AD by level at "
+    "PackmateBaseAS 0.688.",
+    "The wiki Pets entry is outside the local cache: cached P says only 'See Pets for "
+    "full details'.",
+    "P's pack uptime, leap range, frenzy stacking and taunt are unmodeled state on "
+    "top.",
+    "The summon precedent requires a cached wiki row for a pet's per-attack damage.",
     "R (Hounds' Pursuit) prices Naafiri's own dash hit; its shield "
     "(100/150/200 + 150% bonus AD) and the 99% slow stay state",
 ]

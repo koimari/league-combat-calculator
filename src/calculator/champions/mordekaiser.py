@@ -235,45 +235,39 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Darkness Rise) is two rows on the swing stream: the 40% AP bonus "
-    "magic damage is an on-hit on every basic attack (binary "
-    "PercentAPAddedToAutos; Rageblade phantom hits apply it again), and "
-    "the aura (passive_darkness_rise) ticks 5 + 30% AP + 1% to 5% by level "
-    "of the target's maximum health every second from the third stacking "
-    "hit to the fight end. The stacking hits are the basic attacks at the "
-    "fight's swing cadence, Q at each mirrored cast and E at each cast's "
-    "claw (Braum-pattern walk: one set of hands, no resource exhaustion), "
-    "and the stacks are assumed to refresh for the rest of the window; the "
-    "4-second tail past the fight end, the 3/6/9% movement speed and the "
-    "monster cap are not priced.",
-    "W (Indestructible) stores 45% of post-mitigation damage dealt and "
-    "7.5% of pre-mitigation damage taken as Potential Shield (capped at "
-    "30% of maximum health); the recast (modeled at W cast + 0.5 s, the "
-    "wiki's earliest available recast) heals the Shield-to-Healing % "
-    "(35/37.5/40/42.5/45% by W rank) of the stored shield — the E8a "
-    "grey-health primitive authors it from the incoming/outgoing "
-    "ledgers. Shield conversion and both decay curves are state.",
-    "W (Indestructible) deals no enemy damage in any channel: the "
-    "cached wiki entry lists only the Potential Shield store, the "
-    "shield active and the recast heal, the game binary's MordekaiserW "
-    "spell object has no damage field (only Duration/DamageConversion/"
-    "BaseShield/HealingPercent/MinionPenalty/DamageTakenConversion/"
-    "MaxHealthCap/TimeBeforeDecay/DecayPerSecond), and the v2 atoms "
-    "capture tags it Trait_ActiveHeal + Trait_Shield with no damage "
-    "atom.  Its shield and recast heal are priced by the E8a "
-    "grey-health primitive, so the slot is no_damage, not withheld.",
-    "R (Realm of Death) heals 10% of the banished champion's maximum "
-    "health at the cast (cached R prose). Only the primary defender's "
-    "pair fight authors it — one banishment, one heal. R itself deals "
-    "no enemy damage (binary MordekaiserR carries only "
-    "SpiritRealmDuration/StatStealPercentScalar/ZoneRadius/"
-    "GhostAPRatio; v2 atoms tag it Trait_ImmobilizingCCSpell + "
-    "Trait_ActiveHeal). The 7-second stat theft (10% of the target's "
-    "ability power, total attack speed, maximum health, armour, magic "
-    "resistance and total AD, transferred to Mordekaiser) and the "
-    "Death Realm itself are not modeled: the attacker-only stat_buff "
-    "channel (_apply_stat_buff_ultimates) has no defender input, so "
-    "pricing the steal would mean inventing the target's stats.",
+    "P (Darkness Rise) adds 40% AP magic on every basic attack (binary "
+    "PercentAPAddedToAutos).",
+    "Rageblade phantom hits apply that on-hit again.",
+    "The aura ticks 5 + 30% AP + 1 to 5% by level of target maximum health each "
+    "second from the 3rd hit.",
+    "P's stacks are assumed to refresh, the hits being swings, Q at each mirrored "
+    "cast and E at each claw.",
+    "The walk uses one set of hands and no resource exhaustion.",
+    "The 4s tail past the fight end, the 3/6/9% movement speed and the monster cap "
+    "are not priced.",
+    "W (Indestructible) stores 45% of post-mitigation damage dealt and 7.5% of damage "
+    "taken.",
+    "The Potential Shield caps at 30% of maximum health.",
+    "The recast, modeled at W cast + 0.5s, heals 35/37.5/40/42.5/45% by rank of the "
+    "stored shield.",
+    "The grey-health primitive authors it from both ledgers; conversion and decay "
+    "curves are state.",
+    "W (Indestructible) deals no enemy damage in any channel.",
+    "The cached entry lists only the Potential Shield store, the shield active and "
+    "the recast heal.",
+    "The binary's MordekaiserW has no damage field and the atoms tag it heal and "
+    "shield only.",
+    "Its shield and recast heal are priced by the grey-health primitive, so the slot "
+    "is no_damage.",
+    "R (Realm of Death) heals 10% of the banished champion's maximum health at the "
+    "cast (cached R prose).",
+    "Only the primary defender's pair fight authors it: one banishment, one heal.",
+    "R itself deals no enemy damage; the binary carries only duration, radius and "
+    "ratio values.",
+    "The 7s stat theft of 10% of the target's stats and the Death Realm are not "
+    "modeled.",
+    "The attacker-only stat_buff channel has no defender input, so pricing the steal "
+    "would invent stats.",
 ]
 
 # No MODULE_COVERAGE any more: W's Potential Shield recast heal is

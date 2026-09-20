@@ -163,19 +163,21 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "W (Shroud of Darkness) grants its passive Bonus Attack Speed row "
-    "(30-50%) unconditionally — the cached text gives that half no "
-    "duration — and the fight engine applies it to the auto count.",
-    "The active's doubled Enhanced Bonus Attack Speed row (60-100%) is "
-    "opt-in through w_spellshield_block: it needs an enemy cast for the "
-    "spell shield to block, which a damage package does not imply.  When "
-    "armed, only the difference between the two rows is time-weighted "
-    "over the sourced 5-second window.",
-    "E (Unspeakable Horror) authors its sourced fear (Disable Duration) at "
-    "the end of the 2-second tether when e_tether_holds is on, the "
-    "default the four priced tether ticks already assume.  Turning it off "
-    "withholds the fear interval only; the packet's tick count is not "
-    "re-derived for a tether broken early.",
+    "W (Shroud of Darkness) grants its passive 30 to 50% Bonus Attack Speed "
+    "unconditionally.",
+    "The cached text gives that half no duration, so the engine applies it to the "
+    "auto count.",
+    "The active's Enhanced Bonus Attack Speed row, 60 to 100%, is opt-in through "
+    "w_spellshield_block.",
+    "It needs an enemy cast for the spell shield to block, which a damage package "
+    "does not imply.",
+    "When armed, only the difference between the two rows is time-weighted over the "
+    "sourced 5s window.",
+    "E (Unspeakable Horror) authors its sourced fear at the end of the 2s tether when "
+    "e_tether_holds is on.",
+    "That default is what E's four priced tether ticks already assume.",
+    "Turning it off withholds the fear interval only; the tick count is not "
+    "re-derived for an early break.",
 ]
 
 # No MODULE_COVERAGE: every one of the five slots emits a priced row now

@@ -163,23 +163,23 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "W (Tormented Shadow) prices all 10 storm ticks (Maximum Damage Per "
-    "Tick x10 == Maximum Total Damage 180-700 + 200% AP) at 0.5-second "
-    "intervals over the 5-second desecrated area, first tick on-cast.",
-    "R (Soul Shackles) prices the initial hit plus the same magic damage "
-    "again at the 3-second tether break (Magic Damage x2 == Total Magic "
-    "Damage 400-700 + 160% AP); the slow/root and reveal are "
-    "crowd-control utility not priced as damage.",
-    "P (Soul Siphon) heals Morgana for 18% of the post-mitigation "
-    "damage dealt by her abilities against champions (this "
-    "module's derive_self_healing rule); the passive deals no enemy damage "
-    "itself.",
-    "E (Black Shield) emits the selected recipient's magic shield from the "
-    "typed Magic Shield Strength atom. Its typed active-duration atom keeps "
-    "crowd control from adding action downtime while the shield holds.",
-    "P (Soul Siphon) has no enemy-damage formula anywhere in the cached "
-    "packet; it emits a sourced zero-damage row (MODULE_COVERAGE: "
-    "no_damage, not out_of_scope). P is not a cast slot in this engine's "
+    "W (Tormented Shadow) prices all 10 storm ticks, per-tick x10 == 180 to 700 + "
+    "200% AP.",
+    "They land at 0.5s intervals over the 5s desecrated area, the first tick on cast.",
+    "R (Soul Shackles) prices the initial hit plus the same magic again at the 3s "
+    "tether break.",
+    "That is 400 to 700 + 160% AP total; R's slow, root and reveal are utility, not "
+    "priced.",
+    "P (Soul Siphon) heals Morgana 18% of the post-mitigation damage her abilities "
+    "deal to champions.",
+    "The passive deals no enemy damage itself.",
+    "E (Black Shield) emits the recipient's magic shield from the typed Magic Shield "
+    "Strength atom.",
+    "Its active-duration atom keeps crowd control from adding action downtime while "
+    "it holds.",
+    "P (Soul Siphon) has no enemy-damage formula in the cached packet and emits a "
+    "zero-damage row.",
+    "That row is no_damage, not out_of_scope, and P is not a cast slot in this "
     "rotation.",
 ]
 COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
