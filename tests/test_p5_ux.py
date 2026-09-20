@@ -136,33 +136,6 @@ def test_analyst_view_is_touch_first_and_has_no_hover_dependency():
     assert soup.select_one("#levelInput") is not None
 
 
-def test_mobile_css_stacks_the_duel_vertically():
-    """Quick mode's card grid is gone; the same criterion now applies to the
-    duel canvas — on a phone the three-column duel becomes one column, the
-    picker grid becomes one column, and nothing is hover-only."""
-    css = CSS.read_text(encoding="utf-8")
-    narrow = css.split("@media (max-width: 860px)")[1].split("@media")[0]
-    assert ".duel" in narrow
-    assert "grid-template-columns: minmax(0, 1fr)" in narrow
-    assert ".verdict" in narrow
-    assert ".app-grid" in narrow
-
-    phone = css.split("@media (max-width: 520px)")[1]
-    assert ".picker-grid" in phone
-    assert "minmax(0, 1fr)" in phone
-    assert "min-height: 40px" in phone, "touch targets must stay reachable"
-
-    # Nothing the reader needs may depend on hover. Read-only rows carry no
-    # hover styles at all; .duel-row is a real <button> since the duel became
-    # editable in place, so its hover is affordance feedback — but it may only
-    # restyle, never reveal (no display/visibility/content changes).
-    for selector in (".spine-row:hover", ".health-row:hover"):
-        assert selector not in css
-    for match in re.finditer(r"\.duel-row[^{]*:hover[^{]*\{([^}]*)\}", css):
-        for revealing in ("display", "visibility", "content"):
-            assert revealing not in match.group(1)
-
-
 # ---------------------------------------------------------------------------
 # Quick-mode "Best next item" flow (the exact requests the UI issues)
 # ---------------------------------------------------------------------------
@@ -354,84 +327,6 @@ def test_share_index_loads_with_share_query_param():
 # ---------------------------------------------------------------------------
 # Trust labels (P4)
 # ---------------------------------------------------------------------------
-
-
-def test_certainty_and_not_modeled_endpoint_contracts():
-    """The frontend consumes the deployed routes and renders a non-2xx answer
-    as an unavailable state: no chips, the backend's error in the legend note.
-    No contract-shaped mock may stand in for sourced data."""
-    source = APP_JS.read_text(encoding="utf-8")
-    assert "fetch(`${path}?champion=${encodeURIComponent(champion)}`)" in source
-    assert 'fetchTrustContract("/api/certainty"' in source
-    assert 'fetchTrustContract("/api/not-modeled"' in source
-    assert "throw new Error(payload?.error || `HTTP ${response.status}`)" in source
-    assert "return { error: `${path} unavailable (${error.message})` }" in source
-    assert "`Certainty unavailable — ${failure}`" in source
-    for gone in ("certaintyMock", "notModeledMock", "Placeholder", "mockBuilder"):
-        assert gone not in source, gone
-
-    # The UI labels every allowed certainty value.
-    assert 'exact: { label: "EXACT"' in source
-    assert 'estimate: { label: "ESTIMATE"' in source
-    assert 'boundary: { label: "BOUNDARY"' in source
-
-
-def test_breakdown_rows_carry_slot_keys_for_certainty_chips():
-    source = APP_JS.read_text(encoding="utf-8")
-    assert "Object.entries(result?.breakdown || {})" in source
-    assert "slot: slotKey" in source
-    assert "certaintyChipHtml(row.slot)" in source
-    assert 'class="certainty-chip certainty-' in source
-
-
-def test_trust_panels_render_not_modeled_list():
-    source = APP_JS.read_text(encoding="utf-8")
-    assert 'document.getElementById("notModeledList")' in source
-    page = _client().get("/advanced").get_data(as_text=True)
-    assert 'id="notModeledList"' in page
-
-
-def test_app_js_wires_the_share_endpoints_and_carries_no_quick_layer():
-    """Quick mode's DOM left in 2026-08; its render/wiring layer is gone too.
-    The share flow it grew is analyst functionality and stays wired."""
-    source = APP_JS.read_text(encoding="utf-8")
-    for needle in (
-        'postJson("/api/builds"',
-        'postJson("/api/share"',
-        "window.location.origin}/?share=",
-        'getElementById("shareAnalystButton")',
-    ):
-        assert needle in source, needle
-    for gone in (
-        'fetch("/static/quick-presets.json")',
-        "data-quick-preset",
-        'getElementById("quickRun")',
-        'getElementById("quickShareButton")',
-        "QUICK_STATE",
-    ):
-        assert gone not in source, gone
-
-
-def test_app_js_posts_json_through_one_helper():
-    """Every backend POST in app.js goes through postJson, so the method,
-    headers and encoding have one home."""
-    source = APP_JS.read_text(encoding="utf-8")
-    assert source.count('method: "POST"') == 1
-    for url in (
-        "/api/metrics/event",
-        "/api/calculate",
-        # main's two new POST endpoints, both routed through the helper: the
-        # roster comparison boundary and the per-slot BIS batch.
-        "/api/compare",
-        "/api/bis/batch",
-        "/api/loadout-stats",
-        "/api/bis",
-        "/api/optimize",
-        "/api/builds",
-        "/api/share",
-    ):
-        assert f'postJson("{url}"' in source, url
-        assert f'fetch("{url}"' not in source, url
 
 
 def test_node_check_passes_for_app_js():

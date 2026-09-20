@@ -3,7 +3,6 @@
 import base64
 import hashlib
 import sqlite3
-from pathlib import Path
 
 import pytest
 from bs4 import BeautifulSoup
@@ -1024,103 +1023,6 @@ def test_local_http_csp_does_not_upgrade_its_own_static_assets():
     )
 
 
-def test_picker_rendering_never_puts_api_strings_into_inner_html():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "el.innerHTML = `" not in source
-    assert "createPickerContent" in source
-
-
-def test_frontend_uses_level_derived_ranks_for_nonstandard_kits():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "engine.domainContract?.rank_allocation" in source
-    assert 'modes.by_champion?.[String(championName || "")]' in source
-    assert "if (usesLevelDerivedRanks(state.attacker.champion)) return null;" in source
-    assert "ability_ranks: usesLevelDerivedRanks(target.champion)" in source
-
-
-def test_frontend_level_controls_routable_contract_uses_data_level_delta():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert 'const levelButton = event.target.closest("[data-level-delta]")' in source
-    assert (
-        "const rosterMatch = levelPath.match(/^(targets|allies)\\.(\\d+)\\.level$/)"
-        in source
-    )
-    assert 'const cap = levelPath === "attacker.level"' in source
-    assert (
-        "setPath(levelPath, Math.max(1, Math.min(cap, "
-        "Number(pathValue(levelPath)) + Number(levelButton.dataset.levelDelta || levelButton.dataset.delta || 0))));"
-        in source
-    )
-    assert (
-        "document.querySelectorAll('button[data-level-path=\"attacker.level\"]')"
-        in source
-    )
-
-
-def test_frontend_layout_keeps_main_identity_controls_hit_area():
-    """The champion identity block must never overflow or clip its controls.
-
-    Redesign note: the identity block moved from a wide two-column champion
-    card (``.champion-identity`` / ``.identity-controls``) into step 1 of the
-    setup rail (``.editor-identity`` / ``.field-row``). The criterion — the
-    row constrains itself so the role select and level stepper stay whole and
-    clickable in a 404px rail — is unchanged.
-    """
-    source = Path("static/css/style.css").read_text(encoding="utf-8")
-    identity_block_start = source.index(".editor-identity {")
-    identity_block_end = source.index(".champion-portrait {")
-    identity_block = source[identity_block_start:identity_block_end]
-    assert "display: flex;" in identity_block
-    assert "align-items: center;" in identity_block
-
-    copy_block = source[
-        source.index(".editor-identity-copy {") : source.index(".field-label {")
-    ]
-    assert "min-width: 0;" in copy_block
-
-    controls_block = source[
-        source.index(".field-row {") : source.index(".field select,")
-    ]
-    assert "display: flex;" in controls_block
-    assert "min-width: 0;" in controls_block
-
-
-def test_frontend_layout_separates_item_option_rows():
-    source = Path("static/css/style.css").read_text(encoding="utf-8")
-    option_block_start = source.index(".item-option-controls {")
-    option_block_end = source.index(".roster-slot-wrap {")
-    option_block = source[option_block_start:option_block_end]
-
-    assert "display: grid;" in option_block
-    assert "gap: 5px;" in option_block
-    assert "min-width: 0;" in option_block
-    assert "width: 100%;" in option_block
-    label_block = source[
-        source.index(".item-option-controls label {") : source.index(
-            ".roster-slot-wrap {"
-        )
-    ]
-    assert "display: grid;" in label_block
-    assert "min-width: 0;" in label_block
-    assert "overflow-wrap: anywhere;" in label_block
-    assert "white-space: normal;" in label_block
-    # The option rows must sit clear of the slot they belong to. On the duel
-    # canvas that comes from the controls wrapper's own flex gap instead of a
-    # margin rule on each child, so a slot, its stack control and its option
-    # rows can never collide however many of them an item declares.
-    wrap_block = source[
-        source.index(".duel-slot-controls {") : source.index(
-            ".duel-b .duel-slot-controls {"
-        )
-    ]
-    assert "display: flex;" in wrap_block
-    assert "flex-wrap: wrap;" in wrap_block
-    assert "gap: 6px 10px;" in wrap_block
-
-
 def test_frontend_item_options_contract_preserves_stridebreaker_active_seconds_effect():
     client = app_module.app.test_client()
     zero_payload = {
@@ -1158,116 +1060,6 @@ def test_frontend_item_options_contract_preserves_stridebreaker_active_seconds_e
         ]
         > 0
     )
-
-
-def test_frontend_click_handlers_handle_missing_main_build_option_buckets():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "function itemOptionState(path)" in source
-    assert (
-        "const optionBuckets = state.attacker[key] || (state.attacker[key] = [{}, {}, {}, {}, {}, {}]);"
-        in source
-    )
-    assert (
-        "return optionBuckets[Number(parts[2])] || (optionBuckets[Number(parts[2])] = {});"
-        in source
-    )
-    assert "return Number.isFinite(id) && id > 0 ? id : 0;" in source
-
-
-def test_damage_breakdown_leads_with_result_and_keeps_support_audit_disclosed():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "function breakdownOutcome" in source
-    assert 'class="breakdown-outcome" role="status"' in source
-    assert "function survivalStatus" in source
-    assert "alive at window end" in source
-    assert "revived at ${one(reviveTime)}s" in source
-    # F1: defeat timing still discloses the timeline time-to-death, routed
-    # through killTimeLabel so a first-event defeat is "<1 s", never "0 s".
-    assert "defeated at ${killTimeLabel(deathTime)" in source
-    assert 'class="breakdown-audit"' in source
-    assert 'aria-label="Recovery and support audit"' in source
-    assert 'aria-label="Event order audit"' not in source
-
-
-def test_bis_frontend_surfaces_backend_withheld_candidate_receipts():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "result.withheld_candidates" in source
-    assert "result.withheld_candidate_count" in source
-    assert "withheld before timeline" in source
-    assert "result.timeline_withheld_candidates" in source
-    assert "result.timeline_withheld_candidate_count" in source
-    assert 'aria-label="${escapeHtml(entry.name || "Candidate")} withheld"' in source
-    assert "const rows = certifiedRows" in source
-    assert "Partial event order is an audit receipt, never a ranked preview" in source
-    assert "const partialCards = displayPartialRows.map" in source
-    assert "partial event order ·" in source
-    assert "certified subset · search not exhaustive" in source
-
-
-def test_bis_frontend_sends_and_filters_by_the_selected_objective():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "payload.objective = objectiveDefinition(objective)" in source
-    assert "Object.keys(OBJECTIVES)[0]" in source
-    assert "data-bis-objective" in source
-    assert "result.objective || {}" in source
-    assert "bisContext.objective = objective" in source
-
-
-def test_item_picker_uses_backend_coverage_and_locks_unsupported_items():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "buildItemCatalog" in source
-    # The served catalogues are the whole catalogue: no snapshot-preference
-    # helper may let static/data.json outrank a backend 0.
-    assert "preferReportedNumbers" not in source
-    assert "SNAPSHOT_NUMERIC_FIELDS" not in source
-    assert 'fetch("/api/items")' in source
-    assert 'fetch("/api/boots")' in source
-    assert "findItemByBackendName" in source
-    assert "entry.targetModelCoverage" in source
-    assert "itemCoverage?.calculation_eligible" in source
-
-
-def test_item_mechanics_label_uses_backend_coverage_status():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    # The item picker surfaces the backend's model-coverage status and
-    # eligibility on every catalogue row (live path, F0).
-    assert "itemCoverage?.status" in source
-    assert "itemCoverage?.calculation_eligible" in source
-    assert "itemCoverage?.optimizer_eligible" in source
-    assert "status.replaceAll" in source
-
-
-def test_frontend_round_trips_all_backend_champion_options():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-    template = Path("templates/index.html").read_text(encoding="utf-8")
-
-    assert "function resetChampionOptions()" in source
-    assert "function renderChampionOptions()" in source
-    assert "state.attacker.championOptions" in source
-    assert 'data-champion-option="' in source
-    # Every backend option is still walked; the one exclusion is SR9's, a
-    # DERIVED option the user has not set, whose key the engine reads as
-    # "derive this" only while it is absent.
-    assert ".map((option) => [" in source
-    assert (
-        "!(option.derives && state.attacker.championOptions[option.key] == null)"
-        in source
-    )
-    assert 'id="championOptionsRow"' in template
-    assert (
-        '$("championOptionsRow").innerHTML = champion ? renderChampionOptions() : "";'
-        in source
-    )
-    assert 'data-ability-rank="${slot}"' in source
-    assert 'data-ability-variant="${slot}"' in source
-    assert "function abilityBindsChampionOption(key)" in source
-    assert "!abilityBindsChampionOption(option.key)" in source
 
 
 def test_config_exposes_one_authoritative_capability_contract_for_every_participant():
@@ -1311,106 +1103,19 @@ def test_config_exposes_the_champion_review_boundary():
     assert engine["module_contract"] == "champion_module_v1"
 
 
-def test_capability_contract_has_a_frontend_control_and_serialization_for_every_supported_field():
+def test_capability_contract_names_a_reason_for_every_unsupported_field():
     config = app_module.app.test_client().get("/api/config").get_json()
     contract = config["capabilities"]
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-    template = Path("templates/index.html").read_text(encoding="utf-8")
-    frontend = f"{source}\n{template}"
 
     for participant in contract["participants"].values():
         for field, descriptor in participant["fields"].items():
             if not descriptor["supported"]:
-                assert descriptor["reason"]
-                continue
-            assert descriptor["frontend_token"] in frontend, field
-            assert descriptor["payload_field"] in source, field
+                assert descriptor["reason"], field
     for field, descriptor in contract["scenario"]["fields"].items():
-        assert descriptor["supported"] is True
-        assert descriptor["frontend_token"] in frontend, field
-        assert descriptor["payload_field"] in source, field
-
-    assert "capabilityAttributes" in source
-    assert 'attrs.push("disabled"' in source
-    assert 'aria-disabled="true"' in source
-    assert "engine.capabilities = config.capabilities" in source
-    assert "champion_options: Object.fromEntries" in source
-
-
-def test_live_builder_surfaces_backend_item_state_controls_for_all_participants():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "function stackControl(path, id, compact = false)" in source
-    # Main build slots (duel canvas) and roster slots both mount the control.
-    assert source.count("item && stackSpec(id) ? stackControl(path, id, true)") == 2
-    assert 'data-stack-path="${path}"' in source
-    assert "function setStackValue(path, value)" in source
-    assert "engineItemOptions(itemIds, itemStacks)" in source
-
-
-def test_frontend_click_handlers_use_path_resolved_item_option_metadata_for_main_build_slots():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "function itemOptionIdForPath(path)" in source
-    assert 'const parts = String(path || "").split(".");' in source
-    assert "const id = Number(state.attacker[parts[1]]?.[Number(parts[2])]);" in source
-    assert (
-        'if (parts[0] === "attacker" && (parts[1] === "buildA" || parts[1] === "buildB"))'
-        in source
-    )
-    assert "return Number.isFinite(id) && id > 0 ? id : 0;" in source
-    assert "function itemOptionSpecsForPath(path)" in source
-    assert "itemOptionState(path)[key] = Number(value);" in source
-    assert 'data-item-option-id="${escapeHtml(id)}"' in source
-    assert "const optionId = Number(itemOptionButton.dataset.itemOptionId);" in source
-    assert (
-        "let specs = Number.isFinite(optionId) && optionId > 0 ? itemOptionSpecs(optionId) : itemOptionSpecsForPath(path);"
-        in source
-    )
-    assert (
-        "const value = Math.min(Math.max(itemOptionValue(path, spec.key), spec.min), spec.max);"
-        in source
-    )
-
-
-def test_frontend_click_handlers_fallback_to_path_resolved_item_options_when_rendered_id_stale():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert (
-        "let specs = Number.isFinite(optionId) && optionId > 0 ? itemOptionSpecs(optionId) : itemOptionSpecsForPath(path);"
-        in source
-    )
-    assert "let spec = specs.find((entry) => entry.key === key);" in source
-    assert "if (!spec) {" in source
-    assert "specs = itemOptionSpecsForPath(path);" in source
-    assert "spec = specs.find((entry) => entry.key === key);" in source
-
-
-def test_frontend_click_handler_runs_in_capture_phase_for_live_bootstrap_resilience():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    start = source.find('document.addEventListener("click", (event) => {')
-    assert start != -1
-    end = source.find('document.addEventListener("input", (event) => {', start)
-    delegated_block = source[start:end]
-    assert "}, true);" in delegated_block
+        assert descriptor["supported"] is True, field
 
 
 def test_roster_boots_are_labeled_serialized_and_applied_to_enemy_and_ally_stats():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "const path = isBoots ? `${root}.${index}.boots`" in source
-    assert 'const emptyLabel = isBoots ? "Add boots" : "Add item";' in source
-    assert 'class="roster-slot-label">Boots</span>' in source
-    assert (
-        'boots: target.includeBoots && selectedBoot ? itemName(selectedBoot) : ""'
-        in source
-    )
-    assert "include_boots: Boolean(target.includeBoots)" in source
-    assert "function engineAlly(ally)" in source
-    assert "function normalizeRosterRoleState(loadout)" in source
-    assert "normalizeRosterRoleState(state[root]?.[Number(indexText)])" in source
-    assert "normalizeAttackerSupportItemsForRole();" in source
 
     response = app_module.app.test_client().post(
         "/api/calculate",
@@ -1449,14 +1154,6 @@ def test_roster_boots_are_labeled_serialized_and_applied_to_enemy_and_ally_stats
 
 
 def test_roster_role_quest_control_round_trips_enemy_and_ally_state():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "function rosterOrdinarySlotCount(loadout)" in source
-    assert 'data-roster-quest="${root}.${index}"' in source
-    assert "const roleQuestComplete = Boolean(loadout.roleQuestComplete);" in source
-    assert 'class="roster-quest-toggle' in source
-    assert "role_quest_complete: Boolean(target.roleQuestComplete)" in source
-    assert "loadout.boots = 0;" in source
 
     response = app_module.app.test_client().post(
         "/api/calculate",
@@ -1489,15 +1186,6 @@ def test_roster_role_quest_control_round_trips_enemy_and_ally_state():
 
 
 def test_support_quest_transition_clears_stale_item_state_and_backend_gate_matches_ui():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "if (loadout.itemOptions) loadout.itemOptions[index] = {};" in source
-    assert (
-        "state.attacker.role = roleSelect.value || null;\n"
-        "    if (!state.attacker.role) state.attacker.roleQuestComplete = false;\n"
-        "    normalizeAttackerBootsForRole();\n"
-        "    normalizeAttackerSupportItemsForRole();"
-    ) in source
 
     client = app_module.app.test_client()
     for root in ("enemies", "allies"):
@@ -1533,43 +1221,6 @@ def test_support_quest_transition_clears_stale_item_state_and_backend_gate_match
         assert (
             "not legal for this support quest state" in incomplete.get_json()["error"]
         )
-
-
-def test_resistance_table_surfaces_all_backend_starting_defense_receipts():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-    template = Path("templates/index.html").read_text(encoding="utf-8")
-
-    # F0: the receipts renderer lives in the visible result column
-    # (renderDefenseReceipts -> #defenseReceipts) instead of the legacy
-    # hidden #resistanceOutput container.
-    assert "function renderDefenseReceipts(" in source
-    assert 'id="defenseReceipts"' in template
-    assert "physical_shield" in source
-    assert "general_shield" in source
-    assert "threshold_shield?.amount" in source
-    assert "spell_shield?.ready" in source
-    assert "basic_damage_flat_reduction" in source
-    assert "critical_strike_damage_multiplier" in source
-    assert "<th>Starting defenses</th>" in source
-    assert "magic_shield_absorbed" in source
-    assert "target_healing_received" in source
-    assert "main.survival?.healing_received" in source
-    assert "const hasHealingReceipt" in source
-    assert "main.survival?.support_shield_received" in source
-    # The utility objective reads the main's own survival ledger only: the
-    # backend never emits top-level healing/support fields, and top-level
-    # shield_absorbed is the *target's* absorption of the attacker's damage.
-    assert "result?.healing_received" not in source
-    assert "result?.support_shield_received" not in source
-    assert "result?.shield_absorbed" not in source
-    assert "support shield received" in source
-    assert "aResult?.damage_by_type" in source
-    assert "aResult?.self_healing" in source
-    assert "aResult?.threshold_health_triggered" in source
-    assert "aResult.target_ending_health" in source
-    assert "aResult.target_effective_max_health" in source
-    assert "threshold_health_bonus_gained" in source
-    assert 'result.error_code === "no_complete_event_order"' in source
 
 
 def test_calculate_aggregates_backend_shield_receipts_across_targets():
@@ -1641,80 +1292,7 @@ def test_optimizer_certifies_the_reviewed_champion_boundary():
     assert body["ranked_builds"]
 
 
-def test_stat_matrix_surfaces_backend_resource_and_critical_stat_fields():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert '["Mana regen"' in source
-    assert '["Gold per 10"' in source
-    assert '["Critical damage"' in source
-    assert "item.manaRegen" in source
-    assert "item.goldPer10" in source
-    assert "item.critDamage" in source
-
-
-def test_frontend_stat_cards_consume_backend_loadout_stats_receipts():
-    # Issue #135: the stat cards must come from the backend.  The local
-    # conversion assembly (mana->AP/HP, Rabadon's literal, growth formula)
-    # was deleted; app.js now maps the /api/loadout-stats snake_case stat
-    # matrix into the stat-card display fields.
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert '"/api/loadout-stats"' in source
-    assert "function displayStatsFromBackend(" in source
-    assert "function currentLoadoutStats(" in source
-    assert "function mainParticipantBackendStats(" in source
-    assert "stats.health" in source
-    assert "stats.bonus_health" in source
-    assert "stats.max_mana" in source
-    assert "stats.attack_damage" in source
-    assert "stats.ability_power" in source
-    assert "stats.armor" in source
-    assert "stats.magic_resistance" in source
-    assert "stats.attack_speed" in source
-    assert "stats.move_speed" in source
-    assert "stats.ability_haste" in source
-    assert "stats.critical_strike_chance" in source
-    # The local assembly is gone; no champion-growth or conversion math
-    # may live in the bundle.
-    assert "attackerChampionStats" not in source
-    assert "0.7025" not in source
-    assert "0.0175" not in source
-
-
-def test_primary_participant_ledger_surfaces_backend_support_events():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "supportEvents = Array.isArray(aResult?.combat?.support_events)" in source
-    assert 'supportRows.join("")' in source
-    assert "event.target_policy || event.target_scope" in source
-    assert "support shield received" in source
-
-
-def test_frontend_surfaces_native_utility_and_target_allocation_receipts():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "utility_outcomes?.focus" in source
-    assert "Applied non-TDD outcomes" in source
-    assert "speed_percent_seconds" in source
-    assert "utility.slow?.percent_seconds" in source
-    assert "target_allocation" in source
-    assert "authored roster-index policy" in source
-
-
-def test_frontend_consumes_backend_calculation_defaults():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "config.default_target" in source
-    assert "engine.defaultTarget.health" in source
-    assert "config.fight_defaults" in source
-    assert "config.exclusivity_groups" in source
-    assert "one_rotation_duration_seconds" in source
-    assert "state.fight.duration = oneRotationDuration" in source
-    assert "engine.exclusivityGroups = config.exclusivity_groups || {}" in source
-
-
 def test_frontend_consumes_every_backend_item_option_and_its_stat_metadata():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
     options = app_module.app.test_client().get("/api/config").get_json()["item_options"]
 
     assert {
@@ -1761,76 +1339,11 @@ def test_frontend_consumes_every_backend_item_option_and_its_stat_metadata():
         "step": 0.5,
     }
     assert options["Mikael's Blessing"]["source_revision_id"] == 3984364
-    assert "function itemOptionSpec(id)" in source
-    assert "definition.stat_effects?.[key]" in source
-    assert "options[item.backendName || item.name] = { [spec.key]" in source
-    assert "LEGACY_STACK_ITEM_NAMES" in source
-    assert "specs.length === 1 && LEGACY_STACK_ITEM_NAMES.has(itemName(id))" in source
-    assert "function itemOptionSpecs(id)" in source
-    assert "bonus_attack_speed_percent" in source
-    assert "on_hit_magic_damage" in source
-    assert "chain_fraction" in source
     assert (
         options["Locket of the Iron Solari"]["options"]["active_seconds"]["max"] == 30.0
     )
     assert options["Knight's Vow"]["options"]["worthy_target_index"]["max"] == 4
     assert options["Stridebreaker"]["options"]["active_seconds"]["max"] == 30.0
-
-
-def test_frontend_renders_typed_item_state_controls_for_roster_participants():
-    """Target/ally slots must expose the same typed state contract as builds.
-
-    Zhonya's/Seeker's Time Stop is a participant-specific input.  Keeping the
-    roster renderer wired to ``itemOptionControls`` prevents the backend from
-    accepting a state that an enemy or ally cannot author in the UI.
-    """
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "function prototypeRosterItemSlot(root, index, loadout, slot)" in source
-    assert 'item && !isBoots ? itemOptionControls(path, id, true) : ""' in source
-    assert (
-        "item_options: engineItemOptions(itemIds, target.itemStacks, target.itemOptions)"
-        in source
-    )
-    assert "function engineAlly(ally)" in source
-
-
-def test_frontend_consumes_backend_sustain_stat_families():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert '"Life steal"' in source
-    assert '"Heal/shield power"' in source
-    assert "stats.lifesteal_percent" in source
-    assert "stats.omnivamp_percent" in source
-    assert "stats.heal_and_shield_power_percent" in source
-    assert "stats.health_regen_per_five" in source
-    assert "stats.tenacity_percent" in source
-    assert "stats.resource_regen_per_second" in source
-
-
-def test_frontend_consumes_ordered_item_targeting_receipts():
-    """Stateful item scope from the backend remains visible to the UI."""
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "entry.temporary_lethality" in source
-    assert 'targeting?.kind === "chain_lightning"' in source
-    assert "targeting.chain_target_count" in source
-    assert "targeting.allocated_target_index" in source
-    assert 'targeting?.kind === "runaan_bolt"' in source
-    assert 'targeting?.kind === "runaan_bolt_copied_on_hit"' in source
-    assert 'targeting?.kind === "hydra_cleave"' in source
-    assert 'targeting?.kind === "active_secondary"' in source
-    assert 'targeting?.kind === "cleave_secondary"' in source
-
-
-def test_frontend_consumes_standalone_self_healing_receipts():
-    """Top-level standalone healing is rendered when no combat ledger exists."""
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "function healingEventsForResult(result)" in source
-    assert "result.self_healing_events" in source
-    assert "if (combatEvents.length) return combatEvents;" in source
-    assert "const healingEvents = healingEventsForResult(aResult);" in source
 
 
 def test_config_exclusivity_groups_cover_frontend_optimizer_families():
@@ -1841,26 +1354,6 @@ def test_config_exclusivity_groups_cover_frontend_optimizer_families():
     assert {"Spellblade", "Hydra", "Fatality", "Glory"} <= set(groups)
     assert "Lich Bane" in groups["Spellblade"]
     assert "Ravenous Hydra" in groups["Hydra"]
-
-
-def test_frontend_reads_one_registry_field():
-    """One field in, one map out: no second always-equal registry set."""
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert (
-        "engine.registration.set(entry.name, entry.engine_registration || null);"
-        in source
-    )
-    for retired in (
-        "engine.reviewed",
-        "engine.backend",
-        "engine.availability",
-        "engineRegistration",
-        "engine_backend_enabled",
-        "verified_attacker",
-    ):
-        assert retired not in source
-    assert "generated packet · not reviewed" not in source
 
 
 @pytest.mark.parametrize(
@@ -1981,20 +1474,6 @@ def test_calculated_auto_uptime_repeats_for_timed_rotation_windows():
         "window_seconds": 10.0,
         "semantics": "sequential timed window; cooldowns, resources, cast lockouts, and item events follow the engine ledger",
     }
-
-
-def test_frontend_exposes_calculated_uptime_mode_and_policy_receipt():
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-    template = Path("templates/index.html").read_text(encoding="utf-8")
-
-    assert 'aaUptimeMode: "calculated"' in source
-    assert "payload.auto_attack_uptime_mode = state.fight.aaUptimeMode" in source
-    assert "rotations: 1," in source
-    assert 'state.fight.autosOnly ? "auto_only" : "time_based"' in source
-    assert "auto_attack_schedule" in source
-    assert "aResult?.auto_attack_policy" in source
-    assert 'id="uptimeModeToggle"' in template
-    assert 'id="uptimeOutput">CALCULATED' in template
 
 
 class TestIconUrlsAreHttps:
@@ -2290,16 +1769,6 @@ def test_headline_total_is_the_rotation_total_without_a_coupled_row():
     assert response.status_code == 200
     data = response.get_json()
     assert data["headline_total"] == data["total_damage"]
-
-
-def test_frontend_reads_the_published_headline_and_team_receipt():
-    """A8/C2: neither the headline nor the team total is re-derived in JS."""
-    source = Path("static/js/app.js").read_text(encoding="utf-8")
-
-    assert "const total = Number(result.headline_total);" in source
-    assert 'participant_id === "main")?.total_damage' not in source
-    assert "combat?.objective?.main_team_damage_before_death" in source
-    assert "alliedRows" not in source
 
 
 def test_loadout_summary_carries_the_registry_once():

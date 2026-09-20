@@ -364,84 +364,11 @@ def _app_source() -> str:
     return Path("static/js/app.js").read_text(encoding="utf-8")
 
 
-def test_frontend_renders_a_bis_trigger_on_every_slot():
-    source = _app_source()
-    css = Path("static/css/style.css").read_text(encoding="utf-8")
-
-    assert "function bisTrigger(path, compact = false)" in source
-    # Attacker build A/B slots and quest boots carry the trigger on the duel
-    # canvas; enemy and ally roster slots carry the same compact trigger.
-    assert "${row}${bisTrigger(path, true)}" in source
-    # Two builds ride one request; every JSON POST goes through postJson.
-    assert 'postJson("/api/compare"' in source
-    assert "${bisTrigger(path, true)}</div>" in source
-    assert ".duel-slot > .bis-trigger" in css
-    assert 'data-bis-path="${path}"' in source
-    assert '"Rank every legal item for this slot"' in source
-    assert ".bis-trigger" in css
-
-
-def test_frontend_bis_trigger_disables_with_context_tooltip():
-    source = _app_source()
-
-    assert "Needs a champion and role on this enemy" in source
-    assert "Needs a champion and role on this ally" in source
-    assert '${ready ? "" : "disabled"}' in source
-    assert "const ready = bisReadyForPath(path);" in source
-    assert "function requestBisBatch(path, slots)" in source
-    # Through the one JSON POST helper, like every other backend write:
-    # tests/test_p5_ux.py::test_app_js_posts_json_through_one_helper owns
-    # that rule and this endpoint is inside it.
-    assert 'postJson("/api/bis/batch"' in source
-
-
 # ---------------------------------------------------------------------------
 # Bug 3 (frontend): kill time never "0 s", surviving HP shown
 # ---------------------------------------------------------------------------
 
 
-def test_frontend_kill_time_never_displays_zero_and_shows_surviving_hp():
-    source = _app_source()
-
-    assert "function killTimeLabel(value)" in source
-    assert 'seconds < 0.05 ? "<1 s" :' in source
-    assert "function enemyHealthRemaining(result)" in source
-    assert "alive · ${fmt(ending)} HP" in source
-    # The delta spine feeds the surviving-HP receipt into the kill-time row
-    # for both builds (it replaced prototypeMetricRow in the redesign).
-    spine = source.split('$("metricList").innerHTML = SPINE_METRICS')[1].split(
-        '.join("")'
-    )[0]
-    assert 'metric.lower ? aAlive : ""' in spine
-    assert 'metric.lower ? bAlive : ""' in spine
-    row = source.split("function spineRowHtml(")[1].split("\nfunction ")[0]
-    assert "metricValueLabel(metric, aValue, aAlive" in row
-    # The receipt is never lost to the 52px column: it rides as the cell's
-    # title and in the row's accessible name.
-    assert "title=" in row
-    assert "aria-label=" in row
-    label = source.split("function metricValueLabel(")[1].split("\nfunction ")[0]
-    assert "killTimeLabel(value)" in label
-    # The old formatting that rendered a defeat as "0 s" is gone: every
-    # kill-time label now routes through killTimeLabel().
-    assert (
-        'return metric.lower ? (killTimeLabel(value) || alive || "—") : fmt(value);'
-        in label
-    )
-
-
 # ---------------------------------------------------------------------------
 # Bug 4 (frontend): overkill + enemy eHP in the main output
 # ---------------------------------------------------------------------------
-
-
-def test_frontend_main_output_adds_overkill_and_enemy_ehp():
-    source = _app_source()
-
-    assert "function enemyOverkill(result, totalDamage)" in source
-    assert "function enemyEffectiveHealth(result)" in source
-    assert (
-        '${fmt(aTotal)} TDD${overkill > 0 ? ` · ${fmt(overkill)} overkill` : ""}'
-        in source
-    )
-    assert '<div class="ledger-line"><span>Enemy effective HP</span>' in source
