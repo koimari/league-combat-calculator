@@ -1,9 +1,7 @@
 """Sivir's crowd-control review: five slots, not one of them a control.
 
-A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-whether an ability event was a control event; an ability packet that never
-says makes the whole timed fight fall back to coarse ordering.  Sivir
-applies no control anywhere, so every slot declares "none" and the timed
+The roster-wide half of this review lives in ``test_module_cc_census.py``.
+Sivir applies no control anywhere, so every slot declares "none" and the timed
 fight certifies — even on the two damaging rows the ledger cannot time.
 """
 
@@ -25,7 +23,6 @@ class TestReviewedCrowdControl:
             "Q": "none",
             "W": "none",
         }
-        assert sivir.parse_abilities.cc_kinds == sivir.MODULE_CC
 
     def test_neither_row_is_a_hit_the_ledger_can_time(self):
         """Boomerang Blade is two passes the module prices at the cast
@@ -46,9 +43,3 @@ class TestReviewedCrowdControl:
             "bonus attack speed and causing her basic attacks to bounce to "
             "additional surrounding enemies" in cc_review.slot_text(data, "W")
         )
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        assert cc_review.unreviewed_ability_slots("Sivir") == []
-        coverage = cc_review.fimbulwinter_coverage("Sivir")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

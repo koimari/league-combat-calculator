@@ -429,7 +429,6 @@ class TestReviewedCrowdControl:
             "P": "none",
             "W": "slow",
         }
-        assert jarvan_iv.parse_abilities.cc_kinds == jarvan_iv.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):
         for slot, word in [["R", "knock"]]:
@@ -441,10 +440,3 @@ class TestReviewedCrowdControl:
 
     def test_every_reviewed_part_carries_its_kind(self):
         assert _CC.kinds() == {"Q": ["none"], "E": ["none"], "R": ["knockback"]}
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = _CC.coverage()
-
-        assert coverage["complete"] is True
-        assert coverage["certification"] == "event_order_certified"
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

@@ -253,9 +253,7 @@ def test_target_max_health_change_is_repriced(shen_data):
 class TestReviewedCrowdControl:
     """Shen's reviewed crowd control, and what declaring it clears.
 
-    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-    whether an ability event was a control event; an ability packet that
-    never says makes the whole timed fight fall back to coarse ordering.
+    The roster-wide half of this review lives in ``test_module_cc_census.py``.
     Both rows already carry their authored dash/swing timing, so the
     declaration rides an event the ledger can see.
     """
@@ -265,14 +263,6 @@ class TestReviewedCrowdControl:
         assert shen.MODULE_CC == {"E": "taunt", "Q": "slow", "W": "none", "R": "none"}
         assert "are slowed for the next 2 seconds" in cc_review.slot_text(data, "Q")
         assert "taunting them for 1.5 seconds" in cc_review.slot_text(data, "E")
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Shen") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Shen")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 # ---------------------------------------------------------------------------

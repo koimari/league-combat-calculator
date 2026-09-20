@@ -33,7 +33,6 @@ class TestReviewedCrowdControl:
             "Q": "none",
             "E": "slow",
         }
-        assert illaoi.parse_abilities.cc_kinds == illaoi.MODULE_CC
 
     def test_control_free_slots_name_every_word_their_text_contains(self):
         for slot, expected in [["W", []], ["R", []]]:
@@ -42,10 +41,3 @@ class TestReviewedCrowdControl:
     def test_every_reviewed_part_carries_its_kind(self):
         """Q and E price no damage part, so their declaration lands nowhere."""
         assert _CC.kinds() == {"W": ["none"], "R": ["none"], "passive": ["none"]}
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = _CC.coverage()
-
-        assert coverage["complete"] is True
-        assert coverage["certification"] == "event_order_certified"
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

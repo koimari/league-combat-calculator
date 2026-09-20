@@ -1,7 +1,6 @@
 """The actor, the grown registry and the packet vocabulary every item-support suite reads."""
 
 import ast
-from contextlib import contextmanager
 from pathlib import Path
 from types import MappingProxyType, SimpleNamespace
 
@@ -39,8 +38,7 @@ def _capability(mechanic: str, packet_source: str):
     )
 
 
-@contextmanager
-def _grown_registry(mechanic: str, capability):
+def _grown_registry(mechanic: str, capability, monkeypatch, cold_memo):
     """Read the producer table off a registry carrying one more capability.
 
     P2c moved the table off this module's own ``_packet`` call sites and
@@ -49,13 +47,9 @@ def _grown_registry(mechanic: str, capability):
     only way to test that the table follows the registry.
     """
     grown = MappingProxyType({**CAPABILITIES, mechanic: capability})
-    ally_packet_shape.CAPABILITIES = grown
-    ally_packet_shape._declared_authorities.cache_clear()
-    try:
-        yield grown
-    finally:
-        ally_packet_shape.CAPABILITIES = CAPABILITIES
-        ally_packet_shape._declared_authorities.cache_clear()
+    monkeypatch.setattr(ally_packet_shape, "CAPABILITIES", grown)
+    cold_memo(ally_packet_shape, "_declared_authorities")
+    return grown
 
 
 def _actor(

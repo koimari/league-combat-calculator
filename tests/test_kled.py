@@ -1,8 +1,6 @@
 """Kled's reviewed crowd control (``MODULE_CC``), slot by slot.
 
-A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-whether an ability event was a control event; an ability packet that never
-says makes the whole timed fight fall back to coarse ordering.
+The roster-wide half of this review lives in ``test_module_cc_census.py``.
 """
 
 import pytest
@@ -23,7 +21,6 @@ class TestReviewedCrowdControl:
             "P": "none",
             "E": "none",
         }
-        assert kled.parse_abilities.cc_kinds == kled.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Kled")

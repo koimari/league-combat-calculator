@@ -376,9 +376,7 @@ class TestFightIntegration:
 class TestReviewedCrowdControl:
     """Braum's damaging casts both control: Winter's Bite slows, R knocks up.
 
-    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-    whether an ability event was a control event; an ability packet that
-    never says makes the whole timed fight fall back to coarse ordering.
+    The roster-wide half of this review lives in ``test_module_cc_census.py``.
     """
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
@@ -389,7 +387,6 @@ class TestReviewedCrowdControl:
             "W": "none",
             "E": "none",
         }
-        assert braum.parse_abilities.cc_kinds == braum.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Braum")
@@ -399,11 +396,3 @@ class TestReviewedCrowdControl:
         assert "all other enemies hit are knocked up for 0.6 seconds" in (
             cc_review.slot_text(data, "R")
         )
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Braum") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Braum")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

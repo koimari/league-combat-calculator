@@ -1,8 +1,6 @@
 """Mel's reviewed crowd control (``MODULE_CC`` plus Solar Snare's two parts).
 
-A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-whether an ability event was a control event; an ability packet that never
-says makes the whole timed fight fall back to coarse ordering.
+The roster-wide half of this review lives in ``test_module_cc_census.py``.
 """
 
 from src.calculator.champions import (
@@ -26,7 +24,6 @@ class TestReviewedCrowdControl:
             "R": "none",
             "W": "none",
         }
-        assert mel.parse_abilities.cc_kinds == mel.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Mel")
@@ -42,14 +39,6 @@ class TestReviewedCrowdControl:
             data, 18, 100.0, champion_stats=calculate_total_stats(data, 18, [])
         )
         assert [part.cc_kind for part in parsed["E"]["parts"]] == ["root", "slow"]
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Mel") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Mel")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 class TestCoverageMap:

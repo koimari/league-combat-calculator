@@ -36,10 +36,7 @@ def _row_at_crit(slot, crit_chance_percent):
 class TestReviewedCrowdControl:
     """Xin Zhao's reviewed crowd control, and the slots that still withhold.
 
-    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-    whether an ability event was a control event; an ability packet that
-    never says makes the whole timed fight fall back to coarse ordering.
-    ``MODULE_CC`` is where this kit answers, read from the cached text.
+    The roster-wide half of this review lives in ``test_module_cc_census.py``.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -51,7 +48,6 @@ class TestReviewedCrowdControl:
             "P": "none",
             "Q": "per_part",
         }
-        assert xin_zhao.parse_abilities.cc_kinds == xin_zhao.MODULE_CC
         assert "slowing all targets hit by 30%" in cc_review.slot_text(data, "E")
         # W's slow is the thrust's, and the module now prices the whole
         # cast — the four slashes plus that thrust.

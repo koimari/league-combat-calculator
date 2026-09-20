@@ -354,13 +354,11 @@ def test_payload_timed_timeline_is_complete_with_no_coarse_sources():
 class TestReviewedCrowdControl:
     """Taliyah's reviewed crowd control, authored per part.
 
-    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-    whether an ability event was a control event; an ability packet that
-    never says makes the whole timed fight fall back to coarse ordering.
-    Neither damaging slot has one answer for the whole cast — Q's fresh
-    shards control nothing while its Worked Ground boulders slow, and E's
-    eruption slows while its stone detonations stun — so ``MODULE_CC``
-    names both slots ``CC_PER_PART`` and each part carries its own kind.
+    The roster-wide half of this review lives in ``test_module_cc_census.py``.
+    Neither damaging slot has one answer for the whole cast — Q's fresh shards
+    control nothing while its Worked Ground boulders slow, and E's eruption
+    slows while its stone detonations stun — so ``MODULE_CC`` names both slots
+    ``CC_PER_PART`` and each part carries its own kind.
     """
 
     def test_the_kit_has_no_single_per_slot_answer_to_declare(self):
@@ -374,7 +372,6 @@ class TestReviewedCrowdControl:
             "P": "none",
             "R": "knockback",
         }
-        assert taliyah.parse_abilities.cc_kinds == taliyah.MODULE_CC
         assert "slowing all targets hit for 1.5 seconds" in cc_review.slot_text(
             data, "Q"
         )
@@ -404,11 +401,3 @@ class TestReviewedCrowdControl:
         )
         assert {part.cc_kind for part in fresh["Q"]["parts"]} == {"none"}
         assert [part.cc_kind for part in fresh["E"]["parts"]] == ["slow"]
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Taliyah") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Taliyah")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

@@ -394,7 +394,6 @@ class TestReviewedCrowdControl:
             "E": "none",
             "R": "none",
         }
-        assert aatrox.parse_abilities.cc_kinds == aatrox.MODULE_CC
 
     def test_the_darkin_blades_knockup_is_the_sweetspot_branchs(self):
         text = cc_review.slot_text(cc_review.kit("Aatrox"), "Q")

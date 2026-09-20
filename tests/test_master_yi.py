@@ -16,10 +16,7 @@ _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 class TestReviewedCrowdControl:
     """Master Yi's reviewed crowd control, and the delay that carries Q.
 
-    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-    whether an ability event was a control event; an ability packet that
-    never says makes the whole timed fight fall back to coarse ordering.
-    ``MODULE_CC`` is where this kit answers, read from the cached text.
+    The roster-wide half of this review lives in ``test_module_cc_census.py``.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -31,7 +28,6 @@ class TestReviewedCrowdControl:
             "E": "none",
             "R": "none",
         }
-        assert master_yi.parse_abilities.cc_kinds == master_yi.MODULE_CC
         # Alpha Strike's only "unable to act" clause is about Master Yi.
         q_text = cc_review.slot_text(data, "Q")
         assert "master yi vanishes and becomes unable to act" in q_text

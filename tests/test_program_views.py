@@ -1014,7 +1014,9 @@ def test_a_lane_nobody_declared_a_tag_for_raises() -> None:
         tagged.tag_for({}, EngineLane.PAIR_ENGINE)
 
 
-def test_one_mechanic_may_not_declare_two_meanings_for_one_lane() -> None:
+def test_one_mechanic_may_not_declare_two_meanings_for_one_lane(
+    monkeypatch, cold_memo
+) -> None:
     """The merge raises rather than taking whichever row was iterated last."""
     from types import MappingProxyType
 
@@ -1030,12 +1032,7 @@ def test_one_mechanic_may_not_declare_two_meanings_for_one_lane() -> None:
             view_tags=MappingProxyType({Engine.PAIR: ViewTag.APPLIED}),
         ),
     }
-    original = capability.CAPABILITIES
-    capability.declared_view_tags.cache_clear()
-    try:
-        capability.CAPABILITIES = halves
-        with pytest.raises(ValueError, match="two declared meanings"):
-            capability.declared_view_tags()
-    finally:
-        capability.CAPABILITIES = original
-        capability.declared_view_tags.cache_clear()
+    monkeypatch.setattr(capability, "CAPABILITIES", halves)
+    cold = cold_memo(capability, "declared_view_tags")
+    with pytest.raises(ValueError, match="two declared meanings"):
+        cold()

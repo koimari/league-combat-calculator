@@ -9,6 +9,7 @@ registry; this one asserts fight-engine behavior with live parsed item data.
 
 from copy import deepcopy
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 
@@ -357,7 +358,7 @@ class TestRapidFirecannonSharpshooter:
         assert parsed["damage_type"] == "magic"
 
 
-class TestSpellbladeSiblingParsing:
+class TestSpellbladeSiblingParsing(_FightHarness):
     """Patch passive branches retain non-damage Spellblade effects."""
 
     def test_parser_extracts_lich_bane_attack_speed(self) -> None:
@@ -406,34 +407,9 @@ class TestSpellbladeSiblingParsing:
         from src.calculator.damage import calculate_fight_damage
         from src.calculator.resistance import apply_resistance
 
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "base_attack_damage": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100.0,
-            "ability_power": 0.0,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "flat_armor_penetration": 0.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 0.0,
-            "critical_strike_chance": 0.0,
-            "is_melee": False,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            base_attack_damage=0.0, health=0.0, max_mana=0.0, is_melee=False
+        )
         import random
 
         random.seed(0)
@@ -459,34 +435,9 @@ class TestSpellbladeSiblingParsing:
         """No auto attacks means no energized proc."""
         from src.calculator.damage import calculate_fight_damage
 
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "base_attack_damage": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100.0,
-            "ability_power": 0.0,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "flat_armor_penetration": 0.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 0.0,
-            "critical_strike_chance": 0.0,
-            "is_melee": False,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            base_attack_damage=0.0, health=0.0, max_mana=0.0, is_melee=False
+        )
         fight = calculate_fight_damage(
             stats,
             {},
@@ -600,7 +551,7 @@ def test_thornmail_parser_extracts_bonus_armor_thorns() -> None:
     assert parsed["grievous_duration"] == pytest.approx(3.0)
 
 
-class TestBloodlettersCurseVileDecay:
+class TestBloodlettersCurseVileDecay(_FightHarness):
     """Tests for Bloodletter's Curse stacking MR reduction passive."""
 
     @pytest.fixture
@@ -727,34 +678,19 @@ class TestBloodlettersCurseVileDecay:
     def test_no_effect_on_physical_only_damage(self) -> None:
         """Stacking MR reduction should not affect physical-only abilities."""
         # Craft a minimal physical-only scenario
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "base_attack_damage": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "attack_speed": 0.625,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "is_melee": True,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            base_attack_damage=0.0,
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            attack_speed=0.625,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+        )
         abilities = {
             "Q": {
                 "name": "Test Physical",
@@ -1341,47 +1277,29 @@ class TestActualizerAmpRow:
         assert row["total_damage"] == pytest.approx(expected, abs=0.01)
 
 
-class TestBurnRefreshWindow:
+class TestBurnRefreshWindow(_FightHarness):
     """Burn windows stretch by the rotation cast spread.
 
     Only a multi-instance R (Ahri: cast_instances=3) adds dash spread;
     a plain single-instance R must not inherit Ahri's dash count.
     """
 
-    _STATS = {
-        "ability_haste": 0.0,
-        "armor_penetration_bonus_percent": 0.0,
-        "basic_ability_haste": 0.0,
-        "bonus_attack_damage": 0.0,
-        "bonus_health": 0.0,
-        "bonus_mana": 0.0,
-        "flat_armor_penetration": 0.0,
-        "health": 0.0,
-        "max_mana": 0.0,
-        "move_speed": 0.0,
-        "omnivamp_percent": 0.0,
-        "resource_regen_per_second": 0.0,
-        "ultimate_haste": 0.0,
-        "item_haste": 0.0,
-        "attack_damage": 60.0,
-        "base_attack_damage": 60.0,
-        "attack_speed": 0.7,
-        "attack_speed_ratio": 0.625,
-        "critical_strike_chance": 0.0,
-        "magic_penetration_flat": 0.0,
-        "magic_penetration_percent": 0.0,
-        "armor_penetration_percent": 0.0,
-        "lethality": 0.0,
-        "ability_power": 100.0,
-        "is_melee": False,
-        "level": 18,
-    }
+    def _burn_stats(self) -> dict[str, float]:
+        return self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=60.0,
+            base_attack_damage=60.0,
+            attack_speed=0.7,
+            ability_power=100.0,
+            is_melee=False,
+        )
 
     def _fight(self, abilities, item_names):
         from src.calculator.data_fetcher import get_item_by_name
 
         return calculate_fight_damage(
-            dict(self._STATS),
+            self._burn_stats(),
             abilities,
             [get_item_by_name(n) for n in item_names],
             FightConfig(
@@ -1499,7 +1417,7 @@ class TestBurnRefreshWindow:
         # R1 lands at spread - 2 x 0.5s = 0.0s; hatefog runs to its
         # duration; burn refreshes until hatefog ends.
         dot_refresh_end = max(1.0, 0.0 + hatefog.duration)
-        inputs = DamageInputs(dict(self._STATS), 18, False, 2000.0, 2000.0)
+        inputs = DamageInputs(self._burn_stats(), 18, False, 2000.0, 2000.0)
         raw = burn.source.raw_damage(inputs)
         raw *= (dot_refresh_end + duration) / duration
         from src.calculator.resistance import apply_resistance
@@ -1508,7 +1426,7 @@ class TestBurnRefreshWindow:
         assert actual == pytest.approx(expected, rel=1e-6)
 
 
-class TestBurnTimedModeUptime:
+class TestBurnTimedModeUptime(_FightHarness):
     """In time-based mode, recasting abilities keep refreshing the burn.
 
     The refresh window must run to the fight's LAST cast (spaced by
@@ -1518,40 +1436,22 @@ class TestBurnTimedModeUptime:
     (in-game measured ~2% max HP/s for the whole fight).
     """
 
-    _STATS = {
-        "ability_haste": 0.0,
-        "armor_penetration_bonus_percent": 0.0,
-        "basic_ability_haste": 0.0,
-        "bonus_attack_damage": 0.0,
-        "bonus_health": 0.0,
-        "bonus_mana": 0.0,
-        "flat_armor_penetration": 0.0,
-        "health": 0.0,
-        "max_mana": 0.0,
-        "move_speed": 0.0,
-        "omnivamp_percent": 0.0,
-        "resource_regen_per_second": 0.0,
-        "ultimate_haste": 0.0,
-        "item_haste": 0.0,
-        "attack_damage": 60.0,
-        "base_attack_damage": 60.0,
-        "attack_speed": 0.7,
-        "attack_speed_ratio": 0.625,
-        "critical_strike_chance": 0.0,
-        "magic_penetration_flat": 0.0,
-        "magic_penetration_percent": 0.0,
-        "armor_penetration_percent": 0.0,
-        "lethality": 0.0,
-        "ability_power": 100.0,
-        "is_melee": False,
-        "level": 18,
-    }
+    def _burn_stats(self) -> dict[str, float]:
+        return self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=60.0,
+            base_attack_damage=60.0,
+            attack_speed=0.7,
+            ability_power=100.0,
+            is_melee=False,
+        )
 
     def _fight(self, abilities, duration=10.0):
         from src.calculator.data_fetcher import get_item_by_name
 
         return calculate_fight_damage(
-            dict(self._STATS),
+            self._burn_stats(),
             abilities,
             [get_item_by_name("Liandry's Torment")],
             FightConfig(
@@ -1569,7 +1469,7 @@ class TestBurnTimedModeUptime:
         from src.calculator.resistance import apply_resistance
 
         (burn,) = _periodic_slots("Liandry's Torment").burns
-        inputs = DamageInputs(dict(self._STATS), 18, False, 4000.0, 4000.0)
+        inputs = DamageInputs(self._burn_stats(), 18, False, 4000.0, 4000.0)
         raw = burn.source.raw_damage(inputs) * (uptime_seconds / burn.duration)
         return apply_resistance(raw, fight["effective_mr"])
 
@@ -1616,7 +1516,7 @@ class TestBurnTimedModeUptime:
         assert actual == pytest.approx(self._expected_burn(fight, 3.5), rel=1e-6)
 
 
-class TestBloodsongSpellbladeAndExposeWeakness:
+class TestBloodsongSpellbladeAndExposeWeakness(_FightHarness):
     """Tests for Bloodsong's Spellblade and Expose Weakness passives."""
 
     @pytest.fixture
@@ -1792,34 +1692,18 @@ class TestBloodsongSpellbladeAndExposeWeakness:
 
     def test_expose_weakness_melee_uses_eight_percent(self) -> None:
         """Melee champions should use the 8% Expose Weakness rate."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "is_melee": True,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+        )
         abilities = {
             "Q": {
                 "name": "Test Q",
@@ -1857,7 +1741,7 @@ class TestBloodsongSpellbladeAndExposeWeakness:
         assert ew["amplifier"] == pytest.approx(1.08, abs=0.001)
 
 
-class TestDuskAndDawnSpellbladeAndDoubleOnHit:
+class TestDuskAndDawnSpellbladeAndDoubleOnHit(_FightHarness):
     """Tests for Dusk and Dawn's Spellblade and Double On-Hit passives."""
 
     @pytest.fixture
@@ -2045,34 +1929,19 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
 
     def test_double_on_hit_with_wits_end(self) -> None:
         """Double on-hit should also work with Wit's End."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "is_melee": False,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+            is_melee=False,
+        )
         abilities = {
             "Q": {
                 "name": "Test",
@@ -2104,34 +1973,18 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
 
     def test_double_on_hit_with_bork(self) -> None:
         """Double on-hit should work with Blade of the Ruined King."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "is_melee": True,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+        )
         abilities = {
             "Q": {
                 "name": "Test Q",
@@ -2174,34 +2027,18 @@ class TestDuskAndDawnSpellbladeAndDoubleOnHit:
 
     def test_kraken_extra_hits_from_double_on_hit(self) -> None:
         """Double on-hit procs should count as extra hits for Kraken Slayer."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "is_melee": True,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+        )
         # Only 2 auto attacks + 2 double on-hit procs = 4 effective hits
         # = 1 Kraken proc (every 3rd hit). Without double on-hit, 2 autos
         # wouldn't reach the 3-hit threshold.
@@ -2350,7 +2187,7 @@ class TestEssenceReaverSpellbladeSiblings:
         assert result["cast_timeline"][1]["resource_before"] == pytest.approx(400.0)
 
 
-class TestEclipseEverRisingMoon:
+class TestEclipseEverRisingMoon(_FightHarness):
     """Tests for Eclipse's Ever Rising Moon passive (% max HP physical proc)."""
 
     @pytest.fixture
@@ -2399,34 +2236,19 @@ class TestEclipseEverRisingMoon:
 
     def test_eclipse_appears_in_fight_breakdown(self) -> None:
         """Eclipse proc should appear in fight breakdown when item is present."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "is_melee": False,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+            is_melee=False,
+        )
         abilities = {
             "Q": {
                 "name": "Test Q",
@@ -2485,34 +2307,19 @@ class TestEclipseEverRisingMoon:
 
     def test_eclipse_damage_mitigated_by_armor(self) -> None:
         """Eclipse physical damage should be reduced by target armor."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "is_melee": False,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+            is_melee=False,
+        )
         abilities = {
             "Q": {
                 "name": "Test Q",
@@ -2603,34 +2410,19 @@ class TestEclipseEverRisingMoon:
 
     def test_no_eclipse_when_item_not_present(self) -> None:
         """Eclipse proc should not appear when item is not equipped."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "is_melee": False,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+            is_melee=False,
+        )
         abilities = {
             "Q": {
                 "name": "Test",
@@ -2657,7 +2449,7 @@ class TestEclipseEverRisingMoon:
         assert "proc_Eclipse" not in fight["breakdown"]
 
 
-class TestExperimentalHexplate:
+class TestExperimentalHexplate(_FightHarness):
     """Tests for Overdrive (melee 50% / ranged 35% bonus AS on R cast)."""
 
     def test_hexplate_registered_in_item_effects(self) -> None:
@@ -2673,34 +2465,18 @@ class TestExperimentalHexplate:
 
     def test_hexplate_increases_auto_count(self) -> None:
         """Hexplate bonus AS (from stats) should yield more autos than without."""
-        base_stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "is_melee": True,
-            "level": 18,
-        }
+        base_stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+        )
         # Hexplate 50% bonus AS is now baked into stats by calculate_total_stats
         buffed_stats = {**base_stats, "attack_speed": 1.3125}
         abilities = {
@@ -2746,34 +2522,19 @@ class TestExperimentalHexplate:
 
     def test_hexplate_auto_count_5s_fight(self) -> None:
         """With buffed AS=1.3125 (from stats), 5s => 6 autos."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.3125,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "is_melee": True,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            attack_speed=1.3125,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+        )
         abilities = {
             "Q": {
                 "name": "Test",
@@ -2804,34 +2565,19 @@ class TestExperimentalHexplate:
 
     def test_hexplate_full_fight_duration(self) -> None:
         """With buffed AS=1.3125 for full 15s fight: floor(1.3125 * 15) = 19."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.3125,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "is_melee": True,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            attack_speed=1.3125,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+        )
         abilities = {
             "Q": {
                 "name": "Test",
@@ -2862,34 +2608,19 @@ class TestExperimentalHexplate:
 
     def test_hexplate_note_in_result(self) -> None:
         """Fight result should include a note about R assumption."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.3125,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "is_melee": True,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            attack_speed=1.3125,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+        )
         abilities = {
             "Q": {
                 "name": "Test",
@@ -2920,34 +2651,18 @@ class TestExperimentalHexplate:
 
     def test_no_note_without_hexplate(self) -> None:
         """No notes when Hexplate is not equipped."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "is_melee": True,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+        )
         abilities = {
             "Q": {
                 "name": "Test",
@@ -2975,7 +2690,7 @@ class TestExperimentalHexplate:
         assert fight["notes"] == []
 
 
-class TestFiendhunterBolts:
+class TestFiendhunterBolts(_FightHarness):
     """Tests for Fiendhunter Bolts (3 empowered autos after R cast)."""
 
     def test_fiendhunter_registered_in_item_effects(self) -> None:
@@ -2996,34 +2711,18 @@ class TestFiendhunterBolts:
         AD=100, crit_mult=2.0, 80% crit = 100 * 2.0 * 0.80 = 160 raw.
         No true damage (0% natural crit chance).
         """
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "is_melee": True,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+        )
         abilities = {
             "Q": {
                 "name": "Test",
@@ -3068,34 +2767,18 @@ class TestFiendhunterBolts:
         Physical: 100 * 2.0 = 200 per hit.
         True: 200 * 0.15 = 30 per hit.
         """
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 100,
-            "is_melee": True,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=100,
+        )
         abilities = {
             "Q": {
                 "name": "Test",
@@ -3127,51 +2810,46 @@ class TestFiendhunterBolts:
         # True damage: 200 * 0.15 = 30 per hit, 3 empowered hits = 90
         assert abs(fh_true["total_damage"] - 90.0) < 0.01
 
-    def test_ahri_level_18_fiendhunter_zero_crits(self) -> None:
-        """Ahri level 18 with Fiendhunter Bolts, 3 autos, 0 natural crits.
+    @pytest.mark.parametrize(
+        ("crit_rolls", "num_crits", "total"),
+        [
+            ((0.99, 0.99, 0.99), 0, 250),
+            ((0.1, 0.99, 0.99), 1, 302),
+            ((0.1, 0.1, 0.99), 2, 354),
+            ((0.1, 0.1, 0.1), 3, 406),
+        ],
+    )
+    def test_ahri_level_18_fiendhunter_by_crit_count(
+        self, crit_rolls, num_crits, total
+    ) -> None:
+        """Ahri level 18, three empowered autos, one row per crit count.
 
-        AD=104, crit_mult=2.0, 25% crit chance but no crits rolled.
-        Empowered: 104 * 2.0 * 0.80 = 166.4 raw, /2 = 83.2 mitigated.
-        Total: 83.2 * 3 = 249.6 -> 250.
+        AD=104 at 25% crit, so a roll under 0.25 takes the full crit plus
+        Fiendhunter's 15% true damage and a roll over it takes 80% of the
+        crit and no true damage: 83.2 mitigated three times is 250, and
+        each crit adds 52.  ``deterministic`` cannot express a crit count,
+        it blends the outcomes, so the roll sequence is the axis here.
         """
-        from unittest.mock import patch
-
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 104,
-            "ability_power": 0,
-            "base_attack_damage": 104,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 25,
-            "is_melee": False,
-            "level": 18,
-        }
-        abilities = {}
-        # Force no crits: random.random() always returns 0.99 (> 0.25)
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=104,
+            ability_power=0,
+            base_attack_damage=104,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=25,
+            is_melee=False,
+        )
         with patch(
-            "src.calculator.fight.autos.simulation.random.random", return_value=0.99
+            "src.calculator.fight.autos.simulation.random.random",
+            side_effect=crit_rolls,
         ):
             fight = calculate_fight_damage(
                 stats,
-                abilities,
+                {},
                 [{"name": "Fiendhunter Bolts"}],
                 FightConfig(
                     target_health=1000,
@@ -3185,220 +2863,26 @@ class TestFiendhunterBolts:
         autos = fight["breakdown"]["auto_attacks"]
         assert autos["empowered_count"] == 3
         assert autos["count"] == 3
-        assert autos["num_crits"] == 0
-        assert round(autos["total_damage"]) == 250
-        assert "fiendhunter_true_damage" not in fight["breakdown"]
-
-    def test_ahri_level_18_fiendhunter_one_crit(self) -> None:
-        """Ahri level 18, Fiendhunter, 3 autos, 1 natural crit -> 302."""
-        from unittest.mock import patch
-
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 104,
-            "ability_power": 0,
-            "base_attack_damage": 104,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 25,
-            "is_melee": False,
-            "level": 18,
-        }
-        abilities = {}
-        # 1st auto crits (0.1 < 0.25), 2nd and 3rd don't (0.99 > 0.25)
-        crit_rolls = iter([0.1, 0.99, 0.99])
-        with patch(
-            "src.calculator.fight.autos.simulation.random.random",
-            side_effect=crit_rolls,
-        ):
-            fight = calculate_fight_damage(
-                stats,
-                abilities,
-                [{"name": "Fiendhunter Bolts"}],
-                FightConfig(
-                    target_health=1000,
-                    target_armor=100,
-                    target_magic_resistance=100,
-                    fight_duration_seconds=3.0,
-                    auto_attack_uptime=1.0,
-                    one_rotation=True,
-                ),
-            )
-        autos = fight["breakdown"]["auto_attacks"]
-        assert autos["num_crits"] == 1
-        assert (
-            round(
-                autos["total_damage"]
-                + fight["breakdown"]["fiendhunter_true_damage"]["total_damage"]
-            )
-            == 302
-        )
-
-    def test_ahri_level_18_fiendhunter_two_crits(self) -> None:
-        """Ahri level 18, Fiendhunter, 3 autos, 2 natural crits -> 354."""
-        from unittest.mock import patch
-
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 104,
-            "ability_power": 0,
-            "base_attack_damage": 104,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 25,
-            "is_melee": False,
-            "level": 18,
-        }
-        abilities = {}
-        crit_rolls = iter([0.1, 0.1, 0.99])
-        with patch(
-            "src.calculator.fight.autos.simulation.random.random",
-            side_effect=crit_rolls,
-        ):
-            fight = calculate_fight_damage(
-                stats,
-                abilities,
-                [{"name": "Fiendhunter Bolts"}],
-                FightConfig(
-                    target_health=1000,
-                    target_armor=100,
-                    target_magic_resistance=100,
-                    fight_duration_seconds=3.0,
-                    auto_attack_uptime=1.0,
-                    one_rotation=True,
-                ),
-            )
-        autos = fight["breakdown"]["auto_attacks"]
-        assert autos["num_crits"] == 2
-        total = (
-            autos["total_damage"]
-            + fight["breakdown"]["fiendhunter_true_damage"]["total_damage"]
-        )
-        assert round(total) == 354
-
-    def test_ahri_level_18_fiendhunter_three_crits(self) -> None:
-        """Ahri level 18, Fiendhunter, 3 autos, 3 natural crits -> 406."""
-        from unittest.mock import patch
-
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 104,
-            "ability_power": 0,
-            "base_attack_damage": 104,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 25,
-            "is_melee": False,
-            "level": 18,
-        }
-        abilities = {}
-        crit_rolls = iter([0.1, 0.1, 0.1])
-        with patch(
-            "src.calculator.fight.autos.simulation.random.random",
-            side_effect=crit_rolls,
-        ):
-            fight = calculate_fight_damage(
-                stats,
-                abilities,
-                [{"name": "Fiendhunter Bolts"}],
-                FightConfig(
-                    target_health=1000,
-                    target_armor=100,
-                    target_magic_resistance=100,
-                    fight_duration_seconds=3.0,
-                    auto_attack_uptime=1.0,
-                    one_rotation=True,
-                ),
-            )
-        autos = fight["breakdown"]["auto_attacks"]
-        assert autos["num_crits"] == 3
-        total = (
-            autos["total_damage"]
-            + fight["breakdown"]["fiendhunter_true_damage"]["total_damage"]
-        )
-        assert round(total) == 406
+        assert autos["num_crits"] == num_crits
+        true_row = fight["breakdown"].get("fiendhunter_true_damage")
+        assert (true_row is not None) is (num_crits > 0)
+        true_damage = true_row["total_damage"] if true_row else 0.0
+        assert round(autos["total_damage"] + true_damage) == total
 
     def test_correct_total_auto_count(self) -> None:
         """3 empowered autos + remaining normal autos at base AS."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "is_melee": True,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+        )
         abilities = {
             "Q": {
                 "name": "Test",
@@ -3434,34 +2918,18 @@ class TestFiendhunterBolts:
 
     def test_fiendhunter_note_in_result(self) -> None:
         """Fight result should include a note about R assumption."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "is_melee": True,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+        )
         abilities = {
             "Q": {
                 "name": "Test",
@@ -3492,36 +2960,18 @@ class TestFiendhunterBolts:
 
     def test_fiendhunter_more_damage_than_no_item(self) -> None:
         """Total damage with Fiendhunter should exceed damage without."""
-        from unittest.mock import patch
-
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 25,
-            "is_melee": True,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=25,
+        )
         abilities = {
             "Q": {
                 "name": "Test",
@@ -3533,68 +2983,35 @@ class TestFiendhunterBolts:
                 "damage_type": "physical",
             },
         }
-        # Use no crits for deterministic comparison
-        with patch(
-            "src.calculator.fight.autos.simulation.random.random", return_value=0.99
-        ):
-            fight_with = calculate_fight_damage(
-                stats,
-                abilities,
-                [{"name": "Fiendhunter Bolts"}],
-                FightConfig(
-                    target_health=1000,
-                    target_armor=100,
-                    target_magic_resistance=100,
-                    fight_duration_seconds=5.0,
-                    auto_attack_uptime=1.0,
-                    one_rotation=True,
-                ),
-            )
-            fight_without = calculate_fight_damage(
-                stats,
-                abilities,
-                [],
-                FightConfig(
-                    target_health=1000,
-                    target_armor=100,
-                    target_magic_resistance=100,
-                    fight_duration_seconds=5.0,
-                    auto_attack_uptime=1.0,
-                    one_rotation=True,
-                ),
-            )
+        config = FightConfig(
+            target_health=1000,
+            target_armor=100,
+            target_magic_resistance=100,
+            fight_duration_seconds=5.0,
+            auto_attack_uptime=1.0,
+            one_rotation=True,
+            deterministic=True,
+        )
+        fight_with = calculate_fight_damage(
+            stats, abilities, [{"name": "Fiendhunter Bolts"}], config
+        )
+        fight_without = calculate_fight_damage(stats, abilities, [], config)
         assert fight_with["total_damage"] > fight_without["total_damage"]
 
     def test_no_empowered_autos_at_zero_uptime(self) -> None:
         """With 0% auto uptime, no empowered autos and no Fiendhunter effect."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 50,
-            "is_melee": True,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=50,
+        )
         abilities = {
             "Q": {
                 "name": "Test",
@@ -3624,36 +3041,18 @@ class TestFiendhunterBolts:
 
     def test_num_crits_in_breakdown(self) -> None:
         """Auto attack breakdown should include num_crits field."""
-        from unittest.mock import patch
-
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "base_attack_damage": 100,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 50,
-            "is_melee": True,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            base_attack_damage=100,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=50,
+        )
         abilities = {
             "Q": {
                 "name": "Test",
@@ -3687,44 +3086,32 @@ class TestFiendhunterBolts:
         assert autos["num_crits"] == 2
 
 
-class TestRagebladeOnHitAllItems:
+class TestRagebladeOnHitAllItems(_FightHarness):
     """Tests that phantom hits apply ALL on-hit effects, not just Rageblade."""
 
-    BASE_STATS: dict = {
-        "ability_haste": 0.0,
-        "armor_penetration_bonus_percent": 0.0,
-        "base_attack_damage": 0.0,
-        "basic_ability_haste": 0.0,
-        "bonus_attack_damage": 0.0,
-        "bonus_health": 0.0,
-        "bonus_mana": 0.0,
-        "health": 0.0,
-        "lethality": 0.0,
-        "max_mana": 0.0,
-        "move_speed": 0.0,
-        "omnivamp_percent": 0.0,
-        "resource_regen_per_second": 0.0,
-        "ultimate_haste": 0.0,
-        "item_haste": 0.0,
-        "attack_damage": 100,
-        "ability_power": 0,
-        "magic_penetration_flat": 0,
-        "magic_penetration_percent": 0,
-        "armor_penetration_percent": 0,
-        "flat_armor_penetration": 0,
-        "critical_strike_chance": 0,
-        "attack_speed": 1.0,
-        "attack_speed_ratio": 0.625,
-        "is_melee": True,
-        "level": 18,
-    }
-
-    def test_rageblade_only_hit_count(self) -> None:
-        """Rageblade's accelerated schedule yields 8 autos and 1 phantom."""
+    @pytest.mark.parametrize(
+        ("item_names", "on_hit_counts"),
+        [
+            (("Guinsoo's Rageblade",), {"Guinsoo's Rageblade": 9}),
+            (
+                ("Guinsoo's Rageblade", "Nashor's Tooth"),
+                {"Guinsoo's Rageblade": 9, "Nashor's Tooth": 9},
+            ),
+            (
+                ("Guinsoo's Rageblade", "Blade of the Ruined King"),
+                {"Guinsoo's Rageblade": 9, "Blade of the Ruined King": 9},
+            ),
+        ],
+    )
+    def test_every_on_hit_rides_the_phantom_schedule(
+        self, item_names, on_hit_counts
+    ) -> None:
+        """Rageblade's accelerated schedule is 8 autos and one phantom, and
+        every on-hit in the build is applied on it, not Rageblade's alone."""
         fight = calculate_fight_damage(
-            self.BASE_STATS,
+            self._make_stats(base_attack_damage=0.0, health=0.0, max_mana=0.0),
             {},
-            [{"name": "Guinsoo's Rageblade"}],
+            [{"name": name} for name in item_names],
             FightConfig(
                 target_health=3000,
                 target_armor=0,
@@ -3733,56 +3120,9 @@ class TestRagebladeOnHitAllItems:
                 auto_attack_uptime=1.0,
             ),
         )
-        rb = fight["breakdown"].get("on_hit_Guinsoo's Rageblade")
-        assert rb is not None
-        assert rb["count"] == 9  # 8 scheduled autos + 1 phantom
-
-    def test_rageblade_plus_nashors_hit_counts(self) -> None:
-        """Both Rageblade and Nashor's follow the same accelerated schedule."""
-        fight = calculate_fight_damage(
-            self.BASE_STATS,
-            {},
-            [
-                {"name": "Guinsoo's Rageblade"},
-                {"name": "Nashor's Tooth"},
-            ],
-            FightConfig(
-                target_health=3000,
-                target_armor=0,
-                target_magic_resistance=0,
-                fight_duration_seconds=7.0,
-                auto_attack_uptime=1.0,
-            ),
-        )
-        rb = fight["breakdown"]["on_hit_Guinsoo's Rageblade"]
-        nt = fight["breakdown"]["on_hit_Nashor's Tooth"]
-        assert rb["count"] == 9
-        assert nt["count"] == 9  # Nashor's also gets phantom hit bonus
-
-    def test_rageblade_plus_bork_hit_counts(self) -> None:
-        """BoRK receives the two phantom applications on the accelerated schedule."""
-        fight = calculate_fight_damage(
-            self.BASE_STATS,
-            {},
-            [
-                {"name": "Guinsoo's Rageblade"},
-                {"name": "Blade of the Ruined King"},
-            ],
-            FightConfig(
-                target_health=3000,
-                target_armor=0,
-                target_magic_resistance=0,
-                fight_duration_seconds=7.0,
-                auto_attack_uptime=1.0,
-            ),
-        )
-        autos = fight["breakdown"]["auto_attacks"]
-        rb = fight["breakdown"]["on_hit_Guinsoo's Rageblade"]
-        bork = fight["breakdown"]["on_hit_Blade of the Ruined King"]
-
-        assert autos["count"] == 8
-        assert rb["count"] == 9
-        assert bork["count"] == 9
+        assert fight["breakdown"]["auto_attacks"]["count"] == 8
+        for name, count in on_hit_counts.items():
+            assert fight["breakdown"][f"on_hit_{name}"]["count"] == count
 
     def test_bork_phantom_hit_double_procs_at_correct_hp(self) -> None:
         """BoRK phantom hit should proc at current HP after first BoRK hit."""
@@ -3813,7 +3153,7 @@ class TestRagebladeOnHitAllItems:
     def test_no_phantom_under_6_autos_with_bork(self) -> None:
         """The fifth scheduled swing reaches the first phantom threshold."""
         fight = calculate_fight_damage(
-            self.BASE_STATS,
+            self._make_stats(base_attack_damage=0.0, health=0.0, max_mana=0.0),
             {},
             [
                 {"name": "Guinsoo's Rageblade"},
@@ -3835,7 +3175,7 @@ class TestRagebladeOnHitAllItems:
     def test_phantom_hits_in_return_value(self) -> None:
         """Fight result should expose phantom_hit_autos for champion use."""
         fight = calculate_fight_damage(
-            self.BASE_STATS,
+            self._make_stats(base_attack_damage=0.0, health=0.0, max_mana=0.0),
             {},
             [{"name": "Guinsoo's Rageblade"}],
             FightConfig(
@@ -3864,7 +3204,7 @@ class TestRagebladeOnHitAllItems:
             },
         }
         fight = calculate_fight_damage(
-            self.BASE_STATS,
+            self._make_stats(base_attack_damage=0.0, health=0.0, max_mana=0.0),
             ability_damages,
             [{"name": "Guinsoo's Rageblade"}],
             FightConfig(
@@ -3880,7 +3220,7 @@ class TestRagebladeOnHitAllItems:
         assert passive_oh["count"] == 9
 
 
-class TestKrakenSlayerPhantomHitStacking:
+class TestKrakenSlayerPhantomHitStacking(_FightHarness):
     """Tests that Kraken Slayer gets stack acceleration from phantom hits.
 
     Phantom hits grant an extra Kraken stack (not an extra damage proc).
@@ -3921,34 +3261,18 @@ class TestKrakenSlayerPhantomHitStacking:
 
     def test_full_fight_kraken_plus_rageblade(self) -> None:
         """Integration test: Kraken + Rageblade in full fight shows correct procs."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "base_attack_damage": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "lethality": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100,
-            "ability_power": 0,
-            "magic_penetration_flat": 0,
-            "magic_penetration_percent": 0,
-            "armor_penetration_percent": 0,
-            "flat_armor_penetration": 0,
-            "critical_strike_chance": 0,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "is_melee": True,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            base_attack_damage=0.0,
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=100,
+            ability_power=0,
+            magic_penetration_flat=0,
+            magic_penetration_percent=0,
+            armor_penetration_percent=0,
+            flat_armor_penetration=0,
+            critical_strike_chance=0,
+        )
         fight = calculate_fight_damage(
             stats,
             {},
@@ -4127,39 +3451,18 @@ class TestHeartsteelDamage:
         assert abs(damage - 70.0) < 0.01
 
 
-class TestUmbralGlaiveNightstalker:
+class TestUmbralGlaiveNightstalker(_FightHarness):
     """Blackout readiness gates the typed first-auto true-damage packet."""
 
-    @staticmethod
-    def _stats() -> dict[str, float]:
-        return {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "health": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100.0,
-            "base_attack_damage": 100.0,
-            "ability_power": 0.0,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 1.0,
-            "lethality": 18.0,
-            "flat_armor_penetration": 18.0,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "armor_penetration_percent": 0.0,
-            "critical_strike_chance": 0.0,
-            "is_melee": False,
-            "level": 18,
-        }
+    def _stats(self) -> dict[str, float]:
+        return self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_speed_ratio=1.0,
+            lethality=18.0,
+            flat_armor_penetration=18.0,
+            is_melee=False,
+        )
 
     def test_ready_state_adds_true_damage_and_default_withholds(self) -> None:
         config = FightConfig(
@@ -4186,7 +3489,7 @@ class TestUmbralGlaiveNightstalker:
         ] == pytest.approx(77.0)
 
 
-class TestHexopticsC44BasicDamageAmp:
+class TestHexopticsC44BasicDamageAmp(_FightHarness):
     """Tests for Hexoptics C44 Magnification basic damage amplification."""
 
     # The amp itself left this registry for its declaration at 3.7-r2;
@@ -4207,35 +3510,13 @@ class TestHexopticsC44BasicDamageAmp:
 
     def test_fight_damage_auto_attacks_amplified(self) -> None:
         """Auto attack damage should be 10% higher with Hexoptics C44."""
-        champion_stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "flat_armor_penetration": 0.0,
-            "health": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100.0,
-            "base_attack_damage": 70.0,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "critical_strike_chance": 0.0,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "armor_penetration_flat": 0.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 0.0,
-            "ability_power": 0.0,
-            "is_melee": False,
-            "level": 18,
-        }
+        champion_stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            base_attack_damage=70.0,
+            armor_penetration_flat=0.0,
+            is_melee=False,
+        )
         items_with = [{"name": "Hexoptics C44"}]
         items_without: list[dict] = []
 
@@ -4273,35 +3554,12 @@ class TestHexopticsC44BasicDamageAmp:
 
     def test_fight_damage_melee_gets_reduced_amp(self) -> None:
         """A melee champion fights inside ~100 units, so the amp is ~2%."""
-        champion_stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "flat_armor_penetration": 0.0,
-            "health": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100.0,
-            "base_attack_damage": 70.0,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "critical_strike_chance": 0.0,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "armor_penetration_flat": 0.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 0.0,
-            "ability_power": 0.0,
-            "is_melee": True,
-            "level": 18,
-        }
+        champion_stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            base_attack_damage=70.0,
+            armor_penetration_flat=0.0,
+        )
         config = FightConfig(
             target_health=2000,
             target_armor=100,
@@ -4321,35 +3579,13 @@ class TestHexopticsC44BasicDamageAmp:
 
     def test_breakdown_shows_amplification(self) -> None:
         """Breakdown should include a 'Damage Amplification' entry."""
-        champion_stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "flat_armor_penetration": 0.0,
-            "health": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100.0,
-            "base_attack_damage": 70.0,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "critical_strike_chance": 0.0,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "armor_penetration_flat": 0.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 0.0,
-            "ability_power": 0.0,
-            "is_melee": False,
-            "level": 18,
-        }
+        champion_stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            base_attack_damage=70.0,
+            armor_penetration_flat=0.0,
+            is_melee=False,
+        )
         fight = calculate_fight_damage(
             champion_stats,
             {},
@@ -4369,7 +3605,7 @@ class TestHexopticsC44BasicDamageAmp:
         assert amp_entry["total_damage"] > 0
 
 
-class TestHorizonFocusHypershotAmp:
+class TestHorizonFocusHypershotAmp(_FightHarness):
     """Tests for Horizon Focus Hypershot damage amplification."""
 
     def test_parsed_values_from_json(self) -> None:
@@ -4394,35 +3630,17 @@ class TestHorizonFocusHypershotAmp:
 
     def test_first_ability_not_amped(self) -> None:
         """First ability triggers the mark and should NOT be amplified."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "flat_armor_penetration": 0.0,
-            "health": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 60.0,
-            "base_attack_damage": 60.0,
-            "attack_speed": 0.6,
-            "attack_speed_ratio": 0.625,
-            "critical_strike_chance": 0.0,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "armor_penetration_flat": 0.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 0.0,
-            "ability_power": 100.0,
-            "is_melee": False,
-            "level": 9,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=60.0,
+            base_attack_damage=60.0,
+            attack_speed=0.6,
+            armor_penetration_flat=0.0,
+            ability_power=100.0,
+            is_melee=False,
+            level=9,
+        )
         # Two abilities: Q (trigger) and E (amped)
         abilities = {
             "Q": {
@@ -4497,35 +3715,16 @@ class TestHorizonFocusHypershotAmp:
         Ahri Q deals magic (outgoing) + true (return). Only the magic
         outgoing hit triggers Hypershot; the true return hit should be amped.
         """
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "flat_armor_penetration": 0.0,
-            "health": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 60.0,
-            "base_attack_damage": 60.0,
-            "attack_speed": 0.6,
-            "attack_speed_ratio": 0.625,
-            "critical_strike_chance": 0.0,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "armor_penetration_flat": 0.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 0.0,
-            "ability_power": 0.0,
-            "is_melee": False,
-            "level": 9,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=60.0,
+            base_attack_damage=60.0,
+            attack_speed=0.6,
+            armor_penetration_flat=0.0,
+            is_melee=False,
+            level=9,
+        )
         # Simulate Ahri Q: mixed (magic out + true return), 100 each
         abilities = {
             "Q": {
@@ -4574,34 +3773,16 @@ class TestHorizonFocusHypershotAmp:
 
     def test_zero_damage_opener_does_not_block_hypershot_receipts(self) -> None:
         """A utility opener must not become Horizon Focus's trigger cast."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "flat_armor_penetration": 0.0,
-            "health": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 60.0,
-            "base_attack_damage": 60.0,
-            "attack_speed": 0.6,
-            "attack_speed_ratio": 0.625,
-            "critical_strike_chance": 0.0,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 0.0,
-            "ability_power": 100.0,
-            "is_melee": False,
-            "level": 9,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            attack_damage=60.0,
+            base_attack_damage=60.0,
+            attack_speed=0.6,
+            ability_power=100.0,
+            is_melee=False,
+            level=9,
+        )
         abilities = {
             "Q": {
                 "name": "Utility Q",
@@ -4644,7 +3825,7 @@ class TestHorizonFocusHypershotAmp:
         assert "damage_amp_Horizon Focus" in fight["timeline_coverage"]["exact_sources"]
 
 
-class TestHullbreakerSkipper:
+class TestHullbreakerSkipper(_FightHarness):
     """Tests for Hullbreaker Skipper stacking on-hit proc."""
 
     def test_parsed_values_from_json(self) -> None:
@@ -4704,35 +3885,9 @@ class TestHullbreakerSkipper:
 
     def test_fight_damage_with_hullbreaker(self) -> None:
         """Integration: Hullbreaker procs appear in fight breakdown."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "flat_armor_penetration": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100.0,
-            "base_attack_damage": 80.0,
-            "attack_speed": 1.0,
-            "attack_speed_ratio": 0.625,
-            "critical_strike_chance": 0.0,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "armor_penetration_flat": 0.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 0.0,
-            "ability_power": 0.0,
-            "health": 2000.0,
-            "is_melee": True,
-            "level": 10,
-        }
+        stats = self._make_stats(
+            max_mana=0.0, base_attack_damage=80.0, armor_penetration_flat=0.0, level=10
+        )
         fight = calculate_fight_damage(
             stats,
             {},
@@ -4753,40 +3908,21 @@ class TestHullbreakerSkipper:
         assert hb_entry["total_damage"] > 0
 
 
-class TestMuramanaMultiCastR:
+class TestMuramanaMultiCastR(_FightHarness):
     """Tests for Muramana ability procs on multi-cast abilities like Ahri R."""
 
     def test_r_procs_muramana_per_dash(self) -> None:
         """Ahri R has 3 dashes — Muramana should proc 3 times, not 1."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "flat_armor_penetration": 0.0,
-            "health": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 80.0,
-            "base_attack_damage": 60.0,
-            "attack_speed": 0.7,
-            "attack_speed_ratio": 0.625,
-            "critical_strike_chance": 0.0,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "armor_penetration_flat": 0.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 0.0,
-            "ability_power": 100.0,
-            "max_mana": 1500.0,
-            "is_melee": False,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            attack_damage=80.0,
+            base_attack_damage=60.0,
+            attack_speed=0.7,
+            armor_penetration_flat=0.0,
+            ability_power=100.0,
+            max_mana=1500.0,
+            is_melee=False,
+        )
 
         # Only R: 3 sub-casts
         abilities = {
@@ -4831,35 +3967,16 @@ class TestMuramanaMultiCastR:
 
     def test_single_cast_ability_procs_once(self) -> None:
         """A normal single-cast ability should proc Muramana once."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "flat_armor_penetration": 0.0,
-            "health": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 80.0,
-            "base_attack_damage": 60.0,
-            "attack_speed": 0.7,
-            "attack_speed_ratio": 0.625,
-            "critical_strike_chance": 0.0,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "armor_penetration_flat": 0.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 0.0,
-            "ability_power": 100.0,
-            "max_mana": 1500.0,
-            "is_melee": False,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            attack_damage=80.0,
+            base_attack_damage=60.0,
+            attack_speed=0.7,
+            armor_penetration_flat=0.0,
+            ability_power=100.0,
+            max_mana=1500.0,
+            is_melee=False,
+        )
         abilities = {
             "Q": {
                 "name": "Test Q",
@@ -4891,40 +4008,19 @@ class TestMuramanaMultiCastR:
         assert abs(mura_entry["total_damage"] - 22.5) < 1.0
 
 
-class TestNavoriFlickerbladeFight:
+class TestNavoriFlickerbladeFight(_FightHarness):
     """Integration tests for Navori CD refund in fight calculations."""
 
     def test_more_casts_with_navori(self) -> None:
         """Navori should produce more ability casts than without."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "flat_armor_penetration": 0.0,
-            "health": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100.0,
-            "base_attack_damage": 70.0,
-            "attack_speed": 1.5,
-            "attack_speed_ratio": 0.625,
-            "critical_strike_chance": 0.0,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "armor_penetration_flat": 0.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 0.0,
-            "ability_power": 0.0,
-            "is_melee": False,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            base_attack_damage=70.0,
+            attack_speed=1.5,
+            armor_penetration_flat=0.0,
+            is_melee=False,
+        )
         abilities = {
             "Q": {
                 "name": "Test Q",
@@ -4968,35 +4064,14 @@ class TestNavoriFlickerbladeFight:
 
     def test_r_not_affected(self) -> None:
         """R is always 1 cast — Navori should not change it."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "flat_armor_penetration": 0.0,
-            "health": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100.0,
-            "base_attack_damage": 70.0,
-            "attack_speed": 1.5,
-            "attack_speed_ratio": 0.625,
-            "critical_strike_chance": 0.0,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "armor_penetration_flat": 0.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 0.0,
-            "ability_power": 0.0,
-            "is_melee": False,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            base_attack_damage=70.0,
+            attack_speed=1.5,
+            armor_penetration_flat=0.0,
+            is_melee=False,
+        )
         abilities = {
             "R": {
                 "name": "Test R",
@@ -5024,35 +4099,14 @@ class TestNavoriFlickerbladeFight:
 
     def test_no_effect_in_one_rotation(self) -> None:
         """In one-rotation mode, Navori should not add extra casts."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "flat_armor_penetration": 0.0,
-            "health": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100.0,
-            "base_attack_damage": 70.0,
-            "attack_speed": 1.5,
-            "attack_speed_ratio": 0.625,
-            "critical_strike_chance": 0.0,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "armor_penetration_flat": 0.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 0.0,
-            "ability_power": 0.0,
-            "is_melee": False,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            base_attack_damage=70.0,
+            attack_speed=1.5,
+            armor_penetration_flat=0.0,
+            is_melee=False,
+        )
         abilities = {
             "Q": {
                 "name": "Test Q",
@@ -5081,35 +4135,14 @@ class TestNavoriFlickerbladeFight:
 
     def test_no_effect_without_autos(self) -> None:
         """With 0 uptime, Navori has no autos to refund with."""
-        stats = {
-            "ability_haste": 0.0,
-            "armor_penetration_bonus_percent": 0.0,
-            "basic_ability_haste": 0.0,
-            "bonus_attack_damage": 0.0,
-            "bonus_health": 0.0,
-            "bonus_mana": 0.0,
-            "flat_armor_penetration": 0.0,
-            "health": 0.0,
-            "max_mana": 0.0,
-            "move_speed": 0.0,
-            "omnivamp_percent": 0.0,
-            "resource_regen_per_second": 0.0,
-            "ultimate_haste": 0.0,
-            "item_haste": 0.0,
-            "attack_damage": 100.0,
-            "base_attack_damage": 70.0,
-            "attack_speed": 1.5,
-            "attack_speed_ratio": 0.625,
-            "critical_strike_chance": 0.0,
-            "magic_penetration_flat": 0.0,
-            "magic_penetration_percent": 0.0,
-            "armor_penetration_flat": 0.0,
-            "armor_penetration_percent": 0.0,
-            "lethality": 0.0,
-            "ability_power": 0.0,
-            "is_melee": False,
-            "level": 18,
-        }
+        stats = self._make_stats(
+            health=0.0,
+            max_mana=0.0,
+            base_attack_damage=70.0,
+            attack_speed=1.5,
+            armor_penetration_flat=0.0,
+            is_melee=False,
+        )
         abilities = {
             "Q": {
                 "name": "Test Q",

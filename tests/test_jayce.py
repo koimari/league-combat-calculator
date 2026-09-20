@@ -956,7 +956,6 @@ class TestReviewedCrowdControl:
             "E": "knockback",
             "R": "none",
         }
-        assert jayce.parse_abilities.cc_kinds == jayce.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):
         for slot, word in [["Q", "slow"], ["E", "knock"]]:

@@ -1222,23 +1222,22 @@ def test_the_two_committed_artifacts_are_each_read_once_per_process() -> None:
     assert git_calls == 0, f"the campaign range was walked {git_calls} times"
 
 
-def test_the_pinned_slice_tags_name_the_range_the_stage_records_declare() -> None:
+def test_the_pinned_slice_tags_name_the_range_the_stage_records_declare(
+    cold_memo,
+) -> None:
     """One home for the range; a tag map read against another one is refused."""
     pinned = json.loads(
         behavior_frontier.CAMPAIGN_SLICE_TAGS.read_text(encoding="utf-8")
     )
     assert pinned["range"] == behavior_frontier.campaign_range()
-    behavior_frontier._tag_first_seen.cache_clear()
-    try:
-        with (
-            mock.patch.object(
-                behavior_frontier, "campaign_range", return_value="deadbee..cafe000"
-            ),
-            pytest.raises(RuntimeError, match="campaign range"),
-        ):
-            behavior_frontier._tag_first_seen()
-    finally:
-        behavior_frontier._tag_first_seen.cache_clear()
+    cold_memo(behavior_frontier, "_tag_first_seen")
+    with (
+        mock.patch.object(
+            behavior_frontier, "campaign_range", return_value="deadbee..cafe000"
+        ),
+        pytest.raises(RuntimeError, match="campaign range"),
+    ):
+        behavior_frontier._tag_first_seen()
 
 
 def test_every_declared_stage_carries_a_blocker_a_reader_can_open() -> None:

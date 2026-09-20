@@ -21,8 +21,8 @@ import copy
 import pytest
 
 from src.app import app
+from src.calculator import ability_atoms
 from src.calculator.ability_atoms import (
-    _ABILITY_ATOMS_MEMO,
     AbilityAtomQuery,
     required_ability_atom,
 )
@@ -292,7 +292,7 @@ class TestAtoms:
     sources; a wrong query raises naming the source (no literal fallback)."""
 
     @pytest.fixture(autouse=True)
-    def _fresh_atom_memo(self):
+    def _fresh_atom_memo(self, cold_memo):
         """Atomization is memoized on ``(data_version, champion_name)``.
 
         The key does not include the ability data, so a case that hands in
@@ -300,9 +300,7 @@ class TestAtoms:
         out of the intact cache — the corruption would never reach the
         parser and the raise it should provoke would silently not happen.
         """
-        _ABILITY_ATOMS_MEMO.clear()
-        yield
-        _ABILITY_ATOMS_MEMO.clear()
+        cold_memo(ability_atoms, "_ABILITY_ATOMS_MEMO")
 
     def test_damage_reduction_and_active_duration_atoms_resolve(self, briar_data):
         champion_data = {"name": "Briar", "abilities": briar_data["abilities"]}

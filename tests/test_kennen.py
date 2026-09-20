@@ -1,14 +1,12 @@
 """Kennen's crowd-control review: the stun is the mark's, not a slot's.
 
-A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-whether an ability event was a control event; an ability packet that never
-says makes the whole timed fight fall back to coarse ordering.  Kennen's
-``MODULE_CC`` declares P's stun and leaves Q, W, E and R ``CC_PER_PART``,
-because Mark of the Storm puts the stun on the target's stack count rather
-than on any one ability: the third application stuns, the first two do
-not, and every slot is capable of being either.  No part of those four
-authors a kind, so they stay unreviewed and P's own row carries the walk
-that says which applications those were.
+The roster-wide half of this review lives in ``test_module_cc_census.py``.
+Kennen's ``MODULE_CC`` declares P's stun and leaves Q, W, E and R
+``CC_PER_PART``, because Mark of the Storm puts the stun on the target's stack
+count rather than on any one ability: the third application stuns, the first
+two do not, and every slot is capable of being either. No part of those four
+authors a kind, so they stay unreviewed and P's own row carries the walk that
+says which applications those were.
 """
 
 import copy
@@ -137,7 +135,6 @@ class TestReviewedCrowdControl:
             "E": "per_part",
             "R": "per_part",
         }
-        assert kennen.parse_abilities.cc_kinds == kennen.MODULE_CC
         assert (
             "kennen's abilities apply a stack of mark of the storm to "
             "enemies hit for 6 seconds, refreshing on subsequent "

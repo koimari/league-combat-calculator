@@ -1,8 +1,6 @@
 """Swain's reviewed crowd control (``MODULE_CC`` plus R's per-variant part).
 
-A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-whether an ability event was a control event; an ability packet that never
-says makes the whole timed fight fall back to coarse ordering.
+The roster-wide half of this review lives in ``test_module_cc_census.py``.
 """
 
 import pytest
@@ -50,14 +48,6 @@ class TestReviewedCrowdControl:
     def test_the_r_wrapper_keeps_the_compiled_parsers_phase(self):
         """A compiled packet slot always carries ``.phase``; the wrapper reads it."""
         assert swain.SLOTS["R"].phase == "damage"
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Swain") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Swain")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 class TestPricedRows:

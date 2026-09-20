@@ -231,7 +231,7 @@ class TestOneWalkPerPassAtRuntime:
         assert sink.walk_invocations == passes
 
     def test_a_two_pass_roster_prices_its_fight_once_inside_its_two_passes(
-        self,
+        self, monkeypatch
     ) -> None:
         """The declared pass budget is a ceiling the composition does not spend.
 
@@ -273,23 +273,20 @@ class TestOneWalkPerPassAtRuntime:
             return original(*args, **kwargs)
 
         sink = self._sink()
-        timeline_module._compose_pass = spy  # pylint: disable=W0212
-        try:
-            build_participant_timeline(
-                main.champion_data,
-                main.request.level,
-                list(main.item_data),
-                FightParams.from_request(
-                    {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
-                ),
-                main_stats=main.stats,
-                main_defenses=main.defenses,
-                enemies=enemies,
-                allies=[],
-                search_context=CoupledSearchContext(work_counters=sink),
-            )
-        finally:
-            timeline_module._compose_pass = original  # pylint: disable=W0212
+        monkeypatch.setattr(timeline_module, "_compose_pass", spy)
+        build_participant_timeline(
+            main.champion_data,
+            main.request.level,
+            list(main.item_data),
+            FightParams.from_request(
+                {"fight_mode": "one_rotation", "role": "mid"}, deterministic=True
+            ),
+            main_stats=main.stats,
+            main_defenses=main.defenses,
+            enemies=enemies,
+            allies=[],
+            search_context=CoupledSearchContext(work_counters=sink),
+        )
 
         budget = pass_count(
             timeline_module._cross_pass_dependencies(  # pylint: disable=W0212

@@ -14,11 +14,7 @@ _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 class TestReviewedCrowdControl:
     """Zac's reviewed crowd control, and what declaring it clears.
 
-    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-    whether an ability event was a control event; an ability packet that
-    never says makes the whole timed fight fall back to coarse ordering.
-    ``MODULE_CC`` is where this kit answers, read from the cached text, and
-    the probe below is the reason it exists.
+    The roster-wide half of this review lives in ``test_module_cc_census.py``.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -30,7 +26,6 @@ class TestReviewedCrowdControl:
             "R": CC_PER_PART,
             "P": "none",
         }
-        assert zac.parse_abilities.cc_kinds == zac.MODULE_CC
         q_text = cc_review.slot_text(data, "Q")
         assert "slowing them by 40% for 0.5 seconds" in q_text
         # Q's root and knock-up need a second, different target.
@@ -51,14 +46,6 @@ class TestReviewedCrowdControl:
         assert opening.cc_kind == "knockback"
         assert later.cc_kind == "slow"
         assert later.count == 3
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Zac") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Zac")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 def test_p_is_modeled_through_the_1269_cell_division_revive() -> None:

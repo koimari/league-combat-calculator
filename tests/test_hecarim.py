@@ -33,7 +33,6 @@ class TestReviewedCrowdControl:
             "R": "fear",
             "P": "none",
         }
-        assert hecarim.parse_abilities.cc_kinds == hecarim.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):
         for slot, word in [["E", "knock"], ["R", "fear"]]:
@@ -51,10 +50,3 @@ class TestReviewedCrowdControl:
             "R": ["fear"],
             "passive": ["none"],
         }
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = _CC.coverage()
-
-        assert coverage["complete"] is True
-        assert coverage["certification"] == "event_order_certified"
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

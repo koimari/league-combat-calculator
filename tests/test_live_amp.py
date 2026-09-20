@@ -17,6 +17,7 @@ target and a killing blow does not retroactively qualify its own hit.
 
 from __future__ import annotations
 
+import sys
 from functools import lru_cache
 from types import SimpleNamespace
 
@@ -418,6 +419,7 @@ def test_the_preview_survives_where_it_is_the_answer_and_is_not_the_applied_numb
 
 def test_removing_the_coupled_interpreter_drops_it_to_zero_not_to_the_preview(
     monkeypatch,
+    cold_memo,
 ):
     """Zero with a receipt, never a fall back to the pair engine's figure.
 
@@ -439,11 +441,10 @@ def test_removing_the_coupled_interpreter_drops_it_to_zero_not_to_the_preview(
     preview = body["breakdown"]["shadowflame_Shadowflame"]["total_damage"]
     assert applied > 0.0
     assert preview > 0.0
-    _roster.cache_clear()
+    cold = cold_memo(sys.modules[__name__], "_roster")
     monkeypatch.setattr(
         participant_timeline, "_live_amps_of", lambda attacker, defender, params: ()
     )
-    without = _roster((ALLY,))
-    _roster.cache_clear()
+    without = cold((ALLY,))
     assert _applied(without) == 0.0
     assert _death_time(without) > _death_time(body)

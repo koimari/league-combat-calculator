@@ -33,7 +33,6 @@ class TestReviewedCrowdControl:
             "P": "none",
             "E": "none",
         }
-        assert graves.parse_abilities.cc_kinds == graves.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):
         for slot, word in [["W", "slow"]]:
@@ -45,13 +44,6 @@ class TestReviewedCrowdControl:
 
     def test_every_reviewed_part_carries_its_kind(self):
         assert _CC.kinds() == {"Q": ["none"], "W": ["slow"], "R": ["none"]}
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = _CC.coverage()
-
-        assert coverage["complete"] is True
-        assert coverage["certification"] == "event_order_certified"
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 def test_the_packet_states_the_shotgun_override_and_a_two_leg_q():

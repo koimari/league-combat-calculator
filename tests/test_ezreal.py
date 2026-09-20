@@ -408,7 +408,6 @@ class TestReviewedCrowdControl:
             "R": "none",
             "P": "none",
         }
-        assert ezreal.parse_abilities.cc_kinds == ezreal.MODULE_CC
 
     def test_control_free_slots_name_every_word_their_text_contains(self):
         for slot, expected in [["P", []], ["Q", []], ["W", []], ["E", []], ["R", []]]:
@@ -422,10 +421,3 @@ class TestReviewedCrowdControl:
             "E": ["none"],
             "R": ["none"],
         }
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = _CC.coverage()
-
-        assert coverage["complete"] is True
-        assert coverage["certification"] == "event_order_certified"
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

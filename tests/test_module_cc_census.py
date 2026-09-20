@@ -11,6 +11,12 @@ declaration drifting back out of ``MODULE_CC`` one module at a time is
 invisible per module and obvious per roster, and so is the other count
 this file owns: the slots whose declaration reaches no event row, where
 the kit's control is real and the fight engine never sees it.
+
+The three claims that are roster-wide rather than per kit live here as
+well, one parametrized row each: the parser carries the declaration, the
+probe fight shows no ability row without a reviewed kind, and the
+control-armed shield certifies.  A champion file keeps what is its own,
+its ``MODULE_CC`` literal and its reading of the cached text.
 """
 
 import ast
@@ -158,6 +164,22 @@ UNCARRIED = {
     ("Twitch", "W"): "slow",
 }
 
+#: Ability rows the probe fight shows with no reviewed kind, champion ->
+#: slots.  Every one is a ``CC_PER_PART`` slot whose parts answer nothing
+#: (the pointers :data:`SILENT_PER_PART` names), so the control-armed
+#: shield has no kind to read and its own row is what goes coarse.
+UNREVIEWED = {
+    "Akali": ["Q"],
+    "Anivia": ["Q", "R"],
+    "Annie": ["Q", "R", "W"],
+    "Brand": ["Q", "R"],
+    "Kennen": ["E", "Q", "R", "W"],
+    "Shaco": ["R"],
+    "Xayah": ["E"],
+    "Xin Zhao": ["Q"],
+    "Zyra": ["W"],
+}
+
 CHAMPIONS = sorted(_CHAMPION_MODULES)
 
 
@@ -234,6 +256,35 @@ def test_every_module_names_every_slot_it_emits():
 
 
 @pytest.mark.parametrize("name", CHAMPIONS)
+def test_module_cc_is_the_declaration_the_parser_wired(name):
+    """``packet_module.compile`` stamps the parser from ``MODULE_CC``, so
+    a module that grew a second declaration site says so here once rather
+    than in its own file 76 times."""
+    module = get_champion_module_contract(name).module
+    assert module.parse_abilities.cc_kinds == module.MODULE_CC
+
+
+@pytest.mark.parametrize("name", CHAMPIONS)
+def test_every_ability_event_carries_the_review(name):
+    """An ability row the fight shows with no reviewed kind is control the
+    item passives armed by it can never read, and the count of them is the
+    census, not one paste per champion file."""
+    assert cc_review.unreviewed_ability_slots(name) == UNREVIEWED.get(name, [])
+
+
+@pytest.mark.parametrize("name", CHAMPIONS)
+def test_a_timed_fimbulwinter_fight_is_fully_certified(name):
+    """The control-token probe, through the public entry: a kit whose rows
+    all name a kind certifies, and the nine that leave a slot unreviewed
+    take the shield's own row coarse with them."""
+    coverage = cc_review.fimbulwinter_coverage(name)
+    assert coverage["coarse_sources"] == (
+        ["fimbulwinter_everlasting"] if name in UNREVIEWED else []
+    )
+    assert coverage["complete"] is (name not in UNREVIEWED)
+
+
+@pytest.mark.parametrize("name", CHAMPIONS)
 def test_only_a_per_part_slot_authors_a_kind_on_its_parts(name):
     """The engine refuses a part-authored kind on any other slot, so this
     is what that refusal amounts to across the roster."""
@@ -246,7 +297,7 @@ def test_only_a_per_part_slot_authors_a_kind_on_its_parts(name):
     per_part = {slot for slot, kind in contract.cc_kinds.items() if kind == CC_PER_PART}
     assert per_part == PER_PART.get(name, set()), name
     for slot, kind in contract.cc_kinds.items():
-        if kind in (CC_PER_PART, "none"):
+        if kind == CC_PER_PART:
             continue
         result_key = "passive" if slot == "P" else slot
         entry = parsed.get(result_key)

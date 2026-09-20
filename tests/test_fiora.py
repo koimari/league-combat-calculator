@@ -1,8 +1,6 @@
 """Fiora's reviewed crowd control (``MODULE_CC``), whole kit.
 
-A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-whether an ability event was a control event; an ability packet that never
-says makes the whole timed fight fall back to coarse ordering.
+The roster-wide half of this review lives in ``test_module_cc_census.py``.
 """
 
 from src.calculator.champions import fiora, parse_champion_abilities
@@ -20,7 +18,6 @@ class TestReviewedCrowdControl:
             "P": "none",
             "R": "none",
         }
-        assert fiora.parse_abilities.cc_kinds == fiora.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Fiora")

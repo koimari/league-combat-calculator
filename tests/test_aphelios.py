@@ -88,7 +88,6 @@ class TestReviewedCrowdControl:
             "P": CC_PER_PART,
             "W": "none",
         }
-        assert aphelios.parse_abilities.cc_kinds == aphelios.MODULE_CC
 
     def test_only_gravitums_q_controls_what_it_damages(self):
         text = cc_review.slot_text(cc_review.kit("Aphelios"), "Q")

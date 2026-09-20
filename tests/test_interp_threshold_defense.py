@@ -252,6 +252,7 @@ def test_the_heal_cadence_is_read_off_the_declaration_not_the_config() -> None:
 
 def test_a_declaration_without_the_cadence_key_stops_rather_than_guesses(
     monkeypatch: pytest.MonkeyPatch,
+    cold_memo,
 ) -> None:
     """The banned shape: a silent default cadence standing in for a number.
 
@@ -285,10 +286,9 @@ def test_a_declaration_without_the_cadence_key_stops_rather_than_guesses(
         )
 
     monkeypatch.setattr(threshold_defense, "behavior_rules", stripped)
-    threshold_defense._THRESHOLD_HEALTH_TICK_MEMO.clear()
+    cold_memo(threshold_defense, "_THRESHOLD_HEALTH_TICK_MEMO")
     with pytest.raises(DefenseInterpretationError) as excinfo:
         threshold_defense.threshold_health_tick_interval()
-    threshold_defense._THRESHOLD_HEALTH_TICK_MEMO.clear()
 
     assert TICK_INTERVAL_KEY in str(excinfo.value)
 

@@ -33,7 +33,6 @@ class TestReviewedCrowdControl:
             "P": "none",
             "R": "none",
         }
-        assert heimerdinger.parse_abilities.cc_kinds == heimerdinger.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):
         for slot, word in [["E", "slow"]]:
@@ -53,13 +52,6 @@ class TestReviewedCrowdControl:
             "W": ["none"],
             "E": ["slow"],
         }
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = _CC.coverage()
-
-        assert coverage["complete"] is True
-        assert coverage["certification"] == "event_order_certified"
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 def test_the_turret_packet_carries_pet_damage_and_its_cadence():

@@ -181,9 +181,7 @@ class TestCharmIsTheKitsOneReviewedControl:
 class TestReviewedCrowdControl:
     """Charm is the kit's one control; every other slot reviews to "none".
 
-    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-    whether an ability event was a control event; an ability packet that
-    never says makes the whole timed fight fall back to coarse ordering.
+    The roster-wide half of this review lives in ``test_module_cc_census.py``.
     """
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
@@ -194,7 +192,6 @@ class TestReviewedCrowdControl:
             "W": "none",
             "R": "none",
         }
-        assert ahri.parse_abilities.cc_kinds == ahri.MODULE_CC
 
     def test_the_declared_kind_is_the_one_the_cached_kit_gives(self):
         """Charm knocks down, charms and slows one target, so the reviewed

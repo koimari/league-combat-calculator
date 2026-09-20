@@ -278,7 +278,7 @@ def test_the_compiled_walk_matches_or_receipts_every_declaration(declared) -> No
 
 
 def test_the_light_tuple_path_raises_rather_than_pricing_a_declaration_at_zero(
-    declared, monkeypatch: pytest.MonkeyPatch
+    declared, monkeypatch: pytest.MonkeyPatch, cold_memo
 ) -> None:
     """Clause 4: the one failure a returned number could not disclose.
 
@@ -313,19 +313,15 @@ def test_the_light_tuple_path_raises_rather_than_pricing_a_declaration_at_zero(
         {**trigger_stream.CAPABILITIES, capability.mechanic: capability}
     )
     monkeypatch.setattr(trigger_stream, "CAPABILITIES", grown)
-    trigger_stream.tuple_incapable_items.cache_clear()
-    trigger_stream.streams_for.cache_clear()
-    try:
-        assert aura in trigger_stream.tuple_incapable_items()
-        require_event_view({"damage_events": []}, (aura,))
-        with pytest.raises(EventViewStarvationError) as raised:
-            require_event_view({"damage_events_tuple": True}, (aura,))
-        assert aura in str(raised.value)
-        assert "damage_events" in str(raised.value)
-        assert "STARVED" in str(raised.value)
-    finally:
-        trigger_stream.tuple_incapable_items.cache_clear()
-        trigger_stream.streams_for.cache_clear()
+    cold_memo(trigger_stream, "tuple_incapable_items")
+    cold_memo(trigger_stream, "streams_for")
+    assert aura in trigger_stream.tuple_incapable_items()
+    require_event_view({"damage_events": []}, (aura,))
+    with pytest.raises(EventViewStarvationError) as raised:
+        require_event_view({"damage_events_tuple": True}, (aura,))
+    assert aura in str(raised.value)
+    assert "damage_events" in str(raised.value)
+    assert "STARVED" in str(raised.value)
 
 
 def test_deleting_an_interpreter_withholds_the_synthetic_item_too(

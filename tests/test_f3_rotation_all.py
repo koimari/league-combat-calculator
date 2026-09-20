@@ -29,7 +29,11 @@ from dataclasses import replace
 
 import pytest
 
-from src.calculator import data_registry
+from src.calculator import (
+    ability_dps_matrix,
+    champion_rotation_rule,
+    data_registry,
+)
 from src.calculator.ability_dps_matrix import _MATRIX_DPS_CACHE
 from src.calculator.cast_dependency import (
     DEPENDENCY_KINDS,
@@ -1124,7 +1128,7 @@ class TestTheDerivationReadsDeclarations:
             assert receipt.active, f"{name} merged with no active row"
 
     def test_a_declared_cycle_in_a_live_parse_raises(
-        self, champion_by_name, monkeypatch
+        self, champion_by_name, monkeypatch, cold_memo
     ) -> None:
         """A declaring champion never falls back from a cycle (D-85).
 
@@ -1133,7 +1137,7 @@ class TestTheDerivationReadsDeclarations:
         the module, and serving the base order would be exactly the
         silent fallback this phase exists to end.
         """
-        from src.calculator import cast_edge_resolution, champion_rotation_rule
+        from src.calculator import cast_edge_resolution
 
         cycle = (
             CastDependency(
@@ -1155,16 +1159,11 @@ class TestTheDerivationReadsDeclarations:
             monkeypatch.setattr(
                 module, "get_champion_cast_dependencies", lambda name: cycle
             )
-        _DERIVED_RULE_CACHE.clear()
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
         data = champion_by_name["Ahri"]
         parsed = _parse(data, 11, (), {})
-        try:
-            with pytest.raises(ResolvedCycleError) as caught:
-                derive_champion_rule(
-                    "Ahri", parsed, data, get_champion_cast_order("Ahri")
-                )
-        finally:
-            _DERIVED_RULE_CACHE.clear()
+        with pytest.raises(ResolvedCycleError) as caught:
+            derive_champion_rule("Ahri", parsed, data, get_champion_cast_order("Ahri"))
         assert "declared" in str(caught.value)
 
     def test_the_same_cycle_without_a_declaration_still_falls_back(
@@ -1234,50 +1233,41 @@ class TestTheDerivedMemoHoldsTheFullKitRule:
 
     @pytest.mark.parametrize(("champion", "narrow", "wide"), _MEMO_CROSS_TALK)
     def test_the_two_requests_really_do_differ_in_shape(
-        self, champion, narrow, wide, champion_by_name
+        self, champion, narrow, wide, champion_by_name, cold_memo
     ) -> None:
         """Guard the guard: a row whose two requests agree tests nothing."""
         data = champion_by_name[champion]
-        try:
-            _DERIVED_RULE_CACHE.clear()
-            narrow_cold = self._rule(champion, data, narrow)
-            _DERIVED_RULE_CACHE.clear()
-            wide_cold = self._rule(champion, data, wide)
-        finally:
-            _DERIVED_RULE_CACHE.clear()
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
+        narrow_cold = self._rule(champion, data, narrow)
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
+        wide_cold = self._rule(champion, data, wide)
         assert set(narrow_cold.order) < set(wide_cold.order)
 
     @pytest.mark.parametrize(("champion", "narrow", "wide"), _MEMO_CROSS_TALK)
     def test_a_narrow_parse_does_not_poison_a_wider_one(
-        self, champion, narrow, wide, champion_by_name
+        self, champion, narrow, wide, champion_by_name, cold_memo
     ) -> None:
         data = champion_by_name[champion]
-        try:
-            _DERIVED_RULE_CACHE.clear()
-            cold = self._rule(champion, data, wide)
-            _DERIVED_RULE_CACHE.clear()
-            self._rule(champion, data, narrow)
-            warm = self._rule(champion, data, wide)
-        finally:
-            _DERIVED_RULE_CACHE.clear()
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
+        cold = self._rule(champion, data, wide)
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
+        self._rule(champion, data, narrow)
+        warm = self._rule(champion, data, wide)
         assert list(warm.order) == list(cold.order)
 
     @pytest.mark.parametrize(("champion", "narrow", "wide"), _MEMO_CROSS_TALK)
     def test_the_wider_parse_does_not_shrink_the_narrower_one(
-        self, champion, narrow, wide, champion_by_name
+        self, champion, narrow, wide, champion_by_name, cold_memo
     ) -> None:
         """The other direction: a slot the fight does not hold stays out."""
         data = champion_by_name[champion]
-        try:
-            _DERIVED_RULE_CACHE.clear()
-            cold = self._rule(champion, data, narrow)
-            _DERIVED_RULE_CACHE.clear()
-            wide_cold = self._rule(champion, data, wide)
-            _DERIVED_RULE_CACHE.clear()
-            self._rule(champion, data, wide)
-            warm = self._rule(champion, data, narrow)
-        finally:
-            _DERIVED_RULE_CACHE.clear()
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
+        cold = self._rule(champion, data, narrow)
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
+        wide_cold = self._rule(champion, data, wide)
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
+        self._rule(champion, data, wide)
+        warm = self._rule(champion, data, narrow)
         assert list(warm.order) == list(cold.order)
         assert set(warm.order) < set(wide_cold.order)
 
@@ -1296,30 +1286,29 @@ class TestTheDeclarationProbeStaysOutOfTheMemo:
     """
 
     def test_passing_the_module_s_own_declarations_changes_nothing(
-        self, champion_by_name
+        self, champion_by_name, cold_memo
     ) -> None:
         from src.calculator.champions import get_champion_cast_dependencies
 
         data = champion_by_name["Syndra"]
         parsed = _parse(data, 18, (), {})
         certified = get_champion_cast_order("Syndra")
-        try:
-            _DERIVED_RULE_CACHE.clear()
-            implicit = derive_champion_rule("Syndra", parsed, data, certified)
-            _DERIVED_RULE_CACHE.clear()
-            explicit = derive_champion_rule(
-                "Syndra",
-                parsed,
-                data,
-                certified,
-                declarations=get_champion_cast_dependencies("Syndra"),
-            )
-        finally:
-            _DERIVED_RULE_CACHE.clear()
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
+        implicit = derive_champion_rule("Syndra", parsed, data, certified)
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
+        explicit = derive_champion_rule(
+            "Syndra",
+            parsed,
+            data,
+            certified,
+            declarations=get_champion_cast_dependencies("Syndra"),
+        )
         assert list(explicit.order) == list(implicit.order)
         assert explicit.rationale == implicit.rationale
 
-    def test_a_probe_is_live_and_leaves_no_trace(self, champion_by_name) -> None:
+    def test_a_probe_is_live_and_leaves_no_trace(
+        self, champion_by_name, cold_memo
+    ) -> None:
         """A reduced probe answers differently and the memo stays clean."""
         from src.calculator.champions import get_champion_cast_dependencies
 
@@ -1327,22 +1316,17 @@ class TestTheDeclarationProbeStaysOutOfTheMemo:
         parsed = _parse(data, 18, (), {}, champion_options={"splinters": 0})
         certified = get_champion_cast_order("Syndra")
         declared = get_champion_cast_dependencies("Syndra")
-        try:
-            _DERIVED_RULE_CACHE.clear()
-            probe = derive_champion_rule(
-                "Syndra",
-                parsed,
-                data,
-                certified,
-                {"splinters": 0},
-                declarations=(),
-            )
-            assert _DERIVED_RULE_CACHE == {}, "a probe was memoised"
-            real = derive_champion_rule(
-                "Syndra", parsed, data, certified, {"splinters": 0}
-            )
-        finally:
-            _DERIVED_RULE_CACHE.clear()
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
+        probe = derive_champion_rule(
+            "Syndra",
+            parsed,
+            data,
+            certified,
+            {"splinters": 0},
+            declarations=(),
+        )
+        assert _DERIVED_RULE_CACHE == {}, "a probe was memoised"
+        real = derive_champion_rule("Syndra", parsed, data, certified, {"splinters": 0})
         assert declared, "Syndra declares nothing — this probe proves nothing"
         assert list(probe.order) != list(real.order)
 
@@ -1356,9 +1340,11 @@ class TestTheRotationMemosInvalidateOnData:
     a number no rule computed against the data the response cites.
     """
 
-    def test_both_cache_keys_carry_the_counter(self, champion_by_name) -> None:
-        _DERIVED_RULE_CACHE.clear()
-        _MATRIX_DPS_CACHE.clear()
+    def test_both_cache_keys_carry_the_counter(
+        self, champion_by_name, cold_memo
+    ) -> None:
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
+        cold_memo(ability_dps_matrix, "_MATRIX_DPS_CACHE")
         data = champion_by_name["Ahri"]
         parsed = _parse(data, 11, (), {})
         derive_champion_rule("Ahri", parsed, data, get_champion_cast_order("Ahri"))
@@ -1367,7 +1353,7 @@ class TestTheRotationMemosInvalidateOnData:
         assert any(key[-1] == version for key in _MATRIX_DPS_CACHE)
 
     def test_a_refresh_is_not_served_a_pre_refresh_order(
-        self, champion_by_name, monkeypatch
+        self, champion_by_name, monkeypatch, cold_memo
     ) -> None:
         """Bump the counter and the stale rule cannot be handed back.
 
@@ -1375,7 +1361,7 @@ class TestTheRotationMemosInvalidateOnData:
         at the same version it is served (proving the cache is live), and
         after the bump it is gone.
         """
-        _DERIVED_RULE_CACHE.clear()
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
         data = champion_by_name["Ahri"]
         parsed = _parse(data, 11, (), {})
         fresh = derive_champion_rule(
@@ -1395,7 +1381,6 @@ class TestTheRotationMemosInvalidateOnData:
             "Ahri", parsed, data, get_champion_cast_order("Ahri")
         )
         assert list(after.order) == list(fresh.order)
-        _DERIVED_RULE_CACHE.clear()
 
 
 # ---------------------------------------------------------------------------
@@ -1444,7 +1429,7 @@ def _without(dependency, declarations):
     return tuple(other for other in declarations if other is not dependency)
 
 
-def _derived_order_route(name, dependency, declarations, champion_data):
+def _derived_order_route(name, dependency, declarations, champion_data, cold_memo):
     """Does the derived order notice this declaration going away?"""
     from scripts.cast_dependency_audit import option_states
 
@@ -1452,7 +1437,7 @@ def _derived_order_route(name, dependency, declarations, champion_data):
     certified = get_champion_cast_order(name)
 
     def order(kept, parsed, options):
-        _DERIVED_RULE_CACHE.clear()
+        cold_memo(champion_rotation_rule, "_DERIVED_RULE_CACHE")
         try:
             return list(
                 derive_champion_rule(
@@ -1466,8 +1451,6 @@ def _derived_order_route(name, dependency, declarations, champion_data):
             )
         except ResolvedCycleError:
             return None
-        finally:
-            _DERIVED_RULE_CACHE.clear()
 
     for _label, options in option_states(name):
         for level in (11, 18):
@@ -1568,7 +1551,7 @@ class TestEveryDeclarationIsLoadBearing:
 
     @pytest.mark.parametrize("champion", _DECLARING_CHAMPIONS)
     def test_every_declaration_takes_the_route_the_receipt_records(
-        self, champion, champion_by_name
+        self, champion, champion_by_name, cold_memo
     ) -> None:
         from src.calculator.champions import get_champion_cast_dependencies
 
@@ -1578,7 +1561,9 @@ class TestEveryDeclarationIsLoadBearing:
         for dependency in declarations:
             key = (champion, dependency.slot, dependency.requires)
             routes = set()
-            if _derived_order_route(champion, dependency, declarations, data):
+            if _derived_order_route(
+                champion, dependency, declarations, data, cold_memo
+            ):
                 routes.add("derived_order")
             if _custom_order_route(champion, dependency, declarations, data):
                 routes.add("custom_order_refusal")

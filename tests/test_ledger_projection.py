@@ -97,6 +97,8 @@ def _inputs(
     champion: str,
     item_names: tuple[str, ...],
     threshold_heal: float,
+    monkeypatch,
+    *,
     keystone: str = "",
 ):
     """The two input records one matrix row resolves to, live off ``run_fight``.
@@ -128,19 +130,15 @@ def _inputs(
         captured["shield"] = real_shield_inputs(config, items)
         return captured["shield"]
 
-    pipeline_module.resolve_ledger_inputs = spy_ledger
-    damage_module.shield_outcome_inputs = spy_shield
-    try:
-        captured["result"] = run_fight(
-            get_champion(champion),
-            18,
-            [get_item_by_name(name) for name in item_names],
-            _params(threshold_heal, keystone),
-            score_only=True,
-        )
-    finally:
-        pipeline_module.resolve_ledger_inputs = real_ledger_inputs
-        damage_module.shield_outcome_inputs = real_shield_inputs
+    monkeypatch.setattr(pipeline_module, "resolve_ledger_inputs", spy_ledger)
+    monkeypatch.setattr(damage_module, "shield_outcome_inputs", spy_shield)
+    captured["result"] = run_fight(
+        get_champion(champion),
+        18,
+        [get_item_by_name(name) for name in item_names],
+        _params(threshold_heal, keystone),
+        score_only=True,
+    )
     return captured
 
 
@@ -197,9 +195,9 @@ def test_requires_fields_names_exactly_the_stat_derived_conditions():
     }
 
 
-def test_a_probe_cannot_read_a_stat_its_condition_did_not_declare():
+def test_a_probe_cannot_read_a_stat_its_condition_did_not_declare(monkeypatch):
     """``requires_fields`` is load-bearing, not a comment beside the probe."""
-    inputs = _inputs("Annie", ("Luden's Echo",), 0.0)["ledger"]
+    inputs = _inputs("Annie", ("Luden's Echo",), 0.0, monkeypatch)["ledger"]
     assert inputs.raw_stat(C.LIFESTEAL_STAT, "lifesteal_percent") == 0.0
     with pytest.raises(ledger_declarations.UndeclaredStatRead):
         inputs.raw_stat(C.LIFESTEAL_STAT, "omnivamp_percent")
@@ -228,7 +226,7 @@ def test_the_healing_registry_owns_every_declaring_champion():
 )
 # comment-ok: width - a pylint pragma cannot wrap
 def test_the_fight_returns_the_projection_the_conditions_chose(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-    label, champion, item_names, keystone, threshold_heal, fires
+    label, champion, item_names, keystone, threshold_heal, fires, monkeypatch
 ):
     """The gate's answer *is* the projection, on every matrix row.
 
@@ -238,7 +236,9 @@ def test_the_fight_returns_the_projection_the_conditions_chose(  # pylint: disab
     value — the two would agree even if the call site had been rewired to
     something else.
     """
-    captured = _inputs(champion, item_names, threshold_heal, keystone)
+    captured = _inputs(
+        champion, item_names, threshold_heal, monkeypatch, keystone=keystone
+    )
     ledger_inputs = captured["ledger"]
     shield_inputs = captured["shield"]
 
@@ -257,11 +257,13 @@ def test_the_fight_returns_the_projection_the_conditions_chose(  # pylint: disab
     assert set(fires) <= raised, label
 
 
-def test_the_matrix_raises_every_declared_condition():
+def test_the_matrix_raises_every_declared_condition(monkeypatch):
     """The projection choice is not vacuous: each condition fires somewhere."""
     raised: set[ledger_declarations.AdequacyCondition] = set()
     for _label, champion, item_names, keystone, threshold_heal, _fires in MATRIX:
-        captured = _inputs(champion, item_names, threshold_heal, keystone)
+        captured = _inputs(
+            champion, item_names, threshold_heal, monkeypatch, keystone=keystone
+        )
         raised |= {demand.condition for demand in lp.ledger_demands(captured["ledger"])}
         raised |= {
             demand.condition for demand in lp.shield_outcome_demands(captured["shield"])
@@ -272,9 +274,9 @@ def test_the_matrix_raises_every_declared_condition():
 # ── receipts ────────────────────────────────────────────────────────────────
 
 
-def test_a_starved_reader_is_named_not_merely_counted():
+def test_a_starved_reader_is_named_not_merely_counted(monkeypatch):
     """A demand carries who owns the mechanic and what would have read it."""
-    captured = _inputs("Aatrox", ("Imperial Mandate",), 0.0)
+    captured = _inputs("Aatrox", ("Imperial Mandate",), 0.0, monkeypatch)
     demands = {
         demand.condition: demand for demand in lp.ledger_demands(captured["ledger"])
     }
@@ -289,9 +291,9 @@ def test_a_starved_reader_is_named_not_merely_counted():
     assert holder.reason
 
 
-def test_the_shield_outcome_names_its_takedown_holder():
+def test_the_shield_outcome_names_its_takedown_holder(monkeypatch):
     """Cryptbloom's stream is synthesized from the outcome, so it keeps it."""
-    captured = _inputs("Annie", ("Cryptbloom",), 0.0)
+    captured = _inputs("Annie", ("Cryptbloom",), 0.0, monkeypatch)
     demands = lp.shield_outcome_demands(captured["shield"])
 
     assert [demand.condition for demand in demands] == [C.PAIR_OUTCOME_STREAM]
@@ -299,9 +301,9 @@ def test_the_shield_outcome_names_its_takedown_holder():
     assert pair_outcome_items() == frozenset({"Cryptbloom"})
 
 
-def test_a_two_holder_build_names_both_holders():
+def test_a_two_holder_build_names_both_holders(monkeypatch):
     """``holders_in`` answered yes; the demand list answers who."""
-    captured = _inputs("Annie", ("Imperial Mandate", "Black Cleaver"), 0.0)
+    captured = _inputs("Annie", ("Imperial Mandate", "Black Cleaver"), 0.0, monkeypatch)
     holders = [
         demand.owner
         for demand in lp.ledger_demands(captured["ledger"])
@@ -311,9 +313,9 @@ def test_a_two_holder_build_names_both_holders():
     assert holders == [ItemOwner("Imperial Mandate"), ItemOwner("Black Cleaver")]
 
 
-def test_an_engine_owned_condition_names_the_deriving_function():
+def test_an_engine_owned_condition_names_the_deriving_function(monkeypatch):
     """No item owns life steal, so the receipt names the code that reads it."""
-    captured = _inputs("Annie", ("Bloodthirster",), 0.0)
+    captured = _inputs("Annie", ("Bloodthirster",), 0.0, monkeypatch)
     demands = {
         demand.condition: demand for demand in lp.ledger_demands(captured["ledger"])
     }

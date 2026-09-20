@@ -524,23 +524,6 @@ class TestScatterTheWeakStun:
             for part in parsed["W"]["parts"]
         ] == [("magic", "slow", 0.0), ("true", "slow", 0.0)]
 
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self) -> None:
-        """MODULE_CC is total, so Unleashed Power's uncertified row still
-        carries the reviewed "none" and the control token is released."""
-        from src.calculator.calculate import calculate_payload
-
-        coverage = calculate_payload(
-            {
-                "champion": "Syndra",
-                "level": 18,
-                "items": ["Fimbulwinter"],
-                "fight_mode": "timed",
-                "include_auto_attacks": True,
-            }
-        )["timeline_coverage"]
-
-        assert coverage["coarse_sources"] == []
-
     def test_e_part_carries_stun_marker(self, syndra_data) -> None:
         (part,) = _parse(syndra_data)["E"]["parts"]
         assert part.cc_kind == "stun"

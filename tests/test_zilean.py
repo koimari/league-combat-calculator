@@ -22,11 +22,7 @@ from tests import cc_review
 class TestReviewedCrowdControl:
     """Zilean's reviewed crowd control, and what declaring it clears.
 
-    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-    whether an ability event was a control event; an ability packet that
-    never says makes the whole timed fight fall back to coarse ordering.
-    ``MODULE_CC`` is where this kit answers, read from the cached text, and
-    the probe below is the reason it exists.
+    The roster-wide half of this review lives in ``test_module_cc_census.py``.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -41,7 +37,6 @@ class TestReviewedCrowdControl:
             "W": "none",
             "R": "none",
         }
-        assert zilean.parse_abilities.cc_kinds == zilean.MODULE_CC
         lone = parse_champion_abilities(
             data, 18, 100.0, {"Q": 5, "W": 5, "E": 5, "R": 3}
         )
@@ -134,11 +129,3 @@ class TestReviewedCrowdControl:
 
         with pytest.raises(KeyError, match=r"Heal.*data/champions.json"):
             zilean.starting_revive_defense(18, {"ability_power": 0.0})
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Zilean") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Zilean")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

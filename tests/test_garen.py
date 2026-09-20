@@ -33,7 +33,6 @@ class TestReviewedCrowdControl:
             "P": "none",
             "W": "none",
         }
-        assert garen.parse_abilities.cc_kinds == garen.MODULE_CC
 
     def test_control_free_slots_name_every_word_their_text_contains(self):
         for slot, expected in [["Q", ["slow"]], ["E", []], ["R", []]]:
@@ -41,13 +40,6 @@ class TestReviewedCrowdControl:
 
     def test_every_reviewed_part_carries_its_kind(self):
         assert _CC.kinds() == {"Q": ["none"], "E": ["none"], "R": ["none"]}
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = _CC.coverage()
-
-        assert coverage["complete"] is True
-        assert coverage["certification"] == "event_order_certified"
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 def test_the_packet_states_judgments_spin_count_and_shred_threshold():

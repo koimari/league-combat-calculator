@@ -9,7 +9,6 @@ cached text it was read from, and prove it reaches the event ledger.
 
 import pytest
 
-from src.calculator.calculate import calculate_payload
 from src.calculator.champions import get_champion_module_contract, milio
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review, rider_probe
@@ -34,31 +33,6 @@ class TestReviewedCrowdControl:
         }
         for slot, phrase in QUOTED.items():
             assert phrase in cc_review.slot_text(cached, slot), slot
-
-    def test_every_ability_event_carries_the_review(self, cached):
-        """A declared kind lands on every part of the slot's row that can
-        carry it; the roster census counts the slots with no such part."""
-        parsed = milio.parse_abilities(cached, 18, 100.0)
-        for slot, kind in milio.MODULE_CC.items():
-            parts = cc_review.declared_parts(parsed, slot)
-            assert {part.cc_kind for part in parts} <= {kind}, slot
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        """The campaign's control-token probe, through the public entry."""
-        coverage = calculate_payload(
-            {
-                "champion": "Milio",
-                "level": 18,
-                "items": ["Fimbulwinter"],
-                "fight_mode": "timed",
-                "include_auto_attacks": True,
-            }
-        )["timeline_coverage"]
-
-        assert coverage["complete"] is True
-        assert coverage["certification"] == "event_order_certified"
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
-        assert coverage["coarse_sources"] == []
 
 
 class TestFiredUpRider:

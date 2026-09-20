@@ -717,13 +717,11 @@ class TestCrossParticipantAuthorities:
             assert table[source] is Authority[member]
         assert frozenset(sites) == frozenset(table)
 
-    def test_a_new_producer_joins_without_editing_a_list(self):
+    def test_a_new_producer_joins_without_editing_a_list(self, monkeypatch, cold_memo):
         """A seventh producer is a row the moment its capability parses."""
         seventh = _capability("synthetic.seventh", "Synthetic — Seventh")
-        with _grown_registry("synthetic.seventh", seventh):
-            assert (
-                _declared_authorities()["Synthetic — Seventh"] is Authority.COUPLED_ONLY
-            )
+        _grown_registry("synthetic.seventh", seventh, monkeypatch, cold_memo)
+        assert _declared_authorities()["Synthetic — Seventh"] is Authority.COUPLED_ONLY
 
     def test_an_undeclared_producer_fails_on_its_first_packet(self):
         """The declaration is required, so a silent seventh cannot exist."""

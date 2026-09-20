@@ -9,7 +9,6 @@ Reference damage (level 9, rank 5 Q, rank 3 W, rank 3 E, rank 1 R, 80 AP):
 
 import pytest
 
-from src.calculator.calculate import calculate_payload
 from src.calculator.champions import get_champion_module_contract, kogmaw
 from src.calculator.champions import parse_champion_abilities as parse_abilities
 from src.calculator.damage import calculate_fight_damage
@@ -539,31 +538,6 @@ class TestReviewedCrowdControl:
                 continue
             hits = cc_review.any_control_hits(kogmaw_data, slot)
             assert hits == [], slot
-
-    def test_every_ability_event_carries_the_review(self, kogmaw_data):
-        """A declared kind lands on every part of the slot's row that can
-        carry it; the roster census counts the slots with no such part."""
-        parsed = kogmaw.parse_abilities(kogmaw_data, 18, 100.0)
-        for slot, kind in kogmaw.MODULE_CC.items():
-            parts = cc_review.declared_parts(parsed, slot)
-            assert {part.cc_kind for part in parts} <= {kind}, slot
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        """The campaign's control-token probe, through the public entry."""
-        coverage = calculate_payload(
-            {
-                "champion": "Kog'Maw",
-                "level": 18,
-                "items": ["Fimbulwinter"],
-                "fight_mode": "timed",
-                "include_auto_attacks": True,
-            }
-        )["timeline_coverage"]
-
-        assert coverage["complete"] is True
-        assert coverage["certification"] == "event_order_certified"
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
-        assert coverage["coarse_sources"] == []
 
 
 class TestCoverageMap:

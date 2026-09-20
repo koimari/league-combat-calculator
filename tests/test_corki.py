@@ -599,29 +599,3 @@ class TestReviewedCcFreeKit:
                     text = (effect.get("description") or "").lower()
                     hits = [word for word in control_words if word in text]
                     assert hits == [], f"{slot}: {hits}"
-
-    def test_every_ability_event_carries_the_review(self, corki_data) -> None:
-        """Reviewing a kit only counts where the ledger can see it."""
-        parsed = _parse(corki_data)
-        for slot, entry in parsed.items():
-            for part in entry.get("parts", ()):
-                assert part.cc_kind == "none", slot
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self) -> None:
-        """The campaign's control-token probe, through the public entry."""
-        from src.calculator.calculate import calculate_payload
-
-        coverage = calculate_payload(
-            {
-                "champion": "Corki",
-                "level": 18,
-                "items": ["Fimbulwinter"],
-                "fight_mode": "timed",
-                "include_auto_attacks": True,
-            }
-        )["timeline_coverage"]
-
-        assert coverage["complete"] is True
-        assert coverage["certification"] == "event_order_certified"
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
-        assert coverage["coarse_sources"] == []
