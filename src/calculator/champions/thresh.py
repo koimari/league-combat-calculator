@@ -21,6 +21,7 @@ from typing import Any
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
 from .inputs import int_option
+from .module_helpers import ability_slot
 from .packet_module import build_packet_module
 from .slot_entries import ability_on_hit_entry
 from .slot_extract import ability_name, extract_value
@@ -46,11 +47,9 @@ _MAX_SOULS = 500
 # component only.
 
 
-def _damnation(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _damnation(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: +1 AP and +1 bonus armor per Soul stack (BUFF phase)."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
 
     souls = int(ctx.options.get("souls", _DEFAULT_SOULS))
     souls = min(max(souls, 0), _MAX_SOULS)

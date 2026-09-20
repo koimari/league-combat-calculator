@@ -49,7 +49,7 @@ from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import int_option
-from .module_helpers import typed_damage
+from .module_helpers import ability_slot, typed_damage
 from .packet_module import build_packet_module
 from .slot_extract import ability_name, extract_named
 from .slotlib import with_item_on_hits
@@ -72,11 +72,9 @@ _TIER3_STACKS = int(data_value(_SMOLDER_Q_SPELL, "StackTier3"))
 _BURN_DURATION = data_value(_SMOLDER_Q_SPELL, "Tier3_DotLength")
 
 
-def _dragon_practice(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _dragon_practice(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: documented zero-damage row tied to the tier-3 burn on Q."""
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
     stacks = max(0, int(ctx.options.get("p_stacks", _TIER3_STACKS)))
     return {
         "name": ability_name(ability),

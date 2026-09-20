@@ -51,6 +51,7 @@ from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat
+from .module_helpers import ability_slot
 from .packet_module import build_packet_module
 from .slot_control import with_control
 from .slot_entries import on_hit_entry
@@ -118,7 +119,8 @@ def _bravado_window_terms(ability: Mapping[str, Any]) -> tuple[int, float, float
     )
 
 
-def _bravado(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _bravado(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: the sourced on-attack packet of a cast-armed, refreshing window.
 
     ``empowers_next_auto`` cannot carry this passive — it multiplies
@@ -128,9 +130,6 @@ def _bravado(ctx: SlotCtx) -> dict[str, Any] | None:
     against the accepted cast timeline and the fight's swings to spend
     at most ``max_charges`` charges per live window.
     """
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
     leveling = find_named_leveling(ability, PER_LEVEL_SCALING)
     if leveling is None:
         raise ValueError(

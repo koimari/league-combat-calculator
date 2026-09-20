@@ -52,7 +52,7 @@ from ..binary_roots import data_value, spell_object
 from ..control_spec import ControlEvent
 from .pet_window import derived_attack_count
 from .engine import ONHIT, SlotCtx
-from .module_helpers import named_damage, ranked_slot
+from .module_helpers import ability_slot, named_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry, on_hit_entry
@@ -85,11 +85,9 @@ _BACKSTAB_BONUS_AD_RATIO = data_value(
 BACKSTAB_CRIT_EFFECTIVENESS = 1.0
 
 
-def _backstab(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _backstab(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: the from-behind bonus on however many attacks land there."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     flat = extract_named(
         ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target, level=ctx.level
     )

@@ -31,6 +31,7 @@ from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
+from .module_helpers import ability_slot
 from .packet_module import build_packet_module
 from .slot_extract import ability_name, find_named_leveling, sum_modifiers
 
@@ -47,16 +48,14 @@ _P_BLEED_DURATION = data_value(_TALON_PASSIVE_SPELL, "BleedDuration")
 _P_BLEED_TICK_INTERVAL = 0.125
 
 
-def _blades_end(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _blades_end(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: one 3-stack consume bleed per fight (``passive_procs`` option).
 
     Abilities apply the Wound stacks and a basic attack consumes them, so
     an ``auto_attacks_only`` window has nothing to consume however many
     procs the option asks for.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
     if ctx.option("auto_attacks_only"):
         return None
     count = max(0, int(ctx.option("passive_procs")))

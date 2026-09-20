@@ -33,7 +33,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
-from .module_helpers import typed_damage
+from .module_helpers import ability_slot, typed_damage
 from .packet_module import build_packet_module
 from .slot_cc import CC_PER_PART
 from .slot_entries import STEROID_ZERO, damage_entry
@@ -50,11 +50,9 @@ _P_HEALTH_PER_FRAGMENT = data_value(
 _P_MAX_FRAGMENTS = 30
 
 
-def _ravenous_flock(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _ravenous_flock(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: 15 permanent bonus health for each Soul Fragment held."""
-    ability = ctx.ability("P")
-    if ability is None:
-        return None
 
     fragments = min(max(int(ctx.option("p_soul_fragments")), 0), _P_MAX_FRAGMENTS)
     bonus_health = _P_HEALTH_PER_FRAGMENT * fragments

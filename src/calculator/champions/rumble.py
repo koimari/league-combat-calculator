@@ -53,6 +53,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx
+from .module_helpers import ability_slot
 from .packet_module import build_packet_module
 from .slot_entries import on_hit_entry
 from .slot_extract import (
@@ -250,7 +251,8 @@ def _overheat_attack_speed(ability: dict[str, Any], level: int) -> float:
     return granted
 
 
-def _junkyard_titan(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _junkyard_titan(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: the Overheated window — its on-hit damage, bonus AS, and lockout.
 
     The "Bonus Magic Damage" leveling row is a per-LEVEL array (20
@@ -272,9 +274,6 @@ def _junkyard_titan(ctx: SlotCtx) -> dict[str, Any] | None:
     Overheats, how many seconds of bonus attack speed that buys and which
     swings are empowered are all read off the plan that happened.
     """
-    ability = ctx.ability("P")
-    if ability is None:
-        return None
     per_auto = extract_named(
         ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
     )

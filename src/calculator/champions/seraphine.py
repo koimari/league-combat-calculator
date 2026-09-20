@@ -85,7 +85,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
 from .inputs import bool_option, int_option
-from .module_helpers import buff_window_share, ranked_slot
+from .module_helpers import ability_slot, buff_window_share, ranked_slot
 from .packet_module import build_packet_module
 from .slot_control import with_control
 from .slot_entries import damage_entry, on_hit_entry
@@ -119,11 +119,9 @@ _NOTE_CAP = 4
 _W_WINDOW_SOURCE = "Seraphine.W[0].effects[0].description"
 
 
-def _stage_presence(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _stage_presence(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: the empowered attack fires every active Note at the target."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     per_note = extract_named(
         ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target, level=ctx.level
     )

@@ -51,7 +51,7 @@ from ..timed_stacks import TimedStackState
 from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS
 from .engine import DEBUFF, SlotCtx
 from .inputs import bool_option, int_option
-from .module_helpers import no_damage, ranked_slot
+from .module_helpers import ability_slot, no_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slot_cc import CC_PER_PART
 from .slot_entries import STEROID_ZERO, damage_entry
@@ -178,11 +178,9 @@ def _ferocity(ctx: SlotCtx) -> int:
     return _ferocity_state(ctx).stacks
 
 
-def _unseen_predator(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _unseen_predator(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: Ferocity stack state row (no enemy damage)."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     stacks = _ferocity(ctx)
     state = (
         "next basic ability is EMPOWERED (consumes all 4 stacks)"

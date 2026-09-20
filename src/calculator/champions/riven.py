@@ -40,6 +40,7 @@ from typing import Any
 
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
+from .module_helpers import ability_slot
 from .packet_module import build_packet_module
 from .slot_entries import damage_entry, on_hit_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
@@ -96,11 +97,9 @@ def _blade_of_the_exile(ctx: SlotCtx) -> dict[str, Any] | None:
 _blade_of_the_exile.phase = BUFF
 
 
-def _runic_blade(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _runic_blade(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: empowered basic attacks deal per-level % AD bonus physical damage."""
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
     percent = extract_named(
         ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target
     )

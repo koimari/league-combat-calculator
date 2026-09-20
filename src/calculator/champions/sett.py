@@ -28,7 +28,7 @@ from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS
 from .engine import SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
-from .module_helpers import no_damage, ranked_slot
+from .module_helpers import ability_slot, no_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slot_entries import attach_self_shield, damage_entry
 from .slot_extract import (
@@ -92,11 +92,9 @@ _PIT_GRIT_CEILING = CachedSentence(
 )
 
 
-def _pit_grit(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _pit_grit(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: alternating-punch combo — Right Punch bonus physical damage."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     punches = min(max(int(ctx.option("p_right_punches")), 0), 30)
     if punches <= 0:
         return no_damage(

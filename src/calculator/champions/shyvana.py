@@ -34,7 +34,7 @@ from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .slot_entries import STEROID_ZERO, attach_self_shield, damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .slotlib import simple_damage
@@ -87,11 +87,9 @@ def _scalemail_per_stack(passive: dict[str, Any] | None) -> tuple[float, float]:
     return float(match.group("armor")), float(match.group("mr"))
 
 
-def _scalemail(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _scalemail(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: the sourced per-stack armor and magic resistance (BUFF phase)."""
-    ability = ctx.ability("P")
-    if ability is None:
-        return None
     armor_per_stack, mr_per_stack = _scalemail_per_stack(ability)
     stacks = min(max(int(ctx.option("scalemail_stacks")), 0), _SCALEMAIL_MAX_STACKS)
     bonus_armor = stacks * armor_per_stack
@@ -149,7 +147,8 @@ def _emberstrike(
     return entry
 
 
-def _inferno_aegis(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("W")
+def _inferno_aegis(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """W: the sourced self-shield plus the explosion damage.
 
     The shield is granted at the cast and consumed by the explosion: with
@@ -165,9 +164,6 @@ def _inferno_aegis(ctx: SlotCtx) -> dict[str, Any] | None:
     authored by the healing rule in ``healing.py``, keyed on the W
     damage events and gated on the dragon-form marker in this detail.
     """
-    ability = ctx.ability("W")
-    if ability is None:
-        return None
     rank = ctx.rank_for("W")
     recast = bool(ctx.option("w_recast"))
     dragon = bool(ctx.option("dragon_form"))
@@ -226,10 +222,8 @@ def _inferno_aegis(ctx: SlotCtx) -> dict[str, Any] | None:
     )
 
 
-def _molten_burst(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("E")
-    if ability is None:
-        return None
+@ability_slot("E")
+def _molten_burst(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     rank = ctx.rank_for("E")
     dragon = bool(ctx.option("dragon_form"))
     attr = "Increased/Explosion Magic Damage" if dragon else "Magic Damage"

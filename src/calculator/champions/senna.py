@@ -42,6 +42,7 @@ from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import int_option
+from .module_helpers import ability_slot
 from .packet_module import build_packet_module
 from .slot_control import with_control
 from .slot_entries import attach_self_shield
@@ -121,11 +122,9 @@ _DAWNING_SHADOW_SHIELD_DURATION_SECONDS = data_value(_SENNA_R_SPELL, "ShieldDura
 _DAWNING_SHADOW_MIST_RATIO = calculation_coefficient(_SENNA_R_SPELL, "TotalShield")
 
 
-def _absolution(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _absolution(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: Mist stat buffs + Weakened Soul every-2nd-hit %health proc."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
 
     stacks = int(ctx.option("senna_mist_stacks"))
     stacks = min(max(stacks, 0), 300)
