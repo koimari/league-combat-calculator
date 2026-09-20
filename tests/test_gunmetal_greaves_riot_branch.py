@@ -165,7 +165,7 @@ def _audit_entry() -> dict:
 def _binary_item() -> dict:
     """The parsed game-file record Items/3172 (16.15.8024387)."""
     if not BINARY_ITEMS_PATH.exists():
-        pytest.skip("local item game-file evidence is unavailable")
+        pytest.skip("local item-binary evidence is unavailable")
     with BINARY_ITEMS_PATH.open(encoding="utf-8") as handle:
         binary = json.load(handle)
     record = binary.get("Items/3172")
@@ -572,7 +572,7 @@ def test_the_movement_magnitude_is_unsourced_and_the_registry_invents_none():
     assert "noxian_gait_move_speed_percent" in message
 
 
-@pytest.mark.needs_game_files
+@pytest.mark.needs_item_binary
 def test_decay_duration_is_sourced_and_binary_confirmed():
     """The 2.0s decay is sourced from the binary capture ONLY now:
     riotDescription carries no Noxian Gait sentence (the

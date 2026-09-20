@@ -35,15 +35,11 @@ and a check that reports skipped is a check that reports nothing.
 
 - In a *filtered* session the full-session tier is **not collected**,
   because only a complete collection can answer it.
-- On a machine without one of ``RESOURCES`` — the character game files, or
-  ``node`` — the nodes marked as needing it are **not collected**, and
-  ``pytest_terminal_summary`` names how many and why.
-  ``scripts/resource_markers.py`` is the gate that every guarded test
-  carries its marker.
+- On a machine without one of ``tests/resource_gate.py``'s resources, the
+  nodes marked as needing it are **not collected**, and the count is named
+  in the terminal summary, under ``-n`` as well, where each worker hands
+  its own count to the controller over ``workeroutput``.
 """
-
-import shutil
-from pathlib import Path
 
 import pytest
 
@@ -60,6 +56,12 @@ from tests.coverage_resolver import (
     FULL_SESSION_MARKER,
     node_facts,
     record_session,
+)
+from tests.resource_gate import (
+    NOT_RUN,
+    NOT_RUN_WIRE,
+    RESOURCES,
+    absent_resources,
 )
 
 
@@ -368,29 +370,6 @@ def fight():
 # ---------------------------------------------------------------------------
 
 
-ROOT = Path(__file__).resolve().parent.parent
-
-#: A local resource a test cannot run without, and how to ask whether this
-#: machine has it.  The same ruling as the tier above: a node that needs one
-#: is deselected and reported, never skipped green.
-RESOURCES = {
-    "needs_game_files": (
-        "the character game files under data/bin and data/gamefiles",
-        lambda: all(
-            any((ROOT / tree).glob("*.bin.json"))
-            for tree in ("data/bin/characters", "data/gamefiles/characters")
-        ),
-    ),
-    "needs_node": (
-        "node, for the browser probes that shell out to it",
-        lambda: shutil.which("node") is not None,
-    ),
-}
-
-#: What this session did not run, by resource, for the terminal summary.
-NOT_RUN: pytest.StashKey[dict[str, int]] = pytest.StashKey()
-
-
 def pytest_configure(config: pytest.Config) -> None:
     """Register the tier marker and one marker per local resource."""
     config.addinivalue_line(
@@ -407,17 +386,33 @@ def pytest_configure(config: pytest.Config) -> None:
         )
 
 
-def _absent_resources() -> set[str]:
-    """Every resource marker whose resource this machine does not have."""
-    return {marker for marker, (_, present) in RESOURCES.items() if not present()}
+def pytest_sessionfinish(session: pytest.Session) -> None:
+    """Hand an xdist worker's counts to the controller, which never collects.
+
+    Under ``-n`` the deselection happens in each worker, and neither
+    ``pytest_deselected`` nor a worker's terminal summary reaches the
+    controller, so the run would print nothing at all.  ``workeroutput`` is
+    xdist's wire for exactly this; it exists only inside a worker.
+    """
+    wire = getattr(session.config, "workeroutput", None)
+    if wire is not None:
+        wire[NOT_RUN_WIRE] = dict(session.config.stash.get(NOT_RUN, {}))
+
+
+def pytest_testnodedown(node, error) -> None:  # pylint: disable=unused-argument
+    """Take one worker's counts; every worker collects the same whole set."""
+    counts = getattr(node, "workeroutput", {}).get(NOT_RUN_WIRE, {})
+    not_run = node.config.stash.setdefault(NOT_RUN, {})
+    for marker, count in counts.items():
+        not_run[marker] = max(not_run.get(marker, 0), count)
 
 
 def pytest_terminal_summary(terminalreporter) -> None:
     """Name what this run did not do, so an absent resource cannot read green."""
     for marker, count in sorted(terminalreporter.config.stash.get(NOT_RUN, {}).items()):
-        description = RESOURCES[marker][0]
+        nodes = "node needs" if count == 1 else "nodes need"
         terminalreporter.write_line(
-            f"NOT RUN: {count} nodes need {description}", yellow=True
+            f"NOT RUN: {count} {nodes} {RESOURCES[marker][0]}", yellow=True
         )
 
 
@@ -457,7 +452,7 @@ def pytest_collection_modifyitems(
     full = _is_full_session(config)
     config.stash[FULL_SESSION] = full
     dropped = set() if full else {FULL_SESSION_MARKER}
-    dropped |= _absent_resources()
+    dropped |= absent_resources()
     not_run: dict[str, int] = {}
     if dropped:
         deselected = [

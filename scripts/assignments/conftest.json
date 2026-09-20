@@ -1,0 +1,14 @@
+{
+ "source": "tests/conftest.py",
+ "decisions": [
+  "The resource vocabulary is a leaf so the scanner's gate can read it without importing conftest, which pulls in half of src/calculator; the pytest hooks that act on it stay in conftest, which is the only place pytest looks for them.",
+  "_absent_resources is published as absent_resources once moved: a residue importing a private name from a leaf is the leaf's name, not its own."
+ ],
+ "modules": [
+  {
+   "path": "tests/resource_gate.py",
+   "docstring": "Which local resources this machine has, and what a run owes when one is absent.",
+   "defs": ["ROOT", "RESOURCES", "NOT_RUN", "NOT_RUN_WIRE", "_absent_resources"]
+  }
+ ]
+}

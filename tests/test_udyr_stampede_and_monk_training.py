@@ -403,12 +403,12 @@ class TestTheStunIsAuthoredAsASourcedControlEvent:
         row = udyr.parse_abilities(data, 18, 0.0, dict(RANKS), champion_options={})["E"]
         assert row["control_events"][0].duration == pytest.approx(0.75)
 
-    @pytest.mark.needs_game_files
+    @pytest.mark.needs_gamefile_cache
     def test_the_binary_corroborates_the_stun_duration(self):
         """The SECOND receipt — skips without the local cache."""
         assert set(_data_values("UdyrE")["StunDuration"]) == {0.75}
 
-    @pytest.mark.needs_game_files
+    @pytest.mark.needs_gamefile_cache
     def test_the_binary_on_target_cooldown_matches_the_wiki_ladder(self):
         """Riot ``DataValues`` are rank-0-indexed; indices 1-6 are ranks 1-6."""
         icd = _data_values("UdyrE")["ICD"]
@@ -419,7 +419,7 @@ class TestTheStunIsAuthoredAsASourcedControlEvent:
 
         assert icd[1:7] == pytest.approx(wiki, abs=1e-6)
 
-    @pytest.mark.needs_game_files
+    @pytest.mark.needs_gamefile_cache
     def test_the_binary_corroborates_the_named_awaken_payload(self):
         values = _data_values("UdyrE")
 
@@ -545,7 +545,7 @@ class TestBridgeBetweenStaysReceiptedOpen:
         assert "30% bonus attack speed" in prose
         assert "refund 5% of Awakened Spirit's total cooldown" in prose
 
-    @pytest.mark.needs_game_files
+    @pytest.mark.needs_gamefile_cache
     def test_monk_training_is_corroborated_by_the_binary(self):
         """The SECOND receipt — skips without the local cache."""
         calc = _binary_record("UdyrPassive")["mSpell"]["mSpellCalculations"][

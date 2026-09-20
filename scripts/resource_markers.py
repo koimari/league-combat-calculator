@@ -32,12 +32,13 @@ TESTS = ROOT / "tests"
 
 #: Each resource, the marker that names it, and the skip reasons that mean
 #: "this machine does not have it".  A reason outside this table is a skip
-#: about something else and is not this rule's business.
+#: about something else and is not this rule's business, and no reason may
+#: match two markers: the three game-file trees are three resources, and a
+#: phrase that fits two of them would pick one by dict order.
 RESOURCES = {
-    "needs_game_files": (
-        "game-file evidence is unavailable",
-        "gitignored local game-file cache",
-    ),
+    "needs_game_files": ("game-file evidence is unavailable",),
+    "needs_item_binary": ("item-binary evidence is unavailable",),
+    "needs_gamefile_cache": ("gitignored local game-file cache",),
     "needs_node": ("node is not installed",),
 }
 

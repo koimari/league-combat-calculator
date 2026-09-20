@@ -143,7 +143,7 @@ class TestRapidFireIsAModeledWindowedSteroid:
         assert atoms["timing.active_duration"]["values"] == [7.0]
         assert atoms["timing.active_duration"]["units"] == ["s"]
 
-    @pytest.mark.needs_game_files
+    @pytest.mark.needs_gamefile_cache
     def test_the_binary_agrees_with_the_wiki_on_both(self):
         values = _data_values("TristanaQ")
 
