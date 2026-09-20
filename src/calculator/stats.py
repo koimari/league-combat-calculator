@@ -1,5 +1,6 @@
 """Module for calculating champion stats at any level with items applied."""
 
+import math
 from collections.abc import Mapping
 from typing import Any
 
@@ -177,6 +178,13 @@ def calculate_total_stats(
         * (1.0 + pool_item_mana_regen_percent / 100.0)
         / 5.0
     )
+    # The mana and energy walks integrate this per event, so a non-finite
+    # cached manaRegen would publish as mana restored rather than raise.
+    if not math.isfinite(resource_regen_per_second):
+        raise ValueError(
+            "resource_regen_per_second is not finite: cached manaRegen "
+            f"{cdm.get('manaRegen', {})!r}"
+        )
     base_health_regen_per_five = growth_stat(
         cdm.get("healthRegen", {}).get("flat", 0),
         cdm.get("healthRegen", {}).get("perLevel", 0),

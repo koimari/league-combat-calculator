@@ -1,10 +1,12 @@
-"""Cached item stat maps must fail closed without breaking sparse fixtures."""
+"""Cached stat maps must fail closed without breaking sparse fixtures."""
 
+import copy
 import math
 
 import pytest
 
 from src.calculator.item_stat_block import get_item_stats
+from src.calculator.stats import calculate_total_stats
 
 
 def test_sparse_synthetic_item_stats_remain_zero_filled():
@@ -55,3 +57,17 @@ def test_validation_cache_rechecks_a_replaced_source_stats_map():
 
     with pytest.raises(ValueError, match="Cached item refreshable"):
         get_item_stats(item)
+
+
+@pytest.mark.parametrize("broken", [math.nan, math.inf])
+def test_a_non_finite_cached_mana_regen_raises(ahri_data: dict, broken: float):
+    """The mana and energy walks integrate this stat once per event.
+
+    A non-finite value would reach every ``OP_REGEN`` amount and publish as
+    mana restored, so the stat sheet refuses it and names the cached record.
+    """
+    champion = copy.deepcopy(ahri_data)
+    champion["stats"]["manaRegen"]["flat"] = broken
+
+    with pytest.raises(ValueError, match="resource_regen_per_second is not finite"):
+        calculate_total_stats(champion, 11, [])
