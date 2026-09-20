@@ -390,23 +390,23 @@ def deferral_rows() -> dict[str, Mapping[str, Any]]:
     two are told apart structurally rather than by a flag.  Refusing an empty
     set would be an instrument that stops working on the commit the debt
     reaches zero.  What such a refusal is worth is catching a read that found
-    no rows *because it read the wrong thing*, so that is what it
-    checks: the frontier's deferral block has to be present and
-    well-formed, and an empty ``rows`` inside a present block is the tree
-    saying the debt is paid.
+    no rows *because it read the wrong thing*, so that is what it checks:
+    counter 4 has to be present and carry its dated unserved-lane receipts.
+    The deferral block retires with the last of its fourteen rows, so an
+    absent block and an empty ``rows`` both mean the tree says the debt is
+    paid.
     """
     counter = json.loads(FRONTIER_PATH.read_text(encoding="utf-8"))["counters"][
         "counter_4"
     ]
-    deferrals = counter.get("deferrals")
-    if not isinstance(deferrals, Mapping) or "rows" not in deferrals:
+    dated = counter.get("receipts", {}).get("dated")
+    if not isinstance(dated, Mapping):
         raise ScheduleError(
-            "the frontier records no receipt-walk deferral BLOCK; a schedule "
-            "built off a counter that publishes no deferrals is reading the "
+            "the frontier records no counter 4 unserved-lane receipts; a "
+            "schedule built off a counter that publishes none is reading the "
             "wrong artifact rather than reading a paid debt"
         )
-    rows = deferrals["rows"]
-    dated = counter["receipts"]["dated"]
+    rows = counter.get("deferrals", {}).get("rows", {})
     out: dict[str, Mapping[str, Any]] = {}
     for key, row in rows.items():
         family, _, lane = key.partition("/")
