@@ -72,6 +72,7 @@ from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import delayed_damage, no_damage_slot, ranked_slot
+from .shared_option_keys import AURELION_SOL_STARDUST_STACKS
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
@@ -226,7 +227,7 @@ def _beam_per_second(
 
 def _burst_damage(ctx: SlotCtx, ability: dict[str, Any], rank: int, ap: float) -> float:
     """One primary-target Stardust burst: flat + % AP + Stardust % max HP."""
-    stacks = float(ctx.option("stardust_stacks"))
+    stacks = float(ctx.option(AURELION_SOL_STARDUST_STACKS))
     max_hp = ctx.target_stat("target_max_health")
     return (
         extract_value(ability, "Bonus Magic Damage", rank, 0)
@@ -311,7 +312,7 @@ def _singularity(
     # Cassiopeia rule).
     entry["dot_duration"] = _E_DURATION
 
-    stacks = float(ctx.option("stardust_stacks"))
+    stacks = float(ctx.option(AURELION_SOL_STARDUST_STACKS))
     threshold_pct = _E_EXECUTE_BASE_PCT + _E_EXECUTE_PCT_PER_100_STARDUST * (
         stacks / 100.0
     )
@@ -359,7 +360,7 @@ _astral_flight = no_damage_slot(
 
 OPTIONS: list[dict[str, Any]] = [
     int_option(
-        "stardust_stacks",
+        AURELION_SOL_STARDUST_STACKS,
         0,
         minimum=0,
         maximum=999,

@@ -46,6 +46,7 @@ from .contract_vocabulary import coverage
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import ability_slot, no_damage_slot
+from .shared_option_keys import BARD_CHIMES
 from .slot_cc import CC_PER_PART
 from .slot_control import with_control, with_control_event
 from .slot_entries import ability_on_hit_entry, support_cast
@@ -144,7 +145,7 @@ def _tier_value(tiers: tuple, chimes: int) -> Any:
 def _travelers_call(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: meep on-hit magic damage, applications capped by stock + recharge."""
 
-    chimes = max(0, int(ctx.options.get("chimes", _DEFAULT_CHIMES)))
+    chimes = max(0, int(ctx.options.get(BARD_CHIMES, _DEFAULT_CHIMES)))
     ap = ctx.stat("ability_power")
     per_meep = (
         _MEEP_BASE + _MEEP_PER_TIER * (chimes // _CHIMES_PER_TIER) + _MEEP_AP_RATIO * ap
@@ -195,7 +196,7 @@ _tempered_fate = no_damage_slot(
 
 OPTIONS: list[dict[str, Any]] = [
     int_option(
-        "chimes",
+        BARD_CHIMES,
         _DEFAULT_CHIMES,
         minimum=0,
         maximum=200,

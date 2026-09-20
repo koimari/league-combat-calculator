@@ -3,6 +3,7 @@
 from typing import Any
 
 from ...ability_atoms import ability_field
+from ...champions.shared_option_keys import RENGAR_FEROCITY
 from ...state_timeline import EventStamp
 from ...timed_stacks import TimedStackState
 from ..autos.swing_schedule import _restore_stream_attack_timestamps
@@ -43,7 +44,7 @@ def _build_ferocity_timeline(
 
     rule = RENGAR_FEROCITY_STACK_RULE
     options = state.champion_options
-    seeded = _seeded_option_stacks(options, "champion", "Rengar", "p_ferocity")
+    seeded = _seeded_option_stacks(options, "champion", "Rengar", RENGAR_FEROCITY)
     stack = TimedStackState(RENGAR_FEROCITY_STACK_RULE, starting_stacks=seeded)
     empowered: dict[tuple[str, int], bool] = {}
     receipts: list[dict[str, Any]] = []

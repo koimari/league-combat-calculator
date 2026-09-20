@@ -53,6 +53,7 @@ from .engine import DEBUFF, SlotCtx
 from .inputs import bool_option, int_option
 from .module_helpers import ability_slot, no_damage, ranked_slot
 from .packet_module import build_packet_module
+from .shared_option_keys import RENGAR_FEROCITY
 from .slot_cc import CC_PER_PART
 from .slot_entries import STEROID_ZERO, damage_entry
 from .slot_extract import (
@@ -170,7 +171,7 @@ def _ferocity_state(ctx: SlotCtx) -> TimedStackState:
     """
     return TimedStackState(
         RENGAR_FEROCITY_STACK_RULE,
-        starting_stacks=max(0, min(int(ctx.option("p_ferocity")), _FEROCITY_MAX)),
+        starting_stacks=max(0, min(int(ctx.option(RENGAR_FEROCITY)), _FEROCITY_MAX)),
     )
 
 
@@ -371,7 +372,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 OPTIONS = [
     int_option(
-        "p_ferocity",
+        RENGAR_FEROCITY,
         0,
         minimum=0,
         maximum=_FEROCITY_MAX,

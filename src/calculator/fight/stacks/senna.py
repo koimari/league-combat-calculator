@@ -3,6 +3,7 @@
 from collections.abc import Iterable, Mapping
 from typing import Any
 
+from ...champions.shared_option_keys import SENNA_MIST_STACKS
 from ..config import _seeded_option_stacks
 from ..results import RotationResult
 from ..state import FightState
@@ -27,13 +28,13 @@ def _add_senna_souls(
     ``resource_ledger["mist"]`` (kind "souls") sub-section — the mana
     account is never replaced — and never re-prices any damage.
     """
-    if "senna_mist_stacks" not in (state.champion_options):
+    if SENNA_MIST_STACKS not in (state.champion_options):
         # Not a Senna-configured fight: no souls surface at all.
         return
     from ...champions.senna import SENNA_MIST_RULE
 
     option = state.champion_options
-    seeded = _seeded_option_stacks(option, "champion", "Senna", "senna_mist_stacks")
+    seeded = _seeded_option_stacks(option, "champion", "Senna", SENNA_MIST_STACKS)
     account = _StackAccount("souls", seeded, 300)
     thresholds: list[dict[str, Any]] = []
     # The accepted soul event: the champion takedown of the modeled target.

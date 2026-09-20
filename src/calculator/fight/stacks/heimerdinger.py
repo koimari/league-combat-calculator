@@ -3,6 +3,10 @@
 from collections.abc import Mapping
 from typing import Any
 
+from ...champions.shared_option_keys import (
+    HEIMERDINGER_GRENADE_UPGRADE,
+    HEIMERDINGER_ROCKETS,
+)
 from ..results import RotationResult
 from ..state import FightState
 from .account import StackEvent, _resource_ledger, _StackAccount
@@ -24,8 +28,9 @@ def _add_heimerdinger_w_e(state: FightState, rotation: RotationResult) -> None:
     ``resource_ledger["w_e"]`` (kind "w_e") sub-section — the mana
     account is never replaced — and never re-prices any damage.
     """
-    if "w_rockets" not in (state.champion_options) and "e_upgrade" not in (
-        state.champion_options
+    if (
+        HEIMERDINGER_ROCKETS not in state.champion_options
+        and HEIMERDINGER_GRENADE_UPGRADE not in state.champion_options
     ):
         return
     from ...champions.heimerdinger import (

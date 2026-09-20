@@ -43,6 +43,7 @@ from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import ability_slot, no_damage_slot
+from .shared_option_keys import ASHE_FOCUS_ACTIVE, ASHE_FOCUS_STACKS
 from .slot_extract import ability_name, extract_cooldown, extract_value
 from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
@@ -118,9 +119,9 @@ def _rangers_focus(ctx: SlotCtx) -> dict[str, Any] | None:
     events into champion-module parses, so the option is the explicit
     pre-stack state (documented in ASSUMPTIONS).
     """
-    if not bool(ctx.option("q_active")):
+    if not bool(ctx.option(ASHE_FOCUS_ACTIVE)):
         return None
-    requested = ctx.options.get("q_focus_stacks")
+    requested = ctx.options.get(ASHE_FOCUS_STACKS)
     rule = ASHE_FOCUS_STACK_RULE
     if requested is not None:
         focus = TimedStackState(
@@ -214,13 +215,13 @@ _hawkshot = no_damage_slot(
 
 OPTIONS = [
     bool_option(
-        "q_active",
+        ASHE_FOCUS_ACTIVE,
         True,
         label="Ranger's Focus active",
         rotation={"role": "self_state", "slot": "Q"},
     ),
     int_option(
-        "q_focus_stacks",
+        ASHE_FOCUS_STACKS,
         4,
         minimum=0,
         maximum=4,

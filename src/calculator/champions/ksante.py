@@ -11,6 +11,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import ability_slot, no_damage, ranked_slot, require_named_leveling
+from .shared_option_keys import KSANTE_ALL_OUT, KSANTE_PATH_MAKER_CHARGE
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
@@ -26,7 +27,7 @@ _ALLOUT_OMNIVAMP_PERCENT = (
 def _marked_attack(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     base = extract_value(ability, "Bonus Damage", ctx.level)
     ratio = extract_value(ability, "Max Health Damage", ctx.level) / 100.0
-    all_out = bool(ctx.option("all_out"))
+    all_out = bool(ctx.option(KSANTE_ALL_OUT))
     extra = (
         0.01
         + 0.01 * ctx.stat("bonus_armor") / 100.0
@@ -172,7 +173,7 @@ KSANTE_PATH_MAKER_RULE = _PathMakerRule(
 def _path_maker(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
-    charge = min(max(float(ctx.option("w_charge")), 0.0), 1.0)
+    charge = min(max(float(ctx.option(KSANTE_PATH_MAKER_CHARGE)), 0.0), 1.0)
     for attribute in (
         "Physical Damage",
         "Minimum Bonus True Damage",
@@ -188,7 +189,7 @@ def _path_maker(
         _W_PHYS_RESIST_PCT_PER_100 * (bonus_mr / 100.0)
     )
     physical = flat + (base_pct + resist_pct) / 100.0 * max_health
-    if bool(ctx.option("all_out")):
+    if bool(ctx.option(KSANTE_ALL_OUT)):
         min_flat = extract_value(ability, "Minimum Bonus True Damage", rank, 0)
         min_pct = extract_value(ability, "Minimum Bonus True Damage", rank, 1)
         max_flat = extract_value(ability, "Maximum Bonus True Damage", rank, 0)
@@ -255,7 +256,7 @@ def _all_out(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any]
         "conversion are state; All Out's 20% omnivamp is priced on the "
         "fight's explicitly single-target attack/on-hit packets."
     )
-    if bool(ctx.option("all_out")):
+    if bool(ctx.option(KSANTE_ALL_OUT)):
         entry["stat_buff"] = {
             "bonus_attack_speed": extract_value(ability, "Bonus Attack Speed", rank),
             "armor_penetration_bonus_percent": 50.0,
@@ -301,7 +302,7 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "P"},
     ),
     float_option(
-        "w_charge",
+        KSANTE_PATH_MAKER_CHARGE,
         1.0,
         minimum=0.0,
         maximum=1.0,
@@ -317,7 +318,7 @@ OPTIONS = [
         rotation={"role": "irrelevant", "slot": "R"},
     ),
     bool_option(
-        "all_out",
+        KSANTE_ALL_OUT,
         False,
         label="All Out state",
         rotation={"role": "self_state", "slot": "R"},

@@ -58,3 +58,16 @@ TAHM_KENCH_GREY_SHIELD = "e_convert_grey_shield"
 #: Who Lulu's W and R land on (`pipeline` pins both for the roster).
 LULU_WHIMSY_TARGET = "lulu_whimsy_target"
 LULU_WILD_GROWTH_TARGET = "lulu_wild_growth_target"
+
+# The walks in `fight/stacks/` gate on these and seed their counters from
+# them: an unrecognised spelling withholds the whole ledger silently.
+ASHE_FOCUS_ACTIVE = "q_active"
+ASHE_FOCUS_STACKS = "q_focus_stacks"
+AURELION_SOL_STARDUST_STACKS = "stardust_stacks"
+BARD_CHIMES = "chimes"
+HEIMERDINGER_GRENADE_UPGRADE = "e_upgrade"
+HEIMERDINGER_ROCKETS = "w_rockets"
+KSANTE_ALL_OUT = "all_out"
+KSANTE_PATH_MAKER_CHARGE = "w_charge"
+RENGAR_FEROCITY = "p_ferocity"
+SENNA_MIST_STACKS = "senna_mist_stacks"

@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from ...champions.shared_option_keys import KSANTE_ALL_OUT, KSANTE_PATH_MAKER_CHARGE
 from ..results import RotationResult
 from ..state import FightState
 from .account import StackEvent, _resource_ledger, _StackAccount
@@ -24,8 +25,9 @@ def _add_ksante_path_maker(state: FightState, rotation: RotationResult) -> None:
     sub-section — the mana account is never replaced — and never
     re-prices any damage.
     """
-    if "w_charge" not in (state.champion_options) and "all_out" not in (
-        state.champion_options
+    if (
+        KSANTE_PATH_MAKER_CHARGE not in state.champion_options
+        and KSANTE_ALL_OUT not in state.champion_options
     ):
         return
     from ...champions.ksante import KSANTE_PATH_MAKER_RULE

@@ -46,6 +46,7 @@ from .healing_contract import self_healing_rule
 from .inputs import int_option
 from .module_helpers import ability_slot
 from .packet_module import build_packet_module
+from .shared_option_keys import SENNA_MIST_STACKS
 from .slot_control import with_control
 from .slot_entries import attach_self_shield
 from .slot_extract import ability_name, extract_named, extract_value
@@ -130,7 +131,7 @@ _DAWNING_SHADOW_MIST_RATIO = calculation_coefficient(_SENNA_R_SPELL, "TotalShiel
 def _absolution(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: Mist stat buffs + Weakened Soul every-2nd-hit %health proc."""
 
-    stacks = int(ctx.option("senna_mist_stacks"))
+    stacks = int(ctx.option(SENNA_MIST_STACKS))
     stacks = min(max(stacks, 0), 300)
     bonus_ad = _MIST_AD_PER_STACK * stacks
     thresholds = stacks // _MIST_STACKS_PER_THRESHOLD
@@ -234,7 +235,7 @@ def _dawning_shadow(packet_r):
             return entry
         ability = ctx.ability()
         shield = extract_named(ability, "Shield Strength", rank, ctx.stats, ctx.target)
-        stacks = int(ctx.option("senna_mist_stacks"))
+        stacks = int(ctx.option(SENNA_MIST_STACKS))
         shield += _DAWNING_SHADOW_MIST_RATIO * stacks
         return attach_self_shield(
             entry,
@@ -297,7 +298,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 OPTIONS = [
     *list(OPTIONS),
     int_option(
-        "senna_mist_stacks",
+        SENNA_MIST_STACKS,
         40,
         minimum=0,
         maximum=300,

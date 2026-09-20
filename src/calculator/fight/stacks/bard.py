@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from ...ability_atoms import ability_field, ability_payload, ability_sub_payload
+from ...champions.shared_option_keys import BARD_CHIMES
 from ..results import RotationResult
 from ..state import FightState
 from .account import StackEvent, _resource_ledger, _stack_receipt_row
@@ -26,7 +27,7 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
     (kind "chimes") sub-section — the mana account is never replaced —
     and never re-prices any damage.
     """
-    if "chimes" not in (state.champion_options):
+    if BARD_CHIMES not in (state.champion_options):
         return
     from ...champions.bard import (
         _CHIMES_PER_TIER,
@@ -42,7 +43,7 @@ def _add_bard_travelers_call(state: FightState, rotation: RotationResult) -> Non
 
     option = state.champion_options
     try:
-        seeded = int(option.get("chimes", _DEFAULT_CHIMES) or _DEFAULT_CHIMES)
+        seeded = int(option.get(BARD_CHIMES, _DEFAULT_CHIMES) or _DEFAULT_CHIMES)
     except (TypeError, ValueError):
         seeded = _DEFAULT_CHIMES
     if not (0 <= seeded <= 200):

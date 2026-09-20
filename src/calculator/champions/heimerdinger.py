@@ -16,6 +16,7 @@ from .module_helpers import (
     ranked_slot,
     require_named_leveling,
 )
+from .shared_option_keys import HEIMERDINGER_GRENADE_UPGRADE, HEIMERDINGER_ROCKETS
 from .slot_control import extract_recharge
 from .slot_entries import damage_entry
 from .slot_extract import (
@@ -203,7 +204,7 @@ HEIMER_E_GRENADE_RULE = _GrenadeRule(
 def _micro_rockets(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
-    rockets = min(max(int(ctx.option("w_rockets")), 1), 5)
+    rockets = min(max(int(ctx.option(HEIMERDINGER_ROCKETS)), 1), 5)
     require_named_leveling("Heimerdinger", ability, "Initial Rocket Magic Damage")
     require_named_leveling("Heimerdinger", ability, "Subsequent Rocket Magic Damage")
     first = extract_named(
@@ -238,7 +239,7 @@ def _micro_rockets(
 
 
 def _grenade(ctx: SlotCtx) -> dict[str, Any] | None:
-    variant = min(max(int(ctx.option("e_upgrade")), 0), 1)
+    variant = min(max(int(ctx.option(HEIMERDINGER_GRENADE_UPGRADE)), 0), 1)
     ranked = ctx.ranked("E", variant)
     if ranked is None:
         return None
@@ -344,7 +345,7 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "Q"},
     ),
     int_option(
-        "w_rockets",
+        HEIMERDINGER_ROCKETS,
         5,
         minimum=1,
         maximum=5,
@@ -353,7 +354,7 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "W"},
     ),
     int_option(
-        "e_upgrade",
+        HEIMERDINGER_GRENADE_UPGRADE,
         0,
         minimum=0,
         maximum=1,

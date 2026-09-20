@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from ...champions.shared_option_keys import AURELION_SOL_STARDUST_STACKS
 from ..config import _seeded_option_stacks
 from ..results import RotationResult
 from ..state import FightState
@@ -23,7 +24,7 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
     ``resource_ledger["stardust"]`` (kind "stardust") sub-section — the
     mana account is never replaced — and never re-prices any damage.
     """
-    if "stardust_stacks" not in (state.champion_options):
+    if AURELION_SOL_STARDUST_STACKS not in (state.champion_options):
         return
     from ...champions.aurelion_sol_stardust import (
         _Q_BURSTS_PER_CHANNEL,
@@ -33,7 +34,7 @@ def _add_aurelion_sol_stardust(state: FightState, rotation: RotationResult) -> N
 
     option = state.champion_options
     seeded = _seeded_option_stacks(
-        option, "champion", "Aurelion Sol", "stardust_stacks"
+        option, "champion", "Aurelion Sol", AURELION_SOL_STARDUST_STACKS
     )
     account = _StackAccount("stardust", seeded, 999)
     milestones: list[dict[str, Any]] = []

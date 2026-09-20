@@ -5,6 +5,7 @@ from typing import Any
 
 from ...ability_atoms import ability_field, ability_payload
 from ...champions.ashe import ASHE_FOCUS_STACK_RULE
+from ...champions.shared_option_keys import ASHE_FOCUS_ACTIVE, ASHE_FOCUS_STACKS
 from ...state_timeline import EventStamp
 from ...timed_stacks import TimedStackState
 from ..config import _seeded_option_stacks, declared_option_default
@@ -160,7 +161,10 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
     option = state.champion_options
     q_entry = ability_payload(state.ability_damages, "Q")
     q_active = bool(
-        option.get("q_active", declared_option_default("champion", "Ashe", "q_active"))
+        option.get(
+            ASHE_FOCUS_ACTIVE,
+            declared_option_default("champion", "Ashe", ASHE_FOCUS_ACTIVE),
+        )
     )
     is_ashe = bool(q_entry) and str(ability_field(q_entry, "name")) == "Ranger's Focus"
     # The Ashe identity: the module's Q entry name, OR the explicitly
@@ -168,12 +172,12 @@ def _add_ashe_focus(state: FightState, rotation: RotationResult) -> None:
     # module gates on q_active first — the Focus still exists, the auto
     # gains are documented, no consume can fire).  The walk must never
     # run for another champion's Q.
-    if not is_ashe and (q_active or "q_active" not in option):
+    if not is_ashe and (q_active or ASHE_FOCUS_ACTIVE not in option):
         return
     if q_active and not q_entry:
         # Q rank 0 (unlearned) -> no Focus system at all.
         return
-    seeded = _seeded_option_stacks(option, "champion", "Ashe", "q_focus_stacks")
+    seeded = _seeded_option_stacks(option, "champion", "Ashe", ASHE_FOCUS_STACKS)
     stack = TimedStackState(ASHE_FOCUS_STACK_RULE, starting_stacks=seeded)
     swings = (state.breakdown.get("auto_attacks") or {}).get("damage_events") or []
     q_casts = [
