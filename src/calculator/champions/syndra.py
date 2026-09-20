@@ -306,27 +306,26 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Splinter stacks are user-set (default 120 = fully stacked late "
-    "game); stack accumulation during the fight is not simulated",
+    "Splinter stacks are user-set, default 120, fully stacked late game; accumulation "
+    "is not simulated.",
     "At 120 splinters the +15% total AP multiplier applies before all "
     "damage calculation",
-    "At 40+ splinters Q's second charge is modeled as one extra Q cast "
-    "available when the fight opens; charge recharge beyond that is not "
-    "simulated",
-    "At 60+ splinters W's bonus true damage uses the exact formula "
-    "(12% + 2% per 100 AP) of W's magic damage, computed in the module "
-    "(quadratic in AP)",
-    "At 100+ splinters R executes a target when R leaves it below 15% "
-    "maximum health; the resolved combo places R after the other damage casts",
-    "R sphere count is user-set (default 3 = no setup; max 7 with "
-    "spheres banked on the field); the Min/Max JSON damage rows are "
-    "derived totals and are not used",
-    "E is assumed to scatter a sphere into the target (the standard QE "
-    "combo), so its cast is authored as a stun event (MODULE_CC) for "
-    "CC-triggered item passives (Imperial Mandate, Fimbulwinter, …); the "
-    "stun itself adds no damage. The 80-splinter upgrade (wider angle, "
-    "slow), the sphere-less knockback, and W's slow remain unmodeled "
-    "utility",
+    "At 40+ splinters Q's second charge is one extra Q cast available at the fight's "
+    "open.",
+    "Q's charge recharge beyond that is not simulated.",
+    "At 60+ splinters W's bonus true damage uses W's magic-damage formula, 12% + 2% "
+    "per 100 AP.",
+    "The module computes it, quadratic in AP.",
+    "At 100+ splinters R executes a target it leaves below 15% maximum health.",
+    "The resolved combo places R after the other damage casts.",
+    "R sphere count is user-set, default 3 for no setup, max 7 with spheres banked on "
+    "the field.",
+    "The Min and Max JSON damage rows are derived totals and are not used.",
+    "E is assumed to scatter a sphere into the target, the standard QE combo.",
+    "Its cast is authored as a stun event for CC-triggered item passives; the stun "
+    "adds no damage.",
+    "The 80-splinter upgrade, the sphere-less knockback and W's slow remain unmodeled "
+    "utility.",
     "R's passive 10/20/30 ability haste applies to Q's cooldown only",
 ]
 

@@ -185,30 +185,28 @@ OPTIONS: list[dict[str, Any]] = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Q (Super Scorcher Breath) is increased by 0% : 75% (+ 0% : 22.5%) "
-    "based on critical strike chance (cached Q description prose): the "
-    "packet's flat + AD-ratio price is multiplied by 1 + 0.975 x crit "
-    "chance",
-    "P (Dragon Practice) tier 3 (225 stacks) sets enemies hit by Q on "
-    "fire for 3 seconds: true damage equal to 2.5% per 100 bonus AD "
-    "(+ 0.5% per 100 stacks) of the target's maximum health over the "
-    "duration — priced as one post-hit burn per Q hit (p_stacks option, "
-    "default 225)",
-    "The 25% : 55% (+ 0% : 9% crit) stack-scaled bonus magic damage on "
-    "basic abilities and the 6.5%-health burn execution are documented "
-    "boundaries, not priced",
+    "Q (Super Scorcher Breath) rises 0 to 75% (+ 0 to 22.5%) by crit chance, cached Q "
+    "prose.",
+    "The packet's flat and AD-ratio price is multiplied by 1 + 0.975 x crit chance.",
+    "P (Dragon Practice) tier 3, 225 stacks, sets a Q-hit enemy on fire for 3 "
+    "seconds.",
+    "The burn is true damage of 2.5% per 100 bonus AD + 0.5% per 100 stacks of target "
+    "maximum health.",
+    "P prices one post-hit burn per Q hit, at p_stacks (default 225).",
+    "The 25 to 55% (+ 0 to 9% crit) stack-scaled bonus magic on basic abilities is "
+    "not priced.",
+    "The 6.5%-health burn execution is a documented limit, not priced.",
     "E (Flap, Flap, Flap) flight utility remains a documented " "out-of-scope row.",
-    "W (Achooo!) prices the whole champion hit — the cached Total "
-    "Physical Damage On Champion Hit row (70/105/140/175/210 + 110% "
-    "bonus AD + 80% AP) == Glob Physical Damage + Explosion Physical "
-    "Damage.  The generated packet priced the glob alone.  The "
-    "explosion's delay behind the glob is not authored, and the 75% "
-    "falloff on repeat explosions against the same target is unpriced.",
-    "E (Flap, Flap, Flap) prices the five-bolt floor — the cached "
-    "Minimum Total Physical Damage row (50/75/100/125/150 + 150% AD) == "
-    "5 x Physical Damage per Hit, the row the generated packet priced "
-    "once.  The extra bolt per 100 Dragon Practice stacks and the bolts' "
-    "cadence across the 1.25-second flight are not priced.",
+    "W (Achooo!) prices the whole champion hit: the cached Total Physical Damage On "
+    "Champion Hit row.",
+    "That is 70/105/140/175/210 + 110% bonus AD + 80% AP, glob plus explosion.",
+    "The explosion's delay behind the glob is not authored.",
+    "The 75% falloff on repeat explosions against the same target is unpriced.",
+    "E (Flap, Flap, Flap) prices the five-bolt floor: the cached Minimum Total "
+    "Physical Damage row.",
+    "That is 50/75/100/125/150 + 150% AD == 5 x Physical Damage per Hit.",
+    "The extra bolt per 100 Dragon Practice stacks and the bolts' 1.25s cadence are "
+    "not priced.",
 ]
 
 MODULE_COVERAGE = coverage(no_damage="P")

@@ -191,40 +191,40 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
     "E's sourced 1.5-second stun counts as target action downtime",
-    "W (Bastion) shields Taric and the linked selected teammate the "
-    "sourced Shield Strength as a live % of the PROTECTED TARGET's "
-    "maximum health (scanner packet with a max-health amount formula "
-    "and 2.5s duration, selection key shield:W:<cast>).",
-    "Q (Starlight's Touch) heals Taric and every selected teammate "
-    "the sourced per-charge heal (25 + 15% AP + 1% of his maximum "
-    "health per charge, capped at the 5-charge maximum) via the E1 "
-    "rule and its self_and_all_teammates fan-out; the scanner defers "
-    "the slot (no heal row in the cached Q leveling).",
-    "R (Cosmic Radiance) grants the caster and every selected "
-    "teammate invulnerability after the sourced 2.5s descent for the "
-    "sourced 2.5s window (state packet).",
-    "P (Bravado) prices the sourced on-attack bonus magic damage "
-    "(25 : 101 based on level, the cached 'Per-Level Scaling' row, "
-    "+ 15% bonus armor read from the same description) once per "
-    "empowered attack the window actually grants.  A cast arms up to "
-    "two charges for 5 seconds and re-arming REFRESHES rather than "
-    "stacks, so a four-cast rotation still books at most two "
-    "empowered attacks; damage.py's empower-window walk spends the "
-    "charges against the accepted cast timeline and the fight's own "
-    "swings.  An attack that lands at the same instant as its arming "
-    "cast does not consume a charge (the named conservative "
-    "tie-break), so one-rotation fights, whose casts all collapse to "
-    "t=0, price the passive at or below its live value.",
-    "P (Bravado)'s two NON-damage effects are not modeled: the 100% "
-    "total attack speed on each empowered attack (it would change "
-    "the fight's swing count, which the auto-attack schedule owns) "
-    "and the 1 : 2 (based on ability haste) cooldown refund on "
-    "Taric's basic abilities.  Both are omissions, so the modeled "
-    "damage is a floor, never an overstatement.",
-    "P (Bravado)'s '+ 15% bonus armor' term reads the BUILD's bonus "
-    "armor.  W (Bastion)'s sourced 6-10% of Taric's armor passive "
-    "grant is not applied to ctx.stats by this module, so it does "
-    "not feed the passive; adding it belongs to W, not P.",
+    "W (Bastion) shields Taric and the linked teammate the sourced Shield Strength "
+    "over 2.5s.",
+    "The amount is a live % of the PROTECTED TARGET's maximum health, a max-health "
+    "amount formula.",
+    "Q (Starlight's Touch) heals Taric and every selected teammate 25 + 15% AP + 1% "
+    "of his max health.",
+    "That is per charge, capped at the 5-charge maximum, through the E1 rule's "
+    "fan-out.",
+    "The scanner defers the slot: the cached Q leveling has no heal row.",
+    "R (Cosmic Radiance) grants the caster and every selected teammate "
+    "invulnerability.",
+    "It lands after the sourced 2.5s descent and holds the sourced 2.5s window.",
+    "P (Bravado) prices the sourced on-attack bonus magic damage, 25 to 101 by level.",
+    "It adds 15% bonus armor, read from the same cached description.",
+    "It fires once per empowered attack the window actually grants.",
+    "A cast arms up to two charges for 5 seconds and re-arming REFRESHES rather than "
+    "stacks.",
+    "A four-cast rotation still books at most two empowered attacks.",
+    "The empower-window walk spends the charges against the accepted cast timeline "
+    "and the fight's swings.",
+    "P's conservative tie-break: an attack landing at its arming cast's instant "
+    "consumes no charge.",
+    "One-rotation fights, whose casts collapse to t=0, therefore price the passive at "
+    "or below live.",
+    "P (Bravado)'s two non-damage effects are not modeled.",
+    "The 100% total attack speed per empowered attack would change the swing count "
+    "the schedule owns.",
+    "The 1 to 2 by ability haste cooldown refund on Taric's basic abilities is the "
+    "other.",
+    "Both are omissions, so the modeled damage is a floor, never an overstatement.",
+    "P (Bravado)'s '+ 15% bonus armor' term reads the BUILD's bonus armor.",
+    "W (Bastion)'s sourced 6 to 10% of Taric's armor grant is not applied to "
+    "ctx.stats here.",
+    "So it does not feed the passive; adding it belongs to W, not P.",
 ]
 
 COVERAGE_CHANNELS = {"Q": ("self_healing_rule",)}

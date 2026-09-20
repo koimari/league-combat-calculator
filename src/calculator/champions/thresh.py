@@ -183,25 +183,25 @@ ASSUMPTIONS = [
     *list(ASSUMPTIONS),
     "Soul count is user-set (default 40 — the expected mid-game state); "
     "soul farming is not simulated",
-    "Each Soul grants 1 ability power and 1 bonus armor — wiki prose "
-    "(module constants); the AP buff applies before all damage slots "
-    "parse",
-    "E's passive (Flay) rides the swing stream: every basic attack carries "
-    "the Minimum Bonus Magic Damage row (1.7 per Soul, 0% AD while "
-    "attacking) as an on-hit, and the first basic attack alone carries the "
-    "Maximum row's charged AD share (90-210% AD by rank): the fight is "
-    "assumed to open after 10 seconds without basic attacking, and the "
-    "charge does not rebuild mid-fight",
-    "W (Dark Passage) shields Thresh and the first allied champion for "
-    "4s at the cast; the ally-support scanner emits the ally packet "
-    "(flat 50/70/90/110/130; the +2-per-Soul term and Thresh's own "
-    "portion are documented boundaries), which absorbs incoming damage "
-    "in the participant ledger when a teammate is selected",
+    "Each Soul grants 1 ability power and 1 bonus armor, wiki-prose module constants.",
+    "The AP buff applies before all damage slots parse.",
+    "E's passive (Flay) rides the swing stream: every attack carries the Minimum "
+    "Bonus Magic Damage row.",
+    "That is 1.7 per Soul, 0% AD while attacking.",
+    "The first attack alone carries the Maximum row's charged AD share, 90 to 210% AD "
+    "by rank.",
+    "E assumes the fight opens after 10 seconds without basic attacking.",
+    "E's charge does not rebuild mid-fight.",
+    "W (Dark Passage) shields Thresh and the first allied champion for 4s at the "
+    "cast.",
+    "The ally-support scanner emits the ally packet at the flat 50/70/90/110/130.",
+    "The +2-per-Soul term and Thresh's own portion are documented limits.",
+    "The packet absorbs incoming damage in the participant ledger when a teammate is "
+    "selected.",
     "All other CC is utility only — no damage",
-    "W (Dark Passage) has no enemy-damage formula: the lantern dash and "
-    "its shield are self/ally utility only (confirmed by the pinned "
-    "reviewed packet's kind='no_damage' declaration for W). W is a cast "
-    "slot in this module: it emits the packet's sourced zero-damage row "
-    "while the support scanner prices the lantern shield, so the slot is "
-    "modeled.",
+    "W (Dark Passage) has no enemy-damage formula: the lantern dash and its shield "
+    "are utility only.",
+    "The pinned reviewed packet declares W kind no_damage.",
+    "W is a cast slot here: it emits the zero-damage row while the scanner prices the "
+    "lantern shield.",
 ]

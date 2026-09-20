@@ -330,26 +330,27 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "One-rotation mode is the certified E -> W -> Q sequence; timed fights "
-    "repeat E and W on their cooldowns and walk Q through the Worked "
-    "Ground terrain state.",
-    "The target is displaced through exactly the selected number of E stones "
-    "(each E window in a timed fight, with a W available per window); "
-    "successive detonations deal 100%, 75%, 50%, then 25% damage.",
-    "Normal Q places all five shards on one target; later shards deal 40%. "
+    "One rotation is the certified E, W, Q sequence.",
+    "Timed fights repeat E and W on cooldown and walk Q through the Worked Ground "
+    "state.",
+    "The target is displaced through exactly the selected number of E stones.",
+    "Each E window in a timed fight has a W available; detonations deal 100%, 75%, "
+    "50%, then 25%.",
+    "Normal Q places all five shards on one target, later shards at 40%.",
     "Worked Ground instead uses the primary-target 180% boulder hit.",
-    "Timed Q: the first cast on fresh ground throws the full volley and "
-    "creates Worked Ground (a 400-unit area lasting 30s, at least the fight "
-    "window); Taliyah stays inside it, so every later cast is the empowered "
-    "boulder at 10 mana on the halved (min 0.75s) cooldown. The q_ground "
-    "select applies to one-rotation mode only.",
+    "The first timed Q on fresh ground throws the full volley and creates Worked "
+    "Ground.",
+    "That is a 400-unit area lasting 30s, at least the fight window.",
+    "Taliyah stays inside it, so every later Q is the boulder at 10 mana on the "
+    "halved cooldown.",
+    "That cooldown floors at 0.75s, and q_ground applies to one-rotation mode only.",
     "Target distance prices Q projectile travel while Taliyah remains at that "
     "distance for the volley.",
-    "P (Rock Surfing) and R (Weaver's Wall) deal no enemy damage; both are "
-    "emitted as sourced zero-damage rows (MODULE_COVERAGE: no_damage) "
-    "rather than withheld. P is a self movement state and R is terrain "
-    "plus a knockback that carries no sourced duration attribute, so "
-    "neither leaves a damage channel unmodeled.",
+    "P (Rock Surfing) and R (Weaver's Wall) deal no enemy damage, emitted as sourced "
+    "zero-damage rows.",
+    "P is a self movement state; R is terrain plus a knockback with no sourced "
+    "duration attribute.",
+    "Neither leaves a damage channel unmodeled.",
 ]
 
 

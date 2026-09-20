@@ -182,31 +182,34 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Power Chord) prices the sourced unmodified chord (20 : 270 based on "
-    "level + 20% AP) once per three basic abilities (selectable); the "
-    "Staccato / Diminuendo / Tempo riders the last-cast tag adds are not "
-    "applied, and Accelerando's ability haste is unpriced.",
-    "W (Aria of Perseverance) heals the caster and the selected teammate "
-    "the sourced Heal (30-90 + 30% AP) via the E1-rule fan-out "
-    "(heal:W:<cast> key) and shields the caster and the same selected "
-    "teammate the sourced Melody Shield Strength (25-105 + 25% AP) for "
-    "1.5s (shield:W:<cast> key); the in-game 'most wounded allied "
-    "champion nearby' selection is the explicit roster teammate choice.",
-    "E (Song of Celerity) deals no damage; its SELF grant (20% + 2% per "
-    "100 AP) is published as a move_speed_percent stat buff, a term in "
-    "the shared resolve_move_speed fold (soft caps included), "
-    "time-weighted by buff_window_share over the sourced window: a "
-    "stat_buff is one scalar for the whole fight, so an unweighted term "
-    "would read the same in a 5s fight and a 30s one. The grant and both "
-    "of its windows are cached PROSE with no leveling row of any kind, so "
-    "the sentence is READ (no module literal, the Shyvana-P shape) and a "
-    "sentence that stops stating them raises. The DAMAGED window (3s) is "
-    "the one priced, not the undisturbed 7s: a modelled fight is a state "
-    "in which she takes damage, and the shorter window can only "
-    "understate the grant — the same call Teemo W makes against its own "
-    "5s-undamaged passive branch. The ranked Melody Bonus "
-    "(10/12/14/16/18% + 2% per 100 AP) is NOT published: it goes to "
-    "tagged allied champions, which the 1v1 surface has no room for.",
+    "P (Power Chord) prices the sourced unmodified chord, 20 to 270 by level + 20% "
+    "AP.",
+    "It fires once per three basic abilities, selectable.",
+    "The Staccato, Diminuendo and Tempo riders the last-cast tag adds are not "
+    "applied.",
+    "Accelerando's ability haste is unpriced.",
+    "W (Aria of Perseverance) heals the caster and the selected teammate the sourced "
+    "30 to 90 + 30% AP.",
+    "It shields both for the sourced Melody Shield Strength, 25 to 105 + 25% AP, over "
+    "1.5s.",
+    "The in-game 'most wounded allied champion nearby' is the explicit roster "
+    "teammate choice.",
+    "E (Song of Celerity) deals no damage; its self grant, 20% + 2% per 100 AP, is a "
+    "move_speed_percent buff.",
+    "It is a term in the shared resolve_move_speed fold, soft caps included.",
+    "It is time-weighted by buff_window_share: a stat_buff is one scalar for the "
+    "whole fight.",
+    "An unweighted term would read the same in a 5s fight and a 30s one.",
+    "The grant and both windows are cached prose with no leveling row, so the "
+    "sentence is read.",
+    "A sentence that stops stating them raises; there is no module literal, the "
+    "Shyvana-P shape.",
+    "The damaged 3s window is priced, not the undisturbed 7s: a modelled fight is one "
+    "where she is hit.",
+    "The shorter window can only understate the grant, the call Teemo W makes on its "
+    "own branch.",
+    "The ranked Melody Bonus, 10/12/14/16/18% + 2% per 100 AP, goes to tagged allies "
+    "and is not published.",
 ]
 MODULE_COVERAGE = coverage(no_damage="E")
 

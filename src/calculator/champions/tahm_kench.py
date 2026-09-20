@@ -153,29 +153,29 @@ OPTIONS = [
 ASSUMPTIONS = [
     "An Acquired Taste is an explicit on-hit rider; Q may opt into the bonus damage "
     "from a pre-existing stack state.",
-    "Thick Skin stores 15/23/31/39/47% of post-mitigation damage taken as "
-    "grey health (42/44/46/48/50% with 2+ visible enemies); the "
-    "out-of-combat consume (4 s without damage) restores 60% : 100% "
-    "based on level of the pool as a heal — the E8a grey-health "
-    "primitive authors it from the incoming ledger. The E active "
-    "converts the banked grey into a 2.5 s shield instead, on E's cached "
-    "3 s haste-scaled cooldown; pressing it is a player decision, so it "
-    "is the off-by-default e_convert_grey_shield option and the model "
-    "presses at the earliest available time (the Mordekaiser-recast "
-    "convention). A press blocks the out-of-combat heal until its own "
-    "cooldown has run out, and the residual bank still pays that heal.",
+    "Thick Skin stores 15/23/31/39/47% of post-mitigation damage taken as grey "
+    "health.",
+    "With 2 or more visible enemies that is 42/44/46/48/50%.",
+    "The out-of-combat consume after 4s restores 60 to 100% by level of the pool as a "
+    "heal.",
+    "The grey-health primitive authors it from the incoming ledger.",
+    "E's active converts the banked grey into a 2.5s shield on its cached 3s "
+    "haste-scaled cooldown.",
+    "Pressing it is a player decision, so e_convert_grey_shield is off by default and "
+    "presses earliest.",
+    "A press blocks the out-of-combat heal until its cooldown runs out; the residual "
+    "bank still pays it.",
     "R defaults to the enemy Regurgitate branch; ally Devour is a separate "
     "support/shield scenario.",
-    "E (Thick Skin) has no enemy-damage formula: all three cached "
-    "effects are self-directed grey-health resource state (store %, "
-    "out-of-combat consume-heal, shield conversion) — the 'Max Health "
-    "Damage' leveling attribute is the wiki parser's generic name for "
-    "the self heal-restore percentage, not a term dealt to an enemy "
-    "(the Rek'Sai P precedent, roadmap session 4 batch F). E is "
-    "deliberately absent from SLOTS so the fight ledger never invents "
-    "an enemy hit; MODULE_COVERAGE reflects a sourced no-damage "
-    "classification rather than an unmodeled gap (no_damage, not "
-    "out_of_scope).",
+    "E (Thick Skin) has no enemy-damage formula: all three cached effects are "
+    "self-directed.",
+    "They are the store percentage, the out-of-combat consume-heal and the shield "
+    "conversion.",
+    "The 'Max Health Damage' attribute is the parser's generic name for the self "
+    "heal-restore share.",
+    "It is not a term dealt to an enemy, the Rek'Sai P precedent.",
+    "E is deliberately absent from SLOTS so the ledger never invents an enemy hit.",
+    "MODULE_COVERAGE records a sourced no_damage rather than an unmodeled gap.",
 ]
 
 SOURCES = load_champion_sources("Tahm Kench")

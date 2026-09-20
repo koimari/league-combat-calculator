@@ -122,16 +122,15 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"W", "E", "R"}),
     slot_parsers={"Q": _deaths_hand, "P": _ravenous_flock},
     assumption_overrides=(
-        "Q (Death's Hand) prices the single-target total of all five "
-        "bolts — the cached Total Damage row (120/180/240/300/360 + 90% "
-        "AP), which is the per-bolt Magic Damage row plus four "
-        "subsequent bolts at the 25% Bonus Damage Per Bolt row.  The "
-        "generated packet priced one bolt.  The 0.264-second cadence "
-        "across the five bolts is not authored.",
-        "R variant 0 (Demonic Ascension) prices ONE 0.5-second drain "
-        "tick.  The cache lists no total for the channel, whose length "
-        "is set by the Demonic Energy economy, so the whole-channel "
-        "price is withheld rather than guessed.",
+        "Q (Death's Hand) prices the single-target total of all five bolts: the "
+        "cached Total Damage row.",
+        "That is 120/180/240/300/360 + 90% AP, one bolt plus four at the 25% Bonus "
+        "Damage Per Bolt row.",
+        "The 0.264-second cadence across the five bolts is not authored.",
+        "R variant 0 (Demonic Ascension) prices one 0.5-second drain tick.",
+        "The cache lists no total for the channel, whose length the Demonic Energy "
+        "economy sets.",
+        "The whole-channel price is withheld rather than guessed.",
     ),
     slot_wrappers={
         "R": _ravenous_flock_ultimate,
@@ -158,13 +157,12 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Ravenous Flock) grants 15 permanent bonus health per Soul "
-    "Fragment (cached P prose; the passive has no leveling row).  "
-    "p_soul_fragments defaults to 0: fragments are dropped by enemy "
-    "champion deaths and ripped by Vision of Empire and Nevermove's "
-    "recast, none of which this rotation authors, so a damage package "
-    "implies no stack count.  The health reaches the parse context "
-    "before R, whose Heal per Tick row scales with bonus health.",
+    "P (Ravenous Flock) grants 15 permanent bonus health per Soul Fragment (cached P "
+    "prose, no row).",
+    "p_soul_fragments defaults to 0: deaths and Vision of Empire or Nevermove rips "
+    "this fight never authors.",
+    "The health reaches the parse context before R, whose Heal per Tick row scales "
+    "with bonus health.",
 ]
 
 # No MODULE_COVERAGE: every one of the five slots emits a priced row now.

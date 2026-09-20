@@ -82,48 +82,44 @@ ASSUMPTIONS = [
     "Starcall counts one enemy-champion hit.",
     "Equinox's eruption is counted only when its target-remains option is on.",
     "Passive and Wish are excluded because they deal no enemy damage.",
-    "P (Salvation) is no_damage, NOT out_of_scope. Its single cached effect "
-    "grants Soraka '90% bonus movement speed while facing nearby allied "
-    "champions that are below 40% of their maximum health' (damageType null, "
-    "affects Self, leveling []) — there is no enemy-damage clause anywhere in "
-    "the slot, so there is no damage to miss. The grant is NOT published as a "
-    "move_speed_percent stat_buff, and the blocker is the CONDITION, not the "
-    "channel: the channel exists and Sivir R rides it. Two cached conditions "
-    "gate it and this surface can establish neither — it needs nearby ALLIED "
-    "CHAMPIONS (a 1v1 fight has none), each below 40% of maximum health (a "
-    "live-health state the scan cannot establish; this module already "
-    "withholds R's '+50% on targets below 40% of their maximum health' on "
-    "exactly that ground). Publishing 90% unconditionally would assert a "
-    "buff that is off for the whole fight — the Akshan-W rider convention, "
-    "which documents a conditional movement grant instead of emitting it. "
-    "The label is no_damage rather than an Olaf-R open because an ability "
-    "movement stat_buff does not become damage here: Swiftmarch's "
-    "adaptive_force_per_total_move_speed is resolved inside "
-    "calculate_total_stats from the BUILD's move speed (stats.py, "
-    "final_move_speed -> resolve_stat_effects) before any cast, while an "
-    "ability stat_buff rewrites stats['move_speed'] afterwards, so the grant "
-    "could only move champion_stats and the descriptive item_state_receipts, "
-    "never a damage row (verified live: Teemo with Swiftmarch reads "
-    "move_speed 395.0 at W0 and 452.088 at W5 with attack_damage, "
-    "ability_power and total_damage identical). This is the Sivir-P verdict "
-    "on the same axis.",
-    "Astral Infusion (W) is declared as a zero-damage cast so the ally-support "
-    "scanner emits its sourced heal (90-170 + 50% AP); its 10%-of-max-health "
-    "cost per cast is documented, not modeled as mana.",
-    "W's cached 'cost' row (10/10/10/10/10, '%' units) is the ability's "
-    "health-cost leg only; Astral Infusion actually costs TWO resources "
-    "('10% Current Health, {{ cost }} Mana' per ddragon costType), and "
-    "the wiki cache never captured the mana leg (bin SorakaW 'mana' "
-    "[40, 45, 50, 55, 60]; ddragon costBurn '40/45/50/55/60') under this "
-    "or any other key in data/champions.json's W entry — a known-"
-    "degraded wiki parse, not a value that changed patch-to-patch. "
-    "patch_regression.py's ability-row comparison flags 'cost drifted' "
-    "because it diffs the cached %-health row against the game's "
-    "separate mana field; that is a row-mapping artifact (comparing two "
-    "different cost components), not a real drift. The module already "
-    "declares resource_cost=0.0 above and never modeled W's mana leg, "
-    "so no runtime behavior is affected (verified 16.15/16.16.1: cdtb "
-    "soraka.bin.json + ddragon Soraka.json).",
+    "P (Salvation) is no_damage, NOT out_of_scope: no enemy-damage clause exists in "
+    "the slot.",
+    "Its single cached effect grants 90% bonus movement speed near allies below 40% "
+    "maximum health.",
+    "damageType is null, it affects Self, and leveling is empty.",
+    "The grant is NOT published as a move_speed_percent stat_buff, and the blocker is "
+    "the CONDITION.",
+    "The channel exists and Sivir R rides it.",
+    "It needs nearby ALLIED CHAMPIONS, which a 1v1 fight has none of.",
+    "Each must be below 40% of maximum health, a live-health state the scan cannot "
+    "establish.",
+    "This module already withholds R's '+50% on targets below 40% of their maximum "
+    "health' on that ground.",
+    "Publishing 90% unconditionally would assert a buff off for the whole fight, the "
+    "Akshan-W convention.",
+    "The label is no_damage because an ability movement stat_buff does not become "
+    "damage here.",
+    "Swiftmarch's adaptive_force_per_total_move_speed resolves in "
+    "calculate_total_stats before any cast.",
+    "An ability stat_buff rewrites stats['move_speed'] afterwards, so it moves "
+    "champion_stats only.",
+    "Teemo with Swiftmarch reads move_speed 395.0 at W0 and 452.088 at W5, damage "
+    "identical.",
+    "This is the Sivir-P verdict on the same axis.",
+    "Astral Infusion (W) is a zero-damage cast so the scanner emits its sourced heal, "
+    "90 to 170 + 50% AP.",
+    "W's 10%-of-maximum-health cost per cast is documented, not modeled as mana.",
+    "W's cached cost row, 10 at every rank in '%' units, is the health-cost leg only.",
+    "Astral Infusion costs two resources: '10% Current Health, {{ cost }} Mana' per "
+    "ddragon costType.",
+    "The wiki cache never captured the mana leg (bin SorakaW 'mana' [40, 45, 50, 55, "
+    "60]).",
+    "ddragon costBurn reads '40/45/50/55/60'; this is a known-degraded parse, not a "
+    "patch change.",
+    "patch_regression diffs the %-health row against the game's mana field, a "
+    "row-mapping artifact.",
+    "The module declares resource_cost 0.0 and never modeled W's mana leg, so no "
+    "behavior is affected.",
 ]
 
 SOURCES = load_champion_sources("Soraka")

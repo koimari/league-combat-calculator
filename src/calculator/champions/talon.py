@@ -160,30 +160,23 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Blade's End) prices one 3-stack consume per fight (the "
-    "passive_procs option): abilities apply Wound stacks (max 3, 6s, "
-    "refreshing); the next basic attack consumes them to bleed the "
-    "target for the per-level total (80 : 303.53 based on level + 210% "
-    "bonus AD — the ratio is wiki prose, module constant), as 16 ticks "
-    "of the sourced per-tick array every 0.125 seconds.  The "
-    "consuming basic attack's own swing is not a separate damage "
-    "event.",
-    "An autos-only fight bleeds nothing (the pipeline states this with "
-    "the auto_attacks_only reserved option): the cached P text sources "
-    "stacking to \"Talon's abilities apply a stack of Wound... refreshing "
-    'on basic attacks", so the consuming swing has no stacks to consume '
-    "when no ability was cast.",
-    "Q's on-kill self-heal (9 : 60.41 based on level) is authored by "
-    "this module's derive_self_healing; the fight model prices it once "
-    "per Q cast because the outgoing ledger cannot identify the "
-    "killing blow.",
-    "E (Assassin's Path) has no enemy-damage formula: the parkour dash "
-    "is a terrain-crossing repositioning tool only (confirmed by the "
-    "pinned reviewed packet's kind='no_damage' declaration for E). E is "
-    "a cast slot in this module (never reassigned away from "
-    "build_packet_module's no_damage branch), so MODULE_COVERAGE "
-    "reflects a sourced no-damage classification rather than an "
-    "unmodeled gap (no_damage, not out_of_scope).",
+    "P (Blade's End) prices one 3-stack consume per fight, the passive_procs option.",
+    "Abilities apply Wound stacks, max 3 over 6s, refreshing.",
+    "The next basic attack consumes them to bleed for 80 to 303.53 by level + 210% "
+    "bonus AD.",
+    "That ratio is wiki prose, a module constant, paid as 16 ticks every 0.125 "
+    "seconds.",
+    "The consuming basic attack's own swing is not a separate damage event.",
+    "An autos-only fight bleeds nothing (auto_attacks_only).",
+    "Cached P text sources stacking to Talon's abilities, so a swing with no cast has "
+    "no stacks.",
+    "Q's on-kill self-heal, 9 to 60.41 by level, is authored by derive_self_healing.",
+    "It prices once per Q cast: the outgoing ledger cannot identify the killing blow.",
+    "E (Assassin's Path) has no enemy-damage formula: the parkour dash only "
+    "repositions.",
+    "The pinned reviewed packet declares E kind no_damage.",
+    "E is a cast slot here, so MODULE_COVERAGE records a sourced no_damage, not an "
+    "unmodeled gap.",
 ]
 MODULE_COVERAGE = coverage(no_damage="E")
 

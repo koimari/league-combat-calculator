@@ -238,8 +238,8 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     # hit, which is what carries Q's reviewed blind into the event ledger.
     single_hit_slots=frozenset({"Q"}),
     assumption_overrides=(
-        "Noxious Trap prices the full 4-second poison: 4 ticks of Magic "
-        "Damage per Tick (== Total Magic Damage) at 1-second intervals.",
+        "Noxious Trap prices the full 4-second poison: 4 ticks of Magic Damage per "
+        "Tick at 1s intervals.",
     ),
     slot_parsers={
         "E": _toxic_shot,
