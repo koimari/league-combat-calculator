@@ -44,7 +44,7 @@ from typing import Any
 
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .module_helpers import at_level, no_damage
+from .module_helpers import ability_slot, at_level, no_damage
 from .packet_module import build_packet_module
 
 # HARDCODED: verify on patch updates — the second shot's AD ratio is
@@ -60,11 +60,9 @@ _LIGHTSLINGER_RATIO_BANDS: tuple[tuple[int, float], ...] = (
 )
 
 
-def _lightslinger(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _lightslinger(ctx: SlotCtx, _passive: dict[str, Any]) -> dict[str, Any] | None:
     """P: second shot after each ability — the engine double-shot path."""
-    passive = ctx.ability("P")
-    if passive is None:
-        return None
     return {
         "name": "Lightslinger",
         "damage_type": "physical",

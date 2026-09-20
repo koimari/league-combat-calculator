@@ -13,7 +13,7 @@ from ..ability_prose import CachedSentence
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .inputs import int_option
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .packet_module import build_packet_module
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_value
@@ -106,10 +106,8 @@ def _switcheroo(
 _switcheroo.phase = BUFF
 
 
-def _get_excited(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _get_excited(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     stacks = int(ctx.option("jinx_get_excited_stacks"))
     stacks = min(max(stacks, 0), 5)
     if stacks == 0:

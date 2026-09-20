@@ -11,7 +11,12 @@ from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, ranked_slot
+from .module_helpers import (
+    REVIEWED_MODULE_ASSUMPTIONS,
+    ability_slot,
+    no_damage,
+    ranked_slot,
+)
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
@@ -19,10 +24,8 @@ from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 
-def _sigil_of_malice(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _sigil_of_malice(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     attribute = (
         "Total Magic Damage" if bool(ctx.option("q_consume")) else "Magic Damage"
@@ -99,10 +102,8 @@ def _ethereal_chains(
     return entry
 
 
-def _mimic(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _mimic(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     choice = str(ctx.option("r_mimic"))
     attribute = {

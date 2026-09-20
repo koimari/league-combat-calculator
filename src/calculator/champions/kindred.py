@@ -58,7 +58,7 @@ from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
-from .module_helpers import no_damage, ranked_slot, typed_damage
+from .module_helpers import ability_slot, no_damage, ranked_slot, typed_damage
 from .shared_mechanics import capped_option
 from .slot_control import park_control_interval
 from .slot_entries import damage_entry
@@ -168,11 +168,11 @@ def _mark_scaled_override(
     return override
 
 
-def _mark_of_the_kindred(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _mark_of_the_kindred(
+    ctx: SlotCtx, ability: dict[str, Any]
+) -> dict[str, Any] | None:
     """P: Mark state row (bonus range, Q AS, E missing-health scaling)."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     marks = _marks(ctx)
     return no_damage(
         ctx,
@@ -329,7 +329,8 @@ def _wolf_pounce(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _hunters_vigor(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("W")
+def _hunters_vigor(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """W passive: Hunter's Vigor — the at-100-stacks next-auto heal.
 
     Cached W prose: "Lamb generates ... 5 stacks on-attack, up to a
@@ -340,9 +341,6 @@ def _hunters_vigor(ctx: SlotCtx) -> dict[str, Any] | None:
     cap; healing.py pays the missing-health-scaled heal on the first
     basic-attack damage event (the deterministic next auto).
     """
-    ability = ctx.ability("W", 0)
-    if ability is None:
-        return None
     requested = ctx.options.get("w_hunters_vigor_stacks")
     per_attack, maximum = _vigor_stack_terms(ability)
     if requested is None:

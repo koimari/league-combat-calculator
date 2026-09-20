@@ -9,7 +9,7 @@ from ..ability_spec import DamagePart
 from .charge_cadence import ChargeRule
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
-from .module_helpers import at_level, no_damage, ranked_slot
+from .module_helpers import ability_slot, at_level, no_damage, ranked_slot
 from .slot_control import with_control
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
@@ -50,10 +50,8 @@ def _final_round_count(ctx: SlotCtx) -> int:
     return 1
 
 
-def _whisper(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _whisper(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     base_percent = extract_value(ability, "Per-Level Scaling", ctx.level)
     crit = float(ctx.stat("critical_strike_chance"))
     bonus_as = float(ctx.stat("bonus_attack_speed"))

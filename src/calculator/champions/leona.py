@@ -18,7 +18,7 @@ from typing import Any
 
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import int_option
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, delayed_damage
+from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, ability_slot, delayed_damage
 from .shared_mechanics import empowered_auto_entry
 from .slot_extract import extract_cooldown, extract_named
 from .slotlib import proc_damage, simple_damage
@@ -48,10 +48,8 @@ def _sunlight(ctx: SlotCtx) -> dict[str, Any] | None:
     return result
 
 
-def _shield_of_daybreak(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _shield_of_daybreak(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     value = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     return empowered_auto_entry(

@@ -36,7 +36,7 @@ from typing import Any
 from ..binary_roots import data_value, spell_object
 from ..control_spec import ControlScope
 from .engine import BUFF, ONHIT, SlotCtx
-from .module_helpers import buff_window_share, ranked_slot, steroid_entry
+from .module_helpers import ability_slot, buff_window_share, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
 from .slot_cc import CC_PER_PART
 from .slot_control import with_control_event
@@ -60,11 +60,9 @@ _ENEMY_CAST = "enemy"
 PACKET_SHA256 = "415ac434abcaefd90a9a1ccf061d7d9b31cde1a7179b7ad7de8e6e83b6b46eef"
 
 
-def _pix_bolts(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _pix_bolts(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: Pix's 3-bolt barrage on basic attacks (per-bolt row x count)."""
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
     bolts = min(max(int(ctx.options.get("lulu_pix_bolts", _PIX_BOLTS_DEFAULT)), 0), 3)
     if bolts <= 0:
         return None

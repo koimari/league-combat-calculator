@@ -26,6 +26,7 @@ from .inputs import bool_option, int_option
 from .module_helpers import (
     REVIEWED_MODULE_ASSUMPTIONS,
     ability_cast_times,
+    ability_slot,
     no_damage,
     ranked_slot,
 )
@@ -175,7 +176,8 @@ def _surge_stack_cap(ctx: SlotCtx) -> int:
     return int(_SURGE_STACK_CAP.value(ability))
 
 
-def _mark_of_the_storm(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _mark_of_the_storm(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: walk this target's mark applications through stack -> stun cycles.
 
     Each application refreshes the sourced mark window; the third consumes
@@ -183,9 +185,6 @@ def _mark_of_the_storm(ctx: SlotCtx) -> dict[str, Any] | None:
     thing no walk can derive, because a third mark would already have been
     spent, which is why it stops at the cap minus one.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
     cap = int(_MARK_STACK_CAP.value(ability))
     window = extract_description_duration(ability, _MARK_EFFECT)
     durations = extract_description_control_durations(ability, _STUN_EFFECT)

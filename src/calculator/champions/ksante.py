@@ -8,7 +8,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
-from .module_helpers import no_damage, ranked_slot, require_named_leveling
+from .module_helpers import ability_slot, no_damage, ranked_slot, require_named_leveling
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
@@ -35,10 +35,8 @@ def _marked_attack(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     return base + (ratio + extra) * float(ctx.target_stat("target_max_health") or 0.0)
 
 
-def _dauntless(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _dauntless(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     count = min(max(int(ctx.option("p_marks")), 0), 8)
     if count <= 0:
         return None

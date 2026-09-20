@@ -23,6 +23,7 @@ from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import (
     REVIEWED_MODULE_ASSUMPTIONS,
+    ability_slot,
     named_damage,
     no_damage,
     typed_damage,
@@ -33,11 +34,9 @@ from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
 
-def _silver_stake(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _silver_stake(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: on-hit damage scaling linearly with target missing health."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     base = extract_named(
         ability, "Bonus Magic Damage", ctx.level, ctx.stats, ctx.target
     )
@@ -54,11 +53,9 @@ def _silver_stake(ctx: SlotCtx) -> dict[str, Any] | None:
     return result
 
 
-def _ritual_nails(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _ritual_nails(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """Q: one to three casts plus the selected Soul Nails detonation."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     rank = ctx.rank_for()
     casts = max(1, min(3, int(ctx.option("q_casts"))))
     per = extract_named(ability, "Magic Damage per Nail", rank, ctx.stats, ctx.target)

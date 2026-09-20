@@ -23,7 +23,12 @@ from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, float_option
-from .module_helpers import REVIEWED_MODULE_ASSUMPTIONS, no_damage, ranked_slot
+from .module_helpers import (
+    REVIEWED_MODULE_ASSUMPTIONS,
+    ability_slot,
+    no_damage,
+    ranked_slot,
+)
 from .shared_mechanics import empowered_auto_entry
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
@@ -84,10 +89,8 @@ def _bear_trap(
     return entry
 
 
-def _violent_tendencies(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _violent_tendencies(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     value = extract_named(
         ability, "Additional Physical Damage", rank, ctx.stats, ctx.target

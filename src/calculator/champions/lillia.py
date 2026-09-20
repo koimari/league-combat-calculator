@@ -11,6 +11,7 @@ from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import (
     REVIEWED_MODULE_ASSUMPTIONS,
+    ability_slot,
     mixed_damage,
     named_damage,
     no_damage,
@@ -21,10 +22,8 @@ from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 
-def _dream_laden_bough(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _dream_laden_bough(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     ticks = max(1, min(6, int(ctx.option("p_ticks"))))
     max_hp = float(ctx.target_stat("target_max_health") or 0.0)
     ap = float(ctx.stat("ability_power"))
@@ -46,10 +45,8 @@ def _dream_laden_bough(ctx: SlotCtx) -> dict[str, Any] | None:
     }
 
 
-def _blooming_blows(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _blooming_blows(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     rank = ctx.rank_for()
     magic = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     true_damage = magic if bool(ctx.option("q_outer_edge")) else 0.0

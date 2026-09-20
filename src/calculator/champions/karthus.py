@@ -20,7 +20,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import DEBUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import clamp, ranked_slot
+from .module_helpers import ability_slot, clamp, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
@@ -274,7 +274,8 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Karthus")
 
 
-def _death_defied(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _death_defied(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: zero-damage receipt — a death-only trigger outside the fight.
 
     Death Defied lets Karthus keep casting for 7 seconds after taking
@@ -283,9 +284,6 @@ def _death_defied(ctx: SlotCtx) -> dict[str, Any] | None:
     contributes zero damage here; this receipt documents the boundary
     with its sourced trigger so the alive-state package is complete.
     """
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
     entry = damage_entry(
         ability_name(ability),
         ctx.level,

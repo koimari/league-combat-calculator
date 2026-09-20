@@ -27,6 +27,7 @@ from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
 from .inputs import int_option
+from .module_helpers import ability_slot
 from .packet_module import build_packet_module
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, find_named_leveling, sum_modifiers
@@ -49,11 +50,9 @@ _ILLUMINATION_MARK = CachedSentence(
 )
 
 
-def _illumination(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _illumination(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: Illumination — post-ability autos deal 30 : 200 + 35% AP magic."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     level = ctx.level
     leveling = find_named_leveling(ability, "Per-Level Scaling")
     if leveling is None:

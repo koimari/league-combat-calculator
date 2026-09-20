@@ -16,6 +16,7 @@ from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option
 from .module_helpers import (
     REVIEWED_MODULE_ASSUMPTIONS,
+    ability_slot,
     no_damage,
     ranked_slot,
     typed_damage,
@@ -28,10 +29,8 @@ from .slotlib import simple_damage
 from .source_receipts import load_champion_sources
 
 
-def _kayle_passive(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability()
-    if ability is None:
-        return None
+@ability_slot()
+def _kayle_passive(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     if ctx.level < 11 or not bool(ctx.option("p_exalted")):
         return no_damage(
             ctx,
