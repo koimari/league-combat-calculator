@@ -75,14 +75,6 @@ from tests.coverage_resolver import tag_dispatch_branches
 LEVEL = 18
 DURATION = 10.0
 TARGET_BONUS_HEALTH = 0.0
-HOLDER_IS_MELEE = False
-
-CATALOG_CONTEXT = FightFacts(
-    level=LEVEL,
-    fight_duration_seconds=DURATION,
-    target_bonus_health=TARGET_BONUS_HEALTH,
-    holder_is_melee=HOLDER_IS_MELEE,
-)
 
 # Which item carries each shared tag today, read off the live registry so a
 # renamed or retired item fails here rather than skipping its comparison.
