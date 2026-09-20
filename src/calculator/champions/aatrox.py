@@ -257,12 +257,11 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     "Assumed R is always active",
-    "W always hits both initial and pull-back damage: the tether is never "
-    "broken, so the second hit lands 1.5 cached seconds after the first",
+    "W hits twice: the tether never breaks, so the pull-back lands 1.5 cached seconds "
+    "after the first.",
     "Q always lands all three strikes, one second apart",
-    "E (Umbral Dash) carries no enemy-damage attribute (damageType: None, "
-    "no leveling row on any effect); it emits a sourced no_damage row. Its "
-    "heal is priced through derive_self_healing, not this slot.",
+    "E (Umbral Dash) has no damageType or leveling row: a sourced no_damage row, its "
+    "heal on derive_self_healing.",
 ]
 
 SLOTS = {

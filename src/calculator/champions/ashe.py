@@ -220,20 +220,16 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Q (Ranger's Focus) is a typed kernel stack state: basic attacks "
-    "on-attack build Focus (cap 4, 4-second duration, refreshing on "
-    "subsequent attacks, expiring one by one every second after the "
-    "window; a capped attack does not refresh the window); the ability "
-    "activates only at 4 stacks and q_focus_stacks is the explicit "
-    "pre-stack state.  Live per-attack gains during a fight are not "
-    "wired: the rotation resolver does not feed per-swing events into "
-    "champion-module parses (named reason), so the fight starts from "
-    "the seeded state and the kernel receipt documents the rule",
+    "Q (Ranger's Focus) builds Focus on attack: cap 4, 4s window, refreshing per "
+    "attack, then expiring one per second.",
+    "A capped attack does not refresh the window, and Q activates only at 4 stacks.",
+    "q_focus_stacks seeds the fight: the rotation resolver feeds no per-swing events "
+    "into champion parses.",
     "Q assumed active by default (4 pre-stacked Focus)",
     "Passive bonus damage from crit chance applied to all auto attacks",
     "W hits a single target (one arrow per enemy)",
-    "E (Hawkshot) carries no enemy-damage attribute (damageType: None, no "
-    "leveling row on either effect); it emits a sourced no_damage row.",
+    "E (Hawkshot) has damageType None and no leveling row on either effect, so it "
+    "emits a sourced no_damage row.",
 ]
 
 SLOTS = {

@@ -355,51 +355,34 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Q is modeled as one full 3.25s channel per cast: full beam damage "
-    "plus 3 bursts on the primary target (in-game the channel can run "
-    "longer — up to 160s at rank 5, unlimited during W)",
-    "Timed fights assume Q channels continuously for the whole duration, "
-    "uninterrupted by other casts — beam damage every second, one burst "
-    "per full second; below rank 5 without W this overstates Q uptime "
-    "(3.25s channel cap plus cooldown gaps)",
+    "Q is one full 3.25s channel per cast: full beam damage plus 3 bursts on the "
+    "primary target.",
+    "In game the channel can run to 160s at rank 5, and is unlimited during W.",
+    "Timed fights assume Q channels the whole duration: beam damage each second, one "
+    "burst per full second.",
+    "Below rank 5 without W that overstates Q uptime, since the channel caps at 3.25s "
+    "plus cooldown gaps.",
     "Timed fights count the whole Q channel as a single cast for "
     "cast-counted item effects (e.g. spellblade procs)",
-    "W active multiplies Q's beam flat damage only (wiki: 'non-burst flat "
-    "damage'), never the burst base or AP portions; the channel window is "
-    "unchanged for an apples-to-apples toggle comparison",
+    "W multiplies only Q's beam flat damage (wiki 'non-burst flat damage'), not the "
+    "burst or AP; the window is unchanged.",
     "E assumes the target stays in the zone for the full 5s (all 20 ticks)",
     "Empowered R shows the star impact only — a target hit by the star is "
     "immune to the shockwave",
-    "Secondary-target Q beam damage is priced from the sourced "
-    "'Secondary Magic Damage per Second' row (exactly 50% of the "
-    "primary row at every rank, flat and % AP) per secondary target "
-    "selected via the parse/API-level q_secondary_targets option "
-    "(default 0 = primary only); the Stardust bursts remain "
-    "primary-target-only, and W's flat-damage modifier applies to the "
-    "secondary beam as non-burst flat damage.  The key is a declared "
-    "OPTIONS row like every other secondary-target count in the roster "
-    "(Orianna's Command: Attack, Xayah's Clean Cuts): a formula reads its "
-    "options through the rows the frontend renders, so the number it "
-    "falls back to and the number the user is shown are one value",
-    "Q's cached 'cost' row (8.75/10/11.25/12.5/13.75 mana) is NOT a "
-    "stale value: it is the wiki's per-0.25s-tick drain, exactly 1/4 "
-    "of the game's per-second convention (bin AurelionSolQ 'mana' "
-    "[35, 40, 45, 50, 55]; ddragon costBurn '35/40/45/50/55', costType "
-    "'Mana per second') — the ratio is exact (4.0x) at every rank, the "
-    "same wiki per-tick display convention this module already sources "
-    "for Q's damage rows (8 beam ticks/s). patch_regression.py's "
-    "ability-row comparison flags this as 'cost drifted' because it "
-    "diffs the raw cached values against the raw per-second game "
-    "field without a unit conversion; that comparison is a row-mapping "
-    "artifact, not a real cache drift (verified 16.15/16.16.1: cdtb "
-    "aurelionsol.bin.json + ddragon AurelionSol.json). resource_cost is "
-    "not stamped for Q's channel (no per-cast test asserts it), so no "
-    "runtime behavior is affected either way.",
-    "P (Cosmic Creator) and W (Astral Flight) carry no sourced "
-    "damage/heal/shield row of their own (P's leveling is empty; W's "
-    "only leveling row is the Q beam multiplier already priced above) "
-    "— both are no_damage, not out_of_scope, and each emits an explicit "
-    "zero-damage state row rather than staying silently absent.",
+    "Secondary Q beam damage reads the cached Secondary Magic Damage per Second row, "
+    "50% of primary at every rank.",
+    "q_secondary_targets (default 0) counts them; the Stardust bursts stay "
+    "primary-target only.",
+    "W's flat-damage modifier applies to the secondary beam as non-burst flat damage.",
+    "Q's cached cost 8.75/10/11.25/12.5/13.75 mana is the wiki per-0.25s tick, 1/4 of "
+    "the game's per-second 35 to 55.",
+    "patch_regression.py diffs the raw rows, so it reports 'cost drifted' where only "
+    "the unit differs.",
+    "resource_cost is not stamped for Q's channel, so no runtime behavior depends on "
+    "it.",
+    "P (Cosmic Creator) has an empty leveling row and W (Astral Flight) only the Q "
+    "beam multiplier already priced.",
+    "Both emit an explicit no_damage row, not out_of_scope.",
 ]
 
 SLOTS = {

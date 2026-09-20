@@ -308,38 +308,34 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Aphelios",
     PACKET_SHA256,
     assumption_overrides=(
-        "The main weapon and Weapon Master skill-point allocation are explicit scenario inputs; "
-        "the main weapon is the module's form axis and P, Q and R all branch on it. Weapon "
-        "Master's AD/AS/lethality grants are read from the cached rows, indexed by points spent.",
-        "P prices two of the five weapon innates on the basic-attack channel: Calibrum's mark "
-        "bonus (15 + 15% bonus AD per mark, on one empowered attack, from aphelios_calibrum_marks "
-        "— default 0, because a mark exists only after an ability of his has damaged the target) "
-        "and Infernum's 110% AD primary-target attack (the extra 10% priced on the same swing, at "
-        "a basic attack's crit effectiveness; the cone's secondary targets need a roster and stay "
-        "unpriced). Severum's innate is priced as healing, Gravitum's is a slow that damages "
-        "nothing, and Crescendum's Chakram bonus is unpriced: its cached effect states "
-        "'0% : 138.5% (based on number of Chakrams) AD additional physical damage' in prose over "
-        "an empty leveling list, so no per-Chakram row exists to price.",
-        "Phase (W) is a weapon swap, not a damage cast: its row carries the cached 0.8-second "
-        "cooldown and states the cached 0.25-second swap duration, and the module holds one main "
-        "weapon for the whole fight rather than simulating mid-fight swaps.",
-        "Onslaught (severum Q) applies wiki-sourced item on-hits at 25% per attack; Duskwave "
-        "(infernum Q) at 100% for its locked-on volley, whose own 100% AD is dealt by the "
-        "off-hand weapon and stays unpriced.",
-        "Moonlight Vigil models the sourced initial blast; with r_followup_targets (default 0) "
-        "selected, each locked-on champion also takes one follow-up attack from the sky: 100% AD "
-        "physical basic damage applying on-hit effects at 100% (cached R prose), with the sourced "
-        "special crit — 'critically strike for 100% : 130% (+ 0% : 9%) (based on critical strike "
-        "chance)' — baked in as an expected-value multiplier 1 + 0.39 x crit^2 (the follow-up "
-        "crits are far weaker than the 200% normal attacks use).",
-        "Severum's excess healing converts into a shield capped at the sourced per-level 'Heal' "
-        "row (10 : 160 by level + 6% maximum health) that lingers for up to 30 seconds (wiki P "
-        "prose); with aphelios_overheal_shield (default True) the healing rule stamps each Severum "
-        "heal with the sourced cap and duration, and the participant timeline converts "
-        "heal-in-excess-of-maximum-health into a timed shield at the heal's timestamp.",
-        "E (Weapon Queue System) carries no enemy-damage attribute (data/champions.json "
-        "Aphelios E has damageType: None and an empty leveling list on both effect rows); "
-        "the pinned packet's no_damage slot is the row it emits.",
+        "The main weapon is the form axis for P, Q and R, and Weapon Master points "
+        "are scenario inputs.",
+        "Weapon Master's AD, AS and lethality grants read the cached rows indexed by "
+        "points spent.",
+        "P prices two of the five weapon innates on the basic-attack channel.",
+        "Calibrum's mark adds 15 + 15% bonus AD on one empowered attack, at "
+        "aphelios_calibrum_marks (default 0).",
+        "Infernum's primary attack is 110% AD, the extra 10% on the same swing; the "
+        "cone's secondaries stay unpriced.",
+        "Severum prices as healing, Gravitum damages nothing, Crescendum's Chakram "
+        "bonus is prose over empty leveling.",
+        "Phase (W) is a weapon swap, not a damage cast: cached 0.8s cooldown, cached "
+        "0.25s swap.",
+        "One main weapon holds for the whole fight, with no mid-fight swap.",
+        "Onslaught (severum Q) applies cached item on-hits at 25% per attack, "
+        "Duskwave (infernum Q) at 100%.",
+        "Duskwave's own 100% AD comes from the off-hand weapon and stays unpriced.",
+        "Moonlight Vigil (R) prices the sourced initial blast.",
+        "Each r_followup_targets (default 0) champion takes one 100% AD sky attack "
+        "applying on-hit at 100% (cached R prose).",
+        "Its sourced 100% to 130% crit is an expected-value multiplier 1 + 0.39 x "
+        "crit^2, weaker than a 200% attack.",
+        "Severum overheal becomes a shield capped at the cached Heal row (10 to 160 "
+        "by level + 6% maximum health) for 30s.",
+        "aphelios_overheal_shield (default True) stamps each Severum heal, and the "
+        "timeline converts the excess at its time.",
+        "E (Weapon Queue System) has damageType None and empty leveling rows in "
+        "cache, so its packet slot is no_damage.",
     ),
     slot_parsers={
         "P": _weapon_master,

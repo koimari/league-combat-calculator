@@ -353,11 +353,9 @@ class TestSourceAndTypedValues:
         assert state["refresh"] == "refresh"
         assert state["expiry"] == "step_down"
         assert state["source"]["revision_id"] == 4015971
-        assert any("typed kernel stack state" in text for text in meta["assumptions"])
-        assert any(
-            "Live per-attack gains during a fight are not wired" in text
-            for text in meta["assumptions"]
-        )
+        published = " ".join(meta["assumptions"])
+        assert "cap 4, 4s window, refreshing per attack" in published
+        assert "the rotation resolver feeds no per-swing events" in published
         assert meta["sources"][0]["url"].endswith("/en-us/Ashe")
         assert meta["sources"][0]["revision_id"] == 4015971
 

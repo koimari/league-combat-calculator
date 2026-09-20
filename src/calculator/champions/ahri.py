@@ -143,14 +143,12 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "P (Essence Theft) consumes 9 Essence Fragments to heal 35 : 95 "
-    "(based on level) (+ 20% AP) — the cached P 'Heal' leveling row; "
-    "fragment generation comes from minion/monster kills the 1v1 model "
-    "does not simulate, so the user supplies the stack count "
-    "(p_essence_fragments, default 9) and the heal fires once per fight "
-    "on the first ability that hits the enemy champion",
-    "The champion-takedown heal (75 : 165 by level + 30% AP) is a kill "
-    "boundary — a takedown ends the fight before a heal receipt can apply",
+    "P (Essence Theft) heals 35 to 95 by level + 20% AP for 9 fragments, the cached P "
+    "Heal row.",
+    "Fragments come from kills the 1v1 model does not simulate: p_essence_fragments "
+    "(default 9), healing once per fight.",
+    "The takedown heal (75 to 165 by level + 30% AP) is a kill boundary: the fight "
+    "ends before a heal receipt applies.",
 ]
 
 SLOTS = {

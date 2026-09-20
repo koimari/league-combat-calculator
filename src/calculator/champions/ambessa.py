@@ -314,9 +314,8 @@ parse_abilities = build_parser(SLOTS, "Ambessa", cc_kinds=MODULE_CC)
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "W (Repudiation) also shields Ambessa at the cast for the level-indexed "
-    "base (50 : 320 by level) + 150% bonus AD for 1.5s; the shield absorbs "
-    "incoming damage in the participant ledger.",
+    "W (Repudiation) shields Ambessa at the cast for 50 to 320 by level + 150% bonus "
+    "AD over 1.5s, in the participant ledger.",
 ]
 
 

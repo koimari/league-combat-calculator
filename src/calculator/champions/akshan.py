@@ -382,20 +382,16 @@ ASSUMPTIONS = [
     "R assumes full channel (max bullets at max damage)",
     "R crit scaling at 30% effectiveness applied",
     "Double shot applies on-hit effects and can crit",
-    "Dirty Fighting stacks up to 3 (cap) on the target and the third "
-    "stack consumes them all: each passive_procs entry is one completed "
-    "3-stack detonation (15/40/80/150 by level + 60% AP, the level "
-    "breakpoints and AP ratio regex-read from the wiki description)",
-    "Each completed 3-stack detonation also grants the proc shield "
-    "(40:280 by level + 35% bonus AD for 2s, the cached 'Bonus Damage' "
-    "row); one shield per proc burst — the proc events ride the cast "
-    "boundary and the shield internal cooldown (16/12/8/4s by level, "
-    "game-file PassiveCooldown) cannot elapse between them",
-    "W (Going Rogue) carries no enemy-damage attribute (damageType: None, "
-    "no effect row deals HP loss to a champion); it emits a sourced "
-    "no_damage row. Its conditional bonus movement speed (80-120 by rank, "
-    "only while facing a marked Scoundrel in camouflage) is a documented, "
-    "sourced-but-unmodeled rider — not a default-on steroid.",
+    "Dirty Fighting detonates on the third stack (15/40/80/150 by level + 60% AP, "
+    "wiki); one passive_procs entry per burst.",
+    "Each detonation grants the proc shield (40 to 280 by level + 35% bonus AD, 2s, "
+    "cached Bonus Damage row).",
+    "One shield per burst: the 16/12/8/4s PassiveCooldown (game file) cannot elapse "
+    "between cast-boundary procs.",
+    "W (Going Rogue) has no damageType and no HP-loss row, so it emits a sourced "
+    "no_damage row.",
+    "W's 80 to 120 by rank move speed needs a marked Scoundrel: sourced, not modeled, "
+    "not a default-on steroid.",
 ]
 
 SLOTS = {

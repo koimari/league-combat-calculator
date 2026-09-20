@@ -459,7 +459,9 @@ class TestOptionsMeta:
     def test_assumptions_present(self) -> None:
         meta = get_champion_options_meta("Aurelion Sol")
         assert any("3.25" in text for text in meta["assumptions"])
-        assert any("continuous" in text.lower() for text in meta["assumptions"])
+        assert any(
+            "channels the whole duration" in text for text in meta["assumptions"]
+        )
 
 
 # ---------------------------------------------------------------------------

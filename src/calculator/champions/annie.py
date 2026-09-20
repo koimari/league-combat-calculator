@@ -394,28 +394,19 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     "R magic penetration passive is always active",
-    "E (Molten Shield) shields Annie for the sourced 60/95/130/165/200 "
-    "+ 40% AP (cached Shield Strength row) for the typed active-duration "
-    "atom at the cast; the ally-support scanner emits the packet and it "
-    "absorbs incoming damage in the participant ledger",
-    "Tibbers auto attacks are priced at the wiki pets cadence (5 enrage "
-    "attacks from the summon, then the 0.625 base AS) truncated to the "
-    "fight window; positioning/leash uptime is a player choice via the "
-    "tibbers_attacks option",
-    "An autos-only fight has no Tibbers at all (the pipeline states this "
-    "with the auto_attacks_only reserved option): the cached R text "
-    "sources him to 'Active: Annie summons Tibbers to the target "
-    "location', which no basic attack performs. R's magic-penetration "
-    "passive is innate and still applies",
+    "E (Molten Shield) shields Annie for 60/95/130/165/200 + 40% AP (cached Shield "
+    "Strength row) over its duration atom.",
+    "Tibbers autos ride the wiki cadence (5 enrage, then 0.625 base AS) clipped to "
+    "the fight; tibbers_attacks sets uptime.",
+    "An autos-only fight summons no Tibbers (cached R Active); R's magic penetration "
+    "passive is innate and still applies.",
     "Tibbers aura defaults to 5 seconds of damage",
-    "The Pyromania charge walks the fight's own cast stream at the "
-    "Braum-pattern schedule (each learned slot at t=0 and every hasted "
-    "cooldown after); the empowered cast consumes the whole charge and "
-    "starts recharging from zero, and an autos-only window casts nothing, "
-    "so the charge never moves",
-    "E retaliation lands only when the scenario declares enemies hitting "
-    "the shield (e_shield_retaliations, default 0): who strikes Annie and "
-    "when is not something the one-pair fight sources",
+    "The Pyromania charge walks the cast stream: each learned slot at t=0, then every "
+    "hasted cooldown.",
+    "The empowered cast spends the whole charge and recharges from zero, so an "
+    "autos-only window never moves it.",
+    "E retaliation needs e_shield_retaliations (default 0): the one-pair fight does "
+    "not source who strikes Annie.",
 ]
 
 SLOTS = {

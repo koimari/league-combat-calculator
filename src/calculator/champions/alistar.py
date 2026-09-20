@@ -269,28 +269,18 @@ OPTIONS: list[dict[str, Any]] = [
 ASSUMPTIONS = [
     "E Trample deals full duration damage (10 ticks over 5 seconds)",
     "E empowered auto always procs once per cast (5 stacks reached)",
-    "P (Triumphant Roar) heals 5% of maximum health when the seventh "
-    "Triumph stack lands (cached P prose), through SELF_HEALING_RULE. Q "
-    "and W each generate one stack against this fight's champion, so "
-    "p_triumph_stacks (default 0) supplies the rest; minion and monster "
-    "deaths are not simulated, and the wiki's unstated internal cooldown "
-    "('only once every few seconds') is not enforced. The 7%-of-maximum-"
-    "health ally heal in the same sentence is a different amount than "
-    "the 5% self heal, and the engine's champion-authored heal fan-out "
-    "clones one shared amount to every recipient — so it belongs to the "
-    "ally scanner, not to this rule",
-    "R (Unbreakable Will) is modeled as a zero-damage self-state window: "
-    "the ranked Damage Reduction row (55/65/75%, required_ranked_"
-    "attribute_atom) prices the multiplier and the description's prose "
-    "'for the next 7 seconds' (timing.active_duration atom) prices the "
-    "window, armed through self_state_events kind=damage_modifier "
-    "(Briar-E / Sivir-E precedent). Declared classes are physical + "
-    "magic only: true damage is explicitly excluded ('True damage "
-    "cannot be reduced by any means and will deal full damage to "
-    "Alistar during Unbreakable Will', cached R note). The self-cleanse "
-    "of Alistar's own crowd control has no channel in this engine (no "
-    "champion module clears an already-armed CC on itself) and stays "
-    "unmodeled",
+    "P (Triumphant Roar) heals 5% of maximum health on the seventh Triumph stack "
+    "(cached P prose).",
+    "Q and W each bank one stack here, so p_triumph_stacks (default 0) supplies the "
+    "rest; minion deaths are not simulated.",
+    "The wiki's unstated internal cooldown is not enforced, and the 7% ally heal is "
+    "the ally scanner's, not this rule.",
+    "R (Unbreakable Will) is a zero-damage self-state window: 55/65/75% Damage "
+    "Reduction over the 7s duration atom.",
+    "R arms self_state_events damage_modifier over physical and magic only; the "
+    "cached R note excludes true damage.",
+    "Alistar's self-cleanse of his own crowd control has no channel in this engine "
+    "and stays unmodeled.",
 ]
 
 SLOTS = {

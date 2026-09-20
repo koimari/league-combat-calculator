@@ -159,17 +159,12 @@ ASSUMPTIONS = [
     "Q hits both pass-through and detonation (total damage used)",
     "E target is always Chilled (empowered damage used)",
     "R first 1.5s uses initial tick damage, remaining uses fully-formed tick damage",
-    "W (Crystallize) is a knockback wall with no sourced damage/heal/shield "
-    "number (confirmed against the cached leveling, the atoms capture, and "
-    "the game binary); modeled as an explicit no_damage row rather than "
-    "left silently absent.",
-    "P (Rebirth) is modeled as the sourced revive state: full maximum health "
-    "after a 6s resurrection on a 240s cooldown (cached passive prose), "
-    "wired through StartingDefenses.revive_* like Zac and Zilean. The "
-    "same passive's sourced '-40 : 20 (based on level) bonus armor and "
-    "bonus magic resistance' grant while resurrecting has no consumer "
-    "anywhere in this engine (no revive_bonus_armor/revive_bonus_magic_"
-    "resistance field exists) and stays sourced-but-unmodeled.",
+    "W (Crystallize) is a knockback wall with no sourced damage, heal or shield row "
+    "in cache, atoms or binary: no_damage.",
+    "P (Rebirth) revives at full maximum health after 6s on a 240s cooldown (cached "
+    "passive prose), through StartingDefenses.",
+    "Its -40 to 20 by level bonus armor and magic resist while resurrecting has no "
+    "consumer here and stays unmodeled.",
 ]
 
 SLOTS = {
