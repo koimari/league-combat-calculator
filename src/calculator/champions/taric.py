@@ -45,6 +45,7 @@ from collections.abc import Mapping
 from functools import partial
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from ..healing_helpers import ability_json, parsed_rank
 from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx
@@ -72,11 +73,23 @@ PACKET_SHA256 = "c4661e1dfa5a63e1d512d64efc3bbb6cfb5e5d22f3c5d3e08c363f4d5c672cb
 # Every read below fails closed: a wiki rewrite that moves or renames a
 # term raises here naming the champion and the missing term, rather than
 # silently falling back to a stale literal.
-_BRAVADO_WINDOW_RE = re.compile(
-    r"empowers his next (?P<attacks>[a-z]+) basic attacks within "
-    r"(?P<seconds>\d+(?:\.\d+)?) seconds"
+_BRAVADO_WINDOW = CachedSentence(
+    re.compile(
+        r"empowers his next (?P<attacks>[a-z]+) basic attacks within "
+        r"(?P<seconds>\d+(?:\.\d+)?) seconds"
+    ),
+    missing=(
+        "Taric P (Bravado): no cached description declares the 'empowers "
+        "his next <N> basic attacks within <T> seconds' window"
+    ),
 )
-_BRAVADO_BONUS_ARMOR_RE = re.compile(r"\+\s*(?P<percent>\d+(?:\.\d+)?)%\s*bonus armor")
+_BRAVADO_BONUS_ARMOR = CachedSentence(
+    re.compile(r"\+\s*(?P<value>\d+(?:\.\d+)?)%\s*bonus armor"),
+    missing=(
+        "Taric P (Bravado): the cached description carries no "
+        "'+ N% bonus armor' ratio for the on-attack damage"
+    ),
+)
 # The description spells the empowered-attack count as an English word.
 _BRAVADO_ATTACK_WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5}
 # Every one of Taric's casts arms Bravado ("After casting an ability").
@@ -90,37 +103,18 @@ _BRAVADO_REFRESH_ON_CONSUME = True
 
 
 def _bravado_window_terms(ability: Mapping[str, Any]) -> tuple[int, float, float]:
-    """Read (empowered attacks, window seconds, bonus-armor ratio) from cache.
-
-    Raises:
-        ValueError: when the cached P description declares neither the
-            window shape nor the bonus-armor ratio.
-    """
-    for effect in ability.get("effects", []):
-        description = effect.get("description", "")
-        window = _BRAVADO_WINDOW_RE.search(description)
-        if window is None:
-            continue
-        word = window.group("attacks")
-        if word not in _BRAVADO_ATTACK_WORDS:
-            raise ValueError(
-                "Taric P (Bravado): the cached description empowers "
-                f"'{word}' basic attacks, which is not a known count"
-            )
-        armor = _BRAVADO_BONUS_ARMOR_RE.search(description)
-        if armor is None:
-            raise ValueError(
-                "Taric P (Bravado): the cached description carries no "
-                "'+ N% bonus armor' ratio for the on-attack damage"
-            )
-        return (
-            _BRAVADO_ATTACK_WORDS[word],
-            float(window.group("seconds")),
-            float(armor.group("percent")) / 100.0,
+    """Read (empowered attacks, window seconds, bonus-armor ratio) from cache."""
+    window = _BRAVADO_WINDOW.match(ability)
+    word = window.group("attacks")
+    if word not in _BRAVADO_ATTACK_WORDS:
+        raise ValueError(
+            "Taric P (Bravado): the cached description empowers "
+            f"'{word}' basic attacks, which is not a known count"
         )
-    raise ValueError(
-        "Taric P (Bravado): no cached description declares the 'empowers "
-        "his next <N> basic attacks within <T> seconds' window"
+    return (
+        _BRAVADO_ATTACK_WORDS[word],
+        float(window.group("seconds")),
+        _BRAVADO_BONUS_ARMOR.value(ability) / 100.0,
     )
 
 
@@ -258,6 +252,37 @@ ASSUMPTIONS = [
 
 COVERAGE_CHANNELS = {"Q": ("self_healing_rule",)}
 
+# Starlight's Touch states both of its formulas in prose: what one charge
+# heals, and the ceiling five charges reach.  The cache spells the health
+# share one way in each sentence ("his" and "Taric's"), so both spellings
+# are read rather than one of them silently answering nothing.
+_STARLIGHT_PER_CHARGE = CachedSentence(
+    re.compile(
+        r"for\s+(?P<flat>\d+(?:\.\d+)?)\s*\(\+\s*(?P<ap>\d+(?:\.\d+)?)%\s*AP\)"
+        r"\s*\(\+\s*(?P<health>\d+(?:\.\d+)?)%\s*of (?:his|Taric's) maximum "
+        r"health\)\s*per charge",
+        re.IGNORECASE,
+    ),
+    missing=(
+        "Taric Q (Starlight's Touch): the cached active no longer states the "
+        "per-charge heal ('for N (+ N% AP) (+ N% of his maximum health) per "
+        "charge')"
+    ),
+)
+_STARLIGHT_CEILING = CachedSentence(
+    re.compile(
+        r"maximum of\s+(?P<flat>\d+(?:\.\d+)?)\s*\(\+\s*(?P<ap>\d+(?:\.\d+)?)%"
+        r"\s*AP\)\s*\(\+\s*(?P<health>\d+(?:\.\d+)?)%\s*of (?:his|Taric's) "
+        r"maximum health\)",
+        re.IGNORECASE,
+    ),
+    missing=(
+        "Taric Q (Starlight's Touch): the cached active no longer states the "
+        "heal ceiling ('maximum of N (+ N% AP) (+ N% of Taric's maximum "
+        "health)')"
+    ),
+)
+
 
 def _starlights_touch(
     q_ability: dict[str, Any],
@@ -266,57 +291,30 @@ def _starlights_touch(
 ) -> tuple[float, int]:
     """Price one Taric Q (Starlight's Touch) cast from the cached data.
 
-    The per-charge and maximum formulas are wiki description text in
+    The per-charge and ceiling formulas are wiki description text in
     ``data/champions.json``; the stock is the rank-scaled "Maximum Charges"
     leveling attribute.  Returns ``(heal_amount, charges_used)`` — the
     amount at the sourced stock, capped at the "maximum of ... at 5
-    charges" row, with zero when no per-charge formula or stock exists.
-    This is the single formula source for the Q heal; the support scanner
-    never re-prices the slot.
+    charges" row, and zero while the slot holds no charge.  This is the
+    single formula source for the Q heal; the support scanner never
+    re-prices the slot.
     """
     charges = extract_named(q_ability, "Maximum Charges", q_rank, champion_stats, {})
-    descriptions = [
-        effect.get("description", "") for effect in q_ability.get("effects", [])
-    ]
-    per_charge_match = re.search(
-        r"for\s+(\d+(?:\.\d+)?)\s*\(\+\s*(\d+(?:\.\d+)?)%\s*AP\)"
-        r"\s*\(\+\s*(\d+(?:\.\d+)?)%\s*of his maximum health\)\s*per charge",
-        " ".join(descriptions),
-        flags=re.IGNORECASE,
-    )
-    maximum_match = re.search(
-        r"maximum of\s+(\d+(?:\.\d+)?)\s*\(\+\s*(\d+(?:\.\d+)?)%\s*AP\)"
-        r"\s*\(\+\s*(\d+(?:\.\d+)?)%\s*of his maximum health\)",
-        " ".join(descriptions),
-        flags=re.IGNORECASE,
-    )
-    if per_charge_match is None or charges <= 0.0:
+    per_charge_terms = _STARLIGHT_PER_CHARGE.match(q_ability)
+    ceiling_terms = _STARLIGHT_CEILING.match(q_ability)
+    if charges <= 0.0:
         return 0.0, max(0, round(charges))
     maximum_health = champion_stat(champion_stats, "health", champion="Taric")
     ability_power = champion_stat(champion_stats, "ability_power", champion="Taric")
 
-    def _charge_heal(flat: float, ap_percent: float, hp_percent: float) -> float:
+    def _charge_heal(terms: re.Match[str]) -> float:
         return (
-            flat
-            + ability_power * ap_percent / 100.0
-            + maximum_health * hp_percent / 100.0
+            float(terms.group("flat"))
+            + ability_power * float(terms.group("ap")) / 100.0
+            + maximum_health * float(terms.group("health")) / 100.0
         )
 
-    per_charge = _charge_heal(
-        float(per_charge_match.group(1)),
-        float(per_charge_match.group(2)),
-        float(per_charge_match.group(3)),
-    )
-    heal = charges * per_charge
-    if maximum_match is not None:
-        heal = min(
-            heal,
-            _charge_heal(
-                float(maximum_match.group(1)),
-                float(maximum_match.group(2)),
-                float(maximum_match.group(3)),
-            ),
-        )
+    heal = min(charges * _charge_heal(per_charge_terms), _charge_heal(ceiling_terms))
     return max(0.0, heal), max(0, round(charges))
 
 
