@@ -218,24 +218,22 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "W (Tough It Out) shields Olaf for the sourced 10/40/70/100/130 + "
-    "17.5% missing health for 2.5s at the cast; the ally-support scanner "
-    "emits the self packet with the flat component at the full-health "
-    "floor (the missing-health term and its 70%-of-missing-health cap "
-    "are documented boundaries), and it absorbs incoming damage in the "
-    "participant ledger",
-    "P (Berserker Rage) grants the first Per-Level Scaling row "
-    "(50% : 107.84% bonus attack speed) scaled by Olaf's missing health, "
-    "which the fight engine does not track — olaf_missing_health_percent "
-    "is that input, defaulting to 30% (the tree's one declared "
-    "self-missing-health default).  The second row (8% : 27.67% life "
-    "steal) has no stat_buff key and is named rather than priced.",
-    "W's Bonus Attack Speed row (40-80%) and R's Bonus Attack Damage "
-    "(10/20/30 + 25% AD) and Bonus Resistances (10/15/20) rows are "
-    "applied for their sourced 5- and 3-second windows, time-weighted by "
-    "the share of the fight window each covers.  R's bonus movement "
-    "speed, its crowd-control immunity and the up-to-2.5s-per-hit "
-    "duration extension are named rather than priced.",
+    "W (Tough It Out) shields Olaf for the sourced 10/40/70/100/130 + 17.5% missing "
+    "health over 2.5s.",
+    "The self packet carries the flat component at the full-health floor.",
+    "W's missing-health term and its 70%-of-missing cap are documented boundaries.",
+    "P (Berserker Rage) grants the first Per-Level row, 50% to 107.84% bonus attack "
+    "speed.",
+    "P scales it by Olaf's missing health, untracked by the engine: "
+    "olaf_missing_health_percent (default 30%).",
+    "The second row, 8% to 27.67% life steal, has no stat_buff key and is named "
+    "rather than priced.",
+    "W's Bonus Attack Speed row, 40 to 80%, is applied for its sourced 5s window, "
+    "time-weighted.",
+    "R's Bonus Attack Damage 10/20/30 + 25% AD and Bonus Resistances 10/15/20 take "
+    "its sourced 3s window.",
+    "R's move speed, crowd-control immunity and the up-to-2.5s-per-hit extension are "
+    "named rather than priced.",
 ]
 
 # No MODULE_COVERAGE: every one of the five slots emits a priced row now

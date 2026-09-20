@@ -157,14 +157,16 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Passive stacks ramp naturally on a single target: auto 1 at 0 "
-    "stacks, auto 2 at +15%, auto 3+ at +30%; stacks never drop "
-    "mid-fight (4s refresh window, sustained attacking)",
+    "Passive stacks ramp on one target: auto 1 at 0, auto 2 at +15%, auto 3 and later "
+    "at +30%.",
+    "Stacks never drop mid-fight: the 4s refresh window holds under sustained "
+    "attacking.",
     "Passive applies spell effects, not on-hit effects — it does not "
     "trigger on-hit items",
-    "Q prices the primary target at full damage plus one sourced 70% "
-    "Reduced Damage hit per q_secondary_targets (default 0) — the "
-    "cached prose's 'reduced to 70% against those hit beyond the first'",
+    "Q prices the primary at full damage plus one sourced 70% Reduced Damage hit per "
+    "q_secondary_targets (default 0).",
+    "The cached prose says damage is 'reduced to 70% against those hit beyond the "
+    "first'.",
     "W speed field and slow are not modeled (utility)",
     "E shield (55-195 +45% AP) and bonus armor/MR (6-30) are not "
     "modeled (defensive only)",

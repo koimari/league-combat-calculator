@@ -248,31 +248,30 @@ OPTIONS: list[dict[str, Any]] = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Q prices the Hurl Physical Damage row plus the Mortal Will empowered "
-    "term (20 : 265.88 by level + 115% bonus AD) — Pantheon starts fights "
-    "with maximum Mortal Will stacks (cached P description), so the first "
-    "basic ability is empowered by default (q_mortal_will, toggleable)",
-    "Q's <20%-HP execute is the Increased Hurl Damage row (155-455 + 230% "
-    "bonus AD + 100% AP), exposed through the q_execute option — the "
-    "target's HP threshold is player state, not a fight-engine boundary",
-    "W (Shield Vault) deals %max-HP physical damage (6-8% by rank + 1.5% "
-    "per 100 AP + 0.4% per 100 bonus health of the target's maximum "
-    "health); the AP and bonus-health per-100 terms are the cached "
-    "modifiers with the garbled '% per 100 Pantheon's bonus health' unit "
-    "pinned as '% per 100 bonus health'. The champion hit stuns for one "
-    "second, from the cached ability description",
-    "R prices the center Magic Damage row by default; the Reduced edge "
-    "row (150-350 + 50% AP) is exposed through the r_edge option.  The R "
-    "passive armor penetration (10-30% by rank) is a self-stat, not "
-    "enemy damage.",
-    "E Aegis Assault blocks selected marked skillshots during the sourced "
-    "1.5 second front-facing channel; direction is represented by the "
-    "explicit source selection.",
-    "P (Mortal Will) itself has no enemy-damage formula in the pinned "
-    "packet; it emits the sourced zero-damage row (MODULE_COVERAGE: "
-    "no_damage, not out_of_scope). P is already a cast slot in this "
-    "module (never overridden from build_packet_module's no_damage "
-    "branch); its empowered rider is priced in Q, not on P itself.",
+    "Q prices the Hurl Physical Damage row plus the Mortal Will term, 20 to 265.88 by "
+    "level + 115% bonus AD.",
+    "Pantheon starts at maximum Mortal Will (cached P), so Q's first cast is "
+    "empowered by default (q_mortal_will).",
+    "Q's below-20% execute is the Increased Hurl Damage row, 155 to 455 + 230% bonus "
+    "AD + 100% AP.",
+    "Q's q_execute option exposes it: the target's health threshold is player state, "
+    "not a boundary.",
+    "W (Shield Vault) deals 6 to 8% by rank of target maximum health as physical.",
+    "It adds 1.5% per 100 AP and 0.4% per 100 bonus health, the cached modifiers.",
+    "The cached '% per 100 Pantheon's bonus health' unit is pinned as '% per 100 "
+    "bonus health'.",
+    "W's champion hit stuns for one second, from the cached ability description.",
+    "R prices the center Magic Damage row by default; r_edge exposes the Reduced edge "
+    "row 150 to 350 + 50% AP.",
+    "R's passive armor penetration, 10 to 30% by rank, is a self-stat, not enemy "
+    "damage.",
+    "E (Aegis Assault) blocks selected marked skillshots during the sourced 1.5s "
+    "front-facing channel.",
+    "Direction is represented by the explicit source selection.",
+    "P (Mortal Will) has no enemy-damage formula in the pinned packet and emits the "
+    "zero-damage row.",
+    "P is already a cast slot here, and its empowered rider is priced in Q, not on P "
+    "itself.",
 ]
 
 # P emits a row and there is nothing left for it to price — Mortal Will's

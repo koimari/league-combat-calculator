@@ -129,14 +129,11 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Iron Ambassador) deals 20 : 198.82 (based on level) bonus magic "
-    "damage on the empowered buckler attack — the wiki's 'Bonus Magic "
-    "Damage' row (data/champions.json). The old packet's %max-HP "
-    "0.11-0.2106 'Max Health Damage' row is the shield Poppy gains when "
-    "she retrieves the buckler, not damage, and is not priced.",
-    "R (Keeper's Verdict) defaults to the reviewed packet's uncharged "
-    "row ('Physical Damage' 100-200 + 45% bonus AD); the fully-charged "
-    "branch (the E3 worklist charge-state variant, 'Increased Damage' "
-    "200-400 + 90% bonus AD == 2x) is option-gated via r_charged — the "
-    "1-second charge time is state.",
+    "P (Iron Ambassador) adds 20 to 198.82 by level magic on the empowered buckler "
+    "attack (cached row).",
+    "P's %max-health row is the retrieval shield, not damage, and is not priced.",
+    "R (Keeper's Verdict) defaults to the uncharged Physical Damage row, 100 to 200 + "
+    "45% bonus AD.",
+    "r_charged gates the fully-charged 200 to 400 + 90% bonus AD, exactly 2x; the 1s "
+    "charge is state.",
 ]

@@ -116,41 +116,31 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Gift of the Drowned Ones) stores 9% (+ 0.2% per 1 Lethality) of "
-    "post-mitigation damage taken as grey health (40% + 0.4% per "
-    "Lethality with 2+ visible enemies), capped at 80 + 800% bonus AD "
-    "and 55% of maximum health; the out-of-vision consume heals 100% of "
-    "the stored pool and is a vision boundary the 1v1 ledger does not "
-    "model (the E8a grey-health primitive authors the store receipts, "
-    "no in-window heal)",
-    "P (Gift of the Drowned Ones) denies every point of bonus health and "
-    "returns it as 1 bonus attack damage per 14 "
-    "(MODULE_STAT_CONVERSION, applied in stats.calculate_total_stats on "
-    "the completed bonus health, after item multipliers and rune grants "
-    "as the wiki's own note orders it). Residual: an item passive that "
-    "reads bonus health resolves before that denial, so Riftmaker's Void "
-    "Infusion and Overlord's Bloodmail still price the health he never "
-    "keeps; his displayed bonus health is 0 in game and those two would "
-    "read it as such.",
-    "R (Death from Below) prices the wiki's non-execute damage row — "
-    "125 : 275 (based on level) (+ 40% bonus AD) (+ 0.75 per 1 "
-    "Lethality) physical damage, the 50%-of-threshold amount dealt to "
-    "enemies above the execute threshold (data/champions.json R "
-    "'Per-Level Scaling' [1]). The execute threshold row (250 : 550 + "
-    "80% bonus AD + 1.5 per Lethality) is a kill boundary and is "
-    "documented, not priced as damage.",
-    "P (Gift of the Drowned Ones) deals no enemy damage; its "
-    "store/consume mechanic is priced by the shared E8a grey-health "
-    "primitive (participant_timeline.py), not this module's own SLOTS "
-    "map -- Pyke is registered in healing.GREY_HEALTH_RULE_CHAMPIONS. "
-    "Reclassified from out_of_scope to no_damage (a stale label, not a "
-    "computation change): the passive was already priced, just not "
-    "through this module's own slot declaration.",
-    "W (Ghostwater Dive) carries no enemy-damage formula of any kind "
-    "(the reviewed packet's own no_damage slot declaration already "
-    "names it): a stealth/decaying-haste self-buff. Reclassified from "
-    "out_of_scope to no_damage (a stale label, not a computation "
-    "change): the slot was previously mislabeled out_of_scope despite "
-    "the packet layer already carrying no enemy-damage formula for it.",
+    "P (Gift of the Drowned Ones) stores 9% + 0.2% per Lethality of post-mitigation "
+    "damage taken.",
+    "With 2 or more visible enemies it is 40% + 0.4% per Lethality, capped at 80 + "
+    "800% bonus AD and 55% health.",
+    "P's out-of-vision consume heals the whole pool, a vision boundary the 1v1 ledger "
+    "does not model.",
+    "P denies every point of bonus health and returns 1 bonus AD per 14 "
+    "(MODULE_STAT_CONVERSION).",
+    "The conversion runs in calculate_total_stats on completed bonus health, after "
+    "items and runes.",
+    "An item passive reading bonus health resolves first, so Riftmaker and Bloodmail "
+    "price health he loses.",
+    "R (Death from Below) prices the non-execute row: 125 to 275 by level + 40% bonus "
+    "AD + 0.75 per Lethality.",
+    "That is the 50%-of-threshold amount dealt above the execute threshold (cached R "
+    "Per-Level row).",
+    "R's execute row, 250 to 550 + 80% bonus AD + 1.5 per Lethality, is a kill "
+    "boundary, documented not priced.",
+    "P (Gift of the Drowned Ones) deals no enemy damage.",
+    "Its store and consume are priced by the shared grey-health primitive, not this "
+    "module's SLOTS map.",
+    "Pyke is registered in healing.GREY_HEALTH_RULE_CHAMPIONS, so the slot is "
+    "no_damage.",
+    "W (Ghostwater Dive) carries no enemy-damage formula: a stealth and "
+    "decaying-haste self-buff.",
+    "The reviewed packet's own no_damage slot declaration names it.",
 ]
 MODULE_COVERAGE = coverage(no_damage="PW")

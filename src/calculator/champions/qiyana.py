@@ -151,9 +151,9 @@ OPTIONS = [
 ASSUMPTIONS = [
     "Royal Privilege and Terrashape are modeled as on-hit riders; they are not free "
     "direct spell damage.",
-    "Terrashape's passive bonus attack speed is an innate grant for the whole fight "
-    "(autos-only too): the fight assumes an Element is held, the same state that arms "
-    "the on-hit.",
+    "Terrashape's passive attack speed is an innate whole-fight grant; the fight "
+    "assumes an Element is held.",
+    "That is the same state that arms the on-hit, an autos-only fight included.",
     "Terrain Q's increased damage is enabled only when the target-below-half state is explicit.",
     "Element control and per-target passive cooldowns remain explicit scenario state.",
 ]

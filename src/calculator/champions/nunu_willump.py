@@ -119,23 +119,19 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Q (Consume) prices the champion branch — Champion Magic Damage "
-    "60-220 + 65% AP + 5% bonus health — instead of the "
-    "Non-Champion True Damage row (400-1200), which applies to "
-    "minions and monsters only.",
-    "Q's champion self-heal (Base Champion Heal 39-111 + 54% AP + 6% "
-    "bonus health, increased by 50% below 50% maximum health) is "
-    "authored by the HEALING_RULE_CHAMPIONS rule in healing.py; the "
-    "below-half empowerment is a live health formula re-priced at the "
-    "heal timestamp.",
-    "P (Call of the Freljord) grants 20% bonus attack speed (cached P "
-    "prose; the JSON has no leveling row) and the fight engine applies "
-    "it to the auto count.  The 4-second window is treated as held for "
-    "the fight, because every damaging cast and auto in the modeled "
-    "rotation extends it; the per-enemy re-trigger cooldown the cache "
-    "calls 'a time' carries no number.  The 10% movement speed, the "
-    "nearby ally's copy of the buff, and Willump's 30% AD cone cleave "
-    "on secondary targets are named rather than priced.",
+    "Q (Consume) prices the champion branch, 60 to 220 + 65% AP + 5% bonus health.",
+    "The Non-Champion True Damage row of 400 to 1200 applies to minions and monsters "
+    "only.",
+    "Q's champion self-heal is 39 to 111 + 54% AP + 6% bonus health, +50% below half "
+    "health.",
+    "The healing rule re-prices the below-half empowerment at the heal timestamp.",
+    "P (Call of the Freljord) grants 20% bonus attack speed (cached P prose; the JSON "
+    "has no row).",
+    "Its 4s window is held for the fight: every damaging cast and auto in the "
+    "rotation extends it.",
+    "The per-enemy re-trigger cooldown the cache calls 'a time' carries no number.",
+    "The 10% move speed, the ally's copy and Willump's 30% AD cone cleave are named, "
+    "not priced.",
 ]
 
 # No MODULE_COVERAGE: every one of the five slots emits a priced row now

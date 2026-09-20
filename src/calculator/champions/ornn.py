@@ -232,25 +232,24 @@ OPTIONS = [
 ASSUMPTIONS = [
     "Bellows Breath uses five sourced 0.15-second ticks and exposes the final-gout "
     "Brittle state in its detail receipt.",
-    "Call of the Forge God defaults to both sourced passes; one pass is an explicit "
-    "option, and Temper's Brittle consume rides the second pass, so a one-pass fight "
-    "prices no consume.",
+    "Call of the Forge God defaults to both sourced passes, one pass being an "
+    "explicit option.",
+    "Temper's Brittle consume rides the second pass, so a one-pass fight prices no "
+    "consume.",
     "Living Forge and Master Craftsman are item/state systems, not direct enemy damage.",
-    "P (Temper) is modeled through Call of the Forge God: the recast pass "
-    "immobilises a target the first pass made Brittle, so every two-pass R "
-    "consumes the debuff exactly once for 9% : 17.94% (by Ornn's level, "
-    "cached passive prose) of the target's maximum health, published as the "
-    "passive's own breakdown row.",
-    "The consume's other sourced triggers are not priced: Searing Charge's "
-    "terrain-collision shockwave (the collision itself is unmodeled), "
-    "Volcanic Rupture's magma pillar knock-aside (the pillar deals no "
-    "damage and is not on the cast timeline), and allies' immobilises or "
-    "silences (no ally crowd-control timeline exists). Each would consume a "
-    "live Brittle in game; the modeled kit therefore prices a floor, not a "
-    "ceiling.",
-    "The consume's 200 : 500 monster cap and Temper's empowered "
-    "basic-attack knock-back are outside a champion-target fight: the cap "
-    "applies to monsters only, and the knock-back adds no damage.",
+    "P (Temper) is modeled through Call of the Forge God: the recast immobilises a "
+    "Brittle target.",
+    "Every two-pass R consumes the debuff once for 9% to 17.94% by level of target "
+    "maximum health.",
+    "Searing Charge's collision shockwave and Volcanic Rupture's pillar knock-aside "
+    "are not priced.",
+    "Allies' immobilises and silences are not priced either: no ally crowd-control "
+    "timeline exists.",
+    "Each would consume a live Brittle in game, so the modeled kit prices a floor, "
+    "not a ceiling.",
+    "The consume's 200 to 500 monster cap applies to monsters only, outside a "
+    "champion fight.",
+    "Temper's empowered basic-attack knock-back adds no damage.",
 ]
 
 SOURCES = load_champion_sources("Ornn")

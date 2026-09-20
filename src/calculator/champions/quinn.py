@@ -98,35 +98,36 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Harrier) prices the wiki's on-hit row: 15 : 132.35 (based on "
-    "level) (+ 40% bonus AD) bonus physical damage when a basic attack "
-    "consumes the Harrier mark (data/champions.json P 'Bonus Physical "
-    "Damage'), modeled like Nautilus and Poppy on-hit passives.",
-    "The Harrier mark requires Quinn's Q/E/R or Valor's periodic marking "
-    "first; the on-hit is priced per auto against the marked target.",
-    "W (Heightened Senses) grants the cached Bonus Attack Speed row "
-    "(28-80%) for 2 seconds on every Harrier auto; since P prices the "
-    "mark on each auto, the window is held for the fight rather than "
-    "time-weighted.  W's Bonus Movement Speed row and the active's "
-    "vision sweep are not priced — stat_buff has no movement-speed key.",
-    "P4 CRIT BOUNDARY (named fail-closed): the Harrier bonus is priced "
-    "NON-crit — no pinned source states it crits (the pinned cache rev "
-    "4009372 and the live wiki carry no crit sentence; the wiki's "
-    "general rule is on-hit damage does not crit unless stated; the "
-    "historical 'can critically strike' note was removed 2020-08-30; "
-    "the binary has no crit coefficient).  A future sourced statement "
-    "flips the engine's pre-specified on_hit crit_effectiveness wiring.",
-    "The degraded P cooldown row (values [0,0,0], units '7 : 2.56 "
-    "(based on critical strike chance)') is the mark-interval scaling "
-    "(7s at 0% crit -> 2.56s at 100%), a mark-COOLDOWN mechanic not "
-    "priced as damage; the row's degraded shape is pinned so a future "
-    "fixed row forces re-review.",
-    "Harrier deals 75 bonus physical damage against monsters (the "
-    "cached effects[2] + the binary BonusMonsterDmg 75.0) — not priced "
-    "(no monster-target kind in the 1v1 model; named boundary).",
-    "Behind Enemy Lines (R-active) disables Harrier and removes all "
-    "marks (cached effects[3]) — not gated in the model (named "
-    "boundary; the on-hit is unconditional).",
+    "P (Harrier) prices the cached Bonus Physical Damage row: 15 : 132.35 (based on "
+    "level) (+ 40% bonus AD).",
+    "It fires when a basic attack consumes the Harrier mark, like the Nautilus and "
+    "Poppy passives.",
+    "The Harrier mark needs Quinn's Q, E or R or Valor; the on-hit is priced per auto "
+    "against the marked target.",
+    "W (Heightened Senses) grants the cached 28 to 80% Bonus Attack Speed for 2s on "
+    "every Harrier auto.",
+    "P prices the mark on each auto, so W's window is held for the fight rather than "
+    "time-weighted.",
+    "W's Bonus Movement Speed row and the active's vision sweep are not priced: "
+    "stat_buff has no key.",
+    "CRIT BOUNDARY, named fail-closed: the Harrier bonus is priced non-crit, with no "
+    "pinned source for a crit.",
+    "The pinned cache and the live wiki carry no crit sentence, and the binary has no "
+    "crit coefficient.",
+    "The wiki's general rule is that on-hit damage does not crit unless stated.",
+    "A sourced statement would flip the engine's pre-wired on_hit crit_effectiveness.",
+    "The degraded P cooldown row, units '7 : 2.56 (based on critical strike chance)', "
+    "is the mark interval.",
+    "That is 7s at 0% crit to 2.56s at 100%, a mark cooldown not priced as damage; "
+    "the shape is pinned.",
+    "Harrier deals 75 bonus physical damage against monsters (binary BonusMonsterDmg "
+    "75.0).",
+    "Harrier's monster bonus is not priced: the 1v1 model has no monster target, a "
+    "named boundary.",
+    "Behind Enemy Lines (R-active) disables Harrier and removes all marks (cached "
+    "effects).",
+    "R's Behind Enemy Lines is not gated in the model, a named boundary: the on-hit "
+    "is unconditional.",
 ]
 
 # No MODULE_COVERAGE: every one of the five slots now emits a priced row,
