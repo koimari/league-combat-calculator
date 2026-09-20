@@ -93,7 +93,7 @@ from src.calculator.champions import (
     get_champion_options_meta,
     parse_champion_abilities,
 )
-from src.calculator.champions.slot_extract import find_named_leveling
+from src.calculator.champions.slot_extract import extract_cast_time, find_named_leveling
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.fight.config import FightConfig
@@ -105,9 +105,9 @@ _HEIMER_DATA = _CHAMPION_DATA["Heimerdinger"]
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
 _TARGET_MAX_HP = 2000.0
-# Contract constants under test (module-authored beside the degraded wiki
-# rows; the values the option state receipts will publish).
-_W_FIRST_TIME_OFFSET = 0.25
+# The first rocket lands on the cached W castTime; the rest are contract
+# constants under test (module-authored beside the degraded wiki rows).
+_W_FIRST_TIME_OFFSET = extract_cast_time(_HEIMER_DATA["abilities"]["W"][0])
 _W_LATER_TIME_OFFSET = 0.35
 _W_HIT_INTERVAL = 0.08
 _E_TIME_OFFSET = 0.6
@@ -804,7 +804,7 @@ class TestTargetPolicy:
         state = option["state"]
         assert state["first_row_attribute"] == "Initial Rocket Magic Damage"
         assert state["subsequent_row_attribute"] == "Subsequent Rocket Magic Damage"
-        assert state["first_time_offset"] == pytest.approx(_W_FIRST_TIME_OFFSET)
+        assert state["first_time_source"] == "cached W castTime"
         assert state["subsequent_time_offset"] == pytest.approx(_W_LATER_TIME_OFFSET)
         assert state["hit_interval"] == pytest.approx(_W_HIT_INTERVAL)
         assert state["default"] == 5

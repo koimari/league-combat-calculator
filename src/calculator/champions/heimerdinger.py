@@ -16,7 +16,12 @@ from .module_helpers import (
 )
 from .slot_control import extract_recharge
 from .slot_entries import damage_entry
-from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slot_extract import (
+    ability_name,
+    extract_cast_time,
+    extract_cooldown,
+    extract_named,
+)
 from .source_receipts import load_champion_sources
 
 
@@ -80,11 +85,10 @@ def _turret_damage(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-# W/E timing + upgraded-E constants (P3 package 3Z).  0.25 is the cached
-# W/E castTime ("0.25"); 0.35 / 0.08 / 0.6 have NO JSON home — they are
-# module-authored timing pins (the wiki's rocket cadence), declared with
-# provenance in the typed rule receipts and flagged uncertified.
-_W_FIRST_TIME_OFFSET = 0.25
+# W/E timing + upgraded-E constants (P3 package 3Z).  0.35 / 0.08 / 0.6 have
+# NO JSON home: they are module-authored timing pins (the wiki's rocket
+# cadence), declared with provenance in the typed rule receipts and flagged
+# uncertified.  The first rocket rides the cached W ``castTime`` instead.
 _W_LATER_TIME_OFFSET = 0.35
 _W_HIT_INTERVAL = 0.08
 _E_TIME_OFFSET = 0.6
@@ -100,15 +104,15 @@ class _MicroRocketsRule:
     Damage" row (the per-rocket champion reduction).  The cached
     leveling rows are degraded (units arrays empty) — the module names
     the explicit rows, which resolve flat.  The rocket count (1..5,
-    default 5) and the timing pins (first 0.25 = the cached castTime;
-    subsequent 0.35 start @ 0.08 interval = module-authored) ride the
-    ``w_rockets`` option's state receipt.
+    default 5) and the timing pins (subsequent 0.35 start @ 0.08
+    interval = module-authored) ride the ``w_rockets`` option's state
+    receipt; the first rocket lands on the cached W ``castTime``.
     """
 
     def __init__(self) -> None:
         self.first_row_attribute = "Initial Rocket Magic Damage"
         self.subsequent_row_attribute = "Subsequent Rocket Magic Damage"
-        self.first_time_offset = _W_FIRST_TIME_OFFSET
+        self.first_time_source = "cached W castTime"
         self.subsequent_time_offset = _W_LATER_TIME_OFFSET
         self.hit_interval = _W_HIT_INTERVAL
         self.default = 5
@@ -120,9 +124,9 @@ class _MicroRocketsRule:
             "revision_id": 2864243,
             "revision_timestamp": "2019-11-03T20:09:52Z",
             "parent_revision_id": 4025016,
-            "note": "first_time_offset is the cached W castTime; "
+            "note": "the first rocket lands on the cached W castTime; "
             "subsequent_time_offset/hit_interval are module-authored "
-            "(no JSON home) — flagged uncertified.",
+            "(no JSON home), flagged uncertified.",
         }
 
     def public_receipt(self) -> dict[str, Any]:
@@ -130,7 +134,7 @@ class _MicroRocketsRule:
             "name": "Heimerdinger — Hextech Micro-Rockets (W)",
             "first_row_attribute": self.first_row_attribute,
             "subsequent_row_attribute": self.subsequent_row_attribute,
-            "first_time_offset": self.first_time_offset,
+            "first_time_source": self.first_time_source,
             "subsequent_time_offset": self.subsequent_time_offset,
             "hit_interval": self.hit_interval,
             "default": self.default,
@@ -202,7 +206,7 @@ def _micro_rockets(
     later = extract_named(
         ability, "Subsequent Rocket Magic Damage", rank, ctx.stats, ctx.target
     )
-    parts = [DamagePart("magic", first, time_offset=_W_FIRST_TIME_OFFSET)]
+    parts = [DamagePart("magic", first, time_offset=extract_cast_time(ability))]
     if rockets > 1:
         parts.append(
             DamagePart(
