@@ -410,64 +410,51 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Noxian Might is derived from the fight's hit timeline: each auto "
-    "and each damaging ability application (Q, W's swing, R) adds a "
-    "Hemorrhage stack, and reaching 5 stacks grants +30-280 bonus AD "
-    "(by level) for 5s, refreshing while the target is held at 5 "
-    "stacks. Casts, autos and bleed ticks inside a window are priced "
-    "with the buffed AD",
-    "Noxian Might's 'instantly applies 5 stacks' is modeled as the "
-    "stack count already being at max when the window opens; Might "
-    "triggered by an R execute kill is not modeled (the target never "
-    "dies here)",
-    "The target starts the fight with 5 Hemorrhage stacks by default, so "
-    "Noxian Might is already up when the first cast lands — the state "
-    "you are in after stacking a target up, and the only way to reach 5 "
-    "stacks in game. Set the option to 0 to model a combo opened on an "
-    "unstacked target, where Might never triggers in one-rotation mode "
-    "(3 applications: Q, W's swing, R)",
-    "R's Hemorrhage stack count always comes from the fight timeline at "
-    "its cast time, never from the option directly: the stacks that "
-    "scale R are the same ones that grant Noxian Might, so the two can "
-    "never disagree",
-    "Pre-fight stacks tick during the fight and their bleed is counted, "
-    "though the autos that applied them are not — a stacked opener "
-    "includes bleed that was already running",
+    "Each auto and each damaging application (Q, W's swing, R) adds a Hemorrhage "
+    "stack on the fight timeline.",
+    "Five stacks grant +30 to 280 bonus AD by level for 5s, refreshing while the "
+    "target is held at 5.",
+    "Casts, autos and bleed ticks inside that window are priced with the buffed AD.",
+    "Noxian Might's 'instantly applies 5 stacks' opens the window with the count "
+    "already at max.",
+    "Might triggered by an R execute kill is not modeled: the target never dies here.",
+    "The target starts with 5 Hemorrhage stacks by default, so Noxian Might is up "
+    "when the first cast lands.",
+    "Set the option to 0 for an unstacked opener: one rotation has 3 applications (Q, "
+    "W's swing, R), never 5.",
+    "R's stack count comes from the fight timeline at its cast time, never from the "
+    "option.",
+    "The stacks that scale R are the ones that grant Noxian Might, so the two cannot "
+    "disagree.",
+    "Pre-fight stacks tick and their bleed counts, though the autos that applied them "
+    "do not.",
+    "A stacked opener therefore includes bleed already running.",
     "E applies NO Hemorrhage stack — Apprehend deals no damage; only "
     "its always-on armor-penetration passive is modeled",
     "Q models the outer blade only; the inner radius (handle, 35% "
     "damage, applies no stack) is a misplay and is not modeled",
-    "R is cast once by default; with r_execute_recast enabled the "
-    "cast is assumed to execute the target, so the sourced free recast "
-    "('recast the ability within 20 seconds at no cost', cached R "
-    "prose) fires once more against the same stack count — both casts "
-    "priced at 2 x (base + N x per-stack), the recast parts offset "
-    "past the 0.15s kill check; the model's target never dies, so the "
-    "execute is an assertion via the option, and the recast's mana "
-    "cost is not separately zeroed (one cast's cost is the module's "
-    "existing single-cast cost)",
-    "Bleed uses committed accounting: every stack applied during the "
-    "fight counts its full 5s of ticks, including past the fight "
-    "cutoff; the bleed cannot crit",
+    "R is cast once by default; r_execute_recast assumes the cast executes and fires "
+    "the sourced free recast.",
+    "Both casts price at base + N x per-stack, the recast parts offset past the 0.15s "
+    "kill check.",
+    "The recast is free within 20 seconds (cached R prose), so its mana cost is not "
+    "separately zeroed.",
+    "Every bleed stack applied in the fight counts its full 5s of ticks, including "
+    "past the cutoff, and cannot crit.",
     "Hemorrhage's 250% damage against monsters is not modeled — the "
     "target is a champion",
-    "Q's self-heal (17-51% of missing health by targets hit) is modeled in "
-    "the ordered participant ledger; R's execute reset restores nothing here",
-    "W's kill-triggered cooldown reduction and mana refund are modeled as "
-    "an ASSERTION: the w_kill_assertion option assumes every accepted W "
-    "empowered attack kills (the model's target never dies, so no input "
-    "can prove a kill — the r_execute_recast precedent).  With the option "
-    "on, W's cooldown is halved (the binary PercentCDRefund 50.0; haste "
-    "applies to the halved base) and the flat 40 (the sourced cost row) "
-    "is refunded by the resource walk at the W cast time after the spend "
-    "(cast, hit, refund — it can only enable later casts).  The cached "
-    "notes' exclusion is jungle plants only ('The cooldown reduction and "
-    "mana refund will not trigger when killing jungle plants.') — the "
-    "modeled target is a champion, so the exclusion is trivially "
-    "satisfied; no structure/monster exclusion is sourced and none is "
-    "invented.  The in-game swing lands one auto interval after the cast "
-    "and the 4s empower window is never enforced (the model's hit time "
-    "is the cast time) — the coarse timing is documented, not modeled.",
+    "Q's self-heal of 17 to 51% of missing health by targets hit rides the ordered "
+    "participant ledger.",
+    "R's execute reset restores nothing here.",
+    "w_kill_assertion assumes every W empowered attack kills; the cached exclusion is "
+    "jungle plants only.",
+    "The modeled target is a champion and never dies, so no input can prove the kill.",
+    "On that assertion W's cooldown halves (binary PercentCDRefund 50.0, haste on the "
+    "halved base).",
+    "The sourced flat 40 cost is refunded by the resource walk at the W cast time, "
+    "after the spend.",
+    "The swing lands one auto interval after the cast and the 4s empower window is "
+    "not enforced.",
     "Q, W, and R slow effects are utility; E's sourced 1-second "
     "airborne interval is counted as action downtime",
 ]

@@ -223,18 +223,18 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     "Urchin Strike carries both its magic packet and one 100% AD on-hit attack component.",
-    "Seastone Trident's active empower is attached to one basic attack; its bleed and "
-    "monster-only riders are not silently applied to champions.",
-    "Seastone Trident's empowered attack is one of the ambient stream's swings "
-    "when the timed window contains at least one; with no stream the cast "
-    "forces its own swing. W therefore casts on cooldown in timed fights even "
-    "when the stream is sparse (the sourced 4s empower window is not walked).",
-    "Seastone Trident's rend is a one-stack DoT every basic attack and Urchin "
-    "Strike's on-hit refresh (never stacks), integrated over the fight's hit "
-    "timeline with the engine's committed accounting (the last hit's full 3 "
-    "seconds of ticks count); its post-hit on-hit rides every swing inside "
-    "the 5-second window after the first W cast (one window per fight, and "
-    "the kill branch that skips it is not taken), never on phantom hits.",
+    "Seastone Trident's active empower rides one basic attack; its monster-only "
+    "riders never reach a champion.",
+    "The empowered attack is one of the ambient swings when the window holds one; "
+    "otherwise the cast forces its own.",
+    "W casts on cooldown in timed fights even when the stream is sparse; the sourced "
+    "4s window is not walked.",
+    "The rend is a one-stack DoT refreshed by every basic attack and Urchin Strike's "
+    "on-hit; it never stacks.",
+    "It integrates over the hit timeline with committed accounting: the last hit's "
+    "full 3s of ticks count.",
+    "Its post-hit rides every swing in the 5s window after the first W cast, one "
+    "window, never a phantom hit.",
     "Chum the Waters exposes all three sourced distance branches rather than treating "
     "the largest shark as a default.",
 ]

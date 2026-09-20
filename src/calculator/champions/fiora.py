@@ -158,12 +158,12 @@ OPTIONS = [
 ASSUMPTIONS = [
     "Vitals are explicit true-damage procs; the user supplies how many "
     "directional hits actually occur.",
-    "Lunge is a real attack for item on-hit purposes, while Bladework's "
-    "first/second crit distinction remains visible in its option detail.",
+    "Lunge is a real attack for item on-hit; Bladework's first and second crit split "
+    "stays in its option detail.",
     "Grand Challenge's Victory Zone heals are not TDD and are not converted into damage.",
-    "Riposte negates selected incoming damage and crowd control during the "
-    "sourced 0.75 second stance; an empty source list means every incoming "
-    "event in the window.",
+    "Riposte negates selected incoming damage and control over the sourced 0.75s "
+    "stance.",
+    "An empty source list means every incoming event in that window.",
 ]
 
 SOURCES = load_champion_sources("Fiora")

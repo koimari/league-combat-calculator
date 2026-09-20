@@ -150,10 +150,10 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Q is a real form variant: Neurotoxin scales from target current health, while "
-    "Venomous Bite scales from target missing health.",
-    "Spiderlings, Rappel untargetability and the Spider Form heal are explicit "
-    "state/utility rows; only Spider Form's on-hit damage enters TDD.",
+    "Q is a real form variant: Neurotoxin scales on target current health, Venomous "
+    "Bite on missing health.",
+    "Spiderlings, Rappel untargetability and the Spider Form heal are state rows; "
+    "only its on-hit damage counts.",
 ]
 
 SOURCES = load_champion_sources("Elise")

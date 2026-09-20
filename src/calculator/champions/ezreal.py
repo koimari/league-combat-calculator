@@ -254,29 +254,23 @@ OPTIONS: list[dict[str, Any]] = [
 ASSUMPTIONS = [
     "Every Q cast hits — drives item on-hit applications, the 1.5s "
     "cooldown refund model, and passive upkeep",
-    "Q's 1.5s refund is modeled as a continuous rate: Q period = hasted "
-    "CD - 1.5s (min 1s); other cooldowns divided by (1 + 1.5/Q period)",
+    "Q's 1.5s refund is a continuous rate: Q period = hasted CD - 1.5s (min 1s), "
+    "others / (1 + 1.5/Q period).",
     "W's mark is always detonated (by the next auto or Q within its 4s "
     "window); a missed detonation means the W missed anyway",
     "Q cannot critically strike",
-    "Q consuming spellblade (Sheen/Trinity) in an auto-less burst "
-    "rotation is not modeled; with an auto stream the engine's existing "
-    "spellblade model yields the same proc count",
-    "W's mana refund is modeled on the shared mana ledger: when the mark "
-    "is detonated BY AN ABILITY (the next accepted ability cast after the "
-    "W in the fight's schedule — every cast is assumed to hit), Ezreal "
-    "restores 60 mana plus that ability's mana cost (the cost actually "
-    "paid, Actualizer discount included). The w_mark_detonation option "
-    "chooses the detonation means; basic_attack detonation restores "
-    "nothing. The flat 60 is a typed rule declaration (wiki prose + game "
-    "binary ManaReturn; no atom exists). The 4s mark window IS modeled "
-    "(cache prose + the binary DetonationTimeout 4.0 + the atom "
-    "timing.active_duration b32849b968950b8e): a detonation landing "
-    "after the window is receipted mark_expired and never refunds. The "
-    "mark is always detonated within its window (every cast is assumed "
-    "to hit); target-side spell "
-    "shields are not modeled); an undetonated mark at the end of the "
-    "fight is receipted, never guessed",
+    "Q consuming spellblade in an auto-less burst rotation is not modeled; with an "
+    "auto stream the count matches.",
+    "W's ability detonation restores 60 mana plus the detonating cast's paid cost, on "
+    "the shared mana ledger.",
+    "w_mark_detonation picks the means, and basic_attack detonation restores nothing.",
+    "The flat 60 is a typed rule declaration from wiki prose and the binary "
+    "ManaReturn; no atom exists.",
+    "The 4s mark window is modeled and target spell shields are not modeled; a late "
+    "detonation is mark_expired.",
+    "The mark is always detonated inside its window, since every cast is assumed to "
+    "hit.",
+    "An undetonated mark at the fight's end is receipted, never guessed.",
     "Life steal applying to Q is not modeled (healing out of scope)",
 ]
 

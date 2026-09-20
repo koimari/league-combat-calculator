@@ -352,49 +352,43 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Q is priced against the target's FULL health on every cast. Because "
-    "Q scales with CURRENT health, repeated casts in one fight are "
-    "overestimated (roughly 18% high on a two-Q rotation)",
-    "Q's minimum damage floor is modeled and takes over against low-health "
-    "targets; Q's capped monster damage and E's 140% minion/monster "
-    "amplification are not — the target is a champion",
-    "All 12 ticks of W's charge are assumed to connect (the full 3s inside "
-    "the 325-unit radius), and the detonation always follows automatically "
-    "at the end of the duration",
-    "W's charge total is per-tick x 12 ticks, NOT the 16-tick 'Total Magic "
-    "Damage' still cached from W's pre-V12.23 four-second duration",
-    "E's bonus damage reaches its maximum amp at 70% missing health, not "
-    "100% (undocumented on the wiki; from the game files and V25.23)",
-    "E's empowered attack applies once per cast, not on every auto.  The "
-    "reset's THROUGHPUT is opt-in via e_reset_throughput: with the "
-    "option on, each accepted E cast's empowered auto is an EXTRA swing "
-    "(the entry's empower becomes a self-supplying burst at an infinite "
-    "rate — 'fires immediately', the cached reset prose + the binary "
-    "Trait_AttackReset tag; the acceleration magnitude is script-side, "
-    "so no finite number is invented); casts lift to the cooldown grid "
-    "when the ambient auto cap binds, and the on-hit counters ride the "
-    "augmented stream.  Default keeps the conservative cap (the reset's "
-    "gain not modeled).  The passive AD steroid rides the same entry "
-    "untouched; the 4s empower window is prose-only (no atom exists).",
-    "E's corpse knockback (100% AD to enemies the flung body passes "
-    "through) is not modeled — it only triggers on a kill or a small "
-    "monster, so it is not a repeatable source against a champion",
-    "R grants BASE health, so it raises max health (feeding E's passive "
-    "bonus AD) but does not feed bonus-health item conversions such as "
-    "Overlord's Bloodmail",
-    "R's health regeneration is modeled by the self-healing rule (a 0.5s "
-    "tick stream over the 10s window per cast); its bonus movement speed "
-    "and takedown duration extension are not modeled (no damage impact)",
-    "Mundo's passive IMMUNITY (the next hostile immobilizing control is "
-    "resisted — 4% current-health cost + canister drop) is modeled in the "
-    "coupled survival walk; the canister pickup (4% max-health heal + "
-    "15s refund) and the enemy destruction are named unsupported timings",
-    "P (Goes Where He Pleases) regenerates an additional 0.04% : 0.23% "
-    "(based on level) of maximum health every 0.5 seconds — the cached P's "
-    "second 'Max Health Damage' row, ten of which equal its first row's "
-    "per-five-seconds statement. The self-heal rule pays it over the whole "
-    "fight window; champion base regeneration stays outside the ledger, so "
-    "this is the passive's additional stream alone",
+    "Q prices against the target's full health every cast, so repeated casts are "
+    "overestimated, about 18% on two Qs.",
+    "Q's minimum damage floor is modeled and takes over on a low-health target.",
+    "Q's monster cap and E's 140% minion amplification do not apply: the target is a "
+    "champion.",
+    "All 12 ticks of W's charge are assumed to connect over 3s inside 325 units, with "
+    "the detonation following.",
+    "W's charge total is per-tick x 12, not the cached 16-tick Total Magic Damage "
+    "row.",
+    "E's bonus damage maxes at 70% missing health, not 100%: game files, undocumented "
+    "on the wiki.",
+    "E's empowered attack applies once per cast, not on every auto.",
+    "e_reset_throughput makes each accepted E cast's empowered auto an extra swing "
+    "(binary Trait_AttackReset).",
+    "Casts lift to the cooldown grid when the ambient auto cap binds, and on-hit "
+    "counters ride that stream.",
+    "The default keeps the conservative cap, so the reset's gain is not modeled.",
+    "The passive AD steroid rides the same entry, and the 4s empower window is "
+    "prose-only with no atom.",
+    "E's corpse knockback, 100% AD through the flung body, is not modeled: it needs a "
+    "kill or a small monster.",
+    "R grants base health, raising maximum health for E's passive AD but feeding no "
+    "bonus-health item conversion.",
+    "R's health regeneration is a 0.5s tick stream over the 10s window per cast, in "
+    "the self-healing rule.",
+    "R's bonus movement speed and takedown extension are not modeled and move no "
+    "damage.",
+    "The passive resists the next hostile immobilizing control for 4% current health "
+    "plus a canister drop.",
+    "It rides the coupled survival walk; the canister pickup and its destruction are "
+    "unsupported timings.",
+    "P (Goes Where He Pleases) regenerates 0.04% to 0.23% by level of maximum health "
+    "every 0.5 seconds.",
+    "That is the cached P second row, ten ticks of which equal its first row's "
+    "per-five-seconds statement.",
+    "The self-heal rule pays it over the fight; champion base regeneration stays "
+    "outside the ledger.",
     "Q's health cost and refund and W's grey-health healing are "
     "self-sustain and are not modeled",
     "Dr. Mundo has no AP scaling anywhere in his kit",

@@ -206,12 +206,11 @@ OPTIONS = [
 ASSUMPTIONS = [
     "Hate Spike requires an explicit recast count and mark state; neither is "
     "inferred from a single rotation.",
-    "Allure's champion branch applies the sourced MR shred only when the full "
-    "charm is selected; monster-only bonus damage is not silently mixed into "
-    "champion TDD.",
-    "The charm control event is emitted only when the user selects an explicit "
-    "post-maturity trigger; its timestamp is the sourced 2.5 second mark "
-    "boundary and its duration is the cached Disable Duration row.",
+    "Allure's champion branch shreds MR only with the full charm selected; "
+    "monster-only bonus damage stays out.",
+    "The charm control event needs an explicit post-maturity trigger selected.",
+    "Its timestamp is the sourced 2.5s mark boundary and its duration the cached "
+    "Disable Duration row.",
     "Last Caress uses the 240% branch only below the sourced 30% "
     "target-health threshold.",
 ]

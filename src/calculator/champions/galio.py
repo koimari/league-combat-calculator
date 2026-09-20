@@ -238,19 +238,19 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Colossal Smash count is user-set because its five-second cooldown is "
-    "reduced by three seconds per spell hit and therefore depends on the "
-    "chosen attack weave; each selected proc replaces one complete physical "
-    "swing with the sourced modified magic basic attack",
-    "W damage uses the sourced 25%-per-0.16s charge steps, caps after 1.25s, "
-    "and includes its 0.4s post-release action lockout in timed scheduling",
-    "Q assumes both gusts converge and the target remains in all four tornado "
-    "ticks; the tornado uses the target's starting maximum health",
+    "Colossal Smash count is user-set: its 5s cooldown drops 3s per spell hit, so it "
+    "follows the attack weave.",
+    "Each selected proc replaces one physical swing with the sourced modified magic "
+    "basic attack.",
+    "W uses the sourced 25%-per-0.16s charge steps, caps at 1.25s, and schedules its "
+    "0.4s post-release lockout.",
+    "Q assumes both gusts converge and the target stays for all four ticks, on its "
+    "starting maximum health.",
     "E assumes a champion collision after the selected 250-650 unit travel",
     "R assumes a valid allied cast target and that the selected enemy remains "
     "inside the landing area after the 2.75s channel",
-    "Taunts, knockups, slows, self damage reduction, and allied R shields are "
-    "control or defense rather than Galio's damage and are not added to TDD",
+    "Taunts, knockups, slows, self damage reduction and allied R shields are control "
+    "or defense, never damage.",
 ]
 
 SOURCES = load_champion_sources("Galio")

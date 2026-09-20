@@ -180,8 +180,8 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Q's doubled branch is selected only for an already-feared target; current-health "
-    "and minimum-damage thresholds remain sourced.",
+    "Q's doubled branch needs an already-feared target; the current-health and "
+    "minimum thresholds stay sourced.",
     "W and R expose explicit tick counts and intervals; W's final missing-health tick "
     "is not averaged into the channel.",
     "Fear, silence, reveal, healing and Effigy behavior are recorded as "

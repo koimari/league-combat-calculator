@@ -137,8 +137,8 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     "Spinning Axe is an empowered basic attack and therefore shares the auto/item timeline.",
-    "Whirling Death exposes one or two sourced passes; target crossing and execution "
-    "thresholds remain explicit target state, not guessed damage.",
+    "Whirling Death exposes one or two sourced passes; crossing and execution "
+    "thresholds stay target state.",
     "Adoration is an explicit economy state and never silently contributes to TDD.",
 ]
 

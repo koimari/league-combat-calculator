@@ -171,12 +171,12 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Resonance stacks up to 3 (cap) and the third stack consumes all three to "
-    "detonate; each p_procs entry is one completed 3-stack detonation (30 : 150 by "
-    "level + 80% AP), priced because the rotation does not imply three prior "
-    "applications.",
-    "Resonance's per-target 4-second stack window and monster 270% multiplier are "
-    "boundary state; the detonation value is the champion-target sourced value.",
+    "Resonance detonates on the third stack for 30 to 150 by level + 80% AP, "
+    "consuming all three.",
+    "Each p_procs entry is one completed detonation: the rotation does not imply "
+    "three prior applications.",
+    "Resonance's 4s per-target window and 270% monster multiplier are boundary state; "
+    "the value is champion-target.",
     "Q's return is a separate authored event and W's passive is disabled unless the "
     "target-health gate is selected.",
     "Chronobreak's heal, stasis and movement are recorded as non-TDD state; only the "
