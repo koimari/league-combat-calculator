@@ -1,102 +1,47 @@
-"""Rumble — CP10.6 packet module with the E9-1 R gap fix.
+"""Rumble: packet module over the heat system.
 
-E9-1 closes the remaining audit gap: R (The Equalizer) priced ONE tick
-of the Burning DoT.  The wiki cache carries "Magic Damage per Tick"
-(30/50/70 + 8.75% AP) and "Maximum Magic Damage" (600/1000/1400 +
-175% AP): 20 ticks at 0.25 seconds over up to 5 seconds of Burning
-("Enemies may be Burning for up to 5 seconds, for a total of 20
-instances of its effect"). This module's packet timing declaration
-prices all 20 ticks.
+Two cached-row traps this module already pays are in the Champions
+section of ``TRAPS.md``: a ``Bonus Damage`` leveling row that is a
+monster-only cap rather than a damage source, and the
+``% of maximum health`` unit spelling that once fell through
+``champions/scaling.py`` to ``0.0``.
 
-Row-selection fix (Q): the generated packet read Flamespitter's "Bonus
-Damage" row, which is neither a Flamespitter damage row nor rank-indexed
-— it is the per-LEVEL monster cap the Danger Zone effect states
-("Flamespitter's total damage based on the target's health is capped at
-65 : 336.84 (based on level) against monsters"), and the packet indexed
-its 20 level values by rank, so rank 5 priced the level-5 cap (107.71).
-Flamespitter's own rows are Minimum / per-Second / per-Tick / Maximum
-Magic Damage; this module prices the "Maximum Magic Damage" row
-(62.5/93.75/125/156.25/187.5 + 131.25% AP + 7.5/8.13/8.75/9.38/10% of
-the target's maximum health), which is the whole 3-second flamethrower
-— 15 ticks of "Magic Damage per Tick" at every rank.
+What each slot prices:
 
+- Q (Flamespitter) prices the "Maximum Magic Damage" row, the whole
+  3-second flamethrower, which is 15 ticks of "Magic Damage per Tick"
+  at every rank.  The other Flamespitter rows are Minimum, per-Second
+  and per-Tick views of the same damage.
+- R (The Equalizer) prices all 20 Burning ticks: "Magic Damage per
+  Tick" at 0.25s over up to 5 seconds, which the cache states as a
+  total of 20 instances.
+- P (Junkyard Titan) carries a real sourced on-hit formula in its
+  Overheated effect, a per-level "Bonus Magic Damage" array with one AP
+  and one target-max-health modifier, corroborated term for term by the
+  binary's ``RumbleHeatSystem``.
+- W (Scrap Shield) is a sourced self-shield with no damage row.  Being
+  shield-only it cannot carry ``attach_self_shield``, which rides
+  damage-event rows, so the ally-support scanner prices it at target
+  scope "self" (the Ekko-W precedent, pinned by
+  ``tests/test_support_effects.py``).
 
-The Danger Zone half of the heat system stays unpriced: rotation
-numbers assume no heat state (the CP-era review boundary), so Q/E/R
-price their base rows and the Enhanced rows go unread.
+Overheat is derived, not declared.  The slot states the cached heat
+rule and the fight's cast plan walks it
+(``fight/rotation/cast_resource_lockout.py``): Heat per basic-ability
+cast, the ceiling, the lockout and the decay, every number read from
+the cached prose, so a reworked cache raises rather than pricing a
+stale constant.  The walk decides how often the bar fills, where each
+lockout sits inside the fight rather than off the end of the horizon,
+how many seconds of bonus attack speed the windows buy, and which
+swings land empowered.  None of the four is a scenario option, and the
+plan can answer them because E is scheduled on its recharge
+(``champions/charge_cadence.py``) and not on the gap between two banked
+harpoons.  The bonus attack speed is the full cached grant rated by the
+share of the fight the windows cover, which is exact because attack
+speed is linear in the bonus percent.
 
-Roadmap session (2026-08-21): closes both of Rumble's remaining
-out_of_scope slots (P, W).
-
-  - P (Junkyard Titan) is NOT a no-damage slot. Its third effect row,
-    Overheated, carries a real sourced on-hit damage formula: "empowers
-    his basic attacks to deal 5 : 44.12 (based on level) (+ 25% AP)
-    (+ 4% of the target's maximum health) bonus magic damage on-hit"
-    (``data/champions.json`` Rumble P, effect 3, leveling attribute
-    "Bonus Magic Damage" — a 20-entry per-LEVEL array, one 25% AP
-    modifier, one 4% target-max-health modifier). The game binary
-    agrees exactly (``data/bin/characters/rumble.bin.json``, record
-    ``RumbleHeatSystem``: ``TotalBaseDamage`` ByCharLevel 5 -> 40 with
-    the level-20 extrapolation to 44.12, ``+ 0.25`` AP coefficient, and
-    ``OverheatPercBonusDamage`` 0.04). The packet's ``no_damage`` label
-    was therefore INCOMPLETE, not merely stale.
-
-    Overheat is derived, not declared. The slot states the cached heat
-    rule and the fight's cast plan walks it
-    (``fight/rotation/cast_resource_lockout.py``): 20 Heat per basic
-    ability cast (Q, W and E state it identically and must agree), a 150
-    ceiling, a 4-second lockout, and a 10 Heat per second decay that
-    starts once the mech has gone 4 seconds without a basic ability and 2
-    without The Equalizer. Every one of those numbers is read from the
-    cached prose, so a reworked cache raises rather than pricing a stale
-    constant.
-
-    What the walk decides, and nothing else does: how often the bar
-    fills, where each lockout sits (in the middle of the fight, silencing
-    the casts it eats, rather than coming off the end of the horizon),
-    how many seconds of bonus attack speed the windows buy, and which
-    basic attacks are empowered — the swings that land inside a window.
-    None of the four is a scenario option, and the plan can answer them
-    because E is scheduled on its 6s recharge
-    (``champions/charge_cadence.py``) and not on the 0.5s gap between two
-    banked harpoons.
-
-    The bonus attack speed is applied as the full cached grant rated by
-    the share of the fight the derived windows cover, which is exact:
-    attack speed is linear in the bonus percent.
-
-    The other row of the same effect is documented and never added:
-
-      * The "Bonus Damage" leveling row (65 : 163.32 by level). Read in
-        context it is not a damage source at all — it is the cap on the
-        %max-health term, "capped at 65 : 163.32 (based on level)
-        against monsters". It is monster-only and this engine's
-        ``target_class`` has no monster value, so it never binds on the
-        champion-target surface and is documented, never added.
-
-  - W (Scrap Shield) is a sourced self-shield with no damage row of any
-    kind: "Rumble generates 20 Heat to grant himself a shield for 1.5
-    seconds", Shield Strength 25/55/85/115/145 (+ 30% AP) (+ 4% of
-    maximum health). Being shield-only it cannot carry
-    ``attach_self_shield`` (that payload rides damage-event rows), so it
-    stays priced by the ally-support scanner, which already derives it
-    at target scope "self" (pinned by tests/test_support_effects.py).
-    Reclassified out_of_scope -> modeled, the Ekko-W precedent for a
-    scanner-priced shield-only slot.
-
-    NOTE: closing this slot required a genuine kernel repair. The 4%
-    max-health term uses the wiki spelling "% of maximum health", which
-    was absent from ``champions/scaling.py``'s ``_SIMPLE_UNITS`` table
-    (only the "% maximum health" spelling was mapped), so
-    ``resolve_scaling`` fell through to its unrecognized-unit ``0.0``
-    and SILENTLY dropped the term — the exact fail-open this codebase
-    bans. The alias is now mapped; see that module's comment for the
-    full blast radius (it also zeroed Galio's W shield outright).
-
-    Danger Zone Bonus (+50% shield strength and bonus movement speed)
-    is heat state and is not applied: the scanner prices the base
-    "Shield Strength" row, the conservative no-heat reading this module
-    has always taken for Q/E/R.
+Danger Zone is heat state and stays unpriced: Q, E, R and W price their
+base rows and the Enhanced rows go unread.
 """
 
 import math

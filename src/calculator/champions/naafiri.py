@@ -1,127 +1,43 @@
-"""Naafiri — CP10.5 full-entry-reviewed packet module (E2/E9-2 fixes).
+"""Naafiri: full-entry-reviewed packet module.
 
-E2 DoT fix: Q (Darkin Daggers) prices the initial hit plus 10 sourced
-0.5s bleed ticks (Total Bleed Physical Damage == per-tick x 10).
+The game binary names her W and R slots the opposite way round from the
+live kit; see the Champions section of ``TRAPS.md`` before any
+patch-day check.  Everything here is named by the live kit, matching
+``data/champions.json``.
 
-E9-2 gap fixes:
-- Q recast: the recast hits an already-bleeding champion for the
-  "remaining bleed damage plus additional bonus physical damage".  The
-  bonus is the cached Minimum/Maximum Bonus Physical Damage rows (30-80
-  + 40% bAD at the minimum, 60-160 + 140% bAD at the maximum),
-  interpolated 0% : 100% by the target's missing health; the remaining
-  bleed term is covered by the already-priced bleed ticks (conservative:
-  the recast does not double-price them).
-- Q self-heal: the recast against a champion heals Naafiri for the
-  cached "Heal" row (45-105 + 40% bonus AD) — authored by the E1
-  self-heal rule (HEALING_RULE_CHAMPIONS); the support scanner defers
-  this slot so the ledger has one receipt.
-- E (Eviscerate) prices BOTH the dash and the Flurry explosion on
-  arrival (Dash Physical Damage + Flurry Physical Damage == Total
-  Physical Damage), instead of the packet's dash-only row.
+What each slot prices:
 
-!!! GAME-FILE SLOT LABELS ARE SWAPPED — READ BEFORE ANY PATCH-DAY CHECK
-Naafiri's binary (``data/bin/characters/naafiri.bin.json``) names her
-two upper spell slots the OPPOSITE way round from the live kit, the
-wiki, and ``data/champions.json``.  This is a naming artifact of her
-2025 rework, not a data error, and it is the single easiest way to
-mis-source this champion (the Gnar-P game-file caveat pattern):
+- Q (Darkin Daggers) prices the initial hit plus 10 sourced 0.5s bleed
+  ticks (Total Bleed Physical Damage == per-tick x 10).  The recast
+  against an already-bleeding champion adds the cached Minimum/Maximum
+  Bonus Physical Damage rows, interpolated 0% : 100% by the target's
+  missing health; the remaining-bleed term is already covered by the
+  bleed ticks, so the recast does not double-price them.
+- Q's heal against a champion is the cached "Heal" row, authored by
+  ``derive_self_healing`` (``HEALING_RULE_CHAMPIONS``).  The support
+  scanner defers the slot so the ledger holds one receipt.
+- W (The Call of the Pack) is a BUFF-phase ``stat_buff``: 20% of TOTAL
+  AD granted as bonus AD, a prose-only constant corroborated by the
+  binary's ``NaafiriADPercentBoost``, plus the ranked bonus movement
+  speed as a ``move_speed_percent`` key so ``damage.py`` re-folds it
+  through ``stats.resolve_move_speed``.  Mutating ``ctx.stats`` in-parse
+  is what lets Q, E, R and the packmate row scale off the buffed AD.
+- E (Eviscerate) prices both the dash and the Flurry explosion on
+  arrival (Dash + Flurry == Total Physical Damage).
+- P (We Are More) prices the packmate damage coupling, the Illaoi-P
+  precedent: the summon itself deals nothing, and what the pack
+  contributes on Hounds' Pursuit is R's own "Physical Damage per
+  Packmate" row.  The packmate count is sourced three ways that agree
+  exactly: the wiki P text, the binary's ``PackmateCap`` breakpoints at
+  levels 9, 12 and 15, and the wiki R notes' packmate-total table.  The
+  ``w_hunt`` option selects the raised cap and the AD steroid together,
+  so there is one hunt state rather than two guesses.
 
-  - binary ``Characters/Naafiri/Spells/NaafiriRAbility/NaafiriR``
-    IS wiki/live **W — The Call of the Pack**.  Proof: its
-    ``cooldownTime`` is the padded 7-slot ``[26, 26, 24, 22, 20, 18,
-    18]`` (ranks 1-5 at indices 1-5 = 26/24/22/20/18, the wiki W
-    cooldown), and its ``DataValues`` are ``PackmatesToAdd`` (2),
-    ``Duration`` (5.0), ``MoveSpeedAmount`` (padded ``[.175, .20,
-    .225, .25, .275, .30, .325]`` = the wiki W row 20/22.5/25/27.5/30%
-    at ranks 1-5), ``UntargetableDuration`` (1.0 — the wiki W's
-    "untargetable for the first 1 second") and ``NaafiriADPercentBoost``
-    (0.20 — the wiki W's "gains 20% AD bonus attack damage").
-  - binary ``Characters/Naafiri/Spells/NaafiriWAbility/NaafiriW``
-    IS wiki/live **R — Hounds' Pursuit**.  Proof: ``cooldownTime`` is
-    the padded ``[110, 110, 95, 80, 80, 80, 80]`` (R ranks 1-3 =
-    110/95/80), and its calculations are ``TotalDamage`` /
-    ``PackmateDamage`` / ``ArmorShred`` / ``ShieldTotal``.
-
-The same swap runs through ``data/atoms/v2/naafiri.atoms.v2.json``,
-whose ``behavior`` field uses the BINARY names: the atom row tagged
-``NaafiriR`` (``Trait_Untargetable``) is wiki W, and the rows tagged
-``NaafiriW`` (``Trait_DamageAbility``, ``Trait_Shield``,
-``Trait_AttackBuff_Duration``) are wiki R.  Everything in THIS module
-is named by the live/wiki kit, matching ``data/champions.json``.
-
-Do NOT try to resolve the swap from the ``NaafiriR*`` / ``NaafiriW*``
-CHILD objects (``NaafiriRShield``, ``NaafiriRVision``,
-``NaafiriRMoveSpeed``, ``NaafiriRPassive``, ``NaafiriWShred``, the
-``NaafiriPackmate*`` shells).  Every one of them is an empty marker —
-``DataValues`` and ``mSpellCalculations`` are both empty — so they
-carry no number to cross-check a cooldown or a ratio against, and the
-atomizer classifies them by NAME (``evidence`` reads ``name:shield``,
-``name:movespeed``), which is precisely the signal the swap corrupts.
-Only the five primary records ``NaafiriP`` / ``NaafiriQ`` /
-``NaafiriW`` / ``NaafiriE`` / ``NaafiriR`` hold DataValues or
-calculations, and the two-channel cooldown match above is the only
-sound way to bind them to live slots.
-
-Roadmap session (2026-08-21): closes both of Naafiri's out_of_scope
-slots (P, W).
-
-  - W (The Call of the Pack) is a real, sourced steroid, so it gets a
-    slot-parser override rather than a relabel (Aatrox R / Singed R
-    precedent: a BUFF-phase ``stat_buff``).  The wiki W's third effect
-    branch reads "While on the hunt, Naafiri gains 20% AD bonus attack
-    damage and grants herself and all Packmates bonus movement speed";
-    the 20% lives in prose rather than a leveling row, so it is pinned
-    as a module constant and corroborated by the binary's
-    ``NaafiriADPercentBoost`` = 0.20 (see the swap note above).  Both
-    channels agree it is unranked, and the binary's ``BonusAD``
-    calculation is a ``StatByNamedDataValueCalculationPart`` on stat 2
-    (attack damage) with NO ``mStatFormula`` override — i.e. 20% of
-    TOTAL AD, granted as bonus AD, which is exactly what the wiki's
-    "20% AD" notation means.  Modeled as BUFF phase (mutates
-    ``ctx.stats`` in-parse) so Q/E/R and the packmate row below all
-    scale off the buffed bonus AD, and emitted as a ``stat_buff``
-    payload so the fight engine's autos see it too.
-    The same branch's bonus movement speed (20/22.5/25/27.5/30% by W
-    rank, a real leveling row, corroborated by the binary's
-    ``MoveSpeedAmount``) rides the same ``stat_buff`` as a
-    ``move_speed_percent`` key, so ``damage.py`` re-folds it through
-    ``stats.resolve_move_speed`` — the one fold the build stats, the
-    runes and the ally bonuses all go through, soft caps included.
-  - P (We Are More) closes as the packmate DAMAGE coupling, the Illaoi-P
-    precedent (a passive slot that prices the pet damage other slots
-    trigger).  The innate summon itself deals nothing; what the pack
-    contributes on Hounds' Pursuit IS wiki-sourced, on R's own second
-    leveling row "Physical Damage per Packmate" (12.5/20/27.5 + 10%
-    bonus AD), which the packet ignored entirely.  The packmate count
-    is sourced three ways and all three agree exactly:
-      * wiki P text: "up to 2 / 3 / 4 / 5 (based on level)";
-      * binary ``NaafiriP``'s ``PackmateCap`` calculation:
-        ``mLevel1Value`` 2 with +1 breakpoints at levels 9, 12 and 15;
-      * the wiki R notes' packmate-total table, which is the arithmetic
-        product of the two rows above — "Levels 16:18: 137.5 (+ 50%
-        bonus AD) / 192.5 (+ 70% bonus AD)" is exactly 5 x 27.5 (+5 x
-        10%) and 7 x 27.5 (+7 x 10%), and every other band checks the
-        same way (L6-8: 2 x 12.5 = 25 / 4 x 12.5 = 50; L9-11: 3 x 12.5
-        = 37.5 at rank 1 and 3 x 20 = 60 at rank 2; L12-14: 4 x 20 =
-        80; L15: 5 x 20 = 100).  The table's second column is the
-        wiki W note's raised cap ("While The Call of the Pack is
-        active, it increases We Are More's summon cap to 4 / 5 / 6 / 7
-        (based on level)"), so the two columns are selected by the SAME
-        ``w_hunt`` option that gates the AD steroid — one hunt state,
-        not two independent guesses.
-    Packmate BASIC ATTACKS stay unpriced with a named receipt: their
-    formula exists only in the game binary (``NaafiriP``'s
-    ``PackmateTotalDamage`` = level-interpolated 10->20 + 4% bonus AD,
-    with ``PackmateBaseAS`` 0.688), because the wiki's per-champion
-    Pets entry is NOT part of the local cache — ``data/champions.json``
-    P says only "See Pets for full details on Packmates".  The E4
-    summon precedent (Malzahar voidlings, Annie's Tibbers) requires a
-    cached wiki row for the per-attack damage and pins only the cadence
-    as a module constant; there is no cached row here to pin against,
-    and the pack's uptime/target-selection (leap range, frenzy
-    stacking, taunt) is unmodeled state on top.  Pricing it would be a
-    single-channel invention, so it is documented instead — see
-    ASSUMPTIONS.
+Packmate BASIC ATTACKS stay unpriced with a named receipt: their
+formula exists only in the binary, the wiki's per-champion Pets entry
+is not part of the local cache, and the pack's uptime and target
+selection are unmodelled state on top.  Pricing it would be a
+single-channel invention; see ASSUMPTIONS.
 """
 
 from typing import Any

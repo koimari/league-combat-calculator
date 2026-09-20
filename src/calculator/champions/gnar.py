@@ -1,4 +1,4 @@
-"""Gnar — slot map for the archetype engine.
+"""Gnar: slot map for the archetype engine.
 
 Why each slot is non-generic:
 - Gnar's two forms live as paired JSON entries per slot (Q[0]/Q[1],
@@ -7,14 +7,14 @@ Why each slot is non-generic:
   on-hit shell, Mega W a cast; Mini E carries a stat_buff, Mega E does
   not), so each slot is a small champion-local form dispatcher rather
   than a ``by_option`` (whose cases must share one shape).
-- P (Rage Gene) deals no damage, but Mega form grants stat bonuses
-  that exist nowhere in the JSON (its ``leveling`` is empty) — module
-  constants (from the Community Dragon game files; the wiki's Mega
-  stat box is stale) applied as a BUFF-phase buff so E (%maxHP) and
-  Q/W (%AD) parse against buffed stats, and echoed in ``stat_buff`` so
-  the fight engine buffs autos and attack speed. The deltas are BASE
-  stats — bonus AD stays 0 without items, which R's %bonus-AD ratios
-  require (in-game confirmed: itemless R wall deals its flat base).
+- P (Rage Gene) deals no damage, but Mega form grants stat bonuses that
+  exist nowhere in the JSON (its ``leveling`` is empty), so they are
+  module constants read from the game files. They apply as a BUFF-phase
+  buff so E (%maxHP) and Q/W (%AD) parse against buffed stats, and are
+  echoed in ``stat_buff`` so the fight engine buffs autos and attack
+  speed. The deltas are BASE stats, which is what R's %bonus-AD ratios
+  require. See the Champions section of ``TRAPS.md`` for why the wiki
+  stat box is not the source.
 - Q (Boomerang Throw / Boulder Toss) is a plain "Physical Damage" read
   per form ("Reduced Damage" is the subsequent-target falloff — a
   single target is hit once at full damage), with the catch/pickup
@@ -56,12 +56,11 @@ from .source_receipts import load_champion_sources
 
 # ROOTED IN THE BINARIES: the five Mega deltas are computed at import as
 # GnarBig's CharacterRecord root minus Mini Gnar's (both tracked under
-# data/bin/characters/).  The wiki's Mega stat box is stale (claims 5.7
-# AD growth; the game says 5.5 — confirmed by in-game testing), so the
-# roots are the authority.  The AD counts as base AD, never bonus AD —
-# R's %bonus-AD ratios see 0 without items.  Attack speed is a LOSS in
-# percentage points of bonus attack speed (it cancels Mini's
-# growth-derived bonus AS: 6%/level Mini vs 0.5%/level Mega).
+# data/bin/characters/), which TRAPS.md explains are the authority here.
+# The AD counts as base AD, never bonus AD, so R's %bonus-AD ratios see
+# 0 without items.  Attack speed is a LOSS in percentage points of bonus
+# attack speed: it cancels Mini's growth-derived bonus AS, 6%/level Mini
+# against 0.5%/level Mega.
 _MINI_ROOT = character_record_root("Gnar")
 _MEGA_ROOT = character_record_root("GnarBig")
 

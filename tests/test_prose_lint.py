@@ -7,6 +7,11 @@ from scripts.prose_lint import FAILING, scan
 #: Files exempt from the counters. Empty, and a new exemption needs a reason.
 PENDING: tuple[str, ...] = ()
 
+#: The ``pointer`` rule reports instead of failing while the tree still cites
+#: campaign documents.  Lower this to what a run prints; never raise it.  At
+#: zero the rule joins ``FAILING`` and this ceiling goes away.
+POINTER_CEILING = 583
+
 SEEDED = '''"""Seed."""
 
 
@@ -77,6 +82,14 @@ def _findings():
 def test_the_tree_carries_no_prose_of_this_kind(findings, kind):
     hits = findings[kind]
     assert hits == [], "\n".join([f"{len(hits)} {kind}:", *hits])
+
+
+def test_the_pointer_count_only_falls(findings):
+    hits = findings["pointer"]
+    assert len(hits) <= POINTER_CEILING, (
+        f"{len(hits)} pointer findings against a ceiling of {POINTER_CEILING}; "
+        "state the fact instead of citing a campaign document"
+    )
 
 
 @pytest.mark.parametrize("kind", FAILING)

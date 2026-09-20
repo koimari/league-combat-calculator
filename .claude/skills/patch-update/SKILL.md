@@ -39,7 +39,7 @@ below the checked-in asset.
 Modifier-parse ERROR spam during the pull ("FAILURE TO PARSE MODIFIER") is
 normal lolstaticdata noise; only the `Skipped N` summary lines mean data was
 actually dropped. The known offenders (gimmick scalings) are listed under
-"Known-degraded wiki parses" in CLAUDE.md's Known Quirks. Compare new spam
+"Known-degraded wiki parses" in the Champions section of `TRAPS.md`. Compare new spam
 against that list. To attribute a NEW error to a champion: the ability names
 streamed to stdout right before the error belong to the champion being parsed
 (the `Processed X` line prints only after X finishes, so the error belongs to

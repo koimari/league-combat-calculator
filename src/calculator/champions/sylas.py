@@ -1,101 +1,56 @@
-"""Sylas — CP10.8 full-entry-reviewed packet module, plus the P1 E-shield note.
+"""Sylas: full-entry-reviewed packet module.
 
-The CP-era "SylasEShield" atom (Abscond/Abduct shield, 80/115/150/185/220
-+ 100% AP for 2s) is not part of the live kit: the wiki patch history
-records its removal in V10.2, and the pinned cached data (patch 16.15)
-carries no shield row on either E entry.  The module's E packet (Abduct
-magic damage) is therefore complete, and the shield atom is a stale
-receipt rather than a missing mechanic.
+Why P rides ``auto_attack_conversion`` rather than an added magic row,
+and how to spot the same shape on the next champion, is in the
+Champions section of ``TRAPS.md``.  The module supplies only the non-AD
+remainder, ``bonus_raw = 1.30 x AD + 0.30 x AP - AD``, and the engine's
+swing path owns the AD term, crits and mid-fight AD changes.  The
+ratios are module constants because the cached entry's ``leveling``
+arrays are all empty and the numbers live in description prose (the
+Darius-P precedent), which is why the tests re-derive both from the
+binary rather than trusting the constants.
 
-E1-b2: Sylas is in HEALING_RULE_CHAMPIONS — W Kingslayer's
-missing-health-scaled heal (Minimum/Maximum Heal rows) is authored by
-``derive_self_healing`` (test_sylas_kingslayer_heals_scaled_by_missing).
+W (Kingslayer) heals on a missing-health scale from the cached
+Minimum/Maximum Heal rows, authored by ``derive_self_healing``
+(``HEALING_RULE_CHAMPIONS``).
 
-Roadmap session (2026-08-21): adjudicates Sylas' two remaining
-out_of_scope slots.  P closes as ``modeled``; R stays open.
+E (Abscond/Abduct) prices the Abduct magic damage and nothing else.
+The live kit carries no shield row on either E entry, so the packet is
+complete.
 
-  - P (Petricite Burst) carries a real sourced damage formula, so the
-    packet's implicit no-damage reading was INCOMPLETE: "Sylas' next
-    basic attack ... is empowered to have an uncancellable windup and
-    consume a stack to whirl his chains around him, dealing 130% AD
-    (+ 30% AP) magic damage to the primary target and 40% AD (+ 20% AP)
-    magic damage to nearby enemies".  The game binary agrees term for
-    term (``SylasPassive``: ``PassiveDamage`` = 1.3 x total AD + 0.3 AP,
-    ``PassiveAoEDamage`` = 0.4 x total AD + 0.2 AP, each with exactly two
-    ``StatByCoefficientCalculationPart`` formula parts and no third
-    term).
+Four sourced P riders are deliberately not modelled:
 
-    **It is NOT bonus on-hit damage, and getting that wrong would have
-    inflated Sylas.**  The empowered attack REPLACES the swing's own
-    damage and converts it to magic; it does not stack on top.  Three
-    independent reads agree: the ratio is 130% AD, which no bonus row
-    could be (a bonus row cannot exceed a whole auto and still be
-    called the attack's damage); the cached note "Spellblade damage does
-    not get CONVERTED to magic damage" only parses if the attack's own
-    damage *is* converted; and the wiki states the 130% AD (+ 30% AP) is
-    the empowered attack's total, magic instead of physical, with
-    on-hit effects and life steal still applying to the primary target.
-    Pricing it as an added magic row would have invented roughly one
-    full auto of damage per empowered swing AND mitigated the real swing
-    against armor instead of magic resistance.
+- the secondary whirl (40% AD + 20% AP), which needs nearby enemies the
+  1v1 damage surface does not have;
+- the nonstandard critical strike.  The wiki records Petricite Burst
+  critting for (175% + 30%) rather than the standard (200% + 30%), and
+  this kernel cannot express that: ``DamagePart.crit_effectiveness``
+  scales the crit PROBABILITY, not the multiplier, and
+  ``state.crit_multiplier`` is the global figure, so the only available
+  encoding would overstate the crit bonus.  ``auto_attack_conversion``
+  crits the AD component at the standard multiplier and never crits
+  ``bonus_raw``; at the zero crit chance of an ordinary Sylas build the
+  two readings coincide exactly.  The divergence is documented, not
+  approximated;
+- ``MonsterDamageMulti`` and the secondary-target minion execute, since
+  this engine's ``target_class`` has no monster value and the execute is
+  secondary-target-only;
+- the 125% bonus attack speed and the uncancellable windup.  The
+  steroid lasts only until the stack is spent, so its uptime is not
+  derivable from a static build, and there is no windup channel.
 
-    So P rides ``auto_attack_conversion``, the kernel channel that
-    already exists for exactly this shape — "a bounded set of attacks
-    may replace their normal physical swing with one modified
-    basic-damage instance" (the Galio Colossal Smash precedent).  The
-    module supplies only the non-AD remainder,
-    ``bonus_raw = 1.30 x AD + 0.30 x AP - AD``, and the engine's own
-    swing path continues to own the AD term, crits and mid-fight AD
-    changes.  The ratios are module constants because the cached entry's
-    ``leveling`` arrays are ALL empty — the numbers live only in
-    description prose (the Darius-P precedent for prose-only ratios),
-    which is why the tests re-derive both from the binary rather than
-    trusting the constants.
-
-    Four sourced riders are deliberately NOT modeled:
-      * the secondary/AoE whirl (40% AD + 20% AP).  It needs nearby
-        enemies, which the 1v1 damage surface does not have;
-      * the nonstandard critical strike.  The wiki records Petricite
-        Burst critting for (175% + 30%) rather than the standard
-        (200% + 30%), and this kernel cannot express that:
-        ``DamagePart.crit_effectiveness`` scales the crit PROBABILITY,
-        not the multiplier, and ``state.crit_multiplier`` is the global
-        200%-plus-bonus figure, so the only available encoding would
-        overstate the crit bonus.  ``auto_attack_conversion`` crits the
-        AD component at the standard multiplier and never crits
-        ``bonus_raw``; with the zero crit chance of an ordinary Sylas
-        build the two readings coincide exactly.  Fail-closed: the
-        divergence is documented, not approximated;
-      * ``MonsterDamageMulti`` (115%) and the secondary-target minion
-        execute below ``CheatingThreshold`` (25 health).  This engine's
-        ``target_class`` has no monster value and the execute is
-        secondary-target-only, so neither can bind;
-      * the 125% bonus attack speed (binary ``PassiveAttackSpeed``
-        1.25) and the uncancellable windup.  The steroid lasts only
-        until the stack is spent, so its uptime is not derivable from a
-        static build, and there is no windup channel.
-
-  - R (Hijack) stays OPEN ``out_of_scope``.  The Olaf-R rule applies in
-    its strongest form: this is not a slot whose damage is zero, it is a
-    slot whose damage is *another champion's ultimate*.  Hijack's own
-    binary record has one calculation, ``PerTargetCooldown``, and no
-    damage formula — the damage arrives entirely through "Recast: Sylas
-    casts his hijacked ultimate ability at no cost, scaling based on
-    Hijack's rank and his own statistics".  Calling that ``no_damage``
-    would be flatly false.
-
-    The blocker is a named kernel gap, not an evidence gap.  Every
-    attacker resolves to exactly one validated champion contract and
-    unknown names fail closed (the named-module rule), so there is no
-    surface on which one champion's parse can instantiate another
-    champion's R at a rank of its own.  The sourced conversion rule that
-    would make such an import correct — "abilities that do not scale
-    with ability power have their attack damage ratios converted to
-    ability power ratios, scaling with 0.6% AP per 1% total AD, and 0.4%
-    AP per 1% bonus AD" — has no channel either: nothing in the kernel
-    re-writes a foreign ability's scaling terms.  Modelling R therefore
-    needs a cross-champion ultimate-import kernel, which is a project,
-    not a slot.
+R (Hijack) stays ``out_of_scope``.  The Olaf-R rule applies in its
+strongest form: this is not a slot whose damage is zero, it is a slot
+whose damage is another champion's ultimate.  Hijack's own binary
+record holds one calculation, ``PerTargetCooldown``, and no damage
+formula, so calling it ``no_damage`` would be flatly false.  The
+blocker is a named kernel gap: every attacker resolves to exactly one
+validated champion contract and unknown names fail closed, so no
+surface lets one champion's parse instantiate another champion's R at a
+rank of its own, and nothing in the kernel re-writes a foreign
+ability's scaling terms the way the sourced AD-to-AP conversion rule
+would need.  Modelling R needs a cross-champion ultimate-import kernel,
+which is a project and not a slot.
 """
 
 from dataclasses import replace

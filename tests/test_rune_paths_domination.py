@@ -308,7 +308,7 @@ class TestUltimateHunter:
         )
 
     def test_a_build_with_no_haste_item_still_publishes_an_integer_zero(self):
-        """A published zero's *type* is load-bearing (CLAUDE.md).
+        """A published zero's *type* is load-bearing (TRAPS.md, Goldens and receipts).
 
         ``views.publish`` gives a float leaf a disposition entry and an int
         leaf none, and the item side of this stat sums no terms for a build

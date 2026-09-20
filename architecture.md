@@ -2,6 +2,20 @@
 
 The calculator separates sourced data, combat rules, scenario composition, optimization, and presentation. A value or rule should have one owner.
 
+## Design rules
+
+Four rules every mechanic is modelled under. They are why a number has a receipt
+and a categorical rule has a type.
+
+- A numerical or quantifiable source value becomes an Atom record with exact evidence and a hash.
+- A categorical mechanic becomes a small typed declaration with a source receipt.
+- A user decision becomes a scenario option with a public receipt.
+- The contracts stay orthogonal and composable.
+
+A primitive promotes only once all five hold: no unused atoms, no unsourced
+runtime numbers, no unsupported semantic declarations, receipt-versus-score
+parity, and public option receipts.
+
 ## Request path
 
 ```text
@@ -39,6 +53,13 @@ League Wiki cache
 - `shield_ledger.py` owns what a damage instance does to a defender: timed-grant expiry, typed-pool consumption, Lifeline arming, general-pool consumption, health damage, overkill, and every absorbed total. All three absorption paths, the two ordered walks (`fight/ledger/pool_walk.py` and `fight/after/shield_outcome.py`) and the one survival kernel (`survival/transitions.py`) that the receipt and compiled-score compositions both run, call `absorb()` over a `ShieldPools`; they differ only in where that object is stored. Shields enter through `grant()` so a pool total and its expiry sub-ledger can never disagree, and defenses become pools through the one `shield_pools.build_pools()`, so the one-pair engine and the coupled ledger cannot stage the same item differently. Adding a shield mechanic or changing absorption order is one edit (issue #159).
 - `defensive_effects.py` resolves defenses that are ready when combat begins, over the state and ledger `starting_defenses.py` holds and the champion's own openers in `champion_opening_defenses.py`. Starting shields, basic-damage modifiers, capped post-mitigation reductions, critical-strike reductions, and one-rotation threshold shields come from revision-backed Wiki mechanics. Timed threshold shields are priced from the certified event ledger; a timed fight with any uncertified damage source is withheld after computation, naming the coarse sources. Unregistered defenses remain explicitly outside the model.
 - `ally_effects.py` compiles opt-in outgoing ally effects only when a sourced, tested rule exists.
+- `control_spec.CC_KIND_VOCABULARY` is the ONE crowd-control vocabulary, and every other cc set is a classification over it. The module's header comments own the three partitions, their wiki citation, and why they are not interchangeable; `tests/test_cc_kind_vocabulary.py` is the guard and `KNOWN_CONTROL_KINDS` is derived. Never re-list kinds anywhere.
+- `manaflow_ledger.py` owns Manaflow as one named passive over the items `item_effects.manaflow_items()` derives from the `MANAFLOW_LEDGER_KEYS` group. `manaflow_holder()` resolves the build's single holder and raises on two, and `loadout_rules`'s `Manaflow` exclusivity group is what keeps that from happening. Every number is per holder, so `ManaflowDeclaration` takes no defaults. Three of the five spend a charge on a basic attack as well as on a cast (`manaflow_on_hit_charge`), and `fight.rotation.mana_declarations._manaflow_swing_rows` rides the swing schedule `_auto_restore_schedule` resolves, so the swing at a bank time takes the charge the next cast finds spent. A `basic_attack` trigger on an items-only holder raises. The grant is bonus MAXIMUM mana and never moves current mana, so the mechanic changes no damage.
+- The rune paths publish their compiler tables once and `rune_effects` reads only what was published. `src/calculator/__init__.py` calls `publish_rune_compilers()`, which hands `register_rune_compilers` a `MappingProxyType` snapshot of each path module's `COMPILERS` and `OPTIONS`. A runtime edit to a path table never reaches `resolve_rune`; a test needing a different vocabulary monkeypatches `rune_effects._COMPILERS`. A read before anything registered raises naming `src.calculator.rune_paths` rather than answering an empty vocabulary, so a module-level rune read reached during the facade's own import chain fails closed there.
+- `DefenseSubject` reads options through an injected reader. `item_behavior.py` is a leaf, holding `ability_spec` plus the value-reference layer only; `defensive_effects.option_reader(item_options)` is the one typed reader, and a subject built without one fails closed on the first supplied option.
+- `interpreters._threshold_regeneration_thresholds` stops the whole `uncompilable_item_receipt` call on one broken declaration. The refusal is request-level, not per-item, and that is intended.
+- `item_support_effects` loads 17 internal modules against sightline #27's fan-out ceiling of 10, and only its reader count keeps that arm quiet: the arm needs two internal readers and `participant_timeline` is the one. The engine reaches the module's facts through `AllyPacketSlot.control_arming` in `interpreters/ally_packet.py` and through `survival.actions.event_timestamp`, never by importing it, and a deferred import from `damage` closes a five-module #35 cycle. No honest move set reaches nine imports without splitting `derive_item_support_effects`, so a second reader means baselining the arm beside the price arm with that reason.
+- Three things are named "champions": `src/calculator/champions/` is our code, `data/champions.json` our tracked cache, and `vendor/lolstaticdata/champions*` the scraper's gitignored scratch output, read at no point at runtime. `vendor/README.md` and `data/README.md` own the detail.
 
 Nine dependency-light leaves own the typed contracts shared mechanics need. Each takes its numbers from a consumer's typed accessor, attaches a source receipt, and fails closed with a named reason rather than inventing a value:
 
@@ -169,6 +190,22 @@ Each owner above resolves to one file per idea. These are the leaves they hold:
 
 Inside `fight/autos/` a strike is filed by what fires it: `on_hit_layering.py` pays the effects every hit carries, `first_auto_strikes.py` the strikes that spend a charge on one swing, `stacking_strikes.py` the strikes a counter of landed hits fires, and `spellblade.py` the charge a cast arms. `fight/items/secondary_delivery.py` is the one home for a packet that lands on a subject the attack was not aimed at: Wind's Fury bolts, a Cleave splash, a chained strike's arc. No step in `fight/` spells a cached item name outside the five entries `tests/test_architecture.py` lists with the reason each is still there. Of the three deliveries only the bolt reads its row key, row name and targeting kind off the declared `SecondaryTargetRule`; the Cleave splash and the max-health cone still resolve their holder by asking `item_effects` which held item carries the effect keys, and `loadout_rules`'s `Hydra` exclusivity group is what keeps that question single-answered.
 
+`count_damage_after_fight_end` (a request field, default true) is the one switch over what the fight's end does to damage. On, the fight is the window the champions act in and a hit lit inside it still lands after it: a fused Time Bomb, Requiem's payload, a DoT's remaining ticks, a burn's tail. Off, `FightState.clip_to_window` drops every landing timed past `fight_duration_seconds` in the cast plan, the cast pricing loop, the stacking-DoT integral, the ability tick events and the burn tail, and the result carries a note saying so. One-rotation fights never clip. `tests/test_fight_window.py` pins both readings, and no module picks one silently.
+
+`ability_rotation` binds an ability's resistance before that ability's own shred applies: it reads `ability_mr` once per ability row, so every cast of the shredding ability meets the unshredded MR while every later packet meets the shredded one. That is the modelled behaviour, and the trace shows it.
+
+Terminus' Juxtaposition pen is a champion stat, so the fight serves ONE pen to casts and swings alike. The `Resists` docstring in `fight/resists.py` owns what `effective_*_pen_percent` resolves to and why a cast pays the ramp's mean wherever it lands.
+
+A stun-only passive cannot reach the event ledger. `P` is never in `fight.cast_slots.DEFAULT_CAST_ORDER`, so a P row's `control_events`, replayed per cast of their own slot, never fire, and `fight/ledger/event_ledger.py`'s `_ordered_damage_events` drops any authored `damage_event` whose `damage <= 0`. Braum's Concussive Blows stun rides its damaging proc events; Annie's Pyromania and Kennen's Mark of the Storm have no damage of their own, so their walks publish the derived stun schedule on the P row's `detail` and `MODULE_CC` stays empty.
+
+A module-walked event ledger is `timeline_event_model: "module_walk"`. The row carries `proc_count` 1 and its own raw `damage_events`, which `precomputed_procs` scales onto the mitigated total, as Braum P's stack cycles and Mordekaiser's Darkness Rise aura do. Build the row through `damage_entry`, never a dict literal: `behavior_frontier` refuses hand-built entries and a literal with `total_raw` or `parts` keys fails it.
+
+A champion on-hit is an `on_hit` entry, never a cast row. A passive rides an `on_hit_entry`, doubled by phantom hits and spellblade re-application; an active rides its row's `proc_window` on-hit, which schedule-gated procs deliberately keep out of phantom-hit doubling. A crit-only rider is `critical_strike_magic_ratio`, priced on the swing's crit share by `_CriticalStrikeRider`, so it never rides a phantom hit.
+
+A kit attack-speed grant walks the build's own swing ramp and never recounts it flat. `_rate_attack_speed_grant` takes `stat_buff.bonus_attack_speed` through `rearmed_swings.ActiveWindow` and authors `support_attack_times`, because a flat per-phase recount leaves `swing_schedule` with `len(ramp_times) != num_auto_attacks`, and that branch falls back to a flat stream, losing Rageblade's stacks for the whole fight. A build with no ramp keeps the per-phase floors.
+
+The kit's attack-speed window opens at the first cast of the row that grants it, and `scripts/swing_stream_audit.py` gates both swing-stream shapes. `cast_slots.slot_cast_start(state, key)` sums the cast times ordered before the slot, so a windowed `stat_buff` on E or W is placed, a `proc_window` on-hit is anchored at the same cast, and `FightState.as_window_slot` names the owner, raising on a second windowed grant. The per-phase floor drops a swing at each phase boundary, so a window opening after t=0 loses the t=0 swing, while the ramp path `rearmed_swings` is exact. `attack_speed_window` and `with_attack_speed_window` in `champions/stat_grants.py` put a window on any row, and `attack_speed_steroid` is the fight-averaged grant for a cast the engine cannot place. A per-attack rider is `on_hit` for every swing, `stacks_required` for every Nth, `proc_window` for a timed window, or `stacking_dot` with `max_stacks` 1 for a refreshing poison. A bare `auto_attack_override.ad_ratio` scales every swing inside the window and defaults to 1.0.
+
 `fight/ledger/trace.py` derives one line per priced packet from a finished fight: time, source, mechanic, raw, damage class, the resistance it met, the amplifier pool, the mitigated amount and the step that wrote it, with a named refusal wherever the fight stated no value. It runs no arithmetic of the engine's; the step column is measured by `fight/authorship.py`, whose recording `dict` stamps the writing frame onto every breakdown row while `authorship.recording()` is armed and costs nothing when it is not. `scripts/fight_trace.py` prints or captures it from a request JSON.
 
 The ordered damage ledger reconstructs accepted casts and exact typed row composition for threshold and shield consumers. Auto attacks carry their simulated per-swing times and damage; item effects without authored events remain explicitly coarse. Results include the accepted cast timeline, resource spent and remaining, per-source damage, TDD, health damage, shield absorption, and effective resistances.
@@ -184,6 +221,8 @@ Cast *order* has two surfaces and they are deliberately separate. `cast_dependen
 The same selected damage package is evaluated against every selected enemy. Target-limited item procs are allocated once across the roster. Aggregate TDD is the sum of the resulting per-target damage, not a synthetic average target.
 
 `participant_timeline.py` composes the roster, per-pair event ledgers, and one coupled survival walk, and owns `CoupledSearchContext`, the per-search compile-once caches. `program/` is the logical layer above the kernel, "what happened, and to whom": `events.py` closes what a packet may be (`PairEvent` before routing, `RoutedEvent` after; a packet matching no family raises `UnclassifiedEvent`), `route.py` resolves each event's subject once and totally, `build.py` freezes the whole fight before any representation choice, `compile.py` holds `WalkCompiler` and the one `SurvivalAction` constructor, and `walk.py` is the one `run_survival_walk` call site, returning a frozen `WalkResult`. `program/views/` holds its five projections (`receipt`, `score`, `survival`, `breakdown`, `tdd`); a view re-runs no arithmetic, every number it emits is already a leaf of the result, and takes every digit count from `program/precision.py`, which is where rounding lives. `survival/` is the transition kernel underneath: `actions`, `transitions` (the walk and its dispatch ladder), `receipt_state`, `score_state`, `compile`, `pricing`, `accumulate`. The dependency runs `program -> survival` and never back, so the hot loop never dispatches on a logical type.
+
+A one-ally item packet is priced before its recipient is chosen. `item_support_effects` emits Mikael's Purify at `teammates[0]`, and `participant_timeline._apply_item_support_selection` is the only place a `support_target_selections` entry moves it, so a `LevelSubject.RECIPIENT` ramp is re-read there through `repriced_for_recipient` and never left at the default ally's level. The fan-out producers, Locket Devotion and Redemption Intervention, already emit one row per ally at that ally's level; Solstice Sleigh's ramp is the holder's own level and has no per-recipient price at all.
 
 Reactive strike-back items (`interpreters.reactive.thorns_effects`) live in the timeline composition layer: each modeled basic attack that strikes a wearer schedules mitigated return damage and a Grievous Wounds window onto the striker, linked to the triggering event so retaliation dies with a skipped strike. In a fight with no incoming attacks, a thorns item correctly contributes nothing.
 
@@ -207,8 +246,9 @@ None of this changes which builds are evaluated or how they score: cache-vs-no-c
 accepts an API prefix, so the standalone Flask page and Scryglass's native
 `/calculator` page use the same controls and response presentation. The standalone
 bundle is built with `cd ui && npm ci && npm run build`. Scryglass imports the
-reviewed source through `scripts/sync-calculator-ui.mjs`; its receipt binds each
-shared file to a calculator commit. Changes to the shared interface start here.
+reviewed source through `scripts/sync-calculator-ui.mjs` in the Scryglass repo,
+not this one; its receipt binds each shared file to a calculator commit. Changes
+to the shared interface start here.
 
 The Scryglass server checks membership before its calculator proxy forwards an
 allowlisted request. `src/service_auth.py` restricts the server credential to
