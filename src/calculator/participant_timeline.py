@@ -11,11 +11,6 @@ or crowd-control behavior that the packets do not provide.
 
 from __future__ import annotations
 
-from .cast_event_row import (
-    cast_ordinal as _row_cast_ordinal,
-    cast_slot as _row_cast_slot,
-    cast_time as _row_cast_time,
-)
 import math
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
@@ -24,16 +19,25 @@ from operator import itemgetter
 from typing import Any, NamedTuple
 
 from . import rune_effects
-from .attack_windows import AttackSpeedWindow
 from .ability_spec import AttackClass, DamageClass
 from .ally_packet_recipient import RETARGETABLE_SCOPES, repriced_for_recipient
+from .attack_windows import AttackSpeedWindow
 from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
+from .cast_event_row import (
+    cast_ordinal as _row_cast_ordinal,
+)
+from .cast_event_row import (
+    cast_slot as _row_cast_slot,
+)
+from .cast_event_row import (
+    cast_time as _row_cast_time,
+)
 from .champion_loadout import ResolvedLoadout
 from .champions.inputs import declared_option_defaults
 from .champions.lulu_events import derive_lulu_support_events
-from .combat_events import certified_recipients
 from .champions.skill_orders import get_ability_rank
 from .champions.slot_extract import extract_cooldown, extract_named
+from .combat_events import certified_recipients
 from .defensive_effects import armed_revive
 from .fight_params import FightParams
 from .healing import GREY_HEALTH_RULE_CHAMPIONS
@@ -41,20 +45,16 @@ from .healing_reduction import (
     champion_grievous_wound_sources,
     healing_reduction_profiles,
 )
-from .interpreters import uncompilable_item_receipt as _uncompilable_item_receipt
+from .interpreters import uncompilable_item_receipt
 from .interpreters.damage_routing import (
-    walk_deferral as _walk_deferral,
-)
-from .interpreters.damage_routing import (
-    walk_execution as _walk_execution,
-)
-from .interpreters.damage_routing import (
-    walk_venom as _walk_venom,
+    walk_deferral,
+    walk_execution,
+    walk_venom,
 )
 from .interpreters.part_amp import StaticHolderAmps, resolve_static_holder_amps
 from .interpreters.reactive import thorns_effects
 from .interpreters.stat_derivation import (
-    declared_stat_derivations as _declared_stat_derivations,
+    declared_stat_derivations,
 )
 from .interpreters.sustain import SustainSlot
 from .interpreters.sustain import walk_slot as _sustain_walk_slot
@@ -131,44 +131,28 @@ from .program.views import breakdown as _breakdown_view
 from .program.views import receipt as _receipt_view
 from .program.views import score as _score_view
 from .program.views import survival as _survival_view
-from .program.views.leaf import DISCARD as _DISCARD
-from .program.views.leaf import LeafWriter as _LeafWriter
-from .program.walk import AttackerOutcome, ObjectiveFold, WalkResult
-from .program.walk import walk as _walk
+from .program.views.leaf import DISCARD, LeafWriter
+from .program.walk import AttackerOutcome, ObjectiveFold, WalkResult, walk
 from .resistance import apply_resistance
 from .roster_composition import (
     ActorRequest,
     Combatant,
+    actor_params_with_resource_restores,
+    defensive_signature,
+    from_loadout,
+    main_combatant,
+    mana_spent_heal_slot,
+    target_overrides,
+    target_params,
 )
 from .roster_composition import (
     actor_params as _actor_params,
 )
 from .roster_composition import (
-    actor_params_with_resource_restores as _actor_params_with_resource_restores,
-)
-from .roster_composition import (
     coalesce_darius_q_heals as _coalesce_darius_q_heals,
 )
 from .roster_composition import (
-    defensive_signature as _defensive_signature,
-)
-from .roster_composition import (
-    from_loadout as _from_loadout,
-)
-from .roster_composition import (
-    main_combatant as _main_combatant,
-)
-from .roster_composition import (
-    mana_spent_heal_slot as _mana_spent_heal_slot,
-)
-from .roster_composition import (
     resource_restores as _declared_resource_restores,
-)
-from .roster_composition import (
-    target_overrides as _target_overrides,
-)
-from .roster_composition import (
-    target_params as _target_params,
 )
 from .starting_defenses import StartingDefenses
 from .state_lifecycle import TriggerGate
@@ -189,13 +173,11 @@ from .survival import (
     UncompilableActionError,
     accumulate_damage_totals,
     accumulate_support_values,
+    action_key,
     build_states,
     coalesce_darius_q_heals,
     support_transition_rank,
     thorns_return_damage,
-)
-from .survival import (
-    action_key as _action_key,
 )
 from .survival import (
     resolve_grievous as _grievous_pack,
@@ -288,7 +270,7 @@ def _cross_pass_dependencies(
     """
     builds = [items, *(loadout.item_data for loadout in (*enemies, *allies))]
     slots = [
-        slot for build in builds if (slot := _mana_spent_heal_slot(build)) is not None
+        slot for build in builds if (slot := mana_spent_heal_slot(build)) is not None
     ]
     return tuple(dict.fromkeys(_cross_pass_dependency(slot) for slot in slots))
 
@@ -557,7 +539,7 @@ def _warmog_heart_tick_events(
     authored here on the commit its declaration lands, not on the commit
     somebody remembers this branch.
     """
-    slots = _declared_stat_derivations(
+    slots = declared_stat_derivations(
         sorted({str(item.get("name", "")) for item in combatant.items}),
         ThresholdRegenRule,
     )
@@ -918,7 +900,7 @@ def _reactive_candidate(
     if reactive:
         candidate["_reactive"] = True
     if sort_key:
-        candidate["_sk"] = _action_key(time, rank, recipient, candidate)
+        candidate["_sk"] = action_key(time, rank, recipient, candidate)
     return candidate
 
 
@@ -2108,7 +2090,7 @@ def _roster_actors(loadouts: Sequence[ResolvedLoadout], team: str) -> list[Comba
         seen[base] = seen.get(base, 0) + 1
         occurrence = seen[base]
         actors.append(
-            _from_loadout(
+            from_loadout(
                 base if occurrence == 1 else f"{base}:{occurrence}", team, loadout
             )
         )
@@ -3156,14 +3138,14 @@ def _routing_build(
 def _venom_profile(combatant: Combatant, duration: float) -> tuple[float, float] | None:
     """The ``(keep, duration)`` pair the kernel's shield ledger reads."""
     owners, facts = _routing_build(combatant, duration)
-    venom = _walk_venom(owners, facts=facts)
+    venom = walk_venom(owners, facts=facts)
     return None if venom is None else (venom.keep, venom.duration)
 
 
 def _execution_rider(combatant: Combatant, duration: float) -> Any:
     """The Execute rider this participant's own declarations arm, or ``None``."""
     owners, facts = _routing_build(combatant, duration)
-    return _walk_execution(owners, facts=facts)
+    return walk_execution(owners, facts=facts)
 
 
 def _simulate_survival(
@@ -3286,7 +3268,7 @@ def _simulate_survival(
         if float(combatant.defenses.damage_deferral_fraction) <= 0.0:
             continue
         owners, facts = _routing_build(combatant, duration)
-        rider = _walk_deferral(owners, facts=facts)
+        rider = walk_deferral(owners, facts=facts)
         if rider is None:
             raise ValueError(
                 f"{participant_id} resolves a damage deferral and declares no "
@@ -3475,7 +3457,7 @@ def _simulate_survival(
                         original["_declared"] = routed_declaration(
                             declared, 1.0 - redirect_fraction
                         )
-                redirected["_sk"] = _action_key(
+                redirected["_sk"] = action_key(
                     float(redirected.get("time", 0.0)),
                     TransitionRank.REACTIVE,
                     redirect_target,
@@ -3582,7 +3564,7 @@ def _simulate_survival(
                         "_deferred_from": event.get("_event_id"),
                         "_deferred_batch_id": batch_id,
                     }
-                    deferred["_sk"] = _action_key(
+                    deferred["_sk"] = action_key(
                         float(deferred.get("time", 0.0)),
                         TransitionRank.DAMAGE,
                         target_id,
@@ -3782,7 +3764,7 @@ def _simulate_survival(
     # ``program.walk.walk``, the one call site in ``src/``, so one walk per
     # pass is a number a counter reads rather than two composition bodies
     # agreeing by hand.
-    return _walk(actions, ctx, counters=work_counters)
+    return walk(actions, ctx, counters=work_counters)
 
 
 class CoupledSearchContext:
@@ -3955,7 +3937,7 @@ def _context_setup(
     for loadout in (*enemies, *allies):
         if loadout.is_practice_dummy:
             continue
-        item_receipt = _uncompilable_item_receipt(
+        item_receipt = uncompilable_item_receipt(
             loadout.item_data,
             loadout_stats=loadout.stats,
             threshold_ticks_compiled=True,
@@ -4004,7 +3986,7 @@ def _context_setup(
             enforce_resource_limits=True,
             roster_target_index=defender_index,
             roster_target_count=len(enemy_actors),
-            **_target_overrides(defender),
+            **target_overrides(defender),
         )
         pair_params.validate_for_champion(champion_name, level)
         context.main_pair_params.append((defender, pair_params))
@@ -4032,7 +4014,7 @@ def _context_setup(
                 enforce_resource_limits=True,
                 roster_target_index=defender_index,
                 roster_target_count=defender_count,
-                **_target_overrides(defender),
+                **target_overrides(defender),
             )
 
     # The signature-independent pair fights — allies into enemies, enemies
@@ -4234,7 +4216,7 @@ def _build_signature_panel(
                         # [main, *allies].
                         roster_target_index=0,
                         roster_target_count=1 + ally_count,
-                        **_target_overrides(main),
+                        **target_overrides(main),
                     ),
                     validated=True,
                 ),
@@ -4330,7 +4312,7 @@ def _score_with_search_context(
     # The main candidate's own loadout is candidate-dependent: a failure
     # here falls back per evaluation and never poisons the context.  Checked
     # before any pair fight so the fallback costs only the capability scan.
-    main_item_receipt = _uncompilable_item_receipt(items)
+    main_item_receipt = uncompilable_item_receipt(items)
     if main_item_receipt is not None:
         raise UncompilableActionError(
             receipt=f"main:{main_item_receipt}",
@@ -4378,7 +4360,7 @@ def _score_with_search_context(
     )
     roster = context.roster_actors or []
     all_actors = [main, *roster]
-    signature = _defensive_signature(main)
+    signature = defensive_signature(main)
     panel = context.panels.get(signature)
     # Which of the two compiled rungs this evaluation takes, decided where
     # the difference between them actually happens.  ``CompiledFull`` is the
@@ -4730,7 +4712,7 @@ def _score_with_search_context(
     base = context.base_compiler
     coverage_reports = fresh.coverage + base.coverage + panel.sig.coverage
     program = roster_program(all_actors)
-    walk_result = _walk(
+    walk_result = walk(
         actions, ctx, counters=context.work_counters, rung=compiled_rung
     ).projected(
         grey_health=grey_summary or None,
@@ -4752,7 +4734,7 @@ def _score_with_search_context(
     # view for the one it returns; recording a third map here would be a
     # map describing rows nobody serializes, on the optimizer's hot path.
     rows_by_id = _survival_view.survival_leaves(
-        program, walk_result, _DISCARD, _survival_view.participant_paths(program)
+        program, walk_result, DISCARD, _survival_view.participant_paths(program)
     )
     survival_rows = [rows_by_id[actor.participant_id] for actor in all_actors]
     applied = ledger.applied
@@ -4801,7 +4783,7 @@ def _score_with_search_context(
                 for index, actor in enumerate(all_actors)
             ]
         ),
-        _LeafWriter() if published else _DISCARD,
+        LeafWriter() if published else DISCARD,
     )
 
 
@@ -5167,7 +5149,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         # it out here would be the second spelling of one decision that the
         # bridge in ``program/rung`` exists to prevent.
         record_rung(work_counters, *counter_entry(gate_rung(_GATE_REFUSAL_RECEIPT)))
-    main = _main_combatant(
+    main = main_combatant(
         champion_data,
         level,
         items,
@@ -5257,7 +5239,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         for attacker in attackers:
             if not defenders:
                 continue
-            actor_params = _actor_params_with_resource_restores(
+            actor_params = actor_params_with_resource_restores(
                 params, attacker, _resource_restores
             )
             for defender_index, defender in enumerate(defenders):
@@ -5276,7 +5258,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                 # between evaluations are cached.  Roster-to-roster pairs do
                 # not depend on the candidate main build at all.  A fight INTO
                 # the main candidate depends on it only through the target
-                # fields ``_target_overrides`` feeds the engine, so its cache
+                # fields ``target_overrides`` feeds the engine, so its cache
                 # key carries that defensive signature: a candidate swap that
                 # changes no defensive stat replays the identical incoming
                 # fights instead of re-simulating them.  Fights the candidate
@@ -5286,7 +5268,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                     attacker.participant_id,
                     defender.participant_id,
                     (
-                        _defensive_signature(defender)
+                        defensive_signature(defender)
                         if defender.participant_id == "main"
                         else ()
                     ),
@@ -5312,7 +5294,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                             attacker.champion_data,
                             attacker.level,
                             list(attacker.items),
-                            params=_target_params(pair_params, defender),
+                            params=target_params(pair_params, defender),
                             precomputed_stats=reusable_stats,
                         ),
                         attacker.participant_id,
@@ -5483,7 +5465,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
             continue
         if attacker.participant_id in support_attached:
             continue
-        actor_params = _actor_params_with_resource_restores(
+        actor_params = actor_params_with_resource_restores(
             params, attacker, _resource_restores
         )
         fallback = _pair_run_fight(
@@ -5518,7 +5500,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                 actor, incoming, params.fight_duration_seconds
             )
             if not complete:
-                slot = _mana_spent_heal_slot(actor.items)
+                slot = mana_spent_heal_slot(actor.items)
                 raise IncompleteDependency(
                     _cross_pass_dependency(slot),
                     pass_index,
@@ -5537,7 +5519,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                 if actor.participant_id in resource_restores
             )
             return PassRequest(
-                _cross_pass_dependency(_mana_spent_heal_slot(requester.items)),
+                _cross_pass_dependency(mana_spent_heal_slot(requester.items)),
                 resource_restores,
             )
 
@@ -5634,7 +5616,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
                 "_event_id": f"main:grey:{source}:{index}",
                 "_grey_health": True,
             }
-            heal_event["_sk"] = _action_key(
+            heal_event["_sk"] = action_key(
                 float(heal_time),
                 TransitionRank.RECOVERY,
                 "main",
@@ -5703,7 +5685,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         ),
     )
     survival = _survival_view.survival_leaves(
-        program, walk_result, _DISCARD, _survival_view.participant_paths(program)
+        program, walk_result, DISCARD, _survival_view.participant_paths(program)
     )
     # An actor's damage after their death is not part of team-fight value.
     for actor in all_actors:
@@ -5792,7 +5774,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
         # "score mode and receipt mode agree" a property of the layering
         # rather than of two assemblies kept in step by hand.
         return _score_view.score_leaves(
-            program, walk_result, _LeafWriter() if published else _DISCARD
+            program, walk_result, LeafWriter() if published else DISCARD
         )
 
     focus_row = next(
@@ -5817,7 +5799,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     public_events = sorted(
         (event for events in outgoing.values() for event in events),
         key=lambda event: event.get("_sk")
-        or _action_key(
+        or action_key(
             float(event.get("time", 0.0)),
             (
                 TransitionRank.REACTIVE
@@ -5831,7 +5813,7 @@ def _compose_pass(  # pylint: disable=too-many-arguments,too-many-positional-arg
     public_healing_events = sorted(
         (event for events in healing.values() for event in events),
         key=lambda event: event.get("_sk")
-        or _action_key(
+        or action_key(
             float(event.get("time", 0.0)),
             TransitionRank.RECOVERY,
             str(event.get("attacker", "")),

@@ -14,6 +14,7 @@ from .auto_attack_policy import (
 from .cast_dependency import BASE_CAST_SLOTS, orderable_slots
 from .champions import get_custom_cast_order_unavailable_reason
 from .champions.skill_orders import get_ability_rank
+from .combat_events import parse_combat_events, parse_combat_events_mode
 from .fight.config import FightConfig
 from .fight_request_bounds import (
     _PUBLIC_FIGHT_MODES,
@@ -31,12 +32,9 @@ from .fight_request_bounds import (
     cast_slot_surface,
     validate_cast_order_shape,
 )
-from .combat_events import parse_combat_events, parse_combat_events_mode
 from .item_effects import validate_item_input_options
 from .rank_allocation import validate_manual_ranks
-from .request_parsing import request_bool as _request_bool
-from .request_parsing import request_index_map
-from .request_parsing import request_int as _request_int
+from .request_parsing import request_bool, request_index_map, request_int
 from .role_quests import max_champion_level, validate_role
 from .rune_effects import validate_keystone_options, validate_rune_page
 from .stats import resolve_pre_combat_stats
@@ -107,7 +105,7 @@ class FightParams(FightConfig):
         # rows; ``damage._apply_stat_buff_ultimates`` is what reads the mode,
         # and it names every grant it withheld in the fight notes.
         auto_attacks_only = (
-            _request_bool(data, "auto_attacks_only", False) or fight_mode == "auto_only"
+            request_bool(data, "auto_attacks_only", False) or fight_mode == "auto_only"
         )
         requested_duration = _bounded_request_float(
             data, "fight_duration", DEFAULT_FIGHT_DURATION
@@ -115,7 +113,7 @@ class FightParams(FightConfig):
         requested_uptime = _bounded_request_float(
             data, "auto_attack_uptime", DEFAULT_AUTO_ATTACK_UPTIME
         )
-        rotation_count = _request_int(
+        rotation_count = request_int(
             data, "rotations", 1, minimum=1, maximum=MAX_ROTATIONS
         )
         uptime_mode = data.get(
@@ -138,7 +136,7 @@ class FightParams(FightConfig):
             )
         else:
             duration = requested_duration
-            include_autos = _request_bool(data, "include_auto_attacks", False)
+            include_autos = request_bool(data, "include_auto_attacks", False)
             uptime = (
                 requested_uptime
                 if (
@@ -196,7 +194,7 @@ class FightParams(FightConfig):
                 },
             )
         role = validate_role(data.get("role", ""))
-        role_quest_complete = _request_bool(data, "role_quest_complete", False)
+        role_quest_complete = request_bool(data, "role_quest_complete", False)
         if role_quest_complete and not role:
             raise ValueError("role is required when role_quest_complete is true")
 
@@ -209,7 +207,7 @@ class FightParams(FightConfig):
             ),
             fight_duration_seconds=duration,
             include_auto_attacks=(
-                _request_bool(data, "include_auto_attacks", False)
+                request_bool(data, "include_auto_attacks", False)
                 if "include_auto_attacks" in data
                 else None
             ),
@@ -217,8 +215,8 @@ class FightParams(FightConfig):
             auto_attack_uptime_mode=uptime_mode,
             rotation_count=rotation_count,
             one_rotation=one_rotation,
-            include_actives=_request_bool(data, "include_actives", True),
-            count_damage_after_fight_end=_request_bool(
+            include_actives=request_bool(data, "include_actives", True),
+            count_damage_after_fight_end=request_bool(
                 data, "count_damage_after_fight_end", True
             ),
             cast_order=data.get("cast_order"),
@@ -240,7 +238,7 @@ class FightParams(FightConfig):
             minion_type=minion_type,
             role=role,
             role_quest_complete=role_quest_complete,
-            enemies_attack=_request_bool(data, "enemies_attack", True),
+            enemies_attack=request_bool(data, "enemies_attack", True),
             deterministic=deterministic or data.get("combat_events") is not None,
         )
         params._validate_request_values()

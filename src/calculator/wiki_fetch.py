@@ -1,8 +1,8 @@
 """One HTTP fetch of a wiki page: a finite wait and an explicit HTTP error."""
 
-import requests as _requests
+import requests
 
-http_get = _requests.get
+http_get = requests.get
 
 
 def download_page(url: str) -> str:

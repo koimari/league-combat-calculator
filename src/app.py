@@ -47,28 +47,25 @@ from src.calculator.bis import bis_batch_payload, bis_payload
 from src.calculator.bis_objective import bis_objective_contract
 from src.calculator.calculate import calculate_payload, compare_payload
 from src.calculator.capabilities import public_capability_contract
-from src.calculator.combat_events import combat_event_contract
 from src.calculator.cast_dependency import BASE_CAST_SLOTS
 from src.calculator.certainty import (
-    CERTAINTY_BOUNDARY as _CERTAINTY_BOUNDARY,
-)
-from src.calculator.certainty import (
-    classify_assumption as _classify_assumption,
-)
-from src.calculator.certainty import (
+    CERTAINTY_BOUNDARY,
+    classify_assumption,
     derive_certainty,
 )
-from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.champion_loadout import (
-    load_public_champion as _load_public_champion,
+    ChampionLoadout,
+    load_public_champion,
+    resolve_named_item,
 )
-from src.calculator.champion_loadout import resolve_named_item as _resolve_named_item
 from src.calculator.champions import (
     champion_options_meta_map,
     engine_registration_kind,
     get_champion_module_meta,
     registered_champion_names,
 )
+from src.calculator.champions.skill_orders import get_ability_rank
+from src.calculator.combat_events import combat_event_contract
 from src.calculator.data_fetcher import fetch_champion_data, fetch_item_data
 from src.calculator.fight_request_bounds import (
     DEFAULT_AUTO_ATTACK_UPTIME,
@@ -91,7 +88,6 @@ from src.calculator.item_effects import (
     stat_conversion_metadata,
 )
 from src.calculator.item_source import effect_entries, effect_text
-from src.calculator.champions.skill_orders import get_ability_rank
 from src.calculator.item_stat_block import get_item_stats
 from src.calculator.loadout_rules import exclusivity_groups, validate_resolved_loadout
 from src.calculator.optimizer import optimize_build
@@ -102,12 +98,8 @@ from src.calculator.optimizer_candidates import (
 )
 from src.calculator.program.views.view_tag import UnrankableNumber
 from src.calculator.public_response import (
-    ICON_HOSTS as _ICON_HOSTS,
-)
-from src.calculator.public_response import (
-    https_icon as _https_icon,
-)
-from src.calculator.public_response import (
+    ICON_HOSTS,
+    https_icon,
     public_loadout_summary,
 )
 from src.calculator.purchase_search import optimize_purchase
@@ -117,19 +109,11 @@ from src.calculator.purchase_search import optimize_purchase
 # widening it is another lane's file to change.
 from src.calculator.quantity import StarvedSignal
 from src.calculator.request_parsing import (
-    request_bool as _request_bool,
-)
-from src.calculator.request_parsing import (
-    request_int as _request_int,
-)
-from src.calculator.request_parsing import (
-    request_optional_int as _request_optional_int,
-)
-from src.calculator.request_parsing import (
-    request_string as _request_string,
-)
-from src.calculator.request_parsing import (
-    request_string_list as _request_string_list,
+    request_bool,
+    request_int,
+    request_optional_int,
+    request_string,
+    request_string_list,
 )
 from src.calculator.role_quests import (
     boot_upgrade_contract,
@@ -148,9 +132,7 @@ from src.calculator.rune_effects import (
 from src.calculator.scenario import parse_scenario_request, resolve_scenario
 from src.calculator.stats import MAX_LEVEL
 from src.calculator.validation_receipts import (
-    VALIDATION_SOURCES as _VALIDATION_SOURCES,
-)
-from src.calculator.validation_receipts import (
+    VALIDATION_SOURCES,
     evaluate_validation_receipt,
 )
 from src.db import (
@@ -285,7 +267,7 @@ _OPERATION_POLICY = {
 
 
 _DEV_UPDATE_COOKIE = "lol_calc_dev_update"
-_ICON_SOURCES = " ".join(f"https://{host}" for host in sorted(_ICON_HOSTS))
+_ICON_SOURCES = " ".join(f"https://{host}" for host in sorted(ICON_HOSTS))
 _SECURITY_HEADERS = {
     "Content-Security-Policy": "; ".join(
         (
@@ -1019,7 +1001,7 @@ def _public_ability_entry(ability_list: object, slot: str) -> dict[str, object]:
     return {
         "slot": slot,
         "name": first.get("name", slot),
-        "icon": _https_icon(first.get("icon", "")),
+        "icon": https_icon(first.get("icon", "")),
         "ingested": bool(first),
         "description": "\n\n".join(
             effect["description"]
@@ -1087,7 +1069,7 @@ def api_champions() -> Response:
         result.append(
             {
                 "name": champ_data["name"],
-                "icon": _https_icon(_cached_champion_field(champ_data, "icon")),
+                "icon": https_icon(_cached_champion_field(champ_data, "icon")),
                 "engine_registration": registration,
                 "patch_last_changed": _cached_champion_field(
                     champ_data, "patchLastChanged"
@@ -1134,7 +1116,7 @@ def _item_shop_fields(
                 {
                     "id": item_id,
                     "name": source["name"] if source else None,
-                    "icon": _https_icon(source["icon"]) if source else None,
+                    "icon": https_icon(source["icon"]) if source else None,
                     "price": item_gold(source) if source else None,
                     "catalog_available": item_id in catalog_ids,
                 }
@@ -1206,7 +1188,7 @@ def api_items() -> Response:
             {
                 "id": item["id"],
                 "name": item["name"],
-                "icon": _https_icon(item.get("icon", "")),
+                "icon": https_icon(item.get("icon", "")),
                 **_item_picker_stat_fields(item),
                 **_item_shop_fields(item, sources, catalog_ids),
                 "tier": item["tier"],
@@ -1236,7 +1218,7 @@ def api_boots() -> Response:
             {
                 "id": item["id"],
                 "name": item["name"],
-                "icon": _https_icon(item.get("icon", "")),
+                "icon": https_icon(item.get("icon", "")),
                 **_item_picker_stat_fields(item),
                 **_item_shop_fields(item, sources, catalog_ids),
                 "tier": item["tier"],
@@ -1472,32 +1454,30 @@ def api_optimize() -> Response | tuple[Response, int]:
         request = parse_scenario_request(
             data, deterministic=True, parse_crossover=False
         )
-        objective = _request_string(data, "objective", "total_damage")
-        locked_items = _request_string_list(data, "locked_items", maximum=6)
-        locked_boots = _request_string(data, "locked_boots")
-        include_boots = _request_bool(data, "include_boots", True)
-        max_legendary_slots = _request_int(
+        objective = request_string(data, "objective", "total_damage")
+        locked_items = request_string_list(data, "locked_items", maximum=6)
+        locked_boots = request_string(data, "locked_boots")
+        include_boots = request_bool(data, "include_boots", True)
+        max_legendary_slots = request_int(
             data, "max_legendary_slots", 5, minimum=1, maximum=6
         )
-        gold_budget = _request_optional_int(data, "gold_budget", maximum=30_000)
-        optimization_scope = _request_string(data, "optimization_scope", "build")
+        gold_budget = request_optional_int(data, "gold_budget", maximum=30_000)
+        optimization_scope = request_string(data, "optimization_scope", "build")
         if optimization_scope not in {"build", "purchase"}:
             raise ValueError("optimization_scope must be 'build' or 'purchase'")
-        available_gold = _request_optional_int(data, "available_gold", maximum=30_000)
+        available_gold = request_optional_int(data, "available_gold", maximum=30_000)
         if optimization_scope == "purchase" and available_gold is None:
             raise ValueError("available_gold is required for purchase optimization")
-        max_purchase_items = _request_optional_int(
-            data, "max_purchase_items", maximum=7
-        )
-        allow_sell = _request_bool(data, "allow_sell", False)
-        max_sell_items = _request_int(data, "max_sell_items", 1, minimum=0, maximum=1)
-        combine_policy = _request_string(data, "combine_policy", "shop_combine")
+        max_purchase_items = request_optional_int(data, "max_purchase_items", maximum=7)
+        allow_sell = request_bool(data, "allow_sell", False)
+        max_sell_items = request_int(data, "max_sell_items", 1, minimum=0, maximum=1)
+        combine_policy = request_string(data, "combine_policy", "shop_combine")
         if combine_policy not in {"shop_combine", "component_accumulate"}:
             raise ValueError(
                 "combine_policy must be 'shop_combine' or 'component_accumulate'"
             )
-        include_starters = _request_bool(data, "include_starters", False)
-        time_budget_ms = _request_int(
+        include_starters = request_bool(data, "include_starters", False)
+        time_budget_ms = request_int(
             data, "time_budget_ms", 12_000, minimum=100, maximum=60_000
         )
     except ValueError as exc:
@@ -1559,9 +1539,9 @@ def api_optimize() -> Response | tuple[Response, int]:
         )
 
     try:
-        resolved_locked = [_resolve_named_item(name) for name in locked_items]
+        resolved_locked = [resolve_named_item(name) for name in locked_items]
         resolved_boots = (
-            _resolve_named_item(locked_boots, kind="Boots") if locked_boots else None
+            resolve_named_item(locked_boots, kind="Boots") if locked_boots else None
         )
         validate_resolved_loadout(
             resolved_locked,
@@ -1640,9 +1620,9 @@ def api_save_build() -> Response | tuple[Response, int]:
     """
     try:
         data = _json_object()
-        _request_string(data, "champion", required=True)
-        _request_int(data, "level", 1, minimum=1, maximum=MAX_LEVEL)
-        role = _request_string(data, "role")
+        request_string(data, "champion", required=True)
+        request_int(data, "level", 1, minimum=1, maximum=MAX_LEVEL)
+        role = request_string(data, "role")
         items = data.get("items", [])
         if not isinstance(items, list) or not all(
             isinstance(entry, str) and 0 < len(entry.strip()) <= 100 for entry in items
@@ -1685,8 +1665,8 @@ def api_create_share() -> Response | tuple[Response, int]:
     """Create a public share link for a saved build."""
     try:
         data = _json_object()
-        build_id = _request_int(data, "build_id", 0, minimum=1, maximum=1_000_000_000)
-        slug = _request_string(data, "slug")
+        build_id = request_int(data, "build_id", 0, minimum=1, maximum=1_000_000_000)
+        slug = request_string(data, "slug")
         if slug and not all(
             character.isalnum() or character in "-_" for character in slug
         ):
@@ -1737,9 +1717,9 @@ _FEEDBACK_PAGE_MAX = 200
 def api_list_feedback() -> Response | tuple[Response, int]:
     """Return recent validation feedback for the review loop."""
     try:
-        champion = _request_string(request.args, "champion") or None
-        source = _request_string(request.args, "source") or None
-        limit = _request_int(
+        champion = request_string(request.args, "champion") or None
+        source = request_string(request.args, "source") or None
+        limit = request_int(
             request.args, "limit", 50, minimum=1, maximum=_FEEDBACK_PAGE_MAX
         )
         rows = list_feedback(champion=champion, source=source, limit=limit)
@@ -1778,9 +1758,9 @@ def api_receipts() -> Response | tuple[Response, int]:
     # pylint: disable=too-many-return-statements
     try:
         data = _json_object()
-        champion = _request_string(data, "champion", required=True)
-        source = _request_string(data, "source", "manual")
-        if source not in _VALIDATION_SOURCES:
+        champion = request_string(data, "champion", required=True)
+        source = request_string(data, "source", "manual")
+        if source not in VALIDATION_SOURCES:
             raise ValueError("source must be manual, combat_log, or practice_tool")
         loadout = data.get("loadout")
         if loadout is None:
@@ -1858,8 +1838,8 @@ def api_validation() -> Response | tuple[Response, int]:
     stable.
     """
     try:
-        champion = _request_string(request.args, "champion") or None
-        limit = _request_int(
+        champion = request_string(request.args, "champion") or None
+        limit = request_int(
             request.args, "limit", 50, minimum=1, maximum=_FEEDBACK_PAGE_MAX
         )
         rows = list_feedback(champion=champion, limit=limit)
@@ -1899,7 +1879,7 @@ def api_metrics_event() -> Response | tuple[Response, int]:
     """
     try:
         data = _json_object()
-        event = _request_string(data, "event", required=True)
+        event = request_string(data, "event", required=True)
         if event not in METRIC_EVENT_NAMES:
             raise ValueError(f"event must be one of {sorted(METRIC_EVENT_NAMES)}")
         took_ms = data.get("took_ms")
@@ -1971,11 +1951,11 @@ def api_certainty() -> Response | tuple[Response, int]:
       only slot, death-only trigger, out-of-scope row).
     """
     try:
-        champion = _request_string(request.args, "champion", required=True)
+        champion = request_string(request.args, "champion", required=True)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     try:
-        champion_data = _load_public_champion(champion)
+        champion_data = load_public_champion(champion)
     except LookupError as exc:
         return jsonify({"error": str(exc)}), 404
     except ValueError as exc:
@@ -1998,11 +1978,11 @@ def api_not_modeled() -> Response | tuple[Response, int]:
     excluded — they belong in /api/certainty, not here.
     """
     try:
-        champion = _request_string(request.args, "champion", required=True)
+        champion = request_string(request.args, "champion", required=True)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
     try:
-        _champion_data = _load_public_champion(champion)  # existence + mode gate
+        _champion_data = load_public_champion(champion)  # existence + mode gate
     except LookupError as exc:
         return jsonify({"error": str(exc)}), 404
     except ValueError as exc:
@@ -2010,9 +1990,7 @@ def api_not_modeled() -> Response | tuple[Response, int]:
     meta = get_champion_module_meta(champion)
     assumptions = meta.get("assumptions") or []
     items = [
-        line
-        for line in assumptions
-        if _classify_assumption(line) == _CERTAINTY_BOUNDARY
+        line for line in assumptions if classify_assumption(line) == CERTAINTY_BOUNDARY
     ]
     return jsonify({"champion": champion, "items": items})
 

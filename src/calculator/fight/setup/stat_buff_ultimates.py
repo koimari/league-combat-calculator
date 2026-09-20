@@ -12,12 +12,12 @@ from ...ability_atoms import (
     declared_payload,
     required_declaration,
 )
-from ...champions import stat_ramp as _stat_ramp
+from ...champions import stat_ramp
 from ...interpreters import rearmed_swings
 from ...stats import calculate_attack_speed, resolve_move_speed
 from ..cast_slots import _slot_is_cast, slot_cast_start
-from ..rotation.cast_schedule import NO_REFUNDS, _schedule_shared_casts
 from ..config import BASE_CRIT_MULTIPLIER
+from ..rotation.cast_schedule import NO_REFUNDS, _schedule_shared_casts
 from ..state import FightState, _crit_profile
 
 
@@ -208,13 +208,13 @@ def _resolve_stat_ramp(state: FightState) -> None:
     Resolved into the row's own ``stat_buff`` so that everything downstream
     reads one kind of grant, and resolved BEFORE the loop below applies it.
     """
-    declared = _stat_ramp.declared_rule(state.ability_damages)
+    declared = stat_ramp.declared_rule(state.ability_damages)
     if declared is None:
         return
     owner, rule = declared
     swings = state.support_attack_times or _swings_at_uptime(state)
     casts = _cast_schedule_times(state) if rule.stacks_from_ability_casts else ()
-    level = _stat_ramp.mean_stack_level(
+    level = stat_ramp.mean_stack_level(
         rule, swings, casts, state.fight_duration_seconds
     )
     for info in state.ability_damages.values():

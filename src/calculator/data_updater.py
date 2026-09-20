@@ -30,27 +30,25 @@ if sys.platform == "win32":
         use_cache: bool = True,
         dir: str = "__cache__",  # noqa: A002 - the vendor signature this replaces
     ) -> str:
-        import os as _os
+        import os
 
-        from bs4 import BeautifulSoup as _BeautifulSoup
+        from bs4 import BeautifulSoup
 
-        directory = _os.path.abspath(
-            _os.path.join(
-                _os.path.dirname(_os.path.realpath(lsd_utils.__file__)), "../.."
-            )
+        directory = os.path.abspath(
+            os.path.join(os.path.dirname(os.path.realpath(lsd_utils.__file__)), "../..")
         )
-        directory = _os.path.join(directory, dir)
-        if not _os.path.exists(directory):
-            _os.mkdir(directory)
+        directory = os.path.join(directory, dir)
+        if not os.path.exists(directory):
+            os.mkdir(directory)
 
         sanitized = url.replace(":", "").replace("/", "@")
         if "ITEM_DATA" not in url.upper():
-            fn = _os.path.join(directory, sanitized)
+            fn = os.path.join(directory, sanitized)
         else:
             url_split = url.split("Item_data_")[1]
-            fn = _os.path.join(directory, url_split.replace("/", "@"))
+            fn = os.path.join(directory, url_split.replace("/", "@"))
 
-        if use_cache and _os.path.exists(fn):
+        if use_cache and os.path.exists(fn):
             with open(fn, encoding="utf-8") as f:
                 html = f.read()
         else:
@@ -59,7 +57,7 @@ if sys.platform == "win32":
                 with open(fn, "w", encoding="utf-8") as f:
                     f.write(html)
 
-        soup = _BeautifulSoup(html, "lxml")
+        soup = BeautifulSoup(html, "lxml")
         html = str(soup)
         for old, new in [
             ("\u00a0", " "),

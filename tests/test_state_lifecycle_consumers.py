@@ -291,7 +291,7 @@ class TestConquerorConsumer:
         assert any(event["stacks_after"] == 12 for event in stack_events)
 
     def test_keystone_state_events_aggregation_preserved(self):
-        from src.app import _load_public_champion
+        from src.app import load_public_champion
         from src.calculator.fight_params import FightParams
         from src.calculator.pipeline import run_fight
 
@@ -311,7 +311,7 @@ class TestConquerorConsumer:
             },
             deterministic=True,
         )
-        result = run_fight(_load_public_champion("Ahri"), 18, [], params)
+        result = run_fight(load_public_champion("Ahri"), 18, [], params)
         state_events = result["keystone_state_events"]
         assert any(event["source"] == "Conqueror · stack" for event in state_events)
 

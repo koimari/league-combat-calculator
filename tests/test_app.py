@@ -1374,7 +1374,7 @@ def test_config_exclusivity_groups_cover_frontend_optimizer_families():
     ],
 )
 def test_icon_api_rejects_non_http_urls(url):
-    assert app_module._https_icon(url) == ""
+    assert app_module.https_icon(url) == ""
 
 
 def test_health_endpoint_is_lightweight_json():

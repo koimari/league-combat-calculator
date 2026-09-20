@@ -65,7 +65,7 @@ this file pins the fail-loud behavior for a missing key.
 
 import pytest
 
-from src.app import _load_public_champion
+from src.app import load_public_champion
 from src.calculator import participant_timeline
 from src.calculator.ability_spec import DamagePart
 from src.calculator.champion_loadout import ChampionLoadout
@@ -217,7 +217,7 @@ def _ziggs_params(*, duration: float = 4.0, ranks: dict | None = None) -> FightP
 
 def _ziggs_timeline(*, duration: float = 4.0, ranks: dict | None = None) -> dict:
     """One coupled participant-timeline build: Ziggs holds Eclipse."""
-    main = _load_public_champion("Ziggs")
+    main = load_public_champion("Ziggs")
     item = get_item_by_name("Eclipse")
     params = _ziggs_params(duration=duration, ranks=ranks)
     enemy = ChampionLoadout(champion="Aatrox", level=18, items=()).resolve()
@@ -700,7 +700,7 @@ class TestShieldPacket:
         # re-derive the expectation from the same fight, not from the raw
         # loadout stats).
         engine = run_fight(
-            _load_public_champion("Ziggs"),
+            load_public_champion("Ziggs"),
             12,
             [get_item_by_name("Eclipse")],
             _ziggs_params(),

@@ -32,13 +32,9 @@ from .item_coverage import (
 )
 from .loadout_rules import validate_resolved_loadout
 from .request_parsing import (
-    request_int as _request_int,
-)
-from .request_parsing import (
-    request_string as _request_string,
-)
-from .request_parsing import (
-    request_string_list as _request_string_list,
+    request_int,
+    request_string,
+    request_string_list,
 )
 from .role_quests import require_level_within_cap
 from .stats import MAX_LEVEL
@@ -103,10 +99,10 @@ def parse_scenario_request(
     shape/range violation raises ValueError and the routes map that to 400
     identically.
     """
-    champion = _request_string(data, "champion", required=True)
-    level = _request_int(data, "level", 1, minimum=1, maximum=MAX_LEVEL)
-    item_names = _request_string_list(data, "items", maximum=MAX_LOADOUT_ITEMS)
-    boots_name = _request_string(data, "boots")
+    champion = request_string(data, "champion", required=True)
+    level = request_int(data, "level", 1, minimum=1, maximum=MAX_LEVEL)
+    item_names = request_string_list(data, "items", maximum=MAX_LOADOUT_ITEMS)
+    boots_name = request_string(data, "boots")
     fight_params = FightParams.from_request(data, deterministic=deterministic)
     require_level_within_cap(level, fight_params.role, fight_params.role_quest_complete)
     if parse_crossover:
