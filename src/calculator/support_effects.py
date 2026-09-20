@@ -36,8 +36,8 @@ from .support_scan import (
 )
 
 # ---------------------------------------------------------------------------
-# Wave-2 champion follow-up packets (HANDOVER 8.5): sourced bounce and
-# best-friend riders that ride the base scanner packet of the same cast.
+# Champion follow-up packets: sourced bounce and best-friend riders that
+# ride the base scanner packet of the same cast.
 # Every number comes from the cached leveling rows / typed atoms below; the
 # two prose coefficients are quoted from the cached descriptions with the
 # same documentation style as healing.py's E1 rules and renata_glasc.py.
@@ -287,11 +287,11 @@ def derive_ally_effects(
                             }
                         )
                     effects.append(event)
-                    # Wave-2 follow-up packets (HANDOVER 8.5): sourced
-                    # riders on the same cast keep the base packet's amount
-                    # intact (the E8d pins read the first matching packet),
-                    # carry their own target-selection keys, and attach the
-                    # atom receipts that prove every number.
+                    # Follow-up packets: sourced riders on the same cast keep
+                    # the base packet's amount intact (the E8d pins read the
+                    # first matching packet), carry their own
+                    # target-selection keys, and attach the atom receipts
+                    # that prove every number.
                     if champion_key == ("Nami", "W"):
                         effects.append(
                             _nami_return_bounce_packet(

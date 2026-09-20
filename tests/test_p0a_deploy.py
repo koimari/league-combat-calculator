@@ -462,18 +462,7 @@ def test_runtime_manifests_include_redis():
     assert f'"{redis_pin}"' in pyproject
 
 
-def test_deploy_runbook_covers_managed_infrastructure_and_rollback():
-    runbook = Path("docs/deploy-runbook.md").read_text(encoding="utf-8")
-    for required in (
-        "SCRYGLASS_INVITE_CODES",
-        "DATABASE_URL",
-        "REDIS_URL",
-        "Neon",
-        "Supabase",
-        "RDS",
-        "Upstash",
-        "/healthz",
-        "Rollback",
-        "Deployment Protection",
-    ):
-        assert required in runbook, required
+# A substring test over a markdown file is word bingo: a rename or a
+# rewrite turns it red while the deployment it describes is untouched
+# (audit 2.3).  docs/deploy.md is the one deployment home and is reviewed,
+# not asserted.

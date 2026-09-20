@@ -7,8 +7,7 @@ one_teammate).  Both events are authored by the engine's ally-support
 scanner from cached leveling at the cast times; the module declares E/R in
 SLOTS so the fight rotation casts them.
 
-Wave-2 ally support (HANDOVER 8.5), all authored by the scanner on the R
-cast:
+Two ally-support riders, both authored by the scanner on the R cast:
 - Best Friend Bonus: Final Chapter's heal to the Best Friend is increased
   by 30% : 60% (based on level) — the deterministic roster model treats
   the selected teammate as the anchor/Best Friend (the same teammate the E

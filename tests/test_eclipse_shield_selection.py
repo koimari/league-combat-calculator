@@ -1,34 +1,29 @@
 """Eclipse Ever Rising Moon shield-selection boundary matrix.
 
-HANDOVER.md section 4.26 certifies Eclipse's shield amount, proc time, and
-two-second duration.  ``survival_ledger_certifications()`` documents the current
-survival rule: overlapping shields stack additively.  It also records strongest
-shield selection as unmodeled.
+``item_effects.py`` owns every Eclipse number this matrix leans on: the
+self-shield arms on the completed proc pair (``stack_required`` hits inside
+``stack_window`` seconds) and carries ``shield_melee_base`` /
+``shield_ranged_base`` plus the melee and ranged bonus-AD ratios for
+``shield_duration`` seconds, under a per-target ``cooldown``.
+``survival_ledger_certifications()`` documents the survival rule: overlapping
+shields stack additively, and strongest-shield selection is unmodeled.
 
-Passing tests pin that current contract.
+Every test here pins that contract and none is an xfail.  Strongest-shield
+selection stays unmodeled on two independent grounds, both required:
 
-The 8 "desired" strongest-shield-selection xfail rows (same-source overlap,
-partial absorption, other-source stacking, same-time grants, and malformed
-source identity x2) were retired on 2026-08-20 (Phase B alt-row lever, per
-GOAL-0fails.md).  Two independent grounds, both required:
-
-1. Unsourced in every authority layer — the strongest-shield rule appears in
-   no wiki effect text, no ``item_effects`` accessor, and is explicitly
-   recorded as absent by ``interpreters.survival_ledger_certifications``
-   and ``HANDOVER.md:1311``.
-2. Physically unreachable — Eclipse's cooldown (``item_effects.py``
+1. Unsourced in every authority layer: the rule appears in no wiki effect
+   text and no ``item_effects`` accessor, and
+   ``interpreters.survival_ledger_certifications`` records its absence.
+2. Physically unreachable: Eclipse's cooldown (``item_effects.py``
    ``"cooldown": 6.0``) exceeds its shield duration (``"shield_duration": 2.0``),
    both sourced values, so two Eclipse shields from the same holder can never
-   be live at the same time.  The retired rows only reached their overlap by
-   hand-writing ``duration=4.0`` on the test fixture, a value the real item
-   never grants.
+   be live at the same time.  An overlap is reachable only by hand-writing
+   ``duration=4.0`` on a test fixture, a value the real item never grants.
 
-Each retired row's primary/current-contract counterpart already pins the
-additive contract on the identical event set, so no coverage was lost.
-Replacement expiry, fallback, and malformed source identity remain
-documented boundaries (see ``test_weaker_grant_was_never_discarded_...``
-and ``test_current_contract_keeps_malformed_source_identity_visible``),
-not xfails.
+Replacement expiry, fallback, and malformed source identity are documented
+boundaries with their own passing tests
+(``test_weaker_grant_was_never_discarded_...`` and
+``test_current_contract_keeps_malformed_source_identity_visible``).
 """
 
 from copy import deepcopy
@@ -333,7 +328,7 @@ def test_weaker_grant_was_never_discarded_there_is_no_replacement_to_resume():
     authority for a "replacement expiry" / "resume" lifecycle, because
     that framing presupposes a SELECTION step (strongest kept, weaker
     discarded) that the current kernel does not have.  The kernel stacks
-    every Eclipse grant additively (HANDOVER 4.26 / BIS receipt) — so the
+    every Eclipse grant additively (the BIS receipt states it) — so the
     "weak" grant here was never rejected in the first place: it tracks its
     own independent amount and expiry from the moment it is granted,
     right alongside the "strong" grant.  This pins that actual

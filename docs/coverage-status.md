@@ -60,8 +60,8 @@ schedule, the way Rumble's Heat now is
 (`fight/rotation/cast_resource_lockout.py`), and each retired one removes
 a way to get a wrong answer by leaving a default alone.
 
-A further 15 default to the whole sourced thing —
-a channel's every tick, a clip's every shot — so the option only removes
+A further 15 default to the whole sourced thing,
+a channel's every tick, a clip's every shot, so the option only removes
 from a complete reading, and 36 derive their
 default outright and take an override.
 36 are facts no engine holds: state the champion
@@ -106,6 +106,22 @@ Counts the fight could walk if one missing number were sourced:
   62 keystones, with
   0 unmodeled. Only compiled runes are
   selectable; everything else fails closed.
+- Of those, **49 price a number** and
+  13 compile to a receipted refusal that names the axis it
+  waits on. A refused rune is selectable and reaches no channel:
+  Cash Back, Deep Ward, Demolish, Grisly Mementos, Hextech Flashtraption, Nimbus Cloak, Presence of Mind, Relentless Hunter, Sixth Sense, Time Warp Tonic, Treasure Hunter, Triple Tonic, Unsealed Spellbook.
+
+## Zero-residue probes
+
+The four readings the zero-leftover-mechanics work steers by, each
+measured here from the tree rather than logged per pass.
+
+| Probe | Reading | Measured from |
+|---|---|---|
+| Champion slots with no engine axis | 5 | each module's own contract |
+| Compiled runes that price a number | 49 of 62 | `rune_catalog()` through `resolve_rune` |
+| Residue rows, by reason | 9 unsourced | `docs/coverage-residue.json` |
+| Surface-area backlog rows open | 5 | `docs/surface-area-backlog.md` |
 
 ## Where the remaining work is written down
 
@@ -116,7 +132,7 @@ row, and each has a gate that fails when a row appears without one.
 |---|---|---|
 | `docs/coverage-census.json` | 36 | champion and item pairs that price coarsely or refuse |
 | `docs/coverage-residue.json` | 9 | frontier entries that cannot close without inventing data |
-| `docs/surface-area-backlog.md` | 11 | everything the surface-area campaigns surfaced and did not close |
+| `docs/surface-area-backlog.md` | 5 | everything the surface-area campaigns surfaced and did not close |
 | `scripts/swing_stream_audit.py` | 9 | cached per-attack riders that do not publish a swing key |
 | `tests/test_axis_less_slots.py` | 5 | the slots with no engine axis, each blocker measured in both sources |
 
@@ -125,13 +141,20 @@ row, and each has a gate that fails when a row appears without one.
 Slot coverage is close to total, so it is the wrong number to steer by.
 The honest frontier is depth, and it has three parts:
 
-1. **Counts the engine still asks for** — the table above. Each is a
+1. **Counts the engine still asks for**, the table above. Each is a
    derivation the fight could do, and each retired one removes a way for a
    reader to get a wrong answer by leaving a default alone.
-2. **Axes the engine does not have** — a summon that fights on its own, a
-   stat conversion with no channel, a persistent object with a field cap.
-   These need new engine shapes, not more packets.
-3. **Approximations that are stated rather than exact** — a fight-averaged
+2. **Axes the engine does not have.** These need new engine shapes, not
+   more packets. A slot waits on one of: a stat or aura with no channel;
+   a summon, pet, clone, transform or terrain; mobility; crowd-control
+   magnitude the cache does not carry; reflection, invulnerability,
+   death, disguise, attachment, shop or experience; vision or stealth;
+   damage reduction taken; a resource or a cooldown. A refused rune waits
+   on one of: gold, vision and wards; movement speed with no fight
+   consequence; summoner-spell, item or trinket haste; mana and resource;
+   consumables on a clock; a non-champion target, or a kill with no
+   timestamp.
+3. **Approximations that are stated rather than exact**, a fight-averaged
    attack-speed share, a resistance bound once per ability row, a charge
    stock capped at one where no cached field states the real cap. Each is
    named where it is made.

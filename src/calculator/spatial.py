@@ -4,7 +4,7 @@ One dependency-light leaf owns the small typed spatial contracts:
 position extraction, Euclidean distance, holder-centered range
 counting, and fail-closed spatial-input receipts.
 
-Design rules (HANDOVER §11):
+Design rules:
 
 - Numeric range values come from the data cache through the consumer's
   typed accessors; this module never invents a unit or radius.

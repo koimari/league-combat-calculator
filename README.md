@@ -30,7 +30,8 @@ The home page compares item builds with the Scryglass interface. Open `/advanced
 for the full roster controls and event inspectors. Existing shared links open
 that workspace.
 
-The shared React source is in `ui/src`. Node.js 24 is required when editing it:
+The shared React source is in `ui/src`. `engines.node` in `ui/package.json`
+states the Node version it needs.
 
 ```bash
 cd ui
@@ -59,4 +60,4 @@ Champion and item data are read from the tracked League of Legends Wiki cache in
 
 The calculator combines the combat engine and tests from [Skyway1111/lol-calculator](https://github.com/Skyway1111/lol-calculator) with Scryglass's roster, comparison, optimizer, provenance, and interface work. The upstream repository has no licence file; redistribution remains closed until its author chooses a licence. See `NOTICE.md`.
 
-Deployment instructions are in `docs/deploy.md`; calculation boundaries and module ownership are in `architecture.md`.
+Deployment instructions are in `docs/deploy.md`; calculation boundaries and module ownership are in `architecture.md`. [`PRODUCT.md`](PRODUCT.md) states who the calculator is for and what a result has to show.

@@ -13,7 +13,7 @@ module: the event vocabulary, its operations and tiers in
 Lost Chapter's Enlighten and Catalyst's Eternity in
 :mod:`mana_item_schedules`.
 
-Design rules (HANDOVER §11):
+Design rules:
 
 - Numerical values come from the consumer's typed accessors
   (``item_effects.required_effect_value``) and are attached to events as

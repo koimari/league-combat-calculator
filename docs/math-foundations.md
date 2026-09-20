@@ -1,16 +1,16 @@
-# Mathematical Foundations of the Scryglass Combat Calculator (P2)
+# Mathematical foundations
 
-Branch: `codex/p2-math-foundations` · Date: 2026-08-06
-Engine: `src/calculator/` (`damage.py`, `participant_timeline.py`, `healing.py`,
-`optimizer.py`, `resistance.py`, `stats.py`)
-Input contract: deterministic combat outcomes derived from the League Wiki cache
-(`data/champions.json`, `data/items.json`) and game files. Every number below
-traces to a wiki/game source. Every attacker is a validated named module.
+`CLAUDE.md` states each formula the calculator uses. This document states each
+derivation: for every modeling family, the mathematical identity the engine
+instantiates, the theorem that justifies it, where the engine is exact against
+where it approximates, and, where a formula deviates from the game, the edge
+case and its resolution, with arXiv anchors. Neither file holds the other's
+half.
 
-This document states, for every modeling family, the mathematical identity the
-engine instantiates, the theorem that justifies it, the cases where the engine
-is exact versus approximate, and, where a formula deviates from the game, the
-edge case and the recommended resolution, with arXiv literature anchors.
+Input contract: deterministic combat outcomes derived from the League Wiki
+cache (`data/champions.json`, `data/items.json`) and the game files. Every
+number below traces to a wiki or game source, and every attacker is a
+validated named module.
 
 ---
 
@@ -62,9 +62,9 @@ a cast counts when it *starts* within the window
 (`_schedule_shared_casts`). With `c_i` the effective cooldown of ability `i`,
 the cast epochs of a solo ability are `0, c_i, 2c_i, …`, again a deterministic
 renewal schedule; the shared-timeline version is the superposition with
-mutual-exclusion, resolved greedily by cast order. This replaced the legacy
-`1 + T/c` independent-timeline count, which overcounted short-cooldown
-abilities (Cassiopeia E: 5 vs. 3 in-game casts over 3 s).
+mutual-exclusion, resolved greedily by cast order. The independent-timeline
+count `1 + T/c` is not the model here: it overcounts short-cooldown abilities
+(Cassiopeia E: 5 against 3 in-game casts over 3 s).
 
 **Theorem (renewal-reward).** For a renewal process with interarrival times
 `X_i` and i.i.d. rewards `R_i` attached to each cycle, the long-run average
@@ -114,7 +114,7 @@ model. Two modeling choices are approximations, both documented in code:
    post-mitigation total. (The operator is *not* linear in `R`, which is why
    averaging resistances is only approximate, Section 2.3.)
 2. **DoT ticks.** A DoT total is partitioned into ticks by a uniform partition
-   of its window (`_periodic_damage_events`): `⌊duration/interval⌋` full ticks
+   of its window (`fight/rotation/dot_ticks.py`): `⌊duration/interval⌋` full ticks
    of `(total/duration)·interval` plus a remainder tick at `duration`.
    Conservation `Σ ticks = total` is enforced with a drift correction on the
    last tick. This is the **Riemann-sum identity** for a constant rate over
@@ -326,7 +326,7 @@ because `m(R)` is convex in `R`:
    constant with the closed-form Cesàro mean when a champion module needs
    exact BC numbers (a candidate P3 item; changing it re-tunes every BC fight
    in the corpus, so it is not a P2 foundation change).
-3. **Negative-armor percentage reduction** (`reduce_resistance`): the engine
+3. **Negative-armor percentage reduction** (`resistance.reduce_resistance`): the engine
    applies percentage reduction only while `R > 0`. The League Wiki's *Armor
    penetration* article states: "Flat armor reduction can reduce armor values
    below 0, while **percentage armor reduction cannot**." The engine's guard
@@ -458,32 +458,34 @@ confidence" claims to the existing corpus, and it is the recommended next step
 Legend: **EXACT** = instantiates the identity exactly under the deterministic
 model; **APPROX** = documented approximation (never silently presented as
 exact). All game-rule claims were cross-checked against the League Wiki
-(armor/penetration, movement speed, crit, grievous wounds, executes).
+(armor/penetration, movement speed, crit, grievous wounds, executes). A formula
+`CLAUDE.md` states is named below, not spelled: each row carries the identity's
+name, the verdict, and the edge case the identity alone does not settle.
 
 | Engine family (location) | Theorem / identity it instantiates | Verdict | Edge case the math says is wrong / must be documented |
 |---|---|---|---|
-| Resistance mitigation (`apply_resistance`) | `m(R)=100/(100+R)`; EHP round-trip `raw = post·(1+R/100)`; sigmoid family | **EXACT** | Negative branch is `2−100/(100−R)` (not the analytic continuation); continuous at 0, saturates at 2× |
-| Penetration (`apply_{armor,magic}_penetration`) | percent-then-flat, floor at 0; reduction-then-penetration composition | **EXACT** | Penetration never deepens negative resistance (reduction-only); composition order is non-commutative and reproduced exactly |
+| Resistance mitigation (`resistance.apply_resistance`) | the mitigation identity `CLAUDE.md` states, derived in §2.1; EHP round-trip `raw = post·(1+R/100)`; sigmoid family | **EXACT** | Negative branch is `2−100/(100−R)` (not the analytic continuation); continuous at 0, saturates at 2× |
+| Penetration (`resistance.apply_{armor,magic}_penetration`) | the penetration order `CLAUDE.md` states, derived in §2.2; reduction-then-penetration composition | **EXACT** | Penetration never deepens negative resistance (reduction-only); composition order is non-commutative and reproduced exactly |
 | Percent reduction on negative armor (`reduce_resistance`) | Wiki rule: "Flat armor reduction can reduce armor values below 0, while **percentage armor reduction cannot**" (League Wiki, *Armor penetration*) | **EXACT** | Engine applies % reduction only while R>0, matching the wiki rule; residual ambiguity (game behavior on an input already below 0) is a game-file-verification item, not a formula error |
-| Stat growth (`growth_stat`) | `base + growth·(L−1)·(0.7025 + 0.0175·(L−1))` | **EXACT** | Level cap 20 (top lane); formula season-volatile, single source of truth `MAX_LEVEL` |
-| Attack speed (`calculate_attack_speed`) | `base_AS + AS_ratio·bonus/100` | **EXACT** | Total AS cap 3.003 deliberately NOT clamped fight-wide (Jayce reads it) |
-| Ability haste (`effective_cooldown`) | `cd' = cd·100/(100+AH)`; casts/unit time affine in AH | **EXACT** | R recasts on its hasted cooldown only for modules certifying `ULTIMATE_RECASTS`; every other kit casts R exactly once per timed fight (model constraint, documented) |
-| Auto DPS / auto count (`_auto_attack_timestamps`, `num_auto_attacks`) | renewal counting `N(T)=⌊AS·u·T⌋`; periodic schedule `t_i=i/rate` | **EXACT*** | *uptime-as-rate-scale approximation; swing exactly at T excluded (measure-zero boundary) |
-| Crit expectation (`_simulate_auto_attacks`, `_evaluate_cast_parts`) | `E[swing] = (1−p)·1 + p·CM = 1+p·(CM−1)`; mitigation commutes with expectation (linear in raw) | **EXACT** | Deterministic path evaluates `f(E[H])` for health-dependent terms; exact for affine f (Kraken), Jensen-biased for convex f (Veigar R ramp) |
-| Ability rotation casts (`_schedule_shared_casts`, `_compute_ability_rotation`) | shared-timeline renewal schedule; cast starts within window | **EXACT** | GCD/0.5s inter-cast estimate used only in one-rotation burn spread (see burn row); R single-cast |
+| Stat growth (`stat_formulas.growth_stat`) | the level-growth formula `CLAUDE.md` states | **EXACT** | The level cap is a seasonal rule and top lane only; `MAX_LEVEL` is its single source of truth, so the number is not written here |
+| Attack speed (`stat_formulas.calculate_attack_speed`) | the attack-speed formula `CLAUDE.md` states | **EXACT** | Total AS cap 3.003 deliberately NOT clamped fight-wide (Jayce reads it) |
+| Ability haste (`stat_formulas.effective_cooldown`) | the ability-haste identity `CLAUDE.md` states; casts/unit time affine in AH | **EXACT** | R recasts on its hasted cooldown only for modules certifying `ULTIMATE_RECASTS`; every other kit casts R exactly once per timed fight (model constraint, documented) |
+| Auto DPS / auto count (`fight/autos/swing_schedule.py`, `FightState.num_auto_attacks`) | renewal counting `N(T)=⌊AS·u·T⌋`; periodic schedule `t_i=i/rate` | **EXACT*** | *uptime-as-rate-scale approximation; swing exactly at T excluded (measure-zero boundary) |
+| Crit expectation (`fight/autos/simulation.py`, `fight/rotation/cast_parts.py`) | `E[swing] = (1−p)·1 + p·CM = 1+p·(CM−1)`; mitigation commutes with expectation (linear in raw) | **EXACT** | Deterministic path evaluates `f(E[H])` for health-dependent terms; exact for affine f (Kraken), Jensen-biased for convex f (Veigar R ramp) |
+| Ability rotation casts (`fight/rotation/cast_schedule.py`, `fight/rotation/ability_rotation.py`) | shared-timeline renewal schedule; cast starts within window | **EXACT** | GCD/0.5s inter-cast estimate used only in one-rotation burn spread (see burn row); R single-cast |
 | DoT totals (`_periodic_damage_events`) | uniform partition / Riemann sum; conservation `Σ ticks = total`; remainder < interval paid at window end | **EXACT** | First tick at +interval (no immediate tick); interval > duration → single remainder tick at duration |
-| Stacking DoT (`_DotTickLedger`) | integral of piecewise-constant stack rate bucketed at tick boundaries; `Σ raw·scale = total` | **EXACT** | Overlapping re-applications: chain clock anchored per application chain; refresh-reset semantics are per-chain, total conserved |
-| Ability DoT event authoring (`_ability_dot_tick_events`) | even split of row total across casts | **APPROX** | Splits by cast count even when casts land at different mitigation states (Vile Decay ramp); total conserved, per-tick pairing approximate |
-| On-hit stacking (`_calculate_stacking_procs`, `_simulate_stacking_on_hit_damage`) | modular every-Nth counting; sequential health-path expectation (affine ⇒ exact) | **EXACT** | Ability-carried on-hits lead the shared counter (ordering convention); double-on-hit extra stacks attributed to a prefix of autos, not the spellblade's actual weave times |
-| Phantom hits (`_calculate_phantom_hits`) | deterministic cadence: first phantom at attack `stacking_autos+1`, then every `interval` | **EXACT** | Assumes the Seething-stack window never lapses (true for continuous streams; approximate for gappy uptime) |
-| Burn/DoT items (`_add_burn_damage`) | refresh model: window = last-refresh + duration, total scaled by window/duration | **APPROX** | One-rotation cast spread uses a 0.5 s GCD estimate (engine casts at t=0); burn resolves past the fight end by design; timed mode uses the real `last_cast_time` (exact) |
+| Stacking DoT (`fight/rotation/dot_ticks.py` `_DotTickLedger`) | integral of piecewise-constant stack rate bucketed at tick boundaries; `Σ raw·scale = total` | **EXACT** | Overlapping re-applications: chain clock anchored per application chain; refresh-reset semantics are per-chain, total conserved |
+| Ability DoT event authoring (`fight/rotation/dot_ticks.py`) | even split of row total across casts | **APPROX** | Splits by cast count even when casts land at different mitigation states (Vile Decay ramp); total conserved, per-tick pairing approximate |
+| On-hit stacking (`fight/autos/on_hit_stream.py`, `fight/autos/decaying_health_walk.py`) | modular every-Nth counting; sequential health-path expectation (affine ⇒ exact) | **EXACT** | Ability-carried on-hits lead the shared counter (ordering convention); double-on-hit extra stacks attributed to a prefix of autos, not the spellblade's actual weave times |
+| Phantom hits (`fight/autos/on_hit_stream.py`) | deterministic cadence: first phantom at attack `stacking_autos+1`, then every `interval` | **EXACT** | Assumes the Seething-stack window never lapses (true for continuous streams; approximate for gappy uptime) |
+| Burn/DoT items (`fight/items/burns.py`) | refresh model: window = last-refresh + duration, total scaled by window/duration | **APPROX** | One-rotation cast spread uses a 0.5 s GCD estimate (engine casts at t=0); burn resolves past the fight end by design; timed mode uses the real `last_cast_time` (exact) |
 | Grievous Wounds (`healing_reduction.py`, survival walk) | multiplicative factor 0.60 (40% reduction); strongest-wins composition via `min` of factors; duration refresh via `max` | **EXACT** | Heal landing exactly at window expiry is un-reduced (boundary convention); sources do not stack (min is the game rule) |
 | Shield absorption (survival walk) | clipping identity `absorbed = min(shield, damage)`, `overkill = max(0, damage−absorbed)`; `absorbed+overkill = damage` | **EXACT** | Consumption order = earliest-expiring timed shields first, then untimed pools (FIFO proxy); venom cuts non-magic shields granted under the wound |
-| Grey health (`_grey_health_receipts`) | saturating accumulator `pool = min(cap, ratio·Σ post-mitigation incoming)` | **EXACT** | Out-of-vision consume (Pyke) is a vision boundary, documented not authored; cap = min(80 + 800% bAD, 55% max health) |
+| Grey health (`participant_timeline._grey_health_receipts`) | saturating accumulator `pool = min(cap, ratio·Σ post-mitigation incoming)` | **EXACT** | Out-of-vision consume (Pyke) is a vision boundary, documented not authored; cap = min(80 + 800% bAD, 55% max health) |
 | Revive (survival walk) | absorbing-state machine: earliest lethal packet triggers revive at `death_time + delay`; restore = min(max_health, amount) | **EXACT** | Candidate revive authored after every damage event, applied only when dead, exact earliest-trigger semantics; post-window revives visible but not applied |
-| BIS score (`_evaluate_build_uncached`) | finite-horizon renewal-reward functional: cumulative damage until death; EHP·1e-9 lexicographic tiebreak | **EXACT*** | *the tiebreak is an infinitesimal regularizer (documented), never a material ordering; `effective_health` receipt is "total resources", not remaining health |
-| Stat rounding (`calculate_total_stats`) | display-level integer rounding of health/AD/AP/armor/MR before damage | **APPROX** | Riot computes with full precision; rounding drifts mitigation and scalings by <1 unit, corpus-wide convention, pinned by golden |
-| Terminus/BC ramps (`average_pen`, `average_reduction`) | Cesàro mean of the per-hit ramp | **APPROX** | m(R) convex ⇒ averaging understates ramp damage (Jensen); BC constant = exact mean at ~10 autos, ±20% at extremes (Section 2.3) |
+| BIS score (`build_evaluation._evaluate_build_uncached`) | finite-horizon renewal-reward functional: cumulative damage until death; EHP·1e-9 lexicographic tiebreak | **EXACT*** | *the tiebreak is an infinitesimal regularizer (documented), never a material ordering; `effective_health` receipt is "total resources", not remaining health |
+| Stat rounding (`stats.calculate_total_stats`) | display-level integer rounding of health/AD/AP/armor/MR before damage | **APPROX** | Riot computes with full precision; rounding drifts mitigation and scalings by <1 unit, corpus-wide convention, pinned by golden |
+| Terminus/BC ramps (`item_effects.average_pen`, `interpreters/resistance_shred.py`) | Cesàro mean of the per-hit ramp | **APPROX** | m(R) convex ⇒ averaging understates ramp damage (Jensen); BC constant = exact mean at ~10 autos, ±20% at extremes (Section 2.3) |
 
 **Audit conclusion.** Every *core* formula family instantiates its stated
 identity exactly under the deterministic model (renewal counting, linearity of
@@ -496,9 +498,8 @@ attribution), none is silently presented as exact. The one once-suspect
 rule (percent reduction on negative armor) matches the League Wiki's stated
 boundary ("percentage armor reduction cannot [reduce below 0]"), with a
 game-file-verification footnote remaining. No combat formula was found
-mathematically wrong, so **no combat-number change was made**; the P2 hardening
-is the documentation above plus the pinned identity suite in
-`tests/test_p2_math_foundations.py`.
+mathematically wrong. `tests/test_p2_math_foundations.py` is the pinned
+identity suite for everything above.
 
 ---
 

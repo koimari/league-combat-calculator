@@ -542,8 +542,8 @@ class TestSourceEvidence:
     def test_golden_parse_snapshot_has_no_rider_payload(self):
         # The golden abilities_level_11 parse surface: the passive entry
         # keeps the single mark on_hit payload, and the snapshot now also
-        # carries the P2 entry with the rider payload (the inherent
-        # parse delta — explained in HANDOVER §4.64).
+        # carries the P2 entry with the rider payload, because the Relic
+        # Cannon rides its own BUFF-phase slot with its own on_hit.
         snapshot = _GOLDEN["champion_baselines"]["Senna"]["abilities_level_11"][
             "passive"
         ]

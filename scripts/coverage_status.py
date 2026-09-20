@@ -352,6 +352,21 @@ def _receipt(name: str) -> dict[str, Any]:
     return json.loads((ROOT / "docs" / name).read_text(encoding="utf-8"))
 
 
+def _refused_runes() -> list[str]:
+    """Compiled runes that price nothing.
+
+    Each compiles to a ``RuneNoDamageEffect``: selectable, listed as
+    implemented, and reaching no channel, so "62 compiled" alone
+    overstates what the roster prices.
+    """
+    names = [str(entry["name"]) for entry in rune_effects.rune_catalog()]
+    return sorted(
+        name
+        for name in names
+        if isinstance(rune_effects.resolve_rune(name), rune_effects.RuneNoDamageEffect)
+    )
+
+
 def _backlog_rows() -> int:
     """Open rows in the surface-area backlog, which is a table of one each."""
     text = (ROOT / "docs" / "surface-area-backlog.md").read_text(encoding="utf-8")
@@ -374,6 +389,8 @@ def measure() -> dict[str, Any]:
     totals, per_slot, out_of_scope = _champion_slots()
     options = _options()
     census = _receipt("coverage-census.json")
+    refused_runes = _refused_runes()
+    residue = _receipt("coverage-residue.json")["acknowledged"]
     return {
         "champions": {
             "modules": len(_CHAMPION_MODULES),
@@ -392,11 +409,15 @@ def measure() -> dict[str, Any]:
             # The census records the NAMES; the page states how many.
             "keystones_compiled": len(census["keystones"]["compiled"]),
             "keystones_unmodeled": len(census["keystones"]["unmodeled"]),
+            "refused": refused_runes,
         },
         "axes": options,
         "frontiers": {
             "census_total": census["counts"]["total"],
-            "residue_rows": len(_receipt("coverage-residue.json")["acknowledged"]),
+            "residue_rows": len(residue),
+            "residue_reasons": dict(
+                collections.Counter(str(row["reason"]) for row in residue)
+            ),
             "backlog_rows": _backlog_rows(),
             "swing_frontier": _swing_frontier(),
             # Derived from the same scan the slot tables use, so the row and
@@ -494,8 +515,8 @@ def render(data: Mapping[str, Any]) -> str:
         "(`fight/rotation/cast_resource_lockout.py`), and each retired one removes",
         "a way to get a wrong answer by leaving a default alone.",
         "",
-        f"A further {len(axes['full_by_default'])} default to the whole sourced thing —",
-        "a channel's every tick, a clip's every shot — so the option only removes",
+        f"A further {len(axes['full_by_default'])} default to the whole sourced thing,",
+        "a channel's every tick, a clip's every shot, so the option only removes",
         f"from a complete reading, and {len(axes['derived_default'])} derive their",
         "default outright and take an override.",
         f"{len(axes['pre_fight'])} are facts no engine holds: state the champion",
@@ -539,8 +560,8 @@ def render(data: Mapping[str, Any]) -> str:
             "",
             "Stack LEVELS the fight builds and a cast reads. Deriving these means",
             "walking a stack timeline into the cast pricing, not counting procs,",
-            "so they are the next campaign (`docs/surface-area-backlog.md` SR8)",
-            "and are reported apart from the row above rather than folded into it.",
+            "so they are reported apart from the row above rather than folded",
+            "into it.",
             "",
             "`[full]` defaults to the top of its range, so it prices the fully",
             "stacked reading and over-counts a fight too short to reach it;",
@@ -590,6 +611,31 @@ def render(data: Mapping[str, Any]) -> str:
         f"  {runes['keystones_compiled']} keystones, with",
         f"  {runes['keystones_unmodeled']} unmodeled. Only compiled runes are",
         "  selectable; everything else fails closed.",
+        f"- Of those, **{runes['compiled'] - len(runes['refused'])} price a number** and",
+        f"  {len(runes['refused'])} compile to a receipted refusal that names the axis it",
+        "  waits on. A refused rune is selectable and reaches no channel:",
+        f"  {', '.join(runes['refused'])}.",
+        "",
+        "## Zero-residue probes",
+        "",
+        "The four readings the zero-leftover-mechanics work steers by, each",
+        "measured here from the tree rather than logged per pass.",
+        "",
+        "| Probe | Reading | Measured from |",
+        "|---|---|---|",
+        f"| Champion slots with no engine axis | {out_of_scope} | each module's own"
+        " contract |",
+        f"| Compiled runes that price a number | "
+        f"{runes['compiled'] - len(runes['refused'])} of {runes['compiled']} |"
+        " `rune_catalog()` through `resolve_rune` |",
+        "| Residue rows, by reason | "
+        + ", ".join(
+            f"{count} {reason}"
+            for reason, count in sorted(frontiers["residue_reasons"].items())
+        )
+        + " | `docs/coverage-residue.json` |",
+        f"| Surface-area backlog rows open | {frontiers['backlog_rows']} |"
+        " `docs/surface-area-backlog.md` |",
         "",
         "## Where the remaining work is written down",
         "",
@@ -614,13 +660,20 @@ def render(data: Mapping[str, Any]) -> str:
         "Slot coverage is close to total, so it is the wrong number to steer by.",
         "The honest frontier is depth, and it has three parts:",
         "",
-        "1. **Counts the engine still asks for** — the table above. Each is a",
+        "1. **Counts the engine still asks for**, the table above. Each is a",
         "   derivation the fight could do, and each retired one removes a way for a",
         "   reader to get a wrong answer by leaving a default alone.",
-        "2. **Axes the engine does not have** — a summon that fights on its own, a",
-        "   stat conversion with no channel, a persistent object with a field cap.",
-        "   These need new engine shapes, not more packets.",
-        "3. **Approximations that are stated rather than exact** — a fight-averaged",
+        "2. **Axes the engine does not have.** These need new engine shapes, not",
+        "   more packets. A slot waits on one of: a stat or aura with no channel;",
+        "   a summon, pet, clone, transform or terrain; mobility; crowd-control",
+        "   magnitude the cache does not carry; reflection, invulnerability,",
+        "   death, disguise, attachment, shop or experience; vision or stealth;",
+        "   damage reduction taken; a resource or a cooldown. A refused rune waits",
+        "   on one of: gold, vision and wards; movement speed with no fight",
+        "   consequence; summoner-spell, item or trinket haste; mana and resource;",
+        "   consumables on a clock; a non-champion target, or a kill with no",
+        "   timestamp.",
+        "3. **Approximations that are stated rather than exact**, a fight-averaged",
         "   attack-speed share, a resistance bound once per ability row, a charge",
         "   stock capped at one where no cached field states the real cap. Each is",
         "   named where it is made.",

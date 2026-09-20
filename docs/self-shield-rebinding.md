@@ -1,8 +1,7 @@
 # A self-shield rider binds to the first ability packet that lands
 
-**Status:** closed (issue #229). Landed 2026-09-02.
-**Owner surface:** `survival/transitions.py` walk, `participant_timeline`
-rider build, `champions/slotlib.attach_self_shield`.
+Owner surface: the `survival/transitions.py` walk, the `participant_timeline`
+rider build, and `champions/slotlib.attach_self_shield`.
 
 ## The rule
 

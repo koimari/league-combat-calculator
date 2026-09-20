@@ -36,8 +36,8 @@ pinned in S1):
   the binary channel atom crowd-control-mobility.channel/VladimirE hash
   940d08fba719e658).  The module also ships the R AMP pseudo-slot
   (hemoplague, 10% debuff, default ON) and the E cooldown now reads the
-  LIVE cached array 13/11/9/7/5 (not the reviewed packet's fixed 13.0 —
-  HANDOVER §4.12 note).
+  LIVE cached array 13/11/9/7/5, not the reviewed packet's fixed 13.0
+  (the cache wins, and the golden note records the move).
 - Atoms: abilities-domain (data/atoms/abilities.json "Vladimir") E rows
   — minimum _magic _damage.modifier_0/1/2 hashes ed0a9a756a254ee9 /
   2241b298f6dcd8d4 / 6c5d374d3795f5a8; maximum _magic _damage.modifier_
@@ -172,15 +172,15 @@ AMBIGUITY NOTES for the coordinator:
 5. BINARY-vs-WIKI COOLDOWN DRIFT.  The binary channel atom
    (crowd-control-mobility.channel / VladimirE) carries cooldown rank1
    = 15.0 (values [15.0, 5.0, 550.0, 8192.0]) while the cached wiki
-   cooldown row is 13/11/9/7/5 and the module reads the wiki array
-   (HANDOVER §4.12 made this the certified behavior).  S1/S3 pin the
+   cooldown row is 13/11/9/7/5 and the module reads the wiki array,
+   which is the certified behavior.  S1/S3 pin the
    wiki array; the 15.0 in the binary atom is a drift flag for patch
    day, not a runtime value.
 6. STALE PER-ABILITY SOURCE REVISION.  The module SOURCES pin the E
    ability entry at revision 2864482 (2019-11-03) while the parent
    entry is 3960728 (2025-10-22) — the same stale-per-ability-revision
    pattern flagged for another champion's passive.  The row VALUES are current (they match
-   the packet and the HANDOVER), but the per-ability revision should be
+   the packet), but the per-ability revision should be
    re-pulled on the next patch day.
 7. REFERENCE CONFIG NUMBERS.  The golden baseline's Vladimir E rows
    (scripts/golden_baseline.json) pin the LEVEL-11 entry: E rank 1,
@@ -708,8 +708,8 @@ class TestLevelEndpoints:
             assert entry_min["total_raw"] == pytest.approx(want_min)
 
     def test_e_cooldown_tracks_the_live_cached_array(self):
-        # The module reads the live cooldown row 13/11/9/7/5 — NOT the
-        # reviewed packet's fixed 13.0 (HANDOVER §4.12).
+        # The module reads the live cooldown row 13/11/9/7/5, NOT the
+        # reviewed packet's fixed 13.0.
         for rank, want in zip(range(1, 6), _COOLDOWN_ROW, strict=False):
             entry = _parse(
                 {"r_hemoplague_debuff": False},

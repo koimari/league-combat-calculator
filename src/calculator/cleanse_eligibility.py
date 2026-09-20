@@ -61,10 +61,9 @@ kernel encodes the self-scope castability rule as the named
 ``caster_control_blocks_cleanse`` denial; Mikael's gating is the walk's
 pinned attacker-state gate (receipt ``attacker_state_blocked``).
 
-Design rules (HANDOVER section 11): categorical mechanics are small typed
-declarations with public receipts; missing values raise naming the
-declaration; the kernel never invents a number or policy the caches do
-not evidence.
+Design rules: categorical mechanics are small typed declarations with
+public receipts; missing values raise naming the declaration; the kernel
+never invents a number or policy the caches do not evidence.
 """
 
 from __future__ import annotations

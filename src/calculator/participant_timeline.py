@@ -4884,7 +4884,7 @@ def _published_support_phase(event: Mapping[str, Any]) -> TransitionRank:
 
 
 # The named receipt for a self-shield rider that never found a carrier
-# (docs/receipts/self-shield-carrier-rebind-2026-08-21.md).  A rider is bound
+# (docs/self-shield-rebinding.md).  A rider is bound
 # to ONE carrier packet by ordinal, in ``fight.ledger.event_rows._damage_event_row``, before
 # the ordered survival walk decides which packets land; a rider whose payload
 # declares ``rebind_on_ability_hit`` moves to the first ability packet that

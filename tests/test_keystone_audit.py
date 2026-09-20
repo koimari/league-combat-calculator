@@ -1,4 +1,5 @@
-"""Keystone/rune coverage audit (HANDOVER §8.3).
+"""Keystone/rune coverage audit over keystone_options, proc timing,
+target selection, action downtime and score-versus-receipt parity.
 
 Locks the wave-2 decisions and invariants:
 

@@ -1,4 +1,4 @@
-# F3 — Optimal Event-Order Engine (algorithmic derivation for all 173 champions)
+# F3 optimal event-order engine, derived for all 173 champions
 
 Status: implemented on `codex/f3-rotation-all`.
 Owner: Scryglass combat pipeline (`src/calculator/rotation_resolver.py`).
@@ -12,7 +12,7 @@ and fell back to the certified/default `DEFAULT_CAST_ORDER`
 `("Q", "Q2", "W", "E", "R")` for everyone else, with a generic rationale.
 That fallback is wrong for kits whose abilities have real setup/consume
 relationships (Cassiopeia's poison-fed Twin Fang, Varus' Blight
-detonation, Darius' Hemorrhage-stack execute, ...) — and the product
+detonation, Darius' Hemorrhage-stack execute, ...), and the product
 owner's directive is explicit: **derive the order on the fly from the
 atomized ability data, never from a hand-maintained combo database**:
 
@@ -23,7 +23,7 @@ atomized ability data, never from a hand-maintained combo database**:
 
 F3 makes that derivation fully algorithmic for ALL 173 champions.  What
 is left of the F2 seeds stays as **documented overrides** (verified by
-hand) — seven of them today, listed under *The hand seeds remain
+hand), seven of them today, listed under *The hand seeds remain
 documented overrides* below; every other champion's order is computed per
 request by `src/calculator/rotation_resolver.py`.
 
@@ -57,7 +57,7 @@ the surface that produced it.
 
 | declared A→B | inferred A→B | inferred B→A | active suppression B→A | outcome |
 |---|---|---|---|---|
-| – | ✓ | – | – | inferred A→B — the 170 non-declaring champions' path |
+| – | ✓ | – | – | inferred A→B, the 170 non-declaring champions' path |
 | ✓ | – | – | – | declared A→B |
 | ✓ | ✓ | – | – | declared A→B, deduped; receipt flags `confirmed_by_inference` |
 | ✓ | – | ✓ | ✓ | declared A→B; B→A dropped; receipt cites the suppression |
@@ -67,8 +67,8 @@ the surface that produced it.
 A suppression nests inside its parent declaration and can express only
 the exact reverse pair, so an over-broad suppression is unwriteable
 rather than merely discouraged.  A declaration is *active* only when
-both endpoints exist in this parse — Syndra's `E requires Q2` is inert
-below 40 splinters — and an inactive declaration takes its suppression
+both endpoints exist in this parse.  Syndra's `E requires Q2` is inert
+below 40 splinters, and an inactive declaration takes its suppression
 out of force with it.  What the merge did rides the response as
 `rotation.dependencies`.
 
@@ -82,22 +82,22 @@ the only `derived=False` rules.
 |---|--------|--------------|--------|
 | a | **Setup/consume edges** | parsed keys (`dot_duration`, `on_hit`, `applies_dot_stack`, `stacking_dot`, `post_hit_proc`, `target_debuff`, `stat_buff`, `cc_kind`, `recast_of`), module OPTION keys (`target_poisoned`, `blight_stacks`, `p_illumination_procs`, `r_hemoplague_debuff`, execute options, ...), structured wiki attribute rows ("Enhanced Damage", "Bonus Damage Per Stack", "Missing Health Damage") | strongest |
 | b | **Per-rank DPS** | `total_raw` / effective per-rank `cooldown` × AoE weight (`rank_ability_dps`) | strong, but matrix-gated |
-| c | **Cooldown gating** | the engine's shared cast timeline (`_schedule_shared_casts`) — placing the low-cooldown spam tool right after its setup starts its cadence earliest | tie-break |
+| c | **Cooldown gating** | the engine's shared cast timeline (`_schedule_shared_casts`), placing the low-cooldown spam tool right after its setup starts its cadence earliest | tie-break |
 | d | **Buffs before damage** | `stat_buff` rows with damage-amp keys (bonus AD/AP, penetration) and damage-taken amplifiers open the burst | strong |
 
-### Edge detection — typed atoms only
+### Edge detection, typed atoms only
 
 `detect_setup_consume_edges` reads THREE typed atom surfaces and nothing
 else; free-form ability prose is never scanned (the only phrases used are
-the wiki's stable structured rows — "applies a stack of X", "become
+the wiki's stable structured rows, "applies a stack of X", "become
 Chilled", "consumes the mark", "takes X% increased damage"):
 
-1. **Parsed ability package** (`ability_damages`) — `dot_duration`
+1. **Parsed ability package** (`ability_damages`), `dot_duration`
    (DoT application), `on_hit` (per-auto application), `applies_dot_stack`
    / `stacking_dot` (stack application), `post_hit_proc` (detonation),
    `target_debuff` (resistance shred / charm), `stat_buff` (damage-amp),
    `cc_kind` on `parts` (crowd control), `recast_of` (parent cast).
-2. **Module OPTION keys** (`get_champion_options_meta`) — the typed
+2. **Module OPTION keys** (`get_champion_options_meta`), the typed
    setup/consume atoms authored by the champion modules:
    `target_poisoned`, `poison_stacks`, `blight_stacks`, `rend_stacks`,
    `r_overwhelm_stacks`, `plasma_starting_stacks`,
@@ -106,10 +106,10 @@ Chilled", "consumes the mark", "takes X% increased damage"):
    `e_execute`, `r_execute_ready`, `target_missing_hp_pct`,
    `q_missing_health`, `w_target_missing_health`, `r_hemoplague_debuff`.
    Self-generated stacks/buffs (`r_stacks`, `q_gathering_storm`,
-   `e_true_grit_stacks`, ...) are excluded by a closed vocabulary — they
+   `e_true_grit_stacks`, ...) are excluded by a closed vocabulary, they
    are not target setup and create no cross-slot edge.
 3. **Structured wiki attribute rows** (`data/champions.json` leveling
-   rows) — "Enhanced Damage", "Total Enhanced Damage", "Bonus Damage Per
+   rows), "Enhanced Damage", "Total Enhanced Damage", "Bonus Damage Per
    Stack", "Detonation Magic Damage", "Missing Health Damage", "Mark
    Magic Damage", "Stored Damage".  These are the wiki's atomized
    attributes, not prose.
@@ -127,13 +127,13 @@ The edge taxonomy (closed, asserted by the tests):
 | `execute` | burst → execute | missing-health / stored-damage executes cast after the burst (Veigar R, Mel R, Pantheon Q) |
 | `shred` | shredder → burst | resistance-reduction `target_debuff` opens so the burst benefits (Sion E, Corki E, Jayce R) |
 | `buff` | buffer → burst | damage-amp `stat_buff` resolves before the abilities it amplifies (Vayne R, Twitch R, Darius E pen) |
-| `cc_setup` | CC → burst | `cc_kind` crowd control opens the burst — **retired for champion modules**, see below (Ahri charm, Pantheon stun) |
+| `cc_setup` | CC → burst | `cc_kind` crowd control opens the burst, **retired for champion modules**, see below (Ahri charm, Pantheon stun) |
 | `amp` | amplifier → burst | damage-taken amplifiers resolve first (Vladimir R Hemoplague) |
 | `recast` | parent → recast | a recast rides its parent's casts on the shared timeline (Q → Q2, Ambessa) |
 
 **`cc_setup` does not fire from a champion module's own `cc_kind`.** A
-module recording its reviewed crowd control — per slot in `MODULE_CC` or
-on the part at its construction site — states what a cast *applies*, not
+module recording its reviewed crowd control, per slot in `MODULE_CC` or
+on the part at its construction site, states what a cast *applies*, not
 when to cast it, and recording a true fact must not move published
 damage. Ordering from crowd control is a `CAST_DEPENDENCIES` declaration
 (`cc_enabler`), which is where `architecture.md` puts a module's
@@ -143,7 +143,7 @@ slots in `rotation_resolver._PRE_CAMPAIGN_CC_ORDERING`, whose orders were
 published before the rule; that table is closed and shrinks by moving the
 ordering into the kit's own declaration.
 
-Consumers that are also detonators (e.g. Varus Q — `post_hit_proc` +
+Consumers that are also detonators (e.g. Varus Q, `post_hit_proc` +
 missing-health rider) are positioned by the consume relationship; the
 execute rider does not re-order them.  Self-consumed mechanics
 (Tristana's Explosive Charge, Yasuo's Ride the Wind, Xerath's Arcane
@@ -153,40 +153,40 @@ verification swarm when a known combo exists.
 ### DPS tie-break with a stability gate
 
 Among the slots left unconstrained by the edges, the derivation ranks by
-per-rank DPS at the fight's stats — `total_raw` / effective cooldown,
+per-rank DPS at the fight's stats, `total_raw` / effective cooldown,
 AoE-weighted (`rank_ability_dps`; ability haste cancels out of the
 relative ranking).  A DPS promotion is only applied when the resulting
-order **reproduces at every point of a reference matrix** — level 1/11/18
+order **reproduces at every point of a reference matrix**, level 1/11/18
 × no-items/magic/physical/spellblade builds (the same builds the golden
 snapshot sweeps).  If the fight's DPS ranking disagrees with any matrix
 point, the free slots keep their certified/base relative order and the
 rationale says so explicitly.  This makes the derived order
-**deterministic across levels and items by construction** — the invariant
+**deterministic across levels and items by construction**, the invariant
 the tests assert.
 
 The matrix parses are cached per champion (they depend only on the
 cached champion data, never on the request's level/build).
 
-### Fallback — the honest flat-kit classification
+### Fallback, the honest flat-kit classification
 
 A champion with NO detectable edge and flat abilities keeps the certified
 module `CAST_ORDER` when one exists (Jayce, Kai'Sa, Karthus, Shen,
 Taliyah, Vi), else the engine's historical `DEFAULT_CAST_ORDER`, and the
 rationale says exactly that: "no detectable setup/consume signal in the
-atomized ability data — no DoT/poison/mark/stack consumer, no resistance
+atomized ability data, no DoT/poison/mark/stack consumer, no resistance
 shred, no damage-amplifying buff, no missing-health execute".  This is
-the data-driven, honest fallback — not a hidden combo database.
+the data-driven, honest fallback, not a hidden combo database.
 
 ### The hand seeds remain documented overrides
 
 `CAST_ORDER_OVERRIDES` (renamed from `COMBO_TABLE`) holds the surviving
-hand-verified seeds — Annie, Brand, Cassiopeia, Lux, Varus, Vladimir, Zed.
+hand-verified seeds: Annie, Brand, Cassiopeia, Lux, Varus, Vladimir, Zed.
 The resolver checks the table FIRST; the derivation never touches them.
 
 Four names left the table in Phase 5 and none of them may be named above.
 Syndra's module declares `E requires Q` and `E requires Q2`, the derivation
 reproduces the order the seed pinned, and the seed retired against that
-declaration (D-89) — which is the only ground on which a seed may be
+declaration (D-89), which is the only ground on which a seed may be
 retired.  Aatrox, Jhin and Aphelios were **redundant** rather than
 converted: the derivation already returned their seeded order with no
 declaration at all, which their deletion commits proved on both baselines.
@@ -197,9 +197,9 @@ Every surviving entry carries an `override_reason` from the closed
 `ORDER_OVERRIDE_REASONS` set (`scheduling_preference`, `dps_tiebreak`,
 `defensive_precast`, `pending_primitive`), so "why is this order still held
 by hand?" is a countable field rather than a claim in this document; the
-count, its reason histogram and its `head_only` list — the seeds whose
+count, its reason histogram and its `head_only` list, the seeds whose
 champion also declares, derived from `get_champion_cast_dependencies` rather
-than named — are published in `docs/cast-dependency-audit.json` under
+than named, are published in `docs/cast-dependency-audit.json` under
 `order_override_frontier`, and this section's name list is asserted against
 the live table by `tests/test_f2_rotation.py`.  After the retirements every
 survivor carries the same reason, so `head_only` is the only place the
@@ -215,7 +215,7 @@ detected data edge (the seed's judgment wins, documented in
   the Blight DETONATOR Q first (the auto-applied stacks ride Q; R's own
   stacks land later in the burst).
 
-### AoE — abilities that hit more than one champion
+### AoE, abilities that hit more than one champion
 
 The derived rule carries an `aoe` map (slot → conservative cap from the
 structured row fields: `targeting`/`spellEffects` "aoe"/"Area of effect"
@@ -260,17 +260,17 @@ Unchanged from F2 (`static/js/eventorder.js` is self-contained).
 
 ## Verification
 
-- `tests/test_f3_rotation_all.py` — the combo-invariant suite for ALL 173
+- `tests/test_f3_rotation_all.py`, the combo-invariant suite for ALL 173
   champions: (a) a derived order never violates a detected edge (setup
   before consume); (b) the rationale cites real atoms; (c) the order is
   deterministic and stable across the level/build matrix; (d) the order
   is a permutation of the certified/base slots and the surviving seeds
   stay as overrides.  The two documented seed exceptions are pinned.
-- `tests/test_f2_rotation.py` — unchanged (F2 contract).
-- `docs/rotation-verification-gaps.md` — champions whose derivation is
-  ambiguous (conflicting atoms, or no data signal where a known combo
-  exists), queued for the F4 verification swarm.
+- `tests/test_f2_rotation.py`, the F2 contract.
+- `docs/surface-area-backlog.md` row RV1, the champions whose derivation
+  is ambiguous: conflicting atoms, or no data signal where a known
+  combo exists.
 - Golden snapshot re-captured: derived orders change sustained-fight
   totals for the reordered champions (Sion E-first shred, Dr. Mundo
   E-first buff, Twitch R/W-first, Vayne R-first, Hwei R-first, Ahri
-  charm-first, ...) — every diff explained in the commit.
+  charm-first, ...), every diff explained in the commit.

@@ -1,11 +1,11 @@
-# Patch-Day Announcement Template (P0d)
+# Patch-day announcement template
 
 Fill in and post to the beta channel on patch day. Two posts: an early
-"re-cert in flight" (runbook Step 0) and a final "re-cert complete"
-(runbook Step 5). The early post must go out within the detection SLA
-(< 4h of patch deploy).
+"re-cert in flight" once detection lands, and a final "re-cert complete"
+once the regression re-run reports `stale: false`. Both clocks are the SLA
+table in `docs/patch-day-runbook.md`.
 
-## Early post (Step 0 — detection)
+## Early post: detection
 
 ```
 📦 Patch <16.16> detected — re-certifying
@@ -17,7 +17,7 @@ Fill in and post to the beta channel on patch day. Two posts: an early
 - Until re-cert completes, numbers for stale champions/items are NOT trusted.
 ```
 
-## Final post (Step 5 — re-cert complete)
+## Final post: re-cert complete
 
 ```
 ✅ Patch <16.16> re-cert complete

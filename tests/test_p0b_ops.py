@@ -419,32 +419,10 @@ def test_load_sanity_user_plan_interleaves_endpoints():
 # ---------------------------------------------------------------------------
 
 
-def test_backup_runbook_covers_backends_and_retention():
-    runbook = Path("docs/backup-runbook.md").read_text(encoding="utf-8")
-    for required in (
-        "pg_dump",
-        ".backup",
-        "SAVE",
-        "retention",
-        "read-only replica",
-        "restore",
-        "cron",
-    ):
-        assert required in runbook, required
-
-
-def test_monitoring_doc_covers_the_five_signals():
-    doc = Path("docs/monitoring.md").read_text(encoding="utf-8")
-    for required in (
-        "error rate",
-        "429",
-        "BIS p95",
-        "cache hit ratio",
-        "staleness",
-        "/api/health/deep",
-        "load_sanity.py",
-    ):
-        assert required in doc.lower() or required in doc, required
+# The two markdown substring tests that sat here are gone (audit 2.3):
+# they asserted words in docs/backup-runbook.md and docs/monitoring.md,
+# so a rewrite turned them red while the operations they describe were
+# untouched.  Monitoring now lives in docs/beta-operations.md.
 
 
 def test_env_example_documents_sentry():

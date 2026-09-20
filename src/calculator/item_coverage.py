@@ -277,8 +277,8 @@ NO_RUNTIME_BEHAVIOR: Mapping[str, str] = {
 
 
 # ---------------------------------------------------------------------------
-# Stats-only certification (docs/roadmap-100.md §1, the 92 SR-admitted
-# ``stats_only`` items)
+# Stats-only certification.  ``tests/test_stats_only_items.py`` computes the
+# SR-admitted ``stats_only`` set live and is the one home for its count.
 # ---------------------------------------------------------------------------
 #
 # ``stats_only`` means item_model_coverage found no OUTGOING-damage mechanic
