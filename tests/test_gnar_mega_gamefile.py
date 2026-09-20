@@ -50,9 +50,8 @@ the API/fight output in both forms.
       breakdown rows (name/casts/total_damage) and damage_events in
       both forms; engine-level breakdown raw/mitigated rows.
 - S10 Regression surface: the tests/ grep set for "gnar" is pinned
-      (test_gnar.py, test_damage.py, test_jayce_form_transition.py,
-      this file, plus conftest.py's fixture) and the mandated sanity
-      list runs green (footer).
+      (test_gnar.py, test_damage.py, this file, plus conftest.py's
+      fixture) and the mandated sanity list runs green (footer).
 
 AMBIGUITY NOTES for the coordinator:
 
@@ -954,9 +953,9 @@ class TestApiFightOutput:
 
 class TestRegressionSurface:
     def test_gnar_test_file_set_is_pinned(self) -> None:
-        # grep -il gnar tests/ (--include="*.py"): the exact 26-file set.
+        # grep -il gnar tests/ (--include="*.py"): the exact 25-file set.
         # The Gnar-CODE surfaces are test_gnar.py, test_damage.py,
-        # test_jayce_form_transition.py, test_stack_systems_1.py (Hyper),
+        # test_stack_systems_1.py (Hyper),
         # test_mechanics_packets.py (Q secondary targets) and
         # test_interaction_atoms.py (R stun atom); the rest match on
         # prose (the Gnar UI-panel rule, the Gnar-module precedent) or
@@ -996,7 +995,6 @@ class TestRegressionSurface:
             "test_gnar_mega_gamefile.py",
             "test_interaction_atoms.py",
             "test_jayce.py",
-            "test_jayce_form_transition.py",
             "test_mechanics_packets.py",
             "test_olaf_r_cleanse.py",
             "test_quinn_p_crit.py",

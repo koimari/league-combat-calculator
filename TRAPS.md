@@ -18,7 +18,9 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   `_input_fallback_sites(root=...)`). A gate that needs a clean world
   `monkeypatch`es every member of its table to a fresh object, derived from the
   table, never a hand-listed subset. Never `.clear()` a process-wide cache in a
-  test: it passes, and it costs every later test the warm cache.
+  test: it passes, it costs every later test the warm cache, and it reaches every
+  `from ... import` alias where a `setattr` on the owner would not. Borrow a cold
+  one through `tests/conftest.py`'s `cold_memo`.
 - **A test that leaves `src.app` state changed decides it for every later test on
   the same xdist worker**, as whole-file cascades in files the diff never
   touched, green serially and green on rerun. `tests/conftest.py`'s autouse
@@ -71,69 +73,34 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   writes a scratch file into a tracked directory races a directory scan under
   xdist, so `tests/test_patch_update.py::TestEscalatedCachedDataLines` builds its
   negative in `tmp_path`.
-- **A codemod over `tests/test_*.py` also eats the file you just wrote the new
-  tests into.** Exclude the destination from the glob, and stage the hand-written
+- **A codemod over `tests/test_*.py` eats the file you just wrote the new tests
+  into.** Exclude the destination from the glob, and stage the hand-written
   change first so `git checkout -- tests/` restores it.
-- **A codemod that rebuilds a docstring with `\n` joins leaves lone LFs that
-  black does not normalise.** Read with `newline=""`, write with
-  `newline="\r\n"`, and assert `b.replace(b"\r\n", b"").count(b"\n") == 0` over
-  `tests/` after black, not before. `git diff` warns "LF will be replaced by
-  CRLF" and the index content is identical either way, so the warning is the only
-  signal.
-- **`deterministic=True` is not a drop-in for a `random.random` patch that forces
-  a crit count.** `fight/autos/simulation.py`'s deterministic branch blends crit
-  and non-crit at expected value and sets `natural_crit` False, so `num_crits` is
-  always 0 and an empowered Fiendhunter auto publishes a
-  `fiendhunter_true_damage` row a forced-no-crit run has none of. Swap it in only
-  where the assertion is an inequality or a blended total.
-- **`.clear()` on a memo reaches every `from ... import` alias;
-  `monkeypatch.setattr(module, name, {})` reaches only the owner.**
-  `trigger_stream.tuple_incapable_items` and `streams_for` are imported by name
-  into `ledger_adequacy` and `support_event_view`, so the naive swap leaves those
-  readers warm and the test passes while testing nothing. `tests/conftest.py`'s
-  `cold_memo` rebinds every module in `sys.modules` that binds the same object
-  under the same name, which is why it is a fixture and not a setattr at each
-  site.
-- **Prove a fixture move changed no number with a throwaway pytest plugin.** `-p`
-  a module that wraps the callee at `pytest_configure`, before collection imports
-  the test module, and digest every result. Filter `at 0x[0-9A-Fa-f]+` out of the
-  digest first: closure reprs differ run to run and are the only false diff.
-- **`tests/test_coverage_claims.py` names real pytest node ids as fixtures.**
-  Deleting a test can break it from two files away, so run that file after any
-  test deletion.
-- **Deleting an AST span leaves the wrong number of blank lines around a
-  module-level `def` or `class`, and deleting every method of a class leaves a
-  syntactically invalid empty class.** Run `black -q` after each span deletion,
-  which preserves CRLF here, and re-parse before trusting it.
-- **Splitting a CRLF file on `b"\r\n"` strips the `\r`.** An exact-match fragment
-  must not carry a trailing `\r`, and `line == fragment` beats
-  `fragment in line` for a single-line deletion.
-- **`"import pytest" in source` is satisfied by an import nested in a function
-  body**, of which this tree has several. A codemod that adds a top-level import
-  matches `^import pytest` with `re.MULTILINE`, or it leaves a `NameError`
-  behind.
-- **`any(path.glob(pattern) for path in dirs)` is always True**, because
-  `Path.glob` returns a generator and a generator is truthy. A resource-presence
-  check needs `any(any(path.glob(pattern)) for ...)`.
-- **`pytest_collection_modifyitems` filtering with
-  `items[:] = [i for i in items if i not in deselected]` is O(n*m) over
-  `Item.__eq__`** and runs on every collection of the 16k-node suite. Filter on
-  `id(item)` against a set.
-- **A scan of which tests reach a guard must follow requested fixtures as well as
-  calls.** A call-graph-only closure over `tests/` misses a node-guarded test
-  whose guard lives in a module-scoped fixture, 14 of them here. A fixture name
-  is an edge exactly like a call is.
-- **Prove an absent-resource path on a machine that has the resource with a
-  pytest `-p` plugin module at the repo root** that stubs the probe
-  (`shutil.which`, `Path.glob`) at import time, before conftest is loaded. It
-  runs in one command and needs no rename of a tracked directory.
+- **Two codemod bites on this CRLF tree.** Rebuilding a docstring with `\n`
+  joins leaves lone LFs black does not normalise, so read with `newline=""`,
+  write with `newline="\r\n"`, and assert
+  `b.replace(b"\r\n", b"").count(b"\n") == 0` over `tests/` after black.
+  Deleting an AST span leaves the wrong blank-line count around a module-level
+  `def`, and an invalid empty class when it takes the last method, so run
+  `black -q` and re-parse after each.
+- **A pytest `-p` plugin proves what collection would otherwise hide.** It loads
+  before collection imports the test module, so it can wrap the callee, where
+  digesting every result proves a fixture move changed no number, or stub an
+  absent resource's probe on a machine that has it. Filter `at 0x[0-9A-Fa-f]+`
+  out of any digest: closure reprs differ run to run.
+- **`tests/test_coverage_claims.py` names real pytest node ids as fixtures**, so
+  deleting a test can break it from two files away. Run that file after any test
+  deletion.
+- **A guard reached through a requested fixture is reached.**
+  `scripts/resource_markers.py` follows both edges; a call-graph-only scan left
+  14 node-guarded tests unmarked. Its other silent pass is
+  `any(path.glob(pattern) for path in dirs)`, always True because a generator is
+  truthy, where `any(any(path.glob(pattern)) for ...)` is meant.
 - **A `_today` or `_is_still_tracked` test name is not evidence that the body
-  pins a defect.** Four of Olaf's and Milio's assert the completed behaviour
-  under a name that says the opposite. Read the body, then rename or delete.
-- **A docstring claiming singularity is not a gate.**
-  `support_effect_fixtures.declared_packet_keywords` called itself "the one AST
-  walk over those call sites" while the tree held three. The walk lives in
-  `scripts/packet_declarations.py` and every reader imports it.
+  pins a defect, and a docstring claiming singularity is not a gate.** Four of
+  Olaf's and Milio's assert the completed behaviour, and one fixture helper
+  called itself the tree's only AST walk over its call sites while the tree held
+  three. Read the body, then rename or delete.
 
 ## Goldens and receipts
 
@@ -186,17 +153,17 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 - **Deleting the last reader of a tracked `docs/receipts/*.json` turns
   `tests/test_tracked_data_lint.py` red** with `orphan: <path>`. Check what names
   a receipt before deleting its test.
-- **`docs/receipts/campaign-stages.json` outlives counter 4's deferrals.**
-  `creditor_stage` still publishes `retires_at` on every unserved-lane row, so
-  deleting the table because one of its two readers left makes a receipt field
-  unreadable.
+- **`docs/receipts/campaign-stages.json` outlives counter 4's deferrals**,
+  because `creditor_stage` still publishes `retires_at` on every unserved-lane
+  row. Deleting a table because one of its two readers left is how a receipt
+  field goes unreadable.
 
 ## Engine and pricing
 
 - **`return factor * sum_modifiers(...)` reads `factor` before the call**, so a
   `nonlocal` the callee's closure sets is invisible. Akshan E's attack-speed
-  factor priced 1.0 that way, and a fix written in the same shape was green on
-  its unit test and moved no number. Bind the call to a name, then multiply.
+  factor priced 1.0 that way, and a fix in the same shape was green on its unit
+  test and moved no number. Bind the call to a name, then multiply.
 - **A charge ability's `cooldown` is its cached `rechargeRate`, never the cached
   `cooldown`.** The docstring of `src/calculator/champions/charge_cadence.py` is
   the one home for what each timer means, which slots must carry a reviewed
@@ -211,7 +178,12 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   `fight/autos/simulation.py` rolls `random.random() < crit_chance` per swing, so
   two identical `calculate_payload` requests on a crit build return different
   auto totals (Kai'Sa: 623, 739, 854). Every probe, test and golden capture on a
-  crit-capable build passes `deterministic=True`.
+  crit-capable build passes `deterministic=True`. It is not a drop-in for a
+  `random.random` patch that forces a crit COUNT: the deterministic branch blends
+  crit and non-crit at expected value and sets `natural_crit` False, so
+  `num_crits` is always 0 and an empowered Fiendhunter auto publishes a
+  `fiendhunter_true_damage` row a forced-no-crit run has none of. Swap it in only
+  under an inequality or a blended total.
 - **The walk mutates the `actions` list its caller passes.** `run_survival_walk`
   re-reads `len(actions)` every iteration because three producers insert into it
   mid-walk: both ledgers' `schedule_heal` and the kernel's
@@ -242,18 +214,17 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 
 - **`sed -i` in Git-Bash strips CRLF.** Use byte-preserving scripts for bulk
   edits on this tree.
-- **`Path.write_text` emits CRLF on Windows**, so a file list written that way
-  and fed through `tr '\n' ' ' | xargs python -m pytest` hands pytest
-  `tests/x.py\r`, and every path is "file or directory not found" with no hint
-  why. Pipe through `tr -d '\r'` first.
-- **The Bash tool mangles a backslash inside a quoted heredoc.** `"\\\n"`
-  written into a `<<'PY'` heredoc reaches Python as a backslash and the letter n,
-  so an exact-string match silently finds nothing. Build such strings from
-  `chr(92)` and `chr(10)`, and assert the match count before writing.
+- **A `Path.write_text` file list reaches `xargs pytest` as `tests/x.py\r`** and
+  every path is "file or directory not found" with no hint why. Pipe through
+  `tr -d '\r'`.
+- **The Bash tool mangles a backslash inside a quoted heredoc.** `"\\\n"` in a
+  `<<'PY'` heredoc reaches Python as a backslash and the letter n, so an
+  exact-string match silently finds nothing. Build such strings from `chr(92)`
+  and `chr(10)`, and assert the match count before writing.
 - **`ruff --select I001` is not at zero on this tree**: 26 unsorted import blocks
-  live in `src/`, so the plugin's `lint_gate.py --tree .` reports about 145
-  findings across 90 files inside a worktree, almost all in files a branch never
-  touched. Judge a branch by the hits in the files it changed.
+  live in `src/`, so `lint_gate.py --tree .` reports about 145 findings across 90
+  files a branch never touched. Judge a branch by the hits in the files it
+  changed.
 - **A Windows filename cannot hold a colon.** `data_updater.py` monkey-patches
   `lolstaticdata`'s `download_soup` to strip colons from cache filenames.
 - **The vendored wiki parser crashes on `nvalues=None`** for Heimerdinger, Sona,

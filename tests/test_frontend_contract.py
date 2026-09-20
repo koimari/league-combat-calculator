@@ -453,6 +453,7 @@ def test_ziggs_variant_payload_is_accepted_by_the_calculate_route(variants, tmp_
     assert response.status_code == 200, response.get_json()
 
 
+@pytest.mark.needs_node
 @pytest.mark.parametrize(
     ("champion", "expected"),
     [
