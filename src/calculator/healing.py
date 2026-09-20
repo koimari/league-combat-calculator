@@ -1,10 +1,11 @@
 """Shared healing entrypoint for the participant and fight pipelines.
 
-Champion modules own their typed declarations. This module owns generic
-ordering and receipt shape: it walks the champion registry, demands a
-resolver from every module that declares one, and sorts what they return.
-The shared readers and the payment machinery a resolver uses live in
-``healing_helpers``; no healing formula lives here.
+Champion modules own their typed declarations. This module walks the
+champion registry and demands a resolver from every module that declares
+one; the receipt order belongs to the declaration, which
+``healing_contract.self_healing_rule`` applies. The shared readers and the
+payment machinery a resolver uses live in ``healing_helpers``; no healing
+formula lives here.
 """
 
 from __future__ import annotations
@@ -12,11 +13,7 @@ from __future__ import annotations
 from typing import Any
 
 from .champions import _CHAMPION_MODULES
-from .champions.healing_contract import (
-    ChampionHealingRule,
-    SelfHealCtx,
-    heal_receipt_order,
-)
+from .champions.healing_contract import ChampionHealingRule, SelfHealCtx
 from .trigger_stream import ChampionSlotOwner
 
 # Grey-health champions whose self-heals are sourced from damage TAKEN
@@ -91,7 +88,7 @@ def derive_self_healing(  # pylint: disable=too-many-arguments,too-many-position
     declaration = _HEALING_RULES.get(champion_name)
     if declaration is None:
         return []
-    events = declaration.derive(
+    return declaration.derive(
         SelfHealCtx(
             champion_data,
             champion_stats,
@@ -101,4 +98,3 @@ def derive_self_healing(  # pylint: disable=too-many-arguments,too-many-position
             fight_duration_seconds,
         )
     )
-    return sorted(events, key=heal_receipt_order)

@@ -238,7 +238,7 @@ class TestSelfHealingRuleDeclaration:
         assert rule.resolver.__module__ == derive_self_healing.__module__
         assert rule.resolver.__name__ == "derive_self_healing"
 
-    def test_one_key_orders_both_the_declaration_and_the_entrypoint(self) -> None:
+    def test_one_key_orders_every_declaration(self) -> None:
         event = {"time": 1.5, "amount": 1.0, "source": "Q"}
         assert heal_receipt_order(event) == (1.5, "Q")
 
