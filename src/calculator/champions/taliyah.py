@@ -39,20 +39,17 @@ from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import (
     ability_name,
+    extract_cast_time,
     extract_cooldown,
     extract_named,
     extract_resource_cost,
 )
 from .source_receipts import load_champion_sources
 
-_E_CAST_START = 0.0
-_W_CAST_START = 0.25
-_Q_CAST_START = 0.5
 _W_ERUPTION_DELAY = 0.792
 _TALIYAH_E_SPELL = spell_object("Taliyah", "TaliyahE")
 _E_ROW_INTERVAL = data_value(_TALIYAH_E_SPELL, "DelayBetweenRows")
 _E_DETONATION_MULTIPLIERS = (1.0, 0.75, 0.5, 0.25)
-_Q_CAST_TIME = 0.25
 _Q_NORMAL_LAUNCH_OFFSETS = (0.25, 0.75, 1.25, 1.5, 1.75)
 _Q_NORMAL_INITIAL_SPEED = 3600.0
 _Q_NORMAL_DECELERATION = 5000.0
@@ -63,6 +60,11 @@ _TALIYAH_Q_SPELL = spell_object("Taliyah", "TaliyahQ")
 _Q_WORKED_COST = data_value(_TALIYAH_Q_SPELL, "BigRockManaCost")
 _Q_WORKED_COOLDOWN_MULTIPLIER = data_value(_TALIYAH_Q_SPELL, "WorkedGroundCDR")
 _Q_WORKED_MINIMUM_COOLDOWN = data_value(_TALIYAH_Q_SPELL, "MinimumWorkedGroundCD")
+
+
+def _cast_start(ctx: SlotCtx, *before: str) -> float:
+    """Where a slot of the certified E -> W -> Q order is cast: the casts before it."""
+    return sum((extract_cast_time(ctx.ability(slot)) for slot in before), 0.0)
 
 
 def _normal_projectile_time(distance: float) -> float:
@@ -113,19 +115,19 @@ def _volley_parts(
 
 
 def _timed_cast_starts(
-    duration: float, fresh_cd: float, worked_cd: float
+    duration: float, fresh_cd: float, worked_cd: float, *, cast_time: float
 ) -> list[float]:
     """Q cast start times over the fight window, from the terrain state.
 
     The fresh cast at t=0 pays the full cooldown, since it CREATES Worked Ground
     rather than being cast from it; later casts are empowered and pay the halved
-    one.  Each occupies its 0.25s cast time before its cooldown runs.
+    one.  Each occupies its cached cast time before its cooldown runs.
     """
     starts = [0.0]
-    start = _Q_CAST_TIME + fresh_cd
+    start = cast_time + fresh_cd
     while start <= duration:
         starts.append(start)
-        start += _Q_CAST_TIME + worked_cd
+        start += cast_time + worked_cd
     return starts
 
 
@@ -142,6 +144,7 @@ def _timed_threaded_volley(
     """
     haste = ctx.stat("ability_haste") + ctx.stat("basic_ability_haste")
     base_cd = extract_cooldown(ability, rank)
+    cast_time = extract_cast_time(ability)
     starts = _timed_cast_starts(
         duration,
         effective_cooldown(base_cd, haste),
@@ -152,6 +155,7 @@ def _timed_threaded_volley(
             ),
             haste,
         ),
+        cast_time=cast_time,
     )
     boulder, primary = _boulder_damage(ctx, ability, rank)
     boulder_travel = _worked_travel_time(distance)
@@ -162,7 +166,7 @@ def _timed_threaded_volley(
         DamagePart(
             "magic",
             boulder,
-            time_offset=start + _Q_CAST_TIME + boulder_travel,
+            time_offset=start + cast_time + boulder_travel,
             cc_kind="slow",
         )
         for start in starts[1:]
@@ -198,6 +202,7 @@ def _threaded_volley(
     if ground not in {"normal", "worked"}:
         raise ValueError("Taliyah q_ground must be normal or worked")
     distance = clamp(float(ctx.option("q_target_distance")), 0.0, _Q_MAX_RANGE)
+    q_start = _cast_start(ctx, "E", "W")
 
     # A timed fight window derives the terrain sequence itself; the
     # q_ground select prices the two states in one-rotation mode only.
@@ -209,7 +214,7 @@ def _threaded_volley(
 
     if ground == "worked":
         raw, primary = _boulder_damage(ctx, ability, rank)
-        hit_time = _Q_CAST_START + _Q_CAST_TIME + _worked_travel_time(distance)
+        hit_time = q_start + extract_cast_time(ability) + _worked_travel_time(distance)
         entry = damage_entry(
             ability_name(ability),
             rank,
@@ -231,7 +236,7 @@ def _threaded_volley(
         )
         return entry
 
-    parts = _volley_parts(ctx, ability, rank, distance, start=_Q_CAST_START)
+    parts = _volley_parts(ctx, ability, rank, distance, start=q_start)
     total = parts[0].amount + 4.0 * parts[1].amount
     entry = damage_entry(
         ability_name(ability),
@@ -262,12 +267,12 @@ def _unraveled_earth(
     detonation = extract_named(
         ability, "Detonation Magic Damage", rank, ctx.stats, ctx.target
     )
-    first_detonation = _W_CAST_START + _W_ERUPTION_DELAY
+    first_detonation = _cast_start(ctx, "E") + _W_ERUPTION_DELAY
     # E's two hits control differently, so each part carries its own answer:
     # the eruption leaves a field that "slow[s] enemies within the area by
     # 20%", while a stone the target is knocked over detonates "taking
     # magic damage and becoming stunned for 0.75 seconds".
-    parts = [DamagePart("magic", initial, time_offset=_E_CAST_START, cc_kind="slow")]
+    parts = [DamagePart("magic", initial, time_offset=_cast_start(ctx), cc_kind="slow")]
     parts.extend(
         DamagePart(
             "magic",
