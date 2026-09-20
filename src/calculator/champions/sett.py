@@ -23,6 +23,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
+from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
@@ -272,7 +273,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "Q": _knuckle_down,
         "W": _haymaker,
     },
-    slot_order=("P", "Q", "W", "E", "R"),
+    slot_order=REQUIRED_CHAMPION_SLOTS,
     cc_kinds=MODULE_CC,
 )
 

@@ -36,6 +36,7 @@ from __future__ import annotations
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
+from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS
 from .engine import ONHIT, SlotCtx
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import at_level, no_damage
@@ -227,7 +228,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         ),
         "R": _inferno_trigger,
     },
-    slot_order=("P", "Q", "W", "E", "R"),
+    slot_order=REQUIRED_CHAMPION_SLOTS,
     cc_kinds=MODULE_CC,
 )
 

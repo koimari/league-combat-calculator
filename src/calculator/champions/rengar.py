@@ -48,6 +48,7 @@ from ..binary_roots import data_value, spell_object
 from ..stack_rules import StackRule
 from ..state_timeline import SourceReceipt
 from ..timed_stacks import TimedStackState
+from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS
 from .engine import DEBUFF, SlotCtx
 from .inputs import bool_option, int_option
 from .module_helpers import no_damage, ranked_slot
@@ -366,7 +367,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "E": _bola_strike,
         "R": _thrill_of_the_hunt,
     },
-    slot_order=("P", "Q", "W", "E", "R"),
+    slot_order=REQUIRED_CHAMPION_SLOTS,
     cc_kinds=MODULE_CC,
 )
 

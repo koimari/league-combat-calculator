@@ -35,7 +35,7 @@ from typing import Any
 
 from ..ability_prose import CachedSentence, extract_description_duration
 from ..ability_spec import DamagePart
-from .contract_vocabulary import coverage
+from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS, coverage
 from .engine import SlotCtx
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import no_damage, ranked_slot
@@ -253,7 +253,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "W": _wind_wall,
         "E": _sweeping_blade,
     },
-    slot_order=("P", "Q", "W", "E", "R"),
+    slot_order=REQUIRED_CHAMPION_SLOTS,
     cc_kinds=MODULE_CC,
 )
 

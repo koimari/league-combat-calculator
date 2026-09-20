@@ -53,7 +53,7 @@ from ..binary_roots import (
 )
 from ..stat_formulas import growth_multiplier
 from .pet_window import derived_attack_count
-from .contract_vocabulary import coverage
+from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS, coverage
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import champion_stat, int_option
@@ -259,7 +259,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
         "P": _mist_walkers,
         "R": _maiden,
     },
-    slot_order=("P", "Q", "W", "E", "R"),
+    slot_order=REQUIRED_CHAMPION_SLOTS,
     cc_kinds=MODULE_CC,
 )
 

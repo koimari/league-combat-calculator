@@ -28,6 +28,7 @@ from ..healing_helpers import (
     leveling_value,
     trigger_fields,
 )
+from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS
 from .engine import SlotCtx
 from .healing_contract import self_healing_rule
 from .inputs import bool_option, champion_stat
@@ -144,7 +145,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     slot_wrappers={
         "W": partial(with_control, duration_attr="Root Duration"),
     },
-    slot_order=("P", "Q", "W", "E", "R"),
+    slot_order=REQUIRED_CHAMPION_SLOTS,
     cc_kinds=MODULE_CC,
 )
 

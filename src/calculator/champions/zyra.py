@@ -44,7 +44,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import calculation_interpolation, data_value, spell_object
 from .pet_window import derived_attack_count
 from .charge_cadence import ChargeRule
-from .contract_vocabulary import coverage
+from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS, coverage
 from .engine import SlotCtx
 from .inputs import int_option
 from .module_helpers import no_damage
@@ -253,7 +253,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
             duration_attr="Root Duration",
         ),
     },
-    slot_order=("P", "Q", "W", "E", "R"),
+    slot_order=REQUIRED_CHAMPION_SLOTS,
     cc_kinds=MODULE_CC,
     charge_rules=CHARGE_RULES,
 )
