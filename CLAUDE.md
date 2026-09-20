@@ -66,15 +66,16 @@ baseline with every diff explained in the commit.
 `[tool.ruff.lint] ignore` and `per-file-ignores`, `[tool.simply-elegant]`
 `comment-rules-off` and `comment-per-file-off`, and `[tool.sightline]` `excludes`
 and `rules-off`, each with its reason beside it. Run the tree gate with
-`python <plugin>/hooks/lint_gate.py --tree . --statistics`. The ruff suite is not
-at zero: 139 findings on this tree, almost all in `tests/`, and the count may only
-fall (a new finding in a file you touched is a regression). `.sightline-baseline`
-holds only what is deferred with a reason, today 59 entries under three rules:
-#27 (53), #14 (3) and #11 (3). A finding under any other rule is a regression,
-not a candidate for the baseline; `sightline baseline .` regenerates the file and
-merges as a union, and a sightline 0.2 binary cannot read its format. The
-per-edit gate `sightline gate . --files` skips the oracle and repo-scope rules,
-so run `--full` before claiming zero.
+`python <plugin>/hooks/lint_gate.py --tree . --statistics`. Neither suite is at
+zero, and both counts may only fall: a new finding in a file you touched is a
+regression. Ruff reports 128 findings, almost all in `tests/`, and
+`sightline gate . --full` reports 22 blocking above `.sightline-baseline`, under
+#27, #56, #37, #32, #14, #24 and #11. The baseline holds only what is deferred
+with a reason, today 59 entries under #27 (53), #14 (3) and #11 (3);
+`sightline baseline .` regenerates it and merges as a union, and a sightline 0.2
+binary cannot read its format. The per-edit gate `sightline gate . --files`
+skips the oracle and repo-scope rules, so judge a branch by the hits in the files
+it changed and run `--full` before claiming a count.
 
 **Derived receipts are regenerated, never hand-merged.**
 `docs/cast-dependency-audit.json` (`scripts/cast_dependency_audit.py --output`),
