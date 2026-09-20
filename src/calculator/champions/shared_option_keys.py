@@ -48,3 +48,13 @@ TARGET_MISSING_HP_OPTION = "target_missing_hp_pct"
 
 #: Yasuo's and Yone's shared Q stack count (`yasuo_yone`).
 GATHERING_STORM_OPTION = "q_gathering_storm"
+
+#: Seraphine's W caster already holds a shield (`support_effects`).
+SERAPHINE_ALREADY_SHIELDED = "w_already_shielded"
+
+#: Tahm Kench presses Thick Skin (`participant_timeline`).
+TAHM_KENCH_GREY_SHIELD = "e_convert_grey_shield"
+
+#: Who Lulu's W and R land on (`pipeline` pins both for the roster).
+LULU_WHIMSY_TARGET = "lulu_whimsy_target"
+LULU_WILD_GROWTH_TARGET = "lulu_wild_growth_target"

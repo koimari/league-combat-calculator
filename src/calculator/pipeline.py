@@ -22,6 +22,10 @@ from .champions import (
     get_champion_ultimate_recasts,
     parse_champion_abilities,
 )
+from .champions.shared_option_keys import (
+    LULU_WHIMSY_TARGET,
+    LULU_WILD_GROWTH_TARGET,
+)
 from .combat_events import combat_event_contract, event_receipt
 from .damage import calculate_fight_damage
 from .data_registry import data_version
@@ -172,8 +176,8 @@ def run_fight(
                 params,
                 champion_options={
                     **(params.champion_options or {}),
-                    "lulu_whimsy_target": "enemy",
-                    "lulu_wild_growth_target": "ally",
+                    LULU_WHIMSY_TARGET: "enemy",
+                    LULU_WILD_GROWTH_TARGET: "ally",
                 },
             )
     if not validated:

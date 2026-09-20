@@ -32,6 +32,7 @@ from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, int_option
 from .module_helpers import innate_on_hit, ranked_slot
+from .shared_option_keys import TAHM_KENCH_GREY_SHIELD
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
@@ -146,7 +147,7 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "Q"},
     ),
     bool_option(
-        "e_convert_grey_shield",
+        TAHM_KENCH_GREY_SHIELD,
         False,
         label="Thick Skin: press the active to convert grey health",
         # Defensive self-state: it converts a pool the incoming ledger

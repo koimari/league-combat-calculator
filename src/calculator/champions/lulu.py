@@ -38,6 +38,7 @@ from ..control_spec import ControlScope
 from .engine import BUFF, ONHIT, SlotCtx
 from .module_helpers import ability_slot, buff_window_share, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
+from .shared_option_keys import LULU_WHIMSY_TARGET, LULU_WILD_GROWTH_TARGET
 from .slot_cc import CC_PER_PART
 from .slot_control import with_control_event
 from .slot_entries import STEROID_ZERO, damage_entry, on_hit_entry
@@ -95,7 +96,7 @@ def _whimsy(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] 
     enemy nobody cast it on.
     """
 
-    target = str(ctx.option("lulu_whimsy_target"))
+    target = str(ctx.option(LULU_WHIMSY_TARGET))
     granted = extract_value(ability, "Bonus Attack Speed", rank)
     duration = extract_value(ability, "Effect Duration", rank)
     share = buff_window_share(ctx, duration) if target == _SELF_CAST else 0.0
@@ -144,7 +145,7 @@ def _wild_growth(
 ) -> dict[str, Any] | None:
     """R: the self cast's 275-575 (+55% AP) bonus health for 7 seconds."""
 
-    target = str(ctx.option("lulu_wild_growth_target"))
+    target = str(ctx.option(LULU_WILD_GROWTH_TARGET))
     granted = extract_named(ability, "Bonus Health", rank, ctx.stats, ctx.target)
     on_self = target == _SELF_CAST
     bonus_health = granted if on_self else 0.0
@@ -256,7 +257,7 @@ OPTIONS.extend(
             "rotation": {"role": "self_state", "slot": "P"},
         },
         {
-            "key": "lulu_whimsy_target",
+            "key": LULU_WHIMSY_TARGET,
             "type": "select",
             "default": _SELF_CAST,
             "label": "Whimsy (W) cast on",
@@ -275,7 +276,7 @@ OPTIONS.extend(
             ],
         },
         {
-            "key": "lulu_wild_growth_target",
+            "key": LULU_WILD_GROWTH_TARGET,
             "type": "select",
             "default": _SELF_CAST,
             "label": "Wild Growth (R) cast on",

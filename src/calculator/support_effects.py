@@ -6,6 +6,7 @@ from collections.abc import Iterable, Mapping
 from typing import Any
 
 from .capabilities import SUPPORT_TARGET_RESOLUTION_SCOPES
+from .champions.shared_option_keys import SERAPHINE_ALREADY_SHIELDED
 from .champions.slot_extract import extract_named
 from .support_bailout import _bailout_denial_rows, _bailout_ramp_metadata
 from .support_champion_packets import (
@@ -244,7 +245,7 @@ def derive_ally_effects(
                     duration = float(duration_metadata["duration"])
                     heal_time = cast_time + duration
                     shield_gate_assumed = (
-                        bool(options.get("w_already_shielded", False))
+                        bool(options.get(SERAPHINE_ALREADY_SHIELDED, False))
                         and cast_index == 0
                     )
                     requires_existing_shield = not shield_gate_assumed

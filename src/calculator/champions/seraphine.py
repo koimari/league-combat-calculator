@@ -87,6 +87,7 @@ from .engine import ONHIT, SlotCtx
 from .inputs import bool_option, int_option
 from .module_helpers import ability_slot, buff_window_share, ranked_slot
 from .packet_module import build_packet_module
+from .shared_option_keys import SERAPHINE_ALREADY_SHIELDED
 from .slot_control import with_control
 from .slot_entries import damage_entry, on_hit_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
@@ -284,7 +285,7 @@ OPTIONS = [
         rotation={"role": "self_state", "slot": "P"},
     ),
     bool_option(
-        "w_already_shielded",
+        SERAPHINE_ALREADY_SHIELDED,
         False,
         label="W caster already has a shield for the first pulse",
         rotation={"role": "self_state", "slot": "W"},

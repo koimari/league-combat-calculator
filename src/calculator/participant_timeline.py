@@ -35,6 +35,7 @@ from .cast_event_row import (
 from .champion_loadout import ResolvedLoadout
 from .champions.inputs import declared_option_defaults
 from .champions.lulu_events import derive_lulu_support_events
+from .champions.shared_option_keys import TAHM_KENCH_GREY_SHIELD
 from .champions.skill_orders import get_ability_rank
 from .champions.slot_extract import extract_cooldown, extract_named
 from .combat_events import certified_recipients
@@ -2642,7 +2643,6 @@ _TAHM_E_STORE_MULTI_RANK = (0.42, 0.44, 0.46, 0.48, 0.50)
 _TAHM_E_STORE_CAP_RATIO = 3.0
 _TAHM_E_OUT_OF_COMBAT_SECONDS = 4.0
 _TAHM_E_SHIELD_DURATION_SECONDS = 2.5
-_TAHM_E_ACTIVE_OPTION = "e_convert_grey_shield"
 # Mordekaiser W (Indestructible) — data/champions.json W prose:
 #   "stores 45% of the post-mitigation damage he deals and 7.5% of the
 #   pre-mitigation damage he takes ... up to 30% of his maximum health."
@@ -2823,7 +2823,7 @@ def _grey_health_receipts(
         # shield, on E's own haste-scaled cooldown.
         residual, last_press = pool, None
         cooldown = _grey_cooldown(ability, e_rank, stats)
-        if _declared_option(name, champion_options, _TAHM_E_ACTIVE_OPTION):
+        if _declared_option(name, champion_options, TAHM_KENCH_GREY_SHIELD):
             banked, press_time = 0.0, None
             for event_time, post, _pre in sorted(incoming):
                 if press_time is not None and event_time >= press_time:
