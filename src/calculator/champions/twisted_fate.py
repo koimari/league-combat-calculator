@@ -28,12 +28,12 @@ hardcoded.
 import re
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import no_damage_parser, ranked_slot, steroid_entry
-from .shared_mechanics import prose_numbers
 from .slot_cc import CC_PER_PART
 from .slot_control import with_control
 from .slot_entries import damage_entry
@@ -50,7 +50,10 @@ from .source_receipts import load_champion_sources
 # Stacked Deck's cap lives only in the cached E prose ("stacking up to 3
 # times"); the attack after the cap consumes the stacks, so the on-hit's
 # period is the cap plus one.
-_E_STACK_CAP_PROSE = re.compile(r"stacking up to (\d+) times", re.IGNORECASE)
+_E_STACK_CAP = CachedSentence(
+    re.compile(r"stacking up to (?P<value>\d+) times", re.IGNORECASE),
+    missing="Twisted Fate E: the Stacked Deck stack cap is missing",
+)
 
 
 @ranked_slot
@@ -58,10 +61,7 @@ def _stacked_deck(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
     """E: the permanent attack speed, and the every-4th-attack on-hit."""
-    cap = prose_numbers(ctx, "E", _E_STACK_CAP_PROSE)
-    if cap is None or cap[0] is None:
-        raise ValueError("Twisted Fate E: the Stacked Deck stack cap is missing")
-    period = int(cap[0]) + 1
+    period = int(_E_STACK_CAP.value(ability)) + 1
     bonus_as = extract_value(ability, "Bonus Attack Speed", rank)
     per_proc = extract_named(ability, "Bonus Magic Damage", rank, ctx.stats, ctx.target)
     return steroid_entry(

@@ -28,6 +28,7 @@ import math
 import re
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..stat_formulas import effective_cooldown
@@ -36,7 +37,6 @@ from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import float_option, int_option
 from .module_helpers import clamp, ranked_slot
-from .shared_mechanics import prose_numbers
 from .slot_control import extract_recharge
 from .slot_entries import attach_self_shield, damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
@@ -92,10 +92,16 @@ def _is_primary_target(ctx: SlotCtx) -> bool:
 
 # Blast Shield's size and duration are cached prose, not a leveling row,
 # so they are read out of the sentence that states them.
-_P_SHIELD_PROSE = re.compile(
-    r"shield equal to\s+(\d+(?:\.\d+)?)%\s+of her maximum health for\s+"
-    r"(\d+(?:\.\d+)?)\s+seconds",
-    re.IGNORECASE,
+_P_SHIELD = CachedSentence(
+    re.compile(
+        r"shield equal to\s+(?P<percent>\d+(?:\.\d+)?)%\s+of her maximum health "
+        r"for\s+(?P<seconds>\d+(?:\.\d+)?)\s+seconds",
+        re.IGNORECASE,
+    ),
+    missing=(
+        "Vi P (Blast Shield): the cached innate no longer states the shield "
+        "('shield equal to N% of her maximum health for N seconds')"
+    ),
 )
 
 # The damage slots that can carry P's payload, in the order the certified
@@ -121,10 +127,11 @@ def _carry_blast_shield(ctx: SlotCtx, entry: dict[str, Any]) -> dict[str, Any]:
     ):
         return entry
     ability = ctx.ability("P")
-    shield = prose_numbers(ctx, "P", _P_SHIELD_PROSE)
-    if ability is None or shield is None:
+    if ability is None:
         return entry
-    percent, duration = shield
+    shield = _P_SHIELD.match(ability)
+    percent = float(shield.group("percent"))
+    duration = float(shield.group("seconds"))
     amount = percent / 100.0 * ctx.stat("health")
     if amount <= 0.0:
         return entry

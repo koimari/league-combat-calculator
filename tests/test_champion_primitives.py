@@ -6,8 +6,6 @@ the shared mechanic shapes (champions.shared_mechanics) and the composition
 helpers (champions.module_helpers).
 """
 
-import re
-
 import pytest
 
 from src.calculator.ability_spec import DamageClass
@@ -26,7 +24,6 @@ from src.calculator.champions.shared_mechanics import (
     multi_pass_damage,
     per_level_on_hit,
     per_level_row,
-    prose_numbers,
     ranked_packet_slot,
     reduced_secondary_hits,
     ticked_channel,
@@ -227,25 +224,6 @@ class TestCappedOption:
         """The helper closes the ``.get(key, literal)`` its call sites had."""
         with pytest.raises(ChampionInputError, match="which its OPTIONS"):
             capped_option(_ctx(), "never_declared", 5)
-
-
-class TestProseNumbers:
-    """Numbers a kit states only in a sentence."""
-
-    _PATTERN = re.compile(r"(\d+(?:\.\d+)?)% of maximum health for (\d+(?:\.\d+)?)s")
-
-    def test_it_returns_every_captured_group_as_a_float(self) -> None:
-        ctx = _ctx(
-            abilities={
-                "P": [_json(description="shields for 12% of maximum health for 2s")]
-            }
-        )
-        assert prose_numbers(ctx, "P", self._PATTERN) == (12.0, 2.0)
-
-    def test_an_absent_entry_and_a_missed_match_answer_alike(self) -> None:
-        assert prose_numbers(_ctx(abilities={}), "P", self._PATTERN) is None
-        ctx = _ctx(abilities={"P": [_json(description="no numbers here")]})
-        assert prose_numbers(ctx, "P", self._PATTERN) is None
 
 
 class TestPerLevelRow:

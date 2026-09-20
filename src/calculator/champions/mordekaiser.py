@@ -31,6 +31,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_atoms import ability_payload
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import (
     calculation_coefficient,
@@ -43,7 +44,6 @@ from .engine import ONHIT, SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .module_helpers import ability_cast_times
 from .packet_module import build_packet_module
-from .shared_mechanics import prose_numbers
 from .slot_entries import damage_entry, on_hit_entry
 from .slot_extract import ability_name
 from .slotlib import simple_damage
@@ -80,9 +80,15 @@ _E_CLAW_SECONDS = data_value(
 # R carries no leveling row at all — the drain is one sentence of the
 # cached R prose, so the percentage is read from there rather than pinned
 # as a module constant.
-_R_DRAIN_PROSE = re.compile(
-    r"healing himself for\s+(\d+(?:\.\d+)?)%\s+of their maximum health",
-    re.IGNORECASE,
+_R_DRAIN = CachedSentence(
+    re.compile(
+        r"healing himself for\s+(?P<value>\d+(?:\.\d+)?)%\s+of their maximum health",
+        re.IGNORECASE,
+    ),
+    missing=(
+        "Mordekaiser R (Realm of Death): the cached active no longer states "
+        "the soul drain ('healing himself for N% of their maximum health')"
+    ),
 )
 
 
@@ -184,10 +190,7 @@ def _realm_of_death(compiled):
         # roster must not heal Mordekaiser once per enemy.
         if int(ctx.target_stat("roster_target_index")) != 0:
             return entry
-        drain = prose_numbers(ctx, "R", _R_DRAIN_PROSE)
-        if drain is None:
-            return entry
-        percent = drain[0]
+        percent = _R_DRAIN.value(ctx.ability("R") or {})
         amount = percent / 100.0 * float(ctx.target_stat("target_max_health"))
         if amount <= 0.0:
             return entry

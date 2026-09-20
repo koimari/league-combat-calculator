@@ -13,7 +13,6 @@ champion module: nothing here imports a champion.
 
 from __future__ import annotations
 
-import re
 from collections.abc import Callable, Sequence
 from typing import Any
 
@@ -56,25 +55,6 @@ def capped_option(ctx: SlotCtx, key: str, cap: int) -> int:
     """One declared count option, clamped to its cap."""
 
     return min(max(int(ctx.option(key)), 0), cap)
-
-
-def prose_numbers(
-    ctx: SlotCtx, slot: str, pattern: re.Pattern[str]
-) -> tuple[float | None, ...] | None:
-    """Every number *pattern* captures in a slot's cached effect prose, or ``None``.
-
-    ``None`` is the one answer for both ways the read fails: no such entry
-    cached, and no match.
-    """
-
-    ability = ctx.ability(slot)
-    if ability is None:
-        return None
-    prose = " ".join(effect["description"] for effect in ability["effects"])
-    match = pattern.search(prose)
-    if match is None:
-        return None
-    return tuple(None if group is None else float(group) for group in match.groups())
 
 
 def per_level_row(
