@@ -1,36 +1,18 @@
-"""Vex — CP10.9 full-entry-reviewed packet module, plus the E8c W shield,
-the P1 Gloom detonation, and the ER2 R split.
+"""Vex: full-entry-reviewed packet module.
 
-ER2 addition over the reviewed packet:
-- R (Shadow Surge) is two hits, not one: the Shadow's own "Magic Damage"
-  and the recast dash's, which the cached "Total Magic Damage" row sums
-  exactly at every rank.  ``_shadow_surge`` reads both, checks the sum
-  against that row, and lands them at their own instants.
-
-E8c addition over the reviewed packet:
-- W (Personal Space) deals its magic damage AND shields Vex herself for
-  2.5 seconds.  The shield rides the W damage event as a
-  ``self_shield_events`` payload (the Eclipse item shape): the shared
-  ledger grants a timed self-shield at the event timestamp, so the W
-  cast both deals damage and absorbs the sourced amount.  The generic
-  ally-support scanner is told to defer this slot (see
-  ``support_effects._MODULE_AUTHORED_SHIELD_SLOTS``) — its description
-  marker misses "granting herself" and would mis-target the self-only
-  shield at a teammate.
-
-P1 addition over the reviewed packet:
-- P (Doom 'n Gloom) Gloom detonation: "Nearby enemy champions and
-  monsters that dash or blink will be marked with Gloom for 6 seconds.
-  Vex's next basic attack ... against an enemy with Gloom will detonate
-  the mark.  Gloom's detonation deals 40 : 162.94 (based on level)
-  (+ 25% AP) bonus magic damage" (cached P description; the leveling row
-  "Bonus Magic Damage" carries the per-level array and AP ratio).  The
-  mark requires the ENEMY to dash/blink, so the fight is deterministic
-  through the ``p_gloom_detonations`` option: each priced detonation
-  rides one of the fight's basic attacks as an on-hit rider capped at
-  the option's count (the engine's ``max_procs`` cap, Bard-meep
-  pattern).  The Doom fear / knock-down (crowd control) and the
-  non-champion reduced damage are state and out of scope.
+R (Shadow Surge) is two hits, not one: the Shadow's own "Magic Damage" and the
+recast dash's, which the cached "Total Magic Damage" row sums exactly at every
+rank.  ``_shadow_surge`` reads both, checks the sum against that row and lands
+them at their own instants.
+W (Personal Space) deals its magic damage AND shields Vex herself for 2.5
+seconds, the shield riding the W damage event as a ``self_shield_events``
+payload.  The generic support scanner is told to defer this slot, because its
+description marker misses "granting herself" and would aim a self-only shield
+at a teammate.
+P (Doom 'n Gloom) detonates its Gloom mark on the next basic attack for bonus
+magic damage.  The mark needs the ENEMY to dash or blink, which no fight state
+decides, so ``p_gloom_detonations`` caps how many of the fight's attacks carry
+the rider.  Doom's fear and the reduced damage to non-champions are state.
 """
 
 import math

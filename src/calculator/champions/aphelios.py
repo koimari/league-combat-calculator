@@ -1,36 +1,22 @@
-"""Aphelios' reviewed weapon-aware damage module.
+"""Aphelios: reviewed weapon-aware damage module.
 
-``aphelios_main_weapon`` is the module's form axis, the way Kayn's ``form``
-and Jayce's stance are theirs: P, Q and R each branch on it.  The weapon
-choice is explicit input, never inferred from a marksman archetype.  Q's
-Onslaught is represented as an attack event whose count is the Wiki's
-``6 + 2 per 100% bonus attack speed`` rule; the other weapon Q forms use the
-pinned packet variants.  R's initial blast and the basic-attack follow-up
-are kept separate so resistance and event ordering remain visible.
-
-P is where each weapon's innate lives, and the five branches are not alike
-(``_weapon_branch``, ``_P_BRANCH_UNPRICED``): Calibrum's mark bonus and
-Infernum's 110%-AD attack are priced on the basic-attack channel, Severum's
-heal is priced by this module's healing rule, Gravitum's innate is a slow
-that damages nothing, and Crescendum's Chakram bonus is the one the cache
-cannot support — its effect states ``0% : 138.5% (based on number of
-Chakrams)`` in prose over an empty ``leveling`` list, so there is no
-per-Chakram row to read and the branch stays unpriced rather than inventing
-the curve between the endpoints.
-
-E (Weapon Queue System) is the one slot with no damage row, and it emits
-that zero rather than staying absent: ``data/champions.json`` Aphelios E
-carries ``damageType: None`` and both effect rows carry an empty
-``leveling`` list — a pure UI affordance ("The icon of this ability
-reflects the next weapon that is in reserve" / "Active: Aphelios receives
-a text prompt of the weapon Alune will create next"), with no cast, no
-cooldown and no HP number anywhere.  The pinned packet already compiles it
-as a ``no_damage`` slot, so ``slot_order`` carries it instead of the module
-re-authoring the same zero.
-
-``MODULE_CC`` names Q and R ``CC_PER_PART``: both are one slot per weapon
-and the weapons do not control alike, so the kind rides the part each
-weapon form builds (``_Q_CC_BY_WEAPON``, ``_R_CC_BY_WEAPON``).
+``aphelios_main_weapon`` is the form axis, the way Kayn's form and Jayce's
+stance are theirs: P, Q and R each branch on it, and the weapon is explicit
+input, never inferred from an archetype.  Q's Onslaught is an attack event whose
+count is the wiki's 6 plus 2 per 100% bonus attack speed; R's initial blast and
+its basic-attack follow-up stay separate so resistance and event order remain
+visible.
+P holds each weapon's innate and the five branches are not alike.  Calibrum's
+mark bonus and Infernum's 110%-AD attack are priced on the basic-attack channel,
+Severum's heal by this module's healing rule, and Gravitum's innate is a slow
+that damages nothing.  Crescendum's is the one the cache cannot support: it
+states a 0 to 138.5% range by Chakram count in prose over an empty ``leveling``
+list, so the branch stays unpriced rather than inventing the curve.
+E (Weapon Queue System) is the one slot with no damage row, a pure interface
+affordance with ``damageType: None`` and empty leveling, compiled by the pinned
+packet as ``no_damage``.
+``MODULE_CC`` names Q and R ``CC_PER_PART``: each is one slot per weapon and the
+weapons do not control alike, so the kind rides the part each form builds.
 """
 
 from dataclasses import replace

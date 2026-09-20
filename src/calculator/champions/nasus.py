@@ -1,36 +1,20 @@
-"""Nasus — slot map for the archetype engine (E3 stack systems).
+"""Nasus: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- Q (Siphoning Strike) is the permanent-scaling stack: every kill grants
-  Nasus 3 permanent stacks (12 for champions/large minions/monsters),
-  and each stack adds 1 bonus damage to Q ("Bonus Physical Damage" =
-  flat 40-120 by rank + 100% of Siphoning Strike stacks). The current
-  stack total comes from the ``q_stacks`` option (default 0 = a fresh
-  Nasus); the kill-gain itself is not modeled (the target never dies in
-  this calculator). Q empowers the next basic attack, so it carries
-  ``empowers_next_auto`` (Vayne Q precedent).
-- E (Spirit Fire) prices the initial hit plus 10 sourced 0.5s zone
-  ticks (E2 fix: "Magic Damage" + 10 x "Magic Damage Per Tick" ==
-  "Total Magic Damage"), with the burn tail keeping item burns
-  refreshed.
-- R (Fury of the Sands) prices all 30 sourced 0.5s ticks ("Magic
-  Damage Per Tick" x30 == "Total Magic Damage"); the bonus health /
-  resistances are self-stats and the Siphoning Strike cooldown halving
-  is not modeled.
-- P (Soul Eater) and W (Wither) both emit rows that deal no enemy
-  damage, but they are not the same claim. P is modeled: the Soul Eater
-  heal rule prices its lifesteal off every physical hit (declared
-  through ``COVERAGE_CHANNELS``). W is a no_damage row.
-
-W (Wither) is already a cast slot in this module (SLOTS["W"] =
-_wither) emitting the pinned packet's sourced zero-damage row; the
-pinned packet (reviewed-packets.json) declares W in no_damage_slots
-alongside P. MODULE_COVERAGE was simply stale, still reading
-"out_of_scope" for an already-covered slot. Roadmap session 4 batch D
-(2026-08-21) reclassifies W to "no_damage" (the Cassiopeia/Cho'Gath/
-Jarvan precedent) — a documentation-only fix with zero
-fight-computation change.  Wither's slow/cripple magnitude is still
-unpriced; its kind rides ``MODULE_CC``.
+Q (Siphoning Strike) is the permanent-scaling stack: each stack adds 1 bonus
+damage to the flat ranked row.  The count is the ``q_stacks`` option, default 0
+for a fresh Nasus, because the target never dies here and the kill gain cannot
+be modeled.  Q empowers the next basic attack, so it carries
+``empowers_next_auto``.
+E (Spirit Fire) prices the initial hit plus ten sourced 0.5s zone ticks, its
+burn tail keeping item burns refreshed.
+R (Fury of the Sands) prices all thirty sourced 0.5s ticks; its bonus health and
+resistances are self-stats and its Siphoning Strike cooldown halving is not
+modeled.
+P (Soul Eater) and W (Wither) both emit rows that deal no enemy damage, and they
+are not the same claim.  P is modeled, the Soul Eater heal rule pricing its
+lifesteal off every physical hit through ``COVERAGE_CHANNELS``.  W is a
+``no_damage`` row whose slow and cripple magnitude stays unpriced, its kind
+riding ``MODULE_CC``.
 """
 
 from typing import Any

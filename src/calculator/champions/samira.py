@@ -1,34 +1,21 @@
-"""Samira — Style (6-stack) S-rank unlock system.
+"""Samira: the six-stack Style system.
 
-Stack mechanics modeled (E3):
-- P (Daredevil Impulse): damaging basic attacks and abilities against
-  unique champions build Style (cap 6). Each stack grants 2.75 / 3 /
-  3.25 / 3.5% (levels 1 / 6 / 11 / 16) bonus movement speed, up to
-  16.5 / 18 / 19.5 / 21% at 6 stacks.  At maximum stacks (S rank),
-  Samira can cast Inferno Trigger; Style stacks are consumed at the end
-  of the effect.  ``p_style_stacks`` is the explicit pre-stack state.
-- R (Inferno Trigger) keeps the reviewed CP10.7 packet pricing (10
-  sourced 0.2s shots, E2 fix); its detail notes the S-rank requirement
-  when Style is maxed.
-
-Q (Flair), W (Blade Whirl) and E (Wild Rush) keep the reviewed CP10.7
-packet pricing. All numeric values are read from the champion JSON data.
-
-P (Daredevil Impulse) prices its second innate on the shared hit-rider
-axis (``slotlib.HitRider``).  "Blade attacks, Blade Whirl, Wild Rush, and
-the slash and explosives of Flair deal 2 : 21 (based on level) (+ 3.5% :
-11.32% (based on level) AD) bonus magic damage, increased by 0% : 100%
-(based on target's missing health)" — one declared rider on two channels:
-``with_hit_rider`` attaches it to the carrying ability slots' own parts,
-and ``auto_entry`` puts it on the basic-attack stream, where the engine
-prices every admitted swing against the target's decayed health.
-
-The range gate is ``p_blade_zone``: her attacks use the blade inside 200
-units and Flair slashes when "a targetable enemy is in front of Samira at
-the time of cast".  Position is not a request input (the Shaco Backstab
-precedent), and in this fight model's duel the two conditions are the one
-posture, so one option states it.  Inferno Trigger is not a carrier — the
-sentence does not name it.
+P (Daredevil Impulse) builds Style on damaging attacks and abilities against
+unique champions, to a cap of six, each stack granting bonus movement speed and
+the sixth unlocking Inferno Trigger.  ``p_style_stacks`` is the explicit
+pre-stack state.
+P's second innate is one declared rider on two channels, the shared
+``slotlib.HitRider``: ``with_hit_rider`` attaches it to the carrying slots' own
+parts and ``auto_entry`` puts it on the basic-attack stream, where the engine
+prices every admitted swing against the target's decayed health.  The carriers
+are the blade attacks, Blade Whirl, Wild Rush and Flair; Inferno Trigger is not
+one, because the cached sentence does not name it.
+``p_blade_zone`` is the range gate: her attacks use the blade inside 200 units
+and Flair slashes when a targetable enemy is in front of her at the cast.
+Position is not a request input, and in a duel the two conditions are the one
+posture, so one option states both.
+R (Inferno Trigger) is ten sourced 0.2s shots, its detail noting the S-rank
+requirement.  Q, W and E keep their packet pricing.
 """
 
 from __future__ import annotations

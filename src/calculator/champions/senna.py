@@ -1,36 +1,19 @@
-"""Senna — reviewed packet slots plus the E3 stack mechanics.
+"""Senna: reviewed packet slots plus the stack mechanics.
 
-E3 additions over the CP10.7 packet module:
-- P (Absolution) becomes a BUFF-phase stack slot with two priced
-  mechanics:
-  1. Mist (soul) stacks — each stack grants 0.75 bonus attack damage,
-     and every 20 stacks grant 20 bonus attack range and 10% critical
-     strike chance. The stack count is a user option
-     (``senna_mist_stacks``, default 40 — the expected mid-game state);
-     the model cannot simulate Wraith-farming, so the pre-stacked count
-     is priced (module convention for permanent scaling).
-  2. Weakened Soul mark — autos and ability hits apply a 4-second mark;
-     the next hit consumes it for bonus physical damage equal to
-     1% : 10% (based on level) of the target's CURRENT health. The
-     on-hit model prices it as an every-2nd-hit proc
-     (``stacks_required`` 2, ``count_ability_hits``) against the
-     target's MAX health — the standard engine convention for %health
-     on-hits (Vayne W), documented as a boundary: the real term decays
-     with the target's current health, the model uses max health.
-- The remaining slots keep their reviewed packet reads; Q/W/R scale off
-  the Mist-buffed AD because P runs first in the BUFF phase.
-
-Coverage: E (Curse of the Black Mist) wraps Senna and her team in
-camouflage — all five cached effects are self/ally utility prose
-(camouflage duration, allied Wraith Form, obscured vision, bonus movement
-speed) with no enemy-damage leveling. The pinned reviewed packet
-(``static/reviewed-packets.json``) declares E ``kind: "no_damage"``, and
-this module does not reassign E, so the slot is emitted as a sourced zero
-row rather than left unmodeled.
-
-Piercing Darkness heals once per cast whether or not its ray damaged
-anyone, so ``SELF_HEALING_RULE`` is the slot, the sourced row and the
-source name it is published under.
+P (Absolution) is a BUFF-phase stack slot with two priced mechanics, and Q, W
+and R scale off the Mist-buffed AD because P runs first in that phase.
+Mist stacks each grant 0.75 bonus attack damage, and every twentieth grants
+bonus attack range and 10% critical strike chance.  The model cannot simulate
+Wraith farming, so the count is the ``senna_mist_stacks`` option, default 40.
+Weakened Soul is applied by attacks and ability hits and consumed by the next
+one, so it is priced as an every-second-hit proc counting ability hits.  It is
+charged against the target's MAXIMUM health, the engine's convention for a
+%health on-hit, where the real term decays with current health.
+E (Curse of the Black Mist) is ``no_damage``: all five cached effects are self
+and ally utility with no enemy-damage leveling.
+Piercing Darkness heals once per cast whether or not its ray damaged anyone, so
+``SELF_HEALING_RULE`` holds the slot, the sourced row and the source name it is
+published under.
 """
 
 from collections.abc import Mapping

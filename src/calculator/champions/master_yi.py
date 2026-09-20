@@ -1,36 +1,22 @@
-"""Master Yi — reviewed packet slots plus the E3 Double Strike passive.
+"""Master Yi: reviewed packet slots plus the Double Strike passive.
 
-E3 addition over the CP10.4 packet module:
-- P (Double Strike) becomes an ONHIT stack slot: basic attacks on-hit
-  generate a stack (up to 3); at 3 stacks the next basic attack strikes
-  twice, the second strike dealing 50% AD physical damage. The fight
-  engine's every-Nth-hit on-hit machinery prices it exactly like Vayne
-  W (``stacks_required`` 3, autos-only): the per-proc 50%-AD strike is
-  spread across the 3 stacking hits. Alpha Strike explicitly does NOT
-  grant Double Strike stacks (wiki note), so ability hits never count —
-  only the simulated auto stream.
-
-P1-2 addition — W (Meditate): the module now declares W in SLOTS so the
-fight rotation casts the channel; the channel's self-heal is authored
-by the healing rule (``healing.derive_self_healing`` "Master Yi"
-branch): 8 ticks at the sourced 0.5-second cadence over the 4-second
-channel, each tick interpolated between the Minimum Heal Per Tick and
-Maximum Heal Per Tick rows by the fighter's live missing health.  W's
-damage-reduction window is a defensive state the damage model does not
-stage.
-
-E (Wuju Style) rides the swing stream: the cached "Bonus True Damage"
-row is an on-hit on every basic attack inside the sourced 5-second window
-(binary ``WujuStyle.Duration``), placed once at the E cast; the reviewed
-packet had priced it as one direct hit per cast.  A schedule-gated rider
-is kept out of phantom-hit doubling by the engine, so Rageblade phantoms
-and Double Strike's second strike do not re-apply it.
-
-R (Highlander) is the attack-speed steroid: the cached "Bonus Attack
-Speed" row (25/45/65%) over the sourced 7-second window, emitted as a
-BUFF-phase ``stat_buff`` so the fight engine's auto count scales with
-it.  R's movement speed, its slow/cripple immunity and its takedown
-cooldown refund have no channel and stay named.
+P (Double Strike) is an on-hit stack slot: basic attacks build three stacks and
+the next attack strikes twice, the second for 50% AD physical.  The engine's
+every-Nth-hit machinery prices it with ``stacks_required`` 3 on autos only,
+spreading the per-proc strike across the three stacking hits.  Alpha Strike
+grants no stack, so ability hits never count.
+W (Meditate) is declared in SLOTS so the rotation casts the channel.  Its
+self-heal is authored by the healing rule as eight ticks at the sourced 0.5s
+cadence, each interpolated between the Minimum and Maximum Heal Per Tick rows by
+live missing health.  Its damage-reduction window is a defensive state the
+damage model does not stage.
+E (Wuju Style) rides the swing stream: the cached "Bonus True Damage" row is an
+on-hit on every basic attack inside the sourced 5-second window, placed once at
+the E cast.  The engine keeps a schedule-gated rider out of phantom-hit
+doubling, so Rageblade phantoms and Double Strike's second strike never
+re-apply it.
+R (Highlander) is the attack-speed steroid over its sourced 7-second window, a
+BUFF-phase ``stat_buff``, so the auto count scales with it.
 """
 
 from typing import Any

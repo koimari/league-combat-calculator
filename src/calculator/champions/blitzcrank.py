@@ -1,36 +1,22 @@
-"""Blitzcrank — slot map for the archetype engine.
+"""Blitzcrank: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- W (Overdrive) is a TIMED attack-speed steroid: 30-70% bonus AS for
-  the buff's 5-second duration only. ``stat_buff`` can only express a
-  full-fight buff, so a custom BUFF-phase fn time-averages the bonus
-  over the fight window read from the reserved
-  ``fight_duration_seconds`` option (10s fight -> half the bonus; the
-  fight engine's auto count then matches "buffed autos for 5s + base
-  autos after"). Absent option (one-rotation / direct parse) -> the
-  per-cast model: full bonus. Zero damage, like Aatrox R.
-- E (Power Fist) has NO leveling data in the JSON at all — the
-  100% total AD (+ 25% AP) bonus is hand-authored below. It rides the
-  next basic attack (``empowers_next_auto``, the Vayne Q pattern: the
-  empowered auto is one of the fight's autos, which already applies
-  item on-hits and advances on-attack counters), and the bonus crits
-  at full effectiveness per the wiki.
-- R (Static Field) has two "Magic Damage" leveling entries: the
-  passive lightning (skipped by design — casting R disables it, and
-  realistic bolt counts are negligible) and the active burst.
-  ``extract_named`` would return the passive first, so a custom fn
-  selects the active by the ABSENCE of the passive's '% maximum mana'
-  modifier (robust to effect reordering on data re-pulls).
-- Q (Rocket Grab) is a clean generic read, kept explicit here.
-- P (Mana Barrier) is a defensive shield with no cast of its own, so it
-  is absent from the slot map; Q's ``with_self_shield`` wrapper hangs the
-  sourced shield (35% max mana, up to 10s) on Q's damage event as a
-  ``self_shield_events`` payload the survival ledger grants pre-fight,
-  live-tested end to end
-  (``tests/test_champion_shield_events.py::test_blitzcrank_mana_barrier_payload_is_sourced``,
-  ``test_blitzcrank_api_mana_barrier_absorbs_sourced_amount``).  That
-  channel is why the coverage map calls P ``modeled`` rather than
-  out_of_scope, with no standalone P row in the ``abilities`` dict.
+W (Overdrive) is a TIMED attack-speed steroid and ``stat_buff`` can only express
+a full-fight buff, so a custom BUFF-phase function time-averages the bonus over
+the window read from the reserved ``fight_duration_seconds`` option.  Without
+that option, a one-rotation or direct parse, it is the per-cast model at full
+bonus.
+E (Power Fist) has no cached leveling at all, so its 100% total AD (+ 25% AP)
+bonus is hand-authored below.  It rides the next basic attack through
+``empowers_next_auto``, so the empowered swing is one of the fight's autos and
+already applies item on-hits, and the bonus crits at full effectiveness.
+R (Static Field) carries two "Magic Damage" entries, the passive lightning and
+the active burst, and ``extract_named`` would return the passive first.  A
+custom function selects the active by the ABSENCE of the passive's
+"% maximum mana" modifier, which survives a re-ordering on a data pull.  The
+passive lightning is skipped by design: casting R disables it.
+Q (Rocket Grab) is a clean generic read.
+P (Mana Barrier) has no cast of its own, so it is absent from the slot map and
+Q's ``with_self_shield`` hangs the sourced shield on Q's damage event.
 """
 
 from typing import Any

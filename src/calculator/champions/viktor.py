@@ -1,36 +1,20 @@
-"""Viktor — CP10.9 full-entry-reviewed packet module.
+"""Viktor: full-entry-reviewed packet module.
 
-E2 fix (packet_module): R (Arcane Storm) prices the impact plus the full
-6.5-second storm (Magic Damage + 6 x Magic Damage Per Tick == Total
-Magic Damage).
-
-P1-2 fixes:
-- Q (Siphon Power) now carries the sourced self-shield: the per-level
-  "Bonus Damage" row is the shield base (40 : 140 by level + 25% AP)
-  for 2.5 seconds (wiki Q effect prose; the row is mislabelled "Bonus
-  Damage" in the cache, and its 18 values are level-indexed), authored
-  via the E8c ``self_shield_events`` payload on the Q damage entry.
-- Q's Discharge empowered-auto on-hit is priced from the "Modified
-  Magic Damage" row (20 : 120 by rank + 100% AD + 50% AP) as an
-  on-hit payload capped at one application (the next basic attack
-  within the 4-second Discharge window), gated by the ``q_discharge``
-  option (default True).  The "Total Magic Damage" row is the
-  projectile + discharge sum and is not read separately.
-
-Coverage: the two slots read differently, for two separate reasons.
-W (Gravity Field) is ``no_damage``: it carries no damage row, and its
-sourced slow IS priced — ``with_control_event`` publishes the cached
-"Slow" row (33/36/39/42/45%) against the slot's prose control duration,
-so CC magnitude is an axis this kit reaches after all.  Only the
-fifth-stack 1.5s stun stays unpriced, and it has no atom.
-P (Glorious Evolution) stays OPEN ``out_of_scope`` (the Olaf-R rule):
-its augments really do change what the other slots do, and the innate
-prices them in Hex Fragments earned from kills over a game (1 per minion
-or monster, 10 per siege/super/epic, 20 per champion takedown), an
-accumulation a single modeled fight has no room for and that the cache
-carries as pure prose — the entry has no leveling row anywhere and no
-augment's magnitude is cached at all, so pricing one would mean
-inventing both the fragment count and the effect.
+R (Arcane Storm) prices the impact plus the full 6.5-second storm, its "Magic
+Damage" row and six per-tick rows summing to the cached total.
+Q (Siphon Power) carries the sourced self-shield: the per-level "Bonus Damage"
+row is the shield base, not damage, the cache mislabelling it, and it rides the
+Q damage entry as a ``self_shield_events`` payload.  Q's Discharge empowered
+attack is priced from the "Modified Magic Damage" row as an on-hit capped at one
+application inside the 4-second window, gated by ``q_discharge``; the "Total
+Magic Damage" row is the projectile and discharge summed and is never read.
+W (Gravity Field) is ``no_damage``, but its sourced slow IS priced:
+``with_control_event`` publishes the cached "Slow" row against the slot's prose
+control duration.  Only the fifth-stack stun stays unpriced, having no atom.
+P (Glorious Evolution) stays ``out_of_scope``.  Its augments really do change
+what the other slots do, they are bought with Hex Fragments earned across a
+whole game, and the cached entry has no leveling row anywhere, so pricing one
+would mean inventing both the fragment count and the effect.
 """
 
 from typing import Any

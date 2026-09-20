@@ -1,35 +1,22 @@
-"""Braum — slot map for the archetype engine.
+"""Braum: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Concussive Blows) is a stack-cycle passive the on-hit framework
-  cannot express: autos AND Q applications build stacks, the 4th stack
-  procs trigger damage, then the target is stack-IMMUNE for 8/6/4s
-  (levels 1/6/11) during which each auto (autos only — not Q) deals 40%
-  of the trigger as bonus magic damage, and the cycle restarts. The
-  generic parser instead applied the 40% bonus on EVERY auto (the
-  JSON's only leveling array, attribute=None). Trigger damage
-  (16 + 10 x level), stun, and immunity period exist only in
-  description prose, so the formula lives here. Timed fights walk the
-  fight's auto/Q hit timeline (via the pipeline-injected
-  ``fight_duration_seconds`` / ``auto_attack_uptime`` /
-  ``auto_attacks_only`` reserved options — an autos-only window casts
-  no Q, so only the ambient swings stack); one-rotation mode emits
-  nothing — a single Q application never reaches 4 stacks.
-- Q (Winter's Bite) scales with 2.5% of BRAUM'S OWN max health — the
-  JSON unit ("% of Braum's maximum health") is champion-named, which
-  ``scaling.resolve_scaling`` cannot map, so a ``sum_modifiers``
-  override resolves it against ``ctx.stats["health"]``.
-- W (Stand Behind Me) is a zero-damage BUFF slot granting SELF
-  20-40 (+36% bonus) armor AND magic resistance (effect[1]; the
-  effect[0] ally values are ignored — single-champion calculator).
-  Two coupled stats with flat+percent parts exceed the ``stat_buff``
-  factory (one stat, flat or percent). Stats-panel only: no damage in
-  the kit scales off resistances, so nothing feeds back into parsing.
-- E (Unbreakable) is a typed directional projectile-defense atom. The
-  selected active window blocks the first selected hit and reduces later
-  selected hits by the sourced rank value.
-- R (Glacial Fissure) is a clean generic read ("Magic Damage",
-  150/250/350 + 60% AP); knockup and slow field are CC only.
+P (Concussive Blows) is a stack cycle no on-hit shape expresses.  Attacks AND Q
+applications build stacks, the fourth procs the trigger damage, and the target is
+then stack-immune for 8, 6 or 4 seconds by level, during which every basic
+attack, autos only and never Q, deals 40% of the trigger before the cycle
+restarts.  Trigger damage, stun and immunity live only in description prose, so
+the formula lives here, and one-rotation emits nothing: one Q never reaches four.
+Q (Winter's Bite) scales with 2.5% of BRAUM'S OWN maximum health, and that
+champion-named unit is one ``scaling.resolve_scaling`` cannot map, so a
+``sum_modifiers`` override resolves it against ``ctx.stats["health"]``.
+W (Stand Behind Me) is a zero-damage BUFF slot granting himself both armor and
+magic resistance.  Two coupled stats with flat and percent parts exceed the
+``stat_buff`` factory, and nothing in the kit scales off resistances, so it
+reaches the stats panel and never feeds back into parsing.
+E (Unbreakable) is a typed directional projectile-defense atom: the active
+window blocks the first selected hit and reduces later ones by the ranked value.
+R (Glacial Fissure) is a clean generic read; its knockup and slow field are
+control only.
 """
 
 import math

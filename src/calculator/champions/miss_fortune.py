@@ -1,36 +1,20 @@
-"""Miss Fortune — CP10.4 packet module with the E9-1 R gap fix.
+"""Miss Fortune: packet module over the channel and the tap.
 
-E9-1 closes the remaining audit gap: R (Bullet Time) priced ONE wave of
-the channel.  The wiki cache carries the explicit "Total Waves"
-14/16/18 row and the "Wave Interval Time" cadence
-(0.2036/0.1781/0.1583s by rank), so this module prices per-wave damage
-x the sourced wave count at the sourced cadence — the full channel.
-The wiki's "Maximum Total Physical Damage" row equals per-wave x waves
-at ranks 1 and 3; the rank-2 display (500) is a rounding artifact of
-16 x 30 == 480.
-
-E2 already fixed E (Make It Rain) to its 8 sourced ticks; Q double-up
-is modeled.  The coverage-frontier riders close P and W:
-
-- P (Love Tap) is an auto-attack rider, not an on-hit that item on-hits
-  proc from: "Miss Fortune's basic attacks are empowered to apply a mark
-  that expires upon attacking a new enemy.  If the enemy was unmarked,
-  this also deals 50% : 100% (based on level) AD bonus physical damage."
-  Its per-level ladder comes from the game binary (see the constants
-  below), which is the only source carrying the level-20 tier this
-  calculator can reach; the cached wiki row cross-checks the first six.
-  The mark never refreshes on the same enemy, so the number of Love Taps
-  is the number of times the player tags a NEW enemy — the ``p_procs``
-  option, defaulting to the one tap the duel target eats.  Neither the
-  minion-halved row nor Double Up's "on-attack effects" re-arming the
-  mark is claimed here.
-- W (Strut) carries no damage instance anywhere (data/atoms/
-  missfortune.atoms.json holds only MissFortuneStrutStacks,
-  MissFortuneViciousStrikes and Miss_Fortune_Strut_Cooldown).  What it
-  does carry is priced: the active's sourced Bonus Attack Speed row
-  (40-100% by rank) through the ``stat_buff`` channel, prorated over its
-  cached 4-second window so a 4s steroid does not take full uptime of an
-  arbitrary fight.  The movement-speed rows have no engine channel.
+R (Bullet Time) prices the whole channel: per-wave damage times the cached
+"Total Waves" row at the cached "Wave Interval Time" cadence.  The cached
+"Maximum Total Physical Damage" row agrees at ranks 1 and 3; its rank-2 display
+is a rounding artifact of 16 x 30.
+E (Make It Rain) prices its eight sourced ticks and Q's double-up is modeled.
+P (Love Tap) is an auto-attack RIDER, not an on-hit item effects proc from.  Its
+per-level ladder comes from the game binary, the only source carrying the
+level-20 tier this calculator reaches, and the cached wiki row cross-checks the
+first six.  The mark never refreshes on the same enemy, so ``p_procs`` is how
+many times the player tags a NEW one and defaults to the single tap the duel
+target eats.
+W (Strut) carries no damage instance anywhere.  What it does carry is priced:
+the active's sourced "Bonus Attack Speed" row through ``stat_buff``, prorated
+over its cached 4-second window so a short steroid does not take full uptime of
+an arbitrary fight.  Its movement-speed rows have no channel.
 """
 
 from typing import Any
