@@ -36,7 +36,9 @@ silently absent, and ``MODULE_COVERAGE`` calls them ``no_damage`` rather
 than letting ``SLOTS`` derive ``modeled``.
 """
 
-from typing import Any
+from collections.abc import Mapping
+from types import MappingProxyType
+from typing import Any, NamedTuple
 
 from ..binary_roots import data_value, spell_object
 from .charge_cadence import ChargeRule
@@ -49,7 +51,7 @@ from .slot_control import with_control, with_control_event
 from .slot_entries import ability_on_hit_entry, support_cast
 from .slot_extract import ability_name
 from .slotlib import simple_damage
-from .source_receipts import load_champion_sources
+from .source_receipts import load_champion_sources, state_receipt
 
 # Bard's P[0] remains degraded in the wiki JSON, but the tracked
 # BardPTooltip_D_nS record carries the passive tooltip values directly.
@@ -88,48 +90,49 @@ _MEEP_RECHARGE_TIERS = (
 _DEFAULT_CHIMES = 35
 
 
-class _TravelersCallRule:
-    """The typed Traveler's Call (chimes + meeps) declaration (P3 package 3Y).
+class _TravelersCallRule(NamedTuple):
+    """The typed Traveler's Call (chimes + meeps) declaration.
 
-    Chimes are a PERMANENT counter seeded by the user — the model cannot
-    simulate map chime spawning/collection (no engine stream) — so the
-    seed prices the meep math at parse time.  Meep AVAILABILITY is a
-    consumable fight-window resource (stock + floor(duration / recharge))
+    Chimes are a PERMANENT counter seeded by the user, because the model
+    cannot simulate map chime spawning and collection (no engine stream),
+    so the seed prices the meep math at parse time.  Meep AVAILABILITY is
+    a consumable fight-window resource (stock + floor(duration / recharge))
     priced into the P on-hit's ``max_procs``; each meep-empowered auto
     consumes one meep.  ``public_receipt()`` rides the option's state
     and the resource-ledger chimes declaration.
     """
 
-    def __init__(self) -> None:
-        self.meep_base = _MEEP_BASE
-        self.meep_per_tier = _MEEP_PER_TIER
-        self.chimes_per_tier = _CHIMES_PER_TIER
-        self.meep_ap_ratio = _MEEP_AP_RATIO
-        self.stock_tiers = list(_MEEP_STOCK_TIERS)
-        self.recharge_tiers = list(_MEEP_RECHARGE_TIERS)
-        self.permanent = True
-        # The revision has one home (the champion source receipt); only the
-        # label narrows it to the prose this rule reads.
-        self.source = {
+    meep_base: float
+    meep_per_tier: float
+    chimes_per_tier: int
+    meep_ap_ratio: float
+    stock_tiers: tuple[tuple[int, int], ...]
+    recharge_tiers: tuple[tuple[int, float], ...]
+    permanent: bool
+    source: Mapping[str, Any]
+
+    def public_receipt(self) -> dict[str, Any]:
+        """The published Traveler's Call declaration."""
+        return state_receipt("Bard — Traveler's Call (Chimes + Meeps)", self)
+
+
+BARD_TRAVELERS_CALL_RULE = _TravelersCallRule(
+    meep_base=_MEEP_BASE,
+    meep_per_tier=_MEEP_PER_TIER,
+    chimes_per_tier=_CHIMES_PER_TIER,
+    meep_ap_ratio=_MEEP_AP_RATIO,
+    stock_tiers=_MEEP_STOCK_TIERS,
+    recharge_tiers=_MEEP_RECHARGE_TIERS,
+    permanent=True,
+    # The revision has one home (the champion source receipt); only the
+    # label narrows it to the prose this rule reads.
+    source=MappingProxyType(
+        {
             **load_champion_sources("Bard")[0],
             "label": "Local League Wiki cache — Bard P (Traveler's Call) prose",
         }
-
-    def public_receipt(self) -> dict[str, Any]:
-        return {
-            "name": "Bard — Traveler's Call (Chimes + Meeps)",
-            "meep_base": self.meep_base,
-            "meep_per_tier": self.meep_per_tier,
-            "chimes_per_tier": self.chimes_per_tier,
-            "meep_ap_ratio": self.meep_ap_ratio,
-            "stock_tiers": self.stock_tiers,
-            "recharge_tiers": self.recharge_tiers,
-            "permanent": self.permanent,
-            "source": dict(self.source),
-        }
-
-
-BARD_TRAVELERS_CALL_RULE = _TravelersCallRule()
+    ),
+)
 
 
 def _tier_value(tiers: tuple, chimes: int) -> Any:
