@@ -466,16 +466,15 @@ def test_the_pre_combat_stat_recipe_is_written_in_exactly_one_place() -> None:
     assert set(sites) - {PRE_COMBAT_RECIPE_HOME} == set(NARROWER_STAT_SURFACES)
 
 
-def test_each_narrower_stat_surface_is_narrow_and_says_why() -> None:
-    """A declaration is a receipt, and the tree has to agree with it.
+def test_each_narrower_stat_surface_is_narrow() -> None:
+    """Narrow means it composes a champion's stat block and not a build's.
 
-    Narrow means it composes a champion's stat block and not a build's: a
-    site that starts passing one of the five has stopped being a reference
+    A site that starts passing one of the five has stopped being a reference
     parse and owes the participant recipe a call, so the entry stops covering
     it here rather than quietly widening.
     """
     sites = _stat_sites()
-    for scope, reason in NARROWER_STAT_SURFACES.items():
+    for scope in NARROWER_STAT_SURFACES:
         for supplied in sites[scope]:
             assert not supplied & BUILD_CONTEXT_KEYWORDS, scope
 
