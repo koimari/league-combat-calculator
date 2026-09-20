@@ -80,6 +80,13 @@ _R_MISSING_HP_MAX_BONUS = (
 # seconds" (data/champions.json Akshan E).
 _E_SHOT_INTERVAL_S = 0.231
 
+# Each shot's damage is multiplied by "(1 + 0.3 per 100% bonus attack
+# speed)" (the wiki's per-shot row, AkshanE's AttackSpeedCoefficient in the
+# game files); the coefficient is read from the cached unit string.
+_E_ATTACK_SPEED_FACTOR = re.compile(
+    r"(\d+(?:\.\d+)?)\s*per\s*100%\s*bonus attack speed"
+)
+
 
 def _extract_e_per_shot(
     ability: dict[str, Any],
@@ -88,8 +95,9 @@ def _extract_e_per_shot(
 ) -> float:
     """Extract Heroic Swing per-shot damage from JSON.
 
-    The JSON has modifiers with unusual unit strings (``"  ×"`` for flat
-    damage) and a prose AS ratio ("+N per 100% bonus attack speed").
+    The row is a product, not a sum: the flat base carries the unusual
+    ``"  ×"`` unit and the last modifier is the attack-speed factor that
+    multiplies the base and the %AD term.
     (Test seam: tests/test_akshan.py validates the JSON values here.)
 
     Args:
@@ -103,33 +111,30 @@ def _extract_e_per_shot(
     leveling = find_named_leveling(ability, "Physical Damage per Shot")
     if leveling is None:
         return 0.0
+    bonus_as = champion_stat(stats_context or {}, "bonus_attack_speed")
+    attack_speed_factor = 1.0
 
     def unusual_unit(unit: str, value: float) -> float | None:
+        nonlocal attack_speed_factor
         unit_stripped = unit.strip()
         if not unit_stripped or unit_stripped in ("×", "x"):
             return value
-        if "per 100% bonus attack speed" not in unit:
+        if "bonus attack speed" not in unit:
             return None
-        match = re.search(r"(\d+(?:\.\d+)?)\s*per\s*100%", unit)
-        if not match:
-            return 0.0
-        as_ratio = float(match.group(1))
-        # ESCALATED DEFECT akshan-bonus-attack-speed-percent
-        # (docs/receipts/escalated-defects-P3-3.7.json): the stat block this
-        # reads has no ``bonus_attack_speed_percent`` key —
-        # ``calculate_total_stats`` emits ``bonus_attack_speed`` — so this
-        # term resolves to zero and Heroic Swing does not price its
-        # attack-speed scaling.  Correcting it moves a number, so the zero
-        # is stated here rather than defaulted.
-        bonus_as_pct = 0.0
-        return as_ratio * (bonus_as_pct / 100.0) * value
+        match = _E_ATTACK_SPEED_FACTOR.search(unit)
+        if match is None:
+            raise ValueError(f"Akshan E attack-speed factor is unreadable: {unit!r}")
+        # This modifier scales the others, so it leaves the sum at zero.
+        attack_speed_factor = value + float(match.group(1)) * bonus_as / 100.0
+        return 0.0
 
-    return sum_modifiers(
+    summed = sum_modifiers(
         leveling,
         rank,
         stats_context,
         modifier_override=unusual_unit,
     )
+    return attack_speed_factor * summed
 
 
 def _parse_passive_proc_damage(
