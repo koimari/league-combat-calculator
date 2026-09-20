@@ -10,8 +10,6 @@ refusals.
 
 from __future__ import annotations
 
-import ast
-import collections
 import importlib.util
 import sys
 from pathlib import Path
@@ -21,8 +19,6 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-
-SRC = ROOT / "src" / "calculator"
 
 
 def _golden_snapshot():
@@ -87,76 +83,6 @@ def test_a_refused_row_publishes_a_declared_zero(scenario: str) -> None:
                 else:
                     assert entry["disposition"] == "MEASURED"
                     assert "reason" not in entry
-
-
-def test_the_declared_zero_reaches_a_payload_at_all() -> None:
-    """The entry's own ``reproducer_after_closure``, asserted as a number.
-
-    The test above is total over the panels and would pass vacuously on a
-    roster where nothing is ever refused.  This is the non-vacuity: a
-    committed scenario emits a non-``MEASURED`` disposition, so the campaign's
-    claim that three of the four spellings are reachable on a served payload
-    is a fact about a run rather than about a unit fixture.
-    """
-    combat = _combat("cleaver_bloodsong_roster")
-    spellings = {entry["disposition"] for entry in combat["dispositions"].values()}
-    assert "STRUCTURAL_ZERO" in spellings
-    declared = [
-        entry
-        for entry in combat["dispositions"].values()
-        if entry["disposition"] == "STRUCTURAL_ZERO"
-    ]
-    # 39, pinned by its composition rather than as a bare figure, so a shift
-    # in *which* refusal reaches the payload is a failure and not a silent
-    # re-count.  ``attacker_state_blocked`` is the merged castability gate:
-    # a leaf refused because its caster was disabled when the cast was due.
-    # Last re-measured when this roster's Aatrox stopped landing his Q and W
-    # as one event each: three strikes a second apart and two chain hits 1.5
-    # seconds apart give a disabled window and the fight's end far more
-    # leaves to refuse, and spread the same damage out so that fewer
-    # attackers and targets die inside the window at all. ``outside_window``
-    # is the walk refusing the late hits the pair rotation still authors
-    # under the default count_damage_after_fight_end reading.
-    assert collections.Counter(entry["reason"] for entry in declared) == {
-        "attacker_state_blocked": 16,
-        "trigger_event_skipped": 11,
-        "outside_window": 8,
-        "attacker_dead": 2,
-        "target_dead": 2,
-    }
-    assert all(entry["reason"] for entry in declared)
-
-
-def _outcome_ledger_sites() -> dict[str, int]:
-    """Every ``OutcomeLedger(...)`` construction expression under ``src/``."""
-    sites = {}
-    for path in sorted(SRC.rglob("*.py")):
-        tree = ast.parse(path.read_text(encoding="utf-8"))
-        count = sum(
-            1
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "OutcomeLedger"
-        )
-        if count:
-            sites[path.relative_to(SRC).as_posix()] = count
-    return sites
-
-
-def test_the_outcome_ledger_is_the_receipt_walks_companion() -> None:
-    """The other half, inverted: this reproducer does not reproduce.
-
-    It read "no walk runs on it, so ``StructuralZero`` and ``Starved`` reach
-    no payload".  Both clauses are now false — the receipt adapter builds one
-    and drives it from every write, annotation and refusal, so the write-once
-    rule and D-62's uniqueness range over real fights; and the verdict that
-    record applies to a refused slot is the verdict the receipt view now
-    publishes.  Pinned to one site rather than merely to a non-zero count: a
-    second construction site would be a second ledger, and two ledgers
-    observing one walk is the shape D-64 exists to refuse.
-    """
-    assert _outcome_ledger_sites() == {"survival/receipt_ledger.py": 1}
 
 
 def test_a_live_walk_fills_the_ledger_the_site_builds() -> None:

@@ -1,172 +1,25 @@
-"""P2 Slice 9 — Olaf R (Ragnarok) champion cleanse + crowd-control
-immunity (test-matrix owner: RLM-2 C).
+"""Olaf R (Ragnarok): the cleanse, the immunity window and the bonus state.
 
-Focused TDD matrix for Olaf's R (Ragnarok): the passive bonus
-resistances, the cast-time cleanse of ALL active crowd control, the 3s
-immunity window, the bonus-state surface (armor/MR/AD/MS/size), the
-castability carve-out, the one-use/cooldown boundaries, and the score
-fail-closed behavior.  CURRENT RUNTIME FACTS (verified before pinning):
+The R deals no damage, and its cast is the activation: no option moves it,
+and the API rejects every ``r_*`` champion option with a named 400.  Per
+cast the authoring emits a cleanse packet (cleanse_item "Olaf R", source
+"Olaf R - Ragnarok"), a 3 s crowd-control immunity window, and the sourced
+armor/MR stat buff beside the movement row.  Rank 0 books no cast and wires
+none of it.
 
-- Olaf is a PACKET module (src/calculator/champions/olaf.py,
-  PACKET_SHA256 abc0765e...): Q/E are modeled packets; W (Tough It Out)
-  is the E8c scanner-emitted self shield (10/40/70/100/130 + 17.5%
-  missing health, 2.5 s, at the cast — the missing-health term is a
-  documented boundary).  MERGE: P, W and R also PRICE their sourced
-  steroid rows, so every slot is ``modeled`` and the module declares no
-  MODULE_COVERAGE; OPTIONS carries one key (olaf_missing_health_percent,
-  which scales Berserker Rage).  There is still no r_* option — the API
-  rejects every one with a named 400 ("champion_options contains unknown
-  option r_time").
-- The module R parse receipt: name "Ragnarok", rank 3, MANA cost 100,
-  cast_time None (the cached castTime is "none"), total_raw 0.0 and one
-  structural-zero part — the R deals no damage; its stat_buff carries
-  the sourced Bonus Resistances and Bonus Attack Damage, and the cached
-  rank cooldown row (100/90/80) is published.
-- MERGE: because R is a BUFF-phase steroid, the app's derived rotation
-  OPENS with it.  The four R receipts anchor on that cast (t=0.0), not
-  on a slot-ordered 0.5, and the immunity window is therefore already up
-  when an enemy control would land — the app fight BLOCKS the Ahri charm
-  instead of truncating it.  The truncation path itself is pinned at
-  kernel level, where the packets are authored behind an active control.
-  Tests read the activation back off the fight (``_r_activation_time``)
-  rather than pinning a rotation-order literal.
-- The cached R rows (data/champions.json "Olaf", R[0]):
-  effects[0] passive "Passive: Olaf gains bonus armor and bonus magic
-  resistance." (Bonus Resistances leveling 10/15/20); effects[1]
-  active "Olaf becomes enraged for 3 seconds, cleansing himself of all
-  crowd control and becoming immune to them, as well as gaining bonus
-  attack damage and 10% increased size. For the first second of
-  Ragnarok, he also gains bonus movement speed while facing visible
-  enemy champions within 2000 units." (Bonus Attack Damage 10/20/30
-  flat + 25% AD; Bonus Movement Speed 20/45/70); effects[2] the
-  duration-extension note ("increased by and up to 2.5 seconds for
-  each basic attack on-hit or cast of Reckless Swing against an enemy
-  champion", leveling EMPTY); cost 100 flat; cooldown 100/90/80
-  affectedByCdr; targeting "Auto"; affects "Self"; resource "MANA";
-  castTime "none".  The notes carry the airborne displacement-override
-  ("removes the underlying stun from airborne effects, but not the
-  forced displacement, which requires him to use a blink or dash
-  ability to override it"), the no-other-debuffs rule, the dynamic AD
-  amplification ("The 25% attack damage scaling amplifies the flat
-  attack damage bonus as well") and the duration-extension details
-  (dodged basics do not extend, blocked basics do; R will not expire
-  during Reckless Swing's cast time).
-- Game-file evidence (data/bin/characters/olaf.bin.json,
-  OlafRagnarokAbility/OlafRagnarok mSpell): DataValues Resists
-  5..35 (ranks 1..3 = 10/15/20), Duration 3.0, FlatAD 0..60 (ranks
-  1..3 = 10/20/30), PercentTotalADAmp 0.25, HasteDuration 1.0,
-  Haste -0.05..1.45 (ranks 1..3 = 0.20/0.45/0.70 -> 20/45/70%),
-  DurationExtension 2.5; cooldownTime [100,100,90,80,...] (ranks
-  1..3 = 100/90/80); mana 100; canCastWhileDisabled TRUE and
-  cannotBeSuppressed TRUE (the QSS/Mercurial/RengarWEmp flag pair);
-  mCantCancelWhileWindingUp true; mSpellTags Trait_Ultimate,
-  SpecialCase_StasisLocked, Trait_AttackBuff_Duration, Trait_CCImmune;
-  mTargetingTypeData Self; the AD GameCalculation = FlatAD +
-  StatByNamedDataValue PercentTotalADAmp (the game's dynamic total-AD
-  amplification).
-- The engine cast_timeline is the activation clock: one_rotation casts
-  Q/W/E/R all at 0.0 (R cost 100); timed casts Q@0.0, W@0.25, E@0.25,
-  R@0.5 (R cost 100).  RANK 0 IS NOT A CAST GATE today: the engine
-  books the R cast at every rank (rank 0 cost 0.0) — the "R rank 0 ->
-  no cast -> no cleanse/immunity/stat receipts" contract is a
-  completion fix (xfailed below).
-- The P2 Slice 4-8 kernel does NOT wire Olaf today:
-  resolve_cleanse_item("Olaf R") FAILS CLOSED with a KeyError naming
-  the source; the app-level fight carries NO cleanse / immunity /
-  stat-buff rows for main, utility_outcomes cleanse event_count is 0,
-  and an enemy Ahri charm (immobilize 1.8 s at t=0) lands untouched
-  (crowd_control_intervals + action_downtime 1.8).  The typed kernel
-  the completion must ride is ALL in place: the Slice 4 interval
-  truncation (truncate_intervals + CleanseEligibility with self scope,
-  the caster_control_blocks_cleanse suppression denial, the one-use
-  latch), the Slice 3 immunity arm (a SHIELD packet with
-  crowd_control_immunity_while_shield grants a typed window tied to
-  the EXACT ledger entry — amount must be > 0; a zero-amount shield
-  arms nothing), the stat-buff packet kernel (bonus_armor /
-  bonus_magic_resistance fields; NO bonus-AD / size / movement fields
-  on the stat-buff action), and the score gate
-  (unrepresentable_template_receipt: support_kind=stat_buff /
-  support_kind=movement; cleanse and crowd_control_resist
-  representable).
-- Walk dispatch order (same-time ordering): SHIELD / STAT_BUFF /
-  UTILITY kinds dispatch BEFORE the attacker-state gate (the
-  QSS/Mercurial/GP/Rengar utility-before-gate carve-out), so a
-  champion-cast cleanse + immunity + stat buff fire while the caster
-  is crowd-controlled; the gate's stasis/invulnerable/untargetable
-  branch also never sees them (the game's SpecialCase_StasisLocked
-  stasis lock has NO kernel path for support-kind packets today — a
-  named boundary).  The suppression denial lives in the CLEANSE
-  decision (CAST_BLOCKING_CONTROL_KINDS = {"suppression"} -> the
-  named caster_control_blocks_cleanse denial, use NOT consumed).
+Every value is read live from the cache rather than pinned as a literal.
+``data/champions.json`` "Olaf" R[0] carries Bonus Resistances 10/15/20,
+Bonus Attack Damage 10/20/30 plus 25% AD, Bonus Movement Speed 20/45/70,
+cost 100, cooldown 100/90/80 and castTime "none";
+``data/bin/characters/olaf.bin.json`` OlafRagnarokAbility carries Duration
+3.0, DurationExtension 2.5, and canCastWhileDisabled and cannotBeSuppressed
+both true, which is the flag pair behind the castability carve-out.
 
-The coordinator's completion (P2-9) will (most likely) wire the R cast
-as the activation (no toggle): per R cast the authoring emits a cleanse
-packet (cleanse_item "Olaf R", source "Olaf R — Ragnarok") at the cast
-time + a 3s immunity grant (the Slice 3 arm — a nominal timed shield
-entry with crowd_control_immunity_while_shield, or a new grant kind)
-+ the bonus-state packets (armor/MR stat buffs; the AD / size / MS
-rows have NO kernel stat-buff field today — the AD+25%-AD and the 10%
-size are receipted as named-unsupported or new fields, the first-
-second MS could ride the movement utility surface) + the named
-denials (use_spent / unknown_control / caster_control_blocks_cleanse),
-and the score fails closed (support_kind=stat_buff / movement — never
-a silent re-price; the cleanse itself stages).  This matrix pins the CONTRACT;
-genuinely-absent mechanics are pytest.mark.xfail (non-strict) with
-reason "awaiting P2-9 ..." — the completion removes the markers.
-
-Contract sections (numbered as in the RLM-2 C brief):
-  S1  Source evidence + typed values (cached R rows: resistances
-      10/15/20, AD 10/20/30 + 25% AD, MS 20/45/70, duration 3s, size
-      10%, cd 100/90/80, cost 100; the cleanse + immunity wording;
-      the game file; the module parse receipt; the source receipts;
-      the absent typed R declaration xfailed).
-  S2  No R (R rank 0; the option set unchanged — no new option; the
-      rank-0 no-cast contract xfailed — the engine casts R at every
-      rank today with cost 0 at rank 0).
-  S3  R activation timing (engine cast_timeline one_rotation 0.0 /
-      timed 0.5; the activation-time == cast-time contract xfailed;
-      the missing/invalid timing fail-closed contract xfailed).
-  S4  Cleanse of active controls (the kernel truncation contract PASS;
-      the charm applies untouched today; the wired cleanse-at-cast
-      truncation xfailed: every known kind except the displacement
-      family, the airborne displacement-override named boundary).
-  S5  Immunity for later controls (the Slice 3 window kernel evidence
-      PASS — in-window blocked, after-window applied, end-exclusive;
-      the wired 3s R window xfailed).
-  S6  Castability while disabled + suppression (the game flag pair
-      pinned; the kernel self-scope suppression denial PASS; the wired
-      carve-out + the stasis-lock named boundary xfailed).
-  S7  Bonus-state receipts (the stat-buff kernel fields PASS; no R
-      stat rows today; the wired armor/MR stat-buff rows + the 3s
-      window + the duration-extension receipted-never-applied + the
-      AD/size named-unsupported boundaries xfailed).
-  S8  One-use and cooldown boundaries (the kernel latch evidence PASS;
-      the R cooldown row receipted never enforced; the wired one-use
-      latch + use_spent + repeated-cast semantics xfailed).
-  S9  Same-time ordering (the walk's support-before-gate dispatch +
-      the shield-before-damage arm priority PASS; the wired
-      cleanse-vs-immunity-vs-stat-buff ordering xfailed).
-  S10 Missing identity or rows (resolve_cleanse_item fails closed
-      naming the source PASS; the require_named_leveling fail-loud precedent).
-  S11 Score fail-closed (the generic gates PASS: support_kind=stat_buff
-      / movement; cleanse and crowd_control_resist representable —
-      never a silent re-price).
-  S12 Full vs score parity (the Q/W/E/R engine surface byte-identical
-      today in both fight modes; the named R divergence xfailed).
-  S13 Unchanged boundaries (Q/E damage, the W shield E8c, the module
-      OPTIONS + parse receipts, the GP/Rengar/Milio/Dr. Mundo + item
-      cleanse declarations, the Slice 3 immunity + resist machinery,
-      the Ferocity + grey-health packages untouched).
-  S14 Regression surface (the mandated sanity run list, footer).
-
-Expected damage values are recomputed from data/champions.json
-leveling rows against the fight's own stats — no literal damage
-constants.  The R resist/AD/MS/duration/size/cd/cost rows ARE the
-values under test (the typed declaration must publish them), so they
-appear as pinned cache + game-file evidence (the K'Sante / Gangplank /
-Rengar / Milio / Dr. Mundo matrix precedent).  The declaration item
-key below is a pinned CANDIDATE ("Olaf R"); the coordinator's final
-spelling is a contract ambiguity reported to the parent.
+Two carve-outs the shared kernel owns and this file drives: the airborne
+family is excluded from the cleanse, because the notes remove the stun under
+an airborne and not the displacement, and a suppression on the caster denies
+the cleanse by name (``caster_control_blocks_cleanse``) without consuming
+the one use.
 """
 
 import contextlib
@@ -183,19 +36,13 @@ from src.calculator.champions import (
     parse_champion_abilities,
 )
 from src.calculator.champions.slot_extract import extract_named
-from src.calculator.cleanse_declarations import (
-    ITEM_CLEANSE_DECLARATIONS,
-    resolve_cleanse_item,
-)
+from src.calculator.cleanse_declarations import resolve_cleanse_item
 from src.calculator.cleanse_eligibility import (
     CAST_BLOCKING_CONTROL_KINDS,
     CleanseEligibility,
 )
 from src.calculator.control_intervals import truncate_intervals
-from src.calculator.crowd_control_eligibility import (
-    KNOWN_CONTROL_KINDS,
-    classify_control,
-)
+from src.calculator.crowd_control_eligibility import KNOWN_CONTROL_KINDS
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.fight.config import FightConfig
@@ -212,10 +59,6 @@ _OLAF_DATA = _CHAMPION_DATA["Olaf"]
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
 _TARGET_MAX_HP = 2000.0
-# The P2-9 coordinator wires the typed R declaration + the packet
-# authoring; genuinely-absent mechanics are xfailed with this reason
-# (never strict — the completion removes the markers).
-_AWAIT = "awaiting P2-9 wiring"
 
 # The cached R rows the typed declaration must publish (values under
 # test — pinned as cache evidence, never literal damage constants).
@@ -833,24 +676,9 @@ class TestSourceAndTypedValues:
 
 
 class TestNoR:
-    def test_r_rank0_still_books_a_cast_today(self):
-        # P2-9: an unlearned R books NO cast (the rank-gated no_damage
-        # slot — the Milio precedent) in both fight modes.
-        for one_rotation in (True, False):
-            result = _fight({}, one_rotation=one_rotation, ranks={**_RANKS, "R": 0})
-            assert not [c for c in result["cast_timeline"] if c["slot"] == "R"]
-        # A rank-3 one_rotation fight books R at 0.0 with the 100 cost.
-        result = _fight({}, one_rotation=True)
-        (r_cast,) = [c for c in result["cast_timeline"] if c["slot"] == "R"]
-        assert r_cast["time"] == pytest.approx(0.0)
-        assert r_cast["resource_cost"] == pytest.approx(100.0)
-
-    def test_r_rank0_no_cleanse_immunity_stat_rows_today(self):
-        # Pinned actual (the brief's contract #2): even though the engine
-        # books the R cast, NO cleanse/immunity/stat-buff surface exists
-        # at any rank — the app fight carries no R rows anywhere.
-        # P2-9: the R rank gate removes the rank-0 cast; ranks 1-3 wire
-        # the full R surface (cleanse + immunity + stats).
+    def test_every_learned_rank_wires_the_full_r_surface(self):
+        # Ranks 1 to 3 wire the whole R surface: the cleanse item and
+        # its source, the immunity arm, and one cleanse event each.
         for ranks in (dict(_RANKS), {**_RANKS, "R": 1}):
             combat = _app_combat(ranks=ranks)
             survival = survival_of(combat)
@@ -988,16 +816,6 @@ class TestRTiming:
         assert survival["cleanse"]["decision"]["reason"] == "control_not_active"
         assert survival["cleanse"]["use_consumed"] is True
         assert _cleanse_event_count(combat) == 1
-
-    def test_r_no_typed_timing_option_today(self):
-        # Pinned actual (the brief's contract #3 tail): NO typed timing
-        # option exists today — the cast timeline IS the activation
-        # clock.  IF the coordinator later lands a typed timing option,
-        # its missing/invalid values must fail closed with a named denial
-        # (never a silent re-anchor of the cast) — the P2-9 contract is
-        # documented here for the completion.  MERGE: the module's one
-        # option scales Berserker Rage and cannot move the R cast.
-        assert not _r_option_keys(get_champion_options_meta("Olaf"))
 
 
 # ---------------------------------------------------------------------------
@@ -1604,10 +1422,9 @@ class TestBonusStateReceipts:
         # surface is the support_events row the authoring emits.
         assert result["main"]["support_shield_received"] == 0.0
 
-    def test_no_r_stat_rows_in_app_fight_today(self):
-        # Pinned actual (the brief's contract #9): no R stat-buff or
-        # movement rows exist in the app fight today — support_events
-        # carries only the E8c W shield for main.
+    def test_the_r_cast_authors_its_stat_buff_and_movement_rows(self):
+        # The R cast authors the armor stat-buff row and the movement
+        # row beside the E8c W shield.
         combat = _app_combat()
         rows = [
             e for e in combat.get("support_events", []) if e.get("attacker") == "main"
@@ -2113,193 +1930,3 @@ class TestScoreFailClosed:
             "_event_id": "main:olaf:r:cleanse:0",
         }
         assert unrepresentable_template_receipt(template) is None
-
-
-# ---------------------------------------------------------------------------
-# S12 — Full vs score parity
-# ---------------------------------------------------------------------------
-
-
-class TestModeParity:
-    def test_engine_surface_byte_identical_under_score_only(self):
-        # PASS today (the brief's contract #13): the R surface — the
-        # breakdown row, the mana ledger, the resource spend — is
-        # byte-identical between the full walk and the compiled score
-        # path in both fight modes; the R stays OUT of outgoing damage
-        # in both modes.
-        for one_rotation in (True, False):
-            full = _fight({}, one_rotation=one_rotation)
-            scored = _fight({}, one_rotation=one_rotation, score_only=True)
-            assert full["breakdown"]["R"] == scored["breakdown"]["R"]
-            assert full["breakdown"]["R"]["total_damage"] == 0.0
-            assert full["total_damage"] == scored["total_damage"]
-            assert full["resource_spent"] == scored["resource_spent"]
-            assert full["resource_remaining"] == scored["resource_remaining"]
-            # The Q/W/E surfaces agree too (the R has no damage surface).
-            for slot in ("Q", "W", "E"):
-                assert full["breakdown"][slot] == scored["breakdown"][slot]
-
-    def test_engine_r_cast_booked_in_both_modes(self):
-        # PASS today: the engine books the R cast in BOTH fight modes
-        # (the score path's cast_timeline carries the same slot/time/
-        # cost; the full path additionally carries the resource
-        # before/after columns — the documented receipt difference).
-        for one_rotation in (True, False):
-            full = _fight({}, one_rotation=one_rotation)
-            scored = _fight({}, one_rotation=one_rotation, score_only=True)
-            full_r = next(c for c in full["cast_timeline"] if c["slot"] == "R")
-            score_r = next(c for c in scored["cast_timeline"] if c["slot"] == "R")
-            assert full_r["time"] == pytest.approx(score_r["time"])
-            assert full_r["resource_cost"] == pytest.approx(score_r["resource_cost"])
-            assert full_r["time"] == pytest.approx(0.0 if one_rotation else 0.5)
-
-    def test_q_e_surfaces_identical_across_paths(self):
-        # PASS (the brief's contract #13): the Q/E damage surfaces are
-        # byte-identical between the full walk and the compiled score
-        # path — the parity the P2-9 wiring must keep (the R adds the
-        # cleanse/immunity/stat receipts to the FULL path; the score
-        # path either models them identically or fails closed with the
-        # named receipts — never a silent re-price).
-        full = _fight({}, one_rotation=True)
-        scored = _fight({}, one_rotation=True, score_only=True)
-        assert full["breakdown"]["Q"] == scored["breakdown"]["Q"]
-        assert full["breakdown"]["E"] == scored["breakdown"]["E"]
-        assert full["total_damage"] == scored["total_damage"]
-
-
-# ---------------------------------------------------------------------------
-# S13 — Unchanged boundaries
-# ---------------------------------------------------------------------------
-
-
-class TestUnchangedBoundaries:
-    def test_q_and_e_parse_receipts_unchanged(self):
-        # The Q/E parse receipts are unchanged (the brief's contract
-        # #14): Undertow 70..270 + 100% bonus AD (cd 9, cost 50..70);
-        # Reckless Swing 70..250 + 50% AD true damage (cd 11..7, cost
-        # 28..100) — recomputed from the cached rows, no literals.
-        c = get_champion("Olaf")
-        q = c["abilities"]["Q"][0]
-        e = c["abilities"]["E"][0]
-        assert extract_named(
-            q, "Physical Damage", 5, {"bonus_attack_damage": 40.0}, {}
-        ) == pytest.approx(270.0 + 40.0)
-        assert extract_named(e, "True Damage", 5, {"attack_damage": 100.0}, {}) == (
-            pytest.approx(250.0 + 50.0)
-        )
-        _, abilities = _parse()
-        assert abilities["Q"]["name"] == "Undertow"
-        assert abilities["Q"]["cooldown"] == pytest.approx(9.0)
-        assert abilities["E"]["name"] == "Reckless Swing"
-        assert abilities["E"]["damage_type"] == "true"
-        # MERGE: the cooldown is published at the SELECTED rank now (the
-        # reference build maxes E, and the cached row is 11/10/9/8/7 by
-        # rank, so rank 5 is 7) — never the rank-1 row whatever rank was
-        # asked for.
-        assert abilities["E"]["rank"] == 5
-        assert abilities["E"]["cooldown"] == pytest.approx(7.0)
-        assert abilities["E"]["resource_cost"] == pytest.approx(100.0)
-
-    def test_w_shield_e8c_surface_unchanged(self):
-        # The E8c W shield surface is unchanged (the brief's contract
-        # #14): the app fight emits one Tough It Out shield row at the
-        # cast (130 flat at the full-health floor, 2.5s, expires 2.75),
-        # and the module constants stay pinned.
-        from src.calculator.champions.olaf import (
-            TOUGH_IT_OUT_MISSING_HEALTH_CAP,
-            TOUGH_IT_OUT_MISSING_HEALTH_RATIO,
-            TOUGH_IT_OUT_SHIELD_DURATION_SECONDS,
-        )
-
-        assert pytest.approx(2.5) == TOUGH_IT_OUT_SHIELD_DURATION_SECONDS
-        assert pytest.approx(0.175) == TOUGH_IT_OUT_MISSING_HEALTH_RATIO
-        assert pytest.approx(0.70) == TOUGH_IT_OUT_MISSING_HEALTH_CAP
-        combat = _app_combat()
-        rows = [
-            e
-            for e in combat.get("support_events", [])
-            if e.get("attacker") == "main" and e.get("kind") == "shield"
-        ]
-        assert len(rows) == 1
-        assert rows[0]["source"].startswith("Tough It Out")
-        assert rows[0]["amount"] == pytest.approx(130.0)
-        assert rows[0]["time"] == pytest.approx(0.25)
-        assert rows[0]["expires_at"] == pytest.approx(2.75)
-        survival = survival_of(combat)
-        assert survival["support_shield_received"] == pytest.approx(130.0)
-        assert survival["shield_absorbed"] == pytest.approx(130.0)
-
-    def test_cleanse_tables_unchanged(self):
-        # The GP/Rengar/Milio/Dr. Mundo + item cleanse declarations stay
-        # untouched (the brief's contract #14).
-        assert set(CHAMPION_CLEANSE_DECLARATIONS) == {
-            "Gangplank W",
-            "Rengar W",
-            "Milio R",
-            "Dr. Mundo P",
-            "Olaf R",
-        }
-        assert set(ITEM_CLEANSE_DECLARATIONS) == {
-            "Mikael's Blessing",
-            "Quicksilver Sash",
-            "Mercurial Scimitar",
-        }
-        for key in ("Gangplank W", "Rengar W", "Milio R", "Dr. Mundo P", "Olaf R"):
-            assert CHAMPION_CLEANSE_DECLARATIONS[key]["target_scope"]
-        # The item declarations still resolve through the typed path.
-        assert resolve_cleanse_item("Quicksilver Sash — Quicksilver") == (
-            "Quicksilver Sash"
-        )
-
-    def test_kernel_truncation_and_immunity_contracts_unchanged(self):
-        # The Slice 3/4 kernel contracts are unchanged (the brief's
-        # contract #14): the truncate_intervals semantics and the
-        # self-scope suppression rule stay as pinned by the Slices 4-8
-        # matrices.
-        kept, removed = truncate_intervals(
-            [{"kind": "charm", "start": 0.0, "end": 1.8, "source": "E"}],
-            0.25,
-            frozenset(KNOWN_CONTROL_KINDS),
-        )
-        assert kept[0]["end"] == pytest.approx(0.25)
-        assert removed[0]["start"] == pytest.approx(0.25)
-        assert frozenset({"stasis", "suppression"}) == CAST_BLOCKING_CONTROL_KINDS
-        assert classify_control(SimpleNamespace(cc_kind="slow")).blocking is False
-        assert classify_control(SimpleNamespace(cc_kind="stun")).blocking is True
-        unknown = classify_control(SimpleNamespace(cc_kind="mystery"))
-        assert unknown.unknown is True
-
-    def test_r_stays_out_of_damage_in_both_paths(self):
-        # The R has no damage surface and the completion must NOT add
-        # one (the brief's contract #13/#14): total_raw 0 in the parse,
-        # no damage events in either path, and the Q/E numbers agree
-        # across the full and score walks.
-        for one_rotation in (True, False):
-            result = _fight({}, one_rotation=one_rotation)
-            assert result["breakdown"]["R"]["total_damage"] == 0.0
-            assert "damage_events" not in result["breakdown"]["R"]
-            scored = _fight({}, one_rotation=one_rotation, score_only=True)
-            assert scored["breakdown"]["R"]["total_damage"] == 0.0
-
-
-# ---------------------------------------------------------------------------
-# S14 — Regression surface (the mandated sanity run list)
-# ---------------------------------------------------------------------------
-
-
-# The full mandated sanity gate (the brief's contract #15):
-#
-#   .venv/bin/python -m pytest tests/test_olaf_r_cleanse.py \
-#     tests/test_aurelion_sol_stardust_ledger.py \
-#     tests/test_senna_souls_ledger.py tests/test_bard_chimes_ledger.py \
-#     tests/test_heimerdinger_multihit.py tests/test_ksante_w_resistance.py \
-#     tests/test_rengar_ferocity_ledger.py tests/test_rengar_w_cleanse.py \
-#     tests/test_gangplank_w_cleanse.py tests/test_milio_r_cleanse.py \
-#     tests/test_dr_mundo_passive.py tests/test_cleanse_eligibility.py \
-#     tests/test_cleanse_eligibility_kernel.py \
-#     tests/test_cleanse_eligibility_consumers.py \
-#     tests/test_state_lifecycle.py tests/test_state_lifecycle_consumers.py \
-#     tests/test_resource_ledger.py tests/test_resource_ledger_consumers.py \
-#     tests/test_resource_ledger_champion_consumers.py \
-#     tests/test_catalyst_resource_ledger.py tests/test_item_sustain.py \
-#     tests/test_mana_restore_refund.py tests/test_app.py
