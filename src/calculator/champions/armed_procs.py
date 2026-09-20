@@ -26,6 +26,7 @@ from functools import partial
 from typing import Any
 
 from ..ability_atoms import declared_payload, required_declaration
+from ..ability_prose import CachedSentence
 
 #: The sentence every stacking innate in this cache writes the same way:
 #: "... apply a stack of <name> to <whom> for N seconds, refreshing ...
@@ -43,22 +44,16 @@ def cached_stack_terms(ability: Mapping[str, Any], *, owner: str) -> tuple[float
 
     Raises rather than answering a default: a cache that stops stating
     either number cannot be stood in for, and a counter with a guessed
-    threshold prices a mechanic nobody reviewed.
+    threshold prices a mechanic nobody reviewed.  The refusal names the
+    kit, so the sentence is declared per owner over the one pattern.
     """
-    effects = ability.get("effects")
-    parts: list[str] = []
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is not None:
-            parts.append(str(description))
-    description = " ".join(parts)
-    match = _STACK_SENTENCE.search(description)
-    if match is None:
-        raise ValueError(
+    return CachedSentence(
+        _STACK_SENTENCE,
+        missing=(
             f"{owner}: the cached innate no longer states its stack life and cap "
             "('apply a stack of ... for N seconds ... stacking up to N times')"
-        )
-    return float(match.group("seconds")), int(match.group("stacks"))
+        ),
+    ).stack_terms(ability)
 
 
 @dataclass(frozen=True)
