@@ -17,10 +17,14 @@ from .engine import SlotCtx, build_parser
 from .inputs import float_option, int_option
 from .module_helpers import ability_slot, named_damage, ranked_slot
 from .slot_entries import damage_entry
-from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slot_extract import (
+    ability_name,
+    extract_cast_time,
+    extract_cooldown,
+    extract_named,
+)
 from .source_receipts import load_champion_sources
 
-_Q_CAST_TIME = 0.25
 _Q_TORNADO_FIRST_TICK = 0.75
 _Q_TORNADO_TICK_INTERVAL = 0.5
 _Q_TORNADO_TICKS = 4
@@ -28,7 +32,6 @@ _W_MAX_CHARGE = 2.0
 _W_DAMAGE_CAP_TIME = 1.25
 _W_DAMAGE_STEP = 0.16
 _W_RECAST_LOCKOUT = 0.4
-_E_CAST_TIME = 0.4
 _E_DASH_SPEED = 2300.0
 _R_LANDING_TIME = 2.75
 
@@ -88,6 +91,7 @@ def _winds_of_war(
 ) -> dict[str, Any] | None:
     """Q: gust at cast end, then four max-health tornado ticks."""
 
+    cast_time = extract_cast_time(ability)
     gust = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     ap = float(ctx.stat("ability_power"))
     target_max_health = float(ctx.target_stat("target_max_health"))
@@ -113,7 +117,7 @@ def _winds_of_war(
         "magic",
     )
     entry["parts"] = (
-        DamagePart("magic", gust, time_offset=_Q_CAST_TIME),
+        DamagePart("magic", gust, time_offset=cast_time),
         DamagePart(
             "magic",
             per_tick,
@@ -123,7 +127,7 @@ def _winds_of_war(
             hit_interval=_Q_TORNADO_TICK_INTERVAL,
         ),
     )
-    entry["cast_time"] = _Q_CAST_TIME
+    entry["cast_time"] = cast_time
     entry["target_max_health_sensitive"] = True
     entry["detail"] = "1 gust + 4 tornado ticks over 2 seconds"
     return entry
@@ -174,7 +178,7 @@ def _justice_punch(
         650.0,
         max(250.0, float(ctx.option("e_dash_distance"))),
     )
-    hit_delay = _E_CAST_TIME + distance / _E_DASH_SPEED
+    hit_delay = extract_cast_time(ability) + distance / _E_DASH_SPEED
     total = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
     entry = damage_entry(
         ability_name(ability),
