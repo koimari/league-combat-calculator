@@ -83,7 +83,7 @@ def _seeded_option_stacks(
 #: resistance IS unsourced, and is absent from this table because
 #: ``minion_stats.sourced_stat`` raises for it rather than answering 0.0.
 #:
-#: One table, both directions: :meth:`FightConfig.for_minion` FILLS exactly
+#: One table, both directions: :func:`sourced_minion_target` FILLS exactly
 #: these fields and :meth:`FightConfig._validate_minion_target` REFUSES any
 #: other answer for them, so a field cannot be filled without also being
 #: pinned, nor pinned without being filled.
@@ -213,53 +213,12 @@ class FightConfig:
     # target caller-shaped (a minion LABEL over caller-supplied stats) and is
     # the default for every existing caller.  A named type binds the fields
     # MINION_SOURCED_TARGET_FIELDS lists to the minion's own spawn-time
-    # record: build such a config through FightConfig.for_minion, which fills
-    # them, and __post_init__ then REFUSES any config that claims a type
-    # while carrying some other target's numbers.  Magic resistance is NOT
+    # record: fill them from sourced_minion_target, and __post_init__ then
+    # REFUSES any config that claims a type while carrying some other
+    # target's numbers.  Magic resistance is NOT
     # among them and stays caller-supplied, because no minion character
     # record states one — see minion_stats.
     minion_type: str = ""
-
-    @classmethod
-    def for_minion(
-        cls,
-        minion_type: str,
-        *,
-        target_magic_resistance: float,
-        fight_duration_seconds: float,
-        **overrides: Any,
-    ) -> "FightConfig":
-        """A fight whose target IS the named lane minion, at spawn-time stats.
-
-        The durability fields come from the minion's own character record —
-        no call site spells its health or armor — and supplying one of them
-        here is refused rather than merged, so "sourced" and "caller-supplied"
-        never both answer for one field.
-
-        ``target_magic_resistance`` has no default because it is the one
-        durability stat no minion record states; a default here would put an
-        invented magic resistance behind a sourced-looking constructor, which
-        is the failure :mod:`minion_stats` exists to prevent.
-        """
-        sourced = sourced_minion_target(minion_type)
-        # "minion_type" needs no entry here: it is a named parameter above, so
-        # passing it again raises before this runs.
-        collisions = sorted(set(overrides) & (set(sourced) | {"target_class"}))
-        if collisions:
-            raise ValueError(
-                f"for_minion({minion_type!r}) decides {', '.join(collisions)}; "
-                "the sourced target fields are "
-                f"{', '.join(sorted(sourced))} and the class is fixed. "
-                "Pass a champion-class FightConfig instead of overriding them."
-            )
-        return cls(
-            target_magic_resistance=target_magic_resistance,
-            fight_duration_seconds=fight_duration_seconds,
-            target_class=item_effects.MINION_TARGET_CLASS,
-            minion_type=minion_type,
-            **sourced,
-            **overrides,
-        )
 
     @property
     def rune_page(self) -> "rune_effects.RunePage":
@@ -316,7 +275,7 @@ class FightConfig:
             )
             raise ValueError(
                 f"{field_name}={supplied!r} contradicts the sourced "
-                f"{self.minion_type} minion ({cited}). Build a sourced-minion "
-                "fight with FightConfig.for_minion, which fills these fields; "
-                "it does not accept a second answer for them."
+                f"{self.minion_type} minion ({cited}). Fill these fields from "
+                "sourced_minion_target; a sourced-minion fight does not "
+                "accept a second answer for them."
             )

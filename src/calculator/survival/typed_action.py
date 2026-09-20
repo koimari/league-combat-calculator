@@ -267,8 +267,7 @@ class SurvivalAction(NamedTuple):
     # (``Authority.SPLIT``'s machine-checked handshake).  A roster *index*,
     # like ``subject`` and ``attacker``, so the kernel never compares
     # participant id strings; ``-1`` is "this packet declares no holder", the
-    # integer spelling of the empty owner string it replaces.  ``Provenance``
-    # compiles into this field.
+    # integer spelling of the empty owner string it replaces.
     holder: int = -1
     # The class restriction a damage-modifier packet declares (D-04).  Both
     # are required of such a packet and empty is banned, which is why the

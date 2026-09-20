@@ -175,6 +175,17 @@ def test_the_projection_publishes_one_row_per_participant() -> None:
     assert list(rows) == ["target", "ally"]
 
 
+def _published_leaves(row: dict) -> list[tuple[str, object]]:
+    """Every leaf of one survival row, keyed as the precision registry is."""
+    leaves: list[tuple[str, object]] = []
+    for key, value in row.items():
+        if isinstance(value, dict):
+            leaves.extend((f"{key}.{leaf}", inner) for leaf, inner in value.items())
+        else:
+            leaves.append((key, value))
+    return leaves
+
+
 def test_every_published_number_carries_its_declared_precision() -> None:
     """The whole point of the move: the digit count comes from the registry.
 
@@ -196,15 +207,13 @@ def test_every_published_number_carries_its_declared_precision() -> None:
             },
         ),
     )["target"]
-    for field, digits in precision.ROUNDING_BY_VIEW["survival"].items():
-        if "." in field:
-            block, leaf = field.split(".")
-            value = row[block][leaf]
-        else:
-            value = row[field]
-        if value is None:
+    checked = 0
+    for field, value in _published_leaves(row):
+        if not isinstance(value, float):
             continue
-        assert value == round(value, digits), field
+        assert value == round(value, precision.digits_for(field)), field
+        checked += 1
+    assert checked == 44
 
 
 def test_a_survivor_publishes_no_death_time_rather_than_a_zero() -> None:
@@ -215,7 +224,7 @@ def test_a_survivor_publishes_no_death_time_rather_than_a_zero() -> None:
 
 
 def test_a_death_time_is_published_at_millisecond_precision() -> None:
-    """The number the post-death cutoff then reads (``CutoffPolicy``)."""
+    """The number the post-death damage cutoff then reads."""
     row = _row(death_time=4.567891)
     assert row["death_time"] == 4.568
     assert row["survived_window"] is False

@@ -11,7 +11,7 @@ Three groups, in the order the evidence flows:
    attack-speed ratio is in no siege record, and the wave-upgrade table has
    no decidable binding to Classic. All three answer with a named error,
    never with a plausible zero.
-3. **The wiring.** ``FightConfig.for_minion`` and the request layer fill the
+3. **The wiring.** ``sourced_minion_target`` and the request layer fill the
    target's durability from the source, refuse a second answer for it, and
    leave the champion-class path exactly where it was.
 """
@@ -30,6 +30,10 @@ from src.calculator.fight.config import FightConfig
 from tests.app_config import app_config
 
 BIN_DIR = Path(__file__).resolve().parent.parent / "data" / "bin" / "characters"
+
+#: The two team prefixes of the tracked binaries.  Both files are compared;
+#: the stat block itself is keyed by type alone because the comparison passes.
+MINION_TEAMS = ("chaos", "order")
 
 #: The anchor the sourcing task named, transcribed once here so the pin has
 #: a value that did NOT come from the module under test.  Everything else is
@@ -136,7 +140,7 @@ def test_the_four_types_are_not_all_the_same_minion():
 @pytest.mark.parametrize("minion_type", minion_stats.MINION_TYPES)
 def test_every_tracked_record_is_readable_and_names_its_own_type(minion_type):
     """The eight evidence files parse, and each states the record cited."""
-    for team in minion_stats.MINION_TEAMS:
+    for team in MINION_TEAMS:
         record = _record(team, minion_type)
         assert record["__type"] == "CharacterRecord"
     assert minion_stats.base_stats(minion_type).record.endswith("CharacterRecords/Root")
@@ -156,7 +160,7 @@ def test_magic_resistance_is_absent_from_every_record(minion_type):
     wrong — which is the point of checking the premise rather than the
     consequence.
     """
-    for team in minion_stats.MINION_TEAMS:
+    for team in MINION_TEAMS:
         record = _record(team, minion_type)
         assert minion_stats.ABSENT_FROM_EVERY_RECORD["magic_resistance"] not in record
         assert not [key for key in record if "spellblock" in key.lower()]
@@ -239,71 +243,34 @@ def test_the_scaling_denial_is_the_only_way_to_read_a_scaled_stat():
 # ---------------------------------------------------------------------------
 
 
+def _sourced_config(minion_type: str) -> FightConfig:
+    """A fight whose target IS the named lane minion, at spawn-time stats."""
+    return FightConfig(
+        **config.sourced_minion_target(minion_type),
+        target_magic_resistance=0.0,
+        fight_duration_seconds=5.0,
+        target_class=item_effects.MINION_TARGET_CLASS,
+        minion_type=minion_type,
+    )
+
+
 @pytest.mark.parametrize("minion_type", minion_stats.MINION_TYPES)
-def test_for_minion_fills_the_target_from_the_source(minion_type):
+def test_a_sourced_config_carries_the_records_numbers(minion_type):
     """A sourced-minion fight carries the record's numbers, unspelled."""
-    config = FightConfig.for_minion(
-        minion_type, target_magic_resistance=0.0, fight_duration_seconds=5.0
-    )
-    assert config.target_class == item_effects.MINION_TARGET_CLASS
-    assert config.minion_type == minion_type
-    assert config.target_health == minion_stats.sourced_stat(minion_type, "health")
-    assert config.target_armor == minion_stats.sourced_stat(minion_type, "armor")
-    assert config.target_bonus_health == 0.0
-    assert config.target_bonus_armor == 0.0
+    fight = _sourced_config(minion_type)
+    assert fight.target_class == item_effects.MINION_TARGET_CLASS
+    assert fight.minion_type == minion_type
+    assert fight.target_health == minion_stats.sourced_stat(minion_type, "health")
+    assert fight.target_armor == minion_stats.sourced_stat(minion_type, "armor")
+    assert fight.target_bonus_health == 0.0
+    assert fight.target_bonus_armor == 0.0
 
 
-def test_for_minion_fills_the_melee_anchor_specifically():
+def test_a_sourced_config_fills_the_melee_anchor_specifically():
     """The anchor again, at the surface a fight is actually built through."""
-    config = FightConfig.for_minion(
-        "melee", target_magic_resistance=0.0, fight_duration_seconds=5.0
-    )
-    assert config.target_health == 430.0
-    assert config.target_armor == 0.0
-
-
-def test_for_minion_refuses_to_be_handed_a_field_it_sources():
-    """Sourced and caller-supplied never both answer for one field."""
-    for field_name in sorted(config.MINION_SOURCED_TARGET_FIELDS):
-        with pytest.raises(ValueError, match=field_name):
-            FightConfig.for_minion(
-                "melee",
-                target_magic_resistance=0.0,
-                fight_duration_seconds=5.0,
-                **{field_name: 1.0},
-            )
-
-
-def test_for_minion_refuses_to_be_handed_its_own_class_or_type():
-    """The class is fixed by the constructor, not negotiable through it.
-
-    ``minion_type`` is refused one layer earlier, by Python: it is a named
-    parameter, so passing it again is a TypeError before the guard runs.
-    """
-    with pytest.raises(ValueError, match="target_class"):
-        FightConfig.for_minion(
-            "melee",
-            target_magic_resistance=0.0,
-            fight_duration_seconds=5.0,
-            target_class="champion",
-        )
-    with pytest.raises(TypeError, match="minion_type"):
-        FightConfig.for_minion(
-            "melee",
-            target_magic_resistance=0.0,
-            fight_duration_seconds=5.0,
-            minion_type="ranged",
-        )
-
-
-def test_for_minion_requires_a_magic_resistance_from_the_caller():
-    """The one unsourced durability stat has no default hiding behind it."""
-    with pytest.raises(TypeError):
-        FightConfig.for_minion("melee", fight_duration_seconds=5.0)
-    config = FightConfig.for_minion(
-        "melee", target_magic_resistance=37.0, fight_duration_seconds=5.0
-    )
-    assert config.target_magic_resistance == 37.0
+    fight = _sourced_config("melee")
+    assert fight.target_health == 430.0
+    assert fight.target_armor == 0.0
 
 
 def test_a_hand_built_config_cannot_contradict_the_type_it_claims():
@@ -338,9 +305,7 @@ def test_a_minion_type_requires_the_minion_class():
 def test_an_unknown_minion_type_never_reaches_a_fight():
     """A misspelling fails closed instead of arriving caller-shaped."""
     with pytest.raises(KeyError):
-        FightConfig.for_minion(
-            "caster", target_magic_resistance=0.0, fight_duration_seconds=5.0
-        )
+        config.sourced_minion_target("caster")
     with pytest.raises(ValueError, match="minion_type must be one of"):
         FightConfig(
             target_health=430.0,
@@ -518,7 +483,7 @@ def test_all_eight_evidence_files_are_tracked_and_parse():
     """The constants are only defensible while their sources are in the tree."""
     expected = {
         f"sru_{team}minion{minion_type}.bin.json"
-        for team in minion_stats.MINION_TEAMS
+        for team in MINION_TEAMS
         for minion_type in minion_stats.MINION_TYPES
     }
     assert len(expected) == 8

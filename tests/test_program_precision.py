@@ -1,10 +1,8 @@
 """The precision registry: one home for every published digit count (D-71).
 
 What is asserted here is not that ``round`` works.  It is that the registry
-is the *only* place ``program/`` decides a precision, that an undeclared
-field fails closed instead of picking a default, and that the death-time
-cutoff is a named policy rather than a comparison somebody could quietly
-improve.
+is the *only* place ``program/`` decides a precision, and that an undeclared
+field fails closed instead of picking a default.
 """
 
 from __future__ import annotations
@@ -53,44 +51,6 @@ def test_round_field_refuses_a_field_it_has_no_precision_for() -> None:
     """``round_field`` is ``digits_for`` plus a call; it fails the same way."""
     with pytest.raises(precision.UnregisteredField):
         precision.round_field("a_field_nobody_declared", 1.0)
-
-
-def test_the_cutoff_policy_has_exactly_one_member_and_no_default() -> None:
-    """One live policy, named.  A second member is what a change looks like."""
-    assert [member.name for member in precision.CutoffPolicy] == ["ROUNDED_DEATH_TIME"]
-
-
-def test_a_survivor_is_cut_off_at_the_fight_window() -> None:
-    """No death time means the window itself is the cutoff."""
-    assert (
-        precision.damage_cutoff(None, 5.0, precision.CutoffPolicy.ROUNDED_DEATH_TIME)
-        == 5.0
-    )
-
-
-def test_the_cutoff_is_the_published_death_time_sliver_and_all() -> None:
-    """The quirk the policy names, asserted rather than described.
-
-    The walk's raw death time is published rounded to the millisecond, and
-    the cutoff reads the published number.  An event at 4.5679 s therefore
-    still counts against an actor whose raw death was 4.56789 s, because the
-    published time is 4.568.  Reaching for the raw number would be the more
-    correct comparison and a silent change to a published total.
-    """
-    raw_death = 4.567891
-    published = precision.round_field("death_time", raw_death)
-    cutoff = precision.damage_cutoff(
-        published, 10.0, precision.CutoffPolicy.ROUNDED_DEATH_TIME
-    )
-    assert cutoff == 4.568
-    assert cutoff >= 4.5679
-    assert raw_death < 4.5679
-
-
-def test_an_unknown_cutoff_policy_raises() -> None:
-    """Totality: the function answers for members, and refuses the rest."""
-    with pytest.raises(ValueError):
-        precision.damage_cutoff(1.0, 5.0, "rounded_death_time")  # type: ignore[arg-type]
 
 
 def _round_call_sites(path: Path) -> list[int]:

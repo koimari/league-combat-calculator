@@ -28,9 +28,6 @@ CONTRACT API THIS MATRIX COMMITS THE OWNER TO (six separation concerns):
    - ``classify_control(action) -> ControlProfile(kind, blocking, unknown,
      unknown_markers)``; ``kind == ""`` for a packet with no control
      markers (a plain damage packet — R14).
-   - ``required_control_class(action) -> str``: strict API; raises
-     ``UnknownControlError`` (named reason "unknown_control") for kinds
-     outside the known set.
 2. IMMUNITY ELIGIBILITY
    - ``CrowdControlEligibility(name="crowd_control_immunity", window,
      holder_source, source)`` with ``decide(action, attacker=None, *,
@@ -60,11 +57,6 @@ CONTRACT API THIS MATRIX COMMITS THE OWNER TO (six separation concerns):
      only): {recipient, shield_source, source_atoms, window, active_until,
      reason_immunity_ended ("expired" | "drained" | "fight_end" | None),
      eligibility, blocked, decisions} (R12).
-7. SAME-HIT ORDERING (RLM-2 A dependency)
-   - ``same_hit_ordering() -> (rule_text, SourceReceipt)``; raises
-     ``MissingSameHitRuleError`` with ``reason == "missing_same_hit_rule"``
-     while RLM-2 A has not verified the in-game ordering (R19).
-
 Row status conventions (same as the P2 Slice 1/2 matrices):
 - "CURRENT" rows assert behavior the tree already satisfies today.  The
   behavior assertions pass against today's walk; the contract-API
@@ -787,9 +779,7 @@ def test_r6a_same_packet_damage_breaks_shield_variant_blocked():
     (packet,) = packets
     assert packet["crowd_control_blocked"]["source"] == "Black Shield"
 
-    # NEW-CONTRACT: the walk resolves this ordering through
-    # same_hit_ordering() (R19 fails closed while RLM-2 A is unverified);
-    # the decision gate itself only sees the holder present, so the
+    # NEW-CONTRACT: the decision gate only sees the holder present, so the
     # blocked receipt carries the full before-amount and a zero after.
     _require_contract()
     decision = packet["crowd_control_blocked"]["decision"]
@@ -1080,9 +1070,8 @@ def test_r9_two_same_time_controls_are_deterministic():
 
 def test_r10_unknown_control_kind_fails_closed():
     """A control packet whose kind is not in the known set fails closed:
-    classify_control marks it unknown, decide() denies it with the named
-    'unknown_control' reason, and the strict API raises
-    UnknownControlError.  (Today's walk silently ignores such kinds —
+    classify_control marks it unknown and decide() denies it with the named
+    'unknown_control' reason.  (Today's walk silently ignores such kinds —
     no receipt, no downtime — which is the gap this row closes.)"""
     cce = _require_contract()
     action = _CcAction(cc_kind="dance", cc_duration=2.0)
@@ -1092,9 +1081,6 @@ def test_r10_unknown_control_kind_fails_closed():
     assert profile.blocking is False
     assert profile.unknown is True
     assert profile.unknown_markers == ("unknown_control_kind",)
-
-    with pytest.raises(cce.UnknownControlError):
-        cce.required_control_class(action)
 
     decision = _eligibility().decide(action, holder=_holder())
     assert decision.eligible is False
@@ -1730,23 +1716,6 @@ def test_r18_immunity_tied_to_the_exact_ledger_entry():
 
     # Lifetime: an entry that has lapsed is not a holder (end exclusive).
     assert cce.immunity_holder(pools, "Black Shield", event_time=7.0) is None
-
-
-# ---------------------------------------------------------------------------
-# R19 — kernel fail-closed: same-hit rule unverified
-# ---------------------------------------------------------------------------
-
-
-def test_r19_same_hit_rule_fails_closed_until_verified():
-    """same_hit_ordering() fails closed with the named
-    'missing_same_hit_rule' reason while RLM-2 A has not verified the
-    in-game same-hit ordering.  Once verified, the owner pins exactly one
-    of R6a / R6a-alt and this row flips to assert the returned rule
-    receipt instead of the raise."""
-    cce = _require_contract()
-    with pytest.raises(cce.MissingSameHitRuleError) as exc:
-        cce.same_hit_ordering()
-    assert exc.value.reason == "missing_same_hit_rule"
 
 
 # ---------------------------------------------------------------------------

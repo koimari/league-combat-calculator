@@ -112,7 +112,7 @@ class TestClassifyDelivery:
         profile = delivery_classes.classify_delivery(_Action(skillshot=True))
         assert profile.classes == frozenset({"projectile"})
         assert not profile.unknown
-        assert profile.has("projectile")
+        assert "projectile" in profile.classes
 
     def test_area_and_projectile_combine(self) -> None:
         profile = delivery_classes.classify_delivery(
@@ -151,29 +151,6 @@ class TestClassifyDelivery:
             "unknown": False,
             "unknown_markers": [],
         }
-
-
-class TestRequiredDeliveryClass:
-    def test_returns_the_accepted_class(self) -> None:
-        action = _Action(skillshot=True, is_ability=True)
-        assert (
-            delivery_classes.required_delivery_class(
-                action, frozenset({"projectile", "area"})
-            )
-            == "projectile"
-        )
-
-    def test_fails_closed_on_unknown(self) -> None:
-        action = _Action(is_ability=False)
-        with pytest.raises(
-            delivery_classes.UnknownDeliveryError, match="unknown delivery"
-        ):
-            delivery_classes.required_delivery_class(action, frozenset({"projectile"}))
-
-    def test_fails_closed_on_not_accepted(self) -> None:
-        action = _Action(skillshot=True)
-        with pytest.raises(delivery_classes.UnknownDeliveryError, match="not accepted"):
-            delivery_classes.required_delivery_class(action, frozenset({"area"}))
 
 
 # ---------------------------------------------------------------------------

@@ -14,9 +14,8 @@ type (:mod:`delivery_eligibility`) and state lifecycle
   second list of kinds.
   :func:`classify_control` is a deterministic pure function of the
   action's ``cc_kind``; a kind outside the known set is ``unknown`` and
-  FAILS CLOSED with the named ``unknown_control`` reason
-  (:class:`UnknownControlError` for the strict API).  A packet with no
-  control markers is ``kind == ""`` and never reports a control block.
+  FAILS CLOSED with the named ``unknown_control`` reason.  A packet with
+  no control markers is ``kind == ""`` and never reports a control block.
 - IMMUNITY ELIGIBILITY — :class:`CrowdControlEligibility` (window from
   :class:`delivery_eligibility.DefenseWindow`, holder source, source
   receipt); ``decide`` returns a :class:`CrowdControlDecision` with a
@@ -32,21 +31,16 @@ type (:mod:`delivery_eligibility`) and state lifecycle
   packets resolve through the survival walk's total order (``action_key``),
   so decisions are deterministic.
 
-SAME-HIT ORDERING (documented fail-closed): whether a packet whose own
-damage fully depletes the shield still has its control blocked is the
-walk's gate position, not a per-event decision.  The local caches carry
-one prose statement (wiki notes: "negates crowd control effects before
-any magic damage is absorbed; even if the shield is broken by an enemy
-dealing enough damage, its associated disables will not apply") but no
-second provenance (Riot tooltips say only "until it breaks"; game
-scripts are not cached).  While the rule is single-provenance,
-:func:`same_hit_ordering` FAILS CLOSED by raising
-:class:`MissingSameHitRuleError` (``reason == "missing_same_hit_rule"``)
-instead of certifying an unverified rule; the survival walk keeps its
-pinned gate-before-absorb order (R6a) and the denial is the observable
-receipt.  The shield-destroying exception ("Shield-destroying effects
-bypass this...") and the allied-CC exclusion have no modeled source in
-the calculator and are declared follow-ups.
+SAME-HIT ORDERING: whether a packet whose own damage fully depletes the
+shield still has its control blocked is the walk's gate position, not a
+per-event decision, and the survival walk holds the pinned
+gate-before-absorb order (R6a).  The rule is single-provenance here: the
+wiki notes state it ("negates crowd control effects before any magic
+damage is absorbed; even if the shield is broken by an enemy dealing
+enough damage, its associated disables will not apply"), Riot tooltips say
+only "until it breaks", and game scripts are not cached.  The
+shield-destroying exception and the allied-CC exclusion have no modeled
+source in the calculator and are declared follow-ups.
 
 Design rules: categorical rules are small frozen declarations with
 public receipts; missing values raise naming the declaration; the kernel
@@ -117,13 +111,6 @@ class ControlProfile:
         }
 
 
-class UnknownControlError(ValueError):
-    """Raised when a strict classification needs a kind the contract does
-    not know.  Naming the event keeps the failure actionable."""
-
-    reason = "unknown_control"
-
-
 def _action_cc_kind(action: PacketFacts) -> str:
     """Read the typed control-kind marker, defaulting to ""."""
     return str(getattr(action, "cc_kind", "") or "").strip().lower()
@@ -150,24 +137,6 @@ def classify_control(action: PacketFacts) -> ControlProfile:
         unknown=True,
         unknown_markers=("unknown_control_kind",),
     )
-
-
-def required_control_class(action: PacketFacts) -> str:
-    """Return one known control kind or fail closed.
-
-    Raises :class:`UnknownControlError` when the action carries a kind
-    outside :data:`KNOWN_CONTROL_KINDS` or no kind at all.  This is the
-    strict API for a decision that MUST resolve to a known control; the
-    eligibility decision path uses the receipt form instead.
-    """
-    profile = classify_control(action)
-    if not profile.kind or profile.unknown:
-        raise UnknownControlError(
-            f"unknown control kind {profile.kind!r} for "
-            f"{getattr(action, 'source_key', '?')!r} at "
-            f"t={getattr(action, 'time', 0.0)}"
-        )
-    return profile.kind
 
 
 # ---------------------------------------------------------------------------
@@ -334,50 +303,12 @@ class CrowdControlDecision:
         }
 
 
-# ---------------------------------------------------------------------------
-# Same-hit ordering (documented fail-closed; see module notes)
-# ---------------------------------------------------------------------------
-
-
-class MissingSameHitRuleError(ValueError):
-    """Raised while the same-hit damage/control ordering is unverified.
-
-    The local caches carry only ONE prose statement of the rule (the wiki
-    notes); no Riot tooltip or cached game script states the ordering.  A
-    single-provenance rule is not enough to certify: the contract fails
-    closed with the named ``missing_same_hit_rule`` reason instead of
-    inventing behavior.
-    """
-
-    reason = "missing_same_hit_rule"
-
-
-def same_hit_ordering() -> tuple[str, SourceReceipt]:
-    """The verified same-hit ordering rule and its receipt.
-
-    Raises :class:`MissingSameHitRuleError` while the ordering is
-    single-provenance: the wiki notes are the only local source, so the rule
-    stays uncertified until a second provenance confirms it.
-    """
-    raise MissingSameHitRuleError(
-        "same-hit damage/control ordering is unverified: the wiki notes "
-        "state the gate-before-absorb rule but no second provenance "
-        "(Riot tooltips say only 'until it breaks'; game scripts are not "
-        "cached); the contract fails closed with the named "
-        "missing_same_hit_rule reason"
-    )
-
-
 __all__ = [
     "KNOWN_CONTROL_KINDS",
     "ControlProfile",
     "CrowdControlDecision",
     "CrowdControlEligibility",
-    "MissingSameHitRuleError",
-    "UnknownControlError",
     "active_until",
     "classify_control",
     "immunity_holder",
-    "required_control_class",
-    "same_hit_ordering",
 ]

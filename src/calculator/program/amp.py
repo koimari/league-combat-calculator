@@ -4,18 +4,7 @@ Imperial Mandate's Command priced **zero** for a stunning champion while six
 layers each reported success.  Two of those six live here as types rather
 than as review rules.
 
-:class:`Provenance` is the first.  It is an *authoring* invariant, not a
-runtime record: its construction rules make two of the incident's defects
-unconstructible.  A modifier the pair engine priced must exclude its own
-holder — the pair engine already charged the holder's own damage, so applying
-it again is a double count — and a modifier with no declared class
-restriction cannot be built at all, which is D-04's empty-means-all ban
-enforced at the moment of authoring instead of at the moment of application.
-The record compiles to flat kernel fields (``SurvivalAction.holder`` and the
-two class sets); it never travels into the hot tuple, because an invariant
-belongs where it can be violated and the hot loop cannot violate it.
-
-:func:`arm_key` is the second.  Two holders of one mechanic either arm one
+:func:`arm_key` is the first.  Two holders of one mechanic either arm one
 modifier on a subject or two, and *which* is a per-mechanic fact the
 :class:`~..trigger_stream.HolderStacking` declaration answers.  Both branches
 are written because both are live: Abyssal Mask is an aura and Imperial
@@ -23,7 +12,7 @@ Mandate is per-holder, and a signature that could only express the aura key
 would silently drop a second Mandate holder's contribution — the incident's
 own shape, mandated by a rule.
 
-:func:`live_amp_riders` is the third, and the one this package's docstring
+:func:`live_amp_riders` is the second, and the one this package's docstring
 calls the coupled-lane interpreter of Phase 3's ``delta_amp`` declarations.
 It answers one question — which of a holder's declared amplifiers cannot be
 resolved to a number before the walk runs — and hands each of them to the
@@ -46,15 +35,12 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from enum import Enum
 from typing import Final, NamedTuple
 
-from ..ability_spec import AttackClass, DamageClass
 from ..interpreters import amp_magnitude, delta_amp, part_amp
 from ..item_behavior import (
     AMP_CHAIN_ORDER,
     Comparison,
-    EngineLane,
     FightFacts,
     LivePredicate,
     Probe,
@@ -63,74 +49,6 @@ from ..item_behavior import (
 from ..survival.typed_action import LiveAmp, LiveProbe
 from ..trigger_stream import HolderStacking
 from .identity import MechanicId, PIdx
-
-
-class AppliesTo(Enum):
-    """Which participants a priced modifier's number is allowed to reach.
-
-    ``ALL_EXCEPT_HOLDER`` is not a routing decision — routing is
-    :mod:`program.route`'s — it is a statement about *what the number
-    already contains*.  A pair-engine figure has the holder's own damage
-    baked in, so a coupled pass that applied it to the holder as well would
-    count it twice with no symptom.
-    """
-
-    ALL = "all"
-    ALL_EXCEPT_HOLDER = "all_except_holder"
-
-
-@dataclass(frozen=True, slots=True)
-class Provenance:
-    """Who priced one modifier, what it reaches, and what it may amplify.
-
-    Frozen and validated at construction: the two defects below are not
-    "checked" anywhere, they are unconstructible.
-
-    * A ``PAIR_ENGINE`` price that claims ``ALL`` — the double count.
-    * An empty ``damage_classes`` or ``attack_classes`` — the untyped amp
-      that multiplied a holder's true damage with a magic-only curse (D-04).
-
-    ``holder`` is a :class:`~.identity.PIdx` here and a plain ``int`` in the
-    kernel field it compiles into.  That asymmetry is the phase's one-way
-    dependency: ``survival/`` may not name a ``program/`` type, so the
-    narrowing lives on this side of the boundary and the slot crosses it.
-    """
-
-    holder: PIdx
-    priced_by: EngineLane
-    applies_to: AppliesTo
-    damage_classes: frozenset[DamageClass]
-    attack_classes: frozenset[AttackClass]
-
-    def __post_init__(self) -> None:
-        """Reject the two authoring shapes the incident was made of."""
-        if not self.damage_classes or not self.attack_classes:
-            raise ValueError(
-                "a damage modifier must declare both damage_classes and "
-                "attack_classes; empty-means-all is banned (D-04), and an "
-                "untyped amplifier is what multiplied true damage with a "
-                "magic-only curse "
-                f"(damage_classes={sorted(c.name for c in self.damage_classes)}, "
-                f"attack_classes={sorted(c.name for c in self.attack_classes)})"
-            )
-        if (
-            self.priced_by is EngineLane.PAIR_ENGINE
-            and self.applies_to is not AppliesTo.ALL_EXCEPT_HOLDER
-        ):
-            raise ValueError(
-                "a pair-engine-priced modifier already contains the holder's "
-                "own contribution, so it applies to ALL_EXCEPT_HOLDER; "
-                f"{self.applies_to.name} would count the holder twice"
-            )
-
-    def skips(self, subject: PIdx) -> bool:
-        """Whether this modifier declines to reach *subject*.  Compares roster
-        slots, not id strings, which compare false when an id is spelled two ways.
-        """
-        return self.applies_to is AppliesTo.ALL_EXCEPT_HOLDER and int(subject) == int(
-            self.holder
-        )
-
 
 ArmKey = tuple
 
@@ -361,13 +279,11 @@ def _rider_for(slot, rule, index: int, activation: LivePredicate) -> LiveAmpRide
 __all__ = [
     "NO_AMPS",
     "AmpRiders",
-    "AppliesTo",
     "ArmKey",
     "ArmingDrop",
     "ArmingLedger",
     "HolderStacking",
     "LiveAmpRider",
-    "Provenance",
     "arm_key",
     "live_amp_for",
     "live_amp_riders",

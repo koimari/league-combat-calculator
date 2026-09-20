@@ -4,8 +4,8 @@
 hitscan, area, targeted, basic attack, damage over time), and
 :func:`classify_delivery` maps one survival action to a :class:`DeliveryProfile`
 from its typed markers.  An action whose markers match no declared class is
-``unknown`` and fails closed wherever a defense needs a delivery decision
-(``unknown_delivery`` receipt; :class:`UnknownDeliveryError` for the strict API).
+``unknown`` and fails closed wherever a defense needs a delivery decision,
+through the ``unknown_delivery`` receipt the profile carries.
 """
 
 from __future__ import annotations
@@ -157,10 +157,6 @@ class DeliveryProfile:
     unknown: bool = False
     unknown_markers: tuple[str, ...] = ()
 
-    def has(self, delivery: str) -> bool:
-        """Whether the profile includes one delivery class."""
-        return delivery in self.classes
-
     def public_receipt(self) -> dict[str, Any]:
         """JSON-safe classification receipt."""
         return {
@@ -168,11 +164,6 @@ class DeliveryProfile:
             "unknown": self.unknown,
             "unknown_markers": list(self.unknown_markers),
         }
-
-
-class UnknownDeliveryError(ValueError):
-    """Raised when a strict delivery decision needs a class the model
-    cannot classify.  Naming the event keeps the failure actionable."""
 
 
 def action_flag(action: PacketFacts, name: str) -> bool:
@@ -208,29 +199,4 @@ def classify_delivery(action: PacketFacts) -> DeliveryProfile:
         classes=frozenset(classes),
         unknown=bool(unknown_markers),
         unknown_markers=unknown_markers,
-    )
-
-
-def required_delivery_class(action: PacketFacts, accepted: frozenset[str]) -> str:
-    """Return one accepted delivery class or fail closed.
-
-    Raises :class:`UnknownDeliveryError` when the event's delivery cannot
-    be classified into any accepted class.  This is the strict API for a
-    decision that MUST resolve; the eligibility decision path uses the
-    receipt form instead.
-    """
-    profile = classify_delivery(action)
-    if profile.unknown:
-        raise UnknownDeliveryError(
-            f"unknown delivery for {getattr(action, 'source_key', '?')!r} "
-            f"at t={getattr(action, 'time', 0.0)} (markers: "
-            f"{sorted(profile.unknown_markers)})"
-        )
-    for delivery in sorted(profile.classes):
-        if delivery in accepted:
-            return delivery
-    raise UnknownDeliveryError(
-        f"delivery {sorted(profile.classes)} for "
-        f"{getattr(action, 'source_key', '?')!r} is not accepted by "
-        f"{sorted(accepted)}"
     )

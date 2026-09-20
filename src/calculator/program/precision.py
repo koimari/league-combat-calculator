@@ -31,27 +31,21 @@ one tolerance with two spellings on opposite sides of a boundary only one of
 them can cross — which is the failure this module exists to prevent, not a
 tidier filing of it.
 
-Cutoffs are the other half.  A rounded number that is only displayed is
-presentation; a rounded number that a *rule* then reads is a policy, and the
-one live instance of that is the post-death damage cutoff.  It is named
-here — :class:`CutoffPolicy` — rather than left as a comment beside the
-comparison, because it is exactly the quirk a pure refactor loses silently:
-``ROUNDED_DEATH_TIME`` includes an event landing in the sliver between the
-walk's raw death time and its millisecond-rounded published one, and nothing
-in the arithmetic says so.
+The post-death damage cutoff reads the **published, rounded** death time
+rather than the walk's raw float, so an event landing in the sliver between
+them still counts.  That sliver is at most half a millisecond wide and
+nothing in the arithmetic says so, which is why it is written here: reaching
+for the raw number would be the obviously more correct comparison and a
+silent change to a published total.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from enum import Enum
 from types import MappingProxyType
 
 __all__ = [
     "ROUNDING",
-    "ROUNDING_BY_VIEW",
-    "CutoffPolicy",
-    "damage_cutoff",
     "digits_for",
     "round_field",
 ]
@@ -274,18 +268,6 @@ _OBJECTIVE_ROUNDING: dict[str, int] = {
 }
 
 
-ROUNDING_BY_VIEW: Mapping[str, Mapping[str, int]] = MappingProxyType(
-    {
-        "survival": MappingProxyType(_SURVIVAL_ROUNDING),
-        "survival_receipts": MappingProxyType(_SURVIVAL_RECEIPT_ROUNDING),
-        "breakdown": MappingProxyType(_BREAKDOWN_ROUNDING),
-        "receipt": MappingProxyType(
-            {**_EVENTS_ROUNDING, **_HEALING_EVENTS_ROUNDING, **_SUPPORT_EVENTS_ROUNDING}
-        ),
-        "tdd": MappingProxyType(_OBJECTIVE_ROUNDING),
-    }
-)
-
 # One flat lookup for :func:`digits_for`, asserted disjoint at import: two
 # views declaring one leaf name at two precisions would make the flat answer
 # depend on merge order, which is a coin toss wearing a registry's name.
@@ -338,39 +320,3 @@ def digits_for(field: str) -> int:
 def round_field(field: str, value: float) -> float:
     """Round *value* at *field*'s precision: the only rounding in ``program/``."""
     return round(float(value), digits_for(field))
-
-
-class CutoffPolicy(Enum):
-    """Which death time a post-death rule reads.
-
-    A fight's breakdown drops each actor's damage after that actor died, and
-    the death time it compares against is the **published, rounded** one, not
-    the walk's raw float.  An event landing in the sliver between them is
-    therefore counted.
-
-    ``ROUNDED_DEATH_TIME`` is that behaviour, named.  Naming it is the whole
-    point: the sliver is at most half a millisecond wide, no test that
-    existed before this module could see it, and a refactor that reached for
-    the raw death time — the obviously more correct number — would have
-    changed a published total with nothing to say so.  A second member is
-    what a decision to change it looks like; there is deliberately only one
-    today, and no default.
-    """
-
-    ROUNDED_DEATH_TIME = "rounded_death_time"
-
-
-def damage_cutoff(
-    death_time: float | None,
-    fight_duration_seconds: float,
-    policy: CutoffPolicy,
-) -> float:
-    """The last timestamp an actor's damage still counts at, which is the
-    window for a survivor.  *policy* is required and has no default, because
-    which death time to read is the decision this function names.
-    """
-    if policy is not CutoffPolicy.ROUNDED_DEATH_TIME:
-        raise ValueError(f"unknown cutoff policy {policy!r}")
-    if death_time is None:
-        return float(fight_duration_seconds)
-    return float(death_time)

@@ -55,10 +55,6 @@ from .application_errors import ApplicationError
 #: table is a place for a silent mismatch to live.
 MINION_TYPES = ("melee", "ranged", "siege", "super")
 
-#: The two team prefixes.  Both files are tracked and compared; the stat
-#: block itself is keyed by type alone because the comparison passes.
-MINION_TEAMS = ("chaos", "order")
-
 #: Client dump these records were read from, matching the other
 #: binary-backed receipts in this repo.
 SOURCE_PATCH = "16.15.8024387"
