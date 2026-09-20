@@ -2,11 +2,16 @@
 
 import ast
 import re
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import get_args, get_type_hints
 
 import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+
+import packet_declarations
 
 from src.app import app
 from src.calculator import (
@@ -36,8 +41,6 @@ from .support_effect_fixtures import (
     _actor,
     _capability,
     _grown_registry,
-    _is_packet_kind_node,
-    _packet_keyword,
     declared_classes_by_producer,
 )
 
@@ -624,48 +627,6 @@ def test_knights_vow_attaches_typed_redirect_and_holder_heal_receipts():
     assert heal["amount"] == pytest.approx(24.0)
 
 
-def _damage_modifier_call_sites() -> dict[str, str]:
-    """Every ``kind="damage_modifier"`` ``_packet`` site's source and authority.
-
-    The static half of the binding P2c installs: the authority table is
-    ``trigger_stream.CAPABILITIES``, not something derived from these call
-    sites, and the call sites are checked against it.  Returns ``{source
-    literal: Authority member name}``; a site naming neither literally is a
-    failure here rather than a hole in the table.
-    """
-    body = Path(item_support_effects.__file__).read_text(encoding="utf-8")
-    declared: dict[str, str] = {}
-    for node in ast.walk(ast.parse(body)):
-        if not (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "_packet"
-        ):
-            continue
-        kind = _packet_keyword(node, "kind")
-        if not _is_packet_kind_node(kind, "damage_modifier"):
-            continue
-        source = _packet_keyword(node, "source")
-        no_literal = (
-            f"the damage_modifier packet at line {node.lineno} names no literal "
-            "source; the registry cannot be checked against an expression"
-        )
-        assert isinstance(source, ast.Constant), no_literal
-        assert isinstance(source.value, str), no_literal
-        authority = _packet_keyword(node, "authority")
-        no_member = (
-            f"{source.value} declares no literal Authority.<member> at line "
-            f"{node.lineno}; one of "
-            f"{sorted(member.value for member in Authority)} is required (D-07)"
-        )
-        assert isinstance(authority, ast.Attribute), no_member
-        assert isinstance(authority.value, ast.Name), no_member
-        assert authority.value.id == "Authority", no_member
-        assert authority.attr in Authority.__members__, no_member
-        declared[source.value] = authority.attr
-    return declared
-
-
 class TestCrossParticipantAuthorities:
     """One authority table, and the packets are bound to it."""
 
@@ -707,7 +668,7 @@ class TestCrossParticipantAuthorities:
         one the registry gives it.
         """
         table = _declared_authorities()
-        sites = _damage_modifier_call_sites()
+        sites = packet_declarations.authorities()
         assert sites
         for source, member in sites.items():
             assert source in table, (
@@ -887,26 +848,13 @@ class TestDeclaredDamageAndAttackClasses:
         built; this reads the construction sites themselves, so a branch no
         fixture reaches still has to name both axes.
         """
-        tree = ast.parse(
-            Path(item_support_effects.__file__).read_text(encoding="utf-8")
-        )
-        sites = []
-        for node in ast.walk(tree):
-            if not (
-                isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Name)
-                and node.func.id == "_packet"
-            ):
-                continue
-            kind = _packet_keyword(node, "kind")
-            if _is_packet_kind_node(kind, "damage_modifier"):
-                sites.append(node)
+        sites = packet_declarations.sites()
         assert len(sites) == len(_declared_authorities())
-        for node in sites:
+        for site in sites:
             for axis in ("damage_classes", "attack_classes"):
                 assert (
-                    _packet_keyword(node, axis) is not None
-                ), f"line {node.lineno} declares no {axis}"
+                    site.keyword(axis) is not None
+                ), f"line {site.line} declares no {axis}"
 
     def test_the_declarations_agree_with_the_cached_wiki_text(self):
         """Every restriction is read off the cached entry, never assumed.

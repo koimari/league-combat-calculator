@@ -1,32 +1,26 @@
 """Static guards for high-value module boundaries.
 
-file-length-ok: the bulk is the front-door frontier, one entry per module with
-the reason it has none. Splitting it separates an entry from the guard that
-holds the set to equality.
+The front-door frontier is here, one entry per module with the reason it has
+no importing test module, beside the guard that holds the set to equality.
+The two tree scans live in `scripts/item_name_boundary.py` and
+`scripts/pre_combat_stat_sites.py`, each with its own declared frontier.
 """
 
-import ast
+import sys
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-from src.calculator.item_effects import _REFERENCE_ITEM_EFFECTS
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+
+import item_name_boundary
+import pre_combat_stat_sites
+
 from tests.coverage_resolver import front_door_report
 
 ROOT = Path(__file__).parents[1]
 SRC_ROOT = ROOT / "src" / "calculator"
 TEST_ROOT = ROOT / "tests"
-
-# The fight engine: the orchestrator and every step of the `fight/` package.
-# Both rules below are about the engine rather than about one file, so they
-# read the whole package.
-FIGHT_ENGINE_PATHS = (
-    SRC_ROOT / "damage.py",
-    *sorted((SRC_ROOT / "fight").rglob("*.py")),
-)
-
-#: The nodes a docstring may be the first statement of.
-DOCSTRING_SCOPES = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 
 
 @dataclass(frozen=True, slots=True)
@@ -194,104 +188,24 @@ FRONT_DOOR_FRONTIER: Mapping[str, FrontierEntry] = {
 }
 
 
-def test_damage_engine_does_not_read_item_registry() -> None:
-    """Registry dictionaries belong to item_effects, never the fight engine."""
-    for path in FIGHT_ENGINE_PATHS:
-        assert "ITEM_EFFECTS" not in path.read_text(encoding="utf-8"), path
+def test_item_identity_stops_at_the_fight_engines_door() -> None:
+    """The three rules `scripts/item_name_boundary.py` owns.
 
-
-def test_damage_engine_does_not_dispatch_on_item_names() -> None:
-    """Item identity compiles into typed effects before engine execution."""
-    item_names = frozenset(_REFERENCE_ITEM_EFFECTS)
-    offenders: list[tuple[str, int, str]] = []
-
-    for path in FIGHT_ENGINE_PATHS:
-        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
-            if not isinstance(node, ast.Compare):
-                continue
-            compared = [node.left, *node.comparators]
-            offenders.extend(
-                (path.name, node.lineno, value.value)
-                for value in compared
-                if isinstance(value, ast.Constant) and value.value in item_names
-            )
-
-    assert offenders == []
-
-
-# The steps that still spell a cached item name in code, and what each is
-# waiting on.  Set equality, so a step that stops spelling one leaves in the
-# same commit and a step that starts spelling one cannot arrive quietly.  A
-# name inside a docstring is prose about the mechanic and is not a dispatch,
-# so the scan skips docstrings and reads every other literal.
-ITEM_NAME_LITERAL_FRONTIER: Mapping[str, tuple[str, frozenset[str]]] = {
-    "damage.py": (
-        "the published source label on each resource-restore event; it moves "
-        "with the restore rule the resource walk names below",
-        frozenset({"Catalyst of Aeons"}),
-    ),
-    "fight/items/eclipse_stack_gate.py": (
-        "the row title of the one windowed cooldown proc; it moves when the "
-        "cast-proc family reads its display name off the declaration",
-        frozenset({"Eclipse"}),
-    ),
-    "fight/ledger/pool_walk.py": (
-        "the one burn row the pool walk consumes by key; it moves with the "
-        "periodic family's row keys",
-        frozenset({"Liandry's Torment"}),
-    ),
-    "fight/rotation/mana_declarations.py": (
-        "the restore rule the resource walk names its refusals by; it moves "
-        "with the resource-ledger declarations",
-        frozenset({"Lost Chapter"}),
-    ),
-    "fight/rotation/mana_walk.py": (
-        "the same two restore rules, plus their receipt labels; one slice "
-        "with the module above",
-        frozenset({"Catalyst of Aeons", "Essence Reaver", "Lost Chapter"}),
-    ),
-}
-
-
-def _literal_item_names(path: Path, names: frozenset[str]) -> set[str]:
-    """Every cached item name this module spells outside a docstring."""
-    tree = ast.parse(path.read_text(encoding="utf-8"))
-    docstrings = {
-        id(node.body[0].value)
-        for node in ast.walk(tree)
-        if isinstance(node, DOCSTRING_SCOPES)
-        and node.body
-        and isinstance(node.body[0], ast.Expr)
-        and isinstance(node.body[0].value, ast.Constant)
-    }
-    return {
-        name
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Constant)
-        and isinstance(node.value, str)
-        and id(node) not in docstrings
-        for name in names
-        if name in node.value
-    }
-
-
-def test_the_fight_steps_spell_no_item_name_outside_the_frontier() -> None:
-    """One item, one home: a step reads its row's words off the declaration."""
-    names = frozenset(_REFERENCE_ITEM_EFFECTS)
-    spelling = {
-        path.relative_to(SRC_ROOT).as_posix(): _literal_item_names(path, names)
-        for path in FIGHT_ENGINE_PATHS
-        if _literal_item_names(path, names)
-    }
-    assert spelling == {
-        module: set(spelled)
-        for module, (_, spelled) in ITEM_NAME_LITERAL_FRONTIER.items()
-    }
+    Registry dictionaries belong to `item_effects`, item identity compiles
+    into typed effects before the engine runs, and a step reads its row's
+    words off the declaration rather than spelling the name.
+    """
+    assert item_name_boundary.registry_readers() == []
+    assert item_name_boundary.name_comparisons() == []
+    assert item_name_boundary.frontier_drift() == []
 
 
 def test_every_item_name_frontier_entry_carries_a_reason() -> None:
     """A frontier entry is a receipt, not a suppression."""
-    for module, (reason, spelled) in ITEM_NAME_LITERAL_FRONTIER.items():
+    for module, (
+        reason,
+        spelled,
+    ) in item_name_boundary.ITEM_NAME_LITERAL_FRONTIER.items():
         assert reason.strip(), module
         assert spelled, module
 
@@ -340,182 +254,23 @@ def test_the_survey_covers_more_than_the_filename_convention_it_replaced() -> No
     assert surveyed - reported
 
 
-# SC9: the pre-combat stat surface had three recipes -- a roster card
-# resolved without `external_stat_bonuses`, the coupled capture without
-# `rune_page`, the request path with both -- and every omission read as a
-# default rather than as a decision.  The recipe now has one home and the
-# read off a request has one home; these two names are what the guards below
-# hold the tree to.
-PRE_COMBAT_RECIPE_HOME = "calculator.stats.resolve_pre_combat_stats"
-PRE_COMBAT_PARAMS_READ = "calculator.fight_params.FightParams.pre_combat_stats"
+def test_the_pre_combat_stat_surface_has_one_recipe() -> None:
+    """The four rules `scripts/pre_combat_stat_sites.py` owns.
 
-# The inputs that make a stat block a *build's* rather than a champion's.
-BUILD_CONTEXT_KEYWORDS = frozenset(
-    {
-        "item_options",
-        "role",
-        "role_quest_complete",
-        "external_stat_bonuses",
-        "rune_page",
-    }
-)
-
-# Every `calculate_total_stats` site that is deliberately NOT a participant's
-# pre-combat surface, with the reason it is narrower.  Declared, because the
-# first version of this guard counted a site only if it passed one of the five
-# keywords -- under which a caller that omitted all five was definitionally
-# invisible, and omitting inputs is precisely SC9's failure.  The guard below
-# is keyed on the callee instead and is total: every site is the one recipe or
-# is entered here.
-#
-# What these five share is that no request stands behind them.  Each is a
-# reference parse over a fixed matrix or over champion data alone -- cached or
-# captured on `(champion, data version)` with the level and build written into
-# the harness -- so an input added to the participant recipe must NOT reach
-# them: it would invalidate a cache key that never mentions a request, and
-# move the golden's champion-baseline section on a change about neither.
-NARROWER_STAT_SURFACES: Mapping[str, str] = {
-    "calculator.ability_dps_matrix._matrix_dps_rows": (
-        "the reference DPS matrix, cached on (champion, data version) and "
-        "explicitly independent of the request's level and build"
-    ),
-    "calculator.champion_rotation_rule._canonical_kit_parse": (
-        "the canonical full-kit parse the derived cast order is read off: "
-        "level 11, no items, by construction"
-    ),
-    "cast_dependency_audit._parse": (
-        "one cell of the audit's fixed MATRIX_LEVELS x MATRIX_BUILDS sweep"
-    ),
-    "golden_snapshot._parse_abilities_fresh": (
-        "the ability parse of the golden's champion-baseline section, whose "
-        "level and items are the section's own constants"
-    ),
-    "golden_snapshot.snapshot_champion_baselines": (
-        "the golden's champion-baseline stats at levels 1/11/18 with no items"
-    ),
-    "swing_stream_audit.scan": (
-        "the swing-stream gate's fixed parse: level 18, full ranks, no items"
-    ),
-}
-
-# Every surface that composes a participant's stats as combat begins, and the
-# helper it reaches the recipe through: the module function directly when it
-# holds no request, the FightParams read when it does.
-PRE_COMBAT_SURFACES: Mapping[str, str] = {
-    "calculator.champion_loadout.ChampionLoadout.resolve": "resolve_pre_combat_stats",
-    "calculator.calculate._combat_receipt": "pre_combat_stats",
-    "calculator.build_evaluation._evaluate_build_uncached": "pre_combat_stats",
-    "calculator.pipeline.run_fight": "pre_combat_stats",
-    "golden_snapshot._coupled_receipt": "pre_combat_stats",
-}
-
-
-def _called_name(node: ast.Call) -> str:
-    """What one call expression spells, bare name or dotted attribute alike."""
-    if isinstance(node.func, ast.Name):
-        return node.func.id
-    if isinstance(node.func, ast.Attribute):
-        return node.func.attr
-    return ""
-
-
-def _calls_by_scope(path: Path, module: str) -> list[tuple[str, ast.Call]]:
-    """Every call expression in one module, tagged with the def enclosing it."""
-    found: list[tuple[str, ast.Call]] = []
-
-    def visit(node: ast.AST, scope: str) -> None:
-        for child in ast.iter_child_nodes(node):
-            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-                visit(child, f"{scope}.{child.name}")
-                continue
-            if isinstance(child, ast.Call):
-                found.append((scope, child))
-            visit(child, scope)
-
-    visit(ast.parse(path.read_text(encoding="utf-8")), module)
-    return found
-
-
-def _scanned_scopes() -> list[tuple[str, ast.Call]]:
-    """Calls in `src/calculator` and in the capture harnesses beside it.
-
-    `scripts/` is scanned because the drift this guards against happened
-    there: `golden_snapshot._coupled_receipt` calls itself a mirror of the
-    request path's composition, and a src-only scan is exactly the reading
-    under which it stayed one for a campaign while missing an input.
+    Every composition is the recipe or a declared narrower surface, a
+    declared surface stays narrow, the `FightParams` read answers every
+    input, and the five surfaces SC9 named all route through the helper.
     """
-    scoped: list[tuple[str, ast.Call]] = []
-    for path in sorted(SRC_ROOT.rglob("*.py"), key=lambda item: item.as_posix()):
-        module = ".".join(path.relative_to(SRC_ROOT.parent).with_suffix("").parts)
-        scoped.extend(_calls_by_scope(path, module))
-    for path in sorted((ROOT / "scripts").glob("*.py"), key=lambda item: item.name):
-        scoped.extend(_calls_by_scope(path, path.stem))
-    return scoped
+    assert pre_combat_stat_sites.recipe_drift() == []
+    assert pre_combat_stat_sites.widened_surfaces() == []
+    assert pre_combat_stat_sites.unrouted_surfaces() == []
+    assert (
+        pre_combat_stat_sites.request_read_inputs()
+        == pre_combat_stat_sites.BUILD_CONTEXT_KEYWORDS
+    )
 
 
-def _stat_sites() -> dict[str, list[frozenset[str]]]:
-    """Every `calculate_total_stats` site, by enclosing def, with its keywords.
-
-    Keyed on the callee and nothing else, so a caller that supplies no
-    keyword at all is counted rather than defined away.
-    """
-    sites: dict[str, list[frozenset[str]]] = {}
-    for scope, call in _scanned_scopes():
-        if _called_name(call) != "calculate_total_stats":
-            continue
-        supplied = frozenset(k.arg for k in call.keywords if k.arg)
-        sites.setdefault(scope, []).append(supplied)
-    return sites
-
-
-def test_the_pre_combat_stat_recipe_is_written_in_exactly_one_place() -> None:
-    """SC9: one composition, so no surface can drop an input by omission.
-
-    Set equality against the declared narrower surfaces, in both directions:
-    a new stat composition fails until somebody rules it a participant's (and
-    routes it) or enters it below with a reason.
-    """
-    sites = _stat_sites()
-    assert sites[PRE_COMBAT_RECIPE_HOME] == [BUILD_CONTEXT_KEYWORDS]
-    assert set(sites) - {PRE_COMBAT_RECIPE_HOME} == set(NARROWER_STAT_SURFACES)
-
-
-def test_each_narrower_stat_surface_is_narrow_and_says_why() -> None:
-    """A declaration is a receipt, and the tree has to agree with it.
-
-    Narrow means it composes a champion's stat block and not a build's: a
-    site that starts passing one of the five has stopped being a reference
-    parse and owes the participant recipe a call, so the entry stops covering
-    it here rather than quietly widening.
-    """
-    sites = _stat_sites()
-    for scope, reason in NARROWER_STAT_SURFACES.items():
+def test_each_narrower_stat_surface_says_why_it_is_narrow() -> None:
+    """A declaration is a receipt, not a suppression."""
+    for scope, reason in pre_combat_stat_sites.NARROWER_STAT_SURFACES.items():
         assert reason.strip(), scope
-        for supplied in sites[scope]:
-            assert not supplied & BUILD_CONTEXT_KEYWORDS, scope
-
-
-def test_the_request_read_answers_every_input_of_the_recipe() -> None:
-    """The other half, so the guards above cannot pass vacuously.
-
-    The recipe naming all five is asserted with the site count; a
-    `FightParams` read answering only some of them would put the same
-    silence one call deeper.
-    """
-    (request_read,) = [
-        call
-        for scope, call in _scanned_scopes()
-        if scope == PRE_COMBAT_PARAMS_READ
-        and _called_name(call) == "resolve_pre_combat_stats"
-    ]
-    assert {keyword.arg for keyword in request_read.keywords} == BUILD_CONTEXT_KEYWORDS
-
-
-def test_every_pre_combat_surface_routes_through_the_one_helper() -> None:
-    """The three recipes SC9 named, plus the two that shared one of them."""
-    routed: dict[str, set[str]] = {scope: set() for scope in PRE_COMBAT_SURFACES}
-    for scope, call in _scanned_scopes():
-        if scope in routed:
-            routed[scope].add(_called_name(call))
-    for scope, helper in PRE_COMBAT_SURFACES.items():
-        assert helper in routed[scope], scope

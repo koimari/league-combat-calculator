@@ -2,6 +2,6 @@
  "source": "tests/test_item_support_effects.py",
  "decisions": [
   "The name may not match test_*.py, as for tests/kernel_fixtures.py.",
-  "_damage_modifier_call_sites stays: TestCrossParticipantAuthorities is its only reader, and it is a scan the acceptance matrix runs rather than a fixture another suite reads."
+  "The damage_modifier call-site scan is scripts/packet_declarations.py: TestCrossParticipantAuthorities reads it there, and it is a tree scan rather than a fixture another suite reads."
  ]
 }

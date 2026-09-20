@@ -12,16 +12,17 @@ suite pins the three things that makes true: the registry is a bijection,
 holds no ``str | None`` reference field any more (criterion 6).
 """
 
-import ast
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+
+import single_owner_lint
 
 from src.calculator.program.compile import action_from_event
 from src.calculator.survival.event_slots import EVENT_SLOTS, NO_SLOT, EventSlots
 from src.calculator.survival.phases import TransitionRank
 from src.calculator.survival.typed_action import SurvivalAction
-
-ROOT = Path(__file__).parents[1]
-SRC_ROOT = ROOT / "src" / "calculator"
 
 SLOT_FIELDS = (
     "trigger_slot",
@@ -82,17 +83,8 @@ class TestThereIsOneRegistry:
         The construction is counted rather than reviewed, and the one call
         that builds the module singleton is the only one allowed.
         """
-        constructions = []
-        for path in sorted(SRC_ROOT.rglob("*.py")):
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-            constructions.extend(
-                path.relative_to(ROOT).as_posix()
-                for node in ast.walk(tree)
-                if isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Name)
-                and node.func.id == "EventSlots"
-            )
-        assert constructions == ["src/calculator/survival/event_slots.py"], (
+        constructions = single_owner_lint.event_slot_constructions()
+        assert constructions == [single_owner_lint.EVENT_SLOT_OWNER], (
             "the one construction is the module singleton EVENT_SLOTS -- "
             f"found {constructions}"
         )
