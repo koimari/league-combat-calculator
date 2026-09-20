@@ -50,7 +50,10 @@ from ..survival.typed_action import LiveAmp, LiveProbe
 from ..trigger_stream import HolderStacking
 from .identity import MechanicId, PIdx
 
-ArmKey = tuple
+# The dedupe key itself, with the members the branch below chooses between:
+# the holder is in the key under PER_HOLDER and out of it under
+# IDEMPOTENT_AURA.
+ArmKey = tuple[int, str] | tuple[int, str, int]
 
 
 def arm_key(

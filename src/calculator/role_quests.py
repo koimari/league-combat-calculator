@@ -51,7 +51,6 @@ TOP_QUEST_BONUS_XP: Final[int] = 600
 TOP_QUEST_FUTURE_XP_PERCENT: Final[float] = 12.5
 BASE_LEVEL_CAP: Final[int] = 18
 TOP_QUEST_LEVEL_CAP: Final[int] = 20
-TOP_LEVEL_CAP: Final[int] = TOP_QUEST_LEVEL_CAP
 
 
 def level_cap(role: str, quest_complete: bool) -> int:
@@ -91,7 +90,7 @@ def role_quest_meta(role: str, complete: bool) -> dict[str, object]:
     effects = {
         "top": (
             f"+{TOP_QUEST_BONUS_XP} XP, +{TOP_QUEST_FUTURE_XP_PERCENT:g}% future XP, "
-            f"and level cap {TOP_LEVEL_CAP}"
+            f"and level cap {TOP_QUEST_LEVEL_CAP}"
         ),
         "jungle": "Movement reward is positional and not used for damage scoring",
         "mid": "8% bonus AD, 8% AP, and tier-3 boots",
@@ -111,7 +110,7 @@ def max_champion_level(role: str, complete: bool) -> int:
     # ``require_level_within_cap`` above and therefore still require the
     # completed top quest explicitly.
     if not role:
-        return TOP_LEVEL_CAP
+        return TOP_QUEST_LEVEL_CAP
     return level_cap(role, complete)
 
 
