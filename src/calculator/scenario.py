@@ -9,7 +9,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from typing import Any
 
-from .ally_effects import combine_ally_stat_effects, resolve_ally_stat_effects
+from .ally_effects import (
+    ally_stat_disclosures,
+    combine_ally_stat_effects,
+    resolve_ally_stat_effects,
+)
 from .champion_loadout import (
     MAX_LOADOUT_ITEMS,
     ChampionLoadout,
@@ -208,6 +212,7 @@ def resolve_scenario(request: ScenarioRequest) -> ResolvedScenario:
         fight_params = replace(
             fight_params,
             ally_stat_bonuses=combine_ally_stat_effects(ally_effects),
+            ally_stat_disclosures=ally_stat_disclosures(ally_effects),
         )
 
     event_target_ids = roster_ids(

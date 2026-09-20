@@ -391,6 +391,7 @@ def _resolve_combat_state(
     keystone_effect = _dedicated_keystone(config.keystone)
 
     return FightState(
+        notes=list(config.ally_stat_disclosures),
         combat_events=config.combat_events,
         event_actor_id=config.event_actor_id,
         event_target_id=config.event_target_id,

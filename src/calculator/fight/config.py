@@ -219,6 +219,11 @@ class FightConfig:
     # among them and stays caller-supplied, because no minion character
     # record states one — see minion_stats.
     minion_type: str = ""
+    # What an opt-in ally effect assumed about the fight it is priced into,
+    # one sentence per effect.  The fight seeds its notes from these, because
+    # an assumption the model made and never published is a number the reader
+    # cannot judge.  Empty for every fight holding no ally effect.
+    ally_stat_disclosures: tuple[str, ...] = ()
 
     @property
     def rune_page(self) -> "rune_effects.RunePage":

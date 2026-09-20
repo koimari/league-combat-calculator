@@ -6,7 +6,11 @@ from copy import deepcopy
 import pytest
 
 from src.calculator import item_effects
-from src.calculator.ally_effects import resolve_ally_stat_effects
+from src.calculator.ally_effects import (
+    AllyStatEffect,
+    ally_stat_disclosures,
+    resolve_ally_stat_effects,
+)
 from src.calculator.data_fetcher import get_item_by_name
 
 
@@ -20,6 +24,22 @@ def test_staff_of_flowing_water_rapids_reads_typed_ap_and_cached_ally_stats():
     assert effect.ability_power == pytest.approx(40.0)
     assert effect.ability_haste == pytest.approx(15.0)
     assert effect.duration == pytest.approx(6.0)
+
+
+def test_the_disclosure_names_its_source_and_the_premise_it_assumed():
+    """The buff is priced on a premise the request never stated."""
+    effects = resolve_ally_stat_effects((_staff(),))
+
+    assert ally_stat_disclosures(effects) == (
+        "Staff of Flowing Water — Rapids: The ally healed or shielded the "
+        "attacker immediately before combat.",
+    )
+
+
+def test_an_effect_with_no_assumption_is_a_named_stop():
+    """A premise nobody wrote down cannot be published, so it fails closed."""
+    with pytest.raises(ValueError, match="declares no assumption"):
+        ally_stat_disclosures((AllyStatEffect(source="Nothing — Rapids"),))
 
 
 @pytest.mark.parametrize(

@@ -184,3 +184,21 @@ def combine_ally_stat_effects(
         "ability_power": sum(effect.ability_power for effect in effects),
         "ability_haste": sum(effect.ability_haste for effect in effects),
     }
+
+
+def ally_stat_disclosures(effects: tuple[AllyStatEffect, ...]) -> tuple[str, ...]:
+    """What each effect assumed, named by the source that assumed it.
+
+    An opt-in ally buff is priced on a premise the request did not state, and
+    a premise the model acted on and never published is a number the reader
+    cannot judge.  Every effect carries one, so an effect with an empty
+    assumption is a declaration defect rather than a quiet omission.
+    """
+    for effect in effects:
+        if not effect.assumption.strip():
+            raise ValueError(
+                f"{effect.source} declares no assumption; an ally effect is "
+                "priced on a premise the request did not state, and the "
+                "premise is published beside the number"
+            )
+    return tuple(f"{effect.source}: {effect.assumption}" for effect in effects)

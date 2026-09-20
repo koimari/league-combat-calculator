@@ -846,6 +846,13 @@ def test_enabled_ally_staff_buff_changes_attacker_stats_and_damage():
     assert buffed["scenario"]["ally_effects"]["modeled"] == [
         "Staff of Flowing Water — Rapids"
     ]
+    # The buff is priced on a premise the request never stated, so the
+    # response publishes it beside the number (A6).
+    assert buffed["notes"] == [
+        "Staff of Flowing Water — Rapids: The ally healed or shielded the "
+        "attacker immediately before combat."
+    ]
+    assert base["notes"] == []
 
 
 def test_ludens_charges_are_shared_across_selected_targets():
