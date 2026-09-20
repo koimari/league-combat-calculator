@@ -241,13 +241,13 @@ class TestTheLadderIsReachableFromProduction:
         from src.calculator.stats import calculate_total_stats
 
         seen: list[str] = []
-        real_walk = timeline._walk  # pylint: disable=W0212
+        real_walk = timeline.walk
 
         def observing_walk(*args, **kwargs):
             seen.append(type(kwargs["rung"]).__name__)
             return real_walk(*args, **kwargs)
 
-        monkeypatch.setattr(timeline, "_walk", observing_walk)
+        monkeypatch.setattr(timeline, "walk", observing_walk)
 
         champion = get_champion("Ahri")
         params = FightParams.from_request(

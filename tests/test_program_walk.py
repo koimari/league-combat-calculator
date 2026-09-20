@@ -403,14 +403,14 @@ class TestEveryViewOfOneRequestProjectsOneWalk:
         walked: list = []
         seen: dict[str, list] = {"breakdown": [], "receipt": [], "survival": []}
 
-        original_walk = timeline_module._walk  # pylint: disable=W0212
+        original_walk = timeline_module.walk
 
         def walk_spy(*args, **kwargs):
             result = original_walk(*args, **kwargs)
             walked.append(result)
             return result
 
-        monkeypatch.setattr(timeline_module, "_walk", walk_spy)
+        monkeypatch.setattr(timeline_module, "walk", walk_spy)
 
         for name, module, attribute in (
             ("breakdown", timeline_module._breakdown_view, "breakdown"),
