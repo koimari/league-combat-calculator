@@ -182,8 +182,8 @@ def calculate_total_stats(
     # cached manaRegen would publish as mana restored rather than raise.
     if not math.isfinite(resource_regen_per_second):
         raise ValueError(
-            "resource_regen_per_second is not finite: cached manaRegen "
-            f"{cdm.get('manaRegen', {})!r}"
+            "resource_regen_per_second is not finite: cached manaRegen gave "
+            f"{base_resource_regen_per_five!r} per five at level {level}"
         )
     base_health_regen_per_five = growth_stat(
         cdm.get("healthRegen", {}).get("flat", 0),
