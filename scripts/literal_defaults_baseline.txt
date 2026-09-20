@@ -26,6 +26,9 @@
 #       the roots cover.  This number may only fall, so a module joining the
 #       roots lowers it, and a module dropping out of them or a module new to
 #       the package fails the gate until somebody decides which side it is on.
+#       It is a count, not a set: one module converted alongside one new
+#       uncovered module lands on the same number, and the roots above are
+#       the review surface for that, since the conversion edits them.
 #
 #   <BUCKET>|<module>|<enclosing>|<kind>|<key> <count>
 #       One frozen site.  Every bucket states what it licenses here, and a

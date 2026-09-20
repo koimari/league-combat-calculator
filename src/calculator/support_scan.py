@@ -346,7 +346,7 @@ _MODULE_AUTHORED_HEAL_SLOTS = frozenset(
 # against the correct, already-implemented revive heal that
 # ``zilean.starting_revive_defense`` feeds through
 # ``StartingDefenses.revive_health_amount`` / the survival kernel (see
-# tests/test_ally_support_wave2.py's ``zilr`` cases and
+# tests/test_ally_support_riders.py's ``zilr`` cases and
 # tests/test_engine_hooks.py's revive_source assertion). R is excluded
 # here so the scanner defers entirely to the revive-conditional path.
 _STATE_AUTHORED_HEAL_SLOTS = frozenset({("Sivir", "E"), ("Zilean", "R")})

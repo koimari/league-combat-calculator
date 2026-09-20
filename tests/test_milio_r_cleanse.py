@@ -1909,6 +1909,6 @@ class TestUnchangedBoundaries:
 #
 # The broader regression surface (every test that touches milio / breath
 # of life / ally support, per the brief contract #16): test_revive_and_ally_support_events.py
-# test_self_heal_rules_5.py test_heal_ledger_ownership.py test_ally_support_wave2.py
-# test_heal_ledger_phase2.py test_survival_kernel.py test_dot_tick_counts_2.py
+# test_self_heal_rules_5.py test_heal_ledger_ownership.py test_ally_support_riders.py
+# test_heal_ledger_authored_slots.py test_survival_kernel.py test_dot_tick_counts_2.py
 # test_cp10_batch_04.py test_support_effects.py tests/test_app.py

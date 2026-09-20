@@ -63,6 +63,11 @@ def test_the_frontier_only_ever_moves_towards_the_covered_set():
     A module joins the roots and the count drops; a covered module demoted
     out of them, or a module new to the package, pushes it over the ceiling
     and fails closed until somebody decides which side it is on.
+
+    A count is not a set: one module converted in the same commit as one
+    new uncovered module lands on the same number and passes here.  The
+    roots the baseline pins are the review surface for that, since the
+    conversion half of it cannot happen without editing them.
     """
     tail = FROZEN.er5_tail()
     assert len(tail) <= FROZEN.er5_tail_ceiling, sorted(tail)

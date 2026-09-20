@@ -1881,7 +1881,7 @@ class TestUnchangedBoundaries:
 # The broader regression surface (every test that touches rengar /
 # ferocity / grey health / battle roar / cleanse, per the brief contract
 # #15): test_grey_health.py test_self_heal_rules_4.py
-# test_self_heal_rules_6.py test_heal_ledger_phase2.py test_stack_systems_2.py
+# test_self_heal_rules_6.py test_heal_ledger_authored_slots.py test_stack_systems_2.py
 # test_practice_tool_corpus.py test_cp10_batch_06.py test_import_namespace.py
 # test_lord_dominik.py test_mikael_packet.py test_locke.py
 # test_redemption_packet.py test_rengar_pen_breakpoints.py
