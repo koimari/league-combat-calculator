@@ -39,7 +39,13 @@ from .inputs import float_option, int_option
 from .module_helpers import ability_slot, clamp, ranked_slot
 from .slot_control import extract_recharge
 from .slot_entries import attach_self_shield, damage_entry
-from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
+from .slot_extract import (
+    ability_name,
+    extract_cast_time,
+    extract_cooldown,
+    extract_named,
+    extract_value,
+)
 from .source_receipts import load_champion_sources
 
 _VI_Q_SPELL = spell_object("Vi", "ViQ")
@@ -65,7 +71,6 @@ _VI_R_SPELL = spell_object("Vi", "ViR")
 _ABILITY_HIT = 0
 _ATTACK = 1
 
-_R_CAST_TIME = 0.25
 _R_GRAB_DAMAGE_DELAY = 0.75
 _R_GRAB_RANGE = 300.0
 _R_INITIAL_SPEED = data_value(_VI_R_SPELL, "RBaseSpeed")
@@ -384,7 +389,6 @@ def _denting_blows_timed(
 def _vault_breaker(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
-
     minimum = extract_named(
         ability, "Minimum Physical Damage", rank, ctx.stats, ctx.target
     )
@@ -430,7 +434,6 @@ def _e_hit_time(ctx: SlotCtx) -> float:
 def _relentless_force(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
-
     flat = extract_value(ability, "Physical Damage", rank)
     total_ad = float(ctx.stat("attack_damage"))
     ability_power = float(ctx.stat("ability_power"))
@@ -489,20 +492,16 @@ def _relentless_force(
 def _cease_and_desist(
     ctx: SlotCtx, ability: dict[str, Any], rank: int
 ) -> dict[str, Any] | None:
-
     raw = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     sequence_start = (
         _e_hit_time(ctx)
         if ctx.rank_for("E") > 0
         else (_q_geometry(ctx)[3] if ctx.rank_for("Q") > 0 else 0.0)
     )
-    distance = clamp(
-        float(ctx.option("r_start_distance")),
-        _R_GRAB_RANGE,
-        800.0,
-    )
+    distance = clamp(float(ctx.option("r_start_distance")), _R_GRAB_RANGE, 800.0)
     approach = max(0.0, distance - _R_GRAB_RANGE) / _R_INITIAL_SPEED
-    hit_time = sequence_start + _R_CAST_TIME + approach + _R_GRAB_DAMAGE_DELAY
+    cast_time = extract_cast_time(ability)
+    hit_time = sequence_start + cast_time + approach + _R_GRAB_DAMAGE_DELAY
     entry = damage_entry(
         ability_name(ability),
         rank,
