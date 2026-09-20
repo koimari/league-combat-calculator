@@ -427,8 +427,6 @@ CACHED_SOURCE_ROW|champions/ornn.py|_temper_consume_percent|or-default|"descript
 CACHED_SOURCE_ROW|champions/ornn.py|_temper_consume_percent|or-default|"effects" 1
 CACHED_SOURCE_ROW|champions/rengar.py|_ferocity_bonus|dict.get|"description" 1
 CACHED_SOURCE_ROW|champions/rengar.py|_ferocity_bonus|dict.get|"effects" 1
-CACHED_SOURCE_ROW|champions/sett.py|derive_self_healing|dict.get|"description" 1
-CACHED_SOURCE_ROW|champions/sett.py|derive_self_healing|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/shen.py|_ki_barrier_shield_amount|dict.get|"modifiers" 1
 CACHED_SOURCE_ROW|champions/shen.py|_ki_barrier_shield_amount|dict.get|"units" 1
 CACHED_SOURCE_ROW|champions/shen.py|_ki_barrier_shield_amount|dict.get|"values" 1

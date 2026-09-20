@@ -5,6 +5,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
+#: One number of a "A / B / C (based on level)" row, as the cache writes it.
+_LEVEL_ROW_NUMBER = re.compile(r"\d+(?:\.\d+)?")
 _PROSE_SECONDS_RE = re.compile(
     r"(?<![\w.])(?P<value>\d+(?:\.\d+)?)\s+seconds?\b", re.IGNORECASE
 )
@@ -87,6 +89,13 @@ class CachedSentence:
     def value(self, ability: Mapping[str, Any]) -> float:
         """The ``value`` group, as the number the sentence states."""
         return float(self.match(ability).group("value"))
+
+    def level_values(self, ability: Mapping[str, Any]) -> tuple[float, ...]:
+        """The ``values`` group's numbers: one "A / B / C (based on level)" row."""
+        return tuple(
+            float(number)
+            for number in _LEVEL_ROW_NUMBER.findall(self.match(ability).group("values"))
+        )
 
     def stack_terms(self, ability: Mapping[str, Any]) -> tuple[float, int]:
         """The ``seconds`` and ``stacks`` groups: a stack's life and the cap."""

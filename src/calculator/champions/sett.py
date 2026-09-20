@@ -21,6 +21,7 @@ import re
 from typing import Any
 
 from .. import healing_helpers as _healing
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS
@@ -60,6 +61,35 @@ PACKET_SHA256 = "122d6d40606b4b120f4fd94cc1ba7fa968cbda67af830338296f41fe94ca382
 # the level-based flat values and the bonus-AD coefficient.
 _SETT_P_SPELL = spell_object("Sett", "SettPassive")
 _RIGHT_PUNCH_BONUS_AD_RATIO = calculation_coefficient(_SETT_P_SPELL, "RightPunchBonus")
+
+# Heart of the Half-Beast is prose only: the innate states its per-tick
+# share of missing health and the ceiling one tick may reach as two level
+# rows inside one bracketed sentence, and no leveling row carries either.
+_PIT_GRIT_PER_TICK = CachedSentence(
+    re.compile(
+        r"regenerates[\s\[]+an additional\s+(?P<values>[\d.\s/]+?)\s*"
+        r"\(based on level\)\s*health every 0\.5 seconds per 5% of his "
+        r"missing health",
+        re.IGNORECASE,
+    ),
+    missing=(
+        "Sett P (Heart of the Half-Beast): the cached innate no longer states "
+        "the per-tick regeneration ('regenerates an additional N (based on "
+        "level) health every 0.5 seconds per 5% of his missing health')"
+    ),
+)
+_PIT_GRIT_CEILING = CachedSentence(
+    re.compile(
+        r"up-to an additional\s+(?P<values>[\d.\s/]+?)\s*\(based on level\)"
+        r"\s*health per 0\.5 seconds",
+        re.IGNORECASE,
+    ),
+    missing=(
+        "Sett P (Heart of the Half-Beast): the cached innate no longer states "
+        "the regeneration ceiling ('up-to an additional N (based on level) "
+        "health per 0.5 seconds')"
+    ),
+)
 
 
 def _pit_grit(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -295,7 +325,7 @@ OPTIONS = [
 ]
 
 
-def _level_breakpoint_value(values: list[Any], level: int) -> float:
+def _level_breakpoint_value(values: tuple[float, ...], level: int) -> float:
     """Read a six-value Wiki row at levels 1, 6, 11, 16, 17, and 18."""
     if not values:
         return 0.0
@@ -310,36 +340,9 @@ def _level_breakpoint_value(values: list[Any], level: int) -> float:
 
 def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Pit Grit's sourced missing-health regeneration stream."""
-    p_text = (
-        " ".join(
-            effect.get("description", "")
-            for effect in _healing.ability_json(ctx.champion_data, "P").get(
-                "effects", []
-            )
-        )
-        .replace("[", " ")
-        .replace("]", " ")
-    )
-    base_match = re.search(
-        r"regenerates\s+an additional\s+([\d.\s/]+?)\s*\(based on level\)"
-        r"\s*health every 0\.5 seconds per 5% of his missing health",
-        p_text,
-        flags=re.IGNORECASE,
-    )
-    max_match = re.search(
-        r"up-to an additional\s+([\d.\s/]+?)\s*\(based on level\)"
-        r"\s*health per 0\.5 seconds",
-        p_text,
-        flags=re.IGNORECASE,
-    )
-    if base_match is None or max_match is None:
-        return []
-    base_values = [
-        float(value) for value in re.findall(r"\d+(?:\.\d+)?", base_match.group(1))
-    ]
-    max_values = [
-        float(value) for value in re.findall(r"\d+(?:\.\d+)?", max_match.group(1))
-    ]
+    passive = _healing.ability_json(ctx.champion_data, "P")
+    base_values = _PIT_GRIT_PER_TICK.level_values(passive)
+    max_values = _PIT_GRIT_CEILING.level_values(passive)
     level = max(1, int(champion_stat(ctx.champion_stats, "level")))
     base = _level_breakpoint_value(base_values, level)
     maximum = _level_breakpoint_value(max_values, level)
