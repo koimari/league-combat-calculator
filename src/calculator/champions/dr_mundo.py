@@ -1,38 +1,20 @@
-"""Dr. Mundo — slot map for the archetype engine.
+"""Dr. Mundo: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Goes Where He Pleases) has NO slot: it deals no damage to an enemy.
-  Its two arms are priced elsewhere.  The immunity arm (the next hostile
-  immobilizing control is RESISTED before it applies — 4% current-health
-  cost + canister drop receipt) rides the coupled survival walk via the
-  participant timeline's t=0 arm packet.  The innate regeneration is
-  priced by the self-heal rule, off the cached P's SECOND "Max Health
-  Damage" row (the cache mislabels both regeneration rows) — 0.04% :
-  0.23% (based on level) of maximum health every 0.5 seconds, ten of
-  which equal the first row's per-five-seconds statement.  The canister
-  pickup (4% max-health heal + 15s refund) and the enemy destruction stay
-  NAMED unsupported timings (no movement model, no toggle).
-- Q (Infected Bonesaw) is %CURRENT-health magic damage floored at a flat
-  minimum, and both halves defeat the generic path. The unit
-  ``"% of target's current health"`` resolves against a
-  ``target_current_health`` stat nothing supplies, so the percent scores
-  0.0; the floor lives in a second effect the primary-damage classifier
-  never reaches.
-- W (Heart Zapper) is a 3s charge DoT plus an automatic detonation. The
-  charge total has to be rebuilt from the per-tick value (the JSON's
-  "Total Magic Damage" is stale — see ``W_CHARGE_TICKS``) and the
-  detonation lives in its own effect, so the generic path reads the
-  detonation base alone and misses everything else.
-- E (Blunt Force Trauma) is two mechanics inside one JSON ability: a
-  BUFF-phase %MAXIMUM-health -> bonus AD steroid that roughly doubles
-  Mundo's AD, and an empowered next basic attack whose bonus is amplified
-  by Mundo's OWN missing health. The generic path modeled neither.
-- R (Maximum Dosage) deals no damage whatsoever, so the generic path drops
-  it — but it grants BASE health scaled off missing health, which raises
-  max health and therefore feeds E's passive. That chain
-  (R -> max health -> E's bonus AD -> autos and the forced swing) is why R
-  is listed BEFORE E in ``SLOTS``: both are BUFF phase, and the engine
-  evaluates a phase in slot-map insertion order.
+P (Goes Where He Pleases) has no slot: it deals no enemy damage and both its arms
+are priced elsewhere.  The immunity arm rides the coupled survival walk through
+the timeline's t=0 arm packet; the innate regeneration is priced by the self-heal
+rule off the cached P's SECOND "Max Health Damage" row, the cache mislabelling
+both regeneration rows.
+Q (Infected Bonesaw) is %CURRENT-health magic damage floored at a flat minimum,
+and both halves defeat the generic path: the unit resolves against a stat nothing
+supplies, scoring 0.0, and the floor lives in a second effect.
+W (Heart Zapper) is a 3-second charge DoT plus a detonation in its own effect;
+the charge total is rebuilt from the per-tick value, the cached total being stale.
+E (Blunt Force Trauma) is a BUFF-phase %MAXIMUM-health to bonus-AD steroid and an
+empowered next attack amplified by Mundo's OWN missing health.
+R (Maximum Dosage) deals no damage but grants BASE health scaled off missing
+health, raising maximum health and so feeding E's steroid.  That chain is why R
+is listed BEFORE E in ``SLOTS``: a BUFF phase is evaluated in insertion order.
 """
 
 from typing import Any

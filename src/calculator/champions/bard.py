@@ -1,39 +1,22 @@
-"""Bard — slot map for the archetype engine.
+"""Bard: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Traveler's Call) is a custom fn: the JSON entry has ZERO
-  effects/leveling (known-degraded parse — TRAPS.md, Champions), so
-  the meep formula lives as wiki-sourced module constants. Meep damage
-  scales with a chime-counter champion option, and meep AVAILABILITY is
-  a stock + recharge model — the emitted on-hit carries ``max_procs`` =
-  stock + floor(fight_duration / recharge), so the fight engine
-  empowers only that many autos; the rest are plain.
-- Q (Cosmic Binding) parses generically ("Magic Damage" is exactly
-  right); pinned to the explicit attr so a JSON reshuffle can't move
-  it. The slow/stun is CC with no damage component.
-- W (Caretaker's Shrine) is an ally-only heal: a zero-damage cast whose
-  only job is to exist, so the rotation casts it and the ally-support
-  scanner prices the sourced heal (200.0 to one teammate at rank 5, 0 AP,
-  the cached "Maximum Heal" row).  The 5-second charge that separates that
-  row from "Minimum Heal" is the boundary; the shrine is priced at full
-  power.  No enemy-damage row exists: the cached W leveling carries only
-  Minimum Heal / Maximum Heal / Bonus Movement Speed.
-- E (Magical Journey) is a one-way terrain portal: every effect row in
-  the cached JSON carries an empty ``leveling`` list and the ability has
-  no ``damageType`` — zero damage, confirmed against data/champions.json.
-  The travel itself stays unpriced on the terrain axis, which the fight
-  engine does not model at all.
-- R (Tempered Fate) is 2.5s stasis; the cached notes are explicit —
-  "Tempered Fate deals 0 proc true damage" — atoms-confirmed zero
-  numeric combat effect, not merely an assumption.  The stasis magnitude
-  stays unpriced: ``ability_spec.cc_kind`` is one vocabulary string per
-  part with no duration and no percent, so a stasis can be declared but
-  never priced.
-
-Roadmap session 2 (2026-08-20): E and R emit an explicit, user-visible
-zero-damage row via ``module_helpers.no_damage`` instead of staying
-silently absent, and ``MODULE_COVERAGE`` calls them ``no_damage`` rather
-than letting ``SLOTS`` derive ``modeled``.
+P (Traveler's Call) has zero cached effects and leveling, a known-degraded parse
+TRAPS.md records, so the meep formula is wiki-sourced module constants.  Meep
+damage scales with the chime option, and meep AVAILABILITY is a stock plus
+recharge model: the emitted on-hit carries ``max_procs`` of stock plus
+``floor(fight_duration / recharge)``, so only that many autos are empowered.
+Q (Cosmic Binding) parses generically and is pinned to the explicit attribute so
+a cache reshuffle cannot move it; its slow and stun carry no damage.
+W (Caretaker's Shrine) is an ally-only heal.  The cast is a zero-damage row whose
+job is to exist, so the rotation casts it and the support scanner prices the
+cached "Maximum Heal" row; the 5-second charge separating that from "Minimum
+Heal" is the boundary, and the shrine is priced at full power.
+E (Magical Journey) is a one-way terrain portal with empty leveling on every
+effect row; the travel stays unpriced on the terrain axis.
+R (Tempered Fate) is stasis, and the cached notes say outright that it deals 0
+proc true damage.  The stasis magnitude stays unpriced because
+``ability_spec.cc_kind`` is one vocabulary string with no duration and no
+percent, so a stasis can be declared but never priced.
 """
 
 from collections.abc import Mapping

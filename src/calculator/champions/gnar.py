@@ -1,37 +1,22 @@
 """Gnar: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- Gnar's two forms live as paired JSON entries per slot (Q[0]/Q[1],
-  W[0]/W[1], E[0]/E[1]); the ``mega`` option swaps which entry every
-  slot reads. The forms emit different entry shapes (Mini W is an
-  on-hit shell, Mega W a cast; Mini E carries a stat_buff, Mega E does
-  not), so each slot is a small champion-local form dispatcher rather
-  than a ``by_option`` (whose cases must share one shape).
-- P (Rage Gene) deals no damage, but Mega form grants stat bonuses that
-  exist nowhere in the JSON (its ``leveling`` is empty), so they are
-  module constants read from the game files. They apply as a BUFF-phase
-  buff so E (%maxHP) and Q/W (%AD) parse against buffed stats, and are
-  echoed in ``stat_buff`` so the fight engine buffs autos and attack
-  speed. The deltas are BASE stats, which is what R's %bonus-AD ratios
-  require. See the Champions section of ``TRAPS.md`` for why the wiki
-  stat box is not the source.
-- Q (Boomerang Throw / Boulder Toss) is a plain "Physical Damage" read
-  per form ("Reduced Damage" is the subsequent-target falloff — a
-  single target is hit once at full damage), with the catch/pickup
-  cooldown refund (wiki prose) applied via the ``q_pickup`` option.
-- W Mini (Hyper) procs every 3rd basic attack (Vayne Silver Bolts
-  shell); its single leveling entry sums THREE modifiers (flat +
-  %target max HP + AP), which ``pct_health_per_hit`` cannot do, so the
-  per-proc sum is a champion-local ``sum_modifiers``. W Mega (Wallop)
-  is a plain read of W[1].
-- E Mini (Hop) couples "Physical Damage" (6% of Gnar's own max HP)
-  with the "Bonus Attack Speed" leveling as a stat_buff on the same
-  entry. E Mega (Crunch) scales off "% of his maximum health" — a unit
-  scaling.py does not know — resolved with a local modifier override
-  against the (Mega-buffed) ``ctx.stats["health"]``.
-- R (GNAR!) is Mega-only: Mini form emits nothing; Mega picks its
-  attribute by the ``r_wall`` option ("Increased Damage" is the TOTAL
-  wall-crash damage, 1.5x the normal, not additive).
+Gnar's two forms are paired cached entries per slot and ``mega`` swaps which one
+every slot reads.  The forms emit different shapes, Mini W an on-hit shell
+against Mega W's cast, so each slot is a form dispatcher, not a ``by_option``.
+P (Rage Gene) deals no damage, but Mega's stat bonuses exist nowhere in the
+cache, so they are module constants from the game files, applied on the BUFF
+phase so every %maxHP and %AD slot parses against them.  They are BASE stats,
+which R's %bonus-AD ratios require; TRAPS.md says why the wiki box is not used.
+Q is a plain "Physical Damage" read per form, "Reduced Damage" being the
+subsequent-target falloff, with the catch refund behind ``q_pickup``.
+W Mini (Hyper) procs every third attack and its single leveling entry sums THREE
+modifiers, which ``pct_health_per_hit`` cannot do, so the per-proc sum is a
+champion-local ``sum_modifiers``.  W Mega is a plain read.
+E Mini couples its damage with the "Bonus Attack Speed" leveling as a
+``stat_buff``.  E Mega scales off "% of his maximum health", a unit
+``scaling.py`` does not know, resolved against the Mega-buffed health.
+R is Mega-only, and ``r_wall`` picks "Increased Damage", the TOTAL wall-crash
+value at 1.5x, never an addition.
 """
 
 from typing import Any

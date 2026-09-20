@@ -1,37 +1,21 @@
-"""Aurora — slot map for the archetype engine.
+"""Aurora: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Spirit Abjuration) is a custom fn: a %maxHP proc whose PERCENT
-  itself scales with AP (1% + 2.7% per 100 AP), which the shared
-  ``pct_health_per_hit`` math cannot express and the JSON does not carry
-  (the parser only captured the MONSTER damage cap as attribute
-  "Bonus Damage"), so the formula lives as module constants. Aurora's
-  stack counter advances on damaging basic attacks AND damaging ability
-  hits, so the emitted on-hit dict carries ``count_ability_hits`` — the
-  fight engine adds the rotation's damaging ability hits to the auto
-  count before dividing by ``stacks_required``. The passive's
-  healing/Spirit component deals no enemy damage and is skipped.
-- Q (Twofold Hex) is a custom fn: the first cast and the auto-recast
-  (expunge) are two DamageParts of one entry, so the recast fires
-  exactly once per cast by construction. The recast scales with the
-  target's MISSING health from "Minimum Magic Damage" (full HP) to
-  "Maximum Magic Damage" (zero HP); an ``hp_scaled_damage`` closure
-  lets the fight engine evaluate it against the tracked target HP at
-  recast time (BotRK-style decreasing-HP model).
-- W (Across the Veil) is a dash/invisibility/MS utility with zero
-  damage (JSON damageType is None) — sourced no_damage row, applies no
-  passive stack either.
-- E (The Weirding) and R (Between Worlds) are generic
-  ``simple_damage`` reads; the slow / rift zone / Realm Hopper effects
-  are utility and not modeled.
-
-Roadmap session (2026-08-21): closes the single out_of_scope slot (W).
-W (Across the Veil): ``data/champions.json`` Aurora W carries
-``damageType: None``; its three effect rows are "Invisibility Duration"
-(seconds), "Bonus Movement Speed" (%) and a cooldown-reset clause — pure
-dash/stealth/movement utility, no HP number against an enemy champion
-anywhere. Reclassified from out_of_scope to no_damage (an
-atoms-confirmed zero-HP-number effect), not left silently absent.
+P (Spirit Abjuration) is a %maxHP proc whose PERCENT itself scales with AP, 1%
+plus 2.7% per 100 AP, which the shared ``pct_health_per_hit`` math cannot
+express and the cache does not carry: the parser captured only the monster cap
+as "Bonus Damage", so the formula is module constants.  Aurora's stack counter
+advances on damaging basic attacks AND damaging ability hits, so the on-hit
+dict carries ``count_ability_hits`` and the engine adds the rotation's ability
+hits to the auto count before dividing by ``stacks_required``.
+Q (Twofold Hex) is the first cast and the auto-recast as two parts of one entry,
+so the recast fires exactly once per cast by construction.  The recast scales
+with the target's MISSING health from "Minimum Magic Damage" at full health to
+"Maximum Magic Damage" at none, through an ``hp_scaled_damage`` closure the
+engine evaluates against tracked health at recast time.
+W (Across the Veil) is a sourced ``no_damage`` row, dash and invisibility and
+movement speed only, and it applies no passive stack either.
+E (The Weirding) and R (Between Worlds) are generic reads; the slow, the rift
+zone and Realm Hopper are utility and not modeled.
 """
 
 from collections.abc import Callable

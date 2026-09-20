@@ -1,39 +1,22 @@
-"""Briar — slot map for the archetype engine.
+"""Briar: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Crimson Curse) is a hit-driven stacking bleed no on-hit archetype
-  can express: every attack AND ability application adds a stack (max
-  5; extra stacks tick at 25%), reapplying refreshes the shared 5s
-  duration. The JSON parse is degraded (a jumble of "Per-Level
-  Scaling"/"Bonus Damage" per-tick and per-window arrays with empty
-  units), so the wiki formula is hand-authored here and the fight
-  engine's hit-timeline DoT (``stacking_dot`` + ``applies_dot_stack``,
-  damage.py Case 4) owns the stack/tick accounting.
-- Q (Head Rush) carries three riders beside its damage read: it applies
-  item on-hits at 100% as a real attack (``triggers`` on_hit AND
-  on_attack, per the wiki data template), applies one bleed stack, and
-  shreds 10-20% armor+MR as a ``target_debuff`` (the Kog'Maw rule: the
-  fight engine applies it after Q's own damage).
-- W (Blood Frenzy) splits into two slots. "W_frenzy" is the zero-damage
-  BUFF entry (+55-95% attack speed, +24-60% move speed; the cleave is
-  skipped — it never hits the primary target). "W" is Snack Attack, the
-  frenzy's empowered NEXT basic attack (``empowers_next_auto``, once
-  per W cast — the Alistar rule), whose missing-health scaling resolves
-  the compound "% (+2.5% per 100 bonus AD) of the target's missing
-  health" unit against the shared ``target_missing_hp_pct`` option
-  (Bel'Veth's missing-health pattern). Both exist only while the
-  frenzy is active (``blood_frenzy_active``; R re-triggers the frenzy
-  for its whole duration, so ON is the all-in default).
-- E (Chilling Scream) is assumed fully charged ("Maximum Magic Damage";
-  the classifier's first-damage pick and the generic rank default were
-  both wrong), with the terrain-collision bonus behind the
-  ``e_wall_collision`` option. Applies a bleed stack; does NOT apply
-  item on-hits (verified in the raw data template).
-- R (Certain Death) is the explosion damage ("Magic Damage") plus stat
-  buffs the JSON only partly holds: life steal and move speed are
-  leveling entries, the +20% total AD armor/MR is wiki prose. Buffs are
-  emitted as ``stat_buff`` so items and the stats panel see them;
-  nothing in her own kit scales off them at parse time (no apply_to).
+P (Crimson Curse) is a hit-driven stacking bleed: every basic attack and every
+ability application adds a stack to a cap of five, extras ticking at 25%, and a
+reapplication refreshes the shared 5-second duration.  The cached parse is
+degraded, so the formula is hand-authored and ``stacking_dot`` owns the ticks.
+Q (Head Rush) carries three riders beside its damage read: it applies item
+on-hits at full effectiveness as a real attack, on_hit and on_attack together,
+it applies one bleed stack, and it shreds armor and magic resistance as a
+``target_debuff``, which lands after Q's own damage.
+W is two slots.  ``W_frenzy`` is the zero-damage BUFF entry, attack and movement
+speed, the cleave skipped because it never hits the primary target.  ``W`` is
+Snack Attack, the frenzy's empowered next attack, once per W cast, its compound
+missing-health unit resolving against ``target_missing_hp_pct``.
+E (Chilling Scream) is assumed fully charged, so it reads "Maximum Magic
+Damage", the terrain bonus sits behind ``e_wall_collision``, and it applies a
+bleed stack but no item on-hits.
+R (Certain Death) is the explosion damage plus stat buffs the cache only partly
+holds, the armor and magic resistance share being wiki prose.
 """
 
 import math

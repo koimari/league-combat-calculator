@@ -1,38 +1,22 @@
-"""Vayne — slot map for the archetype engine.
+"""Vayne: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- R (Final Hour) is a flat bonus-AD ``stat_buff`` (BUFF phase, so Q/E
-  scale off the buffed AD) that also drives Q's cooldown: the "Tumble
-  Cooldown Reduction" leveling value is published into the parse
-  context via the archetype's ``couples`` param, under the
-  ``tumble_cd_reduction_percent`` stash key Q reads below.
-- Q (Tumble) is a plain "Bonus Physical Damage" read wrapped to scale
-  its cooldown by R's published reduction (100% - reduction), stamped
-  ``empowers_next_auto`` so the fight engine caps casts at the auto
-  count: the damage only lands through the empowered basic attack.
-  Tumble is an attack reset (wiki: "resets Vayne's basic attack
-  timer"), so the dash costs no attack time and the auto count is
-  unaffected; the reset's throughput gain is not modeled.
-- W (Silver Bolts) procs true damage (% of target max health, floored
-  at "Minimum Bonus Damage") on every 3rd hit — the shared
-  ``pct_health_per_hit`` math in a custom fn, because the emitted
-  entry is a cooldown-less zero-damage shell whose on-hit dict
-  carries ``stacks_required`` for the fight engine's proc grouping.
-- E (Condemn) picks its damage attribute by the ``condemn_wall``
-  option (default True): "Total Physical Damage" includes the wall
-  crash bonus, "Physical Damage" is the unstunned base.
-- P (Night Hunter) is movement speed only — not modeled, absent from
-  the slot map.
-
-All numeric values are read from the champion JSON data except the
-proc cadence: Silver Bolts' every-3rd-hit rule is prose, not leveling
-data, hence the module constant.
-
-Coverage: P (Night Hunter) is a self movement-speed buff toward
-slowed/immobile enemies — the pinned reviewed packet declares it
-``kind: "no_damage"``. It stays off the slot map so the ledger never
-invents an enemy hit, and ``MODULE_COVERAGE`` states that reviewed
-absence of damage rather than an unmodeled gap.
+R (Final Hour) is a flat bonus-AD ``stat_buff`` on the BUFF phase, so Q and E
+scale off the buffed AD, and it also drives Q's cooldown: its "Tumble Cooldown
+Reduction" row is published into the parse context under the
+``tumble_cd_reduction_percent`` stash key Q reads below.
+Q (Tumble) is a plain "Bonus Physical Damage" read wrapped to scale its cooldown
+by that reduction and stamped ``empowers_next_auto``, so the engine caps casts at
+the auto count: the damage lands only through the empowered attack.  Tumble
+resets the attack timer, so the dash costs no attack time; the reset's own
+throughput gain is not modeled.
+W (Silver Bolts) procs true damage, a percent of maximum health floored at
+"Minimum Bonus Damage", on every third hit.  The emitted entry is a cooldown-less
+zero-damage shell whose on-hit dict carries ``stacks_required``, and the
+every-third-hit cadence is prose, hence the module constant.
+E (Condemn) picks its attribute on ``condemn_wall``: "Total Physical Damage"
+includes the wall crash, "Physical Damage" is the unstunned base.
+P (Night Hunter) is movement speed toward slowed enemies, so it is ``no_damage``
+and stays off the slot map, where the ledger cannot invent an enemy hit.
 """
 
 from typing import Any

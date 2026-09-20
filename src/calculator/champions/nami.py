@@ -1,38 +1,15 @@
-"""Nami — CP10.5 full-entry-reviewed packet module.
+"""Nami: full-entry-reviewed packet module.
 
-E2 DoT fix: E (Tidecaller's Blessing) prices 3 empowered hits
-(this module's packet timing declaration).
-
-E8d ally-support: W (Ebb and Flow) heals the selected teammate.  The event is
-authored by the engine's ally-support scanner from the cached W leveling
-(Heal 55-155 + 40% AP; scope one_teammate) at the W cast time; the module
-declares W in SLOTS so the fight rotation casts it.
-
-Coverage: P (Surging Tides) grants movement speed to allies Nami's
-abilities touch. Movement speed is an axis the engine does not have, so
-the slot is out of scope.
-
-Wave-2 ally support: the scanner also emits Ebb and Flow's
-RETURN BOUNCE as a second heal packet on the same cast ("each bounce
-modifying the effectiveness of the next by -20% (+ 15% per 100 AP)" of the
-original, never below the sourced Minimum Heal row — the second bounce
-keeps 60% + 30% per 100 AP, which is exactly the Minimum Heal row at 0 AP).
-Cast on the selected teammate, the stream bounces to the enemy and back to
-the same teammate in a two-champion lane (the cached notes allow the final
-bounce to re-target an already-affected champion), so the return-bounce
-packet uses the same one_teammate scope with its own selection key
-(``heal:W:<cast>:bounce``).
-
-P (Surging Tides) grants nearby allies bonus movement speed after Nami
-casts an ability — pure ally-utility state, no enemy-damage formula
-anywhere in the cached packet. The pinned packet already declares P
-``kind: "no_damage"`` (a sourced zero-damage row), so it was never an
-enemy-damage gap; MODULE_COVERAGE was simply stale, still reading
-"out_of_scope" for an already-covered passive. Roadmap session 4 batch
-D (2026-08-21) reclassifies P to "no_damage" (the Cassiopeia/Cho'Gath/
-Jarvan precedent) — a documentation-only fix with zero fight-
-computation change. P is not a cast slot in this engine
-(``rotation_resolver`` only schedules Q/Q2/W/E/R).
+E (Tidecaller's Blessing) prices three empowered hits.
+W (Ebb and Flow) heals the selected teammate.  The support scanner authors the
+event from the cached W leveling at the cast time, and W is declared in SLOTS so
+the rotation casts it.  The scanner emits the RETURN BOUNCE as a second heal
+packet on the same cast, each bounce modifying the next one's effectiveness and
+never falling below the sourced Minimum Heal row; in a two-champion lane the
+stream bounces to the enemy and back to the same teammate, so the bounce packet
+keeps the one-teammate scope under its own selection key.
+P (Surging Tides) grants nearby allies movement speed after a cast and carries
+no enemy-damage formula, so it is ``no_damage`` and is not a cast slot.
 """
 
 from typing import Any

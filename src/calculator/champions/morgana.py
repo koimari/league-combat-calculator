@@ -1,37 +1,19 @@
-"""Morgana — CP10.4 packet module with the E9-1 gap fixes.
+"""Morgana: packet module over two multi-instance casts.
 
-E9-1 closes the three remaining audit gaps over the CP10.4 packet:
-- W (Tormented Shadow) prices all 10 storm ticks: "Maximum Damage Per
-  Tick" x 10 == "Maximum Total Damage" at every rank (the packet
-  priced ONE tick).  The storm lasts 5 seconds, dealing magic damage
-  "on-cast and every 0.5 seconds thereafter".
-- R (Soul Shackles) prices the initial hit AND the same magic damage
-  again when the 3-second tether breaks: "Total Magic Damage" == 2 x
-  "Magic Damage" at every rank (the packet priced only the initial
-  hit).
-- P (Soul Siphon) heals Morgana for 18% of the post-mitigation damage
-  dealt by her abilities (authored by this module's
-  ``derive_self_healing`` rule); the passive slot itself stays a zero-damage row.
-
-Q (Dark Binding) packet is a correct single-instance read.  E (Black
-Shield) deals no damage but is ``modeled``: the ally-support scanner prices
-its cached "Magic Shield Strength" row (320.0 to the target ally at rank 5,
-0 AP).  The ledger absorbs it as an ordinary pool — the magic-only
-restriction and the crowd-control immunity it carries are the boundary.
-
-P (Soul Siphon) is the self-heal passive: no enemy-damage formula exists
-anywhere in the cached packet (the pinned packet already declares P
-``kind: "no_damage"``, and this module's ``_soul_siphon`` override emits
-the same sourced zero-damage row so the heal rule has a P entry to
-attach to). It was never an enemy-damage gap; MODULE_COVERAGE was
-simply stale, still reading "out_of_scope" for an already-covered
-passive. Roadmap session 4 batch D (2026-08-21) reclassifies P to
-"no_damage" (the Cassiopeia/Cho'Gath/Jarvan precedent) — a
-documentation-only fix with zero fight-computation change. P is not a
-cast slot in this engine (``rotation_resolver`` only schedules
-Q/Q2/W/E/R).  Coverage for P is declared through
-``COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}`` rather than a
-hand-written MODULE_COVERAGE table.
+W (Tormented Shadow) prices all ten storm ticks, on cast and every 0.5 seconds
+over 5 seconds: the "Maximum Damage Per Tick" row times ten is the cached
+"Maximum Total Damage" at every rank.
+R (Soul Shackles) prices the initial hit and the same magic damage again when
+the 3-second tether breaks, the cached "Total Magic Damage" being exactly twice
+the "Magic Damage" row.
+Q (Dark Binding) is a single-instance read.
+E (Black Shield) deals no damage but is modeled: the support scanner prices its
+cached "Magic Shield Strength" row and the ledger absorbs it as an ordinary
+pool, the magic-only restriction and the control immunity being the boundary.
+P (Soul Siphon) heals Morgana for 18% of the post-mitigation damage her
+abilities deal, authored by ``derive_self_healing``.  The slot itself is a
+zero-damage row, and its coverage is declared through ``COVERAGE_CHANNELS``
+rather than a hand-written table.
 """
 
 from functools import partial

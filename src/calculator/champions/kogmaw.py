@@ -1,37 +1,21 @@
-"""Kog'Maw — slot map for the archetype engine.
+"""Kog'Maw: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- Q (Caustic Spittle) is a DEBUFF-phase custom fn: magic damage plus a
-  bonus-attack-speed ``stat_buff`` and a percentage resistance shred
-  emitted as ``target_debuff`` (gated by the ``q_shred`` option,
-  default True). damage.py applies both at fight time; the parse-time
-  target context is left unmutated because no parse-time scaling reads
-  target resistances — the DEBUFF phase stamp documents what the slot
-  does and guarantees it runs before every damage slot.
-- W (Bio-Arcane Barrage) is a pure on-hit buff (``w_active`` option,
-  default True): % of target max health as magic damage per auto, with
-  extra % per 100 AP — the shared ``pct_health_per_hit`` math inside a
-  custom fn, because the emitted shape is a castable shell
-  (rank/cooldown/zero damage keys) around the on-hit dict.
-- E (Void Ooze) is a plain "Magic Damage" attribute read.
-- R (Living Artillery) is a "Minimum Magic Damage" read whose part
-  carries the wiki missing-HP curve as a ``hp_scaled_damage`` closure
-  (+50% linearly to 60% missing, then +100%) — the engine re-evaluates
-  it per shot against the target's falling HP.
-- P (Icathian Surprise) is a self-death trigger: after Kog'Maw takes
-  FATAL damage he rides out a 4-second zombie state, then explodes for
-  the cached "Bonus True Damage" (140 : 650 over levels 1-18). Roadmap
-  session 4 batch C (2026-08-21): closes the single out_of_scope slot
-  with an explicit zero-damage boundary receipt (the Karthus P "Death
-  Defied" pattern) rather than leaving MODULE_COVERAGE reading
-  "out_of_scope" for a death-only trigger this calculator's
-  deterministic alive-state 1v1 fight cannot enter (the main never
-  dies in the model). The sourced explosion magnitude is computed and
-  reported in the row's detail text for traceability, but priced at
-  zero damage since the trigger never fires here.
-
-All numeric values are read from the champion JSON data; nothing is
-hardcoded.
+Q (Caustic Spittle) is a DEBUFF-phase slot: magic damage plus a bonus
+attack-speed ``stat_buff`` and a percentage resistance shred emitted as a
+``target_debuff`` under ``q_shred``.  The parse-time target context is left
+unmutated because no parse-time scaling reads target resistances, and the
+DEBUFF stamp is what guarantees the slot runs before every damage slot.
+W (Bio-Arcane Barrage) is a pure on-hit buff under ``w_active``: a percent of
+the target's maximum health as magic per auto, plus a further percent per 100
+AP.  The emitted shape is a castable shell around the on-hit dict.
+E (Void Ooze) is a plain "Magic Damage" read.
+R (Living Artillery) reads "Minimum Magic Damage" and carries the wiki's
+missing-health curve as an ``hp_scaled_damage`` closure, rising by half up to
+60% missing health and doubling past it, which the engine re-evaluates per shot
+against the target's falling health.
+P (Icathian Surprise) fires only after Kog'Maw takes FATAL damage, which this
+deterministic duel never reaches, so the slot prices zero and reports the
+sourced explosion magnitude in its row detail.
 """
 
 from collections.abc import Callable

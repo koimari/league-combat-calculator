@@ -1,37 +1,18 @@
-"""Zyra — Garden of Thorns plants (E4 summon damage).
+"""Zyra: Garden of Thorns plants.
 
-Why each slot is non-generic:
-- W (Rampant Growth) is the seed that Q/E sprout into attacking plants.
-  The plant attack damage is NOT in the champion JSON (the Q/E ability
-  text only says the plant "lasts for 8 seconds"; the numbers live on the
-  wiki's pet section / the Community Dragon game files — see the
-  HARDCODED block below), so W emits a fixed-count proc over the fight
-  window: ``plant_count`` plants x ``plant_attacks`` attacks of
-  ``15 : 75`` (based on level) (+ 20% AP) magic damage.
-- Q/E/R keep the reviewed CP10.11 packet pricing.  P (Garden of Thorns)
-  stays out of scope: its own seeds spawn on a timer and sprout into
-  plants, a summon timeline the engine does not have.  The seed-spawn
-  state row it emits prices nothing; the plants a player seeds through
-  W are what the fight prices.
-
-Plant boundaries: plants are static turrets with 0 move speed — the
-model prices their attacks only while the target is in range for the
-whole window (8s duration, well beyond the 5-second one-rotation
-window).  The player controls the plant count (seeds via W, sprouting
-via Q/E).  Stranglethorns enrage (flurry, 2 shots per attack at 150%)
-and the 50% multi-plant falloff are not modeled.
-
-Roadmap session 5 slot 14 (2026-08-21): P (Garden of Thorns) has no
-enemy-damage formula: it periodically spawns Seeds (vision wards that
-enemies can walk over to destroy), with no enemy-damage leveling row
-(confirmed by the pinned reviewed packet's kind="no_damage" declaration
-for P, and live: parse_champion_abilities emits P with total_raw=0.0,
-and the fight breakdown carries no P/passive row at all). This module
-keeps P at build_packet_module's default no-damage branch (``SLOTS["P"]
-= _BATCH_SLOTS["P"]``, never reassigned). MODULE_COVERAGE was simply
-stale, still reading "out_of_scope" for a slot this module already
-treats as non-damaging (the Rek'Sai/Renekton precedent). Reclassified
-to "no_damage"; zero fight-computation change.
+W (Rampant Growth) is the seed Q and E sprout into attacking plants.  The plant
+attack damage is not in the champion cache at all, the ability text giving only
+the 8-second lifetime, so it is a module constant from the game files and W
+emits a fixed-count proc: ``plant_count`` plants times ``plant_attacks`` attacks
+of 15 to 75 by level (+ 20% AP) magic.
+Q, E and R keep their packet pricing.  P (Garden of Thorns) is ``no_damage``:
+its own seeds spawn on a timer and sprout on their own, a summon timeline this
+engine does not have, and the plants a player seeds through W are what the
+fight prices.
+Plant boundaries: plants are static turrets, so the model prices their attacks
+only while the target stays in range for the whole window, which the 8-second
+lifetime covers.  The Stranglethorns enrage and the 50% multi-plant falloff are
+not modeled.
 """
 
 from __future__ import annotations
