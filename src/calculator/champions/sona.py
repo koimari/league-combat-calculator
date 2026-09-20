@@ -31,6 +31,7 @@ published time-weighted over the fight window through
 import re
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from ..healing_helpers import ability_json, parsed_rank
 from .contract_vocabulary import coverage
 from .engine import ONHIT, SlotCtx
@@ -83,52 +84,45 @@ _power_chord.phase = ONHIT
 # sentence, so the sentence is read rather than copied (the Shyvana-P
 # shape).  Only the ranked ALLY row ("Melody Bonus", 10/12/14/16/18 +
 # 2% per 100 AP) is a leveling row, and that half has no 1v1 channel.
-_E_ACTIVE_MARKER = "bonus movement speed"
-_E_GRANT_RE = re.compile(
-    r"Sona gains\s+(?P<base>\d+(?:\.\d+)?)%\s*\(\+\s*"
-    r"(?P<per_100_ap>\d+(?:\.\d+)?)%\s*per 100 AP\)\s*bonus movement speed"
-    r"\s*for\s+(?P<undisturbed>\d+(?:\.\d+)?)\s*seconds",
-    re.IGNORECASE,
+_E_GRANT = CachedSentence(
+    re.compile(
+        r"Sona gains\s+(?P<base>\d+(?:\.\d+)?)%\s*\(\+\s*"
+        r"(?P<per_100_ap>\d+(?:\.\d+)?)%\s*per 100 AP\)\s*bonus movement speed"
+        r"\s*for\s+(?P<undisturbed>\d+(?:\.\d+)?)\s*seconds",
+        re.IGNORECASE,
+    ),
+    missing=(
+        "Sona E (Song of Celerity): the cached active no longer states "
+        "'Sona gains <n>% (+ <n>% per 100 AP) bonus movement speed for <n> "
+        "seconds' — the self grant cannot be sourced"
+    ),
 )
-_E_DAMAGED_WINDOW_RE = re.compile(
-    r"If she takes damage during this time.*?"
-    r"(?P<damaged>\d+(?:\.\d+)?)\s*seconds have elapsed",
-    re.IGNORECASE | re.DOTALL,
+_E_DAMAGED_WINDOW = CachedSentence(
+    re.compile(
+        r"If she takes damage during this time.*?"
+        r"(?P<value>\d+(?:\.\d+)?)\s*seconds have elapsed",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    missing=(
+        "Sona E (Song of Celerity): the cached active no longer states the "
+        "damaged window ('<n> seconds have elapsed') — the self grant cannot "
+        "be sourced"
+    ),
 )
 
 
 def _celerity_grant(ability: dict[str, Any] | None) -> tuple[float, float, float]:
     """E's self grant: ``(base %, % per 100 AP, damaged window seconds)``.
 
-    Both windows are stated in the same sentence — 7 seconds undisturbed,
-    cut to 3 once she takes damage.  A modelled fight is by construction a
-    state in which she takes damage, so the DAMAGED window is the one this
-    surface can source; it is also the shorter of the two, so reading it
-    can only understate the grant, never overstate it.  This is the same
-    call Teemo W makes when it refuses the passive branch whose
-    "5 seconds without taking damage" condition a fight never satisfies.
+    A modelled fight is by construction a state in which she takes damage,
+    so the DAMAGED window is the one this surface can source; it is also
+    the shorter of the two, so reading it can only understate the grant.
     """
-    # Direct indexing: a cache-shape break raises KeyError loudly here
-    # rather than falling through silently (the loop's own fail-closed
-    # raise below still guards the no-match case).
-    for effect in ability["effects"]:
-        text = str(effect["description"])
-        if _E_ACTIVE_MARKER not in text:
-            continue
-        grant = _E_GRANT_RE.search(text)
-        window = _E_DAMAGED_WINDOW_RE.search(text)
-        if grant is None or window is None:
-            continue
-        return (
-            float(grant.group("base")),
-            float(grant.group("per_100_ap")),
-            float(window.group("damaged")),
-        )
-    raise ValueError(
-        "Sona E (Song of Celerity): the cached active no longer states "
-        "'Sona gains <n>% (+ <n>% per 100 AP) bonus movement speed for <n> "
-        "seconds' together with the damaged window '<n> seconds have "
-        "elapsed' — the self grant cannot be sourced"
+    grant = _E_GRANT.match(ability or {})
+    return (
+        float(grant.group("base")),
+        float(grant.group("per_100_ap")),
+        _E_DAMAGED_WINDOW.value(ability or {}),
     )
 
 

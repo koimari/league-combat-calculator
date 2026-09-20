@@ -25,6 +25,7 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
@@ -40,21 +41,18 @@ from .source_receipts import load_champion_sources
 SHORT_FUSE_AP_RATIO = data_value(spell_object("Ziggs", "ZiggsPassiveBuff"), "APRatio")
 
 
+_SHORT_FUSE_REFUND = CachedSentence(
+    re.compile(
+        r"reduced by\s*(?P<values>\d+\s*/\s*\d+\s*/\s*\d+)\s*\(based on level\)",
+        re.IGNORECASE,
+    ),
+    missing="Ziggs P: Short Fuse cooldown refund is missing from the cached source",
+)
+
+
 def _short_fuse_refund_seconds(ability: Mapping[str, Any], level: int) -> float:
     """Read the sourced 4/5/6-second cast refund from passive prose."""
-    description = " ".join(
-        str(effect.get("description", "")) for effect in ability.get("effects", [])
-    )
-    match = re.search(
-        r"reduced by\s*(\d+)\s*/\s*(\d+)\s*/\s*(\d+)\s*\(based on level\)",
-        description,
-        flags=re.IGNORECASE,
-    )
-    values = tuple(float(match.group(index)) for index in range(1, 4)) if match else ()
-    if not values:
-        raise ValueError(
-            "Ziggs P: Short Fuse cooldown refund is missing from the cached source"
-        )
+    values = _SHORT_FUSE_REFUND.level_values(ability)
     breakpoint_index = 0 if level < 7 else (1 if level < 13 else 2)
     return values[breakpoint_index]
 

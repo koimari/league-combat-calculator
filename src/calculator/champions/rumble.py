@@ -48,7 +48,7 @@ import math
 import re
 from typing import Any
 
-from ..ability_prose import effect_description, extract_description_duration
+from ..ability_prose import CachedSentence, extract_description_duration
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .charge_cadence import ChargeRule
@@ -72,24 +72,45 @@ PACKET_SHA256 = "c18c1e6e7005c17066acf180ec68a2013bb656c20a88655a536f0a2bc9a078f
 # "becomes Overheated while at 150 Heat"; the window: "disabling his
 # abilities as his Heat decays back down to 0 over 4 seconds".
 _HEAT_PER_CAST_RE = re.compile(r"generates\s+(?P<value>\d+(?:\.\d+)?)\s+Heat")
-_MAX_HEAT_RE = re.compile(
-    r"becomes\s+Overheated\s+while\s+at\s+(?P<value>\d+(?:\.\d+)?)\s+Heat"
+_MAX_HEAT = CachedSentence(
+    re.compile(r"becomes\s+Overheated\s+while\s+at\s+(?P<value>\d+(?:\.\d+)?)\s+Heat"),
+    missing=(
+        "Rumble P: the cached innate no longer states the Overheat ceiling "
+        "('becomes Overheated while at N Heat')"
+    ),
 )
 
 # The slots whose cast the cache says generates Heat.  R is deliberately
 # absent: The Equalizer delays the decay ("or The Equalizer within 2
-# seconds") and generates none.
+# seconds") and generates none.  One sentence, one refusal per slot.
 _HEAT_GENERATOR_SLOTS = ("Q", "W", "E")
+_HEAT_PER_CAST = {
+    slot: CachedSentence(
+        _HEAT_PER_CAST_RE,
+        missing=(
+            f"Rumble {slot}: the cached entry no longer states its Heat "
+            "generation ('Rumble generates N Heat')"
+        ),
+    )
+    for slot in _HEAT_GENERATOR_SLOTS
+}
 _OVERHEAT_EFFECT_INDEX = 2
 
 
 # The decay half of the same innate, in the same cached sentence: "decays
 # by 10 Heat per second after not using any basic ability within 4 seconds
 # or The Equalizer within 2 seconds."
-_HEAT_DECAY_RE = re.compile(
-    r"decays\s+by\s+(?P<rate>\d+(?:\.\d+)?)\s+Heat\s+per\s+second"
-    r"[^.]*?within\s+(?P<basic>\d+(?:\.\d+)?)\s+seconds"
-    r"[^.]*?within\s+(?P<ultimate>\d+(?:\.\d+)?)\s+seconds"
+_HEAT_DECAY = CachedSentence(
+    re.compile(
+        r"decays\s+by\s+(?P<rate>\d+(?:\.\d+)?)\s+Heat\s+per\s+second"
+        r"[^.]*?within\s+(?P<basic>\d+(?:\.\d+)?)\s+seconds"
+        r"[^.]*?within\s+(?P<ultimate>\d+(?:\.\d+)?)\s+seconds"
+    ),
+    missing=(
+        "Rumble P: the cached innate no longer states its Heat decay "
+        "('decays by N Heat per second after not using any basic ability "
+        "within N seconds or The Equalizer within N seconds')"
+    ),
 )
 
 
@@ -103,18 +124,11 @@ def _heat_decay(ctx: SlotCtx) -> tuple[float, float, float]:
     passive = ctx.ability("P")
     if passive is None:
         raise ValueError("Rumble P: the cached Junkyard Titan entry is missing")
-    for index in range(3):
-        match = _HEAT_DECAY_RE.search(effect_description(passive, index))
-        if match is not None:
-            return (
-                float(match.group("rate")),
-                float(match.group("basic")),
-                float(match.group("ultimate")),
-            )
-    raise ValueError(
-        "Rumble P: the cached innate no longer states its Heat decay "
-        "('decays by N Heat per second after not using any basic ability "
-        "within N seconds or The Equalizer within N seconds')"
+    match = _HEAT_DECAY.match(passive)
+    return (
+        float(match.group("rate")),
+        float(match.group("basic")),
+        float(match.group("ultimate")),
     )
 
 
@@ -128,22 +142,11 @@ def _heat_mechanics(ctx: SlotCtx) -> tuple[float, float, float]:
     passive = ctx.ability("P")
     if passive is None:
         raise ValueError("Rumble P: the cached Junkyard Titan entry is missing")
-    ceiling = _MAX_HEAT_RE.search(effect_description(passive, 0))
-    if ceiling is None:
-        raise ValueError(
-            "Rumble P: the cached innate no longer states the Overheat "
-            "ceiling ('becomes Overheated while at N Heat')"
-        )
-
-    gains: set[float] = set()
-    for slot in _HEAT_GENERATOR_SLOTS:
-        match = _HEAT_PER_CAST_RE.search(effect_description(ctx.ability(slot) or {}, 0))
-        if match is None:
-            raise ValueError(
-                f"Rumble {slot}: the cached entry no longer states its Heat "
-                "generation ('Rumble generates N Heat')"
-            )
-        gains.add(float(match.group("value")))
+    ceiling = _MAX_HEAT.value(passive)
+    gains = {
+        sentence.value(ctx.ability(slot) or {})
+        for slot, sentence in _HEAT_PER_CAST.items()
+    }
     if len(gains) != 1:
         raise ValueError(
             "Rumble: the cached Q/W/E entries disagree on Heat per cast "
@@ -157,7 +160,7 @@ def _heat_mechanics(ctx: SlotCtx) -> tuple[float, float, float]:
             "Rumble P: the cached Overheated effect no longer states its "
             "duration ('decays back down to 0 over N seconds')"
         )
-    return float(ceiling.group("value")), gains.pop(), float(window)
+    return ceiling, gains.pop(), float(window)
 
 
 # Flamespitter's cadence is the cache's own, and it is stated twice.  The

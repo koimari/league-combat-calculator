@@ -29,6 +29,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_atoms import ability_field, ability_payload
+from ..ability_prose import CachedSentence
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, SlotParser, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -45,6 +46,25 @@ from .source_receipts import load_champion_sources
 # bonus-AD ratio remain cached leveling rows read live below.
 _REPUDIATION_SHIELD_DURATION_SECONDS = data_value(
     spell_object("Ambessa", "AmbessaW"), "Shield_Duration"
+)
+
+# Drakehound's Step states two of its numbers only in the innate's prose:
+# the bonus-AD ratio the cache carries as no leveling modifier, and the
+# level-stepped energy one empowered attack restores.
+_PASSIVE_BONUS_AD = CachedSentence(
+    re.compile(r"\(\+\s*(?P<value>\d+(?:\.\d+)?)%\s+bonus\s+AD\)"),
+    missing=(
+        "Ambessa P (Drakehound's Step): the cached innate no longer states "
+        "the proc's bonus-AD ratio ('(+ N% bonus AD)')"
+    ),
+)
+_PASSIVE_ENERGY_RESTORE = CachedSentence(
+    re.compile(
+        r"restore\s+(?P<values>\d+(?:\.\d+)?\s*/\s*\d+(?:\.\d+)?\s*/\s*"
+        r"\d+(?:\.\d+)?)\s*\(based on level\)\s*energy",
+        re.IGNORECASE,
+    ),
+    missing="Ambessa passive energy restoration is unavailable",
 )
 
 
@@ -83,23 +103,11 @@ def _parse_passive_damage(
     champion_stats: dict[str, float] | None = None,
     total_ability_power: float = 0.0,
 ) -> float:
-    """Parse Ambessa passive damage per proc from JSON leveling data.
+    """One Drakehound's Step proc at *level*, before resistances.
 
-    The passive has per-level base values (20 values for levels 1-20)
-    extracted from the wiki's ``data-bot-values`` attribute, plus a
-    bonus AD scaling ratio embedded in the effect description (not
-    always present as a leveling modifier) — regex-extracted from
-    ``"(+ N% bonus AD)"``. (Test seam: tests/test_ambessa.py validates
-    the JSON values here.)
-
-    Args:
-        passive: Passive ability dict from champion JSON.
-        level: Champion level (1-20).
-        champion_stats: Champion stats for bonus AD scaling.
-        total_ability_power: Total AP.
-
-    Returns:
-        Damage per passive proc before resistances.
+    The cache carries the per-level base as a leveling row and the
+    bonus-AD ratio only as a sentence, so the row is summed and the
+    sentence read unless the row itself carries a second modifier.
     """
     stats_context = dict(champion_stats) if champion_stats else {}
     stats_context["ability_power"] = total_ability_power
@@ -114,14 +122,8 @@ def _parse_passive_damage(
         return damage
 
     # The bonus AD scaling is in prose when structured scaling is absent.
-    for effect in passive.get("effects", []):
-        desc = effect.get("description", "")
-        ad_match = re.search(r"\(\+\s*(\d+(?:\.\d+)?)%\s+bonus\s+AD\)", desc)
-        if ad_match:
-            ratio = float(ad_match.group(1)) / 100.0
-            return damage + ratio * champion_stat(stats_context, "bonus_attack_damage")
-
-    return damage
+    ratio = _PASSIVE_BONUS_AD.value(passive) / 100.0
+    return damage + ratio * champion_stat(stats_context, "bonus_attack_damage")
 
 
 def _drakehounds_step_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
@@ -131,27 +133,21 @@ def _drakehounds_step_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
     )
 
 
-_MAXIM_STACK_RE = re.compile(
-    r"generates a stack of Medarda Maxim[^.]*?for (?P<seconds>\d+(?:\.\d+)?) seconds"
-    r"[^.]*?stacking up to (?P<stacks>\d+) times"
+_MAXIM_STACK = CachedSentence(
+    re.compile(
+        r"generates a stack of Medarda Maxim[^.]*?for (?P<seconds>\d+(?:\.\d+)?) "
+        r"seconds[^.]*?stacking up to (?P<stacks>\d+) times"
+    ),
+    missing=(
+        "Ambessa P: the cached innate no longer states the Medarda Maxim "
+        "stack life and cap ('for N seconds ... stacking up to N times')"
+    ),
 )
 
 
 def _maxim_stack_terms(ability: dict[str, Any] | None) -> tuple[float, int]:
     """The cached life and cap of a Medarda Maxim stack."""
-    effects = (ability if ability else {}).get("effects")
-    parts: list[str] = []
-    for effect in effects if effects else ():
-        description = effect.get("description")
-        if description is not None:
-            parts.append(str(description))
-    match = _MAXIM_STACK_RE.search(" ".join(parts))
-    if match is None:
-        raise ValueError(
-            "Ambessa P: the cached innate no longer states the Medarda Maxim "
-            "stack life and cap ('for N seconds ... stacking up to N times')"
-        )
-    return float(match.group("seconds")), int(match.group("stacks"))
+    return _MAXIM_STACK.stack_terms(ability or {})
 
 
 def _drakehounds_step(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -185,19 +181,7 @@ def _drakehounds_step(ctx: SlotCtx) -> dict[str, Any] | None:
     }
     # Wiki revision 4038211 supplies the 1/7/13 thresholds. The locally
     # ingested champion JSON carries the three values in the passive prose.
-    description = " ".join(
-        effect.get("description", "")
-        for effect in (ctx.ability() or {}).get("effects", [])
-    )
-    match = re.search(
-        r"restore\s+(\d+(?:\.\d+)?)\s*/\s*(\d+(?:\.\d+)?)\s*/\s*"
-        r"(\d+(?:\.\d+)?)\s*\(based on level\)\s*energy",
-        description,
-        flags=re.IGNORECASE,
-    )
-    if match is None:
-        raise ValueError("Ambessa passive energy restoration is unavailable")
-    values = tuple(float(value) for value in match.groups())
+    values = _PASSIVE_ENERGY_RESTORE.level_values(ctx.ability() or {})
     index = 0 if ctx.level < 7 else 1 if ctx.level < 13 else 2
     entry["resource_restore_per_proc"] = values[index]
     return entry

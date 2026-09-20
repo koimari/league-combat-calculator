@@ -366,10 +366,6 @@ CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"effect
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"leveling" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"modifiers" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"values" 1
-CACHED_SOURCE_ROW|champions/ambessa.py|_drakehounds_step|dict.get|"description" 1
-CACHED_SOURCE_ROW|champions/ambessa.py|_drakehounds_step|dict.get|"effects" 1
-CACHED_SOURCE_ROW|champions/ambessa.py|_parse_passive_damage|dict.get|"description" 1
-CACHED_SOURCE_ROW|champions/ambessa.py|_parse_passive_damage|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/ambessa.py|_parse_passive_damage|dict.get|"modifiers" 1
 CACHED_SOURCE_ROW|champions/aphelios.py|derive_self_healing|dict.get|"P" 1
 CACHED_SOURCE_ROW|champions/aphelios.py|derive_self_healing|dict.get|"abilities" 1
@@ -413,8 +409,6 @@ CACHED_SOURCE_ROW|champions/mel.py|_searing_brilliance_per_missile|or-default|"m
 CACHED_SOURCE_ROW|champions/mel.py|_searing_brilliance_per_missile|or-default|"values" 2
 CACHED_SOURCE_ROW|champions/miss_fortune.py|_love_tap_ad_ratio|or-default|"modifiers" 1
 CACHED_SOURCE_ROW|champions/miss_fortune.py|_love_tap_ad_ratio|or-default|"values" 1
-CACHED_SOURCE_ROW|champions/ornn.py|_temper_consume_percent|or-default|"description" 1
-CACHED_SOURCE_ROW|champions/ornn.py|_temper_consume_percent|or-default|"effects" 1
 CACHED_SOURCE_ROW|champions/rengar.py|_ferocity_bonus|dict.get|"description" 1
 CACHED_SOURCE_ROW|champions/rengar.py|_ferocity_bonus|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/shen.py|_ki_barrier_shield_amount|dict.get|"modifiers" 1
@@ -425,8 +419,6 @@ CACHED_SOURCE_ROW|champions/shen.py|_named_level_rank_damage|dict.get|"leveling"
 CACHED_SOURCE_ROW|champions/shen.py|_named_level_rank_damage|dict.get|"modifiers" 1
 CACHED_SOURCE_ROW|champions/shen.py|_named_level_rank_damage|dict.get|"units" 1
 CACHED_SOURCE_ROW|champions/shen.py|_named_level_rank_damage|dict.get|"values" 1
-CACHED_SOURCE_ROW|champions/shyvana.py|_scalemail_per_stack|or-default|"description" 1
-CACHED_SOURCE_ROW|champions/shyvana.py|_scalemail_per_stack|or-default|"effects" 1
 CACHED_SOURCE_ROW|champions/slot_control.py|_require_seconds|dict.get|"units" 1
 CACHED_SOURCE_ROW|champions/slot_control.py|extract_recharge|or-default|"rechargeRate" 1
 CACHED_SOURCE_ROW|champions/slot_extract.py|_find_primary_damage_leveling|dict.get|"attribute" 1
@@ -458,8 +450,6 @@ CACHED_SOURCE_ROW|champions/yorick.py|_leveling_flat_at_level|dict.get|"values" 
 CACHED_SOURCE_ROW|champions/ziggs.py|_short_fuse|dict.get|"cooldown" 1
 CACHED_SOURCE_ROW|champions/ziggs.py|_short_fuse|dict.get|"modifiers" 1
 CACHED_SOURCE_ROW|champions/ziggs.py|_short_fuse|dict.get|"values" 1
-CACHED_SOURCE_ROW|champions/ziggs.py|_short_fuse_refund_seconds|dict.get|"description" 1
-CACHED_SOURCE_ROW|champions/ziggs.py|_short_fuse_refund_seconds|dict.get|"effects" 1
 CACHED_SOURCE_ROW|data_fetcher.py|_item_name_index|dict.get|"name" 1
 CACHED_SOURCE_ROW|economics_data.py|sourced_combine_cost|dict.get|"combine_costs" 1
 CACHED_SOURCE_ROW|economics_data.py|sourced_combine_cost|or-default|"id" 1

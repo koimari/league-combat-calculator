@@ -27,6 +27,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from ..ability_atoms import ability_payload
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import coverage
@@ -64,37 +65,25 @@ def _inferno_aegis_shield(ctx: SlotCtx) -> float:
 # any kind, so the sentence itself is the source and is read here rather
 # than copied — the Ornn P (Temper) shape.  ``_SCALEMAIL_MAX_STACKS`` is
 # the option's own bound, not a game cap: takedown stacks have none.
-_SCALEMAIL_EFFECT_MARKER = "Scalemail:"
-_SCALEMAIL_RE = re.compile(
-    r"For each stack,\s*Shyvana gains\s+(?P<armor>\d+(?:\.\d+)?)\s+bonus armor"
-    r"\s+and\s+(?P<mr>\d+(?:\.\d+)?)\s+bonus magic resistance",
-    re.IGNORECASE,
+_SCALEMAIL = CachedSentence(
+    re.compile(
+        r"Scalemail:.*?For each stack,\s*Shyvana gains\s+"
+        r"(?P<armor>\d+(?:\.\d+)?)\s+bonus armor\s+and\s+"
+        r"(?P<mr>\d+(?:\.\d+)?)\s+bonus magic resistance",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    missing=(
+        "Shyvana P (Scalemail): the cached passive description no longer "
+        "states 'For each stack, Shyvana gains <n> bonus armor and <n> "
+        "bonus magic resistance' — the per-stack resists cannot be sourced"
+    ),
 )
 _SCALEMAIL_MAX_STACKS = 100
 
 
 def _scalemail_per_stack(passive: dict[str, Any] | None) -> tuple[float, float]:
     """One Scalemail stack's bonus armor and bonus magic resistance."""
-    match = next(
-        filter(
-            None,
-            (
-                _SCALEMAIL_RE.search(text)
-                for text in (
-                    str(effect.get("description") or "")
-                    for effect in (passive or {}).get("effects") or []
-                )
-                if _SCALEMAIL_EFFECT_MARKER in text
-            ),
-        ),
-        None,
-    )
-    if match is None:
-        raise ValueError(
-            "Shyvana P (Scalemail): the cached passive description no longer "
-            "states 'For each stack, Shyvana gains <n> bonus armor and <n> "
-            "bonus magic resistance' — the per-stack resists cannot be sourced"
-        )
+    match = _SCALEMAIL.match(passive or {})
     return float(match.group("armor")), float(match.group("mr"))
 
 

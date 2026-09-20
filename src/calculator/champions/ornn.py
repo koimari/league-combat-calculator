@@ -14,6 +14,7 @@ description prose and cross-checked against the game file — see
 import re
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..stat_formulas import MAX_LEVEL
 from .contract_vocabulary import coverage
@@ -57,12 +58,18 @@ def _bellows_breath(
 # Brittle enemies will consume the debuff to deal bonus magic damage equal
 # to 9% : 17.94% (based on Ornn's level) of the target's maximum health".
 # The two endpoints are read out of that sentence rather than copied.
-_TEMPER_EFFECT_MARKER = "Innate - Temper"
-_TEMPER_CONSUME_RE = re.compile(
-    r"bonus magic damage equal to\s+(?P<low>\d+(?:\.\d+)?)\s*%\s*:\s*"
-    r"(?P<high>\d+(?:\.\d+)?)\s*%\s*\(based on Ornn's level\)\s*"
-    r"of the target's\s+maximum health",
-    re.IGNORECASE,
+_TEMPER_CONSUME = CachedSentence(
+    re.compile(
+        r"Innate - Temper.*?bonus magic damage equal to\s+"
+        r"(?P<low>\d+(?:\.\d+)?)\s*%\s*:\s*(?P<high>\d+(?:\.\d+)?)\s*%\s*"
+        r"\(based on Ornn's level\)\s*of the target's\s+maximum health",
+        re.IGNORECASE | re.DOTALL,
+    ),
+    missing=(
+        "Ornn P (Temper): the cached passive description no longer states "
+        "the Brittle consume's '<low>% : <high>% (based on Ornn's level) "
+        "of the target's maximum health' — the rider cannot be sourced"
+    ),
 )
 # HARDCODED, and only as the drift guard on the prose above: the game file
 # (CommunityDragon ``characters/ornn/ornn.bin.json``, ``OrnnWAbility`` ->
@@ -87,27 +94,7 @@ def _temper_consume_percent(passive: dict[str, Any] | None, level: int) -> float
     file's own level-18 value is asserted against that ramp so a patch that
     moves either source raises instead of pricing a stale rider.
     """
-    descriptions = [
-        str(effect.get("description") or "")
-        for effect in (passive or {}).get("effects") or []
-    ]
-    match = next(
-        filter(
-            None,
-            (
-                _TEMPER_CONSUME_RE.search(text)
-                for text in descriptions
-                if _TEMPER_EFFECT_MARKER in text
-            ),
-        ),
-        None,
-    )
-    if match is None:
-        raise ValueError(
-            "Ornn P (Temper): the cached passive description no longer states "
-            "the Brittle consume's '<low>% : <high>% (based on Ornn's level) "
-            "of the target's maximum health' — the rider cannot be sourced"
-        )
+    match = _TEMPER_CONSUME.match(passive or {})
     low, high = float(match.group("low")), float(match.group("high"))
     span = (high - low) / (MAX_LEVEL - 1)
     at_18 = low + span * (_TEMPER_GAME_FILE_TOP_LEVEL - 1)
