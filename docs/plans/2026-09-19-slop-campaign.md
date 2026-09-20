@@ -7,7 +7,7 @@ are the audit's own.
 
 ## Rules every unit follows
 
-- One worker, one worktree, one branch `slop/<unit>`, one scope list. A worker edits nothing
+- One worker, one worktree, one branch `slop-<wave>/<unit>`, one scope list. A worker edits nothing
   outside its scope. Traps it learns go in its report, not `TRAPS.md`. The integrator appends them.
 - Gates per unit, fresh output quoted in the report: `black --check src/ tests/ scripts/`,
   `pylint src/ --jobs=4 --fail-under=9 --fail-on=E0601,E0602` for code changes, both golden
@@ -29,8 +29,9 @@ are the audit's own.
 - A skeptic reviews every branch before integration, prompted to refute it: a deleted reader, a
   gate not run, a scope breach, a silent behaviour change.
 - The integrator merges units onto `campaign/slop-<wave>`, resolves conflicts by intent,
-  regenerates derived receipts in the CLAUDE.md order, runs `make ci-full`, and merges to `main`
-  only on a green run. The campaign pushes nothing.
+  regenerates derived receipts in the CLAUDE.md order, runs every CI gate one process at a time
+  with `pytest -n 8`, and hands the branch to the session, which merges to `main` only on a green
+  run it reproduces. The campaign pushes nothing.
 
 ## Waves
 
@@ -61,4 +62,4 @@ section 11) and on the docstrings that cite HANDOVER. The integrator resolves th
 
 | Wave | Merged at | Lines removed | Files removed | Notes |
 |---|---|---|---|---|
-| A | `campaign/slop-a` | 603,956 against 2,315 added | 720 tracked, 14.9 MB | All four units merged. Full suite 16,363 passed, 47 skipped, against 16,433 collected on main and 16,410 here. Both goldens identical. `CLAUDE.md` 1,290 words, `TRAPS.md` 5,367, `architecture.md` 6,971. Two conflicts, both resolved by intent: the `item_support_effects` assignment record takes the compacted shape with the corrected import count, and the SD2 receipt stays deleted. Three fixes the integrator owns: the orphan guard names no tracked family in its own fixture, `ui/build.mjs` compares newlines-normalised so the check passes on a CRLF checkout and its bundle loop runs at all, and the retired source-admission review's Camille and Yasuo defects became backlog rows SA2 and SA3. `docs/cast-dependency-audit.json` was already stale on main and is regenerated here. |
+| A | `7ad31845` | 603,956 against 2,315 added | 720 tracked, 14.9 MB | All four units merged. Full suite 16,363 passed, 47 skipped, against 16,433 collected on main and 16,410 here. Both goldens identical. `CLAUDE.md` 1,290 words, `TRAPS.md` 5,367, `architecture.md` 6,971. Two conflicts, both resolved by intent: the `item_support_effects` assignment record takes the compacted shape with the corrected import count, and the SD2 receipt stays deleted. Three fixes the integrator owns: the orphan guard names no tracked family in its own fixture, `ui/build.mjs` compares newlines-normalised so the check passes on a CRLF checkout and its bundle loop runs at all, and the retired source-admission review's Camille and Yasuo defects became backlog rows SA2 and SA3. `docs/cast-dependency-audit.json` was already stale on main and is regenerated here. |
