@@ -1,34 +1,22 @@
-"""Darius — slot map for the archetype engine.
+"""Darius: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Hemorrhage) is a hit-driven stacking bleed plus the steroid it
-  triggers. Every damaging basic attack AND damaging ability applies one
-  stack for 5s (max 5, refreshing); unlike Briar's, every stack ticks at
-  FULL rate. Landing the 5th stack on a champion grants Noxian Might —
-  bonus AD for 5s, refreshing while the target is held at max. Both ride
-  the fight engine's shared stack timeline (damage.py Case 4 and 5), so
-  "when does a stack land" has exactly one home. The JSON parse is
-  degraded in two ways the generic path cannot survive: all four bleed
-  arrays share attribute ``"Per-Level Scaling"`` (indexed positionally
-  below) and every bonus-AD ratio in the passive lives only in the
-  description prose (hardcoded below).
-- Q (Decimate) reads the outer BLADE attribute — the inner handle is a
-  misplay and is not modeled — applies a bleed stack, and overrides its
-  cast time: the JSON says ``"none"`` but Decimate hefts the axe for
-  0.75s, during which Darius cannot attack or cast (the Cassiopeia
-  cast-time rule).
-- W (Crippling Strike) empowers the NEXT basic attack once per cast (the
-  Alistar rule) and its bonus crits at FULL effectiveness alongside the
-  base swing.
-- E (Apprehend) deals ZERO damage — so it applies NO bleed stack, a real
-  mechanic rather than an oversight. Its always-on armor-penetration
-  passive is the whole point, emitted as a BUFF-phase ``stat_buff`` (the
-  Ambessa R precedent) so every physical slot is priced after it.
-- R (Noxian Guillotine) is TRUE damage that grows with the Hemorrhage
-  stacks ON THE TARGET when it lands. The JSON's "Maximum True Damage"
-  is a trap for the primary-damage classifier — it is only correct at 5
-  stacks — so R is built as base + one per-stack instance, with the
-  stack count derived from the fight timeline (or forced by option).
+P (Hemorrhage) is a hit-driven stacking bleed plus the steroid it triggers.
+Every damaging attack and ability applies one stack for 5 seconds, to a cap of
+five, and unlike Briar's every stack ticks at FULL rate; the fifth on a champion
+grants Noxian Might, bonus AD for 5 seconds.  Both ride the engine's shared
+stack timeline.  The cached parse is degraded two ways: all four bleed arrays
+share the attribute "Per-Level Scaling", and every bonus-AD ratio is prose.
+Q (Decimate) reads the outer BLADE attribute, the inner handle being a misplay,
+applies a bleed stack, and overrides its cast time: the cache says "none" where
+Decimate hefts the axe for 0.75 seconds and can neither attack nor cast.
+W (Crippling Strike) empowers the NEXT basic attack once per cast and its bonus
+crits at FULL effectiveness alongside the base swing.
+E (Apprehend) deals ZERO damage, so it applies NO bleed stack, which is a real
+mechanic rather than an oversight.  Its always-on armor penetration is a
+BUFF-phase ``stat_buff``, so every physical slot is priced after it.
+R (Noxian Guillotine) is TRUE damage growing with the Hemorrhage stacks ON THE
+TARGET, so it is built as base plus one per-stack instance.  The cached
+"Maximum True Damage" row is a trap: it is correct only at five stacks.
 """
 
 from collections.abc import Mapping

@@ -1,34 +1,22 @@
 """The three vocabularies a champion formula may read, declared once.
 
-CLAUDE.md rule 5 keeps item numbers out of call sites because a
-``.get(key, <stale literal>)`` keeps answering after the value behind it
-stops arriving — that exact shape hid a 3x Statikk Shiv overstatement.  A
-champion formula reads three inputs: the build's stats, the target's
-stats, and the user's options.  The same shape had grown at 370 call sites
-across the champion tree, each one a literal that would keep a formula
-running after its input stopped being wired, and D-24's declared
-``zero_policy`` default makes that quieter rather than louder — the zero
-such a formula produces is stamped ``MEASURED``, which says a formula
-*computed* it.
-
-So the exception ships with this module, and the guard has two halves:
-
-* **No call site holds the fallback.**  ``scripts/behavior_frontier.py``
-  fails on any ``x.get(<key>, <numeric literal>)`` whose receiver is one of
-  the three input blocks, anywhere under ``champions/``, and
-  ``tests/test_champion_inputs.py`` asserts the same over source.  The
-  accessors below are the only way in.
-* **The vocabulary is checked against its producer.**  Every ``BUILD`` stat
-  named here must be a key ``stats.calculate_total_stats`` really emits and
-  every ``TARGET`` stat a key ``FightParams.target_stats`` really emits, so
-  a stat renamed on the producing side turns red *here*, naming the
-  champion-side readers, instead of silently pricing zero in 143 modules.
-
+A champion formula reads three inputs: the build's stats, the target's stats and
+the user's options.  CLAUDE.md rule 5 keeps numbers out of call sites because a
+``.get(key, <stale literal>)`` keeps answering after the value behind it stops
+arriving, and a declared ``zero_policy`` default makes that quieter: the zero it
+produces is stamped MEASURED, which says a formula computed it.
+So the exception ships here, and the guard has two halves.  No call site holds
+the fallback: ``scripts/behavior_frontier.py`` fails on any
+``x.get(<key>, <numeric literal>)`` whose receiver is one of the three input
+blocks under ``champions/``, and ``tests/test_champion_inputs.py`` asserts the
+same over source, so the accessors below are the only way in.  And the
+vocabulary is checked against its producer: every BUILD stat here must be a key
+``stats.calculate_total_stats`` emits and every TARGET stat one
+``FightParams.target_stats`` emits, so a rename turns red here rather than
+pricing zero in every reader.
 An accessor raises :class:`ChampionInputError` for a name outside its
-vocabulary, so an unwired read fails loud instead of pricing a literal.  A
-name inside it returns the wired value, or the default this module declares
-when the input block does not carry the key.  That declared default is the
-number's one home, stated once and with a reason.
+vocabulary.  A name inside it returns the wired value, or the default this
+module declares when the block does not carry the key, stated once with a reason.
 """
 
 from __future__ import annotations

@@ -1,33 +1,22 @@
-"""Jarvan IV — slot map for the archetype engine.
+"""Jarvan IV: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Martial Cadence) has NO JSON leveling entries — the 8% current-HP,
-  minimum-20, and per-target cooldown values exist only in description
-  prose, so they live here as module constants. The entry emits a
-  cooldown-scheduled ``on_hit`` payload: the fight engine derives the
-  proc schedule from the fight timeline (first auto procs, then the
-  first auto at/after last proc + cooldown) with each proc reading the
-  target's decayed current HP — a configurable proc count would ignore
-  attack speed, and proc-every-auto would badly overstate the passive.
-- Q (Dragon Strike) is a DEBUFF-phase custom fn: physical damage plus a
-  % armor reduction ``target_debuff`` (``q_armor_shred`` option, default
-  True). damage.py applies the shred AFTER Q's own damage, so autos,
-  passive procs, and R benefit but Q does not — matching in-game.
-- W (Golden Aegis) is shield/slow only: a zero-damage cast that exists so
-  the rotation casts it and the ally-support scanner prices the sourced
-  self shield (140.0 at rank 5 with no bonus AD, the cached "Shield
-  Strength" row; see ``support_effects._SHIELD_DURATION_ATOM_QUERIES[
-  ("Jarvan IV", "W")]``, which the scanner was pre-wired with).  The
-  prose-only "+1.3% of his maximum health for each enemy champion hit"
-  has no leveling row and is not priced; the slow is crowd control the
-  model does not price.
-- E (Demacian Standard) is a BUFF-phase custom fn: magic active damage
-  plus a bonus-attack-speed ``stat_buff``. The ``near_flag`` option
-  (default True) doubles the AS bonus — Jarvan near his planted flag
-  gets both the aura and the flag's own aura. The buffed attack speed
-  also raises the passive's derived proc count at fight time.
-- R (Cataclysm) is a plain "Physical Damage" read; terrain and recast
-  are CC/utility only (no recast slot).
+P (Martial Cadence) has no cached leveling, so its 8% current-health share, its
+minimum of 20 and its per-target cooldown are module constants from description
+prose.  The entry emits a cooldown-scheduled ``on_hit`` and the engine derives
+the proc schedule from the fight timeline, each proc reading the target's
+decayed current health: a configurable proc count would ignore attack speed, and
+proccing every auto would badly overstate the passive.
+Q (Dragon Strike) is a DEBUFF-phase slot, physical damage plus a percentage
+armor reduction under ``q_armor_shred``.  The shred lands AFTER Q's own damage,
+so autos, passive procs and R benefit and Q does not, as in game.
+W (Golden Aegis) is shield and slow only: a zero-damage cast that exists so the
+rotation casts it and the support scanner prices the sourced self shield.  Its
+prose-only per-champion-hit bonus has no leveling row and is not priced.
+E (Demacian Standard) is a BUFF-phase slot, magic damage plus a bonus
+attack-speed ``stat_buff``.  ``near_flag`` doubles that bonus, Jarvan beside his
+planted flag taking both auras, and the buffed attack speed also raises the
+passive's derived proc count at fight time.
+R (Cataclysm) is a plain "Physical Damage" read.
 """
 
 from typing import Any

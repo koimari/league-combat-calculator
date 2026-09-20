@@ -1,33 +1,22 @@
-"""Yunara — CP10.10 full-entry-reviewed packet module.
+"""Yunara: full-entry-reviewed packet module.
 
-Every basic attack carries Cultivation of Spirit's bonus magic damage, so
-the kit is priced on the swing stream rather than as casts:
-
-- P (Vow of the First Lands): every critical strike deals a share of its
-  pre-mitigation damage again as magic, ``0.10 + 0.001 x AP`` (the binary
-  ``YunaraPassive`` ``Calc_Damage_Amp``).  Declared as
-  ``critical_strike_magic_ratio``; the auto simulation prices it on each
-  crit, so a build with no crit chance pays nothing.
-- Q passive (``Q_passive`` slot): the "Passive Bonus Magic Damage" row on
-  every basic attack, an ordinary on-hit that Rageblade phantoms and
-  spellblade re-application double.
-- Q active (``Q`` slot): Unleash, the 5-second window (binary ``YunaraQ``
-  ``Buff_Duration``) of "Bonus Attack Speed" whose swings carry the "Active
-  Bonus Magic Damage" row as a second on-hit.  The window opens at the Q
-  cast; one cast per fight, so the second Unleash a long fight would earn
-  after re-stacking is not placed (ASSUMPTIONS).  The spread attacks hit
-  OTHER enemies and are not priced against the single target.
-- W (Arc of Judgment) prices the initial impact AND the lingering-bead
-  DoT: the bead lingers for 1 second, ticking 4 times at 0.25-second
-  intervals (the sourced "Linger Magic Damage per Tick" row x 4 == the
-  "Total Expanded Damage" row; per-tick is 15% of the initial impact).
-- R (Transcend One's Self) is a buff: the zero-damage R entry documents
-  the Transcendent State, and ``r_transcendent`` (default False, the base
-  form is the deterministic default, the Shyvana dragon-form convention)
-  switches W to Arc of Ruin (base 160/320/480 by R rank + 120% bonus AD +
-  75% AP) and keeps Unleash active for the whole state: the attack speed
-  covers the fight and the on-hit reads the "Combined Bonus Magic Damage"
-  row.  Exact for a fight that fits inside the 15-second state.
+Every basic attack carries bonus magic damage, so the kit is priced on the swing
+stream rather than as casts.
+P (Vow of the First Lands) gives every critical strike a share of its
+pre-mitigation damage again as magic, ``0.10 + 0.001 x AP``, declared as
+``critical_strike_magic_ratio``.  The auto simulation prices it on each crit, so
+a build with no crit chance pays nothing.
+Q is two slots.  ``Q_passive`` is the "Passive Bonus Magic Damage" row on every
+attack, an ordinary on-hit that Rageblade phantoms and spellblade re-application
+double.  ``Q`` is Unleash, a 5-second attack-speed window opening at the Q cast
+whose swings carry the "Active Bonus Magic Damage" row as a second on-hit; one
+cast per fight, and the spread attacks hit other enemies, so they go unpriced.
+W (Arc of Judgment) prices the initial impact AND the lingering bead, which
+ticks four times at 0.25-second intervals for the cached "Total Expanded
+Damage".
+R (Transcend One's Self) is a buff whose own entry is zero damage, and
+``r_transcendent``, default False, switches W to Arc of Ruin and keeps Unleash
+active for the whole state, exact for a fight inside the 15-second window.
 """
 
 from typing import Any

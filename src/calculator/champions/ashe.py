@@ -1,33 +1,17 @@
-"""Ashe — slot map for the archetype engine.
+"""Ashe: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Frost Shot) changes what an auto attack IS: crits deal no bonus
-  damage, and instead crit chance converts to bonus physical damage on
-  every auto (``auto_attack_override.crit_as_bonus``). Which entry
-  carries the override depends on Q:
-- Q (Ranger's Focus) is a BUFF-phase custom fn — no direct damage, but
-  a bonus-attack-speed stat buff plus flurry autos at a modified AD
-  ratio ("Total Damage Per Flurry", a per-flurry percentage). When Q is
-  active (``q_active`` option, default True) and ranked, the Q entry
-  carries the auto_attack_override (flurry ratio + crit-as-bonus) and
-  the passive entry is display-only; otherwise the passive entry
-  carries the override at the normal 1.0 AD ratio. P therefore reads
-  ``ctx.results`` and must list after Q in the slot map.
-- W/R are plain attribute reads.
-- E (Hawkshot) is vision utility only, with no enemy-damage attribute
-  of its own.
-
-All numeric values are read from the champion JSON data; nothing is
-hardcoded.
-
-Roadmap session (2026-08-21): closes the single out_of_scope slot (E).
-E (Hawkshot): ``data/champions.json`` Ashe E carries ``damageType: None``
-and neither of its two effect rows carries a ``leveling`` entry at all —
-"sends a hawk spirit to a location, granting sight ... at its destination
-for 5 seconds" and the charge-stocking clause are pure vision/utility
-text, no HP number against an enemy champion anywhere. Reclassified from
-out_of_scope to no_damage (an atoms-confirmed zero-HP-number effect), not
-left silently absent.
+P (Frost Shot) changes what a basic attack IS: crits deal no bonus damage and
+crit chance converts instead to bonus physical damage on every auto, through
+``auto_attack_override.crit_as_bonus``.  Which entry carries that override
+depends on Q, so P reads ``ctx.results`` and must list after Q in the slot map.
+Q (Ranger's Focus) is a BUFF-phase slot with no direct damage: a bonus
+attack-speed stat buff plus flurry autos at a modified AD ratio, the cached
+"Total Damage Per Flurry" percentage.  With ``q_active`` on and Q ranked, the Q
+entry carries the override and the passive entry is display-only; otherwise the
+passive entry carries it at the normal 1.0 AD ratio.
+W and R are plain attribute reads.
+E (Hawkshot) is ``no_damage``: it is vision utility with ``damageType: None``
+and no leveling entry on either cached effect row.
 """
 
 from collections.abc import Mapping

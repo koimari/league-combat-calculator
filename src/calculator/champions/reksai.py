@@ -1,33 +1,19 @@
-"""Rek'Sai — CP10.6 full-entry-reviewed packet module, plus the P1 max-Fury E.
+"""Rek'Sai: full-entry-reviewed packet module.
 
-P1 addition over the reviewed packet:
-- E (Furious Bite) prices the max-Fury branch: "At maximum Fury, Furious
-  Bite deals 120% damage and is converted to true damage" (cached E
-  second effect; the leveling row "True Damage" 84-204 + 72% bonus AD ==
-  120% of the "Physical Damage" row at every rank).  Fury is player
-  state, so the fight is deterministic through the ``e_fury`` option
-  (0-100, default 0 = no Fury): at 100 Fury the E packet prices the
-  sourced true-damage row, otherwise the reviewed physical row.
-
-P (Fury of the Xer'Sai): "When Rek'Sai becomes Burrowed, she consumes her
-current Fury over 3 seconds to heal for 0% : 100% (based on Fury) of
-9% : 21.29% (based on level) maximum health" (cached P prose; the level
-row is mislabelled ``Max Health Damage``).  Fury generation is player
-state the duel does not simulate, so ``p_burrow_fury`` (0-100, default 0)
-is the Fury the burrow that opens the fight consumes; the P row carries
-the resulting amount and the self-heal rule places it at the first W.
-
-Row-selection fix (Q variant 0): Queen's Wrath empowers Rek'Sai's next
-basic attack, and "if Rek'Sai completes an attack, the duration is
-refreshed, for up to 3 total empowered attacks".  The generated packet
-priced "Bonus Physical Damage" (30/35/40/45/50% AD), one of the three;
-the cache's "Total Bonus Physical Damage" row (90/105/120/135/150% AD)
-is all three.  Three attacks is not one hit, so the variant declares its
-aggregate at the cast boundary instead of certifying a single hit —
-Prey Seeker (variant 1) keeps its own certification.
-
-P is therefore *modeled*, not the packet's zero-damage row: this module
-replaces that slot with the priced burrow heal.
+E (Furious Bite) prices the max-Fury branch: at maximum Fury it deals 120%
+damage converted to true, the cached "True Damage" row being exactly 120% of
+the "Physical Damage" row at every rank.  Fury is player state, so ``e_fury``,
+0 to 100 and default 0, picks the branch.
+P (Fury of the Xer'Sai) heals on burrowing, consuming current Fury over 3
+seconds for a share of maximum health; the cached level row is mislabelled
+"Max Health Damage".  Fury generation is state the duel does not simulate, so
+``p_burrow_fury`` is the Fury the opening burrow consumes, and the self-heal
+rule places the amount at the first W.  P is therefore modeled here rather than
+the packet's zero-damage row.
+Q variant 0 (Queen's Wrath) empowers up to three basic attacks, so it reads the
+cached "Total Bonus Physical Damage" row, all three, not the per-attack row.
+Three attacks are not one hit, so the variant declares its aggregate at the cast
+boundary; Prey Seeker, variant 1, keeps its own certification.
 """
 
 from typing import Any

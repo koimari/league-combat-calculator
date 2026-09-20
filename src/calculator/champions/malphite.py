@@ -1,34 +1,18 @@
-"""Malphite — CP10.4 full-entry-reviewed packet module, plus the E8c P shield
-and the P1 W/armor closure.
+"""Malphite: full-entry-reviewed packet module.
 
-E8c addition over the reviewed packet:
-- P (Granite Shield) is a 10%-of-max-HP barrier that "lasts until it is
-  broken" (cached passive description).  The passive has no cast, so the
-  shield rides the first Q damage event as a ``self_shield_events``
-  payload: the shared ledger grants it as a timed self-shield spanning
-  the fight window (an until-broken barrier approximated as
-  full-window), so incoming damage is absorbed before health.  The
-  out-of-combat regeneration ("replenishes to full strength after a few
-  seconds of not taking damage") is a documented boundary — the model
-  grants the full shield once at fight start.
-
-P1 addition over the reviewed packet:
-- W (Thunderclap) now prices BOTH sourced parts of the empowered
-  attack: the "Additional Physical Damage" on-hit bonus (30-70 + 20% AP
-  + 15% armor) and the cone's "Physical Damage" (15-55 + 30% AP + 15%
-  armor) as a single-target hit — in a 1v1 the target stands inside the
-  melee cone, so both rows land on it (the reviewed packet priced only
-  the cone row; the per-auto cone cadence over the 5s window is a
-  documented boundary).
-- W's passive bonus armor ("Malphite gains bonus armor, tripled while
-  Granite Shield is active" — cached W first effect; the "Increased
-  Bonus Armor" leveling row 30/45/60/75/90 % armor IS the tripled
-  value) is a BUFF-phase grant: it mutates the shared parse stats so
-  E's 40% armor ratio and W's own 15% armor ratios price the buffed
-  armor.  The module models Granite Shield as active for the whole
-  window (the E8c assumption), so the tripled value applies for the
-  whole fight; the shield-break revert is part of that documented
-  boundary.
+P (Granite Shield) is a 10%-of-maximum-health barrier lasting until broken.  The
+passive has no cast, so it rides the first Q damage event as a
+``self_shield_events`` payload spanning the fight window; the out-of-combat
+replenish is the documented boundary of that approximation.
+W (Thunderclap) prices BOTH sourced parts of the empowered attack, the
+"Additional Physical Damage" on-hit bonus and the cone's "Physical Damage",
+because in a duel the target stands inside the melee cone and both rows land.
+The per-auto cone cadence over the 5-second window is a boundary.
+W's passive bonus armor is a BUFF-phase grant that mutates the shared parse
+stats, so E's 40% armor ratio and W's own 15% armor ratios price the buffed
+armor.  The cached "Increased Bonus Armor" row IS the value tripled by Granite
+Shield, and the module treats the shield as active for the whole window, so the
+tripled value applies throughout.
 """
 
 from typing import Any

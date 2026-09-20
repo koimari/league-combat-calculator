@@ -1,33 +1,21 @@
-"""Varus — slot map for the archetype engine (E3 stack systems).
+"""Varus: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- W (Blighted Quiver) is an ON-HIT passive, not a castable: every basic
-  attack deals the "Bonus Magic Damage" leveling row and applies a Blight
-  stack (max 3, 6s, refreshing). The reviewed packet priced this row as a
-  40s-cooldown cast, which contributed ~0 damage in any real fight; the
-  on-hit shell (Vayne W precedent) prices it per auto instead.
-- Q (Piercing Arrow) is the primary Blight DETONATOR: abilities consume
-  all Blight stacks on the target, dealing "Bonus Magic Damage per Stack"
-  (% of the target's max health + % per 100 AP) per stack. The fight
-  engine has no auto-application->ability-detonation cycle, so the
-  detonation rides Q as a ``post_hit_proc`` priced from the
-  ``blight_stacks`` option (default 3 = the sourced max) — one sourced
-  detonation per Q cast. E and R also detonate in-game; re-stacking a
-  target between casts is not double-priced here (conservative single
-  detonator model). Q interpolates between the sourced Minimum/Maximum damage rows by
-  the q_charge_fraction option (default 1.0 = fully charged; the
-  0-50% charge ramp is the wiki prose).
-- E (Hail of Arrows) is physical damage ("Physical Damage" — the packet's
-  magic label was wrong; in-game and the JSON both say physical).
-- P (Living Vengeance) is an on-takedown steroid: +30% bonus attack
-  speed and, derived from the resulting TOTAL bonus attack speed, 33% of
-  it again as both attack damage and ability power.  All three numbers
-  are cached prose (the passive has no leveling row), and the whole
-  thing is gated on ``p_champion_takedown`` because a takedown is not
-  implied by a damage package.
-- R (Chain of Corruption) reads "Magic Damage" and attaches the sourced
-  2-second root to the primary hit; secondary chain spread stays outside the
-  single-target model.
+W (Blighted Quiver) is an ON-HIT passive, not a castable: every basic attack
+deals the "Bonus Magic Damage" row and applies a Blight stack, capped at three
+over 6 refreshing seconds.
+Q (Piercing Arrow) is the Blight DETONATOR: an ability consumes every stack for
+"Bonus Magic Damage per Stack" apiece.  The engine has no auto-application to
+ability-detonation cycle, so the detonation rides Q as a ``post_hit_proc``
+priced from ``blight_stacks``, default 3, one per Q cast; E and R detonate in
+game too, and re-stacking between casts is deliberately not double-priced.  Q
+interpolates between the sourced Minimum and Maximum rows by ``q_charge_fraction``.
+E (Hail of Arrows) is physical damage, which both the game and the cache say.
+P (Living Vengeance) is an on-takedown steroid: +30% bonus attack speed and, off
+the resulting TOTAL bonus attack speed, 33% of it again as both attack damage and
+ability power.  All three are cached prose, and it is gated on
+``p_champion_takedown``, because a damage package does not imply a takedown.
+R (Chain of Corruption) reads "Magic Damage" and attaches the sourced 2-second
+root to the primary hit; the chain spread is outside a single-target model.
 """
 
 import re

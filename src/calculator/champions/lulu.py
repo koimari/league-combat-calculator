@@ -1,34 +1,20 @@
-"""Lulu — CP10.4 full-entry-reviewed packet module.
+"""Lulu: full-entry-reviewed packet module.
 
-E8d: E (Help, Pix!) Shield Strength is emitted as an ally-support event
-by the support scanner.
-
-P1-2 fix — P (Pix, Faerie Companion) becomes a modeled ONHIT slot: Pix
-fires a barrage of ``lulu_pix_bolts`` (default 3, wiki prose) magic
-bolts at the target whenever Lulu basic-attacks on-attack; each bolt
-deals the per-level "Per-Level Scaling" row (5 : 39 by level) + 5% AP
-(the AP ratio is prose in the cached P description; the second
-Per-Level Scaling row is the 3-bolt total 15 : 117 + 15% AP).  The
-on-hit entry prices bolts x per-bolt so reducing the barrage keeps the
-sourced per-bolt row exact.
-
-W (Whimsy) and R (Wild Growth) are both "herself or an ally" casts, so
-each one declares who it lands on.  Neither carries a damage attribute
-anywhere in the cache — W's leveling rows are "Disable Duration",
-"Bonus Attack Speed" and "Effect Duration"; R's are "Bonus Health" and
-"Slow" (data/champions.json Lulu W/R, cross-checked against
-data/atoms/lulu.atoms.json where every LuluW*/LuluR* atom carries
-``damage_type: null``).  What each one DOES carry is priced: only the
-**self** branch reaches this fighter's stats — that is the buff the
-main champion's own fight holds — and it takes the cached row through
-``stat_buff``: W's Bonus Attack Speed (20-30%) for its Effect Duration
-row, R's Bonus Health (275-575 + 55% AP) for 7 seconds.  An ally cast
-reaches the roster through the ally-support scanner, not this slot.
-W's enemy cast is the OTHER branch of the same active — the cache
-states them as "Self / Ally Cast" and "Enemy Cast" — so it prices the
-sourced "Disable Duration" polymorph as a control event and grants no
-attack speed at all; R's 1-second knock-up has no duration row in the
-cache, so it stays named rather than authored.
+P (Pix, Faerie Companion) is an on-hit slot: Pix fires ``lulu_pix_bolts`` magic
+bolts, default 3, whenever Lulu attacks on-attack, each bolt the cached
+per-level row plus 5% AP.  The entry prices bolts times per-bolt, so reducing
+the barrage keeps the sourced per-bolt row exact.
+E (Help, Pix!) has its Shield Strength emitted as an ally-support event by the
+scanner.
+W (Whimsy) and R (Wild Growth) are both "herself or an ally" casts, so each
+declares who it lands on, and neither carries a damage attribute anywhere in the
+cache.  Only the SELF branch reaches this fighter's stats, taking its cached row
+through ``stat_buff``: W's Bonus Attack Speed for its Effect Duration, R's Bonus
+Health for 7 seconds.  An ally cast reaches the roster through the support
+scanner instead.
+W's enemy cast is the other branch of the same active, so it prices the sourced
+polymorph as a control event and grants no attack speed at all.  R's knock-up
+has no duration row in the cache and stays named rather than authored.
 """
 
 from typing import Any

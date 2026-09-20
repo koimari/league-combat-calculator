@@ -1,34 +1,19 @@
-"""Cassiopeia — slot map for the archetype engine.
+"""Cassiopeia: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- Q (Noxious Blast) must read "Total Magic Damage" (the full 3s poison);
-  the classifier picks the 7-tick "Magic Damage Per Tick" breakdown.
-- W (Miasma) must read "Total Magic Damage" (the full 5s zone); the
-  classifier picks "Magic Damage Per Second".
-- E (Twin Fang) is champion-local: its unpoisoned base is a PER-LEVEL
-  40-entry array (52 + 4/level, valid through the level-20 cap) plus
-  10% AP, and the poisoned bonus is a separate rank-scaled leveling
-  entry (20-120 + 55% AP) gated by the ``target_poisoned`` option. The
-  JSON's pre-summed "Total Enhanced Damage" attribute is deliberately
-  avoided — its level component carries only 18 values, so it cannot
-  represent levels 19-20; the components are summed here instead.
-- R (Petrifying Gaze) pins "Magic Damage" (the classifier happens to
-  agree, but the module replaces the whole slot map).
-- P (Serpentine Grace) increases movement-speed-bonus effectiveness by a
-  percentage — pure stat-effectiveness state with no combat-damage
-  interaction anywhere in this calculator (no positioning/MS-to-damage
-  kernel). Roadmap session 4 batch B (2026-08-21): closes the single
-  out_of_scope slot with an explicit ``no_damage`` row via
-  ``module_helpers.no_damage`` (same pattern as Kled's P, Skaarl the
-  Cowardly Lizard) rather than leaving MODULE_COVERAGE reading
-  "out_of_scope" for an intentionally-unmodeled state passive.
-  Cassiopeia is in ``rotation_resolver.COMBO_TABLE``, but its
-  ``_CAST_SLOTS = (Q, Q2, W, E, R)`` structurally excludes P from cast
-  order — no combo table edit needed.
-
-Both of E's leveling entries are named "Bonus Magic Damage", so
-``extract_named`` (first match wins) cannot reach the poisoned bonus —
-``_bonus_magic_damage_levelings`` collects both in JSON order.
+Q (Noxious Blast) must read "Total Magic Damage", the full 3-second poison; the
+classifier picks the seven-tick per-tick row.
+W (Miasma) must read "Total Magic Damage", the full 5-second zone; the
+classifier picks "Magic Damage Per Second".
+E (Twin Fang) is champion-local.  Its unpoisoned base is a per-LEVEL 40-entry
+array plus 10% AP and its poisoned bonus is a separate rank-scaled entry gated
+by ``target_poisoned``.  The pre-summed "Total Enhanced Damage" row is
+deliberately avoided: its level component carries only 18 values, so it cannot
+reach levels 19 and 20, and the components are summed here instead.  Both of E's
+leveling entries are named "Bonus Magic Damage", so ``extract_named`` stops at
+the first; ``_bonus_magic_damage_levelings`` collects both in cache order.
+R (Petrifying Gaze) pins "Magic Damage".
+P (Serpentine Grace) is ``no_damage``: it raises the effectiveness of movement
+speed bonuses, which nothing here turns into damage.
 """
 
 from collections.abc import Mapping
