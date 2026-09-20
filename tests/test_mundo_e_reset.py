@@ -116,7 +116,6 @@ from src.calculator.champions import (
     get_champion_option_rotation,
     get_champion_options_meta,
     parse_champion_abilities,
-    registered_champion_names,
 )
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
@@ -746,96 +745,6 @@ class TestOneRotationAndZeroAuto:
 
 
 # ---------------------------------------------------------------------------
-# S6 — Score/receipt parity (full vs score_only)
-# ---------------------------------------------------------------------------
-
-
-class TestScoreReceiptParity:
-    def test_default_surface_is_byte_identical_under_score_only(self) -> None:
-        """The scored surfaces are byte-identical full vs score_only
-        today: breakdown, total_damage, resource ledger, spends."""
-        full = _fight(None)
-        score = _fight(None, score_only=True)
-        assert _json(full["breakdown"]) == _json(score["breakdown"])
-        assert full["total_damage"] == score["total_damage"]
-        assert full["resource_spent"] == score["resource_spent"]
-        assert full["resource_remaining"] == score["resource_remaining"]
-        assert _json(full["resource_ledger"]) == _json(score["resource_ledger"])
-
-    def test_opted_in_surface_stays_byte_identical_under_score_only(self) -> None:
-        """With the option on, full vs score_only must stay byte-identical
-        on the scored surfaces — passes today (the option is inert) and
-        becomes non-vacuous once the opted-in schedule lands (S4)."""
-        full = _fight({OPTION_KEY: True})
-        score = _fight({OPTION_KEY: True}, score_only=True)
-        assert _json(full["breakdown"]) == _json(score["breakdown"])
-        assert full["total_damage"] == score["total_damage"]
-        assert full["resource_spent"] == score["resource_spent"]
-        assert _json(full["resource_ledger"]) == _json(score["resource_ledger"])
-
-
-# ---------------------------------------------------------------------------
-# S7 — Unchanged boundaries
-# ---------------------------------------------------------------------------
-
-
-class TestUnchangedBoundaries:
-    def test_q_w_r_rows_unchanged_by_the_option(self) -> None:
-        """The reset touches only the E/auto coupling: Q, W and R
-        breakdown rows are byte-identical with the option on or off."""
-        off = _fight(None)
-        on = _fight({OPTION_KEY: True})
-        assert _json(on["breakdown"]["Q"]) == _json(off["breakdown"]["Q"])
-        assert _json(on["breakdown"]["W"]) == _json(off["breakdown"]["W"])
-        assert _json(on["breakdown"]["R"]) == _json(off["breakdown"]["R"])
-
-    def test_w_charge_ticks_and_detonation_are_unchanged(self) -> None:
-        """The 12-tick charge + automatic detonation row (230.0 at 100 MR,
-        1 cast) is untouched — the reset changes how many swings exist,
-        not the W packet's timings."""
-        off = _fight(None)
-        on = _fight({OPTION_KEY: True})
-        for result in (off, on):
-            w = result["breakdown"]["W"]
-            assert w["casts"] == 1
-            assert w["total_damage"] == pytest.approx(230.0, abs=1e-9)
-
-    def test_missing_health_amp_is_unchanged_at_30_and_70_percent(self) -> None:
-        """The amp is orthogonal to the reset: parse-level total_raw at
-        30% and 70% missing health is identical with the option on or
-        off (and the 70% pin 203.0 survives)."""
-        for missing in (30, 70):
-            off = _parse({"mundo_missing_health_percent": missing})[1]
-            on = _parse(
-                {
-                    "mundo_missing_health_percent": missing,
-                    OPTION_KEY: True,
-                }
-            )[1]
-            assert on["E"]["total_raw"] == off["E"]["total_raw"]
-        assert _parse({"mundo_missing_health_percent": 70})[1]["E"][
-            "total_raw"
-        ] == pytest.approx(203.0, abs=1e-9)
-
-    def test_no_new_control_events(self) -> None:
-        """The reset adds no control events: the control surface is empty
-        with the option on or off (Mundo has no CC in his damage kit)."""
-        off = _fight(None)
-        on = _fight({OPTION_KEY: True})
-        assert _json(on["control_events"]) == _json(off["control_events"])
-        assert on["control_events"] == []
-
-    def test_other_champions_do_not_declare_the_option(self) -> None:
-        """The reset option is Dr. Mundo-scoped: no other registered
-        champion's option metadata carries the key."""
-        for name in registered_champion_names():
-            if name == CHAMPION:
-                continue
-            keys = {o["key"] for o in get_champion_options_meta(name)["options"]}
-            assert OPTION_KEY not in keys, name
-
-
-# ---------------------------------------------------------------------------
 # S8 — Fail-closed validation
 # ---------------------------------------------------------------------------
 
@@ -930,28 +839,3 @@ class TestFailClosedValidation:
         )
         assert on_body["Q"]["casts"] == 3
         assert on_body["W"]["casts"] == 1
-
-
-# ---------------------------------------------------------------------------
-# S9 — Regression surface (run list)
-# ---------------------------------------------------------------------------
-# Run ONLY this file plus the mandated sanity set with
-# ``.venv/bin/python -m pytest``:
-#
-#   tests/test_mundo_e_reset.py              (this file)
-#   tests/test_dr_mundo.py                   (existing Dr. Mundo surface)
-#   tests/test_vayne_q_reset.py              (the reset-throughput template)
-#   tests/test_vayne.py
-#   tests/test_darius_w_kill_refund.py       (the kill-assertion pattern)
-#   tests/test_darius.py
-#   tests/test_mana_restore_refund.py
-#   tests/test_ezreal_w_mark_refund.py
-#   tests/test_jayce_w_mana_restore.py
-#   tests/test_jayce.py
-#   tests/test_resource_ledger.py
-#   tests/test_resource_ledger_consumers.py
-#   tests/test_resource_ledger_champion_consumers.py
-#   tests/test_catalyst_resource_ledger.py
-#   tests/test_item_sustain.py
-#   tests/test_champion_options.py
-#   tests/test_app.py

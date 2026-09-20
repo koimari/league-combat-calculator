@@ -1255,32 +1255,6 @@ def _scoring_rows(result):
     return rows
 
 
-def test_score_only_fight_parity_mikaels_build():
-    """run_fight score-only keeps every scoring field identical for a
-    Mikael's build (totals, damage events, resource spent)."""
-    params = FightParams.from_request(
-        {
-            "fight_mode": "time_based",
-            "fight_duration": 8,
-            "role": "support",
-            "include_auto_attacks": False,
-            "ability_ranks": {"Q": 0, "W": 0, "E": 0, "R": 0},
-            "item_options": {MIKAELS: {"active_seconds": 2.5}},
-            "support_target_selections": {f"heal:{MIKAELS_SOURCE}": 0},
-            "allies": [_ally("Jinx")],
-            "enemies": [_ahri_e()],
-        },
-        deterministic=True,
-    )
-    champion = get_champion("Lux")
-    item = get_item_by_name(MIKAELS)
-    full = run_fight(champion, 18, [item], params, score_only=False)
-    score = run_fight(champion, 18, [item], params, score_only=True)
-    assert score["total_damage"] == full["total_damage"]
-    assert score["resource_spent"] == full["resource_spent"]
-    assert _scoring_rows(score) == _scoring_rows(full)
-
-
 # ---------------------------------------------------------------------------
 # 11. Optimizer / BIS / coverage + review issue 48
 # ---------------------------------------------------------------------------

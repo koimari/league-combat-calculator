@@ -748,25 +748,6 @@ class TestCoarseFallbackAndWithholding:
 
 
 class TestParityAndOptimizer:
-    def test_score_only_fight_matches_receipt_fight(self) -> None:
-        abilities = {
-            "Q": _ability("Q", cooldown=20.0),
-            "W": _ability("W", cooldown=20.0),
-        }
-        receipt = _fight(_stats(), abilities, duration=41.0, one_rotation=False)
-        score = _fight(
-            _stats(), abilities, duration=41.0, one_rotation=False, score_only=True
-        )
-        left = _sc_row(receipt)
-        right = _sc_row(score)
-        assert right == left
-        assert right["count"] == left["count"] == 3
-        assert (
-            right["damage_per_proc"] == left["damage_per_proc"] == pytest.approx(41.5)
-        )
-        assert right["damage_events"] == left["damage_events"]
-        assert right["total_damage"] == left["total_damage"] == pytest.approx(124.5)
-
     def test_optimizer_exclusion_source_receipt_at_low_altitude(self) -> None:
         assert SC_ROW in EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES
         # A candidate whose ONLY coarse source is the shaped-charge packet

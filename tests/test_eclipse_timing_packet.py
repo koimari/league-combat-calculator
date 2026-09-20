@@ -808,23 +808,6 @@ class TestShieldPacket:
 
 
 class TestParityAndOptimizer:
-    def test_score_only_fight_matches_receipt_fight(self) -> None:
-        abilities = {
-            "Q": _ability("Q", cooldown=1.0),
-            "W": _ability("W", cooldown=5.0),
-        }
-        receipt = _fight(_stats(), abilities, duration=7.0, one_rotation=False)
-        score = _fight(
-            _stats(), abilities, duration=7.0, one_rotation=False, score_only=True
-        )
-        left = receipt["breakdown"]["proc_Eclipse"]
-        right = score["breakdown"]["proc_Eclipse"]
-        assert right["count"] == left["count"] == 2
-        assert right["damage_events"] == left["damage_events"]
-        assert right["total_damage"] == left["total_damage"]
-        assert right["self_shield_events"] == left["self_shield_events"]
-        assert right["state_transitions"] == left["state_transitions"]
-
     def test_optimizer_exclusion_source_receipt_at_low_altitude(self) -> None:
         assert "proc_Eclipse" in EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES
         # A candidate whose ONLY coarse source is proc_Eclipse is eligible

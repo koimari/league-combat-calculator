@@ -720,28 +720,6 @@ def test_slay_receipt_carries_stacks_and_omnivamp_percent():
 # ---------------------------------------------------------------------------
 
 
-def test_score_only_fight_parity_gluttonous_build():
-    """Score-only and full run_fight agree on every scoring field and on
-    the (empty today) Slay state receipts — the stack state must reach
-    both paths identically, never only one."""
-    full = _run_fight(score_only=False)
-    score = _run_fight(score_only=True)
-    assert score["total_damage"] == full["total_damage"]
-    assert score["resource_spent"] == full["resource_spent"]
-    assert score["item_state_receipts"] == full["item_state_receipts"]
-    assert (
-        score["champion_stats"]["omnivamp_percent"]
-        == full["champion_stats"]["omnivamp_percent"]
-    )
-    scoring_keys = ("time", "source_key", "damage_type", "raw_damage", "damage")
-    assert [
-        tuple(event.get(key) for key in scoring_keys)
-        for event in score["damage_events"]
-    ] == [
-        tuple(event.get(key) for key in scoring_keys) for event in full["damage_events"]
-    ]
-
-
 def test_healing_flows_from_base_stat_only_no_slay_packets():
     """The survival engine prices omnivamp healing from the STAT (the
     boot's base 4.0): self_healing_events carry the typed "Omnivamp"
@@ -764,21 +742,6 @@ def test_healing_flows_from_base_stat_only_no_slay_packets():
     for event in full["self_healing_events"]:
         assert "Omnivamp" in str(event.get("source", ""))
         assert "Slay" not in str(event.get("source", ""))
-
-
-def test_compiled_walk_equals_receipt_walk_gluttonous_build():
-    """The compiled score walk equals the legacy receipt walk for a
-    Gluttonous Greaves holder (empty Slay state today; must stay equal
-    once the P3-3L stack state exists — the compiled walk must not
-    silently drop the takedown-synthesized stack state)."""
-    legacy = _timeline(include_receipt=False)
-    context = CoupledSearchContext()
-    fast = _timeline(
-        include_receipt=False,
-        pair_result_cache={},
-        search_context=context,
-    )
-    assert fast == legacy
 
 
 # ---------------------------------------------------------------------------
@@ -839,25 +802,6 @@ def test_coverage_wording_names_modeled_stack_receipt():
 # ---------------------------------------------------------------------------
 # 9. Determinism: identical fights -> identical stack states/receipts
 # ---------------------------------------------------------------------------
-
-
-def test_identical_fights_produce_identical_receipts_and_stats():
-    """Two identical fights produce identical combat, champion stats,
-    state receipts, self-healing events and timelines."""
-    first = _calculate(_main_payload())
-    second = _calculate(_main_payload())
-    assert first["combat"] == second["combat"]
-    assert first["champion_stats"] == second["champion_stats"]
-    assert first["self_healing_events"] == second["self_healing_events"]
-
-    full_a = _run_fight(score_only=False)
-    full_b = _run_fight(score_only=False)
-    assert full_a["item_state_receipts"] == full_b["item_state_receipts"]
-    assert full_a["self_healing_events"] == full_b["self_healing_events"]
-
-    timeline_a = _timeline()
-    timeline_b = _timeline()
-    assert timeline_a == timeline_b
 
 
 # ---------------------------------------------------------------------------

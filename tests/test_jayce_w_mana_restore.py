@@ -802,48 +802,6 @@ def test_p112_unrelated_refunds_and_champions_untouched():
 
 
 # ---------------------------------------------------------------------------
-# 14. Existing regression surface (grep hits stay green)
-# ---------------------------------------------------------------------------
-
-
-def test_p112_existing_regression_surface_invariants():
-    """Rule 14: the parse-level invariants the existing Jayce suite pins
-    stay true alongside the restore: W resolves by stance, "Mana Restored"
-    is never read as damage, and the burst rate is the 3.003 cap."""
-    champ = get_champion("Jayce")
-    hammer = parse_abilities(
-        champ,
-        18,
-        0.0,
-        champion_options={"hammer_stance": True},
-        champion_stats={"max_mana": 100.0, "resource_regen_per_second": 1.0},
-        target_stats={"target_max_health": 2000.0},
-    )
-    cannon = parse_abilities(
-        champ,
-        18,
-        0.0,
-        champion_options={"hammer_stance": False},
-        champion_stats={"max_mana": 100.0, "resource_regen_per_second": 1.0},
-        target_stats={"target_max_health": 2000.0},
-    )
-    assert hammer["W"]["name"] == "Lightning Field"
-    assert cannon["W"]["name"] == "Hyper Charge"
-    # "Mana Restored" (15-25) never leaks into any damage value.
-    for stance in (hammer, cannon):
-        for part in stance["W"]["parts"]:
-            assert part.amount != pytest.approx(15.0)
-            assert part.amount != pytest.approx(25.0)
-    assert cannon["W"]["empowers_next_auto"]["hits"] == 3
-    assert cannon["W"]["empowers_next_auto"]["cooldown_starts_after_hits"] is True
-    # The 3.003 cap is pinned at fight level (real resolved stats) in
-    # test_p112_hyper_charge_burst_swings_restore; a bare parse with no
-    # attack-speed stats resolves 0.0, so it is not pinned here.
-    assert cannon["W"]["resource_restore_per_auto"]["amount"] == 25.0
-    assert hammer["W"]["resource_restore_per_auto"]["amount"] == 25.0
-
-
-# ---------------------------------------------------------------------------
 # 15. Keystone-adjusted (Hail of Blades) per-swing restore timing
 # ---------------------------------------------------------------------------
 

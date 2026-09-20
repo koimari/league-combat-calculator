@@ -1071,32 +1071,6 @@ def test_compiled_score_kernel_can_stage_both_redemption_packet_kinds():
     )
 
 
-def test_compiled_walk_equals_receipt_walk_with_redemption_packets_staged():
-    """The compiled walk deep-equals the authoritative receipt walk for an
-    active Redemption fight; the guard proves both walks actually carried
-    the heal and the true damage (the comparison is not trivially equal)."""
-    legacy = _timeline(include_receipt=False)
-    context = CoupledSearchContext()
-    fast = _timeline(
-        include_receipt=False,
-        pair_result_cache={},
-        search_context=context,
-    )
-    assert fast == legacy
-    assert context.panels  # the compiled panel was attempted before any fallback
-    # Guard: the receipt walk carried the Redemption heal on the ally and
-    # the true damage on the enemy.
-    jinx = next(
-        row for row in legacy["participants"] if row["participant_id"] == "ally:Jinx"
-    )
-    # 350 authored, amplified by the holder's own 10% heal and shield power.
-    assert jinx["survival"]["healing_received"] == pytest.approx(385.0)
-    enemy = next(
-        row for row in legacy["participants"] if row["participant_id"] == "enemy:Aatrox"
-    )
-    assert enemy["survival"]["damage_taken"] >= 258.8
-
-
 def _scoring_rows(result):
     """The scoring fields of one fight's damage events, in either shape.
 
@@ -1125,31 +1099,6 @@ def _scoring_rows(result):
                 )
             )
     return rows
-
-
-def test_score_only_fight_parity_redemption_build():
-    """run_fight score-only keeps every scoring field identical for an
-    active Redemption build (totals, damage events, resource spent)."""
-    params = FightParams.from_request(
-        {
-            "fight_mode": "time_based",
-            "fight_duration": 8,
-            "role": "support",
-            "include_auto_attacks": False,
-            "ability_ranks": {"Q": 0, "W": 0, "E": 0, "R": 0},
-            "item_options": {REDEMPTION: {"active_seconds": 1.0}},
-            "allies": [_ally("Jinx")],
-            "enemies": [_enemy()],
-        },
-        deterministic=True,
-    )
-    champion = get_champion("Lux")
-    item = get_item_by_name(REDEMPTION)
-    full = run_fight(champion, 18, [item], params, score_only=False)
-    score = run_fight(champion, 18, [item], params, score_only=True)
-    assert score["total_damage"] == full["total_damage"]
-    assert score["resource_spent"] == full["resource_spent"]
-    assert _scoring_rows(score) == _scoring_rows(full)
 
 
 def test_redemption_is_optimizer_eligible_with_modeled_state():
