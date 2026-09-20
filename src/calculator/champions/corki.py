@@ -414,7 +414,7 @@ SLOTS = {
 # Hextech Munitions is a true-damage rider the fight engine prices onto
 # each basic attack, so its damage is auto-phase and the row emits no part
 # of its own for a marker to sit on.
-MODULE_CC = dict.fromkeys(SLOTS, "none")
+MODULE_CC = {"Q": "none", "W": "none", "E": "none", "R": "none", "P": "none"}
 
 
 # What this module says about its charge slot (charge_cadence.py).
