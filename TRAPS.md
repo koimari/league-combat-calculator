@@ -102,6 +102,28 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   called itself the tree's only AST walk over its call sites while the tree held
   three. Read the body, then rename or delete.
 
+- **A rule-5 literal default inside a raise message is still a site.**
+  `cdm.get("manaRegen", {})` in the message is a site `scripts/literal_defaults.py`
+  counts and `tests/test_literal_defaults.py` fails on, exactly like one on a live
+  path. Name the value already computed. Rows in
+  `scripts/literal_defaults_baseline.txt` are keyed by the enclosing function, so
+  a rename inside a covered function turns that same gate red.
+- **A "nothing reads it" re-grep that skips `scripts/` misses a live caller.**
+  Cutting `patch_identity.client_patch` left `scripts/patch_update.py`, a
+  CLAUDE.md-listed command, unable to import at all. The cheap complete check is
+  an AST pass over every `ImportFrom` under `src/`, `tests/` and `scripts/`
+  against the names the diff removes.
+- **A reference count cannot tell slop from a load-bearing symbol.** A revert
+  switch holding one value (`AMP_COMPILABILITY`), a Protocol several unrelated
+  dataclasses satisfy (`FormulaPayload`), an alias that changes a generic word to
+  disambiguate, and a derived index whose one reader is a gate all read as dead to
+  a census. Count the reason, and cut only where the removal leaves nothing worse
+  behind.
+- **Retiring a test file can strand its module on
+  `test_architecture.FRONT_DOOR_FRONTIER`**, which asserts set equality both ways.
+  Give the module a real front door when a script already reads it, rather than a
+  frontier row.
+
 ## Goldens and receipts
 
 - **A published zero's type is load-bearing.**
@@ -158,6 +180,16 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   row. Deleting a table because one of its two readers left is how a receipt
   field goes unreadable.
 
+- **`scripts/receipt_walk_schedule.py` resolves Amendment P's mechanisms by the
+  dotted strings `program.events.Defer` and `program.events.Execute`**, so
+  `program/events.py` stays the home of `RIDER_KINDS` and the five rider classes.
+- **`scripts/behavior_frontier.py` pins counter-2 exclusions by symbol name per
+  module**, so moving a table out of `src/` leaves an exclusion binding nothing
+  and turns its gate red. Drop the row and regenerate with `--write`.
+- **`docs/receipts/er5-tail-triage.json` counts `x.get(key, literal)` sites under
+  `src/`**, so any deletion there moves it. Regenerate with
+  `python scripts/tail_site_triage.py write`.
+
 ## Engine and pricing
 
 - **`return factor * sum_modifiers(...)` reads `factor` before the call**, so a
@@ -210,6 +242,18 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   `item_effects.py`, and the test naming it as its source of truth had no way to
   notice. Cite the accessor key, never the log's number.
 
+- **A reader placed before the schedule installers calls
+  `_restore_stream_attack_timestamps`, never `_auto_attack_timestamps`.** At that
+  point `state.hail_attack_times` and `state.lethal_attack_times` are still empty
+  and the spellblade speedup is unresolved, so the latter silently answers the
+  uniform base schedule with no error. `_compute_ability_rotation` sits inside
+  that window.
+- **`TimedStackState.apply_gain` records `combat_freeze` before the interval gate
+  and before a cap denial**, so a denied cast still arms the freeze, and only
+  `note_activity` stamps `trigger_kind` in the transition detail. That asymmetry
+  is a receipt reader's one discriminator between a cast-armed freeze and a
+  swing-armed one.
+
 ## Platform and tooling
 
 - **`sed -i` in Git-Bash strips CRLF.** Use byte-preserving scripts for bulk
@@ -258,7 +302,8 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   main checkout**, so every edit inside `.claude/worktrees/<name>/` reports the
   exemptions as errors: `comment-per-file-off` width on
   `tests/test_cleanse_eligibility.py`, ruff `per-file-ignores` on `tests/**`, and
-  the file-length hook's `git show HEAD:<path>` baseline. A worktree hit is a
+  the file-length hook's `git show HEAD:<path>` baseline, which also
+  reports growth for an edit that shrinks the file. A worktree hit is a
   false positive when the same line is clean at the repo root. Verify there with
   `python <plugin>/hooks/lint_gate.py --tree .` rather than adding a marker.
 - **A Bash task that times out and is moved to the background re-runs its whole
@@ -356,6 +401,34 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 - **Sizes from `git ls-tree -r -l` are MiB when divided by `2**20`.** Two reports
   disagreeing by about 5% on tracked bytes are usually agreeing in different
   units.
+
+- **The file-length hook measures against the committed file**, so any addition
+  to a file already past the 500-line cap blocks the edit. Put a new pin in the
+  small sibling that owns the idea and keep a docstring repair line for line, and
+  the hook stays quiet without a marker.
+- **A rename's blast radius is not the files its diff touches.** Two defects in
+  one unit were a `monkeypatch.setattr(module, "oldname", ...)` beside an
+  attribute read in a file the diff never opened. Sweep `.<oldname>` and quoted
+  `"<oldname>"` over `src/`, `tests/` and `scripts/`, with the name list derived
+  from the diff rather than from a unit's notes.
+- **Dropping an import alias's underscore can rebind it to a different module's
+  same name.** `_coalesce_darius_q_heals` collided with the `survival` function
+  the same module imports plainly, surfacing as an `AttributeError` deep in
+  `survival/compile.py` that the coupled golden caught. Check a collision against
+  the module's other imports, not only its own bindings.
+- **A module-qualified sphinx role outlives a symbol census.**
+  `:func:`~.build.pair_preview_sources`` names a module that never defined it, and
+  a leaf-name check resolves it because the function exists elsewhere. Audit roles
+  against the named module, not the tree's whole name set.
+- **`prose_lint`'s long-docstring rule compares a docstring against its function
+  body**, so a one-line function carries a one-line docstring. Put the
+  explanation on a longer sibling.
+- **Cutting the `src/calculator` facade cannot reach a 100 ms
+  `import src.calculator.quantity`.** `publish_rune_compilers()`, the one line
+  that file keeps, pulls the 173-module champion roster through `rune_effects` to
+  `champions.inputs.champion_stat`, and `rune_paths/precision.py` and `resolve.py`
+  import it at module level too. The facade cut is worth about 130 ms and 158
+  modules; the rest needs `champions/inputs.py` out of the champions package.
 
 ## Frontend and vision
 
