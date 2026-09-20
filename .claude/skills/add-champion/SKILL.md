@@ -33,7 +33,7 @@ replacements (`slot_parsers`, any slot or a new one), parsers that build on
 the compiled row (`slot_wrappers`, a factory handed the compiled parser), the
 slot surface and its order when it differs (`slot_order`), and `MODULE_CC`
 (`cc_kinds`). Keep what it returns: never rebind `parse_abilities` or `SLOTS`
-afterwards and never restate `PACKET_SPEC` — the contract reads the pin off
+afterwards and never restate `PACKET_SPEC`. The contract reads the pin off
 the compiled parser and refuses a module whose parser does not carry it.
 Pin the accepted packet declaration with the module's `PACKET_SHA256`;
 changed generated evidence must fail closed until the named module reviews
@@ -60,7 +60,9 @@ Also:
 
 - Declare sourced item on-hit behavior and update
   `tests/test_spellblade_on_hit_matrix.py` when applicable.
-- Classify every option in `_ROTATION_CLASSIFICATIONS`.
+- Declare every option's rotation semantics on the option itself, as
+  `rotation={...}`. The field vocabulary sits above
+  `get_champion_option_rotation` in `src/calculator/champions/__init__.py`.
 - Use `scripts/atomize.py abilities stats` for numerical extraction.
 - Add focused parser and fight tests for every calculation.
 - Confirm `scripts/full_entry_audit.py` reports the module contract and

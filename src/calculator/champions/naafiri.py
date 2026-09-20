@@ -363,6 +363,9 @@ OPTIONS: list[dict[str, Any]] = [
         True,
         label="W hunt is active (20% AD bonus attack damage + the raised "
         "Packmate cap)",
+        # A SELF steroid, so self_state and not setup: W's ordering edge is
+        # structural already, since the slot's stat_buff on
+        # ``bonus_attack_damage`` puts buffs-first ahead of Q/E/R.
         rotation={"role": "self_state", "slot": "W"},
     ),
 ]
