@@ -33,13 +33,13 @@ from ..ability_prose import CachedSentence
 from ..binary_roots import data_value, spell_object
 from ..damage_event_row import event_damage as _row_damage
 from ..damage_event_row import event_time as _row_time
-from .engine import SlotCtx, SlotParser, build_parser
+from .engine import BUFF, SlotCtx, SlotParser, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
-from .module_helpers import delayed
+from .module_helpers import ability_slot, delayed
 from .shared_mechanics import per_level_row
 from .slot_entries import attach_self_shield
-from .slot_extract import find_named_leveling, sum_modifiers
+from .slot_extract import extract_cast_time, find_named_leveling, sum_modifiers
 from .slotlib import by_option, proc_damage, simple_damage, stat_buff
 from .source_receipts import load_champion_sources
 
@@ -263,9 +263,7 @@ ASSUMPTIONS = [
 # ("Ambessa is displacement immune and unable to act during the cast time
 # and while the target is suppressed" names the two as consecutive), so the
 # offset from cast start is the cached castTime plus the cached suppression.
-_R_CAST_TIME_S = 0.7
 _R_SUPPRESSION_S = 0.75
-_R_IMPACT_FROM_CAST_START_S = _R_CAST_TIME_S + _R_SUPPRESSION_S
 
 
 _r_stat_buff = stat_buff(
@@ -273,8 +271,16 @@ _r_stat_buff = stat_buff(
     "armor_penetration_percent",
     damage_attr="Physical Damage",
 )
-# R: the stat-buff row, with its strike timed to the cached landing.
-_public_execution = delayed(_r_stat_buff, delay=_R_IMPACT_FROM_CAST_START_S)
+
+
+@ability_slot()
+def _public_execution(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
+    """R: the stat-buff row, with its strike timed to the cached landing."""
+    landing = extract_cast_time(ability) + _R_SUPPRESSION_S
+    return delayed(_r_stat_buff, delay=landing)(ctx)
+
+
+_public_execution.phase = BUFF
 
 SLOTS = {
     "R": _public_execution,
