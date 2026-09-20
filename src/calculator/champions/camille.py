@@ -233,13 +233,14 @@ OPTIONS: list[dict[str, Any]] = [
 # HARDCODED: verify on patch updates — Adaptive Defenses' shield amount,
 # duration, and damage-type adaptation are prose-only in the cached
 # passive description (data/champions.json, Camille P): "grants her a
-# shield equal to 20% of her maximum health, lasting for 2 seconds and
+# shield equal to 10% / 15% / 20% (based on level) of her maximum health,
+# lasting for 2 seconds and
 # absorbing damage from either exclusively physical damage or magic damage,
 # based on which type the target has ... dealt most of" (wiki text).
 _CAMILLE_P_SPELL = spell_object("Camille", "CamillePassive")
 # The duration is the binary CamillePassive.ShieldDuration DataValue; the
 # ratio stays wiki prose (no amount row in the dump).
-ADAPTIVE_DEFENSES_MAX_HP_RATIO = 0.20  # 20% of maximum health
+ADAPTIVE_DEFENSES_MAX_HP_RATIO = 0.20  # the level-18 band of the cache's 10/15/20
 ADAPTIVE_DEFENSES_DURATION_SECONDS = data_value(_CAMILLE_P_SPELL, "ShieldDuration")
 
 
