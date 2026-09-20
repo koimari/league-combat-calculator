@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Mapping
+from types import MappingProxyType
+from typing import Any, NamedTuple
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
@@ -13,7 +15,7 @@ from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .slotlib import simple_damage
-from .source_receipts import load_champion_sources
+from .source_receipts import load_champion_sources, state_receipt
 
 # Rooted in KSanteR.Omnivamp; the cached R prose corroborates the 20% value.
 _ALLOUT_OMNIVAMP_PERCENT = (
@@ -103,12 +105,12 @@ _W_TRUE_MIN_RESIST_PCT_PER_100 = 0.2
 _W_TRUE_MAX_RESIST_PCT_PER_100 = 1.6
 
 
-class _PathMakerRule:
-    """The typed Path Maker declaration (P3 package 4A).
+class _PathMakerRule(NamedTuple):
+    """The typed Path Maker declaration.
 
     W prices one physical packet: the cached flat row + the % max-health
     term (base 8%, plus 2% per 100 BONUS armor and 2% per 100 BONUS
-    magic resistance — the game MaxHealthDamageResistRatio 0.0002,
+    magic resistance, the game MaxHealthDamageResistRatio 0.0002,
     wiki-fossilized in the degraded units).  In All Out the true-damage
     range interpolates between the Minimum/Maximum Bonus True Damage
     rows (the game's 10%..80% fractions of the physical formula) by the
@@ -118,19 +120,38 @@ class _PathMakerRule:
     named state.
     """
 
-    def __init__(self) -> None:
-        self.physical_row_attribute = "Physical Damage"
-        self.min_true_row_attribute = "Minimum Bonus True Damage"
-        self.max_true_row_attribute = "Maximum Bonus True Damage"
-        self.base_max_health_percent = 8.0
-        self.resist_percent_per_100 = _W_PHYS_RESIST_PCT_PER_100
-        self.true_min_resist_percent_per_100 = _W_TRUE_MIN_RESIST_PCT_PER_100
-        self.true_max_resist_percent_per_100 = _W_TRUE_MAX_RESIST_PCT_PER_100
-        self.default = 1.0
-        self.min = 0.0
-        self.max = 1.0
-        self.step = 0.25
-        self.source = {
+    physical_row_attribute: str
+    min_true_row_attribute: str
+    max_true_row_attribute: str
+    base_max_health_percent: float
+    resist_percent_per_100: float
+    true_min_resist_percent_per_100: float
+    true_max_resist_percent_per_100: float
+    default: float
+    min: float
+    max: float
+    step: float
+    source: Mapping[str, Any]
+
+    def public_receipt(self) -> dict[str, Any]:
+        """The published Path Maker declaration."""
+        return state_receipt("K'Sante — Path Maker (W)", self)
+
+
+KSANTE_PATH_MAKER_RULE = _PathMakerRule(
+    physical_row_attribute="Physical Damage",
+    min_true_row_attribute="Minimum Bonus True Damage",
+    max_true_row_attribute="Maximum Bonus True Damage",
+    base_max_health_percent=8.0,
+    resist_percent_per_100=_W_PHYS_RESIST_PCT_PER_100,
+    true_min_resist_percent_per_100=_W_TRUE_MIN_RESIST_PCT_PER_100,
+    true_max_resist_percent_per_100=_W_TRUE_MAX_RESIST_PCT_PER_100,
+    default=1.0,
+    min=0.0,
+    max=1.0,
+    step=0.25,
+    source=MappingProxyType(
+        {
             "label": "Local League Wiki cache — K'Sante W template + game file",
             "url": "https://wiki.leagueoflegends.com/en-us/Template:Data_K%27Sante/W",
             "revision_id": 3471720,
@@ -143,26 +164,8 @@ class _PathMakerRule:
             "text; the bonus attribution is game-verified (mStat 1/6 = "
             "bonus armor / bonus magic resistance).",
         }
-
-    def public_receipt(self) -> dict[str, Any]:
-        return {
-            "name": "K'Sante — Path Maker (W)",
-            "physical_row_attribute": self.physical_row_attribute,
-            "min_true_row_attribute": self.min_true_row_attribute,
-            "max_true_row_attribute": self.max_true_row_attribute,
-            "base_max_health_percent": self.base_max_health_percent,
-            "resist_percent_per_100": self.resist_percent_per_100,
-            "true_min_resist_percent_per_100": self.true_min_resist_percent_per_100,
-            "true_max_resist_percent_per_100": self.true_max_resist_percent_per_100,
-            "default": self.default,
-            "min": self.min,
-            "max": self.max,
-            "step": self.step,
-            "source": dict(self.source),
-        }
-
-
-KSANTE_PATH_MAKER_RULE = _PathMakerRule()
+    ),
+)
 
 
 @ranked_slot
