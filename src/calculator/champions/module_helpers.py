@@ -63,22 +63,35 @@ def typed_damage(
     return entry
 
 
+def ability_slot(slot: str | None = None, index: int = 0) -> Callable[..., SlotParser]:
+    """A slot that prices nothing while its cached entry is absent; *body* gets it."""
+
+    def wrap(body: Callable[[SlotCtx, dict[str, Any]], Any]) -> SlotParser:
+        def guarded(ctx: SlotCtx) -> dict[str, Any] | None:
+            ability = ctx.ability(slot, index)
+            return None if ability is None else body(ctx, ability)
+
+        # Not functools.wraps: a ``__wrapped__`` would make pylint read a
+        # direct ``slot(ctx)`` call against the body's own signature.
+        guarded.__name__, guarded.__qualname__ = body.__name__, body.__qualname__
+        guarded.__doc__, guarded.__module__ = body.__doc__, body.__module__
+        return guarded
+
+    return wrap
+
+
 def ranked_slot(
     body: Callable[[SlotCtx, dict[str, Any], int], dict[str, Any] | None],
 ) -> SlotParser:
     """A slot that prices nothing until learned; *body* gets its ``(ability, rank)``."""
 
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ranked = ctx.ranked()
-        if ranked is None:
-            return None
-        return body(ctx, *ranked)
+    def gated(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
+        selected = ctx.rank_for()
+        return None if selected < 1 else body(ctx, ability, selected)
 
-    # Not functools.wraps: a ``__wrapped__`` would make pylint read a direct
-    # ``slot(ctx)`` call against the body's three-parameter signature.
-    parse.__name__, parse.__qualname__ = body.__name__, body.__qualname__
-    parse.__doc__, parse.__module__ = body.__doc__, body.__module__
-    return parse
+    gated.__name__, gated.__qualname__ = body.__name__, body.__qualname__
+    gated.__doc__, gated.__module__ = body.__doc__, body.__module__
+    return ability_slot()(gated)
 
 
 def delayed(parser: SlotParser, *, delay: float) -> SlotParser:
@@ -352,6 +365,8 @@ def no_damage_parser(
     """
 
     def parse(ctx: SlotCtx) -> dict[str, Any] | None:
+        # Not @ability_slot: pylint cannot infer a called decorator's wrapper,
+        # and rank_gated_no_damage_parser calls the parser this returns.
         ability = ctx.ability()
         if ability is None:
             return None
@@ -392,10 +407,8 @@ def rank_gated_no_damage_parser(
 def no_damage_slot(reason: str) -> SlotParser:
     """A slot whose cached row prices no enemy damage: its named, rank-gated zero row."""
 
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability = ctx.ability()
-        if ability is None:
-            return None
+    @ability_slot()
+    def parse(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
         return no_damage(ctx, name=ability_name(ability), reason=reason)
 
     parse.phase = DAMAGE
@@ -446,10 +459,8 @@ def innate_on_hit(
 ) -> SlotParser:
     """P: an on-hit row from the innate's per-level *attr*, named as the kit names it."""
 
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ability = ctx.ability("P", 0)
-        if ability is None:
-            return None
+    @ability_slot("P")
+    def parse(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
         per_hit = extract_named(ability, attr, ctx.level, ctx.stats, ctx.target)
         entry = on_hit_entry(name or ability_name(ability), per_hit, dmg_type)
         if detail is not None:
