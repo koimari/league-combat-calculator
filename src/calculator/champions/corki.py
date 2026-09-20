@@ -337,35 +337,33 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Passive true damage (20% of total AD) applies to every basic attack "
-    "and is multiplied by critical strike modifiers on a crit",
-    "Spellblade procs deal an extra 20% of their pre-mitigation damage as "
-    "true damage (the wiki's Hextech Munitions special case)",
-    "Runaan's Hurricane bolts get the same 20% true-damage rider in-game, "
-    "but the bolts only hit OTHER enemies — this single-target model "
-    "values neither the bolts nor their rider",
-    "W: the target is caught by ONE blazing patch, taking all 5 ticks over "
-    "2.5s (overlapping patches from a longer dash are not modeled)",
-    "E: the target stays in the cone for all 16 ticks over 4s by default; "
-    "E is not a channel, so autos continue normally during it",
-    "E's resistance shred ramps one stack per tick to a maximum of 4, and "
-    "E's own later ticks benefit from the stacks its earlier ticks applied",
-    "E shreds armor and magic resist by a flat amount that may take the "
-    "target's resistances below zero, where they amplify damage",
+    "Passive true damage, 20% of total AD, rides every basic attack and takes the "
+    "crit modifiers on a crit.",
+    "Spellblade procs add 20% of their pre-mitigation damage as true damage (wiki "
+    "Hextech Munitions case).",
+    "Runaan's bolts carry the same 20% rider in game but hit other enemies only, so "
+    "this model prices neither.",
+    "W catches the target in one blazing patch for all 5 ticks over 2.5s; overlapping "
+    "patches are not modeled.",
+    "E holds the target in the cone for all 16 ticks over 4s by default; E is no "
+    "channel, so autos continue.",
+    "E's shred ramps one stack per tick to a maximum of 4, and its later ticks meet "
+    "the earlier ticks' stacks.",
+    "E shreds armor and magic resist flat, which may take a resistance below zero, "
+    "where it amplifies damage.",
     "R starts the fight with full ammo (4 charges) and a fresh Big One "
     "cycle; every third missile fired is a Big One",
-    "R in one-rotation mode dumps ALL stored charges as the burst, which "
-    "takes ~6s of 2s inter-cast lockouts in game — one-rotation R is the "
-    "full ammo dump, not a 5-second window, so it can exceed a short "
-    "timed fight's missile count",
-    "R in a timed fight adds the charges that recharge inside the window "
-    "and caps the barrage at the 2s inter-cast cooldown plus cast time",
-    "R recharge is accelerated by basic attacks on-hit against champions "
-    "(2-6s per attack, scaling with critical strike chance); every auto is "
-    "credited, though in game the reduction is wasted while at 4 charges",
-    "The whole barrage occupies the shared cast timeline as a single "
-    "0.175s cast, and counts as ONE cast toward the spellblade proc "
-    "budget (each missile does proc per-cast effects like Muramana)",
+    "One-rotation R dumps every stored charge, about 6s of 2s inter-cast lockouts in "
+    "game, not a 5s window.",
+    "That full ammo dump can exceed a short timed fight's missile count.",
+    "A timed fight adds the R charges recharging inside the window, capped at the 2s "
+    "inter-cast plus cast time.",
+    "Basic attacks on champions cut R's recharge by 2 to 6s, scaling with crit "
+    "chance.",
+    "Every auto is credited, where in game the reduction is wasted at 4 charges.",
+    "The barrage is one 0.175s cast on the shared timeline and one cast for the "
+    "spellblade budget.",
+    "Each missile still procs per-cast effects such as Muramana.",
 ]
 
 SLOTS = {

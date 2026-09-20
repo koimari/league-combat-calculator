@@ -310,38 +310,33 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Headshot is a 5-stack Count system: attacks generate Count stacks "
-    "(cap 5, doubled in brush) and the auto that would land the 5th "
-    "stack consumes them all to become a Headshot — every 6th attack "
-    "out of brush; p_pre_stacks advances that cadence",
+    "Headshot is a 5-stack Count: the auto that would land the 5th consumes them all, "
+    "every 6th attack out of brush.",
+    "Stacks double in brush, and p_pre_stacks advances that cadence.",
     "Brush doubling is not modeled (out-of-brush stacking)",
-    "Each sprung W trap grants exactly one trap headshot with W's damage "
-    "increase; w_traps (default 1, capped by W's maximum traps at rank) "
-    "is the player-controlled number of traps the enemy steps on; with "
-    "W unranked (or w_traps=0) there is no trap headshot",
-    "Each E cast grants one additional Headshot (no W bonus); granted "
-    "headshots convert existing autos rather than adding attacks — with "
-    "no auto stream (one-rotation mode, or auto attacks disabled) they "
-    "are the forced basic attacks themselves (swing + headshot)",
-    "An autos-only fight casts neither E nor W, so only the every-6th "
-    "cadence lands (the pipeline states this with the auto_attacks_only "
-    "reserved option)",
+    "Each sprung W trap grants one trap headshot at W's damage increase.",
+    "w_traps (default 1, capped by W's maximum at rank) is the player-controlled "
+    "count; W unranked grants none.",
+    "Each E cast grants one extra Headshot with no W bonus, converting an existing "
+    "auto rather than adding one.",
+    "With no auto stream they are forced basic attacks themselves, swing plus "
+    "headshot.",
+    "An autos-only fight casts neither E nor W, so only the every-6th cadence lands "
+    "(auto_attacks_only).",
     "Headshot (swing and rider) is basic damage: basic-damage "
     "amplifiers (Hexoptics C44) apply to it",
-    "Q prices the primary hit at full damage plus one sourced 60% "
-    "Reduced Damage hit per parse/API-level q_secondary_targets "
-    "(default 0); enemies revealed by Yordle Snap Trap always take "
-    "full damage (wiki note) — not distinguished here.  The key is "
-    "deliberately not declared in OPTIONS because the read-only "
-    "option-meta test pins the declared list",
-    "R is assumed to hit (allied body-block not modeled); the Headshot "
-    "vs non-champions (110% AD) is not modeled — the target is a champion",
-    "Headshot bonus applies after the auto's own crit roll; the bonus "
-    "itself cannot crit but scales with crit chance and bonus crit damage",
-    "W (Yordle Snap Trap) is a summoned trap with no direct damage: the "
-    "W row reports the sprung-trap count on the charge recharge rate, "
-    "and the trap's damage contribution is the trap Headshot priced by "
-    "the passive row (root 1.5s + reveal 3s are utility).",
+    "Q prices the primary hit in full plus one sourced 60% Reduced Damage hit per "
+    "q_secondary_targets (default 0).",
+    "A target revealed by Yordle Snap Trap takes full damage (wiki note), which this "
+    "row does not separate.",
+    "R is assumed to hit: an allied body-block is not modeled, and the 110% AD "
+    "non-champion Headshot never applies.",
+    "The Headshot bonus lands after the auto's crit roll; it cannot crit but scales "
+    "with crit chance and crit damage.",
+    "W (Yordle Snap Trap) deals no direct damage: its row reports the sprung-trap "
+    "count on the charge recharge rate.",
+    "The trap's damage is the trap Headshot on the passive row; its 1.5s root and 3s "
+    "reveal are utility.",
 ]
 
 SLOTS = {

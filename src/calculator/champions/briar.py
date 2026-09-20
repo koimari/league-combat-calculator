@@ -455,44 +455,37 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Self-heals modeled by healing.py (HEALING_RULE_CHAMPIONS): the "
-    "bleed heals 25% of its pre-mitigation damage (Crimson Curse, "
-    "cached prose 'always heals Briar for 25% of the pre-mitigation "
-    "damage dealt'), Snack Attack heals 5% of maximum health + the "
-    "sourced Heal Percentage (24-40%) of the bite's post-mitigation "
-    "damage, and Certain Death's life steal (10/15/20%) heals from "
-    "basic-attack damage while the frenzy lasts",
-    "Bleed kill heal (125% of remaining bleed damage on kill) and the "
-    "missing-health healing amplifier (0-40% + up to 2.5% per 100 "
-    "bonus health) are death/live-state boundaries: the fight ends at "
-    "the kill and the amplifier needs a live health walk, so both stay "
-    "documented, not priced",
-    "E's charge window is modeled: while charging for "
-    "e_charge_seconds (default 1.0, capped at the sourced 1s active "
-    "duration) Briar takes 35% less damage from all sources (the "
-    "sourced damage-reduction atom prices the 0.65 multiplier and the "
-    "active-duration atom prices the window, starting at the cast); "
-    "the reduction applies to physical, magic, and true damage "
-    "taken. E's charge heal IS modeled (healing.py, 4 sourced ticks)",
-    "E wall collision (e_wall_collision): the fully-charged knockback "
-    "rebound lands the sourced control duration sequence on the "
-    "primary target — a 0.5s knockup followed by a 1.5s stun — "
-    "creating target action downtime; both durations ride the one "
-    "sequence atom receipt",
-    "W cleave skipped — it hits only enemies around the primary target, "
-    "contributing zero single-target damage; the cleave does not apply "
-    "the bleed",
+    "The bleed heals 25% of its pre-mitigation damage (Crimson Curse cached prose), "
+    "through healing.py.",
+    "Snack Attack heals 5% of maximum health plus the sourced 24 to 40% of the bite's "
+    "post-mitigation damage.",
+    "Certain Death's life steal of 10/15/20% heals from basic-attack damage while the "
+    "frenzy lasts.",
+    "The bleed kill heal, 125% of remaining bleed damage, is a death-state boundary: "
+    "the fight ends at the kill.",
+    "The missing-health heal amplifier (0 to 40% + 2.5% per 100 bonus health) needs a "
+    "live health walk, not priced.",
+    "E's charge window runs e_charge_seconds (default 1.0), capped at the sourced 1s "
+    "active duration from the cast.",
+    "While charging Briar takes 35% less damage, the 0.65 multiplier atom, over "
+    "physical, magic and true alike.",
+    "E's charge heal is priced in healing.py as 4 sourced ticks.",
+    "e_wall_collision lands the fully-charged rebound's sourced sequence: a 0.5s "
+    "knockup then a 1.5s stun.",
+    "Both durations ride the one sequence atom receipt and count as target action "
+    "downtime.",
+    "W's cleave hits only enemies around the primary target, so it adds no "
+    "single-target damage and no bleed.",
     "E assumed fully charged (uncharged base is 2-5.5)",
     "Q's attack-timer reset is not modeled as an extra auto",
-    "Bleed cannot crit; bleed damage uses committed accounting — every "
-    "stack applied during the fight counts its full 5s of ticks, "
-    "including past fight end",
-    "Bleed stacks come from autos and each damaging ability application "
-    "(Q, Snack Attack, E, R); reapplying refreshes the shared duration",
+    "Bleed cannot crit, and every stack applied in the fight counts its full 5s of "
+    "ticks, including past the end.",
+    "Bleed stacks come from autos and each damaging application (Q, Snack Attack, E, "
+    "R), refreshing one duration.",
     "R explosion counted once, against the primary target; fear/stun/"
     "slow CC not modeled",
-    "Blood Frenzy assumed active by default (R's Hematomania re-triggers "
-    "it for the whole ult); toggling it off also removes Snack Attack",
+    "Blood Frenzy is assumed active by default, R re-triggering it for the whole "
+    "ultimate; off also drops Snack Attack.",
 ]
 
 SLOTS = {

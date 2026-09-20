@@ -221,23 +221,20 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "P (Carnivore) heals 18 : 52 (based on level) per kill — the cached P "
-    "'Heal' level row. A duel simulates no wave, so p_carnivore_kills "
-    "(default 0) supplies the count and the heals ride Cho'Gath's first "
-    "damaging hits; the 4.72 : 9.48 mana restore in the same sentence is "
-    "not modeled",
-    "Feast stacks default to 6 (the minion/non-epic-monster cap); "
-    "stacks from champions and epic monsters are uncapped — raise the "
-    "option to match",
-    "Feast stack bonus health is retroactive to the current R rank "
-    "(stacks x 80/120/160); with R unranked, stacks grant nothing",
+    "P (Carnivore) heals 18 to 52 by level per kill, the cached P Heal row, on the "
+    "first damaging hits.",
+    "A duel simulates no wave, so p_carnivore_kills (default 0) sets the count; the "
+    "mana restore is not modeled.",
+    "Feast stacks default to 6, the minion cap; champion and epic-monster stacks are "
+    "uncapped, so raise the option.",
+    "Feast bonus health is retroactive to the current R rank (stacks x 80/120/160); R "
+    "unranked grants nothing.",
     "R uses the champion damage (300/475/650); the 1200 non-champion "
     "value is not modeled",
     "E models all 3 empowered attacks landing per cast; the monster "
     "damage variant is not modeled",
-    "Q knockup/slow, W silence, E slow/bonus range/attack reset, and "
-    "Feast's size/attack-range/cast-range growth are utility — not "
-    "modeled",
+    "Q knockup and slow, W silence, E slow and reset, and Feast's size growth are "
+    "utility and not modeled.",
 ]
 
 SLOTS = {

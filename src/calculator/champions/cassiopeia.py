@@ -213,16 +213,13 @@ ASSUMPTIONS = [
     "W (Miasma) assumes the target remains in the zone for its full "
     "5-second duration",
     "E's healing against poisoned targets is not modeled (damage calculator)",
-    "P (Serpentine Grace) increases movement-speed-bonus effectiveness by "
-    "6-40% (based on level); it is stat-effectiveness state with no "
-    "combat-damage interaction, so it emits a sourced zero-damage row",
-    "R's facing condition does not change damage either way; for crowd "
-    "control it selects the branch — R applies the sourced stun when the "
-    "target faces Cassiopeia ('Enemies with their facing direction "
-    "towards her are instead stunned'), which the duel's target engaged "
-    "with her is, and the r_target_facing option selects the sourced "
-    "slow branch when it faces away.  The duration is read from the "
-    "cached R description atom, never a literal",
+    "P (Serpentine Grace) adds 6 to 40% by level to movement-speed effectiveness: "
+    "stat state, a zero-damage row.",
+    "R's facing condition changes no damage; it selects the crowd-control branch "
+    "only.",
+    "The duel's target faces Cassiopeia, so R stuns; r_target_facing selects the "
+    "sourced slow branch instead.",
+    "Both durations come from the cached R description atom, never a literal.",
 ]
 
 SLOTS = {

@@ -233,26 +233,26 @@ ADAPTIVE_DEFENSES_DURATION_SECONDS = data_value(_CAMILLE_P_SPELL, "ShieldDuratio
 
 
 ASSUMPTIONS = [
-    "Q2 is always the delayed recast: doubled bonus damage and the "
-    "level-based true conversion (36% + 4% per level, 100% from level 16)",
-    "Both Q attacks cannot critically strike; in timed fights with autos "
-    "the consumed auto is modeled inside the regular auto stream",
-    "Spellblade procs on both Q casts; Q2's spellblade proc is converted "
-    "to true damage with the attack (game-verified). Other on-hit "
-    "effects keep their own damage types",
+    "Q2 is always the delayed recast: doubled bonus damage, true conversion 36% + 4% "
+    "per level, 100% at 16.",
+    "Neither Q attack can crit; with autos the consumed auto is modeled inside the "
+    "regular auto stream.",
+    "Spellblade procs on both Q casts, and Q2's proc converts to true damage with the "
+    "attack (game verified).",
+    "Other on-hit effects keep their own damage types.",
     "W models the outer-cone sweet spot by default; W's self-heal and "
     "slow are not modeled",
-    "E's 40-60% attack speed is applied for the whole fight (in-game: 5s "
-    "per cast); the sourced 0.75-second stun is counted as action downtime",
-    "P (Adaptive Defenses) is modeled as a pre-fight granted shield: 20% "
-    "of max HP for 2s riding the first W cast. The in-game trigger (the "
-    "next auto against a champion) and the physical/magic adaptation "
-    "are documented boundaries — the model grants a general shield that "
-    "absorbs both damage types",
-    "R deals damage only through basic attacks on the trapped target: "
-    "with autos disabled (or one-rotation mode) its row is 0. Rider "
-    "procs are capped by the zone duration and use decaying current "
-    "health starting from max HP",
+    "E's 40 to 60% attack speed holds for the whole fight, where the game gives 5s "
+    "per cast.",
+    "E's sourced 0.75s stun counts as action downtime.",
+    "P (Adaptive Defenses) is granted pre-fight: 20% of maximum health for 2s riding "
+    "the first W cast.",
+    "P's next-auto trigger and its physical or magic split are documented boundaries; "
+    "the W shield absorbs both.",
+    "R deals damage only through basic attacks on the trapped target, so its row is 0 "
+    "with autos disabled.",
+    "Rider procs cap at the zone duration and use decaying current health from "
+    "maximum.",
 ]
 
 SLOTS = {
