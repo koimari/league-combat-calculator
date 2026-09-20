@@ -1,31 +1,17 @@
-"""Zed — E5-1 corrected slot map for the archetype engine.
+"""Zed: slot map for the archetype engine.
 
-Why each slot is non-generic:
-
-- R (Death Mark) is a damage-storage mechanic, not a flat hit: the wiki
-  leveling row is "Physical Damage: 100% AD (+ 25 / 40 / 55% of damage
-  stored)".  The previous wiki_attribute read resolved only the first
-  modifier (100% AD) and silently dropped the stored-damage term (the
-  "% of damage stored" unit is not a stat scaling), pricing the mark as
-  a flat ~AD hit.  The corrected packet reads BOTH modifiers: the mark
-  detonates for 100% AD plus 25 / 40 / 55% of the pre-mitigation damage
-  Zed dealt to the target during the mark.  The fight model's one
-  rotation prices the stored pool as the pre-mitigation raw spell damage
-  of the kit's damaging abilities (Q + E, read from ``ctx.results``);
-  basic attacks and Shadow copies are not tracked in the ability parse.
-  The detonation lands 3 seconds after the cast ("renders the target
-  Marked for Death for 3 seconds ... detonating at the end of the
-  duration").
-- Q (Razor Shuriken) prices one enemy-champion hit (80 / 120 / 160 /
-  200 / 240 + 100% bonus AD); the 60%-reduced second-target branch is
-  not the single-target model.
-- E (Shadow Slash) is a plain "Physical Damage" read (70 / 92.5 / 115 /
-  137.5 / 160 + 70% bonus AD).
-- P (Contempt for the Weak) and W (Living Shadow) are explicit
-  no-damage slots.
-
-All numeric values are read from the champion JSON data; nothing is
-hardcoded.
+R (Death Mark) is a damage-storage mechanic, not a flat hit.  Its cached row is
+"100% AD (+ 25 / 40 / 55% of damage stored)", and a single attribute read
+resolves only the first modifier, because "% of damage stored" is not a stat
+scaling, which prices the mark as a flat AD hit.  The slot reads BOTH: the mark
+detonates for 100% AD plus a ranked share of the pre-mitigation damage Zed dealt
+during it.  One rotation prices the stored pool as the raw spell damage of Q and
+E, read from ``ctx.results``; basic attacks and Shadow copies are not tracked in
+the ability parse.  The detonation lands 3 seconds after the cast.
+Q (Razor Shuriken) prices one enemy-champion hit; its 60%-reduced second-target
+branch is not the single-target model.
+E (Shadow Slash) is a plain "Physical Damage" read, and P (Contempt for the
+Weak) and W (Living Shadow) are explicit no-damage slots.
 """
 
 from typing import Any

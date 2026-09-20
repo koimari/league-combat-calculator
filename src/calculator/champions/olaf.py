@@ -1,32 +1,19 @@
-"""Olaf — CP10.5 full-entry-reviewed packet module, plus the E8c W shield.
+"""Olaf: full-entry-reviewed packet module.
 
-E8c addition over the reviewed packet:
-- W (Tough It Out) grants Olaf a shield for 2.5 seconds equal to
-  10/40/70/100/130 (+ 17.5% missing health) (cached Shield Strength
-  row).  W deals no damage, so the shield is emitted by the
-  ally-support scanner at the W cast (self-targeted).  The missing
-  health term is evaluated by the scanner at 0 (full-health floor);
-  the sourced 17.5% missing-health scaling is a documented boundary —
-  the module pins it as a constant for audit, but the scanner's packet
-  carries the flat component only.
-
-The three stat steroids are priced here, each from its cached leveling
-row and each as a BUFF-phase ``stat_buff`` the fight engine folds in:
-
-- P (Berserker Rage) scales "0% : 100% (based on missing health)" of a
-  per-level attack-speed row (50% : 107.84%), so the share of Olaf's
-  health that is missing is an explicit option — the fight engine runs
-  no self-health timeline.  The second per-level row is life steal,
-  for which the dispatch has no key.
-- W (Tough It Out) carries a Bonus Attack Speed row (40-80%) beside the
-  shield above, for the same sourced 5 seconds.
-- R (Ragnarok) grants bonus attack damage (10/20/30 + 25% AD) and
-  bonus resistances (10/15/20) for 3 seconds; its bonus movement speed
-  has no key.
-
-R's cleanse, its 3s crowd-control immunity, the 10% size increase and
-the per-hit duration extension have no kernel field and stay named
-rather than priced (tests/test_olaf_r_cleanse.py is their receipt).
+W (Tough It Out) grants Olaf a shield for 2.5 seconds.  W deals no damage, so
+the support scanner emits the shield at the W cast, self-targeted, and evaluates
+its missing-health term at zero, the full-health floor; the sourced 17.5%
+missing-health scaling is pinned here as a constant and is a documented boundary.
+Three stat steroids are priced, each from its cached leveling row and each a
+BUFF-phase ``stat_buff`` the fight engine folds in.  P (Berserker Rage) scales 0
+to 100% on missing health off a per-level attack-speed row, and the engine runs
+no self-health timeline, so the missing share is an explicit option; its second
+per-level row is life steal, for which the dispatch has no key.  W carries a
+Bonus Attack Speed row beside the shield for the same sourced 5 seconds.  R
+(Ragnarok) grants bonus attack damage and bonus resistances for 3 seconds, its
+movement speed having no key.
+R's cleanse, its 3-second control immunity, the size increase and the per-hit
+duration extension have no kernel field and stay named rather than priced.
 """
 
 from typing import Any

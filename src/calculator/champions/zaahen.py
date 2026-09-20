@@ -1,31 +1,21 @@
-"""Zaahen — CP10.10 full-entry-reviewed packet module.
+"""Zaahen: full-entry-reviewed packet module.
 
-Wiki-sourced item on-hit application is attached as a post-process on the
-batch parser output (the batch parser builds its slot map at build time, so
-declarations cannot be injected into the slot dict after the fact).
-
-Row-selection fix (W): Dreaded Return "extends his glaive in the target
-direction, dealing physical damage to enemies hit.  Upon reaching maximum
-range, all enemies hit are dealt physical damage".  The generated packet
-priced only the first leg — "Initial Physical Damage"
-(40/60/80/100/120 + 50% bonus AD) — dropping the "Subsequent Physical
-Damage" row (30/50/70/90/110 + 30% bonus AD).  This module prices the
-cache's "Total Physical Damage" (70/110/150/190/230 + 80% bonus AD),
-which is the two summed.  Two legs is not one hit, so W declares its
-aggregate at the cast boundary instead of certifying a single hit; the
-glaive's travel time to maximum range is not in the entry, so the second
-leg's offset is left for the timing wave.
-
-P (Cultivation of War) is the Determination stack buff: "for each stack,
-Zaahen gains bonus attack damage equal to 1.5% : 2.95% (based on level)
-AD.  At maximum stacks ... double the bonus to 36% : 70.87%".  Both
-percentages are cached per-level rows and the stack count is an explicit
-option (default 12, the sourced maximum), because the request carries no
-stack state.  The BUFF phase puts the bonus AD into the parse context,
-so Q/W/E/R's own %AD and %bonus-AD ratios scale off it.  The passive's
-other half — a once-per-cooldown resurrection at maximum stacks — is the
-revive axis, which ``starting_revive_defense`` states only for a fight's
-opening health, not a mid-fight trigger.
+Item on-hit application is attached as a post-process over the batch parser's
+output, because that parser builds its slot map at build time and a declaration
+cannot be injected into the slot dict afterwards.
+W (Dreaded Return) extends the glaive and hits again at maximum range, so it
+prices the cache's "Total Physical Damage", the Initial and Subsequent rows
+summed.  Two legs are not one hit, so W declares its aggregate at the cast
+boundary; the glaive's travel time is not in the entry, so the second leg has no
+offset yet.
+P (Cultivation of War) is the Determination stack buff: bonus attack damage per
+stack as a per-level share of AD, doubled at maximum stacks, both percentages
+cached per-level rows.  The stack count is an explicit option, default 12 for
+the sourced maximum, because the request carries no stack state, and the BUFF
+phase puts the bonus AD into the parse context so every %AD and %bonus-AD ratio
+scales off it.  The passive's other half, a once-per-cooldown resurrection at
+maximum stacks, is the revive axis, which ``starting_revive_defense`` states
+only for a fight's opening health and not as a mid-fight trigger.
 """
 
 from functools import partial

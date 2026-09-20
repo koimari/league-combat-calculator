@@ -1,31 +1,22 @@
-"""Cho'Gath — slot map for the archetype engine.
+"""Cho'Gath: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- E (Vorpal Spikes) empowers the next THREE basic attacks per cast —
-  the generic parser reads a single per-hit value with no hit count, no
-  auto-stream coupling, and no Feast rider. Each hit's "+0.5% per Feast
-  stack" of target max health lives only in the modifier's UNITS string
-  ("% (+ 0.5% per Feast stack) of target's maximum health"), so a
-  modifier override resolves it against the ``feast_stacks`` option.
-  The JSON's pre-multiplied "Total Magic Damage" and the two Monster
-  entries are never read (champion target, per-hit model).
-- R (Feast) couples true damage with the Feast-stack bonus health: each
-  stack grants 80/120/160 bonus health (retroactive to R rank), and R's
-  own "% bonus health" ratio must see that stack health — so R is a
-  BUFF-phase fn that mutates ``ctx.stats`` BEFORE extracting its
-  "Champion True Damage" (the pre-buff ``stat_buff`` archetype cannot
-  express this). The "Non-Champion True Damage" entry (1200 flat) is
-  never read. The buff is echoed in ``stat_buff`` for the fight engine
-  (max health display, Overlord's Bloodmail conversion).
-- Q (Rupture) and W (Feral Scream) are clean single-attribute reads,
-  kept explicit ("Magic damage", lowercase d — and W's classifier pick
-  must never drift onto the "Silence Duration" entry).
-- P (Carnivore) "heals for 18 : 52 (based on level)" whenever Cho'Gath
-  kills an enemy — no damage, so its slot is a zero-damage receipt that
-  carries the user's declared kill count to the self-heal rule. A duel
-  simulates no wave, so the count is the ``p_carnivore_kills`` option
-  (default 0) and the receipt is emitted only when it is set. The mana
-  restore in the same sentence has no channel a champion can author.
+E (Vorpal Spikes) empowers the next THREE basic attacks per cast, which the
+generic parser reads as a single per-hit value with no hit count and no Feast
+rider.  Each hit's "+ 0.5% per Feast stack" of the target's maximum health lives
+only in the modifier's UNITS string, so a modifier override resolves it against
+``feast_stacks``.  The pre-multiplied "Total Magic Damage" row and the two
+Monster entries are never read.
+R (Feast) couples true damage with the Feast-stack bonus health: each stack
+grants bonus health retroactive to R's rank, and R's own %bonus-health ratio
+must see that health, so R is a BUFF-phase function that mutates ``ctx.stats``
+BEFORE extracting "Champion True Damage".  The "Non-Champion True Damage" row is
+never read, and the buff is echoed in ``stat_buff`` for the fight engine.
+Q (Rupture) and W (Feral Scream) are clean single-attribute reads of "Magic
+damage" with a lowercase d; W's pick must never drift onto "Silence Duration".
+P (Carnivore) heals on a kill, so its slot is a zero-damage receipt carrying the
+declared kill count to the self-heal rule.  A duel simulates no wave, so the
+count is ``p_carnivore_kills``, default 0, and the receipt is emitted only when
+it is set.
 """
 
 import re

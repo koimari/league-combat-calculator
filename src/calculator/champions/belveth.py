@@ -1,31 +1,22 @@
-"""Bel'Veth — revision-backed 26.15 slot map for the archetype engine.
+"""Bel'Veth: revision-backed slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Death in Lavender) has no direct damage. Ability casts grant a flat
-  20% bonus attack speed for three seconds; permanent Lavender stacks grant
-  0.1-2% bonus attack speed each by champion level. Patch 26.15 restored
-  basic attacks to 100% damage and removed the 75% on-hit rider modifier.
-- Q (Void Surge) is four directional dashes: the ``q_casts`` option
-  multiplies the per-rotation cast count, dashes can crit and each applies
-  item on-hit effects at 100% (``applies_item_on_hits``), and the real
-  per-direction cooldown is wiki prose (the JSON cooldown field holds only
-  the 1s cast lockout).
-- W (Above and Below) is the one generic-shaped slot: a plain
-  "Magic Damage" attribute read with its sourced knock-up interval; the slow
-  remains utility.
-- E (Royal Maelstrom) computes its slash count from final bonus attack
-  speed — floor(6 + bonus AS% / 40) — and interpolates per-slash damage
-  between the JSON min/max attributes by target missing health; slashes
-  can crit, and each applies item on-hit effects at 12-24% (interpolated
-  by the same missing-health fraction). The monster rows (effect[2]) and
-  "Damage Reduction" (defensive) must never parse as damage.
-- R (Endless Banquet) is three modeled components: the Void Coral
-  explosion (true damage + 25% of target missing health, option-driven),
-  the True Form stat buff (bonus health plus a TOTAL-attack-speed
-  multiplier that needs custom fight-engine handling and must NOT feed
-  E's slash count), and a ramping every-attack true damage proc
-  emitted as a synthetic ONHIT slot ("R_onhit"). Void Remora pets are
-  skipped (minion-stat summons, no champion combat damage).
+P (Death in Lavender) has no direct damage: ability casts grant a flat bonus
+attack speed for three seconds and permanent Lavender stacks grant a further
+share each by champion level.
+Q (Void Surge) is four directional dashes, so ``q_casts`` multiplies the cast
+count.  The dashes crit and apply item on-hits at full effectiveness, and the
+real per-direction cooldown is prose: the cached field holds the cast lockout.
+W (Above and Below) is the one generic-shaped slot, a plain "Magic Damage" read
+with its sourced knock-up.
+E (Royal Maelstrom) computes its slash count from final bonus attack speed,
+``floor(6 + bonus_as_percent / 40)``, and interpolates per-slash damage between
+the cached minimum and maximum by target missing health.  Slashes crit and apply
+item on-hits at 12 to 24%, interpolated by the same fraction.  Its monster rows
+and its "Damage Reduction" row must never parse as damage.
+R (Endless Banquet) is three components: the Void Coral explosion, the True Form
+stat buff, whose TOTAL-attack-speed multiplier needs custom engine handling and
+must NOT feed E's slash count, and a ramping every-attack true damage proc
+emitted as the synthetic ``R_onhit`` slot.  Void Remora pets are skipped.
 """
 
 import math

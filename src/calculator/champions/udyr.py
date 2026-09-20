@@ -1,32 +1,21 @@
-"""Udyr — CP10.9 full-entry-reviewed packet module.
+"""Udyr: full-entry-reviewed packet module.
 
-E1/E2: W Iron Mantle heal streams and R Wingborne Storm 8-tick total are
-modeled (healing.py + this module's packet timing declaration); the W shield is
-emitted by the ally-support scanner from the cached Shield Strength row.
-
-P1-2 fix — Q (Wilding Claw) becomes a modeled ONHIT slot.  The stance
-empowers the next ``q_empowered_attacks`` basic attacks (default 2,
-wiki prose) with the sourced on-hit payload: the stance's "Bonus
-Physical Damage" row (3% : 8% by rank of the target's maximum health +
-3.5% per 100 bonus AD) plus the 4-second "Bonus Physical Damage
-On-Hit" row (6 : 36 by rank + 20% bonus AD + 1% : 2% by rank of bonus
-health).  With ``q_awaken`` (default False) the Awaken recast adds the
-per-level "Max Health Damage" row (2% : 4.24% by level + 1.5% per 100
-bonus AD + 0.1% per 100 bonus health) to the empowered attacks, and
-each empowered attack's lightning chain is priced as 6 magic strikes at
-the sourced 0.2-second cadence (per-strike row 1.5% : 3.18% by level +
-0.6% per 100 AP of the target's maximum health; all six chain onto the
-single target).
-
-The cache's Q "Heal" row (40 : 174.12 by level) is the lightning
-strike's minimum damage against MINIONS (wiki prose), not a self-heal;
-the Awaken self-heal family is the W stance stream, which the healing
-rule already models.
-
-Coverage: P (Bridge Between) is the stance and Awaken system itself and
-E (Blazing Stampede) is a stance stun with movement speed. Transform and
-CC magnitude are axes the engine does not have, so both slots are out of
-scope; the stances' own damage is priced on Q/W/E/R.
+Q (Wilding Claw) is an on-hit slot: the stance empowers the next
+``q_empowered_attacks`` basic attacks, default 2, with the stance's "Bonus
+Physical Damage" row plus the 4-second "Bonus Physical Damage On-Hit" row.
+Under ``q_awaken`` the recast adds the per-level "Max Health Damage" row to
+those attacks, and each empowered attack's lightning chain is priced as six
+magic strikes at the sourced 0.2-second cadence, all six chaining onto the one
+target.
+The cache's Q "Heal" row is not a self-heal: wiki prose makes it the lightning
+strike's minimum damage against MINIONS.  The Awaken self-heal family is the W
+stance stream, which the healing rule models, and the W shield is emitted by
+the support scanner from the cached Shield Strength row.
+R (Wingborne Storm) prices its eight-tick total.
+P (Bridge Between) is the stance and Awaken system and E (Blazing Stampede) is
+a stance stun with movement speed, so both are ``out_of_scope``: transform and
+control magnitude are axes this engine lacks.  The stances' own damage is
+priced on Q, W, E and R.
 """
 
 from typing import Any

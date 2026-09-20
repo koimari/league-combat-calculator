@@ -1,30 +1,16 @@
-"""Veigar — E5-1 corrected slot map for the archetype engine.
+"""Veigar: slot map for the archetype engine.
 
-Why each slot is non-generic:
-
-- R (Primordial Burst) is an execute, not a flat maximum hit: the wiki
-  lists "Minimum Magic Damage" (175 / 250 / 325 + 65 / 70 / 75% AP) and
-  "Maximum Magic Damage" (350 / 500 / 650 + 130 / 140 / 150% AP — the
-  maximum row is exactly twice the minimum), with the description
-  "deals magic damage, increased by 0% : 100% (based on target's missing
-  health)" and the live tooltip ("1.5% per 1% of target's missing
-  health; capped at 66.66% missing health").  The previous packet priced
-  the maximum row unconditionally.  The corrected parser prices the
-  minimum row and scales it up to +100% (the maximum row) at 1.5% per 1%
-  missing health, capped at 66.66% missing health (target at 33% health;
-  the pass-16 decision: boost = min(1, missing_ratio / (2/3))), evaluated
-  per cast against the target's live health by the fight engine.
-- Q (Baleful Strike) is a plain "Magic Damage" read (80 / 120 / 160 /
-  200 / 240 + 50 / 55 / 60 / 65 / 70% AP).
-- W (Dark Matter) is a plain "Magic Damage" read (85 / 140 / 195 / 250 /
-  305 + 70 / 80 / 90 / 100 / 110% AP) whose strike lands 1.221 s from the
-  start of the cast.
-- P (Phenomenal Evil Power) and E (Event Horizon) deal no enemy damage
-  and are explicit no-damage slots; E still authors the cage's sourced
-  stun as a typed control interval.
-
-All numeric values are read from the champion JSON data; nothing is
-hardcoded.
+R (Primordial Burst) scales on missing health, so it is not a flat maximum hit.
+The cache carries a "Minimum Magic Damage" row and a "Maximum Magic Damage" row
+worth exactly twice it, and the live tooltip gives the rule: 1.5% per 1% of the
+target's missing health, capped at 66.66% missing.  The slot prices the minimum
+row and scales it up to the maximum by ``min(1, missing_ratio / (2/3))``,
+evaluated per cast against the target's live health.
+Q (Baleful Strike) and W (Dark Matter) are plain "Magic Damage" reads; W's
+strike lands 1.221 seconds from the start of the cast.
+P (Phenomenal Evil Power) and E (Event Horizon) deal no enemy damage and are
+explicit no-damage slots, E still authoring the cage's sourced stun as a typed
+control interval.
 """
 
 from collections.abc import Callable

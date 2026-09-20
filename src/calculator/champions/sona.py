@@ -1,31 +1,18 @@
-"""Sona — CP10.8 full-entry-reviewed packet module.
+"""Sona: full-entry-reviewed packet module.
 
-E8d ally-support: W (Aria of Perseverance) heals and shields the caster and
-one selected teammate.  The heal is authored once by ``derive_self_healing``
-below (the self copy plus the fan-out clone to the selected teammate under
-the ``heal:W:<cast>`` selection key, "heals herself and sends out a tone to
-heal the most wounded allied champion nearby") and the Melody shield stays
-scanner-owned under ``shield:W:<cast>``, read from the cached W leveling
-(Heal 30-90 + 30% AP; Shield Strength 25-105 + 25% AP; scope
-self_and_one_teammate) at the W cast time; both packets expose independent
-roster selection keys, and the deterministic roster model treats the
-selected teammate as the "most wounded" target.  The module declares W in
-SLOTS so the fight rotation casts it.
-
-P (Power Chord) is ``modeled``: the sourced chord (240.0 bonus magic damage
-at level 18, 0 AP) rides the attack three basic abilities empower.
-
-E (Song of Celerity) is ``no_damage``: movement only, with no
-enemy-damage clause anywhere in the slot.  The movement half IS priced,
-because ``slotlib``'s ``stat_buff`` dispatch carries the key it needs:
-``move_speed_percent`` is a term in the shared ``resolve_move_speed``
-fold (``damage._apply_stat_buff_ultimates``), published by Teemo W,
-Seraphine W, Sivir R, Naafiri W, Udyr E and Singed.  Seraphine W is the
-same grant shape to the digit (20% + 2% per 100 AP, self half published,
-ally half withheld), so E follows that wiring: the self grant is
-published time-weighted over the fight window through
-``buff_window_share``, and the ranked ally half (Melody Bonus
-10/12/14/16/18%) is withheld for want of a teammate the parse can see.
+W (Aria of Perseverance) heals and shields the caster and one selected teammate,
+and the two halves have different owners.  ``derive_self_healing`` authors the
+heal once, the self copy plus the fan-out clone to the selected teammate, while
+the Melody shield stays scanner-owned; both packets expose independent roster
+selection keys, and the deterministic roster treats the selected teammate as the
+most wounded.  W is declared in SLOTS so the rotation casts it.
+P (Power Chord) is modeled: the sourced chord rides the basic attack her three
+basic abilities empower.
+E (Song of Celerity) is ``no_damage``, movement only, but the movement half IS
+priced, because ``move_speed_percent`` is a term in the shared
+``resolve_move_speed`` fold.  The self grant is published time-weighted over the
+fight window through ``buff_window_share``, and the ranked Melody ally half is
+withheld for want of a teammate the parse can see.
 """
 
 import re

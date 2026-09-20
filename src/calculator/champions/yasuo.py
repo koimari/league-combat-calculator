@@ -1,31 +1,19 @@
-"""Yasuo — Gathering Storm (Q3) and Ride the Wind (E) stack systems.
+"""Yasuo: the Gathering Storm and Ride the Wind stack systems.
 
-Stack mechanics modeled (E3):
-- Q (Steel Tempest): Gathering Storm stacks up to 2 (6-second window).
-  At 2 stacks the next Q cast consumes them to become the Q3 whirlwind.
-  The whirlwind deals the SAME sourced damage as a normal Q — the
-  empower is a 0.9-second knockup (CC state, not damage). ``q_gathering_storm``
-  is the explicit pre-stack state.
-- E (Sweeping Blade): Ride the Wind stacks up to 4 on the target. Each
-  stack adds the sourced "Bonus Damage per Stack" (17.5 : 32.5 by rank
-  + 5% bonus AD + 15% AP), so E at N stacks prices base + N x per-stack;
-  at 4 stacks this equals the wiki "Total Combined Damage".
-- P (Way of the Wanderer): Flow shield (125 : 674.46 by level) is a
-  state row; crit conversion and reduced crit damage are passive stats.
-
-- W (Wind Wall) is a selected projectile-defense window: the cached
-  active duration, the slots (or specific incoming event ids) the
-  scenario names, and nothing else.  R (Last Breath) keeps the reviewed
-  CP10.10 packet pricing.  All numeric values are read from the champion
-  JSON data.
-
-Coverage: P and W are ``no_damage``, not ``out_of_scope``.  Way of the
-Wanderer deals nothing — it grants the Flow shield and the crit
-conversion the fight engine already applies through ``crit_modifier`` —
-and Wind Wall only destroys projectiles.  Q, E and R each price their
-own row — R (Last Breath) among them: the map dropped it while its SLOTS
-entry was never touched (the Samira precedent), which is the stale label
-this fixes.
+Q (Steel Tempest) stacks Gathering Storm to two over a 6-second window, and the
+next Q consumes them for the Q3 whirlwind, which deals the SAME sourced damage:
+the empower is a 0.9-second knockup, not a number.  ``q_gathering_storm`` is the
+explicit pre-stack state.
+E (Sweeping Blade) stacks Ride the Wind to four on the target, each stack adding
+the sourced "Bonus Damage per Stack", so E at N stacks is base plus N times that
+row and at four stacks equals the cached "Total Combined Damage".
+P (Way of the Wanderer) is ``no_damage``: the Flow shield is a state row and its
+crit conversion and reduced crit damage are passive stats the fight engine
+already applies through ``crit_modifier``.
+W (Wind Wall) is ``no_damage`` too, a selected projectile-defense window holding
+the cached active duration and the slots or incoming event ids the scenario
+names, and nothing else.
+R (Last Breath) keeps its packet pricing.
 """
 
 from __future__ import annotations

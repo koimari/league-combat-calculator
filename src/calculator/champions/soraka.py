@@ -1,31 +1,20 @@
-"""Soraka — revision-backed offensive slot map.
+"""Soraka: revision-backed offensive slot map.
 
-Starcall deals one magic hit. Equinox deals one hit on cast and the same hit
-again after 1.5 seconds when the target remains in the zone. Its second hit is
-an explicit option because crowd control does not guarantee that condition.
-Soraka's passive and R do not damage enemies.
-
-R (Wish) is a zero-damage cast so the ally-support scanner prices the
-sourced team heal (350.0 to Soraka and every selected teammate at rank 3,
-0 AP); its "+50% on targets below 40% of their maximum health" is a
-live-health condition the scan cannot establish and is not priced.
-
-P (Salvation) is ``no_damage``: movement only, with no enemy-damage clause
-anywhere in the slot.  Its 90% bonus toward wounded allies is withheld on
-its CONDITION, not for want of a channel — ``move_speed_percent`` is a live
-``stat_buff`` key, folded through ``stats.resolve_move_speed`` by
-``damage._apply_stat_buff_ultimates``.  The condition is "while facing
-nearby allied champions below 40% of their maximum health", which needs
-both an allied champion (a 1v1 surface has none) and live ally health;
-this module withholds R's "+50% below 40% maximum health" on exactly that
-ground.  See ASSUMPTIONS.
-
-E8d: W (Astral Infusion) is an ally-only heal with no enemy damage.  The slot
-is declared here so the ability is CAST in the fight rotation; the engine's
-ally-support scanner then derives the heal packet from the cached W leveling
-("Heal: 90 / 110 / 130 / 150 / 170 (+ 50% AP)", scope one_teammate).  The
-cached cost row is 10% of maximum health per cast — a health cost, not mana —
-so the module documents it and does not author a mana resource cost.
+Q (Starcall) deals one magic hit.  E (Equinox) deals one hit on cast and the
+same hit again after 1.5 seconds if the target stays in the zone, which crowd
+control does not guarantee, so the second hit is an explicit option.
+W (Astral Infusion) is an ally-only heal.  The slot is declared here so the
+rotation CASTS the ability, and the support scanner derives the heal packet from
+the cached W leveling.  Its cached cost row is 10% of maximum health per cast, a
+health cost rather than mana, so the module documents it and authors no resource
+cost.
+R (Wish) is a zero-damage cast whose sourced team heal the scanner prices.  Its
+"+50% on targets below 40% of their maximum health" is a live-health condition
+no scan establishes and is not priced.
+P (Salvation) is ``no_damage``, movement only.  Its 90% bonus toward wounded
+allies is withheld on its CONDITION rather than for want of a channel:
+``move_speed_percent`` is a live ``stat_buff`` key, but the condition needs both
+an allied champion, which a duel has none of, and live ally health.
 """
 
 from typing import Any
