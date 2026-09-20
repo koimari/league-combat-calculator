@@ -446,9 +446,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     # hits an already-bleeding champion the same cast).  Matching cast
     # time to event time exactly drops a cast whose published time the
     # engine rounded, so the anchor is resolved by ``HealAnchor.CAST``.
-    for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline
-    ):
+    for payment in ctx.payments(_healing.HealAnchor.CAST, "Q"):
         _healing.heal_from_damage(
             healing,
             payment.event,

@@ -23,8 +23,8 @@ def test_taric_q_prices_the_sourced_five_charge_self_heal() -> None:
         {"level": 18, "health": 2000.0, "ability_power": 0.0},
         {"Q": {"rank": 5}},
         [],
-        [{"slot": "Q", "time": 1.0}],
-        5.0,
+        cast_timeline=[{"slot": "Q", "time": 1.0}],
+        fight_duration_seconds=5.0,
     )
 
     assert len(heals) == 1
@@ -76,15 +76,20 @@ class TestTheAnchorIsDeclaredNotInferred:
         stats = {"level": 18, "health": 2000.0, "ability_power": 0.0}
         casts = [{"slot": "W", "time": 2.0}]
         one_hit = derive_self_healing(
-            khazix, stats, {"W": {"rank": 5}}, [self._event("W", 2.0)], casts, 10.0
+            khazix,
+            stats,
+            {"W": {"rank": 5}},
+            [self._event("W", 2.0)],
+            cast_timeline=casts,
+            fight_duration_seconds=10.0,
         )
         four_hits = derive_self_healing(
             khazix,
             stats,
             {"W": {"rank": 5}},
             [self._event("W", 2.0 + 0.2 * index, sequence=index) for index in range(4)],
-            casts,
-            10.0,
+            cast_timeline=casts,
+            fight_duration_seconds=10.0,
         )
         assert len(one_hit) == 1
         assert [event["source"] for event in four_hits] == ["Void Spike"]
@@ -98,8 +103,8 @@ class TestTheAnchorIsDeclaredNotInferred:
             {"level": 18, "health": 2000.0, "ability_power": 0.0},
             {"W": {"rank": 5}},
             [self._event("W", 2.0), self._event("W", 2.3), self._event("W", 9.0)],
-            [{"slot": "W", "time": 2.0}, {"slot": "W", "time": 9.0}],
-            10.0,
+            cast_timeline=[{"slot": "W", "time": 2.0}, {"slot": "W", "time": 9.0}],
+            fight_duration_seconds=10.0,
         )
         assert [round(event["time"], 3) for event in heals] == [2.0, 9.0]
 
@@ -119,8 +124,8 @@ class TestTheAnchorIsDeclaredNotInferred:
                 self._event("Q", 1.5, damage=0.0, sequence=1),
                 self._event("Q", 2.0, damage=50.0, sequence=2),
             ],
-            [{"slot": "Q", "time": 1.0}],
-            10.0,
+            cast_timeline=[{"slot": "Q", "time": 1.0}],
+            fight_duration_seconds=10.0,
         )
         assert [round(event["time"], 3) for event in heals] == [1.0, 2.0]
         assert heals[0]["amount"] == pytest.approx(2.0 * heals[1]["amount"])
@@ -139,8 +144,8 @@ class TestTheAnchorIsDeclaredNotInferred:
             stats,
             {"E": {"rank": 5}},
             [self._event("E", 4.0)],
-            [{"slot": "E", "time": 3.0}],
-            10.0,
+            cast_timeline=[{"slot": "E", "time": 3.0}],
+            fight_duration_seconds=10.0,
         )
         ticks = [
             round(event["time"], 3)
@@ -170,8 +175,8 @@ class TestTheAnchorIsDeclaredNotInferred:
             {"level": 18, "health": 2000.0, "ability_power": 0.0},
             {"W": {"rank": 5}},
             [self._event("W", 2.0), self._event("W", 2.0, sequence=1)],
-            None,
-            10.0,
+            cast_timeline=None,
+            fight_duration_seconds=10.0,
         )
         assert len(heals) == 1
 

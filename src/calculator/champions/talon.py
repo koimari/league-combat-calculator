@@ -203,9 +203,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     heal = _healing.leveling_value(
         _healing.ability_json(ctx.champion_data, "Q"), "Heal", level
     )
-    for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline
-    ):
+    for payment in ctx.payments(_healing.HealAnchor.CAST, "Q"):
         event = payment.event
         _healing.heal_from_damage(healing, event, heal, "Noxian Diplomacy")
     return healing

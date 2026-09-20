@@ -368,10 +368,8 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     else:
         hunger_share = 0.0
     if hunger_share > 0.0:
-        for payment in _healing.payments(
-            _healing.HealAnchor.DAMAGING_HIT,
-            "on_hit_ability_passive",
-            ctx.damage_events,
+        for payment in ctx.payments(
+            _healing.HealAnchor.DAMAGING_HIT, "on_hit_ability_passive"
         ):
             event = payment.event
             _healing.heal_from_damage(

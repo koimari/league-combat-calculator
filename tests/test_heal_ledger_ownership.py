@@ -85,8 +85,8 @@ def test_taric_q_single_ownership_rule_prices_the_stock():
         {"level": 18, "health": 2000.0, "ability_power": 0.0},
         {"Q": {"rank": 5}},
         [],
-        [{"slot": "Q", "time": 1.0}],
-        5.0,
+        cast_timeline=[{"slot": "Q", "time": 1.0}],
+        fight_duration_seconds=5.0,
     )
     assert len(heals) == 1
     heal = heals[0]

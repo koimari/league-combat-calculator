@@ -244,9 +244,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     r_heal = extract_named(r, "Self Heal", r_rank, ctx.champion_stats)
     # The flat self heal is paid once per cast, so a wave the module prices
     # as several hits still heals once.
-    for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "R", ctx.damage_events, ctx.cast_timeline
-    ):
+    for payment in ctx.payments(_healing.HealAnchor.CAST, "R"):
         _healing.heal_from_damage(
             healing, payment.event, r_heal, "MMOOOMMMM!", link_to_damage=False
         )

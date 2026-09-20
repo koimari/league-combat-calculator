@@ -286,17 +286,8 @@ MODULE_COVERAGE = coverage(out_of_scope="R")
 def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Sylas self-healing events from its authored packet."""
     healing = []
-    min_heal, max_heal = _healing.ranked_rows(
-        ctx.champion_data,
-        ctx.ability_damages,
-        ctx.champion_stats,
-        "W",
-        "Minimum Heal",
-        "Maximum Heal",
-    )
-    for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "W", ctx.damage_events, ctx.cast_timeline
-    ):
+    min_heal, max_heal = ctx.ranked_rows("W", "Minimum Heal", "Maximum Heal")
+    for payment in ctx.payments(_healing.HealAnchor.CAST, "W"):
         event = payment.event
         if float(event.get("damage", 0.0)) <= 0.0:
             continue

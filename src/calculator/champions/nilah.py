@@ -194,10 +194,9 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     )
     q_ratio = 0.20 * crit / 100.0
     r_ratio = 0.20 + 0.30 * crit / 100.0
-    for payment in _healing.payments(
+    for payment in ctx.payments(
         _healing.HealAnchor.DAMAGING_HIT,
         lambda source: source in {"Q", "auto_attacks", "R"},
-        ctx.damage_events,
     ):
         event = payment.event
         source = _healing.event_source(event)

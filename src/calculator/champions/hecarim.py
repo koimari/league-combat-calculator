@@ -326,8 +326,8 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         if cast.get("slot") == "W"
     ]
     if w_casts:
-        for payment in _healing.payments(
-            _healing.HealAnchor.DAMAGING_HIT, lambda _source: True, ctx.damage_events
+        for payment in ctx.payments(
+            _healing.HealAnchor.DAMAGING_HIT, lambda _source: True
         ):
             event = payment.event
             event_time = float(event.get("time", 0.0))

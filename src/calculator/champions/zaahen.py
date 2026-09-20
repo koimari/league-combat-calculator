@@ -298,9 +298,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     # One payment per cast: the empowered attack strikes twice and the
     # cache grants one heal, and the heal lands on-attack even when the
     # paired strike packet was fully blocked.
-    for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline
-    ):
+    for payment in ctx.payments(_healing.HealAnchor.CAST, "Q"):
         _healing.heal_from_damage(
             healing,
             payment.event,
@@ -319,9 +317,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         ctx.champion_stats,
         {},
     )
-    for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "R", ctx.damage_events, ctx.cast_timeline
-    ):
+    for payment in ctx.payments(_healing.HealAnchor.CAST, "R"):
         _healing.heal_from_damage(
             healing,
             payment.event,

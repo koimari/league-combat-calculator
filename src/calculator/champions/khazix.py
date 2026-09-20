@@ -113,9 +113,7 @@ SELF_HEALING_RULE = self_healing_rule("Kha'Zix")(
         "Void Spike",
         ctx.damage_events,
         ctx.cast_timeline,
-        amount=_healing.ranked_rows(
-            ctx.champion_data, ctx.ability_damages, ctx.champion_stats, "W", "Heal"
-        )[0],
+        amount=ctx.ranked_rows("W", "Heal")[0],
         link_to_damage=False,
     )
 )

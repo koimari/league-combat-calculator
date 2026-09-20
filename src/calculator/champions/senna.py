@@ -351,9 +351,7 @@ SELF_HEALING_RULE = self_healing_rule("Senna")(
         "Piercing Darkness",
         ctx.damage_events,
         ctx.cast_timeline,
-        amount=_healing.ranked_rows(
-            ctx.champion_data, ctx.ability_damages, ctx.champion_stats, "Q", "Healing"
-        )[0],
+        amount=ctx.ranked_rows("Q", "Healing")[0],
         link_to_damage=False,
     )
 )

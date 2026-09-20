@@ -185,14 +185,7 @@ MODULE_COVERAGE = coverage(no_damage="P")
 def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Soraka self-healing events from its authored packet."""
     healing = []
-    per_tick, total = _healing.ranked_rows(
-        ctx.champion_data,
-        ctx.ability_damages,
-        ctx.champion_stats,
-        "Q",
-        "Heal per Tick",
-        "Total Heal",
-    )
+    per_tick, total = ctx.ranked_rows("Q", "Heal per Tick", "Total Heal")
     tick_count = (
         max(1, min(100, round(total / per_tick)))
         if per_tick > 0.0 and total > 0.0

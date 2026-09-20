@@ -443,8 +443,8 @@ class TestSourceAndTypedValues:
             {"level": 18, "health": 2000.0, "ability_power": 100.0},
             {"W": {"rank": 5}},
             [],
-            [{"slot": "W", "time": 1.0}],
-            5.0,
+            cast_timeline=[{"slot": "W", "time": 1.0}],
+            fight_duration_seconds=5.0,
         )
         assert len(heals) == 1
         heal = heals[0]
@@ -461,8 +461,8 @@ class TestSourceAndTypedValues:
                 {"level": 18, "health": 2000.0, "ability_power": 100.0},
                 {"Q": {"rank": 5}},
                 [],
-                [{"slot": "Q", "time": 1.0}],
-                5.0,
+                cast_timeline=[{"slot": "Q", "time": 1.0}],
+                fight_duration_seconds=5.0,
             )
             == []
         )

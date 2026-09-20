@@ -158,9 +158,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         _healing.ability_json(ctx.champion_data, "Q"), "Heal", level, ctx.champion_stats
     )
     if heal > 0.0:
-        for payment in _healing.payments(
-            _healing.HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline
-        ):
+        for payment in ctx.payments(_healing.HealAnchor.CAST, "Q"):
             event = payment.event
             healing.append(
                 {

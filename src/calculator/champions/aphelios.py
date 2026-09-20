@@ -479,10 +479,9 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         # post-mitigation damage dealt".  An attack that dealt nothing heals
         # nothing, and Onslaught's six attacks are six payments of their own
         # shares, not six copies of one.
-        for payment in _healing.payments(
+        for payment in ctx.payments(
             _healing.HealAnchor.DAMAGING_HIT,
             lambda source: source in {"auto_attacks", "Q"},
-            ctx.damage_events,
         ):
             event = payment.event
             # With Severum equipped the Q row is Onslaught, whose attacks

@@ -296,9 +296,7 @@ ASSUMPTIONS = [
 def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Volibear self-healing events from its authored packet."""
     w_rank = _healing.parsed_rank(ctx.ability_damages, "W")
-    (w_flat,) = _healing.ranked_rows(
-        ctx.champion_data, ctx.ability_damages, ctx.champion_stats, "W", "Heal"
-    )
+    (w_flat,) = ctx.ranked_rows("W", "Heal")
     w_missing_pct = _healing.leveling_modifier(
         _healing.ability_json(ctx.champion_data, "W"), "Heal", w_rank, 1
     )

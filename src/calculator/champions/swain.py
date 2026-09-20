@@ -216,9 +216,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         if heal_leveling is not None
         else 0.0
     )
-    for payment in _healing.payments(
-        _healing.HealAnchor.DAMAGING_HIT, "R", ctx.damage_events
-    ):
+    for payment in ctx.payments(_healing.HealAnchor.DAMAGING_HIT, "R"):
         _healing.heal_from_damage(
             healing,
             payment.event,

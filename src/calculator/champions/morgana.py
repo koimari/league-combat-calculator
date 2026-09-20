@@ -39,7 +39,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
-from ..healing_helpers import HealAnchor, heal_from_damage, payments
+from ..healing_helpers import HealAnchor, heal_from_damage
 from .engine import SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .module_helpers import ranked_slot
@@ -214,10 +214,8 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     ledger rows.
     """
     healing: list[dict] = []
-    for payment in payments(
-        HealAnchor.DAMAGING_HIT,
-        lambda source: source in {"Q", "W", "R"},
-        ctx.damage_events,
+    for payment in ctx.payments(
+        HealAnchor.DAMAGING_HIT, lambda source: source in {"Q", "W", "R"}
     ):
         heal_from_damage(
             healing,

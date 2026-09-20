@@ -112,17 +112,10 @@ parse_abilities = build_parser(SLOTS, "Lissandra", cc_kinds=MODULE_CC)
 def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Lissandra self-healing events from its authored packet."""
     healing = []
-    min_tick, max_tick = _healing.ranked_rows(
-        ctx.champion_data,
-        ctx.ability_damages,
-        ctx.champion_stats,
-        "R",
-        "Minimum Heal per Tick",
-        "Maximum Heal per Tick",
+    min_tick, max_tick = ctx.ranked_rows(
+        "R", "Minimum Heal per Tick", "Maximum Heal per Tick"
     )
-    for payment in _healing.payments(
-        _healing.HealAnchor.CAST_SCHEDULE, "R", ctx.damage_events, ctx.cast_timeline
-    ):
+    for payment in ctx.payments(_healing.HealAnchor.CAST_SCHEDULE, "R"):
         trigger = _healing.trigger_fields(payment.event)
         healing.extend(
             {

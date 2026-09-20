@@ -487,8 +487,8 @@ class TestSourceAndTypedValues:
             {"level": 18, "health": 2000.0, "ability_power": 100.0},
             {"R": {"rank": 3}},
             [],
-            [{"slot": "R", "time": 0.25}],
-            6.0,
+            cast_timeline=[{"slot": "R", "time": 0.25}],
+            fight_duration_seconds=6.0,
         )
         assert len(heals) == 1
         heal = heals[0]
@@ -505,8 +505,8 @@ class TestSourceAndTypedValues:
             {"level": 18, "health": 2000.0, "ability_power": 100.0},
             {"R": {"rank": 3}},
             [],
-            [{"slot": "R", "time": 0.25}, {"slot": "R", "time": 130.25}],
-            200.0,
+            cast_timeline=[{"slot": "R", "time": 0.25}, {"slot": "R", "time": 130.25}],
+            fight_duration_seconds=200.0,
         )
         assert [h["time"] for h in heals2] == [0.25, 130.25]
 
@@ -642,8 +642,8 @@ class TestRTiming:
             {"level": 18, "health": 2000.0, "ability_power": 0.0},
             {"R": {"rank": 3}},
             [],
-            [{"slot": "R", "time": 0.0}],
-            6.0,
+            cast_timeline=[{"slot": "R", "time": 0.0}],
+            fight_duration_seconds=6.0,
         )
         assert heals[0]["time"] == pytest.approx(0.0)
 

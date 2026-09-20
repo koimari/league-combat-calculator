@@ -530,9 +530,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     per-target receipts before applying one live heal.
     """
     healing = []
-    for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline
-    ):
+    for payment in ctx.payments(_healing.HealAnchor.CAST, "Q"):
         event = payment.event
         trigger_time = float(event.get("time", 0.0))
         trigger_sequence = int(event.get("sequence", 0) or 0)

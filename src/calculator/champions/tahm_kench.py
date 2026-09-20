@@ -193,9 +193,7 @@ MODULE_COVERAGE = coverage(no_damage="E")
 def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Tahm Kench self-healing events from its authored packet."""
     q_rank = _healing.parsed_rank(ctx.ability_damages, "Q")
-    (q_flat,) = _healing.ranked_rows(
-        ctx.champion_data, ctx.ability_damages, ctx.champion_stats, "Q", "Heal"
-    )
+    (q_flat,) = ctx.ranked_rows("Q", "Heal")
     q_missing_pct = _healing.leveling_modifier(
         _healing.ability_json(ctx.champion_data, "Q"), "Heal", q_rank, 1
     )

@@ -335,9 +335,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     base_raw = extract_named(
         w_ability, "Physical Damage", w_rank, ctx.champion_stats, {}
     )
-    for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "W", ctx.damage_events, ctx.cast_timeline
-    ):
+    for payment in ctx.payments(_healing.HealAnchor.CAST, "W"):
         event = payment.event
         raw = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
         post = float(event.get("damage", 0.0) or 0.0)

@@ -351,9 +351,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         missing_pct = _healing.leveling_modifier(w, "Missing Health Damage", level, 0)
 
         inferno_aegis_heal = _healing.flat_plus_missing_heal(flat, missing_pct)
-        for payment in _healing.payments(
-            _healing.HealAnchor.CAST, "W", ctx.damage_events, ctx.cast_timeline
-        ):
+        for payment in ctx.payments(_healing.HealAnchor.CAST, "W"):
             event = payment.event
             if float(event.get("damage", 0.0)) <= 0.0:
                 continue

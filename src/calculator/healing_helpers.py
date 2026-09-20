@@ -317,7 +317,7 @@ _CAST_MATCH_TOLERANCE = 1e-3
 
 
 @dataclass(frozen=True, slots=True)
-class _Payment:
+class Payment:
     """One occasion a self-heal rule pays.
 
     ``event`` is the damage event the payment rides — the cast's first hit
@@ -354,9 +354,7 @@ def _attributing_cast(cast_times: Iterable[float], event_time: float) -> float |
     return attributed
 
 
-def takedown_payments(
-    count: int, damage_events: list[dict[str, Any]]
-) -> list[_Payment]:
+def takedown_payments(count: int, damage_events: list[dict[str, Any]]) -> list[Payment]:
     """The first *count* hits a takedown-paid rule can honestly ride.
 
     A heal the game pays when a nearby unit dies has no cast and no damage
@@ -374,7 +372,7 @@ def payments(
     source: HealSource,
     damage_events: list[dict[str, Any]],
     cast_timeline: list[dict[str, Any]] | None = None,
-) -> list[_Payment]:
+) -> list[Payment]:
     """The occasions a rule pays on, per the anchor the rule declares.
 
     ``source`` is the event source key the rule reads — a slot letter, a
@@ -394,7 +392,7 @@ def payments(
     events = _events_matching(source, damage_events)
     if anchor is HealAnchor.DAMAGING_HIT:
         return [
-            _Payment(float(event.get("time", 0.0)), event)
+            Payment(float(event.get("time", 0.0)), event)
             for event in events
             if float(event.get("damage", 0.0) or 0.0) > 0.0
         ]
@@ -411,5 +409,5 @@ def payments(
         if held is None or event_time < float(held.get("time", 0.0)):
             activations[cast_time] = event
     return [
-        _Payment(cast_time, activations[cast_time]) for cast_time in sorted(activations)
+        Payment(cast_time, activations[cast_time]) for cast_time in sorted(activations)
     ]

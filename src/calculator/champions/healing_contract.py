@@ -7,6 +7,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from .. import healing_helpers as _healing
+
 
 def heal_receipt_order(event: dict[str, Any]) -> tuple[float, str]:
     """The order a self-heal ledger is read in: by time, then by source."""
@@ -27,6 +29,22 @@ class SelfHealCtx:
     damage_events: list[dict[str, Any]]
     cast_timeline: list[dict[str, Any]] | None = None
     fight_duration_seconds: float | None = None
+
+    def payments(
+        self, anchor: _healing.HealAnchor, source: _healing.HealSource
+    ) -> list[_healing.Payment]:
+        """The occasions a rule over this ledger pays on."""
+        return _healing.payments(anchor, source, self.damage_events, self.cast_timeline)
+
+    def ranked_rows(self, slot: str, *attributes: str) -> tuple[float, ...]:
+        """One slot's named rows at the rank this parse used."""
+        return _healing.ranked_rows(
+            self.champion_data,
+            self.ability_damages,
+            self.champion_stats,
+            slot,
+            *attributes,
+        )
 
 
 SelfHealResolver = Callable[[SelfHealCtx], list[dict[str, Any]]]

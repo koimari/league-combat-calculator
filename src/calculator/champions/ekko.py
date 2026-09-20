@@ -184,9 +184,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         r_rank,
         ctx.champion_stats,
     )
-    for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "R", ctx.damage_events, ctx.cast_timeline
-    ):
+    for payment in ctx.payments(_healing.HealAnchor.CAST, "R"):
         event = payment.event
         _healing.heal_from_damage(
             healing, event, r_heal, "Chronobreak", link_to_damage=False

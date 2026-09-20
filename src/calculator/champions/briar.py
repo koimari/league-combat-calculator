@@ -530,14 +530,7 @@ SOURCES = load_champion_sources("Briar")
 def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Briar self-healing events from its authored packet."""
     healing = []
-    per_tick, maximum = _healing.ranked_rows(
-        ctx.champion_data,
-        ctx.ability_damages,
-        ctx.champion_stats,
-        "E",
-        "Heal Per Tick",
-        "Maximum Heal",
-    )
+    per_tick, maximum = ctx.ranked_rows("E", "Heal Per Tick", "Maximum Heal")
     if per_tick > 0.0 and maximum > 0.0:
         # The ticks are the charge's, not the scream's: Briar is "charging
         # for up to 1 second, during which she ... heals herself every 0.25
@@ -549,9 +542,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         # tick on a hit that lands at 1.0s would drop three quarters of the
         # charge.  An E event is still what proves the cast happened; it is
         # not what the heal is paid for.
-        for payment in _healing.payments(
-            _healing.HealAnchor.CAST_SCHEDULE, "E", ctx.damage_events, ctx.cast_timeline
-        ):
+        for payment in ctx.payments(_healing.HealAnchor.CAST_SCHEDULE, "E"):
             ticks = max(1, min(4, math.ceil(maximum / per_tick)))
             healing.extend(
                 {
@@ -572,10 +563,9 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     # pre-mitigation bleed damage at every stack level, so one sourced
     # rule prices the whole stream.  The wiki's missing-health healing
     # amplifier (0% : 40%) is a live-state boundary, not priced here.
-    for payment in _healing.payments(
+    for payment in ctx.payments(
         _healing.HealAnchor.DAMAGING_HIT,
         lambda source: source.startswith("stacking_dot_"),
-        ctx.damage_events,
     ):
         event = payment.event
         dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
@@ -605,9 +595,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         {},
     )
     max_health = champion_stat(ctx.champion_stats, "health")
-    for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "W", ctx.damage_events, ctx.cast_timeline
-    ):
+    for payment in ctx.payments(_healing.HealAnchor.CAST, "W"):
         event = payment.event
         snack_heal = (
             0.05 * max_health
@@ -626,9 +614,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
         {},
     )
     if life_steal > 0.0:
-        for payment in _healing.payments(
-            _healing.HealAnchor.DAMAGING_HIT, "auto_attacks", ctx.damage_events
-        ):
+        for payment in ctx.payments(_healing.HealAnchor.DAMAGING_HIT, "auto_attacks"):
             event = payment.event
             _healing.heal_from_damage(
                 healing,

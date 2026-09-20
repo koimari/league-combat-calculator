@@ -15,7 +15,6 @@ from __future__ import annotations
 from typing import Any
 
 from ..ability_spec import DamagePart
-from ..healing_helpers import ranked_rows
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import float_option
@@ -155,14 +154,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     own — never inferred from the damage ledger.
     """
     healing: list[dict] = []
-    per_tick, total = ranked_rows(
-        ctx.champion_data,
-        ctx.ability_damages,
-        ctx.champion_stats,
-        "R",
-        "Heal Per Tick",
-        "Total Heal",
-    )
+    per_tick, total = ctx.ranked_rows("R", "Heal Per Tick", "Total Heal")
     tick_count = (
         max(1, min(100, round(total / per_tick)))
         if per_tick > 0.0 and total > 0.0

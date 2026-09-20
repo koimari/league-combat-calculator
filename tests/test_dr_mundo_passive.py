@@ -1625,8 +1625,8 @@ class TestModeParity:
             stats,
             {"R": {"rank": 3}},
             [],
-            [{"slot": "R", "time": 0.25}],
-            6.0,
+            cast_timeline=[{"slot": "R", "time": 0.25}],
+            fight_duration_seconds=6.0,
         )
         per_tick = extract_named(
             get_champion("Dr. Mundo")["abilities"]["R"][0],

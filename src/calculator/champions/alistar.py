@@ -51,7 +51,7 @@ from typing import Any
 
 from ..ability_atoms import ability_payload
 from ..ability_spec import DamageClass, DamagePart
-from ..healing_helpers import HealAnchor, ability_json, payments, trigger_fields
+from ..healing_helpers import HealAnchor, ability_json, trigger_fields
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
@@ -359,8 +359,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     )
     self_ratio = float(self_match.group(1)) / 100.0 if self_match else 0.0
     casts = sorted(
-        payments(HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline)
-        + payments(HealAnchor.CAST, "W", ctx.damage_events, ctx.cast_timeline),
+        ctx.payments(HealAnchor.CAST, "Q") + ctx.payments(HealAnchor.CAST, "W"),
         key=lambda payment: float(payment.event.get("time", 0.0)),
     )
     carried = ability_payload(ctx.ability_damages, "passive").get("self_heal_state")

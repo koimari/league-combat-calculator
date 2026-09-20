@@ -22,13 +22,7 @@ replaces that slot.
 from typing import Any
 
 from ..binary_roots import data_value, spell_object
-from ..healing_helpers import (
-    HealAnchor,
-    ability_json,
-    parsed_rank,
-    payments,
-    trigger_fields,
-)
+from ..healing_helpers import HealAnchor, ability_json, parsed_rank, trigger_fields
 from .engine import BUFF, SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .module_helpers import named_damage
@@ -187,9 +181,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
             "kind": "champion_ability",
             **trigger_fields(payment.event),
         }
-        for payment in payments(
-            HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline
-        )
+        for payment in ctx.payments(HealAnchor.CAST, "Q")
     ]
 
 

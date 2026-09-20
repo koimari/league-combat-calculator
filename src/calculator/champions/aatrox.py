@@ -49,7 +49,6 @@ from ..healing_helpers import (
     ability_json,
     event_source,
     leveling_value,
-    payments,
     trigger_fields,
 )
 from .engine import ONHIT, SlotCtx, build_parser
@@ -329,10 +328,8 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     # Both rules pay a share of what a hit dealt — Deathbringer Stance
     # "heals for a percentage of the damage dealt" and Umbral Dash the same
     # for every damage source — so both pay per hit that dealt some.
-    passive_payments = payments(
-        HealAnchor.DAMAGING_HIT,
-        lambda source: "passive" in source.lower(),
-        ctx.damage_events,
+    passive_payments = ctx.payments(
+        HealAnchor.DAMAGING_HIT, lambda source: "passive" in source.lower()
     )
     e_description = " ".join(
         effect.get("description", "")
@@ -368,9 +365,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
                 }
             )
 
-    for payment in payments(
-        HealAnchor.DAMAGING_HIT, lambda _source: True, ctx.damage_events
-    ):
+    for payment in ctx.payments(HealAnchor.DAMAGING_HIT, lambda _source: True):
         event = payment.event
         if _is_persistent(event):
             continue

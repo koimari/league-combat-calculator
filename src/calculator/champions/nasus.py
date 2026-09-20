@@ -39,7 +39,7 @@ from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..control_spec import ControlScope
-from ..healing_helpers import HealAnchor, heal_from_damage, payments
+from ..healing_helpers import HealAnchor, heal_from_damage
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
@@ -321,7 +321,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
             return True
         return empowered and source == "Q"
 
-    for payment in payments(HealAnchor.DAMAGING_HIT, is_swing, ctx.damage_events):
+    for payment in ctx.payments(HealAnchor.DAMAGING_HIT, is_swing):
         event = payment.event
         if event.get("damage_type") != "physical":
             continue

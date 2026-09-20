@@ -341,10 +341,9 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     # Public Execution heals from post-mitigation active ability damage: a
     # share of each hit's own damage, so one payment per hit that dealt some.
     if ratio > 0:
-        for payment in _healing.payments(
+        for payment in ctx.payments(
             _healing.HealAnchor.DAMAGING_HIT,
             lambda source: source in {"Q", "Q2", "W", "E", "R"},
-            ctx.damage_events,
         ):
             event = payment.event
             amount = max(0.0, float(event.get("damage", 0.0))) * ratio / 100.0

@@ -326,9 +326,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     last_rites_heal = _healing.flat_plus_missing_heal(
         q_flat, _healing.leveling_ratio(q, "Heal", "missing health", q_rank)
     )
-    for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline
-    ):
+    for payment in ctx.payments(_healing.HealAnchor.CAST, "Q"):
         event = payment.event
         healing.append(
             {

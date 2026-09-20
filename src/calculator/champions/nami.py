@@ -102,9 +102,7 @@ def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     floor = extract_named(w_ability, "Minimum Heal", w_rank, ctx.champion_stats, {})
     ap = champion_stat(ctx.champion_stats, "ability_power")
     amount = max(floor, base * (0.80 + 0.15 * ap / 100.0))
-    for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "W", ctx.damage_events, ctx.cast_timeline
-    ):
+    for payment in ctx.payments(_healing.HealAnchor.CAST, "W"):
         event = payment.event
         _healing.heal_from_damage(
             healing, event, amount, "Ebb and Flow", link_to_damage=False

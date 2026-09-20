@@ -350,8 +350,8 @@ def test_volibear_w_first_cast_applies_wound_only_and_never_scanner_heals():
         stats,
         {"W": {"rank": 5}},
         [w_event(1.0, 1), w_event(3.0, 2)],
-        [{"slot": "W", "time": 1.0}, {"slot": "W", "time": 3.0}],
-        5.0,
+        cast_timeline=[{"slot": "W", "time": 1.0}, {"slot": "W", "time": 3.0}],
+        fight_duration_seconds=5.0,
     )
     assert len(heals) == 1
     assert heals[0]["source"] == "Frenzied Maul"
@@ -366,8 +366,8 @@ def test_volibear_w_first_cast_applies_wound_only_and_never_scanner_heals():
         stats,
         {"W": {"rank": 5}},
         [w_event(1.25, 1), w_event(1.25, 2)],
-        [{"slot": "W", "time": 1.0}],
-        5.0,
+        cast_timeline=[{"slot": "W", "time": 1.0}],
+        fight_duration_seconds=5.0,
     )
     assert one_cast_two_parts == []
 
