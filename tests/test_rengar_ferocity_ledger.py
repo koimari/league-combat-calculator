@@ -446,6 +446,33 @@ class TestTimerAndCombatExtension:
         assert "expire" in receipt
         assert "combat_freeze" in receipt
 
+    def test_both_damage_streams_publish_their_freeze(self):
+        # Damage dealt is a swing as well as a cast, so a seeded Rengar
+        # swinging between two casts keeps his stacks.  Both streams reach
+        # the published receipt, and only the swing's freeze names its
+        # trigger, which is how a reader tells them apart.
+        result = _fight({"p_ferocity": 2}, duration=6.0, auto_attack_uptime=1.0)
+        ferocity = result["breakdown"]["ferocity"]
+        freezes = [
+            transition
+            for transition in ferocity["state_transitions"]
+            if transition["kind"] == "combat_freeze"
+        ]
+        swing_freezes = [
+            round(float(transition["time"]), 3)
+            for transition in freezes
+            if transition["detail"].get("trigger_kind") == "auto_attack"
+        ]
+        cast_freezes = [
+            round(float(transition["time"]), 3)
+            for transition in freezes
+            if "trigger_kind" not in transition["detail"]
+        ]
+        assert swing_freezes == _auto_swing_times(result)
+        assert cast_freezes == [
+            round(float(row["time"]), 3) for row in ferocity["stack_events"]
+        ]
+
 
 # ---------------------------------------------------------------------------
 # S6 — DoT/proc exclusion

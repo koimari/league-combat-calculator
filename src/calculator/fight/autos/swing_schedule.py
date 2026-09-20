@@ -437,7 +437,7 @@ def _auto_attack_timestamps(state: FightState) -> list[float]:
 
 
 def _restore_stream_attack_timestamps(state: FightState) -> list[float]:
-    """The auto-attack swing schedule the per-auto resource walk rides.
+    """The swing schedule the readers that run before the installers ride.
 
     ``_auto_restore_schedule`` runs BEFORE ``_prepare_hail_attack_schedule``
     and ``_prepare_lethal_tempo_attack_schedule`` install their stack-sensitive
