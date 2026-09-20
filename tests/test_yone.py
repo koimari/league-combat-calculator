@@ -24,10 +24,7 @@ def _q_parts(**options):
 class TestReviewedCrowdControl:
     """Yone's reviewed crowd control, and the slot that still withholds.
 
-    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-    whether an ability event was a control event; an ability packet that
-    never says makes the whole timed fight fall back to coarse ordering.
-    ``MODULE_CC`` is where this kit answers, read from the cached text.
+    The roster-wide half of this review lives in ``test_module_cc_census.py``.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -39,7 +36,6 @@ class TestReviewedCrowdControl:
             "P": "none",
             "E": "none",
         }
-        assert yone.parse_abilities.cc_kinds == yone.MODULE_CC
         assert cc_review.control_words(cc_review.slot_text(data, "W")) == []
         r_text = cc_review.slot_text(data, "R")
         assert "pulls them towards the location yone blinked to" in r_text

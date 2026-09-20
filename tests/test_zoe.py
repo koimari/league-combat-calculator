@@ -12,10 +12,7 @@ from tests import cc_review
 class TestReviewedCrowdControl:
     """Zoe's reviewed crowd control, on every slot her module emits.
 
-    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-    whether an ability event was a control event; an ability packet that
-    never says makes the whole timed fight fall back to coarse ordering.
-    ``MODULE_CC`` is where this kit answers, read from the cached text.
+    The roster-wide half of this review lives in ``test_module_cc_census.py``.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -27,7 +24,6 @@ class TestReviewedCrowdControl:
             "W": "none",
             "R": "none",
         }
-        assert zoe.parse_abilities.cc_kinds == zoe.MODULE_CC
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         # The drowsy is the ramp; the sleep is what the cast lands.
         e_text = cc_review.slot_text(data, "E")
@@ -46,9 +42,3 @@ class TestReviewedCrowdControl:
         assert part.count == zoe._W_BOLTS
         assert part.time_offset is None
         assert part.hit_interval is None
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        assert cc_review.unreviewed_ability_slots("Zoe") == []
-        coverage = cc_review.fimbulwinter_coverage("Zoe")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

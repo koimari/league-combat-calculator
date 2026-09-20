@@ -33,7 +33,6 @@ class TestReviewedCrowdControl:
             "R": "slow",
             "W": "none",
         }
-        assert gangplank.parse_abilities.cc_kinds == gangplank.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):
         for slot, word in [["E", "slow"], ["R", "slow"]]:
@@ -62,13 +61,6 @@ class TestReviewedCrowdControl:
             "E": ["slow"],
             "R": ["slow"],
         }
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = _CC.coverage()
-
-        assert coverage["complete"] is True
-        assert coverage["certification"] == "event_order_certified"
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 def test_the_packet_states_gangplanks_proc_count_and_ult_upgrades():

@@ -444,7 +444,6 @@ class TestReviewedCrowdControl:
             "E": "none",
             "R": "per_part",
         }
-        assert annie.parse_abilities.cc_kinds == annie.MODULE_CC
         assert (
             "annie generates a stack of pyromania whenever she hits an "
             "enemy with disintegrate or casts her other abilities, "

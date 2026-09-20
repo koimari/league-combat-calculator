@@ -342,7 +342,6 @@ class TestReviewedCrowdControl:
             "R": "stun",
             "P": "none",
         }
-        assert amumu.parse_abilities.cc_kinds == amumu.MODULE_CC
 
     def test_the_cached_kit_states_the_kinds_this_module_declares(self):
         data = cc_review.kit("Amumu")

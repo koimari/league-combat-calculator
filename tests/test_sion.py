@@ -1,8 +1,6 @@
 """Sion's reviewed crowd control (``MODULE_CC`` plus Q's charge-dependent part).
 
-A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-whether an ability event was a control event; an ability packet that never
-says makes the whole timed fight fall back to coarse ordering.
+The roster-wide half of this review lives in ``test_module_cc_census.py``.
 """
 
 from src.calculator.champions import sion
@@ -49,11 +47,3 @@ class TestReviewedCrowdControl:
         assert sion.MODULE_CC["Q"] == CC_PER_PART
         assert _q_parts(0.0)[0].cc_kind == "slow"
         assert _q_parts(1.0)[0].cc_kind == "immobilize"
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Sion") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Sion")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

@@ -1,8 +1,6 @@
 """Kayn's reviewed crowd control (``MODULE_CC`` plus W's per-form part).
 
-A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-whether an ability event was a control event; an ability packet that never
-says makes the whole timed fight fall back to coarse ordering.
+The roster-wide half of this review lives in ``test_module_cc_census.py``.
 """
 
 import pytest
@@ -36,7 +34,6 @@ class TestReviewedCrowdControl:
             "P": "none",
             "E": "none",
         }
-        assert kayn.parse_abilities.cc_kinds == kayn.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Kayn")
@@ -52,11 +49,3 @@ class TestReviewedCrowdControl:
         assert "slowing them by 90% decaying over 1.5 seconds" in text
         assert "blade's reach knocks up enemies hit for 1 second" in text
         assert _w_kinds(form) == [kind]
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Kayn") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Kayn")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

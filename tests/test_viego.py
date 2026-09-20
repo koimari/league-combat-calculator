@@ -11,11 +11,7 @@ from tests import cc_review
 class TestReviewedCrowdControl:
     """Viego's reviewed crowd control, and what declaring it clears.
 
-    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-    whether an ability event was a control event; an ability packet that
-    never says makes the whole timed fight fall back to coarse ordering.
-    ``MODULE_CC`` is where this kit answers, read from the cached text, and
-    the probe below is the reason it exists.
+    The roster-wide half of this review lives in ``test_module_cc_census.py``.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -27,7 +23,6 @@ class TestReviewedCrowdControl:
             "P": "none",
             "E": "none",
         }
-        assert viego.parse_abilities.cc_kinds == viego.MODULE_CC
         assert cc_review.control_words(cc_review.slot_text(data, "Q")) == []
         assert "stuns them for" in cc_review.slot_text(data, "W")
         # R's slow lands on the champion it strikes; the knockback is for
@@ -46,11 +41,3 @@ class TestReviewedCrowdControl:
         assert viego.MODULE_CC["P"] == "none"
         assert get_champion_module_contract("Viego").coverage["E"] == "modeled"
         assert get_champion_module_contract("Viego").coverage["P"] == "no_damage"
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Viego") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Viego")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

@@ -696,9 +696,7 @@ class TestOptionsMeta:
 class TestReviewedCrowdControl:
     """Only 90 Caliber Net controls among the casts this module prices.
 
-    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-    whether an ability event was a control event; an ability packet that
-    never says makes the whole timed fight fall back to coarse ordering.
+    The roster-wide half of this review lives in ``test_module_cc_census.py``.
     """
 
     def test_module_cc_is_the_declaration_the_parser_wired(self):
@@ -709,7 +707,6 @@ class TestReviewedCrowdControl:
             "P": "none",
             "W": "root",
         }
-        assert caitlyn.parse_abilities.cc_kinds == caitlyn.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Caitlyn")
@@ -723,11 +720,3 @@ class TestReviewedCrowdControl:
         text = cc_review.slot_text(cc_review.kit("Caitlyn"), "W")
         assert "springs the trap is rooted for 1.5 seconds" in text
         assert caitlyn.MODULE_CC["W"] == "root"
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Caitlyn") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Caitlyn")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

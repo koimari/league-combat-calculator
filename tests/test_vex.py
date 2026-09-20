@@ -94,7 +94,6 @@ class TestReviewedCrowdControl:
             "E": "slow",
             "R": "none",
         }
-        assert vex.parse_abilities.cc_kinds == vex.MODULE_CC
         passive = cc_review.slot_text(data, "P")
         assert "empowers her next basic ability to knock down and fear" in passive
         assert "flee from the epicenter instead" in passive

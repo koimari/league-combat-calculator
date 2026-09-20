@@ -276,7 +276,6 @@ class TestReviewedCrowdControl:
             "P": "none",
             "W": "slow",
         }
-        assert karthus.parse_abilities.cc_kinds == karthus.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Karthus")

@@ -13,10 +13,7 @@ from tests import cc_review
 class TestReviewedCrowdControl:
     """Zyra's reviewed crowd control, on every slot her module emits.
 
-    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-    whether an ability event was a control event; an ability packet that
-    never says makes the whole timed fight fall back to coarse ordering.
-    ``MODULE_CC`` is where this kit answers, read from the cached text.
+    The roster-wide half of this review lives in ``test_module_cc_census.py``.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -28,7 +25,6 @@ class TestReviewedCrowdControl:
             "P": "none",
             "W": CC_PER_PART,
         }
-        assert zyra.parse_abilities.cc_kinds == zyra.MODULE_CC
         assert "roots them for a duration" in cc_review.slot_text(data, "E")
         assert "knock up enemies within for 1 second" in cc_review.slot_text(data, "R")
 

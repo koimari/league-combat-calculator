@@ -508,7 +508,6 @@ class TestReviewedCrowdControl:
             "R": "knockback",
             "P": "none",
         }
-        assert gnar.parse_abilities.cc_kinds == gnar.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):
         for slot, word in [["Q", "slow"], ["E", "slow"], ["R", "knock"], ["W", "stun"]]:
@@ -527,10 +526,3 @@ class TestReviewedCrowdControl:
             "E": ["slow"],
             "R": ["knockback"],
         }
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = _CC.coverage()
-
-        assert coverage["complete"] is True
-        assert coverage["certification"] == "event_order_certified"
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

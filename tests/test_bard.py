@@ -339,11 +339,7 @@ class TestFightEngineIntegration:
 class TestReviewedCrowdControl:
     """Bard's reviewed crowd control, and what declaring it clears.
 
-    A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-    whether an ability event was a control event; an ability packet that
-    never says makes the whole timed fight fall back to coarse ordering.
-    ``MODULE_CC`` is where this kit answers, read from the cached text, and
-    the probe below is the reason it exists.
+    The roster-wide half of this review lives in ``test_module_cc_census.py``.
     """
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
@@ -362,11 +358,3 @@ class TestReviewedCrowdControl:
         # Q's stun needs the bolt to carry on into "terrain or a second
         # enemy", which a single-target fight never supplies.
         assert "stun" in cc_review.slot_text(data, "Q")
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Bard") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Bard")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

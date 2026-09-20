@@ -19,10 +19,7 @@ DataValue ``[-5, 25, 55, 85, 115, 145, 175]``, ranks 1-3 = 25/55/85):
   SlowPercent/WDuration/WRadius/DelayExecute/Radius for W) — both are
   sourced zero-damage rows, not silently absent slots.
 
-A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-whether an ability event was a control event; an ability packet that
-never says makes the whole timed fight fall back to coarse ordering, so
-``MODULE_CC`` is asserted here too.
+The roster-wide half of this review lives in ``test_module_cc_census.py``.
 """
 
 import json
@@ -355,11 +352,3 @@ class TestReviewedCrowdControl:
             cc_review.slot_text(data, "E")
         )
         assert "after the displacement" in cc_review.slot_text(data, "E")
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Singed") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Singed")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

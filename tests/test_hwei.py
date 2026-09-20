@@ -34,7 +34,6 @@ class TestReviewedCrowdControl:
             "R": CC_PER_PART,
             "W": "none",
         }
-        assert hwei.parse_abilities.cc_kinds == hwei.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):
         for slot, word in [["E", "fear"], ["R", "slow"]]:
@@ -69,13 +68,6 @@ class TestReviewedCrowdControl:
             "E": ["slow"],
             "R": ["none", "slow"],
         }
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = _CC.coverage()
-
-        assert coverage["complete"] is True
-        assert coverage["certification"] == "event_order_certified"
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 def test_the_signature_passive_is_not_silently_dropped():

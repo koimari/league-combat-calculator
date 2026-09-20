@@ -1,8 +1,6 @@
 """Udyr's reviewed crowd control (``MODULE_CC``).
 
-A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-whether an ability event was a control event; an ability packet that never
-says makes the whole timed fight fall back to coarse ordering.
+The roster-wide half of this review lives in ``test_module_cc_census.py``.
 """
 
 from src.calculator.champions import get_champion_module_contract, udyr
@@ -31,11 +29,3 @@ class TestReviewedCrowdControl:
         # damage-relevant is left unmodeled — rather than out_of_scope.
         assert cc_review.control_words(cc_review.slot_text(data, "E")) == ["stun"]
         assert get_champion_module_contract("Udyr").coverage["E"] == "no_damage"
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Udyr") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Udyr")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

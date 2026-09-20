@@ -598,7 +598,6 @@ class TestReviewedCrowdControl:
         from src.calculator.champions import kaisa
 
         assert kaisa.MODULE_CC == {"Q": "none", "W": "none", "E": "none", "R": "none"}
-        assert kaisa.parse_abilities.cc_kinds == kaisa.MODULE_CC
 
     def test_control_free_slots_name_every_word_their_text_contains(self):
         for slot, expected in [["Q", []], ["W", []]]:
@@ -606,13 +605,6 @@ class TestReviewedCrowdControl:
 
     def test_every_reviewed_part_carries_its_kind(self):
         assert _CC.kinds() == {"Q": ["none"], "W": ["none"]}
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = _CC.coverage()
-
-        assert coverage["complete"] is True
-        assert coverage["certification"] == "event_order_certified"
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
 
 
 class TestCoverageMap:

@@ -1,8 +1,6 @@
 """Pantheon's reviewed crowd control (``MODULE_CC``).
 
-A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-whether an ability event was a control event; an ability packet that never
-says makes the whole timed fight fall back to coarse ordering.
+The roster-wide half of this review lives in ``test_module_cc_census.py``.
 """
 
 from src.calculator.champions import pantheon
@@ -20,7 +18,6 @@ class TestReviewedCrowdControl:
             "R": "slow",
             "P": "none",
         }
-        assert pantheon.parse_abilities.cc_kinds == pantheon.MODULE_CC
 
     def test_declared_kinds_are_the_ones_the_cached_kit_gives(self):
         data = cc_review.kit("Pantheon")
@@ -32,15 +29,6 @@ class TestReviewedCrowdControl:
         text = cc_review.slot_text(cc_review.kit("Pantheon"), "Q")
         assert "pantheon charges while being slowed by 10%" in text
         assert pantheon.MODULE_CC["Q"] == "none"
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Pantheon") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Pantheon")
-        assert coverage["complete"] is True
-        # Every row is reviewed, so nothing at all stays coarse.
-        assert coverage["coarse_sources"] == []
 
 
 def test_the_w_stun_rides_a_certified_single_hit_event():

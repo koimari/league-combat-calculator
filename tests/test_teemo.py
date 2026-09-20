@@ -1,8 +1,6 @@
 """Teemo's reviewed crowd control (``MODULE_CC``), and the slot that withholds.
 
-A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-whether an ability event was a control event; an ability packet that never
-says makes the whole timed fight fall back to coarse ordering.
+The roster-wide half of this review lives in ``test_module_cc_census.py``.
 """
 
 from src.calculator.champions import teemo
@@ -31,11 +29,3 @@ class TestReviewedCrowdControl:
         nor a movement slow, so "none" would be false and "slow" wrong."""
         assert "blind" in CC_KIND_VOCABULARY
         assert "blind" not in IMMOBILIZING_CC_KINDS
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Teemo") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Teemo")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

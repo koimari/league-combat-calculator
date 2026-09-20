@@ -33,7 +33,6 @@ class TestReviewedCrowdControl:
             "R": "slow",
             "P": "none",
         }
-        assert jhin.parse_abilities.cc_kinds == jhin.MODULE_CC
 
     def test_each_declared_kind_is_the_word_its_slot_text_uses(self):
         for slot, word in [["W", "root"], ["E", "slow"], ["R", "slow"]]:
@@ -50,10 +49,3 @@ class TestReviewedCrowdControl:
             "E": ["slow"],
             "R": ["slow"],
         }
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = _CC.coverage()
-
-        assert coverage["complete"] is True
-        assert coverage["certification"] == "event_order_certified"
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

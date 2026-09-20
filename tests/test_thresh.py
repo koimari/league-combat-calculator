@@ -1,8 +1,6 @@
 """Thresh's reviewed crowd control (``MODULE_CC``).
 
-A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-whether an ability event was a control event; an ability packet that never
-says makes the whole timed fight fall back to coarse ordering.
+The roster-wide half of this review lives in ``test_module_cc_census.py``.
 """
 
 from src.calculator.champions import thresh
@@ -30,11 +28,3 @@ class TestReviewedCrowdControl:
             cc_review.slot_text(data, "E")
         )
         assert "slowing them by 99% for 2 seconds" in cc_review.slot_text(data, "R")
-
-    def test_every_ability_event_carries_the_review(self):
-        assert cc_review.unreviewed_ability_slots("Thresh") == []
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        coverage = cc_review.fimbulwinter_coverage("Thresh")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]

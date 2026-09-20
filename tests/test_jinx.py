@@ -33,7 +33,6 @@ class TestReviewedCrowdControl:
             "P": "none",
             "Q": "none",
         }
-        assert jinx.parse_abilities.cc_kinds == jinx.MODULE_CC
 
     def test_the_declared_kinds_are_the_ones_the_text_gives(self):
         assert "reveals and slows them for 2 seconds" in _CC.slot_text("W")

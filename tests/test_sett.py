@@ -1,8 +1,6 @@
 """Sett's reviewed crowd control (``MODULE_CC``), total over his five slots.
 
-A control-armed holder shield (Fimbulwinter's Everlasting) has to know
-whether an ability event was a control event; an ability packet that never
-says makes the whole timed fight fall back to coarse ordering.
+The roster-wide half of this review lives in ``test_module_cc_census.py``.
 """
 
 from src.calculator.champions import sett
@@ -42,9 +40,3 @@ class TestReviewedCrowdControl:
         # the entry gives: neither attack has a stated instant.
         assert "knuckle down resets sett's basic attack timer" in q_text
         assert sett.MODULE_CC["Q"] == "none"
-
-    def test_a_timed_fimbulwinter_fight_is_fully_certified(self):
-        assert cc_review.unreviewed_ability_slots("Sett") == []
-        coverage = cc_review.fimbulwinter_coverage("Sett")
-        assert coverage["complete"] is True
-        assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
