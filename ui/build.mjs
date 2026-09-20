@@ -17,9 +17,13 @@ const matcherModule =
   matcherSource.slice(0, wiringAt).trimEnd() +
   "\n\nexport { ScoreboardVision };\n";
 const matcherPath = "src/scoreboard-vision.js";
+/* Every generated string and esbuild buffer is LF, while a checkout under
+ * core.autocrlf is CRLF, so both comparisons below normalise first. All the
+ * compared assets are UTF-8 text. */
+const asLf = (text) => text.replace(/\r\n/g, "\n");
 if (check) {
   const current = await readFile(matcherPath, "utf8").catch(() => "");
-  if (current !== matcherModule)
+  if (asLf(current) !== asLf(matcherModule))
     throw new Error(`Generated asset differs: ${matcherPath}`);
 } else {
   await writeFile(matcherPath, matcherModule);
@@ -46,8 +50,8 @@ result.outputFiles.push({
 });
 for (const file of result.outputFiles) {
   if (check) {
-    const current = await readFile(file.path);
-    if (!current.equals(Buffer.from(file.contents)))
+    const current = await readFile(file.path, "utf8");
+    if (asLf(current) !== asLf(Buffer.from(file.contents).toString("utf8")))
       throw new Error(`Generated asset differs: ${file.path}`);
   } else {
     await mkdir(new URL("../static/calculator/", import.meta.url), {
