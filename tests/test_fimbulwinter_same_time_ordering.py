@@ -1,10 +1,10 @@
 """Focused matrix for Fimbulwinter same-time reactive damage ordering.
 
 Local evidence certifies Everlasting's trigger and shield. It does not select
-an order when that shield and reactive incoming damage share one timestamp.
-Those policy rows stay strict xfails. Epsilon-separated rows pin only the
-ordinary timestamp order. Adapter-parity rows do not certify the same-time
-policy.
+an order when that shield and reactive incoming damage share one timestamp,
+so those policy rows pin the refusal rather than a winner.
+Epsilon-separated rows pin only the ordinary timestamp order, and
+adapter-parity rows do not certify the same-time policy.
 """
 
 import pytest

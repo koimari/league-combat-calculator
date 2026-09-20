@@ -60,6 +60,7 @@ def test_no_script_points_an_image_at_an_object_url_the_csp_blocks() -> None:
     assert offenders == []
 
 
+@pytest.mark.needs_node
 def test_a_pasted_file_is_refused_by_size_before_it_decodes() -> None:
     """Over the cap the status names the size and the cap; under it the file
     reaches the decoder, and one that is not an image says so."""
@@ -97,6 +98,7 @@ def _players(rows: list) -> list[dict]:
     return [player for row in rows for player in row]
 
 
+@pytest.mark.needs_node
 def test_every_labeled_champion_is_read(readings: dict) -> None:
     """Every row reads the labeled champions, in order."""
     misses = []
@@ -111,6 +113,7 @@ def test_every_labeled_champion_is_read(readings: dict) -> None:
     assert not misses, "\n".join(misses)
 
 
+@pytest.mark.needs_node
 def test_items_clear_the_corpus_floor(readings: dict) -> None:
     """Items are read at ITEM_FLOOR or better with phantoms under EXTRA_CEILING."""
     correct = labeled = extra = 0
@@ -148,6 +151,7 @@ ZOOMED_FRAME = "lck-2026-crop-clipped.jpg"
 ZOOM = 2
 
 
+@pytest.mark.needs_node
 def test_a_zoomed_crop_reads_the_same_champions(readings: dict, tmp_path: Path) -> None:
     """A crop pasted at twice the size reads the rows its label names: the
     reader brings a frame whose portraits are larger than the tuned size

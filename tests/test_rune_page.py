@@ -567,6 +567,7 @@ def rune_page_ui(tmp_path_factory):
 
 
 class TestThePickerBuildsTheRequestTheServerValidates:
+    @pytest.mark.needs_node
     def test_the_payload_builder_is_the_one_place_the_page_is_serialised(
         self, rune_page_ui
     ):
@@ -578,6 +579,7 @@ class TestThePickerBuildsTheRequestTheServerValidates:
             "rune_options": {"Absolute Focus": {"above_health_threshold": 0}},
         }
 
+    @pytest.mark.needs_node
     def test_what_it_builds_is_a_page_the_server_accepts(self, rune_page_ui):
         payload = rune_page_ui["payload"]
         page = rune_effects.validate_rune_page(
@@ -589,6 +591,7 @@ class TestThePickerBuildsTheRequestTheServerValidates:
         assert page.minor_runes == tuple(payload["minor_runes"])
         assert page.stat_shards == tuple(payload["stat_shards"])
 
+    @pytest.mark.needs_node
     def test_picking_can_only_reach_a_page_the_server_accepts(self, rune_page_ui):
         """Legality is the picker's own state transition, not a filtered list
         of offers: a primary pick lands in its own row, a secondary pick starts
@@ -644,6 +647,7 @@ class TestThePickerBuildsTheRequestTheServerValidates:
             if len(minors) == 5:
                 rune_effects.validate_rune_page("Arcane Comet", minors, [])
 
+    @pytest.mark.needs_node
     def test_the_shard_rows_are_the_published_table(self, rune_page_ui):
         assert rune_page_ui["shardChoices"] == [
             ["Adaptive Force", "Attack Speed", "Cooldown Reduction"],
@@ -651,6 +655,7 @@ class TestThePickerBuildsTheRequestTheServerValidates:
             ["Health", "Tenacity and Slow Resist", "Health Scaling"],
         ]
 
+    @pytest.mark.needs_node
     def test_eight_enabled_slots_and_the_option_carries_its_disclosure(
         self, rune_page_ui
     ):
@@ -661,6 +666,7 @@ class TestThePickerBuildsTheRequestTheServerValidates:
         assert 'data-rune-option="above_health_threshold"' in rows
         assert "0 turns the grant off" in rows
 
+    @pytest.mark.needs_node
     def test_each_option_renders_the_control_its_kind_declares(self, rune_page_ui):
         """A switch is a checkbox; a count is a bounded number input."""
         rows = rune_page_ui["rows"]
@@ -670,11 +676,13 @@ class TestThePickerBuildsTheRequestTheServerValidates:
         assert '<input type="number" step="1" min="0" max="10"' in rows
         assert 'data-rune-option="stacks"' in rows
 
+    @pytest.mark.needs_node
     def test_the_picker_reads_its_side_from_the_path_it_was_opened_on(
         self, rune_page_ui
     ):
         assert rune_page_ui["sides"] == ["A", "B", "B", "A"]
 
+    @pytest.mark.needs_node
     def test_copy_a_to_b_copies_the_whole_page(self, rune_page_ui):
         assert rune_page_ui["copied"] == {
             "keystone": "Arcane Comet",

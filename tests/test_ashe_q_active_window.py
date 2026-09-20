@@ -103,11 +103,6 @@ _LEVEL = 18
 # is 4.0.
 WINDOW_SECONDS = 6.0
 FOCUS_WINDOW_SECONDS = 4.0
-# Genuinely-absent mechanics are xfailed with this reason (never strict
-# — the P1-11 completion removes the markers).
-_AWAIT = "awaiting P1-11 six-second active window"
-XFAIL = pytest.mark.xfail(reason=_AWAIT, strict=False)
-
 # The corrected-atom contract records (S14).  Hashes are computed with
 # the atomizer's canonical record hash (sha256 of the sorted JSON,
 # 16 hex chars) so the completion's emitted atoms can be verified
@@ -305,6 +300,7 @@ def _normal_damage(stats: dict, abilities: dict, armor: float = 50.0) -> float:
 
 
 class TestSourceAndTypedValues:
+    @pytest.mark.needs_game_files
     def test_game_file_buff_duration_is_six_seconds_flat_at_every_rank(self):
         # The active window: BuffDuration 6.0 at EVERY array entry (the
         # game file has 7 entries: level 0 + ranks 1-6) — no rank row
@@ -343,6 +339,7 @@ class TestSourceAndTypedValues:
         assert _q_value("Physical Damage Per Arrow", 1) == pytest.approx(22.0)
         assert _q_value("Physical Damage Per Arrow", 5) == pytest.approx(26.0)
 
+    @pytest.mark.needs_game_files
     def test_game_file_corroborates_the_rank_rows(self):
         # The game file's rank-1..5 rows match the cached values the
         # module prices (rank 1 at array index 1).
@@ -367,6 +364,7 @@ class TestSourceAndTypedValues:
         assert abilities["Q"]["stat_buff"]["bonus_attack_speed"] == pytest.approx(20.0)
         assert abilities["Q"]["auto_attack_override"]["ad_ratio"] == pytest.approx(1.10)
 
+    @pytest.mark.needs_game_files
     def test_focus_window_rule_is_four_seconds(self):
         # The typed Focus rule pins the 4s stack window (StackDuration 4
         # flat in the game file + the effect-0 prose).
@@ -948,6 +946,7 @@ class TestSourceReceipts:
             ASHE_FOCUS_STACK_RULE.public_receipt()["source"]["revision_id"] == 4015971
         )
 
+    @pytest.mark.needs_game_files
     def test_game_file_is_the_flat_window_evidence(self):
         # The game file the completion must cite: BuffDuration 6.0 at
         # every rank — the receipt for the window's duration.

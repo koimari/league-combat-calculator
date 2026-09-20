@@ -509,6 +509,7 @@ def _control_gates(contract: dict, tmp_path) -> dict:
     return json.loads(result.stdout)
 
 
+@pytest.mark.needs_node
 def test_every_gated_control_family_is_declared_and_mounted(tmp_path):
     """Each family the browser can disable must be a published control family
     whose controls are in the served document when the pass runs."""
@@ -522,6 +523,7 @@ def test_every_gated_control_family_is_declared_and_mounted(tmp_path):
         assert soup.select(gate["selector"]), (name, gate["selector"])
 
 
+@pytest.mark.needs_node
 def test_a_refused_control_family_reaches_the_page_with_its_reason(tmp_path):
     """The pass matched a refused field by ``frontend_token``, which the
     contract strips from every unsupported field on purpose — so it could
@@ -545,10 +547,12 @@ def test_a_refused_control_family_reaches_the_page_with_its_reason(tmp_path):
     assert refusals[0]["mark"] is True
 
 
+@pytest.mark.needs_node
 def test_a_fully_supported_contract_refuses_nothing(tmp_path):
     assert _control_gates(_contract(), tmp_path)["refusals"] == []
 
 
+@pytest.mark.needs_node
 def test_the_gate_table_covers_every_declared_control_family(tmp_path):
     """A family is gated or it is an exemption that says why, never neither.
 

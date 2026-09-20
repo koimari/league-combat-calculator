@@ -36,8 +36,8 @@ Focused TDD matrix for Heimerdinger's W (Hextech Micro-Rockets) and E
   documentary walk or denial surface (no resource_ledger sub-account,
   no informational breakdown row, empty notes); missing W/E leveling
   rows today yield a SILENT zero-total_raw entry (pinned actual,
-  flagged).  Genuinely-absent mechanics are ``xfail`` with reason
-  "awaiting P3-3Z ...": the coordinator's completion mirrors the
+  flagged).  The absent mechanics are pinned as refusals: the
+  completion mirrors the
   3W/3X/3Y pattern (typed W/E declarations + option state receipts, a
   documentary post-rotation walk over the accepted engine-priced
   stream, named fail-closed denials for the unsupported multi-target
@@ -63,11 +63,10 @@ Contract sections (numbered as in the RLM-2 C brief):
       metadata; API 0/6/2/non-numeric named 400s; parse-path behavior).
   S6  Target policy (the multi-target claims — rocket fan spread,
       grenade bounce multi-hit, 1000-range fan, turret targeting —
-      are named unmodeled assumptions today with NO invented multi-
-      target damage; the coordinator's named fail-closed denials are
-      xfailed).
-  S7  Malformed inputs (bad options fail closed today; missing rows are
-      a silent zero today — the fail-closed contract is xfailed).
+      are named unmodeled assumptions with NO invented multi-target
+      damage; the named fail-closed denials are still owed).
+  S7  Malformed inputs (bad options fail closed; a missing row is a
+      silent zero, and the fail-closed contract is still owed).
   S8  Unchanged boundaries (Q turret shots/beams/cadence/variants, the
       R toggle, the P, the W/E cooldowns, the existing options).
   S9  Score/receipt parity (W/E surface byte-identical under
@@ -106,10 +105,6 @@ _HEIMER_DATA = _CHAMPION_DATA["Heimerdinger"]
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
 _TARGET_MAX_HP = 2000.0
-# The P3-3Z coordinator wires the typed W/E declarations and the
-# documentary walk; genuinely-absent mechanics are xfailed with this reason.
-_AWAIT = "awaiting P3-3Z wiring"
-
 # Contract constants under test (module-authored beside the degraded wiki
 # rows; the values the option state receipts will publish).
 _W_FIRST_TIME_OFFSET = 0.25

@@ -185,11 +185,6 @@ _MUNDO_DATA = _CHAMPION_DATA["DrMundo"]
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
 _TARGET_MAX_HP = 2000.0
-# The P2-8 coordinator wires the typed passive declaration + the resist
-# path; genuinely-absent mechanics are xfailed with this reason (never
-# strict — the completion removes the markers).
-_AWAIT = "awaiting P2-8 wiring"
-
 # The cached P rows the typed declaration must publish (values under
 # test — pinned as cache + game-file evidence, never literal damage
 # constants).
@@ -622,6 +617,7 @@ class TestSourceAndTypedValues:
         assert rows[0]["modifiers"][0]["units"] == ["%"] * 40
         assert rows[1]["modifiers"][0]["units"] == ["%"] * 18
 
+    @pytest.mark.needs_game_files
     def test_p_regen_rows_recomputed_from_game_file(self):
         # Recompute the per-0.5s regen through the game file's
         # MaxHealthRegen (0.004 + 0.0005/level, +0.001/+0.0015/+0.002 at
@@ -690,6 +686,7 @@ class TestSourceAndTypedValues:
         assert p["cost"] is None
         assert p["resource"] is None
 
+    @pytest.mark.needs_game_files
     def test_p_game_file_evidence(self):
         # Community Dragon evidence (the brief's "game file if present"):
         # DrMundoP DataValues — CurrentHealthLoss 0.04 (the 4% current-

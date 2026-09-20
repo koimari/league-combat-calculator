@@ -1,186 +1,29 @@
-"""P4 - Zeri P "Living Battery" execute range (test-matrix owner: RLM-2 C).
+"""Zeri P "Living Battery": the uncharged zap's execute threshold.
 
-Focused TDD matrix for the UNCHARGED zap's execute threshold
-(70 : 170.59 by level + 20% AP).  CURRENT RUNTIME FACTS
-(verify-before-pin completed, all pinned in S1):
+The cached P carries two 20-value rows indexed by LEVEL rather than by
+rank: the zap's own damage (10 to 27.35) and the execute threshold (70 to
+170.59), plus a 20% AP modifier.  Both 20-value rows are one of the
+known-degraded parses: the values survive and the `units` come back
+empty, so the shared resolver cannot attribute them.  An empty unit reads
+as flat, so the engine extractor resolves "Bonus Damage" as exactly
+row[level - 1] + 0.2 x AP, which is what S2 and S3 pin.
 
-- The cached P (data/champions.json "Zeri" -> abilities.P[0]) has THREE
-  effects: [0] the charge-generator prose (leveling EMPTY), [1] the
-  UNCHARGED zap - "Per-Level Scaling" 20-value zap-damage row
-  (10 .. 27.35) plus "Bonus Damage" 20-value EXECUTE-THRESHOLD row
-  (70 .. 170.59) plus a second modifier [20.0] "% AP" - and [2] the
-  FULL-CHARGE attack (75 .. 170 + 110% AP + 1% .. 12.18% max HP; the
-  monster cap is 300; NAMED OUT-OF-SCOPE boundary).  The 20-value rows
-  are indexed by LEVEL (rank == level for this packet; the 70..170.59
-  range IS the row: level 1 = 70, level 20 = 170.59 - there is no
-  4-value row in the cache; the parent brief's "4 values" were the
-  first four entries of each row).
-- DEGRADED PARSE (the AGENTS.md known-degraded list: "Zeri P (execute
-  range)"): both 20-value rows survive with all-empty ``units`` (the
-  half-parse signature: values survive, units come back empty), so the
-  generic parser cannot ATTRIBUTE them; the "[20.0] '% AP'" modifier
-  parsed with its unit intact.  The empty unit resolves as FLAT
-  (``is_flat_unit("")``), so a named module reading "Bonus Damage" via
-  the engine extractor gets exactly row[level-1] + 0.2 x AP (pinned in
-  S2/S3).
-- The module (src/calculator/champions/zeri.py) ships Q/W/E/R plus a
-  PACKET P slot (static/reviewed-packets.json, sha
-  f03ac495eb30baef9672e60deb2f448b0da551e22e39c3113cbc0cfee9e1c055):
-  kind "packet", name "Living Battery", base = TWENTY ZEROS (the zap
-  row is NOT declared), ratios = [targetMaxHp 1% .. 12.18%] (the
-  FULL-CHARGE %maxHP curve, MISATTRIBUTED to the P slot), ranks
-  "level".  Parse emits a zero-damage "passive" entry at every level
-  (total_raw 0.0, rank == level, name "Living Battery"); the fight
-  drops it entirely (no breakdown row, no damage, no execute surface).
-- The engine's execute seam is execute_threshold_ratio/execute_source
-  (Syndra R 0.15 / The Collector): damage.py stamps each event of an
-  ability whose entry carries the ratio; survival/transitions.py turns
-  the stamped event into a TERMINAL death when
-  ``pools.health <= pools.max_health * ratio`` - evaluated AFTER the
-  event's own damage (the zap's damage counts toward the threshold),
-  INCLUSIVE at the boundary.  Zeri's threshold is an ABSOLUTE flat
-  health value, not a max-health ratio; whether the completion hosts it
-  through a parse-time ratio conversion (threshold / target_max_health
-  - exact math, but the stamped ratio becomes target-dependent) or a
-  new absolute-health typed key is the coordinator's seam decision
-  (see AMBIGUITIES 2/4).
-- Atoms (data/atoms/champions.json object "Zeri"): NO atom carries the
-  threshold numbers.  The binary catalog has damage.execute rule flags
-  only on ZeriQ / ZeriQMis (hashes 6013648e7780edb2 / 3a119ecc1dcad01d,
-  values are timing/bitmask, no threshold) and a damage.basic-attack
-  atom for ZeriPassive (hash 288e9c6b195123cb, values [0.0]).  The
-  70..170.59 curve + 20% AP exist ONLY in the wiki JSON.  The module
-  source receipt pins the parent entry at revision 4019486
-  (2026-05-17) and the P ability entry at revision 3380499
-  (2022-01-07 - STALE per-ability revision, flagged).
+No atom carries the threshold numbers; the curve and the AP term exist
+only in the cached wiki rows.  The module's P slot is a reviewed packet
+whose base is twenty zeros and whose ratios are the FULL-CHARGE maximum
+health curve, so the parse emits a zero-damage passive entry that the
+fight drops: there is no execute surface today, and the tests are the
+live guards on that.
 
-CONTRACT PINNED HERE (the P4-Zeri-P completion must satisfy;
-genuinely-unsupported boundaries are STRICT xfails with reason
-"awaiting P4-Zeri-P ..." - the coordinator flips each xfail to a live
-test when the seam lands):
+The engine's execute seam is `execute_threshold_ratio` /
+`execute_source`: `damage.py` stamps each event of an ability whose entry
+carries the ratio, and `survival/transitions.py` turns a stamped event
+into a terminal death when `pools.health <= pools.max_health * ratio`,
+evaluated after the event's own damage and inclusive at the boundary.
+Zeri's threshold is an absolute health value rather than a maximum-health
+share, which is the open seam question.
 
-- S1  Source evidence: all three P effect descriptions verbatim, the
-      notes verbatim, the leveling rows (the 20-value zap row + the
-      20-value threshold row + the 20% AP modifier, the full-charge
-      rows), cost/targeting/resource, the module declaration (packet
-      spec P slot, PACKET_SHA256 == manifest digest, MODULE_COVERAGE,
-      meta options/sources), the atoms (ids + hashes; the degraded
-      state), the zero-damage passive parse at every level.
-- S2  Level endpoints + middle: the threshold row at levels
-      1/6/11/18/20 = 70 / 96.47 / 122.94 / 160 / 170.59 (level
-      indexing row[level-1]; the row is the full 1..20 curve); the
-      engine extractor resolves the degraded row exactly; XFAIL: the
-      parse entry's execute surface equals the row value at each level.
-- S3  AP 0/nonzero: the 20% AP term at AP 0/100/500 (+0/+20/+100;
-      e.g. level 18: 160 / 180 / 260, level 20: 170.59 / 190.59 /
-      270.59); XFAIL: the parse entry's surface carries the AP term.
-- S4  Below / equal / above the threshold: with only the P in the
-      fight (ranks 0 - no other damage source), the target dies when
-      its health <= threshold (INCLUSIVE equality - the engine's
-      ``<=`` convention and the client brief "current health <=
-      threshold"; the wiki prose says "below" - see AMBIGUITY 3), and
-      survives above.  Reference: level 18, AP 0, threshold 160,
-      MR 0: 159.99 -> execute, 160.00 -> execute, 160.01 -> no.
-      XFAIL for below/equal (no seam exists today - nothing executes);
-      the above-threshold half already holds and is a LIVE PASS guard
-      the completion must keep true.
-- S5  Uncharged vs full-charge boundary: the execute range belongs to
-      the UNCHARGED zap (effects[1]); the full-charge attack
-      (effects[2]) is the named out-of-scope boundary; today the P
-      packet MISATTRIBUTES the full-charge %maxHP ratio to the P slot
-      while pricing zero damage (pinned); the unpriced state is a LIVE
-      PASS guard (the completion's seam must never re-price the
-      full-charge %maxHP term or its execute).
-- S6  Malformed/stale/ambiguous fail-closed: the degraded row still
-      resolves exactly (values survive; empty units are flat - never a
-      zero fallback); no atom carries the threshold (nothing to go
-      stale); unknown champion_options are 400'd with a named receipt
-      (Zeri declares NO options); the passive prices zero damage at
-      every level; the stale P source revision is pinned so patch-day
-      review trips it.
-- S7  Atom/source receipts: the Zeri atom hashes, the champions-domain
-      manifest receipt (sha256 49e1c1ddcb91244a, source_ref
-      data/champions.json@sha256:afea81a9976904c1;data/bin/characters
-      - actual file hash verified), the module PACKET_SHA256 vs the
-      recomputed manifest digest, the module SOURCES revisions; XFAIL:
-      the typed atom-backed certification of the threshold (the
-      completion's "typed atom-backed values" rule) - genuinely
-      unsupported today because NO atom/binary root carries the
-      numbers; the completion must name the wiki row as the root.
-- S8  API output: /api/calculate for Zeri today is 200 with NO execute
-      surface (no execute* keys, no passive breakdown row, damage
-      events carry no execute stamps); XFAIL: the P execute surface
-      appears (breakdown P row with an "Executes below ..." detail, the
-      repo's Asol-E precedent, and/or stamped damage events).
-- S9  Score/receipt parity: full vs score_only byte-identical on the
-      scored surface (one-rotation and timed) - PASSES today (no P
-      surface to diverge).
-- S10 Regression surface: the tests/ grep set for "zeri" is pinned to
-      exactly {test_spellblade_on_hit_matrix, test_e5_fix_2,
-      test_cp10_batch_10, test_e2_dot_3, test_zeri_p_execute_range}
-      (growing the set requires updating this pin); module meta pins;
-      the mandated sanity list (footer).
-
-AMBIGUITY NOTES for the coordinator:
-
-1. THE ROW IS 20 VALUES, NOT 4.  The parent brief's "the row has 4
-   values vs the 70..170.59 range" is resolved: the cached leveling
-   rows are the full 20-value level curve (level cap is 20).  The
-   threshold is row[level-1] + 20% AP; level 1 = 70, level 20 =
-   170.59.  There is no separate 4-value array anywhere in the cached
-   P.  (The cost row [0,0,0] units "10 \u2022 100" is the charge
-   mechanic, unrelated.)
-2. SEAM SHAPE: the engine's execute_threshold_ratio is a max-health
-   RATIO; Zeri's threshold is an ABSOLUTE flat health value.  The
-   smallest seam is either (a) parse-time conversion ratio =
-   threshold / ctx.target["target_max_health"] (arithmetically exact -
-   verified round-trip for 160/2358 etc. - but the stamped ratio is
-   target-dependent and semantically misleading in events), or (b) a
-   new absolute typed key (e.g. execute_threshold_health) alongside
-   the ratio in engine.py's allowed keys + transitions.py + damage.py
-   stamping.  (b) is the honest seam; (a) is the smallest.  The S2/S4
-   xfails assert the VALUE (160 at level 18 AP 0) and the BEHAVIOR
-   (dies at health <= 160), not the key, so either lands them.
-3. EQUALITY SEMANTICS: the engine's ratio seam uses ``<=``
-   (inclusive; executes AT the threshold), the wiki prose says
-   "below ... health" (strict), the client brief says "current health
-   <= threshold".  S4 pins INCLUSIVE.  The completion should also
-   decide the evaluation instant: the engine evaluates the threshold
-   AFTER the event's own damage (Syndra semantics), so the zap's
-   10..27.35 + 3% AP damage counts toward crossing the threshold.
-   The notes add: the uncharged zap does NOT execute shielded or
-   invulnerable enemies below the threshold - a named boundary the
-   engine's current seam cannot express (shield semantics); flag if
-   the completion needs it.
-4. TARGET-DEPENDENT RATIO vs ABSOLUTE: if the completion converts to a
-   ratio at parse time, the parse needs target_max_health (available
-   in ctx.target today); with a 0/absent target max health the
-   conversion must fail closed (no execute), not divide by zero.  The
-   API surface should display the ABSOLUTE threshold (the Asol-E
-   precedent: "Executes below 7.6% max HP (152 HP)" carries the
-   absolute number).
-5. THE ZAP DAMAGE ROW (10..27.35 + 3% AP) is declared NOWHERE in the
-   packet (base row is twenty zeros).  This matrix pins ONLY the
-   execute range; whether the completion also prices the zap's damage
-   (and how the zap ties to the auto-attack model - Zeri's Q replaces
-   her basic attack) is out of this slice's pins; the current
-   zero-damage passive and the full-charge ratio misattribution are
-   pinned in S1/S5 so the coordinator can see the exact current
-   declaration.
-6. STALE P SOURCE REVISION: the module SOURCES pin the P ability entry
-   at revision 3380499 (2022-01-07) while the parent entry is 4019486
-   (2026-05-17); the cached notes claim testing on patch 26.12.  The
-   per-ability revision should be re-pulled on the next patch day; the
-   threshold row itself is current (70..170.59 matches the client
-   brief).
-7. NO ATOM ROOT EXISTS for the threshold: the binary atom catalog has
-   only execute RULE flags (ZeriQ/ZeriQMis) and the flat 0.0
-   basic-attack atom; the 70..170.59 + 20% AP numbers live only in the
-   wiki JSON with empty units.  The completion's certification (S7
-   xfail) must name the wiki row (data/champions.json "Zeri" P
-   effects[1] "Bonus Damage") as its root and document that the binary
-   carries no DataValues - or add a typed constant block with the
-   receipt, mirroring the Asol _StardustRule pattern.
+Section ids S1 to S11 below name the parts of this matrix.
 """
 
 import json
@@ -221,7 +64,6 @@ _PACKET_ZERI = json.loads(
 )["champions"]["Zeri"]
 _PACKET_PATH = Path("static/reviewed-packets.json")
 
-_AWAIT = "awaiting P4-Zeri-P ..."
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVELS = (1, 6, 11, 18, 20)
 _REF_MAX_HP = 2358.0  # the level-18 reference target (Ahri, no items)

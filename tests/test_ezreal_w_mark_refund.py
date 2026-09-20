@@ -7,9 +7,8 @@ executed by ``src/calculator/damage.py`` (``_mark_refund_decl`` + the FIFO
 CONTRACT.  The 4s mark expiry IS modeled (see the mark-window tests below).
 Genuinely absent mechanics (target-side spell shields, multi-target mark
 attribution) are named documented-boundary tests asserting the actual
-current fail-closed receipts — not xfails — since no coordinator input
-exists to deny a mark or attribute one to a second target, and no such
-input is being added here.
+fail-closed receipts, since no input exists to deny a mark or attribute
+one to a second target.
 
 Runtime facts pinned here (verified against the current sources before
 writing):

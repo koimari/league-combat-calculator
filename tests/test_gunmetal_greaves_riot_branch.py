@@ -3,10 +3,9 @@ certification.
 
 This file is the focused acceptance-matrix owner for Gunmetal Greaves'
 Noxian Gait passive.  It pins the OBSERVABLES the coordinator's P3-3O
-completion must satisfy and runs against today's source: every behavior
-that already exists passes now; every assertion that targets a contract
-piece the source does not emit yet is marked ``xfail`` with reason
-``awaiting P3-3O ...``.
+contract must satisfy, and every test runs live against today's source.
+An assertion whose contract piece the source does not emit pins the
+current refusal and says so in its own docstring.
 
 Contract under test (current runtime facts, verified before pinning):
 
@@ -76,8 +75,8 @@ Contract under test (current runtime facts, verified before pinning):
   into any fight — a champion-targeted auto grants no movement event —
   because the magnitude that model would need is unsourced by every
   available source.  This is pinned as a documented-boundary named
-  test (not an xfail): the fail-closed absence, and the receipt that
-  explains why, are both asserted directly.
+  test: the fail-closed absence, and the receipt that explains why,
+  are both asserted directly.
 
 Sibling owners: the Ionian Insight precedent is pinned in
 ``tests/test_ionian_boots_summoner_haste.py`` (same receipt-only
@@ -573,6 +572,7 @@ def test_the_movement_magnitude_is_unsourced_and_the_registry_invents_none():
     assert "noxian_gait_move_speed_percent" in message
 
 
+@pytest.mark.needs_game_files
 def test_decay_duration_is_sourced_and_binary_confirmed():
     """The 2.0s decay is sourced from the binary capture ONLY now:
     riotDescription carries no Noxian Gait sentence (the
@@ -735,14 +735,14 @@ def test_coverage_wording_names_the_mechanic_and_the_boundary():
 
 
 # ---------------------------------------------------------------------------
-# 9. Documented boundary: no movement-state model exists (not an xfail)
+# 9. Documented boundary: no movement-state model exists
 # ---------------------------------------------------------------------------
 
 
 def test_a_champion_targeted_auto_grants_no_movement_state_the_magnitude_is_unsourced(
     ahri_data,
 ):
-    """Documented boundary, not an xfail: a champion-targeted basic
+    """A documented boundary: a champion-targeted basic
     attack grants NO movement event today, because a decaying-movement
     model would need a move-speed magnitude that is unsourced by every
     available cached source (the wiki branch is empty, and as of the

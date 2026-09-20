@@ -102,8 +102,6 @@ _ATOM_MANIFEST = json.loads(
 )
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
-_AWAIT = "awaiting P4-Yasuo-Yone-Q3 ..."
-
 _YASUO_Q = _CHAMPION_DATA["Yasuo"]["abilities"]["Q"][0]
 _YONE_Q = _CHAMPION_DATA["Yone"]["abilities"]["Q"][0]
 _YASUO_P = _CHAMPION_DATA["Yasuo"]["abilities"]["P"][0]

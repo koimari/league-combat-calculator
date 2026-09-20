@@ -11,9 +11,8 @@ Contract under test (P3-3J):
    durations via unioned evidence.  Today the scalar row reads [0.5] with
    receipts from BOTH ``effects[0]`` and ``effects[1]`` — a misleading
    union (effects[1] contains a different duration pair [0.264, 0.5]).
-   The contract assertion is written as the fix target and xfailed until
-   the coordinator lands the dedup fix (see
-   ``test_scalar_must_not_claim_multiple_durations``).
+   ``test_scalar_must_not_claim_multiple_durations`` is the live guard on
+   that union.
 3. Preservation: no numeric value is lost — 0.5 and 0.3 appear via the
    sequence row in BOTH the live atomization and the catalog
    (``data/atoms/abilities.json``).

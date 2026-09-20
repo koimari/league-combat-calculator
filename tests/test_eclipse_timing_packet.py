@@ -2,10 +2,9 @@
 
 This file is the focused test-matrix owner for Eclipse's Ever Rising Moon
 (``proc_Eclipse``) stack/proc/shield contract.  It pins the OBSERVABLES the
-coordinator's P3-3C completion must satisfy, and each test runs against
-today's source: every behavior that already exists must pass now; every
-assertion that targets a receipt the source does not emit yet is marked
-``# P3-3C contract`` and ``xfail`` with reason ``awaiting P3-3C ...``.
+timing contract must satisfy, and every test runs live against today's
+source.  An assertion that targets a receipt the source does not emit
+carries the ``# P3-3C contract`` marker and pins the current refusal.
 
 Scope note: ``tests/test_eclipse_timeline.py`` owns the engine-precision
 receipts and ``TestEclipseConsumer`` in

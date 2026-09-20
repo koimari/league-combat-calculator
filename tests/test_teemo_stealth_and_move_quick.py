@@ -189,6 +189,7 @@ class TestGuerrillaWarfareStaysReceiptedOpen:
         assert "auto_attack_override" not in row
         assert "on_hit" not in row
 
+    @pytest.mark.needs_game_files
     def test_the_ladder_is_dual_sourced_not_prose_only(self):
         """Wiki prose AND the binary agree on 20/40/60/80 by level.
 
@@ -213,6 +214,7 @@ class TestGuerrillaWarfareStaysReceiptedOpen:
         for step in part["mBreakpoints"]:
             assert step["mAdditionalBonusAtThisLevel"] == pytest.approx(0.20, abs=1e-6)
 
+    @pytest.mark.needs_game_files
     def test_the_window_and_stealth_delay_are_sourced_too(self):
         values = {
             row["name"]: row["values"]

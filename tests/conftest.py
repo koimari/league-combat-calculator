@@ -24,16 +24,26 @@ accordingly:
   generic path; write a test file only when the champion gets a custom
   module (see the /add-champion skill).
 
-Coverage-evidence tiers
------------------------
+What a run does not collect
+---------------------------
 The hooks at the bottom of this file serve the coverage-claim resolver
 (``tests/coverage_resolver.py``): they stash the collected node set and
 answer whether this session collected everything.  They are purely additive
 — no item is mutated and nothing depends on collection order — except for
-the one deliberate removal: in a *filtered* session the full-session tier is
-**not collected**, because ``pytest.skip`` prints green and a tier that
-reports skipped is a tier that reports nothing.
+two deliberate removals, both the same ruling: ``pytest.skip`` prints green
+and a check that reports skipped is a check that reports nothing.
+
+- In a *filtered* session the full-session tier is **not collected**,
+  because only a complete collection can answer it.
+- On a machine without one of ``RESOURCES`` — the character game files, or
+  ``node`` — the nodes marked as needing it are **not collected**, and
+  ``pytest_terminal_summary`` names how many and why.
+  ``scripts/resource_markers.py`` is the gate that every guarded test
+  carries its marker.
 """
+
+import shutil
+from pathlib import Path
 
 import pytest
 
@@ -358,14 +368,57 @@ def fight():
 # ---------------------------------------------------------------------------
 
 
+ROOT = Path(__file__).resolve().parent.parent
+
+#: A local resource a test cannot run without, and how to ask whether this
+#: machine has it.  The same ruling as the tier above: a node that needs one
+#: is deselected and reported, never skipped green.
+RESOURCES = {
+    "needs_game_files": (
+        "the character game files under data/bin and data/gamefiles",
+        lambda: all(
+            any((ROOT / tree).glob("*.bin.json"))
+            for tree in ("data/bin/characters", "data/gamefiles/characters")
+        ),
+    ),
+    "needs_node": (
+        "node, for the browser probes that shell out to it",
+        lambda: shutil.which("node") is not None,
+    ),
+}
+
+#: What this session did not run, by resource, for the terminal summary.
+NOT_RUN: pytest.StashKey[dict[str, int]] = pytest.StashKey()
+
+
 def pytest_configure(config: pytest.Config) -> None:
-    """Register the marker the full-session tier is gated on."""
+    """Register the tier marker and one marker per local resource."""
     config.addinivalue_line(
         "markers",
         f"{FULL_SESSION_MARKER}: a coverage check only a complete collection "
         "can answer (exact node ids, marker facts, duplicate node ids). "
         "Deselected — never skipped — when -k, -m or a path narrowed the run.",
     )
+    for marker, (description, _) in RESOURCES.items():
+        config.addinivalue_line(
+            "markers",
+            f"{marker}: needs {description}. Deselected and reported, never "
+            "skipped, when this machine does not have it.",
+        )
+
+
+def _absent_resources() -> set[str]:
+    """Every resource marker whose resource this machine does not have."""
+    return {marker for marker, (_, present) in RESOURCES.items() if not present()}
+
+
+def pytest_terminal_summary(terminalreporter) -> None:
+    """Name what this run did not do, so an absent resource cannot read green."""
+    for marker, count in sorted(terminalreporter.config.stash.get(NOT_RUN, {}).items()):
+        description = RESOURCES[marker][0]
+        terminalreporter.write_line(
+            f"NOT RUN: {count} nodes need {description}", yellow=True
+        )
 
 
 def _is_full_session(config: pytest.Config) -> bool:
@@ -388,26 +441,38 @@ def _is_full_session(config: pytest.Config) -> bool:
 def pytest_collection_modifyitems(
     config: pytest.Config, items: list[pytest.Item]
 ) -> None:
-    """Stash the collected node set; a filtered session never collects the full tier.
+    """Stash the collected node set, and drop what this run cannot answer.
 
     Deselection rather than ``pytest.skip`` is the ruling (D-22): a skipped
     check takes the green path and reports success for work it did not do,
     which is this campaign's own failure shape inside its own gate.  A
     deselected node is absent from the report entirely, and the resolution
     tier proves the weaker fact by source scan in its place.
+
+    Two things are dropped under it.  A filtered session never collects the
+    full-session tier, because only a complete collection can answer it.  A
+    machine without one of ``RESOURCES`` never collects the nodes that need
+    it, and ``pytest_terminal_summary`` names how many and why.
     """
     full = _is_full_session(config)
     config.stash[FULL_SESSION] = full
-    if not full:
+    dropped = set() if full else {FULL_SESSION_MARKER}
+    dropped |= _absent_resources()
+    not_run: dict[str, int] = {}
+    if dropped:
         deselected = [
-            item for item in items if item.get_closest_marker(FULL_SESSION_MARKER)
+            item
+            for item in items
+            if any(item.get_closest_marker(marker) for marker in dropped)
         ]
         if deselected:
             config.hook.pytest_deselected(items=deselected)
-            items[:] = [
-                item
-                for item in items
-                if item.get_closest_marker(FULL_SESSION_MARKER) is None
-            ]
+            gone = {id(item) for item in deselected}
+            items[:] = [item for item in items if id(item) not in gone]
+        for marker in sorted(dropped & set(RESOURCES)):
+            count = sum(1 for item in deselected if item.get_closest_marker(marker))
+            if count:
+                not_run[marker] = count
+    config.stash[NOT_RUN] = not_run
     config.stash[COLLECTED_NODES] = node_facts(items)
     record_session(config)

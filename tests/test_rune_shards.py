@@ -402,6 +402,7 @@ def shard_page_ui(tmp_path_factory):
 
 
 class TestThePickerFillsThreeRowsAndTellsTheStatCard:
+    @pytest.mark.needs_node
     def test_each_row_offers_exactly_its_own_three_options(self, shard_page_ui):
         assert shard_page_ui["shardChoices"] == [
             ["Adaptive Force", "Attack Speed", "Cooldown Reduction"],
@@ -409,6 +410,7 @@ class TestThePickerFillsThreeRowsAndTellsTheStatCard:
             ["Health", "Tenacity and Slow Resist", "Health Scaling"],
         ]
 
+    @pytest.mark.needs_node
     def test_the_stat_card_request_carries_the_whole_page(self, shard_page_ui):
         """Without this the card would show pre-rune stats under a rune page."""
         card = shard_page_ui["statCard"]
@@ -417,6 +419,7 @@ class TestThePickerFillsThreeRowsAndTellsTheStatCard:
         assert card["minor_runes"] == ["Absolute Focus", "Scorch"]
         assert card["rune_options"] == {}
 
+    @pytest.mark.needs_node
     def test_what_the_picker_builds_is_a_page_the_server_prices(self, shard_page_ui):
         card = shard_page_ui["statCard"]
         page = rune_effects.validate_rune_page(

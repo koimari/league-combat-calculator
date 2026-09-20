@@ -60,9 +60,6 @@ from tests.parse_stats import parse_stats
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
-# The P3-3V coordinator wires the accepted basic-ability cast events into
-# the resource/counter ledger; genuinely-absent mechanics are xfailed.
-_AWAIT = "awaiting P3-3V wiring"
 
 
 def _parse(option: dict | None):

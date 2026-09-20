@@ -88,10 +88,6 @@ _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-
 _ASOL_DATA = _CHAMPION_DATA["AurelionSol"]
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
-# The P3-3X coordinator wires the live Stardust ledger; genuinely-absent
-# mechanics are xfailed with this reason.
-_AWAIT = "awaiting P3-3X wiring"
-
 # Contract constants under test (module hardcodes these beside the wiki
 # prose; they are the values the ledger declaration will publish).
 _TARGET_MAX_HP = 2000.0

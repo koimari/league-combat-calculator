@@ -113,6 +113,7 @@ def test_the_optimize_family_no_longer_needs_a_gate_exemption():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.needs_node
 def test_the_batch_builder_answers_a_card_path_and_the_slot_builder_refuses_it(
     tmp_path,
 ):
@@ -140,6 +141,7 @@ def test_the_batch_builder_answers_a_card_path_and_the_slot_builder_refuses_it(
         assert built[path]["slot"]["slot_index"] == index
 
 
+@pytest.mark.needs_node
 def test_the_batch_builder_refuses_a_path_naming_no_roster_card(tmp_path):
     """Fail closed: a main-build path and an absent index are not cards."""
     built = _payloads(tmp_path, ["attacker.buildA.1", "allies.0", "targets.4"])
@@ -147,6 +149,7 @@ def test_the_batch_builder_refuses_a_path_naming_no_roster_card(tmp_path):
         assert built[path]["batch"] is None, path
 
 
+@pytest.mark.needs_node
 def test_the_route_accepts_the_card_payload_the_browser_builds(tmp_path):
     """The other half: the shape above is what ``/api/bis/batch`` wants.
 

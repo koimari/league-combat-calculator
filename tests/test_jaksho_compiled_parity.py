@@ -3,9 +3,9 @@ compiled-walk + optimizer certification.
 
 This file is the focused acceptance-matrix owner for Jak'Sho's Voidborn
 Resilience.  It pins the OBSERVABLES the coordinator's P3-3R completion must
-satisfy and runs against today's source: every behavior that already exists
-passes now; every assertion that targets a contract piece the source does not
-emit yet is marked ``xfail`` with reason ``awaiting P3-3R ...``.
+satisfy, and every test runs live against today's source.  An assertion
+whose contract piece the source does not emit pins the current refusal and
+says so in its own docstring.
 
 Contract under test (current runtime facts, verified before pinning):
 
@@ -70,9 +70,9 @@ Contract under test (current runtime facts, verified before pinning):
   built) and the score surface deep-equals the receipt walk on the whole
   scoring receipt, jaksho row included; an ENEMY/ALLY holder poisons the
   search-invariant roster context (uncompilable True, panels empty) and
-  still deep-equals via the receipt walk.  The P3-3R certification
-  (remove from the blocklist with parity proof) is pinned as xfail:
-  panels non-empty + uncompilable False + deep-equal for both sides.
+  still deep-equals via the receipt walk.  The certification (remove
+  from the blocklist with parity proof) is panels non-empty,
+  uncompilable False and deep-equal for both sides.
   The legacy run_fight(score_only=True) surface carries NO survival
   state (no target_* keys, no jaksho) — the named fail-closed carrier
   boundary; item_state_receipts agrees between surfaces.
@@ -83,7 +83,7 @@ Contract under test (current runtime facts, verified before pinning):
   compiler's tuple_ledger_stack_metadata receipt and fall back to
   parity.  Today the capability scan fails first (item_mechanic=Jak'Sho,
   The Protean), which already yields the same fallback parity; the
-  post-certification tuple guard is pinned as xfail.  (Coordinator note:
+  post-certification tuple guard is still owed.  (Note:
   participant_timeline's pair-enrichment block crashes on tuple rows
   today — dict(event) on a 4-tuple — and its defender_stack_armed probe
   reads ``voidborn_stack_interval`` although StartingDefenses names the
@@ -96,15 +96,14 @@ Contract under test (current runtime facts, verified before pinning):
 * COVERAGE: item_model_coverage returns "modeled_effect" with
   optimizer_eligible + calculation_eligible True — but outcome_dimensions
   is [] and the reason is the GENERIC "Damage-relevant effects are
-  represented by the fight model." today; a "defense" dimension and a
-  Voidborn/bonus-resistance-naming reason are xfail (the coordinator's
-  coverage tightening).  target_item_model_coverage is already
+  represented by the fight model.", and a "defense" dimension with a
+  reason naming Voidborn or bonus resistances is the coverage
+  tightening still owed.  target_item_model_coverage is already
   "modeled_event_certified" naming Voidborn's one-stack-per-second
   combat state and the maximum-stack bonus-resistance multiplication.
-* ITEM STATE RECEIPTS: the 3M/3N/3O-pattern item_state_receipts row for
-  Voidborn Resilience (state "voidborn", stack rule/payload/source) is
-  absent today — xfail.
-* XFAIL ONLY for genuinely absent mechanics: (1) the compiled-panel
+* ITEM STATE RECEIPTS: the item_state_receipts row for Voidborn
+  Resilience (state "voidborn", stack rule/payload/source) is absent.
+* THE FOUR ABSENT MECHANICS: (1) the compiled-panel
   certification (main + enemy-roster); (2) the post-certification
   tuple-ledger guard reachability; (3) the coverage dimension + reason
   naming; (4) the item_state_receipts voidborn row.  All are
@@ -763,8 +762,8 @@ def test_compiled_panels_carry_the_jaksho_fight():
     ITEMS with parity proof, the compiled score path rides the shared kernel
     for a main holder: the context builds panels, stays unpoisoned, and the
     compiled surface still deep-equals the receipt walk on the whole scoring
-    receipt (jaksho row included).  Today no panel exists (the item fails
-    closed per evaluation), so this xfails."""
+    receipt (jaksho row included).  No panel exists yet: the item fails
+    closed per evaluation, which is what this pins."""
     ctx = CoupledSearchContext()
     legacy = _holder_fight(16.0, include_receipt=False)
     fast = _holder_fight(16.0, include_receipt=False, search_context=ctx)
@@ -826,7 +825,7 @@ def test_enemy_roster_jaksho_holder_compiles_after_certification():
     """P3-3R contract: the roster-side Jak'Sho holder compiles like the main
     holder — the capability scan does not poison the context, panels are
     built, and the compiled surface still deep-equals the receipt walk.
-    Today the scan marks the context uncompilable, so this xfails."""
+    The scan marks the context uncompilable, which is what this pins."""
     main = get_champion("Ahri")
     main_stats = calculate_total_stats(main, 18, [])
     params = FightParams.from_request(
@@ -886,8 +885,8 @@ def test_compiled_tuple_ledger_fight_fails_closed_with_stack_metadata():
     baseline resistances) must fail closed with the compiler's
     tuple_ledger_stack_metadata receipt and fall back to parity — never a
     crash (participant_timeline's dict(event) enrichment is a named P3-3R
-    metadata gap) and never a silent stack drop.  Today the capability
-    scan fails first, so this xfails."""
+    metadata gap) and never a silent stack drop.  The capability scan
+    fails first, which is what this pins."""
     assert uncompilable_item_receipt([_jaksho_item()]) is None
     legacy = _riven_tuple_ledger_fight(include_receipt=False)
     ctx = CoupledSearchContext()
@@ -979,8 +978,8 @@ def test_absent_jaksho_produces_no_stacks_and_no_receipt_row():
 def test_coverage_posture_stays_eligible_with_defense_dimensions():
     """P3-3R contract: item_model_coverage keeps the modeled posture with
     optimizer_eligible + calculation_eligible True and gains the "defense"
-    outcome dimension.  Today the item rides the generic ITEM_EFFECTS
-    branch with outcome_dimensions [], so this xfails."""
+    outcome dimension.  The item rides the generic ITEM_EFFECTS branch
+    with outcome_dimensions [], which is what this pins."""
     coverage = item_model_coverage(
         str(_jaksho_item()["name"]), ATTACKER_LANES
     ).as_payload()
@@ -994,9 +993,9 @@ def test_coverage_posture_stays_eligible_with_defense_dimensions():
 
 def test_model_coverage_reason_names_voidborn_and_bonus_resistance():
     """P3-3R coverage tightening: item_model_coverage's reason should name
-    the Voidborn mechanic (the target coverage already does).  Today the
-    model posture falls through to the generic ITEM_EFFECTS reason, so this
-    xfails."""
+    the Voidborn mechanic (the target coverage already does).  The model
+    posture falls through to the generic ITEM_EFFECTS reason, which is what
+    this pins."""
     coverage = item_model_coverage(
         str(_jaksho_item()["name"]), ATTACKER_LANES
     ).as_payload()
@@ -1026,9 +1025,9 @@ def test_item_state_receipts_emits_exactly_one_voidborn_row():
     receipts emits exactly ONE Jak'Sho row — state "voidborn" — carrying
     the stack rule (interval 1.0, max 5), the 0.30 bonus-resistance
     multiplier, and the wiki source receipt.  Absent today:
-    item_state_receipts returns [] for Jak'Sho (the fail-closed absent
+    item_state_receipts returns [] for Jak'Sho.  The fail-closed absent
     claim is pinned by the absent-item test above, and the row's absence is
-    what this xfail tracks)."""
+    what this tracks."""
     receipts = item_state_receipts(
         [_jaksho_item()], {}, fight_duration_seconds=16.0, is_melee=False
     )

@@ -97,9 +97,6 @@ _BARD_DATA = _CHAMPION_DATA["Bard"]
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
 _TARGET_MAX_HP = 2000.0
-# The P3-3Y coordinator wires the live chime/meep ledger; genuinely-absent
-# mechanics are xfailed with this reason.
-_AWAIT = "awaiting P3-3Y wiring"
 
 
 def _parse(option: dict | None, *, ap: float = 0.0, ranks: dict | None = None):

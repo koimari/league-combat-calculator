@@ -185,10 +185,12 @@ class TestFleetOfFootHasNoDamageAnywhere:
         values = _P_EFFECT["leveling"][0]["modifiers"][0]["values"]
         assert values == [55, 60, 65, 70, 75]
 
+    @pytest.mark.needs_game_files
     def test_binary_passive_has_no_damage_calculation(self):
         record = _spell_record("SivirPassiveAbility/SivirPassive")
         assert list(record["mSpellCalculations"]) == ["FlatMS"]
 
+    @pytest.mark.needs_game_files
     def test_binary_movement_ladder_reproduces_the_wiki(self):
         record = _spell_record("SivirPassiveAbility/SivirPassive")
         parts = record["mSpellCalculations"]["FlatMS"]["mFormulaParts"]
@@ -203,6 +205,7 @@ class TestFleetOfFootHasNoDamageAnywhere:
                 speed += step["mAdditionalBonusAtThisLevel"]
         assert speed == pytest.approx(75.0)
 
+    @pytest.mark.needs_game_files
     def test_binary_decay_window_matches_the_wiki_prose(self):
         record = _spell_record("SivirPassiveAbility/SivirPassive")
         assert game_binary.data_value(record, "HasteDuration")[1] == pytest.approx(1.5)
@@ -259,6 +262,7 @@ class TestMovementSpeedIsNotStatBuffed:
         assert _WIKI["abilities"]["P"][0]["cooldown"] is None
         assert "based on level" in _P_EFFECT["description"]
 
+    @pytest.mark.needs_game_files
     def test_the_breakpoints_live_only_in_the_gitignored_binary(self):
         record = _spell_record("SivirPassiveAbility/SivirPassive")
         parts = record["mSpellCalculations"]["FlatMS"]["mFormulaParts"]
@@ -317,12 +321,14 @@ class TestMovementSpeedIsNotStatBuffed:
 
 
 class TestOnTheHuntCarriesNoDamage:
+    @pytest.mark.needs_game_files
     def test_binary_ultimate_has_no_damage_calculation(self):
         # The key is absent entirely, not merely empty: SivirR carries no
         # GameCalculation at all.
         record = _spell_record("SivirRAbility/SivirR")
         assert "mSpellCalculations" not in record
 
+    @pytest.mark.needs_game_files
     def test_the_absence_is_meaningful_because_siblings_have_the_key(self):
         # Guards against reading a schema quirk as evidence: Sivir's
         # damaging and healing slots all carry mSpellCalculations.
@@ -377,6 +383,7 @@ class TestOnTheHuntCloses:
         assert "20/25/30%" in assumption
         assert "0.5 seconds" in assumption
 
+    @pytest.mark.needs_game_files
     def test_binary_movement_ladder_matches_the_wiki_ranks(self):
         record = _spell_record("SivirRAbility/SivirR")
         # DataValues arrays are rank-indexed with an unused slot 0.
@@ -384,6 +391,7 @@ class TestOnTheHuntCloses:
             [0.20, 0.25, 0.30]
         )
 
+    @pytest.mark.needs_game_files
     def test_binary_cooldown_refund_matches_the_wiki(self):
         record = _spell_record("SivirRAbility/SivirR")
         assert game_binary.data_value(record, "AttackCooldownRefund")[
@@ -489,6 +497,7 @@ class TestTheRefundIsTheKitsOwnChannelNotTheItemOne:
 
 
 class TestHuntAttackSpeedIsAnUnusedSourceConflict:
+    @pytest.mark.needs_game_files
     def test_binary_carries_the_attack_speed_row(self):
         record = _spell_record("SivirRAbility/SivirR")
         assert game_binary.data_value(record, "HuntAttackSpeed")[1:4] == pytest.approx(

@@ -1,177 +1,81 @@
-"""P2 Slice 4 cleanse-eligibility acceptance matrix — Mikael's Blessing / QSS / Mercurial.
+"""The cleanse acceptance matrix: Mikael's Blessing, QSS, Mercurial Scimitar.
 
-This file is the RLM-2 acceptance-matrix suite for the planned orthogonal
-typed cleanse contract (``src/calculator/cleanse_eligibility.py``, NEW leaf)
-plus the minimal walk integration that consumes it: Mikael's Blessing
-(Purify — one explicitly selected ally, incl. heal), Quicksilver Sash
-(self), Mercurial Scimitar (self; movement speed = SEPARATE utility effect).
-It follows the styles of ``test_crowd_control_immunity.py`` (P2 Slice 3),
-``test_spell_shield_eligibility.py`` (P2 Slice 2) and
-``test_survival_kernel.py``: kernel unit tests with minimal action actors,
-timeline tests through ``participant_timeline._simulate_survival``, and
-``src.app`` -> ``POST /api/calculate`` consumer tests.
+Kernel tests over minimal action actors, timeline tests through
+`participant_timeline._simulate_survival`, and `/api/calculate` consumer
+tests, over `cleanse_eligibility` and the walk integration that consumes
+it.  The row ids below are the index: each test names the row it drives.
 
-The kernel reuses the P2 Slice 3 control classification
-(``crowd_control_eligibility.classify_control`` /
-``ability_spec.ACTION_BLOCKING_CC_KINDS`` / ``NON_BLOCKING_CC_KINDS`` /
-``KNOWN_CONTROL_KINDS``), the P2 Slice 1/2
-``delivery_eligibility.DefenseWindow`` + ``stable_event_key``, the
-``state_lifecycle.SourceReceipt`` shape, and the survival walk's
-``action_key`` total order.
+Sourced wording, read from `data/items.json` and nothing else:
 
-SOURCED WORDING (verified from ``data/items.json`` — the ONLY source this
-matrix reads; no network):
-
-- id 3222 Mikael's Blessing, active Purify: "Remove all crowd control
-  debuffs (except Airborne, Blind, Disarm, Nearsight, and Suppression) from
+- 3222 Mikael's Blessing, Purify: "Remove all crowd control debuffs
+  (except Airborne, Blind, Disarm, Nearsight, and Suppression) from
   yourself or the target allied champion and heal the target for 100 to
-  250 (target's level)."  Excluded kinds therefore are exactly
-  (airborne, blind, disarm, nearsight, suppression).  Cooldown in the
-  cache is null (source gap -> ``cooldown_seconds=None``).
-- id 3140 Quicksilver Sash, active Quicksilver: "Removes all crowd control
-  debuffs (except Airborne) from your champion."  Excluded: (airborne).
-  Cooldown null (source gap).
-- id 3139 Mercurial Scimitar, active Quicksilver: "Removes all crowd
-  control debuffs (except Airborne) from your champion and grants 50%
-  bonus total movement speed and ghosting for 2 seconds."  Excluded:
-  (airborne).  Movement: amount 50%, duration 2s, SEPARATE utility effect
-  with its own atoms.  Cooldown null (source gap).
+  250 (target's level)."  Excluded kinds are exactly (airborne, blind,
+  disarm, nearsight, suppression), and the cached cooldown is null.
+- 3140 Quicksilver Sash, Quicksilver: "Removes all crowd control debuffs
+  (except Airborne) from your champion."  Excluded: (airborne).
+- 3139 Mercurial Scimitar, Quicksilver: the same removal set plus 50%
+  bonus total movement speed and ghosting for 2 seconds, a separate
+  utility effect with its own atoms.
 
-CONTRACT API THIS MATRIX COMMITS THE OWNER TO:
+Castability, sourced from the binary audit (`data/bin/items.bin.json`
+plus `data/wiki-atoms/crowd-control-mobility.json`):
+QuicksilverSash.mSpell and ItemMercurial.mSpell carry
+`canCastWhileDisabled` and `cannotBeSuppressed`; Mikael's 3222Active
+carries neither.  So a QSS or Mercurial self-cast fires while the caster
+is stunned or charmed (R27) but is DENIED while the caster's active
+controls include suppression, with reason `caster_control_blocks_cleanse`
+and no use consumed (R7).  Mikael's Purify stays gated behind the
+attacker crowd-control check (R22).  Those facts concern CASTING, not the
+removal set: suppression is in QSS and Mercurial's removal set by their
+own wording, pinned in R4 and R5.
 
-1. DECLARATIONS — ``cleanse_eligibility.ITEM_CLEANSE_DECLARATIONS``: one
-   sourced declaration per item (Mikael's Blessing / Quicksilver Sash /
-   Mercurial Scimitar) carrying: item name, active name (Purify /
-   Quicksilver / Quicksilver), target scope (explicit_selected_ally /
-   self), excluded control kinds (the sourced tuple, e.g. airborne,
-   suppression, blind, disarm, nearsight for Mikael's), source receipts +
-   source atoms, cooldown_seconds (None = source gap; the cache carries no
-   cooldown for any of the three actives), the heal atom + level scaling
-   (Mikael's 100-250 by target level), and the movement atom +
-   amount/duration (Mercurial 50% / 2s).
-2. ELIGIBILITY — ``CleanseEligibility.decide(action) -> CleanseDecision``
-   with the committed reason set: "" (eligible — at least one active
-   control is removed) / "control_not_active" / "excluded_control_kind" /
-   "unknown_control" / "target_not_selected" / "not_armed" / "use_spent" /
-   "caster_control_blocks_cleanse" (the castability denial of R7 — a
-   QSS/Mercurial self-cast is denied while the CASTER's active controls
-   include suppression, per the sourced cleanse atom and the binary
-   cannotBeSuppressed flag).  The action carries the recipient's ACTIVE
-   control intervals at activation (the walk integration passes them;
-   kernel rows author them).  ``decide(action, *, holder=None)`` reads the
-   holder's LIVE use state from ``holder`` (a mapping with
-   ``uses_remaining`` and ``item_held``; a fresh one-use holder is assumed
-   when omitted) — ``use_spent`` is decided ONLY from that live state, a
-   historical (non-active) interval set is ``control_not_active``.
-3. TRUNCATION — ``truncate_intervals(intervals, activation_time,
-   eligible_kinds) -> (kept_intervals, removed_intervals)``: historical
-   downtime before activation REMAINS (intervals with end <= activation
-   are untouched); an active interval ENDS at activation (end clamped to
-   activation); an interval that starts at/after activation is removed
-   entirely (same-timestamp controls resolve by total order and are fully
-   removed — R11/R17).  Only intervals whose kind is eligible are
-   affected; unknown kinds fail closed (R15).
-4. WALK INTEGRATION — the walk keeps the existing pinned ordering
-   (stasis -> projectile -> spell shield -> CC immunity -> damage); a
-   control blocked by a spell shield / CC immunity is NOT present at
-   cleanse time (R16); a cleanse consumes one use per activation; use
-   state + cooldown receipts are written.  CASTABILITY (sourced by the
-   binary audit): QSS/Mercurial self-casts are exempt from the attacker
-   crowd-control gate (canCastWhileDisabled=true) while the caster is
-   stunned/charmed/etc. (R27) EXCEPT while the caster's active controls
-   include suppression — then the cast is DENIED with the named
-   caster_control_blocks_cleanse reason and the use is NOT consumed (R7);
-   airborne remains an excluded control kind (R8).  Mikael's Purify
-   (heal + cleanse) stays GATED while the caster is crowd-controlled —
-   R21's attacker_state_blocked receipt is the pinned behavior (R22), and
-   the heal fires alongside the truncation when the caster is free
-   (R10/R3).
-   COMMITTED CONSUMPTION + RECEIPT SEMANTICS:
-   - the use is consumed ONLY for the reasons "", "control_not_active" and
-     "excluded_control_kind"; "caster_control_blocks_cleanse", "use_spent",
-     "not_armed", "target_not_selected" and "unknown_control" do NOT
-     consume.
-   - the survival-row ``cleanse_denied`` list is written ONLY for
-     "use_spent"; the ``cleanse`` survival receipt is written for every
-     other processed outcome ("" / control_not_active /
-     excluded_control_kind / unknown_control /
-     caster_control_blocks_cleanse).
-   - ``fired_while_crowd_controlled`` is True when the caster was
-     crowd-controlled at activation AND the activation fired (QSS /
-     Mercurial self-cast, R27); False when the activation was
-     gated/skipped (R22) or the caster was free.
-5. RECEIPTS — the decision exposes ``public_receipt()`` (decision
-   fields); the survival-row ``cleanse`` and ``cleanse_use`` receipts are
-   built by ``survival.transitions`` (``_cleanse_action_view`` /
-   ``_cleanse_use_receipt``
-   receipt); R20 pins the exact field sets.  Per-event annotations on the
-   cleanse packet mirror the removed/rejected lists.
+Consumption and receipt semantics:
 
-Row status conventions (same as the P2 Slice 1/2/3 matrices):
+- the use is consumed only for the reasons "", `control_not_active` and
+  `excluded_control_kind`;
+- `cleanse_denied` is written only for `use_spent`, and the `cleanse`
+  receipt for every other processed outcome;
+- `fired_while_crowd_controlled` is True when the caster was crowd
+  controlled at activation and the activation fired, False when it was
+  gated or the caster was free.
 
-- "CURRENT" rows assert behavior the tree already satisfies today (e.g. a
-  cleanse packet today records utility and truncates nothing; Mikael's
-  heals the selected ally only; QSS/Mercurial actives are rejected with a
-  named 400).  The behavior assertions pass against today's walk; the
-  contract-API assertions in the same row (marked ``_require_contract()``)
-  fail until the kernel lands — the intended signal that the row must be
-  recomposed onto the contract without changing the outcome.
-- "NEW-CONTRACT" rows assert the kernel API the owner commits to.  They
-  fail today with the named PENDING KERNEL marker
-  (``_require_contract()``) and are reported as pending.
+Truncation: historical downtime before activation remains, an active
+interval ends at activation, and an interval starting at or after
+activation is removed entirely.  Only eligible kinds are affected, and an
+unknown kind fails closed (R15).  The walk keeps its pinned ordering,
+stasis then projectile then spell shield then crowd-control immunity then
+damage, so a control a shield blocked is not present at cleanse time.
 
-RLM-2 A evidence (binary audit — data/bin/items.bin.json client
-16.15.8024387 + data/wiki-atoms/crowd-control-mobility.json):
+Matrix rows:
 
-- Items/Spells/QuicksilverSash.mSpell and ItemMercurial.mSpell carry
-  canCastWhileDisabled=true and cannotBeSuppressed=true; Mikael's
-  3222Active carries neither.  The cleanse atom states "castable while
-  disabled, but not under suppression/stasis".  Sourced castability rule:
-  QSS/Mercurial self-casts are exempt from the attacker crowd-control
-  gate while the caster is stunned/charmed/etc. (R27) EXCEPT while the
-  caster's active controls include suppression — then the cast is denied
-  with the named caster_control_blocks_cleanse reason and the use is NOT
-  consumed (R7 primary); Mikael's Purify stays GATED while the caster is
-  crowd-controlled (R21's attacker_state_blocked is the pinned behavior —
-  R22 primary; the exemption alternate is xfailed as contradicted by the
-  binary evidence).
-- Suppression REMOVAL set: A found no wording-level contradiction — the
-  binary/atom facts concern CASTING, not the removal set.  The removal set
-  (QSS/Mercurial exclude only airborne, so suppression IS in the removal
-  set per their own wording) stays pinned in R4/R5; because the self-only
-  cast cannot fire while the caster is suppressed, the walk-level
-  observable is the castability denial of R7 (the wording-based removal
-  variant is the xfailed alternate).
-
-Matrix rows (row id | dimension | level | status | depends on):
-
-R1  | Mikael's cleanses + heals the SELECTED ally only (other allies and the caster unaffected; enemy control lands on unselected allies) | app | CURRENT (heal + no truncation) / NEW-CONTRACT (cleanse receipt) | no
-R2  | Mikael's target-choice public receipt (which ally was selected; heal + decision + use follow the selection; activation after the caster's control ends — app-level truncation is covered by R23-new) | app | CURRENT (heal follows selection) / NEW-CONTRACT (receipt) | no
-R3  | Mikael's selected-ally semantics at timeline level (two allies, mid-CC activation, free caster) | timeline | NEW-CONTRACT | no
-R4  | ITEM_CLEANSE_DECLARATIONS: one sourced declaration per item (name/active/scope/exclusions/cooldown/heal/movement/atoms) | kernel | NEW-CONTRACT | no
-R5  | Mikael's excluded control kinds are row-specific per its wording (airborne, blind, disarm, nearsight, suppression) | kernel | NEW-CONTRACT | no
-R6  | Suppression per item: Mikael's own wording excludes it -> NOT cleansed | timeline | NEW-CONTRACT | A-dependent (suppression question)
-R7  | Suppression CASTABILITY per item: QSS/Mercurial self-casts are DENIED while the caster is suppressed (decision reason caster_control_blocks_cleanse; rejected control with that reason; interval untouched; use NOT consumed) — the removal SET stays pinned in R4/R5 (excluded == (airborne,)); the wording-based removal variant is the xfailed alternate | timeline | NEW-CONTRACT | no (A resolved)
-R8  | Airborne per item: all three exclude airborne -> never cleansed, interval untouched | timeline | NEW-CONTRACT | no
-R9  | slow/root/stun/charm/fear per sourced rules (blocking kinds removed; soft slow never creates downtime) | kernel+timeline | CURRENT (soft no-downtime) / NEW-CONTRACT (removal) | no
-R10 | No active control at activation (per item: heal still fires / movement still grants / use consumed; receipt names the rule) | kernel+timeline | CURRENT (heal fires) / NEW-CONTRACT (receipts) | no
-R11 | Control before / at / after activation (historical remains; active ends at activation; future removed; total order) | timeline | CURRENT (no truncation) / NEW-CONTRACT (truncation) | no
-R12 | Two overlapping controls with different eligibility (stun cleansed, suppression not) | timeline | NEW-CONTRACT | no
-R13 | Two controls ending at different times (only each cleansed control's own remaining tail removed) | timeline | NEW-CONTRACT | no
-R14 | Repeated use and cooldown within one fight (use state; cooldown source gap fails closed) | kernel+timeline | NEW-CONTRACT | no
-R15 | Unknown control kind fails closed (named reason; no truncation) | kernel+timeline | CURRENT (walk applies unknown intervals today) / NEW-CONTRACT (decision) | no
-R16 | Walk order stays: stasis -> projectile -> spell shield -> CC immunity -> damage; a blocked control is NOT present at cleanse time | app+timeline | CURRENT (order) / NEW-CONTRACT (cleanse receipt) | no
-R17 | Cleanse at the same timestamp as a control packet: kernel total order (stable_event_key + action_key) | kernel+timeline | NEW-CONTRACT | no
-R18 | Receipt-versus-result parity: action_downtime == merged intervals; removed tails; receipts consistent | app+timeline | CURRENT (parity) / NEW-CONTRACT (cleanse receipts) | no
-R19 | Score-path fail-closed: compiled walk with Mikael's/QSS/Mercurial armed | unit | CURRENT (representable today; cleanse/movement kinds rejected) / NEW-CONTRACT (named gate) | A/B-dependent
-R20 | Public receipt contents (the owner's required receipt field sets) | kernel | NEW-CONTRACT | no
-R21 | Caster crowd-control at activation TODAY (cleanse-kind utility rides the gate; Mikael's heal is blocked) | app+timeline | CURRENT | no
-R22 | Caster crowd-control at activation (sourced castability): Mikael's Purify stays GATED (attacker_state_blocked); the caster's use receipt names the rule | timeline | NEW-CONTRACT (gated primary; exemption alternate xfailed — binary evidence) | no (A resolved)
-R23 | QSS/Mercurial actives: option validation today (named 400) vs post-contract options | app | CURRENT (named 400) / NEW-CONTRACT (accepted) | no
-R24 | Mercurial: self cleanse + SEPARATE movement utility effect (amount 50%, duration 2s, its own atoms) | timeline+app | CURRENT (utility recorded) / NEW-CONTRACT (atoms + grant) | no
-R25 | A cleanse packet today: records utility and truncates nothing (canonical CURRENT baseline) | timeline | CURRENT | no
-R26 | Support-packet arming-priority baseline: cleanse/movement ride phase 1.0 (total-order baseline) | kernel | CURRENT | no
-R27 | QSS/Mercurial castability exemption: self-cast fires while the caster is stunned/charmed (exempt; truncates the caster's own interval; receipt fired_while_crowd_controlled=true) — the suppression denial is R7 (caster_control_blocks_cleanse) and airborne stays excluded_control_kind (R8) | timeline | CURRENT (packet rides the gate) / NEW-CONTRACT (truncation + receipt) | no (A resolved)
+R1  | Mikael's cleanses + heals the SELECTED ally only (other allies and the caster unaffected; enemy control lands on unselected allies)
+R2  | Mikael's target-choice public receipt (which ally was selected; heal + decision + use follow the selection; activation after the caster's control ends — app-level truncation is covered by R23-new)
+R3  | Mikael's selected-ally semantics at timeline level (two allies, mid-CC activation, free caster)
+R4  | ITEM_CLEANSE_DECLARATIONS: one sourced declaration per item (name/active/scope/exclusions/cooldown/heal/movement/atoms)
+R5  | Mikael's excluded control kinds are row-specific per its wording (airborne, blind, disarm, nearsight, suppression)
+R6  | Suppression per item: Mikael's own wording excludes it -> NOT cleansed
+R7  | Suppression CASTABILITY per item: QSS/Mercurial self-casts are DENIED while the caster is suppressed (decision reason caster_control_blocks_cleanse; rejected control with that reason; interval untouched; use NOT consumed) — the removal SET stays pinned in R4/R5 (excluded == (airborne,))
+R8  | Airborne per item: all three exclude airborne -> never cleansed, interval untouched
+R9  | slow/root/stun/charm/fear per sourced rules (blocking kinds removed; soft slow never creates downtime)
+R10 | No active control at activation (per item: heal still fires / movement still grants / use consumed; receipt names the rule)
+R11 | Control before / at / after activation (historical remains; active ends at activation; future removed; total order)
+R12 | Two overlapping controls with different eligibility (stun cleansed, suppression not)
+R13 | Two controls ending at different times (only each cleansed control's own remaining tail removed)
+R14 | Repeated use and cooldown within one fight (use state; cooldown source gap fails closed)
+R15 | Unknown control kind fails closed (named reason; no truncation)
+R16 | Walk order stays: stasis -> projectile -> spell shield -> CC immunity -> damage; a blocked control is NOT present at cleanse time
+R17 | Cleanse at the same timestamp as a control packet: kernel total order (stable_event_key + action_key)
+R18 | Receipt-versus-result parity: action_downtime == merged intervals; removed tails; receipts consistent
+R19 | Score-path fail-closed: compiled walk with Mikael's/QSS/Mercurial armed
+R20 | Public receipt contents (the owner's required receipt field sets)
+R21 | Caster crowd-control at activation (cleanse-kind utility rides the gate; Mikael's heal is blocked)
+R22 | Caster crowd-control at activation (sourced castability): Mikael's Purify stays GATED (attacker_state_blocked); the caster's use receipt names the rule
+R23 | QSS/Mercurial actives: option validation today (named 400) vs post-contract options
+R24 | Mercurial: self cleanse + SEPARATE movement utility effect (amount 50%, duration 2s, its own atoms)
+R25 | A cleanse packet that finds no eligible control records utility and truncates nothing
+R26 | Support-packet arming-priority baseline: cleanse/movement ride phase 1.0 (total-order baseline)
+R27 | QSS/Mercurial castability exemption: self-cast fires while the caster is stunned/charmed (exempt; truncates the caster's own interval; receipt fired_while_crowd_controlled=true) — the suppression denial is R7 (caster_control_blocks_cleanse) and airborne stays excluded_control_kind (R8)
 """
 
 from types import SimpleNamespace

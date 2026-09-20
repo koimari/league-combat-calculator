@@ -76,9 +76,6 @@ from tests.parse_stats import parse_stats
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
-# The P3-3W coordinator wires the live soul-counter ledger account;
-# genuinely-absent mechanics are xfailed with this reason.
-_AWAIT = "awaiting P3-3W wiring"
 
 
 def _parse(option: dict | None):

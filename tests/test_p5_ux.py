@@ -434,6 +434,7 @@ def test_app_js_posts_json_through_one_helper():
         assert f'fetch("{url}"' not in source, url
 
 
+@pytest.mark.needs_node
 def test_node_check_passes_for_app_js():
     node = shutil.which("node")
     if node is None:

@@ -1,172 +1,32 @@
-"""P2 Slice 9 — Olaf R (Ragnarok) champion cleanse + crowd-control
-immunity (test-matrix owner: RLM-2 C).
+"""Olaf R (Ragnarok): the cleanse, the immunity window and the steroid rows.
 
-Focused TDD matrix for Olaf's R (Ragnarok): the passive bonus
-resistances, the cast-time cleanse of ALL active crowd control, the 3s
-immunity window, the bonus-state surface (armor/MR/AD/MS/size), the
-castability carve-out, the one-use/cooldown boundaries, and the score
-fail-closed behavior.  CURRENT RUNTIME FACTS (verified before pinning):
+`champions/olaf.py` is a packet module whose every slot is modeled, so it
+declares no MODULE_COVERAGE.  W (Tough It Out) is the scanner-emitted self
+shield (10/40/70/100/130 + 17.5% missing health for 2.5s at the cast; the
+missing-health term is a named boundary), and P, W and R each price their
+sourced steroid rows.  `OPTIONS` carries one key,
+`olaf_missing_health_percent`; there is no `r_*` option, and the API
+rejects every one with a named 400.
 
-- Olaf is a PACKET module (src/calculator/champions/olaf.py,
-  PACKET_SHA256 abc0765e...): Q/E are modeled packets; W (Tough It Out)
-  is the E8c scanner-emitted self shield (10/40/70/100/130 + 17.5%
-  missing health, 2.5 s, at the cast — the missing-health term is a
-  documented boundary).  MERGE: P, W and R also PRICE their sourced
-  steroid rows, so every slot is ``modeled`` and the module declares no
-  MODULE_COVERAGE; OPTIONS carries one key (olaf_missing_health_percent,
-  which scales Berserker Rage).  There is still no r_* option — the API
-  rejects every one with a named 400 ("champion_options contains unknown
-  option r_time").
-- The module R parse receipt: name "Ragnarok", rank 3, MANA cost 100,
-  cast_time None (the cached castTime is "none"), total_raw 0.0 and one
-  structural-zero part — the R deals no damage; its stat_buff carries
-  the sourced Bonus Resistances and Bonus Attack Damage, and the cached
-  rank cooldown row (100/90/80) is published.
-- MERGE: because R is a BUFF-phase steroid, the app's derived rotation
-  OPENS with it.  The four R receipts anchor on that cast (t=0.0), not
-  on a slot-ordered 0.5, and the immunity window is therefore already up
-  when an enemy control would land — the app fight BLOCKS the Ahri charm
-  instead of truncating it.  The truncation path itself is pinned at
-  kernel level, where the packets are authored behind an active control.
-  Tests read the activation back off the fight (``_r_activation_time``)
-  rather than pinning a rotation-order literal.
-- The cached R rows (data/champions.json "Olaf", R[0]):
-  effects[0] passive "Passive: Olaf gains bonus armor and bonus magic
-  resistance." (Bonus Resistances leveling 10/15/20); effects[1]
-  active "Olaf becomes enraged for 3 seconds, cleansing himself of all
-  crowd control and becoming immune to them, as well as gaining bonus
-  attack damage and 10% increased size. For the first second of
-  Ragnarok, he also gains bonus movement speed while facing visible
-  enemy champions within 2000 units." (Bonus Attack Damage 10/20/30
-  flat + 25% AD; Bonus Movement Speed 20/45/70); effects[2] the
-  duration-extension note ("increased by and up to 2.5 seconds for
-  each basic attack on-hit or cast of Reckless Swing against an enemy
-  champion", leveling EMPTY); cost 100 flat; cooldown 100/90/80
-  affectedByCdr; targeting "Auto"; affects "Self"; resource "MANA";
-  castTime "none".  The notes carry the airborne displacement-override
-  ("removes the underlying stun from airborne effects, but not the
-  forced displacement, which requires him to use a blink or dash
-  ability to override it"), the no-other-debuffs rule, the dynamic AD
-  amplification ("The 25% attack damage scaling amplifies the flat
-  attack damage bonus as well") and the duration-extension details
-  (dodged basics do not extend, blocked basics do; R will not expire
-  during Reckless Swing's cast time).
-- Game-file evidence (data/bin/characters/olaf.bin.json,
-  OlafRagnarokAbility/OlafRagnarok mSpell): DataValues Resists
-  5..35 (ranks 1..3 = 10/15/20), Duration 3.0, FlatAD 0..60 (ranks
-  1..3 = 10/20/30), PercentTotalADAmp 0.25, HasteDuration 1.0,
-  Haste -0.05..1.45 (ranks 1..3 = 0.20/0.45/0.70 -> 20/45/70%),
-  DurationExtension 2.5; cooldownTime [100,100,90,80,...] (ranks
-  1..3 = 100/90/80); mana 100; canCastWhileDisabled TRUE and
-  cannotBeSuppressed TRUE (the QSS/Mercurial/RengarWEmp flag pair);
-  mCantCancelWhileWindingUp true; mSpellTags Trait_Ultimate,
-  SpecialCase_StasisLocked, Trait_AttackBuff_Duration, Trait_CCImmune;
-  mTargetingTypeData Self; the AD GameCalculation = FlatAD +
-  StatByNamedDataValue PercentTotalADAmp (the game's dynamic total-AD
-  amplification).
-- The engine cast_timeline is the activation clock: one_rotation casts
-  Q/W/E/R all at 0.0 (R cost 100); timed casts Q@0.0, W@0.25, E@0.25,
-  R@0.5 (R cost 100).  RANK 0 IS NOT A CAST GATE today: the engine
-  books the R cast at every rank (rank 0 cost 0.0) — the "R rank 0 ->
-  no cast -> no cleanse/immunity/stat receipts" contract is a
-  completion fix (xfailed below).
-- The P2 Slice 4-8 kernel does NOT wire Olaf today:
-  resolve_cleanse_item("Olaf R") FAILS CLOSED with a KeyError naming
-  the source; the app-level fight carries NO cleanse / immunity /
-  stat-buff rows for main, utility_outcomes cleanse event_count is 0,
-  and an enemy Ahri charm (immobilize 1.8 s at t=0) lands untouched
-  (crowd_control_intervals + action_downtime 1.8).  The typed kernel
-  the completion must ride is ALL in place: the Slice 4 interval
-  truncation (truncate_intervals + CleanseEligibility with self scope,
-  the caster_control_blocks_cleanse suppression denial, the one-use
-  latch), the Slice 3 immunity arm (a SHIELD packet with
-  crowd_control_immunity_while_shield grants a typed window tied to
-  the EXACT ledger entry — amount must be > 0; a zero-amount shield
-  arms nothing), the stat-buff packet kernel (bonus_armor /
-  bonus_magic_resistance fields; NO bonus-AD / size / movement fields
-  on the stat-buff action), and the score gate
-  (unrepresentable_template_receipt: support_kind=stat_buff /
-  support_kind=movement; cleanse and crowd_control_resist
-  representable).
-- Walk dispatch order (same-time ordering): SHIELD / STAT_BUFF /
-  UTILITY kinds dispatch BEFORE the attacker-state gate (the
-  QSS/Mercurial/GP/Rengar utility-before-gate carve-out), so a
-  champion-cast cleanse + immunity + stat buff fire while the caster
-  is crowd-controlled; the gate's stasis/invulnerable/untargetable
-  branch also never sees them (the game's SpecialCase_StasisLocked
-  stasis lock has NO kernel path for support-kind packets today — a
-  named boundary).  The suppression denial lives in the CLEANSE
-  decision (CAST_BLOCKING_CONTROL_KINDS = {"suppression"} -> the
-  named caster_control_blocks_cleanse denial, use NOT consumed).
+R is a zero-damage buff: the parse receipt publishes the sourced Bonus
+Resistances (10/15/20) and Bonus Attack Damage (10/20/30 + 25% bonus AD)
+on its `stat_buff`, costs 100 mana, and publishes the cached cooldown row
+100/90/80.  Its cast time is absent in the cache.
 
-The coordinator's completion (P2-9) will (most likely) wire the R cast
-as the activation (no toggle): per R cast the authoring emits a cleanse
-packet (cleanse_item "Olaf R", source "Olaf R — Ragnarok") at the cast
-time + a 3s immunity grant (the Slice 3 arm — a nominal timed shield
-entry with crowd_control_immunity_while_shield, or a new grant kind)
-+ the bonus-state packets (armor/MR stat buffs; the AD / size / MS
-rows have NO kernel stat-buff field today — the AD+25%-AD and the 10%
-size are receipted as named-unsupported or new fields, the first-
-second MS could ride the movement utility surface) + the named
-denials (use_spent / unknown_control / caster_control_blocks_cleanse),
-and the score fails closed (support_kind=stat_buff / movement — never
-a silent re-price; the cleanse itself stages).  This matrix pins the CONTRACT;
-genuinely-absent mechanics are pytest.mark.xfail (non-strict) with
-reason "awaiting P2-9 ..." — the completion removes the markers.
+Because R is a buff-phase steroid the derived rotation opens with it, so
+the four R receipts anchor at t=0 rather than at a slot-ordered 0.5, and
+the immunity window is already up when an enemy control would land: the
+app fight BLOCKS the Ahri charm instead of truncating it.  The truncation
+path is pinned at kernel level, where the packets are authored behind an
+active control.  Tests read the activation back off the fight through
+`_r_activation_time` rather than pinning a rotation-order literal.
 
-Contract sections (numbered as in the RLM-2 C brief):
-  S1  Source evidence + typed values (cached R rows: resistances
-      10/15/20, AD 10/20/30 + 25% AD, MS 20/45/70, duration 3s, size
-      10%, cd 100/90/80, cost 100; the cleanse + immunity wording;
-      the game file; the module parse receipt; the source receipts;
-      the absent typed R declaration xfailed).
-  S2  No R (R rank 0; the option set unchanged — no new option; the
-      rank-0 no-cast contract xfailed — the engine casts R at every
-      rank today with cost 0 at rank 0).
-  S3  R activation timing (engine cast_timeline one_rotation 0.0 /
-      timed 0.5; the activation-time == cast-time contract xfailed;
-      the missing/invalid timing fail-closed contract xfailed).
-  S4  Cleanse of active controls (the kernel truncation contract PASS;
-      the charm applies untouched today; the wired cleanse-at-cast
-      truncation xfailed: every known kind except the displacement
-      family, the airborne displacement-override named boundary).
-  S5  Immunity for later controls (the Slice 3 window kernel evidence
-      PASS — in-window blocked, after-window applied, end-exclusive;
-      the wired 3s R window xfailed).
-  S6  Castability while disabled + suppression (the game flag pair
-      pinned; the kernel self-scope suppression denial PASS; the wired
-      carve-out + the stasis-lock named boundary xfailed).
-  S7  Bonus-state receipts (the stat-buff kernel fields PASS; no R
-      stat rows today; the wired armor/MR stat-buff rows + the 3s
-      window + the duration-extension receipted-never-applied + the
-      AD/size named-unsupported boundaries xfailed).
-  S8  One-use and cooldown boundaries (the kernel latch evidence PASS;
-      the R cooldown row receipted never enforced; the wired one-use
-      latch + use_spent + repeated-cast semantics xfailed).
-  S9  Same-time ordering (the walk's support-before-gate dispatch +
-      the shield-before-damage arm priority PASS; the wired
-      cleanse-vs-immunity-vs-stat-buff ordering xfailed).
-  S10 Missing identity or rows (resolve_cleanse_item fails closed
-      naming the source PASS; the require_named_leveling fail-loud precedent).
-  S11 Score fail-closed (the generic gates PASS: support_kind=stat_buff
-      / movement; cleanse and crowd_control_resist representable —
-      never a silent re-price).
-  S12 Full vs score parity (the Q/W/E/R engine surface byte-identical
-      today in both fight modes; the named R divergence xfailed).
-  S13 Unchanged boundaries (Q/E damage, the W shield E8c, the module
-      OPTIONS + parse receipts, the GP/Rengar/Milio/Dr. Mundo + item
-      cleanse declarations, the Slice 3 immunity + resist machinery,
-      the Ferocity + grey-health packages untouched).
-  S14 Regression surface (the mandated sanity run list, footer).
+Every expected damage value is recomputed from the cached leveling rows
+against the fight's own stats.  The resist, AD, movement, duration, size,
+cooldown and cost rows are themselves the values under test, so they
+appear as pinned cache and game-file evidence.
 
-Expected damage values are recomputed from data/champions.json
-leveling rows against the fight's own stats — no literal damage
-constants.  The R resist/AD/MS/duration/size/cd/cost rows ARE the
-values under test (the typed declaration must publish them), so they
-appear as pinned cache + game-file evidence (the K'Sante / Gangplank /
-Rengar / Milio / Dr. Mundo matrix precedent).  The declaration item
-key below is a pinned CANDIDATE ("Olaf R"); the coordinator's final
-spelling is a contract ambiguity reported to the parent.
+Section ids S1 to S14 below name the parts of this matrix.
 """
 
 import contextlib
@@ -212,11 +72,6 @@ _OLAF_DATA = _CHAMPION_DATA["Olaf"]
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
 _TARGET_MAX_HP = 2000.0
-# The P2-9 coordinator wires the typed R declaration + the packet
-# authoring; genuinely-absent mechanics are xfailed with this reason
-# (never strict — the completion removes the markers).
-_AWAIT = "awaiting P2-9 wiring"
-
 # The cached R rows the typed declaration must publish (values under
 # test — pinned as cache evidence, never literal damage constants).
 _R_RESISTANCES = [10, 15, 20]
@@ -651,6 +506,7 @@ class TestSourceAndTypedValues:
         passive = _r_ability()["effects"][0]["description"]
         assert "bonus armor and bonus magic resistance" in passive
 
+    @pytest.mark.needs_game_files
     def test_r_duration_extension_note_pinned(self):
         # The duration-extension note (the brief's contract #1 + #9): up
         # to 2.5 seconds per basic attack on-hit or Reckless Swing cast
@@ -682,6 +538,7 @@ class TestSourceAndTypedValues:
         assert "duration will not be increased if the basic attack is  dodged" in notes
         assert "duration will be increased if the basic attack is  blocked" in notes
 
+    @pytest.mark.needs_game_files
     def test_r_rows_recomputed_from_game_file(self):
         # Community Dragon evidence (the brief's "game file if present"):
         # the game DataValues ranks 1..3 match the cached rows exactly —
@@ -702,6 +559,7 @@ class TestSourceAndTypedValues:
         assert calc[0]["mDataValue"] == "FlatAD"
         assert calc[1]["mDataValue"] == "PercentTotalADAmp"
 
+    @pytest.mark.needs_game_files
     def test_r_game_flags_pin_castability_and_immunity(self):
         # The game castability + immunity flags (the brief's contract
         # #5): canCastWhileDisabled true / cannotBeSuppressed true (the
@@ -1376,6 +1234,7 @@ class TestImmunityWindow:
 
 
 class TestCastability:
+    @pytest.mark.needs_game_files
     def test_game_flags_pin_the_carve_out(self):
         # PASS source evidence (the brief's contract #5): the game file
         # carries canCastWhileDisabled true / cannotBeSuppressed true —
@@ -1539,6 +1398,7 @@ class TestCastability:
             }
         ]
 
+    @pytest.mark.needs_game_files
     def test_r_stasis_lock_is_a_named_boundary(self):
         # P2-9 contract boundary (the brief's contract #5 tail): the game
         # flag SpecialCase_StasisLocked locks the R cast under stasis,
@@ -1790,6 +1650,7 @@ class TestOneUseAndCooldown:
         assert decision.reason == "use_spent"
         assert decision.use_consumed is False
 
+    @pytest.mark.needs_game_files
     def test_r_cooldown_row_pinned_and_never_enforced(self):
         # Pinned actual (the brief's contract #8): the cached cooldown
         # row 100/90/80 (affectedByCdr) + the game cooldownTime agree,

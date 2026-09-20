@@ -686,6 +686,7 @@ def _calculate_receipt():
     return response.get_json()
 
 
+@pytest.mark.needs_node
 def test_the_event_order_panel_renders_from_the_published_result(tmp_path):
     """eventorder.js reads the receipt app.js publishes on "scryglass:result"
     rather than wrapping window.fetch to sniff /api/calculate, which would
@@ -702,6 +703,7 @@ def test_the_event_order_panel_renders_from_the_published_result(tmp_path):
     assert receipt["rotation"]["rationale"][:40] in rendered["html"]
 
 
+@pytest.mark.needs_node
 def test_the_panel_stays_hidden_for_a_result_with_no_rotation(tmp_path):
     """A comparison response and an engine error both arrive on the same
     signal; neither carries a rotation receipt."""

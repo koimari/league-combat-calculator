@@ -3,10 +3,9 @@ optimizer certification.
 
 This file is the focused acceptance-matrix owner for Force of Nature's
 Steadfast passive.  It pins the OBSERVABLES the coordinator's P3-3Q
-completion must satisfy and runs against today's source: every behavior
-that already exists passes now; every assertion that targets a contract
-piece the source does not emit yet is marked ``xfail`` with reason
-``awaiting P3-3Q ...``.
+contract must satisfy, and every test runs live against today's source.
+An assertion whose contract piece the source does not emit pins the
+current refusal and says so in its own docstring.
 
 Contract under test (current runtime facts, verified before pinning):
 
@@ -80,7 +79,7 @@ Contract under test (current runtime facts, verified before pinning):
   poisons the search-invariant roster context (uncompilable True, panels
   empty) and still deep-equals via the receipt walk.  The P3-3Q
   certification (remove from the blocklist with byte-parity proof) is
-  pinned as xfail: panels non-empty + uncompilable False + deep-equal.
+  panels non-empty, uncompilable False and deep-equal.
   The legacy run_fight(score_only=True) surface carries NO survival state
   (no target_* keys, no force_of_nature) — the named fail-closed carrier
   boundary; item_state_receipts agrees between surfaces.
@@ -91,15 +90,14 @@ Contract under test (current runtime facts, verified before pinning):
 * COVERAGE: item_model_coverage returns "modeled_effect" with
   optimizer_eligible + calculation_eligible True and outcome_dimensions
   ["movement", "defense"] — but the reason is the GENERIC
-  "Damage-relevant effects are represented by the fight model." today; a
-  Steadfast/magic-resistance-naming reason is xfail (the coordinator's
-  coverage tightening).  target_item_model_coverage is
+  "Damage-relevant effects are represented by the fight model.", and a
+  reason naming Steadfast or magic resistance is the coverage
+  tightening still owed.  target_item_model_coverage is
   "modeled_event_certified" naming Steadfast, expiry and the
   maximum-stack bonus resistance.
-* ITEM STATE RECEIPTS: the 3M/3N/3O-pattern item_state_receipts row for
-  Steadfast (state "steadfast", stacks/payload/source) is absent today —
-  xfail.
-* XFAIL ONLY for genuinely absent mechanics: (1) the compiled-panel
+* ITEM STATE RECEIPTS: the item_state_receipts row for Steadfast
+  (state "steadfast", stacks/payload/source) is absent.
+* THE THREE ABSENT MECHANICS: (1) the compiled-panel
   certification; (2) the coverage reason naming Steadfast; (3) the
   item_state_receipts Steadfast row.  All three are ``awaiting P3-3Q
   ...``.
@@ -827,8 +825,8 @@ def test_compiled_panels_carry_the_force_of_nature_fight():
     with byte-parity proof, the compiled score path rides the shared kernel
     for a main holder: the context builds panels, stays unpoisoned, and the
     compiled surface still deep-equals the receipt walk on the whole scoring
-    receipt (force_of_nature row included).  Today no panel exists (the item
-    fails closed per evaluation), so this xfails."""
+    receipt (force_of_nature row included).  No panel exists yet: the item
+    fails closed per evaluation, which is what this pins."""
     ctx = CoupledSearchContext()
     legacy = _holder_fight(16.0, include_receipt=False)
     fast = _holder_fight(16.0, include_receipt=False, search_context=ctx)
@@ -986,9 +984,9 @@ def test_coverage_posture_stays_eligible_with_steadfast_dimensions():
 
 def test_model_coverage_reason_names_steadfast_and_magic_resistance():
     """P3-3Q coverage tightening: item_model_coverage's reason should name
-    the Steadfast mechanic (the target coverage already does).  Today the
-    model posture falls through to the generic ITEM_EFFECTS reason, so this
-    xfails."""
+    the Steadfast mechanic (the target coverage already does).  The model
+    posture falls through to the generic ITEM_EFFECTS reason, which is what
+    this pins."""
     coverage = item_model_coverage(
         str(_fon_item()["name"]), ATTACKER_LANES
     ).as_payload()
@@ -1004,9 +1002,9 @@ def test_item_state_receipts_emits_exactly_one_steadfast_row():
     emits exactly ONE Force of Nature row — state "steadfast" — carrying the
     stack rule (max 8, 7.0s duration, 1.0s interval, +2 immobilize), the
     payload (70 MR, 6% move speed), and the wiki source receipt.  Absent
-    today: item_state_receipts returns [] for FoN (the fail-closed absent
+    today: item_state_receipts returns [] for FoN.  The fail-closed absent
     claim is pinned by the absent-item test above, and the row's absence is
-    what this xfail tracks)."""
+    what this tracks."""
     receipts = item_state_receipts(
         [_fon_item()], {}, fight_duration_seconds=16.0, is_melee=False
     )

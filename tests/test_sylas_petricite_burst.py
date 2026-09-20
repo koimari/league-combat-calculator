@@ -380,12 +380,14 @@ class TestBinaryCorroborationOfTheRatios:
         assert "130% AD" in text
         assert "30% AP" in text
 
+    @pytest.mark.needs_game_files
     def test_primary_damage_has_exactly_two_formula_parts(self):
         """No third term may be invented (the Rammus BaseDamage lesson)."""
         record = _spell_record("SylasPassive")
         parts = record["mSpellCalculations"]["PassiveDamage"]["mFormulaParts"]
         assert len(parts) == 2
 
+    @pytest.mark.needs_game_files
     def test_primary_ad_coefficient_is_total_ad(self):
         record = _spell_record("SylasPassive")
         parts = record["mSpellCalculations"]["PassiveDamage"]["mFormulaParts"]
@@ -399,6 +401,7 @@ class TestBinaryCorroborationOfTheRatios:
             _PRIMARY_TOTAL_AD_RATIO, abs=1e-6
         )
 
+    @pytest.mark.needs_game_files
     def test_primary_ap_coefficient(self):
         record = _spell_record("SylasPassive")
         parts = record["mSpellCalculations"]["PassiveDamage"]["mFormulaParts"]
@@ -453,6 +456,7 @@ class TestUnshackledStackAccounting:
         assert _MAX_UNSHACKLED_STACKS == 3
         assert "stacking up to 3 times" in _P_ENTRY["effects"][0]["description"]
 
+    @pytest.mark.needs_game_files
     def test_binary_passive_charges_corroborates_the_cap(self):
         record = _spell_record("SylasPassive")
         charges = game_binary.data_value(record, "PassiveCharges")
@@ -499,6 +503,7 @@ class TestWithheldRiders:
         primary_only = _PRIMARY_TOTAL_AD_RATIO * _AD + _PRIMARY_AP_RATIO * _AP
         assert conversion["bonus_raw"] == pytest.approx(primary_only - _AD)
 
+    @pytest.mark.needs_game_files
     def test_binary_secondary_coefficients_match_the_withheld_constants(self):
         record = _spell_record("SylasPassive")
         parts = record["mSpellCalculations"]["PassiveAoEDamage"]["mFormulaParts"]
@@ -509,6 +514,7 @@ class TestWithheldRiders:
         )
         assert parts[1]["mCoefficient"] == pytest.approx(_SECONDARY_AP_RATIO, abs=1e-6)
 
+    @pytest.mark.needs_game_files
     def test_monster_multiplier_is_sourced_and_not_applied(self):
         record = _spell_record("SylasPassive")
         assert game_binary.data_value(record, "MonsterDamageMulti")[0] == pytest.approx(
@@ -520,6 +526,7 @@ class TestWithheldRiders:
         # plain champion one.
         assert _conversion(procs=1)["bonus_raw"] == pytest.approx(93.60)
 
+    @pytest.mark.needs_game_files
     def test_secondary_minion_execute_is_sourced_and_not_applied(self):
         record = _spell_record("SylasPassive")
         assert game_binary.data_value(record, "CheatingThreshold")[0] == pytest.approx(
@@ -528,6 +535,7 @@ class TestWithheldRiders:
         text = " ".join(effect["description"] for effect in _P_ENTRY["effects"])
         assert "executes minions that are secondary targets" in text
 
+    @pytest.mark.needs_game_files
     def test_bonus_attack_speed_is_sourced_and_emits_no_stat_buff(self):
         record = _spell_record("SylasPassive")
         assert game_binary.data_value(record, "PassiveAttackSpeed")[0] == pytest.approx(
@@ -539,6 +547,7 @@ class TestWithheldRiders:
         for entry in abilities.values():
             assert "stat_buff" not in entry
 
+    @pytest.mark.needs_game_files
     def test_stack_duration_is_sourced_and_not_a_modeled_window(self):
         """The 4s refreshing window is why the count is user-set, not derived."""
         record = _spell_record("SylasPassive")
@@ -612,6 +621,7 @@ class TestHijackIsAKernelGapNotAnEvidenceGap:
         one."""
         assert MODULE_COVERAGE["R"] != "no_damage"
 
+    @pytest.mark.needs_game_files
     def test_binary_r_record_has_no_damage_formula(self):
         record = _spell_record("SylasRAbility/SylasR")
         assert sorted(record["mSpellCalculations"]) == ["PerTargetCooldown"]

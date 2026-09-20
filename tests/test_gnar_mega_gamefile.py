@@ -225,6 +225,7 @@ def _timed(level: int, mega: bool) -> dict:
 
 
 class TestSourceEvidence:
+    @pytest.mark.needs_game_files
     def test_gnar_root_modifiable_stats_from_local_binary(self) -> None:
         # The Mini-side authority: Characters/Gnar/CharacterRecords/Root.
         assert _root_value(_GNAR_ROOT, "baseHPModifiable") == pytest.approx(540.0)
@@ -637,6 +638,7 @@ class TestGnarBigRootAuthority:
             "for the live delta verification"
         )
 
+    @pytest.mark.needs_game_files
     def test_gnarbig_character_records_root_is_absent_inside_gnar_bin(self) -> None:
         # Root level: gnar.bin.json carries the GnarBig SPELL nodes but
         # no Characters/GnarBig/CharacterRecords/Root — the stat block
@@ -648,11 +650,13 @@ class TestGnarBigRootAuthority:
             "GnarBig" in key for key in _GNAR_BIN
         ), "expected the GnarBig spell nodes to coexist in gnar.bin.json"
 
+    @pytest.mark.needs_game_files
     def test_gnar_root_is_present(self) -> None:
         if _GNAR_BIN is None:
             pytest.skip("local Gnar game-file evidence is unavailable")
         assert _GNAR_ROOT is not None
 
+    @pytest.mark.needs_game_files
     def test_constants_match_gnarbig_minus_gnar_deltas(self) -> None:
         # The live verification: the GnarBig root landed
         # (data/bin/characters/gnarbig.bin.json, fetched from

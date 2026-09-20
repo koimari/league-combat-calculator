@@ -8,8 +8,8 @@ self-shield arms on the completed proc pair (``stack_required`` hits inside
 ``survival_ledger_certifications()`` documents the survival rule: overlapping
 shields stack additively, and strongest-shield selection is unmodeled.
 
-Every test here pins that contract and none is an xfail.  Strongest-shield
-selection stays unmodeled on two independent grounds, both required:
+Every test here pins that contract.  Strongest-shield selection stays
+unmodeled on two independent grounds, both required:
 
 1. Unsourced in every authority layer: the rule appears in no wiki effect
    text and no ``item_effects`` accessor, and
@@ -324,7 +324,7 @@ def test_score_and_receipt_adapters_match_for_current_contract(events):
 
 
 def test_weaker_grant_was_never_discarded_there_is_no_replacement_to_resume():
-    """Documented boundary, not an xfail: there is no local Eclipse
+    """A documented boundary: there is no local Eclipse
     authority for a "replacement expiry" / "resume" lifecycle, because
     that framing presupposes a SELECTION step (strongest kept, weaker
     discarded) that the current kernel does not have.  The kernel stacks

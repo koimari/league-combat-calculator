@@ -1,157 +1,44 @@
-"""P1 Package 3U — Verdant Barrier (4632) "Annul" compiled-walk +
-optimizer certification.
+"""Verdant Barrier (4632) "Annul": the spell shield through the compiled walk.
 
-This file is the focused acceptance-matrix owner for Verdant Barrier's
-Annul spell shield.  It pins the OBSERVABLES the coordinator's P3-3U
-completion must satisfy and runs against today's source.  The matrix was
-authored pre-completion with the genuinely-absent mechanics marked
-``xfail`` (reason ``awaiting P3-3U ...``); the P3-3U completion landed
-mid-session (compiled-panel certification, the item_state_receipts row,
-and the coverage tightening), so every assertion below is now LIVE and
-passes.  The completion signal is documented per section.
+Cached identity: name "Verdant Barrier", id 4632, 1600 gold (sell 640),
+tier 2 EPIC, built from two Amplifying Tomes and a Null-Magic Mantle and
+building into Banshee's Veil.  Stats +40 ability power and +25 magic
+resistance.  The Annul branch reads "Grants a spell shield that blocks the
+next hostile ability (60 second cooldown, timer restarts upon taking
+damage from champions)."
 
-Contract under test (current runtime facts, verified before pinning):
+Typed source: the `ITEM_EFFECTS` entry carries `spell_shield_ready` True
+and `spell_shield_cooldown` 60.0, read through the typed accessors, and a
+missing key raises naming the item and the key.  A non-numeric cooldown
+raises `TypeError`, and a registry value diverging from the catalog atom
+raises `ValueError`.  The cooldown atom (`timing.cooldown` [60.0], hash
+2a40799f92fb6749) is reachable through `annul_spell_shield_cooldown_atom`,
+and the wiki source receipt rides `defensive_effects.defense_source`.
 
-* ITEM IDENTITY: cached name "Verdant Barrier", id 4632, price 1600
-  (shop.prices.total, sell 640), tier 2 EPIC, builds from
-  [1052 Amplifying Tome, 1033 Null-Magic Mantle, 1052 Amplifying Tome]
-  and builds into 3102 (Banshee's Veil).  Stats: +40 flat ability
-  power, +25 flat magic resistance (ordinary stat parity).  Passive
-  "Annul" (unique); the cached branch text is exact: "Grants a
-  {{tip|spell shield}} that blocks the next hostile ability (60 second
-  cooldown, timer restarts upon taking damage from champions)."
-* TYPED SOURCE: the ITEM_EFFECTS registry entry (type
-  "defensive_start") carries the two typed keys spell_shield_ready
-  True and spell_shield_cooldown 60.0.  spell_shield_ready and
-  spell_shield_cooldown_seconds are read through the typed accessors
-  and a missing key raises KeyError naming "Verdant Barrier" AND the
-  key (AGENTS.md rule 5 — no silent fallbacks).  Malformed cooldown
-  values fail loudly (TypeError on non-numeric, ValueError when the
-  registry value diverges from the catalog atom).  The Annul cooldown
-  atom receipt (timing.cooldown [60.0] hash 2a40799f92fb6749) is
-  discoverable through annul_spell_shield_cooldown_atom; the wiki
-  source receipt (revision 3957920, page rev timestamp
-  2025-10-05T20:04:20Z) rides the code-owned
-  defensive_effects.defense_source("Verdant Barrier", ANNUL) and is carried
-  onto the resolved starting defenses.
-* OWNER GATES: the shield resolves per combatant from that
-  combatant's OWN items (resolve_spell_shield reads the holder's
-  defenses + items).  An ally/enemy holder has NO inferred owner path
-  onto the main champion: the main's defenses stay spell_shield_ready
-  False when the item sits on a roster mate.
-* OPENING READINESS: the spell shield is READY at fight start
-  (spell_shield_ready True, infinite window start 0.0 until consumed,
-  survival spell_shield_until None).
-* FIRST AUTHORED ABILITY CAST: the first hostile ABILITY cast on the
-  holder is blocked and every packet of that cast is nullified.  The
-  gate is CAST IDENTITY, not damage type: champion basic attacks are
-  not abilities and pass through without consuming; a TRUE-damage
-  packet that belongs to an ability cast IS consumed and blocked
-  (full_block blocks_true_damage True); a CONTROL-ONLY ability packet
-  IS consumed and blocked (blocks_control_only True).  Unknown/
-  unclassifiable deliveries fail closed (no invented consumption).
-* DELIVERY BOUNDARIES: basic attacks pass through
-  (basic_attack_not_blocked); unknown deliveries pass through with a
-  named denial (unknown_delivery) and no consumption; true-damage and
-  control packets of the blocked ability cast are nullified with the
-  cast.  The parent brief's "true damage / control effects pass
-  through" reading is NOT the modeled rule for ABILITY packets — see
-  the reply ambiguities; the ability-only gate is by cast identity.
-* 60s COOLDOWN + REARM: the sourced 60.0s cooldown and the "timer
-  restarts upon taking damage from champions" clause are both ENFORCED
-  by the kernel rearm clock, not merely receipted.  A second ability
-  within the cooldown is NOT blocked.  Past it the shield rearms, and
-  the clock is anchored to the LATER of the consumption instant and the
-  last champion damage the holder took: in a 70s walk with a basic
-  attack at t=2.0 the timer starts at 2.0, ready_at is 62.0 and the
-  ability at t=65 IS blocked; move that basic attack to t=9.0 and
-  ready_at is 69.0, so t=65 lands.  The sourced numbers stay receipted
-  too (survival-row cooldown_seconds + cooldown_atom, the rearm clock
-  and its observed rearms; SPELL_SHIELD_REARM_RULE quotes Verdant's
-  60s).  NOTE the request bound: pipeline caps fight_duration at 30s,
-  under every Annul cooldown, so no API request reaches a rearm — the
-  70s walks below are direct-kernel, not request-reachable.
-* RECEIPT FIELDS + SOURCE EVIDENCE: the survival-row spell_shield
-  receipt carries source "Verdant Barrier — Annul", the infinite
-  window, the acceptance declaration, the block rule, the five
-  categorical rules, uses_before/uses_after, selected_cast_identity,
-  blocked_packets, decisions, triggered_heal None, cooldown_seconds
-  60.0, the cooldown_atom hash, the rearm clock and its observed
-  rearms.  The 3M/3N/3O-pattern item_state_receipts row is LIVE
-  post-completion: state "annul", spell_shield_ready True,
-  spell_shield_cooldown 60.0, the cooldown_atom hash, source_url +
-  source_revision_id 3957920, and the named rearm_boundary that
-  receipts the 60s cooldown and the damage-restart rule as ENFORCED.
-* COMPILED VS RECEIPT PARITY: score path (include_receipt=False) and
-  receipt walk agree on every observable (survival rows incl. the
-  spell_shield lifecycle, breakdown, duration).  Today Verdant sits in
-  COMPILED_WALK_UNREPRESENTABLE_ITEMS ("Annul spell shield needs cast
-  metadata"), so the compiled fast path fails closed: a MAIN holder
-  falls back per evaluation (context.uncompilable stays False, no
-  panels built) and an ENEMY/ALLY holder poisons the search-invariant
-  roster context (uncompilable True, panels empty) — both still
-  deep-equal the receipt walk.  A tuple-ledger champion (Riven)
-  holding Verdant fails closed with parity and NO crash today.  The
-  P3-3U certification has LANDED (the Annul cast-metadata gate is staged
-  in the compiled kernel and the blocklist entry is removed): the
-  compiled score path now builds panels with uncompilable False and
-  byte-parity deep-equality for BOTH the main holder and the roster
-  holder.
-* COVERAGE: item_model_coverage returns the justified posture today
-  (status "stats_only", optimizer_eligible + calculation_eligible
-  True) with the coordinator's coverage tightening now LIVE: the reason
-  names Annul's spell shield (one use per cast; the 60s cooldown and the
-  damage-restart rule are receipted named boundaries) and
-  outcome_dimensions carries "spell_protection" (matching Banshee's Veil
-  / Edge of Night).  target_item_model_coverage is "modeled" naming the
-  Annul first-source-backed-Q/W/E/R-cast consumption.
-* BIS: Verdant Barrier is an EPIC tier-2 component (buildsInto 3102
-  Banshee's Veil); the BIS candidate pool ranks only legendary items
-  and boots, so it is excluded by construction — never a candidate,
-  never withheld (mirrors test_issues_46).  The spell-shield
-  legendaries (Banshee's Veil, Edge of Night) still certify.
-* ITEM STATE RECEIPTS: the item_state_receipts row for Annul is LIVE
-  post-completion (state "annul", the typed values, the atom receipt,
-  the source receipt, and the named rearm_boundary).
-* COMPLETION STATUS: all four pre-completion xfail targets (compiled
-  panels for the main holder, roster-holder compilation, the coverage
-  reason + "spell_protection" dimension, and the item_state_receipts
-  row) landed with P3-3U; the matrix holds no xfail markers and every
-  assertion is live.
+What the matrix pins: the shield resolves per combatant from that
+combatant's own items, so an ally or enemy holder grants the main champion
+nothing; it is ready at fight start with an infinite window; the gate is
+by CAST IDENTITY rather than by damage type, so true-damage and
+control-only packets of the first hostile ability are consumed and
+nullified while basic attacks and unclassifiable deliveries pass through;
+the compiled score path builds panels with `uncompilable` False and
+byte-parity deep-equality for both the main and the roster holder; the
+coverage posture is "stats_only" with `outcome_dimensions` carrying
+"spell_protection"; and the `item_state_receipts` row for Annul carries
+the state, the typed values, both receipts and the named rearm boundary.
 
-Coordinator ambiguities surfaced by this matrix (see the reply):
+Rearm is modelled, anchored on the damage-restart clause: the 60s cooldown
+runs from the later of the consumption instant and the last champion
+damage the holder took, so a 70s walk re-arms only when that anchor leaves
+60s inside the window.  The request path caps `fight_duration` at 30s and
+cannot reach it.  BIS never ranks the item: it is an EPIC tier-2
+component and the candidate pool holds legendaries and boots.
 
-* The Annul gate is by CAST IDENTITY (is_ability), not by damage type:
-  true-damage ability packets and control-only ability packets of the
-  first hostile cast ARE consumed and nullified (full_block
-  blocks_true_damage True; blocks_control_only True); basic attacks
-  and unclassifiable deliveries pass through.  The brief's "true
-  damage and control effects pass through" reading only holds for
-  non-ability packets.
-* Rearm IS modeled, anchored on the damage-restart clause: the 60s
-  cooldown runs from the later of the consumption instant and the last
-  champion damage the holder took, so a 70s walk re-arms only when that
-  anchor leaves 60s inside the window.  The request path caps
-  fight_duration at 30s and cannot reach it.
-* The receipt row state name is pinned "annul" provisionally; the
-  named boundary key for the damage-restart rule is the coordinator's
-  pin (this matrix requires SOME rearm/boundary-named key on the row).
-* BIS exclusion is structural (EPIC tier-2 component, legendary-only
-  pool), not a coverage withholding.
-
-Sibling owners: the compiled-vs-receipt kernel contract lives in
-``tests/test_survival_kernel.py`` (issue #137); the 3T/3S matrix shapes
-in ``tests/test_maw_compiled_parity.py`` and
-``tests/test_knights_vow_compiled_parity.py``; the Annul family
-regression surface in ``tests/test_spell_shield_eligibility.py`` (R2
-Annul items, R3 auto-attack gate, R11 compiled fail-closed),
-``tests/test_issues_46.py`` (annul blocks one typed ability + BIS
-exclusion), ``tests/test_participant_timeline.py`` (opening Annul,
-same-cast true-damage nullification), ``tests/test_defensive_effects.py``
-(Annul ready for all three items), ``tests/test_app.py`` (opening enemy
-spell shield), and ``tests/test_item_coverage.py`` (target coverage
-"modeled").  This file is disjoint and pins only the Verdant Barrier
-acceptance observables.
+Siblings: `tests/test_survival_kernel.py` owns the compiled-versus-receipt
+kernel contract, and the Annul family regression surface is in
+`tests/test_spell_shield_eligibility.py`, `tests/test_issues_46.py`,
+`tests/test_participant_timeline.py`, `tests/test_defensive_effects.py`,
+`tests/test_app.py` and `tests/test_item_coverage.py`.
 """
 
 import pytest

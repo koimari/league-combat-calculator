@@ -2,11 +2,10 @@
 
 This file is the focused test-matrix owner for the Fimbulwinter Everlasting
 (``Fimbulwinter — Everlasting``) self-shield contract.  It pins the
-OBSERVABLES the coordinator's P3-3B completion must satisfy, and each test
-runs against today's source: every behavior that already exists must pass
-now; every assertion that targets a receipt the source does not emit yet is
-marked ``# P3-3B contract`` and ``xfail`` with reason
-``awaiting P3-3B denial receipts``.
+OBSERVABLES the crowd-control packet contract must satisfy, and every test
+runs live against today's source.  An assertion that targets a receipt the
+source does not emit carries the ``# P3-3B contract`` marker and pins the
+current refusal.
 
 Contract under test (binding for the coordinator):
 
