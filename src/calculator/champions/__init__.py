@@ -1074,11 +1074,6 @@ def engine_registration_kind(champion_name: str) -> str | None:
     return get_champion_module_contract(champion_name).review_status
 
 
-def is_champion_supported(champion_name: str) -> bool:
-    """Whether this champion has a dedicated module with ability damage."""
-    return champion_name in _CHAMPION_MODULES
-
-
 def declared_options_rows(champion_name: str) -> list[dict[str, Any]]:
     """The OPTIONS rows one champion's module declares, read by ``inputs``."""
     return get_champion_options_meta(champion_name)["options"]
