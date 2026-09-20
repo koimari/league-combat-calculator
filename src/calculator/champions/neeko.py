@@ -1,30 +1,18 @@
-"""Neeko — CP10.5 full-entry-reviewed packet module.
+"""Neeko: full-entry-reviewed packet module.
 
-P1-3 closures:
-
-- Q (Blooming Burst): the reviewed packet priced only the "Initial Magic
-  Damage" hit.  The seed re-blooms "up to 2 times per cast" (0.75s
-  apart) whenever the burst hits a champion, so a single-target cast
-  prices the initial burst plus 2 subsequent bursts — the wiki's
-  "Total Maximum Magic Damage" row (130-530 + 110% AP == initial + 2 x
-  subsequent at every rank).
-
-- R (Pop Blossom) shield: the cached wiki page carries no shield row
-  (a known-degraded parse), but the game files source it — neeko.bin.json
-  NeekoR mSpell DataValues ShieldAmount (75/125/175 by rank) and
-  ShieldPerChampion (40/60/80 by rank), with the BaseShield (75% AP) and
-  ShieldMultiplier (40% AP) calculations.  In the deterministic 1v1 the
-  fight's own target is the one nearby enemy champion, so the shield =
-  ShieldAmount + ShieldPerChampion + (75% + 40%) AP for 2 seconds
-  (ShieldDuration), riding the R damage event via self_shield_events.
-
-Coverage: P (Inherent Glamour) disguises Neeko as an allied champion or
-unit — vision and stealth are axes the engine does not have, and the
-disguise carries no enemy-damage formula. The pinned reviewed packet
-declares P ``kind: "no_damage"`` with a sourced reason and this module
-never overrides P, so the slot already emits the packet's zero-damage
-row (``build_packet_module``'s ``no_damage`` branch): MODULE_COVERAGE
-reads "no_damage", not "out_of_scope".
+Q (Blooming Burst) re-blooms up to twice per cast, 0.75 seconds apart, whenever
+the burst hits a champion, so a single-target cast prices the initial burst plus
+two subsequent ones: the cached "Total Maximum Magic Damage" row is exactly that
+sum at every rank.
+R (Pop Blossom) shields, and the cached page carries no shield row, a
+known-degraded parse.  The game files source it, ``NeekoR``'s ``ShieldAmount``
+and ``ShieldPerChampion`` with the base and multiplier AP calculations, and in a
+duel the fight's own target is the one nearby enemy champion, so the shield is
+both terms plus 115% AP for the sourced 2 seconds, riding the R damage event as
+a ``self_shield_events`` payload.
+P (Inherent Glamour) disguises Neeko as an allied champion or unit.  Vision and
+stealth are axes this engine does not have and the disguise carries no
+enemy-damage formula, so the slot is ``no_damage``.
 """
 
 from typing import Any

@@ -1,28 +1,21 @@
-"""Taliyah — sourced E -> W -> Q event model with a timed terrain walk.
+"""Taliyah: sourced E, W then Q event model with a timed terrain walk.
 
-The certified one-rotation package casts Unraveled Earth, knocks the selected
-target across its stones with Seismic Shove, then fires Threaded Volley.
-Every damaging hit has an authored time; Worked Ground and the number of
-stones detonated are explicit scenario inputs there.
-
-Timed fights derive the terrain state instead: the first Threaded Volley on
-fresh ground throws the full 5-shard volley and creates Worked Ground
-(sourced: a 400-unit area lasting 30s — at least the public fight window),
-and every later cast is made from inside it, consuming and re-creating the
-area, so it uses the empowered boulder row, the 10-mana cost, and the halved
-(min 0.75s) cooldown. The walk is module-owned on the engine's
-cast-exactly-once idiom (the ability entry declares cooldown 0.0 and authors
-every hit itself, like Aurelion Sol's continuous Q channel), with ability
-haste applied to both cooldowns; E and W recast on their own cooldowns
-through the shared scheduler, each E window detonating the selected stones.
-
-Coverage: P (Rock Surfing) grants movement speed near terrain and R
-(Weaver's Wall) raises a wall Taliyah can ride. Neither slot carries a
-damage instance anywhere in the cached entry, so both are emitted as
-sourced zero-damage rows (``no_damage``) rather than withheld — the
-settled shape for a self movement state or a terrain utility with
-nothing damage-relevant left unmodeled (Sivir P, Akshan W, Aurora W,
-Nilah W, Zilean E).
+The certified one-rotation package casts Unraveled Earth, knocks the target
+across its stones with Seismic Shove, then fires Threaded Volley.  Every
+damaging hit has an authored time, and Worked Ground and the number of stones
+detonated are explicit scenario inputs there.
+A timed fight derives the terrain state instead.  The first Threaded Volley on
+fresh ground throws the full five-shard volley and creates Worked Ground, a
+sourced 400-unit area lasting 30 seconds, and every later cast is made from
+inside it, consuming and re-creating the area, so it takes the empowered boulder
+row, the 10-mana cost and the halved cooldown with its 0.75-second floor.  The
+walk is module-owned on the cast-exactly-once idiom, the entry declaring a 0.0
+cooldown and authoring every hit itself, with ability haste applied to both
+cooldowns; E and W recast on their own cooldowns through the shared scheduler,
+each E window detonating the selected stones.
+P (Rock Surfing) grants movement speed near terrain and R (Weaver's Wall) raises
+a wall Taliyah can ride.  Neither carries a damage instance anywhere in the
+cached entry, so both emit sourced zero-damage rows rather than being withheld.
 """
 
 import math

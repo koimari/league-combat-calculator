@@ -1,30 +1,22 @@
-"""Orianna — slot map for the archetype engine.
+"""Orianna: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Clockwork Windup) is a stack-ramped on-hit the generic path misreads:
-  the JSON's P[0] holds THREE leveling rows and the generic on-hit
-  detector sums the wrong one (the pre-computed 2-stack row, leveling[2])
-  as a flat per-hit value. Only leveling[0] (0-stack base, LEVEL-indexed
-  + 15% AP) is a source of truth; leveling[1] is the per-stack increment
-  (15% of base, + 2.25% AP) and leveling[2] the derived 2-stack total.
-  The custom fn reads base + increment, derives the stack cap from the
-  2-stack row (cross-checked, fail-loudly), and emits a ``stack_ramp``
-  on-hit payload so the fight engine models the natural single-target
-  ramp: auto 1 at 0 stacks (x1.00), auto 2 at 1 (x1.15), auto 3+ at 2
-  (x1.30). The passive applies SPELL effects, not on-hit effects — it
-  never declares ``applies_item_on_hits``.
-- Q reads "Magic Damage" and the 70%-effectiveness "Reduced Damage" row
-  separately: the primary target takes the full row and each target
-  selected by ``q_secondary_targets`` takes one reduced hit, so the
-  reduction can never silently land on the primary.
-- W reads "Magic Damage" explicitly; the speed-field/slow row
-  ("Movement Speed Modifier") is utility and must not leak into damage.
-- E's pass-through damage is gated by the ``e_passes_through_target``
-  option (false = pure utility cast, zero damage); the shield
-  ("Shield Strength") and ball-attached resistances ("Bonus
-  Resistances") are defensive-only and excluded.
-- R reads "Magic Damage" explicitly for symmetry with the rest of the
-  kit; the sourced stun is attached to the damage part.
+P (Clockwork Windup) is a stack-ramped on-hit the generic path misreads.  The
+cached P holds THREE leveling rows and the generic detector sums the wrong one,
+the pre-computed two-stack total.  Only row 0, the zero-stack base indexed by
+LEVEL plus 15% AP, is a source of truth; row 1 is the per-stack increment and
+row 2 the derived total.  The slot reads base plus increment, derives the stack
+cap from the two-stack row as a fail-loud cross-check, and emits a
+``stack_ramp`` on-hit so the engine ramps x1.00, x1.15, x1.30.  The passive
+applies SPELL effects, not on-hit effects, so it never applies item on-hits.
+Q reads "Magic Damage" and the 70%-effectiveness "Reduced Damage" row
+separately, so the primary target takes the full row and each target selected by
+``q_secondary_targets`` takes one reduced hit; the reduction can never silently
+land on the primary.
+W reads "Magic Damage" explicitly, its "Movement Speed Modifier" row being
+utility that must not leak into damage.
+E's pass-through damage is gated by ``e_passes_through_target``; its shield and
+ball-attached resistances are defensive and excluded.
+R reads "Magic Damage" explicitly, its sourced stun attached to the damage part.
 """
 
 from typing import Any

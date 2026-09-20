@@ -1,30 +1,16 @@
-"""Sion — E5-1 corrected slot map for the archetype engine.
+"""Sion: slot map for the archetype engine.
 
-Why each slot is non-generic:
-
-- Q (Decimating Smash) is a charged strike: the wiki lists a "Minimum
-  Physical Damage" row (30 / 45 / 60 / 75 / 90 + 40 / 50 / 60 / 70 /
-  80% AD) and a "Maximum Physical Damage" row (90 / 155 / 220 / 285 /
-  350 + 120 / 150 / 180 / 210 / 240% AD), with the charge increasing
-  damage every 0.25 seconds up to 2 seconds.  The previous packet read
-  the "Maximum Base Damage Increase" percentage row (200% : 288.89%) as
-  a flat damage number, dropping both physical-damage rows and the AD
-  scaling.  The corrected parser interpolates between the minimum and
-  maximum physical-damage rows by the ``q_charge_fraction`` option
-  (default 1.0 = fully charged, matching the burst model's Kled R
-  convention).
-- W (Soul Furnace) is a plain "Magic Damage" read (40 / 65 / 90 / 115 /
-  140 + 40% AP + 14% of target's maximum health) for the shield recast.
-- E (Roar of the Slayer) is a plain "Magic Damage" read (65 / 100 / 135
-  / 170 / 205 + 55% AP).
-- R (Unstoppable Onslaught) prices the charge's maximum physical damage
-  (400 / 800 / 1200 + 120% bonus AD), the same max-charge boundary the
-  packet priced.
-- P (Glory in Death) deals no enemy damage and is an explicit no-damage
-  slot.
-
-All numeric values are read from the champion JSON data; nothing is
-hardcoded.
+Q (Decimating Smash) is a charged strike: the cache carries a "Minimum Physical
+Damage" row and a "Maximum Physical Damage" row, the charge raising damage every
+0.25 seconds to a cap of 2, and the slot interpolates between them by
+``q_charge_fraction``, default 1.0 for a fully charged strike.  The neighbouring
+"Maximum Base Damage Increase" row is a percentage, not a damage number.
+W (Soul Furnace) is a plain "Magic Damage" read for the shield recast, target
+maximum health included.
+E (Roar of the Slayer) is a plain "Magic Damage" read.
+R (Unstoppable Onslaught) prices the charge's maximum physical damage, the
+max-charge boundary.
+P (Glory in Death) deals no enemy damage and is an explicit no-damage slot.
 """
 
 from typing import Any

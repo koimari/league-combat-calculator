@@ -1,28 +1,17 @@
-"""Nilah — CP10.5 full-entry-reviewed packet module.
+"""Nilah: full-entry-reviewed packet module.
 
-E2 DoT fix: R (Apotheosis) prices 4 sourced 0.25s ticks
-(this module's packet timing declaration).
-
-E5-2 fix — Formless Blade (Q): the reviewed packet pinned the crit-MAX
-"Maximum Physical Damage" row (0-76.4 + 191% AD) as the flat damage, so
-every fight priced Nilah at 100% critical strike chance.  The wiki
-carries both endpoints: "Minimum Physical Damage" (0-40 + 100% AD at 0%
-crit) and "Maximum Physical Damage" (0-76.4 + 191% AD at 100% crit),
-"increased by 0% : 70% (+ 0% : 21%) (based on critical strike chance)".
-Both cached rows scale by exactly 1.91 (= 1 + 0.70 + 0.21) from the
-minimum at every rank, so the Q is modeled as the minimum row times
-``1 + 0.91 x crit_chance`` — exact at both sourced endpoints, linear in
-between.  The test fights (no items) sit at 0% crit and price exactly
-the minimum row.
-
-Coverage: P (Joy Unending) amplifies nearby allied heals and shields and
-converts self-heal excess into a shield; W (Jubilant Veil) is ghosting,
-bonus movement speed, 25% magic-damage reduction and a basic-attack
-dodge.  Neither carries an enemy-damage clause — the pinned packet
-declares both ``kind: "no_damage"`` — so both slots are ``no_damage``,
-not ``out_of_scope``.  The ally heal/shield amplifier and the
-damage-taken reduction remain axes the engine does not have, documented
-in ASSUMPTIONS.
+Q (Formless Blade) scales with critical strike chance, and the cache carries
+both endpoints: a "Minimum Physical Damage" row at 0% crit and a "Maximum
+Physical Damage" row at 100%, worth exactly 1.91 times it at every rank.  The
+slot prices the minimum row times ``1 + 0.91 x crit_chance``, exact at both
+sourced endpoints and linear between them; pinning the maximum row would price
+every fight at 100% crit.
+R (Apotheosis) prices four sourced 0.25-second ticks.
+P (Joy Unending) amplifies nearby allied heals and shields and converts
+self-heal excess into a shield; W (Jubilant Veil) is ghosting, movement speed,
+25% magic-damage reduction and a basic-attack dodge.  Neither carries an
+enemy-damage clause, so both are ``no_damage``, and the ally amplifier and the
+damage-taken reduction remain axes this engine does not have.
 """
 
 from typing import Any

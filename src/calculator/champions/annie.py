@@ -1,30 +1,20 @@
-"""Annie — slot map for the archetype engine.
+"""Annie: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- R (Summon: Tibbers) is a custom BUFF-phase slot with three parts:
-  a % magic-penetration stat buff (mutated into ``ctx.stats`` and
-  emitted as ``stat_buff`` — BUFF phase guarantees Q/W parse after it),
-  the initial burst ("Initial Magic Damage"), the Tibbers aura, and the
-  Tibbers auto attacks.  The aura and auto-attack numbers are NOT in the
-  JSON (pet stats are not scraped from the wiki) — they come from the
-  wiki's Annie pets entry (see the quarantined constants below).  The
-  attacks are emitted as a separate ``tibbers_attacks`` proc row (the R
-  cast itself stays burst + aura) so the fight prices them once over
-  the window instead of per R cast.
-- P (Pyromania) is a cross-slot charge walk shown as a zero-damage row
-  under the literal "P" results key (the pre-engine UI shape), so a
-  custom slot fn writes it into ``ctx.results`` directly instead of
-  using the engine's "P" -> "passive" mapping.  Every cast charges and
-  the next Q/W/R cast at the cap spends the charge as a stun, so the
-  row reports the charge the walk derives rather than a marker on one
-  cast.
-- E (Molten Shield) shields, and its second cached effect is the
-  retaliation landing: enemies that damage the shield take a sourced
-  25/35/45/55/65 (+40% AP), once per enemy per cast.
-- Q/W are plain "Magic Damage" attribute reads.
-
-All numeric values are read from the champion JSON data except the
-Tibbers aura and auto-attack constants (wiki pets entry).
+R (Summon: Tibbers) is a custom BUFF-phase slot with three parts: a percentage
+magic-penetration stat buff mutated into ``ctx.stats``, so Q and W parse after
+it, the initial burst, and Tibbers himself.  The aura and auto-attack numbers
+are not in the champion cache, pet stats not being scraped, so they come from
+the wiki's pets entry as quarantined constants, and the attacks are a separate
+``tibbers_attacks`` proc row so the fight prices them once over the window
+rather than per R cast.
+P (Pyromania) is a cross-slot charge walk shown as a zero-damage row under the
+literal "P" results key, so a custom slot function writes it into
+``ctx.results`` directly rather than using the engine's passive mapping.  Every
+cast charges and the next Q, W or R at the cap spends the charge as a stun, so
+the row reports the charge the walk derives rather than a marker on one cast.
+E (Molten Shield) shields, and its second cached effect is the retaliation
+landing: an enemy that damages the shield takes a sourced hit once per cast.
+Q and W are plain "Magic Damage" reads.
 """
 
 import re

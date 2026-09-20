@@ -1,28 +1,16 @@
-"""Twisted Fate — E5-1 corrected slot map for the archetype engine.
+"""Twisted Fate: slot map for the archetype engine.
 
-Why each slot is non-generic:
-
-- W (Pick a Card) is a card SELECTION, not the sum of all three cards:
-  the wiki lists one "Magic Damage" leveling row per card (Blue Card =
-  40 / 60 / 80 / 100 / 120 + 100% AD + 100% AP; Red Card = 30 / 45 /
-  60 / 75 / 90 + 100% AD + 70% AP; Gold Card = 15 / 22.5 / 30 / 37.5 /
-  45 + 100% AD + 50% AP).  The previous packet summed all three cards
-  (3.0x AD + 2.2x AP in one hit).  The corrected parser prices exactly
-  one selected card via the ``w_card`` option (0 = gold, 1 = red,
-  2 = blue; default gold).
-- Q (Wild Cards) is a plain "Magic Damage" read (60 / 105 / 150 / 195 /
-  240 + 50% bonus AD + 85% AP) for one enemy-champion pass.
-- E (Stacked Deck) rides the swing stream, not a cast: its "Bonus Attack
-  Speed" row (15 / 25 / 35 / 45 / 55%) is a permanent innate grant, and
-  its "Bonus Magic Damage" row (65 / 90 / 115 / 140 / 165 + 20% bonus AD
-  + 40% AP) is the every-4th-attack on-hit (three stacking attacks, the
-  fourth consumes them), priced by the engine's stack-acceleration on-hit
-  the way Master Yi's Double Strike is.
-- P (Loaded Dice) and R (Destiny) deal no enemy damage and are explicit
-  no-damage slots.
-
-All numeric values are read from the champion JSON data; nothing is
-hardcoded.
+W (Pick a Card) is a card SELECTION, not the sum of the three: the cache carries
+one "Magic Damage" row per card and the slot prices exactly one through
+``w_card``, gold by default.  Summing them would triple the AD ratio.
+Q (Wild Cards) is a plain "Magic Damage" read for one enemy-champion pass.
+E (Stacked Deck) rides the swing stream rather than a cast.  Its "Bonus Attack
+Speed" row is a permanent innate grant, and its "Bonus Magic Damage" row is an
+every-fourth-attack on-hit, three attacks stacking and the fourth consuming
+them, priced by the engine's stack-acceleration on-hit the way Master Yi's
+Double Strike is.
+P (Loaded Dice) and R (Destiny) deal no enemy damage and are explicit no-damage
+slots.
 """
 
 import re

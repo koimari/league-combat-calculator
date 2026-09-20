@@ -1,29 +1,21 @@
-"""Amumu — slot map for the archetype engine.
+"""Amumu: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Cursed Touch) is two pieces. A zero-damage display row lives under
-  the literal "P" results key (the pre-engine UI shape), so a custom
-  slot fn writes it into ``ctx.results`` directly. The amplifier itself
-  is the AMP-phase ``"curse"`` pseudo-slot below: Cursed targets take
-  10% of every ability's pre-mitigation magic damage as bonus TRUE
-  damage, so it runs after all damage slots and mutates their entries
-  (adds ``true_damage``, flips ``damage_type`` to "mixed"), gated by
-  the ``target_cursed`` option (default True).
-- Q (Bandage Toss) is a 2-charge ability — sustained use is limited by
-  rechargeRate, not the 3 s inter-cast cooldown, hence
-  ``cooldown="recharge"``.
-- W (Despair) is a toggle DoT (0.5 s ticks, ``w_seconds`` option) whose
-  entry carries the per-tick display keys (``damage_per_tick`` /
-  ``total_ticks``) that a standard damage entry
-  entry shape does not include — custom fn. Its %maxHP-per-100-AP
-  compound unit resolves automatically via scaling.py as long as the
-  target stats reach ``extract_named``.
-- E/R are plain "Magic Damage" attribute reads (E's first effect is a
-  defensive damage reduction with no "Magic Damage" attribute, so the
-  exact-name scan lands on the active component).
-
-All numeric values are read from the champion JSON data; nothing is
-hardcoded.
+P (Cursed Touch) is two pieces.  A zero-damage display row lives under the
+literal "P" results key, written into ``ctx.results`` directly, and the
+amplifier itself is the AMP-phase ``curse`` pseudo-slot: a Cursed target takes
+10% of every ability's pre-mitigation magic damage again as TRUE damage, so it
+runs after all damage slots and mutates their entries, gated by
+``target_cursed``.
+Q (Bandage Toss) is a two-charge ability, so sustained use is limited by
+``rechargeRate`` and not the 3-second inter-cast cooldown, hence
+``cooldown="recharge"``.
+W (Despair) is a toggle DoT on 0.5-second ticks over ``w_seconds`` whose entry
+carries per-tick display keys a standard damage entry has no room for.  Its
+compound %maxHP-per-100-AP unit resolves in ``scaling.py`` as long as the target
+stats reach ``extract_named``.
+E and R are plain "Magic Damage" reads; E's first cached effect is a defensive
+damage reduction with no such attribute, so the exact-name scan lands on the
+active component.
 """
 
 from typing import Any

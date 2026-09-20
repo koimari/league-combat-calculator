@@ -1,28 +1,18 @@
-"""Swain — CP10.8 full-entry-reviewed packet module.
+"""Swain: full-entry-reviewed packet module.
 
-Row-selection fix (Q): Death's Hand "unleashes five bolts of eldritch
-power over 0.264 seconds ... Subsequent bolts against an enemy deal 25%
-bonus damage".  The generated packet priced the cached per-bolt "Magic
-Damage" row (60/90/120/150/180 + 45% AP); the single-target total the
-cache computes for the whole cast is "Total Damage"
-(120/180/240/300/360 + 90% AP) — the first bolt at 100% plus four at the
-25% "Bonus Damage Per Bolt" row, exactly twice the per-bolt row at every
-rank.  Five bolts is not one hit, so Q declares its aggregate at the cast
-boundary instead of certifying a single hit; the 0.264-second bolt
-cadence is left for the timing wave.
-
-R (variant 0, Demonic Ascension) still prices ONE 0.5-second drain tick
-for a whole channel on a 120-second cooldown.  The cache carries no total
-for it — the channel's length is a Demonic Energy economy (50 energy,
--5 per 0.5s and -7.5 after five seconds, +10 per 0.5s while draining a
-champion) — so pricing it needs a modeled duration, not another row.
-
-P (Ravenous Flock) is the Soul Fragment stack buff: "for each stack,
-Swain gains 15 bonus health permanently".  The stack count is an
-explicit option defaulting to zero, because fragments come from enemy
-champion deaths and from the W / E-recast rips this rotation does not
-author.  The bonus health reaches the parse context before R, whose Heal
-per Tick row carries a "% of his bonus health" ratio.
+Q (Death's Hand) unleashes five bolts over 0.264 seconds, later bolts against
+one enemy dealing 25% bonus damage, so the single-target cast is the cache's
+"Total Damage" row, the first bolt at full and four at the bonus row, exactly
+twice the per-bolt row at every rank.  Five bolts are not one hit, so Q declares
+its aggregate at the cast boundary and the bolt cadence has no offsets yet.
+R variant 0 (Demonic Ascension) still prices ONE 0.5-second drain tick for a
+whole channel.  The cache carries no total for it, the channel's length being a
+Demonic Energy economy, so pricing it needs a modeled duration, not another row.
+P (Ravenous Flock) is the Soul Fragment stack buff, 15 bonus health per stack.
+The count is an explicit option defaulting to zero, because fragments come from
+enemy deaths and from the W and E-recast rips this rotation does not author.
+The bonus health reaches the parse context before R, whose Heal per Tick row
+carries a %bonus-health ratio.
 """
 
 from dataclasses import replace

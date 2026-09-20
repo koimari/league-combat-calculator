@@ -1,28 +1,20 @@
-"""Singed — CP10.7 full-entry-reviewed packet module.
+"""Singed: full-entry-reviewed packet module.
 
-R (Insanity Potion) is the one slot whose grants the engine can price:
-"Singed empowers himself for 25 seconds with ability power, bonus armor,
-bonus magic resistance, bonus movement speed" — one cached "Bonus Stats"
-row (25/55/85, corroborated by the game binary's InsanityPotion
-``StatAmount`` DataValue) that every one of those stats reads.  The
-ability power is fed into the parse context as well as the fight engine,
-because Q's poison ticks and E's fling both carry AP ratios, so the
-ultimate amplifies Singed's own damage exactly as the census said it
-should.  The movement speed rides the same row into the shared
-``stats.resolve_move_speed`` fold, whose output is
-``item_state_receipts``' ``total_move_speed`` input.  The health/mana
-regeneration has no stat_buff key — this fixed-window burst engine
-consumes no regen — and the Grievous Wounds R adds to Poison Trail is an
-enemy-healing effect the one-pair fight has no target to apply to.
-
-P (Noxious Slipstream) and W (Mega Adhesive) stay emitted zero rows.
-Neither spell object carries a damage field at all — ``SingedP`` holds
-only ``MSPercent``/``MSDuration``/``PerTargetCD``/``TriggerArea`` and
-``MegaAdhesive`` only ``SlowPercent``/``WDuration``/``WRadius``/
-``DelayExecute``/``Radius`` — and W's 50-70% slow and its ground are
-crowd control the engine records only as a kind.  P's stacking movement
-speed has a channel (the shared ``move_speed_percent`` fold) but no
-cached magnitude to put in it — see the ASSUMPTIONS entry.
+R (Insanity Potion) is the one slot whose grants the engine can price: one
+cached "Bonus Stats" row that ability power, bonus armor, bonus magic resistance
+and bonus movement speed all read, corroborated by the binary's ``StatAmount``.
+The ability power is fed into the parse context as well as the fight engine,
+because Q's poison ticks and E's fling both carry AP ratios, so the ultimate
+amplifies Singed's own damage.  The movement speed rides the same row into the
+shared ``stats.resolve_move_speed`` fold.  The health and mana regeneration has
+no ``stat_buff`` key, this fixed-window engine consuming no regeneration, and
+the Grievous Wounds R adds to Poison Trail is an enemy-healing effect a one-pair
+fight has no target for.
+P (Noxious Slipstream) and W (Mega Adhesive) stay emitted zero rows: neither
+spell object carries a damage field at all, and W's slow and its ground are
+crowd control the engine records only as a kind.  P's stacking movement speed
+has a channel, the shared ``move_speed_percent`` fold, but no cached magnitude
+to put in it.
 """
 
 from typing import Any
