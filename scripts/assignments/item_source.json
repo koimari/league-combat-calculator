@@ -2,6 +2,6 @@
  "source": "src/calculator/item_source.py",
  "decisions": [
   "The ingestion section reads only _PASSIVE_KEY_MARKERS and _ACTIVE_KEY_PREFIX, so item_source_merge.py is a true leaf and item_source.py imports nothing back.",
-  "tests/test_literal_defaults.py's ER5_TAIL keys seven rows on the file name item_source.py for _champion_restriction, _merge_effect_branches, _merge_one_item and _effect_name. Those are strings the tool does not rewrite; repay them in the same commit."
+  "scripts/literal_defaults_baseline.txt keys seven rows on the file name item_source.py for _champion_restriction, _merge_effect_branches, _merge_one_item and _effect_name. Those are strings the tool does not rewrite; repay them in the same commit."
  ]
 }

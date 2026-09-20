@@ -42,7 +42,7 @@ pylint src/           # Lint code
 python scripts/golden_snapshot.py compare scripts/golden_baseline.json   # Numeric regression gate
 python scripts/coverage_census.py check docs/coverage-census.json        # Coverage frontier gate (own CI job, 4 shards; ~1 min on 16 cores)
 python scripts/prose_lint.py          # Python prose gate: docstrings and comments under src/ and scripts/ hold current state, none longer than its body, no banner over an empty section. It reads no markdown; the plugin hook `comment_lint.lint_prose` is the markdown one
-python scripts/literal_defaults.py    # Rule-5 report: literal fallbacks on cached data. It prints every site and exits 1 on any, so it exits 1 on this tree; the gate is tests/test_literal_defaults.py, which owns the covered set `ROOTS` and the ceiling `ER5_TAIL`
+python scripts/literal_defaults.py    # Rule-5 report: literal fallbacks on cached data. It prints every site with the bucket that licenses it and exits 1 on any, so it exits 1 on this tree. `scripts/literal_defaults_baseline.txt` holds the covered roots, the frozen sites and the uncovered-tail ceiling; tests/test_literal_defaults.py is the gate over it
 python scripts/swing_stream_audit.py  # Swing-stream gate: a cached per-attack rider or Bonus Attack Speed row publishes a swing key or sits on the script's pinned FRONTIER with its reason
 python scripts/patch_update.py run    # Patch day, the one orchestrator: detect/audit/fetch/bis/packets are its other subcommands (see /patch-update skill)
 python scripts/bench_request.py --compare benchmarks.md  # Request-latency instrument, not a gate (its medians are one machine's); benchmarks.md is the one home for perf numbers
@@ -109,8 +109,8 @@ comment block, computes each new module's imports from free names, refuses
 cycles, and repoints every reader under `src/`, `tests/` and `scripts/` including
 `monkeypatch.setattr` dotted strings. Run black after `--write`, then both golden
 compares: a split moves import order, and compiled slot order and ledger
-insertion order are numeric. Fallout it cannot pay: `test_literal_defaults`
-ROOTS/ER5_TAIL rows, `data_registry` memo keys,
+insertion order are numeric. Fallout it cannot pay:
+`scripts/literal_defaults_baseline.txt` rows, `data_registry` memo keys,
 `tests/test_data_writer_inventory`'s writer set,
 `test_architecture.FRONT_DOOR_FRONTIER`, `rename_evidence.EVIDENCE_HOMES`, and
 the residue docstring, which must name what stays and point at the sibling that

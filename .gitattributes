@@ -1,1 +1,2 @@
 .sightline-baseline merge=union text eol=lf
+scripts/literal_defaults_baseline.txt merge=union text eol=lf
