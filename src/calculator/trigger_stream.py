@@ -575,7 +575,7 @@ class MechanicCapability:  # pylint: disable=too-many-instance-attributes
             delivered, ``THEORETICAL`` for a pair-engine preview of one
             (D-62).  Keyed rather than bare because the tag is a fact about
             ``(mechanic, engine)`` and a mechanic's two halves can carry
-            different tags; ``program.build.CapabilityView`` widens the key
+            different tags; ``program.capability.CapabilityView`` widens the key
             to ``EngineLane``, whose home reads ``data/`` and therefore
             cannot be named in this leaf.
         holder_stacking: whether a second holder of this mechanic arms a

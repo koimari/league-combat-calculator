@@ -33,7 +33,7 @@ so a second live-predicate amp joins the walk on the commit that declares
 one.
 
 **What is not here.**  ``modifier_events`` — the compiler from Phase 3's
-declared ``DeltaAmpRule`` to armed :class:`~.events.DamageModifier` events —
+declared ``DeltaAmpRule`` to armed damage-modifier events —
 is a separate compiler for the amps that *do* resolve to a number up front,
 and no authority move has needed it yet: Bloodsong's arrives through
 ``item_support_effects``' own packets and Shadowflame's is a rider, not a

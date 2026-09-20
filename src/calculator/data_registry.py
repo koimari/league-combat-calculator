@@ -62,25 +62,18 @@ def store_for_generation[K, V](
 class Invalidator(Enum):
     """What can make a cached answer wrong: the tree's one vocabulary.
 
-    Two registries answer "what stales this cache": the memo tables below,
-    and ``program/caches.CACHES``.  The enum lives here, in the module that
-    owns ``data_version`` and imports nothing, and ``program/caches``
-    imports it: one vocabulary, two populations, and a gate that can read
-    both.
+    The enum lives here, in the module that owns ``data_version`` and imports
+    nothing, so the memo tables below and any later population declare
+    staleness in one language and a gate can read them together.
 
-    ``DATA_VERSION`` is the member most caches carry and the one
-    ``program/caches`` requires of every declaration it holds, because a
-    derived number that survives a patch refresh is the stale literal
-    CLAUDE.md rule 5 bans, one layer up.  The last three members exist so a
-    cache the counter *cannot* govern says so in the same language rather
-    than by being filed somewhere else.
+    ``DATA_VERSION`` is the member most caches carry, because a derived number
+    that survives a patch refresh is the stale literal CLAUDE.md rule 5 bans,
+    one layer up.  The other members exist so a cache the counter *cannot*
+    govern says so in the same language rather than by being filed somewhere
+    else.
     """
 
     DATA_VERSION = "data_version"
-    ROSTER = "roster"
-    ACTOR_STATS = "actor_stats"
-    PARAMS = "params"
-    PROJECTION = "projection"
     HAND_AUTHORED_ARTIFACT = "hand_authored_artifact"
     """A ``data/`` file no script writes, so the runtime-cache counter can
     never move for it."""
@@ -313,10 +306,7 @@ DEFERRED_MEMOS: dict[str, MemoGovernance] = {
 }
 
 
-#: Every memo this module governs, in one mapping — the half of "what stales
-#: a cache" that lives here.  ``program/caches.every_declaration`` unions it
-#: with the program layer's own declarations so the question has one answer
-#: and not two.
+#: Every memo this module governs, in one mapping.
 GOVERNED_MEMOS: dict[str, MemoGovernance] = {
     **DATA_VERSION_KEYED_MEMOS,
     **ROTATION_MEMOS,
@@ -324,6 +314,13 @@ GOVERNED_MEMOS: dict[str, MemoGovernance] = {
     **REFRESH_CLEARED_MEMOS,
     **DEFERRED_MEMOS,
 }
+
+
+def every_declaration() -> dict[str, frozenset[Invalidator]]:
+    """Every cache in the tree, and what stales it: one answer, one call."""
+    return {
+        name: governance.invalidated_by for name, governance in GOVERNED_MEMOS.items()
+    }
 
 
 def write_runtime_cache(

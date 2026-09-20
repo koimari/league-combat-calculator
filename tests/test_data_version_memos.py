@@ -228,14 +228,10 @@ def test_the_phase_keys_its_survivors_and_the_rotation_lane_keys_its_own() -> No
 
 
 def test_every_declared_memo_names_what_stales_it() -> None:
-    """Criterion 14's first clause, over the population it was unaskable of.
+    """Criterion 14's first clause, as a loop rather than a survey.
 
-    "Every cache declares ``invalidated_by``" was a sentence about
-    ``program/caches``; the memos here declared their governance by
-    which table they sat in, which is a different language for the same
-    question.  It is one language now -- :class:`Invalidator` is declared
-    beside ``data_version`` and ``program/caches`` imports it -- so the
-    clause is a loop rather than a survey.
+    :class:`Invalidator` is declared beside ``data_version``, so every memo
+    names what stales it in one language.
     """
     for name, governance in data_registry.GOVERNED_MEMOS.items():
         assert governance.invalidated_by, name
@@ -257,14 +253,10 @@ def test_a_governance_with_no_reason_is_not_constructible() -> None:
         )
 
 
-def test_the_two_registries_are_one_question_with_one_reader() -> None:
-    """``every_declaration`` unions both populations without overlapping."""
-    from src.calculator.program.caches import CACHES, every_declaration
-
-    declared = every_declaration()
-    assert set(data_registry.GOVERNED_MEMOS) <= set(declared)
-    assert {f"program.{name}" for name in CACHES} <= set(declared)
-    assert len(declared) == len(data_registry.GOVERNED_MEMOS) + len(CACHES)
+def test_what_stales_a_cache_has_one_reader() -> None:
+    """``every_declaration`` answers for the whole governed population."""
+    declared = data_registry.every_declaration()
+    assert set(declared) == set(data_registry.GOVERNED_MEMOS)
     for name, invalidators in declared.items():
         assert invalidators, name
 

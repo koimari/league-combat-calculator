@@ -17,6 +17,8 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import receipt_walk_schedule
 
+from src.calculator.program import events
+
 
 def test_the_priced_row_predicate_reproduces_the_fights_own_total() -> None:
     """Summing ``total_damage`` over exactly :func:`priced_rows` is the total.
@@ -44,3 +46,26 @@ def test_the_priced_row_predicate_reproduces_the_fights_own_total() -> None:
     assert sum(
         float(result["breakdown"][key]["total_damage"]) for key in priced
     ) == pytest.approx(float(result["total_damage"]), rel=0, abs=1e-9)
+
+
+def test_every_rider_amendment_p_names_is_in_the_rider_vocabulary() -> None:
+    """The named delivery resolves against ``RIDER_KINDS``, not a second list.
+
+    Amendment P names its kernel mechanisms as dotted paths.  The schedule
+    resolves each one against the declaring object, so a rider that leaves
+    ``program.events`` re-stops the row it delivers instead of resolving
+    against a name list that outlived it.
+    """
+    declared = {kind.__name__ for kind in events.RIDER_KINDS}
+    named = {
+        path.rpartition(".")[2]
+        for paths in receipt_walk_schedule.AMENDMENT_P_DELIVERY.values()
+        for path in paths
+        if path.startswith("program.events.")
+    }
+    assert named
+    assert named <= declared
+    assert all(
+        receipt_walk_schedule._mechanism_stands(f"program.events.{name}")
+        for name in named
+    )

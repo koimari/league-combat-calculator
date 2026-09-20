@@ -1,101 +1,50 @@
-"""The whole fight, frozen, before any representation choice is made.
+"""The roster one composition pass walks, frozen, and how a later pass differs.
 
-The Imperial Mandate incident was an event that never reached the compiler:
-the emission gate dropped a crowd-control marker before compilation, so the
-compiler's fail-closed raise — which exists precisely to catch a transition
-the compiled kernel cannot stage — never fired.  A gate that runs *before*
-the program is built cannot fail closed, because there is nothing left to
-fail on.
+``program/`` answers "what happened, and to whom".  The "to whom" is this
+module: a :class:`Program` names the participants of one pass beside the
+actors those ids stand for, index-aligned and validated as such, so the five
+views that take ``(Program, WalkResult)`` read a champion at a level holding
+items rather than a string.
 
-So the ordering here is the design.  :func:`build_program` authors every
-event the fight contains, routed and ranked, and only then does a
-:class:`Projection` decide **which fields the compiler reads** — never which
-events exist.  A score-mode program and a receipt-mode program hold the same
-events; they differ in what is read off them.  That is what makes "the
-optimizer scored a build whose amp it silently dropped" unrepresentable
-rather than merely tested-for.
-
-:class:`CapabilityView` is this package's only reader of the shared
-capability registry, and it is a frozen projection of values — never
-callables and never the live objects.  ``program/`` asks three questions of a
-mechanic (can it compile, what does its number mean, does a second holder arm
-a second copy), and a view that could reach the rest of the declaration would
-grow a fourth by accident.
+:class:`ParamPatch` is the only way a later pass differs from its
+predecessor.  Anything else would make "the program is rebuilt per pass" a
+claim about intent rather than a property: two passes that could differ by an
+undeclared mutation are two programs nobody can diff.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any
 
 from ..delivery_facts import CombatantFacts
-from ..survival.phases import TransitionRank
-from .capability import CapabilityView
-from .events import PairEvent, RoutedEvent, payload_from_packet, riders_from_packet
-from .identity import EventId, MechanicId, PairOrigin, PIdx
-from .route import PairDefender, RouteContext, resolve_route
-
-
-class Projection(Enum):
-    """Which fields the compiler reads off a program.
-
-    Two members, and the docstring is the contract: a projection selects
-    *fields*, never *events*.  ``SCORE`` skips the per-event dict enrichment
-    the optimizer never reads; ``RECEIPT`` keeps it.  Neither may decide that
-    an event does not exist, which is why this enum is consumed by the
-    compiler and not by the builder.
-    """
-
-    SCORE = "score"
-    RECEIPT = "receipt"
 
 
 @dataclass(frozen=True, slots=True)
 class ParamPatch:
-    """The per-pass parameter overrides a cross-pass dependency feeds pass 2.
-
-    Frozen, and the **only** way a later pass differs from its predecessor.
-    Anything else would make "the program is rebuilt per pass" a claim about
-    intent rather than a property: two passes that could differ by an
-    un-declared mutation are two programs nobody can diff.
-    """
+    """The per-pass parameter overrides a cross-pass dependency feeds pass 2."""
 
     overrides: Mapping[str, Any]
     reason: str
 
 
 @dataclass(frozen=True, slots=True)
-class PairProgram:
-    """One attacker-versus-one-defender fight, as immutable events."""
-
-    origin: PairOrigin
-    events: tuple[PairEvent, ...]
-
-
-@dataclass(frozen=True, slots=True)
 class Program:
-    """The whole fight, frozen, routed and ranked.
+    """One composition pass's roster, frozen.
 
     ``pass_index`` is a field rather than context because a cross-pass
     dependency rebuilds the program: two passes are two programs, and a
-    cache that could not tell them apart would serve pass 1's compiled
-    actions for pass 2 and discard the patch that caused it.
+    reader that could not tell them apart would attribute pass 1's numbers to
+    pass 2 and discard the patch that caused it.
 
     ``actors`` is the roster those participant ids stand for, index-aligned
-    with ``participants`` and validated as such.  It exists because S9's five
-    views take exactly ``(Program, WalkResult)``: what happened and to whom is
-    the program's question, and "whom" is a champion at a level holding items,
-    not only a string.  Two id lists that could disagree would be the same
+    with ``participants``.  Two id lists that could disagree would be the
     kept-in-step-by-hand arrangement one layer down, so there is one list and
-    the other is derived from it at construction.  It defaults to empty for
-    the compile-time programs :func:`build_program` produces, which route by
-    index and never publish a row.
+    the other is derived from it at construction.
     """
 
     participants: tuple[str, ...]
-    events: tuple[RoutedEvent, ...]
     pass_index: int = 0
     patch: ParamPatch | None = None
     actors: tuple[CombatantFacts, ...] = ()
@@ -130,15 +79,13 @@ def roster_program(
 ) -> Program:
     """The program one composition pass walks, named by its roster.
 
-    The events are empty and that emptiness is a **statement**: the composition
-    authors its transitions as engine packets and compiles them straight to
-    ``SurvivalAction`` through ``WalkCompiler``, so no logical event list exists
-    for those passes.  A reconstructed list would be a second authoring of the
-    fight.  The views read the roster and the walk result, pinned by a test.
+    The composition authors its transitions as engine packets and compiles
+    them straight to ``SurvivalAction`` through ``WalkCompiler``, so no
+    logical event list exists for those passes: the views read the roster and
+    the walk result, pinned by a test.
     """
     return Program(
         participants=tuple(str(actor.participant_id) for actor in actors),
-        events=(),
         pass_index=pass_index,
         patch=patch,
         actors=tuple(actors),
@@ -146,172 +93,8 @@ def roster_program(
     )
 
 
-class DerivationCycle(ValueError):
-    """Two mechanics each declared to be priced after the other.
-
-    A cycle is a declaration defect, not a runtime condition: producer order
-    is *derived* from the capability graph rather than hand-declared, and a
-    hand-declared tier would be a fourth writer on a registry three phases
-    already share.  Naming the cycle is what makes deriving it safe.
-    """
-
-    def __init__(self, cycle: Sequence[MechanicId]) -> None:
-        super().__init__(
-            "the capability graph declares a producer cycle: "
-            + " -> ".join(str(member) for member in cycle)
-        )
-        self.cycle = tuple(cycle)
-
-
-def derivation_order(
-    caps: CapabilityView,
-    *,
-    depends_on: Mapping[MechanicId, Sequence[MechanicId]] | None = None,
-) -> tuple[MechanicId, ...]:
-    """Producer order, derived from the capability graph rather than declared.
-
-    A stable topological order: mechanics are visited in sorted name order so
-    two runs over one registry produce one order, and a cycle raises
-    :class:`DerivationCycle` naming its members rather than silently
-    dropping one of them.  ``depends_on`` defaults to the empty graph, which
-    is what the registry declares today — every mechanic is independent, and
-    the sorted order is the whole answer.
-    """
-    graph: Mapping[MechanicId, Sequence[MechanicId]] = depends_on or {}
-    order: list[MechanicId] = []
-    state: dict[MechanicId, int] = {}
-
-    def visit(mechanic: MechanicId, path: tuple[MechanicId, ...]) -> None:
-        mark = state.get(mechanic, 0)
-        if mark == 2:
-            return
-        if mark == 1:
-            raise DerivationCycle((*path, mechanic))
-        state[mechanic] = 1
-        for parent in sorted(graph.get(mechanic, ())):
-            visit(parent, (*path, mechanic))
-        state[mechanic] = 2
-        order.append(mechanic)
-
-    for mechanic in sorted(caps.mechanics):
-        visit(mechanic, ())
-    return tuple(order)
-
-
-def pair_program(
-    result: Mapping[str, Any], origin: PairOrigin, caps: CapabilityView
-) -> PairProgram:
-    """One attacker x defender fight as immutable events.
-
-    ``result`` is one engine result — the same object the trigger bus reads
-    authored triggers from, not a new name for it.  Every damage row becomes
-    a :class:`~.events.PairEvent` at the damage rank whose id is positional
-    (the engine numbers its ledger by position, which is why ``sequence`` is
-    required and why the row is rejected without one) and whose route is the
-    pair defender, because a pair fight has exactly one.
-
-    ``caps`` is taken and not yet read: the capability-driven fan-out —
-    which declared mechanic arms what beside a hit — is Phase 4 S7's, and a
-    signature that gained the parameter later would make every call site
-    S7's problem too.
-    """
-    _ = caps
-    events: list[PairEvent] = []
-    for index, row in enumerate(result.get("damage_events", ())):
-        if "sequence" not in row:
-            raise ValueError(
-                f"{origin.attacker} damage event "
-                f"{row.get('source_key', '')!r} has no sequence; the walk's "
-                "tie-break order would depend on event-id numbering"
-            )
-        events.append(
-            PairEvent(
-                id=EventId(origin, index),
-                time=float(row["time"]),
-                sequence=int(row["sequence"]),
-                rank=TransitionRank.DAMAGE,
-                payload=payload_from_packet(row, origin=origin),
-                route=PairDefender(),
-                riders=riders_from_packet(row),
-            )
-        )
-    return PairProgram(origin=origin, events=tuple(events))
-
-
-def build_program(
-    participants: Sequence[str],
-    pairs: Sequence[tuple[PairProgram, PIdx, PIdx]],
-    caps: CapabilityView,
-    *,
-    pass_index: int = 0,
-    patch: ParamPatch | None = None,
-) -> Program:
-    """Every pair fight's events, routed against the roster, as one program.
-
-    ``pairs`` carries each fight beside the roster slots of its attacker and
-    defender, because routing is the step that turns "the defender of this
-    fight" into an index and the pair program deliberately does not know one.
-
-    ``caps`` is **taken and not yet read**, exactly as :func:`pair_program`
-    takes it: this builder routes and ranks authored events, and the
-    capability-driven work — the fan-out of what a declared mechanic arms
-    beside a hit, and the refusal of a mechanic nobody declared — is S7's.
-    Saying so here rather than only at the discard: this module's own header
-    calls :class:`CapabilityView` the package's only reader of the registry
-    and describes what it refuses, which reads as if the entry point
-    consulted it.  It does not, and an inert check that reads as a live one
-    is worth one sentence.  The parameter stays because a signature that
-    grew it later would make every call site S7's problem too, and
-    ``caches.CACHES['program']`` declares it inert with a test that varies it
-    and asserts the program does not move — so the day it starts reaching
-    the value, the declaration goes red rather than this docstring going
-    quietly stale.
-
-    The events come out in authored order and are **not** sorted here: the
-    walk's total order is the eight-element sort key the compiler builds, and
-    sorting twice by two rules is how two engines end up disagreeing about
-    simultaneous events.
-    """
-    _ = caps
-    roster = tuple(str(pid) for pid in participants)
-    routed: list[RoutedEvent] = []
-    for pair, attacker, defender in pairs:
-        ctx = RouteContext(
-            author=attacker,
-            holder=attacker,
-            pair_defender=defender,
-            opponents=(defender,),
-        )
-        for event in pair.events:
-            routed.extend(
-                RoutedEvent(
-                    id=event.id,
-                    subject=subject,
-                    source=attacker,
-                    time=event.time,
-                    sequence=event.sequence,
-                    rank=event.rank,
-                    payload=event.payload,
-                    riders=event.riders,
-                )
-                for subject in resolve_route(event.route, ctx, roster_size=len(roster))
-            )
-    return Program(
-        participants=roster,
-        events=tuple(routed),
-        pass_index=pass_index,
-        patch=patch,
-    )
-
-
 __all__ = [
-    "DerivationCycle",
-    "PairProgram",
     "ParamPatch",
     "Program",
-    "Projection",
-    "build_program",
-    "derivation_order",
-    "pair_program",
     "roster_program",
 ]

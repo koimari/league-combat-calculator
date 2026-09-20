@@ -527,10 +527,7 @@ def test_the_inline_sort_tuples_fold_the_way_action_key_does() -> None:
     strike-back after a late barrier that ``action_key`` ties, and only the
     compiled-vs-receipt equivalence suite could ever see it.
 
-    ``program/compile.py`` is the only file that writes one by hand; the
-    declared entry point ``compile_program`` calls ``action_key`` instead,
-    which is the stronger version of this guard — a key that is never
-    rebuilt cannot fold its rank the wrong way.
+    ``program/compile.py`` is the only file that writes one by hand.
     """
     compile_py = PROGRAM / "compile.py"
     rules = _population_rules(_population())
