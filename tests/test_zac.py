@@ -4,9 +4,15 @@ Stretching Strikes slows, Elastic Slingshot knocks up, and Let's Bounce!
 displaces on its opening bounce only — so R's kinds are authored per part.
 """
 
+from functools import partial
+
+import pytest
+
 from src.calculator.champions import parse_champion_abilities, zac
 from src.calculator.champions.slot_cc import CC_PER_PART
+from src.calculator.champions.slot_extract import extract_named
 from tests import cc_review
+from tests import champion_closure as closure
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -122,3 +128,53 @@ def test_the_goo_chunk_heal_is_resolved_in_the_one_pair_receipt() -> None:
     assert payload["self_healing"] == pytest.approx(
         sum(event["amount"] for event in chunks), abs=1.0
     )
+
+
+# One rotation at level 18 into the bare 2000-HP dummy; slot rows are parsed
+# against the shared reference stat block.
+_closure_fight = partial(closure.fight, role="top")
+_closure_parse = closure.reference_abilities
+
+
+# ---------------------------------------------------------------------------
+# Zac — Q both Stretching Strikes
+# ---------------------------------------------------------------------------
+
+
+class TestZac:
+    """P1-3: Q prices both arm strikes (2 x per-hit == Total)."""
+
+    def test_q_prices_both_strikes(self):
+        """Q: 2 x the per-hit Magic Damage row == Total Magic Damage."""
+        data = _closure_fight("Zac")
+        stats = closure.fight_stats(data)
+        total = extract_named(
+            closure.ability_row("Zac", "Q"),
+            "Total Magic Damage",
+            5,
+            stats,
+            closure.target_stats(data),
+        )
+        assert total == pytest.approx(360.0)
+        assert closure.slot_total(data, "Q") == pytest.approx(
+            total, abs=closure.ROUNDING
+        )
+        assert int(data["breakdown"]["Q"]["casts"]) == 1
+        # two authored hit events land on the Q row (cast + empowered attack)
+        events = data["damage_events"]
+        assert len([e for e in events if e.get("phase") == "ability"]) >= 2
+
+    def test_r_keeps_initial_plus_three_bounces(self):
+        """R keeps the E2-3 sourced bounce pricing."""
+        data = _closure_fight("Zac")
+        total = extract_named(
+            closure.ability_row("Zac", "R"),
+            "Total Magic Damage",
+            3,
+            closure.fight_stats(data),
+            {},
+        )
+        assert total == pytest.approx(650.0)
+        assert closure.slot_total(data, "R") == pytest.approx(
+            total, abs=closure.ROUNDING
+        )

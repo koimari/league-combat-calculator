@@ -24,15 +24,21 @@ accordingly:
   generic path; write a test file only when the champion gets a custom
   module (see the /add-champion skill).
 
-Coverage-evidence tiers
------------------------
+What a run does not collect
+---------------------------
 The hooks at the bottom of this file serve the coverage-claim resolver
 (``tests/coverage_resolver.py``): they stash the collected node set and
 answer whether this session collected everything.  They are purely additive
 — no item is mutated and nothing depends on collection order — except for
-the one deliberate removal: in a *filtered* session the full-session tier is
-**not collected**, because ``pytest.skip`` prints green and a tier that
-reports skipped is a tier that reports nothing.
+two deliberate removals, both the same ruling: ``pytest.skip`` prints green
+and a check that reports skipped is a check that reports nothing.
+
+- In a *filtered* session the full-session tier is **not collected**,
+  because only a complete collection can answer it.
+- On a machine without one of ``tests/resource_gate.py``'s resources, the
+  nodes marked as needing it are **not collected**, and the count is named
+  in the terminal summary, under ``-n`` as well, where each worker hands
+  its own count to the controller over ``workeroutput``.
 """
 
 import functools
@@ -53,6 +59,12 @@ from tests.coverage_resolver import (
     FULL_SESSION_MARKER,
     node_facts,
     record_session,
+)
+from tests.resource_gate import (
+    NOT_RUN,
+    NOT_RUN_WIRE,
+    RESOURCES,
+    absent_resources,
 )
 
 
@@ -399,13 +411,49 @@ def fight():
 
 
 def pytest_configure(config: pytest.Config) -> None:
-    """Register the marker the full-session tier is gated on."""
+    """Register the tier marker and one marker per local resource."""
     config.addinivalue_line(
         "markers",
         f"{FULL_SESSION_MARKER}: a coverage check only a complete collection "
         "can answer (exact node ids, marker facts, duplicate node ids). "
         "Deselected — never skipped — when -k, -m or a path narrowed the run.",
     )
+    for marker, (description, _) in RESOURCES.items():
+        config.addinivalue_line(
+            "markers",
+            f"{marker}: needs {description}. Deselected and reported, never "
+            "skipped, when this machine does not have it.",
+        )
+
+
+def pytest_sessionfinish(session: pytest.Session) -> None:
+    """Hand an xdist worker's counts to the controller, which never collects.
+
+    Under ``-n`` the deselection happens in each worker, and neither
+    ``pytest_deselected`` nor a worker's terminal summary reaches the
+    controller, so the run would print nothing at all.  ``workeroutput`` is
+    xdist's wire for exactly this; it exists only inside a worker.
+    """
+    wire = getattr(session.config, "workeroutput", None)
+    if wire is not None:
+        wire[NOT_RUN_WIRE] = dict(session.config.stash.get(NOT_RUN, {}))
+
+
+def pytest_testnodedown(node, error) -> None:  # pylint: disable=unused-argument
+    """Take one worker's counts; every worker collects the same whole set."""
+    counts = getattr(node, "workeroutput", {}).get(NOT_RUN_WIRE, {})
+    not_run = node.config.stash.setdefault(NOT_RUN, {})
+    for marker, count in counts.items():
+        not_run[marker] = max(not_run.get(marker, 0), count)
+
+
+def pytest_terminal_summary(terminalreporter) -> None:
+    """Name what this run did not do, so an absent resource cannot read green."""
+    for marker, count in sorted(terminalreporter.config.stash.get(NOT_RUN, {}).items()):
+        nodes = "node needs" if count == 1 else "nodes need"
+        terminalreporter.write_line(
+            f"NOT RUN: {count} {nodes} {RESOURCES[marker][0]}", yellow=True
+        )
 
 
 def _is_full_session(config: pytest.Config) -> bool:
@@ -428,26 +476,38 @@ def _is_full_session(config: pytest.Config) -> bool:
 def pytest_collection_modifyitems(
     config: pytest.Config, items: list[pytest.Item]
 ) -> None:
-    """Stash the collected node set; a filtered session never collects the full tier.
+    """Stash the collected node set, and drop what this run cannot answer.
 
     Deselection rather than ``pytest.skip`` is the ruling (D-22): a skipped
     check takes the green path and reports success for work it did not do,
     which is this campaign's own failure shape inside its own gate.  A
     deselected node is absent from the report entirely, and the resolution
     tier proves the weaker fact by source scan in its place.
+
+    Two things are dropped under it.  A filtered session never collects the
+    full-session tier, because only a complete collection can answer it.  A
+    machine without one of ``RESOURCES`` never collects the nodes that need
+    it, and ``pytest_terminal_summary`` names how many and why.
     """
     full = _is_full_session(config)
     config.stash[FULL_SESSION] = full
-    if not full:
+    dropped = set() if full else {FULL_SESSION_MARKER}
+    dropped |= absent_resources()
+    not_run: dict[str, int] = {}
+    if dropped:
         deselected = [
-            item for item in items if item.get_closest_marker(FULL_SESSION_MARKER)
+            item
+            for item in items
+            if any(item.get_closest_marker(marker) for marker in dropped)
         ]
         if deselected:
             config.hook.pytest_deselected(items=deselected)
-            items[:] = [
-                item
-                for item in items
-                if item.get_closest_marker(FULL_SESSION_MARKER) is None
-            ]
+            gone = {id(item) for item in deselected}
+            items[:] = [item for item in items if id(item) not in gone]
+        for marker in sorted(dropped & set(RESOURCES)):
+            count = sum(1 for item in deselected if item.get_closest_marker(marker))
+            if count:
+                not_run[marker] = count
+    config.stash[NOT_RUN] = not_run
     config.stash[COLLECTED_NODES] = node_facts(items)
     record_session(config)

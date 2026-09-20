@@ -2,7 +2,7 @@
 
 Every test here pins one acceptance criterion from a GitHub ``front-end``
 issue against the shipped template, stylesheet, or ``app.js`` source — the
-same browser-free contract style as ``test_f0_frontend.py``.
+same browser-free contract style as ``test_frontend_contract.py``.
 
 Root cause worth remembering: the stylesheet's ``@media (max-width: 720px)``
 block was never closed, so ``[hidden]``, ``.economics-bar``, ``.engine-error``
@@ -334,6 +334,7 @@ def event(time: float, source: str, damage: float = 100.0, **extra) -> dict:
     }
 
 
+@pytest.mark.needs_node
 def test_sparse_timeline_names_every_source_in_full():
     html = run_timeline_renderer(
         [event(0.5, "Orb of Deception"), event(3.25, "Charm")], 10
@@ -347,6 +348,7 @@ def test_sparse_timeline_names_every_source_in_full():
     assert "2 ordered events, oldest first" in html
 
 
+@pytest.mark.needs_node
 def test_simultaneous_events_get_separate_lanes():
     """Same-timestamp events get separate lanes, never stacked markers."""
     html = run_timeline_renderer(
@@ -361,12 +363,14 @@ def test_simultaneous_events_get_separate_lanes():
     assert html.count(">4s<") == 3
 
 
+@pytest.mark.needs_node
 def test_dense_timeline_reports_what_it_did_not_draw():
     html = run_timeline_renderer([event(i / 10, f"Hit {i}") for i in range(150)], 15)
     assert html.count('class="timeline-event"') == 60
     assert "First 60 of 150 ordered events" in html, "a silent cap reads as complete"
 
 
+@pytest.mark.needs_node
 def test_timeline_lanes_carry_their_index_and_position():
     html = run_timeline_renderer([event(0.0, "Q"), event(5.0, "R")], 10)
     assert 'data-event-index="0"' in html
@@ -375,18 +379,21 @@ def test_timeline_lanes_carry_their_index_and_position():
     assert "--at:50%" in html
 
 
+@pytest.mark.needs_node
 def test_timeline_escapes_untrusted_source_text():
     html = run_timeline_renderer([event(1.0, '<img src=x onerror="alert(1)">')], 10)
     assert "<img" not in html
     assert "&lt;img" in html
 
 
+@pytest.mark.needs_node
 def test_timeline_states_when_no_events_returned():
     html = run_timeline_renderer([], 10)
     assert "No participant event ledger returned." in html
     assert "timeline-event" not in html
 
 
+@pytest.mark.needs_node
 def test_timeline_skips_events_without_a_usable_timestamp():
     html = run_timeline_renderer(
         [event(1.0, "Q"), event(None, "Withheld"), event(2.0, "W")], 10
@@ -395,6 +402,7 @@ def test_timeline_skips_events_without_a_usable_timestamp():
     assert "Withheld" not in html
 
 
+@pytest.mark.needs_node
 def test_timeline_shows_a_reason_when_an_event_dealt_no_damage():
     html = run_timeline_renderer(
         [event(1.0, "Q", damage=0, skipped_reason="out of range")], 10

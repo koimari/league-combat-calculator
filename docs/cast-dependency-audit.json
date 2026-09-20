@@ -327,7 +327,7 @@
       "champion": "Syndra",
       "consume": "Q2",
       "kind": "cc_setup",
-      "latent_reason": "No E->Q2 cc_setup edge exists in this tree: the detector's _castable() requires cooldown > 0 and Q2 carries the 0.0 cast-exactly-once cooldown, so the fan-out skips it. Declared latent rather than dropped because a Q2 that ever gains a real charge cooldown brings the reversed edge with it. This is the fact the ('E','Q2') seed exception in tests/test_f3_rotation_all.py claimed while silently passing, moved where the audit can see it (D-84).",
+      "latent_reason": "No E->Q2 cc_setup edge exists in this tree: the detector's _castable() requires cooldown > 0 and Q2 carries the 0.0 cast-exactly-once cooldown, so the fan-out skips it. Declared latent rather than dropped because a Q2 that ever gains a real charge cooldown brings the reversed edge with it. This is the fact the ('E','Q2') seed exception in tests/test_rotation_derivation_every_champion.py claimed while silently passing, moved where the audit can see it (D-84).",
       "latent_states": 16,
       "matched_states": 0,
       "parent": "E requires Q2",

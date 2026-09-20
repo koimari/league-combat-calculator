@@ -244,6 +244,7 @@ def test_module_fails_closed_on_the_local_burn_authority_conflict():
     assert renata_glasc.MODULE_COVERAGE["W"] == "modeled"
 
 
+@pytest.mark.needs_game_files
 def test_game_binary_pins_the_conflicting_four_ticks_per_second():
     """The named binary really carries the numbers the denial cites.
 
@@ -281,6 +282,7 @@ def test_game_binary_pins_the_conflicting_four_ticks_per_second():
     assert binary_burn_seconds != pytest.approx(wiki_burn_seconds)
 
 
+@pytest.mark.needs_game_files
 def test_game_binary_corroborates_every_published_active_half_number():
     """The half that IS published is double-sourced, not wiki-only.
 

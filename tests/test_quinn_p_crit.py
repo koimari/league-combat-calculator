@@ -124,7 +124,6 @@ _QUINN_BIN = (
 )
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
-_AWAIT = "awaiting P4-Quinn-P ..."
 # Four different 25%-crit items -> 100% crit, bonus AD 125 at level 18.
 _CRIT_ITEMS = (
     "Navori Flickerblade",
@@ -395,6 +394,7 @@ class TestSourceEvidence:
         assert 7.0 not in atom["values"]
         assert 2.56 not in atom["values"]
 
+    @pytest.mark.needs_game_files
     def test_binary_corroboration(self):
         # QuinnPassive DataValues: the 4 s reveal, the 40% AD ratio, the
         # 1.0 mode multiplier — and NO cooldown numbers (crit cooldown is
@@ -751,6 +751,7 @@ class TestMalformedDeclarations:
         assert extract_cooldown(ability, 1) == 0.0
         assert extract_cooldown(ability, 18) == 0.0
 
+    @pytest.mark.needs_game_files
     def test_no_crit_numbers_anywhere_in_cache_or_atoms(self):
         # The 7 / 2.56 / 4.44 endpoints exist NOWHERE as numbers: wiki
         # values are zeroed, the atom values are zeroed, and the binary
@@ -845,7 +846,7 @@ class TestScoreReceiptParity:
 
 
 class TestRegressionSurface:
-    def test_e5_fix_2_quinn_contract_stays_green(self):
+    def test_corrected_ability_rows_2_quinn_contract_stays_green(self):
         # The E5-2 fix's own assertions, re-pinned: level 18, no items,
         # the Harrier row prices 120 + 0.4 x bAD per auto (bAD 0 here)
         # and the passive parses physical.

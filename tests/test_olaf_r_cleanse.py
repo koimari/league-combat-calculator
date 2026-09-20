@@ -1,25 +1,38 @@
-"""Olaf R (Ragnarok): the cleanse, the immunity window and the bonus state.
+"""Olaf R (Ragnarok): the cleanse, the immunity window and the steroid rows.
 
-The R deals no damage, and its cast is the activation: no option moves it,
-and the API rejects every ``r_*`` champion option with a named 400.  Per
-cast the authoring emits a cleanse packet (cleanse_item "Olaf R", source
-"Olaf R - Ragnarok"), a 3 s crowd-control immunity window, and the sourced
-armor/MR stat buff beside the movement row.  Rank 0 books no cast and wires
-none of it.
+`champions/olaf.py` is a packet module whose every slot is modeled, so it
+declares no MODULE_COVERAGE.  W (Tough It Out) is the scanner-emitted self
+shield (10/40/70/100/130 + 17.5% missing health for 2.5s at the cast; the
+missing-health term is a named boundary), and P, W and R each price their
+sourced steroid rows.  `OPTIONS` carries one key,
+`olaf_missing_health_percent`; there is no `r_*` option, and the API
+rejects every one with a named 400.
 
-Every value is read live from the cache rather than pinned as a literal.
-``data/champions.json`` "Olaf" R[0] carries Bonus Resistances 10/15/20,
-Bonus Attack Damage 10/20/30 plus 25% AD, Bonus Movement Speed 20/45/70,
-cost 100, cooldown 100/90/80 and castTime "none";
-``data/bin/characters/olaf.bin.json`` OlafRagnarokAbility carries Duration
-3.0, DurationExtension 2.5, and canCastWhileDisabled and cannotBeSuppressed
-both true, which is the flag pair behind the castability carve-out.
+R is a zero-damage buff: the parse receipt publishes the sourced Bonus
+Resistances (10/15/20) and Bonus Attack Damage (10/20/30 + 25% bonus AD)
+on its `stat_buff`, costs 100 mana, and publishes the cached cooldown row
+100/90/80.  Its cast time is absent in the cache.
+
+Because R is a buff-phase steroid the derived rotation opens with it, so
+the four R receipts anchor at t=0 rather than at a slot-ordered 0.5, and
+the immunity window is already up when an enemy control would land: the
+app fight BLOCKS the Ahri charm instead of truncating it.  The truncation
+path is pinned at kernel level, where the packets are authored behind an
+active control.  Tests read the activation back off the fight through
+`_r_activation_time` rather than pinning a rotation-order literal.
 
 Two carve-outs the shared kernel owns and this file drives: the airborne
-family is excluded from the cleanse, because the notes remove the stun under
-an airborne and not the displacement, and a suppression on the caster denies
-the cleanse by name (``caster_control_blocks_cleanse``) without consuming
-the one use.
+family is excluded from the cleanse, because the notes remove the stun
+under an airborne and not the displacement, and a suppression on the
+caster denies the cleanse by name (`caster_control_blocks_cleanse`)
+without consuming the one use.
+
+Every expected damage value is recomputed from the cached leveling rows
+against the fight's own stats.  The resist, AD, movement, duration, size,
+cooldown and cost rows are themselves the values under test, so they
+appear as pinned cache and game-file evidence.
+
+Section ids S1 to S11 below name the parts of this matrix.
 """
 
 import contextlib
@@ -494,6 +507,7 @@ class TestSourceAndTypedValues:
         passive = _r_ability()["effects"][0]["description"]
         assert "bonus armor and bonus magic resistance" in passive
 
+    @pytest.mark.needs_game_files
     def test_r_duration_extension_note_pinned(self):
         # The duration-extension note (the brief's contract #1 + #9): up
         # to 2.5 seconds per basic attack on-hit or Reckless Swing cast
@@ -525,6 +539,7 @@ class TestSourceAndTypedValues:
         assert "duration will not be increased if the basic attack is  dodged" in notes
         assert "duration will be increased if the basic attack is  blocked" in notes
 
+    @pytest.mark.needs_game_files
     def test_r_rows_recomputed_from_game_file(self):
         # Community Dragon evidence (the brief's "game file if present"):
         # the game DataValues ranks 1..3 match the cached rows exactly —
@@ -545,6 +560,7 @@ class TestSourceAndTypedValues:
         assert calc[0]["mDataValue"] == "FlatAD"
         assert calc[1]["mDataValue"] == "PercentTotalADAmp"
 
+    @pytest.mark.needs_game_files
     def test_r_game_flags_pin_castability_and_immunity(self):
         # The game castability + immunity flags (the brief's contract
         # #5): canCastWhileDisabled true / cannotBeSuppressed true (the
@@ -1194,6 +1210,7 @@ class TestImmunityWindow:
 
 
 class TestCastability:
+    @pytest.mark.needs_game_files
     def test_game_flags_pin_the_carve_out(self):
         # PASS source evidence (the brief's contract #5): the game file
         # carries canCastWhileDisabled true / cannotBeSuppressed true —
@@ -1357,6 +1374,7 @@ class TestCastability:
             }
         ]
 
+    @pytest.mark.needs_game_files
     def test_r_stasis_lock_is_a_named_boundary(self):
         # P2-9 contract boundary (the brief's contract #5 tail): the game
         # flag SpecialCase_StasisLocked locks the R cast under stasis,
@@ -1607,6 +1625,7 @@ class TestOneUseAndCooldown:
         assert decision.reason == "use_spent"
         assert decision.use_consumed is False
 
+    @pytest.mark.needs_game_files
     def test_r_cooldown_row_pinned_and_never_enforced(self):
         # Pinned actual (the brief's contract #8): the cached cooldown
         # row 100/90/80 (affectedByCdr) + the game cooldownTime agree,

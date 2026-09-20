@@ -7,12 +7,15 @@ single-namespace contract and guard against re-importing duplicate growth,
 cooldown, and resistance formulas outside their canonical owners.
 """
 
-import re
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+
+import import_namespace
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -21,22 +24,6 @@ ROOT = Path(__file__).resolve().parent.parent
 #: busy, so a cap sized for the idle number fails under the suite that runs it
 #: (issue #263).
 HANG_GUARD_SECONDS = 120
-
-
-def _src_text(relpath: str) -> str:
-    return (ROOT / relpath).read_text(encoding="utf-8")
-
-
-def _code_lines(text: str) -> list[str]:
-    """Source lines with comments AND docstrings stripped (enough for the
-    formula guards — prose may cite the formula, code may not)."""
-    without_docstrings = re.sub(r'""".*?"""', "", text, flags=re.DOTALL)
-    lines = []
-    for raw in without_docstrings.splitlines():
-        line = re.sub(r"\s*#.*$", "", raw).strip()
-        if line:
-            lines.append(line)
-    return lines
 
 
 # ---------------------------------------------------------------------------
@@ -93,45 +80,9 @@ def test_direct_entrypoint_runs_without_second_namespace():
     assert "direct-entry ok" in result.stdout
 
 
-def test_no_bare_calculator_imports_in_source():
-    """No ``calculator.*`` (non-``src``) import may appear anywhere."""
-    offenders = []
-    for path in sorted((ROOT / "src").rglob("*.py")):
-        if "__pycache__" in str(path):
-            continue
-        for lineno, line in enumerate(path.read_text().splitlines(), 1):
-            if re.match(r"\s*(?:from|import) calculator(?:\s|\.)", line):
-                offenders.append(f"{path.relative_to(ROOT)}:{lineno}: {line.strip()}")
-    assert not offenders, "bare calculator imports:\n" + "\n".join(offenders)
-
-
-def test_app_does_not_insert_src_dir_on_sys_path():
-    """app.py must put the repo root (or nothing) on sys.path, never src/."""
-    app = _src_text("src/app.py")
-    for lineno, line in enumerate(app.splitlines(), 1):
-        if "sys.path.insert" in line:
-            assert (
-                "resolve().parents[1]" in line
-            ), f"src/app.py:{lineno} inserts a non-repo-root path: {line.strip()}"
-
-
 # ---------------------------------------------------------------------------
 # Canonical formula owners
 # ---------------------------------------------------------------------------
-
-
-def test_growth_formula_lives_only_in_stat_formulas():
-    """The 0.7025/0.0175 growth term is owned by stat_formulas.growth_multiplier."""
-    owners = []
-    for path in sorted((ROOT / "src").rglob("*.py")):
-        if "__pycache__" in str(path) or path.name == "stat_formulas.py":
-            continue
-        for lineno, line in enumerate(_code_lines(path.read_text()), 1):
-            if "0.7025" in line or "0.0175" in line:
-                owners.append(f"{path.relative_to(ROOT)}:{lineno}: {line}")
-    assert not owners, "duplicate growth formula:\n" + "\n".join(owners)
-    formulas_src = _src_text("src/calculator/stat_formulas.py")
-    assert "def growth_multiplier" in formulas_src
 
 
 def test_growth_multiplier_enforces_level_bound():
@@ -144,14 +95,22 @@ def test_growth_multiplier_enforces_level_bound():
             stat_formulas.growth_multiplier(bad)
 
 
-def test_cooldown_formula_is_imported_not_reimplemented():
-    """The DPS matrix takes effective_cooldown rather than writing it again."""
-    matrix = _src_text("src/calculator/ability_dps_matrix.py")
-    import_line = next(
-        line for line in matrix.splitlines() if line.startswith("from .stats import")
+def test_the_tree_scans_find_nothing() -> None:
+    """The four source rules `scripts/import_namespace.py` owns.
+
+    The scans live beside the other tree lints so that a concurrent edit to
+    `src/` cannot produce a phantom failure set here in the middle of a run.
+    """
+    assert import_namespace.bare_calculator_imports() == []
+    assert import_namespace.sys_path_inserts() == []
+    assert import_namespace.growth_formula_sites() == []
+    assert import_namespace.cooldown_reimplementations() == []
+
+
+def test_a_planted_bare_import_is_still_found(tmp_path) -> None:
+    """The gate is driven by a real scan, not by an empty one."""
+    (tmp_path / "planted.py").write_text(
+        "from calculator import stats" + chr(10), encoding="utf-8"
     )
-    assert "effective_cooldown" in import_line
-    for lineno, line in enumerate(_code_lines(matrix), 1):
-        assert (
-            "100.0 / (100.0" not in line
-        ), f"ability_dps_matrix reimplements cooldown math at line {lineno}"
+    (found,) = import_namespace.bare_calculator_imports(tmp_path)
+    assert found.endswith("planted.py:1: from calculator import stats")

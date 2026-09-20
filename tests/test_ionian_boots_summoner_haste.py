@@ -3,11 +3,10 @@
 This file is the focused acceptance-matrix owner for Ionian Boots of
 Lucidity's Ionian Insight passive ("Gain 10 summoner spell haste").  It
 pins the OBSERVABLES the coordinator's P3-3N completion must satisfy and
-runs against today's source: every behavior that already exists passes
-now; every assertion that targets a contract piece the source does not
-emit yet is marked ``xfail`` with reason ``awaiting P3-3N summoner-spell
-model ...`` (the 1v1 fight model has NO summoner-spell action/cooldown
-state — champion abilities + autos only).
+runs live against today's source.  An assertion whose contract piece the
+source does not emit pins the current refusal, because the 1v1 fight
+model has NO summoner-spell action or cooldown state: champion abilities
+and autos only.
 
 Contract under test (typed source-backed values, verified against
 docs/wiki-full-entry-audit.json — Ionian Boots of Lucidity page 41221,
@@ -29,17 +28,17 @@ summoner spell haste]]."; cross-checked by data/atoms/items.json 3158
   and returns exactly 10.0; a missing key raises ``KeyError`` naming
   Ionian Boots of Lucidity AND the key; a malformed value fails loudly
   (TypeError/ValueError) — never a silent fallback (AGENTS.md rule 5).
-  TODAY: no registry entry exists, so the value-read is absent (xfail);
-  the fail-loud paths are pinned through the existing typed reads.
+  No registry entry exists, so the value read is absent; the fail-loud
+  paths are pinned through the existing typed reads.
 * ATOM/SOURCE RECEIPT: the accessor or registry is tied to the catalog
   ``stat.haste`` atom (hash 1e775793fa61a40e, values [10.0], evidence
   "@kw:summoner spell haste"); a monkeypatched diverging registry value
   fails closed with a ValueError naming the atom hash; the wiki revision
   4022246 rides the typed registry (ITEM_INPUT_OPTIONS source receipt or
   ITEM_EFFECTS static key, per the Catalyst/Doran's Helm precedents).
-  TODAY: the atom receipt is pinned from data/atoms/items.json (read-only
+  The atom receipt is pinned from data/atoms/items.json (read-only
   evidence); the registry-tied revision and the fail-closed accessor are
-  absent (xfail).
+  absent.
 * ABILITY-HASTE SEPARATION (the core pin): the item's 10 ability haste
   (stats.abilityHaste.flat) and the passive's 10 summoner spell haste are
   SEPARATE.  Ionian Insight must NOT change champion ability cooldowns:
@@ -60,12 +59,11 @@ summoner spell haste]]."; cross-checked by data/atoms/items.json 3158
   pool).
 * FAIL-CLOSED ABSENT STATE: today an absent summoner-spell state authors
   no row/claim anywhere (pinned as the current observable); the
-  coordinator's chosen P3-3N surface is the receipt-only named-boundary
-  row (the Tear/Doran's Helm Helping Hand precedent) — the receipt-row
-  contract is pinned below and xfailed until it lands.  The B-vs-C
-  parity test filters the Ionian receipt row so it stays green under
-  EITHER surface.
-* XFAIL ONLY for: the typed value read, the atom-tied fail-closed
+  chosen surface is the receipt-only named-boundary row (the
+  Tear/Doran's Helm Helping Hand precedent), and the receipt-row
+  contract is pinned below.  The B-vs-C parity test filters the Ionian
+  receipt row so it stays green under EITHER surface.
+* STILL ABSENT: the typed value read, the atom-tied fail-closed
   accessor, the registry-tied revision, the named-boundary receipt row,
   and the actual summoner-spell cooldown/action assertion (a Flash/
   Ignite cast would reuse 9.09% faster) — all with reason
@@ -74,10 +72,10 @@ summoner spell haste]]."; cross-checked by data/atoms/items.json 3158
 Existing regression surface touching this item (kept green, disjoint):
 tests/test_app.py (allies boots slot -> ability_haste 10, lines ~1350/
 1363/1429), tests/test_optimizer.py (~1037, boots pool), tests/
-test_scenario.py (~243+), tests/test_issues_82.py (~479).
+test_scenario.py (~243+), tests/test_role_quest_and_support_progression.py (~479).
 
 Sibling owners: the Tear of the Goddess / Doran's Helm Helping Hand
-precedents are pinned in tests/test_cp20_items.py and
+precedents are pinned in tests/test_item_quest_economy_packets.py and
 tests/test_dorans_helm_minion_damage.py; the Gluttonous Greaves
 pre-implementation matrix conventions follow tests/test_gluttonous_
 greaves.py.  This file is disjoint and pins only the Ionian Insight
@@ -200,8 +198,8 @@ def _without_ionian_receipt_rows(receipts: list[dict]) -> list[dict]:
 def _lazy_accessor():
     """Import the coordinator's P3-3N accessor lazily (absent today).
 
-    Module-level import would break collection before the coordinator
-    lands; the xfail tests below exercise it and fail closed today."""
+    A module-level import would break collection before the registry
+    entry lands; the tests below exercise it and pin the refusal."""
     from src.calculator import item_effects as _item_effects
 
     return getattr(_item_effects, ACCESSOR_NAME)
@@ -218,7 +216,7 @@ def _lazy_accessor():
 
 
 # ---------------------------------------------------------------------------
-# 2. Typed accessor: fail-loud paths pass today; the value read is xfail
+# 2. Typed accessor: the fail-loud paths pass; the value read is absent
 # ---------------------------------------------------------------------------
 
 
@@ -261,7 +259,7 @@ def test_ionian_insight_accessor_returns_exactly_10(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
-# 3. Atom-tied fail-closed + source revision riding the registry (xfail)
+# 3. Atom-tied fail-closed + source revision riding the registry (absent)
 # ---------------------------------------------------------------------------
 
 
@@ -354,7 +352,7 @@ def test_effective_cooldowns_and_recasts_match_the_stat_exactly(ahri_data):
 
 
 # ---------------------------------------------------------------------------
-# 7 + 9. Coverage wording + the only actual summoner-spell xfail
+# 7 + 9. Coverage wording + the one summoner-spell refusal
 # ---------------------------------------------------------------------------
 
 

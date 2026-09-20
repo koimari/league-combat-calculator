@@ -1,8 +1,8 @@
-"""Issue #143 phase 2 — one authoritative ledger owner per heal, continued.
+"""One authoritative ledger owner per heal, over the audited slots.
 
-Phase 1 locked Taric Q / Shyvana W / Naafiri Q.  Phase 2 extends the
-``_MODULE_AUTHORED_HEAL_SLOTS`` registry to the remaining audited slots and
-locks the ledger outcomes:
+``_MODULE_AUTHORED_HEAL_SLOTS`` carries these slots (Taric Q, Shyvana W and
+Naafiri Q are pinned in ``tests/test_heal_ledger_ownership.py``), and the
+ledger outcomes are:
 
 - SELF-heal double-grants (scanner re-derived a heal the champion rule
   already authors): Sona W, Janna R, Milio R, Irelia Q, Vladimir Q,
@@ -39,7 +39,7 @@ from src.calculator.support_scan import _MODULE_AUTHORED_HEAL_SLOTS
 from tests.survival_probe import survival_of
 
 # The 15 slots this phase adds to the registry (phase 1's three are locked
-# in tests/test_issue_143.py).
+# in tests/test_heal_ledger_ownership.py).
 PHASE2_SLOTS = [
     ("Sona", "W"),
     ("Janna", "R"),

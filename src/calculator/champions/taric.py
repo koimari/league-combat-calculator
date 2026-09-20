@@ -16,15 +16,15 @@ session — the label was simply stale:
     ``derive_self_healing`` (25 + 15% AP + 1% max health per stocked
     charge, self_and_all_teammates fan-out via the E1 rule); Taric is in
     support_effects.py's ``_MODULE_AUTHORED_HEAL_SLOTS`` so the generic
-    scanner correctly defers (pinned in tests/test_issue_143.py,
-    tests/test_e1_healing_b5.py, tests/test_survival_kernel.py).
+    scanner correctly defers (pinned in tests/test_heal_ledger_ownership.py,
+    tests/test_self_heal_rules_5.py, tests/test_survival_kernel.py).
   - W (Bastion): ally/self shield via the support scanner's "Shield
     Strength" packet, an amount_formula keyed off the PROTECTED target's
     max health, 2.5s duration (support_effects.py; pinned in
     tests/test_survival_kernel.py's compiled/receipt-walk parity cases).
   - R (Cosmic Radiance): self_and_all_teammates invulnerability state,
     carried by the support scanner's ``_SUPPORT_STATE_SLOTS`` entry
-    (support_effects.py; pinned in tests/test_e8_support.py's
+    (support_effects.py; pinned in tests/test_revive_and_ally_support_events.py's
     ``test_taric_cosmic_radiance_targets_the_caster_and_selected_ally``
     and tests/test_survival_kernel.py's delayed-ally-state cases).
 Roadmap session 2 (2026-08-20): P (Bravado) is CLOSED — reclassified

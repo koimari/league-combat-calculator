@@ -309,6 +309,7 @@ def _kit(champion, tmp_path):
     }
 
 
+@pytest.mark.needs_node
 def test_variant_flattening_stamps_every_variant_with_its_source_form(tmp_path):
     """``VARIANT_BOOLEAN_OPTIONS`` counts two different things: a ``form`` axis
     and a ``variant`` (packet) axis. Only the stamp tells them apart — Gnar's Q
@@ -331,6 +332,7 @@ def test_variant_flattening_stamps_every_variant_with_its_source_form(tmp_path):
     assert _kit("Ziggs", tmp_path)["R"] == [("Epicenter", 0), ("Outer blast", 0)]
 
 
+@pytest.mark.needs_node
 @pytest.mark.parametrize(
     ("champion", "variants", "key", "expected"),
     [
@@ -355,6 +357,7 @@ def test_variant_buttons_send_booleans_not_variant_indices(
     assert options[key] is expected
 
 
+@pytest.mark.needs_node
 @pytest.mark.parametrize(
     ("clicked", "mega", "mirrored"),
     [
@@ -379,6 +382,7 @@ def test_gnar_q_variants_read_their_form_not_the_flat_index(
     assert probe["kit"]["W"][mirrored]["form"] == probe["kit"]["Q"][clicked]["form"]
 
 
+@pytest.mark.needs_node
 def test_no_jayce_variant_click_can_send_hammer_stance_with_accelerated_q(tmp_path):
     """Accelerated Shock Blast is a *cannon* packet, so no fight can be in
     hammer stance and fire it. Q binds ``accelerated_q`` and therefore sat
@@ -399,6 +403,7 @@ def test_no_jayce_variant_click_can_send_hammer_stance_with_accelerated_q(tmp_pa
     assert set(seen) == {True, False}
 
 
+@pytest.mark.needs_node
 @pytest.mark.parametrize(
     ("clicked", "index", "hammer_stance", "accelerated_q", "mirrored_q"),
     [
@@ -428,6 +433,7 @@ def test_jayce_q_rides_the_form_axis_its_option_does_not_name(
     assert len(set(forms.values())) == 1, forms
 
 
+@pytest.mark.needs_node
 @pytest.mark.parametrize("variants", [{"R": 0}, {"R": 1}])
 def test_ziggs_variant_payload_is_accepted_by_the_calculate_route(variants, tmp_path):
     """The bug was only visible at the boundary: both R variants must POST."""

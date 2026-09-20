@@ -1,5 +1,7 @@
 """Revision-backed formulas, resources, and target rules for Karthus."""
 
+from functools import partial
+
 import pytest
 
 from src.calculator.calculate import calculate_payload
@@ -11,6 +13,7 @@ from src.calculator.champions import (
 )
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
+from tests import champion_closure as closure
 from tests.ability_math import parts_raw_total
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
@@ -322,3 +325,38 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Karthus")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+# One rotation at level 18 into the bare 2000-HP dummy, and the same fight
+# into an Ahri enemy, which is what produces the coupled participant ledger.
+_closure_fight = partial(closure.fight, role="mid", duration=5.0)
+_closure_enemy_fight = partial(
+    closure.fight, role="top", enemy=closure.AHRI, target_health=None
+)
+_closure_parse = closure.abilities
+
+
+# ---------------------------------------------------------------------------
+# Karthus — Death Defied documented receipt
+# ---------------------------------------------------------------------------
+
+
+class TestKarthus:
+    """Death Defied is a death-only trigger: P becomes a zero-damage
+    receipt with the sourced boundary, and the alive-state package is
+    unchanged (total_damage stays Q + E + R)."""
+
+    def test_passive_receipt_is_zero_damage_and_documented(self) -> None:
+        abilities = _closure_parse("Karthus")
+        passive = abilities["passive"]
+        assert passive["name"] == "Death Defied"
+        assert passive["total_raw"] == 0.0
+        assert passive["parts"] == ()
+        assert "death-only trigger" in passive["detail"]
+
+    def test_alive_state_totals_unchanged(self) -> None:
+        data = _closure_fight("Karthus")
+        # W debuff + Q 232 + E 5x27.5 + R 500 at 0 resists.
+        assert data["breakdown"]["Q"]["total_damage"] == pytest.approx(232.0)
+        assert data["breakdown"]["E"]["total_damage"] == pytest.approx(137.5)
+        assert data["breakdown"]["R"]["total_damage"] == pytest.approx(500.0)

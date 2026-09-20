@@ -133,11 +133,6 @@ _RENGAR_DATA = _CHAMPION_DATA["Rengar"]
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
 _TARGET_MAX_HP = 2000.0
-# The P2-6 coordinator wires the empowered-W cleanse packet authoring +
-# the typed declaration; genuinely-absent mechanics are xfailed with
-# this reason (never strict — the completion removes the markers).
-_AWAIT = "awaiting P2-6 wiring"
-
 # The cached W rows the typed declaration must publish (values under
 # test — pinned as cache evidence, never literal damage constants).
 _W_BASE_FLAT = [50, 80, 110, 140, 170]
@@ -545,6 +540,7 @@ class TestSourceAndTypedValues:
                 {**_stats(ap=0.0), "level": level}
             ) == pytest.approx(float(_W_EMPOWERED_LEVEL[idx]))
 
+    @pytest.mark.needs_game_files
     def test_w_game_file_evidence(self):
         # Community Dragon evidence (brief contract #1's "game file if
         # present"): the base RengarW record carries BaseDamage 50..170 at
@@ -651,6 +647,7 @@ class TestSourceAndTypedValues:
             for receipt in rule["source_receipts"]
         )
 
+    @pytest.mark.needs_game_files
     def test_w_empowered_cc_immunity_mechanic(self):
         # Genuinely-absent mechanic: the game file's CCImmuneDuration 1.5
         # (the post-cast CC immunity) is NOT in the wiki wording the
@@ -1471,9 +1468,9 @@ class TestUnchangedBoundaries:
 #
 # The broader regression surface (every test that touches rengar /
 # ferocity / grey health / battle roar / cleanse, per the brief contract
-# #15): test_e8_grey_health.py test_e1_healing_b4.py
-# test_e1_healing_b6.py test_heal_ledger_phase2.py test_e3_stacks_2.py
-# test_e9_corpus.py test_cp10_batch_06.py test_import_namespace.py
-# test_lord_dominik.py test_mikael_packet.py test_p1_review_1.py
+# #15): test_grey_health.py test_self_heal_rules_4.py
+# test_self_heal_rules_6.py test_heal_ledger_authored_slots.py test_stack_systems_2.py
+# test_practice_tool_corpus.py test_cp10_batch_06.py test_import_namespace.py
+# test_lord_dominik.py test_mikael_packet.py test_locke.py
 # test_redemption_packet.py test_rengar_pen_breakpoints.py
 # test_self_healing_champions.py tests/test_app.py

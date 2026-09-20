@@ -114,11 +114,6 @@ _KSANTE_DATA = _CHAMPION_DATA["KSante"]
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
 _TARGET_MAX_HP = 2000.0
-# The P1-4A coordinator wires the typed W declaration, the option state
-# receipt and the documentary walk; genuinely-absent mechanics are xfailed
-# with this reason.
-_AWAIT = "awaiting P3-4A wiring"
-
 # Module-authored constants under test (declared beside the cached rows /
 # in the module; the values the typed W declaration will publish).
 _CHARGE_DEFAULT = 1.0

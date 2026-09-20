@@ -443,7 +443,7 @@ class TestRHextechUltimatum:
 class TestPassiveAndMeta:
     """P (Adaptive Defenses) is a shield; no standalone row in
     ``abilities`` — it rides W's ``self_shield_events`` payload (see
-    tests/test_e8_shields.py) — but MODULE_COVERAGE reports it modeled,
+    tests/test_champion_shield_events.py) — but MODULE_COVERAGE reports it modeled,
     not out_of_scope (roadmap session 4 batch B); options declared."""
 
     def test_passive_not_in_results(self, camille_data, parse_at) -> None:

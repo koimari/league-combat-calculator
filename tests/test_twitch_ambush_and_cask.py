@@ -210,6 +210,7 @@ class TestBothNumbersAreSourcedTwice:
         # The window has NO atom — that is exactly why it is a constant.
         assert "timing.active_duration" not in atoms
 
+    @pytest.mark.needs_gamefile_cache
     def test_the_binary_rank_indexing_is_proved_by_the_stealth_duration_row(self):
         """Riot DataValues are rank-0-indexed; the wiki proves it here.
 
@@ -247,6 +248,7 @@ class TestBothNumbersAreSourcedTwice:
         assert match is not None, prose
         assert float(match.group(1)) == twitch._Q_ATTACK_SPEED_WINDOW
 
+    @pytest.mark.needs_gamefile_cache
     def test_the_six_second_window_matches_the_binary(self):
         """The constant's SECOND receipt — skips without the local cache."""
         assert set(_data_values("TwitchHideInShadows")["AttackSpeedDuration"]) == {
@@ -266,6 +268,7 @@ class TestBothNumbersAreSourcedTwice:
         ), descriptions
         assert any("Upon breaking stealth" in d for d in descriptions), descriptions
 
+    @pytest.mark.needs_gamefile_cache
     def test_the_binary_carries_the_same_one_second_fade(self):
         assert set(_data_values("TwitchHideInShadows")["MaxFadeTime"]) == {1.0}
 

@@ -1,0 +1,835 @@
+# literal-defaults baseline: every site `scripts/literal_defaults.py` still
+# finds under the covered roots, frozen by module, enclosing function, key and
+# occurrence count, never by line number, so an edit above a site does not turn
+# the gate red while a second site under an already-frozen key still does.
+# `merge=union` is safe.
+#
+# Line kinds:
+#
+#   root|<path under src/calculator>
+#       A covered root: every `.py` under it is scanned, including the ones
+#       that survive nothing, so a new literal default in a clean champion
+#       module is caught the day it is written.  A file joins the roots once
+#       every site in it is either converted or sorted into a bucket below.
+#
+#   payload-receiver|<expression prefix>
+#   payload-scope|<path under src/calculator>
+#       A receiver carrying a champion-module-authored ability payload, and
+#       the roots the pin covers.  A literal default on one of these
+#       receivers inside that scope is what
+#       `ability_atoms.ABILITY_PAYLOAD_SCHEMA` exists to refuse, so the count
+#       is pinned at zero there rather than listed site by site.
+#
+#   er5-tail-ceiling|<count>
+#       How many `src/calculator` modules the roots may leave uncovered.  The
+#       tail itself is derived, never listed: it is every module minus what
+#       the roots cover.  This number may only fall, so a module joining the
+#       roots lowers it, and a module dropping out of them or a module new to
+#       the package fails the gate until somebody decides which side it is on.
+#       It is a count, not a set: one module converted alongside one new
+#       uncovered module lands on the same number, and the roots above are
+#       the review surface for that, since the conversion edits them.
+#
+#   <BUCKET>|<module>|<enclosing>|<kind>|<key> <count>
+#       One frozen site.  Every bucket states what it licenses here, and a
+#       bucket with no reason in this header is an error.
+#
+# ROW_READS: Reads off an internal breakdown or damage-event row. These rows
+#     have no schema home the way `_damage_event_row`'s mandatory five do; one
+#     row dataclass retires the whole bucket at once.
+# REQUEST_ITEM_STATE: Request-supplied per-item state, not cached data: an
+#     absent key is the item's declared off state, and `ITEM_INPUT_OPTIONS`
+#     owns what that is.
+# OPTION_SCHEMA: Reads on the in-module `ITEM_INPUT_OPTIONS` declaration
+#     itself. An absent facet means this option declares none, which is a
+#     source fact, not a cached-data miss.
+# LOADOUT_NAMES: A loadout row's own name. The empty string is a sentinel the
+#     next statement rejects or skips past; no number rides on it.
+# ATOM_ROWS: Atom rows compared against the registry. The empty tuple is the
+#     failure branch: each of these raises on the next line rather than using
+#     it.
+# WIKI_TRAVERSALS: Strict traversals of a raw cached ability row. Every one of
+#     these feeds a shape check whose failure branch raises, naming champion,
+#     slot and source, so the empty default is the path *to* that raise, never
+#     a served value.
+# CACHED_SOURCE_ROW: The same traversal shape as WIKI_TRAVERSALS, over the
+#     whole covered set: one step of a walk down a raw cached row (champion,
+#     item or rune JSON) whose empty default is the path to the branch that
+#     refuses, a `return None` that prices the slot at nothing, or a raise
+#     naming the source. No number is ever served from one of these defaults;
+#     the walk that would have produced it does not run. A site that *serves*
+#     a cached value belongs in no bucket: it gets a fail-loud accessor
+#     instead (`slotlib.ability_name`, `ability_atoms.required_ability_atom`,
+#     `item_effects`' typed readers).
+# AUTHORED_DECLARATION: A read on something this repository authored, not
+#     something it ingested: the entry a slot parser just built, a champion
+#     module's reviewed packet spec, an in-module lookup table. An absent key
+#     is that declaration's own statement that it carries no such facet, which
+#     is the shape `ability_atoms.ABILITY_PAYLOAD_SCHEMA` formalises for the
+#     payloads that cross a module boundary.
+# ENGINE_ROW: A row the engine built during this fight: a damage event, a
+#     cast, a heal payment, a stat block `calculate_total_stats` produced.
+#     Same class as ROW_READS, and it retires the same way, one row dataclass
+#     per producer. A build-stat read is *not* in here when a declared
+#     vocabulary covers it: `champions.inputs.champion_stat` is the accessor,
+#     and rune, interpreter and champion formulas all go through it.
+# MODULE_DECLARATION: `getattr(module, "DECLARATION", None)` on a champion
+#     module, its parser, or a compiled part. The absent value is the module
+#     declining to declare an optional contract, which
+#     `champions.module_contract` owns and validates; it is a source fact
+#     about that module, not a cached-data miss.
+
+# The covered set.
+root|__init__.py
+root|ability_atoms.py
+root|ability_prose.py
+root|ability_spec.py
+root|ally_packet_recipient.py
+root|application_errors.py
+root|attack_windows.py
+root|binary_roots.py
+root|build_search.py
+root|capabilities.py
+root|capability_fields.py
+root|cast_dependency.py
+root|cast_edge_resolution.py
+root|cast_event_row.py
+root|cast_order_overrides.py
+root|certified_casts.py
+root|champion_cleanses.py
+root|champion_growth.py
+root|champions
+root|cleanse_declarations.py
+root|combat_events.py
+root|control_spec.py
+root|coverage_evidence.py
+root|damage.py
+root|damage_event_row.py
+root|data_fetcher.py
+root|data_registry.py
+root|data_updater.py
+root|defense_composition.py
+root|economics_data.py
+root|event_row_field.py
+root|fight
+root|fight_request_bounds.py
+root|heal_event_row.py
+root|healing_helpers.py
+root|interpreters
+root|item_coverage.py
+root|item_effects.py
+root|item_outcomes.py
+root|item_source.py
+root|item_source_merge.py
+root|item_stat_block.py
+root|ledger_declarations.py
+root|ledger_inputs.py
+root|ledger_projection.py
+root|manaflow_ledger.py
+root|minion_stats.py
+root|passive_parser.py
+root|patch_identity.py
+root|program/__init__.py
+root|program/amp.py
+root|program/capability.py
+root|program/dependency.py
+root|program/identity.py
+root|program/precision.py
+root|program/route.py
+root|program/scope.py
+root|program/sums.py
+root|program/tagged.py
+root|program/views/__init__.py
+root|program/views/breakdown.py
+root|program/views/leaf.py
+root|program/views/tdd.py
+root|program/views/view_tag.py
+root|quantity.py
+root|rank_allocation.py
+root|reference_vocabulary.py
+root|request_parsing.py
+root|resistance.py
+root|resource_events.py
+root|resource_ledger.py
+root|role_quests.py
+root|rune_effects.py
+root|rune_parser.py
+root|rune_paths
+root|rune_pull.py
+root|shield_ledger.py
+root|shield_pools.py
+root|spell_shield_rearm.py
+root|stack_rules.py
+root|starting_defenses.py
+root|stat_conversion.py
+root|stat_formulas.py
+root|stats.py
+root|survival/__init__.py
+root|survival/accumulate.py
+root|survival/defense_contracts.py
+root|survival/event_slots.py
+root|survival/phases.py
+root|survival/pricing.py
+root|survival/typed_action.py
+root|value_ref.py
+root|value_source_receipt.py
+root|vendor_path.py
+root|wiki_fetch.py
+root|window_gates.py
+root|work_counters.py
+
+# Pinned at zero: the fight engine, the orchestrator and its steps.
+payload-scope|damage.py
+payload-scope|fight
+payload-receiver|ability.
+payload-receiver|ability_damages
+payload-receiver|ability_info
+payload-receiver|auto_attack_override.
+payload-receiver|conversion_info.
+payload-receiver|crit_modifier.
+payload-receiver|debuff.
+payload-receiver|info.
+payload-receiver|on_hit.
+payload-receiver|on_hit_data.
+payload-receiver|on_hit_spec.
+payload-receiver|r_info.
+payload-receiver|spec.
+payload-receiver|state.ability_damages
+payload-receiver|storage.
+payload-receiver|target_debuff.
+
+er5-tail-ceiling|89
+
+# The frozen sites.
+ATOM_ROWS|item_effects.py|_atom_pinned_value|dict.get|"values" 1
+ATOM_ROWS|item_effects.py|counter_trigger|dict.get|"counter_trigger" 1
+ATOM_ROWS|item_effects.py|guardian_angel_rebirth_declaration|dict.get|"values" 1
+ATOM_ROWS|item_effects.py|spell_shield_cooldown_seconds|dict.get|"values" 1
+AUTHORED_DECLARATION|champions/__init__.py|get_champion_option_rotation|dict.get|"key" 1
+AUTHORED_DECLARATION|champions/ambessa.py|_repudiation|dict.get|"name" 1
+AUTHORED_DECLARATION|champions/ambessa.py|_repudiation|dict.get|"rank" 1
+AUTHORED_DECLARATION|champions/ambessa.py|_repudiation|or-default|"rank" 1
+AUTHORED_DECLARATION|champions/amumu.py|_apply_curse|dict.get|"parts" 1
+AUTHORED_DECLARATION|champions/aphelios.py|parse|dict.get|"parts" 1
+AUTHORED_DECLARATION|champions/contract_vocabulary.py|coverage|dict.get|slot 1
+AUTHORED_DECLARATION|champions/entry_shape.py|certify_shared_instant|or-default|"parts" 1
+AUTHORED_DECLARATION|champions/entry_shape.py|validate_entry_keys|dict.get|"post_hit_proc" 1
+AUTHORED_DECLARATION|champions/entry_shape.py|validate_entry_keys|dict.get|"target_debuff" 4
+AUTHORED_DECLARATION|champions/entry_shape.py|validate_entry_keys|or-default|"post_hit_proc" 2
+AUTHORED_DECLARATION|champions/evelynn.py|_allure|dict.get|"skillshot" 1
+AUTHORED_DECLARATION|champions/leblanc.py|_mimic|dict.get|choice 1
+AUTHORED_DECLARATION|champions/malphite.py|parse|dict.get|"rank" 1
+AUTHORED_DECLARATION|champions/malphite.py|parse|or-default|"rank" 1
+AUTHORED_DECLARATION|champions/module_helpers.py|parse|dict.get|"parts" 1
+AUTHORED_DECLARATION|champions/mordekaiser.py|parse|dict.get|'detail' 1
+AUTHORED_DECLARATION|champions/nidalee.py|parse|dict.get|"detail" 1
+AUTHORED_DECLARATION|champions/nidalee.py|parse|dict.get|"total_raw" 1
+AUTHORED_DECLARATION|champions/packet_module.py|_compiled_slot|dict.get|"damage_type" 1
+AUTHORED_DECLARATION|champions/packet_module.py|_compiled_slot|dict.get|"name" 1
+AUTHORED_DECLARATION|champions/packet_module.py|_compiled_slot|dict.get|"ranks" 1
+AUTHORED_DECLARATION|champions/packet_module.py|_compiled_slot|dict.get|"reason" 1
+AUTHORED_DECLARATION|champions/packet_module.py|build_packet_module|dict.get|"assumptions" 1
+AUTHORED_DECLARATION|champions/packet_module.py|build_packet_module|dict.get|"slots" 2
+AUTHORED_DECLARATION|champions/packet_module.py|build_packet_module|dict.get|'slots' 1
+AUTHORED_DECLARATION|champions/packet_module.py|parse_abilities|dict.get|"damage_type" 1
+AUTHORED_DECLARATION|champions/packet_module.py|parse_abilities|or-default|"on_hit" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|_apply_packet_tick_fix|dict.get|"count" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|_apply_packet_tick_fix|dict.get|"damage_type" 3
+AUTHORED_DECLARATION|champions/packet_parsers.py|_apply_packet_tick_fix|dict.get|"total_raw" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|_apply_packet_tick_fix|dict.get|'name' 2
+AUTHORED_DECLARATION|champions/packet_parsers.py|_apply_packet_tick_fix|dict.get|'tick_interval' 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|_apply_packet_tick_fix|or-default|"total_raw" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|_one_hit|dict.get|"count" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|_override_packet_static|dict.get|"base" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|_override_packet_static|dict.get|"ratios" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|_override_packet_static|dict.get|"stat" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|_override_packet_static|dict.get|"values" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|_single_hit_row|dict.get|"variants" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|_variant_parsers|dict.get|"damage_type" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|_variant_parsers|dict.get|"name" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|_variant_parsers|dict.get|"ranks" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|_variant_parsers|dict.get|"reason" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|_variant_slot|dict.get|"default" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|parse|dict.get|"base" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|parse|dict.get|"count" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|parse|dict.get|"damage_type" 2
+AUTHORED_DECLARATION|champions/packet_parsers.py|parse|dict.get|"ratios" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|parse|dict.get|"stat" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|parse|dict.get|"total_multiplier" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|parse|dict.get|"values" 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|parse|dict.get|'tick_interval' 1
+AUTHORED_DECLARATION|champions/packet_parsers.py|select_variant|dict.get|"default" 1
+AUTHORED_DECLARATION|champions/rakan.py|_q_with_p_shield|dict.get|"rank" 1
+AUTHORED_DECLARATION|champions/rakan.py|_q_with_p_shield|or-default|"rank" 1
+AUTHORED_DECLARATION|champions/samira.py|parse|dict.get|'detail' 1
+AUTHORED_DECLARATION|champions/senna.py|parse|dict.get|"name" 1
+AUTHORED_DECLARATION|champions/senna.py|parse|dict.get|"rank" 1
+AUTHORED_DECLARATION|champions/senna.py|parse|or-default|"rank" 1
+AUTHORED_DECLARATION|champions/shyvana.py|derive_self_healing|dict.get|"detail" 1
+AUTHORED_DECLARATION|champions/slot_cc.py|_apply_module_cc|or-default|"control_events" 1
+AUTHORED_DECLARATION|champions/slot_cc.py|_apply_module_cc|or-default|"parts" 1
+AUTHORED_DECLARATION|champions/slot_cc.py|_empower_marker_part|dict.get|"damage_type" 1
+AUTHORED_DECLARATION|champions/slot_cc.py|_refuse_undeclared_part_cc|or-default|"parts" 1
+AUTHORED_DECLARATION|champions/slot_cc.py|_validate_cc_event_contract|or-default|"parts" 1
+AUTHORED_DECLARATION|champions/slot_control.py|parse|dict.get|"control_events" 1
+AUTHORED_DECLARATION|champions/slot_control.py|parse|dict.get|"control_source_atoms" 1
+AUTHORED_DECLARATION|champions/slot_control.py|parse|dict.get|"parts" 1
+AUTHORED_DECLARATION|champions/slot_entries.py|parse|or-default|"parts" 1
+AUTHORED_DECLARATION|champions/slot_entries.py|parse|or-default|"total_raw" 1
+AUTHORED_DECLARATION|champions/smolder.py|parse|dict.get|"total_raw" 2
+AUTHORED_DECLARATION|champions/swain.py|parse|or-default|"parts" 1
+AUTHORED_DECLARATION|champions/sylas.py|parse|or-default|"parts" 1
+AUTHORED_DECLARATION|champions/teemo.py|parse|dict.get|"detail" 1
+AUTHORED_DECLARATION|champions/teemo.py|parse|dict.get|"total_raw" 1
+AUTHORED_DECLARATION|champions/vex.py|parse|dict.get|"name" 1
+AUTHORED_DECLARATION|champions/vex.py|parse|dict.get|"rank" 1
+AUTHORED_DECLARATION|champions/vex.py|parse|or-default|"rank" 1
+AUTHORED_DECLARATION|champions/vi.py|_carry_blast_shield|dict.get|'detail' 1
+AUTHORED_DECLARATION|champions/viktor.py|parse|dict.get|"name" 1
+AUTHORED_DECLARATION|champions/viktor.py|parse|dict.get|"rank" 1
+AUTHORED_DECLARATION|champions/viktor.py|parse|or-default|"rank" 1
+AUTHORED_DECLARATION|champions/vladimir.py|_apply_hemoplague|dict.get|"parts" 1
+AUTHORED_DECLARATION|champions/volibear.py|parse|dict.get|"name" 1
+AUTHORED_DECLARATION|champions/volibear.py|parse|dict.get|"rank" 1
+AUTHORED_DECLARATION|champions/volibear.py|parse|or-default|"rank" 1
+AUTHORED_DECLARATION|champions/zac.py|parse|or-default|"parts" 1
+AUTHORED_DECLARATION|champions/zed.py|_death_mark|dict.get|"total_raw" 1
+AUTHORED_DECLARATION|champions/zed.py|_death_mark|or-default|"total_raw" 1
+AUTHORED_DECLARATION|champions/zilean.py|parse|or-default|"parts" 1
+AUTHORED_DECLARATION|champions/zoe.py|_spell_thief|dict.get|summoner 1
+AUTHORED_DECLARATION|data_updater.py|_riot_item_descriptions|or-default|"description" 1
+AUTHORED_DECLARATION|healing_helpers.py|parsed_rank|dict.get|"rank" 1
+AUTHORED_DECLARATION|healing_helpers.py|parsed_rank|dict.get|slot 1
+AUTHORED_DECLARATION|healing_helpers.py|parsed_rank|or-default|"rank" 1
+AUTHORED_DECLARATION|item_coverage.py|_declared_families|dict.get|"type" 1
+AUTHORED_DECLARATION|item_coverage.py|review_issue_refs|dict.get|str(item_name) 1
+AUTHORED_DECLARATION|item_source.py|branch_inventory|or-default|'name' 1
+AUTHORED_DECLARATION|item_source.py|branches|or-default|"branches" 1
+AUTHORED_DECLARATION|item_source.py|item_source_audit|or-default|"name" 2
+AUTHORED_DECLARATION|item_source_merge.py|_effect_name|or-default|"name" 1
+AUTHORED_DECLARATION|item_source_merge.py|_merge_one_item|or-default|"name" 1
+AUTHORED_DECLARATION|rune_effects.py|rune_catalog|dict.get|"icon" 1
+AUTHORED_DECLARATION|rune_effects.py|rune_catalog|dict.get|"path" 1
+AUTHORED_DECLARATION|rune_paths/domination.py|_compile_cheap_shot|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/domination.py|_compile_sudden_impact|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/domination.py|_compile_taste_of_blood|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/domination.py|_compile_ultimate_hunter|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/inspiration.py|_compile_approach_velocity|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/inspiration.py|_compile_biscuit_delivery|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/inspiration.py|_compile_cosmic_insight|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/inspiration.py|_compile_jack_of_all_trades|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/inspiration.py|_compile_magical_footwear|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/keystones.py|_compile_aftershock|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/keystones.py|_compile_arcane_comet|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/keystones.py|_compile_conqueror|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/keystones.py|_compile_dark_harvest|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/keystones.py|_compile_deathfire|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/keystones.py|_compile_electrocute|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/keystones.py|_compile_first_strike|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/keystones.py|_compile_fleet|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/keystones.py|_compile_glacial|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/keystones.py|_compile_grasp|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/keystones.py|_compile_guardian|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/keystones.py|_compile_hail_of_blades|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/keystones.py|_compile_lethal_tempo|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/keystones.py|_compile_press_the_attack|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/keystones.py|_compile_stormraider|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/keystones.py|_compile_summon_aery|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/precision.py|_compile_absorb_life|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/precision.py|_compile_last_stand|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/precision.py|_compile_legend_alacrity|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/precision.py|_compile_legend_bloodline|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/precision.py|_compile_legend_haste|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/precision.py|_compile_triumph|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/resolve.py|_compile_bone_plating|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/resolve.py|_compile_conditioning|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/resolve.py|_compile_font_of_life|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/resolve.py|_compile_overgrowth|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/resolve.py|_compile_revitalize|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/resolve.py|_compile_second_wind|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/resolve.py|_compile_shield_bash|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/resolve.py|_compile_unflinching|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/shards.py|compile_shard|dict.get|"effects" 2
+AUTHORED_DECLARATION|rune_paths/sorcery.py|_compile_absolute_focus|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/sorcery.py|_compile_axiom_arcanist|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/sorcery.py|_compile_celerity|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/sorcery.py|_compile_gathering_storm|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/sorcery.py|_compile_manaflow_band|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/sorcery.py|_compile_scorch|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/sorcery.py|_compile_transcendence|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_paths/sorcery.py|_compile_waterwalking|dict.get|"effects" 1
+AUTHORED_DECLARATION|rune_pull.py|reparse_cached_rune_effects|dict.get|"slots" 1
+AUTHORED_DECLARATION|stats.py|calculate_total_stats|dict.get|"ability_haste" 1
+AUTHORED_DECLARATION|stats.py|calculate_total_stats|dict.get|"ability_power" 2
+CACHED_SOURCE_ROW|champions/aatrox.py|derive_self_healing|dict.get|"description" 1
+CACHED_SOURCE_ROW|champions/aatrox.py|derive_self_healing|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/akshan.py|_extract_double_shot_ratio|dict.get|"description" 1
+CACHED_SOURCE_ROW|champions/akshan.py|_extract_double_shot_ratio|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/akshan.py|_parse_passive_proc_damage|dict.get|"description" 1
+CACHED_SOURCE_ROW|champions/akshan.py|_parse_passive_proc_damage|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"attribute" 1
+CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"leveling" 1
+CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"modifiers" 1
+CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"values" 1
+CACHED_SOURCE_ROW|champions/alistar.py|derive_self_healing|dict.get|"description" 1
+CACHED_SOURCE_ROW|champions/alistar.py|derive_self_healing|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/ambessa.py|_drakehounds_step|dict.get|"description" 1
+CACHED_SOURCE_ROW|champions/ambessa.py|_drakehounds_step|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/ambessa.py|_parse_passive_damage|dict.get|"description" 1
+CACHED_SOURCE_ROW|champions/ambessa.py|_parse_passive_damage|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/ambessa.py|_parse_passive_damage|dict.get|"modifiers" 1
+CACHED_SOURCE_ROW|champions/aphelios.py|derive_self_healing|dict.get|"P" 1
+CACHED_SOURCE_ROW|champions/aphelios.py|derive_self_healing|dict.get|"abilities" 1
+CACHED_SOURCE_ROW|champions/ashe.py|_require_q_rows|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/ashe.py|_require_q_rows|dict.get|"leveling" 1
+CACHED_SOURCE_ROW|champions/attribute_classifier.py|classify_damage_type|dict.get|"damageType" 1
+CACHED_SOURCE_ROW|champions/attribute_classifier.py|classify_damage_type|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/attribute_classifier.py|classify_damage_type|dict.get|"leveling" 1
+CACHED_SOURCE_ROW|champions/azir.py|_arise|or-default|"rechargeRate" 1
+CACHED_SOURCE_ROW|champions/belveth.py|_per_level_scaling|dict.get|"attribute" 1
+CACHED_SOURCE_ROW|champions/belveth.py|_per_level_scaling|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/belveth.py|_per_level_scaling|dict.get|"leveling" 1
+CACHED_SOURCE_ROW|champions/blitzcrank.py|_static_field|dict.get|"attribute" 1
+CACHED_SOURCE_ROW|champions/blitzcrank.py|_static_field|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/blitzcrank.py|_static_field|dict.get|"leveling" 1
+CACHED_SOURCE_ROW|champions/blitzcrank.py|_static_field|dict.get|"modifiers" 1
+CACHED_SOURCE_ROW|champions/blitzcrank.py|_static_field|dict.get|"units" 1
+CACHED_SOURCE_ROW|champions/cassiopeia.py|_bonus_magic_damage_levelings|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/cassiopeia.py|_bonus_magic_damage_levelings|dict.get|"leveling" 1
+CACHED_SOURCE_ROW|champions/darius.py|_per_level|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/darius.py|_per_level|dict.get|"leveling" 1
+CACHED_SOURCE_ROW|champions/engine.py|_stamp_slot_facts|dict.get|"spellEffects" 1
+CACHED_SOURCE_ROW|champions/engine.py|parse_abilities|dict.get|"abilities" 1
+CACHED_SOURCE_ROW|champions/engine.py|parse_abilities|dict.get|"resource" 1
+CACHED_SOURCE_ROW|champions/gangplank.py|_require_w_rows|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/gangplank.py|_require_w_rows|dict.get|"leveling" 1
+CACHED_SOURCE_ROW|champions/gangplank.py|_require_w_rows|dict.get|"modifiers" 1
+CACHED_SOURCE_ROW|champions/garen.py|derive_self_healing|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/garen.py|derive_self_healing|dict.get|"leveling" 1
+CACHED_SOURCE_ROW|champions/garen.py|derive_self_healing|dict.get|"modifiers" 1
+CACHED_SOURCE_ROW|champions/garen.py|derive_self_healing|dict.get|"values" 1
+CACHED_SOURCE_ROW|champions/gragas.py|derive_self_healing|dict.get|"description" 1
+CACHED_SOURCE_ROW|champions/gragas.py|derive_self_healing|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/gwen.py|_snip_times|dict.get|"castTime" 1
+CACHED_SOURCE_ROW|champions/jayce.py|_transform_ability|dict.get|"R" 1
+CACHED_SOURCE_ROW|champions/karthus.py|_defile_mana_per_second|dict.get|"modifiers" 1
+CACHED_SOURCE_ROW|champions/karthus.py|_defile_mana_per_second|dict.get|"values" 1
+CACHED_SOURCE_ROW|champions/karthus.py|_defile_mana_per_second|or-default|"cost" 1
+CACHED_SOURCE_ROW|champions/maokai.py|derive_self_healing|dict.get|"modifiers" 1
+CACHED_SOURCE_ROW|champions/maokai.py|derive_self_healing|dict.get|"values" 1
+CACHED_SOURCE_ROW|champions/maokai.py|derive_self_healing|or-default|"cooldown" 1
+CACHED_SOURCE_ROW|champions/mel.py|_searing_brilliance_per_missile|or-default|"modifiers" 2
+CACHED_SOURCE_ROW|champions/mel.py|_searing_brilliance_per_missile|or-default|"values" 2
+CACHED_SOURCE_ROW|champions/miss_fortune.py|_love_tap_ad_ratio|or-default|"modifiers" 1
+CACHED_SOURCE_ROW|champions/miss_fortune.py|_love_tap_ad_ratio|or-default|"values" 1
+CACHED_SOURCE_ROW|champions/ornn.py|_temper_consume_percent|or-default|"description" 1
+CACHED_SOURCE_ROW|champions/ornn.py|_temper_consume_percent|or-default|"effects" 1
+CACHED_SOURCE_ROW|champions/rengar.py|_ferocity_bonus|dict.get|"description" 1
+CACHED_SOURCE_ROW|champions/rengar.py|_ferocity_bonus|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/sett.py|derive_self_healing|dict.get|"description" 1
+CACHED_SOURCE_ROW|champions/sett.py|derive_self_healing|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/shen.py|_ki_barrier_shield_amount|dict.get|"modifiers" 1
+CACHED_SOURCE_ROW|champions/shen.py|_ki_barrier_shield_amount|dict.get|"units" 1
+CACHED_SOURCE_ROW|champions/shen.py|_ki_barrier_shield_amount|dict.get|"values" 1
+CACHED_SOURCE_ROW|champions/shen.py|_named_level_rank_damage|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/shen.py|_named_level_rank_damage|dict.get|"leveling" 1
+CACHED_SOURCE_ROW|champions/shen.py|_named_level_rank_damage|dict.get|"modifiers" 1
+CACHED_SOURCE_ROW|champions/shen.py|_named_level_rank_damage|dict.get|"units" 1
+CACHED_SOURCE_ROW|champions/shen.py|_named_level_rank_damage|dict.get|"values" 1
+CACHED_SOURCE_ROW|champions/shyvana.py|_scalemail_per_stack|or-default|"description" 1
+CACHED_SOURCE_ROW|champions/shyvana.py|_scalemail_per_stack|or-default|"effects" 1
+CACHED_SOURCE_ROW|champions/slot_control.py|_require_seconds|dict.get|"units" 1
+CACHED_SOURCE_ROW|champions/slot_control.py|extract_recharge|or-default|"rechargeRate" 1
+CACHED_SOURCE_ROW|champions/slot_extract.py|_find_primary_damage_leveling|dict.get|"attribute" 1
+CACHED_SOURCE_ROW|champions/slot_extract.py|_find_primary_damage_leveling|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/slot_extract.py|_find_primary_damage_leveling|dict.get|"leveling" 1
+CACHED_SOURCE_ROW|champions/slot_extract.py|_modifier_value|dict.get|"modifiers" 1
+CACHED_SOURCE_ROW|champions/slot_extract.py|_modifier_value|dict.get|"values" 1
+CACHED_SOURCE_ROW|champions/slot_extract.py|extract_cooldown|dict.get|"values" 1
+CACHED_SOURCE_ROW|champions/slot_extract.py|extract_resource_cost|dict.get|"modifiers" 1
+CACHED_SOURCE_ROW|champions/slot_extract.py|extract_resource_cost|dict.get|"values" 1
+CACHED_SOURCE_ROW|champions/slot_extract.py|extract_resource_cost|or-default|"cost" 1
+CACHED_SOURCE_ROW|champions/slot_extract.py|find_named_leveling|dict.get|"attribute" 1
+CACHED_SOURCE_ROW|champions/slot_extract.py|find_named_leveling|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/slot_extract.py|find_named_leveling|dict.get|"leveling" 1
+CACHED_SOURCE_ROW|champions/slot_extract.py|sum_modifiers|dict.get|"modifiers" 1
+CACHED_SOURCE_ROW|champions/slot_extract.py|sum_modifiers|dict.get|"units" 1
+CACHED_SOURCE_ROW|champions/slot_extract.py|sum_modifiers|dict.get|"values" 1
+CACHED_SOURCE_ROW|champions/slotlib.py|parse|or-default|"targeting" 1
+CACHED_SOURCE_ROW|champions/syndra.py|_dark_sphere_second_charge|dict.get|"resource" 1
+CACHED_SOURCE_ROW|champions/taric.py|_bravado_window_terms|dict.get|"description" 1
+CACHED_SOURCE_ROW|champions/taric.py|_bravado_window_terms|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/taric.py|_starlights_touch|dict.get|"description" 1
+CACHED_SOURCE_ROW|champions/taric.py|_starlights_touch|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/xayah.py|_bladecaller|dict.get|"values" 2
+CACHED_SOURCE_ROW|champions/xayah.py|_secondary_feather_crit_extra|dict.get|"description" 1
+CACHED_SOURCE_ROW|champions/xayah.py|_secondary_feather_crit_extra|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/xayah.py|_secondary_feather_ratio|dict.get|"description" 1
+CACHED_SOURCE_ROW|champions/xayah.py|_secondary_feather_ratio|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/yasuo.py|_per_target_lockout|or-default|"onTargetCdStatic" 1
+CACHED_SOURCE_ROW|champions/yasuo_yone.py|q3_knockup_duration|or-default|"description" 1
+CACHED_SOURCE_ROW|champions/yasuo_yone.py|q3_knockup_duration|or-default|"effects" 1
+CACHED_SOURCE_ROW|champions/yorick.py|_leveling_flat_at_level|dict.get|"effects" 1
+CACHED_SOURCE_ROW|champions/yorick.py|_leveling_flat_at_level|dict.get|"leveling" 1
+CACHED_SOURCE_ROW|champions/yorick.py|_leveling_flat_at_level|dict.get|"modifiers" 1
+CACHED_SOURCE_ROW|champions/yorick.py|_leveling_flat_at_level|dict.get|"units" 1
+CACHED_SOURCE_ROW|champions/yorick.py|_leveling_flat_at_level|dict.get|"values" 1
+CACHED_SOURCE_ROW|champions/ziggs.py|_short_fuse|dict.get|"cooldown" 1
+CACHED_SOURCE_ROW|champions/ziggs.py|_short_fuse|dict.get|"modifiers" 1
+CACHED_SOURCE_ROW|champions/ziggs.py|_short_fuse|dict.get|"values" 1
+CACHED_SOURCE_ROW|champions/ziggs.py|_short_fuse_refund_seconds|dict.get|"description" 1
+CACHED_SOURCE_ROW|champions/ziggs.py|_short_fuse_refund_seconds|dict.get|"effects" 1
+CACHED_SOURCE_ROW|data_fetcher.py|_item_name_index|dict.get|"name" 1
+CACHED_SOURCE_ROW|economics_data.py|sourced_combine_cost|dict.get|"combine_costs" 1
+CACHED_SOURCE_ROW|economics_data.py|sourced_combine_cost|or-default|"id" 1
+CACHED_SOURCE_ROW|economics_data.py|sourced_combine_cost|or-default|"name" 1
+CACHED_SOURCE_ROW|economics_data.py|sourced_sell_value|dict.get|"per_item_sell" 1
+CACHED_SOURCE_ROW|economics_data.py|sourced_sell_value|or-default|"id" 1
+CACHED_SOURCE_ROW|economics_data.py|sourced_sell_value|or-default|"name" 1
+CACHED_SOURCE_ROW|economics_data.py|sourced_total|dict.get|"per_item_sell" 1
+CACHED_SOURCE_ROW|economics_data.py|sourced_total|or-default|"id" 1
+CACHED_SOURCE_ROW|healing_helpers.py|ability_json|dict.get|"abilities" 1
+CACHED_SOURCE_ROW|healing_helpers.py|leveling_modifier|dict.get|"effects" 1
+CACHED_SOURCE_ROW|healing_helpers.py|leveling_modifier|dict.get|"leveling" 1
+CACHED_SOURCE_ROW|healing_helpers.py|leveling_ratio|dict.get|"effects" 1
+CACHED_SOURCE_ROW|healing_helpers.py|leveling_ratio|dict.get|"leveling" 1
+CACHED_SOURCE_ROW|healing_helpers.py|leveling_ratio|dict.get|"modifiers" 1
+CACHED_SOURCE_ROW|healing_helpers.py|leveling_ratio|dict.get|"units" 1
+CACHED_SOURCE_ROW|healing_helpers.py|leveling_ratio|dict.get|"values" 1
+CACHED_SOURCE_ROW|healing_helpers.py|leveling_value|dict.get|"effects" 1
+CACHED_SOURCE_ROW|healing_helpers.py|leveling_value|dict.get|"leveling" 1
+CACHED_SOURCE_ROW|healing_helpers.py|modifier_at_rank|dict.get|"modifiers" 1
+CACHED_SOURCE_ROW|healing_helpers.py|modifier_at_rank|dict.get|"values" 1
+CACHED_SOURCE_ROW|interpreters/__init__.py|uncompilable_item_receipt|dict.get|"name" 1
+CACHED_SOURCE_ROW|interpreters/part_amp.py|resolve_static_holder_amps|dict.get|"name" 1
+CACHED_SOURCE_ROW|interpreters/reactive.py|thorns_effects|dict.get|"name" 1
+CACHED_SOURCE_ROW|item_coverage.py|is_unreviewed_fixture|dict.get|"name" 1
+CACHED_SOURCE_ROW|item_coverage.py|optimizer_candidate_coverage|dict.get|"name" 1
+CACHED_SOURCE_ROW|item_coverage.py|optimizer_supported_items|dict.get|"name" 1
+CACHED_SOURCE_ROW|item_coverage.py|require_calculation_item_coverage|dict.get|"name" 1
+CACHED_SOURCE_ROW|item_coverage.py|require_certified_target_timeline|dict.get|"name" 2
+CACHED_SOURCE_ROW|item_coverage.py|require_optimizer_item_coverage|dict.get|"name" 1
+CACHED_SOURCE_ROW|item_coverage.py|target_item_model_coverage|dict.get|"name" 1
+CACHED_SOURCE_ROW|item_source.py|audit_scope|or-default|'name' 1
+CACHED_SOURCE_ROW|item_source.py|branch_inventory|or-default|"name" 1
+CACHED_SOURCE_ROW|item_source.py|branch_losses|dict.get|label 1
+CACHED_SOURCE_ROW|item_source.py|effect_entries|or-default|"active" 1
+CACHED_SOURCE_ROW|item_source.py|effect_entries|or-default|"passives" 1
+CACHED_SOURCE_ROW|item_source.py|item_source_audit|or-default|"name" 2
+CACHED_SOURCE_ROW|item_source.py|item_source_audit|or-default|"sourceWarnings" 1
+CACHED_SOURCE_ROW|item_source.py|riot_declared_effects|or-default|"riotDescription" 1
+CACHED_SOURCE_ROW|item_source.py|sr_availability|dict.get|"purchasable" 1
+CACHED_SOURCE_ROW|item_source.py|sr_availability|or-default|"acquisitionNote" 1
+CACHED_SOURCE_ROW|item_source.py|sr_availability|or-default|"championRestriction" 1
+CACHED_SOURCE_ROW|item_source.py|sr_availability|or-default|"modes" 1
+CACHED_SOURCE_ROW|item_source.py|sr_availability|or-default|"name" 1
+CACHED_SOURCE_ROW|item_source.py|sr_availability|or-default|"prices" 1
+CACHED_SOURCE_ROW|item_source.py|sr_availability|or-default|"rank" 1
+CACHED_SOURCE_ROW|item_source.py|sr_availability|or-default|"shop" 1
+CACHED_SOURCE_ROW|item_source_merge.py|_champion_restriction|or-default|"champion" 1
+CACHED_SOURCE_ROW|item_source_merge.py|_champion_restriction|or-default|key 1
+CACHED_SOURCE_ROW|item_source_merge.py|_merge_effect_branches|or-default|"branches" 1
+CACHED_SOURCE_ROW|item_source_merge.py|_merge_effect_branches|or-default|"effects" 1
+CACHED_SOURCE_ROW|item_source_merge.py|_merge_one_item|or-default|"spec" 1
+CACHED_SOURCE_ROW|item_source_merge.py|merge_item_sources|dict.get|item.get("id") 1
+CACHED_SOURCE_ROW|item_stat_block.py|_validate_cached_item_stats|or-default|"name" 1
+CACHED_SOURCE_ROW|item_stat_block.py|champion_stat_conversion|dict.get|"name" 1
+CACHED_SOURCE_ROW|item_stat_block.py|get_item_stats|dict.get|"name" 1
+CACHED_SOURCE_ROW|item_stat_block.py|get_item_stats|dict.get|"stats" 1
+CACHED_SOURCE_ROW|item_stat_block.py|get_item_stats|or-default|"name" 1
+CACHED_SOURCE_ROW|passive_parser.py|_find_active_by_name|dict.get|"active" 1
+CACHED_SOURCE_ROW|passive_parser.py|_find_active_by_name|or-default|"name" 1
+CACHED_SOURCE_ROW|passive_parser.py|_find_item_data_by_name|dict.get|"name" 1
+CACHED_SOURCE_ROW|passive_parser.py|_find_passive_by_name|dict.get|"passives" 1
+CACHED_SOURCE_ROW|passive_parser.py|_find_passive_by_name|or-default|"name" 2
+CACHED_SOURCE_ROW|passive_parser.py|parse_item_effect|dict.get|"criticalStrikeDamage" 1
+CACHED_SOURCE_ROW|passive_parser.py|parse_item_effect|dict.get|"percent" 1
+CACHED_SOURCE_ROW|passive_parser.py|parse_item_effect|dict.get|"stats" 1
+CACHED_SOURCE_ROW|rune_effects.py|_shard_row|dict.get|"row" 1
+CACHED_SOURCE_ROW|rune_effects.py|_shard_row|dict.get|"slots" 1
+CACHED_SOURCE_ROW|rune_effects.py|_shard_row_options|dict.get|"options" 1
+CACHED_SOURCE_ROW|rune_effects.py|_shard_rows|dict.get|"row" 1
+CACHED_SOURCE_ROW|rune_effects.py|_shard_rows|dict.get|"slots" 1
+CACHED_SOURCE_ROW|rune_effects.py|_slot_word|dict.get|"row" 1
+CACHED_SOURCE_ROW|rune_effects.py|cached_effects|dict.get|"effects" 1
+CACHED_SOURCE_ROW|rune_effects.py|shard_catalog|dict.get|"name" 2
+CACHED_SOURCE_ROW|rune_effects.py|shard_catalog|dict.get|"options" 1
+CACHED_SOURCE_ROW|rune_effects.py|shard_catalog|dict.get|"row" 2
+CACHED_SOURCE_ROW|rune_effects.py|shard_catalog|dict.get|"slots" 1
+CACHED_SOURCE_ROW|rune_effects.py|validate_keystone_options|dict.get|"options" 1
+CACHED_SOURCE_ROW|rune_parser.py|_certify_roster_agreement|dict.get|"path" 1
+CACHED_SOURCE_ROW|rune_parser.py|_certify_roster_agreement|dict.get|"slot" 1
+CACHED_SOURCE_ROW|rune_parser.py|_parse_leveling|dict.get|"type" 1
+CACHED_SOURCE_ROW|rune_parser.py|rune_payload|dict.get|key 1
+CACHED_SOURCE_ROW|rune_pull.py|reparse_cached_rune_effects|dict.get|"options" 1
+CACHED_SOURCE_ROW|rune_pull.py|rune_roster|dict.get|"runes" 1
+CACHED_SOURCE_ROW|rune_pull.py|rune_roster|dict.get|"slots" 1
+CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"adaptiveType" 1
+CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"attackSpeedRatio" 1
+CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"attackType" 1
+CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"flat" 3
+CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"healthRegen" 2
+CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"mana" 2
+CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"manaRegen" 2
+CACHED_SOURCE_ROW|stats.py|calculate_total_stats|dict.get|"perLevel" 3
+ENGINE_ROW|champions/aatrox.py|derive_self_healing|dict.get|"damage" 2
+ENGINE_ROW|champions/aatrox.py|derive_self_healing|dict.get|"time" 2
+ENGINE_ROW|champions/alistar.py|derive_self_healing|dict.get|"stacks" 1
+ENGINE_ROW|champions/alistar.py|derive_self_healing|dict.get|"time" 2
+ENGINE_ROW|champions/alistar.py|derive_self_healing|or-default|"stacks" 1
+ENGINE_ROW|champions/ambessa.py|derive_self_healing|dict.get|"damage" 1
+ENGINE_ROW|champions/ambessa.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/aphelios.py|derive_self_healing|dict.get|"damage" 1
+ENGINE_ROW|champions/briar.py|derive_self_healing|dict.get|"damage" 3
+ENGINE_ROW|champions/briar.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/briar.py|derive_self_healing|or-default|"damage" 2
+ENGINE_ROW|champions/briar.py|derive_self_healing|or-default|"raw_damage" 1
+ENGINE_ROW|champions/camille.py|derive_self_healing|dict.get|"damage" 2
+ENGINE_ROW|champions/camille.py|derive_self_healing|or-default|"damage" 1
+ENGINE_ROW|champions/camille.py|derive_self_healing|or-default|"raw_damage" 1
+ENGINE_ROW|champions/chogath.py|derive_self_healing|dict.get|"amount" 1
+ENGINE_ROW|champions/chogath.py|derive_self_healing|dict.get|"kills" 1
+ENGINE_ROW|champions/chogath.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/chogath.py|derive_self_healing|or-default|"amount" 1
+ENGINE_ROW|champions/chogath.py|derive_self_healing|or-default|"kills" 1
+ENGINE_ROW|champions/darius.py|derive_self_healing|dict.get|"sequence" 1
+ENGINE_ROW|champions/darius.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/darius.py|derive_self_healing|or-default|"sequence" 1
+ENGINE_ROW|champions/dr_mundo.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/fiddlesticks.py|derive_self_healing|dict.get|"damage" 1
+ENGINE_ROW|champions/fiddlesticks.py|derive_self_healing|or-default|"raw_damage" 1
+ENGINE_ROW|champions/gangplank.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/gragas.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/gwen.py|derive_self_healing|dict.get|"damage" 1
+ENGINE_ROW|champions/hecarim.py|derive_self_healing|dict.get|"damage" 1
+ENGINE_ROW|champions/hecarim.py|derive_self_healing|dict.get|"time" 2
+ENGINE_ROW|champions/illaoi.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/janna.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/karma.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/kindred.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/maokai.py|derive_self_healing|dict.get|"time" 4
+ENGINE_ROW|champions/milio.py|derive_self_healing|dict.get|"time" 2
+ENGINE_ROW|champions/mordekaiser.py|derive_self_healing|dict.get|"amount" 1
+ENGINE_ROW|champions/mordekaiser.py|derive_self_healing|or-default|"amount" 1
+ENGINE_ROW|champions/morgana.py|derive_self_healing|dict.get|"damage" 1
+ENGINE_ROW|champions/nasus.py|derive_self_healing|dict.get|"damage" 1
+ENGINE_ROW|champions/nidalee.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/nilah.py|derive_self_healing|dict.get|"damage" 2
+ENGINE_ROW|champions/nunu_willump.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/rakan.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/reksai.py|derive_self_healing|dict.get|"amount" 1
+ENGINE_ROW|champions/reksai.py|derive_self_healing|or-default|"amount" 1
+ENGINE_ROW|champions/shyvana.py|derive_self_healing|dict.get|"damage" 1
+ENGINE_ROW|champions/shyvana.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/sona.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/soraka.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/sylas.py|derive_self_healing|dict.get|"damage" 1
+ENGINE_ROW|champions/sylas.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/taric.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/trundle.py|derive_self_healing|dict.get|"amount" 1
+ENGINE_ROW|champions/trundle.py|derive_self_healing|dict.get|"damage" 1
+ENGINE_ROW|champions/trundle.py|derive_self_healing|dict.get|"deaths" 1
+ENGINE_ROW|champions/trundle.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/trundle.py|derive_self_healing|or-default|"amount" 1
+ENGINE_ROW|champions/trundle.py|derive_self_healing|or-default|"deaths" 1
+ENGINE_ROW|champions/trundle.py|derive_self_healing|or-default|"raw_damage" 1
+ENGINE_ROW|champions/udyr.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/vi.py|_denting_stream|dict.get|"E" 1
+ENGINE_ROW|champions/vi.py|_denting_stream|dict.get|"Q" 1
+ENGINE_ROW|champions/vladimir.py|derive_self_healing|dict.get|"damage" 1
+ENGINE_ROW|champions/vladimir.py|derive_self_healing|or-default|"raw_damage" 1
+ENGINE_ROW|champions/warwick.py|derive_self_healing|dict.get|"damage" 3
+ENGINE_ROW|champions/xin_zhao.py|derive_self_healing|dict.get|"damage" 1
+ENGINE_ROW|champions/xin_zhao.py|derive_self_healing|or-default|"stacks_required" 1
+ENGINE_ROW|champions/yorick.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/yuumi.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|champions/zac.py|derive_self_healing|dict.get|"time" 1
+ENGINE_ROW|healing_helpers.py|cast_slot_times|dict.get|"time" 1
+ENGINE_ROW|healing_helpers.py|event_source|dict.get|"source_key" 1
+ENGINE_ROW|healing_helpers.py|heal_from_damage|dict.get|"damage" 1
+ENGINE_ROW|healing_helpers.py|heal_from_damage|dict.get|"time" 1
+ENGINE_ROW|healing_helpers.py|payments|dict.get|"damage" 1
+ENGINE_ROW|healing_helpers.py|payments|dict.get|"time" 3
+ENGINE_ROW|healing_helpers.py|payments|or-default|"damage" 1
+ENGINE_ROW|healing_helpers.py|trigger_fields|dict.get|"time" 1
+ENGINE_ROW|item_coverage.py|require_certified_target_timeline|dict.get|"coarse_sources" 1
+ENGINE_ROW|item_coverage.py|require_certified_target_timeline|dict.get|"complete" 1
+ENGINE_ROW|stats.py|calculate_total_stats|dict.get|"armor_penetration_bonus_percent" 1
+LOADOUT_NAMES|item_effects.py|_cached_sustain_stat|or-default|"name" 1
+LOADOUT_NAMES|item_effects.py|_resolve_damage_effects_uncached|dict.get|"name" 1
+LOADOUT_NAMES|item_effects.py|active_secondary_ad_item_name|dict.get|"name" 1
+LOADOUT_NAMES|item_effects.py|cleave_on_hit_item_name|dict.get|"name" 1
+LOADOUT_NAMES|item_effects.py|grouped_sustain_stat_percent|or-default|"name" 1
+LOADOUT_NAMES|item_effects.py|hydra_secondary_item_name|dict.get|"name" 1
+LOADOUT_NAMES|item_effects.py|resolve_damage_effects|dict.get|"name" 1
+LOADOUT_NAMES|item_effects.py|target_class_denials|dict.get|"name" 1
+LOADOUT_NAMES|item_effects.py|target_class_denials|or-default|"name" 1
+MODULE_DECLARATION|champions/__init__.py|_module_declaration|getattr|attribute 1
+MODULE_DECLARATION|champions/module_contract.py|contract_from_module|getattr|"MODULE_COVERAGE" 1
+MODULE_DECLARATION|champions/module_contract.py|contract_from_module|getattr|"SLOTS" 1
+MODULE_DECLARATION|champions/module_contract.py|contract_from_module|getattr|"parse_abilities" 1
+MODULE_DECLARATION|champions/module_survey.py|_cast_dependencies|getattr|"CAST_ORDER" 1
+MODULE_DECLARATION|champions/module_survey.py|_coverage_channels|getattr|"COVERAGE_CHANNELS" 1
+MODULE_DECLARATION|champions/module_survey.py|_module_cc|getattr|"MODULE_CC" 1
+MODULE_DECLARATION|champions/module_survey.py|_module_cc|getattr|"cc_kinds" 1
+MODULE_DECLARATION|champions/module_survey.py|_module_cc|getattr|"packet_sha256" 1
+MODULE_DECLARATION|champions/module_survey.py|_packet_declaration|getattr|"packet_sha256" 1
+MODULE_DECLARATION|champions/module_survey.py|_present|getattr|attribute 1
+MODULE_DECLARATION|champions/module_survey.py|_require_list|getattr|field_name 1
+MODULE_DECLARATION|champions/module_survey.py|_stat_conversion|getattr|"MODULE_STAT_CONVERSION" 1
+MODULE_DECLARATION|champions/module_survey.py|_ultimate_recasts|getattr|"ULTIMATE_RECASTS" 1
+MODULE_DECLARATION|champions/nocturne.py|_tether_fear|getattr|"phase" 1
+MODULE_DECLARATION|champions/packet_parsers.py|_variant_slot|getattr|"phase" 1
+MODULE_DECLARATION|champions/slot_cc.py|_apply_module_cc|getattr|"cc_kind" 1
+MODULE_DECLARATION|champions/slot_cc.py|_refuse_undeclared_part_cc|getattr|"cc_kind" 1
+MODULE_DECLARATION|champions/slot_cc.py|_validate_cc_event_contract|getattr|"cc_duration" 1
+MODULE_DECLARATION|champions/slot_cc.py|_validate_cc_event_contract|getattr|"cc_kind" 2
+MODULE_DECLARATION|data_updater.py|_bulk_pass|getattr|"name" 1
+MODULE_DECLARATION|interpreters/__init__.py|_validate_authority_agreement|getattr|"subject" 1
+MODULE_DECLARATION|interpreters/cast_proc.py|self_shield_owners|getattr|"self_shield" 1
+MODULE_DECLARATION|interpreters/defense_state.py|_policy_reference|getattr|name 1
+MODULE_DECLARATION|item_coverage.py|_prices_holder_durability|getattr|field 1
+OPTION_SCHEMA|item_effects.py|_input_option_stat_bonuses|dict.get|"bonus_ap_per_unit" 1
+OPTION_SCHEMA|item_effects.py|_input_option_stat_bonuses|dict.get|"bonus_health_per_unit" 1
+OPTION_SCHEMA|item_effects.py|_input_option_stat_bonuses|dict.get|"bonus_mana_per_unit" 1
+OPTION_SCHEMA|item_effects.py|_item_option_schemas|dict.get|"options" 1
+OPTION_SCHEMA|item_effects.py|input_option_float_value|dict.get|"step" 1
+OPTION_SCHEMA|item_effects.py|input_option_float_value|or-default|"step" 1
+OPTION_SCHEMA|item_effects.py|validate_item_input_options|dict.get|"step" 1
+OPTION_SCHEMA|item_effects.py|validate_item_input_options|or-default|"step" 1
+REQUEST_ITEM_STATE|item_effects.py|_manaflow_state|dict.get|"manaflow_bonus_mana" 1
+REQUEST_ITEM_STATE|item_effects.py|actualizer_active_seconds|dict.get|"mana_made_real_active" 1
+REQUEST_ITEM_STATE|item_effects.py|actualizer_active_seconds|dict.get|"mana_made_real_active_seconds" 1
+REQUEST_ITEM_STATE|item_effects.py|actualizer_active_seconds|or-default|"mana_made_real_active" 1
+REQUEST_ITEM_STATE|item_effects.py|input_option_crit_chance|dict.get|"crit_stacks" 1
+REQUEST_ITEM_STATE|item_effects.py|input_option_retribution_bonus_ad|dict.get|"missing_health_percent" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"Endless Hunger" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"Heartsteel" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"Hubris" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"Knight's Vow" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"Rod of Ages" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"Yun Tal Wildarrows" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"bonus_health" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"crit_stacks" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"eminence_active_seconds" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"eminence_stacks" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"feast_active_seconds" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"holder_above_30_percent" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"missing_health_percent" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"shared_riches_gold" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"timeless_stacks" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"ward_uses" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"worthy_target_index" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|dict.get|"worthy_within_range" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"Overlord's Bloodmail" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"crit_stacks" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"eminence_active_seconds" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"eminence_stacks" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"feast_active_seconds" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"shared_riches_gold" 1
+REQUEST_ITEM_STATE|item_effects.py|item_state_receipts|or-default|"ward_uses" 1
+ROW_READS|damage.py|split_auto_vs_ability|dict.get|"total_damage" 1
+ROW_READS|damage.py|split_by_damage_type|dict.get|"total_damage" 2
+ROW_READS|fight/after/amplifiers.py|_apply_command_amp|or-default|"damage_events" 1
+ROW_READS|fight/after/amplifiers.py|_apply_damage_amplifiers|dict.get|"total_damage" 1
+ROW_READS|fight/after/amplifiers.py|_hypershot_delta_events|dict.get|"damage_type" 1
+ROW_READS|fight/after/amplifiers.py|_hypershot_delta_events|dict.get|"total_damage" 1
+ROW_READS|fight/after/empowered_swings.py|_author_empowered_swing_events|dict.get|"damage" 1
+ROW_READS|fight/after/empowered_swings.py|_author_empowered_swing_events|dict.get|"damage_type" 1
+ROW_READS|fight/after/empowered_swings.py|_author_empowered_swing_events|dict.get|"total_damage" 1
+ROW_READS|fight/after/empowered_swings.py|_empowered_swing_consumers|dict.get|"casts" 1
+ROW_READS|fight/after/empowered_swings.py|_empowered_swing_consumers|dict.get|"slot" 1
+ROW_READS|fight/after/empowered_swings.py|_reattribute_empowered_swings|dict.get|"casts" 1
+ROW_READS|fight/after/empowered_swings.py|_reattribute_empowered_swings|dict.get|"count" 1
+ROW_READS|fight/after/empowered_swings.py|_reattribute_empowered_swings|dict.get|"damage_per_hit" 1
+ROW_READS|fight/after/lethality_windows.py|_apply_temporary_lethality_windows|dict.get|"event_phase" 1
+ROW_READS|fight/after/lethality_windows.py|_apply_temporary_lethality_windows|dict.get|"total_damage" 1
+ROW_READS|fight/after/shield_outcome.py|_resolve_starting_shield_outcome|dict.get|"execute_threshold_ratio" 1
+ROW_READS|fight/after/shield_outcome.py|_resolve_starting_shield_outcome|dict.get|"raw_damage" 1
+ROW_READS|fight/after/shield_outcome.py|_resolve_starting_shield_outcome|dict.get|"total_damage" 1
+ROW_READS|fight/after/shield_outcome.py|_resolve_starting_shield_outcome|or-default|"execute_threshold_ratio" 1
+ROW_READS|fight/after/shield_outcome.py|_resolve_starting_shield_outcome|or-default|"raw_damage" 1
+ROW_READS|fight/after/stored_damage.py|_add_stored_damage|dict.get|"casts" 1
+ROW_READS|fight/after/stored_damage.py|_add_stored_damage|dict.get|"slot" 1
+ROW_READS|fight/after/stored_damage.py|_add_stored_damage|dict.get|"time" 1
+ROW_READS|fight/autos/copied_on_hit.py|_add_copied_stacking_on_hit_packets|dict.get|"packets" 1
+ROW_READS|fight/autos/copied_on_hit.py|_add_copied_stacking_on_hit_packets|dict.get|"time" 1
+ROW_READS|fight/autos/on_hit_layering.py|_layer_on_hit_effects|dict.get|"casts" 1
+ROW_READS|fight/autos/spellblade.py|_add_spellblade_damage|dict.get|"casts" 1
+ROW_READS|fight/cast_slots.py|_damaging_cast_times|dict.get|"total_raw" 1
+ROW_READS|fight/items/cast_procs.py|_add_late_phase_proc_damage|dict.get|"event_precision" 1
+ROW_READS|fight/items/eclipse_stack_gate.py|_stacked_champion_proc_times|dict.get|"event_precision" 1
+ROW_READS|fight/items/eclipse_stack_gate.py|_stacked_champion_proc_times|dict.get|"total_damage" 3
+ROW_READS|fight/items/energized_packets.py|_first_damaging_ability_event|dict.get|"event_precision" 1
+ROW_READS|fight/items/energized_packets.py|_first_damaging_ability_event|dict.get|"total_damage" 1
+ROW_READS|fight/items/energized_packets.py|_first_damaging_ability_event|or-default|"total_damage" 1
+ROW_READS|fight/items/muramana.py|_muramana_cast_receipt|dict.get|"total_damage" 1
+ROW_READS|fight/items/muramana.py|_muramana_cast_receipt|or-default|"total_damage" 1
+ROW_READS|fight/ledger/coverage.py|_event_timeline_coverage|dict.get|"casts" 2
+ROW_READS|fight/ledger/coverage.py|_event_timeline_coverage|dict.get|"event_precision" 1
+ROW_READS|fight/ledger/coverage.py|_event_timeline_coverage|dict.get|"total_damage" 1
+ROW_READS|fight/ledger/event_ledger.py|_ordered_damage_events|dict.get|"casts" 1
+ROW_READS|fight/ledger/event_ledger.py|_ordered_damage_events|dict.get|"count" 1
+ROW_READS|fight/ledger/event_ledger.py|_ordered_damage_events|dict.get|"slot" 1
+ROW_READS|fight/ledger/event_ledger.py|_ordered_damage_events|dict.get|"time" 1
+ROW_READS|fight/ledger/event_ledger.py|_ordered_damage_events|dict.get|"total_damage" 1
+ROW_READS|fight/ledger/event_ledger.py|_ordered_damage_events|dict.get|"total_raw" 1
+ROW_READS|fight/ledger/event_ledger.py|_ordered_damage_events|or-default|"total_raw" 1
+ROW_READS|fight/ledger/event_rows.py|_item_proc_precision|dict.get|"casts" 1
+ROW_READS|fight/ledger/event_rows.py|_item_proc_precision|or-default|"casts" 1
+ROW_READS|fight/ledger/event_rows.py|_row_damage_parts|dict.get|"total_damage" 1
+ROW_READS|fight/rotation/dot_ticks.py|_ability_dot_tick_events|dict.get|"casts" 1
+ROW_READS|fight/rotation/dot_ticks.py|_ability_dot_tick_events|dict.get|"total_damage" 1
+ROW_READS|fight/rotation/dot_ticks.py|_author_ability_dot_events|dict.get|"slot" 1
+ROW_READS|fight/rotation/mana_declarations.py|_return_denied_burst_budget|dict.get|"burst_seconds" 1
+ROW_READS|fight/rotation/mana_walk.py|_apply_mana_resource_limits|dict.get|"burst_seconds" 1
+ROW_READS|fight/rotation/mana_walk.py|_apply_mana_resource_limits|dict.get|"window_seconds" 1
+ROW_READS|fight/rotation/mana_walk.py|_resource_ledger_public|dict.get|"bonus_delta" 1
+ROW_READS|fight/rotation/mana_walk.py|_resource_ledger_public|or-default|"bonus_delta" 1
+ROW_READS|fight/rotation/mana_walk.py|_schedule_enlighten|dict.get|"tick" 1
+ROW_READS|fight/rotation/shaped_charge.py|_next_authored_event|dict.get|"event_precision" 1
+ROW_READS|fight/runes/keystone_casts.py|add|dict.get|"cc_duration" 1
+ROW_READS|fight/runes/keystone_casts.py|add|or-default|"cc_duration" 1
+ROW_READS|fight/runes/keystone_ledger_walk.py|_add_keystone_dark_harvest|dict.get|"time" 1
+ROW_READS|fight/runes/keystone_ledger_walk.py|_add_keystone_deathfire|dict.get|"event_precision" 1
+ROW_READS|fight/runes/keystone_ledger_walk.py|_dark_harvest_trigger_event|dict.get|"phase" 1
+ROW_READS|fight/runes/keystone_ledger_walk.py|_deathfire_trigger_events|dict.get|"event_precision" 2
+ROW_READS|fight/runes/keystone_ledger_walk.py|_deathfire_trigger_events|dict.get|"slot" 1
+ROW_READS|fight/runes/keystone_ledger_walk.py|_deathfire_trigger_events|dict.get|"time" 1
+ROW_READS|fight/runes/keystone_ledger_walk.py|emit_until|dict.get|"category" 1
+ROW_READS|fight/runes/keystone_ledger_walk.py|emit_until|dict.get|"source" 1
+ROW_READS|fight/runes/keystone_stacks.py|_add_keystone_conqueror|dict.get|"reason" 1
+ROW_READS|fight/runes/keystone_stacks.py|_add_keystone_conqueror|dict.get|"sequence" 1
+ROW_READS|fight/runes/keystone_stacks.py|_conqueror_trigger_events|dict.get|"phase" 1
+ROW_READS|fight/runes/keystone_stacks.py|_conqueror_trigger_events|dict.get|"slot" 1
+ROW_READS|fight/runes/keystone_stacks.py|_conqueror_trigger_events|dict.get|"time" 1
+ROW_READS|fight/runes/streams.py|_impaired_instance_times|dict.get|"total_raw" 1
+ROW_READS|fight/runes/streams.py|_self_shield_times|dict.get|"time" 1
+ROW_READS|fight/stacks/ashe.py|_add_ashe_focus|dict.get|"slot" 1
+ROW_READS|fight/stacks/ashe.py|_add_ashe_focus|or-default|"auto_attacks" 1
+ROW_READS|fight/stacks/ashe.py|_add_ashe_focus|or-default|"damage_events" 1
+ROW_READS|fight/stacks/ashe.py|_feed_ashe_focus_stack|dict.get|"time" 2
+ROW_READS|fight/stacks/ashe.py|_feed_ashe_focus_stack|or-default|"time" 1
+ROW_READS|fight/stacks/aurelion_sol.py|_add_aurelion_sol_stardust|dict.get|"ordinal" 1
+ROW_READS|fight/stacks/aurelion_sol.py|_add_aurelion_sol_stardust|dict.get|"slot" 1
+ROW_READS|fight/stacks/aurelion_sol.py|_add_aurelion_sol_stardust|dict.get|"time" 1
+ROW_READS|fight/stacks/aurelion_sol.py|_add_aurelion_sol_stardust|or-default|"ordinal" 1
+ROW_READS|fight/stacks/heimerdinger.py|_add_heimerdinger_w_e|dict.get|"raw_damage" 1
+ROW_READS|fight/stacks/rengar.py|_add_rengar_ferocity|dict.get|"detail" 1
+ROW_READS|fight/stacks/rengar.py|_add_rengar_ferocity|dict.get|"ordinal" 1
+ROW_READS|fight/stacks/rengar.py|_add_rengar_ferocity|dict.get|"reason" 1
+ROW_READS|fight/stacks/rengar.py|_add_rengar_ferocity|dict.get|"slot" 2
+ROW_READS|fight/stacks/rengar.py|_add_rengar_ferocity|or-default|"ordinal" 1
+ROW_READS|fight/stacks/rengar.py|_slot_ordinals|dict.get|"ordinal" 1
+ROW_READS|fight/stacks/rengar.py|_slot_ordinals|dict.get|"slot" 1
+ROW_READS|fight/stacks/rengar.py|_slot_ordinals|or-default|"ordinal" 1
+ROW_READS|fight/stacks/senna.py|_add_senna_souls|dict.get|"target" 1
+WIKI_TRAVERSALS|ability_atoms.py|_valid_atom_hash|dict.get|"hash" 1
+WIKI_TRAVERSALS|ability_atoms.py|ranked_ability_atom_value|dict.get|"values" 1
+WIKI_TRAVERSALS|ability_atoms.py|required_ability_atom|dict.get|"evidence" 1
+WIKI_TRAVERSALS|ability_atoms.py|required_ranked_attribute_atom|dict.get|"abilities" 1
+WIKI_TRAVERSALS|ability_atoms.py|required_ranked_attribute_atom|dict.get|"attribute" 1
+WIKI_TRAVERSALS|ability_atoms.py|required_ranked_attribute_atom|dict.get|"effects" 1
+WIKI_TRAVERSALS|ability_atoms.py|required_ranked_attribute_atom|dict.get|"leveling" 1
+WIKI_TRAVERSALS|ability_atoms.py|required_ranked_attribute_atom|dict.get|"modifiers" 1

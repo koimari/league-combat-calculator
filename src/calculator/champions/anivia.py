@@ -25,7 +25,7 @@ Roadmap session 3 (2026-08-20): closes both of Anivia's out_of_scope slots
     ``StartingDefenses.revive_*`` interface Zac's Cell Division and
     Zilean's Chronoshift use (``defensive_effects.py``'s
     ``_CHAMPION_REVIVE_SOURCES``), and it is live-tested end to end
-    (``tests/test_e8_support.py::test_anivia_rebirth_revives_with_sourced_full_health``).
+    (``tests/test_revive_and_ally_support_events.py::test_anivia_rebirth_revives_with_sourced_full_health``).
     ``MODULE_COVERAGE`` was simply stale, still reading "out_of_scope" for
     a slot the revive kernel had already closed — the identical stale-label
     pattern Zilean's R (Chronoshift) was already corrected under in

@@ -498,7 +498,7 @@ attribution), none is silently presented as exact. The one once-suspect
 rule (percent reduction on negative armor) matches the League Wiki's stated
 boundary ("percentage armor reduction cannot [reduce below 0]"), with a
 game-file-verification footnote remaining. No combat formula was found
-mathematically wrong. `tests/test_p2_math_foundations.py` is the pinned
+mathematically wrong. `tests/test_math_foundations.py` is the pinned
 identity suite for everything above.
 
 ---

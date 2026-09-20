@@ -1,4 +1,4 @@
-"""Self-heal and self-shield rows the coverage-frontier sustain slice landed.
+"""Self-heal and self-shield rows for the sustain slots that had none.
 
 Six sustain mechanics that had a cached row and no rule, plus Vi's Blast Shield and the
 two grey-health slots whose primitive already prices them.

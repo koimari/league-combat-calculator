@@ -1,196 +1,30 @@
-"""P4 — Vladimir E "Tides of Blood" charge-time ramp (test-matrix owner: RLM-2 C).
+"""Vladimir E "Tides of Blood": the charge-time ramp between its two rows.
 
-Focused TDD matrix for the charge-interpolated nova between the sourced
-Minimum/Maximum Magic Damage rows, driven by the ``e_charge_fraction``
-option (0 = uncharged minimum, 1 = fully charged after 1s of the 1.5s
-channel).  CURRENT RUNTIME FACTS (verify-before-pin completed, all
-pinned in S1):
+The cached E carries a "Minimum Magic Damage" row (flat 30:90 + 1.5%
+maximum health + 35% AP) and a "Maximum Magic Damage" row (flat 60:180 +
+6% maximum health + 80% AP).  `champions/vladimir.py`'s `_tides_of_blood`
+interpolates each of the three modifiers independently between them by the
+`e_charge_fraction` option, prices the maximum-health term against
+Vladimir's own health, and stamps the ramp semantics onto the detail
+string.  The hemoplague pseudo-slot scales the whole E by 1.1 by default.
 
-- The cached E (data/champions.json "Vladimir" -> abilities.E[0]) has
-  FIVE effects: [0] the charge-window prose ("charges for up to 1.5
-  seconds ... increases Tides of Blood's damage over the first second of
-  the channel" + the 20% channel self-slow) with leveling EMPTY — THE
-  DEGRADED CHARGE-TIME ROW (the AGENTS.md known-degraded list: "Vladimir
-  E (charge time)"); [1] the Recast with the "Minimum Magic Damage" row
-  (flat 30/45/60/75/90 + 1.5% maximum health + 35% AP) and the "Maximum
-  Magic Damage" row (flat 60/90/120/150/180 + 6% maximum health + 80%
-  AP); [2] the slow ("If Tides of Blood was charged for at least 1
-  second, enemies hit are also slowed for 0.5 seconds", row 40/45/50/55/
-  60%); [3] the intercept prose (no leveling); [4] the 12% free rule
-  ("If Vladimir is below 12% of his maximum health, Tides of Blood will
-  not cost any health.").  The cost row carries values [0,0,0,0,0] with
-  the prose unit "2% / 4% / 6% / 8% (based on charge time)" — the
-  health cost is NOT atomized/typed anywhere.
-- The module (src/calculator/champions/vladimir.py, PACKET_SHA256
-  03e211424b005b94fe9d0df6d90a10efc1aa4d935e306143b14b0b254bd3532d)
-  ships ``_tides_of_blood``: the E slot parser that interpolates EACH of
-  the three modifiers independently between its min and max rows by
-  ``e_charge_fraction`` (default 1.0 = fully charged == the reviewed
-  packet's max-row numbers exactly), prices the "% maximum health" term
-  against the champion's OWN maximum health (ctx.stats["health"]), and
-  stamps a detail string with the fraction/ramp/channel semantics.  The
-  charge-window constants are HARDCODED module floats with a "verify on
-  patch updates" comment: ``_E_CHARGE_RAMP_SECONDS = 1.0`` (the ramp —
-  wiki prose only, NO atom carries 1.0) and ``_E_CHANNEL_SECONDS = 1.5``
-  (atomized: timing.active_duration [1.5], hash 367b90ae9fc5cf38, plus
-  the binary channel atom crowd-control-mobility.channel/VladimirE hash
-  940d08fba719e658).  The module also ships the R AMP pseudo-slot
-  (hemoplague, 10% debuff, default ON) and the E cooldown now reads the
-  LIVE cached array 13/11/9/7/5, not the reviewed packet's fixed 13.0
-  (the cache wins, and the golden note records the move).
-- Atoms: abilities-domain (data/atoms/abilities.json "Vladimir") E rows
-  — minimum _magic _damage.modifier_0/1/2 hashes ed0a9a756a254ee9 /
-  2241b298f6dcd8d4 / 6c5d374d3795f5a8; maximum _magic _damage.modifier_
-  0/1/2 hashes 1e9f85c82f8835bf / b80d1b0a647bec0f /
-  0b370081381fdce8; ability.slow 9542f5ef5b374978; timing.active_
-  duration 367b90ae9fc5cf38 (1.5s channel); timing.control_duration
-  7e729d1075801443 (0.5s slow); timing.cooldown 15cbce498dc12195.
-  Champions-domain (data/atoms/champions.json "Vladimir"): the channel/
-  slow/aoe/damage-instance E atoms (940d08fba719e658 / 35908e07efaea3a6
-  / 580c5d8ca6091984 / 75001ca6bfeeea3e), the recast nuke
-  (VladimirTidesofBloodNuke 2493ebc69f194d05), the health-as-resource
-  cost atom (VladimirTidesofBloodCost 77fd5d82b6181e37 — NO numbers),
-  the stale E heal atom (VladimirTidesofBloodHeal bba17d1afe12f8bd — E
-  has no heal in the current patch), and the inherited VladimirEMissile
-  trio (2c71947a806b1959 / 31ee70c52c063735 / 2932ed40dff644d1).  NO
-  atom carries the 1.0s ramp (the degraded row's only numeric survivor
-  is the 1.5s channel in timing.active_duration).
-- Runtime behavior (verified): rank 5, AP 100, health 2500,
-  r_hemoplague_debuff=False -> E total_raw 162.5 (fraction 0) / 286.25
-  (0.5) / 410.0 (1.0); ranks 1-5 max 290/320/350/380/410, min
-  102.5/117.5/132.5/147.5/162.5; the parse entry carries NO
-  resource_cost (the health cost 2%/4%/6%/8% current health and the 12%
-  free rule are UNMODELED — fight resource_spent 0.0, resource_ledger
-  null, control_events [] — the slow is also UNMODELED, "utility" per
-  the module ASSUMPTION); direct-parse out-of-range fractions CLAMP
-  (2.0 -> max row, -1.0 -> min row) while the API 400s them
-  ("champion_options.e_charge_fraction must be between 0.0 and 1.0");
-  unknown API keys 400 ("champion_options contains unknown option ...");
-  non-numeric 400 ("must be a number"); API breakdown E rows use the
-  REAL level-18 stats (health 2470, AP 0): 127.05 / 227.625 / 328.2
-  (rounded to 1dp in the app layer).
+The charge window has two numbers and only one is atomized.  The 1.5s
+channel is `timing.active_duration`; the 1s ramp lives in wiki prose
+alone, because the E's charge-time effect is one of the known-degraded
+parses whose `leveling` is empty, so the module carries it as a reviewed
+constant to verify on patch day.  The cooldown is read from the live
+cached array 13/11/9/7/5, not from the reviewed packet.
 
-CONTRACT PINNED HERE (the P4-Vladimir-E completion must satisfy;
-genuinely-unsupported boundaries are STRICT xfails with reason
-"awaiting P4-Vladimir-E ..." — the coordinator flips each xfail to a
-live test when the seam lands):
+Unmodelled, and the tests below are the live guards that say so: the
+health cost ("2% / 4% / 6% / 8% based on charge time", whose row carries
+five zeros), the 12% free rule, the enemy slow and the 20% channel
+self-slow.
 
-- S1  Source evidence: all five E effects verbatim, the leveling rows
-      (min/max/slow), the cost row + cooldown row, the degraded
-      charge-time row (leveling EMPTY), the atoms (ids + hashes,
-      abilities + champions domains), the module declaration (constants,
-      PACKET_SHA256, SLOTS incl. the hemoplague pseudo-slot,
-      MODULE_COVERAGE, OPTIONS/ASSUMPTIONS/SOURCES meta), the reviewed
-      packet's max-row E slot the module overrides.
-- S2  Charge fractions: E damage at fraction 0/0.25/0.5/1.0 (the
-      per-modifier interpolation — flat x2, %maxHP x4, %AP ~x2.3, so
-      each modifier interpolates on its own), the min/max endpoints, the
-      detail strings, and the health cost at each fraction (UNPRICED
-      today: no resource_cost anywhere — live guard + strict xfail for
-      the typed cost seam).
-- S3  Level endpoints: min/max rows at ranks 1-5 (raw rows + parsed
-      totals), the live cooldown array 13/11/9/7/5, rank-0 absence.
-- S4  The charge window: 1.5s channel (the sourced atom
-      timing.active_duration) vs the 1s ramp (degraded row — prose
-      only, no atom, HARDCODED module constant); the detail string's
-      semantics (fraction x 1s ramp inside the 1.5s channel); the slow's
-      "at least 1 second" boundary == ramp completion.
-- S5  Health cost + the 12% free rule: the effect + the notes verbatim;
-      today the cost is not modeled anywhere (live guard); STRICT xfail
-      for the typed cost seam honoring 2% -> 8% current health by charge
-      and the 12% free boundary.
-- S6  The slow: the effect + the 40/45/50/55/60% row + the 0.5s control
-      duration verbatim; today no slow surface exists (control_events
-      [], no cc on the E part — live guard); STRICT xfail for the slow
-      seam emitting the rank value for 0.5s ONLY at fraction 1.0 (the
-      "charged for at least 1 second" boundary) and nothing below.
-- S7  Malformed/stale declarations: the degraded row is never read (the
-      fraction IS the selection); the min/max rows resolve by exact
-      attribute name (a missing attribute would resolve 0.0 — the
-      engine convention; the rows are pinned so drift trips loudly);
-      direct-parse clamps vs API 400s (option bounds min 0.0 / max 1.0
-      / step 0.1 / default 1.0 / type float); non-numeric raises.
-- S8  Source + atom receipts: the hashes, the manifest receipts
-      (abilities domain 56c47afaf5f0b20b; champions domain
-      49e1c1ddcb91244a; data/champions.json@sha256:afea81a9976904c1),
-      the packet-spec digest == PACKET_SHA256, the module SOURCES
-      revisions;
-      STRICT xfail for the typed atom-backed certification of the charge
-      model (ramp/channel constants + min/max atom ids in one public
-      receipt).
-- S9  API validation: the option accepted (200) and applied (E row
-      total_damage rises 127.05 -> 227.625 -> 328.2 at level 18, MR 0,
-      debuff off); unknown keys 400 with a named receipt; out-of-range
-      (1.5 / -0.5) 400; non-numeric 400; inclusive 0.0/1.0 accepted;
-      the hemoplague default scales E by exactly 1.1 on top of the
-      charge interpolation.
-- S10 Score/receipt parity: full vs score_only byte-identical on the
-      scored surface (breakdown / total_damage / resource_spent /
-      resource_remaining / resource_ledger / notes / cast_timeline
-      shared keys) at fractions 0/0.5/1.0, one-rotation and timed.
-- S11 Regression surface: the tests/ grep set for "vladimir" is pinned
-      to exactly the 11 pre-existing files + this one (growing the set
-      requires updating this pin); module meta pins; the mandated sanity
-      list (footer).
+A direct parse clamps a fraction outside 0.0 to 1.0 onto the nearer row;
+the API refuses it with a named 400, as it does an unknown option key and
+a non-numeric value.
 
-AMBIGUITY NOTES for the coordinator:
-
-1. CHARGE-MODEL CERTIFICATION vs TYPED SEAM.  The model today is a slot
-   parser function plus two HARDCODED module floats (ramp 1.0, channel
-   1.5) with a "verify on patch updates" comment.  The 1.5s channel is
-   atom-backed (timing.active_duration 367b90ae9fc5cf38); the 1.0s ramp
-   exists ONLY in wiki prose (the degraded effects[0] row has no
-   leveling — the atomizer extracted nothing for the ramp).  The
-   completion should either (a) certify the existing constants with a
-   typed public receipt (mirroring the repo's typed-rule-with-public-
-   receipt pattern) naming the min/max atom ids + the wiki-prose root
-   for the 1s ramp, or (b) add a typed seam carrying the window.
-   S8's xfail asserts the receipt surface, not a specific class name.
-2. THE 1S RAMP HAS NO ATOM.  Any "atom-backed" certification of the
-   ramp value must name the wiki prose (effects[0].description "over
-   the first second of the channel" / effects[1].description "increased
-   based on charge time up to the first second") as the root — the
-   binary/atom catalogs carry no 1.0 ramp value.  The fraction option
-   maps linearly onto the ramp: fraction == fraction-seconds of ramp
-   (the detail string pins this).
-3. HEALTH COST TIER MAPPING IS UNKNOWN.  The cost row's unit prose is
-   "2% / 4% / 6% / 8% (based on charge time)" — four discrete tiers but
-   NO sourced boundary between them (the wiki gives no charge-time
-   thresholds; the in-game cost is per the game scripts).  S2/S5 xfails
-   pin ONLY the endpoints (2% at fraction 0, 8% at fraction 1.0,
-   monotone between) and the 12% free boundary (effects[4] + the notes'
-   per-tick semantics: "verified for every tick of health cost, i.e if
-   the first tick drops him below it, the next ones will stop affecting
-   him").  The engine also has NO attacker current-health input today —
-   a cost seam needs one (or must pin the fraction as the only lever).
-4. THE 20% CHANNEL SELF-SLOW IS A SEPARATE BOUNDARY.  effects[0]
-   prose: Vladimir "becomes slowed by 20% afterwards for the remaining
-   duration" (after 1s of charging).  This is a SELF slow, distinct
-   from the enemy slow in effects[2]; neither is modeled.  The S6 xfail
-   covers the ENEMY slow; the self-slow is utility — flag if the
-   completion wants it.
-5. BINARY-vs-WIKI COOLDOWN DRIFT.  The binary channel atom
-   (crowd-control-mobility.channel / VladimirE) carries cooldown rank1
-   = 15.0 (values [15.0, 5.0, 550.0, 8192.0]) while the cached wiki
-   cooldown row is 13/11/9/7/5 and the module reads the wiki array,
-   which is the certified behavior.  S1/S3 pin the
-   wiki array; the 15.0 in the binary atom is a drift flag for patch
-   day, not a runtime value.
-6. STALE PER-ABILITY SOURCE REVISION.  The module SOURCES pin the E
-   ability entry at revision 2864482 (2019-11-03) while the parent
-   entry is 3960728 (2025-10-22) — the same stale-per-ability-revision
-   pattern flagged for another champion's passive.  The row VALUES are current (they match
-   the packet), but the per-ability revision should be
-   re-pulled on the next patch day.
-7. REFERENCE CONFIG NUMBERS.  The golden baseline's Vladimir E rows
-   (scripts/golden_baseline.json) pin the LEVEL-11 entry: E rank 1,
-   cooldown 13.0, total_raw 169.29 = (60 + 6% x 1565 rounded health +
-   80% x 0 AP) x 1.1 hemoplague — i.e. the golden E numbers are the
-   MAX-row values with the R debuff default ON and the level-11 rounded
-   health.  Any completion change to the charge model's default
-   (fraction 1.0 == max row) must re-capture the golden with every diff
-   explained; the API-level reference numbers in S9 use the real
-   level-18 stats (health 2470, AP 0).
+Section ids S1 to S11 below name the parts of this matrix.
 """
 
 import json
@@ -228,7 +62,6 @@ _PACKET_VLADIMIR = json.loads(
     Path("static/reviewed-packets.json").read_text(encoding="utf-8")
 )["champions"]["Vladimir"]
 
-_AWAIT = "awaiting P4-Vladimir-E ..."
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _REF_HEALTH = 2500.0  # fabricated engine-level champion max health
 _REF_AP = 100.0

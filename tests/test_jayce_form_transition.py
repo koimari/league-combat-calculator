@@ -145,10 +145,6 @@ CHAMPION = "Jayce"
 # is modeled as TWO one-stance fights (the ASSUMPTIONS receipt).
 OPTION_KEY = "transform_time"  # deliberately NEVER declared
 
-# Genuinely-absent mechanics are xfailed with this reason prefix; the
-# completion removes the markers (strict) and reconciles the pins.
-_AWAIT = "awaiting P4-Jayce-Form"
-
 # ---------------------------------------------------------------------------
 # Reference build (test_jayce.py's STATS_250_AD convention): level 18,
 # Q/W/E rank 6 (R never leveled), 250 total AD / 150 bonus AD, 1.0 AS,

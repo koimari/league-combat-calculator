@@ -148,6 +148,7 @@ class TestSpikedShellIsBinaryCorroborated:
         """Why the constants are hardcoded: there is no row to read."""
         assert _WIKI["abilities"]["P"][0]["effects"][0].get("leveling", []) == []
 
+    @pytest.mark.needs_game_files
     @pytest.mark.parametrize(
         ("data_value", "constant"),
         [
@@ -160,6 +161,7 @@ class TestSpikedShellIsBinaryCorroborated:
         assert values, f"{data_value} row is empty"
         assert all(value == pytest.approx(constant, abs=1e-6) for value in values)
 
+    @pytest.mark.needs_game_files
     def test_binary_formula_has_exactly_the_two_stat_terms(self):
         """The negative half of the decision: no third term exists.
 

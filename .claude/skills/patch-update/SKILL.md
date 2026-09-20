@@ -114,7 +114,7 @@ as the re-review triage list.
   affected named modules. Also verify surprising *absences*
   (e.g. a buff that didn't move the baseline because the snapshot has 0 AP,
   0% crit, or the ability sits at rank 1 at the snapshot level).
-- The E9 practice-corpus gate (`tests/test_e9_corpus.py`) is anchored at the
+- The E9 practice-corpus gate (`tests/test_practice_tool_corpus.py`) is anchored at the
   `src/` tree of the merge base with `main`, so an in-branch `src/` change
   leaves every scenario *executed* and a broken receipt fails on its numbers.
   A patch that legitimately moves a receipt is re-pinned with

@@ -106,7 +106,6 @@ _ITEMS = json.loads(Path("data/items.json").read_text(encoding="utf-8"))
 _GOLDEN = json.loads(Path("scripts/golden_baseline.json").read_text(encoding="utf-8"))
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
-_AWAIT = "awaiting P4-Senna-Relic ..."
 # Rider breakdown-row spellings the seam may land (contract: ONE of them,
 # count == autos, distinct from on_hit_ability_passive).
 _RIDER_ROW_KEYS = (
@@ -350,6 +349,7 @@ class TestSourceEvidence:
             a["source"].startswith("Senna.P[0].effects[3]") for a in senna_atoms
         )
 
+    @pytest.mark.needs_game_files
     def test_binary_evidence_ms_steal_present_ratio_absent(self):
         # Binary corroboration: MSStealDuration 0.5 (the prose's 0.5s) is
         # a SennaPassive DataValue; the 20% on-hit AD ratio is a

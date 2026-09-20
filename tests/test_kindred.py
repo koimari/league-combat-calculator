@@ -7,11 +7,15 @@ fall back to coarse ordering.  These tests hold the declaration to the
 cached text it was read from, and prove it reaches the event ledger.
 """
 
+from functools import partial
+
 import pytest
 
 from src.calculator.champions import get_champion_module_contract, kindred
+from src.calculator.champions.slot_extract import extract_named
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review, coverage_truth, row_review
+from tests import champion_closure as closure
 
 # The phrase each declared kind was read from, in that slot's cached text.
 QUOTED = {"E": "slows them by 30%"}
@@ -88,3 +92,57 @@ class TestCoverageMap:
             entry = row_review.entry("Kindred", slot)
             assert entry["total_raw"] == 0.0
             assert expected in entry["detail"]
+
+
+# One rotation at level 18 into the bare 2000-HP dummy; slot rows are parsed
+# against the shared reference stat block.
+_closure_fight = partial(closure.fight, role="top")
+_closure_parse = closure.reference_abilities
+
+
+# ---------------------------------------------------------------------------
+# Kindred — W Hunter's Vigor (100-stack next-auto heal)
+# ---------------------------------------------------------------------------
+
+
+class TestKindred:
+    """P1-3: Hunter's Vigor heal receipt + the missing-health-scaled heal."""
+
+    def test_hunters_vigor_receipt_only_at_100_stacks(self):
+        """The W_vigor receipt is emitted only at the sourced 100-stack cap."""
+        at_100 = _closure_parse("Kindred", options={"w_hunters_vigor_stacks": 100})
+        assert "W_vigor" in at_100
+        at_99 = _closure_parse("Kindred", options={"w_hunters_vigor_stacks": 99})
+        assert "W_vigor" in at_99  # emitted as an explicit state row
+        assert at_99["W_vigor"]["total_raw"] == 0.0
+
+    def test_heal_fires_on_first_auto_scaled_by_missing_health(self):
+        """At 100 stacks the next basic attack heals the missing-health
+        share of 47 : 81 (based on level) — 81 at level 18."""
+        # The bar is STATED full: unset it derives, and six seconds of
+        # attacks do not fill it (champions/kindred.py's counter).
+        data = _closure_fight(
+            "Kindred",
+            options={"w_hunters_vigor_stacks": 100},
+            mode="time_based",
+            duration=6,
+            include_autos=True,
+            enemy=closure.AHRI,
+        )
+        heals = closure.response_heals(data, "Hunter's Vigor")
+        assert len(heals) == 1
+        raw = float(heals[0].get("raw_amount", heals[0].get("amount", 0.0)))
+        assert 0.0 < raw <= 81.0 + 0.6
+        assert raw > 0.0  # the fight's own incoming damage creates missing health
+
+    def test_wolf_frenzy_damage_keeps_sourced_row(self):
+        """W damage stays the sourced Magic Damage row over w_attacks."""
+        data = _closure_fight("Kindred")
+        stats = closure.fight_stats(data)
+        target = closure.target_stats(data)
+        per = extract_named(
+            closure.ability_row("Kindred", "W"), "Magic Damage", 5, stats, target
+        )
+        assert closure.slot_total(data, "W") == pytest.approx(
+            per * 3, abs=closure.ROUNDING
+        )

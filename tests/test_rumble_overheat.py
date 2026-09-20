@@ -211,6 +211,7 @@ class TestOverheatIsBinaryCorroborated:
         assert values[17] == pytest.approx(40.0)
         assert values[19] == pytest.approx(44.12)
 
+    @pytest.mark.needs_game_files
     def test_binary_ap_coefficient_matches_the_wiki(self):
         row = _leveling_row(_P_EFFECT, "Bonus Magic Damage")
         assert row["modifiers"][1]["values"][0] == pytest.approx(25.0)
@@ -222,12 +223,14 @@ class TestOverheatIsBinaryCorroborated:
         ]
         assert pytest.approx(0.25, abs=1e-6) in coefficients
 
+    @pytest.mark.needs_game_files
     def test_binary_percent_health_term_matches_the_wiki(self):
         row = _leveling_row(_P_EFFECT, "Bonus Magic Damage")
         assert row["modifiers"][2]["values"][0] == pytest.approx(4.0)
         values = game_binary.data_value(_heat_record(), "OverheatPercBonusDamage")
         assert all(value == pytest.approx(0.04, abs=1e-6) for value in values)
 
+    @pytest.mark.needs_game_files
     def test_binary_base_ladder_matches_the_wiki_endpoints(self):
         """Wiki L18 == binary's last authored ByCharLevel point (40)."""
         parts = _heat_record()["mSpellCalculations"]["TotalBaseDamage"]["mFormulaParts"]

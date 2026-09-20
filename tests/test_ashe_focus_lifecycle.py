@@ -104,10 +104,6 @@ _GAME_FILE = (
 )
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
-# The P1-10 coordinator wires the documentary Focus walk; genuinely-
-# absent mechanics are xfailed with this reason (never strict — the
-# completion removes the markers).
-_AWAIT = "awaiting P1-10 wiring"
 
 
 # Ranger's Focus is DERIVED when the option is unset: the fight banks the
@@ -302,6 +298,7 @@ class TestSourceAndTypedValues:
         # The Q has no cooldown row at all (stack-activated).
         assert _CHAMPION_DATA["Ashe"]["abilities"]["Q"][0].get("cooldown") is None
 
+    @pytest.mark.needs_game_files
     def test_game_file_corroborates_the_rule_numbers(self):
         # The game file (ashe.bin.json AsheQ DataValues) corroborates the
         # prose-pinned rule: 4s stack duration, 4 max stacks, 1s timer and
@@ -1080,6 +1077,6 @@ class TestUnchangedBoundaries:
 #       tests/test_resource_ledger_champion_consumers.py \
 #       tests/test_catalyst_resource_ledger.py tests/test_item_sustain.py \
 #       tests/test_mana_restore_refund.py tests/test_app.py
-# The existing Ashe pins (tests/test_ashe.py, tests/test_e3_stacks_2.py
+# The existing Ashe pins (tests/test_ashe.py, tests/test_stack_systems_2.py
 # test_ashe_focus_stacks_gate_rangers_focus, tests/test_state_lifecycle_
 # consumers.py TestAsheFocusConsumer) stay green.

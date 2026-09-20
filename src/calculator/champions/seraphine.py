@@ -327,7 +327,7 @@ ASSUMPTIONS = [
     "its amount depends on each recipient's live missing health, which the "
     "scanner cannot price per recipient, and w_already_shielded only drops "
     "the caster's shield gate - it must not resurrect a zero-amount pulse "
-    "row (pinned by tests/test_e8_support.py). W's SELF movement grant "
+    "row (pinned by tests/test_revive_and_ally_support_events.py). W's SELF movement grant "
     "(20% + 2% per 100 AP) is published as a move_speed_percent "
     "stat_buff, a term in the shared resolve_move_speed fold (soft caps "
     "included). Its magnitude is prose in the cached W description and "

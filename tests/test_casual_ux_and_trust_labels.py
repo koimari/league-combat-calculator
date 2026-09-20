@@ -328,6 +328,7 @@ def test_share_index_loads_with_share_query_param():
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.needs_node
 def test_node_check_passes_for_app_js():
     node = shutil.which("node")
     if node is None:

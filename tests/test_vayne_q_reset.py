@@ -118,10 +118,6 @@ _ROOT = Path(__file__).resolve().parents[1]
 _CATALOG_PATH = _ROOT / "data" / "atoms" / "abilities.json"
 
 CHAMPION = "Vayne"
-# The P4-Vayne-Q coordinator wires the opt-in reset contract; genuinely
-# absent mechanics are xfailed with this reason.
-_AWAIT = "awaiting P4-Vayne-Q wiring"
-
 # The contract option key (the "smallest opt-in" reset-acceleration
 # control; the coordinator's completion declares it).
 OPTION_KEY = "q_tumble_reset"

@@ -57,7 +57,6 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 import literal_defaults
 
-from tests.test_literal_defaults import ER5_TAIL
 from tests.test_row_stream_census import CENSUS
 
 RECEIPT = REPO_ROOT / "docs" / "receipts" / "er5-tail-triage.json"
@@ -182,7 +181,7 @@ def triage() -> dict[str, Any]:
     tolerant = _tolerance_modules()
     buckets: Counter[str] = Counter()
     by_module: dict[str, Counter[str]] = {}
-    tail = [CALCULATOR / rel for rel in ER5_TAIL if (CALCULATOR / rel).exists()]
+    tail = [CALCULATOR / rel for rel in literal_defaults.load_baseline().er5_tail()]
     for finding in literal_defaults.scan(tail):
         rel = Path(finding.path).as_posix().split("src/calculator/")[1]
         receiver = _receiver(finding.expression)

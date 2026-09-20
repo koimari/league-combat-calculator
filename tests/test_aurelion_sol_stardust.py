@@ -172,7 +172,6 @@ _ASOL_BIN = (
 _GOLDEN = json.loads(Path("scripts/golden_baseline.json").read_text(encoding="utf-8"))
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
-_AWAIT = "awaiting P4-Asol-Q ..."
 _TARGET_MAX_HP = 2000.0
 # One-rotation per-stack Q delta: 3 bursts x 0.031% of 2000 HP.
 _PER_STACK_BURST_DELTA = (
@@ -500,6 +499,7 @@ class TestSourceEvidence:
         # No atom exists for the rank-5 160 s channel (prose-only).
         assert not any("160" in json.dumps(a) for a in _ABILITIES_ATOMS)
 
+    @pytest.mark.needs_game_files
     def test_binary_data_values_corroborate_the_packet(self):
         # Community Dragon binary (client 16.15.8024387): the Q DataValues
         # corroborate every module number - channel 3.25 s (rank 5: 9999.0,
@@ -1089,6 +1089,7 @@ class TestTargetAndStructureRules:
         assert _q_ability()["targeting"] == "Direction"
         assert _q_ability()["affects"] == "Self, Enemies"
 
+    @pytest.mark.needs_game_files
     def test_monster_cap_is_a_documented_out_of_scope_boundary(self):
         # The burst's %maxHP Stardust term is "capped at 300 against
         # monsters" (wiki prose; binary MonsterDamageCap 300.0).  The 1v1
@@ -1316,4 +1317,4 @@ class TestScoreReceiptParity:
 #     tests/test_resource_ledger*.py tests/test_catalyst_resource_ledger.py \
 #     tests/test_item_sustain.py tests/test_champion_options.py tests/test_app.py
 # Aurelion Sol / stardust grep surface (contract 11), run separately:
-#   tests/test_aurelion_sol.py tests/test_e2_dot_1.py tests/test_mechanics_packets.py
+#   tests/test_aurelion_sol.py tests/test_dot_tick_counts_1.py tests/test_mechanics_packets.py

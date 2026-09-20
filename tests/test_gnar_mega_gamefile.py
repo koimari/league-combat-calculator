@@ -225,6 +225,7 @@ def _timed(level: int, mega: bool) -> dict:
 
 
 class TestSourceEvidence:
+    @pytest.mark.needs_game_files
     def test_gnar_root_modifiable_stats_from_local_binary(self) -> None:
         # The Mini-side authority: Characters/Gnar/CharacterRecords/Root.
         assert _root_value(_GNAR_ROOT, "baseHPModifiable") == pytest.approx(540.0)
@@ -637,6 +638,7 @@ class TestGnarBigRootAuthority:
             "for the live delta verification"
         )
 
+    @pytest.mark.needs_game_files
     def test_gnarbig_character_records_root_is_absent_inside_gnar_bin(self) -> None:
         # Root level: gnar.bin.json carries the GnarBig SPELL nodes but
         # no Characters/GnarBig/CharacterRecords/Root — the stat block
@@ -648,11 +650,13 @@ class TestGnarBigRootAuthority:
             "GnarBig" in key for key in _GNAR_BIN
         ), "expected the GnarBig spell nodes to coexist in gnar.bin.json"
 
+    @pytest.mark.needs_game_files
     def test_gnar_root_is_present(self) -> None:
         if _GNAR_BIN is None:
             pytest.skip("local Gnar game-file evidence is unavailable")
         assert _GNAR_ROOT is not None
 
+    @pytest.mark.needs_game_files
     def test_constants_match_gnarbig_minus_gnar_deltas(self) -> None:
         # The live verification: the GnarBig root landed
         # (data/bin/characters/gnarbig.bin.json, fetched from
@@ -952,7 +956,7 @@ class TestRegressionSurface:
     def test_gnar_test_file_set_is_pinned(self) -> None:
         # grep -il gnar tests/ (--include="*.py"): the exact 26-file set.
         # The Gnar-CODE surfaces are test_gnar.py, test_damage.py,
-        # test_jayce_form_transition.py, test_e3_stacks_1.py (Hyper),
+        # test_jayce_form_transition.py, test_stack_systems_1.py (Hyper),
         # test_mechanics_packets.py (Q secondary targets) and
         # test_interaction_atoms.py (R stun atom); the rest match on
         # prose (the Gnar UI-panel rule, the Gnar-module precedent) or
@@ -977,14 +981,14 @@ class TestRegressionSurface:
             "test_damage.py",
             "test_diana.py",
             "test_dr_mundo.py",
-            "test_e3_stacks_1.py",
+            "test_stack_systems_1.py",
             # ci-evidence scanner names gnar bin paths as calibration fixtures
             "test_ci_evidence_parity.py",
             # CF7's coverage-truth sweep names Gnar P and R in its
             # option-gated table (both rows exist only in Mega form).  A
             # declaration of what an option produces, not Gnar coupling.
             "test_coverage_truth_sweep.py",
-            "test_f0_frontend.py",
+            "test_frontend_contract.py",
             "test_gnar.py",
             # The MODULE_CC census names Gnar W and R among the declared
             # kinds no fight row carries.  A roster count, not Gnar code.
@@ -1007,7 +1011,7 @@ class TestRegressionSurface:
             "test_tristana_rapid_fire_and_range.py",
             "test_twitch_ambush_and_cask.py",
             "test_udyr_stampede_and_monk_training.py",
-            "test_wave2_stat_buffs.py",
+            "test_stat_grant_dispatch.py",
             # The patch-day orchestrator fetches the gnar/gnarbig authority
             # pair, so its test module names them.
             "test_patch_update.py",

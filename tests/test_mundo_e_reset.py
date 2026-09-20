@@ -135,10 +135,6 @@ _CATALOG_PATH = _ROOT / "data" / "atoms" / "abilities.json"
 CHAMPION = "Dr. Mundo"
 DATA_KEY = "DrMundo"
 CATALOG_KEY = "DrMundo"
-# The P4-Mundo-E coordinator wires the opt-in reset contract; genuinely
-# absent mechanics are xfailed with this reason.
-_AWAIT = "awaiting P4-Mundo-E wiring"
-
 # The contract option key (the "smallest opt-in" reset-throughput
 # control; the coordinator's completion declares it — key proposal,
 # flagged in the reply for confirmation).

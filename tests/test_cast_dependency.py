@@ -746,7 +746,7 @@ class TestTheContractCarriesDeclarations:
 
 
 class TestNonDeclaringChampionsReachNoNewCode:
-    """D-85 asserted at source level, in the ``test_issue_158`` idiom.
+    """D-85 asserted at source level, in the ``test_public_integer_policy`` idiom.
 
     "The 170 non-declaring champions are byte-identical" is what makes
     the migration provably diff-free, and a behavioural test can only

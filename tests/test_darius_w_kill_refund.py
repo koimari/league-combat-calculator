@@ -120,10 +120,6 @@ _CATALOG_PATH = _ROOT / "data" / "atoms" / "abilities.json"
 
 CHAMPION = "Darius"
 W_DATA_KEY = "Darius"
-# The P4-14 coordinator wires the typed kill contract; genuinely-absent
-# mechanics are xfailed with this reason.
-_AWAIT = "awaiting P4-14 wiring"
-
 # The sourced flat cost and cooldown (cached rows, pinned in S1).
 W_COST = 40.0
 W_COOLDOWN = 5.0

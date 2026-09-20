@@ -3,8 +3,14 @@
 The roster-wide half of this review lives in ``test_module_cc_census.py``.
 """
 
+from functools import partial
+
+import pytest
+
 from src.calculator.champions import varus
+from src.calculator.champions.slot_extract import extract_named, extract_value
 from tests import cc_review
+from tests import champion_closure as closure
 
 
 class TestReviewedCrowdControl:

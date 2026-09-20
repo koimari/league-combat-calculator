@@ -1,14 +1,14 @@
 """The actor, the grown registry and the packet vocabulary every item-support suite reads."""
 
-import ast
+import sys
 from pathlib import Path
 from types import MappingProxyType, SimpleNamespace
 
-from src.calculator import (
-    ally_packet_shape,
-    item_support_effects,
-    trigger_stream,
-)
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+
+import packet_declarations
+
+from src.calculator import ally_packet_shape, trigger_stream
 from src.calculator import (
     item_behavior_catalog as catalog,
 )
@@ -100,80 +100,9 @@ _ABYSSAL_ROSTER = {
 }
 
 
-def _is_packet_kind_node(node, kind: str) -> bool:
-    """Whether a ``_packet(kind=...)`` node names ``PacketKind.<KIND>.value``.
-
-    ER1 put the kind on the enum rather than a bare string literal at every
-    site, so the three source walks below ask this one question instead of
-    each matching a spelling.
-    """
-    return (
-        isinstance(node, ast.Attribute)
-        and node.attr == "value"
-        and isinstance(node.value, ast.Attribute)
-        and node.value.attr == kind.upper()
-        and isinstance(node.value.value, ast.Name)
-        and node.value.value.id == "PacketKind"
-    )
-
-
-def _packet_keyword(call, name):
-    """The value node of one keyword argument of a ``_packet(...)`` call.
-
-    Moved out of ``item_support_effects`` at P2c.  ``CAPABILITIES`` is the
-    authority table, not a walk of the module's own source, so the walk
-    over its construction sites is purely a test-side source assertion and
-    lives with the assertions.
-    """
-    return next((k.value for k in call.keywords if k.arg == name), None)
-
-
-def declared_packet_keywords(*names):
-    """Each ``damage_modifier`` call site's declared keywords, by source.
-
-    Read from the construction sites and evaluated in the module's own
-    namespace, so the test sees the declaration a reader sees rather than a
-    packet a fixture happened to build.  A keyword the call site does not
-    pass comes back ``None`` — absent and defaulted are the same thing to
-    ``_packet`` and the caller decides what that means.
-
-    Public, and the one AST walk over those call sites: the Phase 0
-    sentinels in ``test_phase0_sentinels`` read the same declarations (their
-    class sets and their expiries), and a second walk would be a second home
-    for one fact.
-    """
-    module_source = Path(item_support_effects.__file__).read_text(encoding="utf-8")
-    declared = {}
-    for node in ast.walk(ast.parse(module_source)):
-        if not (
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "_packet"
-        ):
-            continue
-        kind = _packet_keyword(node, "kind")
-        if not _is_packet_kind_node(kind, "damage_modifier"):
-            continue
-        source = _packet_keyword(node, "source").value
-        declared[source] = {
-            name: _evaluate_declaration(_packet_keyword(node, name)) for name in names
-        }
-    return declared
-
-
-def _evaluate_declaration(expression):
-    """One declared keyword's value, or ``None`` when the site omits it."""
-    if expression is None:
-        return None
-    return eval(  # noqa: S307 - evaluates the module's own declaration AST  # pylint: disable=eval-used
-        compile(ast.Expression(expression), "<declaration>", "eval"),
-        vars(item_support_effects),
-    )
-
-
 def declared_classes_by_producer():
     """Each ``damage_modifier`` call site's declared class sets, by source."""
-    return declared_packet_keywords("damage_classes", "attack_classes")
+    return packet_declarations.declared("damage_classes", "attack_classes")
 
 
 def timed_cross_participant_producers():

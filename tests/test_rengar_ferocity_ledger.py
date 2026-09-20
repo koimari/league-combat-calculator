@@ -60,9 +60,6 @@ from tests.parse_stats import parse_stats
 _CHAMPION_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
-# The P3-3V coordinator wires the accepted basic-ability cast events into
-# the resource/counter ledger; genuinely-absent mechanics are xfailed.
-_AWAIT = "awaiting P3-3V wiring"
 
 
 def _parse(option: dict | None):
@@ -640,6 +637,6 @@ class TestResourceLedgerVisibility:
 # ---------------------------------------------------------------------------
 # S10 — Regression surface (kept green; run list)
 # ---------------------------------------------------------------------------
-# The existing Rengar/ferocity pins (test_e3_stacks_2.py
+# The existing Rengar/ferocity pins (test_stack_systems_2.py
 # test_rengar_ferocity_empowers_q_w_e; test_state_lifecycle_consumers.py
 # TestRengarFerocityConsumer) and the resource-ledger consumers stay green.

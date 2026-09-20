@@ -175,6 +175,7 @@ class TestNoteDamageIsBinaryCorroborated:
         assert values[17] == pytest.approx(25.0)
         assert values[19] == pytest.approx(27.47)
 
+    @pytest.mark.needs_game_files
     def test_binary_ladder_endpoints_match_the_wiki(self):
         """Binary interpolates 4 -> 25 over levels 1..18; wiki agrees."""
         parts = _passive_record()["mSpellCalculations"]["AutoDamage"]["mFormulaParts"]
@@ -184,12 +185,14 @@ class TestNoteDamageIsBinaryCorroborated:
         assert ladder["mStartValue"] == pytest.approx(4.0)
         assert ladder["mEndValue"] == pytest.approx(25.0)
 
+    @pytest.mark.needs_game_files
     def test_binary_ap_ratio_matches_the_wiki(self):
         row = _leveling_row(_P_EFFECT, "Bonus Magic Damage")
         assert row["modifiers"][1]["values"][0] == pytest.approx(4.0)
         values = game_binary.data_value(_passive_record(), "NoteAPRatio")
         assert all(value == pytest.approx(0.04, abs=1e-6) for value in values)
 
+    @pytest.mark.needs_game_files
     def test_binary_ap_ratio_is_wired_into_the_damage_formula(self):
         """The ratio must be REFERENCED, not merely present as a DataValue.
 
@@ -201,6 +204,7 @@ class TestNoteDamageIsBinaryCorroborated:
         referenced = {part.get("mDataValue") for part in parts}
         assert "NoteAPRatio" in referenced
 
+    @pytest.mark.needs_game_files
     def test_formula_has_no_third_term(self):
         """Two parts only — no flat/health rider may be invented."""
         parts = _passive_record()["mSpellCalculations"]["AutoDamage"]["mFormulaParts"]
@@ -251,6 +255,7 @@ class TestNoteCapIsSourced:
         assert _MAX_NOTES == 4
         assert "stacks up to 4 times on each unit" in _HARMONY_EFFECT["description"]
 
+    @pytest.mark.needs_game_files
     def test_module_cap_matches_the_binary(self):
         values = game_binary.data_value(_passive_record(), "MaxNotes")
         assert all(value == pytest.approx(4.0) for value in values)
@@ -300,6 +305,7 @@ class TestAllyNotesAreWithheld:
     def test_cached_row_states_the_ally_reduction(self):
         assert "reduced by 75% for Notes from allies" in _P_EFFECT["description"]
 
+    @pytest.mark.needs_game_files
     def test_binary_ally_percent_exists_but_is_not_priced(self):
         values = game_binary.data_value(_passive_record(), "AllyNoteDamagePercent")
         assert all(value == pytest.approx(0.25) for value in values)
@@ -402,7 +408,7 @@ class TestSurroundSound:
         the scanner cannot price per recipient, so it publishes no row at
         all - and w_already_shielded, which exists only to drop the
         caster's shield gate, must not resurrect a zero-amount one.
-        tests/test_e8_support.py pins the same refusal on the roster
+        tests/test_revive_and_ally_support_events.py pins the same refusal on the roster
         path.
         """
         for options in (None, {"w_already_shielded": True}):

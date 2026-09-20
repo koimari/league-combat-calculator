@@ -10,10 +10,14 @@ The per-transition contract lives in ``tests/test_shield_ledger.py``; these
 are the ownership guards and the end-to-end proof that the two engines agree.
 """
 
-import re
+import sys
 from pathlib import Path
 
 import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+
+import single_owner_lint
 
 from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.data_fetcher import get_champion, get_item_by_name
@@ -28,23 +32,12 @@ from src.calculator.stats import calculate_total_stats
 SRC = Path(__file__).parents[1] / "src" / "calculator"
 LEDGER = SRC / "shield_ledger.py"
 
-#: Draining a pool is the transition's own business.  Any other module doing
-#: this arithmetic is a second implementation of the absorption order.
-_POOL_DRAIN = re.compile(r"\.(physical|magic|general)_shield\s*(-=|\+=)")
-
 
 class TestOneOwner:
     """No module outside the ledger may move a shield pool."""
 
     def test_no_other_module_consumes_or_grants_a_shield_pool(self):
-        offenders = []
-        for path in sorted(SRC.rglob("*.py")):
-            if path == LEDGER:
-                continue
-            source = path.read_text(encoding="utf-8")
-            for match in _POOL_DRAIN.finditer(source):
-                line = source[: match.start()].count("\n") + 1
-                offenders.append(f"{path.name}:{line}")
+        offenders = single_owner_lint.shield_pool_arithmetic()
         assert offenders == [], (
             "shield pools may only be moved by shield_ledger.absorb/grant/"
             f"expire_timed; found direct arithmetic at {offenders}"

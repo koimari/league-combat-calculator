@@ -3,14 +3,20 @@
 The roster-wide half of this review lives in ``test_module_cc_census.py``.
 """
 
+from functools import partial
+
+import pytest
+
 from src.calculator.champions import (
     get_champion_module_contract,
     mel,
     parse_champion_abilities,
 )
 from src.calculator.champions.slot_cc import CC_PER_PART
+from src.calculator.champions.slot_extract import extract_named, extract_value
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review, coverage_truth, row_review
+from tests import champion_closure as closure
 
 
 class TestReviewedCrowdControl:
@@ -78,3 +84,59 @@ class TestCoverageMap:
             cc_review.slot_text(cc_review.kit("Mel"), "W")
         )
         assert row_review.entry("Mel", "W")["total_raw"] == 0.0
+
+
+# One rotation at level 18 into the bare 2000-HP dummy; slot rows are parsed
+# against the shared reference stat block.
+_closure_fight = partial(closure.fight, role="top")
+_closure_parse = closure.reference_abilities
+
+
+# ---------------------------------------------------------------------------
+# Mel — Q full volley + E field DoT
+# ---------------------------------------------------------------------------
+
+
+class TestMel:
+    """P1-3: Q prices the full 6-10 bolt volley; E prices the field DoT."""
+
+    def test_q_prices_initial_plus_subsequent_bolts(self):
+        """Q: Initial Explosion + (Number of Bolts - 1) x Subsequent ==
+        the wiki's Total Magic Damage row."""
+        data = _closure_fight("Mel")
+        stats = closure.fight_stats(data)
+        target = closure.target_stats(data)
+        total = extract_named(
+            closure.ability_row("Mel", "Q"), "Total Magic Damage", 5, stats, target
+        )
+        assert total == pytest.approx(277.0)
+        assert closure.slot_total(data, "Q") == pytest.approx(
+            total, abs=closure.ROUNDING
+        )
+
+    def test_e_prices_orb_plus_four_field_ticks(self):
+        """E: orb + 4 field ticks (game-file DoTDuration 0.5s x 8/s)."""
+        data = _closure_fight("Mel")
+        stats = closure.fight_stats(data)
+        target = closure.target_stats(data)
+        orb = extract_named(
+            closure.ability_row("Mel", "E"), "Orb Magic Damage", 5, stats, target
+        )
+        per_tick = extract_named(
+            closure.ability_row("Mel", "E"),
+            "Field Magic Damage per Tick",
+            5,
+            stats,
+            target,
+        )
+        assert closure.slot_total(data, "E") == pytest.approx(orb + 4 * per_tick)
+
+    def test_r_overwhelm_stacks_option_probe(self):
+        """r_overwhelm_stacks scales the R per-stack term (probe)."""
+        data = _closure_fight("Mel", options={"r_overwhelm_stacks": 5})
+        stats = closure.fight_stats(data)
+        flat = extract_named(
+            closure.ability_row("Mel", "R"), "Magic Damage", 3, stats, {}
+        )
+        per_stack = extract_value(closure.ability_row("Mel", "R"), "Magic Damage", 3, 2)
+        assert closure.slot_total(data, "R") == pytest.approx(flat + per_stack * 5)

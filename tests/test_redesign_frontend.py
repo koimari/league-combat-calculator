@@ -1,7 +1,7 @@
 """Contract tests for the 2a/2b redesign's own guarantees.
 
-The ported issue suites (``test_f0_frontend``, ``test_frontend_qa_147_157``,
-``test_p5_ux``, ``test_p1a_onboarding``) still own the criteria that predate
+The ported issue suites (``test_frontend_contract``, ``test_frontend_qa_regressions``,
+``test_casual_ux_and_trust_labels``, ``test_onboarding``) still own the criteria that predate
 the redesign. This file owns what the redesign itself promises, from
 ``docs/redesign/design-language.md`` and ``docs/redesign/gap-ledger.md``:
 
@@ -366,6 +366,7 @@ def _calculate_receipt():
     return response.get_json()
 
 
+@pytest.mark.needs_node
 def test_the_event_order_panel_renders_from_the_published_result(tmp_path):
     """eventorder.js reads the receipt app.js publishes on "scryglass:result"
     rather than wrapping window.fetch to sniff /api/calculate, which would
@@ -382,6 +383,7 @@ def test_the_event_order_panel_renders_from_the_published_result(tmp_path):
     assert receipt["rotation"]["rationale"][:40] in rendered["html"]
 
 
+@pytest.mark.needs_node
 def test_the_panel_stays_hidden_for_a_result_with_no_rotation(tmp_path):
     """A comparison response and an engine error both arrive on the same
     signal; neither carries a rotation receipt."""

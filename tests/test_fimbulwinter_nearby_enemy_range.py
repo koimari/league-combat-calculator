@@ -4,8 +4,9 @@ The cached Everlasting branch certifies a 1200-unit, holder-centered count.
 The 1.8 shield multiplier applies only when more than one enemy champion is
 inside that radius.  The support runtime has no typed spatial-input contract.
 It keeps the sourced base shield, withholds the 1.8 branch, and emits a named
-receipt.  Geometry tests stay strict xfails until a later packet supplies
-authoritative inputs and the exact boundary operator.
+receipt.  The geometry tests pin that withholding, and they become live
+numbers once a packet supplies authoritative inputs and the exact
+boundary operator.
 """
 
 from types import SimpleNamespace

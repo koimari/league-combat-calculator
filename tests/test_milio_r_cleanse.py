@@ -418,6 +418,7 @@ class TestSourceAndTypedValues:
         assert "cast-inhibiting crowd control" in gate
         assert "0.75 seconds after Breath of Life's activation" in gate
 
+    @pytest.mark.needs_game_files
     def test_r_game_file_evidence(self):
         # Community Dragon evidence (the brief's "game file if present"):
         # HealBase 150/250/350 at ranks 1..3, HealCalc = HealBase + 0.5

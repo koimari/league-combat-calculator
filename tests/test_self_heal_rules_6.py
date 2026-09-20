@@ -27,7 +27,7 @@ Deliberately skipped (no sourced self-heal fits the 1v1 fight ledger):
   damage/shield/buff only).
 - Locke       — W Soul Ignition's grey-health heal is authored by the
   E8a grey-health primitive instead (participant_timeline, see
-  tests/test_p1_review_1.py): 100% of the post-mitigation damage he
+  tests/test_locke.py): 100% of the post-mitigation damage he
   *takes* during the 6s W active is stored (capped by the sourced
   "Damage taken grey health cap" row) and healed at the automatic 6s
   recast; the health-cost add and missing-health bonus remain dynamic
@@ -314,13 +314,13 @@ def test_zaahen_grim_deliverance_heals_flat_per_champion_hit():
         # KSante's P/Q/W/E/R carry damage, shields and buffs only — the
         # kit has no heal term at all in data/champions.json (its All Out
         # 20% omnivamp is priced by the engine's omnivamp channel instead,
-        # see tests/test_p1_review_1.py).
+        # see tests/test_ksante.py).
         ("KSante", "top"),
         # Locke W's grey-health heal is now implemented by the E8a
-        # grey-health primitive (see tests/test_p1_review_1.py) — Locke
+        # grey-health primitive (see tests/test_locke.py) — Locke
         # authors a heal and does not belong in this list.
         # Mordekaiser's W recast heal is now implemented by the E8a
-        # grey-health primitive (see tests/test_e8_grey_health.py); its R
+        # grey-health primitive (see tests/test_grey_health.py); its R
         # heals 10% of the TARGET's maximum health and stays out of the
         # self-heal rule set.
     ],

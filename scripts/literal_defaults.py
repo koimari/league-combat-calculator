@@ -13,18 +13,31 @@ list, because neither reads a named field of cached data:
     python scripts/literal_defaults.py            # the whole package
     python scripts/literal_defaults.py <paths>    # files or directories
 
-The CLI reports; ``tests/test_literal_defaults.py`` gates.  Its ``ROOTS`` is
-the covered set and its ``ER5_TAIL`` records every module that was outside it
-when the pin landed, so what this prints is a superset of what is pinned.
+The CLI reports every site it finds and exits 1 on any, tagging each with the
+baseline bucket that licenses it or ``-`` for one outside the covered roots.
+``literal_defaults_baseline.txt`` beside this file holds the covered roots and
+the frozen sites; ``tests/test_literal_defaults.py`` is the gate that holds a
+fresh scan against it.
 """
 
 from __future__ import annotations
 
 import ast
+import re
 import sys
-from collections.abc import Iterable, Iterator
+from collections import Counter
+from collections.abc import Iterable, Iterator, Mapping
 from pathlib import Path
 from typing import NamedTuple
+
+#: Scanned when the CLI is given no paths — the rule's whole subject.
+PACKAGE = Path(__file__).resolve().parent.parent / "src" / "calculator"
+
+#: The frozen sites, the covered roots and what each bucket licenses.
+BASELINE = Path(__file__).resolve().parent / "literal_defaults_baseline.txt"
+
+_REASON = re.compile(r"^# ([A-Z][A-Z_]+): (.*)$")
+_CONTINUATION = re.compile(r"^#     (.*)$")
 
 _EMPTY_FACTORIES = frozenset({"dict", "list", "set", "tuple", "frozenset"})
 # The one receiver whose computed keys are still cached data: champion slots.
@@ -181,13 +194,119 @@ def targets(raw_paths: Iterable[str]) -> Iterator[Path]:
         yield from sorted(path.rglob("*.py")) if path.is_dir() else iter((path,))
 
 
-#: Scanned when the CLI is given no paths — the rule's whole subject.
-PACKAGE = Path(__file__).resolve().parent.parent / "src" / "calculator"
+def frozen_key(finding: Finding) -> tuple[str, str, str, str]:
+    """A site's identity in the baseline: module, function, kind, key."""
+    return (
+        Path(finding.path).resolve().relative_to(PACKAGE).as_posix(),
+        finding.enclosing,
+        finding.kind,
+        finding.key,
+    )
+
+
+def scanned_rows(paths: Iterable[Path]) -> frozenset[tuple[str, str, str, str, int]]:
+    """Every site in ``paths``, keyed and counted the way the baseline is."""
+    occurrences = Counter(map(frozen_key, scan(paths)))
+    return frozenset((*key, count) for key, count in occurrences.items())
+
+
+class Site(NamedTuple):
+    """One frozen row: the bucket that licenses it, and what it is."""
+
+    bucket: str
+    module: str
+    enclosing: str
+    kind: str
+    key: str
+    count: int
+
+    def line(self) -> str:
+        """This row as it is spelled in the baseline file."""
+        return f"{'|'.join(self[:5])} {self.count}"
+
+
+class Baseline(NamedTuple):
+    """What ``literal_defaults_baseline.txt`` declares."""
+
+    roots: tuple[str, ...]
+    payload_receivers: tuple[str, ...]
+    payload_scope: tuple[str, ...]
+    er5_tail_ceiling: int
+    reasons: Mapping[str, str]
+    sites: frozenset[Site]
+
+    def covered_files(self, roots: Iterable[str] | None = None) -> list[Path]:
+        """Every ``.py`` the given roots hold, the covered set by default."""
+        chosen = self.roots if roots is None else roots
+        return sorted(targets(str(PACKAGE / root) for root in chosen))
+
+    def er5_tail(self) -> tuple[str, ...]:
+        """Every package module the covered roots do not reach."""
+        covered = {path.resolve() for path in self.covered_files()}
+        return tuple(
+            sorted(
+                path.relative_to(PACKAGE).as_posix()
+                for path in PACKAGE.rglob("*.py")
+                if path.resolve() not in covered
+            )
+        )
+
+    def frozen_rows(self) -> frozenset[tuple[str, str, str, str, int]]:
+        """The frozen sites keyed the way ``scanned_rows`` keys a fresh scan."""
+        return frozenset(site[1:] for site in self.sites)
+
+
+def _reasons(lines: Iterable[str]) -> dict[str, str]:
+    """Each ``# BUCKET: ...`` header paragraph, continuations folded in."""
+    reasons: dict[str, str] = {}
+    current = ""
+    for line in lines:
+        named = _REASON.match(line)
+        continued = _CONTINUATION.match(line)
+        if named:
+            current = named.group(1)
+            reasons[current] = named.group(2)
+        elif current and continued:
+            reasons[current] += " " + continued.group(1)
+        elif not named:
+            current = ""
+    return reasons
+
+
+def load_baseline(path: Path = BASELINE) -> Baseline:
+    """Parse the baseline file: covered roots, pinned zeros, frozen sites."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    declared: dict[str, list[str]] = {
+        "root": [],
+        "payload-receiver": [],
+        "payload-scope": [],
+        "er5-tail-ceiling": [],
+    }
+    sites: set[Site] = set()
+    for line in lines:
+        if line.startswith("#") or not line.strip():
+            continue
+        body, _, count = line.rpartition(" ")
+        kind, _, rest = (body or line).partition("|")
+        if kind in declared:
+            declared[kind].append(line.partition("|")[2])
+        else:
+            sites.add(Site(kind, *rest.split("|"), int(count)))
+    return Baseline(
+        tuple(declared["root"]),
+        tuple(declared["payload-receiver"]),
+        tuple(declared["payload-scope"]),
+        int(declared["er5-tail-ceiling"][0]),
+        _reasons(lines),
+        frozenset(sites),
+    )
 
 
 if __name__ == "__main__":
+    _BUCKETS = {site[1:5]: site.bucket for site in load_baseline().sites}
     _FOUND = scan(targets(sys.argv[1:] or [str(PACKAGE)]))
     for _row in _FOUND:
-        print(f"{_row.path}:{_row.line} [{_row.kind}] {_row.expression}")
+        _BUCKET = _BUCKETS.get(frozen_key(_row), "-")
+        print(f"{_row.path}:{_row.line} [{_row.kind}] [{_BUCKET}] {_row.expression}")
     print(f"total {len(_FOUND)}", file=sys.stderr)
     raise SystemExit(1 if _FOUND else 0)

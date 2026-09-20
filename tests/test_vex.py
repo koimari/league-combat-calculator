@@ -6,6 +6,7 @@ answers once R's row stops summing its two hits into one instant.
 """
 
 import math
+from functools import partial
 
 import pytest
 
@@ -17,6 +18,7 @@ from src.calculator.champions.slot_extract import (
     sum_modifiers,
 )
 from tests import cc_review
+from tests import champion_closure as closure
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
@@ -126,3 +128,57 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Vex")
         assert coverage["complete"] is True
         assert coverage["coarse_sources"] == []
+
+
+# Level 18, ranks Q5/W5/E5/R3, no items, six seconds of autos at full uptime
+# into a 3000-HP Aatrox whose own resistances mitigate.
+_closure_fight = partial(
+    closure.combat,
+    mode="time_based",
+    duration=6.0,
+    include_autos=True,
+    auto_uptime=1.0,
+    target_health=3000.0,
+    enemy=closure.AATROX,
+)
+_closure_parse = partial(closure.parse, target=closure.TARGET_3000)
+
+
+# ---------------------------------------------------------------------------
+# Vex — P Doom 'n Gloom Gloom detonation (empowered auto)
+# ---------------------------------------------------------------------------
+
+
+def test_vex_p_gloom_detonation_rides_one_basic_attack():
+    data, stats, abilities = _closure_parse("Vex")
+    passive = data["abilities"]["P"][0]
+    expected = extract_named(passive, "Bonus Magic Damage", 18, stats, {})
+    assert expected == pytest.approx(150.0)  # L18 flat, 0 AP
+    on_hit = abilities["passive"]["on_hit"]
+    assert on_hit["damage_per_hit"] == pytest.approx(expected)
+    assert on_hit["max_procs"] == 1
+    assert on_hit["damage_type"] == "magic"
+
+
+def test_vex_api_gloom_detonation_deals_sourced_bonus_damage():
+    combat = _closure_fight("Vex")
+    enemy_stats = closure.enemy_stats(combat)
+    row = closure.main_breakdown(combat)
+    gloom = next(s for s in row["sources"] if s["name"].startswith("Doom 'n Gloom"))
+    assert gloom["total_damage"] == pytest.approx(
+        closure.mitigated(150.0, "magic", enemy_stats), rel=1e-3
+    )
+
+
+def test_vex_p_gloom_detonation_count_option_caps_the_rider():
+    combat = _closure_fight("Vex", options={"p_gloom_detonations": 3})
+    enemy_stats = closure.enemy_stats(combat)
+    row = closure.main_breakdown(combat)
+    gloom = next(s for s in row["sources"] if s["name"].startswith("Doom 'n Gloom"))
+    assert gloom["total_damage"] == pytest.approx(
+        3 * closure.mitigated(150.0, "magic", enemy_stats), rel=1e-3
+    )
+    # Zero detonations emits nothing.
+    combat0 = _closure_fight("Vex", options={"p_gloom_detonations": 0})
+    row0 = closure.main_breakdown(combat0)
+    assert not [s for s in row0["sources"] if s["name"].startswith("Doom 'n Gloom")]

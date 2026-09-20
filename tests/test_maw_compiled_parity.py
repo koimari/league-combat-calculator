@@ -131,11 +131,11 @@ Sibling owners: the compiled-vs-receipt kernel contract lives in
 ``tests/test_survival_kernel.py`` (issue #137); the 3Q/3S matrix shapes
 in ``tests/test_force_of_nature_compiled_parity.py`` and
 ``tests/test_knights_vow_compiled_parity.py``; the Lifeline family
-regression surface in ``tests/test_issues_46.py`` (threshold trigger +
+regression surface in ``tests/test_opening_mitigation_and_lifeline.py`` (threshold trigger +
 omnivamp toggle + BIS), ``tests/test_shield_ledger.py`` (magic-only
 absorption + strict threshold), ``tests/test_defensive_effects.py``
 (melee/ranged amounts), ``tests/test_participant_timeline.py``
-(post-trigger omnivamp heal), ``tests/test_issue_159.py`` (strict
+(post-trigger omnivamp heal), ``tests/test_shield_absorption_kernel.py`` (strict
 threshold in both walks), and ``tests/test_item_coverage.py``
 (modeled_event_certified + certified-timeline guard).  This file is
 disjoint and pins only the Maw acceptance observables.
@@ -986,7 +986,7 @@ def test_calculate_api_models_the_enemy_maw_shield_in_certified_timed_fights():
     """Certified timed fight: the enemy holder's Lifeline arms, the target
     result reports the threshold absorption, and the enemy's post-trigger
     outgoing damage heals from the temporary omnivamp (mirrors
-    test_issues_46)."""
+    test_opening_mitigation_and_lifeline)."""
     client = app_module.app.test_client()
     payload = {
         "champion": "Ziggs",

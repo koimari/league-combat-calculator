@@ -55,10 +55,10 @@ CURRENT RUNTIME FACTS (verified before pinning):
 Contract sections (numbered as in the RLM-2 C brief):
   S1  Source evidence + typed values (cached W rows; the module parse
       receipt; the no-outgoing-damage pin; the already-authored heal
-      receipt; the absent typed heal+cleanse declaration xfailed).
+      receipt; the typed heal-plus-cleanse declaration is absent).
   S2  Absent option (no w option -> the W stays the no_damage stub and
       the cleanse never fires implicitly; the API boundary named-400
-      pinned actual; the acceptance contract xfailed).
+      is the pinned actual).
   S3  Explicit activation (the w option activates the cleanse at an
       explicit time; the heal's missing-health evaluation point pinned;
       separate heal + cleanse receipts; the Slice 4 decision shape).
@@ -74,9 +74,9 @@ Contract sections (numbered as in the RLM-2 C brief):
       source, unsupported control/suppression state, unsupported
       spatial or score behavior).
   S8  Score fail-closed behavior (the generic gate pins; the W wiring
-      contract xfailed: never silently re-price).
-  S9  Mode parity (full vs score_only agree today; the named-divergence
-      contract xfailed).
+      never silently re-prices).
+  S9  Mode parity (full vs score_only agree; a divergence would be
+      named).
   S10 Unchanged boundaries (P/Q/E/R damage, the existing options, the
       mana ledger — the W cast DOES spend mana 60..100 by rank today —
       cast timing, item-cleanse regression surface).
@@ -126,10 +126,6 @@ _GANPLANK_DATA = _CHAMPION_DATA["Gangplank"]
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 _LEVEL = 18
 _TARGET_MAX_HP = 2000.0
-# The P2-5 coordinator wires the typed W declaration + the w option;
-# genuinely-absent mechanics are xfailed with this reason.
-_AWAIT = "awaiting P2-5 wiring"
-
 # Pinned CANDIDATE option spelling (contract ambiguity #1 for the
 # coordinator): the explicit cleanse-activation time in seconds.  All
 # contract tests read this one constant; the coordinator's final spelling
@@ -602,8 +598,7 @@ class TestAbsentOption:
     def test_api_rejects_w_option_today_with_named_400(self):
         # Pinned actual (the option is genuinely absent at the API
         # boundary): every candidate w* key gets a named 400.  This flips
-        # when the P2-5 option lands (the acceptance contract is pinned
-        # by the xfail below).
+        # when the W option lands.
         with _testing_client() as client:
             responses = []
             responses.extend(
@@ -1435,7 +1430,7 @@ class TestUnchangedBoundaries:
 # The broader regression surface (every test that touches gangplank /
 # scurvy / cleanse / cleanse_eligibility, per the brief contract #11):
 #   tests/test_cleanse_eligibility.py tests/test_cleanse_eligibility_kernel.py
-#   tests/test_cleanse_eligibility_consumers.py tests/test_e1_healing_b3.py
-#   tests/test_heal_ledger_phase2.py tests/test_issue_143.py
+#   tests/test_cleanse_eligibility_consumers.py tests/test_self_heal_rules_3.py
+#   tests/test_heal_ledger_authored_slots.py tests/test_heal_ledger_ownership.py
 #   tests/test_crowd_control_immunity.py tests/test_survival_kernel.py
 #   tests/test_guardian_angel_resurrection.py tests/test_app.py

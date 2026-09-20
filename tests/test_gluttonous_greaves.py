@@ -3,12 +3,9 @@
 This file is the independent acceptance matrix for Gluttonous Greaves'
 Slay passive: "Scoring a takedown against an enemy champion grants you
 0.6% omnivamp, stacking up to 10 times for a total of 6% omnivamp."
-It pins the OBSERVABLES the P3-3L acceptance rules require and runs
-against today's source: every behavior that already exists must pass now;
-genuinely absent contract pieces are ``xfail`` with reason
-``awaiting P3-3L ...`` (the Slay takedown/stack/omnivamp machinery is
-largely absent today — the fail-closed absences below are pinned as
-PASSING current observables and the contract assertions are xfailed).
+It pins the OBSERVABLES the acceptance rules require and runs live against
+today's source.  The Slay takedown, stack and omnivamp machinery is
+largely absent, and the fail-closed absences below are what pin it.
 
 Contract pinned (typed source-backed values, verified against
 docs/wiki-full-entry-audit.json — Gluttonous Greaves page 1661999,

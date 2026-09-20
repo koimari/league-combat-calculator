@@ -220,7 +220,7 @@ class TestPassiveRebirth:
     """Passive is the sourced revive state (StartingDefenses.revive_*) —
     it prices no cast damage of its own, so it stays absent from the
     parsed abilities dict even though MODULE_COVERAGE now reads
-    "modeled" (roadmap session 3: tests/test_e8_support.py exercises the
+    "modeled" (roadmap session 3: tests/test_revive_and_ally_support_events.py exercises the
     revive kernel end to end)."""
 
     def test_passive_not_in_results(self, anivia_data, parse_at) -> None:

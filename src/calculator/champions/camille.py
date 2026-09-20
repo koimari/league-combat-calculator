@@ -29,7 +29,7 @@ Why each slot is non-generic:
   hangs the sourced shield (20% max HP, 2s) on W's damage event as a
   ``self_shield_events`` payload the survival ledger grants pre-fight,
   live-tested end to end
-  (``tests/test_e8_shields.py::test_camille_adaptive_defenses_payload_is_sourced``,
+  (``tests/test_champion_shield_events.py::test_camille_adaptive_defenses_payload_is_sourced``,
   ``test_camille_api_adaptive_defenses_absorbs_known_incoming_hit``).
   That channel is why the coverage map calls P ``modeled`` rather than
   out_of_scope, with no standalone P row in the ``abilities`` dict.

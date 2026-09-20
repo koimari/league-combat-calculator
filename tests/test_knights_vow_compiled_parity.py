@@ -1242,7 +1242,8 @@ def test_roster_holder_compiles_after_certification():
     The enemy holder has no Worthy teammates in this fixture, so the
     tether is empty and the staging no-ops with byte parity.  Poisoning
     is the other branch and is driven by
-    tests/test_issue_137.py and tests/test_catalyst_resource_ledger.py.
+    tests/test_state_transition_engine.py and
+    tests/test_catalyst_resource_ledger.py.
     """
     main = get_champion("Ahri")
     main_stats = calculate_total_stats(main, 18, [])

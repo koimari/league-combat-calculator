@@ -18,11 +18,16 @@ a preserved defect S6 declined to touch, not an oversight.
 """
 
 import ast
+import sys
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import NamedTuple
 
 import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+
+import single_owner_lint
 
 from src.calculator.survival import classify, phases
 from src.calculator.survival.actions import (
@@ -856,9 +861,4 @@ class TestAWalkAuthoredHealMustSayWhenItLands:
 
     def test_both_ledgers_read_the_one_helper(self):
         """The two walks drive the identical kernel, so they cannot differ."""
-        from pathlib import Path
-
-        for module in ("score_state.py", "receipt_ledger.py"):
-            source = Path("src/calculator/survival", module).read_text(encoding="utf-8")
-            assert "scheduled_heal_time(heal_event)" in source, module
-            assert 'heal_event.get("time", 0.0)' not in source, module
+        assert single_owner_lint.heal_timestamp_readers() == []

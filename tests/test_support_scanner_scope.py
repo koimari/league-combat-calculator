@@ -1,4 +1,4 @@
-"""W3 — the ally-support scanner grants to whoever its sentence names.
+"""The ally-support scanner grants to whoever its sentence names.
 
 A leveling row whose declaring sentence names no ally never defaults to
 ``one_teammate``, the default that would serve six casts as a heal or

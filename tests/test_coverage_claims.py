@@ -593,7 +593,9 @@ def test_the_live_skip_guarded_nodes_are_refused() -> None:
     backed by one of them would be a claim that passes on a machine where
     the assertion never ran.
     """
-    ref = TestRef(node_id="tests/test_p5_ux.py::test_node_check_passes_for_app_js")
+    ref = TestRef(
+        node_id="tests/test_casual_ux_and_trust_labels.py::test_node_check_passes_for_app_js"
+    )
     verdict = _verdict(
         ref, live_context(), full_session=coverage_resolver.full_session()
     )
@@ -2038,7 +2040,7 @@ MUTATED_FILES: tuple[str, ...] = (
     "src/calculator/damage.py",
     SUPPORT_MODULE,
     "src/calculator/trigger_stream.py",
-    "tests/test_f0_frontend.py",
+    "tests/test_frontend_contract.py",
 )
 
 
@@ -2271,7 +2273,9 @@ def test_M8_a_skip_guarded_test_ref_is_noticed() -> None:
     ``pytest.skip`` inside the body is the shape rule 4 exists for: the node
     reports green on a machine where its assertions never ran.
     """
-    guarded = TestRef(node_id="tests/test_p5_ux.py::test_node_check_passes_for_app_js")
+    guarded = TestRef(
+        node_id="tests/test_casual_ux_and_trust_labels.py::test_node_check_passes_for_app_js"
+    )
     with pytest.raises(EvidenceUnresolved, match=re.escape("its body calls")):
         resolve_test_ref(
             guarded,

@@ -147,6 +147,7 @@ def test_every_watched_slot_states_its_blocker_in_its_own_module(module, slot):
 class TestWukongsCloneHasNoAttackRate:
     """W's blocker is the clone's SWING COUNT, not its per-hit output."""
 
+    @pytest.mark.needs_game_files
     def test_the_binary_carries_the_output_ratio_and_the_duration(self):
         """What IS sourced, so the absence below is specific rather than vague."""
         values = _data_values(
@@ -162,6 +163,7 @@ class TestWukongsCloneHasNoAttackRate:
             0.6,
         ]
 
+    @pytest.mark.needs_game_files
     def test_the_binary_states_no_clone_attack_rate(self):
         values = _data_values(
             _bin("monkeyking"), "MonkeyKingDecoyAbility/MonkeyKingDecoy"
@@ -184,6 +186,7 @@ class TestWukongsCloneHasNoAttackRate:
 class TestViktorsAugmentsHaveNoCachedMagnitude:
     """P's blocker is that no augment's effect size exists in either source."""
 
+    @pytest.mark.needs_game_files
     def test_the_binary_carries_only_the_fragment_economy(self):
         values = _data_values(_bin("viktor"), "ViktorPassive")
         assert values["MinionStacks"][0] == pytest.approx(1.0)
@@ -191,6 +194,7 @@ class TestViktorsAugmentsHaveNoCachedMagnitude:
         assert values["ChampionStacks"][0] == pytest.approx(20.0)
         assert values["EvolutionStackBreakpoint"][0] == pytest.approx(100.0)
 
+    @pytest.mark.needs_game_files
     def test_the_binary_states_no_augment_effect(self):
         """Every DataValue on the record is an accrual rate or a breakpoint."""
         values = _data_values(_bin("viktor"), "ViktorPassive")
@@ -228,6 +232,7 @@ class TestTeemosStealthTriggerIsUnreachable:
         where a champion stands is not an axis this engine has."""
         assert "While in brush" in _prose("Teemo", "P")
 
+    @pytest.mark.needs_game_files
     def test_the_binary_holds_no_passive_spell_record_to_read_instead(self):
         payload = _bin("teemo")
         records = [
@@ -243,6 +248,7 @@ class TestTeemosStealthTriggerIsUnreachable:
 class TestSylasHijackHasNoDamageOfItsOwn:
     """R's damage is another champion's ultimate, which is not a number."""
 
+    @pytest.mark.needs_game_files
     def test_the_binary_record_computes_only_a_cooldown(self):
         payload = _bin("sylas")
         spell = next(
@@ -252,6 +258,7 @@ class TestSylasHijackHasNoDamageOfItsOwn:
         )
         assert sorted(spell.get("mSpellCalculations", {})) == ["PerTargetCooldown"]
 
+    @pytest.mark.needs_game_files
     def test_every_data_value_on_it_is_about_the_stolen_cooldown(self):
         values = _data_values(_bin("sylas"), "SylasR")
         assert set(values) == {
@@ -281,12 +288,14 @@ class TestSylasHijackHasNoDamageOfItsOwn:
 class TestUdyrsRefundHasNoBase:
     """P refunds a share of a cooldown neither source states."""
 
+    @pytest.mark.needs_game_files
     def test_the_binary_states_the_share_and_not_the_base(self):
         values = _data_values(_bin("udyr"), "UdyrPassive")
         assert values["UltCDReduction"][0] == pytest.approx(0.05)
         assert values["AttackSpeedDuration"][0] == pytest.approx(4.0)
         assert "Cooldown" not in values
 
+    @pytest.mark.needs_game_files
     def test_the_binary_record_carries_no_cooldown_field(self):
         payload = _bin("udyr")
         spell = next(

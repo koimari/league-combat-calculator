@@ -15,6 +15,8 @@ Hand-validated against https://wiki.leagueoflegends.com/en-us/Briar
   +20% total AD armor and MR, 10-20% life steal, 10-30% move speed.
 """
 
+from functools import partial
+
 import pytest
 
 from src.calculator.champions import briar, parse_champion_abilities
@@ -23,6 +25,7 @@ from src.calculator.fight_params import FightParams
 from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
+from tests import champion_closure as closure
 
 # Rank pins for hand-math tests (independent of level/skill order).
 MAX_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 2}
@@ -496,3 +499,84 @@ class TestReviewedCrowdControl:
         coverage = cc_review.fimbulwinter_coverage("Briar")
         assert coverage["complete"] is True
         assert "fimbulwinter_everlasting" not in coverage["coarse_sources"]
+
+
+# One rotation at level 18 into the bare 2000-HP dummy; slot rows are parsed
+# against the shared reference stat block.
+_closure_fight = partial(closure.fight, role="top")
+_closure_parse = closure.reference_abilities
+
+
+# ---------------------------------------------------------------------------
+# Briar — P bleed heal, Snack Attack heal, R life steal (healing.py)
+# ---------------------------------------------------------------------------
+
+
+class TestBriar:
+    """P1-3: the E1-b6 E heal is joined by the sourced P/W/R heal family."""
+
+    def test_ability_damage_unchanged(self):
+        """Q/W/E/R damage packets keep their sourced values."""
+        data = _closure_fight("Briar")
+        stats = closure.fight_stats(data)
+        target = closure.target_stats(data)
+        assert closure.slot_total(data, "Q") == pytest.approx(
+            closure.expected("Briar", "Q", "Physical Damage", 5, stats, target)
+        )
+        assert closure.slot_total(data, "E") == pytest.approx(
+            closure.expected("Briar", "E", "Maximum Magic Damage", 5, stats, target)
+        )
+        assert closure.slot_total(data, "R") == pytest.approx(
+            closure.expected("Briar", "R", "Magic Damage", 3, stats, target)
+        )
+
+    def test_bleed_self_heal_is_25_percent_of_bleed_damage(self):
+        """'The bleed always heals Briar for 25% of the pre-mitigation
+        damage dealt' (cached P prose): every bleed tick pays 25% of its
+        pre-mitigation amount."""
+        data = _closure_fight(
+            "Briar", mode="time_based", duration=6, include_autos=True
+        )
+        bleed_raw = sum(
+            float(event["damage"])
+            for event in data["damage_events"]
+            if event.get("source") == "stacking_dot_passive"
+        )
+        heals = closure.response_heals(data, "Crimson Curse")
+        assert len(heals) >= 5
+        assert sum(float(h["amount"]) for h in heals) == pytest.approx(
+            0.25 * bleed_raw, abs=closure.ROUNDING
+        )
+
+    def test_snack_attack_heal_is_5_percent_max_health_plus_heal_percent(self):
+        """Snack Attack heals 5% of max health + the sourced Heal
+        Percentage (40% at rank 5) of the bite's post-mitigation damage."""
+        data = _closure_fight(
+            "Briar", mode="time_based", duration=6, include_autos=True
+        )
+        w_event = next(
+            event for event in data["damage_events"] if event.get("source") == "W"
+        )
+        heal = closure.response_heals(data, "Snack Attack")
+        assert len(heal) == 1
+        expected = 0.05 * float(data["champion_stats"]["health"]) + 0.40 * float(
+            w_event["damage"]
+        )
+        assert float(heal[0]["amount"]) == pytest.approx(expected, abs=0.11)
+
+    def test_r_life_steal_heals_from_basic_attacks(self):
+        """Certain Death grants 20% life steal at rank 3; autos heal for
+        that share of their post-mitigation damage."""
+        data = _closure_fight(
+            "Briar", mode="time_based", duration=6, include_autos=True
+        )
+        auto_events = [
+            event
+            for event in data["damage_events"]
+            if event.get("source") == "auto_attacks" and event.get("damage") > 0
+        ]
+        heals = closure.response_heals(data, "Certain Death")
+        assert len(heals) == len(auto_events)
+        assert sum(float(h["amount"]) for h in heals) == pytest.approx(
+            0.20 * sum(float(e["damage"]) for e in auto_events), abs=0.6
+        )

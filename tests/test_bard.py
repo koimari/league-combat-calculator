@@ -236,7 +236,7 @@ class TestNonDamageSlots:
 
         The row is the cached "Maximum Heal" (50/87.5/125/162.5/200 + 70% AP)
         — the fully-charged shrine; the slot exists only so the rotation
-        casts it (see tests/test_e8_support.py for the coupled probe).
+        casts it (see tests/test_revive_and_ally_support_events.py for the coupled probe).
         """
         shrine = _parse(bard_data)["W"]
 
