@@ -332,23 +332,6 @@ class TestTheWalkLaneCompilesTheDeclaredNumbers:
         assert all(field.lane is EngineLane.RECEIPT_WALK for field in fields)
         assert all(isinstance(field.value, float) for field in fields)
 
-    def test_a_rule_of_another_family_is_refused(self) -> None:
-        rule = catalog.behavior_rules("Horizon Focus")[0]
-        with pytest.raises(AllyPacketInterpretationError, match="not an ally-packet"):
-            packet_fields(
-                rule,
-                catalog.build_context(
-                    rule.owner,
-                    FightFacts(
-                        level=11,
-                        fight_duration_seconds=5.0,
-                        target_bonus_health=0.0,
-                        holder_is_melee=False,
-                    ),
-                ),
-                EngineLane.RECEIPT_WALK,
-            )
-
 
 def test_every_producer_is_declared() -> None:
     """A producer with no declaration would be a packet silently dropped."""

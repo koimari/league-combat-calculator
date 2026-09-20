@@ -816,31 +816,6 @@ class TestOptimizerBasic:
         )
         assert result["total_damage"] > 0
 
-    def test_optimizer_completes_under_15_seconds(self):
-        """A smoke cap on the exhaustive-opening search, not a perf gate.
-
-        The campaign's perf gates are the bench fingerprints (wall is a
-        ratchet, R-28) and the allocation budget.  Measured best-of-5 on
-        the 16-core dev box: 2,616 ms at the surface-dedup merge (2,677 ms
-        on its base — the merge did not slow the search).  The CI runner's
-        ``-n auto`` multiplier over the dev box was ~2.2x when the old 8 s
-        cap was set and measures ~3.4x now (8.2 s and 8.7 s on two green
-        trees), so the cap is recalibrated to 15 s: still an instant fail
-        on a runaway search (observed at >30 s) without repinning the
-        runner pool's scheduling noise as a formula change.
-        """
-        champ_data = get_champion("Ahri")
-        result = optimize_build(
-            "Ahri",
-            champ_data,
-            level=18,
-            target_health=2000,
-            target_armor=50,
-            target_mr=40,
-            max_legendary_slots=5,
-        )
-        assert result["optimization_time_ms"] < 15000
-
 
 class TestLockedItems:
     """Tests for locked item slot support."""

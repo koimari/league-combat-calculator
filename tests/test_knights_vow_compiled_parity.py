@@ -1235,54 +1235,15 @@ def test_compiled_panels_carry_the_knights_vow_fight():
     assert ctx.panels
 
 
-def test_enemy_holder_poisons_the_compiled_context_and_falls_back():
-    """A Knight's Vow holder on the enemy roster is search-invariant: the
-    capability scan marks the context uncompilable (panels empty) and
-    every evaluation falls back to the shared walk, still deep-equal.
-    This is today's fail-closed boundary for the roster side."""
-    main = get_champion("Ahri")
-    main_stats = calculate_total_stats(main, 18, [])
-    params = FightParams.from_request(
-        {
-            "fight_mode": "time_based",
-            "fight_duration": 10,
-            "role": "mid",
-            "include_auto_attacks": True,
-            "auto_attack_uptime": 1.0,
-        },
-        deterministic=True,
-    )
-    enemy = ChampionLoadout(champion="Janna", level=18, items=(ITEM_NAME,)).resolve()
-    kwargs = {
-        "main_stats": main_stats,
-        "main_defenses": resolve_starting_defenses("Ahri", 18, main_stats, []),
-        "enemies": [enemy],
-        "allies": [],
-    }
-    legacy = build_participant_timeline(
-        main, 18, [], params, include_receipt=False, **kwargs
-    )
-    ctx = CoupledSearchContext()
-    fast = build_participant_timeline(
-        main,
-        18,
-        [],
-        params,
-        include_receipt=False,
-        pair_result_cache={},
-        search_context=ctx,
-        **kwargs,
-    )
-    assert fast == legacy
-    # P3-3S: the roster-side Knight's Vow holder compiles — the capability
-    # scan does not poison the context and panels are built (the enemy
-    # holder has no Worthy teammates in this fixture, so the tether is
-    # empty and the staging no-ops with byte parity).
-    assert ctx.uncompilable is False
-    assert ctx.panels
-
-
 def test_roster_holder_compiles_after_certification():
+    """A roster-side holder compiles: the capability scan leaves the
+    context usable and the compiled panels deep-equal the shared walk.
+
+    The enemy holder has no Worthy teammates in this fixture, so the
+    tether is empty and the staging no-ops with byte parity.  Poisoning
+    is the other branch and is driven by
+    tests/test_issue_137.py and tests/test_catalyst_resource_ledger.py.
+    """
     main = get_champion("Ahri")
     main_stats = calculate_total_stats(main, 18, [])
     params = FightParams.from_request(

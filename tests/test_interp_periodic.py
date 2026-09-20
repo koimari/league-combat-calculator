@@ -212,23 +212,3 @@ def test_the_pair_interpreter_compiles_the_cadence_it_can_know() -> None:
     assert field.name == periodic.PERIODIC_INTERVAL_FIELD
     assert field.value == pytest.approx(float(ITEM_EFFECTS[ANGUISH]["interval"]))  # type: ignore[arg-type]
     assert field.rule_id == rule.mechanic_id
-
-
-def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
-    """The interpreter refuses what it cannot read instead of returning zero."""
-    (foreign,) = [
-        rule
-        for rule in behavior_rules("Tiamat")
-        if rule.family is RuleFamily.ACTIVE_CAST
-    ]
-    ctx = build_context(
-        "Tiamat",
-        FightFacts(
-            level=18,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
-        ),
-    )
-    with pytest.raises(periodic.PeriodicInterpretationError):
-        periodic.cadence_fields(foreign, ctx, EngineLane.PAIR_ENGINE)

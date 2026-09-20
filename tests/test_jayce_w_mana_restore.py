@@ -163,9 +163,8 @@ def test_p112_typed_atom_path_and_cached_row():
     )
     # The module cites the game binary's ManaGain (ranks 1-6, index 0 the
     # unleveled placeholder) as corroboration — the receipt is the docstring.
-    jayce_src = (
-        __import__("pathlib").Path("src/calculator/champions/jayce.py").read_text()
-    )
+    root = __import__("pathlib").Path(__file__).resolve().parents[1]
+    jayce_src = (root / "src/calculator/champions/jayce.py").read_text()
     assert "ManaGain" in jayce_src
     assert "15/17/19/21/23/25" in jayce_src or "15-25" in jayce_src
 
