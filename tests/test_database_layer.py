@@ -297,6 +297,23 @@ def test_cache_set_get_round_trip(sqlite_database):
     assert stats["cached_entries"] == 1
 
 
+def test_the_counter_row_is_stamped_at_every_count(sqlite_database, monkeypatch):
+    """``updated_at`` names the last count, not the row's creation time."""
+    key = db.stable_cache_key("calculate", {"champion": "Ahri", "level": 18})
+    db.cache_get(key)
+    with db.session() as db_session:
+        seeded = db_session.get(db.CacheCounter, 1).updated_at
+
+    later = seeded + timedelta(hours=1)
+    monkeypatch.setattr(db, "_utcnow", lambda: later)
+    db.cache_set(key, {"total_damage": 1.0})
+    db.cache_get(key)
+    with db.session() as db_session:
+        row = db_session.get(db.CacheCounter, 1)
+        assert (row.hits, row.misses) == (1, 1)
+        assert row.updated_at == later
+
+
 def test_cache_ttl_expiry(sqlite_database, monkeypatch):
     key = db.stable_cache_key("calculate", {"champion": "Ahri"})
     db.cache_set(key, {"total_damage": 1.0}, ttl_seconds=1)

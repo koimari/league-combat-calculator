@@ -753,7 +753,9 @@ def _record_cache_counter(db_session: Any, *, hits: bool) -> None:
     """Atomically bump the shared hit/miss counter row (id == 1).
 
     The first call seeds the row with the correct base values; every later
-    call increments exactly one column via ``ON CONFLICT DO UPDATE``.
+    call increments exactly one column via ``ON CONFLICT DO UPDATE``, and
+    stamps ``updated_at`` so the column holds the last count rather than the
+    row's creation time.
     """
     insert_cls = postgres_insert if is_postgres() else sqlite_insert
     statement = (
@@ -764,6 +766,7 @@ def _record_cache_counter(db_session: Any, *, hits: bool) -> None:
             set_={
                 "hits": CacheCounter.hits + (1 if hits else 0),
                 "misses": CacheCounter.misses + (1 if not hits else 0),
+                "updated_at": _utcnow(),
             },
         )
     )

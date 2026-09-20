@@ -91,12 +91,12 @@ champion.
 Single row (`id = 1`) updated atomically (`INSERT … ON CONFLICT DO UPDATE`)
 so every gunicorn worker reports the same totals for `/api/health/deep`.
 
-| Column | Type |
-| --- | --- |
-| `id` | integer PK |
-| `hits` | integer |
-| `misses` | integer |
-| `updated_at` | timestamp |
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | integer PK | |
+| `hits` | integer | |
+| `misses` | integer | |
+| `updated_at` | timestamp | stamped on every hit and every miss |
 
 ### `metrics_events` — anonymous product events (P1b beta metrics)
 

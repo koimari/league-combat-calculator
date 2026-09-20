@@ -276,7 +276,7 @@ def _apply_damage_amplifiers(state: FightState, rotation: RotationResult) -> Non
             if effect.source.is_ability_damage
         )
         amped_base = sum(
-            v.get("total_damage", 0)
+            v.get("total_damage", 0.0)
             for k, v in breakdown.items()
             if isinstance(v, dict) and k in amped_keys
         )

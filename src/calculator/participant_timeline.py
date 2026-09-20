@@ -21,7 +21,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from dataclasses import replace
 from operator import itemgetter
-from typing import Any, NamedTuple, TypeVar
+from typing import Any, NamedTuple
 
 from . import rune_effects
 from .attack_windows import AttackSpeedWindow
@@ -860,16 +860,12 @@ class TimelineScene(NamedTuple):
     support_effects: MutableMapping[str, list[dict[str, Any]]]
 
 
-#: The compiled keystone effect a scheduler resolved, whatever its shape.
-_KeystoneEffect = TypeVar("_KeystoneEffect")
-
-
 def _keystone_holder[KeystoneEffect](
     all_actors: Iterable[Combatant],
     keystone_name: str,
     name: str,
-    effect_type: type[_KeystoneEffect],
-) -> tuple[Combatant, _KeystoneEffect] | None:
+    effect_type: type[KeystoneEffect],
+) -> tuple[Combatant, KeystoneEffect] | None:
     """The opening every keystone scheduler shares: the selected keystone, its
     compiled effect, and the one holder that carries a rune page.
 
