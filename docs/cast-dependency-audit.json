@@ -12,7 +12,7 @@
   "audit": "cast_dependency_declarations",
   "authored_marker_reach": {
     "applies_dot_stack": {
-      "authors": 2,
+      "authors": 3,
       "negative_test": "test_withholding_applies_dot_stack_drops_the_stack_edge",
       "sample_author": "Briar"
     },
@@ -27,12 +27,12 @@
       "sample_author": "Aatrox"
     },
     "dot_duration": {
-      "authors": 39,
+      "authors": 38,
       "negative_test": "test_withholding_dot_duration_drops_the_dot_consume_edge",
       "sample_author": "Alistar"
     },
     "on_hit": {
-      "authors": 56,
+      "authors": 61,
       "negative_test": "test_withholding_on_hit_changes_the_edge_citation",
       "sample_author": "Aatrox"
     },
@@ -42,12 +42,12 @@
       "sample_author": "Aatrox"
     },
     "stacking_dot": {
-      "authors": 2,
+      "authors": 4,
       "negative_test": "test_withholding_stacking_dot_drops_the_stack_edge",
       "sample_author": "Briar"
     },
     "stat_buff": {
-      "authors": 61,
+      "authors": 70,
       "negative_test": "test_withholding_stat_buff_drops_the_buff_edge",
       "sample_author": "Aatrox"
     },
@@ -284,7 +284,7 @@
       11,
       18
     ],
-    "states_walked": 4712
+    "states_walked": 4696
   },
   "order_override_frontier": {
     "champions": [
