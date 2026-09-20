@@ -1965,11 +1965,6 @@ _NAME_ALIASES: dict[str, str] = {
 _REVERSE_ALIASES: dict[str, str] = {v: k for k, v in _NAME_ALIASES.items()}
 
 
-def _json_name(code_name: str) -> str:
-    """Get the JSON item name for a code name."""
-    return _REVERSE_ALIASES.get(code_name, code_name)
-
-
 # Maps item code name → list of (source, name, parser_func, extra_kwargs).
 _ITEM_PARSE_CONFIG: dict[str, list[tuple]] = {
     # ── On-Hit ──
@@ -2207,7 +2202,7 @@ def _find_item_data_by_name(
     item_name: str,
 ) -> dict[str, Any] | None:
     """Find an item entry in JSON data by name (case-insensitive)."""
-    json_name = _json_name(item_name)
+    json_name = _REVERSE_ALIASES.get(item_name, item_name)
     for item_data in items_data.values():
         if item_data.get("name", "").lower() == json_name.lower():
             return item_data

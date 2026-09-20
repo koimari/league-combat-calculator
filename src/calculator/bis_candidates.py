@@ -73,20 +73,6 @@ def bis_replaced_loadout(
     return replace(loadout, items=tuple(items), item_options=item_options)
 
 
-# A candidate-legality boundary, not a champion archetype or damage
-# heuristic: the item cache carries Riot's shop tags, and a roster role is an
-# explicit scenario input, so the tags keep a support-only item off a top or
-# mid enemy and keep a support ally's BIS out of raw-health tank items.  The
-# survivors are still scored by the coupled event timeline.
-def role_scoped_bis_candidates(
-    candidates: list[dict],
-    *,
-    role: str,
-) -> list[dict]:
-    """Keep roster BIS candidates within the selected role's sourced shop scope."""
-    return role_scoped_shop_items(candidates, role)
-
-
 def bis_candidate_pool(
     slot_kind: str,
     *,
@@ -106,10 +92,13 @@ def bis_candidate_pool(
         else get_eligible_legendaries()
     )
     supported = optimizer_supported_items(legal)
+    # A candidate-legality boundary, not a champion archetype or damage
+    # heuristic: the item cache carries Riot's shop tags, and a roster role is
+    # an explicit scenario input, so the tags keep a support-only item off a
+    # top or mid enemy and keep a support ally's BIS out of raw-health tank
+    # items.  The survivors are still scored by the coupled event timeline.
     scoped = (
-        supported
-        if slot_kind == "boots"
-        else role_scoped_bis_candidates(supported, role=role)
+        supported if slot_kind == "boots" else role_scoped_shop_items(supported, role)
     )
     if slot_kind != "boots":
         scoped = role_quest_legal_items(

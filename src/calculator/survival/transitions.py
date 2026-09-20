@@ -1592,7 +1592,7 @@ def _write_spell_shield_reduction_receipt(
         or pdef_eligibility is None
         or pdef_composition is None
         or pdef_composition.destroy.enabled
-        or _interaction_event_key(action)
+        or stable_event_key(action)
         in state.get("projectile_defense_full_block_events", set())
         or (
             action.damage_type == "true"
@@ -2549,11 +2549,6 @@ def _apply_live_packet_chain(
     return amount
 
 
-def _interaction_event_key(action: SurvivalAction) -> str:
-    """Build a stable identity for one projectile interaction packet."""
-    return stable_event_key(action)
-
-
 def _record_event_id_match(state: dict[str, Any], action: SurvivalAction) -> None:
     """Record one applied event whose id was selected by event id.
 
@@ -2612,7 +2607,7 @@ def _prepare_full_block(
         )
     ):
         return
-    key = _interaction_event_key(action)
+    key = stable_event_key(action)
     if composition.full_block.mode == "first":
         remaining = state["projectile_defense_uses_remaining"]
         if remaining is not None:
@@ -2673,7 +2668,7 @@ def _apply_projectile_damage_defense(
         or not eligibility.decide(action, attacker).eligible
     ):
         return amount
-    key = _interaction_event_key(action)
+    key = stable_event_key(action)
     if key in state["projectile_defense_full_block_events"]:
         return 0.0
     before = max(0.0, amount)
@@ -4199,7 +4194,7 @@ def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> 
             continue
         if kind is ActionKind.CROWD_CONTROL:
             if (
-                _interaction_event_key(action)
+                stable_event_key(action)
                 in state["projectile_defense_full_block_events"]
             ):
                 defense = state.get("projectile_defense")
@@ -4240,7 +4235,7 @@ def run_survival_walk(actions: list[SurvivalAction], ctx: TransitionContext) -> 
             # arming before damage ends with a bare continue (no state
             # change, no annotations).
             continue
-        if _interaction_event_key(action) in state.get(
+        if stable_event_key(action) in state.get(
             "projectile_defense_full_block_events", set()
         ):
             # A prior full-block defense disposed of this packet (the

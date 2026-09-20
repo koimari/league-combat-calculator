@@ -1526,7 +1526,7 @@ def test_sustained_fight_revive_lands_exactly_four_seconds_after_the_lethal_pack
 #     ("Guardian Angel", "Rebirth")            -> reason fragment
 #
 # * tests/test_economy.py:51:
-#     assert item_sell_value(_item("Guardian Angel")) == 1280  # 40% legendary
+#     assert sourced_sell_value(_item("Guardian Angel")) == 1280  # 40% legendary
 #
 # * tests/test_app.py:1991-1994:
 #     items["Guardian Angel"]["model_coverage"]["outcome_dimensions"] == [

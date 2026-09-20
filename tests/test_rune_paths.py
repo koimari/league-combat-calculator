@@ -22,6 +22,7 @@ from src.calculator.item_behavior_catalog import BehaviorCatalogError, behavior_
 from src.calculator.rune_paths import (
     domination,
     inspiration,
+    keystones,
     precision,
     resolve,
     shards,
@@ -59,7 +60,7 @@ class TestTheRegistrationContract:
     def test_the_merged_vocabulary_is_the_keystones_plus_the_paths(self):
         merged = set(rune_effects._compilers())
         paths = set(rune_paths.path_compilers())
-        assert merged == set(rune_paths.keystone_compilers()) | paths
+        assert merged == set(keystones.COMPILERS) | paths
         # Every compiled name is a roster rune; the roster's completeness is
         # the catalog's ``implemented`` flag, pinned by the rune-page tests.
         assert merged <= set(rune_effects.RUNE_EFFECTS)
@@ -72,7 +73,6 @@ class TestTheRegistrationContract:
 
     def test_a_shard_registers_under_its_row_and_name(self):
         """Nine options over three rows; the row is half of the key."""
-        assert rune_paths.shard_compilers() == dict(shards.COMPILERS)
         assert sorted(shards.COMPILERS) == [
             (1, "Adaptive Force"),
             (1, "Attack Speed"),

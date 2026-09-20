@@ -1023,7 +1023,7 @@ def validate_item_input_options(value: object) -> dict[str, dict[str, int | floa
     return parsed
 
 
-def _input_option_stat_bonuses(
+def input_option_stat_bonuses(
     items: list[dict[str, Any]],
     item_options: Mapping[str, Mapping[str, int]] | None,
 ) -> tuple[float, float, float, float]:
@@ -1048,14 +1048,6 @@ def _input_option_stat_bonuses(
             if threshold is not None and units >= threshold:
                 move_speed_percent += schema["move_speed_percent"]
     return bonus_ap, move_speed_percent, bonus_health, bonus_mana
-
-
-def input_option_stat_bonuses(
-    items: list[dict[str, Any]],
-    item_options: Mapping[str, Mapping[str, int]] | None,
-) -> tuple[float, float, float, float]:
-    """Return sourced stat deltas from explicit item state controls."""
-    return _input_option_stat_bonuses(items, item_options)
 
 
 def input_option_crit_chance(
@@ -6112,7 +6104,7 @@ def resolve_stat_effects(
     # Movement speed from item state (Mejai's 10+ Glory) is already in the
     # caller's ``total_move_speed``; handing it back would be a second home
     # for one number.
-    input_bonus_ap, _, _, _ = _input_option_stat_bonuses(items, item_options)
+    input_bonus_ap, _, _, _ = input_option_stat_bonuses(items, item_options)
     health_multiplier = item_bonus_health_multiplier(items)
     mana_bonus_ap = mana_to_ap_bonus(items, bonus_mana)
     mana_bonus_health = mana_to_health_bonus(items, bonus_mana)

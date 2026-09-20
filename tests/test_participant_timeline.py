@@ -7,12 +7,13 @@ import pytest
 import src.calculator.bis as bis_module
 from src.app import app
 from src.calculator import support_scan
-from src.calculator.bis_candidates import enemy_bis_rank_key, role_scoped_bis_candidates
+from src.calculator.bis_candidates import enemy_bis_rank_key
 from src.calculator.champion_loadout import ChampionLoadout
 from src.calculator.data_fetcher import get_champion, get_item_by_name
 from src.calculator.defensive_effects import resolve_starting_defenses
 from src.calculator.fight_params import FightParams
 from src.calculator.item_coverage import optimizer_supported_items
+from src.calculator.loadout_rules import role_scoped_shop_items
 from src.calculator.optimizer_candidates import get_eligible_legendaries
 from src.calculator.participant_timeline import (
     ActorRequest,
@@ -2747,10 +2748,8 @@ def test_roster_bis_requires_an_explicit_role_instead_of_guessing_item_class():
 
 def test_roster_bis_uses_sourced_role_shop_scope_before_scoring_candidates():
     candidates = optimizer_supported_items(get_eligible_legendaries())
-    support = {
-        item["name"] for item in role_scoped_bis_candidates(candidates, role="support")
-    }
-    top = {item["name"] for item in role_scoped_bis_candidates(candidates, role="top")}
+    support = {item["name"] for item in role_scoped_shop_items(candidates, "support")}
+    top = {item["name"] for item in role_scoped_shop_items(candidates, "top")}
 
     assert "Locket of the Iron Solari" in support
     assert "Moonstone Renewer" in support

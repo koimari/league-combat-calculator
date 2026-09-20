@@ -85,18 +85,13 @@ _SKILL_ORDERS: dict[str, list[str]] = {
 }
 
 
-def get_skill_order(champion_name: str) -> list[str]:
-    """The 18-entry Q/W/E/R leveling order for *champion_name*."""
-    return _SKILL_ORDERS.get(champion_name, DEFAULT_SKILL_ORDER)
-
-
 def get_ability_rank(
     ability_key: str,
     champion_level: int,
     champion_name: str = "",
 ) -> int:
     """*ability_key*'s rank at *champion_level*: 1-5 basic, 1-3 for R."""
-    order = get_skill_order(champion_name)
+    order = _SKILL_ORDERS.get(champion_name, DEFAULT_SKILL_ORDER)
     rank = 0
     for i in range(min(champion_level, len(order))):
         if order[i] == ability_key:

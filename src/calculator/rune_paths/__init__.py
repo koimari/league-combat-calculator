@@ -86,18 +86,11 @@ def path_options() -> dict[str, tuple[RuneOption, ...]]:
 def publish_rune_compilers() -> None:
     """Hand this package's tables to ``rune_effects``; ``src.calculator`` calls it."""
     register_rune_compilers(
-        keystone_compilers(), path_compilers(), shard_compilers(), path_options()
+        dict(keystones.COMPILERS),
+        path_compilers(),
+        dict(shards.COMPILERS),
+        path_options(),
     )
-
-
-def keystone_compilers() -> dict[str, RuneCompiler]:
-    """Every keystone compiler — row 0, which belongs to no one path."""
-    return dict(keystones.COMPILERS)
-
-
-def shard_compilers() -> dict[tuple[int, str], RuneCompiler]:
-    """Every stat-shard compiler, keyed by the ``(row, name)`` that selects it."""
-    return dict(shards.COMPILERS)
 
 
 def _owner(merged: Mapping[str, RuneCompiler], name: str) -> str | None:

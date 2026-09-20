@@ -68,11 +68,6 @@ def item_total(item: dict[str, Any]) -> int:
     return total
 
 
-def item_sell_value(item: dict[str, Any]) -> int:
-    """The sourced sell refund, from the per-item DDragon table."""
-    return sourced_sell_value(item)
-
-
 def combine_cost(item: dict[str, Any]) -> int:
     """Return the combine fee: total minus the sum of direct component totals.
 
@@ -295,7 +290,7 @@ def apply_purchase_plan(
     )
     remaining = gold_on_hand
     for sold in sell_items or ():
-        refund = item_sell_value(sold)
+        refund = sourced_sell_value(sold)
         sold_id = int(sold["id"])
         if inventory.get(sold_id, 0) <= 0:
             raise ValueError(f"Cannot sell {sold['name']}: not owned")

@@ -435,7 +435,7 @@ def _regeneration_windows(
             sorted({str(item.get("name", "")) for item in combatant.items}),
             RegenerationRule,
         )
-        rune = _rune_regeneration(combatant)
+        rune = _one_rune_walk_effect(combatant, rune_effects.RuneRegenerationEffect)
         if slot is None and rune is None:
             windows.append(None)
             continue
@@ -471,7 +471,7 @@ def _plating_windows(
     """
     windows: list[PlatingWindow | None] = []
     for combatant in combatants:
-        plating = _rune_plating(combatant)
+        plating = _one_rune_walk_effect(combatant, rune_effects.RunePlatingEffect)
         windows.append(
             None
             if plating is None
@@ -484,18 +484,6 @@ def _plating_windows(
             )
         )
     return tuple(windows)
-
-
-def _rune_plating(combatant: Combatant) -> "rune_effects.RunePlatingEffect | None":
-    """The one armed flat reduction this participant's rune page declares."""
-    return _one_rune_walk_effect(combatant, rune_effects.RunePlatingEffect)
-
-
-def _rune_regeneration(
-    combatant: Combatant,
-) -> rune_effects.RuneRegenerationEffect | None:
-    """The one regeneration window this participant's rune page declares."""
-    return _one_rune_walk_effect(combatant, rune_effects.RuneRegenerationEffect)
 
 
 def _one_rune_walk_effect(combatant: Combatant, kind: type) -> Any | None:

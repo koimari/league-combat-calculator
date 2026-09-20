@@ -10,8 +10,8 @@ from src.calculator.economy import (
     is_purchasable,
     is_stackable,
     is_transformation_item,
-    item_sell_value,
     item_total,
+    sourced_sell_value,
 )
 
 
@@ -28,26 +28,26 @@ def test_sell_value_matches_sourced_table_for_every_sourced_item():
     for row in rows:
         item = cache_by_id.get(row["id"])
         assert item is not None, row["name"]
-        from src.calculator.economy import item_sell_value
+        from src.calculator.economy import sourced_sell_value
 
-        assert item_sell_value(item) == row["ddragon_sell"], row["name"]
+        assert sourced_sell_value(item) == row["ddragon_sell"], row["name"]
 
 
 def test_sell_value_uses_real_70_percent_rule_not_stale_cache():
     # B. F. Sword: 1300 total -> 910 refund (70%), while the cache says 520 (40%).
-    from src.calculator.economy import item_sell_value
+    from src.calculator.economy import sourced_sell_value
 
     item = _item("B. F. Sword")
-    assert item_sell_value(item) == 910
+    assert sourced_sell_value(item) == 910
     assert item["shop"]["prices"]["sell"] == 520  # stale cache proves the fix
 
 
 def test_sell_value_respects_reviewed_exceptions():
     from src.calculator.economics_data import _Tables
-    from src.calculator.economy import item_sell_value
+    from src.calculator.economy import sourced_sell_value
 
-    assert item_sell_value(_item("Rejuvenation Bead")) == 120  # 40%
-    assert item_sell_value(_item("Guardian Angel")) == 1280  # 40% legendary
+    assert sourced_sell_value(_item("Rejuvenation Bead")) == 120  # 40%
+    assert sourced_sell_value(_item("Guardian Angel")) == 1280  # 40% legendary
     rows = {row["name"]: row for row in _Tables.load()["per_item_sell"]}
     assert rows["Redemption"]["ratio"] >= 0.7  # 70% ordinary legendary
     assert any(
@@ -302,9 +302,9 @@ def test_selling_completed_item_is_not_always_better_than_components():
     by_id = _item_by_id()
     demand = recipe_demand(seekers)
     components_sell = sum(
-        item_sell_value(by_id[component_id]) * count
+        sourced_sell_value(by_id[component_id]) * count
         for component_id, count in demand.items()
     )
     assert components_sell == 770
-    assert item_sell_value(seekers) == 640
-    assert item_sell_value(seekers) < components_sell
+    assert sourced_sell_value(seekers) == 640
+    assert sourced_sell_value(seekers) < components_sell
