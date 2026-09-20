@@ -30,7 +30,7 @@ Tibbers aura and auto-attack constants (wiki pets entry).
 import re
 from typing import Any
 
-from ..ability_prose import effect_description
+from ..ability_prose import CachedSentence, effect_description
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
@@ -213,9 +213,22 @@ _summon_tibbers.phase = BUFF
 # the charge cap, the slots that may spend it and the level-stepped stun
 # are read from the sentences that state them and raise when a patch stops
 # stating them (the Shyvana Scalemail rule).
-_STACK_CAP_RE = re.compile(r"stacking up to (\d+) times")
-_ENERGIZED_STUN_RE = re.compile(
-    r"stun enemies hit for ([\d.]+) / ([\d.]+) / ([\d.]+) \(based on level\)"
+_CHARGE_CAP = CachedSentence(
+    re.compile(r"stacking up to (?P<value>\d+) times"),
+    missing=(
+        "Annie P: the cached Pyromania innate no longer states "
+        "'stacking up to N times', so the charge cap has no source"
+    ),
+)
+_ENERGIZED_STUN = CachedSentence(
+    re.compile(
+        r"stun enemies hit for (?P<values>[\d.]+ / [\d.]+ / [\d.]+) "
+        r"\(based on level\)"
+    ),
+    missing=(
+        "Annie P: the cached Energized effect no longer states "
+        "'stun enemies hit for A / B / C (based on level)'"
+    ),
 )
 # HARDCODED: verify on patch updates — against the GAME FILES, because the
 # cached entry states "1.25 / 1.5 / 1.75 (based on level)" and names no
@@ -227,7 +240,6 @@ _ENERGIZED_STUN_RE = re.compile(
 # MaxStacks 4 corroborates the charge cap the innate's sentence states.
 # Descending, so the walk takes the first breakpoint the level clears.
 _STUN_BREAKPOINT_LEVELS = (11, 6, 1)
-_CHARGE_EFFECT = 0
 _ENERGIZED_EFFECT = 1
 #: Molten Shield retaliates "once per enemy per cast", so a Summoner's Rift
 #: team is the most landings one cast can ever have.
@@ -236,24 +248,12 @@ _MAX_RETALIATIONS = 5
 
 def _charge_cap(ability: dict[str, Any]) -> int:
     """Pyromania's stack cap, from the sentence that states it."""
-    match = _STACK_CAP_RE.search(effect_description(ability, _CHARGE_EFFECT))
-    if match is None:
-        raise ValueError(
-            "Annie P: the cached Pyromania innate no longer states "
-            "'stacking up to N times', so the charge cap has no source"
-        )
-    return int(match.group(1))
+    return int(_CHARGE_CAP.value(ability))
 
 
 def _stun_seconds(ability: dict[str, Any], level: int) -> float:
     """The Energized stun at a champion level, from the cached sentence."""
-    match = _ENERGIZED_STUN_RE.search(effect_description(ability, _ENERGIZED_EFFECT))
-    if match is None:
-        raise ValueError(
-            "Annie P: the cached Energized effect no longer states "
-            "'stun enemies hit for A / B / C (based on level)'"
-        )
-    steps = [float(value) for value in match.groups()]
+    steps = _ENERGIZED_STUN.level_values(ability)
     for seconds, breakpoint_level in zip(
         reversed(steps), _STUN_BREAKPOINT_LEVELS, strict=False
     ):

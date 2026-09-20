@@ -14,7 +14,7 @@ import re
 from typing import Any
 
 from ..ability_prose import (
-    effect_description,
+    CachedSentence,
     extract_description_control_durations,
     extract_description_duration,
 )
@@ -48,17 +48,42 @@ _E_ATTACK_SPEED_SECONDS = data_value(
 # limit are read from the sentences that state them and raise when a patch
 # stops stating them.  The mark window (6s) and the full stun (1.25s) come
 # from the typed prose readers.
-_STACK_CAP_RE = re.compile(r"stacking up to (\d+) times")
-_REPEAT_STUN_RE = re.compile(
-    r"stun duration is reduced to ([\d.]+) seconds? if this occurs on the "
-    r"same target again within ([\d.]+) seconds"
+_STACK_CAP_RE = re.compile(r"stacking up to (?P<value>\d+) times")
+_MARK_STACK_CAP = CachedSentence(
+    _STACK_CAP_RE,
+    missing=(
+        "Kennen P: the cached kit no longer states Mark of the Storm's "
+        "'stacking up to N times'"
+    ),
 )
-_STORM_STACK_CAP_RE = re.compile(
-    r"Slicing Maelstrom can apply only up to (\d+) stacks on a target"
+_SURGE_STACK_CAP = CachedSentence(
+    _STACK_CAP_RE,
+    missing=(
+        "Kennen P: the cached kit no longer states Electrical Surge's "
+        "'stacking up to N times'"
+    ),
+)
+_REPEAT_STUN = CachedSentence(
+    re.compile(
+        r"stun duration is reduced to (?P<seconds>[\d.]+) seconds? if this "
+        r"occurs on the same target again within (?P<window>[\d.]+) seconds"
+    ),
+    missing=(
+        "Kennen P: the cached kit no longer states the repeat stun's reduced "
+        "duration and its window"
+    ),
+)
+_STORM_STACK_CAP = CachedSentence(
+    re.compile(
+        r"Slicing Maelstrom can apply only up to (?P<value>\d+) stacks on a target"
+    ),
+    missing=(
+        "Kennen P: the cached kit no longer states Slicing Maelstrom's own "
+        "per-target stack limit"
+    ),
 )
 _MARK_EFFECT = 0
 _STUN_EFFECT = 1
-_STORM_EFFECT = 2
 #: Bolt cadence Slicing Maelstrom's own row authors (cast + 0.5s, every 0.5s).
 _BOLT_OFFSET = 0.5
 _BOLT_INTERVAL = 0.5
@@ -111,14 +136,6 @@ def _slicing_maelstrom(
     }
 
 
-def _sourced(pattern: re.Pattern[str], text: str, what: str) -> re.Match[str]:
-    """One cached sentence's numbers, or a refusal naming what went missing."""
-    match = pattern.search(text)
-    if match is None:
-        raise ValueError(f"Kennen P: the cached kit no longer states {what}")
-    return match
-
-
 def _mark_stream(ctx: SlotCtx, duration: float, storm_cap: int) -> list[float]:
     """Every Mark of the Storm application on this target, in time order.
 
@@ -155,13 +172,7 @@ def _surge_stack_cap(ctx: SlotCtx) -> int:
     ability = ctx.ability("W")
     if ability is None:
         raise ValueError("Kennen P: the cached kit has no Electrical Surge entry")
-    return int(
-        _sourced(
-            _STACK_CAP_RE,
-            effect_description(ability, 0),
-            "Electrical Surge's 'stacking up to N times'",
-        ).group(1)
-    )
+    return int(_SURGE_STACK_CAP.value(ability))
 
 
 def _mark_of_the_storm(ctx: SlotCtx) -> dict[str, Any] | None:
@@ -175,13 +186,7 @@ def _mark_of_the_storm(ctx: SlotCtx) -> dict[str, Any] | None:
     ability = ctx.ability()
     if ability is None:
         return None
-    cap = int(
-        _sourced(
-            _STACK_CAP_RE,
-            effect_description(ability, _MARK_EFFECT),
-            "Mark of the Storm's 'stacking up to N times'",
-        ).group(1)
-    )
+    cap = int(_MARK_STACK_CAP.value(ability))
     window = extract_description_duration(ability, _MARK_EFFECT)
     durations = extract_description_control_durations(ability, _STUN_EFFECT)
     if window is None or not durations:
@@ -189,18 +194,8 @@ def _mark_of_the_storm(ctx: SlotCtx) -> dict[str, Any] | None:
             "Kennen P: the cached innate no longer states the mark window or "
             "the stun it ends in"
         )
-    repeat = _sourced(
-        _REPEAT_STUN_RE,
-        effect_description(ability, _STUN_EFFECT),
-        "the repeat stun's reduced duration and its window",
-    )
-    storm_cap = int(
-        _sourced(
-            _STORM_STACK_CAP_RE,
-            effect_description(ability, _STORM_EFFECT),
-            "Slicing Maelstrom's own per-target stack limit",
-        ).group(1)
-    )
+    repeat = _REPEAT_STUN.match(ability)
+    storm_cap = int(_STORM_STACK_CAP.value(ability))
 
     stacks = min(max(int(ctx.option("mark_stacks")), 0), cap - 1)
     fight = ctx.options.get("fight_duration_seconds")
@@ -215,10 +210,13 @@ def _mark_of_the_storm(ctx: SlotCtx) -> dict[str, Any] | None:
             if stacks >= cap:
                 previous = stuns[-1][0] if stuns else None
                 shortened = previous is not None and time - previous < float(
-                    repeat.group(2)
+                    repeat.group("window")
                 )
                 stuns.append(
-                    (time, float(repeat.group(1)) if shortened else durations[0])
+                    (
+                        time,
+                        float(repeat.group("seconds")) if shortened else durations[0],
+                    )
                 )
                 stacks = 0
                 last_application = None
