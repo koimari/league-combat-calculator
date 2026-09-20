@@ -93,7 +93,7 @@ model. Two modeling choices are approximations, both documented in code:
    clock is memoryless; for deterministic schedules it is exact in
    expectation only if swings are uniformly spread (Wald-style rate scaling).
    The error is bounded by ±1 swing and vanishes as `T` grows.
-2. **Navori Flickerblade refunds** (`_navori_effective_cd`) simulate the
+2. **Navori Flickerblade refunds** (`_attack_paid_cooldown`) simulate the
    discrete event process exactly, natural decay of the remaining cooldown
    between attack epochs, then `remaining ← (remaining − Δ)·(1 − r)` at each
    attack, an Euler discretization of the continuous process `dR/dt = −1`
