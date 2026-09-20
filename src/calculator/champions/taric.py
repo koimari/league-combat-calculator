@@ -1,43 +1,20 @@
-"""Taric — CP10.8 full-entry-reviewed packet module.
+"""Taric: full-entry-reviewed packet module.
 
-E8d ally-support: Q (Starlight's Touch) heals himself and nearby allies per
-stocked charge (cached prose: "25 (+ 15% AP) (+ 1% of his maximum health) per
-charge"; the cached Q leveling exposes only "Maximum Charges", not a heal
-row).  The engine's ally-support scanner cannot author the heal from the
-cached leveling, so the Q heal is NOT emitted as a support packet — see E8d
-reply for the missing hook.  R (Cosmic Radiance) is invulnerability state
-(2.5s), documented as such, not a heal/shield.
-
-Roadmap session 1 (2026-08-20): Q, W, and R are reclassified from
-out_of_scope to modeled. Each already carried a real, sourced, tested
-numeric effect via the ally-support/self-heal side channels before this
-session — the label was simply stale:
-  - Q (Starlight's Touch): self/ally heal authored below via
-    ``derive_self_healing`` (25 + 15% AP + 1% max health per stocked
-    charge, self_and_all_teammates fan-out via the E1 rule); Taric is in
-    support_effects.py's ``_MODULE_AUTHORED_HEAL_SLOTS`` so the generic
-    scanner correctly defers (pinned in tests/test_heal_ledger_ownership.py,
-    tests/test_self_heal_rules_5.py, tests/test_survival_kernel.py).
-  - W (Bastion): ally/self shield via the support scanner's "Shield
-    Strength" packet, an amount_formula keyed off the PROTECTED target's
-    max health, 2.5s duration (support_effects.py; pinned in
-    tests/test_survival_kernel.py's compiled/receipt-walk parity cases).
-  - R (Cosmic Radiance): self_and_all_teammates invulnerability state,
-    carried by the support scanner's ``_SUPPORT_STATE_SLOTS`` entry
-    (support_effects.py; pinned in tests/test_revive_and_ally_support_events.py's
-    ``test_taric_cosmic_radiance_targets_the_caster_and_selected_ally``
-    and tests/test_survival_kernel.py's delayed-ally-state cases).
-Roadmap session 2 (2026-08-20): P (Bravado) is CLOSED — reclassified
-from out_of_scope to modeled.  Session 1 left it open on a named
-dependency ("needs proc-window dedup logic in damage.py"), because the
-engine's ``empowers_next_auto`` mechanism multiplies flatly by cast
-count and has no concept of a window being REFRESHED rather than
-stacked — four back-to-back Q/W/E/R casts would have booked eight
-empowered attacks instead of the sourced maximum of two.  That
-dependency now exists: ``damage.py``'s ``_empower_window_procs`` walks
-the accepted cast timeline against the fight's consuming actions and
-returns one timestamp per charge actually spent.  P declares the window
-below; every number in it is read from the cached wiki entry.
+Q (Starlight's Touch) heals Taric and nearby allies per stocked charge, 25
+(+ 15% AP) (+ 1% of his maximum health) each.  The cached Q leveling exposes
+only "Maximum Charges", so the support scanner cannot author the heal;
+``derive_self_healing`` does, and Taric sits in
+``support_effects._MODULE_AUTHORED_HEAL_SLOTS`` so the scanner defers and the
+ledger holds one receipt.
+W (Bastion) is the scanner's "Shield Strength" packet, an amount formula keyed
+off the PROTECTED target's maximum health for 2.5 seconds.
+R (Cosmic Radiance) is invulnerability state for Taric and every teammate,
+carried by the scanner's ``_SUPPORT_STATE_SLOTS``, not a heal or a shield.
+P (Bravado) is an empower window.  ``empowers_next_auto`` multiplies flatly by
+cast count and has no notion of a window refreshed rather than stacked, which
+would book eight empowered attacks for four back-to-back casts, so
+``damage._empower_window_procs`` walks the accepted cast timeline and returns
+one timestamp per charge actually spent, capped at the sourced two.
 """
 
 import re

@@ -1,43 +1,22 @@
 """Naafiri: full-entry-reviewed packet module.
 
-The game binary names her W and R slots the opposite way round from the
-live kit; see the Champions section of ``TRAPS.md`` before any
-patch-day check.  Everything here is named by the live kit, matching
-``data/champions.json``.
-
-What each slot prices:
-
-- Q (Darkin Daggers) prices the initial hit plus 10 sourced 0.5s bleed
-  ticks (Total Bleed Physical Damage == per-tick x 10).  The recast
-  against an already-bleeding champion adds the cached Minimum/Maximum
-  Bonus Physical Damage rows, interpolated 0% : 100% by the target's
-  missing health; the remaining-bleed term is already covered by the
-  bleed ticks, so the recast does not double-price them.
-- Q's heal against a champion is the cached "Heal" row, authored by
-  ``derive_self_healing`` (``HEALING_RULE_CHAMPIONS``).  The support
-  scanner defers the slot so the ledger holds one receipt.
-- W (The Call of the Pack) is a BUFF-phase ``stat_buff``: 20% of TOTAL
-  AD granted as bonus AD, a prose-only constant corroborated by the
-  binary's ``NaafiriADPercentBoost``, plus the ranked bonus movement
-  speed as a ``move_speed_percent`` key so ``damage.py`` re-folds it
-  through ``stats.resolve_move_speed``.  Mutating ``ctx.stats`` in-parse
-  is what lets Q, E, R and the packmate row scale off the buffed AD.
-- E (Eviscerate) prices both the dash and the Flurry explosion on
-  arrival (Dash + Flurry == Total Physical Damage).
-- P (We Are More) prices the packmate damage coupling, the Illaoi-P
-  precedent: the summon itself deals nothing, and what the pack
-  contributes on Hounds' Pursuit is R's own "Physical Damage per
-  Packmate" row.  The packmate count is sourced three ways that agree
-  exactly: the wiki P text, the binary's ``PackmateCap`` breakpoints at
-  levels 9, 12 and 15, and the wiki R notes' packmate-total table.  The
-  ``w_hunt`` option selects the raised cap and the AD steroid together,
-  so there is one hunt state rather than two guesses.
-
-Packmate BASIC ATTACKS stay unpriced with a named receipt: their
-formula exists only in the binary, the wiki's per-champion Pets entry
-is not part of the local cache, and the pack's uptime and target
-selection are unmodelled state on top.  Pricing it would be a
-single-channel invention; see ASSUMPTIONS.
+The game binary names her W and R slots the opposite way round from the live
+kit; see the Champions section of ``TRAPS.md`` before any patch-day check.
+Everything here is named by the live kit, matching ``data/champions.json``.
+Q (Darkin Daggers) prices the initial hit plus ten sourced 0.5s bleed ticks.
+The recast against an already-bleeding champion adds the cached Minimum and
+Maximum Bonus Physical Damage rows interpolated on the target's missing
+health; the remaining-bleed term is the ticks, so nothing is double-priced.
+Q's heal is the cached "Heal" row through ``derive_self_healing``.
+W (The Call of the Pack) is a BUFF-phase ``stat_buff``: 20% of TOTAL AD as
+bonus AD, prose-only and corroborated by ``NaafiriADPercentBoost``, plus the
+ranked ``move_speed_percent``.  Mutating ``ctx.stats`` in-parse is what lets
+Q, E, R and the packmate row scale off the buffed AD.
+E (Eviscerate) prices the dash and the arrival Flurry together.
+P (We Are More) prices the packmate coupling: the summon deals nothing and the
+pack's contribution is R's own "Physical Damage per Packmate" row.  ``w_hunt``
+selects the raised cap and the AD steroid together, so there is one hunt
+state.  Packmate basic attacks stay unpriced; see ASSUMPTIONS.
 """
 
 from typing import Any

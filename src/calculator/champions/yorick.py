@@ -1,41 +1,20 @@
-"""Yorick — Mist Walkers and the Maiden of the Mist (E4 summon damage).
+"""Yorick: Mist Walkers and the Maiden of the Mist.
 
-Why each slot is non-generic:
-- P (Shepherd of Souls) raises Mist Walkers (up to 4 active).  The pet
-  attack damage is NOT in the champion JSON (its leveling rows are
-  empty and the ability text points to "See Pets for more details"), so
-  the per-attack damage is a module constant sourced from the Community
-  Dragon game files (see the HARDCODED block below) and emitted as a
-  fixed-count proc over the fight window: ``mist_walkers`` x
-  ``mist_walker_attacks`` attacks.
-- R (Eulogy of the Isles) summons the Maiden of the Mist, a controllable
-  pet whose attack damage also lives only in the game files.  The R slot
-  keeps its castable row and prices ``maiden_attacks`` basic attacks
-  over the fight window (AS 1.0 -> 5 attacks in the 5-second
-  one-rotation window by default).
-- Q/W/E keep the reviewed CP10.10 packet pricing (E keeps its sourced
-  % max-health magic damage).  W (Dark Procession) stays out of scope:
-  its ring is impassable terrain with its own wall health, an axis the
-  engine does not have, and it deals nothing.
-
-Pet damage boundaries: the fight model does not price pet HP, leash
-ranges, or AI; the walkers and the Maiden are assumed to reach and keep
-attacking the target for the whole window.  The attack counts are
-player-controlled options whose defaults follow the sourced attack
-pattern over the 5-second one-rotation window.
-
-Roadmap session 5 slot 14 (2026-08-21): W (Dark Procession) has no
-enemy-damage formula: its cached effects are a knockback/pull wall with
-a "Wall Health" leveling row (the wall's own destructible HP, not an
-enemy-damage term) — confirmed by the pinned reviewed packet's
-kind="no_damage" declaration for W, and live: parse_champion_abilities
-emits W with total_raw=0.0, and the fight breakdown carries a W row that
-totals zero damage. This module never reassigns W away from
-build_packet_module's default no-damage branch (only P and R are
-overridden below). MODULE_COVERAGE was simply stale, still reading
-"out_of_scope" for a slot this module already treats as non-damaging
-(the Rek'Sai/Renekton precedent). Reclassified to "no_damage"; zero
-fight-computation change.
+P (Shepherd of Souls) raises up to four Mist Walkers.  Their per-attack damage
+is not in the champion cache at all, the leveling rows being empty and the
+text pointing at the Pets page, so it is a module constant sourced from the
+Community Dragon game files and emitted as a fixed-count proc,
+``mist_walkers`` x ``mist_walker_attacks``.
+R (Eulogy of the Isles) summons the Maiden, whose attack damage also lives
+only in the game files; the slot keeps its castable row and prices
+``maiden_attacks`` basic attacks over the fight window.
+W (Dark Procession) is ``no_damage``: its ring is impassable terrain with its
+own wall health, an axis this engine does not carry, and it deals nothing.
+Q and E keep their packet pricing, E its sourced %max-health magic damage.
+Pet boundaries: the model prices no pet health, leash range or AI, and assumes
+the walkers and the Maiden reach and keep attacking for the whole window.  The
+attack counts are options whose defaults follow the sourced attack pattern
+over the 5-second one-rotation window.
 """
 
 from __future__ import annotations

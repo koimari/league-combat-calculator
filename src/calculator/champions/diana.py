@@ -1,42 +1,22 @@
-"""Diana — slot map for the archetype engine.
+"""Diana: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Moonsilver Blade) is two components the generic path misread: it
-  applied the cleave damage on EVERY auto (the mechanic is a 2-stack
-  cycle — every 3rd basic attack cleaves) and missed the attack-speed
-  buff entirely (both AS arrays hide under the generic attribute
-  "Per-Level Scaling"; position distinguishes base from tripled). Split
-  into two slots here: "P" is the BUFF-phase AS steroid (the tripled
-  post-ability-cast values, assumed always active — she casts constantly,
-  Q's 6s cooldown vs the 5s window), and "auto_attacks_moonsilver_cleave"
-  prices floor(autos / 3) cleave procs over a timed fight's auto stream.
-  The cleave is spell AoE riding the autos, NOT an on-hit effect: it
-  neither applies nor triggers item on-hits and ignores on-hit
-  effectiveness, and its synthetic slot key gives the breakdown row the
-  ``auto_attacks_`` prefix so ``split_auto_vs_ability`` buckets it as
-  auto-attack damage (the Corki split rule). Priced after the rotation,
-  it takes the auto-stream magic pen (the Terminus split rule).
-- Q (Crescent Strike) is the one generic-shaped slot, pinned so the slot
-  map is the whole kit. Moonlight (the 3s debuff enabling E's reset) has
-  no damage of its own and is modeled entirely inside E.
-- W (Pale Cascade) must read "Total Magic Damage" (3 orbs); the
-  classifier picks the per-orb entry. The shield (both shield
-  attributes) is pure mitigation and deliberately not modeled.
-- E (Lunar Rush) is two dashes per activation with ``moonlight_reset``
-  on: the first dash consumes Q's Moonlight, zeroing E's current
-  cooldown, and she immediately dashes again — per-dash damage on the
-  part with ``count=2`` (never pre-multiplied — the Amumu trap) and
-  ``cast_instances=2`` for per-cast item procs; the natural cooldown
-  separates activations.
-- R (Moonfall) deals no damage with the pull itself; the delayed beam
-  (always fires — the target is a champion) gains a per-champion bonus
-  beyond the first that the generic path cannot express
-  (``champions_pulled`` option). The "Total Damage Vs. 5 Champions"
-  attribute is a derived display value and is only used as a test
-  cross-check; the "Slow" attribute is not damage.
-
-All numeric values are read from the champion JSON data; the only
-mechanic constants are the cleave cadence and R's pull cap below.
+P (Moonsilver Blade) is two mechanics under one cached attribute name, so it
+is two slots here.  "P" is the BUFF-phase attack-speed steroid, the tripled
+post-cast values, assumed always active because Q's 6s cooldown sits inside
+the 5s window.  ``auto_attacks_moonsilver_cleave`` prices one cleave every
+third basic attack.  The cleave is spell AoE riding the autos, not an on-hit:
+it neither applies nor triggers item on-hits and ignores on-hit effectiveness.
+Its synthetic slot key gives the row the ``auto_attacks_`` prefix so
+``split_auto_vs_ability`` buckets it as auto damage, and it is priced after
+the rotation, so it meets the auto stream's magic penetration.
+W (Pale Cascade) reads "Total Magic Damage", its three orbs; the classifier
+picks the per-orb row.  Its shield is mitigation and is not modeled.
+E (Lunar Rush) is two dashes per activation under ``moonlight_reset``, the
+first consuming Q's Moonlight to zero E's cooldown.  The part carries
+``count=2`` and ``cast_instances=2``, never a pre-multiplied amount.
+R (Moonfall) deals nothing with the pull; the delayed beam gains a per-champion
+bonus beyond the first through ``champions_pulled``.  Its "Total Damage Vs. 5
+Champions" row is a derived display value and is only a test cross-check.
 """
 
 import math

@@ -1,43 +1,18 @@
-"""Lucian — CP10.4 packet module with the E9-1 gap fixes.
+"""Lucian: packet module over the double shot and the channel.
 
-E9-1 closes the two remaining audit gaps over the CP10.4 packet:
-- R (The Culling) prices the FULL 3-second channel: 22 shots of the
-  "Physical Damage Per Shot" packet (this module's packet timing declaration)
-  at the sourced ~3s cadence instead of ONE shot.  The wiki cache
-  carries only the per-shot row and the prose shot count ("up to 22
-  shots ... over the duration"), so per-shot x 22 is the sourced
-  full-channel value.  The wiki's crit-chance-scaled extra shots are
-  zero at 0% crit and not modeled for crit builds.
-- P (Lightslinger) is modeled as the engine's double-shot pattern:
-  after casting an ability, the next basic attack within 3.5 seconds
-  fires a second shot at 50% / 55% / 60% (based on level) AD physical
-  damage (levels 1-6 / 7-12 / 13-18 — the wiki Template:Data band
-  breakpoints).  The fight model prices one second shot per basic
-  attack the rotation fires: in the standard weave every auto follows
-  an ability cast, so per-auto second shots ARE the sourced per-cast
-  mechanic.  The second shot applies on-hit effects and can crit,
-  exactly the engine's double_shot path.
-
-Q/W packets are correct single-instance reads.
-
-Roadmap session 4 batch C (2026-08-21): E (Relentless Pursuit) is
-reclassified from out_of_scope to no_damage. The pinned packet spec
-already carried E as ``kind: "no_damage"`` and the compiler's
-``_no_formula_parser`` was already emitting a proper, user-visible
-zero-damage row at runtime -- MODULE_COVERAGE was the only place still
-reading "out_of_scope" for a slot that was never silently absent. The
-cached ability JSON's three effect entries (cooldown refund on
-Lightslinger hit, the dash itself, the attack-timer reset / free-cast
-window) all carry empty ``leveling`` arrays. Corroborated by the game
-binary (``data/bin/characters/lucian.bin.json``,
-``Characters/Lucian/Spells/LucianEAbility/LucianE``): ``mSpell`` has no
-``mSpellCalculations`` table, and its ``DataValues`` are all
-non-damage parameters (``CDRefundBase`` 1.0s, ``CDRefundChampion`` 2.0s,
-``MaxDistance``/``MinDistance`` 425/200, ``DashSpeed`` 1350) -- no
-damage node exists for E to price. E now rides an explicit,
-champion-authored no-damage row via ``module_helpers.no_damage``
-(Kalista P/R, Jayce P precedent) instead of the compiler's generic
-fallback text.
+R (The Culling) prices the full 3-second channel, 22 shots of the cached
+"Physical Damage Per Shot" row, the cache carrying only that row and the prose
+shot count.  Its crit-chance-scaled extra shots are zero at 0% crit and are
+not modeled for crit builds.
+P (Lightslinger) is the engine's double-shot pattern: after an ability cast
+the next basic attack within 3.5 seconds fires a second shot at 50/55/60% AD
+by level band, 1 to 6, 7 to 12 and 13 to 18.  The fight prices one second shot
+per basic attack the rotation fires, because in the standard weave every auto
+follows a cast, and the second shot applies on-hit effects and can crit.
+Q and W are single-instance reads.
+E (Relentless Pursuit) is ``no_damage``: all three cached effect entries carry
+empty ``leveling`` arrays and the binary's ``LucianE`` has no calculations at
+all, only dash and cooldown-refund parameters.
 """
 
 from typing import Any

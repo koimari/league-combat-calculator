@@ -1,42 +1,20 @@
-"""Xin Zhao — CP10.10 full-entry-reviewed packet module.
+"""Xin Zhao: full-entry-reviewed packet module.
 
-Row-selection fix.  The generated packet picked, for both Q and W, a
-single-instance row where the cached entry also carries the Total the
-wiki computes for one cast, so this module reads the Total instead:
-
-- Q (Three Talon Strike) "empowers his next three basic attacks ... to
-  each have an uncancellable windup, deal bonus physical damage".  The
-  packet priced "Bonus Physical Damage" (15/30/45/60/75 + 40% bonus AD),
-  one of the three; the cache's "Total Bonus Physical Damage" row is
-  45/90/135/180/225 + 120% bonus AD — exactly three of them.
-- W (Wind Becomes Lightning) "unleashes 4 slashes ... each dealing
-  physical damage ... he then thrusts his spear in a line ... dealing
-  physical damage".  The packet priced "Physical Damage per Slash"
-  (7.5/10/12.5/15/17.5 + 7.5% AD), one slash of four and no thrust; the
-  cache's "Total Physical Damage" row is 80/125/170/215/260 + 120% AD
-  + 65% AP == "Slash Total Physical Damage" + "Thrust Physical Damage".
-
-Each row is now several hits, so neither certifies a cast-boundary single
-hit.  W declares its one aggregate hit at the cast so its reviewed slow
-still reaches the event ledger; the slashes' sourced cadence ("over the
-first 0.15 seconds of the cast time") and the thrust's offset behind the
-remaining cast time are left for the timing wave.
-
-Both rows carry a sourced crit clause, and they are different axes — see
-``_Q_CRIT_EFFECTIVENESS`` and ``_W_THRUST_CRIT_CHANCE_AMP``.
-
-Coverage-frontier rider: P (Determination) is the every-third-attack
-bonus — "Xin Zhao's basic attacks on-hit ... generate a stack of
-Determination, stacking up to 3 times.  The third stack consumes them
-all to deal 15% / 30% / 45% / 60% (based on level) AD (+ 5% / 10% / 15%
-/ 20% (based on level) AP) bonus physical damage and heal Xin Zhao for
-2% / 3.5% / 5% (based on level) of his maximum health (+ 40% / 50% / 70%
-(based on level) AP)."  The cached P entry carries no leveling row at
-all, so the bands are module constants.  W's first slash hit and thrust
-each generate a stack too; the kit-wide ability-hit counter would count E
-and R as well, so the row names its stack source per slot instead
-(``ability_stack_slots``: ``{"W": 2}``).  The heal is paid by the Xin Zhao
-healing rule off the same on-hit events.
+Q and W each read the cache's Total row rather than a single instance.  Q
+(Three Talon Strike) empowers three basic attacks, so "Total Bonus Physical
+Damage" is exactly three of "Bonus Physical Damage"; W (Wind Becomes
+Lightning) is four slashes and a thrust, so "Total Physical Damage" is the
+slash total plus the thrust.
+Neither row is one hit, so neither certifies a cast-boundary single hit.  W
+declares its one aggregate hit at the cast so its reviewed slow still reaches
+the event ledger.  Both rows carry a sourced crit clause, on different axes:
+see ``_Q_CRIT_EFFECTIVENESS`` and ``_W_THRUST_CRIT_CHANCE_AMP``.
+P (Determination) is the every-third-attack bonus: three on-hit stacks are
+consumed for level-banded bonus physical damage and a heal the Xin Zhao
+healing rule pays off the same events.  The cached P entry carries no leveling
+row, so the bands are module constants.  W's first slash and its thrust each
+generate a stack, and a kit-wide ability-hit counter would count E and R too,
+so the row names its stack source per slot through ``ability_stack_slots``.
 """
 
 from typing import Any

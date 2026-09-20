@@ -1,43 +1,22 @@
-"""Azir — slot map for the archetype engine.
+"""Azir: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Shurima's Legacy) is deliberately absent: it raises a Sun Disc
-  turret from a destroyed enemy tower — a separate entity with its own
-  HP and decay, out of scope for a target-dummy fight. The JSON also
-  has zero leveling data for it and misparses its damageType as
-  PHYSICAL (it deals magic). Skipped, never hardcoded.
-- Q (Conquering Sands) is a pinned attribute read: one damage instance
-  per cast REGARDLESS of soldier count (in-game rule), so it must never
-  read the ``soldier_count`` option.
-- W (Arise!) is the custom centerpiece. The JSON mixes an 18-value
-  per-level modifier with two 5-value per-rank modifiers inside ONE
-  "Magic Damage" leveling entry — no generic extractor can combine
-  them. The soldier damage is emitted as an ``auto_attack_override``
-  that REPLACES Azir's autos: magic damage on his own attack timer,
-  cannot crit, applies on-hit and proc-style item effects (spellblade,
-  energized, Kraken-style stack procs) at 50% effectiveness — except
-  Sundered Sky, which does not apply at all — and +25% damage per
-  soldier past the first (those extra instances apply no on-hit). The W entry
-  itself deals no direct damage — all soldier
-  damage rides the auto stream, never a cast row too (no double
-  count). The "Per-Level Scaling" leveling entry (20-100%) is the
-  reduced damage to targets BEYOND the closest in the spear line —
-  single-target sim ignores it; it must never become a damage row.
-  W stocks 2 charges: rechargeRate is the cooldown, cast counts are
-  never pre-multiplied (Amumu charge pattern).
-- E (Shifting Sands) pins the "Magic Damage" attribute because the
-  JSON duplicates identical values under "Shield Strength" — exactly
-  one damage row is emitted; the Shield Strength row feeds the
-  ally-support scanner, which grants the self shield at the cast
-  (E8c).
-- R (Emperor's Divide) pins "Magic Damage"; effect[0] carries geometry
-  rows ("Width" with units of " soldiers") that must never parse as
-  damage or scaling values.
-
-P is wired nowhere: it carries ``kind: "no_damage"`` in MODULE_COVERAGE and
-in the pinned reviewed packet (static/reviewed-packets.json), and
-``parse_champion_abilities`` emits no passive key for Azir at all, so the
-fight ledger never invents an enemy hit for it.
+W (Arise!) is the centrepiece.  One "Magic Damage" entry mixes an 18-value
+per-level modifier with two 5-value per-rank ones, which no generic extractor
+combines.  The soldier damage is an ``auto_attack_override`` that REPLACES
+Azir's autos: magic on his own timer, cannot crit, applies on-hit and proc
+item effects at 50% effectiveness except Sundered Sky, and +25% per soldier
+past the first, those extras applying no on-hit.  W deals no cast damage, its
+"Per-Level Scaling" row is the reduced damage to targets beyond the closest
+and must never become a damage row, and its two charges make ``rechargeRate``
+the cooldown.
+Q (Conquering Sands) is one damage instance per cast whatever the soldier
+count, so it must never read ``soldier_count``.
+E (Shifting Sands) pins "Magic Damage" because the cache duplicates identical
+values under "Shield Strength", which feeds the ally-support scanner instead.
+R (Emperor's Divide) pins "Magic Damage"; its ``effects[0]`` geometry rows
+carry units of " soldiers" and must never parse as damage or scaling.
+P (Shurima's Legacy) raises a Sun Disc turret, a separate entity outside a
+duel, and is wired nowhere: no leveling, and the parse emits no passive key.
 """
 
 from typing import Any

@@ -1,43 +1,22 @@
-"""Corki — slot map for the archetype engine.
+"""Corki: slot map for the archetype engine.
 
-Why each slot is non-generic:
-- P (Hextech Munitions) has NO leveling data at all — ``effects[0]``
-  carries an empty ``leveling`` list, so the generic path emitted
-  nothing. The 20% total-AD true damage on every basic attack lives in
-  the description text alone and is a tested constant here (the Gnar
-  Mega-form precedent). It is emitted as ``basic_attack_true_ratio``
-  (and ``spellblade_bonus_true_ratio`` for the item rider) because it
-  must ride the swing's PRE-mitigation damage: that is what makes it
-  crit-multiplied, and it is what the wiki's spellblade special case
-  measures too.
-- Q (Phosphorus Bomb) is the one slot the generic path already read
-  correctly; it is pinned here so the slot map is the whole kit.
-- W (Valkyrie) keeps its damage in ``effects[1]`` (``effects[0]`` is the
-  dash) and the classifier picks "Magic Damage Per Tick". The modeled
-  hit is ONE blazing patch — the JSON's "Total Magic Damage" spread over
-  5 ticks in 2.5s — scaled by how long the target stays in it, and it
-  must declare ``dot_duration`` so item burns keep refreshing through
-  the patch instead of ending at the cast.
-- E (Gatling Gun) needs "Total Physical Damage" (16 ticks over 4s) for
-  the same reason, plus a flat armor AND magic-resist shred the generic
-  path cannot express at all: one stack per tick to a cap of 4.
-- R (Missile Barrage) is a charge/ammo ultimate with a cadence: stored
-  charges plus recharge (accelerated by basic attacks) decide how many
-  missiles fly, and every third one is a Big One at double damage. The
-  generic path read the 2s inter-cast cooldown as the ability cooldown
-  and never saw the Big One entry (``effects[3]``).
-
-Shred rule, deliberately deviating from Kog'Maw Q
--------------------------------------------------
-The engine's standing rule is "a shred never boosts the ability that
-applied it" — written for instant single-hit shreds. Gatling Gun applies
-its stacks one per tick across four seconds, so its own LATER ticks do
-land against the stacks its earlier ticks applied. Tick k is priced
-against k-1 stacks (the per-tick reading of the same rule) and ticks 5
-onward against the full four. Do not "fix" this back to a single
-post-ability application.
-
-All values come from the champion JSON except the constants below.
+P (Hextech Munitions) has no leveling data at all, so its 20% total-AD true
+damage on every basic attack is a tested constant read from description text.
+It is emitted as ``basic_attack_true_ratio`` and ``spellblade_bonus_true_ratio``
+so it rides the swing's PRE-mitigation damage, which is what makes it
+crit-multiplied and what the wiki's spellblade special case measures.
+W (Valkyrie) keeps its damage in ``effects[1]``, the dash being ``effects[0]``.
+The modeled hit is one blazing patch scaled by how long the target stays in
+it, and it declares ``dot_duration`` so item burns refresh through the patch.
+E (Gatling Gun) needs "Total Physical Damage", 16 ticks over 4 seconds, plus a
+flat armor and magic-resist shred of one stack per tick to a cap of four.
+R (Missile Barrage) is a charge ultimate: stored charges plus a recharge that
+basic attacks accelerate decide how many missiles fly, every third is a Big
+One at double damage, and the cached 2s inter-cast gap is not its cooldown.
+E's shred deliberately departs from the Kog'Maw rule that a shred never boosts
+its own ability, which is written for instant single-hit shreds.  Gatling Gun
+applies one stack per tick over four seconds, so tick k is priced against k-1
+stacks and ticks five onward against the full four.
 """
 
 import math

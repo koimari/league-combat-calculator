@@ -1,42 +1,20 @@
-"""Smolder — CP10.7 full-entry-reviewed packet module (E9-2 fixes).
+"""Smolder: full-entry-reviewed packet module.
 
-E9-2 gap fixes over the packet module:
-- Q (Super Scorcher Breath) is "increased by 0% : 75% (+ 0% : 22.5%)
-  (based on critical strike chance)" — the fireball's damage scales with
-  the holder's crit chance (0.75% + 0.225% per 1% crit), so the packet's
-  reviewed base (flat + summed AD ratios) is multiplied by
-  ``1 + 0.975 x crit_chance``.
-- P (Dragon Practice) tier 3 (225 stacks): Q hits set the enemy on fire
-  for 3 seconds, dealing true damage equal to 2.5% per 100 bonus AD
-  (+ 0.5% per 100 Dragon Practice stacks) of the target's maximum
-  health over the duration.  The burn rides Q as a post-hit proc
-  (one application per Q hit) priced from the ``p_stacks`` option
-  (default 225 = the tier-3 threshold, matching the Sion Q / Kled R
-  fully-charged default convention).
-- P itself stays a documented zero-damage row whose detail ties the
-  stack boundary to the burn; the 25% : 55% (+ 0% : 9% crit) stack-
-  scaled bonus magic damage on basic abilities and the 6.5% burn
-  execution are documented boundaries, not priced.
-- E flight utility remains documented out.
-
-Row-selection fix (W and E).  Both generated packets priced one leg of a
-multi-hit cast where the cache also carries the cast's total:
-- W (Achooo!) "deals physical damage to enemies hit ... Hitting an enemy
-  champion creates an explosion that deals physical damage to nearby
-  enemies".  The packet priced "Glob Physical Damage"
-  (60/70/80/90/100 + 60% bonus AD) alone; against a champion both land,
-  and the cache's "Total Physical Damage On Champion Hit" row
-  (70/105/140/175/210 + 110% bonus AD + 80% AP) is glob + explosion.
-- E (Flap, Flap, Flap) "fires up to 5 (+ 1 per 100 Dragon Practice
-  stacks) bolts ... dealing physical damage with each hit".  The packet
-  priced "Physical Damage per Hit" (10/15/20/25/30 + 30% AD), one bolt;
-  the cache's "Minimum Total Physical Damage" row
-  (50/75/100/125/150 + 150% AD) is the five-bolt floor at every rank.
-
-Neither row is one hit any more, so both declare their aggregate at the
-cast boundary rather than certifying a single hit; the explosion's delay
-and the bolts' cadence across the 1.25-second flight are left for the
-timing wave, as is the stack-scaled sixth bolt onward.
+Q (Super Scorcher Breath) scales with the holder's crit chance, 0.75% plus
+0.225% per 1%, so the reviewed base is multiplied by
+``1 + 0.975 x crit_chance``.
+P (Dragon Practice) tier 3 sets Q's target on fire for 3 seconds of true
+damage worth 2.5% per 100 bonus AD (+ 0.5% per 100 stacks) of maximum health.
+The burn rides Q as a post-hit proc, one application per Q hit, priced from
+``p_stacks``, default 225, the tier-3 threshold.  P's own row is zero damage;
+its stack-scaled bonus magic on basic abilities and its 6.5% execution are
+documented boundaries, not priced.
+W and E each read the cache's total rather than one leg.  W (Achooo!) lands
+both glob and explosion on a champion, so "Total Physical Damage On Champion
+Hit" is the pair; E (Flap, Flap, Flap) fires at least five bolts, so "Minimum
+Total Physical Damage" is that floor.  Neither is one hit, so both declare
+their aggregate at the cast boundary, and the stack-scaled sixth bolt onward
+stays unpriced.
 """
 
 from dataclasses import replace

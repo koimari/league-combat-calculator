@@ -1,44 +1,16 @@
-"""Malzahar — CP10.4 full-entry-reviewed packet module.
+"""Malzahar: full-entry-reviewed packet module.
 
-E (Malefic Visions) and R (Nether Grasp) override the batch packet with
-full-total DoT pricing: the packets carried the PER-TICK rows, so the
-fight priced one tick of each multi-tick ability.  Both totals are
-sourced:
-
-- E: "Total Magic Damage" 80/115/150/185/220 is exactly 16x the "Magic
-  Damage Per Tick" row (5/7.1875/9.375/11.5625/13.75); the wiki text
-  ("dealing magic damage every 0.25 seconds over 4 seconds") confirms
-  the 16-tick cadence.
-- R: "Total Magic Damage" 125/200/275 is exactly 10x the "Magic Damage
-  Per Tick" row (12.5/20/27.5); the wiki text ("channels for up to 2.5
-  seconds ... every 0.25 seconds") confirms the 10-tick cadence.
-
-W (Void Swarm) overrides the batch packet's single-attack price with
-the sourced voidling swarm: the W cast itself deals no direct damage
-(the packet's 39 was one voidling attack priced as the whole ability),
-and the voidling attacks ride a separate ``voidling_attacks`` proc row.
-The per-attack formula and the attack-speed growth are sourced from the
-wiki's Malzahar pets entry and the ability JSON:
-- Per attack: level-based 5-64.5 (the 18-value per-level array) + rank
-  base 12-20 + 40% bonus AD + 20% AP magic.
-- Attack speed: 0.665*(1 + 0.02*(level-1)*(0.7025+0.0175*(level-1))),
-  so ~0.891 AS at level 18 (~1.12s per attack).
-- Summoning: the first Voidling appears after a 0.5s delay, each extra
-  Voidling 0.5s later (the ability description); voidlings attack the
-  target from their summon time.
-
-P (Void Shift) is a periodic 90% damage reduction with crowd-control
-immunity until it breaks — pure defensive self-state, no enemy damage.
-The pinned packet already declares it ``kind: "no_damage"`` (a sourced
-zero-damage row), so it was never a gap in enemy-damage coverage;
-MODULE_COVERAGE was simply stale, still reading "out_of_scope" for a
-slot that already emits its state row. Roadmap session 4 batch D
-(2026-08-21) reclassifies P to "no_damage" (the Cassiopeia/Cho'Gath/
-Jarvan precedent) rather than leaving an already-covered passive
-misreported as a gap. P is not a cast slot (``rotation_resolver`` only
-schedules Q/Q2/W/E/R), so this is a documentation-only fix with zero
-fight-computation change.  (Damage *taken* remains an axis the engine
-does not have.)
+E (Malefic Visions) and R (Nether Grasp) price the full-total DoT rows, never
+the per-tick ones: E's "Total Magic Damage" is exactly 16 ticks at 0.25s over
+4 seconds, and R's is 10 ticks over its 2.5-second channel.
+W (Void Swarm) deals no direct damage on the cast.  The voidlings ride a
+separate ``voidling_attacks`` proc row, each attack being the 18-value
+per-level array plus the ranked base, 40% bonus AD and 20% AP as magic.  Their
+attack speed is 0.665 grown by 2% per level on the standard growth curve, and
+the first appears 0.5s after the cast with each further one 0.5s later.
+P (Void Shift) is a ``no_damage`` row: its periodic 90% damage reduction and
+crowd-control immunity are self-state, and damage taken is an axis this engine
+does not carry.
 """
 
 from __future__ import annotations
