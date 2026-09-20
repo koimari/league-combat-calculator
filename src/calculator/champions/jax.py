@@ -7,11 +7,11 @@ from typing import Any
 
 from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
-from .defense_window_options import E_WINDOW
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import ability_slot, no_damage, ranked_slot
 from .shared_mechanics import empowered_auto_entry
+from .shared_option_keys import E_WINDOW
 from .slot_control import with_control
 from .slot_entries import damage_entry
 from .slot_extract import (

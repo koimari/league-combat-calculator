@@ -37,6 +37,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import ability_slot, missing_hp_fraction, ranked_slot
+from .shared_option_keys import TARGET_MISSING_HP_OPTION
 from .slot_control import with_control
 from .slot_entries import ability_on_hit_entry, damage_entry
 from .slot_extract import (
@@ -321,7 +322,7 @@ _endless_banquet_onhit.phase = ONHIT
 
 OPTIONS: list[dict[str, Any]] = [
     int_option(
-        "target_missing_hp_pct",
+        TARGET_MISSING_HP_OPTION,
         50,
         minimum=0,
         maximum=100,

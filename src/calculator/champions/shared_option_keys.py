@@ -1,8 +1,8 @@
-"""The option keys a champion defensive window is driven by, named once.
+"""Every champion option key whose declaration and its read sit in different files.
 
-A champion module declares these rows and `projectile_defense` reads them,
-so the key spelling is a contract between two files: it lives here, and
-both sides import the name rather than repeating the string.
+One module declares the OPTIONS row and another consults it, so the
+spelling is a contract: it lives here and both sides import the name.
+A key only its own module reads is declared there, not here.
 """
 
 from __future__ import annotations
@@ -32,10 +32,19 @@ E_WINDOW = _window("E")
 #: The window a slot's options drive, for a reader holding the slot letter.
 WINDOW_OPTIONS = MappingProxyType({"W": W_WINDOW, "E": E_WINDOW})
 
-# Which incoming events a window is asked to stop. Each spelling is one
-# champion's own, so the declaring module and its reader share this line.
+# Which incoming events a defensive window is asked to stop.
 W_BLOCKED_SKILLSHOTS = "w_blocked_skillshots"
 W_BLOCKED_SOURCES = "w_blocked_sources"
 W_BLOCKED_EVENT_IDS = "w_blocked_event_ids"
 E_BLOCKED_SKILLSHOTS = "e_blocked_skillshots"
 E_BLOCKED_EVENT_IDS = "e_blocked_event_ids"
+
+#: How many times a per-fight passive procs (`slotlib.proc_damage`).
+PASSIVE_PROCS_OPTION = "passive_procs"
+
+#: The share of the target's health already gone
+#: (`module_helpers.missing_hp_fraction`).
+TARGET_MISSING_HP_OPTION = "target_missing_hp_pct"
+
+#: Yasuo's and Yone's shared Q stack count (`yasuo_yone`).
+GATHERING_STORM_OPTION = "q_gathering_storm"

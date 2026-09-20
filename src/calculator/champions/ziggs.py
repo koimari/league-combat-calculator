@@ -30,6 +30,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import ranked_slot
+from .shared_option_keys import PASSIVE_PROCS_OPTION
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .slotlib import by_option, proc_damage, simple_damage
@@ -66,7 +67,7 @@ def _short_fuse_damage(ctx: SlotCtx, ability: dict[str, Any]) -> float:
 _short_fuse_packet = proc_damage(
     per_proc=_short_fuse_damage,
     dmg_type="magic",
-    count_option="passive_procs",
+    count_option=PASSIVE_PROCS_OPTION,
     default_count=2,
     phase_order_events=True,
 )
@@ -93,7 +94,7 @@ def _short_fuse(ctx: SlotCtx) -> dict[str, Any] | None:
         "cooldown": float(cooldown_values[0]),
         "cooldown_reduction_per_cast": _short_fuse_refund_seconds(ability, ctx.level),
         "armed_at_start": True,
-        "requested": ctx.options.get("passive_procs") is not None,
+        "requested": ctx.options.get(PASSIVE_PROCS_OPTION) is not None,
     }
     return entry
 
@@ -126,7 +127,7 @@ def _hexplosive_minefield(
 
 OPTIONS = [
     int_option(
-        "passive_procs",
+        PASSIVE_PROCS_OPTION,
         2,
         minimum=0,
         maximum=10,

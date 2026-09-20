@@ -33,6 +33,7 @@ from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import ability_slot
 from .packet_module import build_packet_module
+from .shared_option_keys import PASSIVE_PROCS_OPTION
 from .slot_extract import ability_name, find_named_leveling, sum_modifiers
 
 # Sourced bleed cadence (wiki P): "5 : 18.97 (based on level)
@@ -58,8 +59,8 @@ def _blades_end(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """
     if ctx.option("auto_attacks_only"):
         return None
-    count = max(0, int(ctx.option("passive_procs")))
-    requested = ctx.options.get("passive_procs") is not None
+    count = max(0, int(ctx.option(PASSIVE_PROCS_OPTION)))
+    requested = ctx.options.get(PASSIVE_PROCS_OPTION) is not None
     if count <= 0 and requested:
         return None
 
@@ -153,7 +154,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 OPTIONS = [
     *list(OPTIONS),
     int_option(
-        "passive_procs",
+        PASSIVE_PROCS_OPTION,
         1,
         minimum=0,
         maximum=10,

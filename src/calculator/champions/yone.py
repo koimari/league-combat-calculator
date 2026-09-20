@@ -30,6 +30,7 @@ from .engine import SlotCtx
 from .inputs import int_option
 from .module_helpers import ability_slot, no_damage, ranked_slot
 from .packet_module import build_packet_module
+from .shared_option_keys import GATHERING_STORM_OPTION
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
@@ -227,7 +228,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 OPTIONS = [
     int_option(
-        "q_gathering_storm",
+        GATHERING_STORM_OPTION,
         0,
         minimum=0,
         maximum=2,

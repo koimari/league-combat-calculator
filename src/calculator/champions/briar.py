@@ -56,6 +56,7 @@ from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option, target_stat
 from .module_helpers import ability_slot, missing_hp_fraction, ranked_slot
+from .shared_option_keys import TARGET_MISSING_HP_OPTION
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
@@ -456,7 +457,7 @@ OPTIONS: list[dict[str, Any]] = [
         rotation={"role": "self_state", "slot": "E"},
     ),
     int_option(
-        "target_missing_hp_pct",
+        TARGET_MISSING_HP_OPTION,
         50,
         minimum=0,
         maximum=100,

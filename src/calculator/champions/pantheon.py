@@ -30,11 +30,11 @@ from ..binary_roots import (
     spell_object,
 )
 from .contract_vocabulary import coverage
-from .defense_window_options import E_BLOCKED_SKILLSHOTS, E_WINDOW
 from .engine import SlotCtx
 from .inputs import bool_option, float_option
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
+from .shared_option_keys import E_BLOCKED_SKILLSHOTS, E_WINDOW
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 

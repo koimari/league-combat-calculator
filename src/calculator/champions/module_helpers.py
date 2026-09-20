@@ -16,6 +16,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..stat_formulas import effective_cooldown
 from .engine import AMP, DAMAGE, ONHIT, SlotCtx, SlotParser
+from .shared_option_keys import TARGET_MISSING_HP_OPTION
 from .slot_entries import MODULE_FORMULA_ZERO, STEROID_ZERO, damage_entry, on_hit_entry
 from .slot_extract import (
     ability_name,
@@ -275,7 +276,7 @@ def clamp(value: float, lower: float, upper: float) -> float:
 def missing_hp_fraction(ctx: SlotCtx) -> float:
     """The shared ``target_missing_hp_pct`` option as a 0..1 fraction."""
 
-    return clamp(float(ctx.option("target_missing_hp_pct")), 0.0, 100.0) / 100.0
+    return clamp(float(ctx.option(TARGET_MISSING_HP_OPTION)), 0.0, 100.0) / 100.0
 
 
 def buff_window_share(ctx: SlotCtx, duration: float) -> float:

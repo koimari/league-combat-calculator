@@ -16,6 +16,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import float_option, int_option
 from .module_helpers import ability_slot, named_damage, ranked_slot
+from .shared_option_keys import PASSIVE_PROCS_OPTION
 from .slot_entries import damage_entry
 from .slot_extract import (
     ability_name,
@@ -57,7 +58,7 @@ def _colossal_smash(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | N
     the cached 3 off it, so the walk over the cast and swing schedules
     answers it (``champions/armed_procs.py``).
     """
-    conversions = max(0, int(ctx.option("passive_procs")))
+    conversions = max(0, int(ctx.option(PASSIVE_PROCS_OPTION)))
     total_modified_raw = extract_named(
         ability,
         "Bonus Magic Damage",
@@ -74,7 +75,7 @@ def _colossal_smash(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | N
             "cooldown": extract_cooldown(ability, ctx.rank_for()),
             "cooldown_reduction_per_cast": _SMASH_REDUCTION.value(ability),
             "armed_at_start": True,
-            "requested": ctx.options.get("passive_procs") is not None,
+            "requested": ctx.options.get(PASSIVE_PROCS_OPTION) is not None,
         },
         "auto_attack_conversion": {
             "name": ability_name(ability),
@@ -205,7 +206,7 @@ _heros_entrance = named_damage(
 
 OPTIONS: list[dict[str, Any]] = [
     int_option(
-        "passive_procs",
+        PASSIVE_PROCS_OPTION,
         1,
         minimum=0,
         maximum=10,

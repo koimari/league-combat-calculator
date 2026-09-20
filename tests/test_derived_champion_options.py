@@ -18,7 +18,15 @@ from pathlib import Path
 
 import pytest
 
-from src.calculator.champions import champion_options_meta_map
+from src.calculator.champions import champion_options_meta_map, shared_option_keys
+
+#: A key more than one module declares is imported by name, so the scan
+#: resolves those names as well as the literals.
+SHARED_KEYS = {
+    name: value
+    for name, value in vars(shared_option_keys).items()
+    if isinstance(value, str) and not name.startswith("_")
+}
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MODULES = REPO_ROOT / "src" / "calculator" / "champions"
@@ -72,9 +80,14 @@ def _option_get_key(node: ast.AST) -> str | None:
         return None
     if not (isinstance(func.value, ast.Attribute) and func.value.attr == "options"):
         return None
-    if len(node.args) != 1 or not isinstance(node.args[0], ast.Constant):
+    if len(node.args) != 1:
         return None
-    key = node.args[0].value
+    argument = node.args[0]
+    if isinstance(argument, ast.Name):
+        return SHARED_KEYS.get(argument.id)
+    if not isinstance(argument, ast.Constant):
+        return None
+    key = argument.value
     return key if isinstance(key, str) else None
 
 

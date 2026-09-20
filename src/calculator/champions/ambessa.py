@@ -38,9 +38,15 @@ from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
 from .module_helpers import ability_slot, delayed
 from .shared_mechanics import per_level_row
+from .shared_option_keys import PASSIVE_PROCS_OPTION
 from .slot_entries import attach_self_shield
 from .slot_extract import extract_cast_time, find_named_leveling, sum_modifiers
-from .slotlib import by_option, proc_damage, simple_damage, stat_buff
+from .slotlib import (
+    by_option,
+    proc_damage,
+    simple_damage,
+    stat_buff,
+)
 from .source_receipts import load_champion_sources
 
 # Rooted in AmbessaW.Shield_Duration; the cached ability description
@@ -179,7 +185,7 @@ def _drakehounds_step(ctx: SlotCtx) -> dict[str, Any] | None:
         "per_cast": 1,
         "stack_seconds": stack_seconds,
         "armed_at_start": False,
-        "requested": ctx.options.get("passive_procs") is not None,
+        "requested": ctx.options.get(PASSIVE_PROCS_OPTION) is not None,
     }
     # Wiki revision 4038211 supplies the 1/7/13 thresholds. The locally
     # ingested champion JSON carries the three values in the passive prose.
@@ -233,7 +239,7 @@ OPTIONS = [
         rotation={"role": "irrelevant", "slot": "Q"},
     ),
     int_option(
-        "passive_procs",
+        PASSIVE_PROCS_OPTION,
         4,
         minimum=0,
         maximum=20,

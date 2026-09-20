@@ -22,6 +22,7 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .inputs import int_option
 from .module_helpers import level_row, ranked_slot
+from .shared_option_keys import PASSIVE_PROCS_OPTION
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
@@ -88,7 +89,7 @@ def _perfect_execution(
 
 OPTIONS = [
     int_option(
-        "passive_procs",
+        PASSIVE_PROCS_OPTION,
         4,
         minimum=0,
         maximum=20,
@@ -111,7 +112,7 @@ SLOTS = {
     "P": proc_damage(
         per_proc=level_row("Bonus Magic Damage"),
         dmg_type="magic",
-        count_option="passive_procs",
+        count_option=PASSIVE_PROCS_OPTION,
         phase_order_events=True,
     ),
 }

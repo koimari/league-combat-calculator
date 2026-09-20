@@ -16,6 +16,7 @@ from typing import Any
 
 from ..ability_spec import DamagePart, ZeroPolicy
 from .attribute_classifier import classify_damage_type
+from .shared_option_keys import PASSIVE_PROCS_OPTION
 from .slot_context import BUFF, DAMAGE, SlotCtx, SlotParser
 from .slot_control import extract_recharge, resolve_casts, resolve_source
 from .slot_entries import MODULE_FORMULA_ZERO, STEROID_ZERO, damage_entry, on_hit_entry
@@ -320,7 +321,7 @@ def proc_damage(
     per_proc: ProcDamageResolver,
     dmg_type: str,
     *,
-    count_option: str = "passive_procs",
+    count_option: str = PASSIVE_PROCS_OPTION,
     default_count: int = 4,
     emit_at_zero: bool = False,
     name: str | None = None,

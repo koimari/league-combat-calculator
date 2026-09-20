@@ -38,10 +38,10 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..stat_formulas import effective_cooldown
-from .defense_window_options import E_BLOCKED_EVENT_IDS, E_BLOCKED_SKILLSHOTS, E_WINDOW
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option
 from .module_helpers import ability_slot, at_level, ranked_slot
+from .shared_option_keys import E_BLOCKED_EVENT_IDS, E_BLOCKED_SKILLSHOTS, E_WINDOW
 from .slot_cc import CC_PER_PART
 from .slot_control import with_control
 from .slot_entries import damage_entry

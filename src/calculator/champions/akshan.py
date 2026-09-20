@@ -55,6 +55,7 @@ from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import champion_stat, int_option
 from .module_helpers import ability_slot, at_level, no_damage_slot, ranked_slot
+from .shared_option_keys import PASSIVE_PROCS_OPTION
 from .slot_entries import attach_self_shield, damage_entry
 from .slot_extract import (
     ability_name,
@@ -337,7 +338,7 @@ def _dirty_fighting(ctx: SlotCtx) -> dict[str, Any] | None:
             "stacks_from_ability_hits": True,
             "stack_seconds": stack_seconds,
             "armed_at_start": False,
-            "requested": ctx.options.get("passive_procs") is not None,
+            "requested": ctx.options.get(PASSIVE_PROCS_OPTION) is not None,
         }
     if passive is not None:
         attach_self_shield(
@@ -379,7 +380,7 @@ _going_rogue = no_damage_slot(
 
 OPTIONS = [
     int_option(
-        "passive_procs",
+        PASSIVE_PROCS_OPTION,
         3,
         minimum=0,
         maximum=20,

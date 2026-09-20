@@ -59,6 +59,7 @@ from .healing_contract import SelfHealCtx, self_healing_rule
 from .module_helpers import ability_slot, missing_hp_fraction, named_damage, ranked_slot
 from .packet_module import build_packet_module
 from .shared_mechanics import damage_reduction_window
+from .shared_option_keys import TARGET_MISSING_HP_OPTION
 from .slot_cc import CC_PER_PART
 from .slot_entries import on_hit_entry
 from .slot_extract import ability_name, extract_named
@@ -276,7 +277,7 @@ OPTIONS.append(
 )
 OPTIONS.append(
     {
-        "key": "target_missing_hp_pct",
+        "key": TARGET_MISSING_HP_OPTION,
         "type": "int",
         "default": 50,
         "min": 0,

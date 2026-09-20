@@ -67,6 +67,7 @@ from .engine import SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import int_option
 from .packet_module import build_packet_module
+from .shared_option_keys import PASSIVE_PROCS_OPTION
 from .slot_extract import ability_name
 
 PACKET_SHA256 = "2c402273f8fc3938c635dbebea26dc7e22901e8a0a07e00ef933ab0d12d77b98"
@@ -147,7 +148,7 @@ def _petricite_burst(packet_passive):
             return None
         name = ability_name(ability)
         attacks = min(
-            max(int(ctx.option("passive_procs")), 0),
+            max(int(ctx.option(PASSIVE_PROCS_OPTION)), 0),
             _MAX_UNSHACKLED_STACKS,
         )
         total_ad = ctx.stat("attack_damage")
@@ -163,7 +164,7 @@ def _petricite_burst(packet_passive):
             "per_cast": 1,
             "stack_seconds": _UNSHACKLED_STACK.value(ability),
             "armed_at_start": False,
-            "requested": ctx.options.get("passive_procs") is not None,
+            "requested": ctx.options.get(PASSIVE_PROCS_OPTION) is not None,
         }
         entry["auto_attack_conversion"] = {
             "name": name,
@@ -215,7 +216,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 OPTIONS = [
     *list(OPTIONS),
     int_option(
-        "passive_procs",
+        PASSIVE_PROCS_OPTION,
         0,
         minimum=0,
         maximum=_MAX_UNSHACKLED_STACKS,

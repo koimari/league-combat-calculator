@@ -9,11 +9,11 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..damage_event_row import event_damage as _row_damage
-from .defense_window_options import W_BLOCKED_SKILLSHOTS, W_WINDOW
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option
 from .module_helpers import ability_slot, no_damage, no_damage_slot, ranked_slot
+from .shared_option_keys import W_BLOCKED_SKILLSHOTS, W_WINDOW
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources

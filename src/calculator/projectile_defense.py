@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from .ability_atoms import atom_receipt, required_ability_atom
-from .champions.defense_window_options import (
+from .champions.shared_option_keys import (
     E_BLOCKED_EVENT_IDS,
     E_BLOCKED_SKILLSHOTS,
     E_WINDOW,

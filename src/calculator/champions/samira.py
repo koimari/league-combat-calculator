@@ -37,12 +37,12 @@ from typing import Any
 
 from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS
-from .defense_window_options import W_BLOCKED_SKILLSHOTS, W_WINDOW
 from .engine import ONHIT, SlotCtx
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import ability_slot, at_level, no_damage
 from .packet_module import build_packet_module
 from .shared_mechanics import capped_option
+from .shared_option_keys import W_BLOCKED_SKILLSHOTS, W_WINDOW
 from .slot_cc import CC_PER_PART
 from .slot_entries import HitRider, with_hit_rider
 from .slot_extract import PER_LEVEL_SCALING, ability_name, extract_value

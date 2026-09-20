@@ -11,7 +11,7 @@ from .ability_atoms import (
     ranked_ability_atom_value,
     required_ability_atom,
 )
-from .champions.defense_window_options import (
+from .champions.shared_option_keys import (
     E_BLOCKED_SKILLSHOTS,
     W_BLOCKED_EVENT_IDS,
     W_BLOCKED_SKILLSHOTS,

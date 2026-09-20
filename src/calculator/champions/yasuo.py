@@ -36,11 +36,16 @@ from typing import Any
 from ..ability_prose import CachedSentence, extract_description_duration
 from ..ability_spec import DamagePart
 from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS, coverage
-from .defense_window_options import W_BLOCKED_EVENT_IDS, W_BLOCKED_SKILLSHOTS, W_WINDOW
 from .engine import SlotCtx
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import ability_slot, no_damage, ranked_slot
 from .packet_module import build_packet_module
+from .shared_option_keys import (
+    GATHERING_STORM_OPTION,
+    W_BLOCKED_EVENT_IDS,
+    W_BLOCKED_SKILLSHOTS,
+    W_WINDOW,
+)
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
@@ -260,7 +265,7 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 OPTIONS = [
     int_option(
-        "q_gathering_storm",
+        GATHERING_STORM_OPTION,
         0,
         minimum=0,
         maximum=2,
