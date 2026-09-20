@@ -363,10 +363,6 @@ AUTHORED_DECLARATION|stats.py|calculate_total_stats|dict.get|"ability_haste" 1
 AUTHORED_DECLARATION|stats.py|calculate_total_stats|dict.get|"ability_power" 2
 CACHED_SOURCE_ROW|champions/aatrox.py|derive_self_healing|dict.get|"description" 1
 CACHED_SOURCE_ROW|champions/aatrox.py|derive_self_healing|dict.get|"effects" 1
-CACHED_SOURCE_ROW|champions/akshan.py|_extract_double_shot_ratio|dict.get|"description" 1
-CACHED_SOURCE_ROW|champions/akshan.py|_extract_double_shot_ratio|dict.get|"effects" 1
-CACHED_SOURCE_ROW|champions/akshan.py|_parse_passive_proc_damage|dict.get|"description" 1
-CACHED_SOURCE_ROW|champions/akshan.py|_parse_passive_proc_damage|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"attribute" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"effects" 1
 CACHED_SOURCE_ROW|champions/alistar.py|_extract_e_on_hit_damage|dict.get|"leveling" 1

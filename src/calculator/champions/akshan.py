@@ -47,6 +47,7 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
+from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .armed_procs import cached_stack_terms
@@ -85,6 +86,33 @@ _E_SHOT_INTERVAL_S = 0.231
 # game files); the coefficient is read from the cached unit string.
 _E_ATTACK_SPEED_FACTOR = re.compile(
     r"(\d+(?:\.\d+)?)\s*per\s*100%\s*bonus attack speed"
+)
+
+# Dirty Fighting's proc is prose only: the innate's "Bonus Damage" leveling
+# row carries the SHIELD, so the third stack's level row and its AP ratio
+# are read from the sentence that states them.
+_DIRTY_FIGHTING_PROC = CachedSentence(
+    re.compile(r"deal them (?P<values>[\d\s/]+?)\s*\(based on level\)"),
+    missing=(
+        "Akshan P (Dirty Fighting): the cached innate no longer states the "
+        "three-stack proc's level row ('deal them A / B / C / D (based on "
+        "level)')"
+    ),
+)
+_DIRTY_FIGHTING_AP_RATIO = CachedSentence(
+    re.compile(r"\+\s*(?P<value>\d+)%\s*AP"),
+    missing=(
+        "Akshan P (Dirty Fighting): the cached innate no longer states the "
+        "three-stack proc's AP ratio ('(+ N% AP)')"
+    ),
+)
+# "he fires an additional shot ... that deals 50% AD physical damage".
+_DOUBLE_SHOT_AD_RATIO = CachedSentence(
+    re.compile(r"deals?\s+(?P<value>\d+)%\s*AD\s+physical damage"),
+    missing=(
+        "Akshan P: the cached innate no longer states the additional shot's "
+        "AD ratio ('deals N% AD physical damage')"
+    ),
 )
 
 
@@ -142,65 +170,29 @@ def _parse_passive_proc_damage(
     level: int,
     stats_context: dict[str, float] | None = None,
 ) -> float:
-    """Parse Dirty Fighting 3-stack proc magic damage from the JSON.
+    """Dirty Fighting's 3-stack proc, per champion level, before resistances.
 
-    The structured leveling data contains shield values (labelled
-    "Bonus Damage"), not the proc damage. The proc breakpoints
-    (15/40/80/150 based on level) and 60% AP ratio are description
-    text, so they are regex-extracted. (Test seam: tests/test_akshan.py
-    validates the JSON values here.)
-
-    Args:
-        passive: Passive ability dict from champion JSON.
-        level: Champion level (1-20).
-        stats_context: Champion stats (for AP).
-
-    Returns:
-        Magic damage per proc before resistances.
+    The innate's one leveling row holds the SHIELD (labelled "Bonus
+    Damage"), so the proc's level breakpoints and its AP ratio are read
+    from the sentence that states them.
     """
-    for effect in passive.get("effects", []):
-        desc = effect.get("description", "")
-        # Match "deal them N / N / N / N (based on level) (+ N% AP)".
-        dmg_match = re.search(
-            r"deal them (\d+)\s*/\s*(\d+)\s*/\s*(\d+)\s*/\s*(\d+)\s*"
-            r"\(based on level\)",
-            desc,
-        )
-        if not dmg_match:
-            continue
-
-        breakpoints = [int(dmg_match.group(i)) for i in range(1, 5)]
-        # Standard 4-breakpoint levels: 1, 6, 11, 16.
-        if level >= 16:
-            base = float(breakpoints[3])
-        elif level >= 11:
-            base = float(breakpoints[2])
-        elif level >= 6:
-            base = float(breakpoints[1])
-        else:
-            base = float(breakpoints[0])
-
-        ap_match = re.search(r"\+\s*(\d+)%\s*AP", desc)
-        ap_ratio = float(ap_match.group(1)) / 100.0 if ap_match else 0.0
-
-        ap = champion_stat(stats_context or {}, "ability_power")
-        return base + ap_ratio * ap
-
-    return 0.0
+    breakpoints = _DIRTY_FIGHTING_PROC.level_values(passive)
+    # Standard 4-breakpoint levels: 1, 6, 11, 16.
+    if level >= 16:
+        base = breakpoints[3]
+    elif level >= 11:
+        base = breakpoints[2]
+    elif level >= 6:
+        base = breakpoints[1]
+    else:
+        base = breakpoints[0]
+    ap_ratio = _DIRTY_FIGHTING_AP_RATIO.value(passive) / 100.0
+    return base + ap_ratio * champion_stat(stats_context or {}, "ability_power")
 
 
 def _extract_double_shot_ratio(passive: Mapping[str, Any]) -> float:
-    """Extract the double shot AD ratio from the passive description.
-
-    The description says the additional shot deals ``50% AD`` physical
-    damage. (Test seam: tests/test_akshan.py validates it here.)
-    """
-    for effect in passive.get("effects", []):
-        desc = effect.get("description", "")
-        match = re.search(r"deals?\s+(\d+)%\s*AD\s+physical damage", desc)
-        if match:
-            return float(match.group(1)) / 100.0
-    raise ValueError("Akshan P double-shot AD ratio is unavailable")
+    """The additional shot's AD ratio, from the sentence that states it."""
+    return _DOUBLE_SHOT_AD_RATIO.value(passive) / 100.0
 
 
 def _heroic_swing(ctx: SlotCtx) -> dict[str, Any] | None:
