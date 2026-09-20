@@ -190,15 +190,12 @@ ASSUMPTIONS = [
     "Q resistance shred applied before all other damage",
     "W (Bio-Arcane Barrage) assumed always active during the fight",
     "R damage scales dynamically with target's decreasing HP",
-    "R Living Artillery stacks (cap 9, +40 mana cost per stack) only "
-    "raise the spell's mana cost — no damage impact, so the stack count "
-    "is not modeled",
-    "Passive (Icathian Surprise) is a self-death trigger: after taking "
-    "fatal damage Kog'Maw explodes for the sourced 140 : 650 (by "
-    "champion level) true damage. The deterministic alive-state fight "
-    "never kills the main, so this boundary is priced at zero damage "
-    "(MODULE_COVERAGE: modeled, not out_of_scope) — the would-be "
-    "magnitude is reported in the row's detail text",
+    "R Living Artillery stacks (cap 9, +40 mana each) raise only mana cost, so the "
+    "count is not modeled.",
+    "Passive (Icathian Surprise) explodes on death for the sourced 140 to 650 by "
+    "level true damage.",
+    "The passive's boundary prices zero, since the alive-state fight never kills the "
+    "main; detail holds it.",
 ]
 
 SLOTS = {

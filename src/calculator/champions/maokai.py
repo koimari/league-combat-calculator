@@ -114,20 +114,20 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Maokai",
     PACKET_SHA256,
     assumption_overrides=(
-        "Sapling Toss defaults to the brush-empowered branch: the explosion deals 66.7% damage to "
-        "non-minion targets and attaches two Saplings that burn every 0.75s over 1.5s (2 ticks) — "
-        "the sourced Total Magic Damage / Total Attached Sapling Damage rows (E2 DoT tick-count "
-        "convention)",
-        "The sapling's 30-second sit duration, 2.5-second chase, 45% slow, reveal, and the 300 cap "
-        "against non-champions are state, not modeled",
-        "P (Sap Magic) is authored by this module's derive_self_healing rule: the periodic "
-        "empowered-attack heal (4% : 12.8% of maximum health by level, the cached Max Health "
-        "Damage row) fires on the first basic attack after the P cooldown (30 : 20 seconds by "
-        "level, affectedByCdr false) completes; each Q/W/E/R cast counts one trigger and each E "
-        "cast an additional sapling champion hit, each reducing the cooldown by 4 seconds.  "
-        "Incoming enemy ability strikes are not visible to the 1v1 outgoing ledger, so the "
-        "counted triggers undercount reality (the proc can only be delayed); the heal does not "
-        "trigger above 95% maximum health (live gate)",
+        "Sapling Toss defaults to the brush-empowered branch, its explosion 66.7% on "
+        "a non-minion target.",
+        "It attaches two Saplings burning every 0.75s over 1.5s, the sourced Total "
+        "Attached Sapling row.",
+        "The sapling's 30s sit, 2.5s chase, 45% slow, reveal and 300 non-champion cap "
+        "are state, not modeled.",
+        "P (Sap Magic) heals 4% to 12.8% of maximum health by level on the first "
+        "basic attack after its cooldown.",
+        "That cooldown is 30 to 20 seconds by level, affectedByCdr false, from the "
+        "cached row.",
+        "Each Q, W, E or R cast counts one trigger, and each E cast a sapling "
+        "champion hit, cutting it 4s.",
+        "Incoming enemy strikes are invisible here, so triggers undercount; the heal "
+        "stops above 95% health.",
     ),
     # The shockwave, the dash's arrival hit and each bramble deal
     # their packet once, at the cast (none of the three carries a

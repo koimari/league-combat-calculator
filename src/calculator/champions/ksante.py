@@ -328,10 +328,10 @@ ASSUMPTIONS = [
     "Dauntless Instinct is an explicit marked-attack proc, not an assumed proc on every auto.",
     "Path Maker uses its physical packet and optionally the authored All Out "
     "true-damage range; charge duration is explicit.",
-    "All Out terrain routing and the health threshold / resistance conversion remain "
-    "visible state rather than hidden arithmetic; the 20% omnivamp IS priced on the "
-    "fight's explicitly single-target attack/on-hit packets (the engine's "
-    "full-effectiveness omnivamp scope) and the remaining ability-damage omnivamp is "
-    "a documented boundary",
+    "All Out terrain routing, the health threshold and the resistance conversion stay "
+    "visible state.",
+    "The 20% omnivamp is priced on the single-target attack and on-hit packets, at "
+    "full effectiveness.",
+    "The remaining ability-damage omnivamp is a documented boundary.",
 ]
 SOURCES = load_champion_sources("K'Sante")

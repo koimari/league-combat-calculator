@@ -163,18 +163,19 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Granite Shield) is modeled as a pre-fight granted shield: 10% of "
-    "max HP spanning the fight window, riding the first Q cast. The "
-    "until-broken lifetime is approximated as the full window; the "
-    "out-of-combat replenishment trigger is a documented boundary",
-    "W (Thunderclap) prices both empowered-attack parts: the Additional "
-    "Physical Damage on-hit bonus and the cone's Physical Damage as a "
-    "single-target hit (the 1v1 target stands inside the melee cone).  "
-    "The cone's per-auto cadence over its 5s window is a documented "
-    "boundary — the packet prices one cone hit at the cast",
-    "W's passive bonus armor is granted at its tripled value (the cached "
-    "Increased Bonus Armor row) for the whole fight, matching the E8c "
-    "full-window Granite Shield assumption; the shield-break revert to "
-    "the un-tripled value is part of that documented boundary",
+    "P (Granite Shield) is granted pre-fight on the first Q cast: 10% of maximum "
+    "health, approximated.",
+    "Its until-broken lifetime is the full window, and out-of-combat replenishment is "
+    "a documented boundary.",
+    "W (Thunderclap) prices both empowered-attack parts: the on-hit Additional "
+    "Physical Damage and the cone.",
+    "The 1v1 target stands inside the melee cone, so the cone lands as a "
+    "single-target hit.",
+    "W's cone cadence over its 5s window is a documented boundary: one cone hit is "
+    "priced at the cast.",
+    "W's passive bonus armor is granted tripled (cached Increased Bonus Armor row) "
+    "for the whole fight.",
+    "That assumes W holds the full-window Granite Shield; the shield-break revert is "
+    "part of that boundary.",
     "R's sourced 1.5-second knockup counts as target action downtime",
 ]

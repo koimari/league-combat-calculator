@@ -130,10 +130,10 @@ _ECLIPSE_BONUS_RESIST_RANKED = (20.0, 27.5, 35.0, 42.5, 50.0)
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "W (Eclipse) is documented as mitigation state, not a shield: "
-    "per-instance flat damage reduction 8/12/16/20/24 (capped at 50% of "
-    "the instance) plus bonus armor/MR 20/27.5/35/42.5/50 + 20% of "
-    "bonus for 3s (extended 3s on detonation hit) — cached leveling "
-    "constants; the ledger's shield events cannot express pre-mitigation "
-    "reduction or resistance buffs, so no flat shield amount is invented",
+    "W (Eclipse) is mitigation state, not a shield: 8/12/16/20/24 flat reduction, "
+    "capped at 50% per instance.",
+    "It also grants 20/27.5/35/42.5/50 + 20% of bonus armor and MR for 3s, extended "
+    "3s on a detonation hit.",
+    "The ledger's shield events cannot express pre-mitigation reduction, so no flat "
+    "shield is invented.",
 ]

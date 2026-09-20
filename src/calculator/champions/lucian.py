@@ -98,26 +98,20 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "R (The Culling) prices all 22 sourced shots of the 3-second "
-    "channel (per-shot x 22; the wiki cache carries only the per-shot "
-    "row and the prose shot count, not a Total row).  The "
-    "crit-chance-scaled extra shots of the wiki's '+ 0 : 6 (based on "
-    "critical strike chance)' template are zero at 0% crit and not "
-    "modeled for crit builds.",
-    "P (Lightslinger) fires a second shot on the next basic attack "
-    "after each ability cast at 50% / 55% / 60% (based on level) AD "
-    "(levels 1-6 / 7-12 / 13-18, wiki Template:Data bands).  The fight "
-    "model prices one second shot per basic attack the rotation fires "
-    "(the standard weave attacks after every ability cast); the second "
-    "shot applies on-hit effects and can crit (engine double_shot "
-    "path).",
-    "E (Relentless Pursuit) carries no sourced damage row: all three "
-    "cached effect entries (cooldown refund on Lightslinger hit, the "
-    "dash, the attack-timer reset) have empty leveling, and the game "
-    "binary's LucianE spell record has no mSpellCalculations table -- "
-    "only non-damage DataValues (cooldown-refund seconds, dash "
-    "range/speed). E is no_damage, not out_of_scope, and emits an "
-    "explicit zero-damage state row rather than staying silently "
-    "absent.",
+    "R (The Culling) prices all 22 sourced shots of the 3s channel: the cache has a "
+    "per-shot row, no total.",
+    "R's crit-scaled extra shots, '+ 0 : 6 based on critical strike chance', are not "
+    "modeled.",
+    "P (Lightslinger) adds a second shot on the next basic attack after each cast, "
+    "50/55/60% AD by level.",
+    "The bands are levels 1-6, 7-12 and 13-18 from the wiki data template.",
+    "One second shot is priced per basic attack the rotation fires; it applies on-hit "
+    "and can crit.",
+    "E (Relentless Pursuit) has no sourced damage row: all three cached effects have "
+    "empty leveling.",
+    "The binary's LucianE record has no mSpellCalculations, only cooldown-refund and "
+    "dash DataValues.",
+    "E is no_damage rather than out_of_scope and emits an explicit zero-damage state "
+    "row.",
 ]
 MODULE_COVERAGE = coverage(no_damage="E")

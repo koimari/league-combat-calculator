@@ -52,13 +52,12 @@ def _iceborn_subjugation(ctx: SlotCtx) -> dict[str, Any] | None:
 
 
 ASSUMPTIONS = [
-    "Iceborn Subjugation (P) is a kill-only trigger: it fires when a "
-    "nearby ENEMY CHAMPION dies, spawning a Frozen Thrall that shatters "
-    "for the sourced 120 : 520 (by champion level) magic damage + 50% AP "
-    "(prose-only rider, not modeled). The deterministic 1v1 fight's "
-    "target never dies, so this boundary is priced at zero damage "
-    "(MODULE_COVERAGE: modeled, not out_of_scope) — the would-be "
-    "magnitude is reported in the row's detail text",
+    "Iceborn Subjugation (P) fires only on a nearby enemy champion's death, spawning "
+    "a Frozen Thrall.",
+    "The Thrall shatters for the sourced 120 to 520 by level magic; its 50% AP rider "
+    "is prose-only.",
+    "P's boundary prices zero: the 1v1 target never dies, and the magnitude is in the "
+    "row's detail.",
     "Glacial Path counts its outward hit; the recast is movement only.",
     "Frozen Tomb counts one ice-field hit, whether cast on Lissandra or an enemy.",
 ]

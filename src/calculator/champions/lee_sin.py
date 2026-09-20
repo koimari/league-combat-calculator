@@ -125,17 +125,16 @@ OPTIONS: list[dict[str, Any]] = [
 
 ASSUMPTIONS = [
     *list(REVIEWED_MODULE_ASSUMPTIONS),
-    "Q is the two-stage combo: Sonic Wave (Physical Damage row) plus the "
-    "Resonating Strike recast, which reads Q[1]'s Minimum/Maximum "
-    "Physical Damage rows and interpolates by the target's missing-health "
-    "fraction at each cast (0% : 100% based on missing health); the "
-    "recast cadence (0.5s) is authored from the 3s recast window",
-    "With q_recast off the module prices Sonic Wave alone; the recast's "
-    "mark consumption and dash are otherwise the only state the Q entry "
-    "does not model",
-    "P (Flurry) is an attack-haste/energy row — no enemy damage; R's "
-    "collision splash is single-target-irrelevant; the Safeguard W shield "
-    "is authored by the E8c support scanner.",
+    "Q is two stages: Sonic Wave's Physical Damage row plus the Resonating Strike "
+    "recast.",
+    "The recast reads Q[1]'s Minimum and Maximum rows, interpolated by target missing "
+    "health at each cast.",
+    "Its 0.5s recast cadence is authored from the sourced 3s recast window.",
+    "With q_recast off only Sonic Wave is priced; the recast's mark and dash are "
+    "state Q does not model.",
+    "P (Flurry) is an attack-haste and energy row with no enemy damage; R's collision "
+    "splash needs a crowd.",
+    "W's Safeguard shield is authored by the support scanner.",
 ]
 
 SOURCES = load_champion_sources("Lee Sin")

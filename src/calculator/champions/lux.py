@@ -151,13 +151,11 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Illumination) prices the sourced per-level proc (30 : 200 based "
-    "on level, + 35% AP) from the p_illumination_procs option (default 3 "
-    "— one per Q/E/R mark in the one-rotation combo); each proc is one "
-    "post-ability auto or Final Spark consuming the mark.",
-    "W (Prismatic Barrier) shields Lux twice per cast (on throw and on "
-    "return), stacking into the sourced 'Maximum Shield' row (80-200 + "
-    "80% AP at rank 5); support_effects.py emits it as a self-targeted "
-    "shield at the cast (Lux gains the shield herself; the allied half "
-    "needs a teammate roster).",
+    "P (Illumination) prices 30 to 200 by level + 35% AP per proc consuming the mark.",
+    "p_illumination_procs (default 3) is one proc per Q, E and R mark; each is an "
+    "auto or Final Spark.",
+    "W (Prismatic Barrier) shields Lux twice per cast, stacking to the sourced "
+    "Maximum Shield row.",
+    "That is 80 to 200 + 80% AP at rank 5, self-targeted; the allied half needs a "
+    "teammate roster.",
 ]

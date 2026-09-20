@@ -463,63 +463,49 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Searing Brilliance) prices the empowered attack: each ability "
-    "cast arms ONE empowered basic attack for 5 seconds and the swing "
-    "fires 8 : 30 (based on level) (+ 4% AP) magic damage per consumed "
-    "stack (data/champions.json Mel P third effect, 'Per-Level Scaling' "
-    "occurrence 0; game file mel.bin.json MelPassive "
-    "PassiveBonusMissileDamage interpolates the same 8.0 -> 30.0 with a "
-    "0.04 AP coefficient, and its PassiveBonusMissiles 3 / "
-    "MaxPassiveBonusMissiles 9 / BonusAttackDuration 5.0 match the "
-    "cached prose). The projectile count is the "
-    "p_searing_brilliance_missiles option (default 3 == one cast's "
-    "stacks, ceiling 9 == the sourced cap); a swing that consumed "
-    "several casts' stacks at once is therefore UNDERSTATED, never "
-    "overstated. Both cached 'Per-Level Scaling' rows are asserted "
-    "against the game-file ladder at parse time, so source drift raises.",
+    "P (Searing Brilliance) arms one empowered basic attack for 5s per ability cast.",
+    "The swing fires 8 to 30 by level + 4% AP magic per consumed stack (cached P "
+    "third effect).",
+    "The game file's MelPassive interpolates the same 8.0 to 30.0 with a 0.04 AP "
+    "coefficient.",
+    "p_searing_brilliance_missiles (default 3, one cast's stacks) has ceiling 9, the "
+    "sourced cap.",
+    "A swing consuming several casts' stacks is therefore understated, never "
+    "overstated.",
+    "Both cached Per-Level Scaling rows are asserted against the game-file ladder, so "
+    "drift raises.",
     "P's Overwhelm stored-damage execute is documented, not priced: "
     + _OVERWHELM_EXECUTE_BOUNDARY,
-    "W (Rebuttal) prices no damage: the 'Replicated Projectile Magic "
-    "Damage Modifier' (40-60% + 5% per 100 AP) and its physical twin "
-    "(28-42% + 3.5% per 100 AP) are percentages of the original enemy "
-    "projectile's damage (data/champions.json W), the game binary's "
-    "MelW owns only DamagePercent and ShieldAmount nodes "
-    "(data/bin/characters/mel.bin.json), and the atom corpus "
-    "emits no damage.* atom for MelW at all — only cc-immunity, "
-    "heal-shield.shield and interaction.projectile-destruction. The "
-    "calculator's target never casts, so the multiplicand is "
-    "structurally absent for every build.",
-    "Q (Radiant Volley) prices the full volley: 'Initial Explosion "
-    "Magic Damage' + (Number of Bolts - 1) x 'Magic Damage per "
-    "Subsequent Explosion' == the wiki's 'Total Magic Damage' row "
-    "(data/champions.json Q), all bolts landing on the primary target "
-    "over the sourced 0.5s volley.",
-    "E (Solar Snare) prices the orb hit plus the field DoT: 4 ticks of "
-    "'Field Magic Damage per Tick' (data/champions.json E) at 0.125s "
-    "intervals — the game-file MelE DataValues source DoTDuration 0.5s "
-    "at AreaTicksPerSecond 8 (raw.communitydragon.org mel.bin.json), "
-    "starting after the 0.5s field-expansion delay.",
-    "R (Golden Eclipse) prices the wiki's 'Magic Damage' row "
-    "(125/200/275 + 30% AP) plus (4/7/10 + 4% AP) per Overwhelm stack "
-    "on the target (data/champions.json R), with the stack count from "
-    "the r_overwhelm_stacks option (default 3).",
-    "The Overwhelm stored-damage execute (P: first stack stores "
-    "50/60/70/80 + 10% AP, +2/3/4/5 + 0.75% AP per additional stack, "
-    "consumed when stored damage exceeds the target's current health "
-    "and shields) is a kill boundary and is documented, not priced as "
-    "damage.",
-    "KNOWN CACHE LAG (verified 16.16.1, not fixed here — out of this "
-    "module's file scope): W (Rebuttal)'s cached cooldown row is "
-    "[38, 35, 32, 29, 26]; the game files disagree at rank 3 only — bin "
-    "MelWAbility/MelW 'cooldownTime' [38, 38, 35, 33, 29, 26, 26] and "
-    "ddragon Mel.json cooldownBurn '38/35/33/29/26' both say 33, not "
-    "32. This module reads the cooldown dynamically via "
-    "extract_cooldown(ability, rank) (no hardcoded value to re-pin), so "
-    "the flag traces to data/champions.json's W cache entry, not to "
-    "this module or its tests — no test currently asserts W's cooldown "
-    "value, so this module's behavior is otherwise unaffected. Clearing "
-    "patch_regression.py's ability_rows_stale flag requires a "
-    "data/champions.json re-pull/re-cert, which is patch-day work "
-    "(the /patch-update skill).",
+    "W (Rebuttal) prices no damage: the target never casts, so the multiplicand is "
+    "structurally absent.",
+    "Its modifiers are percentages of the enemy projectile's damage, 40-60% + 5% per "
+    "100 AP magic.",
+    "The physical twin is 28-42% + 3.5% per 100 AP; the binary's MelW owns "
+    "DamagePercent and ShieldAmount.",
+    "The atom corpus emits no damage atom for MelW, only cc-immunity, shield and "
+    "projectile-destruction.",
+    "Q (Radiant Volley) prices Initial Explosion + (Bolts - 1) x Subsequent "
+    "Explosion, the Total row.",
+    "All bolts land on the primary target over the sourced 0.5s volley.",
+    "E (Solar Snare) prices the orb hit plus 4 ticks of the cached Field Magic Damage "
+    "per Tick at 0.125s.",
+    "MelE's DataValues source DoTDuration 0.5s at 8 ticks per second, after the 0.5s "
+    "expansion delay.",
+    "R (Golden Eclipse) prices the cached 125/200/275 + 30% AP plus 4/7/10 + 4% AP "
+    "per Overwhelm stack.",
+    "The stack count is r_overwhelm_stacks (default 3).",
+    "The Overwhelm stored-damage execute is a kill boundary: documented, not priced "
+    "as damage.",
+    "P stores 50/60/70/80 + 10% AP on the first stack, +2/3/4/5 + 0.75% AP after, "
+    "spent above current health.",
+    "KNOWN CACHE LAG: W's cached cooldown row is [38, 35, 32, 29, 26] and the game "
+    "files say 33 at rank 3.",
+    "Bin MelW cooldownTime and ddragon cooldownBurn both read 33, verified on "
+    "16.16.1.",
+    "The module reads the cooldown through extract_cooldown, so the flag traces to "
+    "data/champions.json.",
+    "No test asserts W's cooldown value, so this module's behavior is unaffected.",
+    "Clearing patch_regression's ability_rows_stale flag needs a cache re-pull, which "
+    "is patch-day work.",
 ]
 MODULE_COVERAGE = coverage(no_damage="W")

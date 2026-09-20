@@ -181,32 +181,29 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Double Strike procs on every 3rd basic attack; the second strike "
-    "deals 50% AD physical damage — wiki prose (module constants)",
-    "The second strike 'is affected by critical strike modifiers' and "
-    "'separately rolls a critical strike' (cached P effect 1 and notes), "
-    "so the on-hit row declares crit_effectiveness=1.0 and the engine "
-    "prices it at the fight's own crit chance and multiplier.",
+    "Double Strike procs every 3rd basic attack for 50% AD physical, a wiki-prose "
+    "module constant.",
+    "The second strike is affected by crit modifiers and rolls its own crit (cached P "
+    "effect and notes).",
+    "Its on-hit row declares crit_effectiveness 1.0, priced at the fight's crit "
+    "chance and multiplier.",
     "Only basic attacks generate stacks (Alpha Strike explicitly does "
     "not; Meditate's channel stacks are not simulated)",
-    "The engine prices the proc spread across the 3 stacking hits "
-    "(Vayne W convention); the 4-second stack window is assumed not to "
-    "expire during sustained combat",
-    "E (Wuju Style) is an on-hit on every basic attack inside the sourced "
-    "5-second window from the E cast (one window per fight: the recast a "
-    "longer fight would earn is not placed), never a direct hit of the "
-    "cast; phantom hits and Double Strike's second strike do not re-apply "
-    "it (the engine's schedule-gated rider rule).",
-    "W (Meditate) heals for 8 ticks at 0.5-second intervals over the "
-    "4-second channel, interpolated between Minimum Heal Per Tick and "
-    "Maximum Heal Per Tick by the fighter's live missing health "
-    "(healing.py 'Master Yi' rule); the channel's damage reduction is "
-    "a defensive state not staged by the damage model.",
-    "R (Highlander) grants the cached Bonus Attack Speed row "
-    "(25/45/65%) for the sourced 7 seconds; the fight engine applies it "
-    "to the auto count, time-weighted by the share of the fight window "
-    "the buff covers.  R's bonus movement speed, slow/cripple immunity "
-    "and takedown cooldown refund are named rather than priced.",
+    "The proc is spread across the 3 stacking hits, its 4s window assumed not to "
+    "expire in sustained combat.",
+    "E (Wuju Style) is an on-hit on every basic attack inside the sourced 5s window "
+    "from the E cast.",
+    "One window per fight is placed; the recast a longer fight would earn is not.",
+    "It is never a direct hit of the cast, and phantom hits and the second strike do "
+    "not re-apply it.",
+    "W (Meditate) heals 8 ticks at 0.5s over its 4s channel, between the Minimum and "
+    "Maximum per-tick rows.",
+    "The interpolation is live missing health; the channel's damage reduction is "
+    "defensive state.",
+    "R (Highlander) grants the cached 25/45/65% Bonus Attack Speed for the sourced "
+    "7s, time-weighted.",
+    "R's movement speed, slow immunity and takedown refund are named rather than "
+    "priced.",
 ]
 
 # No MODULE_COVERAGE: all five slots carry a priced row now — W's is the

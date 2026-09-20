@@ -206,30 +206,26 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Pix, Faerie Companion) fires lulu_pix_bolts (default 3) magic "
-    "bolts on each basic attack; each bolt deals the per-level row "
-    "(5 : 39 by level) + 5% AP (module constants; the AP ratio is wiki "
-    "prose). The second Per-Level Scaling row is the full 3-bolt total "
-    "(15 : 117 + 15% AP).",
-    "W (Whimsy) and R (Wild Growth) carry no damage attribute at all; "
-    "each prices its SELF cast only — the cached Bonus Attack Speed row "
-    "(20-30%) for its Effect Duration row and the Bonus Health row "
-    "(275-575 + 55% AP) for the sourced 7 seconds.  "
-    "lulu_whimsy_target / lulu_wild_growth_target name who the cast "
-    "lands on; an ally cast is the roster's and reaches it through the "
-    "ally-support scanner.",
-    "W's two cached branches are mutually exclusive and only the one "
-    "lulu_whimsy_target names is priced: a self/ally cast grants the "
-    "Bonus Attack Speed row and authors no control, and an enemy cast "
-    "authors the sourced Disable Duration polymorph and grants no "
-    "attack speed.  The cached cast is single-target, so the polymorph "
-    "is allocated to the first roster enemy and the rest of the roster "
-    "is scored without it.",
-    "R's 1-second knock-up is real control the cache gives no duration "
-    "row for, so it is named rather than authored as an event.",
-    "R's bonus health is held for the whole fight rather than for its "
-    "sourced 7 seconds: a health pool is not a rate, so the stat_buff "
-    "channel can only grant or withhold it.",
+    "P (Pix) fires lulu_pix_bolts (default 3) magic bolts per basic attack, each 5 to "
+    "39 by level + 5% AP.",
+    "The AP ratio is wiki prose; the second Per-Level row is the 3-bolt total, 15 to "
+    "117 + 15% AP.",
+    "W (Whimsy) and R (Wild Growth) carry no damage attribute and price the self cast "
+    "only.",
+    "W grants the cached 20 to 30% Bonus Attack Speed for its Effect Duration row.",
+    "R grants the cached 275 to 575 + 55% AP Bonus Health for the sourced 7 seconds.",
+    "lulu_whimsy_target and lulu_wild_growth_target name the recipient; an ally cast "
+    "is the roster's.",
+    "W's two cached branches are exclusive: only the one lulu_whimsy_target names is "
+    "priced.",
+    "A self or ally cast grants Bonus Attack Speed and no control; an enemy cast "
+    "polymorphs and grants none.",
+    "The cached cast is single-target, so the polymorph goes to the first roster "
+    "enemy alone.",
+    "R's 1s knock-up is real control with no cached duration row, so it is named, not "
+    "authored.",
+    "R's bonus health holds for the whole fight, not its sourced 7s: the stat_buff "
+    "channel is all or nothing.",
 ]
 OPTIONS.extend(
     [

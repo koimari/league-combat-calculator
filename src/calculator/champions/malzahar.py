@@ -254,26 +254,23 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *ASSUMPTIONS,
-    "W is a summon: the cast row carries no direct damage; voidling "
-    "attacks ride the sourced 'Magic Damage' leveling formula "
-    "(per-level flat + per-rank base + 40% bonus AD + 20% AP) on a "
-    "separate voidling_attacks proc row",
-    "Voidling attack cadence is the wiki pets attack speed "
-    "(0.665 + 2% growth per level, ~0.891 AS at 18) with the 0.5s "
-    "summon delay and 0.5s stagger; the default attack count truncates "
-    "that cadence to the fight window",
-    "One summon wave per fight window; re-casting W refreshes the swarm "
-    "in-game, modeled by the voidling_count option (up to 4) instead of "
-    "multiplying the proc row by W casts",
-    "An autos-only fight summons no swarm at all (the pipeline states "
-    "this with the auto_attacks_only reserved option): the cached W text "
-    "sources the Zz'Rot stacks to 'when he casts another ability' and the "
-    "Voidlings to 'Active: Malzahar consumes all Zz'Rot Swarm stacks "
-    "and... summons a Voidling', so a basic attack produces neither",
-    "P (Void Shift) is periodic defensive self-state (damage reduction "
-    "with crowd-control immunity) with no enemy damage, so it emits the "
-    "packet's sourced zero-damage row (MODULE_COVERAGE: no_damage, not "
-    "out_of_scope). P is not a cast slot in this engine's rotation.",
+    "W is a summon: its cast row carries no direct damage.",
+    "Voidling attacks ride the sourced Magic Damage row, flat + base + 40% bonus AD + "
+    "20% AP, on their own row.",
+    "Voidling cadence is the wiki pets attack speed, 0.665 + 2% per level, about "
+    "0.891 at 18.",
+    "The 0.5s summon delay and 0.5s stagger apply, and the default count truncates to "
+    "the fight window.",
+    "One summon wave per fight window: voidling_count (up to 4) stands in for W "
+    "recasts refreshing it.",
+    "An autos-only fight summons no swarm (auto_attacks_only): stacks need 'another "
+    "ability' cast.",
+    "The cached W Active consumes those stacks, so a basic attack produces neither "
+    "stack nor Voidling.",
+    "P (Void Shift) is periodic defensive self-state, damage reduction with "
+    "crowd-control immunity.",
+    "It carries no enemy damage, emits the sourced zero-damage row, and is not a cast "
+    "slot here.",
 ]
 
 MODULE_COVERAGE = coverage(no_damage="P")
