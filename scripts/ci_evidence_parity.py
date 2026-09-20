@@ -121,6 +121,9 @@ each is a documented, low-risk trade-off)
   otherwise create a confusing self-referential match. The unit test for
   ``_GUARD_RE`` below deliberately uses a non-``data/`` path so it does
   not depend on this exclusion either.
+- ``tests/resource_gate.py`` is excluded for the sibling reason: it names
+  each watched tree only to ask whether this machine has it, and a node
+  that needs an absent one is deselected before it can open anything.
 """
 
 from __future__ import annotations
@@ -143,6 +146,14 @@ TESTS_DIR = ROOT / "tests"
 #: code to drive the extraction rules. Scanning it would report its own
 #: fixtures as references.
 SELF_TEST = TESTS_DIR / "test_ci_evidence_parity.py"
+
+#: The resource gate, which names each locally-built tree only to ask whether
+#: this machine has it. It opens nothing, and the probe is the guard: a node
+#: needing an absent tree is deselected before it runs.
+RESOURCE_GATE = TESTS_DIR / "resource_gate.py"
+
+#: What the scan never reads. Both name evidence paths without opening one.
+NOT_SCANNED = frozenset({SELF_TEST, RESOURCE_GATE})
 
 # Every tree whose contents are gitignored, locally-built evidence.  One home:
 # the extraction regexes and the tracked-path query below both read it, so a
@@ -298,7 +309,7 @@ def discover() -> tuple[list[Reference], dict[str, str]]:
     references: list[Reference] = []
     texts: dict[str, str] = {}
     for path in sorted(TESTS_DIR.rglob("*")):
-        if not path.is_file() or "__pycache__" in path.parts or path == SELF_TEST:
+        if not path.is_file() or "__pycache__" in path.parts or path in NOT_SCANNED:
             continue
         try:
             source = path.read_text(encoding="utf-8")
