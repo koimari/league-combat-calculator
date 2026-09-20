@@ -247,44 +247,21 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
         _flat_references(rule),
         lane,
         DamageRoutingInterpretationError,
-        reader="resolve_execution",
+        reader="declared_execution",
     )
 
 
 def declared_execution(owners: Sequence[str]) -> Execution | None:
-    """This build's execution threshold from flat references alone.
+    """This build's execution threshold, or ``None`` if nobody declares one.
 
-    The fight-free reader, for the callers holding item names and no fight:
-    identical to :func:`resolve_execution` on a flat declaration, and a stop
-    rather than a defaulted zero on one that needs a context.
+    ``None`` is an answer and not a zero: no holder executes, so no rule ran
+    and no health share is low enough to finish the target.  A reference
+    needing a level or a fight fact is a stop rather than a defaulted zero.
     """
     rule = _sole_rule(owners, ExecuteRule)
     if rule is None:
         return None
     fields = _flat_fields(rule, EngineLane.PAIR_ENGINE)
-    return Execution(
-        owner=rule.owner, threshold=_field(fields, EXECUTE_THRESHOLD_FIELD)
-    )
-
-
-def resolve_execution(
-    owners: Sequence[str],
-    *,
-    facts: FightFacts,
-) -> Execution | None:
-    """This build's execution threshold, or ``None`` if nobody declares one.
-
-    ``None`` is an answer and not a zero: no holder executes, so no rule ran
-    and no health share is low enough to finish the target.
-    """
-    rule = _sole_rule(owners, ExecuteRule)
-    if rule is None:
-        return None
-    fields = pair_fields(
-        rule,
-        build_context(rule.owner, facts),
-        EngineLane.PAIR_ENGINE,
-    )
     return Execution(
         owner=rule.owner, threshold=_field(fields, EXECUTE_THRESHOLD_FIELD)
     )
@@ -446,7 +423,6 @@ __all__ = [
     "Venom",
     "declared_execution",
     "pair_fields",
-    "resolve_execution",
     "resolve_shield_bypass",
     "walk_deferral",
     "walk_execution",

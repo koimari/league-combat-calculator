@@ -24,8 +24,8 @@ from src.calculator.interpreters.damage_deferral import resolve_deferral
 from src.calculator.interpreters.damage_routing import (
     EXECUTE_THRESHOLD_FIELD,
     DamageRoutingInterpretationError,
+    declared_execution,
     pair_fields,
-    resolve_execution,
     resolve_shield_bypass,
 )
 from src.calculator.interpreters.defense_state import compiled_shape
@@ -92,15 +92,7 @@ def test_every_routing_entry_declares_a_rule() -> None:
 
 def test_the_execution_is_the_registry_threshold() -> None:
     """The Collector's share of maximum health, read rather than carried."""
-    execution = resolve_execution(
-        [EXECUTE_HOLDER],
-        facts=FightFacts(
-            level=13,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
-        ),
-    )
+    execution = declared_execution([EXECUTE_HOLDER])
     assert execution is not None
     assert execution.owner == EXECUTE_HOLDER
     assert execution.threshold == pytest.approx(
@@ -110,18 +102,7 @@ def test_the_execution_is_the_registry_threshold() -> None:
 
 def test_nobody_executing_is_an_answer_not_a_zero() -> None:
     """A build with no execution gets ``None``, never a threshold of zero."""
-    assert (
-        resolve_execution(
-            ["Boots"],
-            facts=FightFacts(
-                level=13,
-                fight_duration_seconds=5.0,
-                target_bonus_health=0.0,
-                holder_is_melee=True,
-            ),
-        )
-        is None
-    )
+    assert declared_execution(["Boots"]) is None
 
 
 @pytest.mark.parametrize(

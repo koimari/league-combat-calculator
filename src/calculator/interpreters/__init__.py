@@ -11,11 +11,12 @@ dropped as theoretical.
 
 Two tables.  :data:`INTERPRETERS` maps ``(family, lane)`` to the function that
 compiles one rule's :class:`~..item_behavior.KernelField`s for that lane, and
-:func:`compile_rule` is its dispatch.  :data:`RESOLVERS` maps the six defence
-families to the function that resolves one rule against a subject, and
-:func:`resolve_defense` is its dispatch.  A registry with no entry is a stop,
-which is what makes "delete a family's reading and its items are withheld" a
-property of the code instead of a claim about it.
+is the population the unserved-lane audit and the coverage receipt read.
+:data:`RESOLVERS` maps the six defence families to the function that resolves
+one rule against a subject, and :func:`resolve_defense` is its dispatch.  A
+registry with no entry is a stop, which is what makes "delete a family's
+reading and its items are withheld" a property of the code instead of a claim
+about it.
 
 **Readings run at build time.**  A walk-lane reading emits ``KernelField``s —
 value-typed fields the kernel already understands — rather than being called
@@ -365,25 +366,6 @@ RESOLVERS: Mapping[RuleFamily, ResolveFn] = {
     RuleFamily.SUSTAIN: sustain.resolve_received_healing,
     RuleFamily.THRESHOLD_DEFENSE: threshold_defense.resolve_threshold_defense,
 }
-
-
-def compile_rule(
-    rule: BehaviorRule, ctx: BuildContext, lane: EngineLane
-) -> tuple[KernelField, ...]:
-    """One rule's kernel fields for *lane*, through the registered reading.
-
-    The registry *is* the dispatch: deleting a family's reading for a lane
-    stops every rule of that family on it with this error rather than letting
-    the engine quietly compile nothing.
-    """
-    fields = INTERPRETERS.get((rule.family, lane))
-    if fields is None:
-        raise InterpreterRegistryError(
-            f"{rule.mechanic_id} declares {rule.family.value} and no "
-            f"interpreter serves the {lane.value} lane, so its numbers are "
-            "withheld rather than compiled"
-        )
-    return fields(rule, ctx, lane)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1080,7 +1062,6 @@ __all__ = [
     "ResolveFn",
     "UnservedLane",
     "compilability_for",
-    "compile_rule",
     "declared_pairs",
     "lanes_for",
     "reachability_report",

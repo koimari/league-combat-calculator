@@ -35,7 +35,6 @@ from src.calculator.interpreters.sustain import (
     resolve_received_healing,
     stat_grants,
     sustain_fields,
-    sustain_slot,
     walk_fields,
     walk_slot,
 )
@@ -71,17 +70,8 @@ BELOW_HALF_HOLDER = "Immortal Path"
 
 
 def _slot(owner: str, payload_type: type):
-    """The build's declared sustain of one shape, at a mid-fight level."""
-    return sustain_slot(
-        [owner],
-        payload_type,
-        facts=FightFacts(
-            level=13,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
-        ),
-    )
+    """The build's declared sustain of one shape."""
+    return declared_sustain([owner], payload_type)
 
 
 def _rule(owner: str, payload_type: type):
@@ -213,16 +203,7 @@ def test_stat_grants_sum_across_holders() -> None:
 def test_two_drains_stop_rather_than_compose_silently() -> None:
     """Nothing declares how two drains compose, so a second holder is a stop."""
     with pytest.raises(SustainInterpretationError, match="compose"):
-        sustain_slot(
-            [DRAIN_HOLDER, DRAIN_HOLDER],
-            ResourceDrainRule,
-            facts=FightFacts(
-                level=13,
-                fight_duration_seconds=5.0,
-                target_bonus_health=0.0,
-                holder_is_melee=True,
-            ),
-        )
+        declared_sustain([DRAIN_HOLDER, DRAIN_HOLDER], ResourceDrainRule)
 
 
 def test_every_sustain_rule_acts_on_its_holder() -> None:
@@ -360,7 +341,8 @@ def test_a_context_dependent_shape_is_refused_rather_than_guessed(
 
     A level ramp needs a level and this accessor has none.  Returning the
     ramp's low end would be a number nobody asked for, so the refusal names
-    the shape and points at ``sustain_slot``, which is handed a context.  The
+    the shape and points at the interpreter registry, which is handed a
+    context.  The
     shape is fabricated because no live rule has one — which is exactly why
     the branch would otherwise never be exercised (D-26).
     """

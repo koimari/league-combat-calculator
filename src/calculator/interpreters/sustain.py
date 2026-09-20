@@ -14,7 +14,7 @@ reading the registry directly and none of them able to say what kind of
 restoration it was.
 
 Three lanes.  The pair engine and the roster path read the holder-side
-shapes through :func:`sustain_slot`; the defensive resolver builds the
+shapes through :func:`declared_sustain`; the defensive resolver builds the
 received-healing multiplier, because it has to run *after* every shield it
 multiplies and that position is arithmetic rather than presentation; and the
 receipt walk reads the two shapes it pays out itself — a regeneration
@@ -40,7 +40,6 @@ from ..item_behavior import (
     DefenseOutcome,
     DefenseSubject,
     EngineLane,
-    FightFacts,
     KernelField,
     MeleeRangedSplit,
     ReceivedHealingRule,
@@ -49,7 +48,7 @@ from ..item_behavior import (
     SustainStatRule,
     sole_declared,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import behavior_rules
 from ..reference_vocabulary import ValueRefError
 from ..value_ref import resolve, resolve_flat
 from .defense_state import DefenseInterpretationError, DefenseSlot
@@ -172,38 +171,6 @@ def sustain_rules(
     )
 
 
-def sustain_slot(
-    owners: Sequence[str],
-    payload_type: type,
-    *,
-    facts: FightFacts,
-) -> SustainSlot | None:
-    """This build's sustain of one shape, or ``None`` if nobody declares one.
-
-    ``None`` is an answer and not a zero: no holder restores health this way,
-    so no rule ran.  Two holders of one shape is a stop, because nothing
-    declares how two of them compose — the same refusal the shred slot makes.
-    """
-    rules = sustain_rules(owners, payload_type)
-    if not rules:
-        return None
-    if len(rules) > 1:
-        raise SustainInterpretationError(
-            f"{[rule.owner for rule in rules]} all declare "
-            f"{payload_type.__name__} and no rule declares how two of them "
-            "compose; the slice that declares a second one owns the fold"
-        )
-    rule = rules[0]
-    return SustainSlot(
-        rule=rule,
-        fields=sustain_fields(
-            rule,
-            build_context(rule.owner, facts),
-            EngineLane.PAIR_ENGINE,
-        ),
-    )
-
-
 def declared_sustain(owners: Sequence[str], payload_type: type) -> SustainSlot | None:
     """This build's sustain of one shape, from flat references alone.
 
@@ -256,8 +223,8 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
     except ValueRefError as exc:
         raise SustainInterpretationError(
             f"{rule.mechanic_id} declares a reference that needs a level or a "
-            "fight fact, and this accessor has neither; read it through "
-            "sustain_slot, which is handed the context it resolves against"
+            "fight fact, and this accessor has neither; the interpreter "
+            "registry is handed the context it resolves against"
         ) from exc
     return tuple(
         KernelField(name=name, value=value, lane=lane, rule_id=rule.mechanic_id)
@@ -335,7 +302,6 @@ __all__ = [
     "stat_grants",
     "sustain_fields",
     "sustain_rules",
-    "sustain_slot",
     "walk_fields",
     "walk_slot",
 ]

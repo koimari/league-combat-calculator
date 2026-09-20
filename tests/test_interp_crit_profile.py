@@ -22,7 +22,7 @@ from src.calculator.interpreters.crit_profile import (
     CRIT_DAMAGE_BONUS_FIELD,
     CritProfileInterpretationError,
     crit_fields,
-    resolve_profile,
+    declared_crit_profile,
 )
 from src.calculator.item_behavior import (
     AttackCooldownRefundRule,
@@ -42,16 +42,8 @@ FORCED_HOLDER = "Sundered Sky"
 
 
 def _profile(*owners: str):
-    """The declared crit profile of a build, at a mid-fight level."""
-    return resolve_profile(
-        list(owners),
-        facts=FightFacts(
-            level=13,
-            fight_duration_seconds=5.0,
-            target_bonus_health=1000.0,
-            holder_is_melee=True,
-        ),
-    )
+    """The declared crit profile of a build."""
+    return declared_crit_profile(list(owners))
 
 
 def _rule(owner: str, payload_type: type):

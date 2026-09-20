@@ -273,10 +273,8 @@ def test_a_defence_family_with_no_resolver_is_refused(
         interpreters.validate_registrations()
 
 
-def test_compile_rule_dispatches_through_the_registry(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """The registry is the dispatch for fields exactly as it is for defences."""
+def test_the_registered_reading_compiles_the_lane_it_is_registered_for() -> None:
+    """Every field a registered reading emits carries the lane it served."""
     rule = catalog.behavior_rules("Blade of the Ruined King")[0]
     ctx = catalog.build_context(
         rule.owner,
@@ -287,20 +285,10 @@ def test_compile_rule_dispatches_through_the_registry(
             holder_is_melee=True,
         ),
     )
-    fields = interpreters.compile_rule(rule, ctx, EngineLane.PAIR_ENGINE)
+    reading = interpreters.INTERPRETERS[(rule.family, EngineLane.PAIR_ENGINE)]
+    fields = reading(rule, ctx, EngineLane.PAIR_ENGINE)
     assert fields
     assert all(field.lane is EngineLane.PAIR_ENGINE for field in fields)
-    monkeypatch.setattr(
-        interpreters,
-        "INTERPRETERS",
-        {
-            key: value
-            for key, value in interpreters.INTERPRETERS.items()
-            if key != (rule.family, EngineLane.PAIR_ENGINE)
-        },
-    )
-    with pytest.raises(interpreters.InterpreterRegistryError, match="withheld"):
-        interpreters.compile_rule(rule, ctx, EngineLane.PAIR_ENGINE)
 
 
 def test_validate_registrations_runs_at_import() -> None:

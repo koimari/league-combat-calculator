@@ -11,8 +11,8 @@ accumulator inside the number registry's own effect ladder:
   refunds — a crit item's passive that changes no damage number at all.
 
 Here they are three payloads of one family, and this module is where a build
-turns into the one profile the engines read.  ``resolve_profile`` is the
-whole public surface: it folds every holder's declarations into a
+turns into the one profile the engines read.  ``declared_crit_profile`` is
+the whole public surface: it folds every holder's declarations into a
 :class:`CritProfile`, and a build that declares nothing gets a profile whose
 bonus is a **declared** zero rather than an accumulator that never ran.
 """
@@ -29,14 +29,13 @@ from ..item_behavior import (
     CritDamageBonusRule,
     CritOccurrence,
     EngineLane,
-    FightFacts,
     ForcedCritRule,
     KernelField,
     RuleFamily,
     compiled_value,
     flat_fields,
 )
-from ..item_behavior_catalog import behavior_rules, build_context
+from ..item_behavior_catalog import behavior_rules
 from ..value_ref import AnyValueRef, resolve
 
 # The field names a crit-profile rule compiles to.  One per declared number,
@@ -128,7 +127,7 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
         crit_references(rule),
         lane,
         CritProfileInterpretationError,
-        reader="resolve_profile",
+        reader="declared_crit_profile",
     )
 
 
@@ -226,31 +225,8 @@ def _forced_crit(rule: BehaviorRule, fields: tuple[KernelField, ...]) -> ForcedC
     )
 
 
-def resolve_profile(
-    owners: Sequence[str],
-    *,
-    facts: FightFacts,
-) -> CritProfile:
-    """Fold every holder's crit declarations into one profile.
-
-    A build declaring nothing gets ``CritProfile(0.0, None, None)``: the zero
-    is the declared answer "no holder adds crit damage", and the two ``None``s
-    are the declared answer "nobody forces a crit or refunds a cooldown" — a
-    different thing from a number that resolved to zero, which is why the two
-    slots are optional records rather than floats.
-    """
-    return _fold(
-        owners,
-        lambda rule: crit_fields(
-            rule,
-            build_context(rule.owner, facts),
-            EngineLane.PAIR_ENGINE,
-        ),
-    )
-
-
 def declared_crit_profile(owners: Sequence[str]) -> CritProfile:
-    """This build's crit profile from flat references alone — no fight needed."""
+    """Fold every holder's crit declarations into one profile."""
     return _fold(owners, lambda rule: _flat_fields(rule, EngineLane.PAIR_ENGINE))
 
 
@@ -260,8 +236,12 @@ def _fold(
 ) -> CritProfile:
     """Fold this build's crit declarations, however their fields were compiled.
 
-    ``damage_bonus`` sums in build order, so the two readers replay one float
-    addition rather than two spellings of it.
+    ``damage_bonus`` sums in build order, so a reader replays one float
+    addition rather than two spellings of it.  A build declaring nothing gets
+    ``CritProfile(0.0, None, None)``: the zero is "no holder adds crit
+    damage" and the two ``None``s are "nobody forces a crit or refunds a
+    cooldown", which is why both slots are optional records rather than
+    floats.
     """
     damage_bonus = 0.0
     forced: ForcedCrit | None = None
@@ -314,5 +294,4 @@ __all__ = [
     "crit_references",
     "crit_rules",
     "declared_crit_profile",
-    "resolve_profile",
 ]
