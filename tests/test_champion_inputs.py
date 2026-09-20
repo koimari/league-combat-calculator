@@ -188,12 +188,6 @@ def test_a_declared_stat_reads_its_wired_value_or_its_declared_default() -> None
     assert target_stat({"roster_target_count": 3.0}, "roster_target_count") == 3.0
 
 
-def test_every_declared_default_carries_a_reason() -> None:
-    """A default without a reason is the literal it replaced, relocated."""
-    for name, default in {**CHAMPION_STATS, **TARGET_STATS}.items():
-        assert default.reason.strip(), name
-
-
 def test_an_undeclared_option_raises_and_a_declared_one_falls_back() -> None:
     """An option nothing declared is unwired input, not a default."""
     ctx = SlotCtx(

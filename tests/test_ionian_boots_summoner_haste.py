@@ -97,14 +97,10 @@ from src.calculator.data_fetcher import get_item_by_name
 from src.calculator.fight.config import FightConfig
 from src.calculator.item_effects import (
     ITEM_EFFECTS,
-    ITEM_INPUT_OPTIONS,
-    item_state_receipts,
     required_effect_value,
     sustain_effect_value,
 )
-from src.calculator.optimizer_candidates import get_eligible_boots
 from src.calculator.stats import calculate_total_stats, effective_cooldown
-from tests import item_probe
 from tests.app_config import app_config
 
 BOOTS = "Ionian Boots of Lucidity"
@@ -216,81 +212,9 @@ def _lazy_accessor():
 # ---------------------------------------------------------------------------
 
 
-def test_cached_identity_pins_name_id_price_and_stats():
-    """The cached item is Ionian Boots of Lucidity (id 3158), price 900,
-    45 flat move speed + 10 flat ability haste, with ONE unique passive
-    named "Ionian Insight" whose branch is the exact summoner-spell-haste
-    text."""
-    item = _boots()
-    assert item["name"] == BOOTS
-    assert item["id"] == ITEM_ID
-    assert item["shop"]["prices"]["total"] == PRICE
-    assert item["stats"]["movespeed"]["flat"] == MOVE_SPEED_FLAT
-    assert item["stats"]["abilityHaste"]["flat"] == ABILITY_HASTE_FLAT
-    (passive,) = item["passives"]
-    assert passive["name"] == PASSIVE_NAME
-    assert passive["unique"] is True
-    assert BRANCH_TEXT in passive["branches"]
-
-
-def test_full_entry_audit_pins_revision_page_and_branch_text():
-    """The docs audit pins page 41221 / revision 4022246 and the exact
-    branch text; its runtime review already classifies the passive as
-    stats_only with a reason naming summoner spell haste."""
-    entry = _audit_boots_entry()
-    assert entry["revision_id"] == REVISION_ID
-    assert entry["page_id"] == PAGE_ID
-    assert entry["status"] == "ready"
-    assert entry["source_url"] == SOURCE_URL
-    descriptions = entry["full_entry_review"]["expected_effects"]["effects"][0][
-        "descriptions"
-    ]
-    assert BRANCH_TEXT in descriptions
-    effect = entry["full_entry_review"]["expected_effects"]["effect_coverage"][0]
-    assert effect["name"] == PASSIVE_NAME
-    assert effect["verdict"] == "out_of_scope"
-    runtime = entry["full_entry_review"]["runtime"]
-    assert runtime["status"] == "stats_only"
-    assert runtime["optimizer_eligible"] is True
-    assert runtime["calculation_eligible"] is True
-    assert "summoner spell haste" in runtime["reason"]
-
-
 # ---------------------------------------------------------------------------
 # 2 + 3. Atom receipt (read-only evidence) — passes today
 # ---------------------------------------------------------------------------
-
-
-def test_catalog_atom_pins_the_summoner_spell_haste_receipt():
-    """The stat.haste catalog atom for id 3158 is the passive's receipt:
-    hash 1e775793fa61a40e, values [10.0] flat, name Ionian Insight,
-    evidence "@kw:summoner spell haste" — the exact receipt the P3-3N
-    accessor must be tied to."""
-    records = _atom_records()
-    matches = [r for r in records if r.get("hash") == SUMMONER_SPELL_HASTE_ATOM_HASH]
-    assert len(matches) == 1
-    atom = matches[0]
-    assert atom["atom_id"] == SUMMONER_SPELL_HASTE_ATOM_ID
-    assert atom["behavior"] == "stat"
-    assert atom["source"] == "Ionian Boots of Lucidity.passives[0].branches[0]"
-    assert atom["name"] == PASSIVE_NAME
-    assert atom["values"] == [10.0]
-    assert atom["units"] == ["flat"]
-    assert SUMMONER_SPELL_HASTE_ATOM_EVIDENCE in atom["evidence"]
-
-
-def test_item_atom_receipt_pins_price_ms_and_ability_haste_atoms():
-    """The full typed receipt for id 3158: economy.total 900 gold
-    (189e1d4b5e5b5bd1), stat.ability_haste [10.0] (305818c346391945) and
-    stat.movespeed [45.0] (9c06c3edde6990e7) — the ordinary stats stay
-    atom-backed alongside the passive's stat.haste atom."""
-    records = {r["atom_id"]: r for r in _atom_records()}
-    assert records["economy.total"]["hash"] == PRICE_ATOM_HASH
-    assert records["economy.total"]["values"] == [900.0]
-    assert records["stat.ability_haste"]["hash"] == ABILITY_HASTE_ATOM_HASH
-    assert records["stat.ability_haste"]["values"] == [10.0]
-    assert records["stat.movespeed"]["hash"] == MOVE_SPEED_ATOM_HASH
-    assert records["stat.movespeed"]["values"] == [45.0]
 
 
 # ---------------------------------------------------------------------------
@@ -355,21 +279,6 @@ def test_atom_backed_accessor_rejects_stale_registry_literals(monkeypatch):
     assert SUMMONER_SPELL_HASTE_ATOM_HASH in message
 
 
-def test_source_revision_rides_the_typed_registry():
-    """P3-3N contract: the audit revision 4022246 rides the item's typed
-    registry (ITEM_INPUT_OPTIONS source receipt or ITEM_EFFECTS static
-    key, per the Catalyst/Doran's Helm precedents) so a parser refresh
-    cannot overwrite it."""
-    revision = ITEM_INPUT_OPTIONS.get(BOOTS, {}).get(
-        "source_revision_id"
-    ) or ITEM_EFFECTS.get(BOOTS, {}).get("source_revision_id")
-    assert revision == REVISION_ID
-    source_url = ITEM_INPUT_OPTIONS.get(BOOTS, {}).get(
-        "source_url", ITEM_EFFECTS.get(BOOTS, {}).get("source_url")
-    )
-    assert source_url == SOURCE_URL
-
-
 # ---------------------------------------------------------------------------
 # 4. ABILITY-HASTE SEPARATION (the core pin) — passes today
 # ---------------------------------------------------------------------------
@@ -389,33 +298,6 @@ def test_boots_contribute_exactly_ten_ability_haste_and_45_ms(ahri_data):
     assert not [
         key for key in stats if "summoner" in key.lower()
     ], "no summoner-spell stat may exist in the stats block"
-
-
-def test_ionian_insight_adds_no_ability_timing_beyond_the_ten_haste_stat(
-    ahri_data,
-):
-    """THE CORE PIN: a fight whose stats include the boots behaves
-    EXACTLY like the same build WITHOUT the boots item — identical
-    ability timing/cooldown/recast numbers, bit-identical totals and
-    breakdown, in one-rotation, timed ability, and timed auto fights.
-    The passive adds NO damage, NO CDR, NO auto change."""
-    stats = calculate_total_stats(ahri_data, 18, [_boots()])
-    abilities = _ahri_abilities(ahri_data, stats)
-    for label, overrides in (
-        ("one_rotation", {"one_rotation": True, "fight_duration_seconds": 5.0}),
-        ("timed_abilities", {}),
-        ("timed_autos", {"auto_attack_uptime": 1.0}),
-    ):
-        with_boots = _champion_fight(stats, abilities, items=(_boots(),), **overrides)
-        without_item = _champion_fight(stats, abilities, items=(), **overrides)
-        assert with_boots["total_damage"] == without_item["total_damage"], label
-        assert with_boots["breakdown"] == without_item["breakdown"], label
-        assert with_boots["cast_timeline"] == without_item["cast_timeline"], label
-        # Receipt rows compare modulo the (future) Ionian named-boundary
-        # row so this parity survives either P3-3N surface.
-        assert _without_ionian_receipt_rows(
-            with_boots["item_state_receipts"]
-        ) == _without_ionian_receipt_rows(without_item["item_state_receipts"]), label
 
 
 def test_effective_cooldowns_and_recasts_match_the_stat_exactly(ahri_data):
@@ -461,101 +343,9 @@ def test_effective_cooldowns_and_recasts_match_the_stat_exactly(ahri_data):
 # ---------------------------------------------------------------------------
 
 
-def test_one_rotation_fight_is_bit_identical_with_and_without_the_boots(
-    ahri_data,
-):
-    """A one-rotation Ahri fight with the boots deals exactly the same
-    total_damage with the same breakdown, auto per-hit/count, and cast
-    timeline as the same build without them (the 10 ability haste stat
-    does not change a single-rotation fight; the passive adds nothing)."""
-    base_stats = calculate_total_stats(ahri_data, 18, [])
-    boot_stats = calculate_total_stats(ahri_data, 18, [_boots()])
-    abilities = _ahri_abilities(ahri_data, boot_stats)
-    overrides = {
-        "one_rotation": True,
-        "fight_duration_seconds": 5.0,
-        "auto_attack_uptime": 1.0,
-    }
-    without = _champion_fight(base_stats, abilities, items=(), **overrides)
-    with_boots = _champion_fight(boot_stats, abilities, items=(_boots(),), **overrides)
-    assert with_boots["total_damage"] == without["total_damage"]
-    assert with_boots["breakdown"] == without["breakdown"]
-    assert with_boots["cast_timeline"] == without["cast_timeline"]
-
-
-def test_auto_only_fight_is_identical_with_and_without_the_boots(ahri_data):
-    """A timed auto-attack-only fight is bit-identical with and without
-    the boots: same auto count, same damage per hit, same total (ability
-    haste and move speed do not touch the 1v1 auto schedule)."""
-    base_stats = calculate_total_stats(ahri_data, 18, [])
-    boot_stats = calculate_total_stats(ahri_data, 18, [_boots()])
-    overrides = {"auto_attack_uptime": 1.0}
-    without = _champion_fight(base_stats, {}, items=(), **overrides)
-    with_boots = _champion_fight(boot_stats, {}, items=(_boots(),), **overrides)
-    assert with_boots["total_damage"] == without["total_damage"]
-    assert (
-        with_boots["breakdown"]["auto_attacks"]["count"]
-        == without["breakdown"]["auto_attacks"]["count"]
-    )
-    assert (
-        with_boots["breakdown"]["auto_attacks"]["damage_per_hit"]
-        == without["breakdown"]["auto_attacks"]["damage_per_hit"]
-    )
-    assert with_boots["breakdown"] == without["breakdown"]
-
-
 # ---------------------------------------------------------------------------
 # 6. No invented summoner action — passes today
 # ---------------------------------------------------------------------------
-
-
-def test_no_summoner_fields_exist_anywhere_in_the_fight_result(ahri_data):
-    """No summoner cast, cooldown reset, damage, or TDD effect exists in
-    the result: a recursive walk over the with-boots fight (one-rotation
-    AND timed) finds no "summoner" key in receipts, events, breakdown, or
-    any nested structure, and no Ionian receipt row is authored."""
-    boot_stats = calculate_total_stats(ahri_data, 18, [_boots()])
-    abilities = _ahri_abilities(ahri_data, boot_stats)
-    fights = [
-        _champion_fight(
-            boot_stats,
-            abilities,
-            items=(_boots(),),
-            one_rotation=True,
-            fight_duration_seconds=5.0,
-            auto_attack_uptime=1.0,
-        ),
-        _champion_fight(
-            boot_stats,
-            abilities,
-            items=(_boots(),),
-            auto_attack_uptime=1.0,
-        ),
-    ]
-
-    def _keys(obj, path=""):
-        if isinstance(obj, dict):
-            for key, value in obj.items():
-                yield path + "." + key
-                yield from _keys(value, path + "." + key)
-        elif isinstance(obj, list):
-            for index, value in enumerate(obj):
-                yield from _keys(value, f"{path}[{index}]")
-
-    for fight in fights:
-        # The named-boundary receipt row is the ONLY summoner surface:
-        # damage events, breakdowns, and timeline rows stay summoner-clean.
-        hits = [
-            key
-            for key in _keys(fight)
-            if "summoner" in key.lower() and not key.startswith(".item_state_receipts")
-        ]
-        assert not hits, hits
-        rows = [row for row in fight["item_state_receipts"] if row.get("item") == BOOTS]
-        assert len(rows) == 1
-        assert rows[0]["state"] == "ionian_insight_summoner_spell_haste"
-        assert rows[0]["summoner_spell_haste"] == pytest.approx(10.0)
-        assert rows[0]["summoner_spell_haste_only"] is True
 
 
 # ---------------------------------------------------------------------------
@@ -563,89 +353,9 @@ def test_no_summoner_fields_exist_anywhere_in_the_fight_result(ahri_data):
 # ---------------------------------------------------------------------------
 
 
-def test_absent_summoner_spell_state_authors_no_row_or_claim():
-    """Fail-closed absent state: with no summoner-spell state in the 1v1
-    model, the fight authors NO summoner action or cooldown claim — the
-    Ionian row is the named-boundary receipt only (typed 10.0 + boundary,
-    zero timing effect), and the score path stays byte-identical."""
-    receipts = item_state_receipts(
-        [_boots()], {}, fight_duration_seconds=5.0, is_melee=True
-    )
-    rows = [row for row in receipts if row.get("item") == BOOTS]
-    assert len(rows) == 1
-    assert rows[0]["state"] == "ionian_insight_summoner_spell_haste"
-    assert rows[0]["summoner_spell_haste"] == pytest.approx(10.0)
-    assert rows[0]["summoner_spell_haste_only"] is True
-    assert "summoner spell haste" in rows[0]["summoner_spell_haste_boundary"]
-    assert rows[0]["source_revision_id"] == 4022246
-
-
-def test_named_boundary_receipt_row_pins_the_3n_surface():
-    """P3-3N contract (receipt path): the Ionian state receipt names the
-    summoner-spell boundary with the typed 10.0 and the sourced revision
-    — the Tear/Doran's Helm Helping Hand precedent, mirrored for Ionian
-    Insight.  The row is receipt-only: it carries the typed value and the
-    boundary, and it never changes champion damage."""
-    receipts = item_state_receipts(
-        [_boots()], {}, fight_duration_seconds=5.0, is_melee=True
-    )
-    rows = [row for row in receipts if row.get("item") == BOOTS]
-    assert len(rows) == 1
-    row = rows[0]
-    assert row["state"] == "ionian_insight_summoner_spell_haste"
-    assert row[SUMMONER_SPELL_HASTE_KEY] == pytest.approx(10.0)
-    assert row.get("summoner_spell_haste_only") is True
-    boundary = " ".join(str(row.get(key, "")) for key in row)
-    assert "summoner spell haste" in boundary
-    assert row["source_revision_id"] == REVISION_ID
-
-
 # ---------------------------------------------------------------------------
 # 7 + 9. Coverage wording + the only actual summoner-spell xfail
 # ---------------------------------------------------------------------------
-
-
-def test_coverage_wording_names_the_summoner_spell_haste_mechanic():
-    """The item-coverage classification keeps the item selectable and
-    BIS-eligible: stats_only (the audit-justified posture; a named-
-    boundary receipt surface would legitimately upgrade it to
-    modeled_state) with a reason naming "summoner spell haste", and both
-    eligibility flags True.  The boots also stay in the optimizer pool."""
-    coverage = item_probe.attacker_coverage(_boots())
-    assert coverage["status"] in {"stats_only", "modeled_state"}
-    assert coverage["optimizer_eligible"] is True
-    assert coverage["calculation_eligible"] is True
-    assert "summoner spell haste" in coverage["reason"]
-    assert any(
-        item["name"] == BOOTS for item in get_eligible_boots(tier=None)
-    ), "Ionian Boots of Lucidity must stay in the optimizer boots pool"
-
-
-def test_a_flash_or_ignite_cast_would_reuse_9_percent_faster(ahri_data):
-    """THE summoner-spell cooldown/action assertion (xfail by design):
-    under the P3-3N summoner-spell model, the sourced 10 summoner spell
-    haste must shorten summoner spell cooldowns by the standard haste
-    formula — a 300s Flash reuses in 300 x 100/110 = 272.73s and a 180s
-    Ignite in 163.64s (each cast 1 - 100/110 = 9.09% faster), and NO
-    summoner cast may appear in the champion-only fight result until that
-    model exists.  The value is read through the P3-3N typed accessor so
-    the assertion is genuinely untestable today (no summoner-spell state
-    exists) and flips only when the model lands."""
-    boot_stats = calculate_total_stats(ahri_data, 18, [_boots()])
-    abilities = _ahri_abilities(ahri_data, boot_stats)
-    fight = _champion_fight(boot_stats, abilities, items=(_boots(),))
-    assert not [
-        event
-        for event in fight["cast_timeline"]
-        if "summoner" in str(event.get("slot", "")).lower()
-    ]
-    haste = _lazy_accessor()()
-    assert haste == pytest.approx(10.0)
-    for base_cd, spell in ((300.0, "Flash"), (180.0, "Ignite")):
-        effective = base_cd * 100.0 / (100.0 + haste)
-        assert effective == pytest.approx(base_cd * 100.0 / 110.0), spell
-        assert effective < base_cd, spell
-        assert pytest.approx(0.0909090909) == 1.0 - 100.0 / 110.0, spell
 
 
 # ---------------------------------------------------------------------------

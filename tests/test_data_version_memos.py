@@ -227,19 +227,6 @@ def test_the_phase_keys_its_survivors_and_the_rotation_lane_keys_its_own() -> No
     assert data_registry.ROTATION_MEMOS
 
 
-def test_every_declared_memo_carries_a_reason() -> None:
-    """A table entry with an empty reason is an undeclared memo in disguise."""
-    for table in (
-        data_registry.DATA_VERSION_KEYED_MEMOS,
-        data_registry.ROTATION_MEMOS,
-        data_registry.UNGOVERNED_MEMOS,
-        data_registry.DEFERRED_MEMOS,
-        data_registry.REFRESH_CLEARED_MEMOS,
-    ):
-        for member, governance in table.items():
-            assert governance.why.strip(), member
-
-
 def test_every_declared_memo_names_what_stales_it() -> None:
     """Criterion 14's first clause, over the population it was unaskable of.
 

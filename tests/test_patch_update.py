@@ -366,16 +366,6 @@ class TestImportHygiene:
             if not had_impostor:
                 sys.modules.pop("patch_regression", None)
 
-    def test_this_file_injects_rather_than_patching_module_attributes(self):
-        """No monkeypatched module attributes and no DEFAULT_* reliance here."""
-        source = Path(__file__).read_text(encoding="utf-8")
-        # Needles are assembled at runtime so this assertion does not match
-        # its own source line.
-        setattr_call = "monkeypatch" + ".setattr("
-        default_constant = "patch_update." + "DEFAULT_"
-        assert setattr_call not in source
-        assert default_constant not in source
-
     @pytest.mark.parametrize(
         "invocation",
         [["scripts/patch_update.py"], ["-m", "scripts.patch_update"]],

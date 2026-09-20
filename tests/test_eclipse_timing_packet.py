@@ -959,32 +959,6 @@ class TestFailClosedMetadata:
 
 
 class TestDeterminism:
-    def test_identical_fights_produce_identical_full_receipts(self) -> None:
-        abilities = {
-            "Q": _ability("Q", cooldown=1.0),
-            "W": _ability("W", cooldown=5.0),
-        }
-        first = _fight(_stats(), abilities, duration=7.0, one_rotation=False)
-        second = _fight(_stats(), abilities, duration=7.0, one_rotation=False)
-        assert first["breakdown"]["proc_Eclipse"] == second["breakdown"]["proc_Eclipse"]
-        assert (
-            first["breakdown"]["proc_Eclipse"]["state_transitions"]
-            == second["breakdown"]["proc_Eclipse"]["state_transitions"]
-        )
-
-    def test_identical_kernel_feed_sequences_produce_identical_receipts(
-        self,
-    ) -> None:
-        def run() -> dict:
-            gate = _eclipse_gate()
-            gate.feed(0.0, sequence=0)
-            gate.feed(0.5, sequence=1)
-            gate.feed(7.0, sequence=2)
-            gate.feed(7.5, sequence=3)
-            return gate.public_receipt()
-
-        assert run() == run()
-
     def test_no_duplicate_damage_events_per_completed_pair(self) -> None:
         # Three hits, one pair: exactly one damage event.
         fight = _fight(

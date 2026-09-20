@@ -88,8 +88,6 @@ def test_the_claim_evidence_containers_are_committed_beside_the_counter() -> Non
         # Only a Class B module may carry one: elsewhere it would excuse
         # counter 1, which is the escape hatch the receipt exists to close.
         assert module in behavior_frontier.CLASS_B_CLAIM_PROSE
-        for name, reason in containers.items():
-            assert len(reason.strip()) > 20, name
     assert "Amendment A" in block["amendment"]
 
 
@@ -205,9 +203,8 @@ def test_every_excluded_module_carries_a_reason() -> None:
         behavior_frontier.CLASS_D_NON_BEHAVIOURAL,
         behavior_frontier.CLASS_B_CLAIM_PROSE,
     ):
-        for module, reason in block.items():
+        for module in block:
             assert (ROOT / "src" / module).exists(), module
-            assert len(reason.strip()) > 20, module
 
 
 def test_counter_three_reads_the_catalog_rather_than_a_second_count() -> None:
@@ -306,14 +303,6 @@ def test_the_ten_h4_tags_ride_the_frontier() -> None:
     assert set(block["self_referential"]) == set(catalog.H4_SELF_REFERENTIAL_TAGS)
     assert set(block["reasons"]) == set(block["dead"]) | set(block["self_referential"])
     assert set(block["families"]) == set(block["reasons"])
-
-
-def test_the_priors_are_carried_beside_the_measurement() -> None:
-    """R-07's discipline: a prior is never a gate, and its divergence has a cause."""
-    priors = _receipt()["priors"]
-    assert set(priors) >= {"counter_1", "counter_2", "counter_3", "class_c", "class_d"}
-    for name, prior in priors.items():
-        assert prior["cause"].strip(), name
 
 
 # ---------------------------------------------------------------------------

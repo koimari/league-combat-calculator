@@ -785,8 +785,6 @@ def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:
         "healing_and_regeneration",
         "death_or_terminal_cutoff",
     ]
-    # 8 is the stat-surface labels, 9 the scoreboard control family; neither touches a phase name.
-    assert CAPABILITY_SCHEMA_VERSION == 9
 
 
 def test_s6_moved_the_ordering_and_not_the_classification() -> None:

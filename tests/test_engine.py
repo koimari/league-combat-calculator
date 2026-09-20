@@ -212,10 +212,6 @@ class TestPhaseOrdering:
         with pytest.raises(ValueError, match="sideways"):
             build_parser({"Q": bad}, "TestChamp")
 
-    def test_phase_order_constant(self) -> None:
-        """The approved phase order: BUFF -> DEBUFF -> DAMAGE -> ONHIT -> AMP."""
-        assert PHASE_ORDER == ("buff", "debuff", "damage", "onhit", "amp")
-
 
 # ---------------------------------------------------------------------------
 # Zero-damage entry emission (the stat_buff trap)

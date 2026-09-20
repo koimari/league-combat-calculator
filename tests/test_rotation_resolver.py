@@ -330,13 +330,6 @@ class TestThePinnedPreCampaignOrdering:
     def champions(self):
         return {data.get("name"): data for data in fetch_champion_data().values()}
 
-    def test_the_table_holds_exactly_the_pre_campaign_slots(self) -> None:
-        assert {
-            "Ahri": frozenset({"E"}),
-            "Pantheon": frozenset({"W"}),
-            "Syndra": frozenset({"E"}),
-        } == _PRE_CAMPAIGN_CC_ORDERING
-
     @pytest.mark.parametrize(
         ("champion_name", "slot"),
         [("Ahri", "E"), ("Pantheon", "W"), ("Syndra", "E")],

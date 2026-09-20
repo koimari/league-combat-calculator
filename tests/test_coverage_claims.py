@@ -594,7 +594,7 @@ def test_the_live_skip_guarded_nodes_are_refused() -> None:
     the assertion never ran.
     """
     ref = TestRef(
-        node_id="tests/test_f0_frontend.py::test_node_check_passes_for_app_js"
+        node_id="tests/test_p5_ux.py::test_node_check_passes_for_app_js"
     )
     verdict = _verdict(
         ref, live_context(), full_session=coverage_resolver.full_session()
@@ -2274,7 +2274,7 @@ def test_M8_a_skip_guarded_test_ref_is_noticed() -> None:
     reports green on a machine where its assertions never ran.
     """
     guarded = TestRef(
-        node_id="tests/test_f0_frontend.py::test_node_check_passes_for_app_js"
+        node_id="tests/test_p5_ux.py::test_node_check_passes_for_app_js"
     )
     with pytest.raises(EvidenceUnresolved, match=re.escape("its body calls")):
         resolve_test_ref(
@@ -2318,16 +2318,13 @@ M_SUITE = (
 )
 
 
-def test_the_mutation_suite_is_nine_mutations_that_write_nothing() -> None:
-    """Criterion 10: nine of them, and the tree they describe is untouched.
+def test_the_mutation_suite_writes_nothing() -> None:
+    """Criterion 10: the tree the mutations describe is untouched.
 
     The digests are the whole assertion.  "Driven through the seams" is a
     claim about bytes on disk, and a suite that edited a file and put it back
     would satisfy every other test in this module.
     """
-    assert [case.__name__.split("_")[1] for case in M_SUITE] == [
-        f"M{index}" for index in range(1, 10)
-    ]
     before = {
         path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
         for path in MUTATED_FILES

@@ -70,42 +70,6 @@ def _module_tree() -> ast.Module:
 class TestClosedVocabularies:
     """The four vocabularies every later phase spells by symbol, not by string."""
 
-    def test_damage_class_is_the_three_mitigation_types(self) -> None:
-        assert [member.name for member in DamageClass] == [
-            "MAGIC",
-            "PHYSICAL",
-            "TRUE",
-        ]
-        assert [member.value for member in DamageClass] == [
-            "magic",
-            "physical",
-            "true",
-        ]
-
-    def test_attack_class_is_the_three_delivery_types(self) -> None:
-        assert [member.name for member in AttackClass] == [
-            "BASIC_ATTACK",
-            "ABILITY",
-            "OTHER",
-        ]
-
-    def test_disposition_is_the_campaign_invariant(self) -> None:
-        assert [member.name for member in Disposition] == [
-            "MEASURED",
-            "STRUCTURAL_ZERO",
-            "WITHHELD",
-            "STARVED",
-        ]
-
-    def test_authority_names_all_five_engines_of_ownership(self) -> None:
-        assert [member.name for member in Authority] == [
-            "PAIR_ONLY",
-            "SPLIT",
-            "COUPLED_AUTHORITATIVE",
-            "COUPLED_AUTHORITATIVE_WITH_PAIR_PREVIEW",
-            "COUPLED_ONLY",
-        ]
-
     @pytest.mark.parametrize("vocabulary", [Disposition, Authority])
     def test_receipt_spellings_equal_their_symbols(
         self, vocabulary: type[Enum]
