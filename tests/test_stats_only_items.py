@@ -6,8 +6,8 @@ cached entry is textually numberless.  51 of the 90 have no described
 passive/active at all; the other 39 have a real, numeric passive/active
 (shields, Grievous Wounds, stasis, ally-directed heals routed through the
 separate support ledger, ...) that is correctly excluded from this
-calculator's outgoing-TDD model.  See ``item_coverage.py``'s
-``_STATS_ONLY_CERTIFIED_EFFECT_TEXT`` docstring for the full reasoning.
+calculator's outgoing-TDD model.  See
+``tests/fixtures/stats_only_certified_effect_text.py`` for the full reasoning.
 
 This suite is the certification pass itself:
 
@@ -26,14 +26,14 @@ This suite is the certification pass itself:
 import pytest
 
 from src.calculator.data_fetcher import fetch_item_data, get_champion
-from src.calculator.item_coverage import (
-    _STATS_ONLY_CERTIFIED_EFFECT_TEXT,
-    stats_only_effect_fingerprint,
-)
 from src.calculator.item_source import is_ordinary_sr_item
 from src.calculator.item_stat_block import get_item_stats
 from src.calculator.stats import calculate_total_stats
 from tests import item_probe
+from tests.fixtures.stats_only_certified_effect_text import (
+    CERTIFIED_EFFECT_TEXT,
+    effect_fingerprint,
+)
 
 # The SR-admitted items whose current cached data classifies as stats_only.
 # Computed live, behind the same predicate the optimizer's candidate pool
@@ -109,15 +109,13 @@ def test_fingerprint_registry_matches_the_described_subset_exactly():
     the described subset without this registry being updated alongside it.
     """
     described_names = {
-        name
-        for name, item in _ITEMS_BY_NAME.items()
-        if stats_only_effect_fingerprint(item)
+        name for name, item in _ITEMS_BY_NAME.items() if effect_fingerprint(item)
     }
 
-    assert described_names == set(_STATS_ONLY_CERTIFIED_EFFECT_TEXT)
+    assert described_names == set(CERTIFIED_EFFECT_TEXT)
 
 
-@pytest.mark.parametrize("item_name", sorted(_STATS_ONLY_CERTIFIED_EFFECT_TEXT))
+@pytest.mark.parametrize("item_name", sorted(CERTIFIED_EFFECT_TEXT))
 def test_certified_effect_text_has_not_drifted(item_name):
     """A pinned item's cached branch text must match byte-for-byte.
 
@@ -125,9 +123,9 @@ def test_certified_effect_text_has_not_drifted(item_name):
     appeared -- it means a human must re-read the branch and either re-pin
     the fingerprint (no mechanic change) or reclassify the item.
     """
-    live_fingerprint = stats_only_effect_fingerprint(_ITEMS_BY_NAME[item_name])
+    live_fingerprint = effect_fingerprint(_ITEMS_BY_NAME[item_name])
 
-    assert live_fingerprint == _STATS_ONLY_CERTIFIED_EFFECT_TEXT[item_name]
+    assert live_fingerprint == CERTIFIED_EFFECT_TEXT[item_name]
 
 
 # ---------------------------------------------------------------------------
