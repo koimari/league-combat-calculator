@@ -354,9 +354,9 @@ class LivePredicate:
     Shadowflame's Cinderbloom is the one amp whose pool cannot be
     precomputed: it reads the target's live health at the moment of the hit.
     Forcing it into a window would make the algebra claim a certainty the
-    mechanic does not have, so it gets its own activation shape and
-    ``requires_live_pool`` is a property of that shape rather than a flag a
-    caller may forget.
+    mechanic does not have, so it gets its own activation shape: needing a
+    live pool is a property of the shape rather than a flag a caller may
+    forget.
     """
 
     probe: Probe

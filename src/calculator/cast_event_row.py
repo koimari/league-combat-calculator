@@ -12,8 +12,7 @@ the reason it survives review is that the default can never fire while the
 producer is whole.
 
 So the contract gets a name. These accessors raise for a field the producer
-did not stamp, naming the field and what the row does carry, and a reader
-that wants the whole row takes :class:`CastEventRow`.
+did not stamp, naming the field and what the row does carry.
 """
 
 from __future__ import annotations

@@ -2379,7 +2379,7 @@ def _cinderbloom_rule(source: ValueSource) -> BehaviorRule:
     exists.  This one reads the target's health *at the instant of the hit*,
     under fire from a whole roster, so forcing it into a window would make
     the algebra claim a certainty the mechanic does not have.  It declares a
-    :class:`~.item_behavior.LivePredicate`, whose ``requires_live_pool`` is a
+    :class:`~.item_behavior.LivePredicate`, so needing a live pool is a
     property of the shape rather than a flag a caller may forget, and the
     interpreter compiles the *threshold* while the *reading* arrives event by
     event.

@@ -209,9 +209,8 @@ def amp_fields(
     if isinstance(payload.activation, LivePredicate):
         # The *threshold* is a sourced number and compiles here; the pool it
         # is compared against does not exist yet and must not be guessed at
-        # build time.  That asymmetry is what ``requires_live_pool`` names,
-        # and it is why the comparison lives in ``live_predicate_holds`` and
-        # not in a field.
+        # build time.  That asymmetry is why the comparison lives in
+        # ``live_predicate_holds`` and not in a field.
         fields.append(
             field(
                 LIVE_THRESHOLD_FIELD, resolve(payload.activation.threshold, ctx.level)
