@@ -16,7 +16,7 @@ from ..ability_spec import DamagePart
 from ..cast_dependency import CastDependency, validate_cast_dependencies
 from .charge_cadence import ChargeRule
 from .engine import SlotCtx, SlotParser, build_parser
-from .module_helpers import no_damage_parser
+from .module_helpers import no_damage_parser, ranked_slot
 from .packet_parsers import (
     SlotOverrides,
     _packet_parser,
@@ -92,11 +92,10 @@ def repeat_damage_parser(
     the parts keep the per-tick amount and emit one event per tick.
     """
 
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ranked = ctx.ranked()
-        if ranked is None:
-            return None
-        ability, rank = ranked
+    @ranked_slot
+    def parse(
+        ctx: SlotCtx, ability: dict[str, Any], rank: int
+    ) -> dict[str, Any] | None:
         per_tick = extract_named(
             ability, attr, rank, ctx.stats, ctx.target, level=ctx.level
         )
@@ -143,11 +142,10 @@ def first_plus_repeats_parser(
     bounces; Yuumi's first wave + 4 waves at 25% damage).
     """
 
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ranked = ctx.ranked()
-        if ranked is None:
-            return None
-        ability, rank = ranked
+    @ranked_slot
+    def parse(
+        ctx: SlotCtx, ability: dict[str, Any], rank: int
+    ) -> dict[str, Any] | None:
         first = extract_named(
             ability, first_attr, rank, ctx.stats, ctx.target, level=ctx.level
         )

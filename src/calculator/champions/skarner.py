@@ -23,7 +23,7 @@ from typing import Any
 
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
-from .module_helpers import ability_cast_times, named_damage
+from .module_helpers import ability_cast_times, named_damage, ranked_slot
 from .packet_module import build_packet_module, repeat_damage_parser
 from .shared_mechanics import with_self_shield
 from .slot_entries import damage_entry
@@ -108,12 +108,11 @@ _seismic_bastion = with_self_shield(
 )
 
 
-def _ixtals_impact(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _ixtals_impact(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """E: terrain-collision physical damage (flat + bAD + % max health)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     leveling = find_named_leveling(ability, "Physical Damage")
     if leveling is None:
         return None

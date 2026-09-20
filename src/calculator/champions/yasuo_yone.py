@@ -17,6 +17,7 @@ from typing import Any
 from ..ability_prose import extract_description_control_duration
 from ..ability_spec import DamagePart
 from .engine import DAMAGE, SlotCtx, SlotParser
+from .module_helpers import ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 
@@ -93,11 +94,10 @@ def gathering_storm_thrust(champion: str) -> SlotParser:
     read from.
     """
 
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ranked = ctx.ranked()
-        if ranked is None:
-            return None
-        ability, rank = ranked
+    @ranked_slot
+    def parse(
+        ctx: SlotCtx, ability: dict[str, Any], rank: int
+    ) -> dict[str, Any] | None:
         stacks = min(max(int(ctx.option("q_gathering_storm")), 0), 2)
         damage = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
         entry = damage_entry(

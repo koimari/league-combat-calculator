@@ -148,11 +148,10 @@ def named_damage(  # pylint: disable=too-many-arguments
     context the way ``attr`` is.
     """
 
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ranked = ctx.ranked()
-        if ranked is None:
-            return None
-        ability, selected = ranked
+    @ranked_slot
+    def parse(
+        ctx: SlotCtx, ability: dict[str, Any], selected: int
+    ) -> dict[str, Any] | None:
         row = attr(ctx) if callable(attr) else attr
         value = extract_named(ability, row, selected, ctx.stats, ctx.target)
         entry = damage_entry(

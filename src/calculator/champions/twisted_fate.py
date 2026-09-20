@@ -100,11 +100,10 @@ _CARD_CC = ("stun", "slow", "none")
 def _card_parser(occurrence: int, name: str, cc_kind: str):
     """One selected card's magic damage (flat + 100% AD + AP ratio)."""
 
-    def parse(ctx: SlotCtx) -> dict[str, Any] | None:
-        ranked = ctx.ranked()
-        if ranked is None:
-            return None
-        ability, rank = ranked
+    @ranked_slot
+    def parse(
+        ctx: SlotCtx, ability: dict[str, Any], rank: int
+    ) -> dict[str, Any] | None:
         leveling = find_named_leveling(ability, "Magic Damage", occurrence)
         if leveling is None:
             return None

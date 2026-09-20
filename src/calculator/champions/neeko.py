@@ -38,7 +38,7 @@ from ..binary_roots import (
 )
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .module_helpers import named_damage
+from .module_helpers import named_damage, ranked_slot
 from .packet_module import build_packet_module
 from .shared_mechanics import with_self_shield
 from .slot_control import with_control
@@ -70,12 +70,11 @@ _R_SHIELD_PER_CHAMPION_AP_RATIO = calculation_coefficient(
 _R_SHIELD_DURATION = data_value_at_rank(_NEEKO_R_SPELL, "ShieldDuration", 1)
 
 
-def _blooming_burst(ctx: SlotCtx) -> dict[str, Any] | None:
+@ranked_slot
+def _blooming_burst(
+    ctx: SlotCtx, ability: dict[str, Any], rank: int
+) -> dict[str, Any] | None:
     """Q: initial burst + up to 2 re-blooms (Total Maximum Magic Damage)."""
-    ranked = ctx.ranked()
-    if ranked is None:
-        return None
-    ability, rank = ranked
     initial = extract_named(
         ability, "Initial Magic Damage", rank, ctx.stats, ctx.target
     )
