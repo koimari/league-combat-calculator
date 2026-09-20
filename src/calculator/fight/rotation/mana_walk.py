@@ -55,7 +55,6 @@ def _apply_mana_resource_limits(state: FightState, plan: CastPlan) -> CastPlan:
         owner,
         maximum=base_maximum,
         current=base_maximum,
-        regen_per_second=regen,
     )
     manaflow = _manaflow_ledger_for(state, owner)
     enlighten_decl = _enlighten_decl_for(state)

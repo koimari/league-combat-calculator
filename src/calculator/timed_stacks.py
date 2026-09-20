@@ -52,7 +52,6 @@ class TimedStackState:
         self._entries: list[_StackEntry] = [
             _StackEntry(starting_time, "option") for _ in range(seed)
         ]
-        self._last_gain_time: float | None = starting_time if seed else None
         self._shared_deadline: float | None = (
             starting_time + rule.duration_seconds if seed else None
         )
@@ -139,7 +138,6 @@ class TimedStackState:
                 return out
             before = len(self._entries)
             self._entries.clear()
-            self._last_gain_time = None
             self._shared_deadline = None
             out.append(
                 self._timeline.record(
@@ -184,7 +182,6 @@ class TimedStackState:
                 )
             )
             if len(self._entries) == 0:
-                self._last_gain_time = None
                 self._shared_deadline = None
         return out
 
@@ -298,7 +295,6 @@ class TimedStackState:
                 )
                 return out
             # cap_behavior == "refresh": deadline refreshes, count stays.
-            self._last_gain_time = time
             self._shared_deadline = time + self.rule.duration_seconds
             self._decay_steps_applied = 0
             out.append(
@@ -320,7 +316,6 @@ class TimedStackState:
             self._entries = [
                 _StackEntry(time, kind or "trigger") for _ in range(amount)
             ]
-            self._last_gain_time = time
             self._shared_deadline = time + self.rule.duration_seconds
             self._decay_steps_applied = 0
             after = self.stacks
@@ -328,7 +323,6 @@ class TimedStackState:
             transition_kind: TransitionKind = "replace"
         elif self.rule.per_stack_timers:
             self._entries.append(_StackEntry(time, kind or "trigger"))
-            self._last_gain_time = time
             after = self.stacks
             expires_at = time + self.rule.duration_seconds
             transition_kind = "gain"
@@ -346,7 +340,6 @@ class TimedStackState:
                 *self._entries,
                 *[_StackEntry(time, kind or "trigger") for _ in range(amount)],
             ]
-            self._last_gain_time = time
             after = self.stacks
             expires_at = self._shared_deadline
             self._decay_steps_applied = 0
@@ -451,7 +444,6 @@ class TimedStackState:
         """Drop every entry and timer; returns the stack count they held."""
         before = self.stacks
         self._entries.clear()
-        self._last_gain_time = None
         self._shared_deadline = None
         self._decay_steps_applied = 0
         self._instances.clear()

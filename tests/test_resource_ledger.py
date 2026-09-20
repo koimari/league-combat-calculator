@@ -1100,6 +1100,6 @@ class TestRegression:
 #    identical receipts. Re-running on the SAME ledger is intentionally
 #    stateful (before/after values legitimately differ).
 #
-# 8. regen_per_second is accepted by the constructors but its runtime
-#    behavior is unspecified in the contract; no test asserts automatic
-#    regen. Explicit OP_REGEN events carry their own amounts.
+# 8. The account applies no automatic regeneration: an OP_REGEN event
+#    carries its own amount, and the walk computes that amount from the
+#    champion's own regen stat.

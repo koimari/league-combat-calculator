@@ -144,12 +144,12 @@ class StateTimeline:
     feeds transitions in the same ``(time, sequence)`` order the
     survival/damage walks use; ties at one ``(time, sequence)`` are
     decided by tier (expiry before gain before cooldown start), and
-    insertion order breaks the final tie deterministically.
+    insertion order breaks the final tie deterministically because
+    ``sorted`` is stable, which is why the key itself has three elements.
     """
 
     def __init__(self) -> None:
         self._transitions: list[Transition] = []
-        self._order = 0
 
     def record(
         self,
@@ -168,20 +168,11 @@ class StateTimeline:
             detail=dict(detail or {}),
         )
         self._transitions.append(transition)
-        self._order += 1
         return transition
 
     def transitions(self) -> list[Transition]:
         """The deterministic total order over recorded transitions."""
-        return sorted(
-            self._transitions,
-            key=lambda t: (
-                t.time,
-                t.tier,
-                t.sequence,
-                self._transitions.index(t),
-            ),
-        )
+        return sorted(self._transitions, key=lambda t: (t.time, t.tier, t.sequence))
 
     def public_receipt(self) -> list[dict[str, Any]]:
         """JSON-safe ordered receipt for every transition."""

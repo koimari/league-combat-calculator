@@ -76,7 +76,7 @@ class LeafBlock:
     and not the other, leaving the map describing a leaf that is not there.
     """
 
-    __slots__ = ("_dot", "_prefix", "_records", "_set", "_tag", "_target", "_writer")
+    __slots__ = ("_dot", "_records", "_set", "_tag", "_target", "_writer")
 
     def __init__(
         self,
@@ -88,13 +88,10 @@ class LeafBlock:
         """Bind one target mapping to the path prefix its keys hang under.
 
         An empty prefix is the payload's own root, whose keys carry no
-        leading dot: ``duration``, not ``.duration``.  ``_records``, ``_set``
-        and ``_dot`` are bound once because the optimizer walks every
-        participant of every candidate through here.
-        """
+        leading dot.  ``_records``, ``_set`` and ``_dot`` are bound once
+        because the optimizer walks every candidate's participants here."""
         self._writer = writer
         self._target = target
-        self._prefix = prefix
         self._dot = f"{prefix}." if prefix else ""
         self._tag = tag
         self._records = writer.records

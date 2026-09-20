@@ -76,7 +76,6 @@ class ResourceAccount:
         kind: str = RESOURCE_KIND_MANA,
         maximum: float,
         current: float | None = None,
-        regen_per_second: float = 0.0,
     ) -> None:
         if kind != RESOURCE_KIND_MANA:
             raise ValueError(
@@ -103,18 +102,11 @@ class ResourceAccount:
                 f"resource account current {opening_current!r} is outside "
                 f"[0, maximum={float(maximum)!r}]"
             )
-        if isinstance(regen_per_second, bool) or not math.isfinite(
-            float(regen_per_second)
-        ):
-            raise ValueError(
-                f"regen_per_second must be finite, got {regen_per_second!r}"
-            )
         self._owner = owner
         self._kind = kind
         self._base_maximum = float(maximum)
         self._maximum = float(maximum)
         self._current = min(opening_current, self._maximum)
-        self._regen_per_second = float(regen_per_second)
 
     # ── read-only state ────────────────────────────────────────────────────
     @property
@@ -209,14 +201,12 @@ class ResourceLedger:
         kind: str = RESOURCE_KIND_MANA,
         maximum: float,
         current: float | None = None,
-        regen_per_second: float = 0.0,
     ) -> None:
         self._account = ResourceAccount(
             owner,
             kind=kind,
             maximum=maximum,
             current=current,
-            regen_per_second=regen_per_second,
         )
         self._receipts: list[ResourceReceipt] = []
 
