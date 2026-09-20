@@ -38,7 +38,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, float_option, int_option
-from .module_helpers import missing_hp_fraction, ranked_slot
+from .module_helpers import ability_slot, missing_hp_fraction, ranked_slot
 from .slot_control import with_control
 from .slot_entries import STEROID_ZERO, ability_on_hit_entry, damage_entry
 from .slot_extract import (
@@ -282,11 +282,9 @@ _P_TAKEDOWN_ATTACK_SPEED = data_value(_VARUS_P_SPELL, "PassiveAS") * 100.0
 _P_TAKEDOWN_DERIVED_RATIO = data_value(_VARUS_P_SPELL, "AStoADChampion") / 100.0
 
 
-def _living_vengeance(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _living_vengeance(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: the takedown-empowered attack speed, and the AD/AP it derives."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
 
     armed = bool(ctx.option("p_champion_takedown"))
     bonus_as = _P_TAKEDOWN_ATTACK_SPEED if armed else 0.0

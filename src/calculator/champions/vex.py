@@ -41,6 +41,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
 from .inputs import int_option
+from .module_helpers import ability_slot
 from .packet_module import build_packet_module
 from .slot_entries import attach_self_shield, on_hit_entry
 from .slot_extract import extract_named, find_named_leveling, sum_modifiers
@@ -147,7 +148,8 @@ def _shadow_surge(packet_r):
     return parse
 
 
-def _gloom_detonation(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _gloom_detonation(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: Gloom mark detonation on the next basic attack (empowered auto).
 
     "Vex's next basic attack ... against an enemy with Gloom will detonate
@@ -158,9 +160,6 @@ def _gloom_detonation(ctx: SlotCtx) -> dict[str, Any] | None:
     capped by the engine's ``max_procs`` so autos beyond the count land
     plain (Bard-meep pattern).
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
     detonations = max(0, int(ctx.option("p_gloom_detonations")))
     if detonations <= 0:
         return None

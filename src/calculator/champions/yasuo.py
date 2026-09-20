@@ -38,7 +38,7 @@ from ..ability_spec import DamagePart
 from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS, coverage
 from .engine import SlotCtx
 from .inputs import bool_option, float_option, int_option
-from .module_helpers import no_damage, ranked_slot
+from .module_helpers import ability_slot, no_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
@@ -58,11 +58,11 @@ CERTIFIED_CONSTANTS, ATOM_IDS = crit_conversion_certification("f375a24fbf0555e1"
 certified_constants, atom_ids = CERTIFIED_CONSTANTS, ATOM_IDS
 
 
-def _way_of_the_wanderer(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _way_of_the_wanderer(
+    ctx: SlotCtx, ability: dict[str, Any]
+) -> dict[str, Any] | None:
     """P: Flow shield state row carrying the crit-conversion payload."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     shield = extract_named(ability, "Bonus Damage", ctx.level, ctx.stats, ctx.target)
     entry = no_damage(
         ctx,

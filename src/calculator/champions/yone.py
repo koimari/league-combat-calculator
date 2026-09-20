@@ -28,7 +28,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx
 from .inputs import int_option
-from .module_helpers import no_damage, ranked_slot
+from .module_helpers import ability_slot, no_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
@@ -60,7 +60,8 @@ _R_GUST_DELAY_SECONDS = 0.3
 PACKET_SHA256 = "806d48d7af49a8e38076a40e8ab180ee25751185eb1c7a31caf2b97e338aaaf1"
 
 
-def _way_of_the_hunter(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _way_of_the_hunter(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: soul-mark state row (no enemy damage) + the crit conversion.
 
     The P4 fix: Yone's P carries the SAME crit_modifier payload as
@@ -70,9 +71,6 @@ def _way_of_the_hunter(ctx: SlotCtx) -> dict[str, Any] | None:
     (x0.9), and grants 0.5 AD per excess % — for autos AND the Q's
     AD-ratio part.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
     entry = no_damage(
         ctx,
         name=ability_name(ability),

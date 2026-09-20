@@ -74,7 +74,7 @@ from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import int_option
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .slot_control import with_control
 from .slot_entries import STEROID_ZERO, damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
@@ -227,7 +227,8 @@ def _rapid_fire(
 _rapid_fire.phase = BUFF
 
 
-def _draw_a_bead(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _draw_a_bead(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: bonus attack RANGE — a sourced zero-enemy-damage row.
 
     Range is inert in this model (``is_melee`` is a static champion stat,
@@ -236,9 +237,6 @@ def _draw_a_bead(ctx: SlotCtx) -> dict[str, Any] | None:
     ``out_of_scope`` opening.  The magnitude still rides its typed atom,
     so the row names a sourced number instead of a bare disclaimer.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
     champion_data = {"name": ctx.champion_name, "abilities": ctx.abilities}
     bonus_range, _range_atom = required_ranked_attribute_atom(
         "Tristana", champion_data, "P", "Per-Level Scaling", ctx.level

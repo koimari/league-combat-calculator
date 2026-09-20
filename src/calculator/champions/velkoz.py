@@ -26,7 +26,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .charge_cadence import ChargeRule
 from .engine import SlotCtx, build_parser
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .shared_mechanics import ticked_channel
 from .slot_control import with_control
 from .slot_extract import PER_LEVEL_SCALING, ability_name, extract_named
@@ -40,11 +40,11 @@ _PROC_AP_RATIO = calculation_coefficient(
 _PROC_STACKS = int(data_value(_VELKOZ_PASSIVE_SPELL, "MaxStacks"))
 
 
-def _organic_deconstruction(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _organic_deconstruction(
+    ctx: SlotCtx, ability: dict[str, Any]
+) -> dict[str, Any] | None:
     """P: one 3-stack true-damage consume per fight, when 3+ abilities land."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
 
     # Deconstruction stacks come from damaging abilities (Q, W's two
     # rift hits, E, R). Any full rotation applies 3+, so a fight with

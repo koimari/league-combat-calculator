@@ -48,7 +48,7 @@ from .charge_cadence import ChargeRule
 from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS, coverage
 from .engine import SlotCtx
 from .inputs import int_option
-from .module_helpers import no_damage
+from .module_helpers import ability_slot, no_damage
 from .packet_module import build_packet_module
 from .slot_cc import CC_PER_PART
 from .slot_control import with_control
@@ -113,7 +113,8 @@ def _plant_attack_damage(ctx: SlotCtx) -> float:
     return base + _PLANT_AP_RATIO * ctx.stat("ability_power")
 
 
-def _plants(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _plants(ctx: SlotCtx, _ability: dict[str, Any]) -> dict[str, Any] | None:
     """W: plants — castable row pricing plant attacks over the window.
 
     The plant count is the player-controlled ``plant_count`` (a seed
@@ -122,9 +123,6 @@ def _plants(ctx: SlotCtx) -> dict[str, Any] | None:
     attack speed -> 4 attacks).  Zero cooldown keeps the row a single
     cast in both fight modes — the count is per window, never per recast.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
     plants = min(max(int(ctx.option("plant_count")), 0), 8)
     attacks = derived_attack_count(
         ctx,

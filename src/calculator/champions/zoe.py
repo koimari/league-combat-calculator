@@ -23,6 +23,7 @@ from ..ability_spec import DamagePart
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
 from .inputs import int_option
+from .module_helpers import ability_slot
 from .packet_module import build_packet_module
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
@@ -47,11 +48,9 @@ _W_SUMMONER_VARIANTS = {
 }
 
 
-def _spell_thief(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("W")
+def _spell_thief(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """W: three orbiting bolts, or a no-damage summoner Shard mimic."""
-    ability = ctx.ability("W", 0)
-    if ability is None:
-        return None
     rank = ctx.rank_for()
     if rank < 1:
         return None

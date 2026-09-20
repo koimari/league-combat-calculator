@@ -55,7 +55,7 @@ from ..ability_spec import DamageClass
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
-from .module_helpers import missing_hp_fraction, named_damage, ranked_slot
+from .module_helpers import ability_slot, missing_hp_fraction, named_damage, ranked_slot
 from .packet_module import build_packet_module
 from .shared_mechanics import damage_reduction_window
 from .slot_cc import CC_PER_PART
@@ -110,11 +110,9 @@ def _hunger_heal_share(health_percent: float) -> float:
     return 0.0
 
 
-def _eternal_hunger(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _eternal_hunger(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: bonus magic damage on every basic attack, plus its heal share."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     per_hit = extract_named(
         ability, "Per-Level Scaling", ctx.level, ctx.stats, ctx.target, level=ctx.level
     )

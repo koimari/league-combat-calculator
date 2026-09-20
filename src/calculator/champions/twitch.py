@@ -91,7 +91,7 @@ from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .slot_entries import STEROID_ZERO, damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .slotlib import stat_buff
@@ -143,11 +143,9 @@ def _poison_total_per_stack(level: int, ap: float) -> float:
     return base + _POISON_AP_RATIO * ap
 
 
-def _deadly_venom(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _deadly_venom(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: the poison DoT priced once per fight at the stack option."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     stacks = _poison_stacks(ctx.options)
     if stacks <= 0:
         return None
@@ -223,7 +221,8 @@ def _contaminate(
     return entry
 
 
-def _ambush(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _ambush(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """Q: stealth, and — when asserted — the 6s attack-speed window.
 
     Zero enemy damage either way.  The steroid is published only when
@@ -232,9 +231,6 @@ def _ambush(ctx: SlotCtx) -> dict[str, Any] | None:
     mechanic and stays inert (no phantom proc).  The row itself is kept
     at rank 0 so the withheld mechanic stays user-visible.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
     rank = ctx.rank_for()
     entry = damage_entry(
         ability_name(ability),
@@ -275,7 +271,8 @@ def _ambush(ctx: SlotCtx) -> dict[str, Any] | None:
 _ambush.phase = BUFF
 
 
-def _venom_cask(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _venom_cask(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """W: slow zone that applies poison stacks — a sourced zero-damage row.
 
     The stack application is the only damage-relevant thing here and it
@@ -283,9 +280,6 @@ def _venom_cask(ctx: SlotCtx) -> dict[str, Any] | None:
     a receipted ``out_of_scope`` opening.  The slow's magnitude rides its
     typed atoms so the row names sourced numbers.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
     rank = ctx.rank_for()
     entry: dict[str, Any] = {
         "name": ability_name(ability),

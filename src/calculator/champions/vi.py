@@ -36,7 +36,7 @@ from .charge_cadence import ChargeRule
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import float_option, int_option
-from .module_helpers import clamp, ranked_slot
+from .module_helpers import ability_slot, clamp, ranked_slot
 from .slot_control import extract_recharge
 from .slot_entries import attach_self_shield, damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
@@ -318,7 +318,10 @@ def _denting_stream(ctx: SlotCtx, duration: float) -> list[tuple[float, int]]:
     return events
 
 
-def _denting_blows_timed(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _denting_blows_timed(
+    ctx: SlotCtx, ability: dict[str, Any]
+) -> dict[str, Any] | None:
     """W: walk the merged hit stream through stack -> proc -> reset cycles.
 
     Each counted hit adds a stack (stacks reset when 4s pass without an
@@ -328,9 +331,6 @@ def _denting_blows_timed(ctx: SlotCtx) -> dict[str, Any] | None:
     the proc there — and a window whose stream never completes a cycle
     emits nothing rather than a fractional proc.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
     duration = _timed_window(ctx)
     if duration is None or ctx.rank_for("W") < 1:
         return None

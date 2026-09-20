@@ -26,7 +26,7 @@ from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, int_option
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .packet_module import build_packet_module
 from .slot_entries import attach_self_shield, damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
@@ -78,7 +78,8 @@ _SKY_SPLITTER_SHIELD_AP_RATIO = data_value(_VOLIBEAR_E_SPELL, "ShieldAPRatio")
 _SKY_SPLITTER_SHIELD_DURATION_SECONDS = data_value(_VOLIBEAR_E_SPELL, "ShieldDuration")
 
 
-def _relentless_storm(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _relentless_storm(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: per-stack bonus AS; at 5 stacks, Lightning Claws on-hit magic.
 
     BUFF phase: the bonus attack speed is published as a ``stat_buff``
@@ -86,9 +87,6 @@ def _relentless_storm(ctx: SlotCtx) -> dict[str, Any] | None:
     Lightning Claws on-hit rides the same entry so a fully-stacked
     Volibear's basic attacks carry the sourced magic damage.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
 
     requested = ctx.options.get("relentless_storm_stacks")
     ap = ctx.stat("ability_power")

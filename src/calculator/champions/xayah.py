@@ -33,7 +33,7 @@ from ..binary_roots import data_value, spell_object
 from ..control_spec import ControlEvent
 from .engine import SlotCtx
 from .inputs import int_option
-from .module_helpers import ranked_slot, steroid_entry
+from .module_helpers import ability_slot, ranked_slot, steroid_entry
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
@@ -129,7 +129,8 @@ def _secondary_feather_crit_extra(ability: Mapping[str, Any]) -> float:
     return _SECONDARY_FEATHER_CRIT.value(ability) / 100.0
 
 
-def _clean_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _clean_cuts(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: explicit Clean Cuts stack state + secondary-feather damage.
 
     Each empowered auto's Feather deals the triggering attack's damage
@@ -140,9 +141,6 @@ def _clean_cuts(ctx: SlotCtx) -> dict[str, Any] | None:
     (200% + 30%) damage if the triggering attack does") is baked into
     the per-hit value as an expected-value multiplier.
     """
-    ability = ctx.ability()
-    if ability is None:
-        return None
     requested = ctx.options.get("clean_cuts_stacks")
     stacks = min(
         max(int(requested if requested is not None else _CLEAN_CUTS_MAX_STACKS), 0),

@@ -37,7 +37,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
-from .module_helpers import ranked_slot, typed_damage
+from .module_helpers import ability_slot, ranked_slot, typed_damage
 from .packet_module import build_packet_module
 from .slot_cc import CC_PER_PART
 from .slot_entries import STEROID_ZERO, damage_entry
@@ -85,11 +85,9 @@ def _determination_percent(ctx: SlotCtx, occurrence: int) -> float:
     return sum_modifiers(leveling, ctx.level, level=ctx.level)
 
 
-def _cultivation_of_war(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _cultivation_of_war(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: Determination's bonus AD, doubled once the 12th stack lands."""
-    ability = ctx.ability("P")
-    if ability is None:
-        return None
 
     requested = ctx.options.get("p_determination_stacks")
     per_stack = _determination_percent(ctx, _P_PER_STACK_OCCURRENCE)

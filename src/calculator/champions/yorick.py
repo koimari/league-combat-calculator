@@ -57,7 +57,7 @@ from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS, coverage
 from .engine import SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
-from .module_helpers import no_damage, ranked_slot
+from .module_helpers import ability_slot, no_damage, ranked_slot
 from .packet_module import build_packet_module
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
@@ -139,11 +139,9 @@ def _mist_walker_attack_damage(ctx: SlotCtx) -> float:
     return base + _MIST_WALKER_AD_RATIO * ctx.stat("bonus_attack_damage")
 
 
-def _mist_walkers(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _mist_walkers(ctx: SlotCtx, _ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: Mist Walkers — fixed-count proc over the fight window."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     walkers = min(max(int(ctx.options.get("mist_walkers", _MIST_WALKER_MAX)), 0), 4)
     attacks = derived_attack_count(
         ctx,

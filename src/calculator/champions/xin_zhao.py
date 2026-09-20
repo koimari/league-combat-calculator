@@ -48,7 +48,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat
-from .module_helpers import at_level
+from .module_helpers import ability_slot, at_level
 from .packet_module import build_packet_module
 from .slot_cc import CC_PER_PART
 from .slot_entries import ability_on_hit_entry, damage_entry
@@ -80,11 +80,9 @@ _DAMAGE_BANDS: tuple[tuple[int, tuple[float, float]], ...] = (
 )
 
 
-def _determination(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot()
+def _determination(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: the third-stack bonus, as a per-attack share of the proc."""
-    ability = ctx.ability()
-    if ability is None:
-        return None
     ad_ratio, ap_ratio = at_level(_DAMAGE_BANDS, ctx.level)
     per_proc = ad_ratio * ctx.stat("attack_damage") + ap_ratio * ctx.stat(
         "ability_power"
@@ -142,11 +140,11 @@ _W_THRUST_CRIT_CHANCE_AMP = data_value(_XIN_ZHAO_W_SPELL, "CritChanceAmp")
 _E_ATTACK_SPEED_SECONDS = data_value(spell_object("Xin Zhao", "XinZhaoE"), "ASDuration")
 
 
-def _wind_becomes_lightning(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("W")
+def _wind_becomes_lightning(
+    ctx: SlotCtx, ability: dict[str, Any]
+) -> dict[str, Any] | None:
     """W: the whole cast — four slashes plus the crit-scaled thrust."""
-    ability = ctx.ability("W")
-    if ability is None:
-        return None
     rank = ctx.rank_for("W")
     if rank < 1:
         return None

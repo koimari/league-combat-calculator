@@ -41,6 +41,7 @@ from ..binary_roots import (
 )
 from .engine import ONHIT, SlotCtx
 from .module_helpers import (
+    ability_slot,
     no_damage,
     ranked_slot,
     require_named_leveling,
@@ -75,11 +76,11 @@ _Q_COMBINED_ROW = "Combined Bonus Magic Damage"
 PACKET_SHA256 = "5ad671471e6280db293bcad126fc07d1f6a41c6f5916861a4a3b59278ea133be"
 
 
-def _vow_of_the_first_lands(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _vow_of_the_first_lands(
+    ctx: SlotCtx, ability: dict[str, Any]
+) -> dict[str, Any] | None:
     """P: each critical strike deals a share of its damage again as magic."""
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
     ratio = _P_CRIT_MAGIC_BASE + _P_CRIT_MAGIC_PER_AP * float(ctx.stat("ability_power"))
     return {
         "name": ability_name(ability),

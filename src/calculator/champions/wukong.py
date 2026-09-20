@@ -49,7 +49,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import (
     ability_name,
@@ -85,10 +85,8 @@ _E_ATTACK_SPEED_SECONDS = data_value(
 )
 
 
-def _stone_skin(ctx: SlotCtx) -> dict[str, Any] | None:
-    ability = ctx.ability("P")
-    if ability is None:
-        return None
+@ability_slot("P")
+def _stone_skin(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     base = find_named_leveling(ability, "Per-Level Scaling", 0)
     per_stack = find_named_leveling(ability, "Per-Level Scaling", 1)
     if base is None or per_stack is None:

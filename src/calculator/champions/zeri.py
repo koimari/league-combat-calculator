@@ -19,7 +19,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import ONHIT, SlotCtx
-from .module_helpers import ranked_slot
+from .module_helpers import ability_slot, ranked_slot
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slot_entries import damage_entry, on_hit_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
@@ -104,7 +104,8 @@ _E_LIGHTNING_ROUNDS_ROUNDS = _BURST_ROUNDS
 _E_BONUS_CRIT_MULTIPLIER_AT_MAX = 2.3
 
 
-def _living_battery(ctx: SlotCtx) -> dict[str, Any] | None:
+@ability_slot("P")
+def _living_battery(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
     """P: Living Battery — the uncharged zap + the execute range.
 
     The uncharged zap is per-auto magic damage (the cached "Per-Level
@@ -123,9 +124,6 @@ def _living_battery(ctx: SlotCtx) -> dict[str, Any] | None:
     out-of-scope boundaries (the engine's applied_to_health gate covers
     fully-absorbed hits).
     """
-    ability = ctx.ability("P", 0)
-    if ability is None:
-        return None
     rank = ctx.level
     zap_flat = extract_named(ability, "Per-Level Scaling", rank, ctx.stats, ctx.target)
     ap = ctx.stat("ability_power")
