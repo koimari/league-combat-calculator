@@ -87,8 +87,7 @@ class TestOneWalkCallSite:
     through :func:`program.walk.walk`, and a caller that skipped the seam
     would increment nothing at all.
 
-    The dispatch-ladder gate in ``tests/test_deletion_frontier`` is a
-    different property: one *definition*, in the module that owns the
+    The property here is one *definition*, in the module that owns the
     kernel.  One definition with two callers is exactly the arrangement
     this campaign exists to end.
     """
