@@ -22,25 +22,30 @@ from .engine import DEBUFF, SlotCtx, build_parser
 from .inputs import bool_option, int_option
 from .module_helpers import ability_slot, clamp, ranked_slot
 from .slot_entries import damage_entry
-from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slot_extract import (
+    ability_name,
+    extract_cast_time,
+    extract_cooldown,
+    extract_named,
+)
 from .source_receipts import load_champion_sources
 
 _KARTHUS_W_SPELL = spell_object("Karthus", "KarthusWallOfPain")
 _W_MR_REDUCTION_PERCENT = data_value(_KARTHUS_W_SPELL, "MagicResistShred")
 _W_DEBUFF_DURATION = data_value(_KARTHUS_W_SPELL, "DebuffDuration")
-_W_CAST_TIME = 0.25
-_Q_CAST_TIME = 0.25
 _Q_CONSERVATIVE_DETONATION_DELAY = 0.75
-_E_FIRST_TICK_TIME = _W_CAST_TIME + _Q_CAST_TIME
 _E_TICK_INTERVAL = 0.25
 _E_MAX_SELECTED_TICKS = 40
 # Timed mode prices the toggle in one-second pulses: the sourced drain is
 # "mana per second" and 4 ticks x the sourced per-tick row is exactly the
 # sourced "Damage Per Second" row (cross-checked at parse time).
 _E_PULSE_SECONDS = 1.0
-_R_CAST_START = _E_FIRST_TICK_TIME
 _R_CHANNEL_DURATION = 3.0
-_R_CAST_TIME = 0.25
+
+
+def _sequence_start(ctx: SlotCtx) -> float:
+    """Where Defile's first tick and Requiem's cast land: after the W and Q casts."""
+    return extract_cast_time(ctx.ability("W")) + extract_cast_time(ctx.ability("Q"))
 
 
 @ranked_slot
@@ -79,7 +84,7 @@ def _lay_waste(
     isolated = requested_isolated and roster_count <= 1
     attribute = "Isolated Enhanced Damage" if isolated else "Magic Damage"
     raw = extract_named(ability, attribute, rank, ctx.stats, ctx.target)
-    hit_time = _W_CAST_TIME + _Q_CAST_TIME + _Q_CONSERVATIVE_DETONATION_DELAY
+    hit_time = _sequence_start(ctx) + _Q_CONSERVATIVE_DETONATION_DELAY
     entry = damage_entry(
         ability_name(ability),
         rank,
@@ -181,11 +186,12 @@ def _defile(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] 
     # Both branches author their own hit times, so the reviewed "the aura
     # only damages" rides the parts in each — which is why E declares its
     # kind here and in _defile_timed rather than in MODULE_CC.
+    first_tick = _sequence_start(ctx)
     parts = tuple(
         DamagePart(
             "magic",
             per_tick,
-            time_offset=_E_FIRST_TICK_TIME + index * _E_TICK_INTERVAL,
+            time_offset=first_tick + index * _E_TICK_INTERVAL,
         )
         for index in range(ticks)
     )
@@ -212,7 +218,8 @@ def _defile(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] 
 @ranked_slot
 def _requiem(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any] | None:
     raw = extract_named(ability, "Magic Damage", rank, ctx.stats, ctx.target)
-    hit_time = _R_CAST_START + _R_CAST_TIME + _R_CHANNEL_DURATION
+    channelled = extract_cast_time(ability) + _R_CHANNEL_DURATION
+    hit_time = _sequence_start(ctx) + channelled
     entry = damage_entry(
         ability_name(ability),
         rank,
@@ -221,7 +228,7 @@ def _requiem(ctx: SlotCtx, ability: dict[str, Any], rank: int) -> dict[str, Any]
         "magic",
     )
     entry["parts"] = (DamagePart("magic", raw, time_offset=hit_time),)
-    entry["cast_time"] = _R_CAST_TIME + _R_CHANNEL_DURATION
+    entry["cast_time"] = channelled
     entry["detail"] = "damage after the complete 3-second channel"
     return entry
 
