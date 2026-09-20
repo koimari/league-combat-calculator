@@ -1,7 +1,10 @@
 """Every champion option key whose declaration and its read sit in different files.
 
 One module declares the OPTIONS row and another consults it, so the
-spelling is a contract: it lives here and both sides import the name.
+spelling is a contract: it lives here, the reader imports the name, and
+the declaring row takes it wherever that module has an import to spare.
+``tests/test_shared_option_keys.py`` fails on a name no OPTIONS row
+declares, and on an engine module that reads a key as a literal.
 A key only its own module reads is declared there, not here.
 """
 
