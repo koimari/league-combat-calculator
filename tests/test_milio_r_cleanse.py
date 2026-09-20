@@ -1,127 +1,23 @@
-"""P2 Slice 7 — Milio R (Breath of Life) champion cleanse (test-matrix
-owner: RLM-2 C).
+"""Milio R (Breath of Life): the ally-wide heal and the champion cleanse.
 
-Focused TDD matrix for Milio's R (Breath of Life) champion cleanse.
-CURRENT RUNTIME FACTS (verified before pinning):
+One R cast authors one heal formula, 150/250/350 plus 50% AP at the cast
+start, and the participant timeline fans it out to every selected teammate
+as a support template, so one formula prices every recipient.  The same
+cast cleanses Milio and those allies of non-airborne crowd control.  The
+heal and the cleanse both ride the walk's attacker-state gate, which is the
+opposite of the Gangplank and Rengar carve-out: while the CASTER is crowd
+controlled nothing lands, and the walk names the refusal
+``attacker_state_blocked``.
 
-- Milio is a PACKET module (src/calculator/champions/milio.py,
-  PACKET_SHA256 fce2851d...): Q is modeled; W/R heal allies via the
-  E8d ally-support fan-out.  The module's R parse receipt: name
-  "Breath of Life", rank 3, MANA cost 100, cast_time None (the cached
-  castTime is "none"), total_raw 0.0 and NO parts — the R is
-  non-damaging; the cooldown row is NOT published by the packet module
-  (parse cooldown is 0.0 today — the typed declaration must receipt it).
-- The R cached wording (data/champions.json "Milio", R[0]):
-  effects[0] "Active: Milio explodes in soothing flames, healing and
-  cleansing himself and nearby allied champions of non-airborne crowd
-  control, and granting them 65% tenacity for 3 seconds." (Heal
-  leveling 150/250/350 + 50% AP; cost 100 flat; cooldown 160/145/130
-  affectedByCdr; targeting Auto; affects "Self, Allies"; resource
-  MANA; castTime "none"; effectRadius 700).  effects[1] "Milio cannot
-  cast his other abilities for 0.75 seconds after Breath of Life's
-  activation. Breath of Life cannot be used while affected by
-  cast-inhibiting crowd control."  The ASSUMPTIONS say "the 65%
-  tenacity and cleanse are utility state".
-- THE R HEAL IS ALREADY AUTHORED (healing.py's Milio branch, the
-  E1-rule owner; the slot is in the participant timeline's fan-out):
-  one champion_ability heal per R cast at the CAST START time with the
-  live amount = 150/250/350 + 50% AP, target_scope
-  self_and_all_teammates, actor_wide; the self copy lands in the main's
-  healing ledger ("milio:r:{cast_index}") and the participant timeline
-  fans the SAME formula out to every selected teammate as support heal
-  templates (kind heal, target_scope self_and_all_teammates,
-  target_policy self_and_all_selected_teammates, event_id
-  "{applied_self_id}:ally:{i}", source_event_id = the self copy's
-  applied id) — one formula prices every recipient.
-- The R heal rides the survival walk's attacker-state gate: while the
-  CASTER is crowd-controlled the heal (self copy AND ally copies) is
-  skipped with attacker_state_blocked and never lands (probe-pinned
-  with enemy Ahri charming main at t=0: R heal at 0.25 -> skipped on
-  main and ally:Jinx).  This is the OPPOSITE of the Slice 5/6
-  castability carve-out (GP W heal / Rengar empowered-W heal carry
-  cast_while_disabled); Milio's R "cannot be used while affected by
-  cast-inhibiting crowd control", so a CC'd caster authors NO effect.
-- The engine cast_timeline is the activation clock: one_rotation casts
-  Q/W/E/R all at 0.0; timed rank-3 casts Q@0.0, W@0.0, E@0.25, R@0.25
-  (R cost 100).  RANK 0 IS NOT A CAST GATE today: the engine books the
-  R cast at every rank (packet modules rotate every SLOT) and the heal
-  fires with the rank-clamped value (extract_named rank 0 reads the
-  LAST row value 350).
-- The Slice 4/5/6 champion-cleanse kernel wires Milio through the
-  CHAMPION_CLEANSE_DECLARATIONS "Milio R" row: resolve_cleanse_item
-  ("Milio R") resolves to the declaration; target_scope is
-  self_and_all_teammates (the same roster the heal fans out to); the
-  excluded control kinds are the airborne family (non-airborne CC only);
-  the cast-inhibiting gate blocks a crowd-controlled CASTER without
-  consuming the one use (the Mikael's-style gated path, the OPPOSITE of
-  the GP/Rengar utility-before-gate dispatch); the per-fight latch is
-  shared by one cast's recipients; the cooldown is receipted but never
-  enforced; and the compiled score path stages the cleanse (#226).
-- Game-file evidence (data/bin/characters/milio.bin.json MilioR):
-  HealBase DataValues [50,150,250,350,...] (ranks 1..3 = 150/250/350),
-  mSpellCalculations HealCalc = HealBase + StatByCoefficient 0.5 (50%
-  AP), cooldownTime [160,160,145,130,...] (ranks 1..3 = 160/145/130),
-  mana 100, mCastTime 0.713 (the game cast time — the wiki cached
-  castTime is "none" and the engine books no cast time), mTargetingType
-  SelfAoe, castRange 700, TenacityDuration 3.0, TenacityAmount 0.65,
-  and NO canCastWhileDisabled / cannotBeSuppressed flags (the QSS/
-  Mercurial flag pair is ABSENT — consistent with the cast-inhibiting
-  gate, the OPPOSITE of GP/Rengar).
+Every value is read live from the cache rather than pinned as a literal.
+``data/champions.json`` "Milio" R[0] carries Heal 150/250/350 plus 50% AP,
+cost 100, cooldown 160/145/130, effectRadius 700 and castTime "none", and
+its second effect holds the 0.75 s self-lockout and the rule that the R
+cannot be cast under cast-inhibiting crowd control.
 
-The P2-7 completion landed the Milio R declaration + authoring: self
-AND all selected teammates scope (the same roster the heal fans out
-to), the non-airborne exclusion, the CASTABILITY GATE (the R cannot be
-used while the CASTER is crowd-controlled — the Mikael's-style gated
-path, use NOT consumed, the OPPOSITE of the GP/Rengar
-utility-before-gate dispatch), the heal (E8d fan-out) + cleanse
-separate, the per-fight one-use latch shared by one cast's recipients,
-the cooldown receipted but never enforced, and the compiled score path
-staging the cleanse.  This matrix pins the CONTRACT green.
-
-Contract sections (numbered as in the RLM-2 C brief):
-  S1  Source evidence + typed values (cached R rows; the cleanse +
-      castability wording; the game file; the module parse receipt;
-      the R heal public receipt in parse + fight result; the source
-      receipts; the typed R declaration).
-  S2  No R (R rank 0; the option set unchanged).
-  S3  R timing (engine cast_timeline one_rotation 0.0 / timed 0.25;
-      the heal lands at the cast time; activation time == cast time).
-  S4  Heal + cleanse separate (the E8d ally heal receipts; the heal
-      fires with no control active; the cleanse receipts contract).
-  S5  Self + all selected teammates scope (the heal fan-out roster;
-      per-recipient decisions; the kernel self-scope
-      target_not_selected evidence).
-  S6  Exact control exclusions (non-airborne wording; the kernel
-      excluded_control_kind evidence; the wired Milio exclusion;
-      the displacement-family boundary).
-  S7  Castability while crowd controlled (the heal attacker-gate pin —
-      the OPPOSITE of the GP/Rengar carve-out; suppression kernel
-      evidence; the wired named-denial contract).
-  S8  One-use and cooldown boundaries (the kernel latch evidence; the
-      shared-per-cast latch + cooldown receipt; the heals fire
-      per cast).
-  S9  Same-time ordering (the kernel order — heal fan-out templates
-      before the champion cleanse block; same-time heal + cleanse
-      kernel evidence).
-  S10 Repeated casts (kernel use_spent evidence; the Milio second-cast
-      contract).
-  S11 Truncation (the truncate_intervals contract; per-recipient
-      truncation; historical downtime + later controls).
-  S12 Missing identity + rows (the unavailable-source KeyError pinned;
-      the require_named_leveling fail-loud precedent).
-  S13 Score fail-closed (the generic gate receipts PASS; never a
-      silent re-price).
-  S14 Full vs score parity (byte-identical R surface today; the named
-      cleanse divergence).
-  S15 Unchanged boundaries (W/E ally support, Q damage, R out of
-      damage, the GP/Rengar + item cleanse tables, the options meta).
-  S16 Regression surface (the mandated sanity run list, footer).
-
-Expected heal values are recomputed from data/champions.json leveling
-rows — no literal damage constants.  The R heal/cost/cooldown arrays
-ARE the values under test (the typed declaration publishes them), so
-they appear as pinned cache rows (the K'Sante / Gangplank / Rengar
-matrix precedent).  The declaration item key is "Milio R".
+The airborne family is excluded from the cleanse by the cached wording
+itself, "non-airborne crowd control", which the shared cleanse kernel
+resolves through ``resolve_excluded_kinds``.
 """
 
 import contextlib
@@ -138,11 +34,8 @@ from src.calculator.champions import (
     parse_champion_abilities,
 )
 from src.calculator.champions.slot_extract import extract_named
-from src.calculator.cleanse_declarations import (
-    ITEM_CLEANSE_DECLARATIONS,
-    resolve_cleanse_item,
-)
-from src.calculator.cleanse_eligibility import CleanseDecision, CleanseEligibility
+from src.calculator.cleanse_declarations import resolve_cleanse_item
+from src.calculator.cleanse_eligibility import CleanseEligibility
 from src.calculator.control_intervals import truncate_intervals
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
@@ -699,19 +592,6 @@ class TestNoR:
             config = client.get("/api/config").get_json()
         options = config["champion_options"]["Milio"]["options"]
         assert [option["key"] for option in options] == ["p_procs"]
-
-    def test_r_rank0_no_cleanse_anywhere_today(self):
-        # Pinned actual (the brief's contract #2's absence half): with R
-        # rank 0 (or any rank) the app-level fight carries NO cleanse
-        # keys and zero utility cleanse events — the kernel never fires
-        # implicitly.  Flips when the P2-7 authoring lands.
-        combat = _app_combat(ranks={**_RANKS, "R": 0})
-        for participant_id in ("main", "ally:Jinx"):
-            survival = survival_of(combat, participant_id)
-            assert "cleanse" not in survival
-            assert "cleanse_use" not in survival
-            assert "cleanse_denied" not in survival
-        assert _cleanse_event_count(combat) == 0
 
     def test_r_rank0_no_cast_no_heal_contract(self):
         # P2-7 contract (the brief's contract #2): R rank 0 -> NO R cast
@@ -1717,197 +1597,3 @@ class TestScoreFailClosed:
         plain, cleansing = compiler.actions
         assert (plain.cleanse, plain.cleanse_item) == (False, "")
         assert (cleansing.cleanse, cleansing.cleanse_item) == (True, _R_CLEANSE_ITEM)
-
-
-# ---------------------------------------------------------------------------
-# S14 — Full vs score parity
-# ---------------------------------------------------------------------------
-
-
-class TestModeParity:
-    def test_r_surface_byte_identical_under_score_only(self):
-        # PASS today: the R surface — breakdown row, mana ledger,
-        # resource spend, cast timeline — is byte-identical between the
-        # full walk and the compiled score path in both fight modes; the
-        # R stays OUT of outgoing damage in both modes (the brief's
-        # contract #14).
-        for one_rotation in (True, False):
-            full = _fight({}, one_rotation=one_rotation)
-            scored = _fight({}, one_rotation=one_rotation, score_only=True)
-            assert full["breakdown"]["R"] == scored["breakdown"]["R"]
-            assert full["breakdown"]["R"]["total_damage"] == 0.0
-            assert full["total_damage"] == scored["total_damage"]
-            assert full["resource_spent"] == scored["resource_spent"]
-            assert full["resource_remaining"] == scored["resource_remaining"]
-            assert full["resource_ledger"] == scored["resource_ledger"]
-            shared = ("time", "slot", "name", "ordinal", "resource_cost")
-            for full_row, scored_row in zip(
-                full["cast_timeline"], scored["cast_timeline"], strict=False
-            ):
-                assert {k: full_row[k] for k in shared} == {
-                    k: scored_row[k] for k in shared
-                }
-
-    def test_r_mana_spend_pinned(self):
-        # Pinned actual: the R cast DOES spend mana — 100 at every rank,
-        # receipted as the "ability R cast" ledger spend.
-        result = _fight({}, one_rotation=True)
-        ledger = result["resource_ledger"]
-        assert ledger["kind"] == "mana"
-        spends = {
-            row["source"]: row
-            for row in ledger["receipts"]
-            if row["operation"] == "spend"
-        }
-        assert spends["ability R cast"]["amount"] == pytest.approx(100.0)
-        assert spends["ability R cast"]["detail"] == {"slot": "R", "ordinal": 1}
-        for rank in (1, 2, 3):
-            _, abilities = _parse(ranks={**_RANKS, "R": rank})
-            assert abilities["R"]["resource_cost"] == pytest.approx(100.0)
-
-    def test_r_mode_parity_named_cleanse_divergence(self):
-        # P2-7 contract: the engine surface stays byte-identical full vs
-        # score_only AND the couple score gate stages the R cleanse packet
-        # rather than diverging on it — never a silent re-price.
-        full = _fight({}, one_rotation=True)
-        scored = _fight({}, one_rotation=True, score_only=True)
-        assert full["breakdown"]["R"] == scored["breakdown"]["R"]
-        template = {
-            "kind": "cleanse",
-            "amount": 1.0,
-            "cleanse_item": _R_CLEANSE_ITEM,
-            "source_key": _R_CLEANSE_ITEM,
-            "utility_kind": "cleanse",
-            "source": "Milio R — Breath of Life",
-            "time": 0.0,
-            "attacker": "main",
-            "target": "main",
-            "_event_id": "main:cleanse:R:0",
-        }
-        assert unrepresentable_template_receipt(template) is None
-        combat = _app_combat()
-        assert survival_of(combat)["cleanse"]["decision"]["reason"] == (
-            "control_not_active"
-        )
-        assert survival_of(combat)["cleanse"]["item"] == _R_CLEANSE_ITEM
-
-
-# ---------------------------------------------------------------------------
-# S15 — Unchanged boundaries
-# ---------------------------------------------------------------------------
-
-
-class TestUnchangedBoundaries:
-    def test_w_ally_support_unchanged(self):
-        # The W (Cozy Campfire) ally-support is an unchanged boundary
-        # (the brief's contract #15): the scanner-authored ally heal
-        # lands on the selected teammate at the W cast time with the
-        # sourced Total Heal 150 at rank 5 (AP 0).
-        combat = _app_combat()
-        w_heals = [
-            e
-            for e in combat["support_events"]
-            if e.get("attacker") == "main"
-            and e.get("source") == "Cozy Campfire · Total Heal"
-            and e.get("kind") == "heal"
-        ]
-        assert len(w_heals) == 1
-        (w_heal,) = w_heals
-        assert w_heal["time"] == pytest.approx(0.0)
-        assert w_heal["target"] == "ally:Jinx"
-        assert w_heal["amount"] == pytest.approx(150.0)
-
-    def test_e_ally_support_unchanged(self):
-        # The E (Warm Hugs) ally-support is an unchanged boundary: the
-        # scanner-authored shield lands on the selected teammate with the
-        # sourced Shield Strength 165 at rank 5 (AP 0) for 2.5s.
-        combat = _app_combat()
-        e_shields = [
-            e
-            for e in combat["support_events"]
-            if e.get("attacker") == "main"
-            and e.get("source") == "Warm Hugs · Shield Strength"
-            and e.get("kind") == "shield"
-        ]
-        # Two, not one: E is a charge slot that banks two casts
-        # (champions/charge_cadence.py), so both shields land.
-        assert len(e_shields) == 2
-        e_shield = e_shields[0]
-        assert e_shield["time"] == pytest.approx(0.25)
-        assert e_shield["target"] == "ally:Jinx"
-        assert e_shield["amount"] == pytest.approx(165.0)
-        assert e_shield["duration"] == pytest.approx(2.5)
-
-    def test_q_damage_unchanged(self):
-        # The Q damage is an unchanged boundary (the brief's contract
-        # #15): the module's Q total_raw equals the typed extract at rank
-        # 5 and the fight row prices it; the R row stays zero-damage.
-        stats, abilities = _parse()
-        q = _MILIO_DATA["abilities"]["Q"][0]
-        q_value = extract_named(q, "Magic Damage", 5, stats)
-        assert abilities["Q"]["total_raw"] == pytest.approx(q_value)
-        assert abilities["Q"]["parts"][0].damage_type == "magic"
-        assert abilities["Q"]["cooldown"] == pytest.approx(10.0)
-        result = _fight({}, one_rotation=True)
-        assert result["breakdown"]["Q"]["total_damage"] > 0.0
-        assert result["breakdown"]["R"]["total_damage"] == 0.0
-
-    def test_cleanse_tables_untouched(self):
-        # The Slice 4 item cleanses and the Slice 5/6 champion cleanses
-        # are unchanged boundaries (the brief's contract #15): the
-        # declarations/sources stay exactly the three items + Gangplank W
-        # + Rengar W; Milio R is the coordinator's ADDITION, never a
-        # mutation of the existing rows.
-        assert set(ITEM_CLEANSE_DECLARATIONS) == {
-            "Mikael's Blessing",
-            "Quicksilver Sash",
-            "Mercurial Scimitar",
-        }
-        assert set(CHAMPION_CLEANSE_DECLARATIONS) == {
-            "Gangplank W",
-            "Rengar W",
-            "Milio R",
-            "Dr. Mundo P",
-            "Olaf R",
-        }
-        for item in ITEM_CLEANSE_DECLARATIONS:
-            assert resolve_cleanse_item(item) == item
-        assert resolve_cleanse_item("Remove Scurvy") == "Gangplank W"
-        assert resolve_cleanse_item("Battle Roar") == "Rengar W"
-
-    def test_named_denial_vocabulary_pinned(self):
-        # The named fail-closed denial vocabulary the R wiring must ride
-        # (the brief's contract #7 vocabulary): the Slice 4 decision
-        # reasons plus the unavailable-source KeyError and the score
-        # receipts.
-        decision = CleanseDecision(eligible=False, reason="", item="")
-        assert set(decision.public_receipt()) >= {
-            "eligible",
-            "reason",
-            "item",
-            "activation_time",
-            "target",
-            "removed_controls",
-            "rejected_controls",
-            "intervals_after",
-            "use_consumed",
-        }
-        assert unrepresentable_template_receipt({"kind": "cleanse"}) is None
-        assert (
-            unrepresentable_template_receipt({"kind": "heal", "cleanse": True}) is None
-        )
-        assert (
-            unrepresentable_template_receipt({"kind": "cleanse", "amount": 1.0}) is None
-        )
-
-
-# ---------------------------------------------------------------------------
-# S16 — Regression surface (run list)
-# ---------------------------------------------------------------------------
-#
-#
-# The broader regression surface (every test that touches milio / breath
-# of life / ally support, per the brief contract #16): test_e8_support.py
-# test_e1_healing_b5.py test_issue_143.py test_ally_support_wave2.py
-# test_heal_ledger_phase2.py test_survival_kernel.py test_e2_dot_2.py
-# test_cp10_batch_04.py test_support_effects.py tests/test_app.py

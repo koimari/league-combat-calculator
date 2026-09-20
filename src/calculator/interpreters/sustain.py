@@ -245,7 +245,12 @@ def _flat_fields(rule: BehaviorRule, lane: EngineLane) -> tuple[KernelField, ...
     before a fight exists have nothing to resolve one against.
     """
     payload = rule.payload
-    names = SUSTAIN_PAYLOAD_REFERENCES[type(payload)]
+    names = SUSTAIN_PAYLOAD_REFERENCES.get(type(payload))
+    if names is None:
+        raise SustainInterpretationError(
+            f"{rule.mechanic_id} is a {rule.family.value} rule and this "
+            "accessor reads holder-side sustain declarations only"
+        )
     try:
         values = resolve_flat([getattr(payload, name) for name in names])
     except ValueRefError as exc:

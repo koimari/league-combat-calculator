@@ -149,17 +149,3 @@ class TestTheGrammarIsClosed:
         assert identity.event_id_text(identity.EventId(derived)) == (
             "main:enemy:0:2:shield"
         )
-
-
-def test_the_kernel_does_not_import_the_logical_identity_module() -> None:
-    """``program -> survival`` is one-way; ``PIdx`` never enters ``survival/``.
-
-    Criterion 6's second half, asserted where the alias is declared: the
-    kernel stores roster indices as plain ints, and an annotation alone would
-    invert the phase's own dependency rule.
-    """
-    survival = ROOT / "src" / "calculator" / "survival"
-    for path in sorted(survival.rglob("*.py")):
-        text = path.read_text(encoding="utf-8")
-        assert "program.identity" not in text, path
-        assert "PIdx" not in text, path

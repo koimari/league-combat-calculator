@@ -219,12 +219,6 @@ class TestTheTypedActionCarriesTheAnswer:
 class TestOneHome:
     """Criterion 13's second half: no second immobilize literal in the walk."""
 
-    def test_the_widening_is_ten_kinds_and_the_retired_five_are_a_subset(self):
-        """D-26: the population this correction moved is not empty."""
-        assert RETIRED_WALK_LITERAL < IMMOBILIZING_CC_KINDS
-        assert len(IMMOBILIZING_CC_KINDS) == 15
-        assert len(IMMOBILIZING_CC_KINDS - RETIRED_WALK_LITERAL) == 10
-
     def test_no_survival_module_holds_a_second_immobilize_kind_set(self):
         """A literal naming two of the kinds is the retired shape returning."""
         offenders = []

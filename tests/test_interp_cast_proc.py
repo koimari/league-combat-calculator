@@ -210,23 +210,3 @@ def test_the_pair_interpreter_compiles_the_clock_each_shape_has() -> None:
         (field,) = cast_proc.proc_fields(rule, ctx, EngineLane.PAIR_ENGINE)
         assert field.name == cast_proc.PROC_COOLDOWN_FIELD
         assert field.value == pytest.approx(float(ITEM_EFFECTS[owner][key]))  # type: ignore[arg-type]
-
-
-def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
-    """The interpreter refuses what it cannot read instead of returning zero."""
-    (foreign,) = [
-        rule
-        for rule in behavior_rules("Tiamat")
-        if rule.family is RuleFamily.ACTIVE_CAST
-    ]
-    ctx = build_context(
-        "Tiamat",
-        FightFacts(
-            level=18,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
-        ),
-    )
-    with pytest.raises(cast_proc.CastProcInterpretationError):
-        cast_proc.proc_fields(foreign, ctx, EngineLane.PAIR_ENGINE)

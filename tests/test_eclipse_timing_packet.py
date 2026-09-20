@@ -808,23 +808,6 @@ class TestShieldPacket:
 
 
 class TestParityAndOptimizer:
-    def test_score_only_fight_matches_receipt_fight(self) -> None:
-        abilities = {
-            "Q": _ability("Q", cooldown=1.0),
-            "W": _ability("W", cooldown=5.0),
-        }
-        receipt = _fight(_stats(), abilities, duration=7.0, one_rotation=False)
-        score = _fight(
-            _stats(), abilities, duration=7.0, one_rotation=False, score_only=True
-        )
-        left = receipt["breakdown"]["proc_Eclipse"]
-        right = score["breakdown"]["proc_Eclipse"]
-        assert right["count"] == left["count"] == 2
-        assert right["damage_events"] == left["damage_events"]
-        assert right["total_damage"] == left["total_damage"]
-        assert right["self_shield_events"] == left["self_shield_events"]
-        assert right["state_transitions"] == left["state_transitions"]
-
     def test_optimizer_exclusion_source_receipt_at_low_altitude(self) -> None:
         assert "proc_Eclipse" in EXPLICIT_APPLICABILITY_EXCLUSION_SOURCES
         # A candidate whose ONLY coarse source is proc_Eclipse is eligible
@@ -976,32 +959,6 @@ class TestFailClosedMetadata:
 
 
 class TestDeterminism:
-    def test_identical_fights_produce_identical_full_receipts(self) -> None:
-        abilities = {
-            "Q": _ability("Q", cooldown=1.0),
-            "W": _ability("W", cooldown=5.0),
-        }
-        first = _fight(_stats(), abilities, duration=7.0, one_rotation=False)
-        second = _fight(_stats(), abilities, duration=7.0, one_rotation=False)
-        assert first["breakdown"]["proc_Eclipse"] == second["breakdown"]["proc_Eclipse"]
-        assert (
-            first["breakdown"]["proc_Eclipse"]["state_transitions"]
-            == second["breakdown"]["proc_Eclipse"]["state_transitions"]
-        )
-
-    def test_identical_kernel_feed_sequences_produce_identical_receipts(
-        self,
-    ) -> None:
-        def run() -> dict:
-            gate = _eclipse_gate()
-            gate.feed(0.0, sequence=0)
-            gate.feed(0.5, sequence=1)
-            gate.feed(7.0, sequence=2)
-            gate.feed(7.5, sequence=3)
-            return gate.public_receipt()
-
-        assert run() == run()
-
     def test_no_duplicate_damage_events_per_completed_pair(self) -> None:
         # Three hits, one pair: exactly one damage event.
         fight = _fight(

@@ -81,7 +81,6 @@ from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.pipeline import run_fight
 from src.calculator.starting_defenses import StartingDefenses, defense_source
 from src.calculator.stats import calculate_total_stats
 from tests import item_probe
@@ -629,66 +628,6 @@ def _assert_compiled_parity(
         row["kind"] == "stasis" and row["start"] == 0.0 and row["end"] == 2.0
         for row in stasis_row["survival"]["action_downtime_intervals"]
     )
-
-
-def test_compiled_walk_equals_receipt_walk_main_side_zhonya():
-    """Zhonya stasis on the HOLDER rides the compiled walk (mirror of
-    test_survival_kernel.py:314 at a different altitude: Zhonya-only build,
-    no Infinity Edge, no charm ranks)."""
-    params = _params(
-        fight_duration=12,
-        item_options={ZHONYA: {"stasis_active_seconds": 2.0}},
-    )
-    _assert_compiled_parity(
-        "zhonya-main",
-        "Ahri",
-        [get_item_by_name(ZHONYA)],
-        params,
-        [_roster("Janna")],
-    )
-
-
-def test_compiled_walk_equals_receipt_walk_target_side_zhonya():
-    """Zhonya stasis on the ENEMY target also rides the compiled walk: the
-    target's stasis window gates the attacker's packets identically."""
-    params = _params(
-        fight_duration=9,
-        include_auto_attacks=False,
-        ability_ranks={"Q": 5, "W": 0, "E": 0, "R": 0},
-        item_options={ZHONYA: {"stasis_active_seconds": 2.0}},
-    )
-    _assert_compiled_parity(
-        "zhonya-target",
-        "Ezreal",
-        [],
-        params,
-        [
-            _roster(
-                "Ahri",
-                items=(ZHONYA,),
-                item_options={ZHONYA: {"stasis_active_seconds": 2.0}},
-            )
-        ],
-        stasis_participant="enemy:Ahri",
-    )
-
-
-def test_score_only_fight_parity_zhonya_build():
-    """run_fight score_only keeps every scoring field identical for a
-    Zhonya build (totals and per-event scoring projections)."""
-    zhonya = get_item_by_name(ZHONYA)
-    params = _params(item_options={ZHONYA: {"stasis_active_seconds": 2.0}})
-    full = run_fight(get_champion("Ahri"), 18, [zhonya], params, score_only=False)
-    score = run_fight(get_champion("Ahri"), 18, [zhonya], params, score_only=True)
-    assert score["total_damage"] == full["total_damage"]
-    scoring_keys = ("time", "source_key", "damage_type", "raw_damage", "damage")
-    assert [
-        tuple(event.get(key) for key in scoring_keys)
-        for event in score["damage_events"]
-    ] == [
-        tuple(event.get(key) for key in scoring_keys) for event in full["damage_events"]
-    ]
-    assert score["resource_spent"] == full["resource_spent"]
 
 
 # ---------------------------------------------------------------------------

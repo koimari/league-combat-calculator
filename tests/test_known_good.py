@@ -33,6 +33,9 @@ from src.calculator.damage import calculate_fight_damage
 from src.calculator.fight.config import FightConfig
 from src.calculator.stats import calculate_total_stats
 
+#: The five stats the in-game validation session read off the client.
+_VALIDATED = ("health", "attack_damage", "ability_power", "armor", "magic_resistance")
+
 # ──────────────────────────────────────────────────────────────────────
 # TEST CASE 1: Ahri Level 6, Items: Liandry's Torment
 # Enemy: 1000 HP, 100 Armor, 100 MR
@@ -44,25 +47,17 @@ from src.calculator.stats import calculate_total_stats
 class TestCase1Stats:
     """Test Case 1: Ahri Level 6 with Liandry's Torment - Stats."""
 
-    def test_total_hp(self, ahri_data: dict, liandrys: dict) -> None:
+    def test_the_hand_validated_stats_reproduce(
+        self, ahri_data: dict, liandrys: dict
+    ) -> None:
         stats = calculate_total_stats(ahri_data, 6, [liandrys])
-        assert stats["health"] == 1301
-
-    def test_total_ad(self, ahri_data: dict, liandrys: dict) -> None:
-        stats = calculate_total_stats(ahri_data, 6, [liandrys])
-        assert stats["attack_damage"] == 65
-
-    def test_total_ap(self, ahri_data: dict, liandrys: dict) -> None:
-        stats = calculate_total_stats(ahri_data, 6, [liandrys])
-        assert stats["ability_power"] == 60
-
-    def test_armor(self, ahri_data: dict, liandrys: dict) -> None:
-        stats = calculate_total_stats(ahri_data, 6, [liandrys])
-        assert stats["armor"] == 38
-
-    def test_magic_resist(self, ahri_data: dict, liandrys: dict) -> None:
-        stats = calculate_total_stats(ahri_data, 6, [liandrys])
-        assert stats["magic_resistance"] == 35
+        assert {key: stats[key] for key in _VALIDATED} == {
+            "health": 1301,
+            "attack_damage": 65,
+            "ability_power": 60,
+            "armor": 38,
+            "magic_resistance": 35,
+        }
 
 
 class TestCase1Damage:
@@ -111,35 +106,17 @@ class TestCase1Damage:
 class TestCase2Stats:
     """Test Case 2: Ahri Level 11 with 3 items - Stats."""
 
-    def test_total_hp(
+    def test_the_hand_validated_stats_reproduce(
         self, ahri_data: dict, liandrys: dict, malignance: dict, rylais: dict
     ) -> None:
         stats = calculate_total_stats(ahri_data, 11, [liandrys, malignance, rylais])
-        assert stats["health"] == 2203
-
-    def test_total_ad(
-        self, ahri_data: dict, liandrys: dict, malignance: dict, rylais: dict
-    ) -> None:
-        stats = calculate_total_stats(ahri_data, 11, [liandrys, malignance, rylais])
-        assert stats["attack_damage"] == 79
-
-    def test_total_ap(
-        self, ahri_data: dict, liandrys: dict, malignance: dict, rylais: dict
-    ) -> None:
-        stats = calculate_total_stats(ahri_data, 11, [liandrys, malignance, rylais])
-        assert stats["ability_power"] == 215
-
-    def test_armor(
-        self, ahri_data: dict, liandrys: dict, malignance: dict, rylais: dict
-    ) -> None:
-        stats = calculate_total_stats(ahri_data, 11, [liandrys, malignance, rylais])
-        assert stats["armor"] == 58
-
-    def test_magic_resist(
-        self, ahri_data: dict, liandrys: dict, malignance: dict, rylais: dict
-    ) -> None:
-        stats = calculate_total_stats(ahri_data, 11, [liandrys, malignance, rylais])
-        assert stats["magic_resistance"] == 41
+        assert {key: stats[key] for key in _VALIDATED} == {
+            "health": 2203,
+            "attack_damage": 79,
+            "ability_power": 215,
+            "armor": 58,
+            "magic_resistance": 41,
+        }
 
 
 class TestCase2Damage:
@@ -192,7 +169,7 @@ class TestCase3Stats:
     This 1-point discrepancy is a known rounding difference in the game client.
     """
 
-    def test_total_hp(
+    def test_the_hand_validated_stats_reproduce(
         self,
         ahri_data: dict,
         liandrys: dict,
@@ -204,64 +181,14 @@ class TestCase3Stats:
     ) -> None:
         items = [liandrys, malignance, rylais, sorc_shoes, void_staff, rabadons]
         stats = calculate_total_stats(ahri_data, 18, items)
-        # Allow 1-point tolerance for HP at level 18 due to game rounding
+        # One point of tolerance on HP, for the game client's own rounding.
         assert abs(stats["health"] - 3059) <= 1
-
-    def test_total_ad(
-        self,
-        ahri_data: dict,
-        liandrys: dict,
-        malignance: dict,
-        rylais: dict,
-        sorc_shoes: dict,
-        void_staff: dict,
-        rabadons: dict,
-    ) -> None:
-        items = [liandrys, malignance, rylais, sorc_shoes, void_staff, rabadons]
-        stats = calculate_total_stats(ahri_data, 18, items)
-        assert stats["attack_damage"] == 104
-
-    def test_total_ap(
-        self,
-        ahri_data: dict,
-        liandrys: dict,
-        malignance: dict,
-        rylais: dict,
-        sorc_shoes: dict,
-        void_staff: dict,
-        rabadons: dict,
-    ) -> None:
-        items = [liandrys, malignance, rylais, sorc_shoes, void_staff, rabadons]
-        stats = calculate_total_stats(ahri_data, 18, items)
-        assert stats["ability_power"] == 572
-
-    def test_armor(
-        self,
-        ahri_data: dict,
-        liandrys: dict,
-        malignance: dict,
-        rylais: dict,
-        sorc_shoes: dict,
-        void_staff: dict,
-        rabadons: dict,
-    ) -> None:
-        items = [liandrys, malignance, rylais, sorc_shoes, void_staff, rabadons]
-        stats = calculate_total_stats(ahri_data, 18, items)
-        assert stats["armor"] == 92
-
-    def test_magic_resist(
-        self,
-        ahri_data: dict,
-        liandrys: dict,
-        malignance: dict,
-        rylais: dict,
-        sorc_shoes: dict,
-        void_staff: dict,
-        rabadons: dict,
-    ) -> None:
-        items = [liandrys, malignance, rylais, sorc_shoes, void_staff, rabadons]
-        stats = calculate_total_stats(ahri_data, 18, items)
-        assert stats["magic_resistance"] == 52
+        assert {key: stats[key] for key in _VALIDATED[1:]} == {
+            "attack_damage": 104,
+            "ability_power": 572,
+            "armor": 92,
+            "magic_resistance": 52,
+        }
 
 
 class TestCase3Damage:

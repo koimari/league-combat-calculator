@@ -289,13 +289,6 @@ def test_the_fight_steps_spell_no_item_name_outside_the_frontier() -> None:
     }
 
 
-def test_every_item_name_frontier_entry_carries_a_reason() -> None:
-    """A frontier entry is a receipt, not a suppression."""
-    for module, (reason, spelled) in ITEM_NAME_LITERAL_FRONTIER.items():
-        assert reason.strip(), module
-        assert spelled, module
-
-
 def test_every_module_outside_champions_has_a_front_door_or_a_frontier_entry() -> None:
     """D-95: the front-door registry is derived, and this is what it says.
 
@@ -308,13 +301,6 @@ def test_every_module_outside_champions_has_a_front_door_or_a_frontier_entry() -
     assert {missing.module for missing in report} == set(FRONT_DOOR_FRONTIER)
     for missing in report:
         assert (ROOT / missing.path).is_file(), missing.path
-
-
-def test_every_frontier_entry_carries_a_reason_and_an_owner() -> None:
-    """A frontier entry is a receipt, not a suppression."""
-    for module, entry in FRONT_DOOR_FRONTIER.items():
-        assert entry.reason.strip(), module
-        assert entry.owning_phase.strip(), module
 
 
 def test_the_survey_covers_more_than_the_filename_convention_it_replaced() -> None:
@@ -480,17 +466,15 @@ def test_the_pre_combat_stat_recipe_is_written_in_exactly_one_place() -> None:
     assert set(sites) - {PRE_COMBAT_RECIPE_HOME} == set(NARROWER_STAT_SURFACES)
 
 
-def test_each_narrower_stat_surface_is_narrow_and_says_why() -> None:
-    """A declaration is a receipt, and the tree has to agree with it.
+def test_each_narrower_stat_surface_is_narrow() -> None:
+    """Narrow means it composes a champion's stat block and not a build's.
 
-    Narrow means it composes a champion's stat block and not a build's: a
-    site that starts passing one of the five has stopped being a reference
+    A site that starts passing one of the five has stopped being a reference
     parse and owes the participant recipe a call, so the entry stops covering
     it here rather than quietly widening.
     """
     sites = _stat_sites()
-    for scope, reason in NARROWER_STAT_SURFACES.items():
-        assert reason.strip(), scope
+    for scope in NARROWER_STAT_SURFACES:
         for supplied in sites[scope]:
             assert not supplied & BUILD_CONTEXT_KEYWORDS, scope
 

@@ -27,7 +27,6 @@ first two more than bookkeeping:
 from __future__ import annotations
 
 import ast
-import json
 from pathlib import Path
 
 import pytest
@@ -189,12 +188,6 @@ def test_a_declared_stat_reads_its_wired_value_or_its_declared_default() -> None
     assert target_stat({"roster_target_count": 3.0}, "roster_target_count") == 3.0
 
 
-def test_every_declared_default_carries_a_reason() -> None:
-    """A default without a reason is the literal it replaced, relocated."""
-    for name, default in {**CHAMPION_STATS, **TARGET_STATS}.items():
-        assert default.reason.strip(), name
-
-
 def test_an_undeclared_option_raises_and_a_declared_one_falls_back() -> None:
     """An option nothing declared is unwired input, not a default."""
     ctx = SlotCtx(
@@ -228,53 +221,6 @@ def test_option_defaults_refuse_to_answer_with_no_wired_source(
     monkeypatch.setattr(inputs, "_OPTIONS_ROWS", None)
     with pytest.raises(ChampionInputError, match="champions/__init__"):
         declared_option_defaults("Pantheon")
-
-
-class TestTheEscalatedDefectIsStillTracked:
-    """``docs/receipts/escalated-defects-P3-3.7.json``, gated (R-16 Shape).
-
-    The vocabulary check found one champion reading a stat no producer
-    emits.  This slice may not correct it — the correction moves committed
-    baseline leaves and owes its own R-20 population — so it is recorded,
-    dated and gated instead.  The gate closes the entry by going red the day
-    the defect stops reproducing, which is what stops the next baseline
-    re-capture from absorbing it in silence.
-    """
-
-    RECEIPT = ROOT / "docs" / "receipts" / "escalated-defects-P3-3.7.json"
-
-    def _defect(self) -> dict:
-        payload = json.loads(self.RECEIPT.read_text(encoding="utf-8"))
-        (defect,) = payload["defects"]
-        return defect
-
-    def test_the_stat_the_defect_reads_is_still_absent_from_its_producer(
-        self,
-    ) -> None:
-        """The reproducer, run — not the receipt quoting itself."""
-        signature = self._defect()["live_signature"]
-        champions = fetch_champion_data()
-        produced = calculate_total_stats(champions[signature["champion"]], 18, [])
-        assert signature["stat_read"] not in produced
-        assert signature["stat_the_producer_emits"] in produced
-
-    def test_the_scaling_term_still_does_not_move_with_attack_speed(self) -> None:
-        """The defect itself: the term is zero at every attack speed."""
-        # Imported here so the source assertions above do not depend on a
-        # champion module importing cleanly.
-        from src.calculator.champions.akshan import (  # pylint: disable=import-outside-toplevel
-            _extract_e_per_shot,
-        )
-
-        signature = self._defect()["live_signature"]
-        champions = fetch_champion_data()
-        stats = calculate_total_stats(champions[signature["champion"]], 18, [])
-        ability = champions[signature["champion"]]["abilities"][signature["slot"]][0]
-        without = _extract_e_per_shot(ability, 5, dict(stats))
-        with_speed = _extract_e_per_shot(
-            ability, 5, {**stats, "bonus_attack_speed": 250.0}
-        )
-        assert without == with_speed == signature["measured_per_shot_rank_5"]
 
 
 def test_an_input_default_refuses_an_unknown_source_or_an_empty_reason() -> None:

@@ -269,14 +269,6 @@ def test_dispatcher_fails_closed_for_an_unregistered_name():
         parse_abilities("Synthetic Fixture", fixture, 1, 0.0)
 
 
-def test_review_campaign_batch_modules_and_imports_are_gone():
-    champion_root = Path("src/calculator/champions")
-
-    assert list(champion_root.glob("reviewed_batch_*.py")) == []
-    for path in champion_root.glob("*.py"):
-        assert "reviewed_batch_" not in path.read_text(encoding="utf-8"), path
-
-
 def test_champion_modules_import_only_at_the_top():
     """No champion module needs a late import: `healing_contract` imports clean."""
 
@@ -290,16 +282,6 @@ def test_champion_modules_import_only_at_the_top():
                 assert not seen_code, f"{path}:{node.lineno} imports after code"
             elif not isinstance(node, ast.Expr):
                 seen_code = True
-
-
-def test_packet_compiler_contains_no_champion_name_override_registries():
-    source = Path("src/calculator/champions/packet_module.py").read_text(
-        encoding="utf-8"
-    )
-
-    assert "_PACKET_TICK_FIXES" not in source
-    assert "_PACKET_ASSUMPTION_OVERRIDES" not in source
-    assert "_SINGLE_HIT_EVENT_PACKETS" not in source
 
 
 def test_packet_compiler_fails_closed_when_named_module_digest_drifts():

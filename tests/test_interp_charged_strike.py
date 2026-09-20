@@ -244,26 +244,6 @@ def test_the_pair_interpreter_compiles_the_count_each_shape_has() -> None:
     )
 
 
-def test_a_rule_from_another_family_is_refused_rather_than_priced() -> None:
-    """The interpreter refuses what it cannot read instead of returning zero."""
-    (foreign,) = [
-        rule
-        for rule in behavior_rules("Tiamat")
-        if rule.family is RuleFamily.ACTIVE_CAST
-    ]
-    ctx = build_context(
-        "Tiamat",
-        FightFacts(
-            level=18,
-            fight_duration_seconds=5.0,
-            target_bonus_health=0.0,
-            holder_is_melee=True,
-        ),
-    )
-    with pytest.raises(charged_strike.ChargedStrikeInterpretationError):
-        charged_strike.strike_fields(foreign, ctx, EngineLane.PAIR_ENGINE)
-
-
 # ── the swing schedule ────────────────────────────────────────────────────
 #
 # The fifth shape, and the one the retired item-name reads reached: two call

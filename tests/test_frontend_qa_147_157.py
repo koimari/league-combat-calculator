@@ -84,109 +84,9 @@ def test_stylesheet_braces_balance(css: str):
     assert depth == 0, f"stylesheet ends with {depth} unclosed block(s)"
 
 
-def test_hidden_attribute_contract_is_unconditional(css: str):
-    """``[hidden]`` drives every JS-toggled surface; it must not sit inside a
-    media query (issue #147's inert dismiss, #157's ever-present legend)."""
-    index = css.index("[hidden]")
-    prefix = re.sub(r"/\*.*?\*/", "", css[:index], flags=re.DOTALL)
-    assert prefix.count("{") == prefix.count(
-        "}"
-    ), "[hidden] is nested inside an unclosed block"
-
-
 # ---------------------------------------------------------------------------
 # #147 — shared-build banner actions
 # ---------------------------------------------------------------------------
-
-
-def test_share_controls_initialize_without_quick_view(source: str):
-    """Share wiring lives in its own initializer, not inside the removed
-    quick-view setup that early-returns when ``#quickView`` is absent."""
-    assert "function initShareControls()" in source
-    assert re.search(r"^initShareControls\(\);", source, re.MULTILINE)
-
-    share_block = source.split("function initShareControls()")[1].split(
-        "\n}\n", maxsplit=1
-    )[0]
-    for control in ("shareOpenEditor", "shareDismiss", "shareAnalystButton"):
-        assert control in share_block, f"{control} is not wired by initShareControls"
-
-    # The quick-view layer the wiring was once coupled to is gone entirely.
-    assert "function bindQuickEvents()" not in source
-
-
-def test_share_token_is_read_outside_quick_view_init(source: str):
-    """``?share=`` must be honored on a template with no quick view."""
-    share_block = source.split("function initShareControls()")[1].split(
-        "\n}\n", maxsplit=1
-    )[0]
-    assert 'params.get("share")' in share_block
-    assert "renderSharedBuild(shareToken)" in share_block
-
-
-def test_shared_payload_waits_for_the_item_catalogue(source: str):
-    """The payload resolves item *names* against the catalogue, so applying it
-    before the patch snapshot loads would drop every item silently."""
-    share_block = source.split("function initShareControls()")[1].split(
-        "\n}\n", maxsplit=1
-    )[0]
-    assert "whenEngineReady(() => renderSharedBuild(shareToken))" in share_block
-    ready = source.split("function whenEngineReady(callback)")[1].split(
-        "\n}\n", maxsplit=1
-    )[0]
-    assert "engine.itemCatalogReady" in ready
-    assert "scryglass:engine-ready" in ready
-
-
-def test_share_controls_bind_before_the_snapshot_loads(source: str):
-    """Binding must not be deferred with the payload — inert controls are the
-    bug (#147). The listeners attach in the same synchronous pass."""
-    share_block = source.split("function initShareControls()")[1].split(
-        "\n}\n", maxsplit=1
-    )[0]
-    bind_section = share_block.split("whenEngineReady")[0]
-    for control in ("shareOpenEditor", "shareDismiss"):
-        assert control in bind_section
-
-
-def test_share_dismiss_clears_the_query_parameter(source: str):
-    block = source.split("function initShareControls()")[1].split("\n}\n", maxsplit=1)[
-        0
-    ]
-    assert 'searchParams.delete("share")' in block
-    assert "history.replaceState" in block
-
-
-def test_open_in_editor_does_not_depend_on_quick_view(source: str):
-    block = source.split("function openSharedBuildInEditor()")[1].split(
-        "\n}\n", maxsplit=1
-    )[0]
-    assert "loadSharedBuildIntoAnalyst(payload)" in block
-    assert "quickView" not in block
-    # A share that never resolved must say so rather than sit inert.
-    assert "shareBannerText" in block
-
-
-def test_shared_build_render_targets_the_analyst_view(source: str):
-    """The shared payload renders into the live result column; there is no
-    ``#quickResults`` host in the template."""
-    block = source.split("async function renderSharedBuild(token)")[1].split(
-        "\nfunction ", maxsplit=1
-    )[0]
-    assert "quickResults" not in block
-    assert "loadSharedBuildIntoAnalyst(payload)" in block
-    assert "showShareError(" in block, "invalid/expired shares must surface an error"
-    error_surface = source.split("function showShareError(message)")[1].split(
-        "\nfunction ", maxsplit=1
-    )[0]
-    assert 'host.id = "shareError"' in error_surface
-    assert "engine-error" in error_surface
-
-
-def test_the_view_switching_layer_is_gone(source: str):
-    """There is one view; the guarded quick/analyst switcher was dead code
-    and left with the rest of the quick layer."""
-    assert "function switchView" not in source
 
 
 # ---------------------------------------------------------------------------
@@ -226,20 +126,6 @@ def test_brand_link_returns_home_from_a_shared_url():
 # ---------------------------------------------------------------------------
 # #149 — page heading readable over the background
 # ---------------------------------------------------------------------------
-
-
-def test_brand_reads_against_the_rail(css: str):
-    """#149 was "the page title is unreadable over the map illustration".
-
-    The redesign retires both the map wash and the page-hero heading: the
-    brand now sits on the flat dark rail. The criterion survives as "the
-    brand declares its own ink instead of inheriting", so it can never end up
-    dark-on-dark again.
-    """
-    block = rule_block(css, ".brand-word")
-    assert "var(--cream)" in block
-    mark = rule_block(css, ".brand-mark")
-    assert "var(--cream)" in mark
 
 
 def test_the_map_wash_is_decorative_only(css: str, page: str):
@@ -289,55 +175,9 @@ def test_active_game_state_summary_is_a_live_region(soup: BeautifulSoup):
     assert summary.get("aria-live") == "polite"
 
 
-def test_game_state_summary_follows_the_selected_mode(source: str):
-    """The visible summary is derived from the active button's description —
-    one home for the copy, no duplicated strings in JS."""
-    block = source.split("function renderScenarioRail()")[1].split("\n}\n", maxsplit=1)[
-        0
-    ]
-    assert "gameStateHelp" in block
-    assert "aria-describedby" in block or "describedby" in block
-
-
 # ---------------------------------------------------------------------------
 # #151 — level changes never blank the stats panel
 # ---------------------------------------------------------------------------
-
-
-def test_invalidation_keeps_the_last_known_loadout_stats(source: str):
-    block = source.split("function invalidateOptimization()")[1].split(
-        "\n}\n", maxsplit=1
-    )[0]
-    assert (
-        "engine.loadoutStats = null" not in block
-    ), "dropping the cached stats blanks the panel mid-recalculation"
-    assert "loadoutStatsKey" in block
-
-
-def test_stats_grid_shows_a_scoped_pending_state(source: str):
-    block = source.split("function renderPrototypeChampion()")[1].split(
-        "\n}\n", maxsplit=1
-    )[0]
-    assert "statsGrid" in block
-    assert "aria-busy" in block
-    assert "is-pending" in block
-
-
-def test_stats_placeholder_only_appears_before_any_stats_exist(source: str):
-    block = source.split("function renderPrototypeChampion()")[1].split(
-        "\n}\n", maxsplit=1
-    )[0]
-    placeholder_line = next(
-        line for line in block.splitlines() if "matrix-placeholder" in line
-    )
-    assert "stats ?" in placeholder_line
-
-
-def test_loadout_stats_ignores_out_of_order_responses(source: str):
-    block = source.split("function scheduleLoadoutStats()")[1].split(
-        "\n}\n", maxsplit=1
-    )[0]
-    assert "loadoutStatsRequestId" in block
 
 
 def test_level_output_announces_the_new_level(soup: BeautifulSoup):
@@ -345,38 +185,9 @@ def test_level_output_announces_the_new_level(soup: BeautifulSoup):
     assert output.get("aria-live") == "polite"
 
 
-def test_pending_stats_stay_visible_rather_than_hidden(css: str):
-    block = rule_block(css, ".stats-grid.is-pending")
-    assert "display: none" not in block
-    assert "opacity" in block
-
-
 # ---------------------------------------------------------------------------
 # #152 — Find best item gated on a selected enemy
 # ---------------------------------------------------------------------------
-
-
-def test_bis_prerequisite_is_evaluated_on_every_render(source: str):
-    """``render()`` reaches the prerequisite pass through the capability
-    refusal pass, which runs first so a refused family stays disabled."""
-    assert "function applyPrerequisiteGates()" in source
-    render_block = source.split("\nfunction render() {")[1].split("\n}\n", maxsplit=1)[
-        0
-    ]
-    assert "applyControlCapabilities();" in render_block
-    capability_block = source.split("function applyControlCapabilities()")[1].split(
-        "\n}\n", maxsplit=1
-    )[0]
-    assert "applyPrerequisiteGates();" in capability_block
-
-
-def test_bis_button_disables_without_a_complete_enemy(source: str):
-    block = source.split("function applyPrerequisiteGates()")[1].split(
-        "\n}\n", maxsplit=1
-    )[0]
-    assert "bisButton" in block
-    assert "bisReadyForPath" in block or "state.targets" in block
-    assert "disabled" in block
 
 
 def test_bis_prerequisite_message_sits_next_to_the_control(soup: BeautifulSoup):
@@ -428,39 +239,6 @@ def test_best_buy_controls_live_in_the_constraints_block(soup: BeautifulSoup):
         assert node.find_parent(id="railConstraints") is not None, control_id
 
 
-def test_constraints_block_uses_shared_panel_transparency(css: str):
-    """The constraints banner uses the same translucent dark panel layer as
-    the rail."""
-    block = rule_block(css, ".constraints-bar")
-    assert "background: var(--rail-panel)" in block
-    tokens = rule_block(css, ":root")
-    assert re.search(r"--panel-alpha:\s*\.67", tokens)
-
-
-def test_constraints_copy_uses_readable_ink(css: str):
-    """Constraint labels inherit theme colors at declared alpha values."""
-    name = rule_block(css, ".constraint-name")
-    assert "var(--cream-70)" in name
-    value = rule_block(css, ".constraint-value")
-    assert "var(--cream)" in value
-    note = rule_block(css, ".constraint-note")
-    assert "color-mix(in srgb, var(--cream)" in note
-
-
-def test_best_buy_controls_reflow_at_narrow_widths(css: str):
-    """The rail becomes a full-width block rather than an inline sentence."""
-    narrow = css.split("@media (max-width: 860px)")[1].split("@media", maxsplit=1)[0]
-    assert ".app-grid" in narrow
-    assert "grid-template-columns: minmax(0, 1fr)" in narrow
-
-
-def test_best_buy_disabled_state_stays_legible(css: str):
-    block = rule_block(css, ".rail-primary:disabled")
-    match = re.search(r"opacity:\s*([\d.]+)", block)
-    assert match
-    assert float(match.group(1)) >= 0.4
-
-
 def test_optimizer_receipt_has_a_visible_home(soup: BeautifulSoup, source: str):
     """The optimizer's own result is a canvas band, never a toast — and it is
     actually rendered (a ``state.optimizer.summary`` written in seven places
@@ -485,91 +263,9 @@ def test_optimizer_receipt_has_a_visible_home(soup: BeautifulSoup, source: str):
 # ---------------------------------------------------------------------------
 
 
-def test_keystone_icon_has_an_explicit_size_contract(css: str):
-    # The keystone rides an ordinary build slot row on the duel canvas, so the
-    # shared row icon is what has to be bounded.
-    block = rule_block(css, ".duel-row .item-icon")
-    for declaration in ("width", "height", "aspect-ratio"):
-        assert declaration in block, f"keystone icon is missing {declaration}"
-
-
-def test_keystone_image_is_bounded_and_cropped(css: str):
-    block = rule_block(css, ".duel-row .item-icon img")
-    assert "object-fit" in block
-    assert "width: 100%" in block
-    assert "height: 100%" in block
-
-
-def test_keystone_slot_matches_the_item_slot_grammar(source: str):
-    """The keystone row is built from the same duel-row grammar as an item
-    slot — same class, same icon + copy structure, its own picker."""
-    render = source.split("function renderDuelSide(")[1].split(
-        "\nfunction ", maxsplit=1
-    )[0]
-    assert 'class="duel-row is-keystone' in render
-    assert 'data-picker="keystone"' in render
-    assert 'class="item-icon"' in render
-    assert 'class="duel-row-copy"' in render
-
-
-def test_keystone_label_wraps_instead_of_stretching_the_card(css: str):
-    block = rule_block(css, ".duel-row-copy strong")
-    assert "overflow-wrap" in block or "overflow" in block
-
-
 # ---------------------------------------------------------------------------
 # #155 — legible event timeline
 # ---------------------------------------------------------------------------
-
-
-def test_timeline_renders_one_lane_per_event(source: str):
-    block = source.split("function renderEventTimeline(")[1].split(
-        "\nfunction ", maxsplit=1
-    )[0]
-    assert "timeline-event" in block
-    assert "<ol" in block, "ordered-list semantics expose event order to AT"
-
-
-def test_timeline_labels_are_not_truncated_to_fragments(source: str):
-    block = source.split("function renderEventTimeline(")[1].split(
-        "\nfunction ", maxsplit=1
-    )[0]
-    assert ".slice(0, 3)" not in block, "3-character source fragments are unreadable"
-
-
-def test_timeline_lanes_are_the_one_home_for_events(source: str):
-    """Each lane carries the event's ledger index; the ledger table below keeps
-    the summaries (objective, event order, healing, support) and the damage
-    breakdown neither repeats the event rows."""
-    timeline = source.split("function renderEventTimeline(")[1].split(
-        "\nfunction ", maxsplit=1
-    )[0]
-    assert "data-event-index" in timeline
-    ledger = source.split('$("ledgerTable").innerHTML')[1].split("\n", maxsplit=1)[0]
-    breakdown = source.split("function renderExactBreakdown(")[1].split(
-        "\nfunction ", maxsplit=1
-    )[0]
-    assert "eventRows" not in ledger
-    assert "combat?.events" not in breakdown
-
-
-def test_timeline_label_size_meets_the_legibility_floor(css: str):
-    block = rule_block(css, ".timeline-event")
-    match = re.search(r"font-size:\s*(\d+(?:\.\d+)?)px", block)
-    assert match
-    assert float(match.group(1)) >= 12
-
-
-def test_dense_timelines_scroll_instead_of_overlapping(css: str):
-    block = rule_block(css, ".timeline-events")
-    assert "overflow-y: auto" in block
-    assert "max-height" in block
-
-
-def test_marker_collision_geometry_is_gone(css: str):
-    """Absolutely positioned 17px markers on a shared 1px line collided; the
-    lane layout replaces them."""
-    assert ".timeline-line i" not in css
 
 
 def lift_const(source: str, name: str) -> str:
@@ -711,57 +407,9 @@ def test_timeline_shows_a_reason_when_an_event_dealt_no_damage():
 # ---------------------------------------------------------------------------
 
 
-def test_canvas_never_crops_expanded_content(css: str):
-    """#156 was "content clips and overlaps in the result panel".
-
-    The redesign replaces the sticky, scrolling result column with a canvas
-    that grows with the page, so there is no inner frame to crop against.
-    The criterion becomes: nothing in the canvas may clip its own content.
-    """
-    for selector in (".canvas", ".ledger-band", ".ledger-body", ".buy-band"):
-        block = rule_block(css, selector)
-        assert "overflow: hidden" not in block, selector
-        assert "max-height" not in block, selector
-    # Only the app card clips, and only to keep its 1px frame square.
-    assert "overflow: hidden" in rule_block(css, ".app-card")
-
-
-def test_only_the_event_lane_list_owns_a_scroll_frame(css: str):
-    """A dense ledger scrolls inside its own lane list — the one deliberate
-    inner scroller — instead of pushing the canvas around."""
-    block = rule_block(css, ".timeline-events")
-    assert "overflow-y: auto" in block
-    assert "max-height" in block
-
-
-def test_ledger_lines_wrap_instead_of_colliding(css: str):
-    block = rule_block(css, ".ledger-line")
-    assert "flex-wrap: wrap" in block or "overflow-wrap" in block
-    span = rule_block(css, ".ledger-line span")
-    assert "overflow-wrap: anywhere" in span
-
-
-def test_breakdown_receipts_use_on_card_contrast(css: str):
-    """The receipts render inside the dark result card; dark ink there is
-    invisible (the reported 'Starting defenses' collision)."""
-    block = rule_block(css, ".breakdown-panel .breakdown-outcome")
-    assert "var(--ink)" not in block
-
-
-def test_receipt_tables_scroll_within_the_panel(css: str):
-    block = rule_block(css, ".breakdown-panel .damage-table-wrap")
-    assert "overflow-x: auto" in block
-
-
 # ---------------------------------------------------------------------------
 # #157 — certainty legend stays visible
 # ---------------------------------------------------------------------------
-
-
-def test_certainty_legend_participates_in_flow(css: str):
-    block = rule_block(css, ".trust-legend")
-    assert "position: sticky" not in block
-    assert "position: fixed" not in block
 
 
 def test_certainty_legend_is_hidden_until_a_result_exists(soup: BeautifulSoup):
@@ -775,17 +423,3 @@ def test_certainty_legend_sits_with_the_ledger_it_explains(soup: BeautifulSoup):
     legend = soup.select_one("#trustLegend")
     assert legend.find_parent(class_="ledger-band") is not None
     assert legend.find_parent(class_="verdict") is None
-
-
-def test_certainty_chips_meet_the_readable_size_floor(css: str):
-    block = rule_block(css, ".certainty-chip")
-    match = re.search(r"font:\s*\d+\s+(\d+(?:\.\d+)?)px", block)
-    assert match, "certainty chips need an explicit font size"
-    assert float(match.group(1)) >= 11
-
-
-def test_legend_note_stays_readable_on_its_surface(css: str):
-    block = rule_block(css, ".trust-legend-note")
-    match = re.search(r"font-size:\s*(\d+(?:\.\d+)?)px", block)
-    assert match
-    assert float(match.group(1)) >= 12

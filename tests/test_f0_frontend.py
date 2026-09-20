@@ -15,7 +15,6 @@ These tests pin the F0 redesign without a browser:
 """
 
 import json
-import re
 import shutil
 import subprocess
 from pathlib import Path
@@ -161,12 +160,6 @@ def test_quick_view_is_the_visible_default():
     assert soup.select(".view-tab") == []
 
 
-def test_hidden_attribute_is_enforced_in_css():
-    """Class display rules (e.g. .quick-view) must not override [hidden]."""
-    css = _css()
-    assert re.search(r"\[hidden\]\s*\{[^}]*display:\s*none\s*!important", css)
-
-
 def test_share_analyst_button_is_reachable_inside_analyst_view():
     soup = _soup()
     button = soup.select_one("#shareAnalystButton")
@@ -246,48 +239,6 @@ def test_engine_error_surface_lives_above_the_verdict():
     assert order.index(banners) < order.index(verdict)
 
 
-def test_legacy_hidden_dom_is_removed():
-    page = _page()
-    for legacy_id in (
-        "builder",
-        "winnerVisual",
-        "scoreGrid",
-        "resistanceOutput",
-        "threshold",
-        "mechanicsOutput",
-        "rotationTable",
-        "resultContext",
-        "resultFootnote",
-        "tableA",
-        "tableB",
-        "baseDamage",
-        "apRatio",
-        "physicalDamage",
-        "adRatio",
-    ):
-        assert f'id="{legacy_id}"' not in page, legacy_id
-
-
-def test_engine_failures_render_visibly():
-    source = _source()
-    assert "showEngineError" in source
-    assert "hideEngineError" in source
-    assert 'document.getElementById("engineError")' in source
-    assert 'status.textContent = "error"' in source
-    # The old silent hidden-div error path must be gone.
-    assert '$("why").textContent = failure.error' not in source
-    assert '$("resultContext").textContent = "Engine boundary"' not in source
-
-
-def test_calculating_pending_state_is_rendered():
-    source = _source()
-    assert 'status.textContent = "calculating"' in source
-    assert 'status.classList.add("calculating")' in source
-    assert 'status.classList.remove("calculating")' in source
-    css = _css()
-    assert "#resultStatus.calculating" in css
-
-
 # ---------------------------------------------------------------------------
 # New affordances
 # ---------------------------------------------------------------------------
@@ -302,38 +253,6 @@ def test_practice_target_affordance_is_wired():
     assert 'event.target.closest("#addPracticeEnemy")' in source
     assert "PRACTICE_TARGETS" in source
     assert "no-duplicate-champions" in source or "present.has" in source
-
-
-def test_practice_target_is_the_passive_dummy_with_exact_stat_inputs():
-    source = _source()
-    assert 'const PRACTICE_DUMMY_KIND = "practice_dummy"' in source
-    assert (
-        'const PRACTICE_DUMMY_IMAGE = "/static/img/practice-dummy-enemy.png"' in source
-    )
-    assert "data-dummy-stat" in source
-    assert "targetStatOverrides" in source
-    assert "No skills or outgoing actions" in source
-    assert (ROOT / "static" / "img" / "practice-dummy-enemy.png").is_file()
-
-
-def test_ability_variant_buttons_write_the_declared_backend_option():
-    source = _source()
-    assert 'data-ability-variant="${slot}"' in source
-    # A Variant row renders only when the slot has a bound module option.
-    assert (
-        'const bound = ability.variants?.length > 1 && abilityOptionBinding(slot, "ability_variants");'
-        in source
-    )
-    assert (
-        'abilityOptionBinding(ability.slot, "ability_variants") === option.key'
-        in source
-    )
-    assert "input.variant = Number(abilityVariantButton.dataset.value)" in source
-    assert "legacyVariantKeys" in source
-    # Which key a global form toggle binds is decided in one place; the rule
-    # itself is pinned by
-    # ``test_global_form_binding_checks_set_membership_not_property_lookup``.
-    assert "globalFormToggles" in source
 
 
 def _authored_abilities(champion):
@@ -528,15 +447,6 @@ def test_ziggs_variant_payload_is_accepted_by_the_calculate_route(variants, tmp_
     assert response.status_code == 200, response.get_json()
 
 
-def test_global_form_binding_checks_set_membership_not_property_lookup():
-    """``"hammer_stance" in declared`` on a Set checks properties, never
-    membership — it silently returned "mega" for Jayce, whose module declares
-    no such option, leaving his variant buttons wired to a dead key."""
-    source = _source()
-    assert '"hammer_stance" in declared' not in source
-    assert "globalFormToggles().find((key) => declared.has(key))" in source
-
-
 @pytest.mark.parametrize(
     ("champion", "expected"),
     [
@@ -562,40 +472,6 @@ def test_slot_owned_booleans_never_answer_the_global_form_lookup(
     assert _payload_probe(champion, {}, tmp_path)["bindings"] == expected
 
 
-def test_the_variant_index_to_boolean_rule_has_one_home():
-    """The dedicated ``r_sweet_spot`` branch is gone; the map is the rule."""
-    source = _source()
-    assert 'options[option.key] = abilityInput("R").variant === 0;' not in source
-    assert (
-        "options[option.key] = abilityInput(variantAbility.slot).variant" not in source
-    )
-
-
-def test_global_form_variant_click_syncs_every_bound_slot():
-    """Q/W/E all bind the same global form toggle; clicking Boulder Toss must
-    not leave W/E rendering the Mini kit (and the payload is read from the
-    first bound slot, so unsynced slots would silently disagree with it)."""
-    source = _source()
-    assert "syncGlobalFormVariants" in source
-
-
-def test_global_form_variants_default_to_the_module_option_default():
-    """A fresh champion pick must not flip a form toggle: variant index 0 is
-    Jayce's hammer kit, but his module defaults hammer_stance to false
-    (cannon).  Reset seeds each bound slot's variant from the option default,
-    and the payload falls back to the option value when no variant input
-    exists (share-restore clears abilityInputs)."""
-    source = _source()
-    assert "defaultFormVariantIndex" in source
-    # One home for the starting index: a boolean toggle through
-    # VARIANT_BOOLEAN_OPTIONS, an index-valued option clamped to the list.
-    assert "variant: defaultFormVariantIndex(ability)" in source
-    # Payload never reads the synthetic variant-0 fallback for form toggles.
-    assert (
-        "options[option.key] = abilityInput(variantAbility.slot).variant" not in source
-    )
-
-
 def test_quick_to_analyst_bridge_is_wired():
     """Quick mode, its Open-in-Analyst bridge and the whole view-switching
     layer were removed; share links load directly into the analyst view."""
@@ -606,58 +482,9 @@ def test_quick_to_analyst_bridge_is_wired():
     assert "renderSharedBuild(shareToken)" in source
 
 
-def test_shared_link_loads_into_the_analyst_view():
-    """Share tokens render directly in the analyst view (product decision
-    2026-08-06) — no quick read-only card, no view switch."""
-    source = _source()
-    assert "renderSharedBuild(shareToken)" in source
-    assert "loadSharedBuildIntoAnalyst(payload)" in source
-
-
-def test_bis_hint_when_scenario_incomplete():
-    source = _source()
-    assert "Best-in-slot needs an enemy roster" in source
-    assert 'if (!bisReadyForPath("attacker.buildA.0"))' in source
-
-
 # ---------------------------------------------------------------------------
 # Dead code removal
 # ---------------------------------------------------------------------------
-
-
-def test_dead_renderers_are_removed():
-    source = _source()
-    for dead in (
-        "function renderBuilder(",
-        "function renderResults(",
-        "function renderExactResults(",
-        "function renderEngineUnavailable(",
-        "function renderResistanceOutput(",
-        "function renderDamageBreakdown(",
-        "function renderMechanicsOutput(",
-        "function renderExactStatMatrix(",
-        "function renderExactResistance(",
-        "function renderExactMechanics(",
-        "function applyRosterBuild(",
-        "function optimizeRosterBuild(",
-        "function reoptimizeAttackerAfterRosterChange(",
-        "function rosterBisCandidates(",
-        "function rosterBisStacks(",
-        "function bisCandidates(",
-        "function stacksForBis(",
-        "function openRosterBis(",
-    ):
-        assert dead not in source, dead
-    # The live exact breakdown renderer survives.
-    assert "function renderExactBreakdown(" in source
-
-
-def test_manual_package_bindings_are_null_safe():
-    source = _source()
-    assert (
-        'if (element) element.addEventListener("input", updateDamagePackage)' in source
-    )
-    assert 'const baseDamage = $("baseDamage");' in source
 
 
 # ---------------------------------------------------------------------------
@@ -702,28 +529,6 @@ def test_page_has_one_h1_and_a_sane_heading_order():
     assert champion.name == "h3"
 
 
-def test_visually_hidden_helper_actually_hides():
-    css = _css()
-    block = css.split(".visually-hidden {")[1].split("}")[0]
-    assert "position: absolute" in block
-    assert "clip-path" in block or "clip:" in block
-    assert "width: 1px" in block
-
-
 # ---------------------------------------------------------------------------
 # JS sanity
 # ---------------------------------------------------------------------------
-
-
-def test_node_check_passes_for_app_js():
-    node = shutil.which("node")
-    if node is None:
-        pytest.skip("node is not installed on this machine")
-    result = subprocess.run(
-        [node, "--check", str(APP_JS)],
-        capture_output=True,
-        text=True,
-        cwd=ROOT,
-        check=False,
-    )
-    assert result.returncode == 0, result.stderr

@@ -39,6 +39,8 @@ import copy
 import json
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+
 import pytest
 
 from src.calculator.champions import (
@@ -64,11 +66,13 @@ from src.calculator.fight.autos.empower_windows import _empower_window_procs
 from src.calculator.fight.config import FightConfig
 from src.calculator.stats import calculate_total_stats
 
-_DATA = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))
+_DATA = json.loads((ROOT / "data/champions.json").read_text(encoding="utf-8"))
 _MEL = _DATA["Mel"]
 _MEL_P = _MEL["abilities"]["P"][0]
-_BIN = json.loads(Path("data/bin/characters/mel.bin.json").read_text(encoding="utf-8"))
-_ATOMS = json.loads(Path("data/atoms/mel.atoms.json").read_text(encoding="utf-8"))
+_BIN = json.loads(
+    (ROOT / "data/bin/characters/mel.bin.json").read_text(encoding="utf-8")
+)
+_ATOMS = json.loads((ROOT / "data/atoms/mel.atoms.json").read_text(encoding="utf-8"))
 _FULL_RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
 # The game file's ByCharLevel interpolation, written out as arithmetic the

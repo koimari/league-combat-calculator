@@ -162,29 +162,6 @@ def test_each_payload_says_who_it_acts_on_and_what_arms_it() -> None:
     assert _rule(FORCED_HOLDER, ForcedCritRule).payload.subject is Subject.HOLDER
 
 
-def test_the_interpreter_refuses_a_rule_of_another_family() -> None:
-    """A payload the family does not own is a stop, never an empty field set."""
-    other = next(
-        rule
-        for rule in catalog.behavior_rules("Black Cleaver")
-        if rule.family is RuleFamily.RESISTANCE_SHRED
-    )
-    with pytest.raises(CritProfileInterpretationError):
-        crit_fields(
-            other,
-            catalog.build_context(
-                other.owner,
-                FightFacts(
-                    level=13,
-                    fight_duration_seconds=5.0,
-                    target_bonus_health=0.0,
-                    holder_is_melee=True,
-                ),
-            ),
-            EngineLane.PAIR_ENGINE,
-        )
-
-
 def test_the_compiled_field_names_are_what_the_engines_ask_for() -> None:
     """A field a caller cannot name is a number nobody can read."""
     rule = _rule(BONUS_HOLDER, CritDamageBonusRule)

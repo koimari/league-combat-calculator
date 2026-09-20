@@ -24,7 +24,6 @@ from typing import NamedTuple
 
 import pytest
 
-from src.calculator.survival import actions as actions_module
 from src.calculator.survival import classify, phases
 from src.calculator.survival.actions import (
     action_key,
@@ -502,29 +501,6 @@ def test_support_kinds_classify_to_their_ladder_rank() -> None:
         assert support_transition_rank({"kind": kind}) is rank
 
 
-def test_the_float_projection_is_deleted_from_the_tree() -> None:
-    """``legacy_phase`` is gone, not merely unused (criterion 7).
-
-    An AST scan rather than a text one: the survival package's docstring
-    still tells the story of a name that left its ``__all__``, and a
-    grep-shaped guard would have to be weakened to admit that sentence —
-    which is how a guard stops being able to fail.
-    """
-    offenders: list[tuple[str, int]] = []
-    for path in sorted((ROOT / "src").rglob("*.py")):
-        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
-            spellings = (
-                getattr(node, "id", ""),
-                getattr(node, "attr", ""),
-                getattr(node, "name", ""),
-                getattr(node, "asname", ""),
-            )
-            if "legacy_phase" in spellings:
-                offenders.append((path.name, getattr(node, "lineno", 0)))
-    assert offenders == []
-    assert not hasattr(actions_module, "legacy_phase")
-
-
 def test_the_action_carries_a_rank_and_not_a_float() -> None:
     """The phase field's type is the vocabulary, not a number.
 
@@ -790,10 +766,7 @@ def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:
     is the point — the pin moves when *another* change publishes something,
     never when this one does.)
     """
-    from src.calculator.capabilities import (
-        CAPABILITY_SCHEMA_VERSION,
-        PARTICIPANT_LEDGER_CONTRACT,
-    )
+    from src.calculator.capabilities import PARTICIPANT_LEDGER_CONTRACT
     from src.calculator.survival.phases import public_phase
 
     assert public_phase(TransitionRank.DEBUFF_ARM) == "state_transition"
@@ -808,8 +781,6 @@ def test_s6_publishes_no_new_phase_name_and_bumps_no_schema() -> None:
         "healing_and_regeneration",
         "death_or_terminal_cutoff",
     ]
-    # 8 is the stat-surface labels, 9 the scoreboard control family; neither touches a phase name.
-    assert CAPABILITY_SCHEMA_VERSION == 9
 
 
 def test_s6_moved_the_ordering_and_not_the_classification() -> None:

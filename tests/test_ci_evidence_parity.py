@@ -370,7 +370,6 @@ def test_scanner_finds_the_known_reference_corpus() -> None:
         "tests/test_dr_mundo_passive.py",
         "tests/test_ashe_focus_lifecycle.py",
         "tests/test_gunmetal_greaves_riot_branch.py",
-        "tests/test_milio_fired_up_blocker.py",
     ):
         assert (
             expected in files
@@ -385,6 +384,9 @@ def test_scanner_resolves_join_chains_not_just_single_literals() -> None:
     `Path(__file__).resolve().parent.parent / "data" / "bin" /
     "items.bin.json"` -- no single literal contains "data/bin/" as
     continuous text, only the join does.
+
+    The ``data/gamefiles/ddragon/`` shape has no live corpus member, so it
+    is driven over fabricated text, as the receipt-tree test below is.
     """
     paths = {
         ref.path
@@ -393,12 +395,9 @@ def test_scanner_resolves_join_chains_not_just_single_literals() -> None:
     }
     assert "data/bin/items.bin.json" in paths
 
-    milio_paths = {
-        ref.path
-        for ref in ALL_REFERENCES
-        if ref.file == "tests/test_milio_fired_up_blocker.py"
-    }
-    assert "data/gamefiles/ddragon/Milio.json" in milio_paths
+    fabricated = '_D = _REPO / "data" / "gamefiles" / "ddragon" / "Milio.json"'
+    found = _scan_text("tests/fabricated.py", fabricated, is_python=True)
+    assert {ref.path for ref in found} == {"data/gamefiles/ddragon/Milio.json"}
 
 
 def test_scanner_excludes_pure_docstring_citations() -> None:

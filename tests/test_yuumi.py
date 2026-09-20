@@ -5,13 +5,11 @@ waves by a stacking 10%.
 """
 
 import copy
-import inspect
 import itertools
 
 import pytest
 
 from src import app as app_module
-from src.calculator import healing_reduction
 from src.calculator.champions import get_champion_module_contract, yuumi
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review
@@ -256,26 +254,6 @@ class TestYouAndMeIsASourcedZeroDamageRow:
 
         assert "stat_buff" not in row
         assert row.get("healing") is None
-
-    def test_the_retired_claim_is_false_the_caster_channel_exists(self):
-        """Why the label moved: the hook the old receipt denied is live.
-
-        ``_apply_stat_buff_ultimates`` adds any stat key generically, and
-        ``heal_and_shield_power_factor`` reads that key back for the CASTER.
-        """
-        assert healing_reduction.heal_and_shield_power_factor(
-            {"heal_and_shield_power_percent": 8.0}
-        ) == pytest.approx(1.08)
-
-        stats = {"heal_and_shield_power_percent": 0.0}
-        for stat_key, buff_value in {"heal_and_shield_power_percent": 8.0}.items():
-            stats[stat_key] = stats.get(stat_key, 0.0) + buff_value
-        assert healing_reduction.heal_and_shield_power_factor(stats) == pytest.approx(
-            1.08
-        )
-        assert "heal_and_shield_power_percent" in inspect.getsource(
-            healing_reduction.heal_and_shield_power_factor
-        )
 
     @pytest.mark.parametrize("attribute", ["Heal and Shield Power", "Healing On-Hit"])
     def test_a_kit_missing_either_row_is_refused(self, attribute):

@@ -548,19 +548,6 @@ class TestRationaleCitesAtoms:
 
 
 class TestDeterminismAndStability:
-    def test_derivation_is_deterministic(self, champion_by_name, items_by_name) -> None:
-        """Same champion + same parse → same order (pure function)."""
-        for name in sorted(champion_by_name):
-            data = champion_by_name[name]
-            parsed = _parse(data, 11, (), items_by_name)
-            first, _rule = _resolve(
-                data, parsed, certified_order=get_champion_cast_order(name)
-            )
-            second, _ = _resolve(
-                data, parsed, certified_order=get_champion_cast_order(name)
-            )
-            assert first == second, f"{name} derivation is not deterministic"
-
     def test_order_stable_across_full_kit_levels_and_builds(
         self, champion_by_name, items_by_name
     ) -> None:

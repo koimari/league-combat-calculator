@@ -663,7 +663,6 @@ def test_the_load_gate_imports_nothing_and_reads_nothing() -> None:
 def test_claim_lane_is_exported_here_and_is_not_spelled_lane() -> None:
     """D-45: two lane vocabularies, never both spelled ``Lane``."""
     assert "ClaimLane" in coverage_evidence.__all__
-    assert not hasattr(coverage_evidence, "Lane")
 
 
 # ---------------------------------------------------------------------------

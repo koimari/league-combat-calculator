@@ -586,29 +586,38 @@ class TestSourceEvidence:
 
 
 class TestChargeFractions:
-    def test_zero_charge_prices_the_minimum_rows(self):
-        entry = _parse({"e_charge_fraction": 0.0, "r_hemoplague_debuff": False})["E"]
-        assert entry["total_raw"] == pytest.approx(162.5)
-        assert entry["detail"] == (
-            "0% charge (0s of the 1s ramp; 1.5s channel): flat 90 + "
-            "1.5% maximum health + 35% AP"
-        )
-
-    def test_half_charge_interpolates_each_modifier(self):
-        entry = _parse({"e_charge_fraction": 0.5, "r_hemoplague_debuff": False})["E"]
-        assert entry["total_raw"] == pytest.approx(286.25)
-        assert entry["detail"] == (
-            "50% charge (0.5s of the 1s ramp; 1.5s channel): flat 135 + "
-            "3.75% maximum health + 57.5% AP"
-        )
-
-    def test_full_charge_prices_the_maximum_rows(self):
-        entry = _parse({"e_charge_fraction": 1.0, "r_hemoplague_debuff": False})["E"]
-        assert entry["total_raw"] == pytest.approx(410.0)
-        assert entry["detail"] == (
-            "100% charge (1s of the 1s ramp; 1.5s channel): flat 180 + "
-            "6% maximum health + 80% AP"
-        )
+    @pytest.mark.parametrize(
+        ("fraction", "total_raw", "detail"),
+        [
+            (
+                0.0,
+                162.5,
+                "0% charge (0s of the 1s ramp; 1.5s channel): flat 90 + "
+                "1.5% maximum health + 35% AP",
+            ),
+            (
+                0.5,
+                286.25,
+                "50% charge (0.5s of the 1s ramp; 1.5s channel): flat 135 + "
+                "3.75% maximum health + 57.5% AP",
+            ),
+            (
+                1.0,
+                410.0,
+                "100% charge (1s of the 1s ramp; 1.5s channel): flat 180 + "
+                "6% maximum health + 80% AP",
+            ),
+        ],
+        ids=["zero", "half", "full"],
+    )
+    def test_the_charge_fraction_interpolates_every_modifier(
+        self, fraction: float, total_raw: float, detail: str
+    ):
+        entry = _parse({"e_charge_fraction": fraction, "r_hemoplague_debuff": False})[
+            "E"
+        ]
+        assert entry["total_raw"] == pytest.approx(total_raw)
+        assert entry["detail"] == detail
 
     def test_default_fraction_is_fully_charged(self):
         # The option default 1.0 reproduces the reviewed packet's max-row

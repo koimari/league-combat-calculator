@@ -12,7 +12,6 @@ from src.calculator import champion_rotation_rule
 from src.calculator import champions as champions_package
 from src.calculator.ability_dps_matrix import rank_ability_dps
 from src.calculator.cast_edge_inference import detect_setup_consume_edges
-from src.calculator.cast_edge_markers import _PRE_CAMPAIGN_CC_ORDERING
 from src.calculator.champions import get_champion_cast_order, parse_champion_abilities
 from src.calculator.champions.slot_cc import _apply_module_cc
 from src.calculator.data_fetcher import fetch_champion_data
@@ -325,13 +324,6 @@ class TestThePinnedPreCampaignOrdering:
     @pytest.fixture(scope="class")
     def champions(self):
         return {data.get("name"): data for data in fetch_champion_data().values()}
-
-    def test_the_table_holds_exactly_the_pre_campaign_slots(self) -> None:
-        assert {
-            "Ahri": frozenset({"E"}),
-            "Pantheon": frozenset({"W"}),
-            "Syndra": frozenset({"E"}),
-        } == _PRE_CAMPAIGN_CC_ORDERING
 
     @pytest.mark.parametrize(
         ("champion_name", "slot"),

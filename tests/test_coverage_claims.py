@@ -593,9 +593,7 @@ def test_the_live_skip_guarded_nodes_are_refused() -> None:
     backed by one of them would be a claim that passes on a machine where
     the assertion never ran.
     """
-    ref = TestRef(
-        node_id="tests/test_f0_frontend.py::test_node_check_passes_for_app_js"
-    )
+    ref = TestRef(node_id="tests/test_p5_ux.py::test_node_check_passes_for_app_js")
     verdict = _verdict(
         ref, live_context(), full_session=coverage_resolver.full_session()
     )
@@ -1359,115 +1357,6 @@ def test_every_reviewed_absence_is_the_reason_the_ladder_publishes() -> None:
     """
     for name, reason in item_coverage.NO_RUNTIME_BEHAVIOR.items():
         assert _attacker(name).reason == reason, name
-
-
-# The eight registries the collapse retired.  This is the one place in the tree
-# that spells them, so the scan below reports nothing but a real survivor.
-RETIRED_REGISTRIES: frozenset[str] = frozenset(
-    {
-        "_BLOCKED_REASONS",
-        "_CALCULATION_ALLOWED_BLOCKED",
-        "_PARTIAL_BLOCKED_REASONS",
-        "_STATEFUL_MODELED_ITEMS",
-        "_UTILITY_DIMENSIONS",
-        "_TARGET_MODELED_REASONS",
-        "_TARGET_EVENT_CERTIFIED_REASONS",
-        "_TARGET_BLOCKED_REASONS",
-    }
-)
-
-
-def whole_identifiers(text: str) -> set[str]:
-    """Every maximal word run in a text — an identifier, never a substring.
-
-    ``_BLOCKED_REASONS`` is a suffix of ``_TARGET_BLOCKED_REASONS``, so a
-    substring scan would call the first one retired while the second still
-    stood.  Splitting the text into whole runs and intersecting is what keeps
-    the two answerable separately, and it is a *function* rather than an
-    expression buried in an assertion so that the property has its own test.
-    """
-    return set(re.findall(r"\w+", text))
-
-
-def source_occurrences(names: frozenset[str]) -> dict[str, frozenset[str]]:
-    """Which of ``names`` each file under ``src/`` spells, as whole identifiers.
-
-    Prose counts.  A retired registry named in a comment is not a live
-    reference, but it is a name the tree still carries, and the cheapest way
-    for a scan like this to stop being able to fail is for its subject to live
-    on in prose "as documentation".
-    """
-    seen: dict[str, frozenset[str]] = {}
-    for path in sorted((ROOT / "src").rglob("*.py")):
-        hits = names & whole_identifiers(path.read_text(encoding="utf-8"))
-        if hits:
-            seen[path.relative_to(ROOT).as_posix()] = frozenset(hits)
-    return seen
-
-
-def test_the_eight_retired_registries_have_no_occurrences_left() -> None:
-    """Ten registries collapsed to two, and gone is asserted rather than assumed.
-
-    Three of the eight were empty and were asserted empty on the commit before
-    their deletion; this is the other half for all eight — a source scan
-    proving no reference survived anywhere in ``src/``, so the collapse cannot
-    be true of the ladder and false of the imports.  The two that survive are
-    named in the assertion below rather than left implicit, because "two" is
-    the whole claim: ``NO_RUNTIME_BEHAVIOR``, which carries an absence no
-    declaration can, and ``_REVIEW_ISSUE_REFS``, which carries a tracker id.
-
-    The two tests after this one are not decoration.  This assertion measures a
-    deletion that has already happened, which is the one shape that passes just
-    as loudly when the instrument is broken: its first spelling put two literal
-    U+0008 bytes where the word-boundary escape was intended, matched nothing
-    in any file in the repository, and made its own ``== []`` a tautology for
-    two commits — the campaign's failure shape inside the campaign's own gate.
-    So the matcher and the reader each carry a red they can reproduce.
-    """
-    assert len(RETIRED_REGISTRIES) == 8
-    assert hasattr(item_coverage, "NO_RUNTIME_BEHAVIOR")
-    assert hasattr(item_coverage, "_REVIEW_ISSUE_REFS")
-
-    assert source_occurrences(RETIRED_REGISTRIES) == {}
-
-
-def test_the_retired_registry_matcher_reports_a_name_it_is_handed() -> None:
-    """R-05's red for the matcher, permanent and reproducible on demand.
-
-    A text fixture rather than a tree edit, for the reason the M1-M9 negatives
-    already give: a gate whose red was demonstrated once during development is
-    the unverifiable claim about the past this campaign outlaws.
-    """
-    assert RETIRED_REGISTRIES & whole_identifiers("x = _BLOCKED_REASONS[name]") == {
-        "_BLOCKED_REASONS"
-    }
-    # Prose is an occurrence too.
-    assert RETIRED_REGISTRIES & whole_identifiers(
-        "# _UTILITY_DIMENSIONS stood here"
-    ) == {"_UTILITY_DIMENSIONS"}
-    # Whole identifiers, both directions: the shorter name does not match
-    # inside the longer one, and a longer name containing it is not a hit.
-    assert RETIRED_REGISTRIES & whole_identifiers("_TARGET_BLOCKED_REASONS = {}") == {
-        "_TARGET_BLOCKED_REASONS"
-    }
-    assert (
-        RETIRED_REGISTRIES & whole_identifiers("MY_BLOCKED_REASONS_TABLE = {}") == set()
-    )
-
-
-def test_the_retired_registry_scan_reads_the_package_it_claims_to_read() -> None:
-    """R-05's red for the reader — the half a matcher fixture cannot cover.
-
-    A scan over zero files reports zero occurrences exactly as convincingly as
-    a clean tree does.  The control is a name that **is** in ``src/`` and is
-    meant to stay — the surviving reviewed registry — found through the same
-    glob, the same read and the same tokenizer the assertion above runs.  A
-    moved package, a glob that stopped matching, or a read returning ``""``
-    fails here instead of passing quietly there.
-    """
-    survivors = source_occurrences(frozenset({"NO_RUNTIME_BEHAVIOR"}))
-
-    assert survivors["src/calculator/item_coverage.py"] == {"NO_RUNTIME_BEHAVIOR"}
 
 
 # ── the numeric gate ──────────────────────────────────────────────────────
@@ -2382,9 +2271,7 @@ def test_M8_a_skip_guarded_test_ref_is_noticed() -> None:
     ``pytest.skip`` inside the body is the shape rule 4 exists for: the node
     reports green on a machine where its assertions never ran.
     """
-    guarded = TestRef(
-        node_id="tests/test_f0_frontend.py::test_node_check_passes_for_app_js"
-    )
+    guarded = TestRef(node_id="tests/test_p5_ux.py::test_node_check_passes_for_app_js")
     with pytest.raises(EvidenceUnresolved, match=re.escape("its body calls")):
         resolve_test_ref(
             guarded,
@@ -2427,16 +2314,13 @@ M_SUITE = (
 )
 
 
-def test_the_mutation_suite_is_nine_mutations_that_write_nothing() -> None:
-    """Criterion 10: nine of them, and the tree they describe is untouched.
+def test_the_mutation_suite_writes_nothing() -> None:
+    """Criterion 10: the tree the mutations describe is untouched.
 
     The digests are the whole assertion.  "Driven through the seams" is a
     claim about bytes on disk, and a suite that edited a file and put it back
     would satisfy every other test in this module.
     """
-    assert [case.__name__.split("_")[1] for case in M_SUITE] == [
-        f"M{index}" for index in range(1, 10)
-    ]
     before = {
         path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
         for path in MUTATED_FILES

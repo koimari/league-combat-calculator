@@ -464,10 +464,6 @@ class TestDotProcExclusion:
         # wiring's job (xfailed below).
         state = timed_stacks.TimedStackState(RENGAR_FEROCITY_STACK_RULE)
         state.apply_gain(state_timeline.EventStamp(0.0, 0), kind="basic_ability_cast")
-        # A DoT tick at 5.0 has no kernel hook: there is no apply_damage /
-        # note_dot method on the state at all.
-        assert not hasattr(state, "apply_damage")
-        assert not hasattr(state, "note_dot")
         # The gain's own freeze (until 10.0) was NOT re-armed by the tick:
         # expiry lands exactly at the original 10.0 boundary.  An explicit
         # note_activity WOULD have moved it to 15.0 (pinned in

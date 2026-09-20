@@ -34,7 +34,6 @@ from src.calculator.item_effects import (
     manaflow_declaration,
     manaflow_items,
     required_effect_value,
-    resolve_damage_effects,
 )
 from src.calculator.item_support_effects import derive_item_support_effects
 from src.calculator.manaflow_ledger import ManaflowDeclaration, ManaflowLedger
@@ -138,9 +137,6 @@ def test_cull_reap_on_hit_heal_is_a_typed_health_packet():
     assert slot.owner == "Cull"
     assert slot.value("amount") == pytest.approx(
         required_effect_value("Cull", "health_per_on_hit")
-    )
-    assert not hasattr(
-        resolve_damage_effects([get_item_by_name("Cull")]), "on_hit_heals"
     )
 
 

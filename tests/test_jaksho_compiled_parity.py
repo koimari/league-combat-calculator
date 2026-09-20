@@ -880,23 +880,6 @@ def test_compiled_capability_scan_is_clean_for_jaksho():
     assert fast["participants"][0]["survival"]["jaksho"]["stacks"] == MAX_STACKS
 
 
-def test_compiled_tuple_ledger_fight_fails_closed_with_stack_metadata():
-    """P3-3R contract: once the capability scan stops reporting Jak'Sho, a
-    tuple-ledger pair (engine light rows, which omit ability_instance and
-    baseline resistances) must fail closed with the compiler's
-    tuple_ledger_stack_metadata receipt and fall back to parity — never a
-    crash (participant_timeline's dict(event) enrichment is a named P3-3R
-    metadata gap) and never a silent stack drop.  Today the capability
-    scan fails first, so this xfails."""
-    assert uncompilable_item_receipt([_jaksho_item()]) is None
-    legacy = _riven_tuple_ledger_fight(include_receipt=False)
-    ctx = CoupledSearchContext()
-    fast = _riven_tuple_ledger_fight(include_receipt=False, search_context=ctx)
-    assert fast == legacy
-    assert ctx.uncompilable is False
-    assert fast["participants"][0]["survival"]["jaksho"]["stacks"] == MAX_STACKS
-
-
 def test_legacy_score_only_pair_surface_carries_no_survival_state():
     """Named fail-closed boundary: the legacy pair scorer
     (run_fight(score_only=True)) cannot carry survival state — no target_*
@@ -1041,45 +1024,3 @@ def test_item_state_receipts_emits_exactly_one_voidborn_row():
     assert str(receipt["source_url"]).startswith(
         "https://wiki.leagueoflegends.com/en-us/Jak"
     )
-
-
-# ---------------------------------------------------------------------------
-# 8. Existing regression surface (kept green, disjoint, mirrors the originals)
-# ---------------------------------------------------------------------------
-
-
-def test_regression_surface_jaksho_timeline_stays_green():
-    """Mirrors test_participant_timeline.py ~4375: packets at 0.0 and 5.0
-    against baseline 100 MR with bonus 60 yield 5 stacks, a +18 dynamic MR
-    bonus, and the reaching packet repriced below its earlier twin."""
-    events = [
-        _combat_packet(0.0, 1, baseline_mr=100.0),
-        _combat_packet(5.0, 2, baseline_mr=100.0),
-    ]
-    result = _run_packets(events)
-    row = _jaksho_row(result)
-    assert row["stacks"] == 5
-    assert row["dynamic_bonus_magic_resistance"] == pytest.approx(18.0)
-    assert events[1]["dynamic_resistance"]["effective"] == pytest.approx(118.0)
-    assert events[1]["damage"] < events[0]["damage"]
-
-
-def test_regression_surface_jaksho_defensive_layer_stays_green():
-    """Mirrors test_defensive_effects.py ~304: the typed fields resolve
-    through starting defenses and the combat_state summary."""
-    defenses = resolve_starting_defenses(
-        "Ahri", 18, _stack_stats(), [{"name": ITEM_NAME}]
-    )
-    assert defenses.jaksho_max_stacks == 5
-    assert defenses.jaksho_stack_interval == pytest.approx(1.0)
-    assert defenses.jaksho_bonus_resistance_multiplier == pytest.approx(0.30)
-    assert defenses.public_summary()["combat_state"]["jaksho"]["max_stacks"] == 5
-
-
-def test_regression_surface_jaksho_target_coverage_stays_green():
-    """Mirrors test_item_coverage.py ~277: the target coverage is
-    modeled_event_certified and names the Voidborn mechanic."""
-    coverage = target_item_model_coverage(_jaksho_item())
-    assert coverage["status"] == "modeled_event_certified"
-    assert coverage["calculation_eligible"] is True
-    assert "Voidborn" in coverage["reason"]

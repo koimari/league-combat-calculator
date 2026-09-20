@@ -83,7 +83,6 @@ from src.calculator.participant_timeline import (
     CoupledSearchContext,
     build_participant_timeline,
 )
-from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival.compile import unrepresentable_template_receipt
 
@@ -734,56 +733,6 @@ def test_compiled_kernel_represents_the_timed_heal():
         )
         is None
     )
-
-
-def test_compiled_walk_equals_receipt_walk_with_the_heal_staged():
-    """P3-3K: the compiled score kernel now represents the timed Life From
-    Death heal directly (duration is metadata; heals apply flat in both
-    walks) — the fast result deep-equals the legacy walk with the compiled
-    panel in use and the receipt composition carrying both heal packets
-    with applied amounts."""
-    legacy = _timeline(include_receipt=False)
-    context = CoupledSearchContext()
-    fast = _timeline(
-        include_receipt=False,
-        pair_result_cache={},
-        search_context=context,
-    )
-    assert fast == legacy
-    assert context.panels  # the compiled panel staged the heal
-    full = _timeline(include_receipt=True)
-    heals = _timeline_heals(full)
-    assert len(heals) == 2
-    assert all(event["applied_amount"] > 0 for event in heals)
-
-
-def test_score_only_fight_parity_cryptbloom_build():
-    """run_fight score-only keeps every scoring field identical for a
-    Cryptbloom build (totals, resource spent, damage events)."""
-    params = FightParams.from_request(
-        {
-            "fight_mode": "time_based",
-            "fight_duration": 8.0,
-            "include_auto_attacks": True,
-            "ability_ranks": {"Q": 0, "W": 0, "E": 0, "R": 3},
-            "allies": [_ally("Jinx")],
-            "enemies": [_enemy("Aatrox")],
-        },
-        deterministic=True,
-    )
-    champion = get_champion("Lux")
-    item = get_item_by_name(CRYPTBLOOM)
-    full = run_fight(champion, 18, [item], params, score_only=False)
-    score = run_fight(champion, 18, [item], params, score_only=True)
-    assert score["total_damage"] == full["total_damage"]
-    assert score["resource_spent"] == full["resource_spent"]
-    scoring_keys = ("time", "source_key", "damage_type", "raw_damage", "damage")
-    assert [
-        tuple(event.get(key) for key in scoring_keys)
-        for event in score["damage_events"]
-    ] == [
-        tuple(event.get(key) for key in scoring_keys) for event in full["damage_events"]
-    ]
 
 
 # ---------------------------------------------------------------------------

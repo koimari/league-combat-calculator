@@ -46,6 +46,8 @@ import copy
 import json
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+
 import pytest
 
 from src.calculator.champions import (
@@ -71,9 +73,11 @@ from tests import game_binary
 _CHAMPIONS = fetch_champion_data()
 _BY_NAME = {data.get("name"): data for data in _CHAMPIONS.values()}
 _NAAFIRI = _BY_NAME["Naafiri"]
-_WIKI = json.loads(Path("data/champions.json").read_text(encoding="utf-8"))["Naafiri"]
+_WIKI = json.loads((ROOT / "data/champions.json").read_text(encoding="utf-8"))[
+    "Naafiri"
+]
 _BIN = json.loads(
-    Path("data/bin/characters/naafiri.bin.json").read_text(encoding="utf-8")
+    (ROOT / "data/bin/characters/naafiri.bin.json").read_text(encoding="utf-8")
 )
 # The binary records, addressed by their (swapped) internal names.
 _BIN_R_RECORD = _BIN["Characters/Naafiri/Spells/NaafiriRAbility/NaafiriR"]["mSpell"]

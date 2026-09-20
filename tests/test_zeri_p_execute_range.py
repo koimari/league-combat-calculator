@@ -729,23 +729,14 @@ class TestExecuteSemantics:
     today), so ``target_ending_health == 0`` can only come from the
     execute - a clean isolation for the contract."""
 
-    def test_executes_below_threshold(self):
+    # 160 is the threshold itself, and the comparison is inclusive.
+    @pytest.mark.parametrize("target_health", [159.99, 160.0])
+    def test_a_target_at_or_below_the_threshold_is_executed(self, target_health):
         result = _fight(
             level=18,
             ap=0.0,
             ranks=dict.fromkeys("QWER", 0),
-            target_health=159.99,
-            auto_attack_uptime=1.0,
-            duration=2.0,
-        )
-        assert result["target_ending_health"] == 0.0
-
-    def test_executes_at_exact_threshold_equality(self):
-        result = _fight(
-            level=18,
-            ap=0.0,
-            ranks=dict.fromkeys("QWER", 0),
-            target_health=160.0,
+            target_health=target_health,
             auto_attack_uptime=1.0,
             duration=2.0,
         )

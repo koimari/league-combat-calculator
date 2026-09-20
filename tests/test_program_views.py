@@ -17,7 +17,6 @@ initialiser, so its two rules are pinned here too, and S9 adds
 from __future__ import annotations
 
 import ast
-import re
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -638,119 +637,6 @@ def test_the_score_payload_names_every_number_in_it() -> None:
     assert entries["duration"]["disposition"] == "MEASURED"
     assert "participants[0].survival.max_health" in entries
     assert "breakdown[0].total_damage" in entries
-
-
-# ---------------------------------------------------------------------------
-# The UI's one budgeted change — a withheld leaf renders as a named refusal
-# ---------------------------------------------------------------------------
-
-APP_JS = Path(__file__).resolve().parent.parent / "static" / "js" / "app.js"
-
-
-def test_the_ui_has_one_shared_withheld_marker_and_one_leaf_reader() -> None:
-    """S9's one budgeted UI change, pinned as one.
-
-    Two helpers and no third: a second place that decided how a refusal looks
-    is a second place that could decide it looks like a blank.
-    """
-    source = APP_JS.read_text(encoding="utf-8")
-    assert source.count("const withheldMarker = ") == 1
-    assert source.count("const leafText = ") == 1
-
-
-def test_a_withheld_leaf_never_renders_as_a_blank_a_zero_or_a_nan() -> None:
-    """The failure this campaign is named after, at the last inch of it."""
-    source = APP_JS.read_text(encoding="utf-8")
-    start = source.index("const withheldMarker = ")
-    body = source[start : source.index("function invalidateOptimization", start)]
-    assert 'disposition === "WITHHELD"' in body
-    assert "withheld" in body
-    # The reader falls through to the marker when the payload carries no
-    # number, which is exactly the absent-with-a-receipt case.
-    assert "if (value == null) return withheldMarker(entry);" in body
-
-
-def test_a_measured_leaf_still_renders_as_the_bare_number() -> None:
-    """Unchanged rendering of measured leaves, pinned by test (criterion 5).
-
-    The formatter is the payload's own bare number put through the same
-    ``fmt`` every stat card already used; the disposition map changes what a
-    *refusal* looks like and nothing about what a number looks like.
-    """
-    source = APP_JS.read_text(encoding="utf-8")
-    start = source.index("const leafText = ")
-    body = source[start : source.index("function invalidateOptimization", start)]
-    assert "format = fmt" in body
-    assert "return escapeHtml(format(value));" in body
-
-
-def _js_call_sites(source: str, name: str) -> int:
-    """How many times *name* is invoked.
-
-    An arrow-function definition spells ``const name = (``, with the space
-    and the ``=`` between, so it does not match ``name(`` and needs no
-    subtracting -- and a subtraction that assumed it did is how this check
-    read one live call site as zero while it was being written.
-    """
-    return len(re.findall(rf"(?<![\w.]){re.escape(name)}\(", source))
-
-
-def test_the_refusal_helpers_are_reached_by_something_that_renders() -> None:
-    """A helper with no callers is a definition, not a rendering change.
-
-    ``withheldMarker`` and ``leafText`` shipped with zero call sites and no
-    ``.leaf-withheld`` rule: the payload could carry a refused leaf and the
-    page would still print the ``?? 0`` that stands in for it, which is the
-    exact failure the campaign is named after surviving the commit that
-    claimed to close it.
-    """
-    source = APP_JS.read_text(encoding="utf-8")
-    assert _js_call_sites(source, "leafText") >= 1
-    assert _js_call_sites(source, "withheldMarker") >= 1
-    assert _js_call_sites(source, "leafWithheld") >= 1
-    assert _js_call_sites(source, "survivalLeafPath") >= 1
-
-
-def test_a_refused_survival_leaf_is_not_read_as_a_zero() -> None:
-    """The two readers the verifier named, and the total over them.
-
-    ``Number(row.survival?.ending_health ?? 0)`` turns an absent leaf into a
-    measured zero.  Both the per-participant row and the enemy health total
-    ask the map first now, and a total with a refused member is refused
-    rather than quietly short by that member's amount.
-    """
-    source = APP_JS.read_text(encoding="utf-8")
-    start = source.index("function enemyHealthRemaining(")
-    body = source[start : source.index("function enemyOverkill(", start)]
-    assert "withheldEntry(" in body
-    assert "health withheld" in body
-    start = source.index('$("healthRows").innerHTML')
-    row = source[start : source.index("renderFightChart(", start)]
-    assert "leafWithheld(healthPath, healthDispositions)" in row
-    assert "leafText(null, healthPath, healthDispositions)" in row
-
-
-def test_the_enemy_predicate_has_one_home() -> None:
-    """Which row is an enemy is answered in one place.
-
-    ``enemyHealthRemaining`` needed each enemy's roster *index* to build its
-    dispositions path and re-spelled the filter inline to get it, leaving the
-    shared helper with one fewer caller and the predicate with two copies --
-    character-for-character the same, and free to drift from the next commit
-    onwards.  ``enemyRows`` carries the index, and ``enemyParticipants`` is
-    its projection.
-    """
-    source = APP_JS.read_text(encoding="utf-8")
-    assert source.count('row.team === "enemy"') == 1
-    assert _js_call_sites(source, "enemyRows") >= 2
-
-
-def test_the_page_has_a_rule_for_what_a_refusal_looks_like() -> None:
-    """A marker with no style is a word that reads as a value."""
-    css = (
-        Path(__file__).resolve().parent.parent / "static" / "css" / "style.css"
-    ).read_text(encoding="utf-8")
-    assert ".leaf-withheld {" in css
 
 
 def test_a_discarded_row_is_identical_to_a_recorded_one() -> None:

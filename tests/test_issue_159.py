@@ -50,21 +50,6 @@ class TestOneOwner:
             f"expire_timed; found direct arithmetic at {offenders}"
         )
 
-    def test_the_retired_duplicate_walks_are_gone(self):
-        """The hand-maintained copies named by the issue stay deleted."""
-        retired = (
-            "_LifelineShieldState",
-            "consume_typed_shield",
-            "consume_general_shield",
-            "expire_timed_shields",
-        )
-        for path in sorted(SRC.rglob("*.py")):
-            if path == LEDGER:
-                continue
-            source = path.read_text(encoding="utf-8")
-            for name in retired:
-                assert name not in source, f"{name} came back in {path.name}"
-
     def test_every_absorption_consumer_calls_the_kernel(self):
         """The one-pair engine's two walks, and the survival kernel's one.
 

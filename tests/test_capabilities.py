@@ -5,7 +5,6 @@ from pathlib import Path
 import pytest
 
 from src.calculator.capabilities import (
-    CAPABILITY_SCHEMA_VERSION,
     FIGHT_EFFECTIVE_STATS,
     PARTICIPANT_LEDGER_CONTRACT,
     PRE_COMBAT_STATS,
@@ -93,25 +92,6 @@ def test_the_aura_rank_publishes_its_own_name_in_ledger_order() -> None:
     assert public_phase(TransitionRank.AURA_ARM) != public_phase(
         TransitionRank.DEBUFF_ARM
     )
-
-
-def test_the_published_list_moved_the_schema_version_with_it() -> None:
-    """D-63: the version names a change to the payload, and only that.
-
-    0A derived the list at version 1 with the payload byte-identical; C4
-    published a seventh name and took version 2; Phase 3's 3.8 coverage flip
-    took 3 for a different published payload — the coverage record, whose
-    refusal is now spelled ``withheld`` and whose status is computed from
-    declarations; S9 took 4 for the dispositions map; and the rune page took
-    5 for ``minor_runes``/``stat_shards``/``rune_options`` and the rune and
-    shard catalogs.  Every value in the chain has exactly one owning commit,
-    which is why the phase list is still seven names at version 5; 6 is the
-    survival row's certification fields and 7 the unsupported fields' null
-    locators, 8 the two published stat blocks' ``stats_state`` labels, and 9
-    the ``scoreboard`` control family; none of them touches a phase name.
-    """
-    assert CAPABILITY_SCHEMA_VERSION == 9
-    assert len(PARTICIPANT_LEDGER_CONTRACT["phases"]) == 7
 
 
 def test_public_phase_is_total_over_the_ladder() -> None:

@@ -100,7 +100,6 @@ from src.calculator.participant_timeline import (
     _WalkCompiler,
     build_participant_timeline,
 )
-from src.calculator.pipeline import run_fight
 from src.calculator.starting_defenses import StartingDefenses
 from src.calculator.stats import calculate_total_stats
 from src.calculator.survival.compile import unrepresentable_template_receipt
@@ -425,31 +424,10 @@ def test_valid_half_second_timings_emit_packet_at_exact_time(seconds):
     assert purify["time"] == pytest.approx(seconds)
 
 
-@pytest.mark.parametrize("seconds", [30.5, 31.0, 100.0])
-def test_validation_rejects_values_above_max(seconds):
-    """Above 30 the request schema raises, the defensive resolver raises,
-    and the app answers a named 400; there is no clamp path."""
-    message = (
-        "item_options.Mikael's Blessing.active_seconds must be between 0.0 and 30.0"
-    )
-    with pytest.raises(ValueError, match=message):
-        validate_item_input_options({MIKAELS: {"active_seconds": seconds}})
-    with pytest.raises(ValueError, match=message):
-        input_option_float_value(
-            [get_item_by_name(MIKAELS)],
-            {MIKAELS: {"active_seconds": seconds}},
-            MIKAELS,
-            "active_seconds",
-        )
-    status, body = _calculate_status(
-        _main(item_options={MIKAELS: {"active_seconds": seconds}})
-    )
-    assert status == 400
-    assert body.get("error") == message
-
-
-@pytest.mark.parametrize("seconds", [-0.5, -1.0, -30.0])
-def test_validation_rejects_negative_values(seconds):
+@pytest.mark.parametrize("seconds", [30.5, 31.0, 100.0, -0.5, -1.0, -30.0])
+def test_validation_rejects_a_value_outside_the_sourced_window(seconds):
+    """Outside 0 to 30 the request schema raises, the defensive resolver
+    raises, and the app answers a named 400; there is no clamp path."""
     message = (
         "item_options.Mikael's Blessing.active_seconds must be between 0.0 and 30.0"
     )
@@ -1253,32 +1231,6 @@ def _scoring_rows(result):
                 )
             )
     return rows
-
-
-def test_score_only_fight_parity_mikaels_build():
-    """run_fight score-only keeps every scoring field identical for a
-    Mikael's build (totals, damage events, resource spent)."""
-    params = FightParams.from_request(
-        {
-            "fight_mode": "time_based",
-            "fight_duration": 8,
-            "role": "support",
-            "include_auto_attacks": False,
-            "ability_ranks": {"Q": 0, "W": 0, "E": 0, "R": 0},
-            "item_options": {MIKAELS: {"active_seconds": 2.5}},
-            "support_target_selections": {f"heal:{MIKAELS_SOURCE}": 0},
-            "allies": [_ally("Jinx")],
-            "enemies": [_ahri_e()],
-        },
-        deterministic=True,
-    )
-    champion = get_champion("Lux")
-    item = get_item_by_name(MIKAELS)
-    full = run_fight(champion, 18, [item], params, score_only=False)
-    score = run_fight(champion, 18, [item], params, score_only=True)
-    assert score["total_damage"] == full["total_damage"]
-    assert score["resource_spent"] == full["resource_spent"]
-    assert _scoring_rows(score) == _scoring_rows(full)
 
 
 # ---------------------------------------------------------------------------

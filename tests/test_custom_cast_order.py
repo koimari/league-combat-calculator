@@ -110,11 +110,6 @@ class TestRecastParentageHasOneAuthority:
     def test_syndra_second_charge_is_stamped(self):
         assert _syndra_kit(120)["Q2"]["recast_of"] == "Q"
 
-    def test_the_name_based_q_to_q2_fallback_is_gone(self):
-        source = (SRC / "rotation_resolver.py").read_text(encoding="utf-8")
-        assert "Q2 is Q's second cast" not in source
-        assert '"Q2" in corpora' not in source
-
     def test_every_stamped_recast_names_a_slot_its_own_kit_has(self):
         """A stamp pointing at an absent parent would strand the recast."""
         for splinters in (60, 120):
@@ -141,12 +136,6 @@ class TestChampionAgnosticShapeCheck:
     def test_the_shape_check_names_no_champion(self, good):
         """It may not decide which slots exist — only that the list is well formed."""
         validate_cast_order_shape(good, field="Cast order")
-
-    def test_neither_permutation_literal_survives(self):
-        for module in ("pipeline.py", "scenario.py"):
-            source = (SRC / module).read_text(encoding="utf-8")
-            assert '["E", "Q", "R", "W"]' not in source, module
-            assert "permutation of Q, W, E, R" not in source, module
 
     @pytest.mark.parametrize(
         ("bad", "message"),
@@ -355,12 +344,6 @@ class TestThePostParseCallSiteAsksOneQuestion:
             params.validate_for_champion("Syndra", 6)
         result = run_fight(get_champion("Syndra"), 6, [], params, validated=True)
         assert result["breakdown"]
-
-    def test_the_call_site_names_the_narrow_check(self):
-        source = (SRC / "pipeline.py").read_text(encoding="utf-8")
-        post_parse = source.split("The post-parse cast-order call site")[1][:600]
-        assert "validate_cast_order_for_kit(" in post_parse
-        assert "validate_for_champion(" not in post_parse
 
     def test_a_request_with_no_cast_order_has_nothing_to_check(self):
         params = _fight_params(cast_order=None)

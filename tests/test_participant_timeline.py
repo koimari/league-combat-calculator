@@ -5885,7 +5885,8 @@ class TestCatalystIsTwoPassesAndNotARecursion:
         import ast
         from pathlib import Path
 
-        source = Path("src/calculator/participant_timeline.py").read_text(
+        root = Path(__file__).resolve().parents[1]
+        source = (root / "src/calculator/participant_timeline.py").read_text(
             encoding="utf-8"
         )
         calls = [

@@ -20,10 +20,7 @@ import pytest
 from src import app as app_module
 from src.calculator import ally_packet_shape
 from src.calculator.ability_spec import AttackClass, Authority, DamageClass
-from src.calculator.capabilities import (
-    CAPABILITY_SCHEMA_VERSION,
-    PARTICIPANT_LEDGER_CONTRACT,
-)
+from src.calculator.capabilities import PARTICIPANT_LEDGER_CONTRACT
 from src.calculator.item_support_effects import derive_item_support_effects
 from src.calculator.survival.classify import SUPPORT_RANK_KEY, support_transition_rank
 from src.calculator.survival.phases import TransitionRank, ordering_slot, public_phase
@@ -190,13 +187,3 @@ class TestThePublishedLedgerGainsItsSeventhPhase:
         assert phases.index("persistent_aura_arming") + 1 == phases.index(
             public_phase(TransitionRank.DAMAGE)
         )
-
-    def test_the_schema_version_moved_with_the_payload(self):
-        # C4 took 2 for this phase list; 3.8's coverage flip took 3 for a
-        # different payload and S9's dispositions took 4, so the seven names
-        # are still C4's and the version has moved past it (5 is the
-        # rune page's request fields and catalogs, 6 the survival row's
-        # certification fields, 7 nulled the locators on unsupported
-        # capability fields, 8 the stat-surface labels).
-        assert CAPABILITY_SCHEMA_VERSION == 9
-        assert len(PARTICIPANT_LEDGER_CONTRACT["phases"]) == 7

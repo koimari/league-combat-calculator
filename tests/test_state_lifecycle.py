@@ -393,7 +393,19 @@ class TestIntervalGate:
         assert denied[-1].detail["reason"] == "interval_gate"
         assert state.stacks == 2
 
-    def test_gate_is_per_source_slot(self):
+    @pytest.mark.parametrize(
+        ("time", "kind", "source_key", "source"),
+        [
+            (1.0, "ability_cast", "W", "W"),
+            (1.0, "basic_attack", "auto_attacks", "auto"),
+            (4.0, "ability_cast", "Q", "Q"),
+        ],
+        ids=["another-slot", "an-undeclared-packet", "past-the-interval"],
+    )
+    def test_a_second_gain_the_gate_does_not_deny(
+        self, time: float, kind: str, source_key: str, source: str
+    ):
+        """The gate is per source slot, per declared packet, and inclusive."""
         state = timed_stacks.TimedStackState(self._rule())
         state.apply_gain(
             state_timeline.EventStamp(0.0, 0),
@@ -402,42 +414,10 @@ class TestIntervalGate:
             meta={"source_key": "Q", "source": "Q"},
         )
         state.apply_gain(
-            state_timeline.EventStamp(1.0, 1),
-            kind="ability_cast",
-            packet="ability_cast",
-            meta={"source_key": "W", "source": "W"},
-        )
-        assert state.stacks == 4
-
-    def test_gate_only_applies_to_declared_packets(self):
-        state = timed_stacks.TimedStackState(self._rule())
-        state.apply_gain(
-            state_timeline.EventStamp(0.0, 0),
-            kind="ability_cast",
-            packet="ability_cast",
-            meta={"source_key": "Q", "source": "Q"},
-        )
-        state.apply_gain(
-            state_timeline.EventStamp(1.0, 1),
-            kind="basic_attack",
-            packet="basic_attack",
-            meta={"source_key": "auto_attacks", "source": "auto"},
-        )
-        assert state.stacks == 4
-
-    def test_interval_boundary_is_inclusive(self):
-        state = timed_stacks.TimedStackState(self._rule())
-        state.apply_gain(
-            state_timeline.EventStamp(0.0, 0),
-            kind="ability_cast",
-            packet="ability_cast",
-            meta={"source_key": "Q", "source": "Q"},
-        )
-        state.apply_gain(
-            state_timeline.EventStamp(4.0, 1),
-            kind="ability_cast",
-            packet="ability_cast",
-            meta={"source_key": "Q", "source": "Q"},
+            state_timeline.EventStamp(time, 1),
+            kind=kind,
+            packet=kind,
+            meta={"source_key": source_key, "source": source},
         )
         assert state.stacks == 4
 

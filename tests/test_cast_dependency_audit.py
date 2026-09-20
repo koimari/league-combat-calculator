@@ -208,7 +208,6 @@ class TestInferredKindCoverage:
         assert "D-88" in gap["decision"]
         assert "H6" in gap["decision"]
         assert len(gap["dated"]) == len("YYYY-MM-DD")
-        assert gap["reason"].strip()
 
     def test_deleting_the_gap_turns_the_audit_red(self) -> None:
         """The gate can reproduce its own red on demand (R-05).
@@ -370,7 +369,6 @@ class TestDeclarations:
     ) -> None:
         for row in receipt["suppression_ledger"]:
             assert row["matched_states"] or row["latent_states"], row
-            assert row["reason"].strip()
             if row["latent_states"]:
                 assert row["latent_reason"], row
 

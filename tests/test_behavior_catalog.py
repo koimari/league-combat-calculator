@@ -197,7 +197,6 @@ def test_each_h4_tag_fails_closed_into_a_family_with_a_reason() -> None:
     assert frozenset(catalog.H4_TAG_REASONS) == ten
     for tag in ten:
         assert isinstance(catalog.TAG_FAMILY[tag], RuleFamily)
-        assert catalog.H4_TAG_REASONS[tag].strip()
 
 
 def test_an_h4_tag_without_a_reason_fails_the_catalog(

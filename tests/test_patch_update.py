@@ -366,16 +366,6 @@ class TestImportHygiene:
             if not had_impostor:
                 sys.modules.pop("patch_regression", None)
 
-    def test_this_file_injects_rather_than_patching_module_attributes(self):
-        """No monkeypatched module attributes and no DEFAULT_* reliance here."""
-        source = Path(__file__).read_text(encoding="utf-8")
-        # Needles are assembled at runtime so this assertion does not match
-        # its own source line.
-        setattr_call = "monkeypatch" + ".setattr("
-        default_constant = "patch_update." + "DEFAULT_"
-        assert setattr_call not in source
-        assert default_constant not in source
-
     @pytest.mark.parametrize(
         "invocation",
         [["scripts/patch_update.py"], ["-m", "scripts.patch_update"]],
@@ -1489,3 +1479,27 @@ class TestEconomicsLines:
         assert not ok
         assert any(line.startswith("  BLOCKING: pinned to DDragon ") for line in lines)
         assert lines[-1].startswith("  ** BLOCKING")
+
+
+class TestEscalatedCachedDataLines:
+    """Patch day is the scheduled home of the cached-data defects, so it says so."""
+
+    def test_the_committed_receipt_prints_one_entry_per_open_defect(self) -> None:
+        receipt = json.loads(
+            patch_update.ESCALATED_CACHED_DATA.read_text(encoding="utf-8")
+        )
+        printed = "\n".join(patch_update.escalated_cached_data_lines())
+        assert receipt["defects"]
+        for defect in receipt["defects"]:
+            assert defect["id"] in printed
+            assert defect["scheduled_home"]["what_fires_it"] in printed
+
+    def test_an_entry_with_no_scheduled_home_prints_the_absence(
+        self, tmp_path: Path
+    ) -> None:
+        homeless = {"defects": [{"id": "d", "dated": "2026-01-01", "what": "w"}]}
+        path = tmp_path / "homeless.json"
+        path.write_text(json.dumps(homeless), encoding="utf-8")
+        assert "(no home named)" in "\n".join(
+            patch_update.escalated_cached_data_lines(path)
+        )
