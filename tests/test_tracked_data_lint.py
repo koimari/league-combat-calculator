@@ -101,12 +101,18 @@ class TestTheReaderSetIsDerived:
             ("*", False),
             ("*.json", False),
             ("docs/receipts/*.json", False),
-            ("*.atoms.json", True),
-            ("oracle-C6-*.json", True),
-            ("expected-*-diff-*.json", True),
+            ("*.widget.json", True),
+            ("sample-Q9-*.json", True),
+            ("sample-*-shard-*.json", True),
         ],
     )
     def test_a_glob_counts_only_where_it_pins_a_name(self, pattern, family):
+        """The three family shapes, spelled so none of them names a tracked file.
+
+        This file is one of the sources the reader set is derived from, so a
+        live family glob here would cover its own receipts and blind the guard
+        to the recurrence it exists to catch.
+        """
         assert lint.names_a_family(pattern) is family
 
     def test_the_real_reader_set_cannot_name_a_receipt_that_never_existed(self):
