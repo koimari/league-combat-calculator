@@ -784,11 +784,11 @@ class TestTargetPolicy:
     def test_module_assumptions_name_unmodeled_claims(self):
         # The named unmodeled claims live in the module ASSUMPTIONS today.
         assumptions = get_champion_options_meta("Heimerdinger")["assumptions"]
-        assert any(
-            "Rocket multi-hit reduction uses the explicit first/subsequent rows" in text
-            and "only one champion hit is counted for the upgraded grenade" in text
-            for text in assumptions
+        published = " ".join(assumptions)
+        assert "Rocket multi-hit reduction uses the explicit first/subsequent rows" in (
+            published
         )
+        assert "Only one champion hit is counted for the upgraded grenade" in published
         assert any(
             "UPGRADE!!!, stuns, slows, turret targeting and vision are "
             "state/utility, not extra direct champion damage" in text

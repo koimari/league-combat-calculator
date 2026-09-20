@@ -228,26 +228,23 @@ ASSUMPTIONS = [
     "Ivern's non-epic monster prohibition and grove economics are preserved as utility/state.",
     "Brushmaker's self bonus attack is an on-hit package; allied champion bolts are a "
     "separate roster branch.",
-    "Daisy's basic attacks (70/100/130 by R rank + 15% AP physical) and the "
-    "third-hit Daisy Smash (90/140/190 by R rank + 50% AP magic) are "
-    "game-file constants; verify on patch updates against Community Dragon",
-    "Daisy attacks at 0.75 (+ 30/45/60% by R rank) attack speed, and her "
-    "attack count is DERIVED from that cadence over the fight window "
-    "(champions/pet_window.py): six attacks in a five-second fight, twelve "
-    "in a ten-second one. The sourced 3-hit smash cadence prices one smash "
-    "per 3 attacks (the smash replaces the ordinary swing). A request may "
-    "name the count instead, for the positioning and leash the clock cannot "
-    "know. Neither the cache nor the spell object states how long Daisy "
-    "lives, so the derivation is bounded at 20 attacks, about seventeen "
-    "seconds of her rank-1 cadence, and a longer fight prices that bound "
-    "rather than a pet that would have expired.",
+    "Daisy's attacks are 70/100/130 by R rank + 15% AP physical, her third-hit Smash "
+    "90/140/190 + 50% AP magic.",
+    "Both are game-file constants: verify on patch updates against Community Dragon.",
+    "Daisy attacks at 0.75 (+30/45/60% by R rank) attack speed, six attacks in a 5s "
+    "fight and twelve in a 10s.",
+    "The sourced 3-hit cadence prices one Smash per 3 attacks, replacing the ordinary "
+    "swing.",
+    "A request may name the attack count instead, for positioning and leash the clock "
+    "cannot know.",
+    "No source states Daisy's lifetime, so the derivation is bounded at 20 attacks, "
+    "about 17s of rank-1 cadence.",
     "Daisy Smash!'s 3-second lockout, knockup/stun CC, spawn damage "
     "reduction and leash range are state, not modeled",
-    "E (Triggerseed) shields the target allied champion, Daisy, or Ivern "
-    "himself (cached prose 'or himself', so the scanner profile is "
-    "self-or-target one_teammate): the roster model shields the selected "
-    "teammate for the sourced Shield Strength (75-235 + 50% AP) for 2s "
-    "and falls back to Ivern in a solo fight; the sourced explosion "
-    "damage after 2s and the slow are the module's E damage entry.",
+    "E (Triggerseed) shields the selected teammate, Daisy or Ivern for 75 to 235 + "
+    "50% AP over 2s.",
+    "The cached prose says 'or himself', so the profile is self-or-target and a solo "
+    "fight shields Ivern.",
+    "E's damage entry is the sourced explosion after 2s, with the slow beside it.",
 ]
 SOURCES = load_champion_sources("Ivern")

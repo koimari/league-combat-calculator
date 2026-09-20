@@ -125,18 +125,18 @@ OPTIONS = [
 ]
 ASSUMPTIONS = [
     "Tailwind's 30% bonus-movement-speed on-hit uses the explicit movement-speed input.",
-    "Howling Gale interpolates the sourced minimum/maximum charge packet; W's passive "
-    "movement speed is not double-counted as damage.",
+    "Howling Gale interpolates the sourced minimum and maximum charge packet.",
+    "W's passive movement speed is never counted twice as damage.",
     "Eye of the Storm and Monsoon are visible ally/defensive utility, not TDD.",
-    "E (Eye of the Storm) shields the selected teammate for the sourced "
-    "Shield Strength (80-240 + 55% AP) for 4s (scanner packet with "
-    "selection key shield:E:<cast>); the shield's bonus attack damage "
-    "(10-30 + 10% AP while the shield holds) is documented-only — the "
-    "roster model prices ally survivability, not ally outgoing damage, "
-    "so the AD rider has no survival effect here.",
-    "R (Monsoon) heals Janna and every selected teammate the sourced "
-    "per-tick stream (12 x Heal Per Tick == Total Heal 300-600 + 150% "
-    "AP) via the E1-rule fan-out; the knockback and channel are state.",
+    "E (Eye of the Storm) shields the selected teammate for 80 to 240 + 55% AP over "
+    "4s, the sourced row.",
+    "Its bonus attack damage of 10 to 30 + 10% AP while the shield holds is "
+    "documented only.",
+    "The roster model prices ally survivability, not ally outgoing damage, so that "
+    "rider does nothing.",
+    "R (Monsoon) heals Janna and every selected teammate 12 ticks of the sourced 300 "
+    "to 600 + 150% AP total.",
+    "It fans out through the E1 rule; the knockback and channel are state.",
 ]
 SOURCES = load_champion_sources("Janna")
 

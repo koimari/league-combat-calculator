@@ -242,9 +242,10 @@ ASSUMPTIONS = [
     "before later casts and autos.",
     "Empower is one next-attack magic rider; Counter Strike uses the sourced 0–100% "
     "dodge-damage range.",
-    "Counter Strike's sourced 2-second evasion window blocks incoming basic attacks "
-    "and reduces marked area-ability damage by 25% when e_active is selected.",
-    "Grandmaster-at-Arms includes the active swing and defensive resistances; its "
-    "passive hit is opt-in to avoid inventing prior stacks.",
+    "Counter Strike's sourced 2s evasion window blocks basic attacks and cuts marked "
+    "area damage by 25%.",
+    "It applies only when e_active is selected.",
+    "Grandmaster-at-Arms covers the active swing and defensive resistances; its "
+    "passive hit is opt-in.",
 ]
 SOURCES = load_champion_sources("Jax")

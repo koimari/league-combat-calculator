@@ -363,16 +363,16 @@ OPTIONS = [
     ),
 ]
 ASSUMPTIONS = [
-    "Turret shot/beam values and cadences are copied from the full Wiki Pets entry "
-    "because the champion slot template intentionally contains no pet formula rows.",
-    "Q is a charge ability: its cooldown is the 20s rechargeRate (the "
-    "JSON cooldown field is only the 1s inter-cast timer), so one deploy "
-    "is priced per 20s window; the q_turrets/q_turret_attacks options set "
-    "how many turrets and shots one deploy contributes.",
-    "The R upgrade is the q_variant option: the H-28Q Apex Turret rows "
-    "scale by R rank (shots 80-120 +35% AP, beams 100-180 +70% AP).",
-    "Rocket multi-hit reduction uses the explicit first/subsequent rows; only one "
-    "champion hit is counted for the upgraded grenade.",
+    "Turret shot and beam values and cadences come from the Wiki Pets entry: the slot "
+    "template has no pet rows.",
+    "Q is a charge ability: its cadence is the 20s rechargeRate, the JSON cooldown "
+    "being the 1s inter-cast timer.",
+    "One deploy is priced per 20s window, with q_turrets and q_turret_attacks setting "
+    "turrets and shots.",
+    "The R upgrade is q_variant: Apex Turret rows scale by R rank, shots 80-120 +35% "
+    "AP, beams 100-180 +70% AP.",
+    "Rocket multi-hit reduction uses the explicit first/subsequent rows.",
+    "Only one champion hit is counted for the upgraded grenade.",
     "UPGRADE!!!, stuns, slows, turret targeting and vision are state/utility, not "
     "extra direct champion damage.",
 ]

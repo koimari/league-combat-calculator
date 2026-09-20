@@ -301,9 +301,8 @@ OPTIONS = [
 ASSUMPTIONS = [
     "Trial by Fire is an explicit 10-tick true-damage burn per empowered attack; "
     "Parrrley cannot also apply it.",
-    "Powder Keg's triggering attack is a separate authored input; the packet retains "
-    "the bonus champion branch and armor-ignore note instead of fabricating the "
-    "trigger.",
+    "Powder Keg's triggering attack is a separate authored input, never fabricated.",
+    "The packet keeps the bonus champion branch and the armor-ignore note.",
     "Cannon Barrage exposes the 12/18-wave and Death's Daughter branches with ordered tick events.",
 ]
 

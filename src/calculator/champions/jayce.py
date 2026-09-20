@@ -433,89 +433,80 @@ OPTIONS: list[dict[str, Any]] = [
 CAST_ORDER = ["R", "Q", "Q2", "W", "E", "P"]
 
 ASSUMPTIONS = [
-    "Jayce is modeled in ONE stance at a time — toggle hammer_stance to "
-    "see each form. The cross-stance burst combo (gate -> supercharged "
-    "Shock Blast -> Transform -> empowered Hammer auto -> Thundering Blow "
-    "-> To the Skies!) is not modeled as a single rotation",
-    "FORM TRANSITION RECEIPT: the R cast IS the Transform, and the "
-    "engine schedules it exactly once at t=0 (R is first in CAST_ORDER; "
-    "the engine's single-cast rule).  The fight therefore plays entirely "
-    "in the DESTINATION stance that hammer_stance selects.  A fight that "
-    "opens in one stance and flips at a provable later time is NOT "
-    "representable — the entries are consumed fight-wide (one packet per "
-    "slot, one cooldown per slot, fight-wide stat_buffs, single-cast R), "
-    "so no transform_at/transform_sequence input is declared and the "
-    "API rejects any such key by name (the fail-closed gate).  Model a "
-    "cross-stance sequence as TWO one-stance fights (one per stance) to "
-    "bound the transition; the in-game transform is instant, costs "
-    "nothing, and its 6s cooldown is sourced but never recast in the "
-    "engine (R casts once).  The P passive (30 MS + ghosting for 0.75s "
-    "on every swap) is utility-only and not modeled.",
-    "R (Transform) values are module constants from the live game files: "
-    "both JSON entries have empty leveling arrays. They step with "
-    "CHAMPION LEVEL at 1/6/11/16, not with rank — R starts at rank 1 and "
-    "is never leveled, which is also why Q/W/E have six ranks",
-    "R's empowered basic attack applies ONCE per transform, not on every "
-    "auto, and is the fight's next scheduled swing rather than a reset one "
-    "at the cast: Transform states no attack-timer reset, so the bonus and "
-    "Cannon's shred window both open when that swing lands. With no auto "
-    "stream the cast forces its own swing onto R's row",
+    "Jayce is modeled in one stance at a time; hammer_stance toggles the form.",
+    "The cross-stance burst combo, gate to Shock Blast to Transform to hammer, is not "
+    "modeled as one rotation.",
+    "FORM TRANSITION RECEIPT: model a cross-stance sequence as two one-stance fights, "
+    "one per stance.",
+    "The R cast is the Transform, scheduled once at t=0, so the fight plays in the "
+    "stance hammer_stance picks.",
+    "Entries are consumed fight-wide, so a fight that flips at a later time is not "
+    "representable.",
+    "No transform_at or transform_sequence key is declared, and the API rejects any "
+    "such key by name.",
+    "The in-game transform is instant and free; R casts once, so its sourced 6s "
+    "cooldown is not priced.",
+    "The P passive, 30 movement speed and ghosting for 0.75s per swap, is "
+    "utility-only and not modeled.",
+    "R (Transform) values are module constants from the game files: both JSON entries "
+    "have empty leveling.",
+    "They step with champion level at 1/6/11/16, not rank: R stays rank 1, which is "
+    "why Q/W/E have six.",
+    "R's empowered basic attack applies once per transform, on the fight's next "
+    "scheduled swing.",
+    "Transform states no attack-timer reset, so the bonus and Cannon's shred open "
+    "when that swing lands.",
+    "With no auto stream the cast forces its own swing onto R's row.",
     "Hammer R's bonus armor and magic resist appear in the champion stats "
     "panel but have no effect on outgoing damage",
-    "Cannon R's armor/MR shred applies only to damage dealt after the "
-    "empowered attack lands. Jayce transforms BEFORE he casts, so R "
-    "resolves first and the shred reaches the Q/W of the combo it opens",
-    "R's shred lasts 5s. In a timed fight longer than that it has worn "
-    "off before the later casts, so it is applied weighted by the share "
-    "of the fight it is actually up (a 10s fight gets half of it). A "
-    "one-rotation burst always gets the full shred",
-    "Hyper Charge's 3 attacks deal MODIFIED damage — the basic attack's "
-    "own damage is replaced by 70-110% of total AD, not supplemented. "
-    "They crit normally and apply item on-hits at full effectiveness on "
-    "the fight's shared hit sequence",
-    "Hyper Charge's attack speed applies to its 3 attacks only, not the "
-    "whole fight: they fire at the game's 3.003 cap (which +360% on "
-    "Jayce's ratio always reaches, hence the tooltip's 'maximum Attack "
-    "Speed'), then autos resume at his ordinary rate. Bonus attack speed "
-    "from items is wasted during the burst but still speeds his autos",
-    "Hyper Charge's window is modeled by its 3 attacks, not its 4-second "
-    "timer — the 3 attacks always land well inside 4 seconds",
-    "Hyper Charge's cooldown starts when its 3rd attack is spent, not on "
-    "cast (in-game behaviour), so its recast cycle is the burst's ~1s "
-    "plus the cooldown. Those 3 attacks therefore cannot Navori-refund "
-    "W's own cooldown — it is not running yet — though they do refund "
-    "Jayce's other basic abilities",
+    "Cannon R's armor and MR shred applies only to damage dealt after the empowered "
+    "attack lands.",
+    "Jayce transforms before he casts, so R resolves first and the shred reaches the "
+    "combo's Q and W.",
+    "R's shred lasts 5s, applied weighted by the share of the fight it is up: a 10s "
+    "fight gets half.",
+    "A one-rotation burst always gets the full shred.",
+    "Hyper Charge's 3 attacks replace the basic attack's damage with 70 to 110% of "
+    "total AD, not add to it.",
+    "They crit normally and apply item on-hits at full effectiveness on the shared "
+    "hit sequence.",
+    "Hyper Charge's attack speed covers its 3 attacks only, at the game's 3.003 cap, "
+    "not the whole fight.",
+    "+360% on Jayce's ratio always reaches that cap, which is the tooltip's 'maximum "
+    "Attack Speed'.",
+    "Item attack speed is wasted during the burst but still speeds the autos that "
+    "resume after it.",
+    "Hyper Charge's window is its 3 attacks, not its 4s timer: the 3 always land well "
+    "inside 4 seconds.",
+    "Hyper Charge's cooldown starts when its 3rd attack is spent, so the cycle is the "
+    "burst's 1s plus it.",
+    "Those 3 attacks cannot Navori-refund W, which is not running yet, but do refund "
+    "the other abilities.",
     "Q's bonus damage against monsters and E's monster damage cap are "
     "not modeled (the target is a champion)",
-    "W's passive mana restore is modeled on the shared mana ledger: every "
-    "modeled basic attack restores 15-25 mana (by W rank) at its swing "
-    "time, capped at maximum mana. The passive text lives on the "
-    "hammer-form entry, but the W slot is shared and Jayce keeps the "
-    "restore in BOTH stances — an explicit interpretation (neither the "
-    "wiki cache nor the game binary states stance gating either way). "
-    "With no auto stream the restore has nothing to ride; Hyper Charge's "
-    "forced ability-row swings (one-rotation mode) are not basic-attack "
-    "stream autos and do not restore. The restore's per-swing timing is "
-    "the modeled auto schedule, INCLUDING Hail of Blades/Lethal Tempo's "
-    "stack-sensitive schedule (the resource walk resolves it directly "
-    "from the keystone effect since it runs before the engine installs "
-    "it on state). Lich Bane's proc-timed speedup still resolves after "
-    "the resource walk, so ONLY its per-swing restore timing is not "
-    "mirrored (count is). The walk rides EVERY modeled basic attack, "
-    "including the one R (Transform) consumes via empowers_next_auto — "
-    "that swing is a basic attack, so it restores, even though the "
-    "public auto_attacks row hands its event to the R row instead "
-    "(the row is the stream's prefix, one event short)",
-    "Cannon E (Acceleration Gate) emits nothing: its movement speed is "
-    "utility and its Shock Blast supercharge is the accelerated_q option",
-    "Cannon R raises attack range from 125 to 500; Jayce's JSON attackType "
-    "is RANGED, so melee/ranged item scaling treats him as ranged in BOTH "
-    "stances (matching the wiki's range-type classification)",
-    "Passive (Hextech Capacitor) grants 30 bonus movement speed and "
-    "ghosting for 0.75s on every stance swap; the leveling array is "
-    "empty (pure utility state, no combat-damage interaction), so it "
-    "emits a sourced zero-damage row (MODULE_COVERAGE: no_damage, not "
-    "out_of_scope)",
+    "W's passive restores 15 to 25 mana by W rank on every modeled basic attack, "
+    "capped at maximum mana.",
+    "The passive text sits on the hammer entry, but the W slot is shared and the "
+    "restore holds in both stances.",
+    "Neither the cache nor the binary states stance gating, so that reading is an "
+    "explicit interpretation.",
+    "With no auto stream nothing restores; Hyper Charge's forced ability-row swings "
+    "are not stream autos.",
+    "Per-swing timing is the modeled auto schedule, including Hail of Blades and "
+    "Lethal Tempo.",
+    "Lich Bane's speedup resolves after the resource walk, so its restore timing is "
+    "not mirrored, its count is.",
+    "The swing R consumes through empowers_next_auto is a basic attack and restores, "
+    "though R's row shows it.",
+    "Cannon E (Acceleration Gate) emits nothing: movement speed is utility, the "
+    "supercharge is accelerated_q.",
+    "Cannon R raises attack range from 125 to 500.",
+    "Jayce's JSON attackType is RANGED, so item melee and ranged scaling treats him "
+    "as ranged in both stances.",
+    "Passive (Hextech Capacitor) grants 30 movement speed and ghosting for 0.75s on "
+    "every stance swap.",
+    "Its leveling array is empty and it touches no damage, so it emits a no_damage "
+    "zero row.",
 ]
 
 

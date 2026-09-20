@@ -278,15 +278,15 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "A Thousand Cuts is an explicit max-health magic on-hit; its champion "
-    "heal and minion/monster caps are not applied to champion TDD.",
+    "A Thousand Cuts is a max-health magic on-hit; its champion heal and minion caps "
+    "never reach a champion.",
     "Q exposes Snippy stack count and center true-damage conversion instead "
     "of treating the six-snip maximum as universal.",
     "R's first, second and third casts remain separate ordered events, each "
     "carrying the sourced passive rider.",
-    "Hallowed Mist destroys selected champion projectiles during its sourced "
-    "four-second window; the single-target model exposes the source selection "
-    "as the outside-mist contract.",
+    "Hallowed Mist destroys selected champion projectiles over its sourced 4s window.",
+    "The single-target model exposes the source selection as the outside-mist "
+    "contract.",
 ]
 
 SOURCES = load_champion_sources("Gwen")

@@ -112,8 +112,8 @@ OPTIONS = [
 ASSUMPTIONS = [
     "Barrel Roll exposes the minimum and fully fermented maximum damage branches; the "
     "source charge timing is not averaged.",
-    "Drunken Rage is a single empowered attack with a target-max-health rider; the "
-    "channel damage reduction is defensive state.",
+    "Drunken Rage is one empowered attack with a target-max-health rider; the channel "
+    "reduction is defensive state.",
     "Body Slam's cooldown refund requires a collision state and is not applied to "
     "every cast by default.",
 ]

@@ -142,21 +142,18 @@ OPTIONS: list[dict[str, Any]] = [
 ]
 
 ASSUMPTIONS = [
-    "Passive procs are derived from the fight timeline: the first auto "
-    "procs, then again once the per-target cooldown (6/5/4/3s by level) "
-    "elapses given auto spacing from final attack speed; each proc deals "
-    "8% of the target's decaying current health (min 20) as physical",
+    "The first auto procs the passive, then again once the 6/5/4/3s by level "
+    "per-target cooldown elapses.",
+    "Each proc deals 8% of the target's decaying current health, minimum 20, as "
+    "physical damage.",
     "Q's armor shred applies to damage dealt after Q (autos, passive "
     "procs, R), not to Q itself",
-    "W (Golden Aegis) deals no direct damage; the slow (15-35% for 2s) "
-    "is utility-only and not modeled. Its self-shield (60/80/100/120/"
-    "140 + 70% bonus AD, 4s) is granted by the ally-support scanner "
-    "(self-targeted) from the cached Shield Strength row at the W cast. "
-    "The 'increased by 1.3% of Jarvan's maximum health for each enemy "
-    "champion hit' "
-    "rider is prose-only (not a modifier row) and not modeled — a "
-    "documented boundary that is exact in a 1v1 fight, which can hit "
-    "at most one enemy champion",
+    "W (Golden Aegis) deals no direct damage; its 15 to 35% slow for 2s is "
+    "utility-only and not modeled.",
+    "Its self-shield is 60/80/100/120/140 + 70% bonus AD for 4s, the cached Shield "
+    "Strength row at the cast.",
+    "The 1.3% maximum health per champion hit rider is prose-only, a boundary exact "
+    "in a 1v1 fight.",
     "E flag assumed planted with Jarvan in its aura by default "
     "(doubled attack speed bonus, toggleable)",
     "E ally aura not modeled (single-champion calculator)",

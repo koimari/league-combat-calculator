@@ -375,23 +375,23 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "Mega form stat bonuses are module constants from the live game "
-    "files (the JSON passive parse is empty and the wiki's Mega stat "
-    "box is stale); they are base-stat increases, so bonus AD is "
-    "unchanged",
-    "W Hyper procs every 3rd basic attack (on-hit model; in-game "
-    "ability hits also add stacks, so this is slightly conservative)",
+    "Mega form stat bonuses are base-stat increases, so bonus AD is unchanged; the "
+    "JSON passive parse is empty.",
+    "They are module constants from the live game files, the wiki's Mega stat box "
+    "being unreliable.",
+    "W Hyper procs every 3rd basic attack; in game ability hits also stack, so this "
+    "is slightly conservative.",
     "Hyper's 300 damage cap vs monsters ignored (champion targets)",
     "E Hop assumes the bounce lands on an enemy (damage + attack speed "
     "buff always included)",
-    "Q Mini prices the primary hit at full damage plus one sourced 50% "
-    "Reduced Damage hit per q_secondary_targets on the return pass "
-    "(default 0); enemies can be hit only once per pass, and Mega's "
-    "boulder stops on the first enemy (no reduced row)",
+    "Q Mini prices the primary hit in full plus one sourced 50% Reduced Damage hit "
+    "per q_secondary_targets (default 0).",
+    "An enemy is hit once per pass, and Mega's boulder stops on the first enemy with "
+    "no reduced row.",
     "Mega E shockwave hits a single target once (no double-dip)",
-    "R is unavailable in Mini form (emits no damage entry); the Mega wall "
-    "branch carries the sourced stun interval, and the open branch the "
-    "knock-away, whose duration the cache does not carry",
+    "R is unavailable in Mini form and emits no damage entry.",
+    "Mega's wall branch carries the sourced stun interval; the open branch's "
+    "knock-away has no cached duration.",
     "Forms share ability cooldowns",
 ]
 

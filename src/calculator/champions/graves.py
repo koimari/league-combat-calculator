@@ -202,10 +202,10 @@ OPTIONS = [
 ]
 
 ASSUMPTIONS = [
-    "The auto packet assumes all pellets hit the primary target; reload timing is "
-    "exposed as state rather than replacing the attack stream with guessed cadence.",
+    "The auto packet assumes every pellet hits the primary target; reload timing "
+    "stays state, never a guessed cadence.",
     "End of the Line keeps pass and detonation as separate ordered physical events; "
-    "terrain collision is an explicit source note.",
+    "terrain collision is a note.",
     "True Grit armor/MR is a selected defensive state and cannot inflate outgoing damage.",
 ]
 

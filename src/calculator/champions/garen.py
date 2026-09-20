@@ -112,8 +112,8 @@ OPTIONS = [
 ASSUMPTIONS = [
     "Judgment uses the sourced 7 + 1 per 25% bonus attack speed spin count and "
     "exposes the nearest-target 25% branch.",
-    "The armor reduction is retained as an ordered effect after the six-hit "
-    "threshold; it is never allowed to boost the first six spins.",
+    "The armor reduction is an ordered effect after the six-hit threshold, never "
+    "boosting the first six spins.",
     "Perseverance and Courage are defensive/self-state rows and do not enter TDD.",
 ]
 
