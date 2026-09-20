@@ -3,7 +3,7 @@
 Everything the coverage-frontier (rows `CF*`), engine-retirement (`ER*`), resolution
 (`SR*`), rotation-derivation (`RV*`) and source-review (`SA*`) work surfaced and did not
 close. Delete a row when its fix lands; this file is the one home for the list. Traps live
-in `CLAUDE.md` Known Quirks.
+in `TRAPS.md`.
 
 | # | Where | What | Action |
 |---|---|---|---|

@@ -1,6 +1,5 @@
 {
   "slice": "slots18-alistar-r",
-  "companion_receipt": "docs/receipts/golden-recapture-2026-08-21-slots18.md",
   "landed_against": {
     "golden": "scripts/golden_baseline.json",
     "coupled_golden": "scripts/golden_coupled_baseline.json",
@@ -12,7 +11,7 @@
     "fold_layer_dup_fix": "participant_timeline._support_effect_templates named every self-state packet's published event id out of the champion module's own authored spelling (e.g. 'self_state:R:0:0'), with no owner prefix when the module supplied one. Two actors holding the same self-state mechanic on one roster panel — reachable for the first time by this slice, because R is the first Alistar mechanic to author self_state_events, and cassiopeia_5champ holds Alistar as both ally and enemy support — therefore authored the identical id twice, which precision.SumPlan refuses at construction (DuplicateSumMember). The new _owned_state_event_id helper prefixes every self-state id with its caster's participant id unless the id already names that participant, fixing the collision. This also renames every OTHER champion's already-authored self-state ids (Briar E, Sivir E) from their bare champion-local spelling to an owner-prefixed one (tests/test_briar_e.py's 'self_state:E:0:0' -> 'enemy:Briar:self_state:E:0:0'); no committed baseline captures event_id text, so this rename moves no golden or coupled_golden leaf and is visible only in the two test files that pin it directly."
   },
   "landed_against_golden": {
-    "result": "captured directly against the working tree; python scripts/golden_snapshot.py compare scripts/golden_baseline.json reports OK: snapshot identical. See docs/receipts/golden-recapture-2026-08-21-slots18.md for the 19-diff recapture (17 Alistar structural rows + 2 fingerprint counters) this commit already carries."
+    "result": "captured directly against the working tree; python scripts/golden_snapshot.py compare scripts/golden_baseline.json reports OK: snapshot identical. The commit carries a 19-diff recapture, 17 Alistar structural rows and 2 fingerprint counters."
   },
   "qualifying_population": {
     "enumerated_before_first_src_edit": true,

@@ -419,10 +419,9 @@ def test_load_sanity_user_plan_interleaves_endpoints():
 # ---------------------------------------------------------------------------
 
 
-# The two markdown substring tests that sat here are gone (audit 2.3):
-# they asserted words in docs/backup-runbook.md and docs/monitoring.md,
-# so a rewrite turned them red while the operations they describe were
-# untouched.  Monitoring now lives in docs/beta-operations.md.
+# Monitoring lives in docs/beta-operations.md.  No test here asserts its
+# wording: a rewrite would turn that red while the operations it describes
+# were untouched.
 
 
 def test_env_example_documents_sentry():

@@ -55,6 +55,21 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 - **`pull_request` CI never runs while the PR is CONFLICTING.** GitHub cannot
   build the merge ref, so a PR behind `main` shows only Vercel checks and no
   Actions run. Catch up with `main` first, then read CI.
+- **A guard whose reader set comes from string literals is armed by its own
+  test.** `tests/` is one of the roots `tracked_data_lint.Readers.in_tree`
+  harvests, so a live receipt name or family glob spelled in a fixture makes the
+  guard cover that receipt and the negative passes for the wrong reason. Generate
+  an absent name with `uuid4`, and spell predicate patterns so none matches a
+  tracked file. Prove such a lint by dropping a real reader and watching its
+  receipts surface, never by reading its green output.
+- **A glob counts as a reader only where it pins something past the suffix.**
+  `*` and `*.json` exist in any tree this size, so counting them makes a
+  reader-coverage lint zero by construction. `names_a_family` is the predicate. A
+  docstring mention is not a reader either: `read_literals` skips every
+  `ast.Expr`-wrapped string.
+- **A guard over tracked files reads `git ls-files`, never `rglob`.**
+  `tests/test_escalated_defects_cached_data.py` writes an untracked scratch file
+  into `docs/receipts/` mid-test, which a directory scan races under xdist.
 
 ## Goldens and receipts
 
@@ -125,6 +140,11 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   one. `scripts/bench_optimize_build.py --budget` and
   `--by-build-size [--against <other checkout>]` encode both measurements, and
   `benchmarks.md` owns the numbers.
+- **A section-numbered citation into an append-only log is a second home for
+  every number it quotes, and it drifts silently.** The retired `HANDOVER.md`
+  4.26 was stale in two of its six Eclipse number groups against
+  `item_effects.py`, and the test naming it as its source of truth had no way to
+  notice. Cite the accessor key, never the log's number.
 
 ## Platform and tooling
 
@@ -216,6 +236,51 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
   inside it breaks the YAML, and the harness then lists the skill by its heading
   with no trigger text, showing `/patch-update` as "Patch Update". Use a comma or
   a period.
+- **The worktree isolation guard refuses any Bash command whose git use it
+  cannot statically prove stays inside the worktree.** Heredocs, `git ... |
+  xargs`, brace groups and shell arithmetic over `$(...)` all read as too
+  complex. Use plain single commands and `python -c` one-liners, and write
+  scratch inside the worktree or `$TEMP`.
+- **MSYS2 paths are not Windows paths.** `/tmp/x` and `/proc/meminfo` cannot be
+  opened by Windows python, and MSYS2's `/proc/meminfo` carries `MemTotal` and
+  `MemFree` but no `MemAvailable`, so a reader of it computes 100% used. Read
+  memory with `psutil.virtual_memory()` and scratch from `$TEMP`.
+- **`scripts/literal_defaults.py` prints `total N` to stderr and one site per
+  line to stdout.** `2>&1 | wc -l` therefore reports N+1. Read the total from
+  stderr alone.
+- **A Windows esbuild run reproduces the committed bundle byte for byte, and
+  `node build.mjs --check` passes here.** Compare a build against
+  `git show HEAD:<path>`, never the autocrlf working file: the 17 / 1 / 56 byte
+  deltas on `calculator.js`, `calculator.css` and the LEGAL text are those
+  files' newline counts, not a platform difference.
+- **`Path.write_text` on Windows re-emits `\n` as `\r\n`**, which is what keeps a
+  rewritten data file matching its CRLF neighbours. A rewriter that opens with
+  `newline=""` writes LF into a CRLF tree.
+- **Dependabot's docker ecosystem does not resolve `FROM ${ARG}`.** An
+  ARG-defined base image silently stops receiving digest and security bumps, and
+  Dependabot closes its own update PRs against it (dependabot-core#10190). Keep
+  the pin on a literal `FROM image:tag@sha256:...`.
+- **`scripts/extract_modules.py` check mode refuses a checked-in assignment
+  record**: the split has been applied, so it reports "not a unit of" the
+  source. The records are review evidence, never a replay input.
+- **Deleting an installer deletes the last executable copy of its command.**
+  When a doc becomes a command's last carrier, put its code blocks through the
+  real argument parser in a test; `shlex.split` needs
+  `block.replace("\\\n", " ")` first or the continuation survives as a token.
+- **A regex written as ``` ``?NAME``? ``` requires one mandatory backtick plus an
+  optional second, not an optional pair.** It silently matches only the
+  double-backticked spelling. Use `{0,2}`, and print what a new scanner found
+  before trusting a green run.
+- **`comment_lint.lint_prose` skips fenced code blocks and honours `prose-ok`.**
+  An em dash inside a fence is not a finding. Its history rule matches a fixed
+  phrase list, so "replaced", "now" and "was" pass it while still narrating
+  history a reader has to skip.
+- **A branch another worktree holds is taken with
+  `git checkout --ignore-other-worktrees <branch>`.** A plain checkout refuses
+  with "already used by worktree at ...", which reads like the branch is locked.
+- **Sizes from `git ls-tree -r -l` are MiB when divided by `2**20`.** Two reports
+  disagreeing by about 5% on tracked bytes are usually agreeing in different
+  units.
 
 ## Frontend and vision
 
@@ -249,6 +314,19 @@ ownership live in `architecture.md`; rules, domain facts and gates in `CLAUDE.md
 - **`yt-dlp --download-sections` stalls on YouTube DASH streams here**, writing
   nothing for minutes. Download the whole stream once and cut frames with
   `scoreboard_corpus.py grab`.
+- **The page carries two escapers over three consumer files.**
+  `static/js/scoreboard.js` calls `escapeHtml` at :1100 and :1107 and defines it
+  nowhere, resolving `app.js`'s top-level `const` through the classic-script
+  global scope, so it gets the weaker one (no `'` escape, no null guard). Grep
+  the whole script set, never the file that uses one.
+- **`tests/js/harness_context.mjs` answers an unknown window key with a truthy
+  stub.** A script guarding with `window.ns = window.ns || {}` writes onto a
+  throwaway and every later read gets a fresh one. Seed the namespace
+  (`context.window.scryglass = {}`) before running the script, and gate the
+  page's real load order in the template test instead.
+- **An edit to `ui/src` that reaches the bundle means rebuilding and committing
+  `static/calculator/`.** Removing an export is enough: dropping two moved 523
+  bytes of `calculator.js` because esbuild reassigned its minified names.
 
 ## Champions
 
