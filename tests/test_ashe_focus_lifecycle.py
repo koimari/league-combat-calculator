@@ -885,19 +885,6 @@ class TestOptionsAndApiValidation:
 
 
 class TestMissingRows:
-    def test_stripped_q_rows_today_silent_zero_pinned_actual(self):
-        # P1-10: the _require_row guards make the stripped rows FAIL
-        # LOUD (KeyError naming the rows) — the silent-zero fallback is
-        # gone.
-        with pytest.raises(KeyError) as excinfo:
-            _parse(
-                {},
-                data=_strip_q_rows({"Bonus Attack Speed", "Total Damage Per Flurry"}),
-            )
-        assert "Bonus Attack Speed" in str(
-            excinfo.value
-        ) or "Total Damage Per Flurry" in str(excinfo.value)
-
     def test_missing_rows_fail_closed_not_silent_zero(self):
         # Pinned contract (the P3-3Z _require_row precedent): a
         # missing/degraded Q row must never price a silent zero flurry —

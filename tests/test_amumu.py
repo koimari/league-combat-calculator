@@ -47,18 +47,6 @@ class TestQBandageToss:
         # At level 9 with W-max order, Q is rank 2 → recharge = 15s
         assert abilities["Q"]["cooldown"] >= 12.0
 
-    def test_q_rank1_damage_matches_json(self, amumu_data, parse_at) -> None:
-        """Q rank 1 single cast = 70 + 85% AP, with 0 AP = 70."""
-        _, abilities = parse_at(
-            amumu_data,
-            1,
-            champion_options={"target_cursed": False},
-            target_stats=_TARGET,
-        )
-        assert parts_raw_total(abilities["Q"]["parts"], "magic") == pytest.approx(
-            70.0, abs=0.5
-        )
-
     def test_q_with_ap_scaling(self, amumu_data, parse_at) -> None:
         """Q with 200 AP: 70 + 85%*200 = 70 + 170 = 240 per cast."""
         _, abilities = parse_at(

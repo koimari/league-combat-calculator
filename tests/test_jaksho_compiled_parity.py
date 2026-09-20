@@ -880,23 +880,6 @@ def test_compiled_capability_scan_is_clean_for_jaksho():
     assert fast["participants"][0]["survival"]["jaksho"]["stacks"] == MAX_STACKS
 
 
-def test_compiled_tuple_ledger_fight_fails_closed_with_stack_metadata():
-    """P3-3R contract: once the capability scan stops reporting Jak'Sho, a
-    tuple-ledger pair (engine light rows, which omit ability_instance and
-    baseline resistances) must fail closed with the compiler's
-    tuple_ledger_stack_metadata receipt and fall back to parity — never a
-    crash (participant_timeline's dict(event) enrichment is a named P3-3R
-    metadata gap) and never a silent stack drop.  Today the capability
-    scan fails first, so this xfails."""
-    assert uncompilable_item_receipt([_jaksho_item()]) is None
-    legacy = _riven_tuple_ledger_fight(include_receipt=False)
-    ctx = CoupledSearchContext()
-    fast = _riven_tuple_ledger_fight(include_receipt=False, search_context=ctx)
-    assert fast == legacy
-    assert ctx.uncompilable is False
-    assert fast["participants"][0]["survival"]["jaksho"]["stacks"] == MAX_STACKS
-
-
 def test_legacy_score_only_pair_surface_carries_no_survival_state():
     """Named fail-closed boundary: the legacy pair scorer
     (run_fight(score_only=True)) cannot carry survival state — no target_*

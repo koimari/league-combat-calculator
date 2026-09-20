@@ -232,15 +232,6 @@ class TestRuntimeIdentityContract:
         [
             {"slot": "Q", "time": 0.0, "target_id": DEFAULT_TARGET},
             {"slot": "Q", "time": 0.0, "cast_id": "Q:1"},
-        ],
-        ids=["missing-cast-id", "missing-target-id"],
-    )
-    def test_missing_identity_withholds_proc(self, cast_event: dict) -> None:
-        assert _proc_events([cast_event], expected=1) is None
-
-    @pytest.mark.parametrize(
-        "cast_event",
-        [
             {
                 "slot": "Q",
                 "time": 0.0,
@@ -255,9 +246,15 @@ class TestRuntimeIdentityContract:
             },
             {"slot": "Q", "time": 0.0, "cast_id": "Q:1", "target_id": ""},
         ],
-        ids=["blank-cast-id", "non-string-cast-id", "blank-target-id"],
+        ids=[
+            "missing-cast-id",
+            "missing-target-id",
+            "blank-cast-id",
+            "non-string-cast-id",
+            "blank-target-id",
+        ],
     )
-    def test_malformed_identity_withholds_proc(self, cast_event: dict) -> None:
+    def test_an_unusable_identity_withholds_the_proc(self, cast_event: dict) -> None:
         assert _proc_events([cast_event], expected=1) is None
 
 

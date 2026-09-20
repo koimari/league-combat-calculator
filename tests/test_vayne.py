@@ -103,50 +103,27 @@ class TestQTumble:
 class TestQCooldownWithR:
     """Tests for Q cooldown reduction when R is active."""
 
-    def test_q_cooldown_reduced_by_r(self, vayne_data) -> None:
-        """R rank 3 reduces Q cooldown by 50%."""
+    # Q rank 5 has a 2 s base cooldown, and R reduces it by 30% at rank 1
+    # and 50% at rank 3.
+    @pytest.mark.parametrize(
+        ("level", "r_rank", "cooldown"),
+        [(9, 0, 2.0), (18, 1, 1.4), (18, 3, 1.0)],
+    )
+    def test_q_cooldown_is_reduced_by_the_r_rank(
+        self, vayne_data, level: int, r_rank: int, cooldown: float
+    ) -> None:
+        learned = 5 if r_rank else 0
         abilities = parse_abilities(
             vayne_data,
-            18,
+            level,
             0.0,
-            ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 3},
+            ability_ranks={"Q": 5, "W": learned, "E": learned, "R": r_rank},
             champion_stats={
                 "attack_damage": 100.0,
                 "bonus_attack_damage": 0.0,
             },
         )
-        # Q rank 5 base CD = 2s, with 50% reduction = 1.0s
-        assert abilities["Q"]["cooldown"] == pytest.approx(1.0, abs=0.1)
-
-    def test_q_cooldown_no_r(self, vayne_data) -> None:
-        """Without R, Q cooldown is not reduced."""
-        abilities = parse_abilities(
-            vayne_data,
-            9,
-            0.0,
-            ability_ranks={"Q": 5, "W": 0, "E": 0, "R": 0},
-            champion_stats={
-                "attack_damage": 100.0,
-                "bonus_attack_damage": 0.0,
-            },
-        )
-        # Q rank 5 base CD = 2s
-        assert abilities["Q"]["cooldown"] == pytest.approx(2.0, abs=0.1)
-
-    def test_q_cooldown_r_rank1(self, vayne_data) -> None:
-        """R rank 1 reduces Q cooldown by 30%."""
-        abilities = parse_abilities(
-            vayne_data,
-            18,
-            0.0,
-            ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 1},
-            champion_stats={
-                "attack_damage": 100.0,
-                "bonus_attack_damage": 0.0,
-            },
-        )
-        # Q rank 5 base CD = 2s, with 30% reduction = 1.4s
-        assert abilities["Q"]["cooldown"] == pytest.approx(1.4, abs=0.1)
+        assert abilities["Q"]["cooldown"] == pytest.approx(cooldown, abs=0.1)
 
 
 # ---------------------------------------------------------------------------
@@ -475,42 +452,34 @@ class TestRFinalHour:
         assert "stat_buff" in abilities["R"]
         assert abilities["R"]["stat_buff"]["bonus_attack_damage"] > 0
 
-    def test_r_rank1_bonus_ad(self, vayne_data) -> None:
-        """R rank 1 grants 35 bonus AD."""
+    @pytest.mark.parametrize(
+        ("level", "ranks", "bonus_ad"),
+        [
+            (11, {"Q": 5, "W": 3, "E": 1, "R": 1}, 35.0),
+            (16, {"Q": 5, "W": 5, "E": 3, "R": 3}, 65.0),
+        ],
+    )
+    def test_r_grants_its_ranked_bonus_ad(
+        self, vayne_data, level: int, ranks: dict, bonus_ad: float
+    ) -> None:
         abilities = parse_abilities(
             vayne_data,
-            11,
+            level,
             0.0,
-            ability_ranks={"Q": 5, "W": 3, "E": 1, "R": 1},
+            ability_ranks=ranks,
             champion_stats={
                 "attack_damage": 100.0,
                 "bonus_attack_damage": 0.0,
             },
         )
         assert abilities["R"]["stat_buff"]["bonus_attack_damage"] == pytest.approx(
-            35.0,
+            bonus_ad,
             abs=1.0,
         )
 
-    def test_r_rank3_bonus_ad(self, vayne_data) -> None:
-        """R rank 3 grants 65 bonus AD."""
-        abilities = parse_abilities(
-            vayne_data,
-            16,
-            0.0,
-            ability_ranks={"Q": 5, "W": 5, "E": 3, "R": 3},
-            champion_stats={
-                "attack_damage": 100.0,
-                "bonus_attack_damage": 0.0,
-            },
-        )
-        assert abilities["R"]["stat_buff"]["bonus_attack_damage"] == pytest.approx(
-            65.0,
-            abs=1.0,
-        )
-
-    def test_r_buff_increases_q_damage(self, vayne_data) -> None:
-        """Q damage should be higher when R is ranked (bonus AD applied)."""
+    @pytest.mark.parametrize("slot", ["Q", "E"])
+    def test_r_buff_increases_the_ad_scaling_slots(self, vayne_data, slot: str) -> None:
+        """The slot deals more when R is ranked, because its bonus AD applies."""
         stats = {
             "attack_damage": 100.0,
             "bonus_attack_damage": 0.0,
@@ -529,29 +498,7 @@ class TestRFinalHour:
             ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 3},
             champion_stats=dict(stats),
         )
-        assert with_r["Q"]["total_raw"] > no_r["Q"]["total_raw"]
-
-    def test_r_buff_increases_e_damage(self, vayne_data) -> None:
-        """E damage should be higher when R is ranked (bonus AD applied)."""
-        stats = {
-            "attack_damage": 100.0,
-            "bonus_attack_damage": 0.0,
-        }
-        no_r = parse_abilities(
-            vayne_data,
-            18,
-            0.0,
-            ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 0},
-            champion_stats=dict(stats),
-        )
-        with_r = parse_abilities(
-            vayne_data,
-            18,
-            0.0,
-            ability_ranks={"Q": 5, "W": 5, "E": 5, "R": 3},
-            champion_stats=dict(stats),
-        )
-        assert with_r["E"]["total_raw"] > no_r["E"]["total_raw"]
+        assert with_r[slot]["total_raw"] > no_r[slot]["total_raw"]
 
 
 # ---------------------------------------------------------------------------

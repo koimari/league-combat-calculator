@@ -425,31 +425,10 @@ def test_valid_half_second_timings_emit_packet_at_exact_time(seconds):
     assert purify["time"] == pytest.approx(seconds)
 
 
-@pytest.mark.parametrize("seconds", [30.5, 31.0, 100.0])
-def test_validation_rejects_values_above_max(seconds):
-    """Above 30 the request schema raises, the defensive resolver raises,
-    and the app answers a named 400; there is no clamp path."""
-    message = (
-        "item_options.Mikael's Blessing.active_seconds must be between 0.0 and 30.0"
-    )
-    with pytest.raises(ValueError, match=message):
-        validate_item_input_options({MIKAELS: {"active_seconds": seconds}})
-    with pytest.raises(ValueError, match=message):
-        input_option_float_value(
-            [get_item_by_name(MIKAELS)],
-            {MIKAELS: {"active_seconds": seconds}},
-            MIKAELS,
-            "active_seconds",
-        )
-    status, body = _calculate_status(
-        _main(item_options={MIKAELS: {"active_seconds": seconds}})
-    )
-    assert status == 400
-    assert body.get("error") == message
-
-
-@pytest.mark.parametrize("seconds", [-0.5, -1.0, -30.0])
-def test_validation_rejects_negative_values(seconds):
+@pytest.mark.parametrize("seconds", [30.5, 31.0, 100.0, -0.5, -1.0, -30.0])
+def test_validation_rejects_a_value_outside_the_sourced_window(seconds):
+    """Outside 0 to 30 the request schema raises, the defensive resolver
+    raises, and the app answers a named 400; there is no clamp path."""
     message = (
         "item_options.Mikael's Blessing.active_seconds must be between 0.0 and 30.0"
     )

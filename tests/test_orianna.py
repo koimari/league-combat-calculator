@@ -125,10 +125,6 @@ class TestAbilityDamage:
 class TestEOption:
     """e_passes_through_target gates E's damage, not its presence."""
 
-    def test_default_deals_damage(self, orianna_data) -> None:
-        abilities = _parse(orianna_data)
-        assert abilities["E"]["total_raw"] == pytest.approx(210.0)
-
     def test_disabled_is_zero_damage_utility_cast(self, orianna_data) -> None:
         abilities = _parse(orianna_data, options={"e_passes_through_target": False})
         entry = abilities["E"]

@@ -239,57 +239,28 @@ def test_optimize_api_matches_calculate_for_persistent_state_champions(champion)
     assert response.get_json()["items"] is not None
 
 
-def test_optimize_api_certifies_tahm_kench_event_order():
-    """Tahm's reviewed packet can participate in an event-ordered search."""
+@pytest.mark.parametrize(
+    ("champion", "reviewed"),
+    [
+        ("Tahm Kench", "an event-ordered packet"),
+        ("Qiyana", "a multi-stage ultimate"),
+        ("Shyvana", "form-dependent packets"),
+        ("Ziggs", "a minefield cadence"),
+    ],
+)
+def test_optimize_api_certifies_a_reviewed_packet(champion: str, reviewed: str) -> None:
+    """A reviewed packet can participate in an event-ordered build search."""
     with app.test_client() as client:
         response = client.post(
             "/api/optimize",
             json={
-                "champion": "Tahm Kench",
+                "champion": champion,
                 "level": 18,
                 "fight_mode": "time_based",
                 "max_legendary_slots": 1,
             },
         )
-    assert response.status_code == 200
-    body = response.get_json()
-    assert body["timeline_coverage"]["complete"] is True
-    assert body["timeline_coverage"]["coarse_sources"] == []
-    assert body["ranked_builds"]
-
-
-def test_optimize_api_certifies_qiyana_multistage_ultimate():
-    """Qiyana's reviewed multi-stage R can participate in a build search."""
-    with app.test_client() as client:
-        response = client.post(
-            "/api/optimize",
-            json={
-                "champion": "Qiyana",
-                "level": 18,
-                "fight_mode": "time_based",
-                "max_legendary_slots": 1,
-            },
-        )
-    assert response.status_code == 200
-    body = response.get_json()
-    assert body["timeline_coverage"]["complete"] is True
-    assert body["timeline_coverage"]["coarse_sources"] == []
-    assert body["ranked_builds"]
-
-
-def test_optimize_api_certifies_shyvana_form_packets():
-    """Shyvana's reviewed form-dependent packets can be searched."""
-    with app.test_client() as client:
-        response = client.post(
-            "/api/optimize",
-            json={
-                "champion": "Shyvana",
-                "level": 18,
-                "fight_mode": "time_based",
-                "max_legendary_slots": 1,
-            },
-        )
-    assert response.status_code == 200
+    assert response.status_code == 200, reviewed
     body = response.get_json()
     assert body["timeline_coverage"]["complete"] is True
     assert body["timeline_coverage"]["coarse_sources"] == []
@@ -360,25 +331,6 @@ def test_optimize_api_darius_returns_visible_event_certified_build():
     # coarse candidate evaluation left, the search covered everything and
     # says so.
     assert payload["selection_certification"] == "exhaustive_event_ordered"
-
-
-def test_optimize_api_certifies_ziggs_minefield_cadence():
-    """Ziggs's reviewed minefield cadence can participate in a build search."""
-    with app.test_client() as client:
-        response = client.post(
-            "/api/optimize",
-            json={
-                "champion": "Ziggs",
-                "level": 18,
-                "fight_mode": "time_based",
-                "max_legendary_slots": 1,
-            },
-        )
-    assert response.status_code == 200
-    body = response.get_json()
-    assert body["timeline_coverage"]["complete"] is True
-    assert body["timeline_coverage"]["coarse_sources"] == []
-    assert body["ranked_builds"]
 
 
 def test_shyvana_multi_form_e_and_w_have_certified_sources():

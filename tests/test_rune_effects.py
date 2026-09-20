@@ -7,6 +7,8 @@ turn to prove the compiler raises instead of falling back — CLAUDE.md rule
 5 for runes, as evidence rather than as a claim.
 """
 
+import re
+
 import pytest
 
 from src.calculator import rune_effects
@@ -279,24 +281,6 @@ class TestElectrocuteFormula:
         tie = {"bonus_attack_damage": 50.0, "ability_power": 100.0}  # 5 == 5
         assert effect.damage_type(tie) == "magic"
 
-    def test_missing_registry_key_raises_with_context(self, monkeypatch):
-        broken = {
-            name: (
-                {
-                    **entry,
-                    "effects": {
-                        k: v for k, v in entry["effects"].items() if k != "ap_ratio"
-                    },
-                }
-                if name == "Electrocute"
-                else entry
-            )
-            for name, entry in rune_effects.RUNE_EFFECTS.items()
-        }
-        monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-        with pytest.raises(KeyError, match=r"Electrocute.*ap_ratio"):
-            rune_effects.resolve_rune("Electrocute")
-
 
 class TestFirstStrike:
     def test_first_strike_resolves_to_window_amp_effect(self):
@@ -334,26 +318,6 @@ class TestFirstStrike:
         effect = rune_effects.resolve_rune("First Strike")
         assert effect.gold_conversion(is_melee=True) == pytest.approx(0.50)
         assert effect.gold_conversion(is_melee=False) == pytest.approx(0.35)
-
-    def test_missing_registry_key_raises_with_context(self, monkeypatch):
-        broken = {
-            name: (
-                {
-                    **entry,
-                    "effects": {
-                        k: v
-                        for k, v in entry["effects"].items()
-                        if k != "gold_conversion_ratios"
-                    },
-                }
-                if name == "First Strike"
-                else entry
-            )
-            for name, entry in rune_effects.RUNE_EFFECTS.items()
-        }
-        monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-        with pytest.raises(KeyError, match=r"First Strike.*gold_conversion_ratios"):
-            rune_effects.resolve_rune("First Strike")
 
 
 class TestPressTheAttack:
@@ -421,26 +385,6 @@ class TestPressTheAttack:
             effect.damage_type({"bonus_attack_damage": 0.0, "ability_power": 0.0})
             == "magic"
         )
-
-    def test_missing_registry_key_raises_with_context(self, monkeypatch):
-        broken = {
-            name: (
-                {
-                    **entry,
-                    "effects": {
-                        k: v
-                        for k, v in entry["effects"].items()
-                        if k != "stack_duration_seconds"
-                    },
-                }
-                if name == "Press the Attack"
-                else entry
-            )
-            for name, entry in rune_effects.RUNE_EFFECTS.items()
-        }
-        monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-        with pytest.raises(KeyError, match=r"Press the Attack.*stack_duration_seconds"):
-            rune_effects.resolve_rune("Press the Attack")
 
     def test_a_missing_amp_ratio_raises_through_the_reference(self, monkeypatch):
         """Rule 5 reaches keystones: the declaration's read fails loud too."""
@@ -517,26 +461,6 @@ class TestArcaneComet:
             effect.damage_type({"bonus_attack_damage": 0.0, "ability_power": 0.0})
             == "magic"
         )
-
-    def test_missing_distance_scaling_raises_with_context(self, monkeypatch):
-        broken = {
-            name: (
-                {
-                    **entry,
-                    "effects": {
-                        k: v
-                        for k, v in entry["effects"].items()
-                        if k != "distance_scaling"
-                    },
-                }
-                if name == "Arcane Comet"
-                else entry
-            )
-            for name, entry in rune_effects.RUNE_EFFECTS.items()
-        }
-        monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
-        with pytest.raises(KeyError, match=r"Arcane Comet.*distance_scaling"):
-            rune_effects.resolve_rune("Arcane Comet")
 
     def test_swapped_leveling_tables_raise_with_context(self, monkeypatch):
         # The compiler picks leveling[0] as the minimum-damage table by
@@ -1001,3 +925,32 @@ class TestThePathsPublishTheirCompilerTables:
             rune_effects.register_rune_compilers(
                 {name: compiler}, {name: compiler}, {}, {}
             )
+
+
+@pytest.mark.parametrize(
+    ("rune", "key"),
+    [
+        ("Electrocute", "ap_ratio"),
+        ("First Strike", "gold_conversion_ratios"),
+        ("Press the Attack", "stack_duration_seconds"),
+        ("Arcane Comet", "distance_scaling"),
+    ],
+)
+def test_a_missing_registry_key_raises_naming_the_rune_and_the_key(
+    monkeypatch, rune: str, key: str
+) -> None:
+    """Rule 5 over the rune registry: a missing number is a stop, not a zero."""
+    broken = {
+        name: (
+            {
+                **entry,
+                "effects": {k: v for k, v in entry["effects"].items() if k != key},
+            }
+            if name == rune
+            else entry
+        )
+        for name, entry in rune_effects.RUNE_EFFECTS.items()
+    }
+    monkeypatch.setattr(rune_effects, "RUNE_EFFECTS", broken)
+    with pytest.raises(KeyError, match=rf"{re.escape(rune)}.*{key}"):
+        rune_effects.resolve_rune(rune)
