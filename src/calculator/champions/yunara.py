@@ -42,7 +42,7 @@ from ..binary_roots import (
 from .engine import ONHIT, SlotCtx
 from .module_helpers import (
     ability_slot,
-    no_damage,
+    no_damage_slot,
     ranked_slot,
     require_named_leveling,
     steroid_entry,
@@ -227,22 +227,13 @@ def _arc_of_judgment(
     return entry
 
 
-@ranked_slot
-def _transcend_one_self(
-    ctx: SlotCtx, ability: dict[str, Any], _rank: int
-) -> dict[str, Any] | None:
-    """R: the Transcendent State buff shell (zero direct damage)."""
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            f"Transcendent State ({_R_TRANSCENDENT_DURATION:g}s): a buff that "
-            "keeps Unleash active and empowers W into Arc of Ruin; with "
-            "r_transcendent=True the Q rows price the combined on-hit and the "
-            "whole-fight attack speed, and the W row prices the empowered base "
-            "160/320/480 by R rank + 120% bonus AD + 75% AP"
-        ),
-    )
+_transcend_one_self = no_damage_slot(
+    f"Transcendent State ({_R_TRANSCENDENT_DURATION:g}s): a buff that "
+    "keeps Unleash active and empowers W into Arc of Ruin; with "
+    "r_transcendent=True the Q rows price the combined on-hit and the "
+    "whole-fight attack speed, and the W row prices the empowered base "
+    "160/320/480 by R rank + 120% bonus AD + 75% AP"
+)
 
 
 # Arc of Judgment's initial hit "deals magic damage and slows them by 99%

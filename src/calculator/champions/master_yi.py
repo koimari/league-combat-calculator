@@ -42,7 +42,7 @@ from .healing_contract import SelfHealCtx, self_healing_rule
 from .module_helpers import (
     ability_slot,
     buff_window_share,
-    no_damage,
+    no_damage_slot,
     ranked_slot,
     steroid_entry,
 )
@@ -110,22 +110,13 @@ def _double_strike(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | No
 _double_strike.phase = ONHIT
 
 
-@ranked_slot
-def _meditate(
-    ctx: SlotCtx, ability: dict[str, Any], _rank: int
-) -> dict[str, Any] | None:
-    """W: a zero-damage channel receipt (the heal lives in healing.py)."""
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "4-second channel: the self-heal (Minimum/Maximum Heal Per Tick, "
-            "missing-health scaled) is authored by healing.py; the damage-"
-            "reduction window is a defensive state not staged by the damage "
-            "model"
-        ),
-        dmg_type="physical",
-    )
+_meditate = no_damage_slot(
+    "4-second channel: the self-heal (Minimum/Maximum Heal Per Tick, "
+    "missing-health scaled) is authored by healing.py; the damage-"
+    "reduction window is a defensive state not staged by the damage "
+    "model",
+    dmg_type="physical",
+)
 
 
 @ranked_slot

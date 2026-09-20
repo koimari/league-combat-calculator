@@ -11,7 +11,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option
-from .module_helpers import ability_slot, no_damage, ranked_slot
+from .module_helpers import ability_slot, no_damage, no_damage_slot, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
@@ -141,15 +141,11 @@ def _snip_snip(
     return entry
 
 
-def _hallowed_mist(ctx: SlotCtx) -> dict[str, Any] | None:
-    return no_damage(
-        ctx,
-        name="Hallowed Mist",
-        reason=(
-            "Mist untargetability and bonus resistances are defensive state; no "
-            "outgoing damage."
-        ),
-    )
+_hallowed_mist = no_damage_slot(
+    "Mist untargetability and bonus resistances are defensive state; no "
+    "outgoing damage.",
+    name="Hallowed Mist",
+)
 
 
 _hallowed_mist.phase = BUFF

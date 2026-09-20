@@ -44,7 +44,7 @@ from typing import Any
 
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .module_helpers import ability_slot, at_level, no_damage
+from .module_helpers import ability_slot, at_level, no_damage_slot
 from .packet_module import build_packet_module
 
 # HARDCODED: verify on patch updates — the second shot's AD ratio is
@@ -75,28 +75,19 @@ def _lightslinger(ctx: SlotCtx, _passive: dict[str, Any]) -> dict[str, Any] | No
     }
 
 
-def _relentless_pursuit(ctx: SlotCtx) -> dict[str, Any] | None:
-    """E: the cooldown-refunding dash — documented zero-damage row.
-
-    All three cached effect rows carry empty leveling (cooldown refund
-    on Lightslinger hit, the dash, the attack-timer reset); the game
-    binary's ``LucianE`` spell record carries no ``mSpellCalculations``
-    table, only non-damage DataValues (cooldown-refund seconds, dash
-    range/speed). E prices nothing.
-    """
-    return no_damage(
-        ctx,
-        name="Relentless Pursuit",
-        reason=(
-            "Active: Lucian dashes in the target direction, resetting his "
-            "basic attack timer. Passive: Relentless Pursuit's current "
-            "cooldown is reduced by 1s per Lightslinger shot hit (2s "
-            "against champions). Pure movement/cooldown-refund state -- "
-            "no leveling row and no combat-damage interaction; "
-            "corroborated by the game binary's LucianE spell record, "
-            "which carries no mSpellCalculations table."
-        ),
-    )
+# All three cached E effect rows carry empty leveling (cooldown refund on
+# Lightslinger hit, the dash, the attack-timer reset), and the game binary's
+# LucianE record holds only non-damage DataValues.
+_relentless_pursuit = no_damage_slot(
+    "Active: Lucian dashes in the target direction, resetting his "
+    "basic attack timer. Passive: Relentless Pursuit's current "
+    "cooldown is reduced by 1s per Lightslinger shot hit (2s "
+    "against champions). Pure movement/cooldown-refund state -- "
+    "no leveling row and no combat-damage interaction; "
+    "corroborated by the game binary's LucianE spell record, "
+    "which carries no mSpellCalculations table.",
+    name="Relentless Pursuit",
+)
 
 
 PACKET_SHA256 = "3fe0c536a453a203c13c7bb713274cbc217785ea29e4723c090c474b7607b9e6"

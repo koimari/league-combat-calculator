@@ -403,12 +403,13 @@ def rank_gated_no_damage_parser(
     return parse
 
 
-def no_damage_slot(reason: str) -> SlotParser:
+def no_damage_slot(reason: str, **no_damage_kwargs: Any) -> SlotParser:
     """A slot whose cached row prices no enemy damage: its named, rank-gated zero row."""
 
     @ability_slot()
     def parse(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any] | None:
-        return no_damage(ctx, name=ability_name(ability), reason=reason)
+        pinned = {"name": ability_name(ability), **no_damage_kwargs}
+        return no_damage(ctx, reason=reason, **pinned)
 
     parse.phase = DAMAGE
     return parse

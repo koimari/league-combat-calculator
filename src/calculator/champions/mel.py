@@ -57,7 +57,7 @@ from ..binary_roots import (
 from .contract_vocabulary import coverage
 from .engine import ONHIT, SlotCtx
 from .inputs import int_option
-from .module_helpers import ability_slot, no_damage, ranked_slot
+from .module_helpers import ability_slot, no_damage_slot, ranked_slot
 from .packet_module import build_packet_module
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry, on_hit_entry
@@ -245,29 +245,18 @@ def _searing_brilliance(ctx: SlotCtx, ability: dict[str, Any]) -> dict[str, Any]
 _searing_brilliance.phase = ONHIT
 
 
-@ranked_slot
-def _rebuttal(
-    ctx: SlotCtx, ability: dict[str, Any], _rank: int
-) -> dict[str, Any] | None:
-    """W: shield + conditional projectile reflection, priced ``no_damage``.
-
-    Every source (the wiki rows, MelW's mSpellCalculations, the atom
-    catalog) states a shield and a "% of the original damage" reflection,
-    never a damage amount, and the multiplicand is structurally absent:
-    this calculator models one attacker against a target that never casts.
-    """
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason=(
-            "Rebuttal shields Mel (80-200 + 70% AP) and reflects enemy "
-            "projectiles at 40-60% (+ 5% per 100 AP) of their original "
-            "damage; no enemy projectile source is modeled — the target "
-            "never casts — so the slot prices no damage. The game binary's "
-            "MelW carries only DamagePercent and ShieldAmount, and no "
-            "damage.* atom exists for MelW."
-        ),
-    )
+# Every source (the wiki rows, MelW's mSpellCalculations, the atom catalog)
+# states a shield and a "% of the original damage" reflection, never a damage
+# amount, and the multiplicand is structurally absent: this calculator models
+# one attacker against a target that never casts.
+_rebuttal = no_damage_slot(
+    "Rebuttal shields Mel (80-200 + 70% AP) and reflects enemy "
+    "projectiles at 40-60% (+ 5% per 100 AP) of their original "
+    "damage; no enemy projectile source is modeled — the target "
+    "never casts — so the slot prices no damage. The game binary's "
+    "MelW carries only DamagePercent and ShieldAmount, and no "
+    "damage.* atom exists for MelW."
+)
 
 
 _OVERWHELM_STACK_LIFE = CachedSentence(

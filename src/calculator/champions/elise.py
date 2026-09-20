@@ -7,7 +7,7 @@ from typing import Any
 from ..control_spec import ControlScope
 from .engine import ONHIT, SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import ability_slot, named_damage, no_damage
+from .module_helpers import ability_slot, named_damage, no_damage, no_damage_slot
 from .slot_control import with_control_event
 from .slot_entries import damage_entry
 from .slot_extract import extract_cooldown, extract_named
@@ -91,12 +91,10 @@ _volatile_spiderling = named_damage(
 )
 
 
-def _cocoon(ctx: SlotCtx) -> dict[str, Any] | None:
-    return no_damage(
-        ctx,
-        name="Cocoon",
-        reason="Stun/reveal only; the parent entry has no outgoing damage formula.",
-    )
+_cocoon = no_damage_slot(
+    "Stun/reveal only; the parent entry has no outgoing damage formula.",
+    name="Cocoon",
+)
 
 
 def _form_toggle(ctx: SlotCtx) -> dict[str, Any] | None:

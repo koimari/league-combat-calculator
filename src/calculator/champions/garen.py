@@ -9,19 +9,15 @@ from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat
-from .module_helpers import named_damage, no_damage, ranked_slot
+from .module_helpers import named_damage, no_damage_slot, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
-
-def _perseverance(ctx: SlotCtx) -> dict[str, Any] | None:
-    return no_damage(
-        ctx,
-        name="Perseverance",
-        reason="Out-of-combat regeneration is self sustain, not outgoing damage.",
-        slot="P",
-    )
+_perseverance = no_damage_slot(
+    "Out-of-combat regeneration is self sustain, not outgoing damage.",
+    name="Perseverance",
+)
 
 
 _decisive_strike = named_damage(
@@ -35,12 +31,10 @@ _decisive_strike = named_damage(
 )
 
 
-def _courage(ctx: SlotCtx) -> dict[str, Any] | None:
-    return no_damage(
-        ctx,
-        name="Courage",
-        reason="Courage resist stacks, shield and damage reduction are defensive state.",
-    )
+_courage = no_damage_slot(
+    "Courage resist stacks, shield and damage reduction are defensive state.",
+    name="Courage",
+)
 
 
 _courage.phase = BUFF

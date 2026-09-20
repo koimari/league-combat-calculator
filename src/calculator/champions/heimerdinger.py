@@ -8,7 +8,12 @@ from ..ability_spec import DamagePart
 from .charge_cadence import ChargeRule
 from .engine import SlotCtx, build_parser
 from .inputs import int_option
-from .module_helpers import no_damage, ranked_slot, require_named_leveling
+from .module_helpers import (
+    no_damage,
+    no_damage_slot,
+    ranked_slot,
+    require_named_leveling,
+)
 from .slot_control import extract_recharge
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
@@ -250,15 +255,11 @@ def _grenade(ctx: SlotCtx) -> dict[str, Any] | None:
     return entry
 
 
-def _upgrade(ctx: SlotCtx) -> dict[str, Any] | None:
-    return no_damage(
-        ctx,
-        name="UPGRADE!!!",
-        reason=(
-            "The ultimate is an empowerment toggle; its selected Q/W/E variant "
-            "carries the outgoing damage."
-        ),
-    )
+_upgrade = no_damage_slot(
+    "The ultimate is an empowerment toggle; its selected Q/W/E variant "
+    "carries the outgoing damage.",
+    name="UPGRADE!!!",
+)
 
 
 SLOTS = {

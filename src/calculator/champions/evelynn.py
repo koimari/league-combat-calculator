@@ -8,23 +8,17 @@ from ..ability_spec import DamagePart
 from ..control_spec import ControlEvent, ControlScope
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option, int_option
-from .module_helpers import named_damage, no_damage, ranked_slot
+from .module_helpers import named_damage, no_damage, no_damage_slot, ranked_slot
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
 from .source_receipts import load_champion_sources
 
-
-def _demon_shade(ctx: SlotCtx) -> dict[str, Any] | None:
-    return no_damage(
-        ctx,
-        name="Demon Shade",
-        reason=(
-            "Camouflage and low-health regeneration are self-state; no outgoing "
-            "damage is implied."
-        ),
-        slot="P",
-    )
+_demon_shade = no_damage_slot(
+    "Camouflage and low-health regeneration are self-state; no outgoing "
+    "damage is implied.",
+    name="Demon Shade",
+)
 
 
 @ranked_slot

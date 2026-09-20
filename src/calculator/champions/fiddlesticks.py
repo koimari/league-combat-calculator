@@ -9,21 +9,17 @@ from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, int_option
-from .module_helpers import named_damage, no_damage, ranked_slot
+from .module_helpers import named_damage, no_damage_slot, ranked_slot
 from .slot_cc import CC_PER_PART
 from .slot_control import with_control
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
-
-def _scarecrow(ctx: SlotCtx) -> dict[str, Any] | None:
-    return no_damage(
-        ctx,
-        name="A Harmless Scarecrow",
-        reason="Effigy/sweeper state only; the full passive has no outgoing damage formula.",
-        slot="P",
-    )
+_scarecrow = no_damage_slot(
+    "Effigy/sweeper state only; the full passive has no outgoing damage formula.",
+    name="A Harmless Scarecrow",
+)
 
 
 @ranked_slot

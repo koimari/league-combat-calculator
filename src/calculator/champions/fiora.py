@@ -8,7 +8,13 @@ from .. import healing_helpers as _healing
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option
-from .module_helpers import level_row, named_damage, no_damage, ranked_slot
+from .module_helpers import (
+    level_row,
+    named_damage,
+    no_damage,
+    no_damage_slot,
+    ranked_slot,
+)
 from .slot_extract import ability_name, extract_named
 from .slotlib import proc_damage
 from .source_receipts import load_champion_sources
@@ -69,15 +75,11 @@ def _bladework(
     return entry
 
 
-def _grand_challenge(ctx: SlotCtx) -> dict[str, Any] | None:
-    return no_damage(
-        ctx,
-        name="Grand Challenge",
-        reason=(
-            "Vital highlighting and Victory Zone healing are explicit challenge "
-            "state, not outgoing damage."
-        ),
-    )
+_grand_challenge = no_damage_slot(
+    "Vital highlighting and Victory Zone healing are explicit challenge "
+    "state, not outgoing damage.",
+    name="Grand Challenge",
+)
 
 
 SLOTS = {

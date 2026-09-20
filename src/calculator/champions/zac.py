@@ -33,7 +33,7 @@ from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, SlotParser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat
-from .module_helpers import no_damage, ranked_slot
+from .module_helpers import no_damage_slot, ranked_slot
 from .packet_module import build_packet_module, first_plus_repeats_parser
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
@@ -141,25 +141,18 @@ def _lets_bounce(packet_r: SlotParser) -> SlotParser:
 MODULE_CC = {"Q": "slow", "W": "none", "E": "knockup", "R": CC_PER_PART, "P": "none"}
 
 
-def _cell_division(ctx: SlotCtx):
-    """P: a state row with no enemy-damage term of its own.
-
-    The packet's ``targetMaxHp`` ratio is a generation mislabel — the
-    cached prose pays it off ZAC's maximum health — so publishing it as a
-    damage part put a heal in the damage vocabulary.  Both halves of the
-    slot are priced by the channels ``COVERAGE_CHANNELS`` names.
-    """
-    return no_damage(
-        ctx,
-        name="Cell Division",
-        reason=(
-            "Cell Division deals no enemy damage: the cached 'Max Health "
-            "Damage' ratio is Zac's own Goo chunk heal (4% : 8.47% of HIS "
-            "maximum health), priced through the self_healing_rule "
-            "channel, and the resurrection through "
-            "starting_revive_defense."
-        ),
-    )
+# The packet's ``targetMaxHp`` ratio is a generation mislabel — the cached
+# prose pays it off ZAC's maximum health — so publishing it as a damage part
+# put a heal in the damage vocabulary.  Both halves of the slot are priced by
+# the channels ``COVERAGE_CHANNELS`` names.
+_cell_division = no_damage_slot(
+    "Cell Division deals no enemy damage: the cached 'Max Health "
+    "Damage' ratio is Zac's own Goo chunk heal (4% : 8.47% of HIS "
+    "maximum health), priced through the self_healing_rule "
+    "channel, and the resurrection through "
+    "starting_revive_defense.",
+    name="Cell Division",
+)
 
 
 parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(

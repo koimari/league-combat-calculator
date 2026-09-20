@@ -34,7 +34,7 @@ from ..stat_formulas import effective_cooldown
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import float_option, int_option
-from .module_helpers import clamp, no_damage, no_damage_slot, ranked_slot
+from .module_helpers import clamp, no_damage_slot, ranked_slot
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import (
@@ -247,16 +247,8 @@ def _threaded_volley(
     return entry
 
 
-@ranked_slot
-def _seismic_shove(
-    ctx: SlotCtx, ability: dict[str, Any], _rank: int
-) -> dict[str, Any] | None:
-    """W deals no damage but spends its sourced cast and mana cost."""
-    return no_damage(
-        ctx,
-        name=ability_name(ability),
-        reason="Knockback used to trigger the selected E stones",
-    )
+# W deals no damage but spends its sourced cast and mana cost.
+_seismic_shove = no_damage_slot("Knockback used to trigger the selected E stones")
 
 
 @ranked_slot

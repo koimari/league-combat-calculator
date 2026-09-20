@@ -88,7 +88,7 @@ from ..stat_formulas import ATTACK_SPEED_CAP, calculate_attack_speed
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
 from .inputs import bool_option
-from .module_helpers import no_damage
+from .module_helpers import no_damage_slot
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named, extract_value
@@ -567,17 +567,12 @@ ASSUMPTIONS = [
 ]
 
 
-def _hextech_capacitor(ctx: SlotCtx) -> dict[str, Any] | None:
-    """P: zero-damage row for Hextech Capacitor's MS + ghosting on swap."""
-    return no_damage(
-        ctx,
-        name="Hextech Capacitor",
-        reason=(
-            "Innate: gains ghosting and 30 bonus movement speed for 0.75s "
-            "whenever Jayce switches stances. Pure utility state — no "
-            "leveling row and no combat-damage interaction"
-        ),
-    )
+_hextech_capacitor = no_damage_slot(
+    "Innate: gains ghosting and 30 bonus movement speed for 0.75s "
+    "whenever Jayce switches stances. Pure utility state — no "
+    "leveling row and no combat-damage interaction",
+    name="Hextech Capacitor",
+)
 
 
 SLOTS = {

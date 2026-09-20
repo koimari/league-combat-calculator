@@ -9,23 +9,17 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, build_parser
 from .inputs import int_option
-from .module_helpers import no_damage, ranked_slot
+from .module_helpers import no_damage_slot, ranked_slot
 from .slot_cc import CC_PER_PART
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
 
-
-def _nimble_fighter(ctx: SlotCtx) -> dict[str, Any] | None:
-    return no_damage(
-        ctx,
-        name="Nimble Fighter",
-        reason=(
-            "Ghosting and incoming pre-mitigation damage reduction are defensive "
-            "state, not outgoing TDD."
-        ),
-        slot="P",
-    )
+_nimble_fighter = no_damage_slot(
+    "Ghosting and incoming pre-mitigation damage reduction are defensive "
+    "state, not outgoing TDD.",
+    name="Nimble Fighter",
+)
 
 
 @ranked_slot

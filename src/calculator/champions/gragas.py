@@ -11,7 +11,7 @@ from ..healing_helpers import ability_json
 from .engine import SlotCtx, build_parser
 from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat
-from .module_helpers import named_damage, no_damage, ranked_slot
+from .module_helpers import named_damage, no_damage_slot, ranked_slot
 from .slot_entries import damage_entry
 from .slot_extract import ability_name, extract_cooldown, extract_named
 from .source_receipts import load_champion_sources
@@ -30,13 +30,10 @@ _HAPPY_HOUR_SHARE = CachedSentence(
 )
 
 
-def _happy_hour(ctx: SlotCtx) -> dict[str, Any] | None:
-    return no_damage(
-        ctx,
-        name="Happy Hour",
-        reason="5.5% maximum-health heal after casting; no outgoing damage.",
-        slot="P",
-    )
+_happy_hour = no_damage_slot(
+    "5.5% maximum-health heal after casting; no outgoing damage.",
+    name="Happy Hour",
+)
 
 
 @ranked_slot
