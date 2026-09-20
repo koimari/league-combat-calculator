@@ -15,6 +15,11 @@ than failing, under a ceiling the test holds and that may only fall; moving it
 into ``FAILING`` is one edit once the ceiling reaches zero.  Prose citing a wiki
 URL or a game file for a number is evidence, and is never reported.
 
+A sixth, ``unsourced_constant``, reports a module-level numeric literal under
+``CONSTANTS_SCOPE`` whose provenance nothing states: a citation, a cached field
+name or a composition, either trailing the line or heading the unbroken run of
+assignments it sits in.  It reports under its own ceiling for the same reason.
+
 A comment run belongs to the function holding it, or — when it touches a ``def``
 — to the definition it introduces.  Inside a body the bound is the body; above
 the ``def`` it is the whole definition, header and docstring included, so moving
@@ -36,7 +41,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 TARGETS = ("src", "scripts")
+CONSTANTS_SCOPE = "src/calculator/champions/"
 FAILING = ("long_docstring", "long_comment", "history", "dead_banner")
+REPORTING = ("pointer", "unsourced_constant")
 SCOPES = (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)
 FUNCS = (ast.FunctionDef, ast.AsyncFunctionDef)
 
@@ -55,6 +62,15 @@ POINTER = re.compile(
     re.IGNORECASE,
 )
 BANNER = re.compile(r"^# -{5,}$")
+# Where a number comes from: a citation, a cached field name or a quoted cached
+# phrase, or a composition of two numbers.
+PROVENANCE = re.compile(
+    r"https?://|wiki|\.bin\.json|CommunityDragon|game file|\batoms?\b|binar"
+    r"|HARDCODED|SOURCES|\bsourced?\b|\bcach|data/|JSON"
+    r"|(?-i:[a-z]+[A-Z][a-zA-Z]*)|\"[^\"]+\""
+    r"|\d.*[-+*/×]\s*\d",
+    re.IGNORECASE,
+)
 
 
 def _span(nodes: list[ast.stmt]) -> int:
@@ -81,6 +97,62 @@ def _comment_blocks(source: str) -> list[tuple[int, list[str]]]:
         else:
             blocks.append((tok.start[0], [tok.string]))
     return blocks
+
+
+def _trailing_comments(source: str) -> dict[int, str]:
+    """Comments that follow code on their line, by line number."""
+    lines = iter(source.splitlines(keepends=True))
+    return {
+        tok.start[0]: tok.string
+        for tok in tokenize.generate_tokens(lambda: next(lines, ""))
+        if tok.type == tokenize.COMMENT and not tok.line.lstrip().startswith("#")
+    }
+
+
+def _is_number(node: ast.expr) -> bool:
+    """Whether this is a numeric literal, sign included."""
+    if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
+        return _is_number(node.operand)
+    value = node.value if isinstance(node, ast.Constant) else None
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _assignment_runs(tree: ast.Module) -> dict[int, int]:
+    """Each module-level assignment's line to the first line of its unbroken run.
+
+    A run is what one comment over it documents, so the note heading a block of
+    constants answers for every constant in the block.
+    """
+    heads: dict[int, int] = {}
+    previous: ast.stmt | None = None
+    for node in tree.body:
+        if not isinstance(node, (ast.Assign, ast.AnnAssign)):
+            previous = None
+            continue
+        abuts = previous is not None and previous.end_lineno + 1 == node.lineno
+        heads[node.lineno] = heads[previous.lineno] if abuts else node.lineno
+        previous = node
+    return heads
+
+
+def _unsourced_constants(
+    source: str, tree: ast.Module, blocks: list[tuple[int, list[str]]], where: str
+) -> list[str]:
+    """Module-level numbers whose provenance no comment beside them states."""
+    trailing = _trailing_comments(source)
+    over = {line + len(block): " ".join(block) for line, block in blocks}
+    runs = _assignment_runs(tree)
+    lines = source.splitlines()
+    found = []
+    for node in tree.body:
+        if not isinstance(node, (ast.Assign, ast.AnnAssign)) or node.value is None:
+            continue
+        if not _is_number(node.value):
+            continue
+        notes = (trailing.get(node.lineno, ""), over.get(runs[node.lineno], ""))
+        if not any(PROVENANCE.search(note) for note in notes):
+            found.append(f"{where}:{node.lineno}: {lines[node.lineno - 1].strip()}")
+    return found
 
 
 def _definition_spans(funcs: list[ast.stmt]) -> dict[int, int]:
@@ -139,8 +211,8 @@ def _cite(found: Mapping[str, list], where: str, line: int, text: str) -> None:
 
 
 def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str]]:
-    """Report the five findings over every ``.py`` file under ``TARGETS``."""
-    found: dict[str, list[str]] = {key: [] for key in (*FAILING, "pointer")}
+    """Report the six findings over every ``.py`` file under ``TARGETS``."""
+    found: dict[str, list[str]] = {key: [] for key in (*FAILING, *REPORTING)}
     paths = (
         p for t in TARGETS for p in (root / t).rglob("*.py") if p.name not in exclude
     )
@@ -166,6 +238,10 @@ def scan(root: Path = ROOT, exclude: tuple[str, ...] = ()) -> dict[str, list[str
                 found["long_comment"].append(f"{where}:{line}: {len(block)} lines")
         for line in _dead_banners(blocks, tree):
             found["dead_banner"].append(f"{where}:{line}: banner over nothing")
+        if where.startswith(CONSTANTS_SCOPE):
+            found["unsourced_constant"] += _unsourced_constants(
+                source, tree, blocks, where
+            )
     return found
 
 
