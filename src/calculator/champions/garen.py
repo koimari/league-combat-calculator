@@ -7,7 +7,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat
 from .module_helpers import named_damage, no_damage, ranked_slot
 from .slot_entries import damage_entry
@@ -121,19 +121,11 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Garen")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Garen self-healing events from its authored packet."""
     healing = []
-    p = _healing.ability_json(champion_data, "P")
-    p_level = int(champion_stat(champion_stats, "level"))
+    p = _healing.ability_json(ctx.champion_data, "P")
+    p_level = int(champion_stat(ctx.champion_stats, "level"))
     per_tick = 0.0
     for effect in p.get("effects", []):
         for leveling in effect.get("leveling", []):
@@ -146,7 +138,7 @@ def derive_self_healing(
             if not values:
                 continue
             per_tick = float(values[min(max(p_level, 1) - 1, len(values) - 1)]) / 100.0
-    duration = max(0.0, float(fight_duration_seconds or 0.0))
+    duration = max(0.0, float(ctx.fight_duration_seconds or 0.0))
     if per_tick > 0.0 and duration > 0.0:
         tick = 0.5
         sequence = 0

@@ -29,7 +29,7 @@ from ..binary_roots import data_value, spell_object
 from .armed_procs import cached_stack_terms
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
 from .packet_module import build_packet_module
 from .slot_extract import ability_name, find_named_leveling, sum_modifiers
@@ -196,23 +196,15 @@ ASSUMPTIONS = [
 MODULE_COVERAGE = coverage(no_damage="E")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Talon self-healing events from its authored packet."""
     healing = []
-    level = max(1, int(champion_stat(champion_stats, "level")))
+    level = max(1, int(champion_stat(ctx.champion_stats, "level")))
     heal = _healing.leveling_value(
-        _healing.ability_json(champion_data, "Q"), "Heal", level
+        _healing.ability_json(ctx.champion_data, "Q"), "Heal", level
     )
     for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
+        _healing.HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline
     ):
         event = payment.event
         _healing.heal_from_damage(healing, event, heal, "Noxian Diplomacy")

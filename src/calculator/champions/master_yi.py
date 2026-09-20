@@ -38,7 +38,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .module_helpers import buff_window_share, no_damage, ranked_slot, steroid_entry
 from .packet_module import build_packet_module
 from .slot_entries import ability_on_hit_entry
@@ -239,23 +239,19 @@ ASSUMPTIONS = [
 # Minimum/Maximum Total Heal == 8 x per-tick at every rank).  W deals no
 # enemy damage, so the W cast timeline is the sourced trigger — the heal
 # is paid on the channel's own tick schedule, not inferred from hits.
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Master Yi self-healing events from its authored packet."""
     healing = []
-    w_rank = _healing.parsed_rank(ability_damages, "W")
-    w_ability = _healing.ability_json(champion_data, "W")
-    min_tick = extract_named(w_ability, "Minimum Heal Per Tick", w_rank, champion_stats)
-    max_tick = extract_named(w_ability, "Maximum Heal Per Tick", w_rank, champion_stats)
+    w_rank = _healing.parsed_rank(ctx.ability_damages, "W")
+    w_ability = _healing.ability_json(ctx.champion_data, "W")
+    min_tick = extract_named(
+        w_ability, "Minimum Heal Per Tick", w_rank, ctx.champion_stats
+    )
+    max_tick = extract_named(
+        w_ability, "Maximum Heal Per Tick", w_rank, ctx.champion_stats
+    )
     if min_tick > 0.0:
-        for cast_time in _healing.cast_slot_times(cast_timeline, "W"):
+        for cast_time in _healing.cast_slot_times(ctx.cast_timeline, "W"):
             start = float(cast_time)
             healing.extend(
                 {

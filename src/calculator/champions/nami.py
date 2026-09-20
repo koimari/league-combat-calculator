@@ -39,7 +39,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from .contract_vocabulary import coverage
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat
 from .packet_module import build_packet_module
 from .slot_extract import extract_named
@@ -93,25 +93,17 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 MODULE_COVERAGE = coverage(no_damage="P")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Nami self-healing events from its authored packet."""
     healing = []
-    w_rank = _healing.parsed_rank(ability_damages, "W")
-    w_ability = _healing.ability_json(champion_data, "W")
-    base = extract_named(w_ability, "Heal", w_rank, champion_stats, {})
-    floor = extract_named(w_ability, "Minimum Heal", w_rank, champion_stats, {})
-    ap = champion_stat(champion_stats, "ability_power")
+    w_rank = _healing.parsed_rank(ctx.ability_damages, "W")
+    w_ability = _healing.ability_json(ctx.champion_data, "W")
+    base = extract_named(w_ability, "Heal", w_rank, ctx.champion_stats, {})
+    floor = extract_named(w_ability, "Minimum Heal", w_rank, ctx.champion_stats, {})
+    ap = champion_stat(ctx.champion_stats, "ability_power")
     amount = max(floor, base * (0.80 + 0.15 * ap / 100.0))
     for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
+        _healing.HealAnchor.CAST, "W", ctx.damage_events, ctx.cast_timeline
     ):
         event = payment.event
         _healing.heal_from_damage(

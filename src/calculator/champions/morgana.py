@@ -41,7 +41,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from ..healing_helpers import HealAnchor, heal_from_damage, payments
 from .engine import SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
 from .shared_mechanics import innate_zero_row
@@ -202,15 +202,7 @@ ASSUMPTIONS = [
 COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Soul Siphon pays 18% of every damaging ability hit.
 
     "heals herself for 18% of the post-mitigation damage dealt by her
@@ -225,7 +217,7 @@ def derive_self_healing(
     for payment in payments(
         HealAnchor.DAMAGING_HIT,
         lambda source: source in {"Q", "W", "R"},
-        damage_events,
+        ctx.damage_events,
     ):
         heal_from_damage(
             healing,

@@ -24,7 +24,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from .engine import SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .shared_mechanics import unreachable_innate
 from .slot_cc import CC_PER_PART
 from .slot_control import with_control
@@ -109,27 +109,19 @@ MODULE_CC = {"Q": "slow", "W": "root", "E": "none", "R": "slow", "P": CC_PER_PAR
 parse_abilities = build_parser(SLOTS, "Lissandra", cc_kinds=MODULE_CC)
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Lissandra self-healing events from its authored packet."""
     healing = []
     min_tick, max_tick = _healing.ranked_rows(
-        champion_data,
-        ability_damages,
-        champion_stats,
+        ctx.champion_data,
+        ctx.ability_damages,
+        ctx.champion_stats,
         "R",
         "Minimum Heal per Tick",
         "Maximum Heal per Tick",
     )
     for payment in _healing.payments(
-        _healing.HealAnchor.CAST_SCHEDULE, "R", damage_events, cast_timeline
+        _healing.HealAnchor.CAST_SCHEDULE, "R", ctx.damage_events, ctx.cast_timeline
     ):
         trigger = _healing.trigger_fields(payment.event)
         healing.extend(

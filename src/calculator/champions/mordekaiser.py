@@ -40,7 +40,7 @@ from ..binary_roots import (
     spell_object,
 )
 from .engine import ONHIT, SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .module_helpers import ability_cast_times
 from .packet_module import build_packet_module
 from .shared_mechanics import prose_numbers
@@ -288,15 +288,7 @@ ASSUMPTIONS = [
 # consumes — which is what the contract derives.
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Price Realm of Death's soul drain: one banishment, one heal.
 
     Mordekaiser "consumes the target's soul ..., healing himself for 10%
@@ -307,7 +299,7 @@ def derive_self_healing(
     the grey-health primitive's, not this rule's.
     """
     healing: list[dict[str, Any]] = []
-    realm = ability_payload(ability_damages, "R").get("self_heal_state")
+    realm = ability_payload(ctx.ability_damages, "R").get("self_heal_state")
     if isinstance(realm, dict):
         amount = float(realm.get("amount", 0.0) or 0.0)
         healing.extend(
@@ -318,7 +310,7 @@ def derive_self_healing(
                 "kind": "champion_ability",
                 "actor_wide": True,
             }
-            for cast_time in _healing.cast_slot_times(cast_timeline, "R")
+            for cast_time in _healing.cast_slot_times(ctx.cast_timeline, "R")
         )
     return healing
 

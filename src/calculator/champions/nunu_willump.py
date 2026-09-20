@@ -30,7 +30,7 @@ from ..healing_helpers import (
     trigger_fields,
 )
 from .engine import BUFF, SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .module_helpers import named_damage
 from .packet_module import build_packet_module
 from .slot_entries import STEROID_ZERO, damage_entry
@@ -152,15 +152,7 @@ ASSUMPTIONS = [
 # (P's own attack-speed steroid replaces the packet's zero-damage row).
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Price Consume's champion heal, re-read at the heal's own timestamp.
 
     "Willump takes a bite ... healing himself" for the sourced Base
@@ -169,12 +161,11 @@ def derive_self_healing(
     participant ledger evaluates when the heal lands rather than a number
     fixed at parse time.
     """
-    del fight_duration_seconds
     base = extract_named(
-        ability_json(champion_data, "Q"),
+        ability_json(ctx.champion_data, "Q"),
         "Base Champion Heal",
-        parsed_rank(ability_damages, "Q"),
-        champion_stats,
+        parsed_rank(ctx.ability_damages, "Q"),
+        ctx.champion_stats,
         {},
     )
 
@@ -196,7 +187,9 @@ def derive_self_healing(
             "kind": "champion_ability",
             **trigger_fields(payment.event),
         }
-        for payment in payments(HealAnchor.CAST, "Q", damage_events, cast_timeline)
+        for payment in payments(
+            HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline
+        )
     ]
 
 

@@ -6,7 +6,7 @@ from typing import Any
 
 from .. import healing_helpers as _healing
 from .engine import SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option
 from .module_helpers import level_row, named_damage, no_damage, ranked_slot
 from .slot_extract import ability_name, extract_named
@@ -148,26 +148,18 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Fiora")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Fiora self-healing events from its authored packet."""
     healing = []
-    p_level = int(champion_stat(champion_stats, "level"))
+    p_level = int(champion_stat(ctx.champion_stats, "level"))
     p_heal = extract_named(
-        _healing.ability_json(champion_data, "P"),
+        _healing.ability_json(ctx.champion_data, "P"),
         "Bonus Damage",
         p_level,
-        champion_stats,
+        ctx.champion_stats,
     )
     for event in _healing.attributed_events(
-        damage_events, lambda source, _event: source == "passive"
+        ctx.damage_events, lambda source, _event: source == "passive"
     ):
         _healing.heal_from_damage(healing, event, p_heal, "Duelist's Dance")
     return healing

@@ -54,7 +54,7 @@ from ..ability_atoms import ability_payload
 from ..ability_spec import DamageClass
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, ONHIT, SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .module_helpers import missing_hp_fraction, named_damage, ranked_slot
 from .packet_module import build_packet_module
 from .shared_mechanics import damage_reduction_window
@@ -329,21 +329,13 @@ ASSUMPTIONS = [
 # SLOTS — and the contract refuses a declaration that only restates it.
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Warwick self-healing events from its authored packet."""
     healing = []
-    q = _healing.ability_json(champion_data, "Q")
-    q_rank = _healing.parsed_rank(ability_damages, "Q")
-    q_ratio = extract_named(q, "Healing Percentage", q_rank, champion_stats, {})
-    for event in damage_events:
+    q = _healing.ability_json(ctx.champion_data, "Q")
+    q_rank = _healing.parsed_rank(ctx.ability_damages, "Q")
+    q_ratio = extract_named(q, "Healing Percentage", q_rank, ctx.champion_stats, {})
+    for event in ctx.damage_events:
         source = _healing.event_source(event)
         if source == "Q":
             _healing.heal_from_damage(
@@ -370,7 +362,7 @@ def derive_self_healing(
     # payloads through this function — an explicit membership check keeps
     # the distinction honest: absence means "not Warwick's P payload",
     # never a silently-defaulted number.
-    _p_payload = ability_payload(ability_damages, "passive")
+    _p_payload = ability_payload(ctx.ability_damages, "passive")
     if "self_heal_share_of_damage" in _p_payload:
         hunger_share = float(_p_payload["self_heal_share_of_damage"])
     else:
@@ -379,7 +371,7 @@ def derive_self_healing(
         for payment in _healing.payments(
             _healing.HealAnchor.DAMAGING_HIT,
             "on_hit_ability_passive",
-            damage_events,
+            ctx.damage_events,
         ):
             event = payment.event
             _healing.heal_from_damage(

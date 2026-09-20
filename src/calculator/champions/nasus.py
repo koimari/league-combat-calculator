@@ -42,7 +42,7 @@ from ..control_spec import ControlScope
 from ..healing_helpers import HealAnchor, heal_from_damage, payments
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
 from .module_helpers import ranked_slot
 from .shared_mechanics import innate_zero_row, ticked_channel
@@ -295,15 +295,7 @@ COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
 _SOUL_EATER_BREAKPOINTS = ((13, 0.24), (7, 0.18), (1, 0.12))
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Price Soul Eater's lifesteal off every physical basic-attack hit.
 
     The empowered swing counts.  Siphoning Strike does not replace a basic
@@ -315,20 +307,21 @@ def derive_self_healing(
     rows partition the swings, so reading both is exactly one payment per
     swing, never two.
     """
-    del champion_data, cast_timeline, fight_duration_seconds
     healing: list[dict[str, Any]] = []
-    level = max(1, int(champion_stat(champion_stats, "level")))
+    level = max(1, int(champion_stat(ctx.champion_stats, "level")))
     ratio = next(
         share for threshold, share in _SOUL_EATER_BREAKPOINTS if level >= threshold
     )
-    empowered = bool(ability_payload(ability_damages, "Q").get("empowers_next_auto"))
+    empowered = bool(
+        ability_payload(ctx.ability_damages, "Q").get("empowers_next_auto")
+    )
 
     def is_swing(source: str) -> bool:
         if source == "auto_attacks" or source.startswith("on_hit_"):
             return True
         return empowered and source == "Q"
 
-    for payment in payments(HealAnchor.DAMAGING_HIT, is_swing, damage_events):
+    for payment in payments(HealAnchor.DAMAGING_HIT, is_swing, ctx.damage_events):
         event = payment.event
         if event.get("damage_type") != "physical":
             continue

@@ -70,7 +70,7 @@ from ..healing_helpers import (
 )
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat
 from .packet_module import build_packet_module, first_plus_repeats_parser
 from .shared_mechanics import ranked_packet_slot
@@ -239,15 +239,7 @@ MODULE_COVERAGE = coverage(no_damage="W")
 COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Final Chapter's five waves and Feline Friendship's on-hit heal.
 
     "Heal per Hit" x5 == the cached "Total Heal" row; the waves land on the
@@ -262,12 +254,12 @@ def derive_self_healing(
     ``affectedByCdr`` false, so ability haste never shortens it).
     """
     healing: list[dict] = []
-    r_rank = parsed_rank(ability_damages, "R")
+    r_rank = parsed_rank(ctx.ability_damages, "R")
     per_wave = extract_named(
-        ability_json(champion_data, "R"), "Heal per Hit", r_rank, champion_stats
+        ability_json(ctx.champion_data, "R"), "Heal per Hit", r_rank, ctx.champion_stats
     )
     if per_wave > 0.0:
-        for cast in cast_timeline or []:
+        for cast in ctx.cast_timeline or []:
             if cast.get("slot") != "R":
                 continue
             start = float(cast.get("time", 0.0))
@@ -282,7 +274,9 @@ def derive_self_healing(
                 for index in range(5)
             )
     healing.extend(
-        _feline_friendship_heals(champion_data, champion_stats, damage_events)
+        _feline_friendship_heals(
+            ctx.champion_data, ctx.champion_stats, ctx.damage_events
+        )
     )
     return healing
 

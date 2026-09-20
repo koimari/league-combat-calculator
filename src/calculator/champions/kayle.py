@@ -12,7 +12,7 @@ from typing import Any
 
 from ..healing_helpers import ability_json, cast_slot_times, parsed_rank
 from .engine import SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option
 from .module_helpers import (
     REVIEWED_MODULE_ASSUMPTIONS,
@@ -117,25 +117,16 @@ _ON_HIT_SPECS: dict[str, dict] = {
 parse_abilities = with_item_on_hit_specs(parse_abilities, _ON_HIT_SPECS)
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Price Celestial Blessing's heal: one sourced Heal row per W cast.
 
     "Kayle blesses herself and the target allied champion, healing them"
     — the heal is paid on the cast, not on damage, so it rides the cast
     timeline and carries ``actor_wide`` for the ally copy.
     """
-    del damage_events, fight_duration_seconds
-    w_rank = parsed_rank(ability_damages, "W")
+    w_rank = parsed_rank(ctx.ability_damages, "W")
     w_heal = extract_named(
-        ability_json(champion_data, "W"), "Heal", w_rank, champion_stats
+        ability_json(ctx.champion_data, "W"), "Heal", w_rank, ctx.champion_stats
     )
     return [
         {
@@ -145,7 +136,7 @@ def derive_self_healing(
             "kind": "champion_ability",
             "actor_wide": True,
         }
-        for cast_time in cast_slot_times(cast_timeline, "W")
+        for cast_time in cast_slot_times(ctx.cast_timeline, "W")
     ]
 
 

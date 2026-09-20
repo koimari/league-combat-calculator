@@ -36,7 +36,7 @@ from .. import healing_helpers as _healing
 from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
 from .engine import SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import int_option
 from .module_helpers import ranked_slot, typed_damage
 from .packet_module import build_packet_module
@@ -201,15 +201,7 @@ ASSUMPTIONS = [
 # is what the contract derives.
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Rek'Sai self-healing events from its authored packet.
 
     Fury of the Xer'Sai (P): "When Rek'Sai becomes Burrowed, she consumes
@@ -220,8 +212,8 @@ def derive_self_healing(
     is paid there.
     """
     healing: list[dict[str, Any]] = []
-    burrow = ability_payload(ability_damages, "passive").get("self_heal_state")
-    w_casts = _healing.cast_slot_times(cast_timeline, "W")
+    burrow = ability_payload(ctx.ability_damages, "passive").get("self_heal_state")
+    w_casts = _healing.cast_slot_times(ctx.cast_timeline, "W")
     if isinstance(burrow, dict) and w_casts:
         amount = float(burrow.get("amount", 0.0) or 0.0)
         if amount > 0.0:

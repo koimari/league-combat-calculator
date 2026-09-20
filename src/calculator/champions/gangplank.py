@@ -10,7 +10,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, data_value_at_rank, spell_object
 from .charge_cadence import ChargeRule
 from .engine import SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, int_option
 from .module_helpers import named_damage, no_damage, ranked_slot
 from .slot_entries import damage_entry
@@ -307,24 +307,16 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Gangplank")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Gangplank self-healing events from its authored packet."""
     healing = []
-    w = _healing.ability_json(champion_data, "W")
-    w_rank = _healing.parsed_rank(ability_damages, "W")
-    w_flat = extract_named(w, "Heal", w_rank, champion_stats)
+    w = _healing.ability_json(ctx.champion_data, "W")
+    w_rank = _healing.parsed_rank(ctx.ability_damages, "W")
+    w_flat = extract_named(w, "Heal", w_rank, ctx.champion_stats)
     remove_scurvy_heal = _healing.flat_plus_missing_heal(
         w_flat, _healing.leveling_ratio(w, "Heal", "missing health", w_rank)
     )
-    for cast in cast_timeline or []:
+    for cast in ctx.cast_timeline or []:
         if cast.get("slot") != "W":
             continue
         healing.append(

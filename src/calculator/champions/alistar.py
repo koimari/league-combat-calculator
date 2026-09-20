@@ -53,7 +53,7 @@ from ..ability_atoms import ability_payload
 from ..ability_spec import DamageClass, DamagePart
 from ..healing_helpers import HealAnchor, ability_json, payments, trigger_fields
 from .engine import SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import ranked_slot
 from .shared_mechanics import damage_reduction_window
@@ -330,15 +330,7 @@ parse_abilities = build_parser(SLOTS, "Alistar", cc_kinds=MODULE_CC)
 SOURCES = load_champion_sources("Alistar")
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Price Triumphant Roar: 5% maximum health per completed 7-stack set.
 
     Both numbers are read from the cached P prose ("At 7 stacks, Alistar
@@ -351,11 +343,10 @@ def derive_self_healing(
     all seven at once, but a 1v1 kill ends the fight before any heal
     receipt can apply.
     """
-    del fight_duration_seconds
     healing: list[dict[str, Any]] = []
     p_text = " ".join(
         effect.get("description", "")
-        for effect in ability_json(champion_data, "P").get("effects", [])
+        for effect in ability_json(ctx.champion_data, "P").get("effects", [])
     )
     stack_match = re.search(r"At\s+(\d+)\s+stacks", p_text, flags=re.IGNORECASE)
     stack_cap = int(stack_match.group(1)) if stack_match else 0
@@ -368,11 +359,11 @@ def derive_self_healing(
     )
     self_ratio = float(self_match.group(1)) / 100.0 if self_match else 0.0
     casts = sorted(
-        payments(HealAnchor.CAST, "Q", damage_events, cast_timeline)
-        + payments(HealAnchor.CAST, "W", damage_events, cast_timeline),
+        payments(HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline)
+        + payments(HealAnchor.CAST, "W", ctx.damage_events, ctx.cast_timeline),
         key=lambda payment: float(payment.event.get("time", 0.0)),
     )
-    carried = ability_payload(ability_damages, "passive").get("self_heal_state")
+    carried = ability_payload(ctx.ability_damages, "passive").get("self_heal_state")
     qw_seen = int(carried.get("stacks", 0) or 0) if isinstance(carried, dict) else 0
     for payment in casts:
         event = payment.event
@@ -381,7 +372,7 @@ def derive_self_healing(
             healing.append(
                 {
                     "time": float(event.get("time", 0.0)),
-                    "amount": self_ratio * champion_stat(champion_stats, "health"),
+                    "amount": self_ratio * champion_stat(ctx.champion_stats, "health"),
                     "source": "Triumphant Roar",
                     "kind": "champion_passive",
                     **trigger_fields(event),

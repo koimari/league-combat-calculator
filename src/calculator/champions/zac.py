@@ -31,7 +31,7 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, SlotParser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat
 from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module, first_plus_repeats_parser
@@ -229,15 +229,7 @@ ASSUMPTIONS = [
 ]
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Zac self-healing events from its authored packet.
 
     The chunk pays a percentage of Zac's own MAXIMUM health, which the
@@ -247,10 +239,10 @@ def derive_self_healing(
     none, while the one-pair receipt cannot evaluate one.
     """
     healing = []
-    p = _healing.ability_json(champion_data, "P")
-    level = int(champion_stat(champion_stats, "level"))
-    chunk_pct = extract_named(p, "Max Health Damage", level, champion_stats, {})
-    amount = max(0.0, champion_stat(champion_stats, "health") * chunk_pct / 100.0)
+    p = _healing.ability_json(ctx.champion_data, "P")
+    level = int(champion_stat(ctx.champion_stats, "level"))
+    chunk_pct = extract_named(p, "Max Health Damage", level, ctx.champion_stats, {})
+    amount = max(0.0, champion_stat(ctx.champion_stats, "health") * chunk_pct / 100.0)
 
     healing.extend(
         {
@@ -261,7 +253,7 @@ def derive_self_healing(
             **_healing.trigger_fields(event),
         }
         for event in _healing.attributed_events(
-            damage_events, lambda source, _event: source in {"Q", "W", "E", "R"}
+            ctx.damage_events, lambda source, _event: source in {"Q", "W", "E", "R"}
         )
     )
     return healing

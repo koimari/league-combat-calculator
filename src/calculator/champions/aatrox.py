@@ -53,7 +53,7 @@ from ..healing_helpers import (
     trigger_fields,
 )
 from .engine import ONHIT, SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import no_damage_slot, ranked_slot
 from .slot_cc import CC_PER_PART
@@ -310,7 +310,6 @@ MODULE_CC: dict[str, str] = {
 parse_abilities = build_parser(SLOTS, "Aatrox", cc_kinds=MODULE_CC)
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
 def _is_persistent(event: dict[str, Any]) -> bool:
     """Return the source-certified persistent/periodic damage boundary.
 
@@ -324,16 +323,8 @@ def _is_persistent(event: dict[str, Any]) -> bool:
     )
 
 
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Price Deathbringer Stance and Umbral Dash healing for Aatrox."""
-    del cast_timeline, fight_duration_seconds
     healing: list[dict[str, Any]] = []
     # Both rules pay a share of what a hit dealt — Deathbringer Stance
     # "heals for a percentage of the damage dealt" and Umbral Dash the same
@@ -341,11 +332,11 @@ def derive_self_healing(
     passive_payments = payments(
         HealAnchor.DAMAGING_HIT,
         lambda source: "passive" in source.lower(),
-        damage_events,
+        ctx.damage_events,
     )
     e_description = " ".join(
         effect.get("description", "")
-        for effect in ability_json(champion_data, "E").get("effects", [])
+        for effect in ability_json(ctx.champion_data, "E").get("effects", [])
     )
     ratio_match = re.search(
         r"heals for\s+(\d+(?:\.\d+)?)%\s*\(\+\s*(\d+(?:\.\d+)?)%\s*per\s*100\s*bonus health",
@@ -355,11 +346,11 @@ def derive_self_healing(
     base_ratio = float(ratio_match.group(1)) / 100.0 if ratio_match else 0.0
     per_100 = float(ratio_match.group(2)) / 100.0 if ratio_match else 0.0
     e_ratio = base_ratio + per_100 * (
-        float(champion_stat(champion_stats, "bonus_health")) / 100.0
+        float(champion_stat(ctx.champion_stats, "bonus_health")) / 100.0
     )
-    r_rank = int(ability_field(ability_payload(ability_damages, "R"), "rank"))
+    r_rank = int(ability_field(ability_payload(ctx.ability_damages, "R"), "rank"))
     r_inc = leveling_value(
-        ability_json(champion_data, "R"), "Increased Healing", r_rank
+        ability_json(ctx.champion_data, "R"), "Increased Healing", r_rank
     )
     healing_amp = 1.0 + r_inc / 100.0 if r_rank > 0 else 1.0
 
@@ -378,7 +369,7 @@ def derive_self_healing(
             )
 
     for payment in payments(
-        HealAnchor.DAMAGING_HIT, lambda _source: True, damage_events
+        HealAnchor.DAMAGING_HIT, lambda _source: True, ctx.damage_events
     ):
         event = payment.event
         if _is_persistent(event):

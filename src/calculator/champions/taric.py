@@ -48,7 +48,7 @@ from typing import Any
 from ..healing_helpers import ability_json, parsed_rank
 from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat
 from .packet_module import build_packet_module
 from .slot_control import with_control
@@ -259,7 +259,6 @@ ASSUMPTIONS = [
 COVERAGE_CHANNELS = {"Q": ("self_healing_rule",)}
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
 def _starlights_touch(
     q_ability: dict[str, Any],
     q_rank: int,
@@ -321,14 +320,7 @@ def _starlights_touch(
     return max(0.0, heal), max(0, round(charges))
 
 
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Starlight's Touch pays its per-charge heal on each Q cast.
 
     This rule is the one ledger owner of the Q heal.  The support
@@ -340,12 +332,12 @@ def derive_self_healing(
     """
     healing: list[dict] = []
     heal, charges = _starlights_touch(
-        ability_json(champion_data, "Q"),
-        parsed_rank(ability_damages, "Q"),
-        champion_stats,
+        ability_json(ctx.champion_data, "Q"),
+        parsed_rank(ctx.ability_damages, "Q"),
+        ctx.champion_stats,
     )
     if heal > 0.0:
-        for cast_index, cast in enumerate(cast_timeline or []):
+        for cast_index, cast in enumerate(ctx.cast_timeline or []):
             if cast.get("slot") != "Q":
                 continue
             healing.append(

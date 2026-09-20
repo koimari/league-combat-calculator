@@ -34,7 +34,7 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option
 from .module_helpers import ranked_slot
 from .slot_control import park_control_interval
@@ -182,21 +182,13 @@ parse_abilities = build_parser(SLOTS, "Soraka", cc_kinds=MODULE_CC)
 MODULE_COVERAGE = coverage(no_damage="P")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Soraka self-healing events from its authored packet."""
     healing = []
     per_tick, total = _healing.ranked_rows(
-        champion_data,
-        ability_damages,
-        champion_stats,
+        ctx.champion_data,
+        ctx.ability_damages,
+        ctx.champion_stats,
         "Q",
         "Heal per Tick",
         "Total Heal",
@@ -206,7 +198,7 @@ def derive_self_healing(
         if per_tick > 0.0 and total > 0.0
         else 0
     )
-    for event in damage_events:
+    for event in ctx.damage_events:
         if _healing.event_source(event) != "Q" or tick_count <= 0:
             continue
         trigger = _healing.trigger_fields(event)

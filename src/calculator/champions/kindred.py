@@ -56,7 +56,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import no_damage, ranked_slot, typed_damage
 from .shared_mechanics import capped_option
@@ -539,7 +539,6 @@ SOURCES = load_champion_sources("Kindred")
 MODULE_COVERAGE = coverage(no_damage="PR")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def _vigor_heal_events(
     counter: dict[str, Any] | None, damage_events: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
@@ -558,21 +557,14 @@ def _vigor_heal_events(
     return carried if counter["repeats"] else carried[:1]
 
 
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Kindred self-healing events from its authored packet."""
     healing = []
-    r = _healing.ability_json(champion_data, "R")
-    r_rank = _healing.parsed_rank(ability_damages, "R")
-    r_heal = extract_named(r, "Heal", r_rank, champion_stats)
-    duration = max(0.0, float(fight_duration_seconds or 0.0))
-    for cast_time in _healing.cast_slot_times(cast_timeline, "R"):
+    r = _healing.ability_json(ctx.champion_data, "R")
+    r_rank = _healing.parsed_rank(ctx.ability_damages, "R")
+    r_heal = extract_named(r, "Heal", r_rank, ctx.champion_stats)
+    duration = max(0.0, float(ctx.fight_duration_seconds or 0.0))
+    for cast_time in _healing.cast_slot_times(ctx.cast_timeline, "R"):
         heal_time = cast_time + 4.0
         if heal_time > duration + 1e-9:
             continue
@@ -592,10 +584,14 @@ def derive_self_healing(
     # 100 stacks; the heal pays on the first basic-attack damage event
     # (the deterministic next auto) and is naturally zero at full
     # health (the wiki says it is not triggered there).
-    if "W_vigor" in ability_damages:
-        level = int(champion_stat(champion_stats, "level"))
+    if "W_vigor" in ctx.ability_damages:
+        level = int(champion_stat(ctx.champion_stats, "level"))
         heal = extract_named(
-            _healing.ability_json(champion_data, "W"), "Heal", level, champion_stats, {}
+            _healing.ability_json(ctx.champion_data, "W"),
+            "Heal",
+            level,
+            ctx.champion_stats,
+            {},
         )
         # A stated level at the cap says the bar is full right now, so the
         # first auto heals once. A derived one has to FILL it: the cached
@@ -603,8 +599,8 @@ def derive_self_healing(
         # spends them, and the bar refills behind it. A stated level below
         # the cap carries no counter at all and heals nothing, which is the
         # reading the row's presence alone never gave.
-        counter = ability_damages["W_vigor"].get("heal_requires_stacks")
-        for event in _vigor_heal_events(counter, damage_events):
+        counter = ctx.ability_damages["W_vigor"].get("heal_requires_stacks")
+        for event in _vigor_heal_events(counter, ctx.damage_events):
             healing.append(
                 {
                     "time": float(event.get("time", 0.0)),

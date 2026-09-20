@@ -34,7 +34,7 @@ from typing import Any
 from ..healing_helpers import ability_json, parsed_rank
 from .contract_vocabulary import coverage
 from .engine import ONHIT, SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import int_option
 from .module_helpers import buff_window_share
 from .packet_module import build_packet_module
@@ -228,15 +228,7 @@ ASSUMPTIONS = [
 MODULE_COVERAGE = coverage(no_damage="E")
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Price Aria of Perseverance: the sourced Heal row, once per W cast.
 
     The heal is paid on the cast — "heals herself and sends out a tone to
@@ -244,12 +236,11 @@ def derive_self_healing(
     timeline and declares its own fan-out scope; the roster's selected
     teammate stands in for the most wounded ally.
     """
-    del damage_events, fight_duration_seconds
     heal = extract_named(
-        ability_json(champion_data, "W"),
+        ability_json(ctx.champion_data, "W"),
         "Heal",
-        parsed_rank(ability_damages, "W"),
-        champion_stats,
+        parsed_rank(ctx.ability_damages, "W"),
+        ctx.champion_stats,
     )
     if heal <= 0.0:
         return []
@@ -263,7 +254,7 @@ def derive_self_healing(
             "target_scope": "self_and_one_teammate",
             "_event_id": f"sona:w:{cast_index}",
         }
-        for cast_index, cast in enumerate(cast_timeline or [])
+        for cast_index, cast in enumerate(ctx.cast_timeline or [])
         if cast.get("slot") == "W"
     ]
 

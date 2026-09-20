@@ -62,7 +62,7 @@ from ..ability_prose import CachedSentence
 from ..binary_roots import calculation_coefficients, spell_object
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import int_option
 from .packet_module import build_packet_module
 from .slot_extract import ability_name
@@ -283,27 +283,19 @@ ASSUMPTIONS = [
 MODULE_COVERAGE = coverage(out_of_scope="R")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Sylas self-healing events from its authored packet."""
     healing = []
     min_heal, max_heal = _healing.ranked_rows(
-        champion_data,
-        ability_damages,
-        champion_stats,
+        ctx.champion_data,
+        ctx.ability_damages,
+        ctx.champion_stats,
         "W",
         "Minimum Heal",
         "Maximum Heal",
     )
     for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
+        _healing.HealAnchor.CAST, "W", ctx.damage_events, ctx.cast_timeline
     ):
         event = payment.event
         if float(event.get("damage", 0.0)) <= 0.0:

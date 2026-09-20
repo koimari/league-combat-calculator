@@ -32,7 +32,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, float_option
 from .module_helpers import amp_slot, ranked_slot
 from .packet_module import build_packet_module, repeat_damage_parser
@@ -408,23 +408,18 @@ ASSUMPTIONS = [
 MODULE_COVERAGE = coverage(no_damage="P")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Vladimir self-healing events from its authored packet."""
     healing = []
-    q_rank = _healing.parsed_rank(ability_damages, "Q")
+    q_rank = _healing.parsed_rank(ctx.ability_damages, "Q")
     q_heal = extract_named(
-        _healing.ability_json(champion_data, "Q"), "Heal", q_rank, champion_stats
+        _healing.ability_json(ctx.champion_data, "Q"),
+        "Heal",
+        q_rank,
+        ctx.champion_stats,
     )
     for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
+        _healing.HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline
     ):
         event = payment.event
         _healing.heal_from_damage(
@@ -434,7 +429,7 @@ def derive_self_healing(
     # (patch 12.13: "Healing increased to 30% of damage dealt from 15%";
     # 18% against minions — champion targets assumed here).
     for event in _healing.attributed_events(
-        damage_events, lambda source, _event: source == "W"
+        ctx.damage_events, lambda source, _event: source == "W"
     ):
         # Pre-mitigation damage per the wiki ("30% of the pre-mitigation
         # damage dealt"); the engine exposes it as event["raw_damage"].
@@ -448,18 +443,21 @@ def derive_self_healing(
     # coupled participant ledger re-prices later roster targets so the
     # first infected champion pays the full heal and each additional
     # champion pays the reduced heal.
-    r_rank = _healing.parsed_rank(ability_damages, "R")
+    r_rank = _healing.parsed_rank(ctx.ability_damages, "R")
     r_heal = extract_named(
-        _healing.ability_json(champion_data, "R"), "Heal", r_rank, champion_stats
+        _healing.ability_json(ctx.champion_data, "R"),
+        "Heal",
+        r_rank,
+        ctx.champion_stats,
     )
     r_reduced = extract_named(
-        _healing.ability_json(champion_data, "R"),
+        _healing.ability_json(ctx.champion_data, "R"),
         "Reduced Heal",
         r_rank,
-        champion_stats,
+        ctx.champion_stats,
     )
     for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "R", damage_events, cast_timeline
+        _healing.HealAnchor.CAST, "R", ctx.damage_events, ctx.cast_timeline
     ):
         event = payment.event
         _healing.heal_from_damage(

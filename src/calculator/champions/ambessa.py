@@ -31,7 +31,7 @@ from .. import healing_helpers as _healing
 from ..ability_atoms import ability_field, ability_payload
 from ..binary_roots import data_value, spell_object
 from .engine import SlotCtx, SlotParser, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
 from .module_helpers import delayed
 from .shared_mechanics import per_level_row
@@ -331,20 +331,12 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Ambessa")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Ambessa self-healing events from its authored packet."""
     healing = []
-    r_rank = int(ability_field(ability_payload(ability_damages, "R"), "rank"))
+    r_rank = int(ability_field(ability_payload(ctx.ability_damages, "R"), "rank"))
     ratio = _healing.leveling_value(
-        _healing.ability_json(champion_data, "R"), "Healing Percentage", r_rank
+        _healing.ability_json(ctx.champion_data, "R"), "Healing Percentage", r_rank
     )
     # Public Execution heals from post-mitigation active ability damage: a
     # share of each hit's own damage, so one payment per hit that dealt some.
@@ -352,7 +344,7 @@ def derive_self_healing(
         for payment in _healing.payments(
             _healing.HealAnchor.DAMAGING_HIT,
             lambda source: source in {"Q", "Q2", "W", "E", "R"},
-            damage_events,
+            ctx.damage_events,
         ):
             event = payment.event
             amount = max(0.0, float(event.get("damage", 0.0))) * ratio / 100.0

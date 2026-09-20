@@ -8,7 +8,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..healing_helpers import ability_json
 from .engine import SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat
 from .module_helpers import named_damage, no_damage, ranked_slot
 from .slot_entries import damage_entry
@@ -104,15 +104,7 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Gragas")
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Happy Hour pays 5.5% of maximum health on each ability CAST.
 
     Cached Wiki text: "Periodically, after casting an ability, Gragas heals
@@ -123,7 +115,7 @@ def derive_self_healing(
     healing: list[dict] = []
     p_text = " ".join(
         effect.get("description", "")
-        for effect in ability_json(champion_data, "P").get("effects", [])
+        for effect in ability_json(ctx.champion_data, "P").get("effects", [])
     )
     ratio_match = re.search(
         r"heals himself for\s+(\d+(?:\.\d+)?)%\s+of his maximum health",
@@ -131,9 +123,9 @@ def derive_self_healing(
         flags=re.IGNORECASE,
     )
     ratio = float(ratio_match.group(1)) / 100.0 if ratio_match else 0.0
-    per_cast = ratio * champion_stat(champion_stats, "health")
+    per_cast = ratio * champion_stat(ctx.champion_stats, "health")
     if per_cast > 0.0:
-        for cast in cast_timeline or []:
+        for cast in ctx.cast_timeline or []:
             slot = cast.get("slot")
             if slot not in {"Q", "W", "E", "R"}:
                 continue

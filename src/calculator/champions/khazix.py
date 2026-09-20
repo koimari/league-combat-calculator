@@ -108,12 +108,14 @@ MODULE_COVERAGE = coverage(no_damage="R")
 
 
 SELF_HEALING_RULE = self_healing_rule("Kha'Zix")(
-    lambda data, stats, damages, events, casts=None, *_: _healing.cast_heals(
+    lambda ctx: _healing.cast_heals(
         "W",
         "Void Spike",
-        events,
-        casts,
-        amount=_healing.ranked_rows(data, damages, stats, "W", "Heal")[0],
+        ctx.damage_events,
+        ctx.cast_timeline,
+        amount=_healing.ranked_rows(
+            ctx.champion_data, ctx.ability_damages, ctx.champion_stats, "W", "Heal"
+        )[0],
         link_to_damage=False,
     )
 )

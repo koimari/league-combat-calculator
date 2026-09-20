@@ -40,7 +40,7 @@ from ..healing_helpers import (
 )
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .packet_module import build_packet_module
 from .stat_grants import with_attack_speed_window
 
@@ -161,15 +161,7 @@ OPTIONS.append(
 MODULE_COVERAGE = coverage(no_damage="PR")
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Primal Surge pays a missing-health-scaled heal on each E CAST.
 
     Wiki "Minimum Heal" / "Maximum Heal": the heal triggers on the cast
@@ -178,9 +170,9 @@ def derive_self_healing(
     """
     healing: list[dict] = []
     min_heal, max_heal = ranked_rows(
-        champion_data,
-        ability_damages,
-        champion_stats,
+        ctx.champion_data,
+        ctx.ability_damages,
+        ctx.champion_stats,
         "E",
         "Minimum Heal",
         "Maximum Heal",
@@ -194,7 +186,9 @@ def derive_self_healing(
             "kind": "champion_ability",
             **trigger_fields(payment.event),
         }
-        for payment in payments(HealAnchor.CAST, "E", damage_events, cast_timeline)
+        for payment in payments(
+            HealAnchor.CAST, "E", ctx.damage_events, ctx.cast_timeline
+        )
     )
     return healing
 

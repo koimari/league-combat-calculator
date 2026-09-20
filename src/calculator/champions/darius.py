@@ -38,7 +38,7 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, int_option
 from .module_helpers import ranked_slot
 from .slot_cc import CC_PER_PART
@@ -520,15 +520,7 @@ parse_abilities = build_parser(SLOTS, "Darius", cc_kinds=MODULE_CC)
 SOURCES = load_champion_sources("Darius")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Darius self-healing events from its authored packet.
 
     Decimate's outer blade heals for 17% of missing health per enemy
@@ -539,7 +531,7 @@ def derive_self_healing(
     """
     healing = []
     for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
+        _healing.HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline
     ):
         event = payment.event
         trigger_time = float(event.get("time", 0.0))

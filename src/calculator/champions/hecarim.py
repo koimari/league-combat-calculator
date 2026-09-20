@@ -11,7 +11,7 @@ from ..ability_prose import CachedSentence
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import float_option, int_option
 from .module_helpers import between_rows, ranked_slot
 from .slot_entries import damage_entry
@@ -313,15 +313,7 @@ _SPIRIT_OF_DREAD_SHARE = data_value(_HECARIM_W_SPELL, "DamageLeechPerc") / 100.0
 _SPIRIT_OF_DREAD_WINDOW_SECONDS = data_value(_HECARIM_W_SPELL, "BuffDuration")
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Hecarim self-healing events from its authored packet.
 
     Window membership comes from the engine's own cast timeline, and every
@@ -330,12 +322,12 @@ def derive_self_healing(
     healing: list[dict[str, Any]] = []
     w_casts = [
         float(cast.get("time", 0.0))
-        for cast in (cast_timeline or [])
+        for cast in (ctx.cast_timeline or [])
         if cast.get("slot") == "W"
     ]
     if w_casts:
         for payment in _healing.payments(
-            _healing.HealAnchor.DAMAGING_HIT, lambda _source: True, damage_events
+            _healing.HealAnchor.DAMAGING_HIT, lambda _source: True, ctx.damage_events
         ):
             event = payment.event
             event_time = float(event.get("time", 0.0))

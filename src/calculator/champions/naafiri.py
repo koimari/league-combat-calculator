@@ -46,7 +46,7 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option
 from .module_helpers import buff_window_share, ranked_slot
 from .packet_module import build_packet_module
@@ -430,20 +430,15 @@ ASSUMPTIONS = [
 # what the contract derives from SLOTS.
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Naafiri self-healing events from its authored packet."""
     healing = []
-    q_rank = _healing.parsed_rank(ability_damages, "Q")
+    q_rank = _healing.parsed_rank(ctx.ability_damages, "Q")
     q_heal = extract_named(
-        _healing.ability_json(champion_data, "Q"), "Heal", q_rank, champion_stats
+        _healing.ability_json(ctx.champion_data, "Q"),
+        "Heal",
+        q_rank,
+        ctx.champion_stats,
     )
     # One heal per Q cast: the module emits the initial hit at the cast
     # boundary, then the bleed ticks and the recast share later
@@ -452,7 +447,7 @@ def derive_self_healing(
     # time to event time exactly drops a cast whose published time the
     # engine rounded, so the anchor is resolved by ``HealAnchor.CAST``.
     for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
+        _healing.HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline
     ):
         _healing.heal_from_damage(
             healing,

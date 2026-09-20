@@ -28,7 +28,7 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import ranked_slot
 from .slot_extract import (
@@ -195,24 +195,19 @@ parse_abilities = build_parser(SLOTS, "Ahri", cc_kinds=MODULE_CC)
 SOURCES = load_champion_sources("Ahri")
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Ahri self-healing events from its authored packet."""
     healing = []
-    if "passive" in ability_damages:
+    if "passive" in ctx.ability_damages:
         # The module emits the P receipt only at 9+ fragments.
-        level = int(champion_stat(champion_stats, "level"))
+        level = int(champion_stat(ctx.champion_stats, "level"))
         heal = extract_named(
-            _healing.ability_json(champion_data, "P"), "Heal", level, champion_stats
+            _healing.ability_json(ctx.champion_data, "P"),
+            "Heal",
+            level,
+            ctx.champion_stats,
         )
-        for event in damage_events:
+        for event in ctx.damage_events:
             source = _healing.event_source(event)
             if source not in {"Q", "W", "E", "R"}:
                 continue

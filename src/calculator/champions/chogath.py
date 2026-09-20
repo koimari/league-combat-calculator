@@ -35,7 +35,7 @@ from .. import healing_helpers as _healing
 from ..ability_atoms import ability_payload
 from ..ability_spec import DamagePart
 from .engine import BUFF, SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import int_option
 from .module_helpers import delayed_damage, ranked_slot
 from .slot_control import with_control
@@ -275,15 +275,7 @@ parse_abilities = build_parser(SLOTS, "Cho'Gath", cc_kinds=MODULE_CC)
 SOURCES = load_champion_sources("Cho'Gath")
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Price Carnivore: one heal per kill Cho'Gath's user declares.
 
     "Whenever Cho'Gath kills an enemy, it heals for 18 : 52 (based on
@@ -293,7 +285,7 @@ def derive_self_healing(
     damaging hits.
     """
     healing: list[dict[str, Any]] = []
-    carnivore = ability_payload(ability_damages, "passive").get("self_heal_state")
+    carnivore = ability_payload(ctx.ability_damages, "passive").get("self_heal_state")
     if isinstance(carnivore, dict):
         amount = float(carnivore.get("amount", 0.0) or 0.0)
         healing.extend(
@@ -306,7 +298,7 @@ def derive_self_healing(
                 **_healing.trigger_fields(payment.event),
             }
             for payment in _healing.takedown_payments(
-                int(carnivore.get("kills", 0) or 0), damage_events
+                int(carnivore.get("kills", 0) or 0), ctx.damage_events
             )
         )
     return healing

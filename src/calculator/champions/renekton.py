@@ -17,7 +17,7 @@ from typing import Any
 
 from ..healing_helpers import ability_json, event_source, heal_from_damage, parsed_rank
 from .contract_vocabulary import coverage
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .packet_module import build_packet_module
 from .slot_extract import extract_named
 from .slotlib import with_item_on_hits
@@ -77,21 +77,13 @@ ASSUMPTIONS = [
 MODULE_COVERAGE = coverage(no_damage="P")
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Cull the Meek pays its heal on every Q hit that lands."""
     healing: list[dict] = []
-    ability = ability_json(champion_data, "Q")
-    rank = parsed_rank(ability_damages, "Q")
-    amount = extract_named(ability, "Champion Healing", rank, champion_stats, {})
-    for event in damage_events:
+    ability = ability_json(ctx.champion_data, "Q")
+    rank = parsed_rank(ctx.ability_damages, "Q")
+    amount = extract_named(ability, "Champion Healing", rank, ctx.champion_stats, {})
+    for event in ctx.damage_events:
         if event_source(event) == "Q":
             heal_from_damage(healing, event, amount, "Cull the Meek")
     return healing

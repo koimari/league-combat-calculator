@@ -30,7 +30,7 @@ from ..healing_helpers import (
 )
 from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS
 from .engine import SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
@@ -156,20 +156,12 @@ OPTIONS = [
 ]
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
+# pylint: disable=too-many-locals
 # pylint: disable=too-many-branches,too-many-statements
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Sap Magic's cooldown and empowered-attack heal."""
-    del ability_damages
-    passive = ability_json(champion_data, "P")
-    level = max(1, int(champion_stat(champion_stats, "level")))
+    passive = ability_json(ctx.champion_data, "P")
+    level = max(1, int(champion_stat(ctx.champion_stats, "level")))
     cooldown_values: list[float] = []
     for modifier in (passive.get("cooldown") or {}).get("modifiers", []):
         values = modifier.get("values", [])
@@ -190,12 +182,12 @@ def derive_self_healing(
             return 0.0
         return maximum_health * percentage / 100.0
 
-    duration = max(0.0, float(fight_duration_seconds or 0.0))
+    duration = max(0.0, float(ctx.fight_duration_seconds or 0.0))
     auto_events = attributed_events(
-        damage_events, lambda source, _event: source == "auto_attacks"
+        ctx.damage_events, lambda source, _event: source == "auto_attacks"
     )
     trigger_by_time: dict[float, int] = {}
-    for cast in cast_timeline or []:
+    for cast in ctx.cast_timeline or []:
         slot = cast.get("slot")
         if slot not in {"Q", "W", "E", "R"}:
             continue

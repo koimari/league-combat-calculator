@@ -42,7 +42,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
 from .module_helpers import ranked_slot
 from .shared_mechanics import capped_option
@@ -444,15 +444,7 @@ COVERAGE_CHANNELS = {"P": ("self_healing_rule",)}
 SOURCES = load_champion_sources("Dr. Mundo")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Dr. Mundo self-healing events from its authored packet.
 
     Two streams, both with a cadence of their own rather than a damage
@@ -462,14 +454,14 @@ def derive_self_healing(
     receipts across multiple defenders.
     """
     healing = []
-    r = _healing.ability_json(champion_data, "R")
-    r_rank = _healing.parsed_rank(ability_damages, "R")
+    r = _healing.ability_json(ctx.champion_data, "R")
+    r_rank = _healing.parsed_rank(ctx.ability_damages, "R")
     per_tick = extract_named(
-        r, "Health Regenerated per 0.5 Seconds", r_rank, champion_stats, {}
+        r, "Health Regenerated per 0.5 Seconds", r_rank, ctx.champion_stats, {}
     )
-    duration = max(0.0, float(fight_duration_seconds or 0.0))
+    duration = max(0.0, float(ctx.fight_duration_seconds or 0.0))
     if per_tick > 0.0 and duration > 0.0:
-        for cast in cast_timeline or []:
+        for cast in ctx.cast_timeline or []:
             if cast.get("slot") != "R":
                 continue
             start = float(cast.get("time", 0.0)) + 0.5
@@ -498,15 +490,17 @@ def derive_self_healing(
     # already raised.  Champion base regeneration stays outside the ledger
     # (pipeline.py adds only the item contribution), so this is the
     # passive's additional stream alone.
-    level = int(champion_stat(champion_stats, "level"))
+    level = int(champion_stat(ctx.champion_stats, "level"))
     regen_percent = extract_value(
-        _healing.ability_json(champion_data, "P"),
+        _healing.ability_json(ctx.champion_data, "P"),
         "Max Health Damage",
         level,
         level=level,
         occurrence=1,
     )
-    per_half_second = regen_percent / 100.0 * champion_stat(champion_stats, "health")
+    per_half_second = (
+        regen_percent / 100.0 * champion_stat(ctx.champion_stats, "health")
+    )
     if per_half_second > 0.0 and duration > 0.0:
         tick = 0.5
         while tick <= duration + 1e-9:

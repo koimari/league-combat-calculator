@@ -346,12 +346,14 @@ MODULE_COVERAGE = coverage(no_damage="E")
 
 
 SELF_HEALING_RULE = self_healing_rule("Senna")(
-    lambda data, stats, damages, events, casts=None, *_: _healing.cast_heals(
+    lambda ctx: _healing.cast_heals(
         "Q",
         "Piercing Darkness",
-        events,
-        casts,
-        amount=_healing.ranked_rows(data, damages, stats, "Q", "Healing")[0],
+        ctx.damage_events,
+        ctx.cast_timeline,
+        amount=_healing.ranked_rows(
+            ctx.champion_data, ctx.ability_damages, ctx.champion_stats, "Q", "Healing"
+        )[0],
         link_to_damage=False,
     )
 )

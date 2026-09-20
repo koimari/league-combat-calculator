@@ -37,7 +37,7 @@ from ..binary_roots import data_value, spell_object
 from ..control_spec import ControlScope
 from .contract_vocabulary import coverage
 from .engine import ONHIT, SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import target_stat
 from .module_helpers import ranked_slot, with_detail
 from .packet_module import build_packet_module, repeat_damage_parser
@@ -407,26 +407,18 @@ ASSUMPTIONS = [
 MODULE_COVERAGE = coverage(no_damage="E", out_of_scope="P")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Udyr self-healing events from its authored packet."""
     healing = []
-    w_rank = _healing.parsed_rank(ability_damages, "W")
+    w_rank = _healing.parsed_rank(ctx.ability_damages, "W")
     per_tick = extract_named(
-        _healing.ability_json(champion_data, "W"),
+        _healing.ability_json(ctx.champion_data, "W"),
         "Heal per Tick",
         w_rank,
-        champion_stats,
+        ctx.champion_stats,
     )
     if per_tick > 0.0:
-        for cast in cast_timeline or []:
+        for cast in ctx.cast_timeline or []:
             if cast.get("slot") != "W":
                 continue
             start = float(cast.get("time", 0.0))

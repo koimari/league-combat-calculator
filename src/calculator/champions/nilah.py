@@ -31,7 +31,7 @@ from .. import healing_helpers as _healing
 from .charge_cadence import ChargeRule
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat
 from .packet_module import build_packet_module
 from .slot_entries import damage_entry
@@ -175,15 +175,7 @@ ASSUMPTIONS = [
 MODULE_COVERAGE = coverage(no_damage="PW")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Nilah self-healing events from its authored packet.
 
     Q passive: basic attacks and Formless Blade heal her for 0%-20%
@@ -197,7 +189,7 @@ def derive_self_healing(
         0.0,
         min(
             100.0,
-            champion_stat(champion_stats, "critical_strike_chance"),
+            champion_stat(ctx.champion_stats, "critical_strike_chance"),
         ),
     )
     q_ratio = 0.20 * crit / 100.0
@@ -205,7 +197,7 @@ def derive_self_healing(
     for payment in _healing.payments(
         _healing.HealAnchor.DAMAGING_HIT,
         lambda source: source in {"Q", "auto_attacks", "R"},
-        damage_events,
+        ctx.damage_events,
     ):
         event = payment.event
         source = _healing.event_source(event)

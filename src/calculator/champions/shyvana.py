@@ -31,7 +31,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .contract_vocabulary import coverage
 from .engine import BUFF, SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
 from .module_helpers import ranked_slot
 from .slot_entries import STEROID_ZERO, attach_self_shield, damage_entry
@@ -340,27 +340,19 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Shyvana")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Shyvana self-healing events from its authored packet."""
     healing = []
-    w_row = ability_payload(ability_damages, "W")
+    w_row = ability_payload(ctx.ability_damages, "W")
     if "dragon form" in str(w_row.get("detail", "")).lower():
-        level = max(1, int(champion_stat(champion_stats, "level")))
-        w = _healing.ability_json(champion_data, "W")
-        flat = extract_named(w, "Heal", level, champion_stats, {})
+        level = max(1, int(champion_stat(ctx.champion_stats, "level")))
+        w = _healing.ability_json(ctx.champion_data, "W")
+        flat = extract_named(w, "Heal", level, ctx.champion_stats, {})
         missing_pct = _healing.leveling_modifier(w, "Missing Health Damage", level, 0)
 
         inferno_aegis_heal = _healing.flat_plus_missing_heal(flat, missing_pct)
         for payment in _healing.payments(
-            _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
+            _healing.HealAnchor.CAST, "W", ctx.damage_events, ctx.cast_timeline
         ):
             event = payment.event
             if float(event.get("damage", 0.0)) <= 0.0:

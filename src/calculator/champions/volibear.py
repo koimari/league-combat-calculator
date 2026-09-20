@@ -24,7 +24,7 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .engine import BUFF, SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, int_option
 from .module_helpers import ranked_slot
 from .packet_module import build_packet_module
@@ -293,22 +293,14 @@ ASSUMPTIONS = [
 ]
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Volibear self-healing events from its authored packet."""
-    w_rank = _healing.parsed_rank(ability_damages, "W")
+    w_rank = _healing.parsed_rank(ctx.ability_damages, "W")
     (w_flat,) = _healing.ranked_rows(
-        champion_data, ability_damages, champion_stats, "W", "Heal"
+        ctx.champion_data, ctx.ability_damages, ctx.champion_stats, "W", "Heal"
     )
     w_missing_pct = _healing.leveling_modifier(
-        _healing.ability_json(champion_data, "W"), "Heal", w_rank, 1
+        _healing.ability_json(ctx.champion_data, "W"), "Heal", w_rank, 1
     )
     # One bite, one heal: the cached note is "Frenzied Maul deals bonus
     # damage and heals if the target is still Wounded after the cast time",
@@ -318,8 +310,8 @@ def derive_self_healing(
     return _healing.cast_heals(
         "W",
         "Frenzied Maul",
-        damage_events,
-        cast_timeline,
+        ctx.damage_events,
+        ctx.cast_timeline,
         amount_formula=_healing.flat_plus_missing_heal(w_flat, w_missing_pct),
         skip_casts=1,
     )

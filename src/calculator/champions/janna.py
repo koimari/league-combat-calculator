@@ -17,7 +17,7 @@ from typing import Any
 from ..ability_spec import DamagePart
 from ..healing_helpers import ranked_rows
 from .engine import SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import float_option
 from .module_helpers import between_rows, named_damage, no_damage, ranked_slot
 from .slot_entries import damage_entry, on_hit_entry
@@ -137,16 +137,7 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Janna")
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
-# pylint: disable=too-many-locals
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Monsoon pays its sourced per-tick heal on its own 0.25s channel.
 
     Monsoon channels for up to 3 seconds, healing Janna herself and nearby
@@ -165,9 +156,9 @@ def derive_self_healing(
     """
     healing: list[dict] = []
     per_tick, total = ranked_rows(
-        champion_data,
-        ability_damages,
-        champion_stats,
+        ctx.champion_data,
+        ctx.ability_damages,
+        ctx.champion_stats,
         "R",
         "Heal Per Tick",
         "Total Heal",
@@ -178,7 +169,7 @@ def derive_self_healing(
         else 12
     )
     if per_tick > 0.0:
-        for cast_index, cast in enumerate(cast_timeline or []):
+        for cast_index, cast in enumerate(ctx.cast_timeline or []):
             if cast.get("slot") != "R":
                 continue
             start = float(cast.get("time", 0.0))

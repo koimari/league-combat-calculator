@@ -51,7 +51,7 @@ from ..binary_roots import data_value, spell_object
 from ..control_spec import ControlEvent
 from ..survival.phases import TransitionRank
 from .engine import BUFF, DEBUFF, SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, float_option, int_option, target_stat
 from .module_helpers import missing_hp_fraction, ranked_slot
 from .slot_entries import damage_entry
@@ -527,21 +527,13 @@ parse_abilities = build_parser(SLOTS, "Briar", cc_kinds=MODULE_CC)
 SOURCES = load_champion_sources("Briar")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Briar self-healing events from its authored packet."""
     healing = []
     per_tick, maximum = _healing.ranked_rows(
-        champion_data,
-        ability_damages,
-        champion_stats,
+        ctx.champion_data,
+        ctx.ability_damages,
+        ctx.champion_stats,
         "E",
         "Heal Per Tick",
         "Maximum Heal",
@@ -558,7 +550,7 @@ def derive_self_healing(
         # charge.  An E event is still what proves the cast happened; it is
         # not what the heal is paid for.
         for payment in _healing.payments(
-            _healing.HealAnchor.CAST_SCHEDULE, "E", damage_events, cast_timeline
+            _healing.HealAnchor.CAST_SCHEDULE, "E", ctx.damage_events, ctx.cast_timeline
         ):
             ticks = max(1, min(4, math.ceil(maximum / per_tick)))
             healing.extend(
@@ -583,7 +575,7 @@ def derive_self_healing(
     for payment in _healing.payments(
         _healing.HealAnchor.DAMAGING_HIT,
         lambda source: source.startswith("stacking_dot_"),
-        damage_events,
+        ctx.damage_events,
     ):
         event = payment.event
         dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
@@ -604,17 +596,17 @@ def derive_self_healing(
     # 36 / 40% by rank).  The heal pays once per activation, at the
     # bite's hit event; the CAST anchor keeps that one payment even if a
     # future W is priced as several hits.
-    w_rank = _healing.parsed_rank(ability_damages, "W")
+    w_rank = _healing.parsed_rank(ctx.ability_damages, "W")
     heal_percent = extract_named(
-        _healing.ability_json(champion_data, "W", 1),
+        _healing.ability_json(ctx.champion_data, "W", 1),
         "Heal Percentage",
         w_rank,
-        champion_stats,
+        ctx.champion_stats,
         {},
     )
-    max_health = champion_stat(champion_stats, "health")
+    max_health = champion_stat(ctx.champion_stats, "health")
     for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "W", damage_events, cast_timeline
+        _healing.HealAnchor.CAST, "W", ctx.damage_events, ctx.cast_timeline
     ):
         event = payment.event
         snack_heal = (
@@ -625,17 +617,17 @@ def derive_self_healing(
     # R (Certain Death) grants life steal (10 / 15 / 20% by rank) while
     # Hematomania lasts; life steal heals for the sourced percentage of
     # the post-mitigation damage dealt by basic attacks.
-    r_rank = _healing.parsed_rank(ability_damages, "R")
+    r_rank = _healing.parsed_rank(ctx.ability_damages, "R")
     life_steal = extract_named(
-        _healing.ability_json(champion_data, "R"),
+        _healing.ability_json(ctx.champion_data, "R"),
         "Life Steal",
         r_rank,
-        champion_stats,
+        ctx.champion_stats,
         {},
     )
     if life_steal > 0.0:
         for payment in _healing.payments(
-            _healing.HealAnchor.DAMAGING_HIT, "auto_attacks", damage_events
+            _healing.HealAnchor.DAMAGING_HIT, "auto_attacks", ctx.damage_events
         ):
             event = payment.event
             _healing.heal_from_damage(

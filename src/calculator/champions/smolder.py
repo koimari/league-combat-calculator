@@ -47,7 +47,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import int_option
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
@@ -236,24 +236,16 @@ ASSUMPTIONS = [
 MODULE_COVERAGE = coverage(no_damage="P")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Smolder self-healing events from its authored packet."""
     healing = []
-    r = _healing.ability_json(champion_data, "R")
-    r_rank = _healing.parsed_rank(ability_damages, "R")
-    r_heal = extract_named(r, "Self Heal", r_rank, champion_stats)
+    r = _healing.ability_json(ctx.champion_data, "R")
+    r_rank = _healing.parsed_rank(ctx.ability_damages, "R")
+    r_heal = extract_named(r, "Self Heal", r_rank, ctx.champion_stats)
     # The flat self heal is paid once per cast, so a wave the module prices
     # as several hits still heals once.
     for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "R", damage_events, cast_timeline
+        _healing.HealAnchor.CAST, "R", ctx.damage_events, ctx.cast_timeline
     ):
         _healing.heal_from_damage(
             healing, payment.event, r_heal, "MMOOOMMMM!", link_to_damage=False

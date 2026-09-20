@@ -7,7 +7,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .engine import SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, int_option
 from .module_helpers import named_damage, no_damage, ranked_slot
 from .slot_cc import CC_PER_PART
@@ -180,25 +180,19 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Fiddlesticks")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Fiddlesticks self-healing events from its authored packet."""
     healing = []
-    w_ability = _healing.ability_json(champion_data, "W")
-    w_rank = _healing.parsed_rank(ability_damages, "W")
+    w_ability = _healing.ability_json(ctx.champion_data, "W")
+    w_rank = _healing.parsed_rank(ctx.ability_damages, "W")
     portion = (
-        extract_named(w_ability, "Champion Heal Portion", w_rank, champion_stats, {})
+        extract_named(
+            w_ability, "Champion Heal Portion", w_rank, ctx.champion_stats, {}
+        )
         / 100.0
     )
     for event in _healing.attributed_events(
-        damage_events, lambda source, _event: source == "W"
+        ctx.damage_events, lambda source, _event: source == "W"
     ):
         dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
         _healing.heal_from_damage(healing, event, portion * dealt, "Bountiful Harvest")

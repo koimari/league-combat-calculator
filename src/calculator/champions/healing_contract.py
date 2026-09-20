@@ -14,40 +14,43 @@ def heal_receipt_order(event: dict[str, Any]) -> tuple[float, str]:
 
 
 @dataclass(frozen=True, slots=True)
+class SelfHealCtx:
+    """Everything a champion's self-heal resolver is handed.
+
+    The record is the rule interface, so a resolver names the fields its kit
+    reads instead of restating six positional parameters.
+    """
+
+    champion_data: dict[str, Any]
+    champion_stats: dict[str, float]
+    ability_damages: dict[str, dict[str, Any]]
+    damage_events: list[dict[str, Any]]
+    cast_timeline: list[dict[str, Any]] | None = None
+    fight_duration_seconds: float | None = None
+
+
+SelfHealResolver = Callable[[SelfHealCtx], list[dict[str, Any]]]
+
+
+@dataclass(frozen=True, slots=True)
 class ChampionHealingRule:
     """One champion module's self-healing declaration."""
 
     champion_name: str
-    resolver: Callable[..., list[dict[str, Any]]] | None = None
+    resolver: SelfHealResolver | None = None
 
-    def derive(
-        self,
-        champion_data: dict[str, Any],
-        champion_stats: dict[str, float],
-        ability_damages: dict[str, dict[str, Any]],
-        damage_events: list[dict[str, Any]],
-        *,
-        cast_timeline: list[dict[str, Any]] | None = None,
-        fight_duration_seconds: float | None = None,
-    ) -> list[dict[str, Any]]:
+    def derive(self, ctx: SelfHealCtx) -> list[dict[str, Any]]:
         """Resolve this declaration through the shared rule interface."""
         if self.resolver is None:
             raise RuntimeError(
                 f"{self.champion_name} has no champion-local healing resolver"
             )
-        return self.resolver(
-            champion_data,
-            champion_stats,
-            ability_damages,
-            damage_events,
-            cast_timeline,
-            fight_duration_seconds,
-        )
+        return self.resolver(ctx)
 
 
 def declare_healing_rule(
     champion_name: str,
-    resolver: Callable[..., list[dict[str, Any]]],
+    resolver: SelfHealResolver,
 ) -> ChampionHealingRule:
     """Declare the self-healing rule owned by a champion module.
 
@@ -63,7 +66,7 @@ def declare_healing_rule(
 
 def self_healing_rule(
     champion_name: str,
-) -> Callable[[Callable[..., list[dict[str, Any]]]], ChampionHealingRule]:
+) -> Callable[[SelfHealResolver], ChampionHealingRule]:
     """Declare a champion module's self-heal rule from its own resolver.
 
     The declaration owns the receipt order, so a module writes only the
@@ -72,10 +75,10 @@ def self_healing_rule(
         SELF_HEALING_RULE = self_healing_rule("Nami")(derive_self_healing)
     """
 
-    def declare(resolver: Callable[..., list[dict[str, Any]]]) -> ChampionHealingRule:
+    def declare(resolver: SelfHealResolver) -> ChampionHealingRule:
         @functools.wraps(resolver)
-        def ordered(*args: Any, **kwargs: Any) -> list[dict[str, Any]]:
-            return sorted(resolver(*args, **kwargs), key=heal_receipt_order)
+        def ordered(ctx: SelfHealCtx) -> list[dict[str, Any]]:
+            return sorted(resolver(ctx), key=heal_receipt_order)
 
         return declare_healing_rule(champion_name, ordered)
 

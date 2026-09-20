@@ -46,7 +46,7 @@ from ..ability_atoms import ability_field, ability_payload
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import ONHIT, SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat
 from .module_helpers import at_level
 from .packet_module import build_packet_module
@@ -270,21 +270,13 @@ _HEAL_BANDS: tuple[tuple[int, tuple[float, float]], ...] = (
 )
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Xin Zhao self-healing events from its authored packet."""
     healing = []
-    lifesteal = champion_stat(champion_stats, "lifesteal_percent")
+    lifesteal = champion_stat(ctx.champion_stats, "lifesteal_percent")
     if lifesteal > 0.0:
         for event in _healing.attributed_events(
-            damage_events, lambda source, _event: source == "W"
+            ctx.damage_events, lambda source, _event: source == "W"
         ):
             amount = (
                 0.333 * max(0.0, float(event.get("damage", 0.0))) * lifesteal / 100.0
@@ -296,18 +288,20 @@ def derive_self_healing(
     # ``_determination`` prices the proc as a per-attack share (partial
     # stacks included), so the heal pays the same share on the same on-hit
     # events — three of them are one proc's heal.
-    determination = ability_field(ability_payload(ability_damages, "passive"), "on_hit")
+    determination = ability_field(
+        ability_payload(ctx.ability_damages, "passive"), "on_hit"
+    )
     if determination:
-        xin_level = max(1, int(champion_stat(champion_stats, "level")))
+        xin_level = max(1, int(champion_stat(ctx.champion_stats, "level")))
         health_share, heal_ap_ratio = at_level(_HEAL_BANDS, xin_level)
         per_proc_heal = health_share * float(
-            champion_stat(champion_stats, "health")
-        ) + heal_ap_ratio * champion_stat(champion_stats, "ability_power")
+            champion_stat(ctx.champion_stats, "health")
+        ) + heal_ap_ratio * champion_stat(ctx.champion_stats, "ability_power")
         # The module declares the cadence; dividing by it here is what keeps
         # the heal and the damage on one grouping.
         stacks = max(1, int(determination.get("stacks_required") or 1))
         for event in _healing.attributed_events(
-            damage_events, lambda source, _event: source == "on_hit_ability_passive"
+            ctx.damage_events, lambda source, _event: source == "on_hit_ability_passive"
         ):
             _healing.heal_from_damage(
                 healing, event, per_proc_heal / stacks, "Determination"

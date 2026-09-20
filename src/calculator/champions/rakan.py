@@ -23,7 +23,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from .contract_vocabulary import coverage
 from .engine import build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat
 from .slot_control import with_control
 from .slot_entries import attach_self_shield, support_cast
@@ -150,24 +150,16 @@ MODULE_COVERAGE = coverage()
 COVERAGE_CHANNELS = {"P": ("self_shield_events",)}
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Rakan self-healing events from its authored packet."""
     healing = []
-    level = max(1, int(champion_stat(champion_stats, "level")))
+    level = max(1, int(champion_stat(ctx.champion_stats, "level")))
     heal = extract_named(
-        _healing.ability_json(champion_data, "Q"), "Heal", level, champion_stats
+        _healing.ability_json(ctx.champion_data, "Q"), "Heal", level, ctx.champion_stats
     )
     if heal > 0.0:
         for payment in _healing.payments(
-            _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
+            _healing.HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline
         ):
             event = payment.event
             healing.append(

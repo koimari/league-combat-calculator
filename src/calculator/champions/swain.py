@@ -31,7 +31,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import typed_damage
 from .packet_module import build_packet_module
@@ -182,15 +182,7 @@ ASSUMPTIONS = [
 # No MODULE_COVERAGE: every one of the five slots emits a priced row now.
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Swain self-healing events from its authored packet.
 
     Demonic Ascension drains nearby enemies, healing a flat amount per
@@ -204,20 +196,20 @@ def derive_self_healing(
     dropped.
     """
     healing = []
-    r_ability = _healing.ability_json(champion_data, "R")
-    r_rank = _healing.parsed_rank(ability_damages, "R")
+    r_ability = _healing.ability_json(ctx.champion_data, "R")
+    r_rank = _healing.parsed_rank(ctx.ability_damages, "R")
     heal_leveling = find_named_leveling(r_ability, "Heal per Tick")
 
     def swain_bonus_health(unit: str, value: float) -> float | None:
         if unit == "% of his bonus health":
-            return value / 100.0 * champion_stat(champion_stats, "bonus_health")
+            return value / 100.0 * champion_stat(ctx.champion_stats, "bonus_health")
         return None
 
     heal_per_tick = (
         sum_modifiers(
             heal_leveling,
             r_rank,
-            champion_stats,
+            ctx.champion_stats,
             {},
             modifier_override=swain_bonus_health,
         )
@@ -225,7 +217,7 @@ def derive_self_healing(
         else 0.0
     )
     for payment in _healing.payments(
-        _healing.HealAnchor.DAMAGING_HIT, "R", damage_events
+        _healing.HealAnchor.DAMAGING_HIT, "R", ctx.damage_events
     ):
         _healing.heal_from_damage(
             healing,

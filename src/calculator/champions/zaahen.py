@@ -35,7 +35,7 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import ranked_slot, typed_damage
 from .packet_module import build_packet_module
@@ -282,15 +282,7 @@ ASSUMPTIONS = [
 # No MODULE_COVERAGE: every one of the five slots emits a priced row now.
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Zaahen self-healing events from its authored packet."""
     healing = []
     # The Darkin Glaive (Q): the empowered attack heals him for "Champion
@@ -298,16 +290,16 @@ def derive_self_healing(
     # minions/monsters; champion targets assumed).  The Wiki unit ("% of
     # his maximum health") is not a slotlib-recognised unit, so the percent
     # is read raw and priced against the sourced max health.
-    q_rank = _healing.parsed_rank(ability_damages, "Q")
+    q_rank = _healing.parsed_rank(ctx.ability_damages, "Q")
     q_heal_pct = _healing.leveling_value(
-        _healing.ability_json(champion_data, "Q"), "Champion Healing", q_rank
+        _healing.ability_json(ctx.champion_data, "Q"), "Champion Healing", q_rank
     )
-    q_heal = q_heal_pct / 100.0 * champion_stat(champion_stats, "health")
+    q_heal = q_heal_pct / 100.0 * champion_stat(ctx.champion_stats, "health")
     # One payment per cast: the empowered attack strikes twice and the
     # cache grants one heal, and the heal lands on-attack even when the
     # paired strike packet was fully blocked.
     for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
+        _healing.HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline
     ):
         _healing.heal_from_damage(
             healing,
@@ -319,16 +311,16 @@ def derive_self_healing(
     # Grim Deliverance (R): flat heal per champion hit
     # ("Healing per Champion hit": 82.5 / 132 / 181.5 (+ 66% bonus
     # AD)); the 1v1 pair fight sees exactly one hit per R cast.
-    r_rank = _healing.parsed_rank(ability_damages, "R")
+    r_rank = _healing.parsed_rank(ctx.ability_damages, "R")
     r_heal = extract_named(
-        _healing.ability_json(champion_data, "R"),
+        _healing.ability_json(ctx.champion_data, "R"),
         "Healing per Champion hit",
         r_rank,
-        champion_stats,
+        ctx.champion_stats,
         {},
     )
     for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "R", damage_events, cast_timeline
+        _healing.HealAnchor.CAST, "R", ctx.damage_events, ctx.cast_timeline
     ):
         _healing.heal_from_damage(
             healing,

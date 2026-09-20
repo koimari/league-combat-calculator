@@ -25,7 +25,7 @@ from ..ability_spec import DamagePart
 from ..binary_roots import calculation_coefficient, data_value, spell_object
 from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS
 from .engine import SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
@@ -308,20 +308,14 @@ def _level_breakpoint_value(values: list[Any], level: int) -> float:
     return float(values[min(max(level, 1) - 1, len(values) - 1)])
 
 
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Pit Grit's sourced missing-health regeneration stream."""
-    del ability_damages, damage_events, cast_timeline
     p_text = (
         " ".join(
             effect.get("description", "")
-            for effect in _healing.ability_json(champion_data, "P").get("effects", [])
+            for effect in _healing.ability_json(ctx.champion_data, "P").get(
+                "effects", []
+            )
         )
         .replace("[", " ")
         .replace("]", " ")
@@ -346,11 +340,11 @@ def derive_self_healing(
     max_values = [
         float(value) for value in re.findall(r"\d+(?:\.\d+)?", max_match.group(1))
     ]
-    level = max(1, int(champion_stat(champion_stats, "level")))
+    level = max(1, int(champion_stat(ctx.champion_stats, "level")))
     base = _level_breakpoint_value(base_values, level)
     maximum = _level_breakpoint_value(max_values, level)
     segments_cap = round(maximum / base) if base > 0.0 else 0
-    duration = max(0.0, float(fight_duration_seconds or 0.0))
+    duration = max(0.0, float(ctx.fight_duration_seconds or 0.0))
     if duration <= 0.0 or base <= 0.0:
         return []
 

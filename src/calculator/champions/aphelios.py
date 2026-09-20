@@ -51,7 +51,7 @@ from .aphelios_weapons import (
 )
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, champion_stat, int_option
 from .packet_module import build_packet_module
 from .slot_cc import CC_PER_PART
@@ -428,37 +428,30 @@ OPTIONS = [
 MODULE_COVERAGE = coverage(no_damage="E")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+# pylint: disable=too-many-locals
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Aphelios self-healing events from its authored packet."""
     healing = []
-    r_detail = str(ability_field(ability_payload(ability_damages, "R"), "detail"))
+    r_detail = str(ability_field(ability_payload(ctx.ability_damages, "R"), "detail"))
     if "Severum" in r_detail:
         severum = next(
             (
                 entry
-                for entry in champion_data.get("abilities", {}).get("P", [])
+                for entry in ctx.champion_data.get("abilities", {}).get("P", [])
                 if isinstance(entry, dict) and entry.get("name") == "Severum"
             ),
             {},
         )
-        level = int(champion_stat(champion_stats, "level"))
+        level = int(champion_stat(ctx.champion_stats, "level"))
         basic_scaling = find_named_leveling(severum, "Per-Level Scaling", 0)
         ability_scaling = find_named_leveling(severum, "Per-Level Scaling", 1)
         basic_ratio = (
-            sum_modifiers(basic_scaling, level, champion_stats, {}) / 100.0
+            sum_modifiers(basic_scaling, level, ctx.champion_stats, {}) / 100.0
             if basic_scaling is not None
             else 0.0
         )
         ability_ratio = (
-            sum_modifiers(ability_scaling, level, champion_stats, {}) / 100.0
+            sum_modifiers(ability_scaling, level, ctx.champion_stats, {}) / 100.0
             if ability_scaling is not None
             else 0.0
         )
@@ -473,7 +466,7 @@ def derive_self_healing(
         # ``_apply_overheal_shield`` receipt).
         heal_leveling = find_named_leveling(severum, "Heal")
         shield_cap = (
-            sum_modifiers(heal_leveling, level, champion_stats, {})
+            sum_modifiers(heal_leveling, level, ctx.champion_stats, {})
             if heal_leveling is not None
             else 0.0
         )
@@ -489,7 +482,7 @@ def derive_self_healing(
         for payment in _healing.payments(
             _healing.HealAnchor.DAMAGING_HIT,
             lambda source: source in {"auto_attacks", "Q"},
-            damage_events,
+            ctx.damage_events,
         ):
             event = payment.event
             # With Severum equipped the Q row is Onslaught, whose attacks

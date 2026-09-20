@@ -8,7 +8,7 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from ..binary_roots import data_value, spell_object
 from .engine import BUFF, SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import float_option, int_option
 from .module_helpers import between_rows, named_damage, ranked_slot
 from .slot_cc import CC_PER_PART
@@ -216,21 +216,13 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Irelia")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Irelia self-healing events from its authored packet."""
     healing = []
-    ability = _healing.ability_json(champion_data, "Q")
-    rank = _healing.parsed_rank(ability_damages, "Q")
-    amount = extract_named(ability, "Heal", rank, champion_stats, {})
-    for event in damage_events:
+    ability = _healing.ability_json(ctx.champion_data, "Q")
+    rank = _healing.parsed_rank(ctx.ability_damages, "Q")
+    amount = extract_named(ability, "Heal", rank, ctx.champion_stats, {})
+    for event in ctx.damage_events:
         if _healing.event_source(event) == "Q":
             _healing.heal_from_damage(healing, event, amount, "Bladesurge")
     return healing

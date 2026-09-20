@@ -23,7 +23,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from .contract_vocabulary import coverage
 from .engine import build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .module_helpers import no_damage_parser
 from .slot_cc import CC_PER_PART
 from .slot_extract import extract_named
@@ -80,23 +80,15 @@ MODULE_CC = {"E": "none", "P": "none", "Q": "none", "W": CC_PER_PART, "R": "none
 parse_abilities = build_parser(SLOTS, "Tryndamere", cc_kinds=MODULE_CC)
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Tryndamere self-healing events from its authored packet."""
     healing = []
-    q_rank = _healing.parsed_rank(ability_damages, "Q")
+    q_rank = _healing.parsed_rank(ctx.ability_damages, "Q")
     amount = extract_named(
-        _healing.ability_json(champion_data, "Q"),
+        _healing.ability_json(ctx.champion_data, "Q"),
         "Minimum Heal",
         q_rank,
-        champion_stats,
+        ctx.champion_stats,
     )
     healing.extend(
         {
@@ -106,7 +98,7 @@ def derive_self_healing(
             "kind": "champion_ability",
             "actor_wide": True,
         }
-        for cast_time in _healing.cast_slot_times(cast_timeline, "Q")
+        for cast_time in _healing.cast_slot_times(ctx.cast_timeline, "Q")
     )
     return healing
 

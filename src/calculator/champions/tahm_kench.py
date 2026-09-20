@@ -29,7 +29,7 @@ from .. import healing_helpers as _healing
 from ..ability_spec import DamagePart
 from .contract_vocabulary import coverage
 from .engine import SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, int_option
 from .module_helpers import innate_on_hit, ranked_slot
 from .slot_cc import CC_PER_PART
@@ -190,28 +190,20 @@ SOURCES = load_champion_sources("Tahm Kench")
 MODULE_COVERAGE = coverage(no_damage="E")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Tahm Kench self-healing events from its authored packet."""
-    q_rank = _healing.parsed_rank(ability_damages, "Q")
+    q_rank = _healing.parsed_rank(ctx.ability_damages, "Q")
     (q_flat,) = _healing.ranked_rows(
-        champion_data, ability_damages, champion_stats, "Q", "Heal"
+        ctx.champion_data, ctx.ability_damages, ctx.champion_stats, "Q", "Heal"
     )
     q_missing_pct = _healing.leveling_modifier(
-        _healing.ability_json(champion_data, "Q"), "Heal", q_rank, 1
+        _healing.ability_json(ctx.champion_data, "Q"), "Heal", q_rank, 1
     )
     return _healing.cast_heals(
         "Q",
         "Tongue Lash",
-        damage_events,
-        cast_timeline,
+        ctx.damage_events,
+        ctx.cast_timeline,
         amount_formula=_healing.flat_plus_missing_heal(q_flat, q_missing_pct),
     )
 

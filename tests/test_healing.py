@@ -8,6 +8,7 @@ import pytest
 
 from src.calculator import healing_helpers as _healing
 from src.calculator.champions.healing_contract import (
+    SelfHealCtx,
     heal_receipt_order,
     self_healing_rule,
 )
@@ -219,7 +220,7 @@ class TestSelfHealingRuleDeclaration:
         assert self._rule().champion_name == "Taric"
 
     def test_the_ledger_comes_back_ordered_by_time_then_source(self) -> None:
-        ordered = self._rule().derive({}, {}, {}, [])
+        ordered = self._rule().derive(SelfHealCtx({}, {}, {}, []))
         assert [(e["time"], e["source"]) for e in ordered] == [
             (1.0, "Q"),
             (1.0, "R"),

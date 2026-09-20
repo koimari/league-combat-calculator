@@ -55,7 +55,7 @@ from ..stat_formulas import growth_multiplier
 from .pet_window import derived_attack_count
 from .contract_vocabulary import REQUIRED_CHAMPION_SLOTS, coverage
 from .engine import SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import champion_stat, int_option
 from .module_helpers import no_damage, ranked_slot
 from .packet_module import build_packet_module
@@ -297,7 +297,6 @@ OPTIONS = [
 MODULE_COVERAGE = coverage(no_damage="W")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
 def _leveling_flat_at_level(
     ability: Mapping[str, Any], attribute: str, level: int
 ) -> float:
@@ -317,25 +316,18 @@ def _leveling_flat_at_level(
     return 0.0
 
 
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Yorick self-healing events from its authored packet."""
     healing = []
-    q = _healing.ability_json(champion_data, "Q")
-    q_rank = _healing.parsed_rank(ability_damages, "Q")
-    q_level = int(champion_stat(champion_stats, "level"))
+    q = _healing.ability_json(ctx.champion_data, "Q")
+    q_rank = _healing.parsed_rank(ctx.ability_damages, "Q")
+    q_level = int(champion_stat(ctx.champion_stats, "level"))
     q_flat = _leveling_flat_at_level(q, "Heal", q_level)
     last_rites_heal = _healing.flat_plus_missing_heal(
         q_flat, _healing.leveling_ratio(q, "Heal", "missing health", q_rank)
     )
     for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "Q", damage_events, cast_timeline
+        _healing.HealAnchor.CAST, "Q", ctx.damage_events, ctx.cast_timeline
     ):
         event = payment.event
         healing.append(

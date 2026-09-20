@@ -11,6 +11,7 @@ import pytest
 
 from src import app as app_module
 from src.calculator.champions import get_champion_module_contract, yuumi
+from src.calculator.champions.healing_contract import SelfHealCtx
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review
 
@@ -159,7 +160,9 @@ class TestFelineFriendship:
             {"time": time, "source_key": "auto_attacks", "damage": 50.0}
             for time in (0.0, 3.0, 7.9, 8.0, 12.0, 16.5)
         ]
-        heals = yuumi.derive_self_healing(data, {"level": 18}, {}, events, [], 20.0)
+        heals = yuumi.derive_self_healing(
+            SelfHealCtx(data, {"level": 18}, {}, events, [], 20.0)
+        )
         paid = [
             event["time"] for event in heals if event["source"] == "Feline Friendship"
         ]
@@ -174,7 +177,9 @@ class TestFelineFriendship:
             {"time": 0.0, "source_key": "auto_attacks", "damage": 0.0},
             {"time": 1.0, "source_key": "Q", "damage": 40.0},
         ]
-        heals = yuumi.derive_self_healing(data, {"level": 18}, {}, events, [], 20.0)
+        heals = yuumi.derive_self_healing(
+            SelfHealCtx(data, {"level": 18}, {}, events, [], 20.0)
+        )
         paid = [
             event["time"] for event in heals if event["source"] == "Feline Friendship"
         ]
@@ -191,7 +196,9 @@ class TestFelineFriendship:
                 if row.get("attribute") != "Heal"
             ]
         with pytest.raises(ValueError, match="no cached 'Heal' leveling row"):
-            yuumi.derive_self_healing(data, {"level": 18}, {}, [], [], 10.0)
+            yuumi.derive_self_healing(
+                SelfHealCtx(data, {"level": 18}, {}, [], [], 10.0)
+            )
 
 
 class TestYouAndMeIsASourcedZeroDamageRow:

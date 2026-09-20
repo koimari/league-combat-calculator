@@ -22,7 +22,7 @@ from .. import healing_helpers as _healing
 from ..ability_prose import CachedSentence
 from .charge_cadence import ChargeRule
 from .engine import ONHIT, SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import int_option
 from .module_helpers import rank_gated_no_damage_parser
 from .packet_module import build_packet_module
@@ -176,23 +176,18 @@ ASSUMPTIONS = [
 ]
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Milio self-healing events from its authored packet."""
     healing = []
-    r_rank = _healing.parsed_rank(ability_damages, "R")
+    r_rank = _healing.parsed_rank(ctx.ability_damages, "R")
     heal = extract_named(
-        _healing.ability_json(champion_data, "R"), "Heal", r_rank, champion_stats
+        _healing.ability_json(ctx.champion_data, "R"),
+        "Heal",
+        r_rank,
+        ctx.champion_stats,
     )
     if heal > 0.0:
-        for cast_index, cast in enumerate(cast_timeline or []):
+        for cast_index, cast in enumerate(ctx.cast_timeline or []):
             if cast.get("slot") != "R":
                 continue
             healing.append(
@@ -216,17 +211,17 @@ def derive_self_healing(
     # ticks, so the ratio-derived count wins, exactly as Janna's Monsoon
     # is handled.  W deals no enemy damage, so the W cast timeline is
     # the sourced trigger.
-    w_rank = _healing.parsed_rank(ability_damages, "W")
-    w_ability = _healing.ability_json(champion_data, "W")
-    w_per_tick = extract_named(w_ability, "Heal per Tick", w_rank, champion_stats)
-    w_total = extract_named(w_ability, "Total Heal", w_rank, champion_stats)
+    w_rank = _healing.parsed_rank(ctx.ability_damages, "W")
+    w_ability = _healing.ability_json(ctx.champion_data, "W")
+    w_per_tick = extract_named(w_ability, "Heal per Tick", w_rank, ctx.champion_stats)
+    w_total = extract_named(w_ability, "Total Heal", w_rank, ctx.champion_stats)
     w_tick_count = (
         max(1, min(100, round(w_total / w_per_tick)))
         if w_per_tick > 0.0 and w_total > 0.0
         else 25
     )
     if w_per_tick > 0.0:
-        for cast in cast_timeline or []:
+        for cast in ctx.cast_timeline or []:
             if cast.get("slot") != "W":
                 continue
             start = float(cast.get("time", 0.0))

@@ -21,7 +21,7 @@ from .. import healing_helpers as _healing
 from ..ability_atoms import ability_payload
 from .contract_vocabulary import coverage
 from .engine import SlotCtx
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import float_option, int_option
 from .packet_module import build_packet_module, repeat_damage_parser
 from .slot_control import with_control_event
@@ -176,15 +176,7 @@ ASSUMPTIONS = [
 MODULE_COVERAGE = coverage(no_damage="E")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Trundle self-healing events from its authored packet."""
     healing = []
     # Subjugate drains the target, "dealing magic damage and healing himself
@@ -193,7 +185,7 @@ def derive_self_healing(
     # The engine's R event carries the drain's pre-mitigation damage, which is
     # exactly the heal amount — the heal does not pass through magic resistance.
     for event in _healing.attributed_events(
-        damage_events, lambda source, _event: source == "R"
+        ctx.damage_events, lambda source, _event: source == "R"
     ):
         dealt = float(event.get("raw_damage", event.get("damage", 0.0)) or 0.0)
         _healing.heal_from_damage(
@@ -205,7 +197,7 @@ def derive_self_healing(
     # carried it on the P row with the user's declared death count.  A heal a
     # takedown pays has neither a cast nor a damage row, so each death rides
     # one of the fight's first damaging hits, in order.
-    tribute = ability_payload(ability_damages, "passive").get("self_heal_state")
+    tribute = ability_payload(ctx.ability_damages, "passive").get("self_heal_state")
     if isinstance(tribute, dict):
         amount = float(tribute.get("amount", 0.0) or 0.0)
         healing.extend(
@@ -218,7 +210,7 @@ def derive_self_healing(
                 **_healing.trigger_fields(payment.event),
             }
             for payment in _healing.takedown_payments(
-                int(tribute.get("deaths", 0) or 0), damage_events
+                int(tribute.get("deaths", 0) or 0), ctx.damage_events
             )
         )
     return healing

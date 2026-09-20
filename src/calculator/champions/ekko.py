@@ -7,7 +7,7 @@ from typing import Any
 from .. import healing_helpers as _healing
 from .armed_procs import cached_stack_terms
 from .engine import ONHIT, SlotCtx, build_parser
-from .healing_contract import self_healing_rule
+from .healing_contract import SelfHealCtx, self_healing_rule
 from .inputs import bool_option, float_option, int_option
 from .module_helpers import level_row, named_damage, no_damage, ranked_slot
 from .shared_mechanics import multi_pass_damage
@@ -174,26 +174,18 @@ ASSUMPTIONS = [
 SOURCES = load_champion_sources("Ekko")
 
 
-# pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,unused-argument
-def derive_self_healing(
-    champion_data: dict[str, Any],
-    champion_stats: dict[str, float],
-    ability_damages: dict[str, dict[str, Any]],
-    damage_events: list[dict[str, Any]],
-    cast_timeline: list[dict[str, Any]] | None = None,
-    fight_duration_seconds: float | None = None,
-) -> list[dict[str, Any]]:
+def derive_self_healing(ctx: SelfHealCtx) -> list[dict[str, Any]]:
     """Resolve Ekko self-healing events from its authored packet."""
     healing = []
-    r_rank = _healing.parsed_rank(ability_damages, "R")
+    r_rank = _healing.parsed_rank(ctx.ability_damages, "R")
     r_heal = extract_named(
-        _healing.ability_json(champion_data, "R"),
+        _healing.ability_json(ctx.champion_data, "R"),
         "Minimum Heal",
         r_rank,
-        champion_stats,
+        ctx.champion_stats,
     )
     for payment in _healing.payments(
-        _healing.HealAnchor.CAST, "R", damage_events, cast_timeline
+        _healing.HealAnchor.CAST, "R", ctx.damage_events, ctx.cast_timeline
     ):
         event = payment.event
         _healing.heal_from_damage(
