@@ -1,14 +1,15 @@
 """Tests for the Riven champion module."""
 
+import json
+from functools import partial
+
 import pytest
 
-from src.calculator.champions import riven
-from tests import cc_review, rider_probe, row_review
-from functools import partial
-from tests import champion_closure as closure
-from src.calculator.champions.slot_extract import extract_named
 from src import app as app_module
-import json
+from src.calculator.champions import riven
+from src.calculator.champions.slot_extract import extract_named
+from tests import cc_review, rider_probe, row_review
+from tests import champion_closure as closure
 
 
 class TestReviewedCrowdControl:

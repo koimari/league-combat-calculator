@@ -7,6 +7,8 @@ fall back to coarse ordering.  These tests hold the declaration to the
 cached text it was read from, and prove it reaches the event ledger.
 """
 
+from functools import partial
+
 import pytest
 
 from src.calculator.calculate import calculate_payload
@@ -14,7 +16,6 @@ from src.calculator.champions import lulu
 from src.calculator.champions.slot_cc import CC_PER_PART
 from src.calculator.data_fetcher import get_champion
 from tests import cc_review
-from functools import partial
 from tests import champion_closure as closure
 
 # The phrase each declared kind was read from, in that slot's cached text.

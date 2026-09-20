@@ -4,11 +4,13 @@ Every modelled slot is control-free; the slow and stun live in Gravity
 Field, which this module does not price.
 """
 
+from functools import partial
+
+import pytest
+
 from src.calculator.champions import get_champion_module_contract, viktor
 from tests import cc_review
-from functools import partial
 from tests import champion_closure as closure
-import pytest
 
 
 class TestReviewedCrowdControl:

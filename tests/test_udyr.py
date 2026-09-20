@@ -5,11 +5,13 @@ whether an ability event was a control event; an ability packet that never
 says makes the whole timed fight fall back to coarse ordering.
 """
 
+from functools import partial
+
+import pytest
+
 from src.calculator.champions import get_champion_module_contract, udyr
 from tests import cc_review
-from functools import partial
 from tests import champion_closure as closure
-import pytest
 
 
 class TestReviewedCrowdControl:

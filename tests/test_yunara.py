@@ -7,6 +7,7 @@ both its base and Transcendent forms.
 """
 
 import math
+from functools import partial
 from itertools import pairwise
 
 import pytest
@@ -17,7 +18,6 @@ from src.calculator.damage import calculate_fight_damage
 from src.calculator.data_fetcher import get_champion
 from src.calculator.fight.config import FightConfig
 from tests import cc_review
-from functools import partial
 from tests import champion_closure as closure
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}

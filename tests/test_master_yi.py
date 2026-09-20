@@ -5,14 +5,15 @@ seconds after the cast starts.  Wuju Style's row prices an on-hit rider
 as one direct hit, so it has no instant a marker could ride.
 """
 
+from functools import partial
+
 import pytest
 
 from src.calculator.champions import master_yi, parse_champion_abilities
-from tests import cc_review, rider_probe, row_review
-from functools import partial
-from tests import champion_closure as closure
 from src.calculator.data_fetcher import get_champion
 from src.calculator.healing import derive_self_healing
+from tests import cc_review, rider_probe, row_review
+from tests import champion_closure as closure
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 

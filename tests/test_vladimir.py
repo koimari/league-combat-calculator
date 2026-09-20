@@ -5,12 +5,14 @@ not.  Hemoplague controls nothing and its burst lands 4 seconds after the
 cast, which the packet now authors.
 """
 
+from functools import partial
+
+import pytest
+
 from src.calculator.champions import parse_champion_abilities, vladimir
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
-from functools import partial
 from tests import champion_closure as closure
-import pytest
 
 
 class TestReviewedCrowdControl:

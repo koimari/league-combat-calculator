@@ -1,12 +1,14 @@
 """Tests for the Neeko champion module."""
 
-from src.calculator.champions import neeko
-from tests import cc_review
-from functools import partial
-from tests import champion_closure as closure
-import pytest
-from src.calculator.champions.slot_extract import extract_named
 import json
+from functools import partial
+
+import pytest
+
+from src.calculator.champions import neeko
+from src.calculator.champions.slot_extract import extract_named
+from tests import cc_review
+from tests import champion_closure as closure
 
 
 class TestReviewedCrowdControl:

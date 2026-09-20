@@ -15,6 +15,8 @@ Hand-validated against https://wiki.leagueoflegends.com/en-us/Briar
   +20% total AD armor and MR, 10-20% life steal, 10-30% move speed.
 """
 
+from functools import partial
+
 import pytest
 
 from src.calculator.champions import briar, parse_champion_abilities
@@ -23,7 +25,6 @@ from src.calculator.fight_params import FightParams
 from src.calculator.pipeline import run_fight
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
-from functools import partial
 from tests import champion_closure as closure
 
 # Rank pins for hand-math tests (independent of level/skill order).

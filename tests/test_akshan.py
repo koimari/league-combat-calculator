@@ -1,5 +1,7 @@
 """Tests for Akshan champion ability parsing and damage calculation."""
 
+from functools import partial
+
 import pytest
 
 from src.calculator.champions import akshan
@@ -8,13 +10,12 @@ from src.calculator.champions.akshan import (
     _extract_e_per_shot,
     _parse_passive_proc_damage,
 )
+from src.calculator.champions.slot_extract import extract_named
 from src.calculator.damage import calculate_fight_damage
 from src.calculator.fight.config import FightConfig
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
-from functools import partial
 from tests import champion_closure as closure
-from src.calculator.champions.slot_extract import extract_named
 
 
 class TestQAvengerang:

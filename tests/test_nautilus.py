@@ -1,11 +1,13 @@
 """Tests for the Nautilus champion module."""
 
-from src.calculator.champions import nautilus
-from tests import cc_review
 from functools import partial
-from tests import champion_closure as closure
+
 import pytest
+
+from src.calculator.champions import nautilus
 from src.calculator.champions.slot_extract import extract_named
+from tests import cc_review
+from tests import champion_closure as closure
 
 
 class TestReviewedCrowdControl:

@@ -1,6 +1,7 @@
 """Tests for the Aphelios champion module."""
 
 import re
+from functools import partial
 
 import pytest
 
@@ -13,7 +14,6 @@ from src.calculator.champions import (
 )
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
-from functools import partial
 from tests import champion_closure as closure
 
 # The two prose-sourced weapon innates, read back out of the sentence each

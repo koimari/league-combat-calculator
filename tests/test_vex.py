@@ -6,6 +6,7 @@ answers once R's row stops summing its two hits into one instant.
 """
 
 import math
+from functools import partial
 
 import pytest
 
@@ -17,9 +18,7 @@ from src.calculator.champions.slot_extract import (
     sum_modifiers,
 )
 from tests import cc_review
-from functools import partial
 from tests import champion_closure as closure
-from src.calculator.champions.slot_extract import extract_named
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 

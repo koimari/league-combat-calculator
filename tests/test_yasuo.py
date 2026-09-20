@@ -4,18 +4,20 @@ Last Breath knocks up; Steel Tempest does so only on the Gathering Storm
 cast, so its kind is authored per part rather than per slot.
 """
 
+from functools import partial
+
+import pytest
+
 from src.calculator.champions import (
     get_champion_module_contract,
     parse_champion_abilities,
     yasuo,
 )
 from src.calculator.champions.slot_cc import CC_PER_PART
-from tests import cc_review, coverage_truth
-from functools import partial
-from tests import champion_closure as closure
-import pytest
 from src.calculator.data_fetcher import get_champion
 from src.calculator.stats import calculate_total_stats
+from tests import cc_review, coverage_truth
+from tests import champion_closure as closure
 
 _RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 

@@ -7,13 +7,14 @@ says makes the whole timed fight fall back to coarse ordering.
 probe below is the reason it exists.
 """
 
+from functools import partial
+
 import pytest
 
 from src.calculator.champions import get_champion_module_contract, seraphine
-from tests import cc_review, rider_probe
-from functools import partial
-from tests import champion_closure as closure
 from src.calculator.champions.slot_extract import extract_named
+from tests import cc_review, rider_probe
+from tests import champion_closure as closure
 
 
 class TestReviewedCrowdControl:

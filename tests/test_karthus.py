@@ -1,5 +1,7 @@
 """Revision-backed formulas, resources, and target rules for Karthus."""
 
+from functools import partial
+
 import pytest
 
 from src.calculator.calculate import calculate_payload
@@ -11,9 +13,8 @@ from src.calculator.champions import (
 )
 from src.calculator.stats import calculate_total_stats
 from tests import cc_review
-from tests.ability_math import parts_raw_total
-from functools import partial
 from tests import champion_closure as closure
+from tests.ability_math import parts_raw_total
 
 RANKS = {"Q": 5, "W": 5, "E": 5, "R": 3}
 
