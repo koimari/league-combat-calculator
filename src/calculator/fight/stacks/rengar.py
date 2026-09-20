@@ -5,6 +5,7 @@ from typing import Any
 from ...ability_atoms import ability_field
 from ...state_timeline import EventStamp
 from ...timed_stacks import TimedStackState
+from ..autos.swing_schedule import _auto_attack_timestamps
 from ..config import _seeded_option_stacks
 from ..results import CastPlan, FerocityTimeline, RotationResult
 from ..state import FightState
@@ -22,6 +23,12 @@ def _build_ferocity_timeline(
     no-refresh expiry, the 10-second combat freeze, and the cap), and
     (c) marks the cast that consumes the cap as empowered.  Returns None
     for any champion whose module does not emit ``ferocity_parts``.
+
+    The wiki's freeze is "10 seconds after dealing or taking damage", not
+    "after a gain", so every auto-attack swing re-arms it through
+    ``note_activity`` as well.  Damage TAKEN is out of this walk's reach and
+    is the remaining gap: a Rengar who only takes damage holds his stacks in
+    game and loses them here after one second.
     """
     if not any(
         "ferocity_parts" in info
@@ -43,7 +50,15 @@ def _build_ferocity_timeline(
         for ordinal, cast_time in enumerate(plan.times.get(ability_key, ())):
             casts.append((float(cast_time), ability_key, ordinal))
     casts.sort(key=lambda row: (row[0], ("Q", "W", "E").index(row[1]), row[2]))
+    swings = sorted(float(time) for time in _auto_attack_timestamps(state))
+    swing_index = 0
     for cast_time, ability_key, ordinal in casts:
+        while swing_index < len(swings) and swings[swing_index] <= cast_time:
+            stack.note_activity(
+                EventStamp(swings[swing_index], sequence), kind="auto_attack"
+            )
+            swing_index += 1
+            sequence += 1
         before = stack.stacks
         transitions = stack.apply_gain(
             EventStamp(cast_time, sequence),
@@ -97,6 +112,9 @@ def _build_ferocity_timeline(
                 }
             )
             empowered[(ability_key, ordinal)] = True
+    for swing_time in swings[swing_index:]:
+        stack.note_activity(EventStamp(swing_time, sequence), kind="auto_attack")
+        sequence += 1
     return FerocityTimeline(
         stack=stack,
         starting_stacks=seeded,

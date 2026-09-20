@@ -452,6 +452,14 @@ class TestTimerAndCombatExtension:
 # ---------------------------------------------------------------------------
 
 
+def _auto_swing_times(result: dict) -> list[float]:
+    """Every auto-attack swing timestamp the fight published."""
+    return [
+        round(float(event["time"]), 3)
+        for event in result["breakdown"]["auto_attacks"]["damage_events"]
+    ]
+
+
 class TestDotProcExclusion:
     def test_kernel_freeze_is_explicit_only(self):
         # Pinned rule-level shape: the kernel never invents an extension —
@@ -475,9 +483,10 @@ class TestDotProcExclusion:
 
     def test_fight_dot_tick_and_proc_do_not_extend_or_grant(self):
         # A fight with a burn item (Liandry) + autos and NO basic-ability
-        # casts: DoT ticks and item procs produce zero Ferocity gains and
-        # zero combat_freeze receipts (the walk never grants from a burn
-        # tick or an on-hit proc).
+        # casts: DoT ticks and item procs produce zero Ferocity gains.  The
+        # freeze re-arms on the auto swings, which the wiki counts as damage
+        # dealt, and on nothing else: one receipt per swing and none between
+        # them, where a burn tick would land.
         result = _fight(
             {"p_ferocity": 0},
             duration=6.0,
@@ -488,7 +497,15 @@ class TestDotProcExclusion:
             r for r in result["resource_ledger"]["receipts"] if r["operation"] == "gain"
         ]
         assert gains == []
-        assert "combat_freeze" not in json.dumps(result, default=list)
+        freezes = [
+            transition
+            for transition in result["breakdown"]["ferocity"]["state_transitions"]
+            if transition["kind"] == "combat_freeze"
+        ]
+        assert [t["detail"]["trigger_kind"] for t in freezes] == ["auto_attack"] * len(
+            freezes
+        )
+        assert [t["time"] for t in freezes] == _auto_swing_times(result)
 
 
 # ---------------------------------------------------------------------------
