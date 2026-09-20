@@ -67,14 +67,12 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Reign of Anger) has no enemy-damage formula: all three cached "
-    "effects (Fury generation/decay, the 50-Fury empower gate, the "
-    "sub-50%-health bonus-Fury-generation rule) carry zero leveling "
-    "rows (confirmed by the pinned reviewed packet's kind='no_damage' "
-    "declaration for P). P is a cast slot in this module (never "
-    "reassigned away from build_packet_module's no_damage branch), so "
-    "MODULE_COVERAGE reflects a sourced no-damage classification "
-    "rather than an unmodeled gap (no_damage, not out_of_scope).",
+    "P (Reign of Anger) has no enemy-damage formula: all three cached effects carry "
+    "zero leveling rows.",
+    "Those are Fury generation and decay, the 50-Fury empower gate and the "
+    "sub-50%-health rule.",
+    "P is a cast slot here, so MODULE_COVERAGE records a sourced no_damage rather "
+    "than an unmodeled gap.",
 ]
 MODULE_COVERAGE = coverage(no_damage="P")
 

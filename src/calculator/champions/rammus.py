@@ -209,35 +209,30 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "W (Defensive Ball Curl) prices the thorns damage — 15 + 10% total "
-    "armor + 10% total magic resistance magic damage per enemy basic "
-    "attack that hits Rammus during the stance (cached W description "
-    "prose; there is no leveling row). The fight engine has no "
-    "incoming-auto hook, so w_thorns_autos is the explicit count of "
-    "enemy autos (0 = none). The reviewed packet's misread of the "
-    "'Bonus Armor' row as magic damage is removed; the stance's bonus "
-    "armor/MR rows are the defensive buff and remain state.",
-    "P (Spiked Shell) grants bonus attack damage equal to 15% total armor "
-    "+ 15% total magic resistance (cached P description prose; the P "
-    "leveling array is empty, and both ratios are corroborated by the game "
-    "binary's RammusP ArmorRatio/MagicResistRatio DataValues). It is "
-    "emitted as a BUFF-phase stat_buff on bonus_attack_damage, so the auto "
-    "stream and bonus-AD item conversions see it. The armor/MR read is the "
-    "pre-fight total: Defensive Ball Curl's own bonus armor/MR (W) are "
-    "state, not stats, so the in-stance AD spike is a documented boundary. "
-    "The binary's unused BaseDamage DataValue (10.0) is not modeled - the "
-    "spell's own TotalDamage calculation does not reference it and the "
-    "wiki text carries no flat term.",
-    "E (Frenzying Taunt) deals no damage to a champion target: its one "
-    "sourced damage row is 'Monster Magic Damage' (80-160 + 70% AP), "
-    "restricted by the cached description to monsters ('Monsters are "
-    "additionally dealt magic damage upon being affected'). This engine's "
-    "target_class label has no monster value (champion/minion only) and "
-    "champion-ability target-class clauses are a named open kernel "
-    "boundary, so the row is documented rather than priced against a "
-    "champion. The sourced taunt (1.2-2.0s by rank) is already emitted as "
-    "a control event. Reclassified from out_of_scope to no_damage on the "
-    "champion-target surface.",
+    "W (Defensive Ball Curl) prices thorns of 15 + 10% total armor + 10% total magic "
+    "resist per enemy hit.",
+    "That is cached W prose with no leveling row, per enemy basic attack landing "
+    "during the stance.",
+    "The engine has no incoming-auto hook, so w_thorns_autos is the explicit enemy "
+    "auto count (0 = none).",
+    "The stance's bonus armor and MR rows are the defensive buff and remain state.",
+    "P (Spiked Shell) grants bonus AD of 15% total armor + 15% total magic resist "
+    "(cached P prose).",
+    "The P leveling array is empty; the binary's RammusP ArmorRatio and "
+    "MagicResistRatio corroborate.",
+    "It is a buff-phase stat_buff on bonus_attack_damage, so autos and bonus-AD items "
+    "see it.",
+    "P reads the pre-fight total: W's own bonus armor and MR are state, so the "
+    "in-stance spike is a boundary.",
+    "The binary's unused BaseDamage 10.0 is not modeled: TotalDamage never references "
+    "it.",
+    "E (Frenzying Taunt)'s one damage row is Monster Magic Damage, and target_class "
+    "has no monster value.",
+    "E deals no damage to a champion target: the cached description restricts that "
+    "row to monsters.",
+    "The row is 80 to 160 + 70% AP, and the class gap is a named open kernel "
+    "boundary, so E is documented.",
+    "E's sourced 1.2 to 2.0s taunt by rank is already emitted as a control event.",
 ]
 
 # E is emitted and grants nothing the engine prices against a champion.

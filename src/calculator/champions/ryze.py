@@ -32,11 +32,11 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     single_hit_slots=frozenset({"Q", "W", "E", "R"}),
     cc_kinds=MODULE_CC,
     assumption_overrides=(
-        "P (Arcane Mastery) has no enemy-damage formula: its one cached "
-        "effect ('increases his maximum mana by 10% per 100 AP') carries an "
-        "empty leveling row, and the pinned reviewed packet declares P "
-        "kind='no_damage'. The slot is emitted, so MODULE_COVERAGE records a "
-        "sourced no-damage classification rather than an unmodeled gap.",
+        "P (Arcane Mastery) has no enemy-damage formula: its one cached effect has an "
+        "empty leveling row.",
+        "That effect 'increases his maximum mana by 10% per 100 AP'.",
+        "The slot is emitted, so MODULE_COVERAGE records a sourced no-damage rather "
+        "than an unmodeled gap.",
     ),
 )
 

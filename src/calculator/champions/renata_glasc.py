@@ -216,42 +216,38 @@ OPTIONS: list[dict[str, Any]] = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Leverage) is an on-hit mark: the first basic attack on an "
-    "unmarked target deals bonus magic damage equal to 1% : 2% (based on "
-    "level) (+ 2% per 100 AP) of the target's maximum health — the "
-    "cached Per-Level Scaling row; the mark refreshes on subsequent hits "
-    "and expires on a new target, so the 1v1 prices the p_leverage_procs "
-    "option (default 1)",
-    "E (Loyalty Program) grants Renata herself a 3s shield for the "
-    "sourced Shield Strength (50-110 + 50% AP) — the rockets strike "
-    "'Renata and allies struck'; the ally half is a scanner packet with "
-    "scope all_teammates (every selected teammate the rockets pass "
-    "through), so a roster fight shields each selected ally and the 1v1 "
-    "prices only the module-authored self shield",
-    "W (Bailout) prices its SELF cast: the mean of the two cached "
-    "attack-speed rows (Bonus Attack Speed 10-30% + 1% per 100 AP and "
-    "Maximum Bonus Attack Speed 20-60% + 2% per 100 AP), which is what "
-    "the sourced 0%-to-100% linear ramp averages to over its 5 seconds, "
-    "time-weighted by the share of the fight window the buff covers.  "
-    "w_bailout_target names who the cast lands on; an ally cast is the "
-    "roster's and reaches it through the ally-support scanner.",
-    "W's movement-speed rows have no engine channel, and R (Hostile "
-    "Takeover) berserks its targets — control the engine records as a "
-    "kind without a magnitude.",
-    "W (Bailout)'s LETHAL half is documented-only. The Wiki cache "
-    "describes a fatal-damage restore to 100% maximum health followed by "
-    "10% maximum-health burn ticks that kill the target anyway unless a "
-    "takedown lands within 6s. The burn CADENCE is adjudicated to the game "
-    "binary (TicksPerSecond 4 -> 0.25s, TicksBeforeDeath 10 -> a 2.5s "
-    "window) over the Wiki's 0.264s, on the repo's Gnar game-file "
-    "precedent. The burn's DAMAGE CLASS is not adjudicated: the Wiki "
-    "description calls it true damage, the same entry's notes call it raw "
-    "damage, and the binary defines no damage class for it. That field "
-    "decides whether a shield absorbs a tick, and Renata's own E shields "
-    "the covered participant, so the survival result fails closed until a "
-    "source resolves it — see BAILOUT_AUTHORITY for the per-field record. "
-    "The ramping attack-speed and movement-speed buff has no survival "
-    "impact on the recipient in this model.",
+    "P (Leverage) is an on-hit mark: the first attack on an unmarked target adds 1 to "
+    "2% by level max health.",
+    "It adds 2% per 100 AP, from the cached Per-Level Scaling row.",
+    "The mark refreshes on later hits and expires on a new target, so the 1v1 prices "
+    "p_leverage_procs (default 1).",
+    "E (Loyalty Program) grants Renata a 3s shield of the sourced 50 to 110 + 50% AP.",
+    "The rockets strike 'Renata and allies struck', so the ally half is a scanner "
+    "packet, all_teammates.",
+    "A roster fight shields each selected ally; the 1v1 prices the module-authored "
+    "self shield only.",
+    "W (Bailout) prices its self cast: the mean of the two cached attack-speed rows.",
+    "Those are 10 to 30% + 1% per 100 AP and 20 to 60% + 2% per 100 AP, the 0-to-100% "
+    "ramp's 5s average.",
+    "It is time-weighted by the fight share; w_bailout_target names the recipient, an "
+    "ally cast the roster's.",
+    "W's movement-speed rows have no engine channel.",
+    "R (Hostile Takeover) berserks its targets, control the engine records as a kind "
+    "with no magnitude.",
+    "W (Bailout)'s lethal half is documented only.",
+    "The cache describes a fatal-damage restore to full health, then 10% "
+    "maximum-health burn ticks.",
+    "Those ticks kill the target anyway unless a takedown lands within 6s.",
+    "The burn cadence is adjudicated to the binary: TicksPerSecond 4 and "
+    "TicksBeforeDeath 10, a 2.5s window.",
+    "Its damage class is not adjudicated: the description says true, the notes say "
+    "raw, the binary neither.",
+    "That field decides whether a shield absorbs a tick, and E shields the covered "
+    "participant.",
+    "The survival result fails closed until a source resolves it; BAILOUT_AUTHORITY "
+    "holds the field record.",
+    "The ramping attack-speed and movement-speed buff has no survival impact on the "
+    "recipient here.",
 ]
 
 OPTIONS = [

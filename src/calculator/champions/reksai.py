@@ -160,27 +160,27 @@ OPTIONS = [
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "E (Furious Bite) is deterministic through the e_fury option: below "
-    "100 Fury it prices the physical row (70-170 + 60% bonus AD); at 100 "
-    "Fury it prices the sourced true-damage variant (84-204 + 72% bonus "
-    "AD == 120% of the physical row, 'converted to true damage').  Fury "
-    "generation and decay are not simulated, and Burrow's CC remains "
-    "documented out-of-scope",
-    "Q variant 0 (Queen's Wrath) prices all three empowered attacks — "
-    "the cached Total Bonus Physical Damage row (90/105/120/135/150% "
-    "AD), three times the per-attack Bonus Physical Damage row the "
-    "generated packet selected.  The aggregate is declared at the cast "
-    "boundary; the attacks' spacing across the 3-second window and the "
-    "primary target's critical-strike modifiers are not priced.",
-    "P (Fury of the Xer'Sai) heals 0% : 100% (based on Fury) of "
-    "9% : 21.29% (based on level) maximum health when Rek'Sai burrows — "
-    "the cached P level row, which the wiki data mislabels 'Max Health "
-    "Damage'. p_burrow_fury (default 0) is the Fury the burrow that "
-    "opens the fight consumes and the heal lands at the fight's first W "
-    "cast; it is a separate input from e_fury, which is the Fury she has "
-    "re-earned by the time Furious Bite is cast. The 3-second consume is "
-    "paid as one receipt, and its stop-at-full-health clause is the "
-    "survival walk's overheal rather than a cap applied here.",
+    "E (Furious Bite) is deterministic through e_fury: below 100 Fury it prices 70 to "
+    "170 + 60% bonus AD.",
+    "At 100 Fury it prices the sourced true-damage variant, 84 to 204 + 72% bonus AD, "
+    "120% of the row.",
+    "E's Fury generation and decay are not simulated; Burrow's control stays "
+    "documented out-of-scope.",
+    "Q variant 0 (Queen's Wrath) prices all three empowered attacks: the cached Total "
+    "Bonus Physical row.",
+    "That is 90/105/120/135/150% AD, three times the per-attack row the generated "
+    "packet selected.",
+    "Q's aggregate lands at the cast boundary; the 3s spacing and crit modifiers are "
+    "not priced.",
+    "P (Fury of the Xer'Sai) heals 0 to 100% by Fury of 9% to 21.29% by level maximum "
+    "health on burrow.",
+    "That is the cached P level row, which the wiki data mislabels 'Max Health "
+    "Damage'.",
+    "p_burrow_fury (default 0) is the Fury the opening burrow consumes; the heal "
+    "lands at the first W cast.",
+    "It is separate from e_fury, the Fury re-earned by the time Furious Bite is cast.",
+    "The 3s consume is one receipt, and its stop-at-full clause is the walk's "
+    "overheal.",
 ]
 
 # No MODULE_COVERAGE: P now prices the burrow heal the self-heal rule

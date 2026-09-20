@@ -159,27 +159,34 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Samira",
     PACKET_SHA256,
     assumption_overrides=(
-        "Style caps at 6 stacks (6-second expiry and unique-hit generation not modeled); "
-        "p_style_stacks is the explicit pre-stack state",
+        "Style caps at 6 stacks; its 6s expiry and unique-hit generation are not "
+        "modeled.",
+        "p_style_stacks is the explicit pre-stack state.",
         "At 6 stacks (S rank) Inferno Trigger is available and consumes all stacks at the end of "
         "the effect",
         "Style's bonus movement speed (2.75/3/3.25/3.5% per stack by level) is state, not damage",
-        "Daredevil Impulse's blade rider (2 : 21 by level + 3.5% : 11.32% total AD bonus magic "
-        "damage, increased by 0% : 100% of the target's missing health) is priced on every "
-        "carrier the cached sentence names: blade basic attacks, Blade Whirl's two slashes, "
-        "Wild Rush's dash and Flair's blade branch.  Inferno Trigger is not named and carries "
-        "none",
-        "p_blade_zone (default on) is the rider's range gate: inside 200 units her attacks use "
-        "the blade, and Flair slashes when a targetable enemy is in front of her.  Position is "
-        "not a request input, and in this duel the two conditions are one posture, so one "
-        "option states both; turning it off prices Q as the ranged shot and no attack carries "
-        "the rider (Blade Whirl and Wild Rush still do)",
+        "Daredevil Impulse's blade rider is 2 to 21 by level + 3.5 to 11.32% total AD "
+        "bonus magic.",
+        "It rises by 0 to 100% of the target's missing health.",
+        "It rides every carrier the cached sentence names: blade autos, Blade Whirl, "
+        "Wild Rush and Flair.",
+        "Inferno Trigger is not named and carries none.",
+        "p_blade_zone (default on) gates the rider: Q takes the blade or the ranged "
+        "shot, Wild Rush and Blade Whirl always.",
+        "Inside 200 units her attacks use the blade, and Flair slashes with a "
+        "targetable enemy in front.",
+        "Position is not a request input, and in this duel the two conditions are one "
+        "posture.",
+        "With it off no attack carries the rider, though Blade Whirl and Wild Rush "
+        "still do.",
         "Q/W/E and R damage keep the reviewed CP10.7 packet pricing (R: 10 sourced 0.2s shots)",
-        "E (Wild Rush) places its bonus attack speed as a 5-second window at the first E "
-        "cast; the takedown reset and the second window a longer fight earns are not placed",
-        "W Blade Whirl destroys selected champion projectiles during its sourced "
-        "0.75 second window; the source selection is an explicit incoming-event "
-        "contract.",
+        "E (Wild Rush) places its bonus attack speed as a 5-second window at the "
+        "first E cast.",
+        "The takedown reset and the second window a longer fight earns are not "
+        "placed.",
+        "W (Blade Whirl) destroys selected champion projectiles during its sourced "
+        "0.75s window.",
+        "The source selection is an explicit incoming-event contract.",
     ),
     packet_tick_fixes={
         "Blade Whirl": {

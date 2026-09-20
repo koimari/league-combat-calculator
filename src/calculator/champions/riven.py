@@ -119,24 +119,21 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Runic Blade) prices the wiki's per-level AD ratio: empowered "
-    "basic attacks deal bonus physical damage equal to 30% : 46.76% "
-    "(based on level) AD, one stack per auto (data/champions.json P "
-    "'Per-Level Scaling' [0]).",
-    "Runic Blade's bonus damage 'is affected by critical strike "
-    "modifiers' (cached P effect 1), so the on-hit row declares "
-    "crit_effectiveness=1.0 and the engine prices it at the fight's own "
-    "crit chance and multiplier.  The same sentence's 100% life-steal "
-    "effectiveness is a healing axis the row does not carry.",
-    "R1 (Blade of the Exile) prices the AD steroid: +20% of bonus AD "
-    "as bonus AD for 15s (riven.bin.json PercentBonusAD 0.20 x bonus "
-    "AD, flat at all ranks — the retired 20/25/30% rank array was "
-    "patched to a flat 20% bonus AD), factored at cast; the Wind Slash "
-    "stays priced by the R slot and now scales off the buffed AD.",
-    "E (Valor) has no enemy-damage formula: both cached effects are "
-    "self-directed — the 70-170 + 110% bonus AD shield for 1.5s on a "
-    "no-damage dash, and the cast-during-dash utility note — which the "
-    "pinned reviewed packet confirms with kind='no_damage' for E. E is "
-    "a cast slot here: it emits that sourced zero-damage row while the "
-    "support scanner prices its Valor shield, so the slot is modeled.",
+    "P (Runic Blade) prices the cached per-level AD ratio: 30% to 46.76% by level AD "
+    "on an empowered auto.",
+    "One stack is banked per auto, from the cached P Per-Level Scaling row.",
+    "Runic Blade's bonus is affected by critical strike modifiers (cached P effect).",
+    "The on-hit row declares crit_effectiveness 1.0, priced at the fight's crit "
+    "chance and multiplier.",
+    "The same sentence's 100% life-steal effectiveness is a healing axis the row does "
+    "not carry.",
+    "R1 (Blade of the Exile) prices the AD steroid: +20% of bonus AD for 15s, "
+    "factored at the cast.",
+    "riven.bin.json PercentBonusAD is a flat 0.20 at every rank.",
+    "Wind Slash stays priced by the R slot and scales off the buffed AD.",
+    "E (Valor) has no enemy-damage formula: both cached effects are self-directed.",
+    "Those are the 70 to 170 + 110% bonus AD shield for 1.5s on a no-damage dash and "
+    "the cast-during note.",
+    "E emits the sourced zero-damage row while the scanner prices the Valor shield, "
+    "so the slot is modeled.",
 ]

@@ -338,80 +338,72 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 )
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "Q (Flamespitter) prices the cached Maximum Magic Damage row "
-    "(62.5/93.75/125/156.25/187.5 + 131.25% AP + 7.5% : 10% of the "
-    "target's maximum health) — the whole 3-second flamethrower, equal "
-    "to 15 x Magic Damage per Tick at every rank.  The generated packet "
-    "read the Danger Zone effect's per-level Bonus Damage row, which is "
-    "the monster damage cap and is indexed by level, not rank.  The row "
-    "lands as 15 ticks at 0.25-second intervals from the cast, the "
-    "cadence the cached entry states ('spewing forth flames ... every "
-    "0.25 seconds', plus the last flame's 0.6-second scorch).  The "
-    "Danger Zone (Enhanced) rows remain unpriced.",
-    "R (The Equalizer) prices all 20 Burning ticks (Magic Damage per "
-    "Tick x20 == Maximum Magic Damage 600/1000/1400 + 175% AP) at "
-    "0.25-second intervals over up to 5 seconds (packet_module "
-    "local packet timing declaration). The initial rocket impact has no separate "
-    "damage row in the cache.",
-    "The Danger Zone half of the heat system is state outside the damage "
-    "model: Q/E/R rotation numbers price their base rows and the Enhanced "
-    "(Danger Zone) rows go unread, and W's Danger Zone Bonus (+50% shield "
-    "strength) is not applied - the base Shield Strength row is priced. "
-    "Only the Overheated half of heat is priced, through the "
-    "overheat_windows axis.",
-    "P (Junkyard Titan) prices the Overheated on-hit bonus magic damage - "
-    "5:44.12 by level + 25% AP + 4% of the target's maximum health per "
-    "empowered basic attack (cached P effect 3, leveling attribute 'Bonus "
-    "Magic Damage', a per-level array; corroborated by the game binary's "
-    "RumbleHeatSystem TotalBaseDamage / 0.25 AP coefficient / "
-    "OverheatPercBonusDamage 0.04). The fight engine does not simulate "
-    "heat, so overheat_autos is the explicit count of empowered autos "
-    "(0 = none, the default). The 'Bonus Damage' leveling row "
-    "(65:163.32 by level) is the "
-    "monster-only cap on the %max-health term, not a damage source, and "
-    "never binds against a champion target. Reclassified from "
-    "out_of_scope to modeled; the packet's no_damage label was incomplete, "
-    "not stale.",
-    "P (Junkyard Titan) heat axis: overheat_windows declares how many "
-    "times the mech reaches the cached Heat ceiling during the fight "
-    "(0 = never, the default). Every number the axis prices is read from "
-    "the cached prose and nothing is a constant here: the ceiling (150 "
-    "Heat, 'becomes Overheated while at 150 Heat'), the per-cast gain "
-    "(20 Heat, stated identically by Q, W and E, and they must agree) and "
-    "the window (4 seconds, 'decays back down to 0 over 4 seconds') — so "
-    "8 basic-ability casts fill the bar. A declared axis rather than a "
-    "cast-plan derivation because the cast plan is not yet trustworthy "
-    "for heat: E is scheduled on its cached 0.5s inter-charge cooldown "
-    "instead of its 6s rechargeRate, which puts 16 basic casts (320 Heat) "
-    "in a 10-second fight where the kit generates about 140. The window "
-    "buys BOTH remaining rows of the Overheated effect, never one alone: "
-    "the 50%:142.54% (by level) bonus attack speed, applied as a "
-    "stat_buff weighted by the share of the fight the windows cover "
-    "(exact for attack speed, which is linear in the bonus percent), and "
-    "the self-silence stated in the same sentence, applied as "
-    "self_cast_lockout_seconds — windows x 4 seconds taken off the shared "
-    "cast schedule's horizon. Where inside the fight the lockout sits is "
-    "NOT claimed: the model prices how much casting the window costs, not "
-    "which casts it eats. An autos-only fight casts nothing, generates no "
-    "Heat and therefore Overheats zero times whatever the axis declares. "
-    "The two axes cannot contradict each other and neither is clamped into "
-    "agreement, because a clamp answers an impossible request with a "
-    "plausible number: a windows x 4s lockout longer than the declared "
-    "fight is REFUSED naming its numbers (clamped, 3/4/5 windows in a 10s "
-    "fight all priced one answer), overheat_autos with no declared window "
-    "DERIVES the one window that holds the swings, and an autos-only fight "
-    "drops the window and the swings together since it casts nothing and "
-    "builds no Heat.",
-    "W (Scrap Shield) is a sourced self-shield with no damage row: 25/55/"
-    "85/115/145 + 30% AP + 4% of maximum health for 1.5 seconds. Shield-"
-    "only abilities cannot carry attach_self_shield (that payload rides "
-    "damage-event rows), so W stays priced by the ally-support scanner, "
-    "which derives it at target scope 'self'. Its 4% max-health term was "
-    "silently dropped until this session: the wiki spelling '% of maximum "
-    "health' was missing from the scaling unit table and resolved to 0.0; "
-    "the alias is now mapped. The bonus movement speed row is not damage "
-    "and remains state. Reclassified from out_of_scope to modeled (the "
-    "Ekko-W precedent for a scanner-priced shield-only slot).",
+    "Q (Flamespitter) prices the cached Maximum Magic Damage row for the whole "
+    "3-second flamethrower.",
+    "That is 62.5/93.75/125/156.25/187.5 + 131.25% AP + 7.5 to 10% of target maximum "
+    "health.",
+    "It equals 15 x Magic Damage per Tick at every rank, landing at 0.25s intervals "
+    "from the cast.",
+    "The cached entry states that cadence, plus the last flame's 0.6s scorch.",
+    "The Danger Zone per-level Bonus Damage row is the monster cap, indexed by level, "
+    "and stays unpriced.",
+    "R (The Equalizer) prices all 20 Burning ticks at 0.25s intervals over up to 5 "
+    "seconds.",
+    "That is per-tick x20 == Maximum Magic Damage 600/1000/1400 + 175% AP.",
+    "The initial rocket impact has no separate damage row in the cache.",
+    "The Danger Zone half of the heat system is state outside the damage model.",
+    "Q, E and R price their base rows and the Enhanced Danger Zone rows go unread.",
+    "W's Danger Zone Bonus of +50% shield strength is not applied: the base Shield "
+    "Strength row is priced.",
+    "Only the Overheated half of heat is priced, through the overheat_windows axis.",
+    "P (Junkyard Titan) prices the Overheated on-hit bonus, not the monster-only cap: "
+    "5 to 44.12 by level.",
+    "It adds 25% AP and 4% of target maximum health, from cached P effect 3's Bonus "
+    "Magic Damage row.",
+    "The binary's RumbleHeatSystem TotalBaseDamage, 0.25 AP coefficient and 0.04 "
+    "bonus corroborate it.",
+    "The engine does not simulate heat, so overheat_autos counts empowered autos (0 = "
+    "none, the default).",
+    "The Bonus Damage row, 65 to 163.32 by level, is that cap and never binds against "
+    "a champion.",
+    "P's heat axis: overheat_windows (default 0) declares how often the mech reaches "
+    "the 150 Heat ceiling.",
+    "Zero windows is the default; the per-cast gain is 20 Heat, stated identically by "
+    "Q, W and E.",
+    "Every number the axis prices is read from the cached prose, with no constant "
+    "here.",
+    "The window is 4 seconds, 'decays back down to 0 over 4 seconds', so 8 basic "
+    "casts fill the bar.",
+    "It is a declared axis because the cast plan is not yet trustworthy for heat.",
+    "E is scheduled on its cached 0.5s inter-charge cooldown instead of its 6s "
+    "rechargeRate.",
+    "That puts 16 basic casts, 320 Heat, in a 10s fight where the kit generates about "
+    "140.",
+    "The window buys both remaining Overheated rows, never one alone.",
+    "The 50% to 142.54% by level bonus attack speed is a stat_buff weighted by the "
+    "windows' fight share.",
+    "That weighting is exact for attack speed, which is linear in the bonus percent.",
+    "The self-silence in the same sentence applies as self_cast_lockout_seconds, "
+    "windows x 4 seconds.",
+    "Where the lockout sits inside the fight is not claimed: the model prices its "
+    "cost, not which casts.",
+    "An autos-only fight casts nothing, builds no Heat and Overheats zero times "
+    "whatever the axis says.",
+    "Neither axis is clamped into agreement: a clamp answers an impossible request "
+    "with a plausible number.",
+    "A windows x 4s lockout longer than the declared fight is refused, naming its "
+    "numbers.",
+    "overheat_autos with no declared window derives the one window that holds the "
+    "swings.",
+    "W (Scrap Shield) is a sourced self-shield with no damage row: 25/55/85/115/145 + "
+    "30% AP + 4% health.",
+    "It holds 1.5 seconds.",
+    "A shield-only ability cannot carry attach_self_shield, which rides damage-event "
+    "rows.",
+    "W stays priced by the ally-support scanner, which derives it at target scope "
+    "'self'.",
+    "The wiki spelling '% of maximum health' is mapped in the scaling unit table.",
+    "W's bonus movement speed row is not damage and remains state.",
 ]
 # No MODULE_COVERAGE: every slot is emitted and priced, which is exactly
 # what ``module_contract.default_coverage`` derives from SLOTS.  Restating

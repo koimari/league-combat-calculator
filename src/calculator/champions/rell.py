@@ -84,15 +84,15 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
 
 ASSUMPTIONS = [
     *list(ASSUMPTIONS),
-    "P (Break the Mold) deals 5% of Rell's total armor + 5% of her total "
-    "magic resistance as bonus magic damage on-hit (wiki prose; module "
-    "constants). The 3%-per-stack armor/MR reduction (5 stacks max, 5s "
-    "window) is a debuff ramp the single-target damage model does not "
-    "stage; the on-hit damage itself is priced.",
-    "W (Ferromancy: Crash Down) grants Rell the sourced Shield Strength "
-    "(20 : 100 by rank + 11% maximum health), emitted as a self shield by "
-    "the ally-support scanner.",
-    "E (Full Tilt) is modeled: Bonus Magic Damage 5% : 7% by rank of the "
-    "target's maximum health + 3% per 100 AP on the empowered basic "
-    "attack or Shattering Strike.",
+    "P (Break the Mold) deals 5% of Rell's total armor + 5% of her total magic resist "
+    "as magic on-hit.",
+    "Those are wiki-prose module constants.",
+    "The 3%-per-stack armor and MR reduction, 5 stacks over 5s, is a ramp this model "
+    "does not stage.",
+    "W (Ferromancy: Crash Down) grants Rell the sourced 20 to 100 by rank + 11% "
+    "maximum health shield.",
+    "The ally-support scanner emits it as a self shield.",
+    "E (Full Tilt) prices 5 to 7% by rank of target maximum health + 3% per 100 AP as "
+    "Bonus Magic Damage.",
+    "It rides the empowered basic attack or Shattering Strike.",
 ]

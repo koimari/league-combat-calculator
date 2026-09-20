@@ -312,31 +312,38 @@ parse_abilities, SLOTS, ASSUMPTIONS, SOURCES, OPTIONS = build_packet_module(
     "Rengar",
     PACKET_SHA256,
     assumption_overrides=(
-        "W (Battle Roar) stores 50% of post-mitigation damage taken in the last 1.5 seconds as "
-        "grey health and the active heals the stored pool (the E8a grey-health primitive authors "
-        "the heal from the incoming ledger at each W cast)",
-        "Ferocity is a typed kernel stack state: cap 4, each stack lasts 1 second, subsequent "
-        "triggers do not refresh the timer, and expiry is prevented for 10 seconds after dealing "
-        "or taking damage (excluding DoT/proc damage); at 4 stacks the next Q/W/E cast is "
-        "empowered and prices the wiki Ferocity Bonus values, consuming all stacks.  The 1-second "
-        "value is prose in the reviewed P template (rev 2864152); live in-fight gains are not "
-        "wired: the rotation resolver does not feed per-cast stack events into champion-module "
-        "parses (named reason), so the fight starts from the seeded state and the kernel receipt "
-        "documents the rule",
+        "W (Battle Roar) stores 50% of post-mitigation damage taken in the last 1.5s "
+        "as grey health.",
+        "The active heals the stored pool; the grey-health primitive authors it at "
+        "each W cast.",
+        "Ferocity is a typed kernel stack state: cap 4, each stack lasting 1 second.",
+        "A later trigger does not refresh the timer; expiry is held off for 10s after "
+        "damage dealt or taken.",
+        "That exclusion covers damage-over-time and proc damage.",
+        "At 4 stacks the next Q, W or E cast is empowered and prices the wiki "
+        "Ferocity Bonus, spending all.",
+        "The 1-second value is prose in the reviewed P template.",
+        "Live in-fight gains are not wired: the resolver feeds no per-cast stack "
+        "events into champion parses.",
+        "The fight starts from the seeded state and the kernel receipt documents the "
+        "rule.",
         "p_ferocity is the explicit pre-stack state; 0 prices base Q/W/E",
-        "The reviewed CP10.6 packet misread Q's per-level Ferocity Bonus array as per-rank base "
-        "damage; this module prices base Q from the rank array (20 : 160 + 5% AD) and the empower "
-        "from the level array (35 : 260 + 20% AD)",
-        "R (Thrill of the Hunt) prices its armour reduction as a target_debuff: the cached Armor "
-        "Reduction row (15/20/25) for the sourced 4 seconds, applied when r_thrill_attack is on "
-        "(default).  The engine weights the shred by the share of the fight its window covers, "
-        "timed from the cast rather than from the empowered attack that lands 2 seconds later, "
-        "and the 100% AD rider on that attack, the camouflage and the movement speed are not "
-        "priced.  That rider stays unpriced on sourced grounds: rengar.bin.json RengarR carries "
-        "mSpellCalculations.BonusDamage (mStat=2 bonus AD, coefficient 1.0) against the wiki's "
-        "ambiguous '100% AD' prose, and a 7-value ArmorShred DataValues array against the wiki's "
-        "3-value leveling row, and no marked-target / Unseen-Predator proc-condition kernel "
-        "exists to gate the ambush attack",
+        "Q's base damage is the rank array, 20 to 160 + 5% AD.",
+        "Q's empower is the per-level Ferocity Bonus array, 35 to 260 + 20% AD.",
+        "R (Thrill of the Hunt) prices its armour reduction as a target_debuff: "
+        "15/20/25 for the sourced 4s.",
+        "R applies it when r_thrill_attack is on (the default).",
+        "The engine weights the shred by the fight share its window covers, timed "
+        "from the cast.",
+        "That is 2 seconds before the empowered attack lands.",
+        "The 100% AD rider on that attack, the camouflage and the movement speed are "
+        "not priced.",
+        "rengar.bin.json RengarR carries BonusDamage at bonus-AD coefficient 1.0 "
+        "against the wiki's '100% AD'.",
+        "It also carries a 7-value ArmorShred array against the wiki's 3-value "
+        "leveling row.",
+        "No marked-target or Unseen-Predator proc kernel exists to gate the ambush "
+        "attack.",
     ),
     slot_parsers={
         "P": _unseen_predator,
