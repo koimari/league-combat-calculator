@@ -70,12 +70,6 @@ the reason where they meet the count and the gate diffs it by set equality;
 the import-time gate in ``interpreters`` is what makes an *unreceipted* gap
 impossible in the first place.
 
-Counter 4 additionally carries **deferral rows** (umbrella criterion 7,
-Amendment B): gaps Phase 3 cannot close because only Phase 4's S3 can, each
-row naming the gap, its reason and that stage.  The lane targets are measured
-net of them, which is the difference between a phase that says what it did
-not do and one whose exit criterion is quietly false.
-
 Counters 5-7 are Phase 4's and live in ``docs/migration-frontier.json``;
 nothing here reports them.
 
@@ -609,57 +603,13 @@ def _undeclared_base_blocker() -> tuple[str, ...]:
 # Counter 4's target is per lane, so the two lanes it names are two targets.
 COUNTER_4_TARGET_LANES: tuple[str, ...] = ("pair_engine", "receipt_walk")
 
-# ── counter 4's deferrals ───────────────────────────────────
+# ── who retires an unserved lane ──────────────────────────────────────────
 #
-# A declared ``(family, lane)`` pair on the receipt walk that has no
-# interpreter is a gap this counter cannot drive to zero on its own.  Such a
-# gap is deferred in writing, one row each: the gap, the reason its number is
-# not a silence (read from the tree, never restated here) and the stage that
-# retires it.  A deferral is a promise with a creditor, so the gate refuses a
-# row naming a gap the tree does not hold, a row the tree's own receipt
-# dates elsewhere, and a gap deferred with no dated row behind it at all.
-#
-# Which stage a row names is not spelled here.  It is read from the stage
-# record that declares itself the creditor, so re-dating a row is an edit to
-# the ruled artifact rather than to this dict.  See
-# ``deferral_creditor_stage`` below.
-
-# Empty: every declared receipt-walk lane has an interpreter, so no family is
-# deferred.  The tuple stays rather than the mechanism being deleted with the
-# debt it measured: a declared ``(family, RECEIPT_WALK)`` gap still has to be
-# deferrable in writing, and a gate exercisable only while a debt stood would
-# go untested on the commit it stopped mattering.
-COUNTER_4_DEFERRAL_FAMILIES: tuple[str, ...] = ()
-
-# ── the stages the campaign has shipped, and what a passed stage owes ──────
-#
-# A deferral is a promise with a creditor and a due date.  The gate below
-# refuses a row whose gap the tree does not hold and a row the tree's own
-# receipt dates elsewhere.  The third way a deferral goes wrong is invisible
-# to both: **the stage arrives and the row stays.**
-#
-# So a row recording a shipped stage is **overdue**: still deferred, still
-# netted out of the counter, and named as a debt with a blocker rather than
-# a schedule.
-#
-# Neither half of that lives here.  The stage records are committed beside the
-# counter at ``docs/receipts/campaign-stages.json`` (D-40 -- a counter's lists
-# may not live inside the tool that measures it, and "this stage shipped" is
-# the sole trigger of the rule), and shippedness is not declared even there:
-# each record names the slice tag the campaign's commit subjects carry, and
-# ``completed_stages`` reads the committed derivation of those subjects
-# (``CAMPAIGN_SLICE_TAGS``) for it.  That is the difference between
-# a rule that comes due on its own and a rule that comes due when somebody
-# remembers to edit a dict -- the second is the failure shape this campaign is
-# named after, one level up.
+# Which stage retires a gap is a ruling, and a ruling's home is the committed
+# stage record rather than a literal here or a field on the engine's lane
+# table.  ``interpreters.UnservedLane`` carries the two facts a reader can
+# check against the tree and nothing about when a gap retires.
 CAMPAIGN_STAGES = ROOT / "docs" / "receipts" / "campaign-stages.json"
-
-#: The campaign range's slice tags, derived from commit subjects once and
-#: committed.  The range is closed and named in one place -- ``campaign_range``
-#: on the stage records -- so the derivation has one answer forever, and
-#: re-deriving it per run is the whole reason this suite needed the repository
-#: rather than the tree.
-CAMPAIGN_SLICE_TAGS = ROOT / "docs" / "receipts" / "campaign-slice-tags.json"
 
 
 @functools.cache
@@ -669,34 +619,16 @@ def _campaign_stages_block() -> Mapping[str, Any]:
 
 
 def declared_stages() -> Mapping[str, Mapping[str, str]]:
-    """The committed stage records, keyed by the name a deferral spells."""
+    """The committed stage records, keyed by the name a debt spells."""
     return {row["stage"]: row for row in _campaign_stages_block()["stages"]}
-
-
-def campaign_range() -> str:
-    """The closed commit range the campaign is measured over."""
-    return _campaign_stages_block()["campaign_range"]
-
-
-#: The debt whose creditor a stage record may declare itself.  Spelled the way
-#: ``TARGET_CRITERIA`` spells the same counter and lane, because it is the same
-#: counter and lane: counter 4's receipt-walk half, netted out by these rows.
-CREDITOR_OF_COUNTER_4_DEFERRALS = "counter_4/receipt_walk"
 
 
 def creditor_stage(debt: str) -> str:
     """The one stage the committed records declare the creditor of *debt*.
 
-    Which stage retires an unserved lane is a ruling, and a ruling's home is
-    the committed stage record, not a literal in the tool that measures the
-    counter and not a field on the engine's lane table.  This is the **only**
-    home: ``interpreters.UnservedLane`` carries the two facts a reader can
-    check against the tree and nothing about when a row retires.  A debt is
-    spelled ``counter_4/<lane>``, exactly as ``TARGET_CRITERIA`` spells it.
-
     Raises ``ValueError`` when no record declares the debt, or more than one
-    does.  Fail closed both ways: no creditor leaves the rows dated to
-    nothing, and two creditors let a re-dating leave the old claim standing.
+    does.  Fail closed both ways: no creditor leaves the gap dated to nothing,
+    and two creditors let a re-dating leave the old claim standing.
     """
     claimed = sorted(
         stage
@@ -708,72 +640,9 @@ def creditor_stage(debt: str) -> str:
             f"{CAMPAIGN_STAGES.name} has {len(claimed)} stage record(s) "
             f"declaring themselves the creditor of "
             f"{debt} ({claimed}); exactly one may, "
-            "because the stage that retires a deferral is what the row is "
-            "overdue against"
+            "because the stage that retires a gap is what it is overdue against"
         )
     return claimed[0]
-
-
-def deferral_creditor_stage() -> str:
-    """The ruled creditor of counter 4's receipt-walk half, by name."""
-    return creditor_stage(CREDITOR_OF_COUNTER_4_DEFERRALS)
-
-
-#: One deferral row per family, dated to the ruled creditor rather than to a
-#: stage name written here.  Built once at import, like every other declared
-#: set in this module, and fails closed if the records do not name a creditor:
-#: resolving the claim is what makes ``import scripts.behavior_frontier`` raise
-#: on a tree whose records name no creditor or two.  The claim is resolved
-#: **once** and shared by the fourteen rows — it is one claim, and asking the
-#: same question once per row said fourteen times what it says once.
-_DEFERRAL_CREDITOR = deferral_creditor_stage()
-COUNTER_4_DEFERRALS: Mapping[str, str] = {
-    f"{family}/receipt_walk": _DEFERRAL_CREDITOR
-    for family in COUNTER_4_DEFERRAL_FAMILIES
-}
-
-
-@functools.cache
-def _tag_first_seen() -> Mapping[str, str]:
-    """Every slice tag of the campaign range, mapped to its earliest sha.
-
-    Read from the committed derivation rather than re-walked, and once per
-    process, because the overdue clause runs per deferral row.  Raises
-    ``RuntimeError`` when the pinned tags name a range the stage records do
-    not: a tag map read against the wrong range would report every overdue row
-    as on schedule.
-    """
-    pinned = json.loads(CAMPAIGN_SLICE_TAGS.read_text(encoding="utf-8"))
-    declared = campaign_range()
-    if pinned["range"] != declared:
-        raise RuntimeError(
-            f"{CAMPAIGN_SLICE_TAGS.name} pins the tags of {pinned['range']} but "
-            f"{CAMPAIGN_STAGES.name} declares the campaign range {declared}"
-        )
-    return pinned["tags"]
-
-
-def completed_stages() -> Mapping[str, str]:
-    """Stage → why the campaign's commits say it shipped, for every declared stage.
-
-    Two conjuncts, both read from commit subjects: the stage's own slice tag
-    is present, and its declared successor's tag is too.  The first alone
-    fires on the stage's opening commit, and a stage is not shipped while it
-    is being shipped.  The subjects are read from the committed derivation, not
-    from the stage record, so a stage still cannot declare itself shipped.
-    """
-    tags = _tag_first_seen()
-    shipped: dict[str, str] = {}
-    for stage, row in declared_stages().items():
-        own, after = tags.get(row["slice_tag"]), tags.get(row["followed_by"])
-        if own and after:
-            shipped[stage] = (
-                f"the campaign range carries the slice tag {row['slice_tag']!r} "
-                f"from {own} and its declared successor {row['followed_by']!r} "
-                f"from {after}, so the stage this row defers to has shipped and "
-                "the campaign ran on past it"
-            )
-    return shipped
 
 
 TARGET_CRITERIA: Mapping[str, str] = {
@@ -855,180 +724,13 @@ def _owed(has_gap: bool, debt: str) -> str:
     return debt_owner(debt) if has_gap else ""
 
 
-def deferral_block() -> dict[str, Any]:
-    """Counter 4's committed deferrals: the gap, its reason and its creditor.
-
-    The reason is read from ``interpreters.UNSERVED_LANE_RECEIPTS`` and the
-    recorded stage from the record that claims this lane's debt, so each fact
-    is transcribed from its one home rather than said twice; what this module
-    owns is the *decision* to defer, which is the part a receipt has to carry
-    because no code implies it.  A row carries no second copy of its stage,
-    so nothing beside ``recorded_stage`` can disagree with it.
-    """
-    shipped = completed_stages()
-    blockers = {
-        stage: row.get("blocked_on", "") for stage, row in declared_stages().items()
-    }
-    rows: dict[str, dict[str, str]] = {}
-    for key, stage in sorted(COUNTER_4_DEFERRALS.items()):
-        row = next(
-            (
-                receipt
-                for (
-                    family,
-                    lane,
-                ), receipt in interpreters.UNSERVED_LANE_RECEIPTS.items()
-                if f"{family.value}/{lane.value}" == key
-            ),
-            None,
-        )
-        rows[key] = {
-            "recorded_stage": stage,
-            "reason": row.reason if row is not None else "",
-            "overdue": stage in shipped,
-            "overdue_because": shipped.get(stage, ""),
-            "blocked_on": blockers.get(stage, "") if stage in shipped else "",
-        }
-    return {
-        "rule": (
-            "umbrella criterion 7, Amendment B (2026-08-12): a declared "
-            "(family, lane) gap Phase 3 cannot close is deferred in writing to "
-            "the stage that can.  The Phase-3 exit target is 0 net of these "
-            "rows; Phase 4's exit re-asserts them retired.  A row naming a gap "
-            "the tree no longer holds, or a stage the tree's own receipt does "
-            "not say, fails the gate"
-        ),
-        "rows": rows,
-        "by_lane": _deferrals_by_lane(),
-    }
-
-
-def _deferrals_by_lane() -> dict[str, int]:
-    """How many deferral rows each lane carries."""
-    tally: dict[str, int] = {}
-    for key in COUNTER_4_DEFERRALS:
-        lane = key.split("/", 1)[1]
-        tally[lane] = tally.get(lane, 0) + 1
-    return tally
-
-
-def _deferral_failures(
-    committed: Mapping[str, Any], fresh: Mapping[str, Any]
-) -> list[str]:
-    """Amendment B's rows, gated by set equality and against the tree (D-40).
-
-    Fails closed on a missing section.  Four substantive clauses: the
-    committed rows equal the declared ones, every deferred gap is still an
-    open gap in the tree, every deferred gap has the tree's own unserved-lane
-    receipt behind it, and the **committed** receipt records the stage the
-    ruled records claim today.  Without the first three a deferral would
-    outlive the gap it excused, which is a counter driven to its target by a
-    row nobody re-read.
-
-    The last clause is where the old two-homes clause went.  While the stage
-    was declared both on ``UnservedLane.retires_at`` and in the stage records,
-    this compared the two and caught a re-dating that moved only one — at the
-    price of making every ruled re-dating a ``src/`` commit.  With one home
-    that comparison has nothing left to disagree about, so what is compared
-    instead is the pair that still can: a re-dating lands in
-    ``campaign-stages.json`` and the committed frontier receipt is stale until
-    it is regenerated, and a stale receipt is now red rather than invisible.
-    """
-    recorded = committed.get("counters", {}).get("counter_4", {}).get("deferrals")
-    if not isinstance(recorded, Mapping):
-        return [
-            "counter 4: the committed receipt records no deferral rows; run --write"
-        ]
-    failures: list[str] = []
-    declared = fresh["counters"]["counter_4"]["deferrals"]["rows"]
-    if set(recorded.get("rows", {})) != set(declared):
-        failures.append(
-            "counter 4: the committed deferral set differs from the declared "
-            f"one (committed-only="
-            f"{sorted(set(recorded.get('rows', {})) - set(declared))}, "
-            f"declared-only={sorted(set(declared) - set(recorded.get('rows', {})))})"
-        )
-    open_gaps = set(fresh["counters"]["counter_4"]["pairs"])
-    dated = fresh["counters"]["counter_4"]["receipts"]["dated"]
-    for key, row in sorted(declared.items()):
-        if key not in open_gaps:
-            failures.append(
-                f"counter 4: {key} is deferred and is not an open gap — a "
-                "deferral that outlives its gap excuses a counter nobody re-read"
-            )
-            continue
-        if key not in dated:
-            failures.append(
-                f"counter 4: {key} is deferred and no unserved-lane receipt "
-                "dates it; a deferral needs the tree's own reason behind it"
-            )
-        committed_row = recorded.get("rows", {}).get(key)
-        if (
-            isinstance(committed_row, Mapping)
-            and committed_row.get("recorded_stage") != row["recorded_stage"]
-        ):
-            failures.append(
-                f"counter 4: {key} is committed as deferred to "
-                f"{committed_row.get('recorded_stage')!r} and the record "
-                f"claiming its debt says {row['recorded_stage']!r}; a "
-                "re-dating that never reached the receipt is half-landed"
-            )
-        failures.extend(_overdue_failures(key, row, recorded.get("rows", {})))
-    return failures
-
-
-def _overdue_failures(
-    key: str, row: Mapping[str, Any], committed_rows: Mapping[str, Any]
-) -> list[str]:
-    """A deferral whose stage has shipped is a debt, and must say so.
-
-    Four clauses.  The first is the one that makes the other three come due on
-    their own: a deferral may not name a stage no committed record declares,
-    so the record exists before the row does and the tree — not an edit to
-    this module — decides when the row goes overdue.  Then the row recording a
-    completed stage must be declared overdue with a blocker a reader can open,
-    an overdue claim on a live stage is refused, and the committed receipt must
-    agree.  A row that quietly outlives its own due date is how "deferred to
-    the stage that can close it" becomes "deferred".
-    """
-    stage = row["recorded_stage"]
-    failures: list[str] = []
-    if stage not in declared_stages():
-        failures.append(
-            f"counter 4: {key} is deferred to {stage!r}, which no row of "
-            "docs/receipts/campaign-stages.json declares; a stage nothing "
-            "records can never come due"
-        )
-    if stage in completed_stages():
-        if not row["overdue"] or not row["blocked_on"]:
-            failures.append(
-                f"counter 4: {key} is deferred to {stage!r}, which has shipped, "
-                "and is not declared overdue with a blocker"
-            )
-    elif row["overdue"]:
-        failures.append(
-            f"counter 4: {key} is declared overdue but {stage!r} is not a "
-            "completed stage"
-        )
-    committed = committed_rows.get(key)
-    if isinstance(committed, Mapping) and committed.get("overdue") != row["overdue"]:
-        failures.append(
-            f"counter 4: {key}'s committed receipt says overdue="
-            f"{committed.get('overdue')!r} and the tree says {row['overdue']!r}"
-        )
-    return failures
-
-
 def target_block(report: FrontierReport) -> dict[str, Any]:
     """Each counter's target, the bound it resolves to, and the gap left.
 
-    Counter 4's two lane targets are measured **net of the committed deferral
-    rows** (Amendment B): the gross gap and the deferred count ride the entry
-    beside the net one, so the netting is arithmetic a reader can check rather
-    than a smaller number with no derivation.
+    Counter 4's two lane targets are one per lane: how many declared pairs
+    that lane still owes an interpreter.
     """
     by_lane = _uninterpreted_by_lane()
-    deferred = _deferrals_by_lane()
     measured: dict[str, tuple[int, int, str]] = {
         "counter_1": (0, report.counter_1, _owed(report.counter_1 > 0, "counter_1")),
         # The bound is the reviewed set's live size, so reviewing an item in
@@ -1042,29 +744,15 @@ def target_block(report: FrontierReport) -> dict[str, Any]:
         ),
         "counter_3": (0, report.counter_3, _owed(report.counter_3 > 0, "counter_3")),
         **{
-            f"counter_4/{lane}": (
-                0,
-                by_lane.get(lane, 0) - deferred.get(lane, 0),
-                _lane_owed_to(lane),
-            )
+            f"counter_4/{lane}": (0, by_lane.get(lane, 0), _lane_owed_to(lane))
             for lane in COUNTER_4_TARGET_LANES
         },
-    }
-    netting = {
-        f"counter_4/{lane}": {
-            "gross": by_lane.get(lane, 0),
-            "deferred": deferred.get(lane, 0),
-        }
-        for lane in COUNTER_4_TARGET_LANES
     }
     return {
         "rule": (
             "a target's gap may not grow, a met target may not stay recorded "
             "outstanding, and a target the receipt has lost is a failure; the "
-            "block records targets and never amends one.  Counter 4's lane "
-            "targets are measured net of the committed deferral rows "
-            "(Amendment B), and the gross and deferred halves ride the entry "
-            "so the netting is checkable arithmetic"
+            "block records targets and never amends one"
         ),
         "targets": {
             key: {
@@ -1074,7 +762,6 @@ def target_block(report: FrontierReport) -> dict[str, Any]:
                 "gap": max(value - bound, 0),
                 "met": value <= bound,
                 "owed_to": owed,
-                **netting.get(key, {}),
             }
             for key, (bound, value, owed) in sorted(measured.items())
         },
@@ -1688,7 +1375,6 @@ def build_receipt(
                 "retires_at": "3.9",
                 "pairs": list(report.uninterpreted),
                 "receipts": unserved_lane_block(),
-                "deferrals": deferral_block(),
             },
         },
         "exclusions": {
@@ -1790,7 +1476,6 @@ def check(
     failures.extend(_claim_evidence_failures(committed, fresh))
     failures.extend(_target_failures(committed, fresh))
     failures.extend(_unserved_lane_failures(committed, fresh))
-    failures.extend(_deferral_failures(committed, fresh))
     failures.extend(_zero_policy_failures(committed, fresh))
     failures.extend(_compiled_walk_refusal_failures(committed, fresh))
     failures.extend(_no_runtime_behavior_failures(committed, fresh))

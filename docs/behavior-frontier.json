@@ -112,11 +112,6 @@
     },
     "counter_4": {
       "counts": "declared (family, lane) pairs with no interpreter",
-      "deferrals": {
-        "by_lane": {},
-        "rows": {},
-        "rule": "umbrella criterion 7, Amendment B (2026-08-12): a declared (family, lane) gap Phase 3 cannot close is deferred in writing to the stage that can.  The Phase-3 exit target is 0 net of these rows; Phase 4's exit re-asserts them retired.  A row naming a gap the tree no longer holds, or a stage the tree's own receipt does not say, fails the gate"
-      },
       "pairs": [
         "active_cast/compiled_score_walk",
         "ally_packet/compiled_score_walk",
@@ -439,7 +434,7 @@
   "schema_version": 2,
   "slice": "3.9",
   "targets": {
-    "rule": "a target's gap may not grow, a met target may not stay recorded outstanding, and a target the receipt has lost is a failure; the block records targets and never amends one.  Counter 4's lane targets are measured net of the committed deferral rows (Amendment B), and the gross and deferred halves ride the entry so the netting is checkable arithmetic",
+    "rule": "a target's gap may not grow, a met target may not stay recorded outstanding, and a target the receipt has lost is a failure; the block records targets and never amends one",
     "targets": {
       "counter_1": {
         "bound": 0,
@@ -468,9 +463,7 @@
       "counter_4/pair_engine": {
         "bound": 0,
         "criterion": "criterion 4: no declared family is uninterpreted on the pair engine",
-        "deferred": 0,
         "gap": 0,
-        "gross": 0,
         "measured": 0,
         "met": true,
         "owed_to": ""
@@ -478,9 +471,7 @@
       "counter_4/receipt_walk": {
         "bound": 0,
         "criterion": "criterion 4: no declared family is uninterpreted on the receipt walk",
-        "deferred": 0,
         "gap": 0,
-        "gross": 0,
         "measured": 0,
         "met": true,
         "owed_to": ""
