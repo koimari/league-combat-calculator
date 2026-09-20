@@ -10,7 +10,13 @@ import pytest
 
 from src.calculator.calculate import calculate_payload
 from src.calculator.champions import parse_champion_abilities, volibear
+from src.calculator.champions.slot_extract import extract_cast_time
 from tests import cc_review
+
+
+def _cached_bite_time() -> float:
+    """Where the cache puts Frenzied Maul's strike."""
+    return extract_cast_time(cc_review.kit("Volibear")["abilities"]["W"][0])
 
 
 class TestReviewedCrowdControl:
@@ -60,7 +66,7 @@ class TestReviewedCrowdControl:
             data, 18, 100.0, {"Q": 5, "W": 5, "E": 5, "R": 3}
         )
         base, bonus = parsed["W"]["parts"]
-        assert base.time_offset == bonus.time_offset == volibear._W_BITE_SECONDS
+        assert base.time_offset == bonus.time_offset == _cached_bite_time()
         assert base.cc_kind == bonus.cc_kind == "none"
 
     def test_one_bite_pays_one_heal_however_many_parts_price_it(self):
@@ -93,7 +99,7 @@ class TestReviewedCrowdControl:
         assert len(events) == 6  # two parts per bite
         assert len(heals) == len(casts) - 1
         assert [round(float(row["time"]), 3) for row in heals] == [
-            pytest.approx(float(cast["time"]) + volibear._W_BITE_SECONDS, abs=5e-4)
+            pytest.approx(float(cast["time"]) + _cached_bite_time(), abs=5e-4)
             for cast in casts[1:]
         ]
 

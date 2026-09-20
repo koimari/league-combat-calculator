@@ -29,7 +29,12 @@ from .inputs import bool_option, int_option
 from .module_helpers import ability_slot, ranked_slot
 from .packet_module import build_packet_module
 from .slot_entries import attach_self_shield, damage_entry
-from .slot_extract import ability_name, extract_cooldown, extract_named
+from .slot_extract import (
+    ability_name,
+    extract_cast_time,
+    extract_cooldown,
+    extract_named,
+)
 
 PACKET_SHA256 = "29b4dc9dac0b65fb99cbe14df3e85aebbb307f341cae112415f1b9504c9f3cce"
 
@@ -39,17 +44,6 @@ PACKET_SHA256 = "29b4dc9dac0b65fb99cbe14df3e85aebbb307f341cae112415f1b9504c9f3cc
 # R), and he "leaps to the target location ... over 1 second" regardless of
 # distance, so the offset is a constant, not a travel estimate.
 _R_IMPACT_SECONDS = 1.0
-
-# Frenzied Maul's strike is its cast time: the cached note says "Frenzied
-# Maul deals bonus damage and heals if the target is still Wounded after
-# the cast time.  If the mark wears off before the cast time completes, the
-# ability's animation will appear as if the bite was applied but there is
-# no bonus damage or heal" (data/champions.json Volibear W), and that cast
-# time is the cached ``castTime`` of 0.25 seconds.  Both halves of the bite
-# — the base slash and the Wounded surplus — are the one strike, so both
-# land on that instant.
-_W_BITE_SECONDS = 0.25
-
 
 _VOLIBEAR_P_SPELL = spell_object("Volibear", "VolibearP")
 # PAttackSpeed is a fractional per-stack grant; AttackSpeedCalc's coefficient
@@ -165,10 +159,15 @@ def _frenzied_maul(
     base = extract_named(ability, "Physical Damage", rank, ctx.stats, ctx.target)
     cooldown = extract_cooldown(ability, rank)
     name = ability_name(ability)
+    # The cache times the bite by the cast: "Frenzied Maul deals bonus damage
+    # and heals if the target is still Wounded after the cast time"
+    # (data/champions.json Volibear W).  The base slash and the Wounded
+    # surplus are the one strike, so both land on that instant.
+    bite = extract_cast_time(ability)
 
     if not ctx.option("w_wounded"):
         entry = damage_entry(name, rank, cooldown, base, "physical")
-        entry["parts"] = (DamagePart("physical", base, time_offset=_W_BITE_SECONDS),)
+        entry["parts"] = (DamagePart("physical", base, time_offset=bite),)
         return entry
 
     bonus_ad = ctx.stat("bonus_attack_damage")
@@ -178,8 +177,8 @@ def _frenzied_maul(
     extra = base * extra_ratio
     entry = damage_entry(name, rank, cooldown, base + extra, "physical")
     entry["parts"] = (
-        DamagePart("physical", base, time_offset=_W_BITE_SECONDS),
-        DamagePart("physical", extra, time_offset=_W_BITE_SECONDS),
+        DamagePart("physical", base, time_offset=bite),
+        DamagePart("physical", extra, time_offset=bite),
     )
     entry["detail"] = (
         f"Wounded 2nd bite: +{extra_ratio * 100:g}% increased damage "
